@@ -1,0 +1,212 @@
+[
+  {
+    "schema_version": 1,
+    "event_id": "5fe003d8-7b3d-47b1-939c-e8968b4910b7",
+    "sequence": 1,
+    "timestamp": "2026-09-16T03:40:08.980Z",
+    "process_clock_id": "5a195ee8-cd36-4b37-86c2-bff8485ae988",
+    "run_id": "run-aaef446cd0e74cb3",
+    "operation_id": null,
+    "pod_id": "pod-1",
+    "phase": "READY",
+    "reason": null,
+    "payload": {
+      "generation": 1,
+      "backend_mode": "ovsdb-sim",
+      "fresh": true,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16"
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "fd1ebef9-33db-47ff-a39e-3b38efc36409",
+    "sequence": 2,
+    "timestamp": "2026-09-16T03:40:08.988Z",
+    "process_clock_id": "5a195ee8-cd36-4b37-86c2-bff8485ae988",
+    "run_id": "run-aaef446cd0e74cb3",
+    "operation_id": "fd674055-cce4-4303-8f2b-4ef0bc36f7b8",
+    "pod_id": "pod-1",
+    "phase": "REQUESTED",
+    "reason": null,
+    "payload": {}
+  },
+  {
+    "schema_version": 1,
+    "event_id": "b4c38d16-d333-4081-afc4-7c2f8eb8a4a8",
+    "sequence": 3,
+    "timestamp": "2026-09-16T03:40:09.000Z",
+    "process_clock_id": "5a195ee8-cd36-4b37-86c2-bff8485ae988",
+    "run_id": "run-aaef446cd0e74cb3",
+    "operation_id": "fd674055-cce4-4303-8f2b-4ef0bc36f7b8",
+    "pod_id": "pod-1",
+    "phase": "VALIDATED",
+    "reason": null,
+    "payload": {
+      "reason": null,
+      "plan": {
+        "mapping": "synthetic-existing-bss-v1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "fields": [
+          "ssid",
+          "wpa_psks[key]"
+        ],
+        "ssid": "emosa-lab",
+        "secret_ref": "scenario-key",
+        "guard": "VIF fields, security and radio/VIF references",
+        "shared_radio_actuation": false
+      }
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "9afa225f-f486-4bf6-882d-fa637488b2ae",
+    "sequence": 4,
+    "timestamp": "2026-09-16T03:40:09.005Z",
+    "process_clock_id": "5a195ee8-cd36-4b37-86c2-bff8485ae988",
+    "run_id": "run-aaef446cd0e74cb3",
+    "operation_id": "fd674055-cce4-4303-8f2b-4ef0bc36f7b8",
+    "pod_id": "pod-1",
+    "phase": "SUBMITTED",
+    "reason": null,
+    "payload": {
+      "reason": null,
+      "attempt": {
+        "attempt_id": "90a7dd09-327c-4c71-b25f-84e109cb8aef",
+        "transaction_id": "89e74f4f-3183-469d-b3bd-0b3da7e91d51",
+        "session_generation": 1,
+        "prepared_at": "2026-09-16T03:40:09.005Z"
+      }
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "b9261f2d-a352-491f-95ac-b1509284b671",
+    "sequence": 5,
+    "timestamp": "2026-09-16T03:40:09.015Z",
+    "process_clock_id": "5a195ee8-cd36-4b37-86c2-bff8485ae988",
+    "run_id": "run-aaef446cd0e74cb3",
+    "operation_id": "fd674055-cce4-4303-8f2b-4ef0bc36f7b8",
+    "pod_id": "pod-1",
+    "phase": "INDETERMINATE",
+    "reason": "OUTCOME_UNKNOWN",
+    "payload": {
+      "reason": "OUTCOME_UNKNOWN"
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "5415eef4-7ad8-472e-8475-251199833e6c",
+    "sequence": 6,
+    "timestamp": "2026-09-16T03:40:09.021Z",
+    "process_clock_id": "5a195ee8-cd36-4b37-86c2-bff8485ae988",
+    "run_id": "run-aaef446cd0e74cb3",
+    "operation_id": null,
+    "pod_id": null,
+    "phase": "BEFORE_DEVICE_APPLICATION",
+    "reason": null,
+    "payload": {
+      "fault": {
+        "point": "transaction-reply",
+        "action": "lost-reply",
+        "duration_seconds": 0
+      },
+      "seed_sample": 339563
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "becbe81e-0cf9-4855-ace1-2f89e9ad3b7c",
+    "sequence": 7,
+    "timestamp": "2026-09-16T03:40:09.030Z",
+    "process_clock_id": "5a195ee8-cd36-4b37-86c2-bff8485ae988",
+    "run_id": "run-aaef446cd0e74cb3",
+    "operation_id": null,
+    "pod_id": "pod-1",
+    "phase": "SIMULATED_MANAGER_FEEDBACK",
+    "reason": null,
+    "payload": {
+      "action": "apply",
+      "config_consumed": true,
+      "state_writes": 1,
+      "generation": 1,
+      "provenance": "independent-simulated-manager"
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "ea6f7017-cb3d-43b8-ace7-6b9c0f9171f2",
+    "sequence": 8,
+    "timestamp": "2026-09-16T03:40:10.178Z",
+    "process_clock_id": "5a195ee8-cd36-4b37-86c2-bff8485ae988",
+    "run_id": "run-aaef446cd0e74cb3",
+    "operation_id": null,
+    "pod_id": "pod-1",
+    "phase": "OBSERVATION",
+    "reason": null,
+    "payload": {
+      "operation_id": "fd674055-cce4-4303-8f2b-4ef0bc36f7b8",
+      "observation": {
+        "pod_id": "pod-1",
+        "resource_id": "bss-1",
+        "values": {
+          "ssid": "emosa-lab",
+          "enabled": true,
+          "mode": "ap",
+          "security_mode": "wpa2-psk",
+          "credential_fingerprint": "[REDACTED]"
+        },
+        "source": "ovsdb",
+        "backend_mode": "ovsdb-sim",
+        "session_generation": 2,
+        "received_at": "2026-09-16T03:40:10.178Z",
+        "fresh": true,
+        "provenance": "independent-simulated-manager:Wifi_VIF_State",
+        "source_time": null,
+        "revision": 3
+      },
+      "config": {
+        "ssid": "emosa-lab",
+        "enabled": true,
+        "mode": "ap",
+        "security_mode": "wpa2-psk",
+        "credential_fingerprint": "[REDACTED]"
+      },
+      "desired_observed_diff": {}
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "a49c3a0d-1ffe-490c-877f-ef9c64f86ea6",
+    "sequence": 9,
+    "timestamp": "2026-09-16T03:40:10.184Z",
+    "process_clock_id": "5a195ee8-cd36-4b37-86c2-bff8485ae988",
+    "run_id": "run-aaef446cd0e74cb3",
+    "operation_id": "fd674055-cce4-4303-8f2b-4ef0bc36f7b8",
+    "pod_id": "pod-1",
+    "phase": "OBSERVED_APPLIED",
+    "reason": "OUTCOME_UNKNOWN",
+    "payload": {
+      "reason": "OUTCOME_UNKNOWN",
+      "observation": {
+        "pod_id": "pod-1",
+        "resource_id": "bss-1",
+        "values": {
+          "ssid": "emosa-lab",
+          "enabled": true,
+          "mode": "ap",
+          "security_mode": "wpa2-psk",
+          "credential_fingerprint": "[REDACTED]"
+        },
+        "source": "ovsdb",
+        "backend_mode": "ovsdb-sim",
+        "session_generation": 2,
+        "received_at": "2026-09-16T03:40:10.178Z",
+        "fresh": true,
+        "provenance": "independent-simulated-manager:Wifi_VIF_State",
+        "source_time": null,
+        "revision": 3
+      }
+    }
+  }
+]

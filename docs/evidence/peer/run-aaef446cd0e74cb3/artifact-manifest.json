@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "run_id": "run-aaef446cd0e74cb3",
+  "artifacts": [
+    {
+      "path": "events.json",
+      "sha256": "f67654789d5d8adb96fce8fec711d238ecc52fab83048ef430cecf91b5d51f6c",
+      "size": 6262
+    },
+    {
+      "path": "inputs.json",
+      "sha256": "9644169c636573001758b169246d339c057b521b32befa3e0ec761bd8f726c37",
+      "size": 1185
+    },
+    {
+      "path": "observations.json",
+      "sha256": "12e29548d7d5caa73832e39f1e0a172de217f7af125dda54475789b320f20ce8",
+      "size": 1041
+    },
+    {
+      "path": "report.html",
+      "sha256": "1a2a970894032f8ca2d3303469ec17eb89b45062025d8eb564130be2914e5462",
+      "size": 22770
+    },
+    {
+      "path": "report.md",
+      "sha256": "d860e7117442de5f16d29f11160e03a497b5c7897fd18d46dcb28d4b1721fd4f",
+      "size": 1727
+    },
+    {
+      "path": "run.json",
+      "sha256": "ab80e2e341f4847da1f224bd3e6606869bd4362462dba4a920a61e6584926797",
+      "size": 8973
+    }
+  ]
+}

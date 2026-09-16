@@ -1,0 +1,11 @@
+--- a/src/lib/ow/src/ow_steer_bm.c
++++ b/src/lib/ow/src/ow_steer_bm.c
+@@ -5231,7 +5231,7 @@
+ 
+         const char *group_id = sta->group != NULL ? sta->group->id: NULL;
+         osw_diag_pipe_writef(pipe, LOG_PREFIX("    group:"));
+-        osw_diag_pipe_writef(pipe, LOG_PREFIX("      id: %s", group_id));
++        osw_diag_pipe_writef(pipe, LOG_PREFIX("      id: %s", group_id != NULL ? group_id : "(nil)"));
+     }
+     osw_diag_pipe_close(pipe);
+ }

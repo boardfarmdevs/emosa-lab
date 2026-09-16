@@ -1,0 +1,27 @@
+{
+  "scope": "local browser validation of Pages guide",
+  "browser": "139.0.7258.5",
+  "playwright": "1.63.0",
+  "checks": [
+    "8 architecture selections",
+    "4 lab modes",
+    "all 6 retained runs",
+    "lost-reply unknown attribution",
+    "run comparison",
+    "event and traceability filters",
+    "clipboard copy",
+    "keyboard skip link",
+    "390/768/1024/1440px without horizontal overflow",
+    "all static assets over repository-style subpath",
+    "stale output excluded by rebuild"
+  ],
+  "console_errors": [],
+  "assets": [
+    "index.html",
+    "app.js",
+    "style.css",
+    "data.json",
+    "icon.svg",
+    "architecture.svg"
+  ]
+}

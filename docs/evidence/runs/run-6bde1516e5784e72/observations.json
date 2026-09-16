@@ -1,0 +1,22 @@
+[
+  {
+    "phase": "initial",
+    "pod_id": "pod-1",
+    "resource_id": "bss-1",
+    "values": {
+      "ssid": "initial-network",
+      "enabled": true,
+      "mode": "ap",
+      "security_mode": "wpa2-psk",
+      "credential_fingerprint": "[REDACTED]"
+    },
+    "source": "ovsdb",
+    "backend_mode": "ovsdb-sim",
+    "session_generation": 1,
+    "received_at": "2026-09-16T01:33:53.956Z",
+    "fresh": true,
+    "provenance": "independent-simulated-manager:Wifi_VIF_State",
+    "source_time": null,
+    "revision": 1
+  }
+]

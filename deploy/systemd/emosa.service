@@ -1,0 +1,26 @@
+[Unit]
+Description=EMOSA OpenSync OVSDB adapter (simulation qualification)
+After=network.target
+
+[Service]
+Type=simple
+User=emosa
+Group=emosa
+WorkingDirectory=/opt/emosa
+ExecStart=/opt/emosa/.venv/bin/emosa serve --config /etc/emosa/adapter.json
+Restart=on-failure
+RestartSec=2
+StateDirectory=emosa
+RuntimeDirectory=emosa
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/emosa /run/emosa
+ReadOnlyPaths=/run/emosa-secrets
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

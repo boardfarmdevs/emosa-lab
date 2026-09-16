@@ -1,0 +1,7 @@
+emosa-lab,STOPPED
+prpl-build-0908,STOPPED
+prpl-build-0913,STOPPED
+prpl-build-0916,STOPPED
+prplmesh-0913,STOPPED
+prplmesh-0913-thin-builder,STOPPED
+prplmesh-0916,RUNNING

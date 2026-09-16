@@ -1,0 +1,9 @@
+    RUN: src/lib/osw/src/osw_confsync.c: osw_ut_func_osw_confsync_neigh_filter
+   PASS: src/lib/osw/src/osw_confsync.c: osw_ut_func_osw_confsync_neigh_filter
+    RUN: src/lib/osw/src/osw_confsync.c: osw_ut_func_osw_confsync_changed_fn
+   PASS: src/lib/osw/src/osw_confsync.c: osw_ut_func_osw_confsync_changed_fn
+    RUN: src/lib/osw/src/osw_confsync.c: osw_ut_func_osw_confsync_ut_two_drivers
+   PASS: src/lib/osw/src/osw_confsync.c: osw_ut_func_osw_confsync_ut_two_drivers
+
+
+UT: passed 3/3, failed 0

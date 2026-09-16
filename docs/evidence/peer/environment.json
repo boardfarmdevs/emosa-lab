@@ -1,0 +1,101 @@
+{
+  "kernel": "6.8.0-139-generic",
+  "lxd": "Client version: 5.21.7 LTS\nServer version: 5.21.7 LTS",
+  "uv": "uv 0.11.17 (x86_64-unknown-linux-gnu)",
+  "networks": [
+    {
+      "name": "em-mgmt",
+      "description": "",
+      "type": "bridge",
+      "managed": true,
+      "status": "Created",
+      "config": {
+        "ipv4.address": "10.219.166.1/24",
+        "ipv4.nat": "true",
+        "ipv6.address": "none"
+      },
+      "used_by": [
+        "/1.0/profiles/emosa-app",
+        "/1.0/instances/em-controller",
+        "/1.0/instances/emosa"
+      ],
+      "locations": [
+        "none"
+      ],
+      "project": "default"
+    },
+    {
+      "name": "em-protocol",
+      "description": "",
+      "type": "bridge",
+      "managed": true,
+      "status": "Created",
+      "config": {
+        "ipv4.address": "none",
+        "ipv6.address": "none"
+      },
+      "used_by": [
+        "/1.0/instances/em-controller",
+        "/1.0/instances/emosa",
+        "/1.0/profiles/emosa-app"
+      ],
+      "locations": [
+        "none"
+      ],
+      "project": "default"
+    },
+    {
+      "name": "lxdbr0",
+      "description": "",
+      "type": "bridge",
+      "managed": true,
+      "status": "Created",
+      "config": {
+        "ipv4.address": "10.237.63.1/24",
+        "ipv4.nat": "true",
+        "ipv6.address": "fd42:8f61:69c1:72f3::1/64",
+        "ipv6.nat": "true"
+      },
+      "used_by": [
+        "/1.0/profiles/default"
+      ],
+      "locations": [
+        "none"
+      ],
+      "project": "default"
+    },
+    {
+      "name": "lo",
+      "description": "",
+      "type": "loopback",
+      "managed": false,
+      "status": "",
+      "config": {},
+      "used_by": [],
+      "locations": null,
+      "project": "default"
+    },
+    {
+      "name": "enp5s0",
+      "description": "",
+      "type": "physical",
+      "managed": false,
+      "status": "",
+      "config": {},
+      "used_by": [],
+      "locations": null,
+      "project": "default"
+    },
+    {
+      "name": "hwsim0",
+      "description": "",
+      "type": "unknown",
+      "managed": false,
+      "status": "",
+      "config": {},
+      "used_by": [],
+      "locations": null,
+      "project": "default"
+    }
+  ]
+}

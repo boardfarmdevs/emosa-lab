@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "status": "blocked",
+  "upstream_commit": "78d8a7194d5e77635877cc456231e7be5cf03d68",
+  "selected_manager": "OWM/OW/OSW",
+  "kconfig": "r0-config-native.txt",
+  "kconfig_sha256": "de2aad267a01b60fcfc19f54aaba20448edc7decc51be06e98cf29a7eec99e14",
+  "build_host": "Ubuntu 22.04.5; reference Ubuntu 24.04 container not provisioned",
+  "python_build_dependencies": [
+    "kconfiglib==14.1.0",
+    "jinja2==3.1.6"
+  ],
+  "last_blocker": "protoc-c: No such file or directory",
+  "harness_revision": null,
+  "native_manager_executed": false,
+  "host_or_pod_networking_modified": false,
+  "platform_stubs_added": [],
+  "patches": [],
+  "tests": {
+    "N01": "blocked",
+    "N02": "blocked",
+    "N03": "blocked",
+    "N04": "partial: isolated build only"
+  },
+  "logs": [
+    "r0-build.log",
+    "r0-build-kconfiglib.log",
+    "r0-build-ovsdb.log",
+    "r0-build-jinja2.log"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "Device.WiFi.DataElements.Network.MultiAPSteeringSummaryStats.": {
+    "BTMAttempts": 0,
+    "BlacklistFailures": 0,
+    "BlacklistSuccesses": 0,
+    "BlacklistAttempts": 0,
+    "NoCandidateAPFailures": 0,
+    "BTMQueryResponses": 0,
+    "BTMSuccesses": 0,
+    "BTMFailures": 0
+  },
+  "Device.WiFi.DataElements.Network.X_PRPLWARE-COM_Group.": {},
+  "Device.WiFi.DataElements.Network.AccessPoint.": {},
+  "Device.WiFi.DataElements.Network.": {
+    "DeviceNumberOfEntries": 0,
+    "AccessPointNumberOfEntries": 0,
+    "MSCSDisallowedStaList": "",
+    "ID": "02:00:00:e0:00:01",
+    "ControllerID": "02:00:00:e0:00:01",
+    "Enable": true,
+    "SCSDisallowedStaList": "",
+    "TimeStamp": "2026-09-16T03:37:59.678379179Z"
+  },
+  "Device.WiFi.DataElements.Network.Device.": {}
+}

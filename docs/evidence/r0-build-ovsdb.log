@@ -1,0 +1,25 @@
+make: Entering directory '/home/rev/git/emosa/.cache/upstream/opensync'
+TARGET=native PLATFORM= VENDOR=
+Using configuration file: kconfig/targets/config_native
+Layers: .   
+create ovsdb
+ clean ovsdb in work/native-cc-ubuntu22.04-x86_64/rootfs//usr/opensync/etc
+ init ovsdb in work/native-cc-ubuntu22.04-x86_64/rootfs//usr/opensync/etc/conf.db.bck
+ hooks ovsdb in ovsdb
+  ovsdb transact: ovsdb/00_open_vswitch.json
+  ovsdb transact: ovsdb/05_awlan.json
+  ovsdb transact: ovsdb/10_awlan.redirector_addr.json.sh
+  ovsdb transact: ovsdb/10_awlan.version_matrix.json.sh
+  ovsdb transact: ovsdb/15_led_config.json.sh
+  ovsdb transact: ovsdb/20_kconfig.bridge_home_inet.json.sh
+  ovsdb transact: ovsdb/20_kconfig.eth_default.json.sh
+  ovsdb transact: ovsdb/20_kconfig.radio.json.sh
+  ovsdb transact: ovsdb/20_kconfig.sta_backhaul_inet.json.sh
+  ovsdb transact: ovsdb/40_node_services.json.jinja
+Traceback (most recent call last):
+  File "/home/rev/git/emosa/.cache/upstream/opensync/build/templates.py", line 68, in <module>
+    import jinja2
+ModuleNotFoundError: No module named 'jinja2'
+ERROR: ovsdb/40_node_services.json.jinja 1 ''
+make: *** [build/ovsdb.mk:114: ovsdb-create] Error 1
+make: Leaving directory '/home/rev/git/emosa/.cache/upstream/opensync'

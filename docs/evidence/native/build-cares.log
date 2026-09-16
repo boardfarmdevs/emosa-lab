@@ -1,0 +1,382 @@
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  libcares2
+The following NEW packages will be installed:
+  libc-ares-dev libcares2
+0 upgraded, 2 newly installed, 0 to remove and 7 not upgraded.
+Need to get 262 kB of archives.
+After this operation, 891 kB of additional disk space will be used.
+Get:1 http://archive.ubuntu.com/ubuntu noble/main amd64 libcares2 amd64 1.27.0-1.0ubuntu1 [73.7 kB]
+Get:2 http://archive.ubuntu.com/ubuntu noble/main amd64 libc-ares-dev amd64 1.27.0-1.0ubuntu1 [189 kB]
+Fetched 262 kB in 1s (317 kB/s)
+Selecting previously unselected package libcares2:amd64.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 43750 files and directories currently installed.)
+Preparing to unpack .../libcares2_1.27.0-1.0ubuntu1_amd64.deb ...
+Unpacking libcares2:amd64 (1.27.0-1.0ubuntu1) ...
+Selecting previously unselected package libc-ares-dev:amd64.
+Preparing to unpack .../libc-ares-dev_1.27.0-1.0ubuntu1_amd64.deb ...
+Unpacking libc-ares-dev:amd64 (1.27.0-1.0ubuntu1) ...
+Setting up libcares2:amd64 (1.27.0-1.0ubuntu1) ...
+Setting up libc-ares-dev:amd64 (1.27.0-1.0ubuntu1) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.9) ...
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+TARGET=native PLATFORM= VENDOR=
+Using configuration file: kconfig/targets/config_native
+Layers: .   
+ generate[version] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.version/version_defs.h
+ compile [version] src/lib/version/src/build_version.c
+ link    [version] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.version/libversion.a
+ link    [brctl_mac_learn] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.brctl_mac_learn/libbrctl_mac_learn.a
+ link    [common] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.common/libcommon.a
+ link    [daemon] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.daemon/libdaemon.a
+ link    [data_report_tags] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.data_report_tags/libdata_report_tags.a
+ link    [datapipeline] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.datapipeline/libdatapipeline.a
+ link    [ds] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.ds/libds.a
+ link    [ds_util] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.ds_util/libds_util.a
+ compile [evx] src/lib/evx/src/evx_debounce.c
+ compile [evx] src/lib/evx/src/evx_debounce_call.c
+ compile [evx] src/lib/evx/src/evx_ares.c
+ compile [execsh] src/lib/execsh/src/execsh.c
+ compile [execssl] src/lib/execssl/src/execssl.c
+ compile [hostap2] src/lib/hostap2/src/hostap_sock.c
+ compile [hostap2] src/lib/hostap2/src/hostap_conn.c
+ compile [hostap2] src/lib/hostap2/src/hostap_txq.c
+ compile [hostap2] src/lib/hostap2/src/hostap_ev.c
+ compile [hostap2] src/lib/hostap2/src/hostap_ev_ctrl.c
+ compile [hostap2] src/lib/hostap2/src/hostap_rq_task.c
+ compile [hostap2] src/lib/hostap2/src/hostap_wdog.c
+ compile [hostap2] src/lib/hostap2/src/hostap_sta.c
+ compile [ipc] src/lib/ipc/src/os_uds_link.c
+ compile [ipc] src/lib/ipc/src/os_mq_link.c
+ compile [ipc] src/lib/ipc/src/mque_link.c
+ compile [ipc] src/lib/ipc/src/udsock_link.c
+ compile [jsutil] src/lib/json_util/src/string.c
+ compile [jsutil] src/lib/json_util/src/memdbg.c
+ compile [jsutil] src/lib/json_util/src/future.c
+ compile [log] src/lib/log/src/log.c
+ compile [log] src/lib/log/src/log_syslog.c
+ compile [log] src/lib/log/src/log_stdout.c
+src/lib/log/src/log.c: In function ‘mlog’:
+src/lib/log/src/log.c:563:47: warning: ‘%s’ directive output may be truncated writing up to 3427 bytes into a region of size between 52 and 62 [-Wformat-truncation=]
+  563 |     snprintf(se_tag, sizeof(se_tag), "<%s>%.*s%s", se->name, scnt, spaces, tag);
+      |                                               ^~
+In file included from /usr/include/stdio.h:980,
+                 from src/lib/log/src/log.c:27:
+In function ‘snprintf’,
+    inlined from ‘mlog’ at src/lib/log/src/log.c:563:5:
+/usr/include/x86_64-linux-gnu/bits/stdio2.h:54:10: note: ‘__builtin___snprintf_chk’ output 3 or more bytes (assuming 3440) into a destination of size 64
+   54 |   return __builtin___snprintf_chk (__s, __n, __USE_FORTIFY_LEVEL - 1,
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   55 |                                    __glibc_objsize (__s), __fmt,
+      |                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   56 |                                    __va_arg_pack ());
+      |                                    ~~~~~~~~~~~~~~~~~
+ compile [log] src/lib/log/src/log_traceback.c
+ compile [log] src/lib/log/src/log_remote.c
+ compile [module] src/lib/module/src/module.c
+ compile [neigh_table] src/lib/neigh_table/src/neigh_table.c
+ compile [neigh_table] src/lib/neigh_table/src/neigh_src_ovsdb.c
+ compile [network_metadata] src/lib/network_metadata/src/network_metadata.c
+ compile [network_metadata] src/lib/network_metadata/src/network_metadata_report.c
+ compile [network_metadata] src/lib/network_metadata/src/network_metadata_utils.c
+ compile [nf_utils] src/lib/nf_utils/src/nf_util_neigh.c
+ compile [nf_utils] src/lib/nf_utils/src/nf_queue.c
+ compile [nf_utils] src/lib/nf_utils/src/nf_conntrack_stubs.c
+ compile [nl] src/lib/nl/src/nl_cmd.c
+ compile [nl] src/lib/nl/src/nl_cmd_task.c
+ compile [nl] src/lib/nl/src/nl_conn.c
+ compile [nl] src/lib/nl/src/nl_ev.c
+ compile [nl] src/lib/nl/src/nl_80211.c
+ compile [objmfs] src/lib/objmfs/src/objmfs.c
+ compile [osa] src/lib/osa/src/os_backtrace.c
+ compile [osa] src/lib/osa/src/os_socket.c
+ compile [osa] src/lib/osa/src/os_nif_linux.c
+ compile [osa] src/lib/osa/src/os_regex.c
+ compile [osa] src/lib/osa/src/os_proc.c
+ compile [osa] src/lib/osa/src/os_file_ops.c
+ compile [osa] src/lib/osa/src/os_file.c
+ compile [osa] src/lib/osa/src/os_random.c
+ compile [osa] src/lib/osa/src/os_assert.c
+ compile [osn] src/lib/osn/src/osn_types.c
+ compile [osn] src/lib/osn/src/osn_netif_linux.c
+ compile [osn] src/lib/osn/src/osn_ip_null.c
+ compile [osn] src/lib/osn/src/osn_route_null.c
+ compile [osn] src/lib/osn/src/osn_route6_linux.c
+ compile [osn] src/lib/osn/src/osn_dhcp_client_null.c
+ compile [osn] src/lib/osn/src/osn_dhcp_server_null.c
+ compile [osn] src/lib/osn/src/osn_upnp_null.c
+ compile [osn] src/lib/osn/src/osn_ip6_null.c
+ compile [osn] src/lib/osn/src/osn_dhcpv6_client_null.c
+ compile [osn] src/lib/osn/src/osn_dhcpv6_server_null.c
+ compile [osn] src/lib/osn/src/osn_ip6_radv_null.c
+ compile [osn] src/lib/osn/src/osn_pppoe_linux.c
+ compile [osn] src/lib/osn/src/osn_vlan_linux.c
+ compile [osn] src/lib/osn/src/osn_tap_linux.c
+ compile [osn] src/lib/osn/src/osn_qos_linux.c
+ compile [osn] src/lib/osn/src/osn_qdisc.c
+ compile [osn] src/lib/osn/src/osn_adaptive_qos_null.c
+ compile [osn] src/lib/osn/src/osn_fw_null.c
+ compile [osn] src/lib/osn/src/osn_fw_ebtables_full.c
+ compile [osn] src/lib/osn/src/osn_ipset_null.c
+ compile [osn] src/lib/osn/src/osn_lte_linux.c
+ compile [osn] src/lib/osn/src/osn_cell_modem.c
+ compile [osn] src/lib/osn/src/osn_cell_esim.c
+ compile [osn] src/lib/osn/src/osn_nflog_linux.c
+ compile [osn] src/lib/osn/src/osn_igmp_linux.c
+ compile [osn] src/lib/osn/src/osn_mld_linux.c
+ compile [osn] src/lib/osn/src/osn_vpn_linux.c
+ compile [osn] src/lib/osn/src/osn_ipsec_null.c
+ compile [osn] src/lib/osn/src/osn_tunnel_iface_linux.c
+ compile [osn] src/lib/osn/src/osn_tc_linux.c
+ compile [osn] src/lib/osn/src/osn_bridge_linux.c
+ compile [osn] src/lib/osn/src/osn_route_rule_linux.c
+ compile [osn] src/lib/osn/src/osn_map_linux.c
+ compile [osn] src/lib/osn/src/osn_map_v6plus.c
+ compile [osn] src/lib/osn/src/linux/dnsmasq6_server.c
+ compile [osn] src/lib/osn/src/linux/dnsmasq_server.c
+ compile [osn] src/lib/osn/src/linux/lnx_ip.c
+ compile [osn] src/lib/osn/src/linux/lnx_ip6.c
+ compile [osn] src/lib/osn/src/linux/lnx_netif.c
+ compile [osn] src/lib/osn/src/linux/lnx_netlink.c
+ compile [osn] src/lib/osn/src/linux/lnx_route.c
+ compile [osn] src/lib/osn/src/linux/lnx_routes.c
+ compile [osn] src/lib/osn/src/linux/lnx_route_state_nl.c
+ compile [osn] src/lib/osn/src/linux/lnx_route6.c
+ compile [osn] src/lib/osn/src/linux/lnx_route6_nl.c
+ compile [osn] src/lib/osn/src/linux/lnx_route6_state_nl.c
+ compile [osn] src/lib/osn/src/linux/mupnp_server.c
+ compile [osn] src/lib/osn/src/linux/mupnp_cfg_iptv.c
+ compile [osn] src/lib/osn/src/linux/mupnp_cfg_wan.c
+ compile [osn] src/lib/osn/src/linux/odhcp6_client.c
+ compile [osn] src/lib/osn/src/linux/udhcp_client.c
+ compile [osn] src/lib/osn/src/linux/lnx_pppoe.c
+ compile [osn] src/lib/osn/src/linux/lnx_vlan.c
+ compile [osn] src/lib/osn/src/linux/lnx_bridge.c
+ compile [osn] src/lib/osn/src/linux/lnx_tap.c
+ compile [osn] src/lib/osn/src/linux/lnx_qos.c
+ compile [osn] src/lib/osn/src/linux/lnx_qdisc.c
+ compile [osn] src/lib/osn/src/linux/lnx_lte.c
+ compile [osn] src/lib/osn/src/linux/lnx_igmp.c
+ compile [osn] src/lib/osn/src/linux/lnx_mld.c
+ compile [osn] src/lib/osn/src/linux/lnx_mcast_bridge.c
+ compile [osn] src/lib/osn/src/linux/lnx_tunnel_iface.c
+ compile [osn] src/lib/osn/src/linux/udhcp_const.c
+ compile [osn] src/lib/osn/src/linux/lnx_tc.c
+ compile [osn] src/lib/osn/src/linux/lnx_route_rule_iproute.c
+ compile [osn] src/lib/osn/src/linux/lnx_map.c
+ compile [osn] src/lib/osn/src/linux/lnx_map_mapt_nat46.c
+ compile [osn] src/lib/osn/src/linux/lnx_map_mape_ip6tnl.c
+ compile [osp] src/lib/osp/src/osp_unit_default.c
+ compile [osp] src/lib/osp/src/osp_led_null.c
+ compile [osp] src/lib/osp/src/osp_upgrade_null.c
+ compile [osp] src/lib/osp/src/osp_dl_curl.c
+ compile [osp] src/lib/osp/src/osp_reboot_pstore.c
+ compile [osp] src/lib/osp/src/osp_ps_psfs.c
+ compile [osp] src/lib/osp/src/osp_objm_objmfs.c
+ compile [osp] src/lib/osp/src/osp_sec_openssl.c
+ compile [osp] src/lib/osp/src/osp_sec_key.c
+src/lib/osp/src/osp_sec_key.c: In function ‘osp_sec_get_key’:
+src/lib/osp/src/osp_sec_key.c:53:2: warning: #warning "Default osp_sec_get_key() implementation used." "You should override it with your private version!" [-Wcpp]
+   53 | #warning "Default osp_sec_get_key() implementation used." \
+      |  ^~~~~~~
+ compile [osp] src/lib/osp/src/osp_l2switch_null.c
+ compile [osp] src/lib/osp/src/osp_l2uf_null.c
+ compile [osp] src/lib/osp/src/osp_ble_null.c
+ compile [osp] src/lib/osp/src/osp_otbr_null.c
+ compile [osp] src/lib/osp/src/osp_temp.c
+ compile [osp] src/lib/osp/src/osp_temp_srcs.c
+ compile [osp] src/lib/osp/src/osp_pki_ps.c
+ compile [osp] src/lib/osp/src/osp_tm_null.c
+ compile [ovsdb] src/lib/ovsdb/src/ovsdb.c
+ compile [ovsdb] src/lib/ovsdb/src/ovsdb_method.c
+ compile [ovsdb] src/lib/ovsdb/src/ovsdb_update.c
+ compile [ovsdb] src/lib/ovsdb/src/ovsdb_stream.c
+ compile [ovsdb] src/lib/ovsdb/src/ovsdb_sync.c
+ compile [ovsdb] src/lib/ovsdb/src/ovsdb_sync_api.c
+ compile [ovsdb] src/lib/ovsdb/src/ovsdb_table.c
+ compile [ovsdb] src/lib/ovsdb/src/ovsdb_cache.c
+ compile [ovsdb] src/lib/ovsdb/src/ovsdb_utils.c
+ compile [pjs] src/lib/pjs/src/pjs_types.c
+ compile [pjs] src/lib/pjs/src/pjs_basic.c
+ compile [pjs] src/lib/pjs/src/pjs_array.c
+ compile [pjs] src/lib/pjs/src/pjs_ovs_basic.c
+ compile [pjs] src/lib/pjs/src/pjs_ovs_set.c
+ compile [pjs] src/lib/pjs/src/pjs_ovs_map.c
+ compile [schema_tags] src/lib/policy_tags/src/policy_tags.c
+ compile [schema_tags] src/lib/policy_tags/src/policy_tag_groups.c
+ compile [schema_tags] src/lib/policy_tags/src/policy_tag_list.c
+ compile [schema_tags] src/lib/policy_tags/src/policy_tag_utils.c
+ compile [psfs] src/lib/psfs/src/psfs.c
+ compile [rq] src/lib/rq/src/rq.c
+ compile [rq] src/lib/rq/src/rq_nested.c
+ compile [target] src/lib/target/src/target_map.c
+ compile [target] src/lib/target/src/target_linux.c
+ compile [target] src/lib/target/src/target_mac_learn.c
+ compile [target] src/lib/target/src/target_om_hook.c
+ compile [target] src/lib/target/src/target_kconfig.c
+ compile [target] src/lib/target/src/target_native.c
+ compile [ustack] src/lib/ustack/src/net_header_parse.c
+ compile [qm_conn] src/qm/qm_conn/src/qm_conn.c
+ compile [telog] src/lib/timevt/src/timevt_server.c
+ compile [telog] src/lib/timevt/src/timevt_client.c
+ compile [telog] src/lib/timevt/src/timevt.c
+ compile [telog] src/lib/timevt/src/timevt_print.c
+ compile [telog] src/lib/timevt/src/timevt_msg_link.c
+ link    [evx] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.evx/libevx.a
+ link    [execsh] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.execsh/libexecsh.a
+ link    [execssl] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.execssl/libexecssl.a
+ link    [hostap2] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.hostap2/libhostap2.a
+ link    [ipc] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.ipc/libipc.a
+ link    [jsutil] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.json_util/libjsutil.a
+ link    [log] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.log/liblog.a
+ link    [module] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.module/libmodule.a
+ link    [neigh_table] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.neigh_table/libneigh_table.a
+ link    [network_metadata] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.network_metadata/libnetwork_metadata.a
+ link    [nf_utils] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.nf_utils/libnf_utils.a
+ link    [nl] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.nl/libnl.a
+ link    [objmfs] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.objmfs/libobjmfs.a
+ link    [osa] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.osa/libosa.a
+ link    [osn] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.osn/libosn.a
+ link    [osp] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.osp/libosp.a
+ link    [ovsdb] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.ovsdb/libovsdb.a
+ link    [pjs] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.pjs/libpjs.a
+ link    [schema_tags] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.policy_tags/libschema_tags.a
+ link    [psfs] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.psfs/libpsfs.a
+ link    [rq] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.rq/librq.a
+ link    [ustack] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.ustack/libustack.a
+ generate[target] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.target/target_impl.h
+ link    [qm_conn] work/native-gcc-ubuntu24.04-x86_64/obj/src.qm.qm_conn/libqm_conn.a
+ link    [telog] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.timevt/libtelog.a
+ compile [target] src/lib/target/src/target_stub.c
+ link    [target] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.target/libtarget.a
+ compile [osw] src/lib/osw/src/osw_thread.c
+ compile [osw] src/lib/osw/src/osw_ut.c
+ compile [osw] src/lib/osw/src/osw_drv.c
+ compile [osw] src/lib/osw/src/osw_drv_dummy.c
+ compile [osw] src/lib/osw/src/osw_drv_target.c
+ compile [osw] src/lib/osw/src/osw_state.c
+ compile [osw] src/lib/osw/src/osw_conf.c
+ compile [osw] src/lib/osw/src/osw_confsync.c
+ compile [osw] src/lib/osw/src/osw_types.c
+ compile [osw] src/lib/osw/src/osw_bss_map.c
+ compile [osw] src/lib/osw/src/osw_mux.c
+ compile [osw] src/lib/osw/src/osw_tlv.c
+ compile [osw] src/lib/osw/src/osw_tlv_merge.c
+ compile [osw] src/lib/osw/src/osw_module.c
+ compile [osw] src/lib/osw/src/osw_sta_chan_cap.c
+ compile [osw] src/lib/osw/src/osw_stats_defs.c
+ compile [osw] src/lib/osw/src/osw_stats.c
+ compile [osw] src/lib/osw/src/osw_scan_sched.c
+ compile [osw] src/lib/osw/src/osw_sta_cache.c
+ compile [osw] src/lib/osw/src/osw_btm.c
+ compile [osw] src/lib/osw/src/osw_rrm_meas.c
+ compile [osw] src/lib/osw/src/osw_throttle.c
+ compile [osw] src/lib/osw/src/osw_time.c
+ compile [osw] src/lib/osw/src/osw_timer.c
+ compile [osw] src/lib/osw/src/osw_util.c
+ compile [osw] src/lib/osw/src/osw_ev.c
+ compile [osw] src/lib/osw/src/osw_cqm.c
+ compile [osw] src/lib/osw/src/osw_hostap_conf.c
+ compile [osw] src/lib/osw/src/osw_hostap_common.c
+ compile [osw] src/lib/osw/src/osw_wpas_conf.c
+ compile [osw] src/lib/osw/src/osw_hostap.c
+ compile [osw] src/lib/osw/src/osw_rrm.c
+ compile [osw] src/lib/osw/src/osw_rrm_bcn_meas_rpt_cache.c
+ compile [osw] src/lib/osw/src/osw_token.c
+ compile [osw] src/lib/osw/src/osw_l2uf.c
+ compile [osw] src/lib/osw/src/osw_defer_vif_down.c
+ compile [osw] src/lib/osw/src/osw_diag.c
+ compile [osw] src/lib/osw/src/osw_mld_vif.c
+ compile [osw] src/lib/osw/src/osw_etc.c
+ compile [osw] src/lib/osw/src/osw_phy_chan_observer.c
+ compile [osw] src/lib/osw/src/osw_sta_assoc.c
+ compile [osw] src/lib/osw/src/osw_drv_nl80211.c
+ link    [osw] work/native-gcc-ubuntu24.04-x86_64/lib/libosw.so
+ compile [ow] src/lib/ow/src/ow_core.c
+ compile [ow] src/lib/ow/src/ow_core_thread.c
+ compile [ow] src/lib/ow/src/ow_conf.c
+ compile [ow] src/lib/ow/src/ow_conf_barrier.c
+ compile [ow] src/lib/ow/src/ow_frm_inject_file.c
+ compile [ow] src/lib/ow/src/ow_ovsdb.c
+ compile [ow] src/lib/ow/src/ow_ovsdb_ms.c
+ compile [ow] src/lib/ow/src/ow_ovsdb_cconf.c
+ compile [ow] src/lib/ow/src/ow_ovsdb_stats.c
+ compile [ow] src/lib/ow/src/ow_ovsdb_dfs_backup.c
+ compile [ow] src/lib/ow/src/ow_ovsdb_csa.c
+ compile [ow] src/lib/ow/src/ow_ovsdb_wps.c
+ compile [ow] src/lib/ow/src/ow_sigalrm.c
+ compile [ow] src/lib/ow/src/ow_ovsdb_steer.c
+ compile [ow] src/lib/ow/src/ow_ovsdb_mld_onboard.c
+ compile [ow] src/lib/ow/src/ow_steer.c
+ compile [ow] src/lib/ow/src/ow_steer_sta.c
+ compile [ow] src/lib/ow/src/ow_steer_candidate_list.c
+ compile [ow] src/lib/ow/src/ow_steer_policy.c
+ compile [ow] src/lib/ow/src/ow_steer_policy_stack.c
+ compile [ow] src/lib/ow/src/ow_steer_policy_bss_filter.c
+ compile [ow] src/lib/ow/src/ow_steer_policy_chan_cap.c
+ compile [ow] src/lib/ow/src/ow_steer_policy_force_kick.c
+ compile [ow] src/lib/ow/src/ow_steer_policy_pre_assoc.c
+ compile [ow] src/lib/ow/src/ow_acl_kick.c
+ compile [ow] src/lib/ow/src/ow_demo_stats.c
+ compile [ow] src/lib/ow/src/ow_stats_conf.c
+ compile [ow] src/lib/ow/src/ow_stats_conf_file.c
+ compile [ow] src/lib/ow/src/ow_ev_timer.c
+In file included from /usr/include/stdio.h:980,
+                 from src/lib/osa/inc/osa_assert.h:34,
+                 from src/lib/common/inc/memutil.h:32,
+                 from src/lib/ow/src/ow_stats_conf.c:29:
+In function ‘snprintf’,
+    inlined from ‘ow_stats_conf_sub_report_bss_scan’ at src/lib/ow/src/ow_stats_conf.c:724:5,
+    inlined from ‘ow_stats_conf_sub_report’ at src/lib/ow/src/ow_stats_conf.c:959:34,
+    inlined from ‘ow_stats_conf_sub_report_cb’ at src/lib/ow/src/ow_stats_conf.c:971:5:
+/usr/include/x86_64-linux-gnu/bits/stdio2.h:54:10: warning: ‘__builtin___snprintf_chk’ specified bound 129 exceeds destination size 18 [-Wstringop-overflow=]
+   54 |   return __builtin___snprintf_chk (__s, __n, __USE_FORTIFY_LEVEL - 1,
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   55 |                                    __glibc_objsize (__s), __fmt,
+      |                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   56 |                                    __va_arg_pack ());
+      |                                    ~~~~~~~~~~~~~~~~~
+ compile [ow] src/lib/ow/src/ow_steer_policy_snr_level.c
+ compile [ow] src/lib/ow/src/ow_steer_policy_snr_xing.c
+ compile [ow] src/lib/ow/src/ow_steer_executor_action.c
+ compile [ow] src/lib/ow/src/ow_steer_executor.c
+ compile [ow] src/lib/ow/src/ow_steer_executor_action_acl.c
+ compile [ow] src/lib/ow/src/ow_steer_executor_action_deauth.c
+ compile [ow] src/lib/ow/src/ow_steer_executor_action_btm.c
+ compile [ow] src/lib/ow/src/ow_sta_channel_override.c
+ compile [ow] src/lib/ow/src/ow_sta_log_snr.c
+ compile [ow] src/lib/ow/src/ow_state_watchdog.c
+ compile [ow] src/lib/ow/src/ow_dfs_backup.c
+ compile [ow] src/lib/ow/src/ow_dfs_chan_clip.c
+ compile [ow] src/lib/ow/src/ow_wps.c
+ compile [ow] src/lib/ow/src/ow_xphy_csa_conf.c
+ compile [ow] src/lib/ow/src/ow_xphy_csa_ovsdb.c
+ compile [ow] src/lib/ow/src/ow_steer_bm.c
+ compile [ow] src/lib/ow/src/ow_steer_bm_policy_hwm_2g.c
+ compile [ow] src/lib/ow/src/ow_steer_candidate_assessor.c
+ compile [ow] src/lib/ow/src/ow_steer_policy_btm_response.c
+ compile [ow] src/lib/ow/src/ow_l2uf_kick.c
+ compile [ow] src/lib/ow/src/ow_steer_local_neigh.c
+ compile [ow] src/lib/ow/src/ow_mbss_prefer_nonhidden.c
+ compile [ow] src/lib/ow/src/ow_telog.c
+ compile [ow] src/lib/ow/src/ow_radar_next_channel.c
+In function ‘ow_steer_bm_sigusr1_dump_stas’,
+    inlined from ‘ow_steer_bm_sigusr1_dump’ at src/lib/ow/src/ow_steer_bm.c:6175:5:
+src/lib/ow/src/ow_steer_bm.c:84:5: error: ‘%s’ directive argument is null [-Werror=format-overflow=]
+   84 |     "ow: steer: bm: " fmt, ##__VA_ARGS__
+      |     ^~~~~~~~~~~~~~~~~
+src/lib/ow/src/ow_steer_bm.c:5234:36: note: in expansion of macro ‘LOG_PREFIX’
+ 5234 |         osw_diag_pipe_writef(pipe, LOG_PREFIX("      id: %s", group_id));
+      |                                    ^~~~~~~~~~
+cc1: all warnings being treated as errors
+make: *** [build/unit-build.mk:620: work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.ow/src/lib/ow/src/ow_steer_bm.o] Error 1

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "component_runtime_verified_wire_hardware_not_qualified",
+  "remote": "ubuntu:",
+  "release": "24.04",
+  "architecture": "x86_64",
+  "serial": "20260911",
+  "vm_fingerprint": "805f57b68c5eac9ef90fc2d0c435e01ad15ba98d57054b83ad83dac2ebc2f1e5",
+  "container_fingerprint": "cc6b6e557372769f5b0d0945d61f200360818a408f9d0dddadbbab584d2fb414",
+  "evidence": "lxc image info ubuntu:24.04 [--vm]",
+  "image_exports": [
+    {
+      "kind": "base_container_split_export",
+      "local_path": ".cache/peer-evidence/ubuntu24-container",
+      "sha256": "3b437480022ddaa2860043d6b6ef41189c989de72d9308513ef26f1a5c5a1229",
+      "size": 408
+    },
+    {
+      "kind": "base_container_split_export",
+      "local_path": ".cache/peer-evidence/ubuntu24-container.root",
+      "sha256": "49348feddff03cdbaac97f24497b872752be64cdddff44ebac793c649c6b02bd",
+      "size": 279617536
+    }
+  ],
+  "packages_qualified": true,
+  "qualification_scope": "Ubuntu 24.04 Python component tests and VM-driven semantic OVSDB scenarios only; peer baseline separate; no wire/hardware qualification",
+  "runtime_evidence": "docs/evidence/peer/qualification-summary.json",
+  "export_combined_sha256": "cc6b6e557372769f5b0d0945d61f200360818a408f9d0dddadbbab584d2fb414",
+  "runtime_image_exports": []
+}

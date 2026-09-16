@@ -1,0 +1,18 @@
+config:
+  security.privileged: "false"
+  limits.cpu: "1"
+  limits.memory: 768MiB
+description: EMOSA Ubuntu application endpoints inside the dedicated lab VM
+devices:
+  root:
+    type: disk
+    path: /
+    pool: default
+  eth0:
+    type: nic
+    name: eth0
+    network: em-mgmt
+  em0:
+    type: nic
+    name: em0
+    network: em-protocol

@@ -1,0 +1,612 @@
+{
+  "schema_version": 1,
+  "backend_mode": "opensync-native",
+  "initiating_interface": "semantic",
+  "interoperability": "not_evaluated",
+  "physical_pod": "not_connected",
+  "probe_passed": false,
+  "baseline": {
+    "config": {
+      "ssid": "initial-network",
+      "enabled": true,
+      "mode": "ap",
+      "security_mode": "wpa2-psk",
+      "credential_fingerprint": "a958ea232b23d57f2ef1015f21b81d6abb0a19c58f4acf9651153b6364b848fd"
+    },
+    "observed": {
+      "pod_id": "pod-1",
+      "resource_id": "bss-1",
+      "values": {
+        "ssid": "initial-network",
+        "enabled": true,
+        "mode": "ap",
+        "security_mode": "wpa2-psk",
+        "credential_fingerprint": "a958ea232b23d57f2ef1015f21b81d6abb0a19c58f4acf9651153b6364b848fd"
+      },
+      "source": "ovsdb",
+      "backend_mode": "opensync-native",
+      "session_generation": 1,
+      "received_at": "2026-09-16T04:58:31.365Z",
+      "fresh": true,
+      "provenance": "native-OWM:Wifi_VIF_State:simulated-OSW-dummy-feedback",
+      "source_time": null,
+      "revision": 4
+    },
+    "ready": true,
+    "generation": 1,
+    "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16"
+  },
+  "mixed_or_unobserved_cipher_rejections": 12,
+  "applied": {
+    "operation_id": "99da74a1-1986-4193-8736-d371a1dfb7ef",
+    "run_id": "path-djiwxing",
+    "request_source": "native-r0-semantic-probe",
+    "initiating_interface": "semantic",
+    "intent": {
+      "pod_id": "pod-1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1",
+      "ssid": "native-applied",
+      "secret_ref": "test-key",
+      "enabled": true,
+      "security_mode": "wpa2-psk"
+    },
+    "intent_fingerprint": "ad0be728253d2e87327c979d5d4a6859a45d0fefe38cd8c9c632e8343534c28f",
+    "idempotency_key": "native-applied",
+    "created_at": "2026-09-16T04:58:31.365Z",
+    "updated_at": "2026-09-16T04:58:32.036Z",
+    "deadline_at": "2026-09-16T04:58:51.365000+00:00",
+    "schema_version": 1,
+    "state": "OBSERVED_APPLIED",
+    "reason": null,
+    "mapping_version": "synthetic-existing-bss-v1",
+    "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+    "attempts": [
+      {
+        "attempt_id": "b3fd6526-7979-4db3-a775-45e6c58acb9b",
+        "transaction_id": "5851bc6d-416c-4bd6-a7f5-bc285c69cc82",
+        "session_generation": 1,
+        "prepared_at": "2026-09-16T04:58:31.388Z"
+      }
+    ],
+    "commit_evidence": {
+      "attribution": "reply",
+      "transaction_validated": true,
+      "transaction_id": "5851bc6d-416c-4bd6-a7f5-bc285c69cc82",
+      "session_generation": 1,
+      "results": [
+        {},
+        {},
+        {
+          "count": 1
+        },
+        {
+          "count": 1
+        }
+      ]
+    },
+    "application_predicate": "fresh-qualified-existing-ap-ssid-security-v1",
+    "application_evidence": {
+      "fresh": true,
+      "predicate_satisfied": true,
+      "generation": 1,
+      "revision": 6,
+      "received_at": "2026-09-16T04:58:32.025Z",
+      "source": "ovsdb",
+      "provenance": "native-OWM:Wifi_VIF_State:simulated-OSW-dummy-feedback"
+    },
+    "changed": true,
+    "deadline_elapsed": false,
+    "original_outcome": null,
+    "late_resolution": null,
+    "client_verification": {
+      "verdict": "unknown"
+    },
+    "blocked_for_resubmission": false,
+    "plan": {
+      "mapping": "synthetic-existing-bss-v1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1",
+      "fields": [
+        "ssid",
+        "wpa_psks[key]"
+      ],
+      "ssid": "native-applied",
+      "secret_ref": "test-key",
+      "guard": "VIF fields, security and radio/VIF references",
+      "shared_radio_actuation": false
+    },
+    "timings": {
+      "VALIDATED": {
+        "seconds_since_request": 0.001621751999891785,
+        "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+      },
+      "SUBMITTED": {
+        "seconds_since_request": 0.007485793999876478,
+        "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+      },
+      "CONFIG_COMMITTED": {
+        "seconds_since_request": 0.01713106399984099,
+        "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+      },
+      "OBSERVED_APPLIED": {
+        "seconds_since_request": 0.6555038320000222,
+        "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+      }
+    }
+  },
+  "withheld": {
+    "operation_id": "2760c4aa-6110-45e2-a8ae-70134bedda2b",
+    "run_id": "path-djiwxing",
+    "request_source": "native-r0-semantic-probe",
+    "initiating_interface": "semantic",
+    "intent": {
+      "pod_id": "pod-1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1",
+      "ssid": "native-withheld",
+      "secret_ref": "test-key",
+      "enabled": true,
+      "security_mode": "wpa2-psk"
+    },
+    "intent_fingerprint": "1e1423fab733133beea9c0acf41ac725efc455f3f84b59efe0c1f23eef0a46db",
+    "idempotency_key": "native-withheld",
+    "created_at": "2026-09-16T04:58:32.043Z",
+    "updated_at": "2026-09-16T04:58:34.099Z",
+    "deadline_at": "2026-09-16T04:58:34.043000+00:00",
+    "schema_version": 1,
+    "state": "TIMED_OUT",
+    "reason": "APPLY_TIMEOUT",
+    "mapping_version": "synthetic-existing-bss-v1",
+    "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+    "attempts": [
+      {
+        "attempt_id": "2dd29894-7098-44be-923c-1f2de8b109c0",
+        "transaction_id": "900df8d8-091e-456d-9c7b-17182ccef769",
+        "session_generation": 1,
+        "prepared_at": "2026-09-16T04:58:32.055Z"
+      }
+    ],
+    "commit_evidence": {
+      "attribution": "reply",
+      "transaction_validated": true,
+      "transaction_id": "900df8d8-091e-456d-9c7b-17182ccef769",
+      "session_generation": 1,
+      "results": [
+        {},
+        {},
+        {
+          "count": 1
+        },
+        {
+          "count": 1
+        }
+      ]
+    },
+    "application_predicate": "fresh-qualified-existing-ap-ssid-security-v1",
+    "application_evidence": null,
+    "changed": true,
+    "deadline_elapsed": true,
+    "original_outcome": "CONFIG_COMMITTED",
+    "late_resolution": null,
+    "client_verification": {
+      "verdict": "unknown"
+    },
+    "blocked_for_resubmission": false,
+    "plan": {
+      "mapping": "synthetic-existing-bss-v1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1",
+      "fields": [
+        "ssid",
+        "wpa_psks[key]"
+      ],
+      "ssid": "native-withheld",
+      "secret_ref": "test-key",
+      "guard": "VIF fields, security and radio/VIF references",
+      "shared_radio_actuation": false
+    },
+    "timings": {
+      "VALIDATED": {
+        "seconds_since_request": 0.0012696030000824976,
+        "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+      },
+      "SUBMITTED": {
+        "seconds_since_request": 0.006449974000133807,
+        "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+      },
+      "CONFIG_COMMITTED": {
+        "seconds_since_request": 0.015576767000084146,
+        "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+      },
+      "TIMED_OUT": {
+        "seconds_since_request": 2.0508302190000904,
+        "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+      }
+    }
+  },
+  "withheld_observation": {
+    "pod_id": "pod-1",
+    "resource_id": "bss-1",
+    "values": {
+      "ssid": "native-applied",
+      "enabled": true,
+      "mode": "ap",
+      "security_mode": "wpa2-psk",
+      "credential_fingerprint": "a325b781b3857aa890440a3fa9b328f665bc85adfebab4af1a872674b3393143"
+    },
+    "source": "ovsdb",
+    "backend_mode": "opensync-native",
+    "session_generation": 1,
+    "received_at": "2026-09-16T04:58:34.109Z",
+    "fresh": true,
+    "provenance": "native-OWM:Wifi_VIF_State:simulated-OSW-dummy-feedback",
+    "source_time": null,
+    "revision": 7
+  },
+  "released_observation": {
+    "pod_id": "pod-1",
+    "resource_id": "bss-1",
+    "values": {
+      "ssid": "native-withheld",
+      "enabled": true,
+      "mode": "ap",
+      "security_mode": "wpa2-psk",
+      "credential_fingerprint": "a325b781b3857aa890440a3fa9b328f665bc85adfebab4af1a872674b3393143"
+    },
+    "source": "ovsdb",
+    "backend_mode": "opensync-native",
+    "session_generation": 1,
+    "received_at": "2026-09-16T04:58:34.314Z",
+    "fresh": true,
+    "provenance": "native-OWM:Wifi_VIF_State:simulated-OSW-dummy-feedback",
+    "source_time": null,
+    "revision": 8
+  },
+  "disconnected": {
+    "config": {
+      "ssid": "native-withheld",
+      "enabled": true,
+      "mode": "ap",
+      "security_mode": "wpa2-psk",
+      "credential_fingerprint": "a325b781b3857aa890440a3fa9b328f665bc85adfebab4af1a872674b3393143"
+    },
+    "observed": {
+      "pod_id": "pod-1",
+      "resource_id": "bss-1",
+      "values": {
+        "ssid": "native-withheld",
+        "enabled": true,
+        "mode": "ap",
+        "security_mode": "wpa2-psk",
+        "credential_fingerprint": "a325b781b3857aa890440a3fa9b328f665bc85adfebab4af1a872674b3393143"
+      },
+      "source": "ovsdb",
+      "backend_mode": "opensync-native",
+      "session_generation": 1,
+      "received_at": "2026-09-16T04:58:34.315Z",
+      "fresh": false,
+      "provenance": "native-OWM:Wifi_VIF_State:simulated-OSW-dummy-feedback",
+      "source_time": null,
+      "revision": 8
+    },
+    "ready": false,
+    "generation": 1,
+    "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16"
+  },
+  "resynchronized": {
+    "config": {
+      "ssid": "native-withheld",
+      "enabled": true,
+      "mode": "ap",
+      "security_mode": "wpa2-psk",
+      "credential_fingerprint": "a325b781b3857aa890440a3fa9b328f665bc85adfebab4af1a872674b3393143"
+    },
+    "observed": {
+      "pod_id": "pod-1",
+      "resource_id": "bss-1",
+      "values": {
+        "ssid": "native-withheld",
+        "enabled": true,
+        "mode": "ap",
+        "security_mode": "wpa2-psk",
+        "credential_fingerprint": "a325b781b3857aa890440a3fa9b328f665bc85adfebab4af1a872674b3393143"
+      },
+      "source": "ovsdb",
+      "backend_mode": "opensync-native",
+      "session_generation": 2,
+      "received_at": "2026-09-16T04:58:42.024Z",
+      "fresh": true,
+      "provenance": "native-OWM:Wifi_VIF_State:simulated-OSW-dummy-feedback",
+      "source_time": null,
+      "revision": 9
+    },
+    "ready": true,
+    "generation": 2,
+    "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16"
+  },
+  "manager_after_database_restart_exit_code": null,
+  "failure": {
+    "type": "AssertionError",
+    "message": "Native path did not converge before the probe deadline"
+  },
+  "manager_final_exit_code": -15,
+  "write_count": 3,
+  "operations_at_end": [
+    {
+      "operation_id": "99da74a1-1986-4193-8736-d371a1dfb7ef",
+      "run_id": "path-djiwxing",
+      "request_source": "native-r0-semantic-probe",
+      "initiating_interface": "semantic",
+      "intent": {
+        "pod_id": "pod-1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "ssid": "native-applied",
+        "secret_ref": "test-key",
+        "enabled": true,
+        "security_mode": "wpa2-psk"
+      },
+      "intent_fingerprint": "ad0be728253d2e87327c979d5d4a6859a45d0fefe38cd8c9c632e8343534c28f",
+      "idempotency_key": "native-applied",
+      "created_at": "2026-09-16T04:58:31.365Z",
+      "updated_at": "2026-09-16T04:58:32.036Z",
+      "deadline_at": "2026-09-16T04:58:51.365000+00:00",
+      "schema_version": 1,
+      "state": "OBSERVED_APPLIED",
+      "reason": null,
+      "mapping_version": "synthetic-existing-bss-v1",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "attempts": [
+        {
+          "attempt_id": "b3fd6526-7979-4db3-a775-45e6c58acb9b",
+          "transaction_id": "5851bc6d-416c-4bd6-a7f5-bc285c69cc82",
+          "session_generation": 1,
+          "prepared_at": "2026-09-16T04:58:31.388Z"
+        }
+      ],
+      "commit_evidence": {
+        "attribution": "reply",
+        "transaction_validated": true,
+        "transaction_id": "5851bc6d-416c-4bd6-a7f5-bc285c69cc82",
+        "session_generation": 1,
+        "results": [
+          {},
+          {},
+          {
+            "count": 1
+          },
+          {
+            "count": 1
+          }
+        ]
+      },
+      "application_predicate": "fresh-qualified-existing-ap-ssid-security-v1",
+      "application_evidence": {
+        "fresh": true,
+        "predicate_satisfied": true,
+        "generation": 1,
+        "revision": 6,
+        "received_at": "2026-09-16T04:58:32.025Z",
+        "source": "ovsdb",
+        "provenance": "native-OWM:Wifi_VIF_State:simulated-OSW-dummy-feedback"
+      },
+      "changed": true,
+      "deadline_elapsed": false,
+      "original_outcome": null,
+      "late_resolution": null,
+      "client_verification": {
+        "verdict": "unknown"
+      },
+      "blocked_for_resubmission": false,
+      "plan": {
+        "mapping": "synthetic-existing-bss-v1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "fields": [
+          "ssid",
+          "wpa_psks[key]"
+        ],
+        "ssid": "native-applied",
+        "secret_ref": "test-key",
+        "guard": "VIF fields, security and radio/VIF references",
+        "shared_radio_actuation": false
+      },
+      "timings": {
+        "VALIDATED": {
+          "seconds_since_request": 0.001621751999891785,
+          "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+        },
+        "SUBMITTED": {
+          "seconds_since_request": 0.007485793999876478,
+          "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+        },
+        "CONFIG_COMMITTED": {
+          "seconds_since_request": 0.01713106399984099,
+          "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+        },
+        "OBSERVED_APPLIED": {
+          "seconds_since_request": 0.6555038320000222,
+          "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+        }
+      }
+    },
+    {
+      "operation_id": "2760c4aa-6110-45e2-a8ae-70134bedda2b",
+      "run_id": "path-djiwxing",
+      "request_source": "native-r0-semantic-probe",
+      "initiating_interface": "semantic",
+      "intent": {
+        "pod_id": "pod-1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "ssid": "native-withheld",
+        "secret_ref": "test-key",
+        "enabled": true,
+        "security_mode": "wpa2-psk"
+      },
+      "intent_fingerprint": "1e1423fab733133beea9c0acf41ac725efc455f3f84b59efe0c1f23eef0a46db",
+      "idempotency_key": "native-withheld",
+      "created_at": "2026-09-16T04:58:32.043Z",
+      "updated_at": "2026-09-16T04:58:34.099Z",
+      "deadline_at": "2026-09-16T04:58:34.043000+00:00",
+      "schema_version": 1,
+      "state": "TIMED_OUT",
+      "reason": "APPLY_TIMEOUT",
+      "mapping_version": "synthetic-existing-bss-v1",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "attempts": [
+        {
+          "attempt_id": "2dd29894-7098-44be-923c-1f2de8b109c0",
+          "transaction_id": "900df8d8-091e-456d-9c7b-17182ccef769",
+          "session_generation": 1,
+          "prepared_at": "2026-09-16T04:58:32.055Z"
+        }
+      ],
+      "commit_evidence": {
+        "attribution": "reply",
+        "transaction_validated": true,
+        "transaction_id": "900df8d8-091e-456d-9c7b-17182ccef769",
+        "session_generation": 1,
+        "results": [
+          {},
+          {},
+          {
+            "count": 1
+          },
+          {
+            "count": 1
+          }
+        ]
+      },
+      "application_predicate": "fresh-qualified-existing-ap-ssid-security-v1",
+      "application_evidence": null,
+      "changed": true,
+      "deadline_elapsed": true,
+      "original_outcome": "CONFIG_COMMITTED",
+      "late_resolution": null,
+      "client_verification": {
+        "verdict": "unknown"
+      },
+      "blocked_for_resubmission": false,
+      "plan": {
+        "mapping": "synthetic-existing-bss-v1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "fields": [
+          "ssid",
+          "wpa_psks[key]"
+        ],
+        "ssid": "native-withheld",
+        "secret_ref": "test-key",
+        "guard": "VIF fields, security and radio/VIF references",
+        "shared_radio_actuation": false
+      },
+      "timings": {
+        "VALIDATED": {
+          "seconds_since_request": 0.0012696030000824976,
+          "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+        },
+        "SUBMITTED": {
+          "seconds_since_request": 0.006449974000133807,
+          "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+        },
+        "CONFIG_COMMITTED": {
+          "seconds_since_request": 0.015576767000084146,
+          "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+        },
+        "TIMED_OUT": {
+          "seconds_since_request": 2.0508302190000904,
+          "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+        }
+      }
+    },
+    {
+      "operation_id": "f168a4ff-3ef0-4067-b04e-4183520b4a1f",
+      "run_id": "path-djiwxing",
+      "request_source": "native-r0-semantic-probe",
+      "initiating_interface": "semantic",
+      "intent": {
+        "pod_id": "pod-1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "ssid": "native-reconnected",
+        "secret_ref": "test-key",
+        "enabled": true,
+        "security_mode": "wpa2-psk"
+      },
+      "intent_fingerprint": "108e7e561ceee6157ea42424251b27c15baa87041b970176094f45554d291e34",
+      "idempotency_key": "native-reconnected",
+      "created_at": "2026-09-16T04:58:42.024Z",
+      "updated_at": "2026-09-16T04:58:42.051Z",
+      "deadline_at": "2026-09-16T04:59:02.024000+00:00",
+      "schema_version": 1,
+      "state": "CONFIG_COMMITTED",
+      "reason": null,
+      "mapping_version": "synthetic-existing-bss-v1",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "attempts": [
+        {
+          "attempt_id": "b64846f8-2cef-4ae8-bd16-f0ff4d125205",
+          "transaction_id": "417dec94-15c1-4bf4-a6e1-5bab8ce055f8",
+          "session_generation": 2,
+          "prepared_at": "2026-09-16T04:58:42.042Z"
+        }
+      ],
+      "commit_evidence": {
+        "attribution": "reply",
+        "transaction_validated": true,
+        "transaction_id": "417dec94-15c1-4bf4-a6e1-5bab8ce055f8",
+        "session_generation": 2,
+        "results": [
+          {},
+          {},
+          {
+            "count": 1
+          },
+          {
+            "count": 1
+          }
+        ]
+      },
+      "application_predicate": "fresh-qualified-existing-ap-ssid-security-v1",
+      "application_evidence": null,
+      "changed": true,
+      "deadline_elapsed": false,
+      "original_outcome": null,
+      "late_resolution": null,
+      "client_verification": {
+        "verdict": "unknown"
+      },
+      "blocked_for_resubmission": false,
+      "plan": {
+        "mapping": "synthetic-existing-bss-v1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "fields": [
+          "ssid",
+          "wpa_psks[key]"
+        ],
+        "ssid": "native-reconnected",
+        "secret_ref": "test-key",
+        "guard": "VIF fields, security and radio/VIF references",
+        "shared_radio_actuation": false
+      },
+      "timings": {
+        "VALIDATED": {
+          "seconds_since_request": 0.001481223999917347,
+          "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+        },
+        "SUBMITTED": {
+          "seconds_since_request": 0.007228972999882899,
+          "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+        },
+        "CONFIG_COMMITTED": {
+          "seconds_since_request": 0.015811082000027454,
+          "process_clock_id": "5c75f236-bfa1-4d15-9fe9-cf4ecd165e6a"
+        }
+      }
+    }
+  ],
+  "maximum_child_rss_kib": 37708
+}

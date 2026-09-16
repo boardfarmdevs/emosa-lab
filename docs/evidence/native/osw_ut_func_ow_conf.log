@@ -1,0 +1,11 @@
+    RUN: src/lib/ow/src/ow_conf_barrier.c: osw_ut_func_ow_conf_barrier
+   PASS: src/lib/ow/src/ow_conf_barrier.c: osw_ut_func_ow_conf_barrier
+    RUN: src/lib/ow/src/ow_conf.c: osw_ut_func_ow_conf_ut_is_set
+   PASS: src/lib/ow/src/ow_conf.c: osw_ut_func_ow_conf_ut_is_set
+    RUN: src/lib/ow/src/ow_conf.c: osw_ut_func_ow_conf_ut_vif_enabled
+   PASS: src/lib/ow/src/ow_conf.c: osw_ut_func_ow_conf_ut_vif_enabled
+    RUN: src/lib/ow/src/ow_conf.c: osw_ut_func_ow_conf_ut_phy_enabled
+   PASS: src/lib/ow/src/ow_conf.c: osw_ut_func_ow_conf_ut_phy_enabled
+
+
+UT: passed 4/4, failed 0

@@ -1,0 +1,38 @@
+architecture: x86_64
+config:
+  image.architecture: amd64
+  image.description: ubuntu 24.04 LTS amd64 (release) (20260911)
+  image.label: release
+  image.os: ubuntu
+  image.release: noble
+  image.serial: "20260911"
+  image.type: squashfs
+  image.version: "24.04"
+  limits.cpu: "2"
+  limits.memory: 1536MiB
+  security.privileged: "false"
+  volatile.base_image: cc6b6e557372769f5b0d0945d61f200360818a408f9d0dddadbbab584d2fb414
+  volatile.cloud-init.instance-id: 5272f365-4f93-4106-a4e6-badce8987553
+  volatile.eth0.host_name: vethdeba695f
+  volatile.eth0.hwaddr: 00:16:3e:22:e1:6b
+  volatile.idmap.base: "0"
+  volatile.idmap.current: '[{"Isuid":true,"Isgid":false,"Hostid":1000000,"Nsid":0,"Maprange":1000000000},{"Isuid":false,"Isgid":true,"Hostid":1000000,"Nsid":0,"Maprange":1000000000}]'
+  volatile.idmap.next: '[{"Isuid":true,"Isgid":false,"Hostid":1000000,"Nsid":0,"Maprange":1000000000},{"Isuid":false,"Isgid":true,"Hostid":1000000,"Nsid":0,"Maprange":1000000000}]'
+  volatile.last_state.idmap: '[]'
+  volatile.last_state.power: RUNNING
+  volatile.uuid: 45d27f29-3a1e-462a-b77b-5c32303fb571
+  volatile.uuid.generation: 45d27f29-3a1e-462a-b77b-5c32303fb571
+devices:
+  eth0:
+    name: eth0
+    network: em-mgmt
+    type: nic
+  root:
+    path: /
+    pool: default
+    type: disk
+ephemeral: false
+profiles:
+- emosa-native-r0
+stateful: false
+description: ""

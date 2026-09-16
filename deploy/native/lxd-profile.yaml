@@ -1,0 +1,14 @@
+description: Isolated candidate OpenSync native build/runtime inside emosa-lab
+config:
+  limits.cpu: "2"
+  limits.memory: 1536MiB
+  security.privileged: "false"
+devices:
+  root:
+    path: /
+    pool: default
+    type: disk
+  eth0:
+    name: eth0
+    network: em-mgmt
+    type: nic

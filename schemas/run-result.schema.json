@@ -1,0 +1,430 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emosa.local/schemas/run-result.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "scenario_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "execution_status": {
+      "enum": [
+        "running",
+        "completed",
+        "blocked",
+        "interrupted",
+        "failed"
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "pass",
+        "fail",
+        "blocked",
+        "unsupported",
+        "skipped",
+        "inconclusive"
+      ]
+    },
+    "interoperability_verdict": {
+      "enum": [
+        "not_evaluated",
+        "blocked",
+        "pass",
+        "fail",
+        "inconclusive"
+      ]
+    },
+    "manifest": {
+      "type": "object"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "verdict": {
+            "enum": [
+              "pass",
+              "fail",
+              "blocked",
+              "unsupported",
+              "skipped",
+              "inconclusive"
+            ]
+          },
+          "expected": {},
+          "observed": {},
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "verdict",
+          "expected",
+          "observed",
+          "evidence_refs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "coverage": {
+      "type": "object"
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/operation"
+      }
+    },
+    "timings": {
+      "type": "object"
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "cleanup": {
+      "type": "object"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "path",
+          "sha256",
+          "size"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "seamlessness": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "scenario_id",
+    "execution_status",
+    "verdict",
+    "interoperability_verdict",
+    "manifest",
+    "checks",
+    "coverage",
+    "operations",
+    "timings",
+    "prerequisites",
+    "cleanup",
+    "artifacts",
+    "limitations",
+    "seamlessness"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "operation": {
+      "type": "object",
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "request_source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "initiating_interface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "radio_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "bss_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "ssid": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "secret_ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "security_mode": {
+              "enum": [
+                "wpa2-psk",
+                "wpa3-sae"
+              ]
+            }
+          },
+          "required": [
+            "pod_id",
+            "radio_id",
+            "bss_id",
+            "ssid",
+            "secret_ref"
+          ],
+          "additionalProperties": false
+        },
+        "intent_fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deadline_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "state": {
+          "enum": [
+            "REQUESTED",
+            "VALIDATED",
+            "SUBMITTED",
+            "CONFIG_COMMITTED",
+            "OBSERVED_APPLIED",
+            "REJECTED",
+            "FAILED",
+            "TIMED_OUT",
+            "INDETERMINATE",
+            "OWNERSHIP_CONFLICT",
+            "CANCELLED"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mapping_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema_fingerprint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "attempt_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "transaction_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "session_generation": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "prepared_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "attempt_id",
+              "transaction_id",
+              "session_generation",
+              "prepared_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "commit_evidence": {
+          "type": "object",
+          "required": [
+            "attribution"
+          ],
+          "properties": {
+            "attribution": {
+              "enum": [
+                "not_submitted",
+                "unknown",
+                "reply"
+              ]
+            }
+          }
+        },
+        "application_predicate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "application_evidence": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "changed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "deadline_elapsed": {
+          "type": "boolean"
+        },
+        "original_outcome": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "late_resolution": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "client_verification": {
+          "type": "object",
+          "required": [
+            "verdict"
+          ]
+        },
+        "blocked_for_resubmission": {
+          "type": "boolean"
+        },
+        "plan": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "timings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "seconds_since_request": {
+                "type": "number",
+                "minimum": 0
+              },
+              "process_clock_id": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "seconds_since_request",
+              "process_clock_id"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "operation_id",
+        "run_id",
+        "request_source",
+        "initiating_interface",
+        "intent",
+        "intent_fingerprint",
+        "idempotency_key",
+        "created_at",
+        "updated_at",
+        "deadline_at",
+        "schema_version",
+        "state",
+        "reason",
+        "mapping_version",
+        "schema_fingerprint",
+        "attempts",
+        "commit_evidence",
+        "application_predicate",
+        "application_evidence",
+        "changed",
+        "deadline_elapsed",
+        "original_outcome",
+        "late_resolution",
+        "client_verification",
+        "blocked_for_resubmission",
+        "plan",
+        "timings"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

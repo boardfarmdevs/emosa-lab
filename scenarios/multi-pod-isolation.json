@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "multi-pod-isolation",
+  "purpose": "Direct semantic component test of one existing simulated BSS; no EasyMesh packets.",
+  "initiating_interface": "semantic",
+  "required_backend": "any-simulation",
+  "requirements": [
+    "A19",
+    "E04"
+  ],
+  "prerequisites": [
+    "synthetic-existing-bss-v1"
+  ],
+  "target_allowlist": [
+    "pod-1",
+    "pod-2",
+    "pod-3",
+    "pod-4"
+  ],
+  "intent": {
+    "pod_id": "pod-1",
+    "radio_id": "radio-1",
+    "bss_id": "bss-1",
+    "ssid": "emosa-lab",
+    "secret_ref": "scenario-key",
+    "enabled": true,
+    "security_mode": "wpa2-psk"
+  },
+  "expected": {
+    "state": "TIMED_OUT",
+    "commit_attribution": "reply",
+    "changed_fields": [
+      "ssid",
+      "wpa_psks[key]"
+    ]
+  },
+  "fault": {
+    "point": "after-config-commit",
+    "action": "withhold",
+    "duration_seconds": 0
+  },
+  "seed": 7,
+  "repetitions": 1,
+  "deadlines": {
+    "apply_seconds": 0.5,
+    "overall_seconds": 45
+  },
+  "topology": {
+    "management_path": "private-unix-socket",
+    "target_carries_management": false
+  },
+  "cleanup": "dispose-simulation",
+  "evidence_required": [
+    "events",
+    "observations",
+    "transaction"
+  ]
+}

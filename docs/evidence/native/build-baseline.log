@@ -1,0 +1,117 @@
+Collecting kconfiglib==14.1.0
+  Downloading kconfiglib-14.1.0-py2.py3-none-any.whl.metadata (39 kB)
+Collecting jinja2==3.1.6
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting MarkupSafe==3.0.3
+  Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Downloading kconfiglib-14.1.0-py2.py3-none-any.whl (145 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 145.9/145.9 kB 2.5 MB/s eta 0:00:00
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 5.6 MB/s eta 0:00:00
+Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Installing collected packages: MarkupSafe, kconfiglib, jinja2
+Successfully installed MarkupSafe-3.0.3 jinja2-3.1.6 kconfiglib-14.1.0
+TARGET=native PLATFORM= VENDOR=
+Using configuration file: kconfig/targets/config_native
+Layers: .   
+Generating kconfig file and headers: work/native-gcc-ubuntu24.04-x86_64/kconfig/config_native
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, bool will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple prompts in single location
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, string will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, bool will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple prompts in single location
+warning: default on the choice symbol OSN_BACKEND_PPPOE_NAME_TEMPLATE (defined at src/lib/osn/kconfig/Kconfig.osn.pppoe_backend:14) will have no effect, as defaults do not affect choice symbols
+warning: the choice symbol OSN_BACKEND_QDISC_LINUX (defined at src/lib/osn/kconfig/Kconfig.osn.qdisc_backend:7) is selected by the following symbols, but select/imply has no effect on choice symbols
+ - OSN_BACKEND_ADAPTIVE_QOS_CAKE_AUTORATE (defined at src/lib/osn/kconfig/Kconfig.osn.adaptive_qos_backend:7)
+warning: the default selection CONFIG_OSN_BACKEND_IPSEC_NULL (undefined) of <choice> (defined at kconfig/Kconfig:178) is not contained in the choice
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, bool will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple prompts in single location
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, string will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, bool will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple prompts in single location
+warning: default on the choice symbol OSN_BACKEND_PPPOE_NAME_TEMPLATE (defined at src/lib/osn/kconfig/Kconfig.osn.pppoe_backend:14) will have no effect, as defaults do not affect choice symbols
+warning: the choice symbol OSN_BACKEND_QDISC_LINUX (defined at src/lib/osn/kconfig/Kconfig.osn.qdisc_backend:7) is selected by the following symbols, but select/imply has no effect on choice symbols
+ - OSN_BACKEND_ADAPTIVE_QOS_CAKE_AUTORATE (defined at src/lib/osn/kconfig/Kconfig.osn.adaptive_qos_backend:7)
+warning: the default selection CONFIG_OSN_BACKEND_IPSEC_NULL (undefined) of <choice> (defined at kconfig/Kconfig:178) is not contained in the choice
+TARGET=native PLATFORM= VENDOR=
+Using configuration file: kconfig/targets/config_native
+Layers: .   
+ link    [kconfig] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.kconfig/libkconfig.a
+ generate[schema] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.schema/schema_gen.h
+ generate[version] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.version/version_defs.h
+ compile [const] src/lib/const/src/const.c
+ compile [hw_acc] src/lib/hw_acc/src/hw_acc.c
+ compile [read_until] src/lib/read_until/src/read_until.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/dpi_stats.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/gatekeeper_hero_stats.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/gatekeeper.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/interface_stats.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/ip_dns_telemetry.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/lte_info.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/mdns_records_telemetry.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/network_metadata.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/object_manager.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/opensync_nflog.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/opensync_stats.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/time_event.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/adv_data_typing.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/upnp_portmap.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/cell_info.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/thread_network_info.pb-c.c
+ compile [protobuf] work/native-gcc-ubuntu24.04-x86_64/pb-src/latency.pb-c.c
+ generate[schema] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.schema/schema_pre.h
+ compile [version] src/lib/version/src/build_version.c
+ link    [const] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.const/libconst.a
+ link    [hw_acc] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.hw_acc/libhw_acc.a
+ link    [read_until] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.read_until/libread_until.a
+ link    [protobuf] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.protobuf/libprotobuf.a
+ link    [version] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.version/libversion.a
+ compile [schema] src/lib/schema/src/schema.c
+ compile [schema] src/lib/schema/src/compat.c
+ link    [schema] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.schema/libschema.a
+ compile [brctl_mac_learn] src/lib/brctl_mac_learn/src/brctl_mac_learn.c
+ compile [common] src/lib/common/src/os_time.c
+ compile [common] src/lib/common/src/util.c
+ compile [common] src/lib/common/src/monitor.c
+ compile [common] src/lib/common/src/os.c
+In file included from src/lib/common/src/util.c:59:
+src/lib/common/src/util.c: In function ‘strfmt_nt_array’:
+src/lib/common/inc/os.h:95:5: warning: ‘__builtin_strncat’ specified bound depends on the length of the source argument [-Wstringop-overflow=]
+   95 |     strncat(dest, src, __ssz);              \
+      |     ^~~~~~~
+src/lib/common/src/util.c:598:9: note: in expansion of macro ‘strlcat’
+  598 |         strlcat(str, *array, size);
+      |         ^~~~~~~
+src/lib/common/inc/os.h:90:13: note: length computed here
+   90 |     __ssz = strlen(src);                    \
+      |             ^~~~~~~~~~~
+src/lib/common/src/util.c:598:9: note: in expansion of macro ‘strlcat’
+  598 |         strlcat(str, *array, size);
+      |         ^~~~~~~
+ compile [common] src/lib/common/src/os_util.c
+ compile [common] src/lib/common/src/os_exec.c
+ compile [common] src/lib/common/src/memutil.c
+ compile [common] src/lib/common/src/netutil.c
+ compile [common] src/lib/common/src/sockaddr_storage.c
+ compile [common] src/lib/common/src/iso3166.c
+ compile [common] src/lib/common/src/os_send_raw.c
+ compile [common] src/lib/common/src/os_llc_snap.c
+ compile [common] src/lib/common/src/kv_parser.c
+ compile [daemon] src/lib/daemon/src/daemon.c
+ compile [data_report_tags] src/lib/data_report_tags/src/data_report_tags.c
+ compile [datapipeline] src/lib/datapipeline/src/dppline.c
+ compile [ds] src/lib/ds/src/ds_tree.c
+ compile [ds_util] src/lib/ds_util/src/ds_map_str.c
+ compile [ds_util] src/lib/ds_util/src/ds_map_int.c
+ compile [ds_util] src/lib/ds_util/src/ds_map_str_int.c
+ compile [ds_util] src/lib/ds_util/src/ds_map_int_str.c
+ compile [ds_util] src/lib/ds_util/src/ds_set_str.c
+ compile [ds_util] src/lib/ds_util/src/ds_set_int.c
+ compile [evx] src/lib/evx/src/evx_debounce.c
+In file included from src/lib/evx/src/evx_debounce.c:27:
+src/lib/evx/inc/evx.h:32:10: fatal error: ares.h: No such file or directory
+   32 | #include <ares.h>
+      |          ^~~~~~~~
+compilation terminated.
+make: *** [build/unit-build.mk:621: work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.evx/src/lib/evx/src/evx_debounce.o] Error 1
+make: *** Waiting for unfinished jobs....

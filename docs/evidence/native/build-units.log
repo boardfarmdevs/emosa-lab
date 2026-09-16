@@ -1,0 +1,16 @@
+TARGET=native PLATFORM= VENDOR=
+Using configuration file: kconfig/targets/config_native
+Layers: .   
+ generate[version] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.version/version_defs.h
+ compile [version] src/lib/version/src/build_version.c
+ link    [version] work/native-gcc-ubuntu24.04-x86_64/obj/src.lib.version/libversion.a
+ compile [osw] src/lib/osw/src/osw_ut.c
+ link    [osw] work/native-gcc-ubuntu24.04-x86_64/lib/libosw.so
+ link    [ow] work/native-gcc-ubuntu24.04-x86_64/lib/libow.so
+ link    [owm] work/native-gcc-ubuntu24.04-x86_64/bin/owm
+osw_ut_func_ow_ovsdb 0
+osw_ut_func_ow_conf 0
+osw_ut_func_osw_drv 0
+osw_ut_func_osw_confsync 0
+osw_ut_func_osw_types 0
+/opt/native/units-hgnq_0xw

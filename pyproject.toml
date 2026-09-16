@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling==1.32.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "emosa"
+version = "0.1.0"
+description = "Evidence-driven OpenSync OVSDB adaptation experiments"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "cryptography==50.0.1",
+    "jsonschema==4.26.0",
+    "ovs==4.0.0",
+]
+
+[project.scripts]
+emosa = "emosa.cli:main"
+em-controller = "emosa.cli:controller_main"
+emosa-lab = "emosa.evaluation.cli:main"
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "ruff==0.16.7"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/emosa"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"schemas" = "emosa/contracts"
+"tests/fixtures/opensync/opensync.ovsschema" = "emosa/data/opensync.ovsschema"
+"tests/fixtures/opensync/LICENSE.opensync" = "emosa/data/LICENSE.opensync"
+"tests/fixtures/opensync/provenance.json" = "emosa/data/opensync-provenance.json"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+  "unit: unprivileged deterministic tests",
+  "ovsdb: real disposable ovsdb-server and independent simulated manager",
+  "wire: selected normative protocol prerequisites required",
+  "hardware: qualified physical target required",
+  "external: independent controller required",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

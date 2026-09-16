@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "run_id": "run-65264f5d645e4bb7",
+  "scenario_id": "component-bss-change",
+  "execution_status": "completed",
+  "verdict": "pass",
+  "interoperability_verdict": "not_evaluated",
+  "manifest": {
+    "software_version": "0.1.0",
+    "git_revision": "4a41911a21439ca135cccdbe6ef5db36368128ef",
+    "source_tree_sha256": "0c7528923e2fbcff1af14dc066439135c2b84ca5596b89bc1874222b3ab204f4",
+    "source_hash_scope": "checkout code/contracts/scenarios",
+    "dependencies": {
+      "ovs": "4.0.0",
+      "jsonschema": "4.26.0"
+    },
+    "python": "3.13.7",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "uv_lock_sha256": "18b75c5c986357804dac047759dfb6af88b59c12b0af5cf35057521c1431e8a0",
+    "scenario": {
+      "schema_version": 1,
+      "id": "component-bss-change",
+      "purpose": "Direct semantic component test of one existing simulated BSS; no EasyMesh packets.",
+      "initiating_interface": "semantic",
+      "required_backend": "any-simulation",
+      "requirements": [
+        "A08",
+        "A10",
+        "A13",
+        "E02",
+        "E04",
+        "E06"
+      ],
+      "prerequisites": [
+        "synthetic-existing-bss-v1"
+      ],
+      "target_allowlist": [
+        "pod-1"
+      ],
+      "intent": {
+        "pod_id": "pod-1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "ssid": "emosa-lab",
+        "secret_ref": "scenario-key",
+        "enabled": true,
+        "security_mode": "wpa2-psk"
+      },
+      "expected": {
+        "state": "OBSERVED_APPLIED",
+        "commit_attribution": "reply",
+        "changed_fields": [
+          "ssid",
+          "wpa_psks[key]"
+        ]
+      },
+      "fault": {
+        "point": "after-config-commit",
+        "action": "none",
+        "duration_seconds": 0
+      },
+      "seed": 7,
+      "repetitions": 1,
+      "deadlines": {
+        "apply_seconds": 30,
+        "overall_seconds": 45
+      },
+      "topology": {
+        "management_path": "private-unix-socket",
+        "target_carries_management": false
+      },
+      "cleanup": "dispose-simulation",
+      "evidence_required": [
+        "events",
+        "observations",
+        "transaction"
+      ]
+    },
+    "backend_mode": "ovsdb-sim",
+    "initiating_interface": "semantic",
+    "trial": 1,
+    "started_at": "2026-09-16T01:51:16.116Z",
+    "mapping_version": "synthetic-existing-bss-v1",
+    "schema_fingerprints": {
+      "pod-1": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16"
+    },
+    "pod_identities": [
+      "pod-1"
+    ],
+    "controller": "component-runner",
+    "virtual_agent": null,
+    "topology": {
+      "management_path": "private-unix-socket",
+      "target_carries_management": false
+    },
+    "resource_budget": {
+      "writes_per_pod": 1,
+      "queued_modifying_requests": 0,
+      "ovsdb_requests_per_session": 16,
+      "monitor_rows": 10000
+    },
+    "finished_at": "2026-09-16T01:51:16.474Z"
+  },
+  "checks": [
+    {
+      "id": "pod-1:operation",
+      "verdict": "pass",
+      "expected": "OBSERVED_APPLIED",
+      "observed": "OBSERVED_APPLIED",
+      "evidence_refs": [
+        "events.json",
+        "observations.json"
+      ]
+    }
+  ],
+  "coverage": {
+    "selected": [
+      "A08",
+      "A10",
+      "A13",
+      "E02",
+      "E04",
+      "E06"
+    ],
+    "eligible": 1,
+    "attempted": 1,
+    "passing": 1,
+    "omitted": [
+      "all wire, RF, hardware and external-peer acceptance"
+    ]
+  },
+  "operations": [
+    {
+      "operation_id": "20b840d9-63f0-4c95-b7e4-937d7cb40a9a",
+      "run_id": "run-65264f5d645e4bb7",
+      "request_source": "component-runner",
+      "initiating_interface": "semantic",
+      "intent": {
+        "pod_id": "pod-1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "ssid": "emosa-lab",
+        "secret_ref": "scenario-key",
+        "enabled": true,
+        "security_mode": "wpa2-psk"
+      },
+      "intent_fingerprint": "fb55efbc267427fc85f907287d90ced08c07ec7a25b62e6ac5dbe287403c7fd4",
+      "idempotency_key": "initial-change",
+      "created_at": "2026-09-16T01:51:16.422Z",
+      "updated_at": "2026-09-16T01:51:16.455Z",
+      "deadline_at": "2026-09-16T01:51:46.422000+00:00",
+      "schema_version": 1,
+      "state": "OBSERVED_APPLIED",
+      "reason": null,
+      "mapping_version": "synthetic-existing-bss-v1",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "attempts": [
+        {
+          "attempt_id": "fc098c8a-a166-401d-b20a-48af40345757",
+          "transaction_id": "2968e756-9c2a-4334-acbd-527f6e2e0bd5",
+          "session_generation": 1,
+          "prepared_at": "2026-09-16T01:51:16.435Z"
+        }
+      ],
+      "commit_evidence": {
+        "attribution": "reply",
+        "transaction_validated": true,
+        "transaction_id": "2968e756-9c2a-4334-acbd-527f6e2e0bd5",
+        "session_generation": 1,
+        "results": [
+          {},
+          {},
+          {
+            "count": 1
+          },
+          {
+            "count": 1
+          }
+        ]
+      },
+      "application_predicate": "fresh-qualified-existing-ap-ssid-security-v1",
+      "application_evidence": {
+        "fresh": true,
+        "predicate_satisfied": true,
+        "generation": 1,
+        "revision": 3,
+        "received_at": "2026-09-16T01:51:16.453Z",
+        "source": "ovsdb",
+        "provenance": "independent-simulated-manager:Wifi_VIF_State"
+      },
+      "changed": true,
+      "deadline_elapsed": false,
+      "original_outcome": null,
+      "late_resolution": null,
+      "client_verification": {
+        "verdict": "unknown"
+      },
+      "blocked_for_resubmission": false,
+      "plan": {
+        "mapping": "synthetic-existing-bss-v1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "fields": [
+          "ssid",
+          "wpa_psks[key]"
+        ],
+        "ssid": "emosa-lab",
+        "secret_ref": "scenario-key",
+        "guard": "VIF fields, security and radio/VIF references",
+        "shared_radio_actuation": false
+      },
+      "timings": {
+        "VALIDATED": {
+          "seconds_since_request": 0.0014697379665449262,
+          "process_clock_id": "6460c58f-27ea-445f-ba2c-29b596db340e"
+        },
+        "SUBMITTED": {
+          "seconds_since_request": 0.004934721975587308,
+          "process_clock_id": "6460c58f-27ea-445f-ba2c-29b596db340e"
+        },
+        "CONFIG_COMMITTED": {
+          "seconds_since_request": 0.01152304996503517,
+          "process_clock_id": "6460c58f-27ea-445f-ba2c-29b596db340e"
+        },
+        "OBSERVED_APPLIED": {
+          "seconds_since_request": 0.025007713004015386,
+          "process_clock_id": "6460c58f-27ea-445f-ba2c-29b596db340e"
+        }
+      }
+    }
+  ],
+  "timings": {
+    "clock": "single-process-monotonic",
+    "samples": [
+      {
+        "operation_id": "20b840d9-63f0-4c95-b7e4-937d7cb40a9a",
+        "request_to_final_observation_seconds": 0.028107042016927153,
+        "request_to_commit_seconds": 0.01152304996503517,
+        "request_to_application_seconds": 0.025007713004015386,
+        "operation_phase_clocks": {
+          "VALIDATED": {
+            "seconds_since_request": 0.0014697379665449262,
+            "process_clock_id": "6460c58f-27ea-445f-ba2c-29b596db340e"
+          },
+          "SUBMITTED": {
+            "seconds_since_request": 0.004934721975587308,
+            "process_clock_id": "6460c58f-27ea-445f-ba2c-29b596db340e"
+          },
+          "CONFIG_COMMITTED": {
+            "seconds_since_request": 0.01152304996503517,
+            "process_clock_id": "6460c58f-27ea-445f-ba2c-29b596db340e"
+          },
+          "OBSERVED_APPLIED": {
+            "seconds_since_request": 0.025007713004015386,
+            "process_clock_id": "6460c58f-27ea-445f-ba2c-29b596db340e"
+          }
+        },
+        "independent_client_seconds": null
+      }
+    ],
+    "client_recovery": null,
+    "management_interruption": null,
+    "runner_wall_seconds": 0.35529611399397254
+  },
+  "prerequisites": [],
+  "cleanup": {
+    "status": "completed",
+    "policy": "dispose-simulation",
+    "errors": [],
+    "physical_pod_changes": false
+  },
+  "artifacts": [
+    {
+      "path": "inputs.json",
+      "sha256": "8f5e3e488b31ecf222b68050b9c2633fb37958d7983a7ec16a3d5254c1cfe80c",
+      "size": 1214
+    },
+    {
+      "path": "events.json",
+      "sha256": "239f9849b09d69022021b9acfddde6366307e30a11bc6c54324a2d247fcb4093",
+      "size": 6209
+    },
+    {
+      "path": "observations.json",
+      "sha256": "b56b0c75362287d7a591ef170ac1f965b618d4db4b3ec5e8bc29f263c331d254",
+      "size": 1041
+    }
+  ],
+  "limitations": [
+    "Semantic component testing does not evaluate EasyMesh provisioning or interoperability.",
+    "No physical radio or independent Wi-Fi client evidence.",
+    "Upstream reference schema and synthetic identities do not qualify a pod build.",
+    "Lost-reply injection discards a real response at adapter ingress before interpretation.",
+    "Simulation event triggers are controlled; OS scheduling is not deterministic."
+  ],
+  "seamlessness": {
+    "controller_workflow": "not_evaluated",
+    "pod_compatibility": "not_evaluated",
+    "semantic_accuracy": "not_evaluated",
+    "operational_continuity": "not_evaluated",
+    "timing_and_observability": "not_evaluated"
+  }
+}

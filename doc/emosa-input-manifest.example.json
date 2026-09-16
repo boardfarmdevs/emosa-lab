@@ -1,0 +1,110 @@
+{
+  "manifest_version": 1,
+  "architecture_version": "3.6",
+  "project": "EMOSA",
+  "status": "template_not_an_executable_device_configuration",
+  "implementation_defaults": {
+    "python_minor": "3.13",
+    "reference_architecture": "linux-x86_64",
+    "outer_environment": "LXD VM",
+    "guest_os": "Ubuntu 24.04",
+    "inner_runtime": "LXD daemon inside the VM managing LXD system containers",
+    "python_container_base": "Ubuntu 24.04",
+    "alpine_status": "optional_later_portability_target",
+    "priority": "evaluate_whether_adaptation_enables_seamless_EasyMesh_controller_operation_with_unchanged_OpenSync_pods",
+    "required_evaluation_features": ["controlled_experiments", "live_visibility", "correlated_evidence", "run_comparison", "explicit_compatibility_gaps"],
+    "python_containers": ["em-controller", "emosa"],
+    "lab_runner_location": "outer VM guest, using inner LXD lxc exec",
+    "native_reference_container_base": "Ubuntu, separate LXD container",
+    "dependency_lock": "uv.lock",
+    "lxd_image_fingerprint_status": "not_selected"
+  },
+  "execution_environment": {
+    "status": "not_provided",
+    "repository_path": null,
+    "linux_execution_profile": null,
+    "lxd_vm_profile": null,
+    "evidence_refs": []
+  },
+  "protocol": {
+    "status": "not_selected",
+    "ieee1905_specification": null,
+    "easymesh_specification": null,
+    "provisioning_specification": null,
+    "selected_profile": null,
+    "procedure_subset": [
+      "topology discovery and query/response",
+      "AP autoconfiguration search/response",
+      "AP capability query/report",
+      "AP autoconfiguration WSC M1/M2 for one qualified existing BSS"
+    ],
+    "subset_status": "proposed_requires_normative_matrix",
+    "matrix_path": null,
+    "independent_vector_refs": [],
+    "evidence_refs": []
+  },
+  "simulation_reference": {
+    "repository": "https://github.com/plume-design/opensync",
+    "commit": "78d8a7194d5e77635877cc456231e7be5cf03d68",
+    "schema_path": "interfaces/opensync.ovsschema",
+    "upstream_database_name": "Open_vSwitch",
+    "upstream_schema_version": "7.11.413",
+    "actual_pod_schema": false,
+    "fixture_hash": null,
+    "fixture_license_provenance": null
+  },
+  "hardware": {
+    "status": "not_provided",
+    "user_confirmed_inputs": {
+      "direct_authorized_ovsdb_access_available": true,
+      "cloud_writers_can_be_disabled_or_redirected": true,
+      "physical_pods_planned": true,
+      "firmware_changes_allowed": false
+    },
+    "pod_profiles": [],
+    "required_profile_fields": [
+      "pod_id",
+      "model",
+      "firmware_build",
+      "ovsdb_connection_direction",
+      "endpoint_and_port",
+      "trust_profile_reference_no_secret_values",
+      "actual_schema_fingerprint_and_artifact",
+      "managed_radio_and_existing_vif",
+      "supported_security_representation",
+      "writer_ownership_evidence",
+      "management_path_and_shared_radio_dependencies",
+      "recovery_method",
+      "independent_client_profile"
+    ]
+  },
+  "third_party": {
+    "status": "not_selected",
+    "controller_name": null,
+    "controller_build": null,
+    "compatible_procedure_scope": null,
+    "evaluator_environment": null,
+    "evidence_refs": []
+  },
+  "dependency_qualification": {
+    "ovsdb_client": null,
+    "ovsdb_server_version": null,
+    "crypto_library": null,
+    "python_patch": null,
+    "compatibility_report": null
+  },
+  "opensync_native_reference": {
+    "status": "source_reviewed_build_not_verified",
+    "repository": "https://github.com/plume-design/opensync",
+    "commit": "78d8a7194d5e77635877cc456231e7be5cf03d68",
+    "candidate_manager_path": ["owm", "ow", "osw"],
+    "native_test_script": "src/owm/scripts/test.sh",
+    "candidate_driver": "src/lib/osw/src/osw_drv_dummy.c",
+    "qualification_tests": ["N01", "N02", "N03", "N04"],
+    "kconfig_artifact": null,
+    "harness_revision": null,
+    "patch_manifest": null,
+    "lxd_image_fingerprint": null,
+    "build_and_test_evidence": []
+  }
+}

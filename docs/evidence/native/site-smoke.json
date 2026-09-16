@@ -1,0 +1,15 @@
+{
+  "browser": "chromium",
+  "desktop": "1440x1100",
+  "mobile": "390x844",
+  "checks": [
+    "architecture",
+    "four lab modes",
+    "attribution",
+    "comparison",
+    "event filtering",
+    "traceability search",
+    "no horizontal overflow"
+  ],
+  "page_errors": []
+}

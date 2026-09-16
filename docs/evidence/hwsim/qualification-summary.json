@@ -1,0 +1,23 @@
+{
+  "hostname": "emosa-lab",
+  "kernel": "6.8.0-139-generic",
+  "lxd": "Client version: 5.21.7 LTS\nServer version: 5.21.7 LTS\n",
+  "container_image": "cc6b6e557372769f5b0d0945d61f200360818a408f9d0dddadbbab584d2fb414",
+  "setup_complete": true,
+  "source_sha256": "48736a139fad2a2cce7820ac86bfc7d9f553a7681a6ead14bca50e4bb87b933c",
+  "scope": "standalone hwsim client smoke, not EMOSA onboarding or physical proof",
+  "smoke_script_sha256": "2b4d473c16c58311327cfc56c1cbf6e4a0c1fbfe9dae133c37a9ca398ef74a1a",
+  "lxd_snap": "Name  Version         Rev    Tracking       Publisher    Notes\nlxd   5.21.7-1018661  40585  5.21/stable/\u2026  canonical**  held\n",
+  "packages": {
+    "em-radio-ap": "hostapd\t2:2.10-21ubuntu0.4\niproute2\t6.1.0-1ubuntu6.4\niputils-ping\t3:20240117-1ubuntu0.1\niw\t6.7-1build1\nwpasupplicant\t2:2.10-21ubuntu0.4\n",
+    "em-radio-client": "hostapd\t2:2.10-21ubuntu0.4\niproute2\t6.1.0-1ubuntu6.4\niputils-ping\t3:20240117-1ubuntu0.1\niw\t6.7-1build1\nwpasupplicant\t2:2.10-21ubuntu0.4\n"
+  },
+  "private_capture": {
+    "location_in_vm": "/opt/emosa/.lab/hwsim/smoke-20260916T023345.873780Z/wireless.pcap",
+    "sha256": "62378be5df6f16eeb33d3fa2fe6a793c31cc60e5fc10810d7f18b41879321102",
+    "bytes": 16431,
+    "published": false
+  },
+  "clean_setup_retest": true,
+  "initial_failure": "Ubuntu package installation started the D-Bus wpa_supplicant service; setup now stops it in owned fresh containers before starting the harness daemons."
+}

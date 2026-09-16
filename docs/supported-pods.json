@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "physical_pods": [],
+  "simulation_profiles": [
+    {
+      "profile": "synthetic-existing-bss-v1",
+      "source": "OpenSync",
+      "backend": "ovsdb-sim",
+      "actual_pod_schema": false,
+      "upstream_commit": "78d8a7194d5e77635877cc456231e7be5cf03d68",
+      "schema_version": "7.11.413",
+      "schema_file_sha256": "91d18cc4668ff6fc9c9be2234ddc7e70c84b9640f04e621a1ff90e3451c867a9",
+      "status": "component_tests_passed",
+      "tests": [
+        "tests/test_ovsdb.py"
+      ],
+      "limitations": [
+        "Synthetic existing AP only",
+        "No vendor manager, hardware, TLS or wire qualification"
+      ]
+    }
+  ]
+}

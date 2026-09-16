@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emosa.local/schemas/config.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "backend_mode": {
+      "enum": [
+        "model",
+        "ovsdb-sim",
+        "opensync-native",
+        "hardware"
+      ]
+    },
+    "state_directory": {
+      "type": "string",
+      "minLength": 1
+    },
+    "secret_directory": {
+      "type": "string",
+      "minLength": 1
+    },
+    "socket_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "write_mode": {
+      "enum": [
+        "read-only",
+        "managed-fields"
+      ]
+    },
+    "request_source": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "pods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pod_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "endpoint": {
+            "type": "string",
+            "minLength": 1
+          },
+          "database": {
+            "const": "Open_vSwitch"
+          },
+          "if_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "radio_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "radio_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "bss_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "pod_id",
+          "endpoint",
+          "database",
+          "if_name",
+          "radio_name",
+          "radio_id",
+          "bss_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 32
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "local_frame_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1048576
+        },
+        "local_clients": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "ovsdb_requests": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "backend_mode",
+    "state_directory",
+    "secret_directory",
+    "socket_path",
+    "write_mode",
+    "request_source",
+    "pods"
+  ],
+  "additionalProperties": false
+}

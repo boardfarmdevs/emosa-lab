@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "status": "bounded_R0_completed_with_N03_blocker",
+  "backend_enabled": false,
+  "upstream_commit": "78d8a7194d5e77635877cc456231e7be5cf03d68",
+  "upstream_source_archive_sha256": "65ff15d01367a8125de2f41a8c81892a13e88f2545ac4080cd81ac405c239a08",
+  "schema_sha256": "91d18cc4668ff6fc9c9be2234ddc7e70c84b9640f04e621a1ff90e3451c867a9",
+  "kconfig_sha256": "99036e917d612c6a0f1b5e603026c179945e6909367600762bae63568793d42a",
+  "emosa_source_base_revision": "e853ecc28c0338156f10d6541f5ec54c33f035ed",
+  "lab_sources_sha256": {
+    "deploy/native/LICENSE.opensync": "9cba8206411efc24883ac03387912665509265c8fb52326b72d933596316a13d",
+    "deploy/native/NOTICE.opensync": "3b0e2bca943554c3e1d75c02fcc8e6d35ffc0e29edef751745a292c267e61bcf",
+    "deploy/native/README.md": "9328046181edfa11aa6505d95ebffc97a03a6af98ca3001797a505428a1b24d7",
+    "deploy/native/build-deps.lock": "e4248ca8dc88692b1ea6f8ac455c6bfdd6c72504d0c4d40e0a08fc1bf1dedb34",
+    "deploy/native/build.sh": "856db8ff6a6bf3144483b0cd270bab67283e3240a7e048b7a657086e57943d15",
+    "deploy/native/check-path.py": "d5350e783d54d4a952fea4ff277051e6f893d2f264092efe18c6e72528e48f33",
+    "deploy/native/check-units.py": "02124856047ac461e99d69a909dbf847db451f128c4a8ca5dc5e3673ade41729",
+    "deploy/native/driver.c": "8c01b404f385a91cb7ed2a2cc8427a1c6c90425483889259547c89f6e11ed226",
+    "deploy/native/install-build-deps.sh": "cbc4a7bb845916e125cff101ce3060055ad799cfef5452eaa103fe39e2bd4cfe",
+    "deploy/native/lxd-profile.yaml": "156588a9d082f6c493f8b9241d590d25433b848301354ce02d04e6618cbe1220",
+    "deploy/native/patches/0001-null-group-diagnostic.patch": "a787ecd884c9ef4bba80245c6ecd02af51f288abc9f7031c9f6e1024c1a26533",
+    "deploy/native/patches/0002-check-unit-child-exit.patch": "fca593b3682f4d91172b3b982a09b3f488fd573e77767d64276d017a60d533ac",
+    "deploy/native/prepare.sh": "5aa6d65d81d3504ccb4993848cefcce6b857d6c2d76d8e093bfed662f53a4d61"
+  },
+  "manager_stack": "Only OWM process; pinned OW/OSW libraries and native target dependencies",
+  "platform_stubs_added": [],
+  "upstream_platform_files": [
+    "src/lib/target/src/target_stub.c",
+    "src/lib/target/src/target_native.c",
+    "kconfig/targets/config_native"
+  ],
+  "drivers_disabled": [
+    "OSW_DRV_TARGET_DISABLED",
+    "OSW_DRV_NL80211_DISABLE"
+  ],
+  "native_binary_sha256": {
+    "owm": "3a70dd46af1743695136c4038568c2185caadce2854865b2fd417d76233280d4",
+    "libow.so": "9c271045d9166be53efd095a0c21a5d2e69c99eae0861b5027c2611ae37ea0f7",
+    "libosw.so": "63697c6228822c3d5455d91736be984b77b0167f23f6b881e1d0b370f3f255cf",
+    "driver.so": "9e4655383d1fd34bce0f8754f654351494e0e07560c6ffd28d12f3c44978bbe2"
+  },
+  "container_image": "cc6b6e557372769f5b0d0945d61f200360818a408f9d0dddadbbab584d2fb414",
+  "container": "emosa-lab/opensync-native-r0",
+  "container_privileged": false,
+  "vm_root_disk_gib": 20,
+  "container_memory_limit_mib": 1536,
+  "container_cpus": 2,
+  "container_peak_memory_bytes": 829227008,
+  "final_probe_maximum_child_rss_kib": 37708,
+  "upstream_unit_passes": 39,
+  "cipher_negative_checks": 12,
+  "checks": {
+    "N01": "verified: fresh source build in recorded candidate; 39 selected upstream units",
+    "N02": "verified: one existing simulated AP, native PSK interpretation in probe",
+    "N03": "blocked: post-database-restart Config commits but no further driver request within deadline",
+    "N04": "verified: isolated simulated resources; manifests, patches and limits retained"
+  },
+  "qualification_limits": [
+    "No full fresh runtime image rebuild/export; OVSDB binaries and Python runtime reused from recorded Ubuntu VM/container",
+    "Native probe only; production profile, guards and lifecycle not enabled",
+    "No radio, real packets, external controller, physical pod or client proof",
+    "Probe terminates manager deliberately with SIGTERM; orderly native service shutdown is not qualified"
+  ],
+  "reproduction": "build-reproduction.log; unit-summary.json; path-summary.json",
+  "physical_pod_accessed": false,
+  "hwsim_used": false,
+  "wire_validation": "pending external specification inputs",
+  "next_native_check": "Qualify OWM reconnect/resubscription or explicit supervisor restart and state rebuild, then rerun N03 without writing State from the harness",
+  "repository_checks": {
+    "unit_passes": 124,
+    "unit_evidence": "emosa-unit-results.xml",
+    "browser_evidence": "site-smoke.json",
+    "traceability_test_sha256": "074cf2c7002b31a21e4ed869021ded6eb271fd2f8f9588378bac4fae462d4dfb"
+  }
+}

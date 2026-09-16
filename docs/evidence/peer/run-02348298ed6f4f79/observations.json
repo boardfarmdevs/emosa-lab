@@ -1,0 +1,42 @@
+[
+  {
+    "phase": "initial",
+    "pod_id": "pod-1",
+    "resource_id": "bss-1",
+    "values": {
+      "ssid": "initial-network",
+      "enabled": true,
+      "mode": "ap",
+      "security_mode": "wpa2-psk",
+      "credential_fingerprint": "[REDACTED]"
+    },
+    "source": "ovsdb",
+    "backend_mode": "ovsdb-sim",
+    "session_generation": 1,
+    "received_at": "2026-09-16T03:39:19.942Z",
+    "fresh": true,
+    "provenance": "independent-simulated-manager:Wifi_VIF_State",
+    "source_time": null,
+    "revision": 1
+  },
+  {
+    "phase": "final",
+    "pod_id": "pod-1",
+    "resource_id": "bss-1",
+    "values": {
+      "ssid": "emosa-lab",
+      "enabled": true,
+      "mode": "ap",
+      "security_mode": "wpa2-psk",
+      "credential_fingerprint": "[REDACTED]"
+    },
+    "source": "ovsdb",
+    "backend_mode": "ovsdb-sim",
+    "session_generation": 1,
+    "received_at": "2026-09-16T03:39:20.019Z",
+    "fresh": true,
+    "provenance": "independent-simulated-manager:Wifi_VIF_State",
+    "source_time": null,
+    "revision": 3
+  }
+]

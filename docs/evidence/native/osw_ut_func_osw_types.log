@@ -1,0 +1,13 @@
+    RUN: src/lib/osw/src/osw_types_ut.c: osw_ut_func_osw_types_from_channel_num_width
+   PASS: src/lib/osw/src/osw_types_ut.c: osw_ut_func_osw_types_from_channel_num_width
+    RUN: src/lib/osw/src/osw_types_ut.c: osw_ut_func_osw_types_cipher
+   PASS: src/lib/osw/src/osw_types_ut.c: osw_ut_func_osw_types_cipher
+    RUN: src/lib/osw/src/osw_types_ut.c: osw_ut_func_osw_types_akm
+   PASS: src/lib/osw/src/osw_types_ut.c: osw_ut_func_osw_types_akm
+    RUN: src/lib/osw/src/osw_types_ut.c: osw_ut_func_osw_types_dfs_overlap
+   PASS: src/lib/osw/src/osw_types_ut.c: osw_ut_func_osw_types_dfs_overlap
+    RUN: src/lib/osw/src/osw_types_ut.c: osw_ut_func_osw_types_ut_2g_chan_list
+   PASS: src/lib/osw/src/osw_types_ut.c: osw_ut_func_osw_types_ut_2g_chan_list
+
+
+UT: passed 5/5, failed 0

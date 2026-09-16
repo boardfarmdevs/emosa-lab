@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "python": "3.13.7",
+  "source_checkout_used_by_test": false,
+  "checks": [
+    "fresh wheel install in temporary venv",
+    "all three CLI help commands",
+    "model component run",
+    "all eight schema validators",
+    "pinned OpenSync schema load/qualification",
+    "final wheel real OVSDB read-only collector and schema artifact fingerprint"
+  ],
+  "tested_wheel_sha256": "751ecc9e19b2acc25e9bb43f074e3eff31c6fdd3e490f7f90347c376ac844694",
+  "final_wheel_sha256": "d1cb09cee283a5e3dd99a04d12d1d52113918ae5cc7c0d7b6a177c63ce44445b",
+  "final_change_validation": "Read-only/quiesced capability status correction: tests/test_api.py, 2 passed; wheel rebuilt."
+}

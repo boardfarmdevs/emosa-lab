@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="EMOSA Lab: explore the adapter architecture, reproduce integration and evaluation experiments, and follow the evidence toward unchanged OpenSync pod interoperability."
+    />
+    <meta name="theme-color" content="#f6f5f0" />
+    <title>EMOSA Lab · Integration & evaluation</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="app.js" type="module"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="topbar">
+      <a class="brand" href="#overview"
+        ><img src="icon.svg" width="32" height="32" alt="" /><strong
+          >EMOSA Lab</strong
+        ><span>FIELD GUIDE / 01</span></a
+      >
+      <a class="source-link" href="https://github.com/boardfarmdevs/emosa-lab"
+        >View repository <span aria-hidden="true">↗</span></a
+      >
+    </header>
+    <div class="layout">
+      <aside class="sidebar">
+        <p class="eyebrow">Explore the project</p>
+        <nav aria-label="Main navigation">
+          <a href="#overview"><span>00</span> Overview</a>
+          <a href="#architecture"><span>01</span> Architecture</a>
+          <a href="#manual"><span>02</span> Lab manual</a>
+          <a href="#evidence"><span>03</span> Evidence explorer</a>
+          <a href="#next"><span>04</span> Path to viability</a>
+          <a href="#reference"><span>05</span> Reference library</a>
+        </nav>
+        <div class="sidebar-note">
+          <span class="status-dot"></span> Component foundation<br /><strong
+            >Physical proof is pending.</strong
+          >
+          <p>
+            This guide is a published evidence snapshot. It does not connect to
+            or control a lab.
+          </p>
+        </div>
+        <a
+          class="quiet"
+          href="https://github.com/boardfarmdevs/emosa-lab/blob/main/doc/EMOSA-CODING-HANDOFF.md"
+          >Coding handoff ↗</a
+        >
+      </aside>
+      <main id="main">
+        <noscript
+          ><p class="notice">
+            JavaScript enables the interactive diagrams and retained evidence
+            browser. The manual below and
+            <a href="https://github.com/boardfarmdevs/emosa-lab/tree/main/docs"
+              >repository documentation</a
+            >
+            remain available.
+          </p></noscript
+        >
+        <p id="load-error" class="notice" hidden></p>
+        <section id="overview" class="hero">
+          <p class="eyebrow">
+            <span class="status-dot"></span> EasyMesh OVSDB Adapter
+            <span class="separator">/</span> Research & evaluation
+          </p>
+          <h1>
+            An OpenSync extender.<br /><span>Seen as an EasyMesh agent.</span>
+          </h1>
+          <p class="lead">
+            EMOSA Lab evaluates whether EMOSA, an adapter around the controller,
+            can let an EasyMesh controller discover, onboard, and manage an
+            unchanged OpenSync extender. The proof is a controller-visible
+            agent backed by actual pod behavior.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#architecture"
+              >Explore the architecture <span aria-hidden="true">↓</span></a
+            ><a class="button" href="#manual">Run an experiment</a>
+          </div>
+          <div class="metrics" aria-label="Retained validation snapshot">
+            <div>
+              <strong id="unit-count">—</strong><span>unit-suite passes</span>
+            </div>
+            <div>
+              <strong id="ovsdb-count">—</strong><span>OVSDB-suite passes</span>
+            </div>
+            <div><strong>0</strong><span>physical-pod proofs</span></div>
+            <div class="metric-note">
+              Suite counts overlap.<br />Component results establish only their
+              recorded scope.
+            </div>
+          </div>
+        </section>
+
+        <section id="architecture">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">01 / System map</p>
+              <h2>Where the adaptation happens</h2>
+            </div>
+            <a class="text-link" href="architecture.svg" download
+              >Download diagram ↓</a
+            >
+          </div>
+          <p>
+            All new adapter code stays in the controller environment. The pod
+            keeps its firmware and existing management interface. Select a
+            building block to see its responsibility and current status.
+          </p>
+          <div class="architecture-layout">
+            <div class="system-map">
+              <div class="map-boundary">
+                <span class="boundary-label">CONTROLLER ENVIRONMENT · LXD</span>
+                <button class="map-node" data-node="controller">
+                  <span class="node-number">01</span
+                  ><strong>EasyMesh controller</strong
+                  ><small>Pinned independent candidate</small
+                  ><span class="badge pending">Peer baseline captured</span>
+                </button>
+                <div class="connector">
+                  ↓
+                  <span
+                    >Real IEEE 1905 / EasyMesh frames · isolated L2 bridge</span
+                  >
+                </div>
+                <div class="adapter-boundary">
+                  <span class="boundary-label">EMOSA</span>
+                  <button class="map-node" data-node="agent">
+                    <strong>Virtual EasyMesh agent</strong
+                    ><small>Discovery · capabilities · WSC</small
+                    ><span class="badge pending">P0 gated</span>
+                  </button>
+                  <div class="connector">
+                    ↓ <span>Validated semantic intent</span>
+                  </div>
+                  <div class="node-pair">
+                    <button class="map-node" data-node="engine">
+                      <strong>Operation engine</strong
+                      ><small>Plan · guard · apply · reconcile</small
+                      ><span class="badge pass">Component tested</span></button
+                    ><button class="map-node" data-node="journal">
+                      <strong>Durable journal</strong
+                      ><small>SQLite · events · secret references</small
+                      ><span class="badge pass">Component tested</span>
+                    </button>
+                  </div>
+                  <div class="connector">
+                    ↓ <span>Qualified mapping & guarded transaction</span>
+                  </div>
+                  <button class="map-node" data-node="ovsdb">
+                    <strong>OVSDB session & mapper</strong
+                    ><small>Schema · monitor · transaction · recovery</small
+                    ><span class="badge pass">Simulator tested</span>
+                  </button>
+                </div>
+              </div>
+              <div class="connector">
+                ↓ <span>Existing authorized OVSDB management connection</span>
+              </div>
+              <div class="node-pair endpoints">
+                <button class="map-node" data-node="pod">
+                  <strong>Unchanged OpenSync pod</strong
+                  ><small>Existing managers → driver → actual radio</small
+                  ><span class="badge pending"
+                    >M0 qualification pending</span
+                  ></button
+                ><button class="map-node" data-node="client">
+                  <strong>Independent Wi-Fi client</strong
+                  ><small>Association · authentication · data traffic</small
+                  ><span class="badge pending"
+                    >Physical observation pending</span
+                  >
+                </button>
+              </div>
+              <button class="map-node evidence-node" data-node="evaluator">
+                <strong>Evaluation & evidence</strong
+                ><small
+                  >Scenarios · captures · OVSDB observations · client results ·
+                  comparisons</small
+                >
+              </button>
+            </div>
+            <aside
+              class="detail-card"
+              id="node-detail"
+              aria-live="polite"
+            ></aside>
+          </div>
+          <div class="callout">
+            <strong>Acceptance chain</strong>
+            <p>
+              EasyMesh controller discovers and onboards an EMOSA agent
+              representing an OpenSync extender → adapter translates to existing
+              OVSDB → unchanged extender applies the change → independent client
+              confirms behavior.
+            </p>
+          </div>
+        </section>
+
+        <section id="manual">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">02 / Lab manual</p>
+              <h2>Choose the experiment you need</h2>
+            </div>
+          </div>
+          <p>
+            Each level answers a different question. A simulated radio adds a
+            real Linux Wi-Fi stack to the lab; the final experiment still needs
+            the actual pod and a client with a physical Wi-Fi interface.
+          </p>
+          <div class="mode-switch" role="group" aria-label="Experiment level">
+            <button data-mode="model" aria-pressed="true">01 · Model</button
+            ><button data-mode="ovsdb" aria-pressed="false">02 · OVSDB</button
+            ><button data-mode="hwsim" aria-pressed="false">
+              03 · hwsim radio</button
+            ><button data-mode="physical" aria-pressed="false">
+              04 · Physical pod
+            </button>
+          </div>
+          <article
+            class="manual-panel"
+            id="mode-detail"
+            aria-live="polite"
+          ></article>
+          <details class="manual-details">
+            <summary>
+              Understand a result: Config committed ≠ behavior observed
+            </summary>
+            <p>
+              A successful OVSDB transaction proves the database accepted a
+              change. The operation engine waits for fresh State observations.
+              Independent client evidence is another required boundary for
+              physical acceptance. An expired deadline remains a failure even if
+              application is observed later; a lost reply can leave commit
+              attribution unknown.
+            </p>
+            <a
+              href="https://github.com/boardfarmdevs/emosa-lab/blob/main/docs/recovery.md"
+              >Read the recovery contract ↗</a
+            >
+          </details>
+          <details class="manual-details">
+            <summary>
+              Understand WSC scope: provisioning applies to the radio
+            </summary>
+            <p>
+              The proposed EasyMesh 6.1 procedure configures the radio’s BSS
+              set, including unmatched-BSS teardown. Qualify a sole-BSS radio
+              for the first experiment, or implement the complete radio-wide
+              request. Applying one VIF patch on a shared radio does not prove
+              that procedure.
+            </p>
+            <a
+              href="https://github.com/boardfarmdevs/emosa-lab/blob/main/docs/protocol-inputs.md"
+              >Read the normative-input research ↗</a
+            >
+          </details>
+        </section>
+
+        <section id="evidence">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">03 / Evidence explorer</p>
+              <h2>Follow what actually happened</h2>
+            </div>
+            <span class="pill">Retained runs · no live connection</span>
+          </div>
+          <p>
+            Inspect a baseline, a lost reply, a deadline failure, and a blocked
+            wire experiment. These are recorded component runs, including an
+            earlier failure and its successful retest.
+          </p>
+          <div class="evidence-controls">
+            <label>Experiment<select id="run-select"></select></label
+            ><label
+              >Compare with<select id="compare-select">
+                <option value="">No comparison</option>
+              </select></label
+            >
+          </div>
+          <div id="run-summary" aria-live="polite"></div>
+          <div id="comparison" hidden></div>
+          <div class="timeline-heading">
+            <h3>Event timeline</h3>
+            <label
+              >Filter events<input
+                type="search"
+                id="event-filter"
+                placeholder="e.g. commit, recovery, timeout"
+            /></label>
+          </div>
+          <ol id="timeline" class="timeline"></ol>
+          <p id="event-count" class="quiet" aria-live="polite"></p>
+        </section>
+
+        <section id="next">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">04 / Path to viability</p>
+              <h2>The next proof is end to end</h2>
+            </div>
+          </div>
+          <p class="lead-small">
+            The next milestone is a real EasyMesh controller discovering and
+            onboarding the OpenSync extender as an agent represented by EMOSA,
+            then provisioning its BSS through the adapter. Retain the
+            controller’s agent view and independently verify the extender’s
+            behavior.
+          </p>
+          <div id="roadmap" class="roadmap"></div>
+          <div class="callout">
+            <strong>A useful viability verdict is bounded.</strong>
+            <p>
+              Name the procedure, controller build, pod firmware, schema,
+              management path, timing budget, recovery behavior, and manual
+              interventions. Keep incompatibilities and failed runs alongside
+              successes.
+            </p>
+          </div>
+        </section>
+
+        <section id="reference">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">05 / Reference library</p>
+              <h2>Go from overview to source</h2>
+            </div>
+          </div>
+          <label class="search-label"
+            >Find a guide, requirement, or implementation task<input
+              id="reference-filter"
+              type="search"
+              placeholder="Search WSC, radio, A08, recovery…"
+          /></label>
+          <div id="reference-list" class="reference-grid"></div>
+          <details class="manual-details">
+            <summary>
+              Requirement traceability <span id="trace-count"></span>
+            </summary>
+            <p>
+              “Verified” always refers to the recorded mode. It does not imply
+              hardware or protocol acceptance.
+            </p>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Requirement</th>
+                    <th>Status / mode</th>
+                    <th>Scope & source</th>
+                  </tr>
+                </thead>
+                <tbody id="trace-rows"></tbody>
+              </table>
+            </div>
+          </details>
+        </section>
+        <footer>
+          <p><strong>EMOSA Lab</strong> / Make the hypothesis observable.</p>
+          <p id="build-info">
+            Built from versioned project documentation and retained evidence.
+          </p>
+          <a href="https://github.com/boardfarmdevs/emosa-lab/issues"
+            >Report a documentation issue ↗</a
+          >
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

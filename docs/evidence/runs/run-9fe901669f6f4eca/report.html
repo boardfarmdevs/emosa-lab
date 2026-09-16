@@ -1,0 +1,198 @@
+<!doctype html><html lang='en'><meta charset='utf-8'><meta name='viewport' content='width=device-width'><title>EMOSA experiment</title><style>body{font:16px system-ui;max-width:1100px;margin:3rem auto;padding:0 1rem;background:#101a22;color:#e3edf3}table{border-collapse:collapse;width:100%}td,th{padding:.6rem;border-bottom:1px solid #456}pre{white-space:pre-wrap;overflow-wrap:anywhere}details{padding:.6rem;border-left:3px solid #68b9af;margin:.5rem 0}summary{cursor:pointer}a{color:#83c9ed}</style><h1>EMOSA experiment provision-one-bss</h1><p>Run run-9fe901669f6f4eca</p><p>Execution: <b>blocked</b> · component verdict: <b>blocked</b> · interoperability: <b>blocked</b></p><p>easymesh-wire / ovsdb-sim</p><h2>Checks</h2><table><tr><th>Check</th><th>Verdict</th><th>Expected</th><th>Observed</th></tr></table><h2>Timeline</h2><details><summary>1 · 2026-09-16T01:51:16.125Z · BLOCKED · run</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;event_id&quot;: &quot;33c30386-7e79-47ce-b244-74ed3a2a8660&quot;,
+  &quot;sequence&quot;: 1,
+  &quot;timestamp&quot;: &quot;2026-09-16T01:51:16.125Z&quot;,
+  &quot;process_clock_id&quot;: &quot;45fcc411-a2a5-4596-b58b-ab7b74fddbb7&quot;,
+  &quot;run_id&quot;: &quot;run-9fe901669f6f4eca&quot;,
+  &quot;operation_id&quot;: null,
+  &quot;pod_id&quot;: null,
+  &quot;phase&quot;: &quot;BLOCKED&quot;,
+  &quot;reason&quot;: &quot;MISSING_PREREQUISITE&quot;,
+  &quot;payload&quot;: {
+    &quot;reason&quot;: &quot;MISSING_PREREQUISITE&quot;,
+    &quot;gates&quot;: [
+      {
+        &quot;gate&quot;: &quot;P0&quot;,
+        &quot;status&quot;: &quot;blocked&quot;,
+        &quot;reason&quot;: &quot;exact normative matrix, independent vectors and wire implementation required&quot;
+      },
+      {
+        &quot;gate&quot;: &quot;evidence:pcap&quot;,
+        &quot;status&quot;: &quot;blocked&quot;,
+        &quot;reason&quot;: &quot;required evidence cannot be produced by the available component backend&quot;
+      }
+    ]
+  }
+}</pre></details><h2>Scope and evidence</h2><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;run_id&quot;: &quot;run-9fe901669f6f4eca&quot;,
+  &quot;scenario_id&quot;: &quot;provision-one-bss&quot;,
+  &quot;execution_status&quot;: &quot;blocked&quot;,
+  &quot;verdict&quot;: &quot;blocked&quot;,
+  &quot;interoperability_verdict&quot;: &quot;blocked&quot;,
+  &quot;manifest&quot;: {
+    &quot;software_version&quot;: &quot;0.1.0&quot;,
+    &quot;git_revision&quot;: &quot;4a41911a21439ca135cccdbe6ef5db36368128ef&quot;,
+    &quot;source_tree_sha256&quot;: &quot;0c7528923e2fbcff1af14dc066439135c2b84ca5596b89bc1874222b3ab204f4&quot;,
+    &quot;source_hash_scope&quot;: &quot;checkout code/contracts/scenarios&quot;,
+    &quot;dependencies&quot;: {
+      &quot;ovs&quot;: &quot;4.0.0&quot;,
+      &quot;jsonschema&quot;: &quot;4.26.0&quot;
+    },
+    &quot;python&quot;: &quot;3.13.7&quot;,
+    &quot;platform&quot;: &quot;Linux-6.8.0-138-generic-x86_64-with-glibc2.35&quot;,
+    &quot;uv_lock_sha256&quot;: &quot;18b75c5c986357804dac047759dfb6af88b59c12b0af5cf35057521c1431e8a0&quot;,
+    &quot;scenario&quot;: {
+      &quot;schema_version&quot;: 1,
+      &quot;id&quot;: &quot;provision-one-bss&quot;,
+      &quot;purpose&quot;: &quot;Pending genuine EasyMesh WSC provisioning; P0 required. No semantic fallback.&quot;,
+      &quot;initiating_interface&quot;: &quot;easymesh-wire&quot;,
+      &quot;required_backend&quot;: &quot;any-simulation&quot;,
+      &quot;requirements&quot;: [
+        &quot;W01&quot;,
+        &quot;W02&quot;,
+        &quot;W04&quot;
+      ],
+      &quot;prerequisites&quot;: [
+        &quot;P0&quot;,
+        &quot;synthetic-existing-bss-v1&quot;
+      ],
+      &quot;target_allowlist&quot;: [
+        &quot;pod-1&quot;
+      ],
+      &quot;intent&quot;: {
+        &quot;pod_id&quot;: &quot;pod-1&quot;,
+        &quot;radio_id&quot;: &quot;radio-1&quot;,
+        &quot;bss_id&quot;: &quot;bss-1&quot;,
+        &quot;ssid&quot;: &quot;emosa-lab&quot;,
+        &quot;secret_ref&quot;: &quot;scenario-key&quot;,
+        &quot;enabled&quot;: true,
+        &quot;security_mode&quot;: &quot;wpa2-psk&quot;
+      },
+      &quot;expected&quot;: {
+        &quot;state&quot;: &quot;OBSERVED_APPLIED&quot;,
+        &quot;commit_attribution&quot;: &quot;reply&quot;,
+        &quot;changed_fields&quot;: [
+          &quot;ssid&quot;,
+          &quot;wpa_psks[key]&quot;
+        ]
+      },
+      &quot;fault&quot;: {
+        &quot;point&quot;: &quot;after-config-commit&quot;,
+        &quot;action&quot;: &quot;none&quot;,
+        &quot;duration_seconds&quot;: 0
+      },
+      &quot;seed&quot;: 7,
+      &quot;repetitions&quot;: 1,
+      &quot;deadlines&quot;: {
+        &quot;apply_seconds&quot;: 30,
+        &quot;overall_seconds&quot;: 45
+      },
+      &quot;topology&quot;: {
+        &quot;management_path&quot;: &quot;private-unix-socket&quot;,
+        &quot;target_carries_management&quot;: false
+      },
+      &quot;cleanup&quot;: &quot;dispose-simulation&quot;,
+      &quot;evidence_required&quot;: [
+        &quot;events&quot;,
+        &quot;observations&quot;,
+        &quot;transaction&quot;,
+        &quot;pcap&quot;
+      ]
+    },
+    &quot;backend_mode&quot;: &quot;ovsdb-sim&quot;,
+    &quot;initiating_interface&quot;: &quot;easymesh-wire&quot;,
+    &quot;trial&quot;: 1,
+    &quot;started_at&quot;: &quot;2026-09-16T01:51:16.123Z&quot;,
+    &quot;mapping_version&quot;: &quot;synthetic-existing-bss-v1&quot;,
+    &quot;schema_fingerprints&quot;: {},
+    &quot;pod_identities&quot;: [
+      &quot;pod-1&quot;
+    ],
+    &quot;controller&quot;: &quot;not_started&quot;,
+    &quot;virtual_agent&quot;: null,
+    &quot;topology&quot;: {
+      &quot;management_path&quot;: &quot;private-unix-socket&quot;,
+      &quot;target_carries_management&quot;: false
+    },
+    &quot;resource_budget&quot;: {
+      &quot;writes_per_pod&quot;: 1,
+      &quot;queued_modifying_requests&quot;: 0,
+      &quot;ovsdb_requests_per_session&quot;: 16,
+      &quot;monitor_rows&quot;: 10000
+    },
+    &quot;finished_at&quot;: &quot;2026-09-16T01:51:16.130Z&quot;
+  },
+  &quot;checks&quot;: [],
+  &quot;coverage&quot;: {
+    &quot;selected&quot;: [
+      &quot;W01&quot;,
+      &quot;W02&quot;,
+      &quot;W04&quot;
+    ],
+    &quot;eligible&quot;: 0,
+    &quot;attempted&quot;: 0,
+    &quot;passing&quot;: 0,
+    &quot;omitted&quot;: [
+      &quot;all wire, RF, hardware and external-peer acceptance&quot;
+    ]
+  },
+  &quot;operations&quot;: [],
+  &quot;timings&quot;: {
+    &quot;clock&quot;: &quot;single-process-monotonic&quot;,
+    &quot;samples&quot;: [],
+    &quot;client_recovery&quot;: null,
+    &quot;management_interruption&quot;: null,
+    &quot;runner_wall_seconds&quot;: 0.004681324993725866
+  },
+  &quot;prerequisites&quot;: [
+    {
+      &quot;gate&quot;: &quot;P0&quot;,
+      &quot;status&quot;: &quot;blocked&quot;,
+      &quot;reason&quot;: &quot;exact normative matrix, independent vectors and wire implementation required&quot;
+    },
+    {
+      &quot;gate&quot;: &quot;evidence:pcap&quot;,
+      &quot;status&quot;: &quot;blocked&quot;,
+      &quot;reason&quot;: &quot;required evidence cannot be produced by the available component backend&quot;
+    }
+  ],
+  &quot;cleanup&quot;: {
+    &quot;status&quot;: &quot;completed&quot;,
+    &quot;policy&quot;: &quot;dispose-simulation&quot;,
+    &quot;errors&quot;: [],
+    &quot;physical_pod_changes&quot;: false
+  },
+  &quot;artifacts&quot;: [
+    {
+      &quot;path&quot;: &quot;inputs.json&quot;,
+      &quot;sha256&quot;: &quot;ffb3c3fb47a262ebcef1493bfa791bc47bcd24288acd62cfc796b534eb1adb43&quot;,
+      &quot;size&quot;: 1200
+    },
+    {
+      &quot;path&quot;: &quot;events.json&quot;,
+      &quot;sha256&quot;: &quot;b753505afe8d222662d32e848d2811b6f272e03d9aff3efe15fe4655c45ec510&quot;,
+      &quot;size&quot;: 810
+    },
+    {
+      &quot;path&quot;: &quot;observations.json&quot;,
+      &quot;sha256&quot;: &quot;37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570&quot;,
+      &quot;size&quot;: 3
+    }
+  ],
+  &quot;limitations&quot;: [
+    &quot;Semantic component testing does not evaluate EasyMesh provisioning or interoperability.&quot;,
+    &quot;No physical radio or independent Wi-Fi client evidence.&quot;,
+    &quot;Upstream reference schema and synthetic identities do not qualify a pod build.&quot;,
+    &quot;Lost-reply injection discards a real response at adapter ingress before interpretation.&quot;,
+    &quot;Simulation event triggers are controlled; OS scheduling is not deterministic.&quot;
+  ],
+  &quot;seamlessness&quot;: {
+    &quot;controller_workflow&quot;: &quot;not_evaluated&quot;,
+    &quot;pod_compatibility&quot;: &quot;not_evaluated&quot;,
+    &quot;semantic_accuracy&quot;: &quot;not_evaluated&quot;,
+    &quot;operational_continuity&quot;: &quot;not_evaluated&quot;,
+    &quot;timing_and_observability&quot;: &quot;not_evaluated&quot;
+  }
+}</pre></html>

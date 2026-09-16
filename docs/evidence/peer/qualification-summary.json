@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "status": "component_and_independent_peer_baseline_verified",
+  "goal_complete": false,
+  "scope": "Actual controller outbound discovery delivered to EMOSA container; no EMOSA protocol processing, onboarding or physical pod",
+  "emosa_tested_revision": "595356ba45e11de9d2de34c4cd20b76bea4fa04f",
+  "source_archive_sha256": "0f8b48d1e09a9fe29b800cdb752cdc52d7a7b318d272011e023ba47658afec39",
+  "source_tree_sha256": "59afdd938d59dfd82cbac6d1f12cb883a79e219a0f213d62f48dad13d0f7233f",
+  "candidate_profile": "deploy/peer/prplmesh.reference.json",
+  "controller_inventory": {
+    "devices": 0,
+    "bss_policies": 0
+  },
+  "observations": {
+    "initial_no_radio": "helper exited before binding transport; zero frames captured",
+    "hwsim_attached": "helper bound br-lan/em0; radio remained down without AP/client",
+    "initial_capture_frames": 2,
+    "paired_capture": [
+      {
+        "path": "repeat-bridge.pcap",
+        "captured_length": 43,
+        "original_length": 43,
+        "timestamp_unix": 1789529881.762839,
+        "packet_sha256": "9d3bc9b8dfed547f995bfeda2f7065f2c6fdc3bc10fdbcb8fb9840ccd564425c"
+      },
+      {
+        "path": "repeat-receiver.pcap",
+        "captured_length": 43,
+        "original_length": 43,
+        "timestamp_unix": 1789529881.762861,
+        "packet_sha256": "9d3bc9b8dfed547f995bfeda2f7065f2c6fdc3bc10fdbcb8fb9840ccd564425c"
+      }
+    ],
+    "interpretation": "Wireshark 4.2.2 decoded topology discovery; normative IEEE validation pending",
+    "parser_package": "4.2.2-1.1build3",
+    "invalid_restart_guard": "rejected live/failed units without changing them",
+    "existing_radio_guard": "rejected existing module without modifying it",
+    "wrong_host_guard": "both commands rejected the development host"
+  },
+  "ubuntu24_component_tests": {
+    "unit": 69,
+    "ovsdb": 13
+  },
+  "vm_runner_scenarios": {
+    "run-02348298ed6f4f79": "component BSS change passed",
+    "run-aaef446cd0e74cb3": "component lost reply passed"
+  },
+  "scenario_interoperability_verdict": "not_evaluated",
+  "known_failures": [
+    "Controller and helper repeatedly SIGABRT on shutdown; final launcher returned 1 and preserved failed unit results",
+    "Native helper emits unavailable agent3 and defaults.d diagnostics; effects beyond baseline remain unqualified"
+  ],
+  "final_state": "Owned peer processes stopped; hwsim unloaded; inner containers stopped; emosa-lab VM stopped",
+  "remaining": [
+    "Full IEEE base/amendment access and frozen P0 rules",
+    "Real EMOSA discovery/search/WSC and complete radio BSS mapping",
+    "Explicit controller BSS policy before M1",
+    "Qualified physical-pod access and independent physical client",
+    "Clean peer shutdown and end-to-end recovery",
+    "Retained final runtime images and clean full-procedure rerun"
+  ]
+}

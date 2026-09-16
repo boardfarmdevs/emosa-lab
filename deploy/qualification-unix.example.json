@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "pod_id": "replace-with-pod-id",
+  "database": "Open_vSwitch",
+  "connection": {
+    "direction": "dial",
+    "endpoint": "unix:/home/REPLACE_USER/.config/emosa/pods/pod-1/sockets/ovsdb.sock",
+    "trust": {
+      "kind": "local-unix"
+    }
+  },
+  "secret_directory": "/home/REPLACE_USER/.config/emosa/pods/pod-1/secrets",
+  "read_only": true,
+  "timeout_seconds": 10,
+  "expected_identifiers": {}
+}

@@ -1,0 +1,140 @@
+[
+  {
+    "schema_version": 1,
+    "event_id": "614d39e4-3051-4ec9-ae23-7a96d925adfc",
+    "sequence": 1,
+    "timestamp": "2026-09-16T01:33:53.956Z",
+    "process_clock_id": "177950cb-f508-4cfb-b640-91b52d5fce25",
+    "run_id": "run-6bde1516e5784e72",
+    "operation_id": null,
+    "pod_id": "pod-1",
+    "phase": "READY",
+    "reason": null,
+    "payload": {
+      "generation": 1,
+      "backend_mode": "ovsdb-sim",
+      "fresh": true,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16"
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "5329a06d-fd74-483d-b481-f9c5b91abde5",
+    "sequence": 2,
+    "timestamp": "2026-09-16T01:33:53.959Z",
+    "process_clock_id": "177950cb-f508-4cfb-b640-91b52d5fce25",
+    "run_id": "run-6bde1516e5784e72",
+    "operation_id": "8c24f994-3c54-46cd-850d-82e1388cd4ba",
+    "pod_id": "pod-1",
+    "phase": "REQUESTED",
+    "reason": null,
+    "payload": {}
+  },
+  {
+    "schema_version": 1,
+    "event_id": "0659d282-e3f3-4860-93aa-bc57b511b3a2",
+    "sequence": 3,
+    "timestamp": "2026-09-16T01:33:53.963Z",
+    "process_clock_id": "177950cb-f508-4cfb-b640-91b52d5fce25",
+    "run_id": "run-6bde1516e5784e72",
+    "operation_id": "8c24f994-3c54-46cd-850d-82e1388cd4ba",
+    "pod_id": "pod-1",
+    "phase": "VALIDATED",
+    "reason": null,
+    "payload": {
+      "reason": null,
+      "plan": {
+        "mapping": "synthetic-existing-bss-v1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "fields": [
+          "ssid",
+          "wpa_psks[key]"
+        ],
+        "ssid": "emosa-lab",
+        "secret_ref": "scenario-key",
+        "guard": "VIF fields, security and radio/VIF references",
+        "shared_radio_actuation": false
+      }
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "bfe38bc6-4650-42c9-a3d2-cdca3396138b",
+    "sequence": 4,
+    "timestamp": "2026-09-16T01:33:53.965Z",
+    "process_clock_id": "177950cb-f508-4cfb-b640-91b52d5fce25",
+    "run_id": "run-6bde1516e5784e72",
+    "operation_id": "8c24f994-3c54-46cd-850d-82e1388cd4ba",
+    "pod_id": "pod-1",
+    "phase": "SUBMITTED",
+    "reason": null,
+    "payload": {
+      "reason": null,
+      "attempt": {
+        "attempt_id": "ed26371d-d219-4aca-a156-a9b918c5f695",
+        "transaction_id": "1e4d6aa6-2907-4a19-84f5-ce24b62cf1d5",
+        "session_generation": 1,
+        "prepared_at": "2026-09-16T01:33:53.965Z"
+      }
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "4687f045-6a2b-46c8-a5b3-c89d9bea00a2",
+    "sequence": 5,
+    "timestamp": "2026-09-16T01:33:53.970Z",
+    "process_clock_id": "177950cb-f508-4cfb-b640-91b52d5fce25",
+    "run_id": "run-6bde1516e5784e72",
+    "operation_id": "8c24f994-3c54-46cd-850d-82e1388cd4ba",
+    "pod_id": "pod-1",
+    "phase": "CONFIG_COMMITTED",
+    "reason": null,
+    "payload": {
+      "reason": null
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "758f1cec-60aa-47ba-95f5-d7fb2993093e",
+    "sequence": 6,
+    "timestamp": "2026-09-16T01:33:53.972Z",
+    "process_clock_id": "177950cb-f508-4cfb-b640-91b52d5fce25",
+    "run_id": "run-6bde1516e5784e72",
+    "operation_id": null,
+    "pod_id": null,
+    "phase": "BEFORE_DEVICE_APPLICATION",
+    "reason": null,
+    "payload": {
+      "fault": {
+        "point": "after-config-commit",
+        "action": "restart-server",
+        "duration_seconds": 0
+      },
+      "seed_sample": 339563
+    }
+  },
+  {
+    "schema_version": 1,
+    "event_id": "f347c670-e246-4894-bb14-3708a85ebf12",
+    "sequence": 7,
+    "timestamp": "2026-09-16T01:33:58.989Z",
+    "process_clock_id": "177950cb-f508-4cfb-b640-91b52d5fce25",
+    "run_id": "run-6bde1516e5784e72",
+    "operation_id": null,
+    "pod_id": null,
+    "phase": "ERROR",
+    "reason": {
+      "code": "NOT_READY",
+      "message": "independent manager command failed",
+      "details": {}
+    },
+    "payload": {
+      "reason": {
+        "code": "NOT_READY",
+        "message": "independent manager command failed",
+        "details": {}
+      }
+    }
+  }
+]

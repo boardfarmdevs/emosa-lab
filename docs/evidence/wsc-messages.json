@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "verified_wsc_payload_component_only",
+  "source_base_revision": "a4c6c19aa04da889bd9ca45cdbafc3df63ccb0c5",
+  "tested_working_tree_sha256": {
+    "src/emosa/wsc.py": "9c79bd436bc428ac671e52b75a7f511ed0214bc26720c2d79edc350e89c1da7a",
+    "src/emosa/wsc_messages.py": "2e29e06282316b6c3443c34831222a64925ae4f7bbfc9b88460ed49812c86f02",
+    "tests/test_wsc_messages.py": "506474a27c389c378d2d4724b298640a48516dc843490cde3b75d48ab7e035e9",
+    "scripts/check-wsc-reference.py": "62727ffeb4f136777484f096718b79e19f1b08beff7b29de9fc66b36fe85c301",
+    "tests/fixtures/protocol/wsc-messages/reference.c": "e7de1e0fd807fa088449a2573c5890569cf41f59acb01e4bfaee3bab0fed1a5d"
+  },
+  "unit_suite_passes": 124,
+  "wsc_message_component_passes": 55,
+  "independent_reference": "tests/fixtures/protocol/wsc-messages/provenance.json",
+  "independent_results": [
+    "EMOSA M1 equals unmodified hostap builder output (440 bytes)",
+    "Hostap strict validators accept generated M1/M2 and reject missing-Version negatives",
+    "EMOSA authenticates/decrypts native-helper M2 (594 bytes)",
+    "Native HMAC/KWA routines independently validate the payload"
+  ],
+  "negative_coverage": [
+    "missing and duplicate required fields",
+    "enrollee nonce and original-M1 identity mismatch",
+    "authentication before decryption",
+    "malformed authenticated settings and conditional password fields",
+    "version and unknown-field forward compatibility",
+    "BSS-index placement and batch nonce/index uniqueness",
+    "payload count and nested vendor resource bounds"
+  ],
+  "p0_satisfied": false,
+  "complete_ieee_messages": false,
+  "controller_interoperability_tested": false,
+  "pod_accessed": false,
+  "configuration_writes_enabled": false,
+  "remaining": [
+    "IEEE transport and full CMDU/profile validation",
+    "Controller trust, radio binding, exchange state, replay/retries/restart",
+    "Complete radio/BSS semantics and qualified mapping",
+    "Unchanged physical pod and independent client evidence"
+  ]
+}

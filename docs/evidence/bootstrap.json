@@ -1,0 +1,16 @@
+{
+  "system": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+  "host_distribution": "Ubuntu 22.04.5 LTS",
+  "python_patch": "Python 3.13.7",
+  "uv": "uv 0.11.17 (x86_64-unknown-linux-gnu)",
+  "lxd": "client/server 6.9",
+  "reference_vm_provisioned": false,
+  "schema_sha256": "91d18cc4668ff6fc9c9be2234ddc7e70c84b9640f04e621a1ff90e3451c867a9",
+  "ovsdb_server": "ovsdb-server (Open vSwitch) 4.0.0",
+  "ovsdb_binaries": {
+    "ovsdb-server": "4e24b896cf90c17340ffcd309870d5696422f186a41825ffb025a4773b1558be",
+    "ovsdb-tool": "2dd560a9f4434482477fb034b3885011ba705fec537c97d0b0d714a6710c944c"
+  },
+  "ovs_tarball_sha256": "6c94e1e019a7f36ef40a9ae34fb21ab2534dbb78e5bea83338452e07a11becf2",
+  "host_infrastructure_modified": false
+}

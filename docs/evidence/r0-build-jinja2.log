@@ -1,0 +1,10 @@
+Installed 3 packages in 3ms
+make: Entering directory '/home/rev/git/emosa/.cache/upstream/opensync'
+TARGET=native PLATFORM= VENDOR=
+Using configuration file: kconfig/targets/config_native
+Layers: .   
+ link    [kconfig] work/native-cc-ubuntu22.04-x86_64/obj/src.lib.kconfig/libkconfig.a
+make: protoc-c: No such file or directory
+make: *** [/home/rev/git/emosa/.cache/upstream/opensync//./src/lib/protobuf/unit.mk:63: work/native-cc-ubuntu22.04-x86_64/pb-src/dpi_stats.pb-c.c] Error 127
+make: *** Waiting for unfinished jobs....
+make: Leaving directory '/home/rev/git/emosa/.cache/upstream/opensync'

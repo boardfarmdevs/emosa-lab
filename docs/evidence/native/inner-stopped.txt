@@ -1,0 +1,3 @@
+em-controller,STOPPED
+emosa,STOPPED
+opensync-native-r0,STOPPED

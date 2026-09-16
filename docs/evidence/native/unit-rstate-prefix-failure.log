@@ -1,0 +1,4 @@
+    RUN: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_rstate_channel
+   PASS: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_rstate_channel
+    RUN: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_rstate_bcn_int
+owm: src/lib/ow/src/ow_ovsdb.c:4251: ow_ovsdb_ut_run: Assertion `ovsdb_echo_call_argv(ow_ovsdb_ut_echo_cb, &ut, 1, argv) == true' failed.

@@ -1,0 +1,5 @@
+EMOSA_NATIVE simulated_inventory one_phy_one_existing_ap
+EMOSA_NATIVE driver_request sequence=1 held=0 ssid_length=14 psk_count=1
+EMOSA_NATIVE simulated_feedback sequence=1 ssid_length=14 psk_count=1
+EMOSA_NATIVE driver_request sequence=2 held=1 ssid_length=15 psk_count=1
+EMOSA_NATIVE simulated_feedback sequence=2 ssid_length=15 psk_count=1

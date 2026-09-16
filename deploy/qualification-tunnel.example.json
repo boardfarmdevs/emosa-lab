@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "pod_id": "replace-with-pod-id",
+  "database": "Open_vSwitch",
+  "connection": {
+    "direction": "dial",
+    "endpoint": "tcp:127.0.0.1:16640",
+    "trust": {
+      "kind": "existing-tunnel",
+      "evidence_ref": "tunnel-trust.txt"
+    }
+  },
+  "secret_directory": "/home/REPLACE_USER/.config/emosa/pods/pod-1/secrets",
+  "read_only": true,
+  "timeout_seconds": 10,
+  "expected_identifiers": {}
+}

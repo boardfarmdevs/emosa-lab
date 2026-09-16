@@ -1,0 +1,11 @@
+{
+  "scope": "standalone-hwsim-client-smoke",
+  "verdict": "fail",
+  "emosa_actuation": "not_evaluated",
+  "wire_provisioning": "not_evaluated",
+  "physical_pod": "not_evaluated",
+  "started_at": "2026-09-16T02:30:30.408720+00:00",
+  "checks": {},
+  "error_type": "RuntimeError",
+  "finished_at": "2026-09-16T02:30:30.837883+00:00"
+}

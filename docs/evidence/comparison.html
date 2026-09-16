@@ -1,0 +1,176 @@
+<!doctype html><html lang='en'><meta charset='utf-8'><title>EMOSA run comparison</title><h1>EMOSA run comparison</h1><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;run_a&quot;: &quot;run-65264f5d645e4bb7&quot;,
+  &quot;run_b&quot;: &quot;run-71210fdc76724ca2&quot;,
+  &quot;differences&quot;: [
+    {
+      &quot;field&quot;: &quot;finished_at&quot;,
+      &quot;run_a&quot;: &quot;2026-09-16T01:51:16.474Z&quot;,
+      &quot;run_b&quot;: &quot;2026-09-16T01:51:17.547Z&quot;
+    },
+    {
+      &quot;field&quot;: &quot;scenario.expected.commit_attribution&quot;,
+      &quot;run_a&quot;: &quot;reply&quot;,
+      &quot;run_b&quot;: &quot;unknown&quot;
+    },
+    {
+      &quot;field&quot;: &quot;scenario.fault.action&quot;,
+      &quot;run_a&quot;: &quot;none&quot;,
+      &quot;run_b&quot;: &quot;lost-reply&quot;
+    },
+    {
+      &quot;field&quot;: &quot;scenario.fault.point&quot;,
+      &quot;run_a&quot;: &quot;after-config-commit&quot;,
+      &quot;run_b&quot;: &quot;transaction-reply&quot;
+    },
+    {
+      &quot;field&quot;: &quot;scenario.id&quot;,
+      &quot;run_a&quot;: &quot;component-bss-change&quot;,
+      &quot;run_b&quot;: &quot;component-lost-reply&quot;
+    },
+    {
+      &quot;field&quot;: &quot;scenario.purpose&quot;,
+      &quot;run_a&quot;: &quot;Direct semantic component test of one existing simulated BSS; no EasyMesh packets.&quot;,
+      &quot;run_b&quot;: &quot;Semantic component fault experiment: lost-reply&quot;
+    },
+    {
+      &quot;field&quot;: &quot;scenario.requirements&quot;,
+      &quot;run_a&quot;: [
+        &quot;A08&quot;,
+        &quot;A10&quot;,
+        &quot;A13&quot;,
+        &quot;E02&quot;,
+        &quot;E04&quot;,
+        &quot;E06&quot;
+      ],
+      &quot;run_b&quot;: [
+        &quot;E02&quot;,
+        &quot;E04&quot;,
+        &quot;E05&quot;,
+        &quot;E06&quot;,
+        &quot;E07&quot;,
+        &quot;E08&quot;
+      ]
+    },
+    {
+      &quot;field&quot;: &quot;started_at&quot;,
+      &quot;run_a&quot;: &quot;2026-09-16T01:51:16.116Z&quot;,
+      &quot;run_b&quot;: &quot;2026-09-16T01:51:16.097Z&quot;
+    }
+  ],
+  &quot;verdicts&quot;: {
+    &quot;run_a&quot;: &quot;pass&quot;,
+    &quot;run_b&quot;: &quot;pass&quot;
+  },
+  &quot;checks&quot;: {
+    &quot;run_a&quot;: [
+      {
+        &quot;id&quot;: &quot;pod-1:operation&quot;,
+        &quot;verdict&quot;: &quot;pass&quot;,
+        &quot;expected&quot;: &quot;OBSERVED_APPLIED&quot;,
+        &quot;observed&quot;: &quot;OBSERVED_APPLIED&quot;,
+        &quot;evidence_refs&quot;: [
+          &quot;events.json&quot;,
+          &quot;observations.json&quot;
+        ]
+      }
+    ],
+    &quot;run_b&quot;: [
+      {
+        &quot;id&quot;: &quot;pod-1:operation&quot;,
+        &quot;verdict&quot;: &quot;pass&quot;,
+        &quot;expected&quot;: &quot;OBSERVED_APPLIED&quot;,
+        &quot;observed&quot;: &quot;OBSERVED_APPLIED&quot;,
+        &quot;evidence_refs&quot;: [
+          &quot;events.json&quot;,
+          &quot;observations.json&quot;
+        ]
+      }
+    ]
+  },
+  &quot;timings&quot;: {
+    &quot;run_a&quot;: {
+      &quot;clock&quot;: &quot;single-process-monotonic&quot;,
+      &quot;samples&quot;: [
+        {
+          &quot;operation_id&quot;: &quot;20b840d9-63f0-4c95-b7e4-937d7cb40a9a&quot;,
+          &quot;request_to_final_observation_seconds&quot;: 0.028107042016927153,
+          &quot;request_to_commit_seconds&quot;: 0.01152304996503517,
+          &quot;request_to_application_seconds&quot;: 0.025007713004015386,
+          &quot;operation_phase_clocks&quot;: {
+            &quot;VALIDATED&quot;: {
+              &quot;seconds_since_request&quot;: 0.0014697379665449262,
+              &quot;process_clock_id&quot;: &quot;6460c58f-27ea-445f-ba2c-29b596db340e&quot;
+            },
+            &quot;SUBMITTED&quot;: {
+              &quot;seconds_since_request&quot;: 0.004934721975587308,
+              &quot;process_clock_id&quot;: &quot;6460c58f-27ea-445f-ba2c-29b596db340e&quot;
+            },
+            &quot;CONFIG_COMMITTED&quot;: {
+              &quot;seconds_since_request&quot;: 0.01152304996503517,
+              &quot;process_clock_id&quot;: &quot;6460c58f-27ea-445f-ba2c-29b596db340e&quot;
+            },
+            &quot;OBSERVED_APPLIED&quot;: {
+              &quot;seconds_since_request&quot;: 0.025007713004015386,
+              &quot;process_clock_id&quot;: &quot;6460c58f-27ea-445f-ba2c-29b596db340e&quot;
+            }
+          },
+          &quot;independent_client_seconds&quot;: null
+        }
+      ],
+      &quot;client_recovery&quot;: null,
+      &quot;management_interruption&quot;: null,
+      &quot;runner_wall_seconds&quot;: 0.35529611399397254
+    },
+    &quot;run_b&quot;: {
+      &quot;clock&quot;: &quot;single-process-monotonic&quot;,
+      &quot;samples&quot;: [
+        {
+          &quot;operation_id&quot;: &quot;ae640e78-660f-4e6b-b18f-37a64c744918&quot;,
+          &quot;request_to_final_observation_seconds&quot;: 1.1091451029642485,
+          &quot;request_to_commit_seconds&quot;: null,
+          &quot;request_to_application_seconds&quot;: 1.1067274090019055,
+          &quot;operation_phase_clocks&quot;: {
+            &quot;VALIDATED&quot;: {
+              &quot;seconds_since_request&quot;: 0.004110272042453289,
+              &quot;process_clock_id&quot;: &quot;754706f3-3312-4b30-8ce3-4e791b15facd&quot;
+            },
+            &quot;SUBMITTED&quot;: {
+              &quot;seconds_since_request&quot;: 0.006267146032769233,
+              &quot;process_clock_id&quot;: &quot;754706f3-3312-4b30-8ce3-4e791b15facd&quot;
+            },
+            &quot;INDETERMINATE&quot;: {
+              &quot;seconds_since_request&quot;: 0.013002365012653172,
+              &quot;process_clock_id&quot;: &quot;754706f3-3312-4b30-8ce3-4e791b15facd&quot;
+            },
+            &quot;OBSERVED_APPLIED&quot;: {
+              &quot;seconds_since_request&quot;: 1.1067274090019055,
+              &quot;process_clock_id&quot;: &quot;754706f3-3312-4b30-8ce3-4e791b15facd&quot;
+            }
+          },
+          &quot;independent_client_seconds&quot;: null
+        }
+      ],
+      &quot;client_recovery&quot;: null,
+      &quot;management_interruption&quot;: null,
+      &quot;runner_wall_seconds&quot;: 1.4462539799860679
+    }
+  },
+  &quot;evidence_gaps&quot;: {
+    &quot;run_a&quot;: [
+      &quot;Semantic component testing does not evaluate EasyMesh provisioning or interoperability.&quot;,
+      &quot;No physical radio or independent Wi-Fi client evidence.&quot;,
+      &quot;Upstream reference schema and synthetic identities do not qualify a pod build.&quot;,
+      &quot;Lost-reply injection discards a real response at adapter ingress before interpretation.&quot;,
+      &quot;Simulation event triggers are controlled; OS scheduling is not deterministic.&quot;
+    ],
+    &quot;run_b&quot;: [
+      &quot;Semantic component testing does not evaluate EasyMesh provisioning or interoperability.&quot;,
+      &quot;No physical radio or independent Wi-Fi client evidence.&quot;,
+      &quot;Upstream reference schema and synthetic identities do not qualify a pod build.&quot;,
+      &quot;Lost-reply injection discards a real response at adapter ingress before interpretation.&quot;,
+      &quot;Simulation event triggers are controlled; OS scheduling is not deterministic.&quot;
+    ]
+  },
+  &quot;causality&quot;: &quot;Differences in builds, backend, firmware or topology are uncontrolled; no causal attribution.&quot;
+}</pre></html>

@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "component-bss-change",
+  "purpose": "Direct semantic component test of one existing simulated BSS; no EasyMesh packets.",
+  "initiating_interface": "semantic",
+  "required_backend": "any-simulation",
+  "requirements": [
+    "A08",
+    "A10",
+    "A13",
+    "E02",
+    "E04",
+    "E06"
+  ],
+  "prerequisites": [
+    "synthetic-existing-bss-v1"
+  ],
+  "target_allowlist": [
+    "pod-1"
+  ],
+  "intent": {
+    "pod_id": "pod-1",
+    "radio_id": "radio-1",
+    "bss_id": "bss-1",
+    "ssid": "emosa-lab",
+    "secret_ref": "scenario-key",
+    "enabled": true,
+    "security_mode": "wpa2-psk"
+  },
+  "expected": {
+    "state": "OBSERVED_APPLIED",
+    "commit_attribution": "reply",
+    "changed_fields": [
+      "ssid",
+      "wpa_psks[key]"
+    ]
+  },
+  "fault": {
+    "point": "after-config-commit",
+    "action": "none",
+    "duration_seconds": 0
+  },
+  "seed": 7,
+  "repetitions": 1,
+  "deadlines": {
+    "apply_seconds": 30,
+    "overall_seconds": 45
+  },
+  "topology": {
+    "management_path": "private-unix-socket",
+    "target_carries_management": false
+  },
+  "cleanup": "dispose-simulation",
+  "evidence_required": [
+    "events",
+    "observations",
+    "transaction"
+  ]
+}

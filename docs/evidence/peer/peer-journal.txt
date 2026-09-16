@@ -1,0 +1,103 @@
+Sep 16 03:27:42 em-controller systemd[1]: Starting emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent...
+Sep 16 03:27:42 em-controller systemd[1]: Started emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent.
+Sep 16 03:27:42 em-controller beerocks_agent[1307]: 2026-09-16 03:27:42,237 INFO [default] MultiVendorExample: registering vendor-specific TLV handlers and parsers
+Sep 16 03:27:42 em-controller beerocks_agent[1307]: 2026-09-16 03:27:42,237 INFO [default] MultiVendorAirties (dummy): registering handlers
+Sep 16 03:27:42 em-controller beerocks_agent[1307]: Beerocks Agent Process Start
+Sep 16 03:27:42 em-controller beerocks_agent[1307]: 2026-09-16 03:27:42,238 ERROR [default] cfg_get_hostap_iface: unknown iface index: 3
+Sep 16 03:27:42 em-controller beerocks_agent[1307]: 2026-09-16 03:27:42,238 ERROR [default] cfg_get_all_prplmesh_wifi_interfaces: failed to get wifi interface for agent3
+Sep 16 03:27:42 em-controller beerocks_agent[1307]: 2026-09-16 03:27:42,238 ERROR [default] Failed to read pid from file: /tmp/beerocks/pid/beerocks_agent
+Sep 16 03:27:42 em-controller beerocks_agent[1307]: Include file not found "defaults.d"
+Sep 16 03:27:42 em-controller beerocks_agent[1307]: ERROR  : 17 - Include file not found "defaults.d"@(null):line 1
+Sep 16 03:35:46 em-controller systemd[1]: Stopping emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent...
+Sep 16 03:35:47 em-controller systemd[1]: emosa-peer-agent.service: Main process exited, code=dumped, status=6/ABRT
+Sep 16 03:35:47 em-controller systemd[1]: emosa-peer-agent.service: Failed with result 'core-dump'.
+Sep 16 03:35:47 em-controller systemd[1]: Stopped emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent.
+Sep 16 03:35:47 em-controller systemd[1]: Starting emosa-peer-bus.service - /usr/sbin/ubusd...
+Sep 16 03:35:47 em-controller systemd[1]: Started emosa-peer-bus.service - /usr/sbin/ubusd.
+Sep 16 03:35:47 em-controller systemd[1]: Starting emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport...
+Sep 16 03:35:47 em-controller systemd[1]: Started emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport.
+Sep 16 03:35:47 em-controller ieee1905_transport[1384]: IEEE1905 Transport Process Start
+Sep 16 03:35:47 em-controller systemd[1]: Starting emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller...
+Sep 16 03:35:47 em-controller ieee1905_transport[1384]: 03:35:47 logger.cpp[144]: Configuration file does not exist
+Sep 16 03:35:47 em-controller systemd[1]: Started emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller.
+Sep 16 03:35:47 em-controller beerocks_controller[1386]: Beerocks Controller Process Start
+Sep 16 03:35:47 em-controller beerocks_controller[1386]: Include file not found "defaults.d"
+Sep 16 03:35:47 em-controller beerocks_controller[1386]: ERROR  : 17 - Include file not found "defaults.d"@(null):line 1
+Sep 16 03:36:51 em-controller systemd[1]: Stopping emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller...
+Sep 16 03:36:51 em-controller systemd[1]: emosa-peer-controller.service: Main process exited, code=dumped, status=6/ABRT
+Sep 16 03:36:51 em-controller systemd[1]: emosa-peer-controller.service: Failed with result 'core-dump'.
+Sep 16 03:36:51 em-controller systemd[1]: Stopped emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller.
+Sep 16 03:36:51 em-controller systemd[1]: Stopping emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport...
+Sep 16 03:36:51 em-controller systemd[1]: emosa-peer-transport.service: Deactivated successfully.
+Sep 16 03:36:51 em-controller systemd[1]: Stopped emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport.
+Sep 16 03:36:51 em-controller systemd[1]: Stopping emosa-peer-bus.service - /usr/sbin/ubusd...
+Sep 16 03:36:51 em-controller systemd[1]: emosa-peer-bus.service: Deactivated successfully.
+Sep 16 03:36:51 em-controller systemd[1]: Stopped emosa-peer-bus.service - /usr/sbin/ubusd.
+Sep 16 03:37:59 em-controller systemd[1]: Starting emosa-peer-bus.service - /usr/sbin/ubusd...
+Sep 16 03:37:59 em-controller systemd[1]: Started emosa-peer-bus.service - /usr/sbin/ubusd.
+Sep 16 03:37:59 em-controller systemd[1]: Starting emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport...
+Sep 16 03:37:59 em-controller systemd[1]: Started emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport.
+Sep 16 03:37:59 em-controller ieee1905_transport[1425]: IEEE1905 Transport Process Start
+Sep 16 03:37:59 em-controller ieee1905_transport[1425]: 03:37:59 logger.cpp[144]: Configuration file does not exist
+Sep 16 03:37:59 em-controller systemd[1]: Starting emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller...
+Sep 16 03:37:59 em-controller systemd[1]: Started emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller.
+Sep 16 03:37:59 em-controller beerocks_controller[1427]: Beerocks Controller Process Start
+Sep 16 03:37:59 em-controller systemd[1]: Starting emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent...
+Sep 16 03:37:59 em-controller systemd[1]: Started emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent.
+Sep 16 03:37:59 em-controller beerocks_controller[1427]: Include file not found "defaults.d"
+Sep 16 03:37:59 em-controller beerocks_controller[1427]: ERROR  : 17 - Include file not found "defaults.d"@(null):line 1
+Sep 16 03:37:59 em-controller beerocks_agent[1429]: 2026-09-16 03:37:59,681 INFO [default] MultiVendorExample: registering vendor-specific TLV handlers and parsers
+Sep 16 03:37:59 em-controller beerocks_agent[1429]: 2026-09-16 03:37:59,682 INFO [default] MultiVendorAirties (dummy): registering handlers
+Sep 16 03:37:59 em-controller beerocks_agent[1429]: Beerocks Agent Process Start
+Sep 16 03:37:59 em-controller beerocks_agent[1429]: 2026-09-16 03:37:59,682 ERROR [default] cfg_get_hostap_iface: unknown iface index: 3
+Sep 16 03:37:59 em-controller beerocks_agent[1429]: 2026-09-16 03:37:59,683 ERROR [default] cfg_get_all_prplmesh_wifi_interfaces: failed to get wifi interface for agent3
+Sep 16 03:37:59 em-controller beerocks_agent[1429]: Include file not found "defaults.d"
+Sep 16 03:37:59 em-controller beerocks_agent[1429]: ERROR  : 17 - Include file not found "defaults.d"@(null):line 1
+Sep 16 03:44:34 em-controller systemd[1]: Stopping emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent...
+Sep 16 03:44:34 em-controller systemd[1]: emosa-peer-agent.service: Main process exited, code=dumped, status=6/ABRT
+Sep 16 03:44:34 em-controller systemd[1]: emosa-peer-agent.service: Failed with result 'core-dump'.
+Sep 16 03:44:34 em-controller systemd[1]: Stopped emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent.
+Sep 16 03:44:34 em-controller systemd[1]: Stopping emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller...
+Sep 16 03:44:34 em-controller systemd[1]: emosa-peer-controller.service: Main process exited, code=dumped, status=6/ABRT
+Sep 16 03:44:34 em-controller systemd[1]: emosa-peer-controller.service: Failed with result 'core-dump'.
+Sep 16 03:44:34 em-controller systemd[1]: Stopped emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller.
+Sep 16 03:44:34 em-controller systemd[1]: Stopping emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport...
+Sep 16 03:44:34 em-controller systemd[1]: emosa-peer-transport.service: Deactivated successfully.
+Sep 16 03:44:34 em-controller systemd[1]: Stopped emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport.
+Sep 16 03:44:34 em-controller systemd[1]: Stopping emosa-peer-bus.service - /usr/sbin/ubusd...
+Sep 16 03:44:34 em-controller systemd[1]: emosa-peer-bus.service: Deactivated successfully.
+Sep 16 03:44:34 em-controller systemd[1]: Stopped emosa-peer-bus.service - /usr/sbin/ubusd.
+Sep 16 03:46:20 em-controller systemd[1]: Starting emosa-peer-bus.service - /usr/sbin/ubusd...
+Sep 16 03:46:20 em-controller systemd[1]: Started emosa-peer-bus.service - /usr/sbin/ubusd.
+Sep 16 03:46:20 em-controller systemd[1]: Starting emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport...
+Sep 16 03:46:20 em-controller systemd[1]: Started emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport.
+Sep 16 03:46:20 em-controller systemd[1]: Starting emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller...
+Sep 16 03:46:20 em-controller ieee1905_transport[1550]: IEEE1905 Transport Process Start
+Sep 16 03:46:20 em-controller ieee1905_transport[1550]: 03:46:20 logger.cpp[144]: Configuration file does not exist
+Sep 16 03:46:20 em-controller systemd[1]: Started emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller.
+Sep 16 03:46:21 em-controller beerocks_controller[1552]: Beerocks Controller Process Start
+Sep 16 03:46:21 em-controller systemd[1]: Starting emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent...
+Sep 16 03:46:21 em-controller systemd[1]: Started emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent.
+Sep 16 03:46:21 em-controller beerocks_agent[1554]: 2026-09-16 03:46:21,033 INFO [default] MultiVendorExample: registering vendor-specific TLV handlers and parsers
+Sep 16 03:46:21 em-controller beerocks_agent[1554]: 2026-09-16 03:46:21,034 INFO [default] MultiVendorAirties (dummy): registering handlers
+Sep 16 03:46:21 em-controller beerocks_agent[1554]: Beerocks Agent Process Start
+Sep 16 03:46:21 em-controller beerocks_agent[1554]: 2026-09-16 03:46:21,034 ERROR [default] cfg_get_hostap_iface: unknown iface index: 3
+Sep 16 03:46:21 em-controller beerocks_agent[1554]: 2026-09-16 03:46:21,034 ERROR [default] cfg_get_all_prplmesh_wifi_interfaces: failed to get wifi interface for agent3
+Sep 16 03:46:21 em-controller beerocks_controller[1552]: Include file not found "defaults.d"
+Sep 16 03:46:21 em-controller beerocks_controller[1552]: ERROR  : 17 - Include file not found "defaults.d"@(null):line 1
+Sep 16 03:46:21 em-controller beerocks_agent[1554]: Include file not found "defaults.d"
+Sep 16 03:46:21 em-controller beerocks_agent[1554]: ERROR  : 17 - Include file not found "defaults.d"@(null):line 1
+Sep 16 03:47:20 em-controller systemd[1]: Stopping emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent...
+Sep 16 03:47:20 em-controller systemd[1]: emosa-peer-agent.service: Main process exited, code=dumped, status=6/ABRT
+Sep 16 03:47:20 em-controller systemd[1]: emosa-peer-agent.service: Failed with result 'core-dump'.
+Sep 16 03:47:20 em-controller systemd[1]: Stopped emosa-peer-agent.service - /opt/prpl-install-nl80211/bin/beerocks_agent.
+Sep 16 03:47:20 em-controller systemd[1]: Stopping emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller...
+Sep 16 03:47:21 em-controller systemd[1]: emosa-peer-controller.service: Main process exited, code=dumped, status=6/ABRT
+Sep 16 03:47:21 em-controller systemd[1]: emosa-peer-controller.service: Failed with result 'core-dump'.
+Sep 16 03:47:21 em-controller systemd[1]: Stopped emosa-peer-controller.service - /opt/prpl-install-nl80211/bin/beerocks_controller.
+Sep 16 03:47:21 em-controller systemd[1]: Stopping emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport...
+Sep 16 03:47:21 em-controller systemd[1]: emosa-peer-transport.service: Deactivated successfully.
+Sep 16 03:47:21 em-controller systemd[1]: Stopped emosa-peer-transport.service - /opt/prpl-install-nl80211/bin/ieee1905_transport.
+Sep 16 03:47:21 em-controller systemd[1]: Stopping emosa-peer-bus.service - /usr/sbin/ubusd...
+Sep 16 03:47:21 em-controller systemd[1]: emosa-peer-bus.service: Deactivated successfully.
+Sep 16 03:47:21 em-controller systemd[1]: Stopped emosa-peer-bus.service - /usr/sbin/ubusd.

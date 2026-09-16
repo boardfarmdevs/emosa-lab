@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "pod_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resource_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "values": {
+      "type": "object"
+    },
+    "source": {
+      "enum": [
+        "ovsdb",
+        "simulation",
+        "telemetry"
+      ]
+    },
+    "backend_mode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session_generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "received_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "fresh": {
+      "type": "boolean"
+    },
+    "provenance": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_time": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "pod_id",
+    "resource_id",
+    "values",
+    "source",
+    "backend_mode",
+    "session_generation",
+    "received_at",
+    "fresh",
+    "provenance",
+    "source_time",
+    "revision"
+  ],
+  "additionalProperties": false
+}

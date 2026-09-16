@@ -1,0 +1,11 @@
+Connected to 02:00:00:00:00:00 (on wlan0)
+	SSID: emosa-hwsim
+	freq: 2412.0
+	RX: 872 bytes (13 packets)
+	TX: 537 bytes (5 packets)
+	signal: -30 dBm
+	rx bitrate: 1.0 MBit/s
+	tx bitrate: 2.0 MBit/s
+	bss flags: short-slot-time
+	dtim period: 2
+	beacon int: 100

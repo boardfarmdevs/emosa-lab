@@ -1,0 +1,499 @@
+<!doctype html><html lang='en'><meta charset='utf-8'><meta name='viewport' content='width=device-width'><title>EMOSA experiment</title><style>body{font:16px system-ui;max-width:1100px;margin:3rem auto;padding:0 1rem;background:#101a22;color:#e3edf3}table{border-collapse:collapse;width:100%}td,th{padding:.6rem;border-bottom:1px solid #456}pre{white-space:pre-wrap;overflow-wrap:anywhere}details{padding:.6rem;border-left:3px solid #68b9af;margin:.5rem 0}summary{cursor:pointer}a{color:#83c9ed}</style><h1>EMOSA experiment server-restart</h1><p>Run run-4023fccf9a144b47</p><p>Execution: <b>completed</b> · component verdict: <b>pass</b> · interoperability: <b>not_evaluated</b></p><p>semantic / ovsdb-sim</p><h2>Checks</h2><table><tr><th>Check</th><th>Verdict</th><th>Expected</th><th>Observed</th></tr><tr><td>pod-1:operation</td><td>pass</td><td>OBSERVED_APPLIED</td><td>OBSERVED_APPLIED</td></tr></table><h2>Timeline</h2><details><summary>1 · 2026-09-16T01:39:12.657Z · READY · pod-1</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;event_id&quot;: &quot;b9a6c84f-7fda-405e-9ac1-344dc9ca3b6e&quot;,
+  &quot;sequence&quot;: 1,
+  &quot;timestamp&quot;: &quot;2026-09-16T01:39:12.657Z&quot;,
+  &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;,
+  &quot;run_id&quot;: &quot;run-4023fccf9a144b47&quot;,
+  &quot;operation_id&quot;: null,
+  &quot;pod_id&quot;: &quot;pod-1&quot;,
+  &quot;phase&quot;: &quot;READY&quot;,
+  &quot;reason&quot;: null,
+  &quot;payload&quot;: {
+    &quot;generation&quot;: 1,
+    &quot;backend_mode&quot;: &quot;ovsdb-sim&quot;,
+    &quot;fresh&quot;: true,
+    &quot;schema_fingerprint&quot;: &quot;b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16&quot;
+  }
+}</pre></details><details><summary>2 · 2026-09-16T01:39:12.659Z · REQUESTED · pod-1</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;event_id&quot;: &quot;033a36fc-c98f-4229-88b3-da9a50a0b739&quot;,
+  &quot;sequence&quot;: 2,
+  &quot;timestamp&quot;: &quot;2026-09-16T01:39:12.659Z&quot;,
+  &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;,
+  &quot;run_id&quot;: &quot;run-4023fccf9a144b47&quot;,
+  &quot;operation_id&quot;: &quot;fe6f0325-6d8c-477e-95d2-dc55bf873a29&quot;,
+  &quot;pod_id&quot;: &quot;pod-1&quot;,
+  &quot;phase&quot;: &quot;REQUESTED&quot;,
+  &quot;reason&quot;: null,
+  &quot;payload&quot;: {}
+}</pre></details><details><summary>3 · 2026-09-16T01:39:12.662Z · VALIDATED · pod-1</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;event_id&quot;: &quot;c1b13927-b385-44ab-a0bb-3ed3f82a78f9&quot;,
+  &quot;sequence&quot;: 3,
+  &quot;timestamp&quot;: &quot;2026-09-16T01:39:12.662Z&quot;,
+  &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;,
+  &quot;run_id&quot;: &quot;run-4023fccf9a144b47&quot;,
+  &quot;operation_id&quot;: &quot;fe6f0325-6d8c-477e-95d2-dc55bf873a29&quot;,
+  &quot;pod_id&quot;: &quot;pod-1&quot;,
+  &quot;phase&quot;: &quot;VALIDATED&quot;,
+  &quot;reason&quot;: null,
+  &quot;payload&quot;: {
+    &quot;reason&quot;: null,
+    &quot;plan&quot;: {
+      &quot;mapping&quot;: &quot;synthetic-existing-bss-v1&quot;,
+      &quot;radio_id&quot;: &quot;radio-1&quot;,
+      &quot;bss_id&quot;: &quot;bss-1&quot;,
+      &quot;fields&quot;: [
+        &quot;ssid&quot;,
+        &quot;wpa_psks[key]&quot;
+      ],
+      &quot;ssid&quot;: &quot;emosa-lab&quot;,
+      &quot;secret_ref&quot;: &quot;scenario-key&quot;,
+      &quot;guard&quot;: &quot;VIF fields, security and radio/VIF references&quot;,
+      &quot;shared_radio_actuation&quot;: false
+    }
+  }
+}</pre></details><details><summary>4 · 2026-09-16T01:39:12.664Z · SUBMITTED · pod-1</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;event_id&quot;: &quot;132bc608-2bde-4d2d-a742-ec22caed8393&quot;,
+  &quot;sequence&quot;: 4,
+  &quot;timestamp&quot;: &quot;2026-09-16T01:39:12.664Z&quot;,
+  &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;,
+  &quot;run_id&quot;: &quot;run-4023fccf9a144b47&quot;,
+  &quot;operation_id&quot;: &quot;fe6f0325-6d8c-477e-95d2-dc55bf873a29&quot;,
+  &quot;pod_id&quot;: &quot;pod-1&quot;,
+  &quot;phase&quot;: &quot;SUBMITTED&quot;,
+  &quot;reason&quot;: null,
+  &quot;payload&quot;: {
+    &quot;reason&quot;: null,
+    &quot;attempt&quot;: {
+      &quot;attempt_id&quot;: &quot;5e1f0c8f-1b75-4049-b48c-7114e1fdf57b&quot;,
+      &quot;transaction_id&quot;: &quot;ec9ebf48-a737-48e2-84d2-34ead39a8e1d&quot;,
+      &quot;session_generation&quot;: 1,
+      &quot;prepared_at&quot;: &quot;2026-09-16T01:39:12.664Z&quot;
+    }
+  }
+}</pre></details><details><summary>5 · 2026-09-16T01:39:12.670Z · CONFIG_COMMITTED · pod-1</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;event_id&quot;: &quot;b3441e12-3809-4960-bbff-8134df3c056a&quot;,
+  &quot;sequence&quot;: 5,
+  &quot;timestamp&quot;: &quot;2026-09-16T01:39:12.670Z&quot;,
+  &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;,
+  &quot;run_id&quot;: &quot;run-4023fccf9a144b47&quot;,
+  &quot;operation_id&quot;: &quot;fe6f0325-6d8c-477e-95d2-dc55bf873a29&quot;,
+  &quot;pod_id&quot;: &quot;pod-1&quot;,
+  &quot;phase&quot;: &quot;CONFIG_COMMITTED&quot;,
+  &quot;reason&quot;: null,
+  &quot;payload&quot;: {
+    &quot;reason&quot;: null
+  }
+}</pre></details><details><summary>6 · 2026-09-16T01:39:12.671Z · BEFORE_DEVICE_APPLICATION · run</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;event_id&quot;: &quot;93648b41-d566-4427-b61d-7bd19f6a1698&quot;,
+  &quot;sequence&quot;: 6,
+  &quot;timestamp&quot;: &quot;2026-09-16T01:39:12.671Z&quot;,
+  &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;,
+  &quot;run_id&quot;: &quot;run-4023fccf9a144b47&quot;,
+  &quot;operation_id&quot;: null,
+  &quot;pod_id&quot;: null,
+  &quot;phase&quot;: &quot;BEFORE_DEVICE_APPLICATION&quot;,
+  &quot;reason&quot;: null,
+  &quot;payload&quot;: {
+    &quot;fault&quot;: {
+      &quot;point&quot;: &quot;after-config-commit&quot;,
+      &quot;action&quot;: &quot;restart-server&quot;,
+      &quot;duration_seconds&quot;: 0
+    },
+    &quot;seed_sample&quot;: 339563
+  }
+}</pre></details><details><summary>7 · 2026-09-16T01:39:17.825Z · SIMULATED_MANAGER_FEEDBACK · pod-1</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;event_id&quot;: &quot;2a1c4c8a-fa04-42ca-9d61-086e76da5245&quot;,
+  &quot;sequence&quot;: 7,
+  &quot;timestamp&quot;: &quot;2026-09-16T01:39:17.825Z&quot;,
+  &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;,
+  &quot;run_id&quot;: &quot;run-4023fccf9a144b47&quot;,
+  &quot;operation_id&quot;: null,
+  &quot;pod_id&quot;: &quot;pod-1&quot;,
+  &quot;phase&quot;: &quot;SIMULATED_MANAGER_FEEDBACK&quot;,
+  &quot;reason&quot;: null,
+  &quot;payload&quot;: {
+    &quot;action&quot;: &quot;apply&quot;,
+    &quot;config_consumed&quot;: true,
+    &quot;state_writes&quot;: 1,
+    &quot;generation&quot;: 1,
+    &quot;provenance&quot;: &quot;independent-simulated-manager&quot;
+  }
+}</pre></details><details><summary>8 · 2026-09-16T01:39:20.026Z · OBSERVATION · pod-1</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;event_id&quot;: &quot;49504b35-902e-4dc1-949e-31c1e7895292&quot;,
+  &quot;sequence&quot;: 8,
+  &quot;timestamp&quot;: &quot;2026-09-16T01:39:20.026Z&quot;,
+  &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;,
+  &quot;run_id&quot;: &quot;run-4023fccf9a144b47&quot;,
+  &quot;operation_id&quot;: null,
+  &quot;pod_id&quot;: &quot;pod-1&quot;,
+  &quot;phase&quot;: &quot;OBSERVATION&quot;,
+  &quot;reason&quot;: null,
+  &quot;payload&quot;: {
+    &quot;operation_id&quot;: &quot;fe6f0325-6d8c-477e-95d2-dc55bf873a29&quot;,
+    &quot;observation&quot;: {
+      &quot;pod_id&quot;: &quot;pod-1&quot;,
+      &quot;resource_id&quot;: &quot;bss-1&quot;,
+      &quot;values&quot;: {
+        &quot;ssid&quot;: &quot;emosa-lab&quot;,
+        &quot;enabled&quot;: true,
+        &quot;mode&quot;: &quot;ap&quot;,
+        &quot;security_mode&quot;: &quot;wpa2-psk&quot;,
+        &quot;credential_fingerprint&quot;: &quot;[REDACTED]&quot;
+      },
+      &quot;source&quot;: &quot;ovsdb&quot;,
+      &quot;backend_mode&quot;: &quot;ovsdb-sim&quot;,
+      &quot;session_generation&quot;: 2,
+      &quot;received_at&quot;: &quot;2026-09-16T01:39:20.026Z&quot;,
+      &quot;fresh&quot;: true,
+      &quot;provenance&quot;: &quot;independent-simulated-manager:Wifi_VIF_State&quot;,
+      &quot;source_time&quot;: null,
+      &quot;revision&quot;: 3
+    },
+    &quot;config&quot;: {
+      &quot;ssid&quot;: &quot;emosa-lab&quot;,
+      &quot;enabled&quot;: true,
+      &quot;mode&quot;: &quot;ap&quot;,
+      &quot;security_mode&quot;: &quot;wpa2-psk&quot;,
+      &quot;credential_fingerprint&quot;: &quot;[REDACTED]&quot;
+    },
+    &quot;desired_observed_diff&quot;: {}
+  }
+}</pre></details><details><summary>9 · 2026-09-16T01:39:20.032Z · OBSERVED_APPLIED · pod-1</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;event_id&quot;: &quot;7f48deb8-74e1-44e2-b982-33b81fad4718&quot;,
+  &quot;sequence&quot;: 9,
+  &quot;timestamp&quot;: &quot;2026-09-16T01:39:20.032Z&quot;,
+  &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;,
+  &quot;run_id&quot;: &quot;run-4023fccf9a144b47&quot;,
+  &quot;operation_id&quot;: &quot;fe6f0325-6d8c-477e-95d2-dc55bf873a29&quot;,
+  &quot;pod_id&quot;: &quot;pod-1&quot;,
+  &quot;phase&quot;: &quot;OBSERVED_APPLIED&quot;,
+  &quot;reason&quot;: null,
+  &quot;payload&quot;: {
+    &quot;reason&quot;: null,
+    &quot;observation&quot;: {
+      &quot;pod_id&quot;: &quot;pod-1&quot;,
+      &quot;resource_id&quot;: &quot;bss-1&quot;,
+      &quot;values&quot;: {
+        &quot;ssid&quot;: &quot;emosa-lab&quot;,
+        &quot;enabled&quot;: true,
+        &quot;mode&quot;: &quot;ap&quot;,
+        &quot;security_mode&quot;: &quot;wpa2-psk&quot;,
+        &quot;credential_fingerprint&quot;: &quot;[REDACTED]&quot;
+      },
+      &quot;source&quot;: &quot;ovsdb&quot;,
+      &quot;backend_mode&quot;: &quot;ovsdb-sim&quot;,
+      &quot;session_generation&quot;: 2,
+      &quot;received_at&quot;: &quot;2026-09-16T01:39:20.026Z&quot;,
+      &quot;fresh&quot;: true,
+      &quot;provenance&quot;: &quot;independent-simulated-manager:Wifi_VIF_State&quot;,
+      &quot;source_time&quot;: null,
+      &quot;revision&quot;: 3
+    }
+  }
+}</pre></details><h2>Scope and evidence</h2><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;run_id&quot;: &quot;run-4023fccf9a144b47&quot;,
+  &quot;scenario_id&quot;: &quot;server-restart&quot;,
+  &quot;execution_status&quot;: &quot;completed&quot;,
+  &quot;verdict&quot;: &quot;pass&quot;,
+  &quot;interoperability_verdict&quot;: &quot;not_evaluated&quot;,
+  &quot;manifest&quot;: {
+    &quot;software_version&quot;: &quot;0.1.0&quot;,
+    &quot;git_revision&quot;: &quot;4a41911a21439ca135cccdbe6ef5db36368128ef&quot;,
+    &quot;source_tree_sha256&quot;: &quot;372d9f4c7dd0a164fb23222b9761b7dfdc25d9ce8e9362eb5c80f35ec9662f27&quot;,
+    &quot;python&quot;: &quot;3.13.7&quot;,
+    &quot;platform&quot;: &quot;Linux-6.8.0-138-generic-x86_64-with-glibc2.35&quot;,
+    &quot;uv_lock_sha256&quot;: &quot;18b75c5c986357804dac047759dfb6af88b59c12b0af5cf35057521c1431e8a0&quot;,
+    &quot;scenario&quot;: {
+      &quot;schema_version&quot;: 1,
+      &quot;id&quot;: &quot;server-restart&quot;,
+      &quot;purpose&quot;: &quot;Semantic component fault experiment: restart-server&quot;,
+      &quot;initiating_interface&quot;: &quot;semantic&quot;,
+      &quot;required_backend&quot;: &quot;any-simulation&quot;,
+      &quot;requirements&quot;: [
+        &quot;E02&quot;,
+        &quot;E04&quot;,
+        &quot;E05&quot;,
+        &quot;E06&quot;,
+        &quot;E07&quot;,
+        &quot;E08&quot;
+      ],
+      &quot;prerequisites&quot;: [
+        &quot;synthetic-existing-bss-v1&quot;
+      ],
+      &quot;target_allowlist&quot;: [
+        &quot;pod-1&quot;
+      ],
+      &quot;intent&quot;: {
+        &quot;pod_id&quot;: &quot;pod-1&quot;,
+        &quot;radio_id&quot;: &quot;radio-1&quot;,
+        &quot;bss_id&quot;: &quot;bss-1&quot;,
+        &quot;ssid&quot;: &quot;emosa-lab&quot;,
+        &quot;secret_ref&quot;: &quot;scenario-key&quot;,
+        &quot;enabled&quot;: true,
+        &quot;security_mode&quot;: &quot;wpa2-psk&quot;
+      },
+      &quot;expected&quot;: {
+        &quot;state&quot;: &quot;OBSERVED_APPLIED&quot;,
+        &quot;commit_attribution&quot;: &quot;reply&quot;,
+        &quot;changed_fields&quot;: [
+          &quot;ssid&quot;,
+          &quot;wpa_psks[key]&quot;
+        ]
+      },
+      &quot;fault&quot;: {
+        &quot;point&quot;: &quot;after-config-commit&quot;,
+        &quot;action&quot;: &quot;restart-server&quot;,
+        &quot;duration_seconds&quot;: 0
+      },
+      &quot;seed&quot;: 7,
+      &quot;repetitions&quot;: 1,
+      &quot;deadlines&quot;: {
+        &quot;apply_seconds&quot;: 30,
+        &quot;overall_seconds&quot;: 45
+      },
+      &quot;topology&quot;: {
+        &quot;management_path&quot;: &quot;private-unix-socket&quot;,
+        &quot;target_carries_management&quot;: false
+      },
+      &quot;cleanup&quot;: &quot;dispose-simulation&quot;,
+      &quot;evidence_required&quot;: [
+        &quot;events&quot;,
+        &quot;observations&quot;,
+        &quot;transaction&quot;
+      ]
+    },
+    &quot;backend_mode&quot;: &quot;ovsdb-sim&quot;,
+    &quot;initiating_interface&quot;: &quot;semantic&quot;,
+    &quot;trial&quot;: 1,
+    &quot;started_at&quot;: &quot;2026-09-16T01:39:12.370Z&quot;,
+    &quot;mapping_version&quot;: &quot;synthetic-existing-bss-v1&quot;,
+    &quot;schema_fingerprints&quot;: {
+      &quot;pod-1&quot;: &quot;b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16&quot;
+    },
+    &quot;pod_identities&quot;: [
+      &quot;pod-1&quot;
+    ],
+    &quot;controller&quot;: &quot;component-runner&quot;,
+    &quot;virtual_agent&quot;: null,
+    &quot;topology&quot;: {
+      &quot;management_path&quot;: &quot;private-unix-socket&quot;,
+      &quot;target_carries_management&quot;: false
+    },
+    &quot;resource_budget&quot;: {
+      &quot;writes_per_pod&quot;: 1,
+      &quot;queued_modifying_requests&quot;: 0,
+      &quot;ovsdb_requests_per_session&quot;: 16,
+      &quot;monitor_rows&quot;: 10000
+    },
+    &quot;finished_at&quot;: &quot;2026-09-16T01:39:20.048Z&quot;
+  },
+  &quot;checks&quot;: [
+    {
+      &quot;id&quot;: &quot;pod-1:operation&quot;,
+      &quot;verdict&quot;: &quot;pass&quot;,
+      &quot;expected&quot;: &quot;OBSERVED_APPLIED&quot;,
+      &quot;observed&quot;: &quot;OBSERVED_APPLIED&quot;,
+      &quot;evidence_refs&quot;: [
+        &quot;events.json&quot;,
+        &quot;observations.json&quot;
+      ]
+    }
+  ],
+  &quot;coverage&quot;: {
+    &quot;selected&quot;: [
+      &quot;E02&quot;,
+      &quot;E04&quot;,
+      &quot;E05&quot;,
+      &quot;E06&quot;,
+      &quot;E07&quot;,
+      &quot;E08&quot;
+    ],
+    &quot;eligible&quot;: 1,
+    &quot;attempted&quot;: 1,
+    &quot;passing&quot;: 1,
+    &quot;omitted&quot;: [
+      &quot;all wire, RF, hardware and external-peer acceptance&quot;
+    ]
+  },
+  &quot;operations&quot;: [
+    {
+      &quot;operation_id&quot;: &quot;fe6f0325-6d8c-477e-95d2-dc55bf873a29&quot;,
+      &quot;run_id&quot;: &quot;run-4023fccf9a144b47&quot;,
+      &quot;request_source&quot;: &quot;component-runner&quot;,
+      &quot;initiating_interface&quot;: &quot;semantic&quot;,
+      &quot;intent&quot;: {
+        &quot;pod_id&quot;: &quot;pod-1&quot;,
+        &quot;radio_id&quot;: &quot;radio-1&quot;,
+        &quot;bss_id&quot;: &quot;bss-1&quot;,
+        &quot;ssid&quot;: &quot;emosa-lab&quot;,
+        &quot;secret_ref&quot;: &quot;scenario-key&quot;,
+        &quot;enabled&quot;: true,
+        &quot;security_mode&quot;: &quot;wpa2-psk&quot;
+      },
+      &quot;intent_fingerprint&quot;: &quot;1bdad9f94886363a95bc48eedc3e9d1ef27f06de698567aa161513b4e5f1342c&quot;,
+      &quot;idempotency_key&quot;: &quot;initial-change&quot;,
+      &quot;created_at&quot;: &quot;2026-09-16T01:39:12.659Z&quot;,
+      &quot;updated_at&quot;: &quot;2026-09-16T01:39:20.032Z&quot;,
+      &quot;deadline_at&quot;: &quot;2026-09-16T01:39:42.659000+00:00&quot;,
+      &quot;schema_version&quot;: 1,
+      &quot;state&quot;: &quot;OBSERVED_APPLIED&quot;,
+      &quot;reason&quot;: null,
+      &quot;mapping_version&quot;: &quot;synthetic-existing-bss-v1&quot;,
+      &quot;schema_fingerprint&quot;: &quot;b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16&quot;,
+      &quot;attempts&quot;: [
+        {
+          &quot;attempt_id&quot;: &quot;5e1f0c8f-1b75-4049-b48c-7114e1fdf57b&quot;,
+          &quot;transaction_id&quot;: &quot;ec9ebf48-a737-48e2-84d2-34ead39a8e1d&quot;,
+          &quot;session_generation&quot;: 1,
+          &quot;prepared_at&quot;: &quot;2026-09-16T01:39:12.664Z&quot;
+        }
+      ],
+      &quot;commit_evidence&quot;: {
+        &quot;attribution&quot;: &quot;reply&quot;,
+        &quot;transaction_validated&quot;: true,
+        &quot;transaction_id&quot;: &quot;ec9ebf48-a737-48e2-84d2-34ead39a8e1d&quot;,
+        &quot;session_generation&quot;: 1,
+        &quot;results&quot;: [
+          {},
+          {},
+          {
+            &quot;count&quot;: 1
+          },
+          {
+            &quot;count&quot;: 1
+          }
+        ]
+      },
+      &quot;application_predicate&quot;: &quot;fresh-qualified-existing-ap-ssid-security-v1&quot;,
+      &quot;application_evidence&quot;: {
+        &quot;fresh&quot;: true,
+        &quot;predicate_satisfied&quot;: true,
+        &quot;generation&quot;: 2,
+        &quot;revision&quot;: 3,
+        &quot;received_at&quot;: &quot;2026-09-16T01:39:20.026Z&quot;,
+        &quot;source&quot;: &quot;ovsdb&quot;,
+        &quot;provenance&quot;: &quot;independent-simulated-manager:Wifi_VIF_State&quot;
+      },
+      &quot;changed&quot;: true,
+      &quot;deadline_elapsed&quot;: false,
+      &quot;original_outcome&quot;: null,
+      &quot;late_resolution&quot;: null,
+      &quot;client_verification&quot;: {
+        &quot;verdict&quot;: &quot;unknown&quot;
+      },
+      &quot;blocked_for_resubmission&quot;: false,
+      &quot;plan&quot;: {
+        &quot;mapping&quot;: &quot;synthetic-existing-bss-v1&quot;,
+        &quot;radio_id&quot;: &quot;radio-1&quot;,
+        &quot;bss_id&quot;: &quot;bss-1&quot;,
+        &quot;fields&quot;: [
+          &quot;ssid&quot;,
+          &quot;wpa_psks[key]&quot;
+        ],
+        &quot;ssid&quot;: &quot;emosa-lab&quot;,
+        &quot;secret_ref&quot;: &quot;scenario-key&quot;,
+        &quot;guard&quot;: &quot;VIF fields, security and radio/VIF references&quot;,
+        &quot;shared_radio_actuation&quot;: false
+      },
+      &quot;timings&quot;: {
+        &quot;VALIDATED&quot;: {
+          &quot;seconds_since_request&quot;: 0.0010371780372224748,
+          &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;
+        },
+        &quot;SUBMITTED&quot;: {
+          &quot;seconds_since_request&quot;: 0.0029034489998593926,
+          &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;
+        },
+        &quot;CONFIG_COMMITTED&quot;: {
+          &quot;seconds_since_request&quot;: 0.008294277009554207,
+          &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;
+        },
+        &quot;OBSERVED_APPLIED&quot;: {
+          &quot;seconds_since_request&quot;: 7.370967046008445,
+          &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;
+        }
+      }
+    }
+  ],
+  &quot;timings&quot;: {
+    &quot;clock&quot;: &quot;single-process-monotonic&quot;,
+    &quot;samples&quot;: [
+      {
+        &quot;operation_id&quot;: &quot;fe6f0325-6d8c-477e-95d2-dc55bf873a29&quot;,
+        &quot;request_to_final_observation_seconds&quot;: 7.373130936000962,
+        &quot;request_to_commit_seconds&quot;: 0.008294277009554207,
+        &quot;request_to_application_seconds&quot;: 7.370967046008445,
+        &quot;operation_phase_clocks&quot;: {
+          &quot;VALIDATED&quot;: {
+            &quot;seconds_since_request&quot;: 0.0010371780372224748,
+            &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;
+          },
+          &quot;SUBMITTED&quot;: {
+            &quot;seconds_since_request&quot;: 0.0029034489998593926,
+            &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;
+          },
+          &quot;CONFIG_COMMITTED&quot;: {
+            &quot;seconds_since_request&quot;: 0.008294277009554207,
+            &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;
+          },
+          &quot;OBSERVED_APPLIED&quot;: {
+            &quot;seconds_since_request&quot;: 7.370967046008445,
+            &quot;process_clock_id&quot;: &quot;c4c4c226-745c-4f03-85cf-b162c0d18412&quot;
+          }
+        },
+        &quot;independent_client_seconds&quot;: null
+      }
+    ],
+    &quot;client_recovery&quot;: null,
+    &quot;management_interruption&quot;: null,
+    &quot;runner_wall_seconds&quot;: 7.676526322029531
+  },
+  &quot;prerequisites&quot;: [],
+  &quot;cleanup&quot;: {
+    &quot;status&quot;: &quot;completed&quot;,
+    &quot;policy&quot;: &quot;dispose-simulation&quot;,
+    &quot;errors&quot;: [],
+    &quot;physical_pod_changes&quot;: false
+  },
+  &quot;artifacts&quot;: [
+    {
+      &quot;path&quot;: &quot;inputs.json&quot;,
+      &quot;sha256&quot;: &quot;94dde4cd0f6ae15455684860984c5dd2f41090518dccd8eb3664212fa730a9d7&quot;,
+      &quot;size&quot;: 1187
+    },
+    {
+      &quot;path&quot;: &quot;events.json&quot;,
+      &quot;sha256&quot;: &quot;1d2eb95b00218155bbce1109b52b133d5ff8f033db28a9805ea0e5ec66578721&quot;,
+      &quot;size&quot;: 6219
+    },
+    {
+      &quot;path&quot;: &quot;observations.json&quot;,
+      &quot;sha256&quot;: &quot;3f74784ad80c6e0f010e1b10531c0d547091f623d9cfe7488779b827b4cbbf8c&quot;,
+      &quot;size&quot;: 1041
+    }
+  ],
+  &quot;limitations&quot;: [
+    &quot;Semantic component testing does not evaluate EasyMesh provisioning or interoperability.&quot;,
+    &quot;No physical radio or independent Wi-Fi client evidence.&quot;,
+    &quot;Upstream reference schema and synthetic identities do not qualify a pod build.&quot;,
+    &quot;Lost-reply injection discards a real response at adapter ingress before interpretation.&quot;,
+    &quot;Simulation event triggers are controlled; OS scheduling is not deterministic.&quot;
+  ],
+  &quot;seamlessness&quot;: {
+    &quot;controller_workflow&quot;: &quot;not_evaluated&quot;,
+    &quot;pod_compatibility&quot;: &quot;not_evaluated&quot;,
+    &quot;semantic_accuracy&quot;: &quot;not_evaluated&quot;,
+    &quot;operational_continuity&quot;: &quot;not_evaluated&quot;,
+    &quot;timing_and_observability&quot;: &quot;not_evaluated&quot;
+  }
+}</pre></html>

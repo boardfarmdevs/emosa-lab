@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emosa.local/schemas/scenario.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "initiating_interface": {
+      "enum": [
+        "semantic",
+        "easymesh-wire"
+      ]
+    },
+    "required_backend": {
+      "enum": [
+        "any-simulation",
+        "model",
+        "ovsdb-sim",
+        "hardware",
+        "opensync-native"
+      ]
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "target_allowlist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true
+    },
+    "intent": {
+      "type": "object",
+      "properties": {
+        "pod_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "radio_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "bss_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "ssid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "secret_ref": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "security_mode": {
+          "enum": [
+            "wpa2-psk",
+            "wpa3-sae"
+          ]
+        }
+      },
+      "required": [
+        "pod_id",
+        "radio_id",
+        "bss_id",
+        "ssid",
+        "secret_ref"
+      ],
+      "additionalProperties": false
+    },
+    "expected": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "enum": [
+            "OBSERVED_APPLIED",
+            "TIMED_OUT",
+            "OWNERSHIP_CONFLICT",
+            "FAILED",
+            "REJECTED",
+            "INDETERMINATE"
+          ]
+        },
+        "commit_attribution": {
+          "enum": [
+            "reply",
+            "unknown",
+            "not_submitted",
+            "any"
+          ]
+        },
+        "changed_fields": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ssid",
+              "wpa_psks[key]"
+            ]
+          }
+        }
+      },
+      "required": [
+        "state",
+        "commit_attribution",
+        "changed_fields"
+      ],
+      "additionalProperties": false
+    },
+    "fault": {
+      "type": "object",
+      "properties": {
+        "point": {
+          "enum": [
+            "after-config-commit",
+            "transaction-reply",
+            "before-guard",
+            "after-state-apply",
+            "after-submit"
+          ]
+        },
+        "action": {
+          "enum": [
+            "none",
+            "lost-reply",
+            "withhold",
+            "reject",
+            "partial",
+            "compete",
+            "guard-conflict",
+            "restart-controller",
+            "restart-server"
+          ]
+        },
+        "duration_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60
+        }
+      },
+      "required": [
+        "point",
+        "action",
+        "duration_seconds"
+      ],
+      "additionalProperties": false
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "repetitions": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "deadlines": {
+      "type": "object",
+      "properties": {
+        "apply_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 3600
+        },
+        "overall_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 7200
+        }
+      },
+      "required": [
+        "apply_seconds",
+        "overall_seconds"
+      ],
+      "additionalProperties": false
+    },
+    "topology": {
+      "type": "object",
+      "properties": {
+        "management_path": {
+          "enum": [
+            "private-unix-socket",
+            "model",
+            "wired",
+            "wireless"
+          ]
+        },
+        "target_carries_management": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "management_path",
+        "target_carries_management"
+      ],
+      "additionalProperties": false
+    },
+    "cleanup": {
+      "enum": [
+        "dispose-simulation",
+        "guarded-owned-fields"
+      ]
+    },
+    "evidence_required": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "events",
+          "observations",
+          "transaction",
+          "pcap",
+          "independent-client"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "purpose",
+    "initiating_interface",
+    "required_backend",
+    "requirements",
+    "prerequisites",
+    "target_allowlist",
+    "intent",
+    "expected",
+    "fault",
+    "seed",
+    "repetitions",
+    "deadlines",
+    "topology",
+    "cleanup",
+    "evidence_required"
+  ],
+  "additionalProperties": false
+}

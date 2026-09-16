@@ -1,0 +1,6 @@
+2026-09-16T04:58:31Z|00001|ovsdb_server|INFO|ovsdb-server (Open vSwitch) 4.0.0
+2026-09-16T04:58:34Z|00002|fatal_signal|WARN|terminating with signal 15 (Terminated)
+2026-09-16T04:58:39Z|00001|ovsdb_server|INFO|ovsdb-server (Open vSwitch) 4.0.0
+2026-09-16T04:58:49Z|00002|memory|INFO|37708 kB peak resident set size after 10.0 seconds
+2026-09-16T04:58:49Z|00003|memory|INFO|atoms:99 cells:231 monitors:1 n-weak-refs:4 sessions:1
+2026-09-16T04:58:57Z|00004|fatal_signal|WARN|terminating with signal 15 (Terminated)

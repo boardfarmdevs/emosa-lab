@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "backend_mode": "opensync-native",
+  "initiating_interface": "semantic",
+  "interoperability": "not_evaluated",
+  "physical_pod": "not_connected",
+  "qualified": false,
+  "baseline": {
+    "config": {
+      "ssid": "initial-network",
+      "enabled": true,
+      "mode": "ap",
+      "security_mode": "wpa2-psk",
+      "credential_fingerprint": "bb1fe1489758e25505b0c3556d08808a4a8cc791448b484f279a6c8d3547cee9"
+    },
+    "observed": {
+      "pod_id": "pod-1",
+      "resource_id": "bss-1",
+      "values": {
+        "ssid": "initial-network",
+        "enabled": true,
+        "mode": "ap",
+        "security_mode": null,
+        "credential_fingerprint": "bb1fe1489758e25505b0c3556d08808a4a8cc791448b484f279a6c8d3547cee9"
+      },
+      "source": "ovsdb",
+      "backend_mode": "opensync-native",
+      "session_generation": 1,
+      "received_at": "2026-09-16T04:52:43.234Z",
+      "fresh": true,
+      "provenance": "native-OWM:Wifi_VIF_State:simulated-OSW-dummy-feedback",
+      "source_time": null,
+      "revision": 4
+    },
+    "ready": true,
+    "generation": 1,
+    "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16"
+  },
+  "failure": {
+    "type": "AssertionError",
+    "message": "Native path did not converge before the probe deadline"
+  },
+  "manager_final_exit_code": -15,
+  "write_count": 1
+}

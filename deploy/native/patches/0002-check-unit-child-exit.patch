@@ -1,0 +1,11 @@
+--- a/src/lib/osw/src/osw_ut.c
++++ b/src/lib/osw/src/osw_ut.c
+@@ -172,7 +172,7 @@
+ 
+         osw_ut_run_proc(&proc, m);
+ 
+-        if (WIFEXITED(proc.child.rstatus)) {
++        if (WIFEXITED(proc.child.rstatus) && WEXITSTATUS(proc.child.rstatus) == EXIT_SUCCESS) {
+             if (verbose)
+                 fprintf(stderr, "   PASS: %s: %s\n", m->file_name, m->fun_name);
+             m->passed = true;

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "status": "verified_selected_radio_payload_component_only",
+  "source_base_revision": "5622ac43fd6eab39dd51e428bf114af0e8586176",
+  "tested_working_tree_sha256": {
+    "src/emosa/wsc_messages.py": "3421bba06c7a09f1f0a73e597031c5b9f96cce9ed8fd1ce0b1917cbeaa91196c",
+    "src/emosa/wsc_radio.py": "cecbd548265e346ee6944bd102a9b1f0f463a1f8da9a9e1bf47fd48e89671517",
+    "tests/test_wsc_messages.py": "506474a27c389c378d2d4724b298640a48516dc843490cde3b75d48ab7e035e9",
+    "tests/test_wsc_radio.py": "62ce6af3984410fb2d1907f1e77ea0dda652d84267302a2e340df715ebeeca74",
+    "tests/fixtures/protocol/wsc-messages/reference.c": "22fc5e53151bd3c87059c30b83d46940a7a4032d6799bbb21d53a911da20b498",
+    "tests/fixtures/protocol/wsc-messages/vectors.json": "2f4e4b8374e697935d02b381493f683d75fe612e852989cc36fb95847482cbae"
+  },
+  "normative_rules": "docs/wsc-radio.md",
+  "unit_suite_passes": 166,
+  "radio_payload_component_passes": 42,
+  "independent_reference": "tests/fixtures/protocol/wsc-messages/provenance.json",
+  "independent_checks": [
+    "Original native M1 and configuration M2 bytes unchanged",
+    "Native decrypted Multi-AP extension parser confirms fronthaul and teardown flags",
+    "Independent 509-byte teardown M2 passes envelope, HMAC, decryption and KWA checks"
+  ],
+  "negative_scope": [
+    "Entire M2 set authenticated before semantic parsing",
+    "Missing, malformed, duplicate, wrong-vendor or unencrypted role data",
+    "Conflicting teardown/configuration batch and unsupported multi-BSS projection",
+    "Unsupported roles, security, original-M1 capabilities and password changes",
+    "Unsupported SSID/key representations, no key truncation, secret-free repr/errors"
+  ],
+  "wire_frames": false,
+  "exchange_state": false,
+  "controller_trust_established": false,
+  "radio_identity_bound": false,
+  "full_radio_mapping": false,
+  "pod_accessed": false,
+  "operation_submission_enabled": false,
+  "p0_satisfied": false,
+  "limits": [
+    "Candidate only; complete CMDU/companion TLVs, ownership and radio/BSS profile still required",
+    "Reserved bits ignored per selected edition; local ambiguity errors are not wire error codes",
+    "Teardown classified but not executed; normal AP parser remains strict",
+    "Fixture alternatives reuse synthetic session material for separate tests, not a valid combined response"
+  ],
+  "required_next": [
+    "Acquire exact pending IEEE base/amendment and resolve full P0 procedure rules",
+    "Implement selected discovery and onboarding exchange with independent controller captures",
+    "Bind complete validated radio requests to a qualified sole-BSS or complete-radio profile",
+    "Qualify unchanged physical pod and independent observer"
+  ]
+}

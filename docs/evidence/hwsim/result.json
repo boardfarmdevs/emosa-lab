@@ -1,0 +1,15 @@
+{
+  "scope": "standalone-hwsim-client-smoke",
+  "verdict": "pass",
+  "emosa_actuation": "not_evaluated",
+  "wire_provisioning": "not_evaluated",
+  "physical_pod": "not_evaluated",
+  "started_at": "2026-09-16T02:33:45.873917+00:00",
+  "checks": {
+    "wpa2_association": true,
+    "wireless_ping": true,
+    "capture_running": true,
+    "capture_has_frames": true
+  },
+  "finished_at": "2026-09-16T02:33:53.042374+00:00"
+}

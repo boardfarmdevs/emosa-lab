@@ -1,0 +1,29 @@
+[
+  {
+    "schema_version": 1,
+    "event_id": "33c30386-7e79-47ce-b244-74ed3a2a8660",
+    "sequence": 1,
+    "timestamp": "2026-09-16T01:51:16.125Z",
+    "process_clock_id": "45fcc411-a2a5-4596-b58b-ab7b74fddbb7",
+    "run_id": "run-9fe901669f6f4eca",
+    "operation_id": null,
+    "pod_id": null,
+    "phase": "BLOCKED",
+    "reason": "MISSING_PREREQUISITE",
+    "payload": {
+      "reason": "MISSING_PREREQUISITE",
+      "gates": [
+        {
+          "gate": "P0",
+          "status": "blocked",
+          "reason": "exact normative matrix, independent vectors and wire implementation required"
+        },
+        {
+          "gate": "evidence:pcap",
+          "status": "blocked",
+          "reason": "required evidence cannot be produced by the available component backend"
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.072" timestamp="2026-09-15T18:51:17.201550-07:00" hostname="rev150"><testcase classname="tests.test_gated" name="test_wire_acceptance_requires_P0" time="0.000"><failure message="Failed: MISSING_PREREQUISITE P0: exact normative matrix, independent vectors and wire endpoint missing; no wire acceptance executed">@pytest.mark.wire
+    def test_wire_acceptance_requires_P0():
+&gt;       pytest.fail(
+            "MISSING_PREREQUISITE P0: exact normative matrix, independent vectors "
+            "and wire endpoint missing; no wire acceptance executed"
+        )
+E       Failed: MISSING_PREREQUISITE P0: exact normative matrix, independent vectors and wire endpoint missing; no wire acceptance executed
+
+tests/test_gated.py:6: Failed</failure></testcase></testsuite></testsuites>

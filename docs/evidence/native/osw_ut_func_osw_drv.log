@@ -1,0 +1,302 @@
+    RUN: src/lib/osw/src/osw_drv_target.c: osw_ut_func_osw_drv_target_ut_keyid
+   PASS: src/lib/osw/src/osw_drv_target.c: osw_ut_func_osw_drv_target_ut_keyid
+    RUN: src/lib/osw/src/osw_drv_target.c: osw_ut_func_osw_drv_target_ut_ch2freq
+   PASS: src/lib/osw/src/osw_drv_target.c: osw_ut_func_osw_drv_target_ut_ch2freq
+    RUN: src/lib/osw/src/osw_drv_target.c: osw_ut_func_osw_drv_target_ut_cs
+   PASS: src/lib/osw/src/osw_drv_target.c: osw_ut_func_osw_drv_target_ut_cs
+    RUN: src/lib/osw/src/osw_drv_target.c: osw_ut_func_osw_drv_target_ut_vifconf2schema_ap
+   PASS: src/lib/osw/src/osw_drv_target.c: osw_ut_func_osw_drv_target_ut_vifconf2schema_ap
+    RUN: src/lib/osw/src/osw_drv_target.c: osw_ut_func_osw_drv_target_ut_phyconf2schema
+   PASS: src/lib/osw/src/osw_drv_target.c: osw_ut_func_osw_drv_target_ut_phyconf2schema
+    RUN: src/lib/osw/src/osw_drv_dummy.c: osw_ut_func_osw_drv_dummy_ut_1
+   PASS: src/lib/osw/src/osw_drv_dummy.c: osw_ut_func_osw_drv_dummy_ut_1
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_sta_net_4
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_sta_net_4
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_sta_net_3
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_sta_net_3
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_sta_net_2
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_sta_net_2
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_sta_net_1
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_sta_net_1
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_csa_to_phy
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_csa_to_phy
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_schedule_remove_phy
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy1 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif1 exists=1 1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif2 exists=1 1
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy2 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=1 1
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_phy_added_cb: phy1
+osw_drv_ut_core1_op_phy_changed_cb: phy1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif2
+osw_drv_ut_core1_op_phy_added_cb: phy2
+osw_drv_ut_core1_op_phy_changed_cb: phy2
+osw_drv_ut_core1_op_vif_added_cb: phy2/vif3
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy2 exists=0
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 49
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=0 0
+osw_drv_ut_work: work 48
+osw_drv_ut_core1_op_vif_removed_cb: phy2/vif3
+osw_drv_ut_work: work 47
+osw_drv_ut_work: work 46
+osw_drv_ut_core1_op_phy_removed_cb: phy2
+osw_drv_ut_work: work 45
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_schedule_remove_phy
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_schedule_remove_vif
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy1 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif1 exists=1 1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif2 exists=1 1
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy2 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=1 1
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_phy_added_cb: phy1
+osw_drv_ut_core1_op_phy_changed_cb: phy1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif2
+osw_drv_ut_core1_op_phy_added_cb: phy2
+osw_drv_ut_core1_op_phy_changed_cb: phy2
+osw_drv_ut_core1_op_vif_added_cb: phy2/vif3
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=0 0
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_vif_removed_cb: phy2/vif3
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_schedule_remove_vif
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_multiple_frames
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy1 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif1 exists=1 1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif2 exists=1 1
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy2 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=1 1
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_phy_added_cb: phy1
+osw_drv_ut_core1_op_phy_changed_cb: phy1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif2
+osw_drv_ut_core1_op_phy_added_cb: phy2
+osw_drv_ut_core1_op_phy_changed_cb: phy2
+osw_drv_ut_core1_op_vif_added_cb: phy2/vif3
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_multiple_frames
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_no_drv_feedback_after_push
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy1 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif1 exists=1 1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif2 exists=1 1
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy2 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=1 1
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_phy_added_cb: phy1
+osw_drv_ut_core1_op_phy_changed_cb: phy1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif2
+osw_drv_ut_core1_op_phy_added_cb: phy2
+osw_drv_ut_core1_op_phy_changed_cb: phy2
+osw_drv_ut_core1_op_vif_added_cb: phy2/vif3
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_no_drv_feedback_after_push
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_reuse_desc
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy1 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif1 exists=1 1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif2 exists=1 1
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy2 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=1 1
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_phy_added_cb: phy1
+osw_drv_ut_core1_op_phy_changed_cb: phy1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif2
+osw_drv_ut_core1_op_phy_added_cb: phy2
+osw_drv_ut_core1_op_phy_changed_cb: phy2
+osw_drv_ut_core1_op_vif_added_cb: phy2/vif3
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_reuse_desc
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_getters_setters
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy1 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif1 exists=1 1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif2 exists=1 1
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy2 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=1 1
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_phy_added_cb: phy1
+osw_drv_ut_core1_op_phy_changed_cb: phy1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif2
+osw_drv_ut_core1_op_phy_added_cb: phy2
+osw_drv_ut_core1_op_phy_changed_cb: phy2
+osw_drv_ut_core1_op_vif_added_cb: phy2/vif3
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_frame_tx_getters_setters
+    RUN: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_1
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy3 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif4 exists=1 1
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy1 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif1 exists=1 1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif2 exists=1 1
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy2 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=1 1
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_phy_added_cb: phy3
+osw_drv_ut_core1_op_phy_changed_cb: phy3
+osw_drv_ut_core1_op_vif_added_cb: phy3/vif4
+osw_drv_ut_core1_op_phy_added_cb: phy1
+osw_drv_ut_core1_op_phy_changed_cb: phy1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif1
+osw_drv_ut_core1_op_vif_added_cb: phy1/vif2
+osw_drv_ut_core1_op_phy_added_cb: phy2
+osw_drv_ut_core1_op_phy_changed_cb: phy2
+osw_drv_ut_core1_op_vif_added_cb: phy2/vif3
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+checking conf from state
+remove phy2
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy2 exists=0
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 49
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=0 0
+osw_drv_ut_work: work 48
+osw_drv_ut_core1_op_vif_removed_cb: phy2/vif3
+osw_drv_ut_work: work 47
+osw_drv_ut_work: work 46
+osw_drv_ut_core1_op_phy_removed_cb: phy2
+osw_drv_ut_work: work 45
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+add phy4
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy4 exists=1
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=1 1
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_phy_added_cb: phy4
+osw_drv_ut_core1_op_phy_changed_cb: phy4
+osw_drv_ut_core1_op_vif_added_cb: phy4/vif3
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+blip phy5
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy4 exists=0
+osw_drv_ut_drv_request_phy_state_cb: phy_name=phy5 exists=0
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 49
+osw_drv_ut_drv_request_vif_state_cb: vif_name=vif3 exists=0 0
+osw_drv_ut_work: work 48
+osw_drv_ut_core1_op_vif_removed_cb: phy4/vif3
+osw_drv_ut_work: work 47
+osw_drv_ut_work: work 46
+osw_drv_ut_core1_op_phy_removed_cb: phy4
+osw_drv_ut_work: work 45
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+inject bad csa event
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+inject sta
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_sta_state_cb: sta_addr=00:11:22:33:44:55 connected=1
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_sta_connected_cb: phy1/vif1/00:11:22:33:44:55
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+inject 2nd sta, other vif
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_sta_state_cb: sta_addr=00:11:22:33:44:55 connected=1
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_sta_connected_cb: phy3/vif4/00:11:22:33:44:55
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+flip 2nd sta
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_sta_state_cb: sta_addr=00:11:22:33:44:55 connected=1
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 49
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+reconnect 2nd sta
+osw_drv_ut_work: work 50
+osw_drv_ut_drv_request_sta_state_cb: sta_addr=00:11:22:33:44:55 connected=1
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_sta_disconnected_cb: phy3/vif4/00:11:22:33:44:55
+osw_drv_ut_core1_op_sta_connected_cb: phy3/vif4/00:11:22:33:44:55
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+unregister
+osw_drv_ut_work: work 50
+osw_drv_ut_state_busy_cb: was busy = 0
+osw_drv_ut_work: work 49
+osw_drv_ut_core1_op_sta_disconnected_cb: phy3/vif4/00:11:22:33:44:55
+osw_drv_ut_work: work 48
+osw_drv_ut_core1_op_vif_removed_cb: phy1/vif2
+osw_drv_ut_work: work 47
+osw_drv_ut_core1_op_vif_removed_cb: phy3/vif4
+osw_drv_ut_core1_op_sta_disconnected_cb: phy1/vif1/00:11:22:33:44:55
+osw_drv_ut_work: work 46
+osw_drv_ut_work: work 45
+osw_drv_ut_core1_op_phy_removed_cb: phy3
+osw_drv_ut_core1_op_vif_removed_cb: phy1/vif1
+osw_drv_ut_work: work 44
+osw_drv_ut_work: work 43
+osw_drv_ut_core1_op_phy_removed_cb: phy1
+osw_drv_ut_work: work 42
+osw_drv_ut_state_idle_cb: was busy = 1
+osw_drv_ut_work: work done
+unregister2
+osw_drv_ut_work: work 50
+osw_drv_ut_work: work done
+   PASS: src/lib/osw/src/osw_drv_ut.c: osw_ut_func_osw_drv_ut_1
+
+
+UT: passed 18/18, failed 0

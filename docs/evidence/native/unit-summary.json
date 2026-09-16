@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "scope": "native upstream component units",
+  "runner": "process per prefix; patched upstream fork runner checks child exit status",
+  "results": [
+    {
+      "prefix": "osw_ut_func_ow_ovsdb",
+      "exit_code": 0,
+      "selected_count": 9,
+      "elapsed_seconds": 5.384
+    },
+    {
+      "prefix": "osw_ut_func_ow_conf",
+      "exit_code": 0,
+      "selected_count": 4,
+      "elapsed_seconds": 0.316
+    },
+    {
+      "prefix": "osw_ut_func_osw_drv",
+      "exit_code": 0,
+      "selected_count": 18,
+      "elapsed_seconds": 0.033
+    },
+    {
+      "prefix": "osw_ut_func_osw_confsync",
+      "exit_code": 0,
+      "selected_count": 3,
+      "elapsed_seconds": 0.01
+    },
+    {
+      "prefix": "osw_ut_func_osw_types",
+      "exit_code": 0,
+      "selected_count": 5,
+      "elapsed_seconds": 0.012
+    }
+  ],
+  "passed": true
+}

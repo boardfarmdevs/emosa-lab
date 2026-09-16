@@ -1,0 +1,16 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________________ test_wire_acceptance_requires_P0 _______________________
+
+    @pytest.mark.wire
+    def test_wire_acceptance_requires_P0():
+>       pytest.fail(
+            "MISSING_PREREQUISITE P0: exact normative matrix, independent vectors "
+            "and wire endpoint missing; no wire acceptance executed"
+        )
+E       Failed: MISSING_PREREQUISITE P0: exact normative matrix, independent vectors and wire endpoint missing; no wire acceptance executed
+
+tests/test_gated.py:6: Failed
+=========================== short test summary info ============================
+FAILED tests/test_gated.py::test_wire_acceptance_requires_P0 - Failed: MISSIN...
+1 failed, 54 deselected in 0.07s

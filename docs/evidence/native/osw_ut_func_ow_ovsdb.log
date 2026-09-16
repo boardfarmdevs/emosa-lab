@@ -1,0 +1,21 @@
+    RUN: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_sta
+   PASS: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_sta
+    RUN: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_phy_mem
+   PASS: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_phy_mem
+    RUN: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_freq_band
+   PASS: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_freq_band
+    RUN: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_rstate_channel
+   PASS: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_rstate_channel
+    RUN: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_vstate
+   PASS: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_vstate
+    RUN: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_rstate_bcn_int
+   PASS: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_rstate_bcn_int
+    RUN: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_rstate
+   PASS: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_rstate
+    RUN: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_vconf
+   PASS: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_vconf
+    RUN: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_rconf
+   PASS: src/lib/ow/src/ow_ovsdb.c: osw_ut_func_ow_ovsdb_ut_rconf
+
+
+UT: passed 9/9, failed 0

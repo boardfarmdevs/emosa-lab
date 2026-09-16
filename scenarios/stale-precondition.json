@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "stale-precondition",
+  "purpose": "Semantic component fault experiment: guard-conflict",
+  "initiating_interface": "semantic",
+  "required_backend": "any-simulation",
+  "requirements": [
+    "E02",
+    "E04",
+    "E05",
+    "E06",
+    "E07",
+    "E08"
+  ],
+  "prerequisites": [
+    "synthetic-existing-bss-v1"
+  ],
+  "target_allowlist": [
+    "pod-1"
+  ],
+  "intent": {
+    "pod_id": "pod-1",
+    "radio_id": "radio-1",
+    "bss_id": "bss-1",
+    "ssid": "emosa-lab",
+    "secret_ref": "scenario-key",
+    "enabled": true,
+    "security_mode": "wpa2-psk"
+  },
+  "expected": {
+    "state": "OWNERSHIP_CONFLICT",
+    "commit_attribution": "unknown",
+    "changed_fields": [
+      "ssid",
+      "wpa_psks[key]"
+    ]
+  },
+  "fault": {
+    "point": "before-guard",
+    "action": "guard-conflict",
+    "duration_seconds": 0
+  },
+  "seed": 7,
+  "repetitions": 1,
+  "deadlines": {
+    "apply_seconds": 30,
+    "overall_seconds": 45
+  },
+  "topology": {
+    "management_path": "private-unix-socket",
+    "target_carries_management": false
+  },
+  "cleanup": "dispose-simulation",
+  "evidence_required": [
+    "events",
+    "observations",
+    "transaction"
+  ]
+}

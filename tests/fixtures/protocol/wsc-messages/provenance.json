@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "independent_non_normative_implementation_cross_check",
+  "source_url": "https://w1.fi/releases/hostapd-2.11.tar.gz",
+  "source_sha256": "2b3facb632fd4f65e32f4bf82a76b4b72c501f995a4f62e330219fe7aed1747a",
+  "openssl": "OpenSSL 3.0.2 15 Mar 2022 (Library: OpenSSL 3.0.2 15 Mar 2022)",
+  "compiler": "cc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0",
+  "normative_contract": "docs/wsc-messages.md",
+  "complete_wsc_payloads": true,
+  "complete_ieee1905_messages": false,
+  "physical_capture": false,
+  "compiled_sources": [
+    "src/wps/wps_common.c",
+    "src/wps/wps_attr_build.c",
+    "src/wps/wps_attr_process.c",
+    "src/crypto/crypto_openssl.c",
+    "src/utils/wpabuf.c",
+    "src/utils/common.c",
+    "src/utils/os_unix.c",
+    "src/wps/wps_dev_attr.c",
+    "src/wps/wps_attr_parse.c",
+    "src/wps/wps_validate.c"
+  ],
+  "compile_defines": [
+    "CONFIG_WPS_STRICT"
+  ],
+  "source_files": {
+    "src/wps/wps_common.c": "86b81668a0e736f1cf51536694fb0eccfafa4a64fed43905c631e9aa4c7d4a27",
+    "src/wps/wps_attr_build.c": "6a57c10310d044d2dbf93eb7e39990663613661e0a100f963f0703347f752354",
+    "src/wps/wps_attr_process.c": "f98e5feb45c031070d8e30ff8417a022be1f0d58e1d2f03414e3a6ad8d4a716c",
+    "src/crypto/crypto_openssl.c": "629f6328b9bfde95b6e7c280aea25a3b8d328c849286268b8be80662ecfb085a",
+    "src/utils/wpabuf.c": "959ae9b5d51a03d0ee52ffe6c8eec027abe9db603c99699c4fdea9d867c49e0b",
+    "src/utils/common.c": "309edb4af12f5ddbb7b17e5f1f80d25304cdde4a985f314dc371a65b3a076ae3",
+    "src/utils/os_unix.c": "b92b2cd3503e4e837f31e0b95ca5329d2827dcb4bd3d58d4fea43546b9ea125d",
+    "src/wps/wps_dev_attr.c": "62caa3a55b4e26db680f471699c6772665623d3a93f76f610d0d96db5889e183",
+    "src/wps/wps_attr_parse.c": "5acade21fc03bcd89b269e20d5e69172c9afbe8c8ca8c3ea9288336806bc9f62",
+    "src/wps/wps_validate.c": "e78da3692d714c3a5f6c0f6b4f09b27b5149906a5499ff91261ccd843953b28c",
+    "src/wps/wps_enrollee.c": "4969b154e9544498e865a91b16426253b76b52738b5cce43654a31b03c123e95"
+  },
+  "harness_sha256": "22fc5e53151bd3c87059c30b83d46940a7a4032d6799bbb21d53a911da20b498",
+  "vectors_sha256": "2f4e4b8374e697935d02b381493f683d75fe612e852989cc36fb95847482cbae",
+  "result": "Native M1/M2/AP field and crypto checks pass; native decrypted Multi-AP role parses as fronthaul; alternative teardown M2 passes envelope/HMAC/KWA and native role parsing without ordinary AP settings validation.",
+  "limitations": [
+    "Hostap 2.11 cross-checks WPS base fields and crypto, not complete EasyMesh 6.1 requirements",
+    "BSS_Index is assembled from the selected WFA specification and ignored as unknown by hostap",
+    "Synthetic identities, capabilities, keys and IVs; no actual controller or pod",
+    "The teardown alternative shares synthetic M1/N2 material for an independent test, not a second M2 in the same received batch. It does not validate a complete EasyMesh teardown procedure."
+  ]
+}

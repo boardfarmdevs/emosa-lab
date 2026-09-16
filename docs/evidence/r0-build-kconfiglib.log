@@ -1,0 +1,33 @@
+Installed 1 package in 4ms
+make: Entering directory '/home/rev/git/emosa/.cache/upstream/opensync'
+TARGET=native PLATFORM= VENDOR=
+Using configuration file: kconfig/targets/config_native
+Layers: .   
+Generating kconfig file and headers: work/native-cc-ubuntu22.04-x86_64/kconfig/config_native
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, bool will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple prompts in single location
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, string will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, bool will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple prompts in single location
+warning: default on the choice symbol OSN_BACKEND_PPPOE_NAME_TEMPLATE (defined at src/lib/osn/kconfig/Kconfig.osn.pppoe_backend:14) will have no effect, as defaults do not affect choice symbols
+warning: the choice symbol OSN_BACKEND_QDISC_LINUX (defined at src/lib/osn/kconfig/Kconfig.osn.qdisc_backend:7) is selected by the following symbols, but select/imply has no effect on choice symbols
+ - OSN_BACKEND_ADAPTIVE_QOS_CAKE_AUTORATE (defined at src/lib/osn/kconfig/Kconfig.osn.adaptive_qos_backend:7)
+warning: the default selection CONFIG_OSN_BACKEND_IPSEC_NULL (undefined) of <choice> (defined at kconfig/Kconfig:178) is not contained in the choice
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, bool will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple prompts in single location
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, string will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple types, bool will be used
+warning: MDNS_OPENSYNC_LOG (defined at src/lib/mdnsd/kconfig/Kconfig.libs:8, src/lib/mdnsd/kconfig/Kconfig.libs:8) defined with multiple prompts in single location
+warning: default on the choice symbol OSN_BACKEND_PPPOE_NAME_TEMPLATE (defined at src/lib/osn/kconfig/Kconfig.osn.pppoe_backend:14) will have no effect, as defaults do not affect choice symbols
+warning: the choice symbol OSN_BACKEND_QDISC_LINUX (defined at src/lib/osn/kconfig/Kconfig.osn.qdisc_backend:7) is selected by the following symbols, but select/imply has no effect on choice symbols
+ - OSN_BACKEND_ADAPTIVE_QOS_CAKE_AUTORATE (defined at src/lib/osn/kconfig/Kconfig.osn.adaptive_qos_backend:7)
+warning: the default selection CONFIG_OSN_BACKEND_IPSEC_NULL (undefined) of <choice> (defined at kconfig/Kconfig:178) is not contained in the choice
+TARGET=native PLATFORM= VENDOR=
+Using configuration file: kconfig/targets/config_native
+Layers: .   
+create ovsdb
+ clean ovsdb in work/native-cc-ubuntu22.04-x86_64/rootfs//usr/opensync/etc
+ init ovsdb in work/native-cc-ubuntu22.04-x86_64/rootfs//usr/opensync/etc/conf.db.bck
+/bin/sh: line 1: ovsdb-tool: command not found
+make: *** [build/ovsdb.mk:114: ovsdb-create] Error 127
+make: Leaving directory '/home/rev/git/emosa/.cache/upstream/opensync'

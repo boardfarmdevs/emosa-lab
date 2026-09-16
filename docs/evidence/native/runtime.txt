@@ -1,0 +1,30 @@
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.5 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+6.8.0-139-generic
+gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+Copyright (C) 2023 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+protobuf-c 1.4.1
+libprotoc 3.21.12
+Python 3.12.3
+Jinja2==3.1.6
+kconfiglib==14.1.0
+MarkupSafe==3.0.3
+93714d2adf2e847697807a77515d527ff7281c270170a01864e2f8194ac49b68  /opt/native/ovsdb/ovsdb-server
+c664d4a282a3fe77356b02e025e3d419b7857bfdc92a289b23c81a030e3ec257  /opt/native/ovsdb/ovsdb-tool
+829227008
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        19G   11G  8.2G  56% /
