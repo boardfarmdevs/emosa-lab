@@ -1,0 +1,11 @@
+{
+  "device": "Device.WiFi.DataElements.Network.Device.2.",
+  "radio": "Device.WiFi.DataElements.Network.Device.2.Radio.1.",
+  "backhaul": {
+    "BackhaulDeviceID": "02:00:00:e0:00:01",
+    "CurrentOperatingClassProfileNumberOfEntries": 5,
+    "BackhaulMACAddress": "02:00:00:ec:01:01",
+    "LinkType": "Wi-Fi",
+    "MACAddress": "02:00:00:ec:02:10"
+  }
+}

@@ -14,6 +14,12 @@ Wireshark independently decodes the frames. **EMOSA has not answered or onboarde
 an extender; the controller inventory contains zero agents.** IEEE normative
 validation, actual search/WSC exchanges and a physical-pod profile remain pending.
 
+That statement concerns the EMOSA-facing endpoint. The separate
+[native controller–agent baseline](../peer-baseline/README.md) now exercises this
+peer build against a normal native prplMesh agent, including wired and wireless
+onboarding and client traffic. It uses its own topology, explicit BSS policy and
+hostap runtime; it does not turn the EMOSA-facing experiment into a pass.
+
 ## Prepare the peer
 
 Create the dedicated VM and inner containers using [the deployment guide](../README.md).

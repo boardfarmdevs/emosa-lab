@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "scope": "pod-initiated OVSDB to local diagnostic virtual agent",
+  "transport": "private Unix stream; database initiates, EMOSA manages",
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "passed": true,
+  "stages": {
+    "before_connection": {
+      "interface": "local-diagnostic",
+      "adapter_instance_id": "65689f61-c223-4864-b918-712dcbf4c0c8",
+      "al_mac": "02:00:00:00:30:01",
+      "state": "pending",
+      "fresh": false,
+      "observed_at": null,
+      "generation": null,
+      "device_identity": null,
+      "radios": [],
+      "bsses": []
+    },
+    "connected": {
+      "interface": "local-diagnostic",
+      "adapter_instance_id": "65689f61-c223-4864-b918-712dcbf4c0c8",
+      "al_mac": "02:00:00:00:30:01",
+      "state": "ready",
+      "fresh": true,
+      "observed_at": "2026-09-16T22:46:53.325Z",
+      "generation": 1,
+      "device_identity": [
+        {
+          "serial_number": "EMOSA-SIM-EXTENDER-001",
+          "model": "EMOSA synthetic extender",
+          "firmware_version": "simulation-only"
+        }
+      ],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "if_name": "lab-radio",
+          "freq_band": "5G",
+          "channel": 36,
+          "mac": "02:00:00:00:20:01"
+        }
+      ],
+      "bsses": [
+        {
+          "bss_id": "bss-1",
+          "radio_id": "radio-1",
+          "if_name": "lab-ap",
+          "mac": "02:00:00:00:10:01",
+          "ssid": "initial-network",
+          "enabled": true,
+          "mode": "ap"
+        }
+      ]
+    },
+    "configuration_applied": {
+      "state": "OBSERVED_APPLIED",
+      "initiating_interface": "semantic",
+      "created_at": "2026-09-16T22:46:53.364Z",
+      "updated_at": "2026-09-16T22:46:53.489Z",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "commit_attribution": "reply"
+    },
+    "updated_inventory": {
+      "interface": "local-diagnostic",
+      "adapter_instance_id": "65689f61-c223-4864-b918-712dcbf4c0c8",
+      "al_mac": "02:00:00:00:30:01",
+      "state": "ready",
+      "fresh": true,
+      "observed_at": "2026-09-16T22:46:53.492Z",
+      "generation": 1,
+      "device_identity": [
+        {
+          "serial_number": "EMOSA-SIM-EXTENDER-001",
+          "model": "EMOSA synthetic extender",
+          "firmware_version": "simulation-only"
+        }
+      ],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "if_name": "lab-radio",
+          "freq_band": "5G",
+          "channel": 36,
+          "mac": "02:00:00:00:20:01"
+        }
+      ],
+      "bsses": [
+        {
+          "bss_id": "bss-1",
+          "radio_id": "radio-1",
+          "if_name": "lab-ap",
+          "mac": "02:00:00:00:10:01",
+          "ssid": "emosa-virtual-agent-demo",
+          "enabled": true,
+          "mode": "ap"
+        }
+      ]
+    },
+    "disconnected": {
+      "interface": "local-diagnostic",
+      "adapter_instance_id": "65689f61-c223-4864-b918-712dcbf4c0c8",
+      "al_mac": "02:00:00:00:30:01",
+      "state": "unavailable",
+      "fresh": false,
+      "observed_at": "2026-09-16T22:46:53.492Z",
+      "generation": 1,
+      "device_identity": [
+        {
+          "serial_number": "EMOSA-SIM-EXTENDER-001",
+          "model": "EMOSA synthetic extender",
+          "firmware_version": "simulation-only"
+        }
+      ],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "if_name": "lab-radio",
+          "freq_band": "5G",
+          "channel": 36,
+          "mac": "02:00:00:00:20:01"
+        }
+      ],
+      "bsses": [
+        {
+          "bss_id": "bss-1",
+          "radio_id": "radio-1",
+          "if_name": "lab-ap",
+          "mac": "02:00:00:00:10:01",
+          "ssid": "emosa-virtual-agent-demo",
+          "enabled": true,
+          "mode": "ap"
+        }
+      ]
+    },
+    "reconnected": {
+      "interface": "local-diagnostic",
+      "adapter_instance_id": "65689f61-c223-4864-b918-712dcbf4c0c8",
+      "al_mac": "02:00:00:00:30:01",
+      "state": "ready",
+      "fresh": true,
+      "observed_at": "2026-09-16T22:46:55.579Z",
+      "generation": 2,
+      "device_identity": [
+        {
+          "serial_number": "EMOSA-SIM-EXTENDER-001",
+          "model": "EMOSA synthetic extender",
+          "firmware_version": "simulation-only"
+        }
+      ],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "if_name": "lab-radio",
+          "freq_band": "5G",
+          "channel": 36,
+          "mac": "02:00:00:00:20:01"
+        }
+      ],
+      "bsses": [
+        {
+          "bss_id": "bss-1",
+          "radio_id": "radio-1",
+          "if_name": "lab-ap",
+          "mac": "02:00:00:00:10:01",
+          "ssid": "emosa-virtual-agent-demo",
+          "enabled": true,
+          "mode": "ap"
+        }
+      ]
+    },
+    "adapter_restarted": {
+      "interface": "local-diagnostic",
+      "adapter_instance_id": "ef9932dc-9f9c-4a49-a56c-41a80c3d8d13",
+      "al_mac": "02:00:00:00:30:01",
+      "state": "ready",
+      "fresh": true,
+      "observed_at": "2026-09-16T22:46:56.708Z",
+      "generation": 1,
+      "device_identity": [
+        {
+          "serial_number": "EMOSA-SIM-EXTENDER-001",
+          "model": "EMOSA synthetic extender",
+          "firmware_version": "simulation-only"
+        }
+      ],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "if_name": "lab-radio",
+          "freq_band": "5G",
+          "channel": 36,
+          "mac": "02:00:00:00:20:01"
+        }
+      ],
+      "bsses": [
+        {
+          "bss_id": "bss-1",
+          "radio_id": "radio-1",
+          "if_name": "lab-ap",
+          "mac": "02:00:00:00:10:01",
+          "ssid": "emosa-virtual-agent-demo",
+          "enabled": true,
+          "mode": "ap"
+        }
+      ]
+    }
+  },
+  "manual_cli_verified": true,
+  "tests": {
+    "unit_passed": 183,
+    "ovsdb_passed": 20
+  },
+  "source_base_commit": "eefd9cdf9e679fdd1c99a1a8c9237560424a35e7",
+  "source_files": {
+    "src/emosa/agents.py": "42fa1c599247938a4c1d8bc63ab0e82e82c7288c814fb47fd50ef4c1375cc250",
+    "src/emosa/app.py": "b5b3bcbb1ae164a6b3e9fa9f81462c9b55cefdc1403d9ca132e87437122057e1",
+    "src/emosa/cli.py": "a4c44c01a72eeb1f2f0e381ecd2a25bfd5a4446e8165698b61cb871d77c7a888",
+    "src/emosa/config.py": "b3a23eb83acc30a348b8f3918fad4a7ce1d4d9186a7da4f57b62a541caddc835",
+    "src/emosa/opensync/mapping.py": "af3ea36fa5feb604cb018421f15095730fb8711322f8e16072ea48e931b39d70",
+    "src/emosa/opensync/schema.py": "b6f2dd8dc75d94a5161befbc2bb0a90b10b39d6f78433222cd2460b592d38ba0",
+    "src/emosa/opensync/session.py": "f5d307034d5ffdf03f55e9a362b124ab161e164867cc3b8d53c476a6d3094ca2",
+    "src/emosa/simulation/database.py": "da76ce816114ae944193ebc84a7c839b5dcd02aee13986e05cd133c68e3aaaf5",
+    "src/emosa/simulation/connecting_pod.py": "d2e2d19029fa1216f77903d100ddd6566007c311999b057e8afc04bf434de871",
+    "schemas/config.schema.json": "7fcf95fc81339d8e273c69e893ff7991d3f35baf1f60d7f9fc99fabca98d1222",
+    "schemas/local-api.schema.json": "8a58444812dd628e46be3e94cc6fd5852dd0d31d70df9ec65827bf34d856f5f8",
+    "tests/test_agents.py": "7ad1393aee0dd7d180c016928d58e843ca87291b6ccdf191a1074241a29222e0",
+    "tests/test_connecting_pod.py": "03c90e16392c440de2e598a017c938f77e4a900c7043c016f649d9b7a85b4eb2"
+  },
+  "schema_reference": {
+    "repository": "plume-design/opensync",
+    "commit": "78d8a7194d5e77635877cc456231e7be5cf03d68",
+    "path": "interfaces/opensync.ovsschema",
+    "artifact_sha256": "91d18cc4668ff6fc9c9be2234ddc7e70c84b9640f04e621a1ff90e3451c867a9"
+  },
+  "earlier_attempt": {
+    "result": "failed",
+    "stage": "initial Unix listener connection",
+    "cause": "Upstream socket-unlink hook initialized Python signal handling in worker thread",
+    "resolution": "Initialize upstream hook on main thread; regression uses a separate service process",
+    "raw_evidence": "Retained privately in .lab/connecting-pod-first; not published"
+  }
+}

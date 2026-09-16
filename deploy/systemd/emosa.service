@@ -1,5 +1,5 @@
 [Unit]
-Description=EMOSA OpenSync OVSDB adapter (simulation qualification)
+Description=EMOSA EasyMesh to OpenSync Adapter (simulation qualification)
 After=network.target
 
 [Service]

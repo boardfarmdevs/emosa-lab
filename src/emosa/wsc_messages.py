@@ -1,6 +1,6 @@
 """WPS 2.0.10 M1/M2 payloads, without IEEE transport or configuration authority.
 
-See docs/wsc-messages.md for the selected rules and remaining procedure checks.
+See doc/protocol/wsc-messages.md for the selected rules and remaining procedure checks.
 Authenticated settings are secret data, not an instruction to write OVSDB.
 """
 

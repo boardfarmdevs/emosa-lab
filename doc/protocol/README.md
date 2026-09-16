@@ -1,0 +1,16 @@
+# Protocol specifications and components
+
+[Documentation index](../README.md)
+
+| Document | Scope |
+| --- | --- |
+| [Specification inputs](protocol-inputs.md) | Authoritative sources, proposed editions and selected procedure scope |
+| [Acquisition checklist](specification-acquisition.md) | Required, obtained and pending external documents |
+| [Protocol matrix](protocol-matrix.json) | Rules, sections, implementation evidence and unresolved procedure requirements |
+| [WSC cryptographic component](wsc-component.md) | Bounded cryptography, independent vectors and validation limits |
+| [WSC M1/M2 payloads](wsc-messages.md) | Payload construction, authentication and required-field checks |
+| [WSC radio interpretation](wsc-radio.md) | Authenticated BSS roles, teardown and complete-radio admission |
+
+Component checks do not establish a complete IEEE 1905/EasyMesh exchange.
+Specification-dependent wire validation and controller onboarding remain gated.
+Open-source reference behavior supplements the normative specifications.

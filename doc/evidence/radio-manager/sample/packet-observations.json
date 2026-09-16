@@ -1,0 +1,11 @@
+{
+  "beacon_counts": {
+    "emosa-radio-initial": 38,
+    "emosa-radio-changed": 119,
+    "emosa-radio-withheld": 36,
+    "emosa-radio-lost-reply": 312
+  },
+  "eapol_frames": 36,
+  "source": "independent tshark decoding",
+  "radio_pcap_sha256": "6aea11ce62421b9b847e428f12f9d52806498c47c20095619195b66e236cd488"
+}

@@ -7,6 +7,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+import ovs.jsonrpc
+import ovs.stream
+
 from emosa.errors import EmosaError, Reason
 from emosa.opensync.schema import reference_path
 from emosa.opensync.session import OvsSession
@@ -92,7 +95,31 @@ class SimDatabase:
         if self.temporary:
             self.temporary.cleanup()
 
-    async def seed(self):
+    async def manager_remote(self, endpoint, *, connect=True):
+        """Make this disposable database initiate a connection to a private local listener."""
+        if not endpoint.startswith("unix:/"):
+            raise EmosaError(Reason.INVALID_INPUT, "simulation remote must be a local Unix socket")
+
+        def command():
+            error, stream = ovs.stream.Stream.open_block(
+                ovs.stream.Stream.open("unix:" + str(self.directory / "control.sock")), 5000
+            )
+            if error:
+                raise EmosaError(Reason.NOT_READY, "simulation admin socket unavailable")
+            rpc = ovs.jsonrpc.Connection(stream)
+            try:
+                action = "add-remote" if connect else "remove-remote"
+                error, reply = rpc.transact_block(
+                    ovs.jsonrpc.Message.create_request("ovsdb-server/" + action, [endpoint])
+                )
+                if error or reply.error is not None:
+                    raise EmosaError(Reason.NOT_READY, "simulation remote change failed")
+            finally:
+                rpc.close()
+
+        await asyncio.to_thread(command)
+
+    async def seed(self, *, serial_number=None):
         # Fixed, explicitly synthetic device records. No adapter predicate imports.
         ap = {
             "if_name": "lab-ap",
@@ -142,6 +169,18 @@ class SimDatabase:
                 },
             ),
         ]
+        if serial_number is not None:
+            rows.append(
+                (
+                    "AWLAN_Node",
+                    "node",
+                    {
+                        "serial_number": serial_number,
+                        "model": "EMOSA synthetic extender",
+                        "firmware_version": "simulation-only",
+                    },
+                )
+            )
         session = OvsSession(self.endpoint)
         try:
             result = await session.transact(

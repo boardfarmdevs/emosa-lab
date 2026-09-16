@@ -4,7 +4,7 @@ The runnable local simulator uses the same session/mapping code in unprivileged
 processes. It has been tested on the inspected Ubuntu 22.04 host and in the
 dedicated Ubuntu 24.04 nested-LXD environment: 69 unit and 13 OVSDB tests passed,
 and VM-driven component provisioning/lost-reply scenarios completed. See
-[the retained runtime evidence](../docs/evidence/peer/qualification-summary.json).
+[the retained runtime evidence](../doc/evidence/peer/qualification-summary.json).
 Full wire/hardware deployment remains unqualified. `images.lock.json` records
 the base image and its retained split export; final runtime image exports and
 clean full-procedure reruns remain pending.
@@ -79,7 +79,13 @@ inside the dedicated VM and is separate from the current OVSDB simulator manager
 The physical observer needs a real Wi-Fi interface; hwsim does not provide an RF
 link to actual pods.
 
-Copy `doc/emosa-input-manifest.example.json` to the ignored local manifest and
+For an existing-controller baseline before inserting EMOSA, use the
+[native controller–agent harness](peer-baseline/README.md). It owns four separate
+unprivileged containers and three hwsim PHYs, removes setup Ethernet, and checks
+wired/wireless onboarding and independent client traffic. Run it separately from
+the two-radio smoke harness; both require exclusive ownership of hwsim in the VM.
+
+Copy `doc/project/emosa-input-manifest.example.json` to the ignored local manifest and
 complete M0 with actual pod/build, schema, trusted endpoint/direction, resource
 bindings, writer controls and recovery/client evidence. Hardware configuration
 currently rejects writes because no such target has been qualified. Do not use
@@ -96,3 +102,7 @@ path and controller discovery captures delivered to the EMOSA container. Its
 controller-only helper requires one hwsim radio, and both native controller and
 helper abort on shutdown. No EMOSA discovery/onboarding or physical-pod
 interoperability is established by that baseline.
+
+The [OVSDB/hwsim integration](radio-manager/README.md) exercises semantic EMOSA
+changes through an independent hostapd/nl80211 manager with both client types.
+It reuses stopped native-baseline resources and does not enable wire or pod gates.

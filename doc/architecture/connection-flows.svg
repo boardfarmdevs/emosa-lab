@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1430" viewBox="0 0 1680 1430" role="img" aria-labelledby="title desc">
+<title id="title">Existing OpenSync and gateway EasyMesh, followed by the target EMOSA control and telemetry flows</title>
+<desc id="desc">The upper panels compare each OpenSync pod's own cloud management and telemetry sessions with a gateway EasyMesh controller managing native agents. The lower panel proposes one EMOSA service with per-pod contexts, unchanged OpenSync extenders, separately qualified root ownership, and a telemetry collector exporting to ODH, the data lake in the network center. Proposed integrations are dashed. No physical EMOSA or ODH delivery is proven.</desc>
+<defs>
+<marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#1769aa"/></marker>
+<marker id="purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8243a8"/></marker>
+</defs>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#182b40} .muted{fill:#4d6175} .blue{fill:#1769aa} .purple{fill:#8243a8}</style>
+<rect width="1680" height="1430" fill="#fff"/>
+
+<text x="32" y="45" font-size="34" font-weight="bold" text-anchor="start" class="">
+<tspan x="32" dy="0">From cloud-managed pods to gateway-managed agents</tspan>
+</text>
+<text x="32" y="79" font-size="21" font-weight="normal" text-anchor="start" class="muted">
+<tspan x="32" dy="0">Logical service relationships • arrows do not show every network hop • deployment view for EMOSA Lab</tspan>
+</text>
+<rect x="32" y="108" width="796" height="538" rx="14" fill="#f5f9fc" stroke="#b9c9d8" stroke-width="2"/>
+<rect x="852" y="108" width="796" height="538" rx="14" fill="#f5f9fc" stroke="#b9c9d8" stroke-width="2"/>
+<text x="58" y="153" font-size="27" font-weight="bold" text-anchor="start" class="">
+<tspan x="58" dy="0">A. Existing OpenSync deployment</tspan>
+</text>
+<text x="878" y="153" font-size="27" font-weight="bold" text-anchor="start" class="">
+<tspan x="878" dy="0">B. Gateway-based EasyMesh deployment</tspan>
+</text>
+<rect x="84" y="193" width="316" height="87" rx="14" fill="#e9f3fb" stroke="#80b1d4" stroke-width="2"/>
+<text x="242" y="228" font-size="23" font-weight="bold" text-anchor="middle" class="">
+<tspan x="242" dy="0">Cloud management</tspan>
+<tspan x="242" dy="31.05">OVSDB endpoint</tspan>
+</text>
+<rect x="448" y="193" width="328" height="87" rx="14" fill="#f3ebfa" stroke="#bb94d0" stroke-width="2"/>
+<text x="612" y="228" font-size="23" font-weight="bold" text-anchor="middle" class="">
+<tspan x="612" dy="0">Cloud telemetry</tspan>
+<tspan x="612" dy="31.05">Existing reporting service</tspan>
+</text>
+<rect x="84" y="394" width="692" height="161" rx="14" fill="#fff" stroke="#b9c9d8" stroke-width="2"/>
+<text x="430" y="426" font-size="23" font-weight="bold" text-anchor="middle" class="">
+<tspan x="430" dy="0">Each pod has its own cloud sessions</tspan>
+</text>
+<rect x="105" y="448" width="200" height="82" rx="14" fill="#f8fafc" stroke="#b9c9d8" stroke-width="2"/>
+<text x="205" y="480" font-size="21" font-weight="normal" text-anchor="middle" class="">
+<tspan x="205" dy="0">OpenSync root</tspan>
+<tspan x="205" dy="28.35">on gateway</tspan>
+</text>
+<rect x="330" y="448" width="200" height="82" rx="14" fill="#f8fafc" stroke="#b9c9d8" stroke-width="2"/>
+<text x="430" y="480" font-size="21" font-weight="normal" text-anchor="middle" class="">
+<tspan x="430" dy="0">OpenSync</tspan>
+<tspan x="430" dy="28.35">extender A</tspan>
+</text>
+<rect x="555" y="448" width="200" height="82" rx="14" fill="#f8fafc" stroke="#b9c9d8" stroke-width="2"/>
+<text x="655" y="480" font-size="21" font-weight="normal" text-anchor="middle" class="">
+<tspan x="655" dy="0">OpenSync</tspan>
+<tspan x="655" dy="28.35">extender B</tspan>
+</text>
+<path d="M 242 394 L 242 280" fill="none" stroke="#1769aa" stroke-width="3" marker-end="url(#blue)" marker-start="url(#blue)"/>
+<path d="M 612 394 L 612 280" fill="none" stroke="#8243a8" stroke-width="3" marker-end="url(#purple)"/>
+<text x="225" y="324" font-size="20" font-weight="normal" text-anchor="end" class="blue">
+<tspan x="225" dy="0">Control / State</tspan>
+<tspan x="225" dy="27.0">per pod</tspan>
+</text>
+<text x="631" y="324" font-size="20" font-weight="normal" text-anchor="start" class="purple">
+<tspan x="631" dy="0">Telemetry</tspan>
+<tspan x="631" dy="27.0">per pod</tspan>
+</text>
+<text x="84" y="590" font-size="21" font-weight="normal" text-anchor="start" class="muted">
+<tspan x="84" dy="0">Gateway forwarding is not cloud-session termination.</tspan>
+<tspan x="84" dy="28.35">The root pod also has its own cloud relationship.</tspan>
+</text>
+<rect x="1066" y="190" width="376" height="70" rx="14" fill="#f3ebfa" stroke="#bb94d0" stroke-width="2"/>
+<text x="1254" y="218" font-size="18" font-weight="normal" text-anchor="middle" class="">
+<tspan x="1254" dy="0">Network-center backend</tspan>
+<tspan x="1254" dy="24.3">Upstream integration is deployment-specific</tspan>
+</text>
+<rect x="1066" y="322" width="376" height="81" rx="14" fill="#e9f3fb" stroke="#80b1d4" stroke-width="2"/>
+<text x="1254" y="354" font-size="23" font-weight="bold" text-anchor="middle" class="">
+<tspan x="1254" dy="0">EasyMesh controller</tspan>
+<tspan x="1254" dy="31.05">on gateway</tspan>
+</text>
+<path d="M 1254 322 L 1254 260" fill="none" stroke="#8243a8" stroke-width="3" marker-end="url(#purple)" stroke-dasharray="9 7"/>
+<text x="1280" y="291" font-size="18" font-weight="normal" text-anchor="start" class="purple">
+<tspan x="1280" dy="0">Export integration</tspan>
+</text>
+<rect x="894" y="466" width="712" height="98" rx="14" fill="#fff" stroke="#b9c9d8" stroke-width="2"/>
+<rect x="908" y="478" width="220" height="73" rx="14" fill="#f8fafc" stroke="#b9c9d8" stroke-width="2"/>
+<text x="1018" y="506" font-size="19" font-weight="normal" text-anchor="middle" class="">
+<tspan x="1018" dy="0">Gateway local agent</tspan>
+<tspan x="1018" dy="25.650000000000002">owns local radios</tspan>
+</text>
+<rect x="1140" y="478" width="220" height="73" rx="14" fill="#f8fafc" stroke="#b9c9d8" stroke-width="2"/>
+<text x="1250" y="506" font-size="19" font-weight="normal" text-anchor="middle" class="">
+<tspan x="1250" dy="0">Native extender A</tspan>
+<tspan x="1250" dy="25.650000000000002">EasyMesh agent</tspan>
+</text>
+<rect x="1372" y="478" width="220" height="73" rx="14" fill="#f8fafc" stroke="#b9c9d8" stroke-width="2"/>
+<text x="1482" y="506" font-size="19" font-weight="normal" text-anchor="middle" class="">
+<tspan x="1482" dy="0">Native extender B</tspan>
+<tspan x="1482" dy="25.650000000000002">EasyMesh agent</tspan>
+</text>
+<path d="M 1254 403 L 1254 466" fill="none" stroke="#1769aa" stroke-width="3" marker-end="url(#blue)" marker-start="url(#blue)"/>
+<text x="1280" y="439" font-size="19" font-weight="normal" text-anchor="start" class="blue">
+<tspan x="1280" dy="0">Control + supported reports</tspan>
+</text>
+<text x="894" y="597" font-size="21" font-weight="normal" text-anchor="start" class="muted">
+<tspan x="894" dy="0">Agents implement EasyMesh directly.</tspan>
+<tspan x="894" dy="28.35">The controller coordinates the local agent domain.</tspan>
+</text>
+<text x="32" y="692" font-size="29" font-weight="bold" text-anchor="start" class="">
+<tspan x="32" dy="0">Combine the local controller model with existing OpenSync pods</tspan>
+</text>
+<rect x="32" y="719" width="1616" height="639" rx="14" fill="#fafcfe" stroke="#b9c9d8" stroke-width="2"/>
+<text x="58" y="757" font-size="27" font-weight="bold" text-anchor="start" class="">
+<tspan x="58" dy="0">C. Target EMOSA scheme — proposed integration, physical proof pending</tspan>
+</text>
+<rect x="616" y="800" width="462" height="91" rx="14" fill="#e9f3fb" stroke="#80b1d4" stroke-width="2"/>
+<text x="847" y="837" font-size="23" font-weight="bold" text-anchor="middle" class="">
+<tspan x="847" dy="0">EasyMesh controller on gateway</tspan>
+<tspan x="847" dy="31.05">Discovers represented extenders</tspan>
+</text>
+<rect x="616" y="968" width="462" height="225" rx="14" fill="#eaf6f0" stroke="#79b899" stroke-width="2"/>
+<text x="847" y="1004" font-size="24" font-weight="bold" text-anchor="middle" class="">
+<tspan x="847" dy="0">One EMOSA service per site/domain</tspan>
+</text>
+<text x="847" y="1042" font-size="23" font-weight="normal" text-anchor="middle" class="">
+<tspan x="847" dy="0">Virtual agent A  ↔  pod context A</tspan>
+<tspan x="847" dy="31.05">Virtual agent B  ↔  pod context B</tspan>
+</text>
+<text x="847" y="1120" font-size="20" font-weight="normal" text-anchor="middle" class="">
+<tspan x="847" dy="0">Identity • mapping • journal • recovery</tspan>
+<tspan x="847" dy="27.0">Separate session and freshness per pod</tspan>
+</text>
+<path d="M 847 891 L 847 968" fill="none" stroke="#1769aa" stroke-width="3" marker-end="url(#blue)" marker-start="url(#blue)" stroke-dasharray="9 7"/>
+<text x="871" y="936" font-size="19" font-weight="normal" text-anchor="start" class="blue">
+<tspan x="871" dy="0">EasyMesh wire binding pending</tspan>
+</text>
+<rect x="75" y="918" width="367" height="340" rx="14" fill="#fff" stroke="#b9c9d8" stroke-width="2"/>
+<text x="258" y="955" font-size="24" font-weight="bold" text-anchor="middle" class="">
+<tspan x="258" dy="0">Unchanged OpenSync pods</tspan>
+</text>
+<rect x="93" y="979" width="331" height="48" rx="14" fill="#f8fafc" stroke="#b9c9d8" stroke-width="2"/>
+<text x="258" y="1010" font-size="20" font-weight="normal" text-anchor="middle" class="">
+<tspan x="258" dy="0">Extender A: existing managers</tspan>
+</text>
+<rect x="93" y="1040" width="331" height="48" rx="14" fill="#f8fafc" stroke="#b9c9d8" stroke-width="2"/>
+<text x="258" y="1071" font-size="20" font-weight="normal" text-anchor="middle" class="">
+<tspan x="258" dy="0">Extender B: existing managers</tspan>
+</text>
+<rect x="93" y="1110" width="331" height="125" rx="14" fill="#fff8eb" stroke="#d6b35d" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="258" y="1142" font-size="18" font-weight="normal" text-anchor="middle" class="">
+<tspan x="258" dy="0">Root pod on gateway</tspan>
+<tspan x="258" dy="24.3">Resource ownership must be resolved;</tspan>
+<tspan x="258" dy="24.3">do not duplicate a local agent’s control.</tspan>
+</text>
+<path d="M 442 1020 L 616 1020" fill="none" stroke="#1769aa" stroke-width="3" marker-end="url(#blue)" marker-start="url(#blue)" stroke-dasharray="9 7"/>
+<text x="529" y="977" font-size="20" font-weight="normal" text-anchor="middle" class="blue">
+<tspan x="529" dy="0">OVSDB</tspan>
+<tspan x="529" dy="27.0">per pod</tspan>
+</text>
+<text x="529" y="1072" font-size="18" font-weight="normal" text-anchor="middle" class="muted">
+<tspan x="529" dy="0">Root control</tspan>
+<tspan x="529" dy="24.3">scope pending</tspan>
+</text>
+<rect x="1192" y="800" width="402" height="105" rx="14" fill="#f3ebfa" stroke="#bb94d0" stroke-width="2"/>
+<text x="1393" y="837" font-size="24" font-weight="bold" text-anchor="middle" class="">
+<tspan x="1393" dy="0">ODH</tspan>
+<tspan x="1393" dy="32.400000000000006">Data lake in the network center</tspan>
+</text>
+<rect x="1192" y="1090" width="402" height="103" rx="14" fill="#f3ebfa" stroke="#bb94d0" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="1393" y="1128" font-size="22" font-weight="bold" text-anchor="middle" class="">
+<tspan x="1393" dy="0">Telemetry collector / exporter</tspan>
+<tspan x="1393" dy="29.700000000000003">Component or cooperating service</tspan>
+</text>
+<path d="M 1393 1090 L 1393 905" fill="none" stroke="#8243a8" stroke-width="3" marker-end="url(#purple)" stroke-dasharray="9 7"/>
+<text x="1412" y="962" font-size="19" font-weight="normal" text-anchor="start" class="purple">
+<tspan x="1412" dy="0">Ingestion contract</tspan>
+<tspan x="1412" dy="25.650000000000002">and delivery</tspan>
+<tspan x="1412" dy="25.650000000000002">verification pending</tspan>
+</text>
+<path d="M 442 1224 L 1393 1224 L 1393 1193" fill="none" stroke="#8243a8" stroke-width="3" marker-end="url(#purple)" stroke-dasharray="9 7"/>
+<text x="733" y="1254" font-size="20" font-weight="normal" text-anchor="start" class="purple">
+<tspan x="733" dy="0">Pod telemetry: retain source identity, timestamps and report meaning</tspan>
+</text>
+<path d="M 1078 1144 L 1192 1144" fill="none" stroke="#8243a8" stroke-width="3" marker-end="url(#purple)" stroke-dasharray="9 7"/>
+<text x="1136" y="1080" font-size="18" font-weight="normal" text-anchor="middle" class="purple">
+<tspan x="1136" dy="0">Adapter</tspan>
+<tspan x="1136" dy="24.3">diagnostics</tspan>
+</text>
+<text x="75" y="1323" font-size="21" font-weight="normal" text-anchor="start" class="muted">
+<tspan x="75" dy="0">Control migration and telemetry delivery are separate obligations. Firmware stays unchanged; endpoint/trust changes need qualification.</tspan>
+</text>
+<path d="M 42 1396 L 98 1396" fill="none" stroke="#1769aa" stroke-width="3" marker-end="url(#blue)" marker-start="url(#blue)"/>
+<text x="113" y="1403" font-size="20" font-weight="normal" text-anchor="start" class="">
+<tspan x="113" dy="0">Management / control</tspan>
+</text>
+<path d="M 390 1396 L 446 1396" fill="none" stroke="#8243a8" stroke-width="3" marker-end="url(#purple)"/>
+<text x="461" y="1403" font-size="20" font-weight="normal" text-anchor="start" class="">
+<tspan x="461" dy="0">Telemetry / observations</tspan>
+</text>
+<path d="M 770 1396 L 826 1396" fill="none" stroke="#1769aa" stroke-width="3" marker-end="url(#blue)" stroke-dasharray="9 7"/>
+<text x="841" y="1403" font-size="20" font-weight="normal" text-anchor="start" class="">
+<tspan x="841" dy="0">Integration or qualification pending</tspan>
+</text>
+<text x="1645" y="1403" font-size="20" font-weight="normal" text-anchor="end" class="muted">
+<tspan x="1645" dy="0">See manual §2.6–2.7</tspan>
+</text>
+</svg>

@@ -1,0 +1,112 @@
+diff --git a/hostapd/ctrl_iface.c b/hostapd/ctrl_iface.c
+index 86adf18e5..d3a4468a9 100644
+--- a/hostapd/ctrl_iface.c
++++ b/hostapd/ctrl_iface.c
+@@ -3688,6 +3688,11 @@ static int hostapd_ctrl_iface_receive_process(struct hostapd_data *hapd,
+ 	} else if (os_strcmp(buf, "RELOAD_WPA_PSK") == 0) {
+ 		if (hostapd_ctrl_iface_reload_wpa_psk(hapd))
+ 			reply_len = -1;
++	} else if (os_strcmp(buf, "UPDATE") == 0 ||
++		   os_strcmp(buf, "UPDATE ") == 0) {
++		/* prplMesh NL80211 writes a file before this fixed-BSS update. */
++		if (hostapd_reload_bss_config(hapd->iface) < 0)
++			reply_len = -1;
+ 	} else if (os_strncmp(buf, "RELOAD", 6) == 0) {
+ 		if (hostapd_ctrl_iface_reload(hapd->iface))
+ 			reply_len = -1;
+diff --git a/src/ap/hostapd.c b/src/ap/hostapd.c
+index 4b88641a2..fceac43f7 100644
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -210,7 +210,8 @@ static int hostapd_iface_conf_changed(struct hostapd_config *newconf,
+ }
+ 
+ 
+-int hostapd_reload_config(struct hostapd_iface *iface)
++static int hostapd_reload_config_internal(struct hostapd_iface *iface,
++					int bss_only)
+ {
+ 	struct hapd_interfaces *interfaces = iface->interfaces;
+ 	struct hostapd_data *hapd = iface->bss[0];
+@@ -218,6 +219,8 @@ int hostapd_reload_config(struct hostapd_iface *iface)
+ 	size_t j;
+ 
+ 	if (iface->config_fname == NULL) {
++		if (bss_only)
++			return -1;
+ 		/* Only in-memory config in use - assume it has been updated */
+ 		hostapd_clear_old(iface);
+ 		for (j = 0; j < iface->num_bss; j++)
+@@ -232,9 +235,32 @@ int hostapd_reload_config(struct hostapd_iface *iface)
+ 	if (newconf == NULL)
+ 		return -1;
+ 
+-	hostapd_clear_old(iface);
+-
+ 	oldconf = hapd->iconf;
++	if (bss_only) {
++		/* Keep the control endpoint alive and reject unapplied PHY changes. */
++		if (hostapd_iface_conf_changed(newconf, oldconf) ||
++		    newconf->channel != oldconf->channel ||
++		    newconf->hw_mode != oldconf->hw_mode ||
++		    newconf->secondary_channel != oldconf->secondary_channel ||
++		    newconf->ieee80211n != oldconf->ieee80211n ||
++		    newconf->ieee80211ac != oldconf->ieee80211ac ||
++		    newconf->ieee80211ax != oldconf->ieee80211ax ||
++		    hostapd_get_oper_chwidth(newconf) !=
++		    hostapd_get_oper_chwidth(oldconf) ||
++		    hostapd_get_oper_centr_freq_seg0_idx(newconf) !=
++		    hostapd_get_oper_centr_freq_seg0_idx(oldconf) ||
++		    hostapd_get_oper_centr_freq_seg1_idx(newconf) !=
++		    hostapd_get_oper_centr_freq_seg1_idx(oldconf))
++			goto unsupported_update;
++		for (j = 0; j < newconf->num_bss; j++) {
++			if (os_memcmp(newconf->bss[j]->bssid,
++				      oldconf->bss[j]->bssid, ETH_ALEN) ||
++			    os_strcmp(newconf->bss[j]->bridge,
++				      oldconf->bss[j]->bridge))
++				goto unsupported_update;
++		}
++	}
++	hostapd_clear_old(iface);
+ 	if (hostapd_iface_conf_changed(newconf, oldconf)) {
+ 		char *fname;
+ 		int res;
+@@ -289,9 +315,24 @@ int hostapd_reload_config(struct hostapd_iface *iface)
+ 	}
+ 
+ 	hostapd_config_free(oldconf);
++	return 0;
++
++unsupported_update:
++	wpa_printf(MSG_ERROR, "UPDATE requires unchanged radio and BSS identities");
++	hostapd_config_free(newconf);
++	return -1;
++}
+ 
+ 
+-	return 0;
++int hostapd_reload_config(struct hostapd_iface *iface)
++{
++	return hostapd_reload_config_internal(iface, 0);
++}
++
++
++int hostapd_reload_bss_config(struct hostapd_iface *iface)
++{
++	return hostapd_reload_config_internal(iface, 1);
+ }
+ 
+ 
+diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
+index f3ca7529a..42c017283 100644
+--- a/src/ap/hostapd.h
++++ b/src/ap/hostapd.h
+@@ -605,6 +605,7 @@ int hostapd_for_each_interface(struct hapd_interfaces *interfaces,
+ 			       int (*cb)(struct hostapd_iface *iface,
+ 					 void *ctx), void *ctx);
+ int hostapd_reload_config(struct hostapd_iface *iface);
++int hostapd_reload_bss_config(struct hostapd_iface *iface);
+ void hostapd_reconfig_encryption(struct hostapd_data *hapd);
+ struct hostapd_data *
+ hostapd_alloc_bss_data(struct hostapd_iface *hapd_iface,

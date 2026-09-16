@@ -1,0 +1,17 @@
+{
+  "browser": "Chromium",
+  "viewports": [
+    "1440x1100",
+    "390x844"
+  ],
+  "checks": [
+    "five modes",
+    "native peer commands",
+    "bounded proof scope",
+    "repository subpath",
+    "no mobile overflow"
+  ],
+  "errors": [],
+  "evidence_links": "Source links use the build commit on GitHub; reviewed packet files are repository artifacts, not copied Pages assets.",
+  "publication_verification": "Outside this local preview check; verify the deployed commit separately."
+}

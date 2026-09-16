@@ -1,0 +1,641 @@
+{
+  "schema_version": 1,
+  "architecture_version": "3.6",
+  "status": "blocked",
+  "gate": "P0",
+  "reviewed_on": "2026-09-15",
+  "specifications": {
+    "ieee1905": null,
+    "easymesh": null,
+    "wsc": null
+  },
+  "selected_profile": null,
+  "selection_status": "proposal_only_not_frozen",
+  "research_notes": "doc/protocol/protocol-inputs.md",
+  "proposed_specifications": {
+    "ieee1905": {
+      "id": "ieee1905-2013-with-2014-amendment",
+      "publisher": "IEEE",
+      "base_edition": "IEEE Std 1905.1-2013",
+      "base_reference": "https://standards.ieee.org/ieee/1905.1/4995/",
+      "base_doi": "10.1109/IEEESTD.2013.6502164",
+      "amendment_edition": "IEEE Std 1905.1a-2014",
+      "amendment_reference": "https://standards.ieee.org/ieee/1905.1a/5820/",
+      "access_status": "pending_external_inputs_operator_confirmed_no_local_copies_or_subscription",
+      "publisher_status": "Inactive-Reserved; still explicitly referenced by EasyMesh 6.1 section 2",
+      "selection_status": "proposed",
+      "content_sha256": null,
+      "user_access_needed": "Lawfully accessible base and amendment PDFs, or an IEEE subscription-access route. Full clauses, amendments and applicable corrections must be reviewed before freezing P0.",
+      "operator_confirmation": {
+        "date": "2026-09-15",
+        "editions": [
+          "IEEE Std 1905.1-2013",
+          "IEEE Std 1905.1a-2014"
+        ],
+        "local_copies": "not_available",
+        "subscription_access_mechanism": "not_supplied",
+        "dependent_wire_validation": "pending"
+      }
+    },
+    "easymesh": {
+      "id": "wfa-easymesh-6.1",
+      "publisher": "Wi-Fi Alliance",
+      "edition": "Wi-Fi EasyMesh Specification 6.1",
+      "edition_date": "2025-12-15",
+      "reference": "https://www.wi-fi.org/file/wi-fi-easymesh-specification",
+      "document_url": "https://www.wi-fi.org/system/files/Wi-Fi%20EasyMesh%20Specification%20v6.1.pdf",
+      "access_status": "publisher_pdf_retrieved_and_reviewed",
+      "retrieval_method": "HTTPS GET; publisher download page exposed the document URL; no registration, form submission or account credentials used",
+      "bytes": 4297070,
+      "pages": 229,
+      "content_sha256": "21b86e1d951a97ea832029979872b19a0933976c27db0822ecb0eb1ef02842e0",
+      "selection_status": "proposed",
+      "redistributed": false,
+      "user_access_needed": null
+    },
+    "wsc": {
+      "id": "wfa-wps-2.0.10",
+      "publisher": "Wi-Fi Alliance",
+      "edition": "Wi-Fi Protected Setup Specification 2.0.10",
+      "edition_date": "2025-12-15",
+      "reference": "https://www.wi-fi.org/file/wi-fi-protected-setup-specification",
+      "document_url": "https://www.wi-fi.org/system/files/Wi-Fi%20Protected%20Setup%20Specification%20v2.0.10.pdf",
+      "access_status": "publisher_pdf_retrieved_and_reviewed",
+      "retrieval_method": "HTTPS GET; publisher download page exposed the document URL; no registration, form submission or account credentials used",
+      "bytes": 1265445,
+      "pages": 155,
+      "content_sha256": "49f7a566a5cc7996982d601b5607664c3cf79a2e7ae0d01d2b589fdd934080cf",
+      "selection_status": "proposed",
+      "redistributed": false,
+      "user_access_needed": null
+    }
+  },
+  "proposed_profile": {
+    "name": "EasyMesh 6.1 Profile-1 procedure subset for an isolated lab",
+    "status": "proposed_requires_dependency_and_mandatory_field_review",
+    "full_profile_compliance": false,
+    "rationale": "Both WFA documents are accessible publisher editions released on the same date. EasyMesh 6.1 section 2 cites the 1905 base and amendment and an unversioned WPS reference; WPS 2.0.10 records matching EasyMesh extensions. Profile-1 avoids requiring the full Profile-3 DPP onboarding path, but its actual 6.1 requirements must be applied.",
+    "scope": [
+      "One virtual agent and one independently selected controller on isolated Ethernet",
+      "Topology discovery/query/response",
+      "AP autoconfiguration search/response",
+      "AP capability query/report for qualified represented resources",
+      "WSC M1/M2 for one existing fronthaul BSS only after full-radio scope is qualified"
+    ],
+    "proposed_security_scope": "WPA2-Personal with AES, subject to actual pod representation and capabilities; no credentials, radio capabilities or trust properties are inferred from a schema",
+    "scope_constraints": [
+      "Section 18 requires all mandatory functions for a claimed profile. This subset cannot claim complete Profile-1 conformance or certification.",
+      "Apply 6.1 profile/capability rules; do not import an older Profile-1 TLV list solely because the profile number matches.",
+      "WSC configures a complete radio BSS set (section 7.1). The one-BSS trial requires that the qualified radio has exactly that sole existing BSS, or a separately qualified complete-radio mapping.",
+      "The narrow trial cannot create/delete additional BSSs, tear down a radio, change backhaul or silently apply a convenient part of a larger request.",
+      "If full-radio ownership or any mandatory data cannot be proven, the affected provisioning/capability claim remains blocked.",
+      "Controller-triggered reconfiguration/renew requires its own procedure mapping if the chosen independent controller depends on it."
+    ]
+  },
+  "cross_cutting_sections": [
+    {
+      "specification": "wfa-easymesh-6.1",
+      "sections": [
+        "2",
+        "15.1",
+        "15.2",
+        "15.3",
+        "17",
+        "17.1 Table 22",
+        "18 Table 133",
+        "A.3.3 (informative)"
+      ],
+      "pages": [
+        14,
+        104,
+        105,
+        107,
+        197,
+        198,
+        214
+      ],
+      "verification": "publisher_pdf_reviewed",
+      "purpose": "Normative dependencies, reliability, conditional fragmentation changes, processing order and profile requirements. Informative legacy-fragment note is not a replacement for normative framing rules."
+    },
+    {
+      "specification": "ieee1905-2013-with-2014-amendment",
+      "sections": [
+        "6.2",
+        "7.1.1",
+        "7.1.2",
+        "7.2",
+        "7.3",
+        "7.4",
+        "7.6",
+        "7.7"
+      ],
+      "verification": "section_pointers_only_from_EasyMesh_6.1_15_not_IEEE_full_text",
+      "purpose": "Retrieve and verify base CMDU framing, fragmentation, reassembly and transmission/reception rules, including amendment effects."
+    }
+  ],
+  "cross_cutting_gaps": [
+    "IEEE base and amendment full text, amendment effects and applicable corrections are unavailable.",
+    "A complete mandatory/optional/conditional field and profile-applicability audit is pending; current entries are partial source-backed research.",
+    "Byte-level lengths, ordering, duplicate detection, message-ID rollover, all timers/retries, reassembly limits and malformed/unknown-field behavior are not yet frozen.",
+    "IEEE 802.11-2024 reference [1] must be accessible wherever capability fields require its operating-class and radio-capability definitions; no such values may be fabricated.",
+    "Independent full-message packet vectors and peer interpretation remain pending. Independent WSC crypto and M1/M2 payload vectors are retained separately; they contain no IEEE frames.",
+    "No physical-pod mapping or independent-controller qualification has been completed.",
+    "IEEE 802.3-2015 Ethernet link/frame definitions referenced by EasyMesh 5.2.6 and 14.1.3 require review.",
+    "Wi-Fi Alliance Security Requirements referenced by EasyMesh section 13 have no obtained full text or resolved edition."
+  ],
+  "document_ambiguities": [
+    "EasyMesh 6.1 section 2 reference [2] names the IEEE 1905.1-2013 base but links to an amendment URL; reference [11] separately names 1905.1a-2014. Preserve and review both documents.",
+    "EasyMesh 6.1 section 17.1.3 points to IEEE section 6.3.8 for WSC, while its section 6.1 uses that IEEE pointer for the autoconfiguration response. Verify the WSC base clause from IEEE rather than silently correcting the reference.",
+    "EasyMesh 6.1 section 9.1, section 17.1.7 and section 18 must be read together to resolve feature-conditional reporting for the proposed Profile-1 subset."
+  ],
+  "independent_references": [
+    {
+      "id": "wireshark-4.4.0-ieee1905",
+      "kind": "non_normative_implementation_cross_check",
+      "repository": "https://github.com/wireshark/wireshark",
+      "release_tag": "v4.4.0",
+      "commit": "009a163470b581c7d3ee66d89c819cef1f9e50fe",
+      "path": "epan/dissectors/packet-ieee1905.c",
+      "reference": "https://github.com/wireshark/wireshark/blob/009a163470b581c7d3ee66d89c819cef1f9e50fe/epan/dissectors/packet-ieee1905.c",
+      "content_sha256": "5da6141b2be50312be153a929775c625db726049a5fb6ed37fecdba67849ec50",
+      "reviewed_scope": "Message-name/ID definitions for the proposed procedure subset only.",
+      "validation_status": "No independent vectors or captures executed; source predates EasyMesh 6.1 and cannot qualify its complete extensions.",
+      "normative_substitute": false
+    },
+    {
+      "id": "prplmesh-6.0.0-lab-baseline",
+      "kind": "observed_controller_capture_not_a_normative_substitute",
+      "profile": "deploy/peer/prplmesh.reference.json",
+      "evidence": "doc/evidence/peer/qualification-summary.json",
+      "reviewed_scope": "Outbound topology discovery captured on isolated VM bridge and received in EMOSA container; interpreted by Wireshark 4.2.2",
+      "validation_status": "Peer baseline only; no EMOSA decoder or procedure validation; IEEE normative gate remains blocked",
+      "normative_substitute": false
+    }
+  ],
+  "procedures": [
+    {
+      "name": "Topology discovery/query/response",
+      "status": "blocked",
+      "specification_sections": [
+        {
+          "specification": "wfa-easymesh-6.1",
+          "sections": [
+            "6.2",
+            "7.2",
+            "17.1.4",
+            "17.2.1",
+            "17.2.4",
+            "17.2.5",
+            "17.2.47",
+            "18"
+          ],
+          "verification": "publisher_pdf_reviewed",
+          "pages": [
+            63,
+            64,
+            71,
+            111,
+            112,
+            125,
+            126,
+            157,
+            197
+          ]
+        },
+        {
+          "specification": "ieee1905-2013-with-2014-amendment",
+          "sections": [
+            "8",
+            "6.3.3"
+          ],
+          "verification": "section_pointers_from_EasyMesh_6.1_6.2_and_17.1.4_only"
+        }
+      ],
+      "messages": [
+        {
+          "name": "Topology Discovery",
+          "message_type": null,
+          "source": null,
+          "status": "pending_IEEE_normative_verification"
+        },
+        {
+          "name": "Topology Query",
+          "message_type": "0x0002",
+          "source": "wfa-easymesh-6.1 section 17.1 Table 22",
+          "status": "verified_identifier_only"
+        },
+        {
+          "name": "Topology Response",
+          "message_type": "0x0003",
+          "source": "wfa-easymesh-6.1 section 17.1 Table 22",
+          "status": "verified_identifier_only"
+        }
+      ],
+      "tlvs": [],
+      "tlv_audit_status": "pending_complete_field_and_profile_applicability_matrix",
+      "timers": [],
+      "verified_findings": [
+        "EasyMesh extends the IEEE topology response with service and BSS reporting; section 6.2 adds client reporting when clients are present.",
+        "Current profile indications and profile-conditional extensions require a complete audit; the static message list alone is insufficient.",
+        "Report virtual protocol adjacency separately from the physical pod backhaul; BSSID/radio/client facts need fresh qualified evidence."
+      ],
+      "vectors": [],
+      "implementation_refs": [
+        "wireshark-4.4.0-ieee1905"
+      ],
+      "remaining_gaps": [
+        "IEEE discovery format/timing and complete base response TLVs remain unverified.",
+        "Real physical topology and mandatory supported-resource inventory are not yet qualified."
+      ],
+      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing."
+    },
+    {
+      "name": "AP autoconfiguration search/response",
+      "status": "blocked",
+      "specification_sections": [
+        {
+          "specification": "wfa-easymesh-6.1",
+          "sections": [
+            "6.1",
+            "17.1.1",
+            "17.1.2",
+            "17.2.1",
+            "17.2.2",
+            "17.2.47",
+            "17.2.48",
+            "18"
+          ],
+          "verification": "publisher_pdf_reviewed",
+          "pages": [
+            62,
+            63,
+            111,
+            125,
+            157,
+            197
+          ]
+        },
+        {
+          "specification": "ieee1905-2013-with-2014-amendment",
+          "sections": [
+            "10",
+            "6.3.7",
+            "6.3.8"
+          ],
+          "verification": "section_pointers_from_EasyMesh_6.1_6.1_only"
+        }
+      ],
+      "messages": [
+        {
+          "name": "AP-Autoconfiguration Search",
+          "message_type": "0x0007",
+          "source": "wfa-easymesh-6.1 section 17.1 Table 22",
+          "status": "verified_identifier_only"
+        },
+        {
+          "name": "AP-Autoconfiguration Response",
+          "message_type": "0x0008",
+          "source": "wfa-easymesh-6.1 section 17.1 Table 22",
+          "status": "verified_identifier_only"
+        }
+      ],
+      "tlvs": [],
+      "tlv_audit_status": "pending_complete_field_and_profile_applicability_matrix",
+      "timers": [],
+      "verified_findings": [
+        "Service discovery links the controller to the IEEE registrar role; EasyMesh service/profile additions supplement the IEEE fields.",
+        "Section 6.1 contains current Profile-1 capability and controller-capability requirements that must be reconciled with the message definitions.",
+        "This exchange alone causes no OVSDB configuration change."
+      ],
+      "vectors": [],
+      "implementation_refs": [
+        "wireshark-4.4.0-ieee1905"
+      ],
+      "remaining_gaps": [
+        "IEEE search cadence, response timers, relaying, retry and duplicate rules need the base and amendment.",
+        "Selected peer profile and all conditional security/capability TLVs remain unresolved."
+      ],
+      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing."
+    },
+    {
+      "name": "AP capability query/report",
+      "status": "blocked",
+      "specification_sections": [
+        {
+          "specification": "wfa-easymesh-6.1",
+          "sections": [
+            "9.1",
+            "17.1.6",
+            "17.1.7",
+            "17.2.6",
+            "17.2.7",
+            "17.2.8",
+            "17.2.9",
+            "17.2.10",
+            "17.2.48",
+            "17.2.59",
+            "17.2.76",
+            "18"
+          ],
+          "verification": "publisher_pdf_reviewed",
+          "pages": [
+            79,
+            80,
+            112,
+            127,
+            128,
+            129,
+            157,
+            164,
+            172,
+            197
+          ]
+        }
+      ],
+      "messages": [
+        {
+          "name": "AP Capability Query",
+          "message_type": "0x8001",
+          "source": "wfa-easymesh-6.1 section 17.1 Table 22",
+          "status": "verified_identifier_only"
+        },
+        {
+          "name": "AP Capability Report",
+          "message_type": "0x8002",
+          "source": "wfa-easymesh-6.1 section 17.1 Table 22",
+          "status": "verified_identifier_only"
+        }
+      ],
+      "tlvs": [],
+      "tlv_audit_status": "pending_complete_field_and_profile_applicability_matrix",
+      "timers": [
+        {
+          "event": "Reply to a received AP Capability Query with an AP Capability Report",
+          "maximum_seconds": 1,
+          "source": "wfa-easymesh-6.1 section 9.1, page 79",
+          "status": "verified_requirement_not_implemented",
+          "meaning": "Protocol response deadline; not an OVSDB apply deadline."
+        }
+      ],
+      "verified_findings": [
+        "Section 17.1.6 requires no query TLVs; section 9.1 requires the report to echo the query MID.",
+        "Reporting includes per-radio capabilities, with technology/feature conditions determined jointly by sections 9.1, 17.1.7 and 18.",
+        "Schema table names cannot establish radio capabilities, scan/CAC support, operating classes or truthful profile bits."
+      ],
+      "vectors": [],
+      "implementation_refs": [
+        "wireshark-4.4.0-ieee1905"
+      ],
+      "remaining_gaps": [
+        "Mandatory feature/field interpretation is pending complete profile audit.",
+        "IEEE 802.11 capability references and actual represented-pod capability evidence remain pending."
+      ],
+      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing."
+    },
+    {
+      "name": "AP autoconfiguration WSC M1/M2",
+      "status": "blocked",
+      "specification_sections": [
+        {
+          "specification": "wfa-easymesh-6.1",
+          "sections": [
+            "7.1 Tables 16-20",
+            "17.1.3",
+            "17.2.3",
+            "17.2.7",
+            "17.2.48",
+            "17.2.52",
+            "18"
+          ],
+          "verification": "publisher_pdf_reviewed",
+          "pages": [
+            66,
+            67,
+            68,
+            69,
+            111,
+            125,
+            127,
+            157,
+            160,
+            197
+          ]
+        },
+        {
+          "specification": "wfa-wps-2.0.10",
+          "sections": [
+            "7.1",
+            "7.2",
+            "7.2.2",
+            "7.3",
+            "7.5",
+            "7.9",
+            "8.1",
+            "8.3.1 Table 8",
+            "8.3.2 Table 9",
+            "8.3.9 Table 20",
+            "12 Tables 28 and 29"
+          ],
+          "verification": "publisher_pdf_reviewed",
+          "pages": [
+            46,
+            48,
+            51,
+            52,
+            57,
+            66,
+            67,
+            74,
+            75,
+            81,
+            100,
+            104
+          ]
+        },
+        {
+          "specification": "ieee1905-2013-with-2014-amendment",
+          "sections": [
+            "10.1"
+          ],
+          "verification": "section_pointer_from_EasyMesh_6.1_7.1_only"
+        }
+      ],
+      "messages": [
+        {
+          "name": "AP-Autoconfiguration WSC",
+          "message_type": "0x0009",
+          "source": "wfa-easymesh-6.1 section 17.1 Table 22",
+          "status": "verified_identifier_only"
+        }
+      ],
+      "tlvs": [],
+      "tlv_audit_status": "pending_complete_field_and_profile_applicability_matrix",
+      "timers": [
+        {
+          "event": "Controller replies to received M1 using the defined M2 configuration or teardown response",
+          "maximum_seconds": 1,
+          "source": "wfa-easymesh-6.1 section 7.1, pages 67-68",
+          "status": "verified_requirement_not_implemented",
+          "meaning": "Controller protocol response deadline; not confirmation of pod application."
+        }
+      ],
+      "verified_findings": [
+        "A separate M1 exchange identifies each radio; its WSC MAC attribute uses the virtual 1905 AL MAC, not an assumed pod hardware MAC.",
+        "M2 processing validates the full radio configuration. Section 7.1 includes removal of existing BSSs that do not match any requested M2 configuration, and explicit radio teardown semantics.",
+        "WPS sections 7.1, 7.3 and 7.5 supply nonce/authenticator handling, key derivation and authenticated key wrapping. Tables 8, 9 and 20 and EasyMesh extensions must be interpreted together.",
+        "The candidate WPS edition explicitly reserves current EasyMesh extensions. It does not authorize substituting plaintext credentials or skipping authenticator verification.",
+        "Reject an unsupported overall semantic request before any pod write; map its wire behavior only after the IEEE/EasyMesh failure rules are verified."
+      ],
+      "vectors": [],
+      "implementation_refs": [
+        "wireshark-4.4.0-ieee1905"
+      ],
+      "remaining_gaps": [
+        "IEEE WSC encapsulation, ordering, retry/duplicate and failure behavior require full normative review.",
+        "Independent M1/M2, key derivation, authenticator and key-wrap vectors are absent.",
+        "The one-BSS component patch has not been qualified as full-radio WSC semantics.",
+        "Hardware must establish sole-BSS radio scope or a complete supported mapping; shared management/backhaul dependencies and recovery remain unverified."
+      ],
+      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing."
+    }
+  ],
+  "gate_completion_requirements": [
+    "Obtain base IEEE and amendment full text and any normative dependencies needed for emitted capabilities.",
+    "Freeze exact editions and profile/subset explicitly; retain publisher URLs, artifact digests and applicable corrections.",
+    "Finish each message/TLV/field/timer/error/fragmentation rule with an exact source and applicability condition.",
+    "Obtain independent valid and invalid packet/crypto vectors and expected interpretations, pinning provenance.",
+    "Resolve mandatory semantics that unchanged pods cannot provide; never invent capabilities or reinterpret a partial operation as full success."
+  ],
+  "acceptance_path": [
+    "real EasyMesh messages",
+    "EMOSA adapter",
+    "unchanged physical pod",
+    "independently observed behavior"
+  ],
+  "simulator_results_complete_acceptance": false,
+  "component_selections": {
+    "wsc_crypto": {
+      "status": "selected_component_only",
+      "specification": "wfa-wps-2.0.10",
+      "content_sha256": "49f7a566a5cc7996982d601b5607664c3cf79a2e7ae0d01d2b589fdd934080cf",
+      "rules": "doc/protocol/wsc-component.md",
+      "implementation": "src/emosa/wsc.py",
+      "procedure_gate_satisfied": false,
+      "scope": "TLV structure, group-5 key derivation, message authenticator and authenticated encrypted settings only; no complete M1/M2 procedure or wire transport",
+      "tests": [
+        "tests/test_wsc.py"
+      ],
+      "vectors": "tests/fixtures/protocol/wsc/vectors.json",
+      "provenance": "tests/fixtures/protocol/wsc/provenance.json",
+      "validation": "25 unit component cases and two independently generated hostap cases; full protocol vectors remain pending"
+    },
+    "wsc_payloads": {
+      "status": "selected_component_only",
+      "specifications": [
+        "wfa-wps-2.0.10",
+        "wfa-easymesh-6.1"
+      ],
+      "rules": "doc/protocol/wsc-messages.md",
+      "implementation": "src/emosa/wsc_messages.py",
+      "procedure_gate_satisfied": false,
+      "scope": "M1 builder, M2 required-field structure/transcript authentication/AP settings decryption and within-set nonce/index checks; no IEEE messages, peer trust, radio binding, replay state or write permission",
+      "tests": [
+        "tests/test_wsc_messages.py"
+      ],
+      "vectors": "tests/fixtures/protocol/wsc-messages/vectors.json",
+      "provenance": "tests/fixtures/protocol/wsc-messages/provenance.json",
+      "evidence": "doc/evidence/wsc-messages.json",
+      "validation": "55 unit component cases; independent native M1 builder, strict M1/M2/AP settings validators and message/KWA verification"
+    },
+    "wsc_radio_payloads": {
+      "status": "selected_component_only",
+      "specifications": [
+        "wfa-wps-2.0.10",
+        "wfa-easymesh-6.1"
+      ],
+      "rules": "doc/protocol/wsc-radio.md",
+      "normative_sections": [
+        "EasyMesh 6.1 section 3.1.2 and section 7.1 Table 20",
+        "WPS 2.0.10 sections 7.2-3, 7.5, 8.3.9 Table 20 and section 12 Network Key/Table 40"
+      ],
+      "implementation": "src/emosa/wsc_radio.py",
+      "procedure_gate_satisfied": false,
+      "scope": "Whole M2 payload-set authentication, encrypted roles, teardown distinction and narrow candidate projection; no complete CMDU, controller/radio binding, pod qualification or writes",
+      "local_policies": [
+        "Reject ambiguous/misplaced Multi-AP role data; internal error reasons only",
+        "Candidate projection supports one pure fronthaul WPA2-Personal/AES payload with UTF-8 SSID and printable 8-63 byte passphrase; not a claim that other protocol representations are invalid"
+      ],
+      "validation": "42 component cases; native hostap role parsing and independent teardown envelope/crypto checks",
+      "provenance": "tests/fixtures/protocol/wsc-messages/provenance.json",
+      "tests": [
+        "tests/test_wsc_radio.py"
+      ],
+      "evidence": "doc/evidence/wsc-radio.json"
+    }
+  },
+  "acquisition_checklist": "doc/protocol/specification-acquisition.md",
+  "additional_normative_inputs": [
+    {
+      "id": "ieee80211-2024",
+      "edition": "IEEE Std 802.11-2024",
+      "reference": "https://standards.ieee.org/ieee/802.11/10548/",
+      "access_route": "https://ieeexplore.ieee.org/browse/standards/get-program/page/series?id=68",
+      "access_status": "publisher_offers_GET_full_text_not_retrieved_HTTP_418",
+      "source_sections": [
+        "EasyMesh 6.1 section 2 reference [1]",
+        "EasyMesh 6.1 section 9.1 and applicable 17.2 capability fields"
+      ],
+      "affected_work": "operating-class and actual radio capability encoding",
+      "content_sha256": null
+    },
+    {
+      "id": "ieee8023-2015",
+      "edition": "IEEE Std 802.3-2015",
+      "reference": "https://ieeexplore.ieee.org/document/7428776/",
+      "access_status": "full_text_not_obtained",
+      "source_sections": [
+        "EasyMesh 6.1 section 2 reference [3]",
+        "EasyMesh 6.1 section 5.2.6",
+        "EasyMesh 6.1 section 14.1.3 references IEEE section 3; IEEE text not read"
+      ],
+      "affected_work": "logical Ethernet link-driven onboarding and applicable frame handling",
+      "content_sha256": null
+    },
+    {
+      "id": "wfa-security-requirements",
+      "edition": null,
+      "reference": "https://www.wi-fi.org/members/wi-fi-alliance-security-requirements",
+      "access_status": "publisher_redirects_to_member_login_no_access_supplied_full_text_and_edition_pending",
+      "source_sections": [
+        "EasyMesh 6.1 section 2 reference [22] is unversioned",
+        "EasyMesh 6.1 section 13"
+      ],
+      "affected_work": "review Personal AP requirements for represented fronthaul BSS; STA requirements if backhaul STA scope is added",
+      "content_sha256": null
+    },
+    {
+      "id": "iso3166-1",
+      "edition": null,
+      "linked_edition": "ISO 3166-1:2013",
+      "reference": "https://www.iso.org/standard/63545.html",
+      "access_status": "conditional_full_standard_not_obtained_edition_and_code_source_review_pending",
+      "source_sections": [
+        "EasyMesh 6.1 section 2 reference [6] is unversioned",
+        "EasyMesh 6.1 section 9.1 CAC country code"
+      ],
+      "affected_work": "CAC reporting only if applicable to selected capabilities; no inferred regulatory domain",
+      "content_sha256": null
+    },
+    {
+      "id": "ieee80211-2012",
+      "edition": "IEEE Std 802.11-2012",
+      "access_status": "conditional_historical_reference_not_obtained",
+      "source_sections": [
+        "WPS 2.0.10 section 2 reference [17]",
+        "WPS 2.0.10 section 8.2 management frame path not implemented"
+      ],
+      "affected_work": "historical WPS cross-reference review if those definitions are used; no automatic substitution by 802.11-2024",
+      "content_sha256": null
+    }
+  ]
+}

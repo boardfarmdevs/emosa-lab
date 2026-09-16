@@ -5,7 +5,7 @@ controller captures or conformance vectors. Every key, nonce, IV and identifier
 in `vectors.json` is a deliberately public test constant. None is a pod secret.
 
 Normative rules are selected from WPS 2.0.10 in
-[the component contract](../../../../docs/wsc-component.md). Expected bytes were
+[the component contract](../../../../doc/protocol/wsc-component.md). Expected bytes were
 generated separately by compiling the unmodified WPS routines from the official
 [hostap 2.11 release](https://w1.fi/releases/hostapd-2.11.tar.gz), with OpenSSL
 3.0.2 and GCC 11.4.0 on Ubuntu 22.04. `provenance.json` records the archive and

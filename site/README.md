@@ -5,6 +5,11 @@ modes, retained run timelines/comparisons, requirement traceability and next
 acceptance experiments. It has no connection to a running lab and exposes no
 control API. All command examples are copied as text for local use.
 
+The [team onboarding and operator manual](../doc/guides/team-manual.md) provides the
+full learning path, setup procedures, CLI exercises, radio/native experiments,
+demo recipes and troubleshooting. It is linked from the site's manual section
+and searchable reference library; the full document opens on GitHub.
+
 ```sh
 python3 scripts/build-site.py
 python3 -m http.server 8000 --directory dist/site
@@ -35,7 +40,7 @@ publication is complete only after the deployment succeeds and the URL serves
 the new guide; a pushed workflow alone does not establish that.
 
 The build validates hashes and JavaScript syntax. Manual/browser checks should
-exercise diagram selection, all four lab modes, command copy, evidence comparison,
+exercise diagram selection, all five lab modes, command copy, evidence comparison,
 event/reference filters, keyboard navigation and narrow layouts. The page uses
 relative asset URLs so a repository subpath works without a custom domain.
 

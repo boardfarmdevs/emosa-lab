@@ -1,7 +1,7 @@
 """Selected EasyMesh 6.1 section 7.1 semantics of one radio's M2 payload set.
 
 No IEEE framing, controller trust, radio identity binding, external TLV parsing,
-operation submission or pod writes. See docs/wsc-radio.md for the exact boundary.
+operation submission or pod writes. See doc/protocol/wsc-radio.md for the exact boundary.
 """
 
 from dataclasses import dataclass, field

@@ -1,0 +1,17 @@
+{
+  "owner": "emosa-standard-agent-baseline-v1",
+  "nodes": [
+    "em-baseline-controller",
+    "em-baseline-agent",
+    "em-baseline-wired",
+    "em-baseline-wifi"
+  ],
+  "networks": [
+    "em-base-bh",
+    "em-base-lan"
+  ],
+  "profile": true,
+  "image": "cc6b6e557372769f5b0d0945d61f200360818a408f9d0dddadbbab584d2fb414",
+  "setup_complete": true,
+  "hwsim_loaded": true
+}

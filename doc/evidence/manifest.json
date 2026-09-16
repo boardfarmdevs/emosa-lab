@@ -1,0 +1,1026 @@
+{
+  "schema_version": 1,
+  "scope": "Component, native manager R0 with recovery failure, bounded native peer baseline, semantic EMOSA/OVSDB/hostapd-hwsim client integration and guide evidence; no EMOSA wire onboarding or physical qualification",
+  "artifacts": [
+    {
+      "path": "api-results.xml",
+      "sha256": "526ad28b743bfd9ba19e3cfc97ce12563f7bc0e39a6787892b4294d3460569fa",
+      "size": 456
+    },
+    {
+      "path": "bootstrap.json",
+      "sha256": "02ab787e5dd7c22b13a64103af26578a1c798c00fba84f5a601e090ce0cdaba6",
+      "size": 735
+    },
+    {
+      "path": "comparison.html",
+      "sha256": "9b98895af65fac57079cadaacda553ec08531813e0d3467e714956f539faf433",
+      "size": 7450
+    },
+    {
+      "path": "inspect-smoke.json",
+      "sha256": "9591417eef4bea0b5eb25ab925424f0792040dd00a9870bd56bfffab9150b7ab",
+      "size": 9448
+    },
+    {
+      "path": "ovsdb-results.xml",
+      "sha256": "46f95519f6129b428acff252f6feb7a473096f3f5bd9bba80c043b44e64b6687",
+      "size": 1720
+    },
+    {
+      "path": "qualification-results.xml",
+      "sha256": "fadab48ffb7f7882e4714692080ddd9c0d89390f567262a93fa87903a83ed97f",
+      "size": 612
+    },
+    {
+      "path": "r0-build-jinja2.log",
+      "sha256": "acef933c5f39cb9400d0088ec8d8e79ce6629d45a3486b5237c9efdc06026f68",
+      "size": 599
+    },
+    {
+      "path": "r0-build-kconfiglib.log",
+      "sha256": "9f36b86fe75281e291e7e8af9c4252167a92a904a2a4746daa142530c825b1fd",
+      "size": 3525
+    },
+    {
+      "path": "r0-build-ovsdb.log",
+      "sha256": "331943648b22fd45ff1099d051b8f8237dcd05b744af9ab9c0ddf835cb93e4ec",
+      "size": 1252
+    },
+    {
+      "path": "r0-build.log",
+      "sha256": "cbe3b3af872186bae054bb8fb2e0bb16876a4d40f5af2f4f53fb2de85a1044fa",
+      "size": 669
+    },
+    {
+      "path": "r0-config-native.txt",
+      "sha256": "de2aad267a01b60fcfc19f54aaba20448edc7decc51be06e98cf29a7eec99e14",
+      "size": 972
+    },
+    {
+      "path": "r0-manifest.json",
+      "sha256": "4dd9da71b7f712c6f0c78844d1ba07d5643a66e194e79e0d6e3222e4f935afaa",
+      "size": 901
+    },
+    {
+      "path": "runs/run-1f7127f0752d4a69/artifact-manifest.json",
+      "sha256": "00d93d918ca15b8a9568999c5fc05b6df8fa500b2380c7875833234e429fe44f",
+      "size": 955
+    },
+    {
+      "path": "runs/run-1f7127f0752d4a69/events.json",
+      "sha256": "7f46b4ad004f1607c2e69d3778de7450662a097f230889fcbc3aaf470df257d9",
+      "size": 6262
+    },
+    {
+      "path": "runs/run-1f7127f0752d4a69/inputs.json",
+      "sha256": "9e432c01fcedc1889d5825b75875420350f4b98b2020002a02ca2df83c279b24",
+      "size": 1187
+    },
+    {
+      "path": "runs/run-1f7127f0752d4a69/observations.json",
+      "sha256": "a0466bbde66dab76bc901c6b3d36bfe1cac20136fe2ac87e148f2e3e2ebcf871",
+      "size": 1041
+    },
+    {
+      "path": "runs/run-1f7127f0752d4a69/report.html",
+      "sha256": "9bc058f134e5200953979fe0da023032e0deaa4a4ac52c93db1297bdd64d7339",
+      "size": 22856
+    },
+    {
+      "path": "runs/run-1f7127f0752d4a69/report.md",
+      "sha256": "3a78c9596a2eaf48e0e88f305f470cbb42597f0c3ed8e2d769d1154a5881c875",
+      "size": 1727
+    },
+    {
+      "path": "runs/run-1f7127f0752d4a69/run.json",
+      "sha256": "91b6a832fe0725cab635c2384ca7a529c483fd42f1e65ca75de44c91735d91fa",
+      "size": 9039
+    },
+    {
+      "path": "runs/run-4023fccf9a144b47/artifact-manifest.json",
+      "sha256": "c9e6a30e7cbf38a7643cdc9b01f5e0bee605893b97adad6c03d35f931b46ca6a",
+      "size": 955
+    },
+    {
+      "path": "runs/run-4023fccf9a144b47/events.json",
+      "sha256": "1d2eb95b00218155bbce1109b52b133d5ff8f033db28a9805ea0e5ec66578721",
+      "size": 6219
+    },
+    {
+      "path": "runs/run-4023fccf9a144b47/inputs.json",
+      "sha256": "94dde4cd0f6ae15455684860984c5dd2f41090518dccd8eb3664212fa730a9d7",
+      "size": 1187
+    },
+    {
+      "path": "runs/run-4023fccf9a144b47/observations.json",
+      "sha256": "3f74784ad80c6e0f010e1b10531c0d547091f623d9cfe7488779b827b4cbbf8c",
+      "size": 1041
+    },
+    {
+      "path": "runs/run-4023fccf9a144b47/report.html",
+      "sha256": "239efb76c80c0a4bb73d3e541930c7f019c05d7f6395547520e901a80b0ee8ce",
+      "size": 22789
+    },
+    {
+      "path": "runs/run-4023fccf9a144b47/report.md",
+      "sha256": "8de0382b02caff22da9da4c9c6ef0f5734c22a50862ed28ee10e5fb5f9d2fcf9",
+      "size": 1706
+    },
+    {
+      "path": "runs/run-4023fccf9a144b47/run.json",
+      "sha256": "d724c6829f81a1aac1131ae23fc2bb78bab1f0a5a267cd65ef3163303f0e1e26",
+      "size": 9108
+    },
+    {
+      "path": "runs/run-65264f5d645e4bb7/artifact-manifest.json",
+      "sha256": "a054b5ab501da3d0a75fc17555946117ae195b2225464be1b2ebfd62c4a75580",
+      "size": 955
+    },
+    {
+      "path": "runs/run-65264f5d645e4bb7/events.json",
+      "sha256": "239f9849b09d69022021b9acfddde6366307e30a11bc6c54324a2d247fcb4093",
+      "size": 6209
+    },
+    {
+      "path": "runs/run-65264f5d645e4bb7/inputs.json",
+      "sha256": "8f5e3e488b31ecf222b68050b9c2633fb37958d7983a7ec16a3d5254c1cfe80c",
+      "size": 1214
+    },
+    {
+      "path": "runs/run-65264f5d645e4bb7/observations.json",
+      "sha256": "b56b0c75362287d7a591ef170ac1f965b618d4db4b3ec5e8bc29f263c331d254",
+      "size": 1041
+    },
+    {
+      "path": "runs/run-65264f5d645e4bb7/report.html",
+      "sha256": "eb179a03ca746d2940dfa88f8a958e6b019d5533a8ab2db2c0183ff03d7498b2",
+      "size": 23039
+    },
+    {
+      "path": "runs/run-65264f5d645e4bb7/report.md",
+      "sha256": "10ffc619b68242c1336704f2c0bee9d05c0aa96daaecc01da5789214536683dc",
+      "size": 1706
+    },
+    {
+      "path": "runs/run-65264f5d645e4bb7/run.json",
+      "sha256": "185c93de16c72db6befee6e59a0c8e5b6313826059e5d176dc6aab7fb2fe3003",
+      "size": 9292
+    },
+    {
+      "path": "runs/run-6bde1516e5784e72/artifact-manifest.json",
+      "sha256": "9bb0729e7a74ef4f0ee47a916270ac00a775069cf4976ea5eae77a1f2c9decdd",
+      "size": 954
+    },
+    {
+      "path": "runs/run-6bde1516e5784e72/events.json",
+      "sha256": "fb59945045718cbca110000bedc8dfc300dbc7468248c1d8806a22dbc268d80b",
+      "size": 4015
+    },
+    {
+      "path": "runs/run-6bde1516e5784e72/inputs.json",
+      "sha256": "94dde4cd0f6ae15455684860984c5dd2f41090518dccd8eb3664212fa730a9d7",
+      "size": 1187
+    },
+    {
+      "path": "runs/run-6bde1516e5784e72/observations.json",
+      "sha256": "f0a70f589ee25e25e60795e8425c85c59340e59d4ef64fdd78d26ca745f0bf83",
+      "size": 526
+    },
+    {
+      "path": "runs/run-6bde1516e5784e72/report.html",
+      "sha256": "94aafa8c8d6e75a0657a6d6efac8b80ba4e410b6061eff01b6ff60791ffb4b61",
+      "size": 16738
+    },
+    {
+      "path": "runs/run-6bde1516e5784e72/report.md",
+      "sha256": "918a8271f90b15b580dd450d1f1b4d8422c1029616fb0319a89ccdf272255ca5",
+      "size": 1570
+    },
+    {
+      "path": "runs/run-6bde1516e5784e72/run.json",
+      "sha256": "6a70e3db431867cf9a0b75c42e53f18b0f94a6a9c80b52ee757e8e16eac1ab1a",
+      "size": 7004
+    },
+    {
+      "path": "runs/run-71210fdc76724ca2/artifact-manifest.json",
+      "sha256": "efc9f6694247a48e8ad8f692c76ec726994e2b4ac55380a64017c2058fd04167",
+      "size": 955
+    },
+    {
+      "path": "runs/run-71210fdc76724ca2/events.json",
+      "sha256": "7f54846c06d0a6d6d1e73364fb6976064a2efacafd00d62b40b4dabfcd41e73b",
+      "size": 6262
+    },
+    {
+      "path": "runs/run-71210fdc76724ca2/inputs.json",
+      "sha256": "9644169c636573001758b169246d339c057b521b32befa3e0ec761bd8f726c37",
+      "size": 1185
+    },
+    {
+      "path": "runs/run-71210fdc76724ca2/observations.json",
+      "sha256": "6ae183dc4605d424429713148d0f2003f4e8d0a1558734654f2b3cf6aad48680",
+      "size": 1041
+    },
+    {
+      "path": "runs/run-71210fdc76724ca2/report.html",
+      "sha256": "c81538eb04601891ec05efda0ad77ccd126d042b16a79bbabfbf4e9018464d05",
+      "size": 22801
+    },
+    {
+      "path": "runs/run-71210fdc76724ca2/report.md",
+      "sha256": "86f585fb198f2ce8c81ad8dcd84d19cf3cab17fe77a7e0d51a4430a185d8328d",
+      "size": 1727
+    },
+    {
+      "path": "runs/run-71210fdc76724ca2/run.json",
+      "sha256": "27b209ed650d31e186823acfd5979bb3e3a95641dfffada79e7cdc75a77ced19",
+      "size": 9004
+    },
+    {
+      "path": "runs/run-9fe901669f6f4eca/artifact-manifest.json",
+      "sha256": "59cb80d07c0ef8eea216cbfeaecaafcfe1d6cb6921d0bcda060882b81423f602",
+      "size": 950
+    },
+    {
+      "path": "runs/run-9fe901669f6f4eca/events.json",
+      "sha256": "b753505afe8d222662d32e848d2811b6f272e03d9aff3efe15fe4655c45ec510",
+      "size": 810
+    },
+    {
+      "path": "runs/run-9fe901669f6f4eca/inputs.json",
+      "sha256": "ffb3c3fb47a262ebcef1493bfa791bc47bcd24288acd62cfc796b534eb1adb43",
+      "size": 1200
+    },
+    {
+      "path": "runs/run-9fe901669f6f4eca/observations.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "size": 3
+    },
+    {
+      "path": "runs/run-9fe901669f6f4eca/report.html",
+      "sha256": "5a77af637f634c07332232a5512b117305d3cee831f7cbfdd9bfb7cb49051685",
+      "size": 8876
+    },
+    {
+      "path": "runs/run-9fe901669f6f4eca/report.md",
+      "sha256": "1bf19f4eaa2b49f5a33c77b26d64731462278dcf141f8dd8a19fde8c8b3061de",
+      "size": 1139
+    },
+    {
+      "path": "runs/run-9fe901669f6f4eca/run.json",
+      "sha256": "8c4766e3b82f6b9b30fddcca73079bbd47801e0459f9a1fbaf2e5415c933cf50",
+      "size": 4912
+    },
+    {
+      "path": "unit-results.xml",
+      "sha256": "b7daf3d2fabacaa6996ba7cbd33e762eac72c8715fb19bbd2554e32be1325274",
+      "size": 4282469
+    },
+    {
+      "path": "watch-smoke.log",
+      "sha256": "66fac92ff0a4c9552b3e1a68ae740fa8d7bad5b9773fbbe94012eb5e41b391df",
+      "size": 9450
+    },
+    {
+      "path": "wheel-smoke.json",
+      "sha256": "1ab1c1c6ce1de9ebcb600567e554efa09b70d3d4f7ec78cc5e98087512aed285",
+      "size": 689
+    },
+    {
+      "path": "wire-gate.log",
+      "sha256": "46db88f1e5a36c5fb4e5ec8e5e3d95b78f710715f43c691a458f4cebcdc28202",
+      "size": 859
+    },
+    {
+      "path": "wire-gate.xml",
+      "sha256": "ab42516da2911b015ec4731cb8a1c3cca80169cd0c2a9d077c788ed2cc747e1e",
+      "size": 925
+    },
+    {
+      "path": "hwsim/capture.log",
+      "sha256": "c3c73104f0ed424e91bbd12272af1db50418dae2f64fc6951055fb96370dcdfd",
+      "size": 197
+    },
+    {
+      "path": "hwsim/guard-results.xml",
+      "sha256": "1a0f82cdebb7c13e3d661eaef466649ed687b8277e3909ac94af2f4fb931f205",
+      "size": 696
+    },
+    {
+      "path": "hwsim/initial-failure.json",
+      "sha256": "f559523a3fa3e792af771a957e975bab9d14ea18d76fadf1400c811e38a55711",
+      "size": 334
+    },
+    {
+      "path": "hwsim/initial-retest.json",
+      "sha256": "a37dcdaa78f429ca7ea9f4ab4bb9f7c7da17c94eeeb0959b73e69d505a295350",
+      "size": 390
+    },
+    {
+      "path": "hwsim/qualification-summary.json",
+      "sha256": "6d883b0bb2067fca0e4631b0ff81e8cb295b97a4475e0dd387c726b42f4378a1",
+      "size": 1473
+    },
+    {
+      "path": "hwsim/result.json",
+      "sha256": "7e601dd1ba9498134616936fd361cf7ae3f9d28ec53a85fe885d2f273153ab5a",
+      "size": 422
+    },
+    {
+      "path": "hwsim/station-link.txt",
+      "sha256": "647a018023d933f6275bd584b65097433ce9b0c523369afe6dd123421b036729",
+      "size": 256
+    },
+    {
+      "path": "hwsim/station-ping.txt",
+      "sha256": "9a7010c3d94558c1aa1091b8f88e36453b0317930941aed3bb701ceb7e0eb4aa",
+      "size": 390
+    },
+    {
+      "path": "hwsim/station-status.txt",
+      "sha256": "3050b3eb6f23ccaa38e60e11affc1223b3e50193d495ac496dfc6ed62be41529",
+      "size": 272
+    },
+    {
+      "path": "site-browser.json",
+      "sha256": "c4b6dd0b9cd228b7e9abf77cac8ac781b3459a0c9b285684e1618c19f8d2146c",
+      "size": 653
+    },
+    {
+      "path": "wsc-component.json",
+      "sha256": "07edabab557d6c93842f5a27035406195e765757dc7e2fd44f211a1acb06774a",
+      "size": 1465
+    },
+    {
+      "path": "peer/controller-baseline-capture.log",
+      "sha256": "1b9e800946b2fb549af9d02cc68ec8fb4b92027732d00135b88dc01d992a08a9",
+      "size": 169
+    },
+    {
+      "path": "peer/controller-baseline.pcap",
+      "sha256": "704e5e5b3234433c01fcfd1b20a306e77e985038120492dc53965c3edd38a4ea",
+      "size": 24
+    },
+    {
+      "path": "peer/controller-hwsim-baseline.pcap",
+      "sha256": "1e2df377c464e39cfb592ccbef3399f04904cdaf4ee27e6593186cca9c7c10d5",
+      "size": 142
+    },
+    {
+      "path": "peer/controller-hwsim-wireshark.json",
+      "sha256": "dc9a713f4f33302f29a2d1119c37fa934ecefc45cddb4fb401e6f368aba8bf4e",
+      "size": 6428
+    },
+    {
+      "path": "peer/controller-inventory.json",
+      "sha256": "f5a5e8e73a45767ba34050be178060ab6e5c2477fc67cb28083fdb1e8cddbed4",
+      "size": 779
+    },
+    {
+      "path": "peer/controller-packages.txt",
+      "sha256": "babe20b622658b6bd3bcc0b85caae57f4d0cd369cafb79759f540be9e3499296",
+      "size": 19392
+    },
+    {
+      "path": "peer/emosa-packages.txt",
+      "sha256": "1d28e4410c654d4472a4fb4f0338d0bceb83f1c6b1c525710fb9586fced1b070",
+      "size": 21860
+    },
+    {
+      "path": "peer/environment.json",
+      "sha256": "229f8d1d50033546959eaba576843e314f5d3cfc1a1c39a2da38b7300af0927d",
+      "size": 2196
+    },
+    {
+      "path": "peer/peer-journal.txt",
+      "sha256": "53d371dd7009c7498bfbe468a38d664fa2babd52aa84487431b9d0721f3a7635",
+      "size": 12089
+    },
+    {
+      "path": "peer/qualification-summary.json",
+      "sha256": "4826fc8f9bc334c07fc1c00fe26f8858c57649275f71cca9a31bd5cc320ab4f5",
+      "size": 2830
+    },
+    {
+      "path": "peer/repeat-bridge.pcap",
+      "sha256": "1d162aaab3a5d053a038ad0237cc4fae557bcab3d823228fa22f9d4bd1d76c22",
+      "size": 83
+    },
+    {
+      "path": "peer/repeat-decoded.json",
+      "sha256": "f45f3d13ef01186a01c5902ad77840b3ebfa80ee0b96d954bc6792f80168149e",
+      "size": 3214
+    },
+    {
+      "path": "peer/repeat-receiver.pcap",
+      "sha256": "c919c3d149d7580e6b0c3e9dc62a21d2328894bca3378a1b32aed44b171e2b9d",
+      "size": 83
+    },
+    {
+      "path": "peer/run-02348298ed6f4f79/artifact-manifest.json",
+      "sha256": "0a9617ecb48570a6eb2608138be20b0da565a3c3c138af5a41b2ee9a32989b00",
+      "size": 955
+    },
+    {
+      "path": "peer/run-02348298ed6f4f79/events.json",
+      "sha256": "95d5be4d9cf557d715536eaec4bc5f2ca25bab97fd624fe889b100e41e6f4869",
+      "size": 6209
+    },
+    {
+      "path": "peer/run-02348298ed6f4f79/inputs.json",
+      "sha256": "8f5e3e488b31ecf222b68050b9c2633fb37958d7983a7ec16a3d5254c1cfe80c",
+      "size": 1214
+    },
+    {
+      "path": "peer/run-02348298ed6f4f79/observations.json",
+      "sha256": "7aa011ac4a45bca220aeeb642a478e013c5485ae2c9b81db6c1a1dd4bd7f5e16",
+      "size": 1041
+    },
+    {
+      "path": "peer/run-02348298ed6f4f79/report.html",
+      "sha256": "a00dc55cd031fbea4e743b9ca804380e10b931bc1b699f3d72575d6cd3d7472a",
+      "size": 23004
+    },
+    {
+      "path": "peer/run-02348298ed6f4f79/report.md",
+      "sha256": "2add99d8b9cab0445505a41c3bd6a7eb8daf8ebf97f2b6bda7af8e36e0bae026",
+      "size": 1706
+    },
+    {
+      "path": "peer/run-02348298ed6f4f79/run.json",
+      "sha256": "2358c667bc9f4e2b3c2117347f0cdbd860203f0fd622c2a1c2185db7b64521d1",
+      "size": 9257
+    },
+    {
+      "path": "peer/run-aaef446cd0e74cb3/artifact-manifest.json",
+      "sha256": "0599de761c9dc5b417a365df181507f6554770239f7cc95d6cb6ff11158ba191",
+      "size": 955
+    },
+    {
+      "path": "peer/run-aaef446cd0e74cb3/events.json",
+      "sha256": "f67654789d5d8adb96fce8fec711d238ecc52fab83048ef430cecf91b5d51f6c",
+      "size": 6262
+    },
+    {
+      "path": "peer/run-aaef446cd0e74cb3/inputs.json",
+      "sha256": "9644169c636573001758b169246d339c057b521b32befa3e0ec761bd8f726c37",
+      "size": 1185
+    },
+    {
+      "path": "peer/run-aaef446cd0e74cb3/observations.json",
+      "sha256": "12e29548d7d5caa73832e39f1e0a172de217f7af125dda54475789b320f20ce8",
+      "size": 1041
+    },
+    {
+      "path": "peer/run-aaef446cd0e74cb3/report.html",
+      "sha256": "1a2a970894032f8ca2d3303469ec17eb89b45062025d8eb564130be2914e5462",
+      "size": 22770
+    },
+    {
+      "path": "peer/run-aaef446cd0e74cb3/report.md",
+      "sha256": "d860e7117442de5f16d29f11160e03a497b5c7897fd18d46dcb28d4b1721fd4f",
+      "size": 1727
+    },
+    {
+      "path": "peer/run-aaef446cd0e74cb3/run.json",
+      "sha256": "ab80e2e341f4847da1f224bd3e6606869bd4362462dba4a920a61e6584926797",
+      "size": 8973
+    },
+    {
+      "path": "peer/ubuntu24-ovsdb.xml",
+      "sha256": "066e9a5e380c958071858ecca29519dbde5f52a3b5958cd153b6e98236d044e5",
+      "size": 1719
+    },
+    {
+      "path": "peer/ubuntu24-unit.xml",
+      "sha256": "ca45975f14ee5439e9d1c45c50108cadfb961f63c4755cb8c357529b77c4a676",
+      "size": 4269334
+    },
+    {
+      "path": "peer/units-after-stop.txt",
+      "sha256": "f7ca376ff60039a36c11169e7fa7e2cba7d5244f4156c3b25cdcf5005b8b6704",
+      "size": 434
+    },
+    {
+      "path": "peer/units-before-stop.txt",
+      "sha256": "5eb95c8c1cbdc3f70fb8cd2aee29f8249118b3aca969d2a4b53915b650be898a",
+      "size": 386
+    },
+    {
+      "path": "peer/vm-packages.txt",
+      "sha256": "7552bc61dc7f1944dafb29203364a16d5e9e435ef62a2bad38d0a006ad4c916b",
+      "size": 21972
+    },
+    {
+      "path": "wsc-message-reference.log",
+      "sha256": "5fe6d7c3a0bc303c99184f163d5e0cf6dbaa1dd62508f37f028192b6f6e358b9",
+      "size": 133
+    },
+    {
+      "path": "wsc-messages.json",
+      "sha256": "5deb243c12ef05012d99744ce9e5a1edf706649323d989057486e8aa03c7cba5",
+      "size": 2042
+    },
+    {
+      "path": "native/build-baseline.log",
+      "sha256": "e468a0aa88a73f5e09c7f132e3e5ea13a9b3bfcef86839044f9796fa6fcf8a4f",
+      "size": 9115
+    },
+    {
+      "path": "native/build-cares.log",
+      "sha256": "ff499f146e1ce261e97690cb1c3948ce24fc70cc00c5d0a4836d46bfde06c779",
+      "size": 21487
+    },
+    {
+      "path": "native/build-null-diagnostic.log",
+      "sha256": "07086c554d341e34b2f8d05d0c15c917f23be7b94e420a12d89b5a15f2c00a6c",
+      "size": 597
+    },
+    {
+      "path": "native/build-reproduction.log",
+      "sha256": "63729d8bb7a6e61a5d705b5b6074197bd4e3a3cc6f1dd5fae90af8eaf53c19cb",
+      "size": 27441
+    },
+    {
+      "path": "native/build-units.log",
+      "sha256": "38ac820f8bdc8aaf3e5c0015dd96d7860aa4b5ab3d5aa60874fba2e44e513b5a",
+      "size": 701
+    },
+    {
+      "path": "native/config-native.txt",
+      "sha256": "99036e917d612c6a0f1b5e603026c179945e6909367600762bae63568793d42a",
+      "size": 21615
+    },
+    {
+      "path": "native/container-config.yaml",
+      "sha256": "9e641ff72832d889e01cadd8d94fdb9cdea8ec0b156251bc7211d69d766d1438",
+      "size": 1357
+    },
+    {
+      "path": "native/driver-events.log",
+      "sha256": "fc85b8b9678737516ab6ee6fbc9775ad086b6693e8c3b70e057d7e80119fc599",
+      "size": 343
+    },
+    {
+      "path": "native/emosa-unit-results.xml",
+      "sha256": "a77d3ef68e6a1733f15b910edf6d12053d5acab6c9f07fe63d6d4f834b21d965",
+      "size": 4276865
+    },
+    {
+      "path": "native/host-final-state.txt",
+      "sha256": "7bf6bcee9468fd81ba3063d1b78d8a5e83ada978c3198736467246eaaaaefe98",
+      "size": 169
+    },
+    {
+      "path": "native/initial-recovery-failure.json",
+      "sha256": "da10fd980fe5f0b71d53809bc7a1fcd2501405108a33ceb180f563fa6c3cbc1e",
+      "size": 10653
+    },
+    {
+      "path": "native/initial-security-mismatch.json",
+      "sha256": "460189205f255eee6dead1e5b8a4a02f3eede3856663fa433b2e25e1a426cb55",
+      "size": 1373
+    },
+    {
+      "path": "native/inner-stopped.txt",
+      "sha256": "04c6f265d03ee1dd1af76e5f9954f9166cd6c635c899e4c4bd9a78a244796ea3",
+      "size": 63
+    },
+    {
+      "path": "native/missing-cipher-columns.json",
+      "sha256": "fdf48c5572da6ce4419d2426fe550bc9ba5f02198d5204dd9f2194917fe40652",
+      "size": 1373
+    },
+    {
+      "path": "native/osw_ut_func_osw_confsync.log",
+      "sha256": "bd8a9b029afeb59b1eb1936cf1b9ef960ee4995754d6c9a139cf6091a8776c1d",
+      "size": 501
+    },
+    {
+      "path": "native/osw_ut_func_osw_drv.log",
+      "sha256": "b770a0674aa3357fb8571804d90aa8890f7ec20c16d3c814ba2c20750c3dcdab",
+      "size": 13231
+    },
+    {
+      "path": "native/osw_ut_func_osw_types.log",
+      "sha256": "f21756fdb4393baa6f022d32e63d5d7d6dce3f7e23ecc59106f7090d0e4de685",
+      "size": 781
+    },
+    {
+      "path": "native/osw_ut_func_ow_conf.log",
+      "sha256": "6889ee171685fed5157449488324e383a4cfa5163878095bf672c978f4f2015b",
+      "size": 579
+    },
+    {
+      "path": "native/osw_ut_func_ow_ovsdb.log",
+      "sha256": "82ec44046428bd8c8d5a1653c0857cf5b997e3672c1c17afd99e738400ff7c15",
+      "size": 1263
+    },
+    {
+      "path": "native/packages.txt",
+      "sha256": "9d9a27085055e83d26c09b57442df782eea6c20df7572588e00778d45f263669",
+      "size": 23011
+    },
+    {
+      "path": "native/path-summary.json",
+      "sha256": "e185b331a6883c0ba15cade17b9802de4ab64b6dd1f2455e722e7b1a5ba3d983",
+      "size": 19808
+    },
+    {
+      "path": "native/qualification.json",
+      "sha256": "c31a4bb6d3f68fd66130fafcc085727c1292003fef68a83dfbf5704e907948a7",
+      "size": 4527
+    },
+    {
+      "path": "native/runtime.txt",
+      "sha256": "cdb20864d8431b9c51fb5d34d1feeace1c4d6c3b06b74a53cf5396d3d1186ca2",
+      "size": 1055
+    },
+    {
+      "path": "native/server.log",
+      "sha256": "014517ce8ee5694b6b4be6a63b4d505635daaac1153db275cd7d198ce46368c4",
+      "size": 512
+    },
+    {
+      "path": "native/site-smoke.json",
+      "sha256": "8501e23b1c7d052c6cca0b28a51245ad15561471678e3d80a79d16cf79494371",
+      "size": 275
+    },
+    {
+      "path": "native/unit-rstate-prefix-failure.log",
+      "sha256": "714a0ecc0b09c1a101dbeb75380c2278866bcea6a979138a11c40a0725ea6354",
+      "size": 363
+    },
+    {
+      "path": "native/unit-summary.json",
+      "sha256": "d57f02d8455f9203ea2d907a97c2f8ecb26f508fa42768e7b0e2fc337ff2c1e1",
+      "size": 866
+    },
+    {
+      "path": "wsc-radio-unit-results.xml",
+      "sha256": "d34e7934695b8a6f976db284dc4533837753a5880ee796d42bce64ae2b27b1b4",
+      "size": 13376
+    },
+    {
+      "path": "wsc-radio-reference.log",
+      "sha256": "5fe6d7c3a0bc303c99184f163d5e0cf6dbaa1dd62508f37f028192b6f6e358b9",
+      "size": 133
+    },
+    {
+      "path": "wsc-radio.json",
+      "sha256": "e5e79d7e4d3a54b2bbe03fcdec22d2ac5055c650f5876d788874b23acda83530",
+      "size": 2742
+    },
+    {
+      "path": "peer-baseline/build-packages.txt",
+      "sha256": "6bbc3f83c9c763b15f74404f758258d5cee96eca78df82fdb805809790b5cd36",
+      "size": 226
+    },
+    {
+      "path": "peer-baseline/bwl-build-packages.txt",
+      "sha256": "5e732e120990b5e6c7b5b6c3024be2f8297acff61b884a2f1dca43afaa82fccc",
+      "size": 166
+    },
+    {
+      "path": "peer-baseline/controller-packages.txt",
+      "sha256": "c430c36939364bcdaa0d0d983adb78fa6777bd05cefd8150f7e9fa5b83369bbd",
+      "size": 18016
+    },
+    {
+      "path": "peer-baseline/curator-regression.json",
+      "sha256": "f002c25128b36687795718fdfe7ed600541fb55da229b1828957663bea083cba",
+      "size": 238
+    },
+    {
+      "path": "peer-baseline/failure-catalog.json",
+      "sha256": "d07b669ecdb734ea1119e480efe3c814faff4a1fb99b6f76627a9b4207956455",
+      "size": 9392
+    },
+    {
+      "path": "peer-baseline/ownership.json",
+      "sha256": "1ff2ed2a19902b2276fd603026f12b0f348d044a570465cc7cba006628f6fbfb",
+      "size": 376
+    },
+    {
+      "path": "peer-baseline/primary-bss-failure.json",
+      "sha256": "3be85092efa9a65f2abd346c8fb59d301f14e9bcc15cbacceec14003c6a06a61",
+      "size": 918
+    },
+    {
+      "path": "peer-baseline/retention.json",
+      "sha256": "01da6c7d4807f77981e5a7c7d28d0aaa3e23a042daa8c278d72449d7b3bdee6e",
+      "size": 5676
+    },
+    {
+      "path": "peer-baseline/runtime-provenance.json",
+      "sha256": "72aee3e80a37d75cac86f255f691bd7c29e5d05b261379f616e979376dc4de71",
+      "size": 13376
+    },
+    {
+      "path": "peer-baseline/samples/wired/client-probes-01.json",
+      "sha256": "d1f6ae1f41cd8ef376dc795c7cf949824620f9b5dbe99ebbf8018e14f5d80539",
+      "size": 4889
+    },
+    {
+      "path": "peer-baseline/samples/wired/client-probes-02.json",
+      "sha256": "ffabda1dde83e454cb6d94753ae1dd34c841828fe40113560dac4ec2552277b7",
+      "size": 4893
+    },
+    {
+      "path": "peer-baseline/samples/wired/em-baseline-agent-agent-state.json",
+      "sha256": "874905b0f56391fae4cd7ef085e36d24b053ae8759663e7a6509fee697ee6490",
+      "size": 457
+    },
+    {
+      "path": "peer-baseline/samples/wired/em-baseline-controller-agent-state.json",
+      "sha256": "b441b292b34f3c04b9fcdab64507161260bd04d7b5e37a65f4dc33918a15bbc7",
+      "size": 472
+    },
+    {
+      "path": "peer-baseline/samples/wired/ethernet.pcap",
+      "sha256": "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964",
+      "size": 10255
+    },
+    {
+      "path": "peer-baseline/samples/wired/ieee1905.tsv",
+      "sha256": "dcf3b014d81481193ebf8da4272273cbda652dfc6de74a013ab2d142bb214147",
+      "size": 2782
+    },
+    {
+      "path": "peer-baseline/samples/wired/index.json",
+      "sha256": "fa7e54748f6d0213cb649ceea1760e1489337971202a805855ad8fe1057572aa",
+      "size": 2045
+    },
+    {
+      "path": "peer-baseline/samples/wired/inventory-identity.json",
+      "sha256": "557bd6df9f186a7e478672d8485d31c42e9868e455536146c0b40075ea0023bf",
+      "size": 359
+    },
+    {
+      "path": "peer-baseline/samples/wired/post-client-stability.json",
+      "sha256": "ce3f13705e62600686c55728588c0758f6037a83e56aaafd878e68318fb497fa",
+      "size": 1094
+    },
+    {
+      "path": "peer-baseline/samples/wired/protocol-observation.json",
+      "sha256": "6682bb7cb3cac78e54c3658a63674e338dfe1ee9987455fa5071aea9a4ba9181",
+      "size": 281
+    },
+    {
+      "path": "peer-baseline/samples/wired/radio.pcap",
+      "sha256": "042c6d656e1ab5628270478a6aff8ed76a56e41d1d556c74d735c85144ee2082",
+      "size": 1363555
+    },
+    {
+      "path": "peer-baseline/samples/wired/result.json",
+      "sha256": "948244f7d4f1e12e832cc15c23de446d4c44e5bc9e6a7f849fc864026afed031",
+      "size": 1039
+    },
+    {
+      "path": "peer-baseline/samples/wired/runtime-reference.json",
+      "sha256": "8079ed9d76012d755c14da7b0e7f53f57298535538e41fc7df285152611ee2ae",
+      "size": 4569
+    },
+    {
+      "path": "peer-baseline/samples/wireless/client-probes-01.json",
+      "sha256": "f98ac522e81305cf7997a6a61c5d1aafd790f9e7ba183718cc6c12eea72f0e5b",
+      "size": 4889
+    },
+    {
+      "path": "peer-baseline/samples/wireless/client-probes-02.json",
+      "sha256": "18554352ade5785b9e731d42ff111cadf3c7ecf0c7058350332dee9b952a69b9",
+      "size": 4893
+    },
+    {
+      "path": "peer-baseline/samples/wireless/em-baseline-agent-agent-state.json",
+      "sha256": "874905b0f56391fae4cd7ef085e36d24b053ae8759663e7a6509fee697ee6490",
+      "size": 457
+    },
+    {
+      "path": "peer-baseline/samples/wireless/em-baseline-controller-agent-state.json",
+      "sha256": "b441b292b34f3c04b9fcdab64507161260bd04d7b5e37a65f4dc33918a15bbc7",
+      "size": 472
+    },
+    {
+      "path": "peer-baseline/samples/wireless/ethernet.pcap",
+      "sha256": "3e86b432d70be6a5855ee38fe9202b74bc237dc03a74147dbc17bcd305fddcda",
+      "size": 9980
+    },
+    {
+      "path": "peer-baseline/samples/wireless/four-address.tsv",
+      "sha256": "938c2a02d71e4c58e862aef2f7b28aa5e8c79069fa23a39a3a33fb8b4c014820",
+      "size": 9389
+    },
+    {
+      "path": "peer-baseline/samples/wireless/ieee1905.tsv",
+      "sha256": "3693cfacbb29b877fdcc03cd0df45f5f1aa3af52e95d9cac54c554c67e3fe035",
+      "size": 2500
+    },
+    {
+      "path": "peer-baseline/samples/wireless/index.json",
+      "sha256": "cd1de58d5d6fa147d9fb5a39d1a48e931da673c212c9dbf4dba0e1857f4d162d",
+      "size": 2110
+    },
+    {
+      "path": "peer-baseline/samples/wireless/inventory-identity.json",
+      "sha256": "4fdcc478152e22a28cdb0d6ea9c7aef09c5ca1d7d6fa7705ab4be48c129518d3",
+      "size": 356
+    },
+    {
+      "path": "peer-baseline/samples/wireless/post-client-stability.json",
+      "sha256": "f5945ea7cc10e04226134a30ca7f67f9f51d077825d9116f62e984c7849af615",
+      "size": 996
+    },
+    {
+      "path": "peer-baseline/samples/wireless/protocol-observation.json",
+      "sha256": "59849b9835f9199a7286b457593e0dae350fb601eddabe946209f7fc67f23803",
+      "size": 344
+    },
+    {
+      "path": "peer-baseline/samples/wireless/radio.pcap",
+      "sha256": "c3107c9f8580bbb906cf2a94aacc8c7b547e42716bbc244e194db7d2a37917a8",
+      "size": 1628315
+    },
+    {
+      "path": "peer-baseline/samples/wireless/result.json",
+      "sha256": "b8caee0bc1a7deb6de63ad69c270ec2087d18ac6f276e196a3219f9bb9f0defe",
+      "size": 1115
+    },
+    {
+      "path": "peer-baseline/samples/wireless/runtime-reference.json",
+      "sha256": "e1ef4fb9caf03654f7aad977f1fcb6f548121cdc46bb8f8424af181b4174f981",
+      "size": 4672
+    },
+    {
+      "path": "peer-baseline/samples/wireless/wps.tsv",
+      "sha256": "c0e13677cacb64b090b5749f019603cdf63090cbc3b292860336624b6b0c028a",
+      "size": 414
+    },
+    {
+      "path": "peer-baseline/site-smoke.json",
+      "sha256": "e80612c7a9976434f2aee8c00f0cd88db840a60735a11a0b6518c891bc4af68b",
+      "size": 487
+    },
+    {
+      "path": "peer-baseline/source-cross-check.json",
+      "sha256": "5f8c2097146d5a2d57c96daae2665cf5077398294766f59fd9bfb172bfdaaa5e",
+      "size": 405
+    },
+    {
+      "path": "peer-baseline/summary.json",
+      "sha256": "4318abd5f9935d52d0bc3bbdd8702905afc0997db7b5034e1bc28b8e2418fa25",
+      "size": 1154412
+    },
+    {
+      "path": "radio-manager/curator-regression.json",
+      "sha256": "2f7e1e6de6830340a81465e51636a7d7ce30fd624ad7a73fa2012356b1b5f108",
+      "size": 211
+    },
+    {
+      "path": "radio-manager/ovsdb-results.xml",
+      "sha256": "55828c59811e9c78fc87ed4efdf29eaf247227e6a26c3c4c3a80dca0947ba437",
+      "size": 1861
+    },
+    {
+      "path": "radio-manager/review.json",
+      "sha256": "4a9904cad8104bea8f40273352b93a28caf5adb16eae763c596b237b991eedd5",
+      "size": 909
+    },
+    {
+      "path": "radio-manager/sample/backhaul-loss.json",
+      "sha256": "589f8fa5539c2adf501eb966964fb3d14ed4d4d48cb34d52fd9acf33358d2833",
+      "size": 487
+    },
+    {
+      "path": "radio-manager/sample/clients-adapter-restart.json",
+      "sha256": "2b7613b0d93158ccbc598776ec4b7619cb1d79a7ce85afe1dd35a92173ccdc6b",
+      "size": 2642
+    },
+    {
+      "path": "radio-manager/sample/clients-ap-recovery.json",
+      "sha256": "ef73b418a0769e6b5acc55f0965a15e9a9107a2e71772db3e2e3f3abbb6e2117",
+      "size": 2622
+    },
+    {
+      "path": "radio-manager/sample/clients-backhaul-recovery.json",
+      "sha256": "14a843ca025daf922dd327fc48853ad435e464c469c8e3462f03eb5cb88f6dc5",
+      "size": 2645
+    },
+    {
+      "path": "radio-manager/sample/clients-changed.json",
+      "sha256": "f385d9fae4db6a2f5eb865a8ae600e613b3146e5cff44dadcf7a58de883d81f2",
+      "size": 2608
+    },
+    {
+      "path": "radio-manager/sample/clients-correct-key-restored.json",
+      "sha256": "8facf91d3217d29042705028c40be36d67a285d96a4164637a39067b1d073786",
+      "size": 2640
+    },
+    {
+      "path": "radio-manager/sample/clients-database-restart.json",
+      "sha256": "b685977757e041b1fed568626bc54e590a9d8884a02f03e564a31c7b71e98c3a",
+      "size": 2631
+    },
+    {
+      "path": "radio-manager/sample/clients-initial.json",
+      "sha256": "e233e1f1e819ce7a104a2e98ccad83a78e89427fe925af45759335d3ae37c679",
+      "size": 2608
+    },
+    {
+      "path": "radio-manager/sample/clients-late-application.json",
+      "sha256": "e78ef2913fb657e86bf3c460a1f0a2dd43ea5dc884f3f57186b2b41f9c941609",
+      "size": 2627
+    },
+    {
+      "path": "radio-manager/sample/clients-lost-reply.json",
+      "sha256": "367c7a6f6293a30f6835d1964b05f53f1d83c0af14fffb94699e79f54b80c8e9",
+      "size": 2620
+    },
+    {
+      "path": "radio-manager/sample/clients-unsupported-channel.json",
+      "sha256": "32094e46265f7bafb4c46501eabcaf9f560aacf8572b0e3a1423b9015b4ff807",
+      "size": 2649
+    },
+    {
+      "path": "radio-manager/sample/clients-withheld-old-radio.json",
+      "sha256": "6ea48abde1a4d50fdfb4f22404ea1bc82f0f58a0f1566edd55de03a8d2a2ec58",
+      "size": 2642
+    },
+    {
+      "path": "radio-manager/sample/eapol.tsv",
+      "sha256": "41db3a34d8146355dff0541296717d53d9ff40d44cf7065d0df83cb5eb294efc",
+      "size": 216
+    },
+    {
+      "path": "radio-manager/sample/index.json",
+      "sha256": "ccc9fcda1b35e289701419a6465764a5ac0d9562b25e2d15c357970350f9a739",
+      "size": 2085
+    },
+    {
+      "path": "radio-manager/sample/manager.jsonl",
+      "sha256": "dcec8b813928709480c0be04340d2d5a2f4b445322a82c57319e28a7e458b12d",
+      "size": 23533
+    },
+    {
+      "path": "radio-manager/sample/operations.json",
+      "sha256": "887f2f40e233e58dc22f28fb100b71cf4b7bc99748d69ced9b467ffc74564d5b",
+      "size": 9030
+    },
+    {
+      "path": "radio-manager/sample/packet-observations.json",
+      "sha256": "fc07459606def48142ba533f0aad388389909a8c1369c629fbbc9c08f854654f",
+      "size": 314
+    },
+    {
+      "path": "radio-manager/sample/radio.pcap",
+      "sha256": "6aea11ce62421b9b847e428f12f9d52806498c47c20095619195b66e236cd488",
+      "size": 207373
+    },
+    {
+      "path": "radio-manager/sample/result.json",
+      "sha256": "253b49421b64a6441957ac1af3f4555f5956ba6ff5dbfee93392285945cc042b",
+      "size": 15190
+    },
+    {
+      "path": "radio-manager/sample/source-hashes.json",
+      "sha256": "b7d66300cc9c35000714728b39061724ce8995ef0c82936bbaffefbd4c2fc8c2",
+      "size": 1028
+    },
+    {
+      "path": "radio-manager/sample/wrong-key.log",
+      "sha256": "1212bb76be801d80bc34bb500e732c595b0d2efe5fb5198683604fe80e9f708e",
+      "size": 1098
+    },
+    {
+      "path": "radio-manager/site-smoke.json",
+      "sha256": "5c30848fe189fae4df1ba3ea76a39ee3eda25214fe1d040457fb358566891ac4",
+      "size": 227
+    },
+    {
+      "path": "radio-manager/summary.json",
+      "sha256": "bf66edb46f080ac672d802b9514c177addafb8354f9f6544e9c5731e870b02f5",
+      "size": 298634
+    },
+    {
+      "path": "radio-manager/unit-results.xml",
+      "sha256": "62b0f019787a741dced3273bc816e58e857f3d8f238b355f9a0ba0656dbde27a",
+      "size": 4283820
+    },
+    {
+      "path": "connecting-pod/ovsdb-results.xml",
+      "sha256": "baf0f2d9c9c839380e8890f47cbfca9a7e212e277bd8fcd1bc271d2f589e8f1a",
+      "size": 2615
+    },
+    {
+      "path": "connecting-pod/qualification-summary.json",
+      "sha256": "2a3c0a6e4df02643fcdc5be13ef30585ba38f0707c66388084af1255d7b1e329",
+      "size": 8023
+    },
+    {
+      "path": "connecting-pod/unit-results.xml",
+      "sha256": "b4938252a517dfb2e3ceb945f60a26d39298f4ee557eb6a988fb72276282423a",
+      "size": 4284777
+    }
+  ]
+}

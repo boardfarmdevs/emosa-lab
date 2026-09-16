@@ -1,0 +1,220 @@
+{
+  "private_root": ".lab/peer-baseline/",
+  "private_manifest_sha256": "890d07c90db43efc908ed153cf17a1a8b4e6128c7f0d45f1bed720d294709ceb",
+  "private_file_count": 3546,
+  "private_total_bytes": 306116113,
+  "native_log_archives": {
+    "em-baseline-controller": {
+      "archive": "em-baseline-controller-logs.tar.gz",
+      "sha256": "4f109404463bcb8d16f48448351d13034257522904f342787461dbc5e6ae529e",
+      "size": 2151235,
+      "service_states": {
+        "hostap": "inactive",
+        "supplicant": "inactive",
+        "bus": "inactive",
+        "transport": "inactive",
+        "controller": "inactive",
+        "agent": "inactive",
+        "client": "inactive",
+        "data": "inactive",
+        "capture": "inactive"
+      }
+    },
+    "em-baseline-agent": {
+      "archive": "em-baseline-agent-logs.tar.gz",
+      "sha256": "02ec7def723d33d726ce39c85ec9583d6fafc261277175564e5bb0db94ee4d64",
+      "size": 1227550,
+      "service_states": {
+        "hostap": "inactive",
+        "supplicant": "inactive",
+        "bus": "inactive",
+        "transport": "inactive",
+        "controller": "inactive",
+        "agent": "inactive",
+        "client": "inactive",
+        "data": "inactive",
+        "capture": "inactive"
+      }
+    },
+    "em-baseline-wired": {
+      "archive": "em-baseline-wired-logs.tar.gz",
+      "sha256": "56fccde30064fa2852b1bfc47d69182c0800c296fa3323cf0bb01ef4d2a2365c",
+      "size": 887,
+      "service_states": {
+        "hostap": "inactive",
+        "supplicant": "inactive",
+        "bus": "inactive",
+        "transport": "inactive",
+        "controller": "inactive",
+        "agent": "inactive",
+        "client": "inactive",
+        "data": "inactive",
+        "capture": "inactive"
+      }
+    },
+    "em-baseline-wifi": {
+      "archive": "em-baseline-wifi-logs.tar.gz",
+      "sha256": "21782ed1b2bb24bc88835260d32a51e27cb4ac81dbe46a508670875804e65730",
+      "size": 3314,
+      "service_states": {
+        "hostap": "inactive",
+        "supplicant": "inactive",
+        "bus": "inactive",
+        "transport": "inactive",
+        "controller": "inactive",
+        "agent": "inactive",
+        "client": "inactive",
+        "data": "inactive",
+        "capture": "inactive"
+      }
+    }
+  },
+  "development_archive": {
+    "path": "development-evidence.tar.gz",
+    "size": 189807,
+    "sha256": "e2c447474dd7786745375d88d980002f64ac500ff9fb639102807ae3907203ea"
+  },
+  "final_shutdown": {
+    "em-baseline-controller": [
+      {
+        "unit": "agent",
+        "before": {
+          "MainPID": "11521",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "core-dump",
+          "ExecMainStatus": "6"
+        }
+      },
+      {
+        "unit": "controller",
+        "before": {
+          "MainPID": "11514",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "core-dump",
+          "ExecMainStatus": "6"
+        }
+      },
+      {
+        "unit": "transport",
+        "before": {
+          "MainPID": "10685",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "bus",
+        "before": {
+          "MainPID": "10681",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "hostap",
+        "before": {
+          "MainPID": "10667",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "data",
+        "before": {
+          "MainPID": "10758",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      }
+    ],
+    "em-baseline-agent": [
+      {
+        "unit": "agent",
+        "before": {
+          "MainPID": "10475",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "core-dump",
+          "ExecMainStatus": "6"
+        }
+      },
+      {
+        "unit": "transport",
+        "before": {
+          "MainPID": "9885",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "bus",
+        "before": {
+          "MainPID": "9881",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "supplicant",
+        "before": {
+          "MainPID": "9859",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "hostap",
+        "before": {
+          "MainPID": "9846",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      }
+    ],
+    "em-baseline-wired": [],
+    "em-baseline-wifi": [
+      {
+        "unit": "client",
+        "before": {
+          "MainPID": "3213",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      }
+    ]
+  },
+  "final_state": "Owned baseline services stopped; the dedicated VM and four containers remain running to retain assigned hwsim PHYs. VM/container reboot qualification remains outside scope.",
+  "scope": "Private raw history, sources, runtime inputs and native logs retained; only reviewed synthetic samples and metadata are published."
+}

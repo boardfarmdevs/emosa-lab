@@ -2,9 +2,9 @@
 
 The pinned OpenSync OWM/OW/OSW stack now builds and runs in an isolated Ubuntu
 24.04 container. **The backend remains disabled: recovery test N03 fails.**
-See the [qualification record](../../docs/evidence/native/qualification.json),
-[39 upstream unit results](../../docs/evidence/native/unit-summary.json), and
-[end-to-end component probe](../../docs/evidence/native/path-summary.json).
+See the [qualification record](../../doc/evidence/native/qualification.json),
+[39 upstream unit results](../../doc/evidence/native/unit-summary.json), and
+[end-to-end component probe](../../doc/evidence/native/path-summary.json).
 These are semantic, simulated-device results. No EasyMesh frames, Wi-Fi link,
 physical pod or independent controller participate in this experiment.
 
@@ -119,5 +119,5 @@ measurements, not pod resource requirements.
 This experiment satisfies the bounded R0 investigation with a concrete recovery
 blocker. It must not delay an available physical experiment. Actual acceptance
 still requires **real EasyMesh messages → EMOSA → unchanged physical pod →
-independently observed behavior**. The [specification acquisition checklist](../../docs/specification-acquisition.md)
-and [private pod connection instructions](../../docs/pod-qualification.md) remain applicable.
+independently observed behavior**. The [specification acquisition checklist](../../doc/protocol/specification-acquisition.md)
+and [private pod connection instructions](../../doc/guides/pod-qualification.md) remain applicable.

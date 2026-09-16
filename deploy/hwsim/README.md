@@ -15,9 +15,9 @@ with kernel 6.8.0-139-generic and inner LXD 5.21.7 (snap revision 40585).
 The station reached WPA2-PSK `COMPLETED`, all three interface-bound pings passed,
 and 112 virtual-medium packets were captured. The initial package-started
 supplicant conflict and its retest are also retained. See
-[qualification evidence](../../docs/evidence/hwsim/qualification-summary.json),
-[result](../../docs/evidence/hwsim/result.json) and
-[station observation](../../docs/evidence/hwsim/station-status.txt).
+[qualification evidence](../../doc/evidence/hwsim/qualification-summary.json),
+[result](../../doc/evidence/hwsim/result.json) and
+[station observation](../../doc/evidence/hwsim/station-status.txt).
 
 ## Setup
 
@@ -109,3 +109,7 @@ Authoritative references:
 - [Linux iw documentation](https://wireless.docs.kernel.org/en/latest/en/users/documentation/iw.html).
 - [Upstream wpa_supplicant](https://w1.fi/wpa_supplicant/).
 - [Canonical LXD network devices](https://documentation.ubuntu.com/lxd/latest/reference/devices_nic/).
+
+For semantic EMOSA Config → actual radio → independent client checks, use the
+[OVSDB/hwsim integration](../radio-manager/README.md). It reuses the native
+baseline topology and must run separately from this standalone smoke lab.

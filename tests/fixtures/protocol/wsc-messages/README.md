@@ -19,9 +19,9 @@ Native parsing verifies both fronthaul and teardown flags in decrypted ConfigDat
 The teardown alternative omits ordinary AP fields; hostap checks its envelope and
 crypto, not its normal AP-settings validator. The alternatives reuse synthetic
 M1/N2 material for separate tests and must not be combined into a response batch.
-See [radio payload interpretation](../../../../docs/wsc-radio.md).
+See [radio payload interpretation](../../../../doc/protocol/wsc-radio.md).
 
-The normative contract is [wsc-messages.md](../../../../docs/wsc-messages.md).
+The normative contract is [wsc-messages.md](../../../../doc/protocol/wsc-messages.md).
 Hostap 2.11 predates the selected WFA editions. Its parser ignores BSS_Index as
 an unknown attribute; the harness does not establish its semantic interpretation
 by a real peer. These tests do not complete P0 or any physical-pod milestone.

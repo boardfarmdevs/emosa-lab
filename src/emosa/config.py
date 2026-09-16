@@ -5,6 +5,7 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
 
+from emosa.agents import validate_bindings
 from emosa.errors import EmosaError, Reason
 
 
@@ -37,6 +38,7 @@ def load(name, path):
         raise EmosaError(Reason.INVALID_INPUT, f"cannot read {name} JSON") from exc
     validate(name, value)
     if name == "config":
+        validate_bindings(value)
         pods = value["pods"]
         if len({p["pod_id"] for p in pods}) != len(pods):
             raise EmosaError(Reason.INVALID_INPUT, "duplicate pod identity")

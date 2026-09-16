@@ -73,6 +73,25 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 128
+          },
+          "virtual_agent": {
+            "type": "object",
+            "properties": {
+              "al_mac": {
+                "type": "string",
+                "pattern": "^[0-9a-f][26ae](?::[0-9a-f]{2}){5}$"
+              },
+              "expected_serial": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "al_mac",
+              "expected_serial"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [

@@ -1,0 +1,2810 @@
+{
+  "schema_version": 1,
+  "architecture_version": "3.6",
+  "status_policy": "verified is always scoped to its recorded mode; no global completion or interoperability claim",
+  "tasks": {
+    "I0": "local and nested Ubuntu 24.04 component foundation tested; full reference wire/hardware deployment and runtime image exports pending",
+    "I1": "implemented with model tests",
+    "I2": "real OVSDB component path and independent hostapd/hwsim manager tested with wired/wireless clients; semantic initiation only; see doc/evaluation/radio-manager.md",
+    "R0": "native apply/withhold experiment runs; database-restart recovery N03 fails and production backend remains disabled",
+    "I3": "blocked P0",
+    "I4": "WSC M1/M2 payload component independently tested; full procedure remains blocked P0/I3",
+    "I5": "read-only draft collector implemented; physical qualification and writes blocked M0/P0",
+    "I6": "incremental component runner/watch/inspect/report/compare; complete reference release pending",
+    "I7": "native wired/wireless controller-agent baseline recorded; EMOSA wire exchanges, clean native shutdown and hardware interoperability remain pending"
+  },
+  "rows": [
+    {
+      "id": "ARCH-01",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "ARCH-02",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "ARCH-03",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "ARCH-04",
+      "status": "verified",
+      "implementation_refs": [
+        "pyproject.toml"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "ARCH-05",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "LANG-01",
+      "status": "verified",
+      "implementation_refs": [
+        "pyproject.toml"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "LANG-02",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/session.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "LANG-03",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/session.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "LANG-04",
+      "status": "not_started",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification."
+    },
+    {
+      "id": "DEP-01",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "DEP-02",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "DEP-03",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "DEP-04",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "DEP-05",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "DEP-06",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "DEP-07",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "DEP-08",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "DEP-09",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "DEP-10",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "DEP-11",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "DEP-12",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/README.md",
+        "deploy/images.lock.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "SW-01",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "SW-02",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/model.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "SW-03",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "SW-04",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "SW-05",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "MODEL-01",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "MODEL-02",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "MODEL-03",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py",
+        "tests/test_qualification.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "MODEL-04",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "MODEL-05",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "MODEL-06",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "MODEL-07",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/capabilities.py"
+      ],
+      "test_refs": [
+        "tests/test_api.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "OWN-01",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "OWN-02",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "OWN-03",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "OWN-04",
+      "status": "implemented",
+      "implementation_refs": [
+        "doc/architecture/recovery.md"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "OWN-05",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "OWN-06",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "OWN-07",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/capabilities.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "OWN-08",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "OWN-09",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/app.py"
+      ],
+      "test_refs": [
+        "tests/test_api.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "API-01",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "API-02",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "API-03",
+      "status": "verified",
+      "implementation_refs": [
+        "doc/architecture/operation-mappings.md"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "API-04",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "API-05",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/capabilities.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py",
+        "tests/test_api.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "SCHEMA-01",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "SCHEMA-02",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "SCHEMA-03",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/schema.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "MAP-01",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "MAP-02",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "MAP-03",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "MAP-04",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "MAP-05",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "MAP-06",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "DB-01",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/session.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "DB-02",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "DB-03",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "DB-04",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/session.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "DB-05",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/session.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "DB-06",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "DB-07",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/session.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "DB-08",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "DB-09",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "DB-10",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "DB-11",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/ovsdb-results.xml"
+      ],
+      "mode": "ovsdb-sim",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "DB-12",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "REC-01",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "REC-02",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "REC-03",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "REC-04",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "REC-05",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "REC-06",
+      "status": "not_started",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification."
+    },
+    {
+      "id": "REC-07",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py",
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "REC-08",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "CLI-01",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_api.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "CLI-02",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/local_api.py"
+      ],
+      "test_refs": [
+        "tests/test_api.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "CLI-03",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/local_api.py"
+      ],
+      "test_refs": [
+        "tests/test_api.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "CLI-04",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/local_api.py"
+      ],
+      "test_refs": [
+        "tests/test_api.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "CLI-05",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_api.py",
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "CLI-06",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/app.py"
+      ],
+      "test_refs": [
+        "tests/test_api.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "CFG-01",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/local_api.py"
+      ],
+      "test_refs": [
+        "tests/test_api.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "CFG-02",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "CFG-03",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "CFG-04",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/local_api.py"
+      ],
+      "test_refs": [
+        "tests/test_api.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "CFG-05",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "CFG-06",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "OBS-01",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/store.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "OBS-02",
+      "status": "not_started",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification."
+    },
+    {
+      "id": "OBS-03",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "OBS-04",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/store.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "OBS-05",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "DEL-01",
+      "status": "not_started",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification."
+    },
+    {
+      "id": "DEL-02",
+      "status": "not_started",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification."
+    },
+    {
+      "id": "DEL-03",
+      "status": "not_started",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification."
+    },
+    {
+      "id": "DEL-04",
+      "status": "not_started",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification."
+    },
+    {
+      "id": "DEL-05",
+      "status": "not_started",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification."
+    },
+    {
+      "id": "DEL-06",
+      "status": "not_started",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification."
+    },
+    {
+      "id": "WIRE-01",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "WIRE-02",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "WIRE-03",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "WIRE-04",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "WIRE-05",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "WIRE-06",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "WIRE-07",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wsc.py",
+        "doc/protocol/wsc-component.md",
+        "src/emosa/wsc_messages.py",
+        "src/emosa/wsc_radio.py",
+        "doc/protocol/wsc-radio.md"
+      ],
+      "test_refs": [
+        "tests/test_gated.py",
+        "tests/test_wsc.py",
+        "tests/test_wsc_messages.py",
+        "tests/test_wsc_radio.py"
+      ],
+      "evidence_refs": [
+        "tests/fixtures/protocol/wsc/provenance.json",
+        "doc/evidence/unit-results.xml",
+        "doc/evidence/wsc-messages.json",
+        "doc/evidence/wsc-radio.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "M1/M2 crypto, payload structure and encrypted radio role/teardown semantics have scoped component evidence; complete CMDU/profile rules, controller/radio binding, replay/state and pod writes remain gated."
+    },
+    {
+      "id": "WIRE-08",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wsc_messages.py",
+        "src/emosa/wsc_radio.py",
+        "doc/protocol/wsc-radio.md"
+      ],
+      "test_refs": [
+        "tests/test_gated.py",
+        "tests/test_wsc_messages.py",
+        "tests/test_wsc_radio.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/wsc-messages.json",
+        "doc/evidence/wsc-radio.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "M1/M2 crypto, payload structure and encrypted radio role/teardown semantics have scoped component evidence; complete CMDU/profile rules, controller/radio binding, replay/state and pod writes remain gated."
+    },
+    {
+      "id": "WIRE-09",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "WIRE-10",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "EVAL-01",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "EVAL-02",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/opensync/mapping.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "EVAL-03",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "EVAL-04",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "EVAL-05",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "EVAL-06",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "EVAL-07",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "EVAL-08",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/reconcile.py"
+      ],
+      "test_refs": [
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "EVAL-09",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "EVAL-10",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "EVAL-11",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "EVAL-12",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_api.py",
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "EVAL-13",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "EVAL-14",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "EVAL-15",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "EVAL-16",
+      "status": "verified",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/unit-results.xml"
+      ],
+      "mode": "model",
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+    },
+    {
+      "id": "TP-01",
+      "status": "blocked",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "X1: independent controller/build, selected wire scope and evaluator environment missing.",
+      "independent_work": "Component evaluator package and reports."
+    },
+    {
+      "id": "TP-02",
+      "status": "blocked",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "X1: independent controller/build, selected wire scope and evaluator environment missing.",
+      "independent_work": "Component evaluator package and reports."
+    },
+    {
+      "id": "TP-03",
+      "status": "blocked",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "X1: independent controller/build, selected wire scope and evaluator environment missing.",
+      "independent_work": "Component evaluator package and reports."
+    },
+    {
+      "id": "TP-04",
+      "status": "implemented",
+      "implementation_refs": [
+        "doc/project/THIRD-PARTY-NOTICES.md"
+      ],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "TP-05",
+      "status": "implemented",
+      "implementation_refs": [
+        "deploy/README.md"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete.",
+      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+    },
+    {
+      "id": "TP-06",
+      "status": "blocked",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "X1: independent controller/build, selected wire scope and evaluator environment missing.",
+      "independent_work": "Component evaluator package and reports."
+    },
+    {
+      "id": "TP-07",
+      "status": "blocked",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "X1: independent controller/build, selected wire scope and evaluator environment missing.",
+      "independent_work": "Component evaluator package and reports."
+    },
+    {
+      "id": "TP-08",
+      "status": "blocked",
+      "implementation_refs": [],
+      "test_refs": [],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "X1: independent controller/build, selected wire scope and evaluator environment missing.",
+      "independent_work": "Component evaluator package and reports."
+    },
+    {
+      "id": "CORE-01",
+      "status": "verified",
+      "implementation_refs": [
+        "deploy/native/README.md",
+        "deploy/native/driver.c",
+        "deploy/native/build.sh"
+      ],
+      "test_refs": [
+        "deploy/native/check-units.py",
+        "deploy/native/check-path.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/native/qualification.json",
+        "doc/evidence/native/path-summary.json"
+      ],
+      "mode": "opensync-native",
+      "scope": "Bounded R0 native experiment only; one synthetic existing AP with probe-specific PSK interpretation; no production native backend, wire, radio or physical qualification."
+    },
+    {
+      "id": "CORE-02",
+      "status": "verified",
+      "implementation_refs": [
+        "deploy/native/README.md",
+        "deploy/native/driver.c",
+        "deploy/native/build.sh"
+      ],
+      "test_refs": [
+        "deploy/native/check-units.py",
+        "deploy/native/check-path.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/native/qualification.json",
+        "doc/evidence/native/path-summary.json"
+      ],
+      "mode": "opensync-native",
+      "scope": "Bounded R0 native experiment only; one synthetic existing AP with probe-specific PSK interpretation; no production native backend, wire, radio or physical qualification."
+    },
+    {
+      "id": "CORE-03",
+      "status": "verified",
+      "implementation_refs": [
+        "deploy/native/README.md",
+        "deploy/native/driver.c",
+        "deploy/native/build.sh"
+      ],
+      "test_refs": [
+        "deploy/native/check-units.py",
+        "deploy/native/check-path.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/native/qualification.json",
+        "doc/evidence/native/path-summary.json"
+      ],
+      "mode": "opensync-native",
+      "scope": "Bounded R0 native experiment only; one synthetic existing AP with probe-specific PSK interpretation; no production native backend, wire, radio or physical qualification."
+    },
+    {
+      "id": "CORE-04",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+    },
+    {
+      "id": "CORE-05",
+      "status": "verified",
+      "implementation_refs": [
+        "deploy/native/README.md",
+        "deploy/native/driver.c",
+        "deploy/native/build.sh"
+      ],
+      "test_refs": [
+        "deploy/native/check-units.py",
+        "deploy/native/check-path.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/native/qualification.json",
+        "doc/evidence/native/path-summary.json"
+      ],
+      "mode": "opensync-native",
+      "scope": "Bounded R0 native experiment only; one synthetic existing AP with probe-specific PSK interpretation; no production native backend, wire, radio or physical qualification."
+    },
+    {
+      "id": "A01",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A02",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A03",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A04",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A05",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A06",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A07",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A08",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A09",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A10",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A11",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A12",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A13",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A14",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A15",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A16",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A17",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A18",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A19",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A20",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A21",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A22",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A23",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A24",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "A25",
+      "status": "blocked",
+      "implementation_refs": [
+        "src/emosa/qualification.py"
+      ],
+      "test_refs": [
+        "tests/test_qualification.py",
+        "tests/test_ovsdb.py",
+        "tests/test_model.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
+      "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
+      "independent_work": "Read-only qualification tool and simulator evidence."
+    },
+    {
+      "id": "W01",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "W02",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "W03",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "W04",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "W05",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "W06",
+      "status": "blocked",
+      "implementation_refs": [
+        "doc/protocol/protocol-matrix.json"
+      ],
+      "test_refs": [
+        "tests/test_gated.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
+      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+    },
+    {
+      "id": "E01",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py",
+        "src/emosa/evaluation/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py",
+        "tests/test_api.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Component platform checks exist; clean reference-LXD and full wire/hardware evaluation remain pending."
+    },
+    {
+      "id": "E02",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py",
+        "src/emosa/evaluation/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py",
+        "tests/test_api.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Component platform checks exist; clean reference-LXD and full wire/hardware evaluation remain pending."
+    },
+    {
+      "id": "E03",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py",
+        "src/emosa/evaluation/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py",
+        "tests/test_api.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Component platform checks exist; clean reference-LXD and full wire/hardware evaluation remain pending."
+    },
+    {
+      "id": "E04",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py",
+        "src/emosa/evaluation/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py",
+        "tests/test_api.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Component platform checks exist; clean reference-LXD and full wire/hardware evaluation remain pending."
+    },
+    {
+      "id": "E05",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py",
+        "src/emosa/evaluation/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py",
+        "tests/test_api.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Component platform checks exist; clean reference-LXD and full wire/hardware evaluation remain pending."
+    },
+    {
+      "id": "E06",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py",
+        "src/emosa/evaluation/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py",
+        "tests/test_api.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Component platform checks exist; clean reference-LXD and full wire/hardware evaluation remain pending."
+    },
+    {
+      "id": "E07",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py",
+        "src/emosa/evaluation/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py",
+        "tests/test_api.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Component platform checks exist; clean reference-LXD and full wire/hardware evaluation remain pending."
+    },
+    {
+      "id": "E08",
+      "status": "implemented",
+      "implementation_refs": [
+        "src/emosa/evaluation/runner.py",
+        "src/emosa/evaluation/cli.py"
+      ],
+      "test_refs": [
+        "tests/test_evaluation.py",
+        "tests/test_api.py",
+        "tests/test_ovsdb.py"
+      ],
+      "evidence_refs": [],
+      "mode": null,
+      "scope": "Component platform checks exist; clean reference-LXD and full wire/hardware evaluation remain pending."
+    },
+    {
+      "id": "T01",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/peer/README.md",
+        "deploy/peer/prplmesh.reference.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Independent candidate baseline exists; actual selected EMOSA wire exchanges, native shutdown/recovery and physical-pod evaluation are still unqualified.",
+      "independent_work": "Component evaluator package and reports."
+    },
+    {
+      "id": "T02",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/peer/README.md",
+        "deploy/peer/prplmesh.reference.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Independent candidate baseline exists; actual selected EMOSA wire exchanges, native shutdown/recovery and physical-pod evaluation are still unqualified.",
+      "independent_work": "Component evaluator package and reports."
+    },
+    {
+      "id": "T03",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/peer/README.md",
+        "deploy/peer/prplmesh.reference.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Independent candidate baseline exists; actual selected EMOSA wire exchanges, native shutdown/recovery and physical-pod evaluation are still unqualified.",
+      "independent_work": "Component evaluator package and reports."
+    },
+    {
+      "id": "T04",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/peer/README.md",
+        "deploy/peer/prplmesh.reference.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Independent candidate baseline exists; actual selected EMOSA wire exchanges, native shutdown/recovery and physical-pod evaluation are still unqualified.",
+      "independent_work": "Component evaluator package and reports."
+    },
+    {
+      "id": "T05",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/peer/README.md",
+        "deploy/peer/prplmesh.reference.json"
+      ],
+      "test_refs": [],
+      "evidence_refs": [
+        "doc/evidence/peer/qualification-summary.json"
+      ],
+      "mode": null,
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "blocker": "Independent candidate baseline exists; actual selected EMOSA wire exchanges, native shutdown/recovery and physical-pod evaluation are still unqualified.",
+      "independent_work": "Component evaluator package and reports."
+    },
+    {
+      "id": "N01",
+      "status": "verified",
+      "implementation_refs": [
+        "deploy/native/README.md",
+        "deploy/native/driver.c",
+        "deploy/native/build.sh"
+      ],
+      "test_refs": [
+        "deploy/native/check-units.py",
+        "deploy/native/check-path.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/native/qualification.json",
+        "doc/evidence/native/path-summary.json"
+      ],
+      "mode": "opensync-native",
+      "scope": "Bounded R0 native experiment only; one synthetic existing AP with probe-specific PSK interpretation; no production native backend, wire, radio or physical qualification."
+    },
+    {
+      "id": "N02",
+      "status": "verified",
+      "implementation_refs": [
+        "deploy/native/README.md",
+        "deploy/native/driver.c",
+        "deploy/native/build.sh"
+      ],
+      "test_refs": [
+        "deploy/native/check-units.py",
+        "deploy/native/check-path.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/native/qualification.json",
+        "doc/evidence/native/path-summary.json"
+      ],
+      "mode": "opensync-native",
+      "scope": "Bounded R0 native experiment only; one synthetic existing AP with probe-specific PSK interpretation; no production native backend, wire, radio or physical qualification."
+    },
+    {
+      "id": "N03",
+      "status": "blocked",
+      "implementation_refs": [
+        "deploy/native/README.md",
+        "deploy/native/driver.c",
+        "deploy/native/build.sh"
+      ],
+      "test_refs": [
+        "deploy/native/check-units.py",
+        "deploy/native/check-path.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/native/qualification.json",
+        "doc/evidence/native/path-summary.json"
+      ],
+      "mode": "opensync-native",
+      "scope": "Bounded R0 native experiment only; one synthetic existing AP with probe-specific PSK interpretation; no production native backend, wire, radio or physical qualification.",
+      "blocker": "blocked: post-database-restart Config commits but no further driver request within deadline",
+      "independent_work": "Recorded model/OVSDB evaluation, selected WSC components, and future physical qualification remain independent of R0."
+    },
+    {
+      "id": "N04",
+      "status": "verified",
+      "implementation_refs": [
+        "deploy/native/README.md",
+        "deploy/native/driver.c",
+        "deploy/native/build.sh"
+      ],
+      "test_refs": [
+        "deploy/native/check-units.py",
+        "deploy/native/check-path.py"
+      ],
+      "evidence_refs": [
+        "doc/evidence/native/qualification.json",
+        "doc/evidence/native/path-summary.json"
+      ],
+      "mode": "opensync-native",
+      "scope": "Bounded R0 native experiment only; one synthetic existing AP with probe-specific PSK interpretation; no production native backend, wire, radio or physical qualification."
+    }
+  ]
+}

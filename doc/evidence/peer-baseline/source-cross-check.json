@@ -1,0 +1,11 @@
+{
+  "upstream_commit": "2e153c7e00cbcab6b8ee35082f494a364e23f018",
+  "companion_patches_applied": 22,
+  "tracked_files_checked": 1774,
+  "mismatches": [],
+  "new_hal_fix_applied_separately_by": "deploy/peer-baseline/build-bwl.sh",
+  "external_symlink_targets_compared_without_following": {
+    "LICENSE": "LICENSES/BSD-2-Clause-Patent.txt",
+    "external_toolchain.cfg": "../external_toolchain.cfg"
+  }
+}

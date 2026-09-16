@@ -5,6 +5,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from emosa import __version__
+from emosa.agents import AgentDirectory, validate_bindings
 from emosa.backends.mock import ModelBackend
 from emosa.capabilities import capabilities
 from emosa.clock import Clock
@@ -20,7 +21,9 @@ from emosa.store import Store
 
 class Application:
     def __init__(self, config):
+        validate_bindings(config)
         self.config = config
+        self.agents = AgentDirectory(config["pods"], config["backend_mode"])
         self.store = Store(Path(config["state_directory"]))
         self.vault = SecretStore(Path(config["secret_directory"]))
         self.clock = Clock()
@@ -42,6 +45,7 @@ class Application:
                     radio_name=pod["radio_name"],
                     bss_id=pod["bss_id"],
                     radio_id=pod["radio_id"],
+                    expected_serial=pod.get("virtual_agent", {}).get("expected_serial"),
                 )
             else:
                 raise EmosaError(Reason.MISSING_PREREQUISITE, "backend qualification pending")
@@ -81,6 +85,15 @@ class Application:
                 backend = self.backends[pod_id]
                 if hasattr(backend, "inventory"):
                     self.inventories[pod_id] = await backend.inventory()
+                    inventory = self.inventories[pod_id]
+                    if (
+                        snap.ready
+                        and inventory["ready"]
+                        and inventory["generation"] == snap.generation
+                    ):
+                        self.agents.observe(pod_id, inventory)
+                    else:
+                        self.agents.invalidate(pod_id)
                 else:
                     self.inventories[pod_id] = {
                         "pod_id": pod_id,
@@ -91,6 +104,9 @@ class Application:
                         "clients": [],
                     }
             except (EmosaError, ConnectionError, TimeoutError) as exc:
+                self.agents.invalidate(
+                    pod_id, exc.code if isinstance(exc, EmosaError) else "NOT_READY"
+                )
                 self.cache[pod_id]["ready"] = False
                 self.cache[pod_id]["reason"] = (
                     exc.code if isinstance(exc, EmosaError) else "NOT_READY"
@@ -126,6 +142,8 @@ class Application:
         if method == "pods":
             offset, limit = params.get("offset", 0), params.get("limit", 100)
             return {"pods": list(self.cache.values())[offset : offset + limit], "offset": offset}
+        if method == "agents":
+            return self.agents.view(offset=params.get("offset", 0), limit=params.get("limit", 100))
         if method in {"inventory", "capabilities", "ownership"}:
             pod_id = params["pod_id"]
             if pod_id not in self.backends:

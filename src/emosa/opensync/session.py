@@ -14,6 +14,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
+import ovs.fatal_signal
 import ovs.jsonrpc
 import ovs.stream
 
@@ -21,6 +22,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.opensync.schema import TABLES, Schema
 
 TLS_PROFILE_LOCK = threading.Lock()
+UNIX_SIGNAL_HOOK_READY = False
 
 
 class BoundedStream:
@@ -55,6 +57,7 @@ class OvsSession:
         tls_files=None,
         peer_certificate_sha256=None,
     ):
+        global UNIX_SIGNAL_HOOK_READY
         local_endpoint = endpoint.startswith(("unix:", "punix:", "tcp:127.0.0.1:")) or re.fullmatch(
             r"ptcp:[0-9]+:127\.0\.0\.1", endpoint
         )
@@ -66,6 +69,14 @@ class OvsSession:
                 Reason.MISSING_PREREQUISITE,
                 "only isolated simulation transports qualified; TLS/pod trust pending",
             )
+        if endpoint.startswith("punix:") and not UNIX_SIGNAL_HOOK_READY:
+            # Upstream Unix listeners register unlink hooks on first use. Initialize
+            # their signal machinery on the main thread before the bounded worker
+            # opens a socket. Existing application handlers are preserved upstream.
+            if threading.current_thread() is not threading.main_thread():
+                raise EmosaError(Reason.INVALID_INPUT, "create Unix listener on the main thread")
+            ovs.fatal_signal.add_hook(lambda: None, None, False)
+            UNIX_SIGNAL_HOOK_READY = True
         # ovs Python PassiveStream uses host:port, unlike the C CLI's port:host.
         if endpoint.startswith("ptcp:"):
             _, port, host = endpoint.split(":")

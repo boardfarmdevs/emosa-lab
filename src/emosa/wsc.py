@@ -1,6 +1,6 @@
 """WPS 2.0.10 cryptographic component; NOT a complete M1/M2 procedure.
 
-See docs/wsc-component.md. There is deliberately no network or OVSDB dependency.
+See doc/protocol/wsc-component.md. There is deliberately no network or OVSDB dependency.
 Successful cryptographic verification alone never authorizes a configuration.
 """
 

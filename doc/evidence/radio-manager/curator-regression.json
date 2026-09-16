@@ -1,0 +1,6 @@
+{
+  "input": "retained development-01",
+  "result_sha256": "3e62dbe1e6e9e05d3472ce5aa1caf9100ec8cabf3825b4008a0608a2de771e55",
+  "qualification_rejected": true,
+  "reason": "Incomplete result: development-01"
+}

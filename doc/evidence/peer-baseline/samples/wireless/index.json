@@ -1,0 +1,44 @@
+{
+  "mode": "wireless",
+  "source_attempt": "wireless-stable-suite-01/clean-01",
+  "scope": "Reviewed synthetic native-peer capture; no EMOSA, OpenSync or physical-pod traffic",
+  "files": {
+    "result.json": "b8caee0bc1a7deb6de63ad69c270ec2087d18ac6f276e196a3219f9bb9f0defe",
+    "runtime-reference.json": "e1ef4fb9caf03654f7aad977f1fcb6f548121cdc46bb8f8424af181b4174f981",
+    "protocol-observation.json": "59849b9835f9199a7286b457593e0dae350fb601eddabe946209f7fc67f23803",
+    "ieee1905.tsv": "3693cfacbb29b877fdcc03cd0df45f5f1aa3af52e95d9cac54c554c67e3fe035",
+    "wps.tsv": "c0e13677cacb64b090b5749f019603cdf63090cbc3b292860336624b6b0c028a",
+    "four-address.tsv": "938c2a02d71e4c58e862aef2f7b28aa5e8c79069fa23a39a3a33fb8b4c014820",
+    "post-client-stability.json": "f5945ea7cc10e04226134a30ca7f67f9f51d077825d9116f62e984c7849af615",
+    "inventory-identity.json": "4fdcc478152e22a28cdb0d6ea9c7aef09c5ca1d7d6fa7705ab4be48c129518d3",
+    "em-baseline-agent-agent-state.json": "874905b0f56391fae4cd7ef085e36d24b053ae8759663e7a6509fee697ee6490",
+    "em-baseline-controller-agent-state.json": "b441b292b34f3c04b9fcdab64507161260bd04d7b5e37a65f4dc33918a15bbc7",
+    "client-probes-01.json": "f98ac522e81305cf7997a6a61c5d1aafd790f9e7ba183718cc6c12eea72f0e5b",
+    "client-probes-02.json": "18554352ade5785b9e731d42ff111cadf3c7ecf0c7058350332dee9b952a69b9",
+    "ethernet.pcap": "3e86b432d70be6a5855ee38fe9202b74bc237dc03a74147dbc17bcd305fddcda",
+    "radio.pcap": "c3107c9f8580bbb906cf2a94aacc8c7b547e42716bbc244e194db7d2a37917a8"
+  },
+  "review": {
+    "radio_addresses": [
+      "01:80:c2:00:00:13",
+      "02:00:00:00:02:00",
+      "02:00:00:ec:01:00",
+      "02:00:00:ec:01:01",
+      "02:00:00:ec:02:00",
+      "02:00:00:ec:02:01",
+      "02:00:00:ec:02:10",
+      "33:33:00:00:00:02",
+      "33:33:00:00:00:16",
+      "ff:ff:ff:ff:ff:ff"
+    ],
+    "ssids": [
+      "<MISSING>",
+      "emosa-baseline-backhaul",
+      "emosa-baseline-provisioned",
+      "emosa-unprovisioned-1",
+      "emosa-unprovisioned-2",
+      "emosa-unprovisioned-backhaul-1",
+      "emosa-unprovisioned-backhaul-2"
+    ]
+  }
+}

@@ -19,8 +19,9 @@ def read_json(path):
 def build():
     content = read_json("site/content.json")
     # Validate preserved evidence before publishing any derived claims.
-    evidence = ROOT / "docs/evidence"
-    for artifact in read_json("docs/evidence/manifest.json")["artifacts"]:
+    evidence = ROOT / "doc/evidence"
+    artifacts = read_json("doc/evidence/manifest.json")["artifacts"]
+    for artifact in artifacts:
         path = (evidence / artifact["path"]).resolve()
         if not path.is_relative_to(evidence.resolve()) or not path.is_file():
             raise ValueError(f"Invalid evidence reference: {artifact['path']}")
@@ -31,8 +32,14 @@ def build():
         ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
     ).strip()
     content["suites"] = {}
+    suite_evidence = content.pop(
+        "suite_evidence", {suite: f"{suite}-results.xml" for suite in ("unit", "ovsdb")}
+    )
     for suite in ("unit", "ovsdb"):
-        root = ET.parse(evidence / f"{suite}-results.xml").getroot()
+        reference = suite_evidence[suite]
+        if reference not in {artifact["path"] for artifact in artifacts}:
+            raise ValueError(f"Suite evidence is not allowlisted: {reference}")
+        root = ET.parse(evidence / reference).getroot()
         cases = root.findall(".//testcase")
         content["suites"][suite] = sum(
             not any(case.find(tag) is not None for tag in ("failure", "error", "skipped"))
@@ -41,7 +48,7 @@ def build():
     content["runs"] = []
     for item in content.pop("run_catalog"):
         # Only committed, curated simulation evidence is eligible for this public site.
-        path = Path("docs/evidence/runs") / item["id"]
+        path = Path("doc/evidence/runs") / item["id"]
         run = read_json(path / "run.json")
         if run["manifest"]["backend_mode"] not in {"model", "ovsdb-sim"}:
             raise ValueError("Public run catalog requires explicit review for new backend modes")
@@ -50,7 +57,7 @@ def build():
         run.update(label=item["label"], annotation=item["annotation"])
         run["events"] = read_json(path / "events.json")
         content["runs"].append(run)
-    content["traceability"] = read_json("docs/traceability.json")
+    content["traceability"] = read_json("doc/project/traceability.json")
     for item in content["references"]:
         if not (ROOT / item["path"]).is_file():
             raise ValueError(f"Missing manual reference: {item['path']}")

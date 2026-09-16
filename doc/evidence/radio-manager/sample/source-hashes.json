@@ -1,0 +1,11 @@
+{
+  "/opt/emosa-radio-manager/manager.py": "1769fd23efc1aca804c62dfa753ee663523588a4a9f004d1bde8dfb4f3073548",
+  "/opt/emosa-radio-manager/observer.py": "62fc63ee22be7e1423ab41c8f27d7731aeee90f35818c9b34792ee93287a9984",
+  "/opt/emosa-radio-manager/common.py": "c614f47679225e1d64fa152659e2f519f94cdb7cb40a082638314487b96f8ec1",
+  "/opt/emosa-radio-manager/run.py": "7cc1c4bce8db6a2a58f4e7c0a7b9bdca4db9c6f82a08382998f6a39afbe97bb0",
+  "/opt/emosa-radio-manager/node.py": "a821e4b57499bdeada6b40e2500541adbe2ddf592c01484a6a6768712467b896",
+  "/opt/emosa-radio-manager/stage.py": "9859c3d91797d336598559b6605fad2ff4c46e09304d31bd62ee18aac7aa5c50",
+  "/opt/emosa-radio-manager/peer-reference.json": "08632d9791dbf622d814ad010b83e1c1981060efcf3f8b4280f03e2924c8093a",
+  "/opt/emosa-radio-manager/source/emosa/simulation/radio.py": "b3298b3ae87903b05f79064b0b7636f33382391feb1b52feeb10864f4823ac60",
+  "/opt/emosa-radio-manager/source/emosa/opensync/mapping.py": "445189ca26c41b0daa1a3eae972cfc73f2da25536c9f57a0dcb84ec0391502ba"
+}

@@ -1,0 +1,12 @@
+{
+  "source_container": "em-baseline-agent",
+  "source_path": "/opt/emosa-baseline/archive/wired-disconnect-regression-01/shutdown/beerocks/logs/beerocks_ap_manager_wlan0.20260916_075336.log",
+  "source_sha256": "6746d47fa2492a1c9428079d913f29c4e143222c8f1141ce75da223fb3f1323a",
+  "excerpt": [
+    "DEBUG 07:53:55:226 <123162342192960> base_wlan_hal_nl80211.cpp[932] --> (wlan0) event received:<3>AP-STA-DISCONNECTED 02:00:00:00:02:00",
+    "ERROR 07:53:55:226 <123162342192960> ap_wlan_hal_nl80211.cpp[1482] --> Invalid vap_id -2",
+    "ERROR 07:53:55:226 <123162342192960> base_wlan_hal_nl80211.cpp[945] --> Failed processing NL80211 event: AP-STA-DISCONNECTED",
+    "ERROR 07:53:55:226 <123162342192960> fronthaul_manager_main.cpp[307] --> Event loop failure!"
+  ],
+  "diagnosis": "Primary interface identity was erased by native credential update; the real disconnect event then terminated the fronthaul loop."
+}

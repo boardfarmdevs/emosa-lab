@@ -1,0 +1,26 @@
+{
+  "source_run": "qualified-06",
+  "scope": "Synthetic traffic only; private config, vault and database excluded.",
+  "files": {
+    "result.json": "253b49421b64a6441957ac1af3f4555f5956ba6ff5dbfee93392285945cc042b",
+    "manager.jsonl": "dcec8b813928709480c0be04340d2d5a2f4b445322a82c57319e28a7e458b12d",
+    "operations.json": "887f2f40e233e58dc22f28fb100b71cf4b7bc99748d69ced9b467ffc74564d5b",
+    "packet-observations.json": "fc07459606def48142ba533f0aad388389909a8c1369c629fbbc9c08f854654f",
+    "eapol.tsv": "41db3a34d8146355dff0541296717d53d9ff40d44cf7065d0df83cb5eb294efc",
+    "radio.pcap": "6aea11ce62421b9b847e428f12f9d52806498c47c20095619195b66e236cd488",
+    "wrong-key.log": "1212bb76be801d80bc34bb500e732c595b0d2efe5fb5198683604fe80e9f708e",
+    "backhaul-loss.json": "589f8fa5539c2adf501eb966964fb3d14ed4d4d48cb34d52fd9acf33358d2833",
+    "source-hashes.json": "b7d66300cc9c35000714728b39061724ce8995ef0c82936bbaffefbd4c2fc8c2",
+    "clients-adapter-restart.json": "2b7613b0d93158ccbc598776ec4b7619cb1d79a7ce85afe1dd35a92173ccdc6b",
+    "clients-ap-recovery.json": "ef73b418a0769e6b5acc55f0965a15e9a9107a2e71772db3e2e3f3abbb6e2117",
+    "clients-backhaul-recovery.json": "14a843ca025daf922dd327fc48853ad435e464c469c8e3462f03eb5cb88f6dc5",
+    "clients-changed.json": "f385d9fae4db6a2f5eb865a8ae600e613b3146e5cff44dadcf7a58de883d81f2",
+    "clients-correct-key-restored.json": "8facf91d3217d29042705028c40be36d67a285d96a4164637a39067b1d073786",
+    "clients-database-restart.json": "b685977757e041b1fed568626bc54e590a9d8884a02f03e564a31c7b71e98c3a",
+    "clients-initial.json": "e233e1f1e819ce7a104a2e98ccad83a78e89427fe925af45759335d3ae37c679",
+    "clients-late-application.json": "e78ef2913fb657e86bf3c460a1f0a2dd43ea5dc884f3f57186b2b41f9c941609",
+    "clients-lost-reply.json": "367c7a6f6293a30f6835d1964b05f53f1d83c0af14fffb94699e79f54b80c8e9",
+    "clients-unsupported-channel.json": "32094e46265f7bafb4c46501eabcaf9f560aacf8572b0e3a1423b9015b4ff807",
+    "clients-withheld-old-radio.json": "6ea48abde1a4d50fdfb4f22404ea1bc82f0f58a0f1566edd55de03a8d2a2ec58"
+  }
+}

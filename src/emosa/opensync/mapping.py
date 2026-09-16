@@ -55,6 +55,8 @@ class OpenSyncBackend:
         bss_id="bss-1",
         radio_id="radio-1",
         backend_mode="ovsdb-sim",
+        state_provenance="independent-simulated-manager:Wifi_VIF_State",
+        expected_serial=None,
     ):
         if backend_mode != "ovsdb-sim":
             raise EmosaError(
@@ -64,6 +66,13 @@ class OpenSyncBackend:
         self.pod_id, self.session, self.vault = pod_id, session, vault
         self.if_name, self.radio_name = if_name, radio_name
         self.bss_id, self.radio_id = bss_id, radio_id
+        self.expected_serial = expected_serial
+        if state_provenance not in {
+            "independent-simulated-manager:Wifi_VIF_State",
+            "independent-hostapd-nl80211-manager:Wifi_VIF_State",
+        }:
+            raise EmosaError(Reason.INVALID_INPUT, "unknown simulation State provenance")
+        self.state_provenance = state_provenance
         self.last = None
         self.drop_next_reply = False
         self.before_transaction = None  # controller-side fault boundary, never used in hardware
@@ -93,6 +102,10 @@ class OpenSyncBackend:
         decoded = {
             t: {u: schema.row(t, row) for u, row in rows.items()} for t, rows in tables.items()
         }
+        if self.expected_serial is not None:
+            nodes = list(decoded.get("AWLAN_Node", {}).values())
+            if len(nodes) != 1 or nodes[0].get("serial_number") != self.expected_serial:
+                raise EmosaError(Reason.NOT_READY, "simulated pod identity absent or mismatched")
         configs = [
             (u, r)
             for u, r in decoded.get("Wifi_VIF_Config", {}).items()
@@ -145,7 +158,7 @@ class OpenSyncBackend:
                     raw["generation"],
                     utc_now(),
                     raw["ready"] and bool(state),
-                    "independent-simulated-manager:Wifi_VIF_State",
+                    self.state_provenance,
                     revision=raw["revision"],
                 ),
                 raw["ready"] and bool(state),
@@ -161,7 +174,7 @@ class OpenSyncBackend:
 
     async def inventory(self):
         raw = await self.session.snapshot()
-        _, _, _, state, decoded = self._binding(raw)
+        _, radio_uuid, _, state, decoded = self._binding(raw)
         return {
             "pod_id": self.pod_id,
             "source": "OpenSync",
@@ -169,7 +182,10 @@ class OpenSyncBackend:
             "backend_mode": self.mode,
             "schema_fingerprint": raw["schema"].fingerprint,
             "generation": raw["generation"],
-            "ready": raw["ready"],
+            "revision": raw["revision"],
+            "observed_at": utc_now(),
+            "ready": raw["ready"] and bool(state),
+            "device_identity": list(decoded.get("AWLAN_Node", {}).values()),
             "topology": {"physical_links": "unknown", "protocol_adjacency": "not_started"},
             "radios": [
                 {
@@ -177,6 +193,7 @@ class OpenSyncBackend:
                     **{k: r.get(k) for k in ("if_name", "freq_band", "channel", "mac")},
                 }
                 for r in decoded.get("Wifi_Radio_State", {}).values()
+                if r.get("radio_config") == radio_uuid
             ],
             "bsses": [
                 {
@@ -277,6 +294,26 @@ class OpenSyncBackend:
                 ],
             },
         ]
+        if self.expected_serial is not None:
+            # Guard the complete identity set atomically with Config changes. A different
+            # or additional node arriving after planning must not inherit write authority.
+            transaction.insert(
+                0,
+                {
+                    "op": "wait",
+                    "table": "AWLAN_Node",
+                    "where": [],
+                    "columns": ["_uuid", "serial_number"],
+                    "until": "==",
+                    "rows": [
+                        {
+                            "_uuid": ["uuid", next(iter(raw["tables"]["AWLAN_Node"]))],
+                            "serial_number": self.expected_serial,
+                        }
+                    ],
+                    "timeout": 0,
+                },
+            )
         if self.before_transaction:
             await self.before_transaction()
         discard, self.drop_next_reply = self.drop_next_reply, False
@@ -288,7 +325,9 @@ class OpenSyncBackend:
                 attempt["session_generation"],
                 discard_reply=discard,
             )
-            check_results(results, [None, None, 1, 1])
+            check_results(
+                results, ([None] if self.expected_serial is not None else []) + [None, None, 1, 1]
+            )
         except (ConnectionError, TimeoutError):
             return SubmitResult("unknown", {"attribution": "unknown"}, Reason.OUTCOME_UNKNOWN)
         except EmosaError as exc:

@@ -8,10 +8,10 @@ pytestmark = pytest.mark.unit
 
 
 def test_every_architecture_requirement_and_acceptance_has_a_traceability_row():
-    architecture = Path("doc/minimal-easymesh-architecture-requirements.md").read_text()
+    architecture = Path("doc/architecture/requirements.md").read_text()
     expected = set(re.findall(r"\*\*([A-Z]+-\d+)\.", architecture))
     expected.update(re.findall(r"\| ([AWENT]\d{2}):", architecture))
-    rows = json.loads(Path("docs/traceability.json").read_text())["rows"]
+    rows = json.loads(Path("doc/project/traceability.json").read_text())["rows"]
     assert {row["id"] for row in rows} == expected
     assert len(rows) == len(expected)
     for row in rows:

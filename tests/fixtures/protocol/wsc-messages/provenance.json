@@ -5,7 +5,7 @@
   "source_sha256": "2b3facb632fd4f65e32f4bf82a76b4b72c501f995a4f62e330219fe7aed1747a",
   "openssl": "OpenSSL 3.0.2 15 Mar 2022 (Library: OpenSSL 3.0.2 15 Mar 2022)",
   "compiler": "cc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0",
-  "normative_contract": "docs/wsc-messages.md",
+  "normative_contract": "doc/protocol/wsc-messages.md",
   "complete_wsc_payloads": true,
   "complete_ieee1905_messages": false,
   "physical_capture": false,

@@ -1,0 +1,284 @@
+[
+  {
+    "operation_id": "fe4c868f-5e03-4977-bc3b-906cd8943b94",
+    "run_id": "qualified-06",
+    "request_source": "radio-manager-lab",
+    "initiating_interface": "semantic",
+    "intent": {
+      "pod_id": "pod-1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1",
+      "ssid": "emosa-radio-changed",
+      "secret_ref": "change",
+      "enabled": true,
+      "security_mode": "wpa2-psk"
+    },
+    "intent_fingerprint": "f0a764e7567c9b06a1974536a3802d545b4020e793ae270bf0b9b19b01db3734",
+    "idempotency_key": "change",
+    "created_at": "2026-09-16T14:39:46.018Z",
+    "updated_at": "2026-09-16T14:39:47.296Z",
+    "deadline_at": "2026-09-16T14:40:16.018000+00:00",
+    "schema_version": 1,
+    "state": "OBSERVED_APPLIED",
+    "reason": null,
+    "mapping_version": "synthetic-existing-bss-v1",
+    "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+    "attempts": [
+      {
+        "attempt_id": "b9eb10e7-52ad-4b9a-b8e3-012df18e728e",
+        "transaction_id": "c724680a-6a73-4ee3-985d-08fc52665e66",
+        "session_generation": 1,
+        "prepared_at": "2026-09-16T14:39:46.047Z"
+      }
+    ],
+    "commit_evidence": {
+      "attribution": "reply",
+      "transaction_validated": true,
+      "transaction_id": "c724680a-6a73-4ee3-985d-08fc52665e66",
+      "session_generation": 1,
+      "results": [
+        {},
+        {},
+        {
+          "count": 1
+        },
+        {
+          "count": 1
+        }
+      ]
+    },
+    "application_predicate": "fresh-qualified-existing-ap-ssid-security-v1",
+    "application_evidence": {
+      "fresh": true,
+      "predicate_satisfied": true,
+      "generation": 1,
+      "revision": 4,
+      "received_at": "2026-09-16T14:39:47.291Z",
+      "source": "ovsdb",
+      "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+    },
+    "changed": true,
+    "deadline_elapsed": false,
+    "original_outcome": null,
+    "late_resolution": null,
+    "client_verification": {
+      "verdict": "unknown"
+    },
+    "blocked_for_resubmission": false,
+    "plan": {
+      "mapping": "synthetic-existing-bss-v1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1",
+      "fields": [
+        "ssid",
+        "wpa_psks[key]"
+      ],
+      "ssid": "emosa-radio-changed",
+      "secret_ref": "change",
+      "guard": "VIF fields, security and radio/VIF references",
+      "shared_radio_actuation": false
+    },
+    "timings": {
+      "VALIDATED": {
+        "seconds_since_request": 0.0022199349987204187,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      },
+      "SUBMITTED": {
+        "seconds_since_request": 0.012285323999094544,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      },
+      "CONFIG_COMMITTED": {
+        "seconds_since_request": 0.029225039997982094,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      },
+      "OBSERVED_APPLIED": {
+        "seconds_since_request": 1.2613794869976118,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      }
+    }
+  },
+  {
+    "operation_id": "dc9ca0ee-7783-441e-8a9b-abc5a5f68911",
+    "run_id": "qualified-06",
+    "request_source": "radio-manager-lab",
+    "initiating_interface": "semantic",
+    "intent": {
+      "pod_id": "pod-1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1",
+      "ssid": "emosa-radio-withheld",
+      "secret_ref": "withheld",
+      "enabled": true,
+      "security_mode": "wpa2-psk"
+    },
+    "intent_fingerprint": "9fcc88f65efd80a27b1ced15a36e93e9823098578a2cd760802da128c4d7ffd4",
+    "idempotency_key": "withheld",
+    "created_at": "2026-09-16T14:39:51.990Z",
+    "updated_at": "2026-09-16T14:39:59.544Z",
+    "deadline_at": "2026-09-16T14:39:55.990000+00:00",
+    "schema_version": 1,
+    "state": "TIMED_OUT",
+    "reason": "APPLY_TIMEOUT",
+    "mapping_version": "synthetic-existing-bss-v1",
+    "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+    "attempts": [
+      {
+        "attempt_id": "30a05155-aef3-4ce8-ae64-45289db8c879",
+        "transaction_id": "6d164ee6-daf4-41d8-a37b-660ba721a9c3",
+        "session_generation": 1,
+        "prepared_at": "2026-09-16T14:39:52.003Z"
+      }
+    ],
+    "commit_evidence": {
+      "attribution": "reply",
+      "transaction_validated": true,
+      "transaction_id": "6d164ee6-daf4-41d8-a37b-660ba721a9c3",
+      "session_generation": 1,
+      "results": [
+        {},
+        {},
+        {
+          "count": 1
+        },
+        {
+          "count": 1
+        }
+      ]
+    },
+    "application_predicate": "fresh-qualified-existing-ap-ssid-security-v1",
+    "application_evidence": {
+      "fresh": true,
+      "predicate_satisfied": true,
+      "generation": 1,
+      "revision": 6,
+      "received_at": "2026-09-16T14:39:59.539Z",
+      "source": "ovsdb",
+      "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+    },
+    "changed": true,
+    "deadline_elapsed": true,
+    "original_outcome": "CONFIG_COMMITTED",
+    "late_resolution": "applied_after_deadline",
+    "client_verification": {
+      "verdict": "unknown"
+    },
+    "blocked_for_resubmission": false,
+    "plan": {
+      "mapping": "synthetic-existing-bss-v1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1",
+      "fields": [
+        "ssid",
+        "wpa_psks[key]"
+      ],
+      "ssid": "emosa-radio-withheld",
+      "secret_ref": "withheld",
+      "guard": "VIF fields, security and radio/VIF references",
+      "shared_radio_actuation": false
+    },
+    "timings": {
+      "VALIDATED": {
+        "seconds_since_request": 0.001241704998392379,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      },
+      "SUBMITTED": {
+        "seconds_since_request": 0.006049691000953317,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      },
+      "CONFIG_COMMITTED": {
+        "seconds_since_request": 0.014944546001061099,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      },
+      "TIMED_OUT": {
+        "seconds_since_request": 4.0984634540000116,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      }
+    }
+  },
+  {
+    "operation_id": "96331e18-fadb-48ee-9740-79e809eb045d",
+    "run_id": "qualified-06",
+    "request_source": "radio-manager-lab",
+    "initiating_interface": "semantic",
+    "intent": {
+      "pod_id": "pod-1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1",
+      "ssid": "emosa-radio-lost-reply",
+      "secret_ref": "lost-reply",
+      "enabled": true,
+      "security_mode": "wpa2-psk"
+    },
+    "intent_fingerprint": "6b14da87632f9da2bb44c5870c899df930a0cea45c2d0267f2f26fdb337ac05a",
+    "idempotency_key": "lost-reply",
+    "created_at": "2026-09-16T14:40:02.180Z",
+    "updated_at": "2026-09-16T14:40:03.448Z",
+    "deadline_at": "2026-09-16T14:40:32.180000+00:00",
+    "schema_version": 1,
+    "state": "OBSERVED_APPLIED",
+    "reason": "OUTCOME_UNKNOWN",
+    "mapping_version": "synthetic-existing-bss-v1",
+    "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+    "attempts": [
+      {
+        "attempt_id": "63a3d361-62fe-4698-a5ca-99d4150906aa",
+        "transaction_id": "14bb13a7-4953-4cd4-bd04-680ebffa900a",
+        "session_generation": 1,
+        "prepared_at": "2026-09-16T14:40:02.192Z"
+      }
+    ],
+    "commit_evidence": {
+      "attribution": "unknown"
+    },
+    "application_predicate": "fresh-qualified-existing-ap-ssid-security-v1",
+    "application_evidence": {
+      "fresh": true,
+      "predicate_satisfied": true,
+      "generation": 2,
+      "revision": 8,
+      "received_at": "2026-09-16T14:40:03.443Z",
+      "source": "ovsdb",
+      "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State",
+      "attribution": "current_condition_only"
+    },
+    "changed": null,
+    "deadline_elapsed": false,
+    "original_outcome": null,
+    "late_resolution": null,
+    "client_verification": {
+      "verdict": "unknown"
+    },
+    "blocked_for_resubmission": false,
+    "plan": {
+      "mapping": "synthetic-existing-bss-v1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1",
+      "fields": [
+        "ssid",
+        "wpa_psks[key]"
+      ],
+      "ssid": "emosa-radio-lost-reply",
+      "secret_ref": "lost-reply",
+      "guard": "VIF fields, security and radio/VIF references",
+      "shared_radio_actuation": false
+    },
+    "timings": {
+      "VALIDATED": {
+        "seconds_since_request": 0.0009648439990996849,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      },
+      "SUBMITTED": {
+        "seconds_since_request": 0.004377682998892851,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      },
+      "INDETERMINATE": {
+        "seconds_since_request": 0.014176532000419684,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      },
+      "OBSERVED_APPLIED": {
+        "seconds_since_request": 1.2609783010011597,
+        "process_clock_id": "0e23b697-7476-479c-9c55-93f6d3fae738"
+      }
+    }
+  }
+]

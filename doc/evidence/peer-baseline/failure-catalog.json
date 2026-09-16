@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "scope": "Curated diagnoses of retained development and runtime observations; setup failures are not counted as successful onboarding attempts.",
+  "private_evidence_root": "/opt/emosa-baseline/ in the dedicated VM, copied to private .lab/peer-baseline/ storage",
+  "failures": [
+    {
+      "id": "hostap-without-wps",
+      "class": "runtime compatibility",
+      "diagnosis": "The original companion hostapd did not include WPS and rejected WPS configuration fields.",
+      "resolution": "Separate pinned hostap build with CONFIG_WPS.",
+      "evidence": "initial-hostap-without-wps.log",
+      "sha256": "b6a28ecf1ed685573d9a5d0e63857470ba402c927c720bf16f9a8c798e19684f"
+    },
+    {
+      "id": "country-namespace",
+      "class": "lab configuration",
+      "diagnosis": "Global regulatory configuration was denied inside the unprivileged network namespace.",
+      "resolution": "Use the VM regulatory state and permitted channel 6; retain iw reg get.",
+      "evidence": "initial-country-namespace-failure.log",
+      "sha256": "6f93b460faaebf16a06e7ecabfd9ee4dbade4fa4b20d6a1d0ed1bf824208d581"
+    },
+    {
+      "id": "radio-settings-position",
+      "class": "lab configuration",
+      "diagnosis": "The native HAL could not infer the band when radio settings were below the interface declaration.",
+      "resolution": "Put radio settings before interface= in the hostap file.",
+      "evidence": "initial-native-band-failure.log",
+      "sha256": "feb7c9b441bc8b7287109bf6e359325f29d64b5ddd6b0b0d7c73cea218c9cb29"
+    },
+    {
+      "id": "native-bml-startup",
+      "class": "startup sequence",
+      "diagnosis": "BML was called before the colocated local agent created its platform socket.",
+      "resolution": "Start the helper and check BML readiness before configuring external-agent policy.",
+      "evidence": "wired-development-02/"
+    },
+    {
+      "id": "stock-hostap-update",
+      "class": "runtime compatibility",
+      "diagnosis": "Native M1/M2 and agent membership occurred, but stock hostapd rejected UPDATE and live SSIDs stayed at their initial values for the entire observation.",
+      "resolution": "Pinned fixed-layout file-update compatibility patch.",
+      "evidence": "wired-development-03/"
+    },
+    {
+      "id": "reload-is-not-file-reload",
+      "class": "diagnostic",
+      "diagnosis": "The stock RELOAD command returned OK without reading the changed file or changing live SSIDs.",
+      "resolution": "Do not substitute RELOAD for the HAL file update.",
+      "evidence": "manual-reload-diagnostic.json",
+      "sha256": "f839134fe895e2143db3ddae3be8b0f121ca4421489486e1efafdf95f4106d75"
+    },
+    {
+      "id": "missing-build-library",
+      "class": "build prerequisite",
+      "diagnosis": "The first WPS supplicant link failed because libnl-route-3-dev was absent.",
+      "resolution": "Install and retain the complete build package inventory.",
+      "evidence": "build-hostap/supplicant-build.log"
+    },
+    {
+      "id": "lxd-query-project",
+      "class": "harness setup",
+      "diagnosis": "The installed LXD CLI rejected --project on query during initial radio assignment.",
+      "resolution": "Read instance PID through lxc list JSON and finish the recorded pending setup.",
+      "evidence": "setup console and ownership.json; no measured attempt existed"
+    },
+    {
+      "id": "empty-unit-journal",
+      "class": "harness setup",
+      "diagnosis": "A wired client with no baseline systemd units caused journalctl to return No data available.",
+      "resolution": "Record that explicit empty-journal condition.",
+      "evidence": "runs/wireless-development-01/ and runs/wireless-development-02/; setup console failures"
+    },
+    {
+      "id": "lxd-show-json-flag",
+      "class": "harness setup",
+      "diagnosis": "The installed LXD config show command rejected --format json.",
+      "resolution": "Use lxc list JSON for device metadata.",
+      "evidence": "runs/wireless-development-03/clean-01/result.json"
+    },
+    {
+      "id": "monitor-down",
+      "class": "harness setup",
+      "diagnosis": "tcpdump refused the hwsim monitor because it was down.",
+      "resolution": "Bring up the owned hwsim0 monitor before capturing.",
+      "evidence": "runs/wireless-development-04/clean-01/capture.log"
+    },
+    {
+      "id": "vht-parser",
+      "class": "runtime compatibility",
+      "diagnosis": "WPS succeeded, but native wireless provisioning wrote VHT fields unsupported by the initial hostap build; live AP configuration did not update.",
+      "resolution": "Enable the VHT parser and set matching channel-width/center fields while keeping 802.11ac operation disabled.",
+      "evidence": "runs/wireless-development-05/clean-01/"
+    },
+    {
+      "id": "neighbor-record-confusion",
+      "class": "harness validator",
+      "diagnosis": "The validator mistook a neighbor record carrying the agent MAC for a duplicate agent record, so it rejected otherwise populated inventory.",
+      "resolution": "Match the exact Device and Radio object paths. Retain the failed validation result.",
+      "evidence": "runs/wireless-development-06/clean-01/"
+    },
+    {
+      "id": "unguarded-controller-restart",
+      "class": "peer startup configuration",
+      "diagnosis": "The controller restarted without restored BSS policy, cleared its local AP SSIDs and failed wireless recovery within 120 seconds.",
+      "resolution": "Hold native transport while restoring policy; the next variant still exposed an additional dependency.",
+      "evidence": "runs/wireless-suite-01/controller-restart-01/"
+    },
+    {
+      "id": "controller-only-restart",
+      "class": "peer recovery dependency",
+      "diagnosis": "The third controller-only restart with a policy barrier did not restore parent BSS inventory and repeatedly rejected the wireless child.",
+      "resolution": "Restart the controller and colocated local-agent helper together under the policy readiness barrier.",
+      "evidence": "runs/wireless-controller-managed-03/controller-restart-01/"
+    },
+    {
+      "id": "native-shutdown-abort",
+      "class": "unresolved native defect",
+      "diagnosis": "Native controller and agent SIGTERM shutdown repeatedly produced SIGABRT/core-dump.",
+      "resolution": "Unresolved. Functional recovery passes are reported separately from clean shutdown.",
+      "evidence": "first-native-shutdown.json and per-attempt restart/helper/shutdown results",
+      "first_evidence_sha256": "0b5c884a7f62b473cf1b605c25769983e72894aef2fcefe1681e9b0c3575a4a6"
+    },
+    {
+      "id": "primary-bss-identity",
+      "class": "native HAL defect",
+      "diagnosis": "Credential updates replaced the primary BSS interface name with an empty bss= value. A subsequent actual AP-STA-DISCONNECTED event failed VAP lookup (Invalid vap_id -2), terminated the fronthaul event loop and caused repeated agent resets.",
+      "resolution": "Recorded libbwl source patch resolves primary interface= identity; the final version 2 selection passes in both backhaul modes with operational state, post-client stability and repeated fresh client probes.",
+      "evidence": "runs/wired-negatives-01/negative-controls/ and em-baseline-agent/archive/wired-disconnect-regression-01/shutdown/beerocks/logs/beerocks_ap_manager_wlan0.20260916_075336.log"
+    },
+    {
+      "id": "premature-onboarding-verdict",
+      "class": "harness acceptance defect",
+      "diagnosis": "Version 1 accepted live BSS/inventory and client traffic without requiring native OPERATIONAL state or post-client stability. The later native reset loop invalidated any full-onboarding claim from those passes.",
+      "resolution": "Retain historical result statuses as preliminary, exclude them from the final qualified matrix, and repeat with acceptance version 2.",
+      "evidence": "runs/wired-suite-01/ and runs/wired-negatives-01/negative-controls/"
+    },
+    {
+      "id": "overlay-build-backend",
+      "class": "build configuration",
+      "diagnosis": "The first overlay CMake configuration selected the upstream default dummy backend. Inspection caught it before deployment. The next NL80211 build lacked the hostapd configuration include path.",
+      "resolution": "Force and verify NL80211 cache selection, reject dummy compile commands and supply the upstream hostapd include dependency. Only the real NL80211 overlay is installed.",
+      "evidence": "build-bwl/configure.log and build-bwl/build.log"
+    },
+    {
+      "id": "outage-transient-inventory",
+      "class": "recovery readiness / native topology timing",
+      "diagnosis": "After wired connectivity returned, a delayed parent topology report omitted the external agent. The controller deleted its device record and rebuilt it about a minute later. The first-ready predicate returned before this transition; the strict post-client observation failed. Both native agent roots remained OPERATIONAL.",
+      "resolution": "Retain the failed trial. Final outage recovery requires 30 continuous healthy seconds within the original 120-second limit, then client probes and the separate post-client stability check. No runtime behavior is changed for this measurement correction.",
+      "evidence": "runs/wired-stable-suite-01/backhaul-loss-02/; controller native log removes Device.2 at 08:45:03.457 and adds Device.3 at 08:46:00.624 UTC."
+    }
+  ]
+}

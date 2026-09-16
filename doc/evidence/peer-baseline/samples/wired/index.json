@@ -1,0 +1,43 @@
+{
+  "mode": "wired",
+  "source_attempt": "wired-stable-suite-01/clean-01",
+  "scope": "Reviewed synthetic native-peer capture; no EMOSA, OpenSync or physical-pod traffic",
+  "files": {
+    "result.json": "948244f7d4f1e12e832cc15c23de446d4c44e5bc9e6a7f849fc864026afed031",
+    "runtime-reference.json": "8079ed9d76012d755c14da7b0e7f53f57298535538e41fc7df285152611ee2ae",
+    "protocol-observation.json": "6682bb7cb3cac78e54c3658a63674e338dfe1ee9987455fa5071aea9a4ba9181",
+    "ieee1905.tsv": "dcf3b014d81481193ebf8da4272273cbda652dfc6de74a013ab2d142bb214147",
+    "post-client-stability.json": "ce3f13705e62600686c55728588c0758f6037a83e56aaafd878e68318fb497fa",
+    "inventory-identity.json": "557bd6df9f186a7e478672d8485d31c42e9868e455536146c0b40075ea0023bf",
+    "em-baseline-agent-agent-state.json": "874905b0f56391fae4cd7ef085e36d24b053ae8759663e7a6509fee697ee6490",
+    "em-baseline-controller-agent-state.json": "b441b292b34f3c04b9fcdab64507161260bd04d7b5e37a65f4dc33918a15bbc7",
+    "client-probes-01.json": "d1f6ae1f41cd8ef376dc795c7cf949824620f9b5dbe99ebbf8018e14f5d80539",
+    "client-probes-02.json": "ffabda1dde83e454cb6d94753ae1dd34c841828fe40113560dac4ec2552277b7",
+    "ethernet.pcap": "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964",
+    "radio.pcap": "042c6d656e1ab5628270478a6aff8ed76a56e41d1d556c74d735c85144ee2082"
+  },
+  "review": {
+    "sample": "wired-stable-suite-01/clean-01",
+    "observed_radio_addresses": [
+      "01:80:c2:00:00:13",
+      "02:00:00:00:02:00",
+      "02:00:00:ec:01:00",
+      "02:00:00:ec:01:01",
+      "02:00:00:ec:02:00",
+      "02:00:00:ec:02:01",
+      "33:33:00:00:00:02",
+      "33:33:00:00:00:16",
+      "ff:ff:ff:ff:ff:ff"
+    ],
+    "observed_ssids": [
+      "<MISSING>",
+      "emosa-baseline-backhaul",
+      "emosa-baseline-provisioned",
+      "emosa-unprovisioned-1",
+      "emosa-unprovisioned-2",
+      "emosa-unprovisioned-backhaul-1",
+      "emosa-unprovisioned-backhaul-2"
+    ],
+    "scope": "Three owned hwsim PHYs; public synthetic lab identities only"
+  }
+}

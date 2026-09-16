@@ -1,0 +1,6 @@
+{
+  "check": "Reject a real historical passed run that lacked operational/stability acceptance",
+  "historical_status": "passed",
+  "accepted_as_qualified": false,
+  "reason": "Weak acceptance cannot qualify wireless-suite-01/clean-01"
+}

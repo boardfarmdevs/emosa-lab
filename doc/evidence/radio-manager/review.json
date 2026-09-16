@@ -1,0 +1,17 @@
+{
+  "sample": "qualified-06",
+  "wireless_sources": [
+    "02:00:00:00:02:00",
+    "02:00:00:ec:02:00",
+    "02:00:00:e0:00:01"
+  ],
+  "interpretation": "Synthetic Wi-Fi client, AP transmitter and forwarded application-endpoint source. The AP transmits frames carrying the endpoint source MAC.",
+  "public_text_passphrases_present": false,
+  "private_config_vault_database_published": false,
+  "owned_radio_manager_units_active_after_collection": false,
+  "client_key_encoding": {
+    "finding": "Source inspection found that the quoted wpa_supplicant PSK parser does not decode JSON escapes; earlier simple-key runs did not exercise this.",
+    "change": "Use standard-library PBKDF2-HMAC-SHA1, 4096 iterations and 32 bytes, serialized as the supported raw hexadecimal PSK.",
+    "validation": "Final selected change uses a literal quote and backslash; both positive and wrong-key cases are required."
+  }
+}

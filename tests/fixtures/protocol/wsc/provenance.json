@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "independent_non_normative_implementation_cross_check",
-  "normative_contract": "docs/wsc-component.md",
+  "normative_contract": "doc/protocol/wsc-component.md",
   "complete_messages": false,
   "physical_capture": false,
   "source_url": "https://w1.fi/releases/hostapd-2.11.tar.gz",

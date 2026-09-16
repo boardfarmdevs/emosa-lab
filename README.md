@@ -2,7 +2,7 @@
 
 ![EMOSA — エモさ — Emotional resonance: a Japanese riverside at sunset](assets/emosa-banner.png)
 
-EMOSA Lab is the integration and evaluation platform for **EMOSA (EasyMesh OVSDB Adapter)**. This repository contains the adapter implementation and tools for exploring whether a controller-side adaptation layer can make **unchanged OpenSync pods work seamlessly with an EasyMesh controller**.
+EMOSA Lab is the integration and evaluation platform for **EMOSA (EasyMesh to OpenSync Adapter)**. This repository contains the adapter implementation and tools for exploring whether a controller-side adaptation layer can make **unchanged OpenSync pods work seamlessly with an EasyMesh controller**. OVSDB is the current OpenSync management interface used by the adapter.
 
 The concrete proof is an EasyMesh controller **discovering and onboarding an
 OpenSync extender as another EasyMesh agent**, represented by EMOSA around the
@@ -15,15 +15,23 @@ The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotiona
 
 ## Architecture
 
+[**Documentation index and subject areas**](doc/README.md)
+
+[**New team members: step-by-step setup, operator and demo manual**](doc/guides/team-manual.md)
+
 [Interactive explorer & lab manual](https://boardfarmdevs.github.io/emosa-lab/) ·
-[Architecture diagram and boundaries](docs/architecture.md) ·
-[Next viability experiments](docs/viability-roadmap.md)
+[Architecture diagram and boundaries](doc/architecture/overview.md) ·
+[Next viability experiments](doc/project/viability-roadmap.md)
+
+[Simulate an extender connecting to EMOSA](doc/guides/connecting-pod.md): pod-initiated
+OVSDB, a local northbound virtual-agent directory, semantic configuration and
+reconnect. Actual EasyMesh-controller discovery/onboarding remains pending.
 
 ```text
 EasyMesh controller
         │ Real IEEE 1905 / EasyMesh messages
         ▼
-EMOSA virtual agent + OVSDB adapter
+EMOSA virtual agent + OpenSync mapping
         │ Existing OVSDB management interface
         ▼
 Unchanged OpenSync pods
@@ -60,7 +68,7 @@ The real OVSDB simulator uses the pinned OpenSync schema and a separate manager
 process. Wire provisioning, physical-pod mapping and independent-controller
 acceptance remain gated; simulator passes do not establish interoperability.
 
-The [WSC payload component](docs/wsc-messages.md) builds M1 and authenticates
+The [WSC payload component](doc/protocol/wsc-messages.md) builds M1 and authenticates
 M2 AP settings against its exact bytes, with independent hostap fixtures. It
 checks complete sets of payloads before returning settings; controller trust,
 IEEE exchange state and approval of the complete radio configuration are still
@@ -71,6 +79,13 @@ discovery frames captured at the EMOSA container. Its agent inventory is empty:
 EMOSA has not answered or onboarded an extender. Ubuntu 24.04 nested-container
 component tests and VM-driven semantic scenarios pass; the peer's shutdown
 aborts are recorded as an unresolved recovery issue.
+
+The separate [native controller–agent baseline](doc/evaluation/peer-baseline.md) exercises
+that controller against a normal prplMesh agent over Ethernet and hwsim wireless
+backhaul, with independent wired and wpa_supplicant client containers. It retains
+real discovery/WSC captures, applied BSS configuration, client traffic and failed
+restart procedures. This establishes the existing peer's behavior; EMOSA and
+OpenSync are absent from that experiment.
 
 ```sh
 uv sync --frozen
@@ -102,14 +117,19 @@ with no applicable tests. Default CI runs unit/OVSDB component suites and rebuil
 the independent hostap WSC reference vectors; it never selects hardware tests.
 
 Prepare actual pod evidence without changing it using
-[read-only qualification](docs/pod-qualification.md). Review
-[deployment](deploy/README.md), [mapping scope](docs/operation-mappings.md),
-[dependency/R0 findings](docs/dependency-qualification.md),
-[WSC component scope](docs/wsc-component.md),
-[open inputs](docs/open-inputs.md), and [traceability](docs/traceability.json).
+[read-only qualification](doc/guides/pod-qualification.md). Review
+[deployment](deploy/README.md), [mapping scope](doc/architecture/operation-mappings.md),
+[dependency/R0 findings](doc/evaluation/dependency-qualification.md),
+[WSC component scope](doc/protocol/wsc-component.md),
+[open inputs](doc/project/open-inputs.md), and [traceability](doc/project/traceability.json).
 The Ubuntu 24.04 LXD layout has pinned candidate images. Its standalone radio
 smoke has passed; full application deployment and retained image exports remain
 pending.
+
+The [integrated OVSDB/hwsim experiment](doc/evaluation/radio-manager.md) now connects the
+semantic EMOSA engine to a separate hostapd/nl80211 manager. Three repeat runs
+passed 13 change, failure and recovery cases with independent wired and wireless
+clients. Genuine EasyMesh initiation and physical-pod qualification remain pending.
 
 When a simulated radio is useful, use the optional
 [mac80211_hwsim AP and wpa_supplicant LXD client](deploy/hwsim/README.md).

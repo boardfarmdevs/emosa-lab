@@ -1,0 +1,20 @@
+{
+  "decoder": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+  "handshake_frames": {
+    "search": [
+      "1"
+    ],
+    "response": [
+      "2"
+    ],
+    "m1": [
+      "6"
+    ],
+    "m2": [
+      "8"
+    ]
+  },
+  "normative_validation": "not_claimed",
+  "four_address_frames": 229,
+  "wps_m1_to_m8_observed": true
+}

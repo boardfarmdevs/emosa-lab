@@ -92,7 +92,7 @@ function showRun() {
       .map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`)
       .join(
         "",
-      )}</dl><div class="artifact-links">${link(`docs/evidence/runs/${run.run_id}/run.json`, "Result JSON")}${link(`docs/evidence/runs/${run.run_id}/report.md`, "Full report")}${link(`docs/evidence/runs/${run.run_id}/artifact-manifest.json`, "Artifact hashes")}</div></article>`;
+      )}</dl><div class="artifact-links">${link(`doc/evidence/runs/${run.run_id}/run.json`, "Result JSON")}${link(`doc/evidence/runs/${run.run_id}/report.md`, "Full report")}${link(`doc/evidence/runs/${run.run_id}/artifact-manifest.json`, "Artifact hashes")}</div></article>`;
   showEvents();
   renderComparison();
 }
@@ -185,7 +185,7 @@ async function init() {
     )
     .join("");
   $("#build-info").innerHTML =
-    `Snapshot from ${link("docs/delivery.md", snapshot.revision.slice(0, 12))}. Evidence retains its original run dates and source hashes.`;
+    `Snapshot from ${link("doc/project/delivery.md", snapshot.revision.slice(0, 12))}. Evidence retains its original run dates and source hashes.`;
   showNode("engine");
   showMode("model");
   showRun();

@@ -1,0 +1,16 @@
+{
+  "X_PRPLWARE-COM_Agent.Info.": {
+    "FronthaulNumberOfEntries": 1,
+    "ManagementMode": "Multi-AP-Agent",
+    "FronthaulIfaces": "wlan0",
+    "BestState": "OPERATIONAL (15)",
+    "CurrentState": "OPERATIONAL (15)",
+    "MACAddress": "02:00:00:e0:00:02"
+  },
+  "X_PRPLWARE-COM_Agent.Info.Fronthaul.1.": {
+    "Iface": "wlan0",
+    "BestState": "OPERATIONAL (4)",
+    "CurrentState": "OPERATIONAL (4)"
+  },
+  "X_PRPLWARE-COM_Agent.Info.Fronthaul.": {}
+}

@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "status": "baseline_under_development",
+  "controller_agent_reference": "../peer/prplmesh.reference.json",
+  "hostap_source_commit": "cff80b4f7d3c0a47c052e8187d671710f48939e4",
+  "archives": {
+    "prpl-install-nl80211-6.0.0.tar.gz": "a98a6903fb9db1494ece0c292dd85c7d4d8ff2f570b5b85768ed6f299f72fb1f",
+    "prpl-runtime-deps-6.0.0.tar.gz": "ad912dc63b7d2188096bd6c0a42978590c4a4b82b0590da1198514e122cec4d2",
+    "hostap-runtime-2.10.tar.gz": "7f049ac211db9c2b50056bd75fb6ec229ba0e7562e0b7b75efd8c303998dbc0d"
+  },
+  "normative_wire_validation": "pending",
+  "emosa_integration": "not_evaluated",
+  "physical_pod_interoperability": "not_evaluated",
+  "hostap_source_repository": "https://chromium.googlesource.com/external/w1.fi/cgit/hostap",
+  "hostap_source_archive_sha256": "c09dc125bcf20fb8c8334e39447831b62c25a7aa683b9d6f12cb7eb49e5f1cb8",
+  "hostap_runtime": {
+    "archive": "emosa-hostap-wps-2.10.tar.gz",
+    "sha256": "ae7beaf8a5ab436f85961bd4a6535aa700f04bd73913879bd3796a53de6ca236",
+    "patch_sha256": "ef851faac5ea5b8585263d17db893c37a8cbc0b29529d085ed49d8feb6348552",
+    "binaries": {
+      "bin/wpa_cli": "96c3f0345625c40306116a2c59339305b397c2d20039e3375008a93331e73114",
+      "bin/hostapd_cli": "baa3471ea4ee53759a7891a426534bfdb25338997833c8eb0dbb75cbe63fa3a3",
+      "sbin/wpa_supplicant": "3d148d1de82ca5d513b2d532f9d26b1ad5e7f2998dd1b86995d0088ec944bab4",
+      "sbin/hostapd": "ee81759af7015707de822445b7955be17341a1d3f48d81837a20fd932cc8b05c"
+    },
+    "configs": {
+      "hostapd.config": "819e62baa5140c5e3e0a10ee4ed7a58d1109cab5433fb29087ec4a45374c7104",
+      "supplicant.config": "23a5dcfe36f0c258c411fc6077d364e037fe0ddb67821cdb11f22c9a5a85d07b"
+    },
+    "profile": "2.4 GHz channel 6; 20 MHz; WPA2-PSK/CCMP; fronthaul plus backhaul BSS; Multi-AP WPS; fixed radio/BSS identity UPDATE only"
+  },
+  "runtime_topology": {
+    "dedicated_vm": "emosa-lab",
+    "controller": {
+      "container": "em-baseline-controller",
+      "mode": "Multi-AP-Controller-and-Agent",
+      "al_mac": "02:00:00:e0:00:01",
+      "radio": "wlan0",
+      "backhaul_ethernet": "eth1",
+      "restart_policy": "Pause existing IEEE 1905 transport with SIGSTOP; restart controller and its colocated local-agent helper; restore BSS policy via native BML; resume with SIGCONT in finally. Unguarded restart and controller-only restart failed."
+    },
+    "agent": {
+      "container": "em-baseline-agent",
+      "mode": "Multi-AP-Agent",
+      "al_mac": "02:00:00:e0:00:02",
+      "radio_id": "02:00:00:ec:02:00",
+      "wired_backhaul": "eth1; removed in wireless mode",
+      "wireless_backhaul": "wlan1; WPS-enrolled, controller BSSID 02:00:00:ec:01:01",
+      "lan": "eth2"
+    },
+    "wired_client": "em-baseline-wired; eth1; 192.0.2.20/24",
+    "wireless_client": "em-baseline-wifi; wlan0; agent BSSID 02:00:00:ec:02:00; 192.0.2.21/24",
+    "application_endpoint": "192.0.2.1:8080 on controller br-lan",
+    "vm_medium": "stock mac80211_hwsim; three PHYs; no wmediumd",
+    "reported_multiap_profile": 2,
+    "normative_profile_qualification": false
+  },
+  "native_hal_overlay": {
+    "archive": "emosa-prpl-bwl-6.0.0.tar.gz",
+    "sha256": "2e1464f5e8a4096e6d896e4732f2eb3c039f6c995b8d00c6a543cccca6b8de89",
+    "library_sha256": "0dfa6fab56238bf0817c9a3299e671ab6ca66798858179b9262dd3d285d261b1",
+    "original_library_sha256": "7484c318309855d27ae7d1abc42d924fcf4c9581bf322c02b399c37dc5ed699c",
+    "source_archive_sha256": "ebc771d43279cdb6b1cf5e2c09eb51d66ef3a8afab6b97f4561439d2606ac549",
+    "source": "pinned prplMesh source plus the companion 22 patches; original exported headers/libraries from pinned install archive",
+    "patch": "patches/0002-prplmesh-primary-bss-identity.patch",
+    "patch_sha256": "0e854699bbeb70fd507edd7612b975e11b7535122ba8ae34b77f0e0823341cba",
+    "scope": "Rebuild only libbwl with the actual NL80211 backend; preserve primary BSS interface= identity during credential updates. Native executables and other libraries remain pinned.",
+    "qualification": "pending acceptance version 2 runs"
+  },
+  "acceptance": {
+    "version": 2,
+    "onboarding_recovery_budget_seconds": 120,
+    "client_budget_seconds": 30,
+    "post_client_stability_seconds": 30,
+    "requires": "Both native agent roots and fronthauls OPERATIONAL, live AP configuration, exact controller inventory and parent link, fresh independent client observations before and after dwell",
+    "earlier_results": "Acceptance version 1 did not check native operational state or stability and cannot qualify full onboarding."
+  }
+}

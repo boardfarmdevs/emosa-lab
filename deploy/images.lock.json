@@ -24,7 +24,7 @@
   ],
   "packages_qualified": true,
   "qualification_scope": "Ubuntu 24.04 Python component tests and VM-driven semantic OVSDB scenarios only; peer baseline separate; no wire/hardware qualification",
-  "runtime_evidence": "docs/evidence/peer/qualification-summary.json",
+  "runtime_evidence": "doc/evidence/peer/qualification-summary.json",
   "export_combined_sha256": "cc6b6e557372769f5b0d0945d61f200360818a408f9d0dddadbbab584d2fb414",
   "runtime_image_exports": []
 }

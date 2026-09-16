@@ -36,7 +36,8 @@ def error_exit(exc):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        prog="emosa", description="OpenSync adapter; semantic diagnostics are component tests"
+        prog="emosa",
+        description="EasyMesh to OpenSync Adapter; semantic diagnostics are component tests",
     )
     parser.add_argument("--socket", default="/run/emosa/control.sock")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -47,7 +48,7 @@ def main(argv=None):
     )
     qualify.add_argument("--connection", required=True, help="validated local connection JSON")
     qualify.add_argument("--output", required=True, help="new private evidence directory")
-    for name in ("status", "pods", "quiesce"):
+    for name in ("status", "pods", "agents", "quiesce"):
         sub.add_parser(name).add_argument("--json", action="store_true")
     pod = sub.add_parser("pod")
     pod.add_argument("pod_id")
