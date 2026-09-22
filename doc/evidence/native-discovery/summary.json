@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-22",
+  "base_revision": "6f918c28790554ff3f3085015fa979fff4d62b5a",
+  "scope": "Bounded EMOSA Profile-1 Search/Response with pinned native controller; discovered device entry without radio/BSS onboarding",
+  "source_sha256": {
+    "src/emosa/wire/controller_probe.py": "3dcb67e8c37d11316ad7bcf71c4cd4639b9e6993ce005da1ef33b0c4b653ecec",
+    "src/emosa/wire/autoconfiguration.py": "b42f7d3d2be9e44c0a12c68926c198a670f352855f0cb6ebdfb09079d3960e4d",
+    "src/emosa/wire/cmdu.py": "720ff0d44d6cca4caad8c8eaae4170732366230f2b8873728ede0c5e02d0a119",
+    "src/emosa/wire/ethernet.py": "a65617a7e6f9978282f104aa52fbfe6581d76a5ceaabb09127d7631e670ec091",
+    "deploy/peer-baseline/discovery-trial.py": "1f3dd6abf14607fa95f0ab9e1de0571cb667033eac06c1c95bdc1c916cdde1a8",
+    "scripts/check-controller-probe.py": "fca0e1d43951180cf69ae25c73a9e94e8ad72f33ef80d646fecead155de457da",
+    "tests/test_controller_probe.py": "2c4e70f1c3cdb1600ad899028ddd59e47b389714ac60622ccffd7ba1fbd5f2b3"
+  },
+  "native_source_review": {
+    "pinned_reference": "deploy/peer/prplmesh.reference.json",
+    "source_archive_sha256": "ebc771d43279cdb6b1cf5e2c09eb51d66ef3a8afab6b97f4561439d2606ac549",
+    "files": {
+      "controller/src/beerocks/master/controller.cpp": "f25ea19cab3c60998f962d301facd8f4343cf5a7db3fa85a5b8d7d6590aed742",
+      "framework/tlvf/yaml/tlvf/wfa_map/tlvControllerCapability.yaml": "d12fe58a6b79117a98d6eddc781d3eaffe02452309e7289fc61f4a0588e0c08f"
+    },
+    "finding": "Response builder sets Profile 1 and Early bit, leaves kibmib_counter_supported unset; handler inserts an agent during Search processing",
+    "native_source_or_binary_modified": false
+  },
+  "retained_runs": [
+    "emosa-search-p1-06",
+    "emosa-search-p1-07"
+  ],
+  "unit_tests": {
+    "command": "uv run pytest -m unit -q --junitxml=.lab/native-discovery-review/unit-results.xml",
+    "passed": 937,
+    "deselected": 55,
+    "new_probe_cases": 9,
+    "original_xml_sha256": "fc73581cafffcb529028275801988ebab280091082c83ae9e69403f703142027",
+    "publication": "Parameterized case labels hashed; outcomes/counts preserved"
+  },
+  "development_findings": [
+    "Initial preflight found controller-trial.py unstaged; staged the existing helper before a run.",
+    "Run 01 timed out because controller inventory root existed before transport interface binding; added socket ownership readiness.",
+    "Run 02 failed on a missing helper import; cleanup completed; fixed before run 03.",
+    "Run 03 exposed native insertion of a discovered device during Search, contradicting the initial absence assertion. Retained as a failed development attempt; classify the entry by its zero radio/BSS inventory.",
+    "Runs 04/05 exchanged packets and observed an entry but tcpdump retained zero packets despite kernel receipt; rejected as evidence. Added immediate capture and explicit captured-Response completion barrier. Selected runs 06/07 pass independent checks."
+  ],
+  "observed": {
+    "search_profile": 1,
+    "response_profile": 1,
+    "initial_controller_device_entry": true,
+    "represented_radios": 0,
+    "represented_bsses": 0,
+    "controller_flags_hex": "40",
+    "security_capability_present": false
+  },
+  "capture_timestamps": "Actual independent tcpdump timestamps, not synthetic",
+  "cleanup": "Temporary namespaces/veths removed; no owned native services remain loaded after selected runs; native controller/helper shutdown aborts retained in results",
+  "native_controller_used": true,
+  "wsc_started": false,
+  "operations_created": 0,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "next": [
+    "Resolve controller capability behavior and selected procedure contract",
+    "Join admitted discovery/capability lifecycle to tested WSC/radio path",
+    "Require full controller radio/BSS inventory and independent client behavior",
+    "Qualify unchanged physical pod"
+  ]
+}

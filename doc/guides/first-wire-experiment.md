@@ -24,7 +24,7 @@ Ethernet do not satisfy controller inventory or radio/client acceptance.
 The follow-on [Ethernet WSC/radio experiment](../protocol/wsc-wire-radio.md) now
 joins that handoff to actual packet sockets, hwsim and independent clients in one
 run. Normal and lost-reply cases pass with a synthetic hostap peer; compatible
-native admission and controller-owned inventory remain absent.
+native admission and complete controller-owned radio/BSS inventory remain absent.
 
 EMOSA means **EasyMesh to OpenSync Adapter**. Its virtual agent is the EasyMesh
 representation it presents to the controller. The OpenSync extender connects to
@@ -44,8 +44,9 @@ flowchart LR
     W -->|Interface bound traffic| S[Independent data endpoint]
 ```
 
-Read the arrows as evidence obligations. A controller inventory entry establishes
-membership. A database reply establishes a transaction result. Fresh State and a
+Read the arrows as evidence obligations. Complete matching controller agent,
+radio and BSS inventory supports membership; a device placeholder alone can
+appear during Search before WSC. A database reply establishes a transaction result. Fresh State and a
 client observation establish different aspects of application. Neither a local
 API request nor a manually inserted controller entry is an acceptable substitute
 for the first arrow.
@@ -85,6 +86,12 @@ agent sends Profile 2. A single-BSS policy does not repair that discovery mismat
 Native profile configuration and mandatory behavior must be reconciled before
 selecting an EMOSA-facing interoperable profile; simply echoing a profile number
 or stripping mandatory TLVs is not a resolution.
+
+The later [native discovery probe](native-discovery.md) tests EMOSA's actual
+Profile-1 Search: the pinned controller answers with Profile 1 and creates a
+device entry, with zero radios/BSSs. Thus the earlier Profile-2/1 mismatch is not
+reproduced by this particular Search. Missing KiB/MiB and security capability
+fields still prevent full admission; the new entry does not establish onboarding.
 
 ## 3. Complete the available preparation exercises
 

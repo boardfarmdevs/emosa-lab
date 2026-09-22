@@ -3398,6 +3398,32 @@ admission and its own inventory. This fixture does not run OpenSync firmware,
 qualify a physical pod, or open the complete wire gate. See the
 [retained normal and fault runs](../evidence/wsc-wire/README.md).
 
+### 13.14 Observe native discovery before claiming onboarding
+
+The previous WSC/radio exercise starts with a synthetic peer. The
+[native discovery walkthrough](native-discovery.md) now tests an earlier boundary
+with the actual prplMesh controller: EMOSA sends its own Profile-1 Search, receives
+a correlated native Response, and observes a new device entry in the controller's
+inventory. No pod connection or WSC exchange participates in this probe.
+
+Run it on the existing owned VM, following the guide's HOST staging commands and
+using a fresh run label. The native helper must finish binding its transport
+before the Search begins; an available controller API is not sufficient readiness.
+The runner waits for that condition and retains an independent capture before
+removing its temporary namespace and stopping its native services.
+
+Read the result in this order: matching Profile-1 Search/Response, remaining
+capability issues, device absence before Search, and device presence afterward.
+Then inspect the represented radio and BSS counts: both remain zero. The native
+controller may already label the agent mode `Running`, but that field alone does
+not prove successful onboarding or working Wi-Fi. No Config operation occurred.
+
+**Learning checkpoint:** explain three different outcomes: a controller answered
+Search; it created a discovered-device entry; it fully onboarded and configured a
+represented radio/BSS. This exercise establishes the first two. The next step
+must resolve capability admission and join the tested WSC/radio path, with the
+controller's complete inventory and independent client evidence in the same run.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

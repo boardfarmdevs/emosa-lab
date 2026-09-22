@@ -36,6 +36,11 @@ Normal and lost-reply runs pass, including withholding and wrong-key rejection.
 Native-controller admission, its own inventory and physical acceptance remain
 required; neither component opens the full-wire gate.
 
+The [native discovery probe](../guides/native-discovery.md) now confirms a matching
+Profile-1 Search/Response with EMOSA and a controller-created initial device
+entry. It has no represented radios or BSSs. Remaining capability omissions,
+complete admission and the causal WSC-to-radio integration are still required.
+
 The [onboarding readiness checks](../guides/onboarding-readiness.md) now add
 strict synthetic sole-radio scope admission and offline review of native captures.
 The scope passed an actual-service hwsim/client run. Both native captures expose

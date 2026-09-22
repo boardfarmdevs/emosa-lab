@@ -169,6 +169,12 @@ received M1 digest to the operation receipt, show old State while application is
 withheld, and verify new SSID/authentication/traffic from separate clients.
 Explain why the synthetic hostap peer cannot establish native-controller inventory.
 
+Next follow [native discovery](native-discovery.md) and
+[manual §13.14](team-manual.md#1314-observe-native-discovery-before-claiming-onboarding).
+Observe the real controller answering EMOSA's Profile-1 Search and creating a
+device entry. Its zero radio/BSS counts and remaining response capability issues
+explain why discovery visibility is still short of completed onboarding.
+
 **Checkpoint:** distinguish a reassembled message, a correlated discovery response,
 an authenticated WSC candidate and a durable component operation. Explain why
 `wsc-component` does not mean the regular service has admitted a real controller.

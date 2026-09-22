@@ -2716,6 +2716,86 @@
       "path": "wsc-wire/wire-gate.json",
       "sha256": "83a087c092f895aed53724192c03452887382bd3db8b3a1f42bce3dd0dcab044",
       "size": 543
+    },
+    {
+      "path": "native-discovery/README.md",
+      "sha256": "7fa20bd582425a946c7c3231b9d155e3d742c3c8678780133acdaeea72a24286",
+      "size": 3027
+    },
+    {
+      "path": "native-discovery/independent-host.json",
+      "sha256": "abc827a2f5570ecfd9eb698c7cb43939e316101782031a9b5f76a7edb8403864",
+      "size": 1410
+    },
+    {
+      "path": "native-discovery/independent-vm.json",
+      "sha256": "bb86866f921a4075cd9c80a61758339cfcbd41be3b0c2414b1068a385000f435",
+      "size": 1443
+    },
+    {
+      "path": "native-discovery/run-06/controller-after.json",
+      "sha256": "b09b52cf735de82dbe3be5341f4fe521965a2793120ab8ba3c63cc3205f44be0",
+      "size": 14887
+    },
+    {
+      "path": "native-discovery/run-06/controller-before.json",
+      "sha256": "03228b4323089f65efdb61c55ae47fc8e316673ebebc7736b82181f87141312c",
+      "size": 10353
+    },
+    {
+      "path": "native-discovery/run-06/ethernet.pcap",
+      "sha256": "7a06408d4b6de7dfb625a6bf30a1e5ba3d23b51b0b273baafd5af0de80a5df51",
+      "size": 172
+    },
+    {
+      "path": "native-discovery/run-06/probe.json",
+      "sha256": "090fe57296e499a24a0071bd891730a21524c360588b13b365bef6fdc34f1510",
+      "size": 861
+    },
+    {
+      "path": "native-discovery/run-06/result.json",
+      "sha256": "592a48a244ea4ffde457eb742a054b62923eb0b99d39305b32246bfb2c02a204",
+      "size": 4013
+    },
+    {
+      "path": "native-discovery/run-07/controller-after.json",
+      "sha256": "959bf69fe3b996ecc4327347bafa2ee45666f8a3a5f8b7f75b6b3c8a28d80f66",
+      "size": 14887
+    },
+    {
+      "path": "native-discovery/run-07/controller-before.json",
+      "sha256": "f38893a720221fb2f251bbd58a07f096df442cce13d72318e0012b29839123b4",
+      "size": 10353
+    },
+    {
+      "path": "native-discovery/run-07/ethernet.pcap",
+      "sha256": "cf50a23af1a4bac51fbdcd7a3020e71f5f4bf2869b83bc6bba6ddee2e78a2f34",
+      "size": 172
+    },
+    {
+      "path": "native-discovery/run-07/probe.json",
+      "sha256": "090fe57296e499a24a0071bd891730a21524c360588b13b365bef6fdc34f1510",
+      "size": 861
+    },
+    {
+      "path": "native-discovery/run-07/result.json",
+      "sha256": "cec5b2de15ad59b96ccc49557eebe00fed8e464dcb16679ba09dc19665b09b7c",
+      "size": 4013
+    },
+    {
+      "path": "native-discovery/summary.json",
+      "sha256": "32c62fde44fd41f4ae204cca93e02963ba968acd33f2a2a9c9778912a7583c56",
+      "size": 3932
+    },
+    {
+      "path": "native-discovery/unit-results.xml",
+      "sha256": "f61f7bfe251ed33c1c9c1e119f01f37afd547aca5329bf71b53d58e0bab52b74",
+      "size": 133655
+    },
+    {
+      "path": "native-discovery/wire-gate.json",
+      "sha256": "0330949ecfc391aef1ec5e8088822e9c7270548bdfc342c3afe9eb9a0bd18447",
+      "size": 451
     }
   ]
 }

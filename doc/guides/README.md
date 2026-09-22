@@ -12,6 +12,7 @@
 | [Service integration walkthrough](service-integration.md) | Exercise two pods, restore owned radios after reboot, test the actual service with hwsim clients, and prepare the live controller trial |
 | [Onboarding readiness checks](onboarding-readiness.md) | Check complete radio/BSS scope and review the native controller's captured profiles and WSC payload set |
 | [Isolated native compatibility trial](native-compatibility.md) | Rebuild and test the HE-length fix, observe a one-BSS controller policy, and restore the pinned runtime |
+| [EMOSA-to-native-controller discovery](native-discovery.md) | Send EMOSA's Profile-1 Search, independently capture the native Response and distinguish a discovered device entry from completed radio/BSS onboarding |
 | [First complete wire experiment](first-wire-experiment.md) | Follow the declared target, causal acceptance evidence, remaining implementation sequence and physical-pod handoff |
 | [Authenticated WSC handoff](../protocol/wsc-provisioning.md) | Follow independent hostap M2 into a durable operation and real owned OVSDB, including duplicate, lost-reply and real process-crash recovery |
 | [Ethernet WSC to observed Wi-Fi](../protocol/wsc-wire-radio.md) | Drive one packet-originated operation through OVSDB, hwsim and independent clients; compare normal and lost-reply outcomes |

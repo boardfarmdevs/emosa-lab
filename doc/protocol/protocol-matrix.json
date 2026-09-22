@@ -1663,5 +1663,31 @@
       "Production exchange/secret retention and multi-agent wire demultiplexing",
       "Qualified unchanged physical pod and independent physical client"
     ]
+  },
+  "native_controller_discovery_probe": {
+    "guide": "doc/guides/native-discovery.md",
+    "evidence": "doc/evidence/native-discovery/summary.json",
+    "implementation": "src/emosa/wire/controller_probe.py",
+    "runner": "deploy/peer-baseline/discovery-trial.py",
+    "independent_check": "scripts/check-controller-probe.py",
+    "source_sections": [
+      "IEEE 1905.1-2013 10.1.1-10.1.2; 7.8",
+      "EasyMesh 6.1 6.1, 17.1.1-17.1.2, 17.2.94 Table 117"
+    ],
+    "observed_profile_pair": [
+      1,
+      1
+    ],
+    "initial_native_device_entry": true,
+    "native_radio_and_bss_onboarding": false,
+    "selected_response_gaps": [
+      "kib_mib_support_absent",
+      "security_capability_absent"
+    ],
+    "native_controller_used": true,
+    "operations_created": 0,
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
   }
 }

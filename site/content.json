@@ -5,7 +5,7 @@
       "title": "An actual protocol peer",
       "status": "Independent peer baseline captured",
       "state": "pending",
-      "description": "In the EMOSA-facing experiment, a pinned prplMesh controller emits discovery frames but its inventory remains empty because EMOSA has not answered or onboarded an extender. A separate native-agent baseline exercises wired and wireless provisioning and independent clients; see the Native peers manual mode.",
+      "description": "The native discovery probe now sends EMOSA's Profile-1 Search to the pinned prplMesh controller and observes its Response and an initial device entry. That entry has zero radios/BSSs; capability admission and full onboarding remain pending. A separate native-agent baseline exercises wired and wireless provisioning and independent clients.",
       "responsibilities": [
         "Use the isolated em-protocol bridge, separate from pod management.",
         "Exercise discovery, capabilities and selected provisioning procedures.",
@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Synthetic Ethernet WSC now drives a durable operation, OVSDB, hwsim and separate clients. Join compatible native discovery/Early/profile/capability admission and retain the controller’s own inventory.",
+      "next": "Native Profile-1 discovery and an initial device entry are observed. Resolve controller capability admission, join the WSC/radio path, and require complete controller radio/BSS inventory.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -675,10 +675,28 @@
       "title": "Ethernet WSC and radio evidence",
       "description": "928 unit / 53 OVSDB checks, normal and lost-reply packet/radio runs, independent captures and interruption cleanup. Synthetic peer; native onboarding pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/guides/native-discovery.md",
+      "title": "EMOSA discovery with the native controller",
+      "description": "Reproduce a Profile-1 Search/Response and inspect the initial controller device entry; zero radio/BSS entries mean onboarding remains pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/native-discovery/README.md",
+      "title": "Native discovery evidence",
+      "description": "Two independently captured native exchanges, before/after controller inventory, 937 unit passes and preserved capability/cleanup findings.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/external-ieee1905-review.md",
+      "title": "Optional external IEEE 1905 components",
+      "description": "Pinned source review of meshComms, Technicolor, RDK Rust and pyieee1905; component fit, adaptation work and proposed evaluation gates. No integration selected.",
+      "category": "Architecture"
     }
   ],
   "suite_evidence": {
-    "unit": "wsc-wire/unit-results.xml",
+    "unit": "native-discovery/unit-results.xml",
     "ovsdb": "wsc-wire/ovsdb-results.xml"
   }
 }

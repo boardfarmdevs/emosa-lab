@@ -1,0 +1,52 @@
+{
+  "passed": true,
+  "tshark": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+  "runs": [
+    {
+      "directory": "emosa-search-p1-06",
+      "passed": true,
+      "search_mids": [
+        65535
+      ],
+      "response_mids": [
+        65535
+      ],
+      "search_profile": 1,
+      "response_profile": 1,
+      "controller_flags_hex": "40",
+      "security_capability_hex": null,
+      "selected_response_issues": [
+        "kib_mib_support_absent",
+        "security_capability_absent"
+      ],
+      "discovery_entry_observed": true,
+      "represented_radio_count": 0,
+      "pcap_sha256": "7a06408d4b6de7dfb625a6bf30a1e5ba3d23b51b0b273baafd5af0de80a5df51",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false
+    },
+    {
+      "directory": "emosa-search-p1-07",
+      "passed": true,
+      "search_mids": [
+        65535
+      ],
+      "response_mids": [
+        65535
+      ],
+      "search_profile": 1,
+      "response_profile": 1,
+      "controller_flags_hex": "40",
+      "security_capability_hex": null,
+      "selected_response_issues": [
+        "kib_mib_support_absent",
+        "security_capability_absent"
+      ],
+      "discovery_entry_observed": true,
+      "represented_radio_count": 0,
+      "pcap_sha256": "cf50a23af1a4bac51fbdcd7a3020e71f5f4bf2869b83bc6bba6ddee2e78a2f34",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false
+    }
+  ]
+}

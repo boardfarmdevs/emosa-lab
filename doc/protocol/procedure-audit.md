@@ -244,3 +244,28 @@ findings are missing Supported Cipher Suites in Early Report, missing Bridging
 Capability despite five local interfaces, and Wi-Fi 6 media-specific length ten
 where selected Table 14 specifies zero. These remain compatibility gaps, not
 reasons to silently change the selected edition or reopen IEEE access requests.
+
+## Direct EMOSA Search against the native controller, 2026-09-22
+
+The [native discovery trial](../guides/native-discovery.md) now establishes that
+EMOSA's Profile-1 Search receives a Profile-1 Response from the pinned controller.
+The prior standard-agent Profile-2/1 mismatch remains a baseline observation,
+not a mismatch reproduced by this particular EMOSA exchange. The native response
+still has Controller Capability `0x40` and no Security Capability TLV.
+
+The controller creates a device object for the probe AL during Search processing,
+before M1. It reports zero radios/BSSs even though the agent operation-mode field
+already says `Running`. Controller inventory acceptance therefore requires the
+complete expected radio/BSS contents and causal protocol evidence, not mere
+presence of an AL or that string. No full-profile gate is cleared by this result.
+
+Source review of the pinned patched tree found the Search-response builder at
+`controller/src/beerocks/master/controller.cpp:814–828`: it selects Profile 1,
+adds a Profile-2 AP Capability value with KiB units, but sets only
+`flags().early_ap_capability`. The TLV schema exposes a separate
+`kibmib_counter_supported` bit at bit 7. The same handler calls
+`database.add_agent(al_mac)` while processing Search. These observations explain
+the captured byte and initial device entry; no native source or binary was
+changed in this trial. A candidate fix still needs behavior validation and a
+separate rebuild. See the retained source hashes and
+[evidence](../evidence/native-discovery/README.md).

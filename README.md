@@ -33,6 +33,10 @@ uses in-memory Ethernet delivery. The next [Ethernet-to-radio exercise](doc/prot
 now carries the same handoff over actual packet sockets into hostapd/hwsim and
 separate wired/wpa_supplicant clients. Normal and lost-reply runs passed; the
 peer is still synthetic, so native-controller onboarding remains pending.
+The [native discovery probe](doc/guides/native-discovery.md) now sends EMOSA's
+Profile-1 Search to the real controller and observes its Response and newly
+created device entry. That entry has no radios/BSSs yet; the missing controller
+capability fields and full admission remain open.
 
 ## Architecture
 
