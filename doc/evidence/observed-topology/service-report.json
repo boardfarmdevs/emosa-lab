@@ -1,0 +1,1057 @@
+{
+  "schema_version": 1,
+  "scope": "complete synthetic topology via read-only adapter API",
+  "passed": true,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "stages": {
+    "connected": [
+      {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "complete configured radio/VIF graph; AP operational value only",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "snapshot_fresh": true,
+        "generation": 1,
+        "revision": 1,
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "observed_at": "2026-09-22T03:06:23.975Z",
+        "source_time": null,
+        "ready": true,
+        "complete": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "if_name": "lab-radio",
+            "ruid": "02:00:00:01:40:01",
+            "observed_mac": "02:00:00:01:20:01",
+            "enabled": true,
+            "freq_band": "5G",
+            "channel": 36,
+            "interfaces": [
+              {
+                "interface_id": "bss-1",
+                "if_name": "lab-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:01",
+                "bss_id": "bss-1",
+                "ssid_hex": "696e697469616c2d6e6574776f726b"
+              },
+              {
+                "interface_id": "bss-guest",
+                "if_name": "guest-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:02",
+                "bss_id": "bss-guest",
+                "ssid_hex": "73696d756c6174696f6e2d6775657374"
+              }
+            ]
+          },
+          {
+            "radio_id": "radio-2",
+            "if_name": "lab-radio-2",
+            "ruid": "02:00:00:01:40:02",
+            "observed_mac": "02:00:00:01:20:02",
+            "enabled": true,
+            "freq_band": "2.4G",
+            "channel": 6,
+            "interfaces": [
+              {
+                "interface_id": "backhaul-station",
+                "if_name": "lab-sta",
+                "mode": "sta",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:04"
+              },
+              {
+                "interface_id": "bss-iot",
+                "if_name": "iot-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:03",
+                "bss_id": "bss-iot",
+                "ssid_hex": "73696d756c6174696f6e2d696f74"
+              }
+            ]
+          }
+        ],
+        "operational_bss_value": {
+          "type": "0x83",
+          "value_hex": "02020000014001020200000110010f696e697469616c2d6e6574776f726b0200000110021073696d756c6174696f6e2d6775657374020000014002010200000110030e73696d756c6174696f6e2d696f74",
+          "sha256": "43d6f155f2dd5021d71745547dc9aadfeb63af0603bd116f9ae7abe98d85c4a6"
+        },
+        "physical_links": "unknown",
+        "protocol_adjacency": "not_started",
+        "capabilities": "not_inferred",
+        "mld_semantics": "not_qualified",
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "al_mac": "02:00:00:01:30:01",
+        "identity_source": "persisted explicit simulation binding; serial is not attestation",
+        "state_provenance": "independent-simulated-manager:Wifi_VIF_State",
+        "ssid_encoding": "synthetic UTF-8 OVSDB string mapping",
+        "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+      },
+      {
+        "schema_version": 1,
+        "pod_id": "pod-2",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "complete configured radio/VIF graph; AP operational value only",
+        "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+        "snapshot_fresh": true,
+        "generation": 1,
+        "revision": 1,
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "observed_at": "2026-09-22T03:06:23.978Z",
+        "source_time": null,
+        "ready": true,
+        "complete": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "if_name": "lab-radio",
+            "ruid": "02:00:00:02:40:01",
+            "observed_mac": "02:00:00:02:20:01",
+            "enabled": true,
+            "freq_band": "5G",
+            "channel": 36,
+            "interfaces": [
+              {
+                "interface_id": "bss-1",
+                "if_name": "lab-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:02:10:01",
+                "bss_id": "bss-1",
+                "ssid_hex": "696e697469616c2d6e6574776f726b"
+              },
+              {
+                "interface_id": "bss-guest",
+                "if_name": "guest-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:02:10:02",
+                "bss_id": "bss-guest",
+                "ssid_hex": "73696d756c6174696f6e2d6775657374"
+              }
+            ]
+          },
+          {
+            "radio_id": "radio-2",
+            "if_name": "lab-radio-2",
+            "ruid": "02:00:00:02:40:02",
+            "observed_mac": "02:00:00:02:20:02",
+            "enabled": true,
+            "freq_band": "2.4G",
+            "channel": 6,
+            "interfaces": [
+              {
+                "interface_id": "backhaul-station",
+                "if_name": "lab-sta",
+                "mode": "sta",
+                "enabled": true,
+                "observed_mac": "02:00:00:02:10:04"
+              },
+              {
+                "interface_id": "bss-iot",
+                "if_name": "iot-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:02:10:03",
+                "bss_id": "bss-iot",
+                "ssid_hex": "73696d756c6174696f6e2d696f74"
+              }
+            ]
+          }
+        ],
+        "operational_bss_value": {
+          "type": "0x83",
+          "value_hex": "02020000024001020200000210010f696e697469616c2d6e6574776f726b0200000210021073696d756c6174696f6e2d6775657374020000024002010200000210030e73696d756c6174696f6e2d696f74",
+          "sha256": "2832b516b4615e31dce289d8aaaff946d20d155ada7fccfe62b1f40f0dbf062e"
+        },
+        "physical_links": "unknown",
+        "protocol_adjacency": "not_started",
+        "capabilities": "not_inferred",
+        "mld_semantics": "not_qualified",
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "al_mac": "02:00:00:02:30:01",
+        "identity_source": "persisted explicit simulation binding; serial is not attestation",
+        "state_provenance": "independent-simulated-manager:Wifi_VIF_State",
+        "ssid_encoding": "synthetic UTF-8 OVSDB string mapping",
+        "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+      }
+    ],
+    "cli_ready": {
+      "exit_code": 0,
+      "result": {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "complete configured radio/VIF graph; AP operational value only",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "snapshot_fresh": true,
+        "generation": 1,
+        "revision": 1,
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "observed_at": "2026-09-22T03:06:24.069Z",
+        "source_time": null,
+        "ready": true,
+        "complete": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "if_name": "lab-radio",
+            "ruid": "02:00:00:01:40:01",
+            "observed_mac": "02:00:00:01:20:01",
+            "enabled": true,
+            "freq_band": "5G",
+            "channel": 36,
+            "interfaces": [
+              {
+                "interface_id": "bss-1",
+                "if_name": "lab-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:01",
+                "bss_id": "bss-1",
+                "ssid_hex": "696e697469616c2d6e6574776f726b"
+              },
+              {
+                "interface_id": "bss-guest",
+                "if_name": "guest-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:02",
+                "bss_id": "bss-guest",
+                "ssid_hex": "73696d756c6174696f6e2d6775657374"
+              }
+            ]
+          },
+          {
+            "radio_id": "radio-2",
+            "if_name": "lab-radio-2",
+            "ruid": "02:00:00:01:40:02",
+            "observed_mac": "02:00:00:01:20:02",
+            "enabled": true,
+            "freq_band": "2.4G",
+            "channel": 6,
+            "interfaces": [
+              {
+                "interface_id": "backhaul-station",
+                "if_name": "lab-sta",
+                "mode": "sta",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:04"
+              },
+              {
+                "interface_id": "bss-iot",
+                "if_name": "iot-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:03",
+                "bss_id": "bss-iot",
+                "ssid_hex": "73696d756c6174696f6e2d696f74"
+              }
+            ]
+          }
+        ],
+        "operational_bss_value": {
+          "type": "0x83",
+          "value_hex": "02020000014001020200000110010f696e697469616c2d6e6574776f726b0200000110021073696d756c6174696f6e2d6775657374020000014002010200000110030e73696d756c6174696f6e2d696f74",
+          "sha256": "43d6f155f2dd5021d71745547dc9aadfeb63af0603bd116f9ae7abe98d85c4a6"
+        },
+        "physical_links": "unknown",
+        "protocol_adjacency": "not_started",
+        "capabilities": "not_inferred",
+        "mld_semantics": "not_qualified",
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "al_mac": "02:00:00:01:30:01",
+        "identity_source": "persisted explicit simulation binding; serial is not attestation",
+        "state_provenance": "independent-simulated-manager:Wifi_VIF_State",
+        "ssid_encoding": "synthetic UTF-8 OVSDB string mapping",
+        "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+      }
+    },
+    "config_only": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "complete configured radio/VIF graph; AP operational value only",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "snapshot_fresh": true,
+      "generation": 1,
+      "revision": 2,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "observed_at": "2026-09-22T03:06:24.155Z",
+      "source_time": null,
+      "ready": true,
+      "complete": true,
+      "blockers": [],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "if_name": "lab-radio",
+          "ruid": "02:00:00:01:40:01",
+          "observed_mac": "02:00:00:01:20:01",
+          "enabled": true,
+          "freq_band": "5G",
+          "channel": 36,
+          "interfaces": [
+            {
+              "interface_id": "bss-1",
+              "if_name": "lab-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:01",
+              "bss_id": "bss-1",
+              "ssid_hex": "696e697469616c2d6e6574776f726b"
+            },
+            {
+              "interface_id": "bss-guest",
+              "if_name": "guest-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:02",
+              "bss_id": "bss-guest",
+              "ssid_hex": "73696d756c6174696f6e2d6775657374"
+            }
+          ]
+        },
+        {
+          "radio_id": "radio-2",
+          "if_name": "lab-radio-2",
+          "ruid": "02:00:00:01:40:02",
+          "observed_mac": "02:00:00:01:20:02",
+          "enabled": true,
+          "freq_band": "2.4G",
+          "channel": 6,
+          "interfaces": [
+            {
+              "interface_id": "backhaul-station",
+              "if_name": "lab-sta",
+              "mode": "sta",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:04"
+            },
+            {
+              "interface_id": "bss-iot",
+              "if_name": "iot-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:03",
+              "bss_id": "bss-iot",
+              "ssid_hex": "73696d756c6174696f6e2d696f74"
+            }
+          ]
+        }
+      ],
+      "operational_bss_value": {
+        "type": "0x83",
+        "value_hex": "02020000014001020200000110010f696e697469616c2d6e6574776f726b0200000110021073696d756c6174696f6e2d6775657374020000014002010200000110030e73696d756c6174696f6e2d696f74",
+        "sha256": "43d6f155f2dd5021d71745547dc9aadfeb63af0603bd116f9ae7abe98d85c4a6"
+      },
+      "physical_links": "unknown",
+      "protocol_adjacency": "not_started",
+      "capabilities": "not_inferred",
+      "mld_semantics": "not_qualified",
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "al_mac": "02:00:00:01:30:01",
+      "identity_source": "persisted explicit simulation binding; serial is not attestation",
+      "state_provenance": "independent-simulated-manager:Wifi_VIF_State",
+      "ssid_encoding": "synthetic UTF-8 OVSDB string mapping",
+      "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+    },
+    "manager_applied": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "complete configured radio/VIF graph; AP operational value only",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "snapshot_fresh": true,
+      "generation": 1,
+      "revision": 3,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "observed_at": "2026-09-22T03:06:24.163Z",
+      "source_time": null,
+      "ready": true,
+      "complete": true,
+      "blockers": [],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "if_name": "lab-radio",
+          "ruid": "02:00:00:01:40:01",
+          "observed_mac": "02:00:00:01:20:01",
+          "enabled": true,
+          "freq_band": "5G",
+          "channel": 36,
+          "interfaces": [
+            {
+              "interface_id": "bss-1",
+              "if_name": "lab-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:01",
+              "bss_id": "bss-1",
+              "ssid_hex": "746f706f6c6f67792d6f627365727665642d61667465722d6d616e61676572"
+            },
+            {
+              "interface_id": "bss-guest",
+              "if_name": "guest-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:02",
+              "bss_id": "bss-guest",
+              "ssid_hex": "73696d756c6174696f6e2d6775657374"
+            }
+          ]
+        },
+        {
+          "radio_id": "radio-2",
+          "if_name": "lab-radio-2",
+          "ruid": "02:00:00:01:40:02",
+          "observed_mac": "02:00:00:01:20:02",
+          "enabled": true,
+          "freq_band": "2.4G",
+          "channel": 6,
+          "interfaces": [
+            {
+              "interface_id": "backhaul-station",
+              "if_name": "lab-sta",
+              "mode": "sta",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:04"
+            },
+            {
+              "interface_id": "bss-iot",
+              "if_name": "iot-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:03",
+              "bss_id": "bss-iot",
+              "ssid_hex": "73696d756c6174696f6e2d696f74"
+            }
+          ]
+        }
+      ],
+      "operational_bss_value": {
+        "type": "0x83",
+        "value_hex": "02020000014001020200000110011f746f706f6c6f67792d6f627365727665642d61667465722d6d616e616765720200000110021073696d756c6174696f6e2d6775657374020000014002010200000110030e73696d756c6174696f6e2d696f74",
+        "sha256": "f28dca9b074f54db46b773383f4aec62e1f16e9e50728ce7e4f28aa77350eec4"
+      },
+      "physical_links": "unknown",
+      "protocol_adjacency": "not_started",
+      "capabilities": "not_inferred",
+      "mld_semantics": "not_qualified",
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "al_mac": "02:00:00:01:30:01",
+      "identity_source": "persisted explicit simulation binding; serial is not attestation",
+      "state_provenance": "independent-simulated-manager:Wifi_VIF_State",
+      "ssid_encoding": "synthetic UTF-8 OVSDB string mapping",
+      "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+    },
+    "other_pod_unchanged": {
+      "schema_version": 1,
+      "pod_id": "pod-2",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "complete configured radio/VIF graph; AP operational value only",
+      "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+      "snapshot_fresh": true,
+      "generation": 1,
+      "revision": 1,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "observed_at": "2026-09-22T03:06:24.165Z",
+      "source_time": null,
+      "ready": true,
+      "complete": true,
+      "blockers": [],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "if_name": "lab-radio",
+          "ruid": "02:00:00:02:40:01",
+          "observed_mac": "02:00:00:02:20:01",
+          "enabled": true,
+          "freq_band": "5G",
+          "channel": 36,
+          "interfaces": [
+            {
+              "interface_id": "bss-1",
+              "if_name": "lab-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:02:10:01",
+              "bss_id": "bss-1",
+              "ssid_hex": "696e697469616c2d6e6574776f726b"
+            },
+            {
+              "interface_id": "bss-guest",
+              "if_name": "guest-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:02:10:02",
+              "bss_id": "bss-guest",
+              "ssid_hex": "73696d756c6174696f6e2d6775657374"
+            }
+          ]
+        },
+        {
+          "radio_id": "radio-2",
+          "if_name": "lab-radio-2",
+          "ruid": "02:00:00:02:40:02",
+          "observed_mac": "02:00:00:02:20:02",
+          "enabled": true,
+          "freq_band": "2.4G",
+          "channel": 6,
+          "interfaces": [
+            {
+              "interface_id": "backhaul-station",
+              "if_name": "lab-sta",
+              "mode": "sta",
+              "enabled": true,
+              "observed_mac": "02:00:00:02:10:04"
+            },
+            {
+              "interface_id": "bss-iot",
+              "if_name": "iot-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:02:10:03",
+              "bss_id": "bss-iot",
+              "ssid_hex": "73696d756c6174696f6e2d696f74"
+            }
+          ]
+        }
+      ],
+      "operational_bss_value": {
+        "type": "0x83",
+        "value_hex": "02020000024001020200000210010f696e697469616c2d6e6574776f726b0200000210021073696d756c6174696f6e2d6775657374020000024002010200000210030e73696d756c6174696f6e2d696f74",
+        "sha256": "2832b516b4615e31dce289d8aaaff946d20d155ada7fccfe62b1f40f0dbf062e"
+      },
+      "physical_links": "unknown",
+      "protocol_adjacency": "not_started",
+      "capabilities": "not_inferred",
+      "mld_semantics": "not_qualified",
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "al_mac": "02:00:00:02:30:01",
+      "identity_source": "persisted explicit simulation binding; serial is not attestation",
+      "state_provenance": "independent-simulated-manager:Wifi_VIF_State",
+      "ssid_encoding": "synthetic UTF-8 OVSDB string mapping",
+      "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+    },
+    "unexpected_interface": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "complete configured radio/VIF graph; AP operational value only",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "snapshot_fresh": true,
+      "generation": 1,
+      "revision": 4,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "observed_at": "2026-09-22T03:06:24.171Z",
+      "source_time": null,
+      "ready": false,
+      "complete": false,
+      "blockers": [
+        "vif_inventory_differs_from_binding"
+      ],
+      "radios": [],
+      "operational_bss_value": null,
+      "physical_links": "unknown",
+      "protocol_adjacency": "not_started",
+      "capabilities": "not_inferred",
+      "mld_semantics": "not_qualified",
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+    },
+    "cli_blocked": {
+      "exit_code": 5,
+      "result": {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "complete configured radio/VIF graph; AP operational value only",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "snapshot_fresh": true,
+        "generation": 1,
+        "revision": 4,
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "observed_at": "2026-09-22T03:06:24.265Z",
+        "source_time": null,
+        "ready": false,
+        "complete": false,
+        "blockers": [
+          "vif_inventory_differs_from_binding"
+        ],
+        "radios": [],
+        "operational_bss_value": null,
+        "physical_links": "unknown",
+        "protocol_adjacency": "not_started",
+        "capabilities": "not_inferred",
+        "mld_semantics": "not_qualified",
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+      }
+    },
+    "disconnected": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "complete configured radio/VIF graph; AP operational value only",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "snapshot_fresh": false,
+      "generation": null,
+      "revision": null,
+      "schema_fingerprint": null,
+      "observed_at": null,
+      "source_time": null,
+      "ready": false,
+      "complete": false,
+      "blockers": [
+        "NOT_READY"
+      ],
+      "radios": [],
+      "operational_bss_value": null,
+      "physical_links": "unknown",
+      "protocol_adjacency": "not_started",
+      "capabilities": "not_inferred",
+      "mld_semantics": "not_qualified",
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+    },
+    "other_pod_while_disconnected": {
+      "schema_version": 1,
+      "pod_id": "pod-2",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "complete configured radio/VIF graph; AP operational value only",
+      "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+      "snapshot_fresh": true,
+      "generation": 1,
+      "revision": 1,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "observed_at": "2026-09-22T03:06:29.295Z",
+      "source_time": null,
+      "ready": true,
+      "complete": true,
+      "blockers": [],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "if_name": "lab-radio",
+          "ruid": "02:00:00:02:40:01",
+          "observed_mac": "02:00:00:02:20:01",
+          "enabled": true,
+          "freq_band": "5G",
+          "channel": 36,
+          "interfaces": [
+            {
+              "interface_id": "bss-1",
+              "if_name": "lab-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:02:10:01",
+              "bss_id": "bss-1",
+              "ssid_hex": "696e697469616c2d6e6574776f726b"
+            },
+            {
+              "interface_id": "bss-guest",
+              "if_name": "guest-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:02:10:02",
+              "bss_id": "bss-guest",
+              "ssid_hex": "73696d756c6174696f6e2d6775657374"
+            }
+          ]
+        },
+        {
+          "radio_id": "radio-2",
+          "if_name": "lab-radio-2",
+          "ruid": "02:00:00:02:40:02",
+          "observed_mac": "02:00:00:02:20:02",
+          "enabled": true,
+          "freq_band": "2.4G",
+          "channel": 6,
+          "interfaces": [
+            {
+              "interface_id": "backhaul-station",
+              "if_name": "lab-sta",
+              "mode": "sta",
+              "enabled": true,
+              "observed_mac": "02:00:00:02:10:04"
+            },
+            {
+              "interface_id": "bss-iot",
+              "if_name": "iot-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:02:10:03",
+              "bss_id": "bss-iot",
+              "ssid_hex": "73696d756c6174696f6e2d696f74"
+            }
+          ]
+        }
+      ],
+      "operational_bss_value": {
+        "type": "0x83",
+        "value_hex": "02020000024001020200000210010f696e697469616c2d6e6574776f726b0200000210021073696d756c6174696f6e2d6775657374020000024002010200000210030e73696d756c6174696f6e2d696f74",
+        "sha256": "2832b516b4615e31dce289d8aaaff946d20d155ada7fccfe62b1f40f0dbf062e"
+      },
+      "physical_links": "unknown",
+      "protocol_adjacency": "not_started",
+      "capabilities": "not_inferred",
+      "mld_semantics": "not_qualified",
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "al_mac": "02:00:00:02:30:01",
+      "identity_source": "persisted explicit simulation binding; serial is not attestation",
+      "state_provenance": "independent-simulated-manager:Wifi_VIF_State",
+      "ssid_encoding": "synthetic UTF-8 OVSDB string mapping",
+      "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+    },
+    "uuid_recreation": {
+      "rows_recreated": 12,
+      "all_uuids_changed": true
+    },
+    "reconnected": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "complete configured radio/VIF graph; AP operational value only",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "snapshot_fresh": true,
+      "generation": 2,
+      "revision": 6,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "observed_at": "2026-09-22T03:06:29.374Z",
+      "source_time": null,
+      "ready": true,
+      "complete": true,
+      "blockers": [],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "if_name": "lab-radio",
+          "ruid": "02:00:00:01:40:01",
+          "observed_mac": "02:00:00:01:20:01",
+          "enabled": true,
+          "freq_band": "5G",
+          "channel": 36,
+          "interfaces": [
+            {
+              "interface_id": "bss-1",
+              "if_name": "lab-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:01",
+              "bss_id": "bss-1",
+              "ssid_hex": "746f706f6c6f67792d6f627365727665642d61667465722d6d616e61676572"
+            },
+            {
+              "interface_id": "bss-guest",
+              "if_name": "guest-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:02",
+              "bss_id": "bss-guest",
+              "ssid_hex": "73696d756c6174696f6e2d6775657374"
+            }
+          ]
+        },
+        {
+          "radio_id": "radio-2",
+          "if_name": "lab-radio-2",
+          "ruid": "02:00:00:01:40:02",
+          "observed_mac": "02:00:00:01:20:02",
+          "enabled": true,
+          "freq_band": "2.4G",
+          "channel": 6,
+          "interfaces": [
+            {
+              "interface_id": "backhaul-station",
+              "if_name": "lab-sta",
+              "mode": "sta",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:04"
+            },
+            {
+              "interface_id": "bss-iot",
+              "if_name": "iot-ap",
+              "mode": "ap",
+              "enabled": true,
+              "observed_mac": "02:00:00:01:10:03",
+              "bss_id": "bss-iot",
+              "ssid_hex": "73696d756c6174696f6e2d696f74"
+            }
+          ]
+        }
+      ],
+      "operational_bss_value": {
+        "type": "0x83",
+        "value_hex": "02020000014001020200000110011f746f706f6c6f67792d6f627365727665642d61667465722d6d616e616765720200000110021073696d756c6174696f6e2d6775657374020000014002010200000110030e73696d756c6174696f6e2d696f74",
+        "sha256": "f28dca9b074f54db46b773383f4aec62e1f16e9e50728ce7e4f28aa77350eec4"
+      },
+      "physical_links": "unknown",
+      "protocol_adjacency": "not_started",
+      "capabilities": "not_inferred",
+      "mld_semantics": "not_qualified",
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "al_mac": "02:00:00:01:30:01",
+      "identity_source": "persisted explicit simulation binding; serial is not attestation",
+      "state_provenance": "independent-simulated-manager:Wifi_VIF_State",
+      "ssid_encoding": "synthetic UTF-8 OVSDB string mapping",
+      "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+    },
+    "restarted": [
+      {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "complete configured radio/VIF graph; AP operational value only",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "snapshot_fresh": true,
+        "generation": 1,
+        "revision": 1,
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "observed_at": "2026-09-22T03:06:30.513Z",
+        "source_time": null,
+        "ready": true,
+        "complete": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "if_name": "lab-radio",
+            "ruid": "02:00:00:01:40:01",
+            "observed_mac": "02:00:00:01:20:01",
+            "enabled": true,
+            "freq_band": "5G",
+            "channel": 36,
+            "interfaces": [
+              {
+                "interface_id": "bss-1",
+                "if_name": "lab-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:01",
+                "bss_id": "bss-1",
+                "ssid_hex": "746f706f6c6f67792d6f627365727665642d61667465722d6d616e61676572"
+              },
+              {
+                "interface_id": "bss-guest",
+                "if_name": "guest-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:02",
+                "bss_id": "bss-guest",
+                "ssid_hex": "73696d756c6174696f6e2d6775657374"
+              }
+            ]
+          },
+          {
+            "radio_id": "radio-2",
+            "if_name": "lab-radio-2",
+            "ruid": "02:00:00:01:40:02",
+            "observed_mac": "02:00:00:01:20:02",
+            "enabled": true,
+            "freq_band": "2.4G",
+            "channel": 6,
+            "interfaces": [
+              {
+                "interface_id": "backhaul-station",
+                "if_name": "lab-sta",
+                "mode": "sta",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:04"
+              },
+              {
+                "interface_id": "bss-iot",
+                "if_name": "iot-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:01:10:03",
+                "bss_id": "bss-iot",
+                "ssid_hex": "73696d756c6174696f6e2d696f74"
+              }
+            ]
+          }
+        ],
+        "operational_bss_value": {
+          "type": "0x83",
+          "value_hex": "02020000014001020200000110011f746f706f6c6f67792d6f627365727665642d61667465722d6d616e616765720200000110021073696d756c6174696f6e2d6775657374020000014002010200000110030e73696d756c6174696f6e2d696f74",
+          "sha256": "f28dca9b074f54db46b773383f4aec62e1f16e9e50728ce7e4f28aa77350eec4"
+        },
+        "physical_links": "unknown",
+        "protocol_adjacency": "not_started",
+        "capabilities": "not_inferred",
+        "mld_semantics": "not_qualified",
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "al_mac": "02:00:00:01:30:01",
+        "identity_source": "persisted explicit simulation binding; serial is not attestation",
+        "state_provenance": "independent-simulated-manager:Wifi_VIF_State",
+        "ssid_encoding": "synthetic UTF-8 OVSDB string mapping",
+        "adapter_instance_id": "8f9725a3-760f-4ebd-9f7e-c0fae7ce8e31"
+      },
+      {
+        "schema_version": 1,
+        "pod_id": "pod-2",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "complete configured radio/VIF graph; AP operational value only",
+        "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+        "snapshot_fresh": true,
+        "generation": 1,
+        "revision": 1,
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "observed_at": "2026-09-22T03:06:30.516Z",
+        "source_time": null,
+        "ready": true,
+        "complete": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "if_name": "lab-radio",
+            "ruid": "02:00:00:02:40:01",
+            "observed_mac": "02:00:00:02:20:01",
+            "enabled": true,
+            "freq_band": "5G",
+            "channel": 36,
+            "interfaces": [
+              {
+                "interface_id": "bss-1",
+                "if_name": "lab-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:02:10:01",
+                "bss_id": "bss-1",
+                "ssid_hex": "696e697469616c2d6e6574776f726b"
+              },
+              {
+                "interface_id": "bss-guest",
+                "if_name": "guest-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:02:10:02",
+                "bss_id": "bss-guest",
+                "ssid_hex": "73696d756c6174696f6e2d6775657374"
+              }
+            ]
+          },
+          {
+            "radio_id": "radio-2",
+            "if_name": "lab-radio-2",
+            "ruid": "02:00:00:02:40:02",
+            "observed_mac": "02:00:00:02:20:02",
+            "enabled": true,
+            "freq_band": "2.4G",
+            "channel": 6,
+            "interfaces": [
+              {
+                "interface_id": "backhaul-station",
+                "if_name": "lab-sta",
+                "mode": "sta",
+                "enabled": true,
+                "observed_mac": "02:00:00:02:10:04"
+              },
+              {
+                "interface_id": "bss-iot",
+                "if_name": "iot-ap",
+                "mode": "ap",
+                "enabled": true,
+                "observed_mac": "02:00:00:02:10:03",
+                "bss_id": "bss-iot",
+                "ssid_hex": "73696d756c6174696f6e2d696f74"
+              }
+            ]
+          }
+        ],
+        "operational_bss_value": {
+          "type": "0x83",
+          "value_hex": "02020000024001020200000210010f696e697469616c2d6e6574776f726b0200000210021073696d756c6174696f6e2d6775657374020000024002010200000210030e73696d756c6174696f6e2d696f74",
+          "sha256": "2832b516b4615e31dce289d8aaaff946d20d155ada7fccfe62b1f40f0dbf062e"
+        },
+        "physical_links": "unknown",
+        "protocol_adjacency": "not_started",
+        "capabilities": "not_inferred",
+        "mld_semantics": "not_qualified",
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "al_mac": "02:00:00:02:30:01",
+        "identity_source": "persisted explicit simulation binding; serial is not attestation",
+        "state_provenance": "independent-simulated-manager:Wifi_VIF_State",
+        "ssid_encoding": "synthetic UTF-8 OVSDB string mapping",
+        "adapter_instance_id": "8f9725a3-760f-4ebd-9f7e-c0fae7ce8e31"
+      }
+    ]
+  },
+  "service_lifecycle": [
+    {
+      "event": "started",
+      "pid": 223753,
+      "adapter_instance_id": "93071ab8-095b-416d-83dd-89ec7408102d"
+    },
+    {
+      "event": "stopped",
+      "pid": 223753,
+      "requested_crash": true,
+      "kill_escalation": false,
+      "returncode": -9
+    },
+    {
+      "event": "started",
+      "pid": 223763,
+      "adapter_instance_id": "8f9725a3-760f-4ebd-9f7e-c0fae7ce8e31"
+    },
+    {
+      "event": "stopped",
+      "pid": 223763,
+      "requested_crash": false,
+      "kill_escalation": false,
+      "returncode": 0
+    }
+  ]
+}

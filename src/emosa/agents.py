@@ -5,6 +5,7 @@ import time
 import uuid
 
 from emosa.errors import EmosaError, Reason
+from emosa.topology_bindings import validate_config_topologies
 
 FRESHNESS_SECONDS = 2.0
 
@@ -23,6 +24,7 @@ def validate_bindings(config):
     for field in ("al_mac", "expected_serial"):
         if len({b[field] for b in bindings}) != len(bindings):
             raise EmosaError(Reason.INVALID_INPUT, "duplicate virtual agent binding", field=field)
+    validate_config_topologies(config["pods"])
 
 
 class AgentDirectory:

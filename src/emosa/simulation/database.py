@@ -167,6 +167,7 @@ class SimDatabase:
                     "if_name": "lab-radio",
                     "freq_band": "5G",
                     "radio_config": ["named-uuid", "radio"],
+                    "enabled": True,
                     "channel": 36,
                     "mac": "02:00:00:00:20:01",
                     "vif_states": ["set", [["named-uuid", "vifstate"]]],

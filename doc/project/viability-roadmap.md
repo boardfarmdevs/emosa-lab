@@ -22,11 +22,13 @@ select a fully qualified profile or enable the missing wire connection.
 
 The [EasyMesh value components](../protocol/easymesh-payloads.md) now implement
 service lists, Radio Identifier, Operational BSS and profile values, with an
-offline inspection CLI and independent native-capture checks. The next work
-available before IEEE intake is stable per-pod radio/BSS identity binding and
-complete observed topology projection. Qualified capability values and the full
-profile audit follow; existing selected-BSS inventory cannot silently become a
-complete agent report. Complete IEEE message processing remains P0-dependent.
+offline inspection CLI and independent native-capture checks. The
+[observed-topology exercise](../guides/observed-topology.md) now pins explicit
+per-pod radio/VIF identities in the local journal, validates the full observed
+graph and builds an Operational BSS value without transmission. It survives
+UUID recreation and actual service restart with two simulated pods. Qualified
+capability inputs/field mapping and the full profile audit follow. Complete IEEE
+message processing remains P0-dependent.
 
 The user-facing proof is specifically **an EasyMesh controller discovers and
 onboards an OpenSync extender as another EasyMesh agent, represented by the

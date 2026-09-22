@@ -1131,6 +1131,36 @@
       "path": "easymesh-payloads/wheel-smoke.json",
       "sha256": "b0486659b1b4af0c5216da87ed358b9c7e6d0d9fdbb9b3a1e932c36c885986ab",
       "size": 693
+    },
+    {
+      "path": "observed-topology/browser-result.json",
+      "sha256": "d12ab09238bed03bd13ba4bdb496f132580f237b8f9742b5a13f23d14024ad06",
+      "size": 227
+    },
+    {
+      "path": "observed-topology/ovsdb-results.xml",
+      "sha256": "28a2ae326441f066beb5aff5b2307cc819c24641a979d60a11c65f21716025dc",
+      "size": 4924
+    },
+    {
+      "path": "observed-topology/service-report.json",
+      "sha256": "6be826951bffd124efa0fea73fb14a536365107ecc548ca8fdf2ee2071fdf59b",
+      "size": 38986
+    },
+    {
+      "path": "observed-topology/summary.json",
+      "sha256": "144cd0e9a5205f38e41a70b1a8adbf4f770aa1f86f789fb56be26a2b735031e7",
+      "size": 5130
+    },
+    {
+      "path": "observed-topology/unit-results.xml",
+      "sha256": "0da124ef2f5afe33fa5975acbf64a588c3f535b2694435150cc452350a2259ea",
+      "size": 43778
+    },
+    {
+      "path": "observed-topology/wheel-smoke.json",
+      "sha256": "9bebb9e2edff347f4919c580223de02a6ae50a622d48a5419facb9ef48475433",
+      "size": 430
     }
   ]
 }

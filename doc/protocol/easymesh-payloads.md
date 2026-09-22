@@ -22,7 +22,9 @@ associate the decoded values with a trusted peer, exchange and represented pod.
 The Python implementation is [easymesh_payloads.py](../../src/emosa/easymesh_payloads.py).
 It is a component of the EasyMesh-to-OpenSync adapter, not a separate virtual-agent
 process. Its offline inspection CLI is an evaluation tool. The running adapter
-service does not yet call these codecs or advertise these values to a controller.
+now uses the Operational BSS codec in an optional [read-only topology report](../guides/observed-topology.md)
+with explicit persisted bindings and a complete observed graph. It does not
+advertise those values to a controller.
 
 ## Exactly which definitions are implemented?
 
@@ -162,7 +164,8 @@ the objects. See [the tests](../../tests/test_easymesh_payloads.py) for multi-ra
 non-UTF-8 SSID, empty-count and boundary examples. A caller remains responsible
 for qualified identity allocation and truthful observed inventory. In particular,
 the existing selected-BSS OVSDB inventory is not automatically a complete-radio
-Operational BSS report. No Config-to-State substitution or fabricated capability
+Operational BSS report. The newer topology report performs separate complete-graph
+and identity checks. No Config-to-State substitution or fabricated capability
 mapping was added to produce these values.
 
 ## 5. Reproduce the checks and interpret their evidence
@@ -200,9 +203,9 @@ keeps this distinction explicit.
 
 ## What follows this component?
 
-The next useful component work is stable per-pod radio/BSS identity binding and
-complete observed topology projection, followed by truthful radio capability
-values from qualified inputs. Profile advertisement must wait for the complete
+Stable per-pod radio/BSS identity binding and complete observed topology projection
+now have a [synthetic service exercise](../guides/observed-topology.md). Next are
+truthful radio capability values from qualified inputs. Profile advertisement must wait for the complete
 mandatory-function audit. Actual discovery/topology/WSC exchange processing also
 needs the missing **IEEE 1905.1-2013 and IEEE 1905.1a-2014** review, independent
 full-message vectors, peer/exchange binding and recovery rules.

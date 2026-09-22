@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Standalone discovery/topology value codecs and authenticated WSC payloads have independent checks. Complete observed topology and stable radio bindings, then IEEE framing, trusted exchange state and complete-radio mapping, before wire-driven pod operations.",
+      "next": "Persisted explicit radio/VIF identities and complete observed AP value projection now survive row recreation and service restart. Qualify truthful capability inputs, complete the profile audit and IEEE exchange processing before wire-driven onboarding.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -471,10 +471,22 @@
       "title": "EasyMesh value component evidence",
       "category": "Protocol components",
       "description": "Component/regression tests, two independent dissector versions and bounded native observations; no complete wire or physical claim."
+    },
+    {
+      "path": "doc/guides/observed-topology.md",
+      "title": "Stable identities and complete observed topology",
+      "category": "Service and protocol integration",
+      "description": "Persist explicit synthetic bindings, inspect every radio/VIF through the real service, and test State-only AP values across reconnect, UUID recreation and process death."
+    },
+    {
+      "path": "doc/evidence/observed-topology/summary.json",
+      "title": "Observed topology evidence",
+      "category": "Service and protocol integration",
+      "description": "Two-pod read-only adapter experiment and graph/identity regressions; complete wire and physical proof remain pending."
     }
   ],
   "suite_evidence": {
-    "unit": "easymesh-payloads/unit-results.xml",
-    "ovsdb": "easymesh-payloads/ovsdb-results.xml"
+    "unit": "observed-topology/unit-results.xml",
+    "ovsdb": "observed-topology/ovsdb-results.xml"
   }
 }

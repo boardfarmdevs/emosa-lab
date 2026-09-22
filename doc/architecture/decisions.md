@@ -1,5 +1,14 @@
 # Implementation decisions
 
+- Add opt-in complete synthetic topology bindings with explicit per-pod logical
+  IDs, RUIDs, names/modes and expected MACs. Pin canonical bindings in versioned
+  local journal metadata; retain removed allocations and reject silent changes.
+  Rebuild UUID references from each monitored snapshot. All configured resources
+  must have unambiguous observed counterparts before producing an AP Operational
+  BSS value. State supplies operational facts, and stations remain separate.
+  The read-only diagnostic grants no actuation authority and keeps full protocol,
+  capabilities, physical topology, MLD and hardware qualification pending. A
+  deliberate identity migration/retirement interface is deferred and documented.
 - I0: CPython 3.13.7 is the installed bootstrap runtime and is pinned in
   `.python-version`. Ubuntu 22.04 x86-64 is the inspected development host;
   it is not the required Ubuntu 24.04 nested-LXD reference deployment.

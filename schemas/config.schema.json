@@ -92,6 +92,88 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 128
+              },
+              "topology": {
+                "type": "object",
+                "properties": {
+                  "radios": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "radio_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "if_name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "ruid": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f][26ae](?::[0-9a-f]{2}){5}$"
+                        },
+                        "expected_mac": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f][02468ace](?::[0-9a-f]{2}){5}$"
+                        },
+                        "interfaces": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "interface_id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "if_name": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "mode": {
+                                "enum": [
+                                  "ap",
+                                  "sta"
+                                ]
+                              },
+                              "expected_mac": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f][02468ace](?::[0-9a-f]{2}){5}$"
+                              }
+                            },
+                            "required": [
+                              "interface_id",
+                              "if_name",
+                              "mode",
+                              "expected_mac"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "maxItems": 16
+                        }
+                      },
+                      "required": [
+                        "radio_id",
+                        "if_name",
+                        "ruid",
+                        "expected_mac",
+                        "interfaces"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 8
+                  }
+                },
+                "required": [
+                  "radios"
+                ],
+                "additionalProperties": false,
+                "description": "Optional complete synthetic identity binding, persisted in the local journal. Read-only topology and value diagnostics; no wire or physical qualification."
               }
             },
             "required": [

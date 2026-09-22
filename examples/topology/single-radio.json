@@ -1,0 +1,18 @@
+{
+  "radios": [
+    {
+      "radio_id": "radio-1",
+      "if_name": "lab-radio",
+      "ruid": "02:00:00:00:40:01",
+      "expected_mac": "02:00:00:00:20:01",
+      "interfaces": [
+        {
+          "interface_id": "bss-1",
+          "if_name": "lab-ap",
+          "mode": "ap",
+          "expected_mac": "02:00:00:00:10:01"
+        }
+      ]
+    }
+  ]
+}

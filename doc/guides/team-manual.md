@@ -1638,6 +1638,35 @@ transaction. Chapter 11's actual-service harness now uses a compatible synthetic
 fixture and checks this policy before exercising clients. Neither a positive
 scope report nor enabling this simulation policy authorizes wire or physical writes.
 
+### 6.13 Bind stable identities and report the complete observed topology
+
+The older `radios` and `bsses` views describe the designated resource used by a
+semantic operation. A complete agent report must account for every represented
+radio and VIF. It must also survive database row recreation: an OVSDB UUID names
+a current row, while a logical `radio_id` or `bss_id` names a resource across
+reconnects and restarts.
+
+The [observed-topology walkthrough](observed-topology.md) explains the new optional
+binding, local journal persistence and `pod pod-1 topology --json` command. Begin
+with its automated exercise on HOST:
+
+```bash
+uv run python -m emosa.simulation.topology --output .lab/topology-demo
+```
+
+It starts one read-only adapter and two connecting simulated pods. Each has two
+radios, three AP BSSs and a station interface. It checks Config-versus-State
+reporting, rejects an unexpected interface, replaces every radio/VIF UUID and
+restarts the actual service. `passed: true` means those component checks passed;
+the false onboarding/physical flags remain visible. Owned processes stop on exit.
+
+Continue the guide for a three-terminal live exercise and the credentials-free
+example matching the loader. The binding is pinned before connecting, so an
+unexpected changed MAC cannot silently acquire an existing identity. Reconnects
+rebuild current references; unknown or incomplete graphs produce no Operational
+BSS value. A valid report provides value bytes for later protocol integration,
+without emitting an IEEE message or expanding the semantic write scope.
+
 ## 7. Explore evidence and the GitHub Pages manual
 
 The explorer is a **static publication of reviewed results and documentation**.
@@ -2754,10 +2783,11 @@ values, build an agent-service value in Python and reproduce the independent
 Wireshark check. SSIDs are shown as hex to preserve their original bytes; hex is
 not anonymization. Use private files for future physical observations.
 
-The running service does not yet use these codecs. Complete observed inventory,
-stable pod/radio identity binding and the eventual IEEE exchange layer are still
-required. In particular, encoding one selected BSS cannot establish a complete
-radio topology or a qualified advertised profile.
+The running service now uses the Operational BSS codec in its optional read-only
+[complete topology report](observed-topology.md). Its explicit bindings and full
+observed graph are separate from the older selected-BSS inventory. The IEEE
+exchange layer and qualified advertised profile remain pending; successful value
+encoding alone does not establish either.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
@@ -3127,7 +3157,7 @@ correctly blocked before any operation was allowed.
 | 2 | Invalid input, including argparse/configuration errors |
 | 3 | Local API caller wait expired; the operation may continue |
 | 4 | Local adapter service unavailable, often wrong socket or stopped service |
-| 5 | Blocked/unsupported operation, missing prerequisite, conflict, busy/precondition rejection, or blocked run |
+| 5 | Blocked/unsupported operation, missing prerequisite, conflict, busy/precondition rejection, blocked run, or unavailable `pod topology` projection |
 | 130 | CLI interrupt where handled as such; interrupted experiments can instead retain an inconclusive run and return nonzero |
 
 Native lab scripts use their own nonzero results for failed readiness/acceptance
@@ -3145,6 +3175,8 @@ and specific script's logs are the authority for what actually executed.
 | Unix socket path too long | Use a shorter private exercise path/checkout. Linux Unix sockets have a small path limit; this fixture keeps its database socket under private `/tmp`, but the API socket follows your exercise directory |
 | Secret unavailable/invalid | Check owned regular file, no symlink, directory 0700/file 0600, valid basename and printable ASCII PSK of 8–63 bytes. A trailing newline is part of the value and is rejected; do not create PSKs with default `echo` |
 | Inventory `NOT_READY`/`fresh: false` | Allow initial synchronization; verify database/manager process and endpoint. Stale rows are not positive application evidence |
+| Topology has no value and lists blockers | Inspect the full graph and explicit binding using the [topology guide](observed-topology.md); an unexpected interface or identity cannot be silently omitted |
+| Persisted topology binding differs | Review the changed configuration and restore the intended identity. Migration is not implemented; preserve the journal instead of deleting it to bypass the check |
 | Service directory already locked | Another adapter owns it; inspect/stop that process deliberately. Do not remove a live lock or share one journal between daemons |
 | Fixture/label already exists | Use a new path/label; preserve previous evidence. Fixture config endpoints become stale after its database closes |
 | `BUSY` or ownership conflict | Inspect active operations and writer/guard evidence. There is no hidden queue or automatic conflict override |

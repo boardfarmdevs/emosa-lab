@@ -788,5 +788,27 @@
     "permitted_scope": "Implement and independently test standalone components whose normative definitions are complete in the available sources; continue semantic service/radio tests and native peer observations.",
     "boundary": "No guessed IEEE base rules, no P0 freeze, no complete wire onboarding or physical acceptance claim from component tests.",
     "document": "doc/protocol/ieee-media-review.md"
+  },
+  "synthetic_topology_projection": {
+    "status": "implemented_simulation_diagnostic_only",
+    "guide": "doc/guides/observed-topology.md",
+    "implementation": [
+      "src/emosa/topology_bindings.py",
+      "src/emosa/opensync/topology.py",
+      "src/emosa/store.py"
+    ],
+    "api_method": "topology",
+    "cli": "emosa pod POD topology --json",
+    "scope": "Persisted explicit radio/VIF identities, complete Config/State reference graph and State-derived AP Operational BSS value; no transmission, capability inference or actuation authority",
+    "value_contract": "doc/protocol/easymesh-payloads.md",
+    "tests": [
+      "tests/test_topology.py",
+      "tests/test_topology_service.py"
+    ],
+    "evidence": "doc/evidence/observed-topology/summary.json",
+    "identity_migration": "not_implemented_changes_rejected_removed_bindings_reserved",
+    "p0_satisfied": false,
+    "physical_qualification": false,
+    "wire_admission": false
   }
 }

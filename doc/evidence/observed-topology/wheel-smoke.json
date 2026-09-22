@@ -1,0 +1,17 @@
+{
+  "installed_wheel": "emosa-0.1.0-py3-none-any.whl",
+  "wheel_sha256": "f8966cd99c9368bb76eefb1f0945bdfa801d21b941dbe73626bc00bbb9c1b5c3",
+  "isolated_python": true,
+  "working_directory_outside_checkout": true,
+  "passed": true,
+  "cli_exit_codes": [
+    0,
+    5
+  ],
+  "uuid_recreation": {
+    "rows_recreated": 12,
+    "all_uuids_changed": true
+  },
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

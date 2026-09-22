@@ -12,7 +12,6 @@ from emosa.opensync.schema import TABLES
 
 MONITOR = copy.deepcopy(TABLES)
 MONITOR["Wifi_Radio_Config"] += ["channel"]
-MONITOR["Wifi_Radio_State"] += ["enabled"]
 
 
 async def seed_radio_database(session):

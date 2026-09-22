@@ -21,6 +21,7 @@ for navigation and commands.
 | Retained model/OVSDB scenarios | [Run directories](runs/) and the [interactive explorer](https://boardfarmdevs.github.io/emosa-lab/#evidence) |
 | WSC components | [M1/M2 evidence](wsc-messages.json) and [radio interpretation](wsc-radio.json) |
 | EasyMesh value components | [Codec, CLI and independent native-capture checks](easymesh-payloads/summary.json) |
+| Complete synthetic observed topology | [Stable bindings, full graph checks and two-pod service recovery](observed-topology/summary.json) |
 
 These collections have different scopes and include failures. They do not
 establish EMOSA wire onboarding, physical-pod qualification or universal peer

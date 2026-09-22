@@ -14,7 +14,15 @@ SCHEMA_SHA256 = "91d18cc4668ff6fc9c9be2234ddc7e70c84b9640f04e621a1ff90e3451c867a
 TABLES = {
     "AWLAN_Node": ["serial_number", "model", "firmware_version"],
     "Wifi_Radio_Config": ["if_name", "freq_band", "enabled", "vif_configs"],
-    "Wifi_Radio_State": ["if_name", "radio_config", "vif_states", "freq_band", "channel", "mac"],
+    "Wifi_Radio_State": [
+        "if_name",
+        "radio_config",
+        "vif_states",
+        "freq_band",
+        "channel",
+        "mac",
+        "enabled",
+    ],
     "Wifi_VIF_Config": [
         "if_name",
         "mode",

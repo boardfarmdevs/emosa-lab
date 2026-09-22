@@ -10,6 +10,7 @@ from emosa.opensync.radio_scope import (
     require_synthetic_scope,
     transaction_guards,
 )
+from emosa.opensync.topology import project, unavailable
 
 
 def where_uuid(row_id):
@@ -64,6 +65,7 @@ class OpenSyncBackend:
         state_provenance="independent-simulated-manager:Wifi_VIF_State",
         expected_serial=None,
         mapping_scope="existing-bss",
+        topology_binding=None,
     ):
         if backend_mode != "ovsdb-sim":
             raise EmosaError(
@@ -74,6 +76,7 @@ class OpenSyncBackend:
         self.if_name, self.radio_name = if_name, radio_name
         self.bss_id, self.radio_id = bss_id, radio_id
         self.expected_serial = expected_serial
+        self.topology_binding = topology_binding
         if mapping_scope not in {"existing-bss", "sole-fronthaul-radio"}:
             raise EmosaError(Reason.INVALID_INPUT, "unknown mapping scope")
         if mapping_scope == "sole-fronthaul-radio" and not expected_serial:
@@ -201,6 +204,7 @@ class OpenSyncBackend:
             "ready": raw["ready"] and bool(state),
             "device_identity": list(decoded.get("AWLAN_Node", {}).values()),
             "topology": {"physical_links": "unknown", "protocol_adjacency": "not_started"},
+            "inventory_scope": "designated_existing_bss",
             "radios": [
                 {
                     "radio_id": self.radio_id,
@@ -227,6 +231,21 @@ class OpenSyncBackend:
                 if u in state.get("associated_clients", [])
             ],
         }
+
+    async def topology(self):
+        if self.topology_binding is None:
+            return unavailable(self.pod_id, None, "topology_binding_not_configured")
+        try:
+            raw = await self.session.snapshot()
+        except (EmosaError, ConnectionError, TimeoutError) as exc:
+            return unavailable(
+                self.pod_id,
+                self.topology_binding,
+                exc.code.value if isinstance(exc, EmosaError) else "NOT_READY",
+            )
+        return project(
+            self.pod_id, raw, self.topology_binding, state_provenance=self.state_provenance
+        )
 
     async def plan(self, intent):
         intent.target(self.vault)
