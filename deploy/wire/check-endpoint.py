@@ -5,6 +5,7 @@ synthetic peers exchange an Early AP Capability Report and a Topology Query /
 Response. Neither mode uses a native controller or provisions a pod.
 With --coordinator, a read-only real OVSDB source drives reports and Ack/retry
 handling; only its separate owned fixture administrator/manager changes data.
+With --discovery, bounded Search/Response correlation precedes read-only topology.
 """
 
 import argparse
@@ -162,10 +163,16 @@ def main():
         help="exchange synthetic complete reports instead of empty transport probes",
     )
     mode.add_argument("--coordinator", action="store_true", help="read-only OVSDB report loop")
+    mode.add_argument("--discovery", action="store_true", help="discovery-to-topology OVSDB loop")
     args = parser.parse_args()
     if socket.gethostname() != "emosa-lab" or os.geteuid() != 0:
         raise SystemExit("Run as root only inside the dedicated emosa-lab VM")
     if args.worker:
+        if args.discovery:
+            from emosa.simulation.discovery_wire import worker as discovery_worker
+
+            asyncio.run(discovery_worker(args.worker, args.interface, args.directory))
+            return
         if args.coordinator:
             from emosa.simulation.coordinator_wire import worker as coordinator_worker
 
@@ -223,19 +230,20 @@ def main():
                     link,
                     *(["--reports"] if args.reports else []),
                     *(["--coordinator"] if args.coordinator else []),
+                    *(["--discovery"] if args.discovery else []),
                 ],
                 stdout=log,
                 stderr=log,
             )
             log.close()
             children.append(process)
-            end = time.monotonic() + (15 if args.coordinator else 5)
+            end = time.monotonic() + (15 if args.coordinator or args.discovery else 5)
             while not (args.directory / (side + ".ready")).exists():
                 if process.poll() is not None or time.monotonic() >= end:
                     raise RuntimeError("packet endpoint did not become ready; inspect its log")
                 time.sleep(0.05)
         for process in children:
-            assert process.wait(timeout=25 if args.coordinator else 10) == 0, (
+            assert process.wait(timeout=30 if args.coordinator or args.discovery else 10) == 0, (
                 "endpoint failed; retain worker logs"
             )
     finally:

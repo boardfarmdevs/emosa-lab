@@ -21,7 +21,11 @@ initiation separate from the absent EMOSA wire exchange. The
 [available WFA audit](../protocol/procedure-audit.md) advances the contract while
 the complete procedure audit remains unfinished. Both exact IEEE PDFs were
 obtained on 2026-09-22; the [envelope implementation](../protocol/ieee1905-envelope.md)
-now passes native-capture and isolated packet checks. Discovery/WSC integration is next.
+now passes native-capture and isolated packet checks. The later
+[discovery-to-topology lifecycle](../protocol/discovery-session.md) joins selected
+Search/Response checks to the real database source, with reconnect invalidation
+and repeated socket tests. Automatic Early Report, complete profile admission,
+native controller visibility and durable WSC-to-operation integration are next.
 
 The [onboarding readiness checks](../guides/onboarding-readiness.md) now add
 strict synthetic sole-radio scope admission and offline review of native captures.

@@ -1,0 +1,142 @@
+{
+  "passed": true,
+  "scope": "restricted_discovery_with_real_ovsdb_and_in_memory_ethernet",
+  "search_mids": [
+    1,
+    2,
+    3
+  ],
+  "stages": {
+    "before_discovery": {
+      "outcome": "message_not_admitted",
+      "response_frames": 0
+    },
+    "incompatible_advertisement": {
+      "scope": "restricted_discovery_to_read_only_topology",
+      "state": "discovery_incompatible",
+      "source_available": true,
+      "selected_response_issues": [
+        "kib_mib_support_absent",
+        "security_capability_absent"
+      ],
+      "response_observed": true,
+      "counts": {
+        "source_context_changed": 1,
+        "message_not_admitted": 1,
+        "search_sent": 1,
+        "discovery_incompatible": 1
+      },
+      "events": [
+        "source_context_changed",
+        "message_not_admitted",
+        "search_sent",
+        "discovery_incompatible"
+      ],
+      "reports": null,
+      "automatic_early_report": "blocked_table117_review",
+      "wsc_admission": "blocked_full_profile_and_durable_operation_integration",
+      "operations_created": 0,
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false
+    },
+    "incompatible_query": {
+      "outcome": "message_not_admitted",
+      "response_frames": 0
+    },
+    "correlated_topology": {
+      "outcome": "topology_response_sent",
+      "response_frames": 1
+    },
+    "config_only": {
+      "outcome": "topology_response_sent",
+      "response_frames": 1
+    },
+    "observed_state_change": {
+      "outcome": "topology_response_sent",
+      "response_frames": 1
+    },
+    "disconnected": {
+      "outcome": "message_not_admitted",
+      "response_frames": 0
+    },
+    "reconnected_before_discovery": {
+      "outcome": "message_not_admitted",
+      "response_frames": 0
+    },
+    "rediscovered_topology": {
+      "outcome": "topology_response_sent",
+      "response_frames": 1
+    },
+    "unsolicited_wsc": "wsc_admission_blocked"
+  },
+  "session": {
+    "scope": "restricted_discovery_to_read_only_topology",
+    "state": "discovered_read_only",
+    "source_available": true,
+    "selected_response_issues": [],
+    "response_observed": true,
+    "counts": {
+      "source_context_changed": 3,
+      "message_not_admitted": 4,
+      "search_sent": 3,
+      "discovery_incompatible": 1,
+      "restart_requested": 1,
+      "input_rejected": 2,
+      "controller_correlated": 2,
+      "wsc_admission_blocked": 1
+    },
+    "events": [
+      "source_context_changed",
+      "message_not_admitted",
+      "search_sent",
+      "discovery_incompatible",
+      "message_not_admitted",
+      "restart_requested",
+      "search_sent",
+      "input_rejected",
+      "controller_correlated",
+      "source_context_changed",
+      "message_not_admitted",
+      "source_context_changed",
+      "message_not_admitted",
+      "search_sent",
+      "input_rejected",
+      "controller_correlated",
+      "wsc_admission_blocked"
+    ],
+    "reports": {
+      "scope": "read_only_report_coordinator",
+      "closed": false,
+      "source_available": true,
+      "early_pending": false,
+      "counts": {
+        "topology_response_sent": 1
+      },
+      "events": [
+        {
+          "event": "topology_response_sent",
+          "mid": 707
+        }
+      ],
+      "operations_created": 0,
+      "wsc_admission": "blocked_full_profile_and_durable_operation_integration",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false
+    },
+    "automatic_early_report": "blocked_table117_review",
+    "wsc_admission": "blocked_full_profile_and_durable_operation_integration",
+    "operations_created": 0,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "monitor_read_only": true,
+  "pod_initiated_connection": true,
+  "credential_columns_monitored": false,
+  "socket_io": false,
+  "radio_used": false,
+  "native_controller_used": false,
+  "fixture_admin_and_manager_writes": true,
+  "adapter_config_writes": 0,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

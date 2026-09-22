@@ -46,6 +46,18 @@ Two isolated AF_PACKET runs and independent dissector checks pass. The new
 No actual-pod source, native controller onboarding, discovery/profile admission
 or operation integration is enabled by this component.
 
+## Discovery-to-topology lifecycle increment
+
+The [discovery session](../protocol/discovery-session.md) joins bounded
+Search/Response correlation to the read-only database/report source. Required
+controller-field gaps are explicit, and changed source generations, capabilities
+or lapsed leases require fresh discovery. Ordinary database revisions still
+produce current State-derived reports. Real-database and repeated isolated
+Ethernet exercises cover rejection, retry and withdrawal. The
+[evidence](../evidence/discovery-session/README.md) retains 898 unit and 49 OVSDB
+passes. Automatic Early Report and M1 remain blocked by the recorded normative
+and admission gaps; no native controller or physical pod was used in these runs.
+
 ## Secure fleet and clean reproduction increment
 
 The [secure-fleet workflow](../guides/secure-fleet.md) adds authenticated

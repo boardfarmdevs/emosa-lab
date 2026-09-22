@@ -22,7 +22,10 @@ Then construct and inspect [capability and topology reports](doc/protocol/report
 including the offline and isolated Ethernet exercises. The
 [read-only report coordinator](doc/protocol/report-coordinator.md) now connects
 those reports to a real disposable database with Ack/retry and source-withdrawal
-checks. Complete controller onboarding and physical acceptance remain pending.
+checks. The [discovery-to-topology lifecycle](doc/protocol/discovery-session.md)
+adds bounded Search/Response handling, capability-gap diagnostics and fresh
+discovery after reconnect. Automatic Early Report/M1 admission, complete
+controller onboarding and physical acceptance remain pending.
 
 ## Architecture
 

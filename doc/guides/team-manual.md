@@ -3178,8 +3178,58 @@ creating operations; the selected full-procedure gate remains closed.
 
 **Checkpoint:** show the Config-only and State-updated reports, identify the
 separate fixture writers, and explain why stale or incomplete facts stop output.
-The next integration is discovery/profile admission plus full AP Capability and
-native controller visibility, followed by durable WSC-to-operation handling.
+Continue with the discovery lifecycle below. Complete profile admission, full AP
+Capability, native controller visibility and durable WSC-to-operation handling
+remain separate requirements.
+
+### 13.11 Discover the controller before reporting the simulated pod
+
+The last exercise was given its controller binding. A running adapter must also
+send a Search, correlate the Response and decide which subsequent messages it
+can process. **Correlation** matches a response to an active attempt; **admission**
+decides whether all requirements for a configuration procedure are satisfied.
+They are different decisions. Neither a matching MID nor a capability flag
+establishes trust in an arbitrary Ethernet sender.
+
+On **HOST**, after §13.10, run:
+
+```bash
+uv run python -m emosa.simulation.discovery --output .lab/manual-discovery-01
+uv run emosa-lab wire-inspect --capture .lab/manual-discovery-01/messages.pcap
+uv run pytest tests/test_discovery_session.py -q
+uv run pytest tests/test_discovery_session_ovsdb.py -q
+```
+
+This starts a real disposable database and a synthetic controller exerciser.
+The database connects to a read-only monitor; Ethernet frames are delivered in
+memory. There is no radio or native controller in this command. The first
+advertisement deliberately omits required capability information. The session
+records the gaps and withholds topology. After an explicit new attempt, matching
+selected fields permit read-only topology reporting. Config-only changes still
+report the old SSID; separately observed State changes alter the report.
+
+Stopping and restarting the database now requires another discovery exchange,
+even after fresh rows return. This prevents an old controller exchange from
+being reused across a changed pod connection. A lease that expired without
+being polled also loses its context. Ordinary timely database revisions can
+refresh topology without restarting discovery.
+
+Read all ten stages in `result.json` using the
+[discovery-session walkthrough](../protocol/discovery-session.md). Then follow
+the VM packet runbook with `--discovery` to reproduce dropped responses, missing
+capability rejection, old/old/new SSID reporting and disconnect suppression over
+actual Ethernet sockets. The peer waits at least 1.1 seconds for deliberately
+withheld responses; a single empty receive call would not establish that result.
+
+Automatic Early Report initiation stays blocked by the documented EasyMesh
+Table 117 bit-range ambiguity. The new lifecycle sends no M1 and creates no
+operations. Its `discovered_read_only` state describes this component's limited
+permission to report; it is not a native controller's managed-agent inventory
+or a qualified profile. The unchanged physical-pod proof remains pending.
+
+**Checkpoint:** explain why a complete database snapshot can still receive no
+topology reply, why reconnect requires discovery again, and why a successful
+read-only response does not authorize provisioning.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

@@ -1455,5 +1455,68 @@
     "full_procedure_gate_satisfied": false,
     "controller_onboarding_proven": false,
     "physical_pod_proven": false
+  },
+  "discovery_report_session": {
+    "implementation": [
+      "src/emosa/wire/discovery_session.py",
+      "src/emosa/simulation/discovery.py",
+      "src/emosa/simulation/discovery_wire.py"
+    ],
+    "tests": [
+      "tests/test_discovery_session.py",
+      "tests/test_discovery_session_ovsdb.py",
+      "scripts/check-discovery-reference.py"
+    ],
+    "guide": "doc/protocol/discovery-session.md",
+    "evidence": "doc/evidence/discovery-session/summary.json",
+    "sources": [
+      {
+        "specification": "IEEE 1905.1-2013",
+        "sections": [
+          "7.8 p.46 (new MID allocation)",
+          "8.2.2.2 p.48 (Topology Response echo and deadline)",
+          "10.1-10.1.2 pp.56-57 (trusted link and discovery correlation)"
+        ]
+      },
+      {
+        "specification": "EasyMesh 6.1",
+        "sections": [
+          "6.1 p.63 (Search/Response roles, services, profiles, KiBMiB and non-DPP Early indication)",
+          "6.2 pp.63-64 (topology service discovery)",
+          "17.1.2 p.111 (Security Capability inclusion)",
+          "17.2.67 Table 90 p.167 (three security capability octets)",
+          "17.2.94 Table 117 p.182 (named bits and unresolved reserved-range overlap)"
+        ]
+      }
+    ],
+    "scope": "Explicitly bound trusted-link simulation peer; selected Response checks precede read-only topology. No automatic Early Report, M1, operation callback or native controller admission.",
+    "rules": [
+      "Only fresh complete restricted 2.4 GHz capability/source facts permit Search.",
+      "Known Response capability gaps, invalid lengths and reserved algorithms are recorded without invented defaults.",
+      "Named Table117 bits inspected diagnostically; overlap unresolved and automatic Early Report blocked.",
+      "Source loss, new connection generation, lapsed lease even without polling, or changed capability facts discard correlation and require a fresh Search.",
+      "Ordinary timely database revisions retain controller correlation; topology uses current observed State.",
+      "Failed or late Search transmission discards the exchange; old MIDs cannot restore a new attempt.",
+      "ReportSource context is process instance, invalidation epoch and DB connection generation, separate from per-report revision stamp."
+    ],
+    "local_limits": {
+      "search_transmissions": 3,
+      "search_spacing_seconds": 1,
+      "attempt_budget_seconds": 5,
+      "event_history": 64
+    },
+    "pending": [
+      "Table117 clarification and automatic Early ordering",
+      "Complete profile/security applicability and AP Capability Report",
+      "LLDP and periodic registrar-detection lifecycle",
+      "Compatible native controller with its own inventory proof",
+      "Durable WSC-to-operation admission",
+      "Qualified unchanged physical pod and independent behavior"
+    ],
+    "full_procedure_gate_satisfied": false,
+    "native_controller_used": false,
+    "adapter_config_writes": 0,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
   }
 }

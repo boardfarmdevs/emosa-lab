@@ -135,3 +135,29 @@ in the walkthrough. Finalizers preserve received-byte traces, close the owned
 database/manager and remove owned namespaces. As with other modes, an abrupt VM
 kill can require owner inspection. The adapter reports zero Config writes; the
 fixture administrator/manager explicitly perform the simulated changes.
+
+## Discovery before read-only topology
+
+Use the same full source/schema bundle and OVSDB tools as above. Read the
+[discovery-session walkthrough](../../doc/protocol/discovery-session.md) first.
+From HOST, use an unused output directory in your existing owned staging area:
+
+```bash
+lxc exec emosa-lab -- env PYTHONPATH=/opt/emosa-wire-check/src \
+  EMOSA_OVS_BIN=/opt/emosa-wire-check/bin \
+  /opt/emosa/.venv/bin/python /opt/emosa-wire-check/deploy/wire/check-endpoint.py \
+  --discovery --directory /opt/emosa-wire-check/discovery-01
+```
+
+The synthetic peer drops the first Search response, supplies an incompatible
+advertisement to Search MID 2, and permits a new attempt after observing no
+Topology Response to Query 710 for at least 1.1 seconds. Search MID 3 receives
+the selected compatible fields. Queries 711/712/713 produce old/old/new SSIDs;
+Query 714 after database loss gets no reply during another 1.1-second window.
+The left/right workers receive seven/six frames respectively. They send no
+automatic Early Report or M1, and create no adapter operation.
+
+Pull both JSON and PCAP files and retain logs/driver output, as in step 4. Check
+them with `scripts/check-discovery-reference.py --directory LOCAL_RUN_DIRECTORY`.
+It requires tshark and imports no adapter code. This experiment uses owned
+isolated namespaces; it does not start or join the native peer baseline.

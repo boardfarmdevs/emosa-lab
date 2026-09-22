@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Read-only reporting now follows a real database source with Query/Ack/retry and withdrawal tested over Ethernet. Next reconcile native peer/full AP Capability/profile, integrate discovery and prove controller inventory, then durable WSC-to-operation admission.",
+      "next": "Restricted discovery-to-topology lifecycle now checks controller fields and requires discovery again after source loss or reconnect. Next resolve automatic Early Report/profile admission, full AP Capability and native inventory, then durable WSC-to-operation handling.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -639,10 +639,22 @@
       "title": "Read-only report coordinator evidence",
       "description": "866 unit / 48 OVSDB passes, two database-backed Ethernet runs, independent fields and installed-package reproduction.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/discovery-session.md",
+      "title": "Discovery before reporting walkthrough",
+      "description": "Learn bounded Search/Response, capability gaps and fresh discovery after reconnect.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/discovery-session/README.md",
+      "title": "Discovery session evidence",
+      "description": "Real database, repeated isolated Ethernet, independent packet checks and unchanged operation gate.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "coordinator/unit-results.xml",
-    "ovsdb": "coordinator/ovsdb-results.xml"
+    "unit": "discovery-session/unit-results.xml",
+    "ovsdb": "discovery-session/ovsdb-results.xml"
   }
 }

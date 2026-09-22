@@ -68,3 +68,10 @@ an actual client association-age source. The pinned OpenSync client schema has
 no such age field. See the [report fact contract](../protocol/reports.md#5-supply-facts-not-guesses)
 and [read-only qualification guide](../guides/pod-qualification.md). These are
 pod/profile inputs, not a renewed request for the already obtained IEEE PDFs.
+
+The [discovery-session lifecycle](../protocol/discovery-session.md) now checks
+selected required Response fields before read-only reporting. It identifies
+the retained native response's missing KiB/MiB support and Security Capability.
+Table 117's Early bit/reserved-range conflict remains a consolidated acquisition
+clarification; automatic Early Report and M1 initiation stay blocked. This work
+adds no new document request and does not establish a qualified native profile.

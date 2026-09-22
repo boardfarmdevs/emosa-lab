@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "search_mids": [
+    1,
+    2,
+    3
+  ],
+  "response_mids": [
+    711,
+    712,
+    713
+  ],
+  "query_mids": [
+    710,
+    711,
+    712,
+    713,
+    714
+  ],
+  "incompatible_observation_seconds": 1.116817329020705,
+  "disconnected_observation_seconds": 1.1145511640352197,
+  "automatic_early_report_or_m1_observed": false,
+  "independent_state_change_reported": true,
+  "scope": "restricted_discovery_with_real_ovsdb_over_AF_PACKET",
+  "native_controller_used": false,
+  "adapter_config_writes": 0,
+  "fixture_admin_and_manager_writes": true,
+  "radio_used": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

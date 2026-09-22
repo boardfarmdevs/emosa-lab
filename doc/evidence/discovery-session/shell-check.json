@@ -1,0 +1,5 @@
+{
+  "passed": true,
+  "shell_blocks": 187,
+  "method": "bash -n only; commands not executed"
+}

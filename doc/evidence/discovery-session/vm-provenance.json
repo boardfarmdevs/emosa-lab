@@ -1,0 +1,21 @@
+{
+  "vm": "emosa-lab",
+  "staging": "/opt/emosa-discovery-20260922",
+  "staged_core_sources_match_checkout": true,
+  "source_hashes": {
+    "src/emosa/wire/autoconfiguration.py": "2947a0a915302287b7dae40b1d6b7413f8f2a1c5421c50c89266564633828856",
+    "src/emosa/wire/coordinator.py": "e6046993e64bd606fc0089dfdd198ec71f6d99ead86c023b4517465af87e9d53",
+    "src/emosa/wire/discovery_session.py": "0517a2a522f74f37fc9be02b86ac7d534d3286c5018c8b2f7943827f8fe8c369",
+    "src/emosa/simulation/report_source.py": "f32b41de3146a7237131eb9498a75dd999b9b3fca1039b41527e083c274c55ab",
+    "src/emosa/simulation/discovery.py": "a590338f592035798644d2970f75b29a3959a6ba82bb5dca595a4550a3a6504f",
+    "src/emosa/simulation/discovery_wire.py": "2d7c965f2b3bfffa1bb20adf4cd2b302b25c37225dc43cf6107a10ef0fce246c",
+    "deploy/wire/check-endpoint.py": "33c229c20e36e2d48984cbf28f5c76d4ec12f741d75883e0926f6a533d750395"
+  },
+  "ovsdb_version": "4.0.0",
+  "binary_sha256": {
+    "/opt/native-ovsdb-server": "93714d2adf2e847697807a77515d527ff7281c270170a01864e2f8194ac49b68",
+    "/opt/native-ovsdb-tool": "c664d4a282a3fe77356b02e025e3d419b7857bfdc92a289b23c81a030e3ec257"
+  },
+  "owned_namespaces_removed": true,
+  "native_controller_started": false
+}

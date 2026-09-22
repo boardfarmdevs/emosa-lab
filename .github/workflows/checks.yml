@@ -27,6 +27,10 @@ jobs:
           --coordinator-directory doc/evidence/coordinator/run-01
           --coordinator-directory doc/evidence/coordinator/run-02
       - run: python3 deploy/peer-baseline/compatibility/check-capture.py
+      - run: >-
+          python3 scripts/check-discovery-reference.py
+          --directory doc/evidence/discovery-session/run-01
+          --directory doc/evidence/discovery-session/run-02
   wsc-reference:
     runs-on: ubuntu-24.04
     steps:

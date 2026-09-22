@@ -77,6 +77,7 @@ def describe(message):
             "band": response.band,
             "advertised_profile": response.profile,
             "pending_requirements": list(response.pending_requirements),
+            "selected_response_issues": list(response.selected_response_issues),
         }
         result["procedure_validation"] = "selected_response_fields_only"
     elif message.message_type in (3, 0x8043):

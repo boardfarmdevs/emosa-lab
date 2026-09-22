@@ -7,7 +7,7 @@
     "I1": "implemented with model tests",
     "I2": "Real OVSDB and independent hostapd/hwsim clients tested through actual adapter service with pod-initiated connection and SIGKILL recovery; bounded two-pod test; semantic initiation only; see doc/guides/service-integration.md; strict sole-radio scope and atomic graph guards verified; see doc/guides/onboarding-readiness.md",
     "R0": "native apply/withhold experiment runs; database-restart recovery N03 fails and production backend remains disabled",
-    "I3": "IEEE envelope, discovery/WSC, restricted reports and read-only Query/Ack coordinator tested with real OVSDB and isolated AF_PACKET. Discovery/profile admission, full AP Capability and native controller visibility remain pending; see doc/protocol/report-coordinator.md",
+    "I3": "IEEE envelope, discovery/WSC, restricted reports and Query/Ack coordinator tested. Restricted discovery-to-topology lifecycle now adds required-field diagnostics and reconnect invalidation through real OVSDB and isolated AF_PACKET. Automatic Early/M1, complete profile, full AP Capability and native inventory pending; see doc/protocol/discovery-session.md",
     "I4": "Independent WSC payloads composed with complete-message peer/link-generation/RUID binding, duplicate/lifetime checks and secret candidate projection. Full profile admission, durable operation binding and live controller provisioning remain blocked P0/I3.",
     "I5": "read-only draft collector implemented; physical qualification and writes blocked M0/P0",
     "I6": "incremental component runner/watch/inspect/report/compare; complete reference release pending",

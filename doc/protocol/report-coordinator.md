@@ -187,6 +187,12 @@ supplying a physical endpoint or bypassing the application wire gate.
 component and a synthetic peer over actual AF_PACKET sockets in the dedicated
 VM. It performs no discovery-profile admission and never starts M1 from an Ack.
 
+The later [discovery session](discovery-session.md) now composes selected
+Search/Response checks with read-only topology and requires fresh discovery after
+a source-context change. It deliberately leaves automatic Early Report and M1
+blocked. The standalone coordinator exercise above still tests Early Ack/retry
+independently of that unresolved admission rule.
+
 Next, reconcile the selected native peer/profile and full AP Capability
 requirements, connect discovery and report handling to the application lifecycle,
 and retain the native controller's own inventory. Then implement durable

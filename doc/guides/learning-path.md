@@ -148,6 +148,13 @@ Observe a Config-only change, a separate manager State change, missing client ag
 disconnection and fresh reconnect. Then repeat with `--coordinator` in the isolated
 VM packet runbook. Explain why an Ack establishes receipt rather than WSC admission.
 
+Then run [discovery before reporting](../protocol/discovery-session.md) and
+[manual §13.11](team-manual.md#1311-discover-the-controller-before-reporting-the-simulated-pod).
+Compare an incompatible advertisement with a correlated response, then reconnect
+the database and observe the requirement for a new Search. Repeat with
+`--discovery` in the VM. Automatic Early Report and M1 remain blocked; explain
+the distinction between correlation, read-only reporting and full admission.
+
 **Checkpoint:** distinguish a reassembled message, a correlated discovery response,
 an authenticated WSC candidate and an admitted operation. The new components
 stop before operation creation. The complete profile/capability and controller

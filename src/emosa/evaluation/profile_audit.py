@@ -28,7 +28,7 @@ REQUIREMENTS = (
         "Controller discovery and topology",
         "6.1–6.2; Table 4",
         "partial_component",
-        "Value codecs/topology exist; IEEE processing and controller inventory proof are absent",
+        "Restricted discovery/report lifecycle exists; full admission and native inventory pending",
     ),
     (
         "profile",
@@ -56,7 +56,7 @@ REQUIREMENTS = (
         "Complete AP capability reporting",
         "9.1; 17.1.7",
         "partial_component",
-        "Basic radio mapping/codecs lack conditional fields and the complete report",
+        "Restricted Early Report exists; full AP Capability and applicable fields remain pending",
     ),
     (
         "client_capability",

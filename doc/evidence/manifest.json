@@ -2191,6 +2191,126 @@
       "path": "coordinator/wire-gate.json",
       "sha256": "54dcd6cd4f1216ee775b8d436c3ed27a33a04f2cecb21d9ca3439178b590cdc6",
       "size": 477
+    },
+    {
+      "path": "discovery-session/README.md",
+      "size": 2476,
+      "sha256": "b21eeec954273ece750481a0ebba26dbfa80f7443f2068bdef1ff09b5dd39f1f"
+    },
+    {
+      "path": "discovery-session/database/messages.pcap",
+      "size": 1780,
+      "sha256": "a80ca19d9794cf651ed474de0c56892e14ae8ab325cc1cb8fa50533331328664"
+    },
+    {
+      "path": "discovery-session/database/result.json",
+      "size": 4035,
+      "sha256": "05ae0d88829f5af93a9598d8a9e2be114a64d8079017e61acc2fe0c887cd1ee2"
+    },
+    {
+      "path": "discovery-session/mermaid-result.json",
+      "size": 2158,
+      "sha256": "58618cd9ebb928a329d8148199470ea63509fef70458a2f9c341a6c2546dffab"
+    },
+    {
+      "path": "discovery-session/ovsdb-results.xml",
+      "size": 6503,
+      "sha256": "ba9b34ab18ba654ff52995b168ed8ed7b6cb5009d3ceadd5ae225396d56ed007"
+    },
+    {
+      "path": "discovery-session/reference-host.json",
+      "size": 776,
+      "sha256": "267be7f0e790b23651d0905623bbe3b85dcae09808266247dc148e3f9312f1b9"
+    },
+    {
+      "path": "discovery-session/reference-vm.json",
+      "size": 785,
+      "sha256": "b632633d2f95e6d28d3a3fa141726bddfee851e26fe1ca78fc051f9eb146acc5"
+    },
+    {
+      "path": "discovery-session/run-01/driver.json",
+      "size": 154,
+      "sha256": "597543dc1e242cbea297c0d73df327d2e7c5b126c32b89f257fe299f7d6cd71f"
+    },
+    {
+      "path": "discovery-session/run-01/left.json",
+      "size": 2215,
+      "sha256": "bd3fc7e2d28ded3874ccafb416d899750e1810b89aa8b7e3c476c44bb4f3e952"
+    },
+    {
+      "path": "discovery-session/run-01/left.pcap",
+      "size": 379,
+      "sha256": "0faf2c02cfe8061f6b563ca3746b42ac0276415637ad3bc8d18b37e279d44abc"
+    },
+    {
+      "path": "discovery-session/run-01/right.json",
+      "size": 665,
+      "sha256": "e4d5b9b304fa77bc6ddb98c8708ae50443a86bbf64c786fb67468ef5be891482"
+    },
+    {
+      "path": "discovery-session/run-01/right.pcap",
+      "size": 850,
+      "sha256": "38934dc237463688ca8be30e4ec0dc9938bf466f74e4cf5dbdce91cc6777b92d"
+    },
+    {
+      "path": "discovery-session/run-02/driver.json",
+      "size": 154,
+      "sha256": "49dfc4c9132abadd71bd1f9c546275dbd37938fc20d94736bda4ca06de680980"
+    },
+    {
+      "path": "discovery-session/run-02/left.json",
+      "size": 2215,
+      "sha256": "bd3fc7e2d28ded3874ccafb416d899750e1810b89aa8b7e3c476c44bb4f3e952"
+    },
+    {
+      "path": "discovery-session/run-02/left.pcap",
+      "size": 379,
+      "sha256": "0faf2c02cfe8061f6b563ca3746b42ac0276415637ad3bc8d18b37e279d44abc"
+    },
+    {
+      "path": "discovery-session/run-02/right.json",
+      "size": 666,
+      "sha256": "8cd7ceb6fb98aca60f8f300abecfc40b72aa8234cfc8710987c35132d58cc621"
+    },
+    {
+      "path": "discovery-session/run-02/right.pcap",
+      "size": 850,
+      "sha256": "38934dc237463688ca8be30e4ec0dc9938bf466f74e4cf5dbdce91cc6777b92d"
+    },
+    {
+      "path": "discovery-session/shell-check.json",
+      "size": 95,
+      "sha256": "ef4c76341a6e6563d8db74e0d495164fb1a4c9de836998da2495443c6cf45049"
+    },
+    {
+      "path": "discovery-session/summary.json",
+      "size": 2454,
+      "sha256": "886484328ed374eeec8b2b95a99838fa9ceab77d81d438bc7a5075c6e407527b"
+    },
+    {
+      "path": "discovery-session/unit-results.xml",
+      "size": 125189,
+      "sha256": "15334f451d5741961a320170425de71d0b7dada7cc2dbea24280867f346a64f2"
+    },
+    {
+      "path": "discovery-session/vm-provenance.json",
+      "size": 1234,
+      "sha256": "813a39da17aea6cdd43c95adcd47e5f77a93ebf5e3b8c0685054494931acb162"
+    },
+    {
+      "path": "discovery-session/wheel-check.json",
+      "size": 309,
+      "sha256": "685d9aff5645f5b6855c307bb7c641cf6418ff8ab6708d6819b2cbf94804c302"
+    },
+    {
+      "path": "discovery-session/wire-gate.json",
+      "size": 481,
+      "sha256": "9bacc91dfdb2c36184810c80e753cef8f81722cb8da4f1e4243ad4cc7719d4a9"
+    },
+    {
+      "path": "discovery-session/browser-result.json",
+      "size": 228,
+      "sha256": "d85f875a7499b8bb622c8ee37f34dea9fa463e0ffab2d063f7adb90779798d3e"
     }
   ]
 }

@@ -1,0 +1,19 @@
+{
+  "exit_code": 5,
+  "scenario": "scenarios/provision-one-bss.json",
+  "backend": "ovsdb-sim",
+  "status": "blocked",
+  "operations": [],
+  "prerequisites": [
+    {
+      "gate": "P0",
+      "status": "blocked",
+      "reason": "exact normative matrix, independent vectors and wire implementation required"
+    },
+    {
+      "gate": "evidence:pcap",
+      "status": "blocked",
+      "reason": "required evidence cannot be produced by the available component backend"
+    }
+  ]
+}

@@ -29,6 +29,7 @@ class ReportSnapshot:
     stamp: ReportStamp
     capabilities: EarlyCapabilities
     topology: TopologyFacts = field(repr=False)
+    context_token: str
 
 
 class ReportSource:
@@ -89,6 +90,10 @@ class ReportSource:
                 invalid("capability and topology radio inventories disagree")
             if revision == self._revision and self._last_facts != facts:
                 invalid("report facts changed without a new source revision")
+            if self._snapshot is not None and self.clock() >= self._snapshot.stamp.valid_until:
+                # Even when nobody polled during the gap, a lapsed observation
+                # lease cannot silently preserve an established peer context.
+                self.invalidate()
             token = f"{self.instance}/{self.epoch}/{revision[0]}/{revision[1]}"
             stamp = ReportStamp(token, observed_at, observed_at + lifetime)
             stamp.check(stamp, self.clock())
@@ -96,7 +101,10 @@ class ReportSource:
             self.invalidate()
             raise
         self._revision, self._last_observed, self._last_facts = revision, observed_at, facts
-        self._snapshot = ReportSnapshot(stamp, capabilities, topology)
+        # Ordinary database revisions may change operational facts. Disconnect,
+        # invalidation or a new database generation requires discovery again.
+        context = f"{self.instance}/{self.epoch}/{revision[0]}"
+        self._snapshot = ReportSnapshot(stamp, capabilities, topology, context)
         return self._snapshot
 
     def current(self):

@@ -113,6 +113,32 @@ class ControllerAdvertisement:
     profile: int
     controller_flags: bytes | None
     security_capability_present: bool
+    security_capability: bytes | None = None
+
+    @property
+    def selected_response_issues(self):
+        """Known field gaps for the non-DPP Search; not full profile admission.
+
+        EasyMesh 6.1 6.1/17.1.2, Tables 90 and 117. Bit 6 is described by
+        name but overlaps the reserved range: expose its observed absence while
+        retaining that conflict as a separate, unconditional admission blocker.
+        Reserved algorithms are unsupported, not inferred to mean algorithm 0.
+        """
+        issues = []
+        if self.controller_flags is None:
+            issues.append("controller_capability_absent")
+        else:
+            if not self.controller_flags[0] & 0x80:
+                issues.append("kib_mib_support_absent")
+            if not self.controller_flags[0] & 0x40:
+                issues.append("early_ap_capability_bit_absent_for_non_dpp_search")
+        if not self.security_capability_present:
+            issues.append("security_capability_absent")
+        elif self.security_capability is None or len(self.security_capability) != 3:
+            issues.append("security_capability_length_invalid")
+        elif self.security_capability != bytes(3):
+            issues.append("security_capability_reserved_algorithm")
+        return tuple(issues)
 
     @property
     def pending_requirements(self):
@@ -146,7 +172,13 @@ def parse_response(message: Message) -> ControllerAdvertisement:
         _invalid("ambiguous or empty discovery capability field")
     # 0xDD permits reserved future octets. 0xA9 semantics remain a profile gate;
     # mere presence (including an empty value) never establishes security support.
-    return ControllerAdvertisement(band, profile, flags[0] if flags else None, bool(security))
+    return ControllerAdvertisement(
+        band,
+        profile,
+        flags[0] if flags else None,
+        bool(security),
+        security[0] if security else None,
+    )
 
 
 @dataclass(frozen=True)
