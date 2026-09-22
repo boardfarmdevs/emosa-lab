@@ -180,8 +180,9 @@ finding and the report's limitations before presenting a verdict.
 
 The next wire trial needs a named compatible controller policy/build and an
 authenticated **complete** request matching the qualified radio scope. It also
-needs the missing IEEE definitions, exchange lifecycle and independent full
-message vectors. A scope candidate or a payload count cannot enable that path.
+needs the complete reviewed procedure, exchange lifecycle and independent
+validation. The [IEEE envelope component](../protocol/ieee1905-envelope.md) now
+uses both acquired IEEE documents and has native-capture boundary vectors. A scope candidate or a payload count cannot enable that path.
 
 ## 6. Apply the same questions to a physical pod without writing it
 

@@ -3,7 +3,7 @@
   "architecture_version": "3.6",
   "status": "blocked",
   "gate": "P0",
-  "reviewed_on": "2026-09-21",
+  "reviewed_on": "2026-09-22",
   "specifications": {
     "ieee1905": null,
     "easymesh": null,
@@ -21,20 +21,55 @@
       "base_doi": "10.1109/IEEESTD.2013.6502164",
       "amendment_edition": "IEEE Std 1905.1a-2014",
       "amendment_reference": "https://standards.ieee.org/ieee/1905.1a/5820/",
-      "access_status": "pending_external_inputs_operator_confirmed_no_local_copies_or_subscription",
+      "access_status": "operator_supplied_local_pdfs_verified_selected_clauses_reviewed",
       "publisher_status": "Inactive-Reserved; still explicitly referenced by EasyMesh 6.1 section 2",
-      "selection_status": "proposed",
-      "content_sha256": null,
-      "user_access_needed": "Lawfully accessible base and amendment PDFs, or an IEEE subscription-access route. Full clauses, amendments and applicable corrections must be reviewed before freezing P0.",
+      "selection_status": "selected_for_envelope_component_full_procedure_proposed",
+      "content_sha256": {
+        "base": "60c627535e51709ea0312f20764a029dad4805a4f5a193f7f471d5abf6e04378",
+        "amendment": "ca12c819be35f519ccd0fe073ea3c47ac7395797c7c063b099f1a12df3fba609"
+      },
+      "user_access_needed": null,
+      "operator_confirmation_history": [
+        {
+          "date": "2026-09-15",
+          "editions": [
+            "IEEE Std 1905.1-2013",
+            "IEEE Std 1905.1a-2014"
+          ],
+          "local_copies": "not_available",
+          "subscription_access_mechanism": "not_supplied",
+          "dependent_wire_validation": "pending"
+        }
+      ],
       "operator_confirmation": {
-        "date": "2026-09-15",
-        "editions": [
-          "IEEE Std 1905.1-2013",
-          "IEEE Std 1905.1a-2014"
+        "date": "2026-09-22",
+        "local_copies": "supplied_and_verified",
+        "base_path": "/home/rev/19051-2013.pdf",
+        "amendment_path": "/home/rev/19051a-2014.pdf",
+        "dependent_wire_validation": "envelope_implemented_complete_procedures_pending"
+      },
+      "artifacts": [
+        {
+          "edition": "IEEE Std 1905.1-2013",
+          "bytes": 1164726,
+          "pages": 93,
+          "sha256": "60c627535e51709ea0312f20764a029dad4805a4f5a193f7f471d5abf6e04378"
+        },
+        {
+          "edition": "IEEE Std 1905.1a-2014",
+          "bytes": 2725558,
+          "pages": 52,
+          "sha256": "ca12c819be35f519ccd0fe073ea3c47ac7395797c7c063b099f1a12df3fba609"
+        }
+      ],
+      "redistributed": false,
+      "corrections_check": {
+        "date": "2026-09-22",
+        "sources": [
+          "https://standards.ieee.org/ieee/1905.1/4995/",
+          "https://standards.ieee.org/ieee/1905.1a/5820/"
         ],
-        "local_copies": "not_available",
-        "subscription_access_mechanism": "not_supplied",
-        "dependent_wire_validation": "pending"
+        "finding": "No separate correction identified on inspected publisher records and targeted publisher search; not a comprehensive absence claim"
       }
     },
     "easymesh": {
@@ -121,31 +156,31 @@
       "specification": "ieee1905-2013-with-2014-amendment",
       "sections": [
         "6.2",
-        "7.1.1",
-        "7.1.2",
-        "7.2",
-        "7.3",
-        "7.4",
-        "7.6",
-        "7.7"
+        "6.2.1 Tables 6-2/6-3/6-4",
+        "6.3.1",
+        "6.3.7-6.3.9",
+        "6.4",
+        "7.1-7.9",
+        "8.2.1-8.2.2",
+        "10.1.1-10.1.2"
       ],
-      "verification": "section_pointers_only_from_EasyMesh_6.1_15_not_IEEE_full_text",
-      "purpose": "Retrieve and verify base CMDU framing, fragmentation, reassembly and transmission/reception rules, including amendment effects."
+      "verification": "local_base_and_amendment_selected_clauses_reviewed",
+      "purpose": "Frozen bounded envelope component and base discovery inspection; complete procedure applicability remains pending",
+      "guide": "doc/protocol/ieee1905-envelope.md"
     }
   ],
   "cross_cutting_gaps": [
-    "IEEE base and amendment full text, amendment effects and applicable corrections are unavailable.",
+    "IEEE base/amendment obtained on 2026-09-22; selected envelope/discovery/autoconfiguration clauses reviewed. Complete procedure/feature/dependency audit remains pending.",
     "A complete mandatory/optional/conditional field and profile-applicability audit is pending; current entries are partial source-backed research.",
-    "Byte-level lengths, ordering, duplicate detection, message-ID rollover, all timers/retries, reassembly limits and malformed/unknown-field behavior are not yet frozen.",
+    "Envelope lengths, TLV-boundary reassembly, reserved fields and MID rollover implemented; complete procedure timers, retries, relay/trust and malformed/unknown-field dispatch remain pending.",
     "IEEE 802.11-2024 is verified and selected definitions reviewed; full field mappings and actual target capability/regulatory evidence remain pending.",
-    "Independent full-message packet vectors and peer interpretation remain pending. Independent WSC crypto and M1/M2 payload vectors are retained separately; they contain no IEEE frames.",
+    "Independent native envelope/header/TLV-boundary vectors now retained. Full procedure/crypto/exchange/controller interpretation remains pending.",
     "No physical-pod mapping or independent-controller qualification has been completed.",
     "IEEE 802.3-2015 remains unavailable; supplied 802.3-2022 Clause 3 was reviewed without selecting a normative substitution. Actual link-state/frame-interface qualification remains pending.",
     "Wi-Fi Alliance Security Requirements referenced by EasyMesh section 13 have no obtained full text or resolved edition."
   ],
   "document_ambiguities": [
     "EasyMesh 6.1 section 2 reference [2] names the IEEE 1905.1-2013 base but links to an amendment URL; reference [11] separately names 1905.1a-2014. Preserve and review both documents.",
-    "EasyMesh 6.1 section 17.1.3 points to IEEE section 6.3.8 for WSC, while its section 6.1 uses that IEEE pointer for the autoconfiguration response. Verify the WSC base clause from IEEE rather than silently correcting the reference.",
     "EasyMesh 6.1 section 9.1, section 17.1.7 and section 18 must be read together to resolve feature-conditional reporting for the proposed Profile-1 subset.",
     "Section 6.2 Topology Query prose references Profile-2 AP Capability in a Search message; preserve the reference and resolve any needed interpretation before freezing the query contract.",
     "Section 6.1 requires Profile-2 AP Capability in the stated Profile-1 Search case although section 17.1.1 does not list it. See the available procedure audit.",
@@ -211,15 +246,15 @@
             "8",
             "6.3.3"
           ],
-          "verification": "section_pointers_from_EasyMesh_6.1_6.2_and_17.1.4_only"
+          "verification": "selected_base_and_amendment_clauses_reviewed_full_procedure_contract_pending"
         }
       ],
       "messages": [
         {
           "name": "Topology Discovery",
-          "message_type": null,
-          "source": null,
-          "status": "pending_IEEE_normative_verification"
+          "message_type": "0x0000",
+          "source": "IEEE 1905.1-2013 Table 6-4 and 6.3.1",
+          "status": "verified_identifier_and_base_message_contract"
         },
         {
           "name": "Topology Query",
@@ -250,7 +285,7 @@
         "IEEE discovery format/timing and complete base response TLVs remain unverified.",
         "Real physical topology and mandatory supported-resource inventory are not yet qualified."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
+      "reason": "IEEE base/amendment obtained and envelope component implemented; complete normative procedure/profile contract and exchange validation remain pending.",
       "available_rule_audit": "doc/protocol/procedure-audit.md"
     },
     {
@@ -286,7 +321,7 @@
             "6.3.7",
             "6.3.8"
           ],
-          "verification": "section_pointers_from_EasyMesh_6.1_6.1_only"
+          "verification": "selected_base_and_amendment_clauses_reviewed_full_procedure_contract_pending"
         }
       ],
       "messages": [
@@ -319,7 +354,7 @@
         "IEEE search cadence, response timers, relaying, retry and duplicate rules need the base and amendment.",
         "Selected peer profile and all conditional security/capability TLVs remain unresolved."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
+      "reason": "IEEE base/amendment obtained and envelope component implemented; complete normative procedure/profile contract and exchange validation remain pending.",
       "available_rule_audit": "doc/protocol/procedure-audit.md"
     },
     {
@@ -395,7 +430,7 @@
         "Mandatory feature/field interpretation is pending complete profile audit.",
         "IEEE 802.11-2024 selected references are now inspected; complete field mapping and actual represented-pod capability evidence remain pending."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
+      "reason": "IEEE base/amendment obtained and envelope component implemented; complete normative procedure/profile contract and exchange validation remain pending.",
       "available_rule_audit": "doc/protocol/procedure-audit.md"
     },
     {
@@ -463,7 +498,7 @@
           "sections": [
             "10.1"
           ],
-          "verification": "section_pointer_from_EasyMesh_6.1_7.1_only"
+          "verification": "selected_base_and_amendment_clauses_reviewed_full_procedure_contract_pending"
         }
       ],
       "messages": [
@@ -502,7 +537,7 @@
         "The one-BSS component patch has not been qualified as full-radio WSC semantics.",
         "Hardware must establish sole-BSS radio scope or a complete supported mapping; shared management/backhaul dependencies and recovery remain unverified."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
+      "reason": "IEEE base/amendment obtained and envelope component implemented; complete normative procedure/profile contract and exchange validation remain pending.",
       "available_rule_audit": "doc/protocol/procedure-audit.md"
     }
   ],
@@ -763,6 +798,17 @@
       "access_checked_on": "2026-09-22",
       "access_result": "Publisher member route redirects to Wi-Fi Alliance login; no package or credentials supplied",
       "wire_value_implemented": false
+    },
+    {
+      "id": "ieee8021ab-2009",
+      "edition": "IEEE Std 802.1AB-2009",
+      "access_status": "not_supplied_dependency_identified",
+      "source_sections": [
+        "IEEE 1905.1-2013 section 6.1 printed p.27",
+        "IEEE 1905.1-2013 section 8.2.1.2 printed p.48"
+      ],
+      "affected_work": "LLDP bridge discovery accompanying a live Topology Discovery procedure; not required by the current unicast transport probe",
+      "content_sha256": null
     }
   ],
   "available_procedure_audit": {
@@ -857,16 +903,6 @@
       }
     }
   ],
-  "independent_work_while_ieee1905_pending": {
-    "available_authorities": [
-      "Wi-Fi EasyMesh 6.1 for its fully specified extensions and procedures",
-      "WPS 2.0.10 for selected WSC payload/authentication components",
-      "IEEE 802.11-2024 for referenced radio definitions"
-    ],
-    "permitted_scope": "Implement and independently test standalone components whose normative definitions are complete in the available sources; continue semantic service/radio tests and native peer observations.",
-    "boundary": "No guessed IEEE base rules, no P0 freeze, no complete wire onboarding or physical acceptance claim from component tests.",
-    "document": "doc/protocol/ieee-media-review.md"
-  },
   "synthetic_topology_projection": {
     "status": "implemented_simulation_diagnostic_only",
     "guide": "doc/guides/observed-topology.md",
@@ -1061,5 +1097,57 @@
       "Actual unchanged-pod capability evidence and independently observed behavior"
     ]
   },
-  "first_complete_experiment_contract": "doc/guides/first-wire-experiment.md"
+  "first_complete_experiment_contract": "doc/guides/first-wire-experiment.md",
+  "resolved_ambiguities": [
+    {
+      "question": "EasyMesh 6.1 section 17.1.3 points to IEEE section 6.3.8 for WSC, while its section 6.1 uses that IEEE pointer for the autoconfiguration response. Verify the WSC base clause from IEEE rather than silently correcting the reference.",
+      "resolution": "IEEE base WSC message is 6.3.9, WSC TLV 6.4.18; 6.3.8 is autoconfiguration response",
+      "source": "operator-supplied IEEE Std 1905.1-2013 printed pp.32,43; reviewed 2026-09-22"
+    }
+  ],
+  "independent_component_work": {
+    "available_authorities": [
+      "Wi-Fi EasyMesh 6.1 for its fully specified extensions and procedures",
+      "WPS 2.0.10 for selected WSC payload/authentication components",
+      "IEEE 802.11-2024 for referenced radio definitions",
+      "IEEE 1905.1-2013 and IEEE 1905.1a-2014 operator-supplied full texts"
+    ],
+    "permitted_scope": "Implement and independently test standalone components whose normative definitions are complete in the available sources; continue semantic service/radio tests and native peer observations.",
+    "boundary": "Envelope component is implemented; no full P0 procedure freeze or controller/physical acceptance from component checks.",
+    "document": "doc/protocol/ieee1905-envelope.md"
+  },
+  "ieee1905_envelope": {
+    "status": "selected_contract_implemented",
+    "guide": "doc/protocol/ieee1905-envelope.md",
+    "implementation": [
+      "src/emosa/wire/cmdu.py",
+      "src/emosa/wire/inspection.py",
+      "src/emosa/wire/ethernet.py"
+    ],
+    "tests": [
+      "tests/test_ieee1905.py"
+    ],
+    "independent_vectors": "tests/fixtures/protocol/ieee1905/native-envelope.json",
+    "independent_check": "scripts/check-ieee1905-reference.py",
+    "evidence": "doc/evidence/ieee1905/summary.json",
+    "ieee_access_gate_satisfied": true,
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "local_limits": {
+      "timeout_seconds": 5,
+      "contexts": 64,
+      "fragments": 64,
+      "message_bytes": 65536,
+      "total_buffer_bytes": 2097152,
+      "tlvs": 256
+    },
+    "not_implemented": [
+      "DPP octet-boundary fragmentation",
+      "VLAN encapsulation",
+      "reserved-message relay and interface authentication",
+      "live discovery/topology/capability state machine",
+      "WSC exchange and operation binding"
+    ]
+  }
 }

@@ -136,8 +136,9 @@ WSC M1 has a different context. Sections 7.1 and 17.1.3 name one Radio Basic
 Capabilities, one WSC/M1, one Profile-2 AP Capability and one Radio Advanced
 Capabilities value for the initiating radio. Thus a false `advanced_qos` planning
 condition for the **AP report** does not remove the Advanced Capabilities
-requirement from **M1**. Neither list supplies the missing IEEE envelope, trusted
-controller/radio exchange or actual feature evidence.
+requirement from **M1**. The [IEEE envelope](ieee1905-envelope.md) now exists as a
+component; neither list supplies trusted controller/radio exchange binding or
+actual feature evidence.
 
 ## 5. Inspect the new feature value codecs
 

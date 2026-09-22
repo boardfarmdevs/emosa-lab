@@ -15,9 +15,9 @@ optional radio work; the historical two-pod report below keeps its original scop
 | Live controller preparation | Pinned native controller and its local agent run beside the adapter/connecting-pod exercise; native inventory and independent capture are retained | A ready entry in `emosa agents` does not become a native controller inventory entry |
 
 The final acceptance chain remains **real EasyMesh messages → EMOSA → unchanged
-physical OpenSync pod → independently observed behavior**. The missing IEEE
-1905.1-2013 and 1905.1a-2014 documents still block specification-dependent wire
-execution. Read the [available procedure audit](../protocol/procedure-audit.md)
+physical OpenSync pod → independently observed behavior**. Both IEEE 1905
+documents are now obtained and [envelope components](../protocol/ieee1905-envelope.md)
+are implemented. Full procedure validation and exchange integration remain pending. Read the [available procedure audit](../protocol/procedure-audit.md)
 and [acquisition checklist](../protocol/specification-acquisition.md) for exact
 remaining inputs.
 

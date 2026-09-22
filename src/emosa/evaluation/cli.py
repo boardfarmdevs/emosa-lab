@@ -15,6 +15,7 @@ from emosa.evaluation.payloads import inspect_value, read_value
 from emosa.evaluation.profile_audit import audit, markdown, read_features
 from emosa.evaluation.runner import all_events, run
 from emosa.store import Store
+from emosa.wire.inspection import inspect_capture, read_frame
 
 
 def read_run(root, run_id):
@@ -77,8 +78,30 @@ def main(argv=None):
     )
     profile.add_argument("--features", type=Path, help="optional unqualified planning conditions")
     profile.add_argument("--format", choices=("json", "markdown"), default="json")
+    wire = sub.add_parser("wire-inspect", help="inspect IEEE 1905 Ethernet bytes without sending")
+    wire_input = wire.add_mutually_exclusive_group(required=True)
+    wire_input.add_argument("--capture", type=Path, help="classic Ethernet PCAP (not PCAPNG)")
+    wire_input.add_argument("--frame", type=Path, help="one Ethernet frame without FCS")
     args = parser.parse_args(argv)
     try:
+        if args.command == "wire-inspect":
+            if args.execution != "local":
+                raise EmosaError(Reason.INVALID_INPUT, "offline wire inspection runs locally")
+            try:
+                result = inspect_capture(args.capture) if args.capture else read_frame(args.frame)
+            except OSError as exc:
+                raise EmosaError(Reason.NOT_READY, "wire input file unavailable") from exc
+            output(result)
+            return (
+                1
+                if (
+                    result.get("rejected")
+                    or result.get("expired_assemblies")
+                    or result.get("incomplete_or_quarantined")
+                    or result.get("unsupported_tagged_frames")
+                )
+                else 0
+            )
         if args.command == "profile-audit":
             if args.execution != "local":
                 raise EmosaError(Reason.INVALID_INPUT, "offline profile audit runs locally")

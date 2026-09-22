@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Follow the first complete wire experiment contract. IEEE 1905 inputs, complete capability/profile rules and actual wire implementation remain pending; physical qualification needs the private connection path.",
+      "next": "Follow the first complete wire experiment contract. IEEE 1905 inputs are obtained and envelope/packet components work. Complete capability/profile rules, discovery/WSC integration and physical qualification remain pending.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -217,7 +217,7 @@
     {
       "title": "Freeze the protocol contract",
       "status": "P0 · critical path",
-      "description": "Review the proposed IEEE 1905.1-2013 + 1905.1a-2014, EasyMesh 6.1 and WPS 2.0.10 corpus. Obtain missing IEEE text, select the initial procedure scope and finish the normative rule matrix.",
+      "description": "Review the proposed IEEE 1905.1-2013 + 1905.1a-2014, EasyMesh 6.1 and WPS 2.0.10 corpus. Use the obtained IEEE base/amendment, complete the initial procedure scope and finish the remaining normative rule matrix.",
       "evidence": "Selected editions, rule/section references, complete radio-scope rules and independently checked packet/crypto vectors.",
       "path": "doc/protocol/protocol-inputs.md",
       "action": "Resolve specification inputs"
@@ -458,7 +458,7 @@
       "path": "doc/protocol/ieee-media-review.md",
       "title": "IEEE radio and Ethernet input review",
       "category": "Protocol components",
-      "description": "Verified operator-supplied 802.11-2024 and 802.3-2022 artifacts, selected clause references and remaining edition/IEEE 1905 gaps."
+      "description": "802.11/802.3 input review; the later IEEE 1905 envelope guide records acquired base/amendment and wire implementation."
     },
     {
       "path": "doc/protocol/easymesh-payloads.md",
@@ -585,10 +585,28 @@
       "title": "Secure fleet and clean runtime evidence",
       "category": "Learning and service reliability",
       "description": "Measured host/container results, retained failures, suite results, package manifests and private image export digests."
+    },
+    {
+      "path": "doc/evidence/ieee1905/README.md",
+      "title": "IEEE 1905 implementation evidence",
+      "category": "Wire implementation",
+      "description": "Independent 59-frame comparisons, two isolated AF_PACKET runs, 706 unit and 46 OVSDB results; full onboarding remains pending."
+    },
+    {
+      "path": "doc/protocol/ieee1905-envelope.md",
+      "title": "IEEE 1905 frames: inspect and understand",
+      "category": "Wire implementation",
+      "description": "Both IEEE PDFs obtained; frame/CMDU/TLV concepts, native capture inspection and remaining onboarding work."
+    },
+    {
+      "path": "deploy/wire/README.md",
+      "title": "Isolated Ethernet endpoint check",
+      "category": "Wire implementation",
+      "description": "Exercise AF_PACKET in fresh private VM namespaces; preserve received bytes and clean up only owned resources."
     }
   ],
   "suite_evidence": {
-    "unit": "reliability/unit-results.xml",
-    "ovsdb": "reliability/ovsdb-results.xml"
+    "unit": "ieee1905/unit-results.xml",
+    "ovsdb": "ieee1905/ovsdb-results.xml"
   }
 }

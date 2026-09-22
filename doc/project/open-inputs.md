@@ -2,10 +2,10 @@
 
 | Gate | Missing input | Affected work | Independent work |
 | --- | --- | --- | --- |
-| P0 | [Specification acquisition checklist](../protocol/specification-acquisition.md): IEEE 1905.1-2013, 1905.1a-2014, cited 802.3-2015 and WFA Security Requirements remain missing. Operator supplied 802.11-2024 and 802.3-2022; editions/hashes and selected clauses reviewed, with complete feature audit and Ethernet edition comparison unresolved. EasyMesh 6.1 and WPS 2.0.10 are obtained and inspected. Full rule/vector review remains pending. | I3, I4, wire tests/provisioning | I0–I2, selected WSC crypto component, component evaluation |
+| P0 | [Specification acquisition checklist](../protocol/specification-acquisition.md): IEEE 1905.1-2013 and 1905.1a-2014 are obtained and selected envelope rules implemented. Cited 802.3-2015, LLDP 802.1AB-2009, Data Elements package and WFA Security Requirements remain missing. Operator supplied 802.11-2024 and 802.3-2022; editions/hashes and selected clauses reviewed, with complete feature audit and Ethernet edition comparison unresolved. EasyMesh 6.1 and WPS 2.0.10 are obtained and inspected. Full rule/vector review remains pending. | I3, I4, wire tests/provisioning | I0–I2, selected WSC crypto component, component evaluation |
 | M0 | Named pod/build, actual schema, endpoint direction/trust, managed radio/VIF, writer evidence, management/recovery and client profile | I5 and hardware writes | Simulators, package, reports |
 | X1 | The prplMesh candidate now starts and sends discovery to the EMOSA container; actual EMOSA exchanges, profile/BSS policy and shutdown/recovery remain unqualified | I7 | [Peer baseline and startup commands](../../deploy/peer/README.md) |
-| LXD | Ubuntu 24.04 component tests and VM-driven scenarios passed; base image export retained. Final runtime images and clean full-procedure reruns remain pending | Full reference deployment acceptance | Component and peer baselines now exercised in the dedicated VM |
+| LXD | Ubuntu 24.04 component tests and VM-driven scenarios passed; base image export retained. A private TLS/fleet runtime image and clean component reruns are retained; full wire/physical-procedure reruns remain pending | Full reference deployment acceptance | Component and peer baselines now exercised in the dedicated VM |
 
 `qualified` requires referenced evidence and compatible current configuration.
 No boolean in an input manifest enables hardware writes. The upstream schema is
@@ -27,11 +27,11 @@ checklist, alongside the two exact IEEE 1905 editions.
 
 The initial user input supplied no selected specification editions or actual pod
 profile. See [the proposed corpus and access details](../protocol/protocol-inputs.md).
-The operator subsequently confirmed that **IEEE Std 1905.1-2013** and
-**IEEE Std 1905.1a-2014** are not available locally and no subscription-access
-mechanism has been supplied. Both exact editions remain pending external inputs;
-specification-dependent wire validation stays pending. Acquisition requests are
-consolidated in the checklist above.
+The operator supplied **IEEE Std 1905.1-2013** and **IEEE Std 1905.1a-2014** on
+2026-09-22. Both exact editions are verified and used by the
+[envelope implementation](../protocol/ieee1905-envelope.md). Full profile/procedure
+validation and exchange integration remain unfinished; the acquisition request
+for those two documents is closed. Remaining requests are in the checklist above.
 
 The operator supplied local paths on `rev150` for `80211-2024.pdf`
 (**IEEE Std 802.11-2024**) and `IEEE_Standard_for_Ethernet.pdf`

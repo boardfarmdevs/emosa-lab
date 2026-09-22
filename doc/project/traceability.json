@@ -7,7 +7,7 @@
     "I1": "implemented with model tests",
     "I2": "Real OVSDB and independent hostapd/hwsim clients tested through actual adapter service with pod-initiated connection and SIGKILL recovery; bounded two-pod test; semantic initiation only; see doc/guides/service-integration.md; strict sole-radio scope and atomic graph guards verified; see doc/guides/onboarding-readiness.md",
     "R0": "native apply/withhold experiment runs; database-restart recovery N03 fails and production backend remains disabled",
-    "I3": "blocked P0",
+    "I3": "IEEE base/amendment obtained; bounded envelope, native capture cross-check and isolated AF_PACKET tests implemented. Full discovery/capabilities/profile and procedure validation pending; see doc/protocol/ieee1905-envelope.md",
     "I4": "WSC M1/M2 payload component independently tested; full procedure remains blocked P0/I3",
     "I5": "read-only draft collector implemented; physical qualification and writes blocked M0/P0",
     "I6": "incremental component runner/watch/inspect/report/compare; complete reference release pending",
@@ -1508,14 +1508,19 @@
       "id": "WIRE-01",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_ieee1905.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/ieee1905/summary.json"
+      ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
     },
@@ -1531,7 +1536,9 @@
         "src/emosa/evaluation/profile_audit.py",
         "src/emosa/counter_units.py",
         "src/emosa/capability_extensions.py",
-        "src/emosa/he_mcs.py"
+        "src/emosa/he_mcs.py",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
         "tests/test_gated.py",
@@ -1544,7 +1551,8 @@
         "tests/test_technology_values.py",
         "tests/test_capability_extensions.py",
         "tests/test_he_wifi6.py",
-        "tests/test_wifi6_projection.py"
+        "tests/test_wifi6_projection.py",
+        "tests/test_ieee1905.py"
       ],
       "evidence_refs": [
         "doc/evidence/observed-topology/summary.json",
@@ -1552,10 +1560,11 @@
         "doc/evidence/profile-audit/summary.json",
         "doc/evidence/technology-inventory/summary.json",
         "doc/evidence/he-wifi6/summary.json",
-        "doc/evidence/wifi6-inputs/summary.json"
+        "doc/evidence/wifi6-inputs/summary.json",
+        "doc/evidence/ieee1905/summary.json"
       ],
       "mode": null,
-      "scope": "Selected standalone values and read-only synthetic mappings only. Wi-Fi 6 role inputs do not imply complete HE/report, profile, wire or physical qualification.",
+      "scope": "Selected standalone values and read-only synthetic mappings only. Wi-Fi 6 role inputs do not imply complete HE/report, profile, wire or physical qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Read-only topology, Basic/HT/VHT/Device Inventory and separate evidence-bound Wi-Fi 6 role mapping; 0x88 conversion, complete HE set, full procedures and physical qualification remain pending."
     },
@@ -1563,14 +1572,19 @@
       "id": "WIRE-03",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_ieee1905.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/ieee1905/summary.json"
+      ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
     },
@@ -1628,22 +1642,26 @@
         "doc/protocol/wsc-component.md",
         "src/emosa/wsc_messages.py",
         "src/emosa/wsc_radio.py",
-        "doc/protocol/wsc-radio.md"
+        "doc/protocol/wsc-radio.md",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
         "tests/test_gated.py",
         "tests/test_wsc.py",
         "tests/test_wsc_messages.py",
-        "tests/test_wsc_radio.py"
+        "tests/test_wsc_radio.py",
+        "tests/test_ieee1905.py"
       ],
       "evidence_refs": [
         "tests/fixtures/protocol/wsc/provenance.json",
         "doc/evidence/unit-results.xml",
         "doc/evidence/wsc-messages.json",
-        "doc/evidence/wsc-radio.json"
+        "doc/evidence/wsc-radio.json",
+        "doc/evidence/ieee1905/summary.json"
       ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "M1/M2 crypto, payload structure and encrypted radio role/teardown semantics have scoped component evidence; complete CMDU/profile rules, controller/radio binding, replay/state and pod writes remain gated."
     },
@@ -1654,19 +1672,23 @@
         "doc/protocol/protocol-matrix.json",
         "src/emosa/wsc_messages.py",
         "src/emosa/wsc_radio.py",
-        "doc/protocol/wsc-radio.md"
+        "doc/protocol/wsc-radio.md",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
         "tests/test_gated.py",
         "tests/test_wsc_messages.py",
-        "tests/test_wsc_radio.py"
+        "tests/test_wsc_radio.py",
+        "tests/test_ieee1905.py"
       ],
       "evidence_refs": [
         "doc/evidence/wsc-messages.json",
-        "doc/evidence/wsc-radio.json"
+        "doc/evidence/wsc-radio.json",
+        "doc/evidence/ieee1905/summary.json"
       ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "M1/M2 crypto, payload structure and encrypted radio role/teardown semantics have scoped component evidence; complete CMDU/profile rules, controller/radio binding, replay/state and pod writes remain gated."
     },
@@ -2543,14 +2565,19 @@
       "id": "W01",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_ieee1905.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/ieee1905/summary.json"
+      ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
     },
@@ -2558,14 +2585,19 @@
       "id": "W02",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_ieee1905.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/ieee1905/summary.json"
+      ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
     },
@@ -2573,14 +2605,19 @@
       "id": "W03",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_ieee1905.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/ieee1905/summary.json"
+      ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
     },
@@ -2605,18 +2642,22 @@
       "implementation_refs": [
         "doc/protocol/protocol-matrix.json",
         "src/emosa/topology_bindings.py",
-        "src/emosa/opensync/topology.py"
+        "src/emosa/opensync/topology.py",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
         "tests/test_gated.py",
         "tests/test_topology.py",
-        "tests/test_topology_service.py"
+        "tests/test_topology_service.py",
+        "tests/test_ieee1905.py"
       ],
       "evidence_refs": [
-        "doc/evidence/observed-topology/summary.json"
+        "doc/evidence/observed-topology/summary.json",
+        "doc/evidence/ieee1905/summary.json"
       ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Explicit persisted synthetic topology bindings and complete graph projection tested with real OVSDB, two pods, UUID recreation and adapter restart; full wire/physical gate remains open."
     },

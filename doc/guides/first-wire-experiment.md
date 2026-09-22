@@ -2,8 +2,8 @@
 
 This is the acceptance contract for the next integration, and a checklist for
 handing it to another developer. **The complete experiment is not runnable yet.**
-The IEEE 1905 inputs, complete procedure/profile audit and wire endpoint remain
-pending. The existing native-peer and semantic-service exercises test the two
+The IEEE 1905 inputs are obtained and the [bounded envelope/packet components](../protocol/ieee1905-envelope.md)
+are implemented. Complete procedure/profile audit and exchange integration remain pending. The existing native-peer and semantic-service exercises test the two
 sides separately. Their successes must not be combined into a wire-onboarding
 verdict.
 
@@ -105,9 +105,11 @@ overwrite the first one.
 
 ## 4. Implement and run the missing wire boundary after P0
 
-This is the implementation sequence, not a set of commands that already exists:
+This is the implementation sequence. The envelope component has runnable commands
+in the linked guide; later complete procedures remain unfinished:
 
-1. Hash and review IEEE 1905.1-2013 plus 1905.1a-2014. Reconcile the selected
+1. Both IEEE PDFs are hashed and selected envelope/base-discovery clauses reviewed.
+   Continue reconciling the selected
    EasyMesh/WPS rules and dependencies, profile conditions, field lengths,
    addressing, reassembly, retransmission and timers in the protocol matrix.
 2. Implement bounded receive/transmit and discovery/topology/capability exchanges.
@@ -165,7 +167,7 @@ because changing the serving BSS can interrupt the adapter's own connection.
 | Isolated peer compatibility | Candidate HAL length fix and live policy experiment; retained results and remaining native findings are in the [compatibility guide](native-compatibility.md) |
 | First complete experiment definition | This contract defines target, admission, causal evidence, negative controls and physical substitution |
 | Complete capability requirements | Selected value/mapping components tested; `0x88` ordering, mandatory report dependencies and full profile applicability remain pending |
-| Complete wire exchange | Pending IEEE inputs/review and I3/I4 implementation; the existing gate rejects execution |
+| Complete wire exchange | IEEE access complete; envelope/packet components tested, full I3/I4 exchange and profile validation pending; the existing gate rejects execution |
 | Physical qualification and proof | Collector/examples available; actual private connection, qualification and physical run remain pending |
 
 The final acceptance path remains **real EasyMesh messages → EMOSA → unchanged

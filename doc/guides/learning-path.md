@@ -122,14 +122,25 @@ use the ownership-checked cleanup. This track needs no prplMesh, hwsim or pod.
 checkout, reproduced TLS/fleet/recovery checks and used the recorded image. Point
 to the export location; a digest alone does not make an image downloadable.
 
-## 10. Choose the next evidence boundary
+## 10. Learn the wire envelope, then choose the next evidence boundary
+
+Both IEEE 1905 PDFs are now obtained. On HOST, follow the
+[frame/CMDU/TLV learning exercise](../protocol/ieee1905-envelope.md): inspect the
+retained native PCAP, explain why 59 frames produce 58 messages, run the boundary
+and negative tests, then compare with the independent dissector. Optionally run
+the isolated VM packet check. No radio or pod is required for this step.
+
+**Checkpoint:** distinguish a structurally reassembled WSC message from a validated,
+authorized provisioning exchange. The new parser creates no operation; the
+controller-to-EMOSA state machine is still needed before the full wire scenario.
+
 
 | Question | Next guide | Additional inputs |
 | --- | --- | --- |
 | Did Wi-Fi clients authenticate and carry traffic after a semantic change? | [Manual §11](team-manual.md#11-run-emosa-through-ovsdb-to-hwsim-and-real-clients) | Existing radio VM, owned hwsim radios, hostapd and wpa_supplicant client containers |
 | Can the native controller onboard its native agent? | [Manual §10](team-manual.md#10-prepare-and-run-native-controlleragent-onboarding) | Pinned native artifacts and separately qualified topology |
 | Can we inspect our actual OpenSync extender safely? | [Read-only qualification](pod-qualification.md) | Private local connection path, authorized endpoint and existing trust |
-| What completes real controller-to-EMOSA onboarding? | [First wire experiment](first-wire-experiment.md) | Pending IEEE editions, reviewed procedure/profile rules and wire implementation |
+| What completes real controller-to-EMOSA onboarding? | [First wire experiment](first-wire-experiment.md) | IEEE PDFs now obtained; remaining procedure/profile rules and exchange integration |
 
 For capability development, work through observed topology → radio capability
 inputs → technology/inventory → HE/Wi-Fi 6 guides in the [guide index](README.md).

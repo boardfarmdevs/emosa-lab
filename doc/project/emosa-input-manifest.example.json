@@ -12,8 +12,17 @@
     "python_container_base": "Ubuntu 24.04",
     "alpine_status": "optional_later_portability_target",
     "priority": "evaluate_whether_adaptation_enables_seamless_EasyMesh_controller_operation_with_unchanged_OpenSync_pods",
-    "required_evaluation_features": ["controlled_experiments", "live_visibility", "correlated_evidence", "run_comparison", "explicit_compatibility_gaps"],
-    "python_containers": ["em-controller", "emosa"],
+    "required_evaluation_features": [
+      "controlled_experiments",
+      "live_visibility",
+      "correlated_evidence",
+      "run_comparison",
+      "explicit_compatibility_gaps"
+    ],
+    "python_containers": [
+      "em-controller",
+      "emosa"
+    ],
     "lab_runner_location": "outer VM guest, using inner LXD lxc exec",
     "native_reference_container_base": "Ubuntu, separate LXD container",
     "dependency_lock": "uv.lock",
@@ -27,8 +36,8 @@
     "evidence_refs": []
   },
   "protocol": {
-    "status": "not_selected",
-    "ieee1905_specification": null,
+    "status": "documents_obtained_full_profile_selection_pending",
+    "ieee1905_specification": "IEEE Std 1905.1-2013 plus IEEE Std 1905.1a-2014; acquired 2026-09-22",
     "easymesh_specification": null,
     "provisioning_specification": null,
     "selected_profile": null,
@@ -39,8 +48,10 @@
       "AP autoconfiguration WSC M1/M2 for one qualified existing BSS"
     ],
     "subset_status": "proposed_requires_normative_matrix",
-    "matrix_path": null,
-    "independent_vector_refs": [],
+    "matrix_path": "doc/protocol/protocol-matrix.json",
+    "independent_vector_refs": [
+      "tests/fixtures/protocol/ieee1905/native-envelope.json"
+    ],
     "evidence_refs": []
   },
   "simulation_reference": {
@@ -97,10 +108,19 @@
     "status": "source_reviewed_build_not_verified",
     "repository": "https://github.com/plume-design/opensync",
     "commit": "78d8a7194d5e77635877cc456231e7be5cf03d68",
-    "candidate_manager_path": ["owm", "ow", "osw"],
+    "candidate_manager_path": [
+      "owm",
+      "ow",
+      "osw"
+    ],
     "native_test_script": "src/owm/scripts/test.sh",
     "candidate_driver": "src/lib/osw/src/osw_drv_dummy.c",
-    "qualification_tests": ["N01", "N02", "N03", "N04"],
+    "qualification_tests": [
+      "N01",
+      "N02",
+      "N03",
+      "N04"
+    ],
     "kconfig_artifact": null,
     "harness_revision": null,
     "patch_manifest": null,

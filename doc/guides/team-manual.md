@@ -2871,8 +2871,9 @@ radios, BSSs, radio capabilities and profiles. EMOSA now has Python codecs for
 fourteen such **TLV values**.
 A TLV means type/length/value; this component handles the value inside that
 structure. It provides useful progress from EasyMesh's explicit field definitions
-while the IEEE 1905 base/amendment are pending. It does not enable the packet
-endpoint or cause the controller to discover an agent.
+alongside the [IEEE envelope implementation](../protocol/ieee1905-envelope.md)
+now based on the obtained IEEE texts. Value inspection does not cause the
+controller to discover an agent.
 
 On HOST, in the installed checkout, run:
 
@@ -2996,6 +2997,45 @@ unfinished. Top-level readiness and CLI exit 0 cover Basic capabilities only.
 The walkthrough explains all three results, the input fields and the local
 mapping limits. No full report, advertised profile or physical capability is
 qualified by this run. Native profile/length compatibility work remains separate.
+
+### 13.7 Read complete IEEE 1905 envelopes and test packet delivery
+
+The two IEEE 1905 PDFs were supplied on **2026-09-22** and now support an
+implemented envelope component. An Ethernet **frame** carries a CMDU header and
+TLVs; a large CMDU can occupy several frames. The receiver must wait for every
+fragment before interpreting the complete message. A valid envelope alone does
+not authenticate a controller, validate WSC settings or authorize a pod write.
+
+On **HOST**, from this checkout:
+
+```bash
+uv run emosa-lab wire-inspect \
+  --capture doc/evidence/peer-baseline/samples/wired/ethernet.pcap
+uv run pytest tests/test_ieee1905.py -q
+python3 scripts/check-ieee1905-reference.py
+```
+
+The first command needs no root or lab. It reads the reviewed native-peer
+capture and creates zero operations. Find frame 4's Discovery identity: AL MAC
+and interface MAC differ, so they cannot be treated interchangeably. Then find
+the WSC result completed at frame 7: two received frames formed that one message.
+Expect 59 frames and 58 completed messages, with no incomplete/rejected entries.
+Most results explicitly say procedure validation was not performed. Seeing a
+WSC TLV in this output is not a provisioning success.
+
+The tests include independent captured headers, malformed lengths, reserved
+fields, fragment conflicts/timeouts, limits and MID wraparound. The final command
+needs `tshark` and checks the same boundary using an independent implementation.
+Raw TLV values and decrypted settings are intentionally absent from the report.
+
+Read the [full envelope exercise](../protocol/ieee1905-envelope.md) for the exact
+source clauses, local budgets and remaining work. For actual Ethernet socket
+delivery, follow the [isolated VM runbook](../../deploy/wire/README.md). It needs
+root inside the dedicated VM, creates two private namespaces with only a veth
+connection, checks delivery in both directions and removes its own resources.
+It does not use radios, native peers or physical pods. This is a packet transport
+test; complete discovery/capability/WSC handlers must still connect these bytes
+to the adapter's guarded operation engine.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
@@ -3164,13 +3204,14 @@ or access arrangements together, then resolve the consolidated checklist instead
 of selecting incompatible editions independently for each new feature.
 
 [specification-acquisition.md](../protocol/specification-acquisition.md) is the single access
-checklist. Exact **IEEE 1905.1-2013** and **IEEE 1905.1a-2014** remain pending
-external inputs, with no authorized local copies or subscription mechanism.
+checklist. Exact **IEEE 1905.1-2013** and **IEEE 1905.1a-2014** were supplied on
+2026-09-22, verified and hashed. Section 13.7 explains their first implementation.
 IEEE 802.11-2024 is now obtained, verified and hashed. The supplied Ethernet
 document is IEEE 802.3-2022; equivalence to the cited IEEE 802.3-2015 remains
 unresolved. The [media input review](../protocol/ieee-media-review.md) identifies
 the selected radio and Ethernet clauses inspected so far. Wi-Fi Alliance Security
-Requirements with revision to identify and conditional references/corrections
+Requirements with revision to identify, Data Elements 3.0, the LLDP dependency
+IEEE 802.1AB-2009 and conditional references/corrections
 remain on the acquisition checklist.
 
 EasyMesh 6.1 and WPS 2.0.10 publisher PDFs were obtained and hashed outside Git.

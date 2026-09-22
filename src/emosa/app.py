@@ -166,7 +166,11 @@ class Application:
                 "software_version": __version__,
                 "backend_mode": self.config["backend_mode"],
                 "management_backend": "opensync_ovsdb",
-                "protocol": {"state": "blocked", "reason": "P0 normative matrix missing"},
+                "protocol": {
+                    "state": "blocked",
+                    "reason": "P0 full procedure/profile validation and exchange binding pending",
+                    "ieee1905_envelope": "implemented_component",
+                },
                 "quiesced": self.engine.quiesced,
                 "write_mode": self.config["write_mode"],
                 "pods": list(self.cache.values()),

@@ -13,6 +13,11 @@ The goal is to demonstrate what works, expose compatibility gaps, and provide re
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 
+The IEEE 1905.1-2013 and 1905.1a-2014 PDFs are now obtained. Follow the
+[wire-envelope learning exercise](doc/protocol/ieee1905-envelope.md) to inspect
+native captures and test bounded reassembly and isolated Ethernet delivery.
+Complete controller onboarding and physical acceptance remain pending.
+
 ## Architecture
 
 [**Documentation index and subject areas**](doc/README.md)

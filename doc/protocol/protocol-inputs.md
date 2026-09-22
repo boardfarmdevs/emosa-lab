@@ -7,12 +7,14 @@ WIRE-08 and the P0 gate. The machine-readable record is
 Update 2026-09-21: operator-supplied 802.11-2024 and 802.3-2022 PDFs are now
 verified and hashed. See the [bounded media-clause review](ieee-media-review.md)
 for what was inspected and the unresolved 2015/2022 Ethernet edition decision.
-The IEEE 1905 base and amendment remain missing; the historical research below
-does not imply that the newly supplied radio document is still unavailable.
+Update 2026-09-22: the exact IEEE 1905 base and amendment are now obtained,
+verified and used by the [bounded envelope implementation](ieee1905-envelope.md).
+The pointers below retain the original research context; the new guide supplies
+actual IEEE clause review and component evidence.
 
 **P0 remains blocked.** The Wi-Fi Alliance documents below were obtained from
-its public publisher site. IEEE full text, a complete rule matrix and independent
-vectors are still missing. The proposed editions and profile are not a frozen
+its public publisher site. IEEE full text is now available and independent envelope
+vectors pass; a complete procedure rule matrix and validation remain unfinished. The proposed editions and profile are not a frozen
 selection: `specifications` and `selected_profile` remain null in the matrix.
 The [WSC cryptographic component](wsc-component.md) separately selects WPS 2.0.10
 for its bounded payload rules. This does not satisfy P0 or establish interoperability.
@@ -21,8 +23,8 @@ for its bounded payload rules. This does not satisfy P0 or establish interoperab
 
 | Input | Proposed exact edition | Evidence and access |
 | --- | --- | --- |
-| IEEE base | IEEE Std 1905.1-2013 | [Publisher record](https://standards.ieee.org/ieee/1905.1/4995/) and [IEEE Xplore record](https://ieeexplore.ieee.org/document/6502164/) are accessible. The publisher offers purchase or subscription access; full normative text was not obtained. |
-| IEEE amendment | IEEE Std 1905.1a-2014 | [Publisher record](https://standards.ieee.org/ieee/1905.1a/5820/) is accessible. Full amendment text was not obtained. |
+| IEEE base | IEEE Std 1905.1-2013 | [Publisher record](https://standards.ieee.org/ieee/1905.1/4995/) and [IEEE Xplore record](https://ieeexplore.ieee.org/document/6502164/) are accessible. The publisher offers purchase or subscription access; full text was supplied and verified on 2026-09-22. |
+| IEEE amendment | IEEE Std 1905.1a-2014 | [Publisher record](https://standards.ieee.org/ieee/1905.1a/5820/) is accessible. Full amendment text was supplied and verified on 2026-09-22. |
 | EasyMesh | Wi-Fi EasyMesh Specification 6.1, dated 2025-12-15 | [Publisher entry](https://www.wi-fi.org/file/wi-fi-easymesh-specification); [accessible publisher PDF](https://www.wi-fi.org/system/files/Wi-Fi%20EasyMesh%20Specification%20v6.1.pdf), 229 pages. |
 | WSC/WPS | Wi-Fi Protected Setup Specification 2.0.10, dated 2025-12-15 | [Publisher entry](https://www.wi-fi.org/file/wi-fi-protected-setup-specification); [accessible publisher PDF](https://www.wi-fi.org/system/files/Wi-Fi%20Protected%20Setup%20Specification%20v2.0.10.pdf), 155 pages. |
 
@@ -47,9 +49,9 @@ TLV lists cannot simply be reused.
 
 ## Verified section pointers
 
-Page numbers below are printed PDF pages. IEEE section pointers are **references
-found in the EasyMesh text**, not claims that the IEEE clauses were read.
-The JSON matrix records that distinction on each entry.
+Page numbers below are printed PDF pages. This table records the original WFA
+research pointers. The later [IEEE review](ieee1905-envelope.md#2-review-the-exact-rules-implemented)
+verifies the selected actual clauses and resolves the WSC clause to §6.3.9.
 
 | Procedure | Accessible normative sections | IEEE material still needed |
 | --- | --- | --- |
@@ -62,9 +64,9 @@ The JSON matrix records that distinction on each entry.
 The partial matrix includes source-backed message IDs from EasyMesh Table 22
 and the one-second response deadlines in sections 9.1 and 7.1. These are protocol
 response deadlines, independent of a pod's configuration-application deadline.
-They are not a complete timer/retry matrix. The discovery message ID remains
-unset because the inspected normative WFA table does not define it; knowing it
-from a dissector is insufficient to qualify the IEEE procedure.
+They are not a complete timer/retry matrix. The later IEEE Table 6-4 review establishes Topology Discovery as `0x0000`;
+its mandatory base fields now have an implemented interpreter. Full discovery
+procedures, including accompanying LLDP, remain incomplete.
 
 WPS 2.0.10 supplies the registration-message attributes, nonce and authenticator
 handling, key derivation, authenticated key wrapping and encrypted AP settings.
@@ -107,8 +109,8 @@ must be kept distinct from the actual pod's physical topology.
 
 All document requests and access status are consolidated in the
 [specification acquisition checklist](specification-acquisition.md). The operator
-confirmed that the exact IEEE 1905 base/amendment editions have no local copies
-or supplied access mechanism. The follow-up dependency audit also records
+supplied the exact IEEE 1905 base/amendment PDFs on 2026-09-22. The follow-up
+dependency audit records LLDP IEEE 802.1AB-2009,
 IEEE 802.3-2015 (EasyMesh §5.2.6 and §14.1.3) and Wi-Fi Alliance Security
 Requirements (EasyMesh §13), whose revision must be identified. No missing
 document is replaced by a peer implementation or an older fixture.

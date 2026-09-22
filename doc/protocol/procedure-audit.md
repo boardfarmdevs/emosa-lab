@@ -9,8 +9,9 @@ below are the documents' printed page numbers. The PDFs are not redistributed.
 
 This review identifies WFA message inclusion rules, feature conditions, selected
 field definitions, and their implementation consequences. It **does not freeze
-P0**, qualify a complete profile, or replace the missing IEEE base/amendment
-review. A fact that is readable in the WFA documents is not permission to emit
+P0**, qualify a complete profile, or replace the complete IEEE procedure
+review. The later [IEEE envelope review](ieee1905-envelope.md) uses both PDFs
+obtained on 2026-09-22 and resolves selected framing rules. A fact that is readable in the WFA documents is not permission to emit
 an otherwise incomplete IEEE message.
 
 ## Why the proposed Profile-1 subset needs care

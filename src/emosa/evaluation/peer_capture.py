@@ -279,7 +279,7 @@ def review(records, *, controller_al, agent_al):
         "limitations": [
             "Dissector output is an independent implementation observation, not a specification.",
             "Only the listed WFA inclusion conditions are checked; "
-            "IEEE base/amendment remain pending.",
+            "full IEEE/EasyMesh procedure validation remains pending.",
             "No exchange authentication, decryption, replay, physical scope "
             "or write authorization.",
             "Reassembled messages rely on the recorded tshark implementation.",

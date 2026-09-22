@@ -70,7 +70,7 @@ These requirements remain in the [protocol matrix](protocol-matrix.json) and
 [pod qualification instructions](../guides/pod-qualification.md). The end state still needs
 real controller discovery/onboarding and independently observed behavior on an
 unchanged physical OpenSync extender. The [acquisition checklist](specification-acquisition.md)
-continues to list the exact missing IEEE editions.
+now marks both IEEE editions obtained and lists remaining dependencies.
 
 ## Independent evidence
 

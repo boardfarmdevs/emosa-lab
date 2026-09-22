@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "transport": "AF_PACKET",
+  "mids_received": [
+    65535,
+    0
+  ],
+  "message_type": "0x0002",
+  "frames_received": 2,
+  "onboarding_proven": false,
+  "config_writes": 0
+}

@@ -98,7 +98,7 @@ REQUIREMENTS = (
         "Control-message reliability",
         "15.1; 18",
         "review_pending",
-        "Table 133 columns differ; resolve normative procedures and missing IEEE rules",
+        "Table 133 columns differ; complete the normative procedure applicability review",
     ),
     (
         "higher_layer",
@@ -111,8 +111,8 @@ REQUIREMENTS = (
         "message_format",
         "Complete message formats",
         "17",
-        "blocked_external",
-        "IEEE 1905.1-2013/1905.1a-2014 are pending; value codecs do not define the envelope",
+        "review_pending",
+        "IEEE base/amendment obtained and envelope implemented; complete message contracts pending",
     ),
     (
         "release4_features",
@@ -316,12 +316,12 @@ def audit(features=None):
             "required_per_radio": ["0x85", "0x11 (WSC M1)", "0xb4", "0xbe"],
             "note": (
                 "M1 requires Advanced Capabilities independently of AP report QoS conditions. "
-                "IEEE envelope and trusted exchange remain pending."
+                "IEEE envelope exists as a component; trusted exchange binding remains pending."
             ),
         },
         "counter_units": units,
         "blockers": [
-            "IEEE_1905_base_and_amendment_pending",
+            "complete_procedure_review_and_wire_exchange_pending",
             "mandatory_functions_incomplete",
             "qualified_target_feature_inputs_pending",
             "native_peer_profile_intersection_unresolved",

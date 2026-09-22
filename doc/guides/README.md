@@ -36,3 +36,7 @@ Start on the development host. The model and ordinary OVSDB exercises need no
 LXD or radio. Follow the team manual's explicit HOST/VM/CONTAINER labels before
 using the prepared native or radio lab. Private pod credentials and raw physical
 captures belong outside the repository.
+
+The [IEEE 1905 envelope exercise](../protocol/ieee1905-envelope.md) is the next
+wire-learning step after the semantic service: acquired specifications, native
+frame inspection, bounded fragment tests and isolated VM packet delivery.

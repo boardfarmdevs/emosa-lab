@@ -15,8 +15,8 @@ are neither a whole TLV nor an EasyMesh discovery message.
 
 The intended nesting is Ethernet frame → IEEE 1905 message → TLVs → values.
 This module handles only the last part, whose selected fields are explicitly
-defined in EasyMesh. The missing IEEE base and amendment are still needed for
-complete message framing and processing. An eventual protocol endpoint must also
+defined in EasyMesh. The [IEEE envelope component](ieee1905-envelope.md) now uses
+both acquired IEEE editions; complete procedure processing remains unfinished. An eventual protocol endpoint must also
 associate the decoded values with a trusted peer, exchange and represented pod.
 
 The Python implementation is [easymesh_payloads.py](../../src/emosa/easymesh_payloads.py).
@@ -215,7 +215,7 @@ feature labels are incomplete or outdated; independent checks compare numeric
 fields and raw flags, while EasyMesh 6.1 supplies their current meanings.
 
 These native implementation observations supplement the specification. They
-cannot qualify missing IEEE rules or prove the complete native exchange conforms
+cannot replace the IEEE clause review or prove the complete native exchange conforms
 to EasyMesh 6.1. The [retained component evidence](../evidence/easymesh-payloads/summary.json)
 keeps this distinction explicit.
 

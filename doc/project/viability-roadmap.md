@@ -10,7 +10,7 @@ followed by [clean nested-LXD reproduction](../../deploy/reliability/README.md).
 The [new learning sequence](../guides/learning-path.md) teaches those boundaries
 in order. See [retained evidence](../evidence/reliability/README.md) for the exact
 host/container workloads, resource samples, earlier failures and installed image.
-These results reduce southbound/service risk while P0 and physical inputs remain
+These results reduce southbound/service risk while full procedure validation and physical inputs remain
 pending; they do not populate an EasyMesh controller's inventory.
 
 The [service integration walkthrough](../guides/service-integration.md) now
@@ -19,7 +19,9 @@ clients, and live native-controller preparation. The
 [retained results](../evidence/service-integration/summary.json) keep semantic
 initiation separate from the absent EMOSA wire exchange. The
 [available WFA audit](../protocol/procedure-audit.md) advances the contract while
-the exact IEEE base/amendment inputs remain pending.
+the complete procedure audit remains unfinished. Both exact IEEE PDFs were
+obtained on 2026-09-22; the [envelope implementation](../protocol/ieee1905-envelope.md)
+now passes native-capture and isolated packet checks. Discovery/WSC integration is next.
 
 The [onboarding readiness checks](../guides/onboarding-readiness.md) now add
 strict synthetic sole-radio scope admission and offline review of native captures.
@@ -89,7 +91,7 @@ not remove EMOSA's specification or physical-pod gates.
 
 | Order | Work | Exit evidence / decision |
 | --- | --- | --- |
-| 1 — P0 | Freeze proposed editions and procedure subset; obtain missing lawful IEEE text; complete normative rules and independent packet/crypto vectors | Reproducible encodings, authentication rules, timers and radio-wide BSS semantics with exact references |
+| 1 — P0 | Freeze proposed editions and procedure subset; use the acquired IEEE text; resolve remaining LLDP/WFA dependencies and complete normative rules and independent packet/crypto vectors | Reproducible encodings, authentication rules, timers and radio-wide BSS semantics with exact references |
 | 2 — I3/I4 | Implement actual packet endpoints, discovery/capabilities and genuine WSC provisioning; bind to the operation engine | Wire-driven OVSDB simulation and captures; valid/invalid authentication, duplicate/retry and lost-reply cases; no semantic fallback |
 | In parallel — M0 | Run read-only qualification when trusted local inputs arrive; inspect pod/build, schema, managed radio/VIF, writers, recovery and client | Reviewed profile; sole-BSS radio or full radio-scope mapping; actual wired management and independent observer |
 | 3 — I5 | Execute one SSID/PSK change over wired management on an unchanged physical pod | Correlated EasyMesh exchange, Config delta, fresh State, observed BSSID/SSID, station authentication and usable traffic |
@@ -139,7 +141,7 @@ Config changes to a separate hostapd manager and derives State from
 hostapd/nl80211. Three selected runs passed 13 cases with independent clients,
 including wrong-key rejection, SSID/key change, lost reply, withholding, restart
 and data-path failures. The next integration is genuine controller discovery/WSC
-through EMOSA into this boundary, once the missing normative inputs are available.
+through EMOSA into this boundary, as the remaining procedure contract and inputs are resolved.
 
 For real pods use a physical Wi-Fi NIC in the observer, with an isolated client
 data path and a separately verified management/recovery path. Archive captures
