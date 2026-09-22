@@ -1,6 +1,6 @@
 # EasyMesh value components and offline inspection
 
-EMOSA now encodes and decodes five selected EasyMesh **TLV values**. This is
+EMOSA now encodes and decodes six selected EasyMesh **TLV values**. This is
 preparation for discovery and topology reporting while the IEEE 1905 documents
 are being acquired. It does not enable a packet endpoint, controller discovery,
 onboarding or pod writes. Run this exercise on **HOST**, in your development or
@@ -39,6 +39,7 @@ No licensed document or page extract is redistributed.
 | `0x81` / `SearchedServices` | One-octet count, then that many searched services; only `0` controller is defined | EasyMesh §17.2.2, Table 25, p.125 |
 | `0x82` / `RadioIdentifier` | Six RUID octets | EasyMesh §17.2.3, Table 26, pp.125–126 |
 | `0x83` / `APOperationalBss` | Radio count; per-radio RUID and BSS count; per-BSS AP_MAC, SSID byte length and SSID octets | EasyMesh §17.2.4, Table 27, p.126 |
+| `0x85` / `APRadioBasicCapabilities` | RUID, nonzero Max_BSS, class count; per-class identifier, signed EIRP dBm, non-operable channel count/list | EasyMesh §17.2.7, Table 30, pp.127–128; selected classes in IEEE 802.11-2024 Table E-4, pp.5658–5659 |
 | `0xB3` / `MultiAPProfile` | One profile octet; defined profiles 1, 2 and 3 | EasyMesh §17.2.47, Table 70, p.157 |
 | SSID representation | Preserve original octets and the 0–32-octet structural bound; do not assume UTF-8 | IEEE 802.11-2024 §9.4.2.2, Figure 9-209, p.934 |
 
@@ -71,7 +72,7 @@ Other deliberate boundaries:
 - The component preserves order and repeated identities. It checks structure;
   identity uniqueness, real inventory completeness, message inclusion and actual
   supported roles/profile require the later procedure layer.
-- Unsupported types, including capability and associated-client TLVs, remain
+- Unsupported types, including other capability and associated-client TLVs, remain
   explicit errors. This standalone API makes no assertion about how a complete
   IEEE receiver handles unknown TLVs.
 
@@ -178,7 +179,10 @@ uv run pytest tests/test_easymesh_payloads.py
 
 They compare exact independently extracted bytes and decoded fields, hand-derived
 table examples, malformed/truncated input, reserved-code behavior, count and SSID
-boundaries, resource limits and the offline CLI. There are 71 selected cases.
+boundaries, resource limits and the offline CLI. There are 73 selected cases;
+[radio capability tests](../../tests/test_radio_capabilities.py) add signed-power
+boundaries and input-mapping checks. The `0x85` decoder preserves unfamiliar
+classes for inspection; its encoder accepts only audited classes 81–84 and 115.
 
 For the independent re-extraction, install `tshark` on a machine where you can
 inspect the retained public capture. On Ubuntu, the package can be installed
@@ -190,7 +194,7 @@ python3 scripts/check-easymesh-reference.py
 ```
 
 The script validates the retained input digests, invokes Wireshark's decoder,
-uses its reassembly and field boundaries, and compares **nine** retained values
+uses its reassembly and field boundaries, and compares **ten** retained values
 and interpretations. It imports no EMOSA code and never regenerates expected
 values during the check. Both tshark 3.6.2 and 4.2.2 matched locally; CI includes
 the same check. The [provenance](../../tests/fixtures/protocol/easymesh/provenance.json)
@@ -204,9 +208,12 @@ keeps this distinction explicit.
 ## What follows this component?
 
 Stable per-pod radio/BSS identity binding and complete observed topology projection
-now have a [synthetic service exercise](../guides/observed-topology.md). Next are
-truthful radio capability values from qualified inputs. Profile advertisement must wait for the complete
-mandatory-function audit. Actual discovery/topology/WSC exchange processing also
+now have a [synthetic service exercise](../guides/observed-topology.md). The
+[radio-capability diagnostic](../guides/radio-capabilities.md) maps explicit
+synthetic inputs to `0x85`, rechecking identity, evidence and current context.
+Physical capability qualification and other mandatory feature inputs remain
+pending. Profile advertisement must wait for the complete mandatory-function
+audit. Actual discovery/topology/WSC exchange processing also
 needs the missing **IEEE 1905.1-2013 and IEEE 1905.1a-2014** review, independent
 full-message vectors, peer/exchange binding and recovery rules.
 

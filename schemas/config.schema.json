@@ -188,6 +188,25 @@
               "sole-fronthaul-radio"
             ],
             "description": "Optional stricter synthetic radio-scope admission; never enables physical or EasyMesh writes."
+          },
+          "radio_capabilities": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^/",
+                "maxLength": 4096
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [

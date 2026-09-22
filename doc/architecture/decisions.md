@@ -71,3 +71,12 @@
   uses a single existing BSS/PSK profile, and exposes client success separately
   from radio State. Reuse the stopped native baseline containers and retained
   database/Python tools; keep the native OpenSync backend and wire gates closed.
+
+- Bind AP Radio Basic Capabilities inputs to the persisted synthetic topology,
+  model/firmware, schema and fresh regulatory context. Require pinned evidence
+  files, explicit completeness and an expiring validity window. A separate
+  read-only diagnostic produces values only after these checks; hash verification
+  establishes input identity, not the truth of physical claims. Limit class
+  mapping to reviewed IEEE 802.11-2024 Table E-4 entries, never silently omit
+  unsupported classes, and keep full profile/AP Capability Report and wire
+  admission pending. See the [input walkthrough](../guides/radio-capabilities.md).

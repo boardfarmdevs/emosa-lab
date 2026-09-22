@@ -447,19 +447,25 @@
       "implementation_refs": [
         "src/emosa/opensync/mapping.py",
         "src/emosa/topology_bindings.py",
-        "src/emosa/opensync/topology.py"
+        "src/emosa/opensync/topology.py",
+        "src/emosa/radio_capabilities.py",
+        "src/emosa/operating_classes.py"
       ],
       "test_refs": [
         "tests/test_ovsdb.py",
         "tests/test_qualification.py",
         "tests/test_topology.py",
-        "tests/test_topology_service.py"
+        "tests/test_topology_service.py",
+        "tests/test_radio_capabilities.py",
+        "tests/test_radio_capability_service.py"
       ],
       "evidence_refs": [
-        "doc/evidence/observed-topology/summary.json"
+        "doc/evidence/observed-topology/summary.json",
+        "doc/evidence/radio-capabilities/summary.json"
       ],
       "mode": null,
-      "scope": "Complete synthetic radio/VIF identity and observation mapping tested through the actual read-only service; hardware/trusted-identity and wire qualification remain pending."
+      "scope": "Complete synthetic radio/VIF identity and observation mapping tested through the actual read-only service; hardware/trusted-identity and wire qualification remain pending.",
+      "independent_work": "Complete synthetic topology and evidence-bound Radio Basic Capabilities diagnostics tested via read-only two-pod service. Actual capability qualification, complete profile and wire/physical gates remain pending."
     },
     {
       "id": "MODEL-04",
@@ -1463,20 +1469,25 @@
       "implementation_refs": [
         "doc/protocol/protocol-matrix.json",
         "src/emosa/topology_bindings.py",
-        "src/emosa/opensync/topology.py"
+        "src/emosa/opensync/topology.py",
+        "src/emosa/radio_capabilities.py",
+        "src/emosa/operating_classes.py"
       ],
       "test_refs": [
         "tests/test_gated.py",
         "tests/test_topology.py",
-        "tests/test_topology_service.py"
+        "tests/test_topology_service.py",
+        "tests/test_radio_capabilities.py",
+        "tests/test_radio_capability_service.py"
       ],
       "evidence_refs": [
-        "doc/evidence/observed-topology/summary.json"
+        "doc/evidence/observed-topology/summary.json",
+        "doc/evidence/radio-capabilities/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
-      "independent_work": "Explicit persisted synthetic topology bindings and complete graph projection tested with real OVSDB, two pods, UUID recreation and adapter restart; full wire/physical gate remains open."
+      "independent_work": "Complete synthetic topology and evidence-bound Radio Basic Capabilities diagnostics tested via read-only two-pod service. Actual capability qualification, complete profile and wire/physical gates remain pending."
     },
     {
       "id": "WIRE-03",

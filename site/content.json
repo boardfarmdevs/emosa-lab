@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Persisted explicit radio/VIF identities and complete observed AP value projection now survive row recreation and service restart. Qualify truthful capability inputs, complete the profile audit and IEEE exchange processing before wire-driven onboarding.",
+      "next": "Stable topology and evidence-bound synthetic Radio Basic Capabilities values now run through the read-only service. Qualify actual pod limits, add required feature inputs, resolve the native profile mismatch and complete IEEE processing before wire onboarding.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -464,7 +464,7 @@
       "path": "doc/protocol/easymesh-payloads.md",
       "title": "EasyMesh value components and offline inspection",
       "category": "Protocol components",
-      "description": "Five standalone value codecs, beginner exercises, reserved-code rules and nine native payloads cross-checked by Wireshark; complete wire onboarding remains pending."
+      "description": "Six standalone value codecs, beginner exercises, reserved-code rules and ten native payloads cross-checked by Wireshark; complete wire onboarding remains pending."
     },
     {
       "path": "doc/evidence/easymesh-payloads/summary.json",
@@ -483,10 +483,22 @@
       "title": "Observed topology evidence",
       "category": "Service and protocol integration",
       "description": "Two-pod read-only adapter experiment and graph/identity regressions; complete wire and physical proof remain pending."
+    },
+    {
+      "path": "doc/guides/radio-capabilities.md",
+      "title": "Radio capability inputs and diagnostic values",
+      "category": "Service and protocol integration",
+      "description": "Understand supported limits versus observed State, provide explicit evidence inputs, and test withdrawal on changed profile, firmware or regulatory context."
+    },
+    {
+      "path": "doc/evidence/radio-capabilities/summary.json",
+      "title": "Radio capability component evidence",
+      "category": "Service and protocol integration",
+      "description": "Two-pod read-only mapping, signed value boundaries, independent native dissectors and unchanged physical/wire gates."
     }
   ],
   "suite_evidence": {
-    "unit": "observed-topology/unit-results.xml",
-    "ovsdb": "observed-topology/ovsdb-results.xml"
+    "unit": "radio-capabilities/unit-results.xml",
+    "ovsdb": "radio-capabilities/ovsdb-results.xml"
   }
 }

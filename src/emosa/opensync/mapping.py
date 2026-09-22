@@ -1,5 +1,7 @@
+import asyncio
 from dataclasses import asdict
 
+from emosa import radio_capabilities as radio_caps
 from emosa.backends.base import Snapshot, SubmitResult
 from emosa.clock import utc_now
 from emosa.errors import EmosaError, Reason
@@ -66,6 +68,7 @@ class OpenSyncBackend:
         expected_serial=None,
         mapping_scope="existing-bss",
         topology_binding=None,
+        radio_capabilities=None,
     ):
         if backend_mode != "ovsdb-sim":
             raise EmosaError(
@@ -77,6 +80,7 @@ class OpenSyncBackend:
         self.bss_id, self.radio_id = bss_id, radio_id
         self.expected_serial = expected_serial
         self.topology_binding = topology_binding
+        self.radio_capability_reference = radio_capabilities
         if mapping_scope not in {"existing-bss", "sole-fronthaul-radio"}:
             raise EmosaError(Reason.INVALID_INPUT, "unknown mapping scope")
         if mapping_scope == "sole-fronthaul-radio" and not expected_serial:
@@ -245,6 +249,26 @@ class OpenSyncBackend:
             )
         return project(
             self.pod_id, raw, self.topology_binding, state_provenance=self.state_provenance
+        )
+
+    async def radio_capabilities(self):
+        try:
+            profile = await asyncio.to_thread(
+                radio_caps.load_inputs, self.radio_capability_reference
+            )
+            raw = await self.session.snapshot()
+        except (radio_caps.InputUnavailable, EmosaError, ConnectionError, TimeoutError) as exc:
+            code = (
+                str(exc) if isinstance(exc, radio_caps.InputUnavailable) else "snapshot_unavailable"
+            )
+            return radio_caps.unavailable(self.pod_id, self.topology_binding, code)
+        return radio_caps.project(
+            self.pod_id,
+            raw,
+            self.topology_binding,
+            profile,
+            self.radio_capability_reference,
+            state_provenance=self.state_provenance,
         )
 
     async def plan(self, intent):

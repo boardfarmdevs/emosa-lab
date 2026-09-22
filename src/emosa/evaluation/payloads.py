@@ -8,6 +8,7 @@ from pathlib import Path
 from emosa.easymesh_payloads import (
     MAX_VALUE_BYTES,
     APOperationalBss,
+    APRadioBasicCapabilities,
     MultiAPProfile,
     RadioIdentifier,
     SearchedServices,
@@ -43,6 +44,19 @@ def read_value(*, value_hex: str | None = None, value_file: Path | None = None) 
 
 
 def describe(payload):
+    if isinstance(payload, APRadioBasicCapabilities):
+        return {
+            "ruid": payload.ruid.hex(":"),
+            "max_bss": payload.max_bss,
+            "operating_classes": [
+                {
+                    "operating_class": op.operating_class,
+                    "max_eirp_dbm": op.max_eirp_dbm,
+                    "non_operable_channels": list(op.non_operable_channels),
+                }
+                for op in payload.operating_classes
+            ],
+        }
     if isinstance(payload, (SupportedServices, SearchedServices)):
         return {
             "services": list(payload.services),

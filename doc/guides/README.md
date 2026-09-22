@@ -10,6 +10,7 @@
 | [Onboarding readiness checks](onboarding-readiness.md) | Check complete radio/BSS scope and review the native controller's captured profiles and WSC payload set |
 | [Offline EasyMesh payload exercise](../protocol/easymesh-payloads.md) | Decode/build selected values and reproduce their independent native-capture checks without a VM or pod |
 | [Stable identities and observed topology](observed-topology.md) | Bind every simulated radio/VIF, inspect a complete State-derived AP value, and test reconnect/row recreation/service restart |
+| [Radio capability inputs](radio-capabilities.md) | Supply explicit evidence-backed synthetic limits, inspect per-radio values, and test withdrawal on changed inputs or observations |
 | [Read-only physical-pod qualification](pod-qualification.md) | Prepare private local connection inputs, collect an actual schema/inventory and supply useful root-pod/cloud captures |
 
 For the distinction between the adapter, its virtual-agent role and the native

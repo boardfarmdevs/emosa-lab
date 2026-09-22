@@ -12,6 +12,12 @@ FRESHNESS_SECONDS = 2.0
 
 def validate_bindings(config):
     for pod in config["pods"]:
+        if "radio_capabilities" in pod and (
+            config["backend_mode"] != "ovsdb-sim" or "topology" not in pod.get("virtual_agent", {})
+        ):
+            raise EmosaError(
+                Reason.INVALID_INPUT, "radio capabilities require a bound simulation topology"
+            )
         if pod.get("mapping_scope") == "sole-fronthaul-radio" and (
             config["backend_mode"] != "ovsdb-sim" or "virtual_agent" not in pod
         ):

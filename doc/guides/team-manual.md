@@ -1667,6 +1667,43 @@ rebuild current references; unknown or incomplete graphs produce no Operational
 BSS value. A valid report provides value bytes for later protocol integration,
 without emitting an IEEE message or expanding the semantic write scope.
 
+### 6.14 Supply and inspect radio capability inputs
+
+The controller needs to know what a represented radio supports before choosing
+a configuration. Current State alone cannot answer that question: one active
+BSS does not establish maximum BSS capacity, and a current channel does not
+establish the complete supported channel set. EMOSA therefore requires explicit
+capability inputs with evidence references, validity dates and a binding to the
+specific pod/radios, firmware, schema and regulatory context.
+
+The [radio-capability walkthrough](radio-capabilities.md) explains these concepts,
+the exact input fields, blocked results and the path to physical qualification.
+Run its complete demonstration on HOST after chapter 5:
+
+```bash
+uv run python -m emosa.simulation.radio_capabilities \
+  --output .lab/radio-capabilities-demo
+```
+
+This starts two disposable simulated pods and one read-only adapter. It verifies
+explicit capacities different from the active BSS counts, checks independently
+bound per-radio values, modifies owned fixture inputs to demonstrate withdrawal,
+disconnects one pod and restarts the service. Owned processes stop on exit.
+Inspect the generated profiles and `report.json` as explained in the walkthrough.
+
+On a live simulation service configured with those inputs, the command is
+`emosa --socket /absolute/path/to/control.sock pod pod-1 radio-capabilities --json`.
+The older `pod pod-1 capabilities` command still describes available semantic
+operations. The new command returns radio facts and `0x85` value bytes. Exit 0
+means those diagnostic checks passed; exit 5 means no current values are available.
+A default service without capability inputs reports that prerequisite explicitly.
+
+The demonstration's declared limits are synthetic. Hash verification identifies
+the files used; it cannot prove their claims. No EasyMesh message is emitted,
+no complete profile is advertised and no physical pod is qualified. Actual radio
+limits, other mandatory feature capabilities and the IEEE procedure layer remain
+required before a controller can rely on this representation.
+
 ## 7. Explore evidence and the GitHub Pages manual
 
 The explorer is a **static publication of reviewed results and documentation**.
@@ -2759,7 +2796,7 @@ of the history; an old `protoc-c` bootstrap failure is not the current blocker.
 ### 13.3 Inspect EasyMesh value components without a lab
 
 Discovery and topology messages carry small structured fields describing services,
-radios, BSSs and profiles. EMOSA now has Python codecs for five such **TLV values**.
+radios, BSSs, radio capabilities and profiles. EMOSA now has Python codecs for six such **TLV values**.
 A TLV means type/length/value; this component handles the value inside that
 structure. It provides useful progress from EasyMesh's explicit field definitions
 while the IEEE 1905 base/amendment are pending. It does not enable the packet
@@ -2785,7 +2822,9 @@ not anonymization. Use private files for future physical observations.
 
 The running service now uses the Operational BSS codec in its optional read-only
 [complete topology report](observed-topology.md). Its explicit bindings and full
-observed graph are separate from the older selected-BSS inventory. The IEEE
+observed graph are separate from the older selected-BSS inventory. The
+[radio-capability diagnostic](radio-capabilities.md) also uses the `0x85` codec
+after validating explicit evidence inputs against fresh observations. The IEEE
 exchange layer and qualified advertised profile remain pending; successful value
 encoding alone does not establish either.
 
@@ -3157,7 +3196,7 @@ correctly blocked before any operation was allowed.
 | 2 | Invalid input, including argparse/configuration errors |
 | 3 | Local API caller wait expired; the operation may continue |
 | 4 | Local adapter service unavailable, often wrong socket or stopped service |
-| 5 | Blocked/unsupported operation, missing prerequisite, conflict, busy/precondition rejection, blocked run, or unavailable `pod topology` projection |
+| 5 | Blocked/unsupported operation, missing prerequisite, conflict, busy/precondition rejection, blocked run, or unavailable `pod topology` / `pod radio-capabilities` projection |
 | 130 | CLI interrupt where handled as such; interrupted experiments can instead retain an inconclusive run and return nonzero |
 
 Native lab scripts use their own nonzero results for failed readiness/acceptance
@@ -3176,6 +3215,7 @@ and specific script's logs are the authority for what actually executed.
 | Secret unavailable/invalid | Check owned regular file, no symlink, directory 0700/file 0600, valid basename and printable ASCII PSK of 8–63 bytes. A trailing newline is part of the value and is rejected; do not create PSKs with default `echo` |
 | Inventory `NOT_READY`/`fresh: false` | Allow initial synchronization; verify database/manager process and endpoint. Stale rows are not positive application evidence |
 | Topology has no value and lists blockers | Inspect the full graph and explicit binding using the [topology guide](observed-topology.md); an unexpected interface or identity cannot be silently omitted |
+| Radio capabilities are unavailable | Check the named blocker against the [input guide](radio-capabilities.md): missing/expired evidence, changed firmware/country or incomplete inventory must withdraw values |
 | Persisted topology binding differs | Review the changed configuration and restore the intended identity. Migration is not implemented; preserve the journal instead of deleting it to bypass the check |
 | Service directory already locked | Another adapter owns it; inspect/stop that process deliberately. Do not remove a live lock or share one journal between daemons |
 | Fixture/label already exists | Use a new path/label; preserve previous evidence. Fixture config endpoints become stale after its database closes |

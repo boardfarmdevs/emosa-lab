@@ -230,10 +230,11 @@ The service case runs the same two-pod experiment through real OVSDB, the public
 API and CLI, including disconnect, UUID recreation and process death. See the
 [reviewed evidence](../evidence/observed-topology/summary.json).
 
-The next independent component work is truthful radio-capability input handling
-and field mapping, with unsupported/unknown data explicit and without deriving
-capacity or operating classes from a current channel or BSS count. The complete
-profile audit remains open. Actual controller discovery/topology/WSC processing
+The [radio-capability input exercise](radio-capabilities.md) now adds explicit
+synthetic limits and field mapping, with unsupported/unknown data blocked and
+without deriving capacity or classes from current channel or BSS count. Actual
+capability qualification and the complete profile audit remain open.
+Actual controller discovery/topology/WSC processing
 still needs IEEE 1905.1-2013 and 1905.1a-2014 review, independent full-message
 vectors and trusted peer/exchange/radio binding. Physical proof still needs the
 operator's local connection configuration and pod qualification.

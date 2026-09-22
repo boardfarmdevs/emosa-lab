@@ -589,7 +589,9 @@
         "EasyMesh 6.1 section 3.1.2 page 16",
         "EasyMesh 6.1 sections 17.2.1-4 Tables 24-27 pages 125-126",
         "EasyMesh 6.1 section 17.2.47 Table 70 page 157",
-        "IEEE 802.11-2024 section 9.4.2.2 Figure 9-209 page 934"
+        "IEEE 802.11-2024 section 9.4.2.2 Figure 9-209 page 934",
+        "EasyMesh 6.1 section 17.2.7 Table 30 pages 127-128",
+        "IEEE 802.11-2024 Table E-4 selected global operating classes pages 5658-5659"
       ],
       "implementation": "src/emosa/easymesh_payloads.py",
       "inspection": "src/emosa/evaluation/payloads.py",
@@ -598,6 +600,7 @@
         "0x81",
         "0x82",
         "0x83",
+        "0x85",
         "0xb3"
       ],
       "procedure_gate_satisfied": false,
@@ -607,20 +610,22 @@
         "Exact single-value parsing rejects trailing/truncated bytes; no unknown-TLV or duplicate-identity procedure inference",
         "Opaque SSID bytes; no UTF-8 assumption or Config-to-State substitution"
       ],
-      "validation": "71 component cases, including exact native bytes/fields, hand-derived table examples and negative/boundary/CLI tests; nine native projections reproduced under tshark 3.6.2 and 4.2.2",
+      "validation": "73 base codec cases plus radio-capability boundary/input tests; ten independent native values reproduced under tshark 3.6.2 and 4.2.2",
       "tests": [
-        "tests/test_easymesh_payloads.py"
+        "tests/test_easymesh_payloads.py",
+        "tests/test_radio_capabilities.py"
       ],
       "vectors": "tests/fixtures/protocol/easymesh/native-values.json",
       "provenance": "tests/fixtures/protocol/easymesh/provenance.json",
       "independent_checker": "scripts/check-easymesh-reference.py",
       "evidence": "doc/evidence/easymesh-payloads/summary.json",
       "remaining_gaps": [
-        "Complete observed radio/BSS inventory and stable qualified identity bindings",
+        "Qualified physical identity, complete topology and radio capability inputs; synthetic projections are available",
         "Full advertised-profile audit and actual radio capabilities",
         "IEEE 1905.1-2013 / 1905.1a-2014 base rules and independent full-message vectors",
         "Real controller discovery/onboarding and physical-pod acceptance"
-      ]
+      ],
+      "additional_evidence": "doc/evidence/radio-capabilities/summary.json"
     }
   },
   "acquisition_checklist": "doc/protocol/specification-acquisition.md",
@@ -810,5 +815,40 @@
     "p0_satisfied": false,
     "physical_qualification": false,
     "wire_admission": false
+  },
+  "synthetic_radio_capability_projection": {
+    "status": "implemented_simulation_diagnostic_only",
+    "guide": "doc/guides/radio-capabilities.md",
+    "implementation": "src/emosa/radio_capabilities.py",
+    "input_schema": "schemas/radio-capabilities.schema.json",
+    "catalogue": "src/emosa/operating_classes.py",
+    "evidence": "doc/evidence/radio-capabilities/summary.json",
+    "tests": [
+      "tests/test_radio_capabilities.py",
+      "tests/test_radio_capability_service.py"
+    ],
+    "normative_sections": [
+      "EasyMesh 6.1 sections 3.1.2 and 17.2.7 Table 30 pp.127-128",
+      "IEEE 802.11-2024 Table E-4 pp.5658-5659; global classes 81,82,83,84,115"
+    ],
+    "scope": "Read-only per-radio 0x85 values from pinned, expiring synthetic evidence inputs and fresh complete topology; no inference of supported limits from current State",
+    "checks": [
+      "Complete declared class inventory, reviewed class/channel sets and explicit signed EIRP",
+      "Stable binding, pod/RUID, model/firmware, schema and observed country match",
+      "Active BSS count and enabled-radio channel consistent with claimed limits",
+      "Profile/evidence digest and validity rechecked for each request; whole-pod withdrawal on failure"
+    ],
+    "input_assurance": "Operator-declared synthetic facts; digest verification is not attestation or physical qualification",
+    "procedure_gate_satisfied": false,
+    "complete_ap_capability_report": false,
+    "qualified_easymesh_profile": null,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "remaining_gaps": [
+      "Actual target capability evidence and qualification",
+      "AP/HT/VHT/HE/Profile-2/advanced capability requirements and complete profile audit",
+      "Native peer profile mismatch resolution",
+      "IEEE 1905 base/amendment review and full wire exchange integration"
+    ]
   }
 }

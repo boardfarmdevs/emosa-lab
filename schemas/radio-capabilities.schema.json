@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emosa.local/schemas/radio-capabilities.schema.json",
+  "description": "Explicit input claims for read-only synthetic AP Radio Basic Capabilities projection. Hash verification does not qualify physical hardware.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "source_kind": {
+      "enum": [
+        "synthetic_fixture",
+        "physical_pod_draft"
+      ]
+    },
+    "pod_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "binding_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "schema_fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "device": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "firmware_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "model",
+        "firmware_version"
+      ],
+      "additionalProperties": false
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "maxLength": 32
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "maxLength": 32
+    },
+    "complete_operating_class_inventory": {
+      "type": "boolean"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "file": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "review_note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "covers": {
+            "const": [
+              "device_identity",
+              "regulatory_domain",
+              "max_bss",
+              "complete_operating_classes"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "file",
+          "sha256",
+          "review_note",
+          "covers"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 8
+    },
+    "radios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "radio_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "ruid": {
+            "type": "string",
+            "pattern": "^[0-9a-f][26ae](?::[0-9a-f]{2}){5}$"
+          },
+          "country": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$"
+          },
+          "max_bss": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 255
+          },
+          "operating_classes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "operating_class": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                "max_eirp_dbm": {
+                  "type": "integer",
+                  "minimum": -128,
+                  "maximum": 127
+                },
+                "non_operable_channels": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 255
+                  },
+                  "minItems": 0,
+                  "maxItems": 64,
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "operating_class",
+                "max_eirp_dbm",
+                "non_operable_channels"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 32
+          },
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "radio_id",
+          "ruid",
+          "country",
+          "max_bss",
+          "operating_classes",
+          "evidence_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 8
+    }
+  },
+  "required": [
+    "schema_version",
+    "source_kind",
+    "pod_id",
+    "binding_sha256",
+    "schema_fingerprint",
+    "device",
+    "issued_at",
+    "expires_at",
+    "complete_operating_class_inventory",
+    "evidence",
+    "radios"
+  ],
+  "additionalProperties": false
+}

@@ -7,13 +7,15 @@
   "dissector": "TShark (Wireshark) 3.6.2 (Git v3.6.2 packaged as 3.6.2-2)",
   "dissector_executable_sha256": "a65608d17a78f255c7a9aaa08244f3fe284ce752f6818fd87fee9ca6e5bb4d54",
   "extractor": "scripts/check-easymesh-reference.py",
-  "extractor_sha256": "68cef4fc06d43605e5f5616752f501a775a938486c3190f399915a3796bfaeac",
-  "vectors_sha256": "be1b6d67bb879dd040a0781e7dc6d8d5195dd6ce10ffcfaa7622f7506dc5fb96",
-  "display_filter": "frame.number == 1 || frame.number == 2 || frame.number == 7 || frame.number == 20",
+  "extractor_sha256": "efe42632c9f37129f46f993bc109fc017440c26c05c36eecac1bb782a41806ba",
+  "vectors_sha256": "74dfa015527ddf90590b012c909714a5941af246509c655c5ad9e76c1b612271",
+  "display_filter": "frame.number == 1 || frame.number == 2 || frame.number == 5 || frame.number == 7 || frame.number == 20",
   "transformation": "tshark -n -2 -T pdml; selected TLV values and dissector field interpretations only. Header boundaries come from dissector sizes; frame 7 uses its reassembled data source. No EMOSA module is imported.",
   "review": "Synthetic SSIDs and MAC identities already present in public native baseline; no WSC content or credentials projected. Reserved service 0xa1 retained for receiver tests, prohibited in encoder output under EasyMesh 6.1 section 3.1.2.",
   "specification_refs": [
     "EasyMesh 6.1 sections 3.1.2, 17.2.1-4 Tables 24-27, 17.2.47 Table 70",
-    "IEEE 802.11-2024 section 9.4.2.2, Figure 9-209, printed page 934"
+    "IEEE 802.11-2024 section 9.4.2.2, Figure 9-209, printed page 934",
+    "EasyMesh 6.1 section 17.2.7, Table 30, printed pages 127-128",
+    "IEEE 802.11-2024 Table E-4, selected global operating classes, printed pages 5658-5659"
   ]
 }

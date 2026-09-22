@@ -26,9 +26,15 @@ offline inspection CLI and independent native-capture checks. The
 [observed-topology exercise](../guides/observed-topology.md) now pins explicit
 per-pod radio/VIF identities in the local journal, validates the full observed
 graph and builds an Operational BSS value without transmission. It survives
-UUID recreation and actual service restart with two simulated pods. Qualified
-capability inputs/field mapping and the full profile audit follow. Complete IEEE
-message processing remains P0-dependent.
+UUID recreation and actual service restart with two simulated pods. The
+[radio-capability exercise](../guides/radio-capabilities.md) now adds explicit
+synthetic capacity/class/EIRP inputs, evidence hashes, validity windows and a
+read-only mapping that withdraws values on changed inputs, firmware, country or
+topology. It does not qualify physical claims or a complete AP Capability Report.
+Next are reviewed feature inputs for the chosen profile, its mandatory-function
+audit, and resolution of the native peer's profile mismatch. Actual capability
+qualification needs a named pod. Complete IEEE message processing remains
+P0-dependent.
 
 The user-facing proof is specifically **an EasyMesh controller discovers and
 onboards an OpenSync extender as another EasyMesh agent, represented by the

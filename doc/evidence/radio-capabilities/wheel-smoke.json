@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "execution": "installed wheel, isolated Python, outside checkout",
+  "wheel_sha256": "3857e999f8d063c6483693895f408696f248728d21ae78e3fd97117ee6b42c35",
+  "stages": 12,
+  "service_demo_passed": true,
+  "packaged_contract_and_schema_used": true,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

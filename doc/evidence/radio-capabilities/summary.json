@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-09-22T03:44:32.922991+00:00",
+  "base_revision": "5842dd649db07e9685257af0584db657c13cd5ed",
+  "scope": "Evidence-bound synthetic AP Radio Basic Capabilities values through a read-only two-pod adapter service; independent native value comparison",
+  "working_tree_sha256": {
+    "schemas/config.schema.json": "3011394680d9d76e4d5a4a1bf061bd73e9da8371b8cf7578857703819ce17946",
+    "schemas/local-api.schema.json": "31354f6503bdc4842f956a28370395f12c5860a9e76473cccb0c4c7264a21b44",
+    "schemas/radio-capabilities.schema.json": "6b5d90616ca5e601ba8b19d2afa0708cbf3b14b83fb369e2d9e1fe136270ee76",
+    "scripts/check-easymesh-reference.py": "efe42632c9f37129f46f993bc109fc017440c26c05c36eecac1bb782a41806ba",
+    "src/emosa/agents.py": "b851c9e83ead91e7168d8e380c32978e50b5f57eaff53866c6ba3dfc2f96a844",
+    "src/emosa/app.py": "c79ad4d415894bcff913a8e2ed399c9403f7beb816a81f52daa395af63f68da3",
+    "src/emosa/cli.py": "6012eadd766c55e1e1cafd7ce0e505e0c8de1b9a9932a98cf5813e25933a9e09",
+    "src/emosa/easymesh_payloads.py": "d76d534f637e2b35136471e886bb9ebf3cdf00c831f8f38f5e55193800b10ef1",
+    "src/emosa/evaluation/payloads.py": "e73b1172413f17c606e661cc22512f88708f70f7249909e96a3e6c799ee00c97",
+    "src/emosa/opensync/mapping.py": "0daaf9766c6c2cca3dc0a57f2bcd4c21292c9fa1709233285e85756a6f8f49e1",
+    "src/emosa/opensync/schema.py": "89c05c3763129d63a2d9ef9511a9ea6fd84f7f4f44ae5b272d4e537e38265be5",
+    "src/emosa/operating_classes.py": "6554d677c0ab9daa9b800942b3d94e77603c2814d0e3587de4aead8898e570d8",
+    "src/emosa/radio_capabilities.py": "b0d9741d97f13c4a9ba1b04a5bf2c7ce24790c00b051fca43a799beefae47c64",
+    "src/emosa/simulation/radio_capabilities.py": "7fb110b250adcd34aea7c0103338907eedfbac9908eecb43e69bbe4bf9f9e77f",
+    "tests/fixtures/protocol/easymesh/native-values.json": "74dfa015527ddf90590b012c909714a5941af246509c655c5ad9e76c1b612271",
+    "tests/fixtures/protocol/easymesh/provenance.json": "08b8df6d57d642f45dfbd7e7bd5851d2c924766914bdc5d622fe467104292a15",
+    "tests/test_radio_capabilities.py": "045da73b505f4b69ec7a9ba06c351d5cbfefba10c0f0a7bb5929bc050e616fbe",
+    "tests/test_radio_capability_service.py": "0687902503884b9dd2a2e83ae12cf666ac7ac94445cc3f849da5e6e399b12ead",
+    "uv.lock": "4e61b047439d7320aa55032e1d59690845af09dddd2d20e6269e4cbc32f32894"
+  },
+  "tests": {
+    "unit": 392,
+    "ovsdb": 39,
+    "base_value_codec": 73,
+    "radio_capability_unit": 67,
+    "radio_capability_service": 1
+  },
+  "junit_curation": {
+    "unit": {
+      "raw_sha256": "ada1a07c2ec44c542401e58c5af1b181d5192b53d2abde5aa133056d9af1c6f3",
+      "long_names_replaced": 5,
+      "transformation": "Replace testcase names over 256 characters with function and original-name digest; preserve counts, outcomes and timing"
+    },
+    "ovsdb": {
+      "raw_sha256": "7427c847d1fea9d4359b81a1f8d4fc8e1513a6bb23eaf67fc751b3b13dee60b4",
+      "long_names_replaced": 0,
+      "transformation": "Replace testcase names over 256 characters with function and original-name digest; preserve counts, outcomes and timing"
+    }
+  },
+  "guide": "doc/guides/radio-capabilities.md",
+  "service_report": "doc/evidence/radio-capabilities/service-report.json",
+  "observed": {
+    "configured_pods": 2,
+    "radios_per_pod": 2,
+    "declared_max_bss": [
+      4,
+      2
+    ],
+    "observed_enabled_ap_bsses": [
+      2,
+      1
+    ],
+    "stages": [
+      "connected",
+      "cli_ready",
+      "profile_changed",
+      "cli_blocked",
+      "other_pod_unchanged",
+      "evidence_changed",
+      "country_changed",
+      "firmware_changed",
+      "disconnected",
+      "other_pod_while_disconnected",
+      "reconnected",
+      "restarted"
+    ],
+    "cli_exit_codes": [
+      0,
+      5
+    ],
+    "adapter_write_mode": "read-only",
+    "monitored_tables_match_after_fixture_fault_restoration": true
+  },
+  "verification": {
+    "ruff_lint": "pass",
+    "ruff_format": "pass",
+    "unit": "pass",
+    "ovsdb": "pass",
+    "native_tshark_3_6_2": "10 values match",
+    "native_tshark_4_2_2": "10 values match",
+    "installed_wheel_demo": "pass outside checkout with isolated Python and packaged contracts/schema",
+    "documentation_links_and_references": 552,
+    "shell_blocks_syntax_checked": 123,
+    "explorer_browser": {
+      "passed": true,
+      "checked_source_targets": 80,
+      "all_architecture_nodes": 8,
+      "all_lab_modes": 5,
+      "retained_runs": 6,
+      "documentation_index": true,
+      "viewports": [
+        "1440x1100",
+        "390x844"
+      ],
+      "errors": []
+    }
+  },
+  "publication_review": "Only explicit synthetic capability claims/evidence, stable fixture identities, value bytes, snapshot metadata, source hashes, test outcomes and lifecycle; no endpoint, connection configuration, credentials, journal, logs or licensed document extracts published",
+  "p0_satisfied": false,
+  "complete_ap_capability_report": false,
+  "qualified_easymesh_profile": null,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "pod_accessed": false,
+  "limits": [
+    "Operator-declared synthetic claims; digest integrity does not establish truth or authenticate hardware",
+    "Audited class subset 81,82,83,84,115; unknown classes block mapping rather than disappear",
+    "Country string comparison is a synthetic representation check, not certification or proof of regulatory permission",
+    "No IEEE transport, complete AP Capability Report, profile advertisement or added write authority"
+  ],
+  "acceptance_path": [
+    "real EasyMesh messages",
+    "EMOSA adapter",
+    "unchanged physical pod",
+    "independently observed behavior"
+  ],
+  "next": "Review required feature capability inputs and mandatory profile functions; resolve native profile mismatch; acquire IEEE 1905 editions and qualify actual pod"
+}

@@ -1,6 +1,6 @@
 """Selected EasyMesh 6.1 TLV *values*, without TLV headers or IEEE 1905 frames.
 
-Sections 3.1.2, 17.2.1–4 and 17.2.47 define this component. SSID octets use
+Sections 3.1.2, 17.2.1–4, 17.2.7 and 17.2.47 define this component. SSID octets use
 IEEE 802.11-2024 section 9.4.2.2. See doc/protocol/easymesh-payloads.md.
 These objects establish neither trusted identities nor a qualified profile.
 """
@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import ClassVar
 
 from emosa.errors import EmosaError, Reason
+from emosa.operating_classes import GLOBAL_OPERATING_CLASSES
 
 # A local parser/encoder resource budget, not a normative TLV or CMDU limit.
 MAX_VALUE_BYTES = 16_384
@@ -90,6 +91,21 @@ class APOperationalBss:
 
 
 @dataclass(frozen=True)
+class BasicOperatingClass:
+    operating_class: int
+    max_eirp_dbm: int
+    non_operable_channels: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class APRadioBasicCapabilities:
+    kind: ClassVar[int] = 0x85
+    ruid: bytes
+    max_bss: int
+    operating_classes: tuple[BasicOperatingClass, ...]
+
+
+@dataclass(frozen=True)
 class MultiAPProfile:
     kind: ClassVar[int] = 0xB3
     profile: int
@@ -106,7 +122,12 @@ class MultiAPProfile:
 
 
 type Payload = (
-    SupportedServices | SearchedServices | RadioIdentifier | APOperationalBss | MultiAPProfile
+    SupportedServices
+    | SearchedServices
+    | RadioIdentifier
+    | APOperationalBss
+    | APRadioBasicCapabilities
+    | MultiAPProfile
 )
 
 
@@ -162,6 +183,17 @@ def decode_value(kind: int, value: bytes) -> Payload:
             result = APOperationalBss(tuple(radios))
         case 0xB3:
             result = MultiAPProfile(reader.octet())
+        case 0x85:
+            ruid, max_bss = reader.take(6), reader.octet()
+            if max_bss == 0:
+                raise _invalid()
+            classes = []
+            for _ in range(reader.octet()):
+                identifier = reader.octet()
+                power = int.from_bytes(reader.take(1), signed=True)
+                channels = tuple(reader.take(reader.octet()))
+                classes.append(BasicOperatingClass(identifier, power, channels))
+            result = APRadioBasicCapabilities(ruid, max_bss, tuple(classes))
         case _:
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "EasyMesh value type is not implemented")
     reader.finish()
@@ -189,6 +221,29 @@ def encode_value(payload: Payload) -> bytes:
         value = _octet(payload.profile)
         if payload.profile not in (1, 2, 3):
             raise _invalid()
+    elif type(payload) is APRadioBasicCapabilities:
+        value = bytearray(_octets(payload.ruid, length=6) + _octet(payload.max_bss))
+        if payload.max_bss == 0:
+            raise _invalid()
+        value.extend(_count(payload.operating_classes))
+        for op in payload.operating_classes:
+            if type(op) is not BasicOperatingClass:
+                raise _invalid()
+            _octet(op.operating_class)
+            if op.operating_class not in GLOBAL_OPERATING_CLASSES:
+                raise EmosaError(
+                    Reason.UNSUPPORTED_OPERATION, "operating class is outside the audited subset"
+                )
+            if type(op.max_eirp_dbm) is not int or not -128 <= op.max_eirp_dbm <= 127:
+                raise _invalid()
+            value.extend(_octet(op.operating_class) + op.max_eirp_dbm.to_bytes(1, signed=True))
+            value.extend(_count(op.non_operable_channels))
+            for channel in op.non_operable_channels:
+                value.extend(_octet(channel))
+                if channel not in GLOBAL_OPERATING_CLASSES[op.operating_class][1]:
+                    raise _invalid()
+            _bounded(value)
+        value = bytes(value)
     elif type(payload) is APOperationalBss:
         value = bytearray(_count(payload.radios))
         for radio in payload.radios:

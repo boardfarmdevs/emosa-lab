@@ -48,6 +48,38 @@
       }
     },
     {
+      "frame": 5,
+      "type": "0x85",
+      "value_hex": "020000ec020002035114020c0d5314005414020c0d",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00",
+        "max_bss": 2,
+        "operating_classes": [
+          {
+            "operating_class": 81,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": [
+              12,
+              13
+            ]
+          },
+          {
+            "operating_class": 83,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": []
+          },
+          {
+            "operating_class": 84,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": [
+              12,
+              13
+            ]
+          }
+        ]
+      }
+    },
+    {
       "frame": 7,
       "type": "0x82",
       "value_hex": "020000ec0200",

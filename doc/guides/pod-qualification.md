@@ -9,6 +9,13 @@ No actual endpoint or authentication material has been supplied. Physical-pod
 connection remains **pending** until the operator populates a private file and
 provides its absolute path. EMOSA does not create or infer pod credentials.
 
+The separate [radio-capability input mapper](radio-capabilities.md) now exercises
+explicit capacity, operating-class/channel and maximum-EIRP claims in simulation.
+This collector does not discover those supported limits automatically. A physical
+profile needs reviewed evidence for the actual model, firmware and regulatory
+context; observed channel, transmit power or BSS count cannot supply the maximum.
+`physical_pod_draft` capability inputs remain blocked by the mapper.
+
 ## Private file location and examples
 
 Keep the populated configuration, secrets and collected pod evidence **outside

@@ -1161,6 +1161,66 @@
       "path": "observed-topology/wheel-smoke.json",
       "sha256": "9bebb9e2edff347f4919c580223de02a6ae50a622d48a5419facb9ef48475433",
       "size": 430
+    },
+    {
+      "path": "radio-capabilities/browser-result.json",
+      "sha256": "fceaf6ddd1b179007321fd082d6085792b8c3b7f7a3b77acb45cef90a92147eb",
+      "size": 227
+    },
+    {
+      "path": "radio-capabilities/inputs/pod-1/capabilities.json",
+      "sha256": "929680ce1ba7bf1afb72a06fc98ce8eaf17c506bdf2624becc61d1e6d06cf399",
+      "size": 1936
+    },
+    {
+      "path": "radio-capabilities/inputs/pod-1/synthetic-radio-contract.json",
+      "sha256": "a6becde3b23156731505cf2db067a0b21634eb09c2cfced8f981acc39a752bc3",
+      "size": 1366
+    },
+    {
+      "path": "radio-capabilities/inputs/pod-2/capabilities.json",
+      "sha256": "537b524fbfa101113e5854a90a11456ce21d2c1ff402f03db38ec0e4ad63abae",
+      "size": 1936
+    },
+    {
+      "path": "radio-capabilities/inputs/pod-2/synthetic-radio-contract.json",
+      "sha256": "d9883ea7870a037541900b422adcc9da97578f5f990df5f4133474a0622172fe",
+      "size": 1366
+    },
+    {
+      "path": "radio-capabilities/native-reference-host.json",
+      "sha256": "cd15e0459c0cdad44b84ff49b3253a75057e81c2df5d56217eaf1ad0f9a395b1",
+      "size": 599
+    },
+    {
+      "path": "radio-capabilities/native-reference-vm.json",
+      "sha256": "da2005708c998d090a2ea28e48027c1b7228512d1e78ba574b6fd45630fc00cd",
+      "size": 608
+    },
+    {
+      "path": "radio-capabilities/ovsdb-results.xml",
+      "sha256": "9de787df1a8e9f21f33910d6842b6db047c178f9beefddce1c4e74eaa9f3adfd",
+      "size": 5070
+    },
+    {
+      "path": "radio-capabilities/service-report.json",
+      "sha256": "ace56d6fdb22155d9097b4c44de91af7f683f4c6ed6dad9cf565a7b06c5bf0d6",
+      "size": 32027
+    },
+    {
+      "path": "radio-capabilities/summary.json",
+      "sha256": "ccd1a3a098cc9c8c93e77668aabca703fe3e69a3c1733e6d0e7f8e5934f1fb70",
+      "size": 5861
+    },
+    {
+      "path": "radio-capabilities/unit-results.xml",
+      "sha256": "d6cbfb4d523a4cfb53f4a85e50f24e0405c19bafc9b96827ec09ee7b551c5a09",
+      "size": 53468
+    },
+    {
+      "path": "radio-capabilities/wheel-smoke.json",
+      "sha256": "33926c706d1fd8f84a89914497a0c09e0885372550e5a8a8405663f2df397db0",
+      "size": 341
     }
   ]
 }

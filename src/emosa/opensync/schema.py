@@ -22,6 +22,7 @@ TABLES = {
         "channel",
         "mac",
         "enabled",
+        "country",
     ],
     "Wifi_VIF_Config": [
         "if_name",

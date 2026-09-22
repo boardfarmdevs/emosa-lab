@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests/fixtures/protocol/easymesh"
-DISPLAY_FILTER = "frame.number == 1 || frame.number == 2 || frame.number == 7 || frame.number == 20"
+DISPLAY_FILTER = " || ".join(f"frame.number == {number}" for number in (1, 2, 5, 7, 20))
 
 
 def field(element, name):
@@ -39,7 +39,7 @@ def projection(pdml):
             if kind_field is None:
                 continue
             kind = int(kind_field.attrib["value"], 16)
-            if kind not in (0x80, 0x81, 0x82, 0x83, 0xB3):
+            if kind not in (0x80, 0x81, 0x82, 0x83, 0x85, 0xB3):
                 continue
             length_field = field(tlv, "ieee1905.tlv_length")
             # Sizes come from the independent decoder, including on reassembled
@@ -62,6 +62,30 @@ def projection(pdml):
                 decoded = {"ruid": address(tlv, "ieee1905.ap_radio_identifier")}
             elif kind == 0xB3:
                 decoded = {"profile": int(field(tlv, "ieee1905.multi_ap_version").attrib["show"])}
+            elif kind == 0x85:
+                parents = {child: parent for parent in tlv.iter() for child in parent}
+                classes = []
+                for op in tlv.iterfind(".//field[@name='ieee1905.radio_basic.op_class']"):
+                    parent = parents[op]
+                    classes.append(
+                        {
+                            "operating_class": int(op.attrib["show"]),
+                            "max_eirp_dbm": int(
+                                field(parent, "ieee1905.radio_basic.max_power").attrib["show"]
+                            ),
+                            "non_operable_channels": [
+                                int(f.attrib["show"])
+                                for f in parent.iterfind(
+                                    ".//field[@name='ieee1905.radio_basic.non_op_channel']"
+                                )
+                            ],
+                        }
+                    )
+                decoded = {
+                    "ruid": address(tlv, "ieee1905.ap_radio_identifier"),
+                    "max_bss": int(field(tlv, "ieee1905.radio_basic_cap.max_bss").attrib["show"]),
+                    "operating_classes": classes,
+                }
             else:
                 parents = {child: parent for parent in tlv.iter() for child in parent}
                 radios = []
