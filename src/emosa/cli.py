@@ -52,7 +52,7 @@ def main(argv=None):
         sub.add_parser(name).add_argument("--json", action="store_true")
     pod = sub.add_parser("pod")
     pod.add_argument("pod_id")
-    pod.add_argument("view", choices=("capabilities", "radios", "bsses", "clients"))
+    pod.add_argument("view", choices=("capabilities", "radios", "bsses", "clients", "radio-scope"))
     pod.add_argument("--json", action="store_true")
     ownership = sub.add_parser("ownership")
     ownership.add_argument("action", choices=["status"])
@@ -92,7 +92,9 @@ def main(argv=None):
         params = {}
         method = args.command
         if method == "pod":
-            method = "capabilities" if args.view == "capabilities" else "inventory"
+            method = {"capabilities": "capabilities", "radio-scope": "radio.scope"}.get(
+                args.view, "inventory"
+            )
             params = {"pod_id": args.pod_id}
         elif method == "ownership":
             params = {"pod_id": args.pod}
@@ -125,7 +127,7 @@ def main(argv=None):
                     {"operation_id": result["operation_id"], "timeout": args.wait},
                 )
             )
-        if args.command == "pod" and args.view != "capabilities":
+        if args.command == "pod" and args.view not in {"capabilities", "radio-scope"}:
             result = {"pod_id": args.pod_id, "fresh": result["fresh"], args.view: result[args.view]}
         output(result)
         if isinstance(result, dict) and result.get("state") in {

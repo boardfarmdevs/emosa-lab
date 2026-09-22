@@ -99,6 +99,13 @@
               "expected_serial"
             ],
             "additionalProperties": false
+          },
+          "mapping_scope": {
+            "enum": [
+              "existing-bss",
+              "sole-fronthaul-radio"
+            ],
+            "description": "Optional stricter synthetic radio-scope admission; never enables physical or EasyMesh writes."
           }
         },
         "required": [

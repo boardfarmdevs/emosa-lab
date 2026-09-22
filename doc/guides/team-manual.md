@@ -1617,6 +1617,27 @@ one-service/many-pods arrangement; it does not establish production scale,
 automatic discovery or tenant security. The walkthrough explains each report
 stage and how to preserve its private journal and secrets.
 
+### 6.12 Check whether the complete radio fits the intended request
+
+One radio can host several BSSs. Our original semantic operation changes one
+existing BSS, while EasyMesh provisioning may describe the radio's entire BSS
+set. A successful single-row patch therefore does not establish that the full
+controller request can be represented. An extra BSS, additional credentials or
+a management/backhaul dependency can change the answer.
+
+The [onboarding readiness walkthrough](onboarding-readiness.md) explains the
+new read-only `pod pod-1 radio-scope --json` command and its result fields. Run
+it against the interactive connecting-pod service from §6.10. Its default fixture
+deliberately fails the narrower scope because it contains a guest credential and
+has no explicit ordinary-AP role. Keep that evidence visible: the older exercise
+is testing preservation of unrelated settings, not full-radio provisioning.
+
+The optional `sole-fronthaul-radio` simulation policy guards every radio/VIF
+reference and row identity at commit, so an intervening scope change aborts the
+transaction. Chapter 11's actual-service harness now uses a compatible synthetic
+fixture and checks this policy before exercising clients. Neither a positive
+scope report nor enabling this simulation policy authorizes wire or physical writes.
+
 ## 7. Explore evidence and the GitHub Pages manual
 
 The explorer is a **static publication of reviewed results and documentation**.
@@ -2280,6 +2301,22 @@ the assigned PHYs. There is no baseline `cleanup` command; retirement requires
 ownership-aware operator cleanup after evidence is retained. Never use the
 standalone smoke cleanup script to delete baseline resources.
 
+### 10.7 Compare captured native behavior with the proposed procedure
+
+The native baseline establishes behavior for its named build, policy and run.
+It does not establish that the controller implements every requirement of our
+proposed EasyMesh edition. Before connecting EMOSA, inspect the actual discovery
+profiles and WSC payload set using the [offline review exercise](onboarding-readiness.md#4-review-the-native-controllers-retained-messages-offline).
+This reads existing captures on HOST; no running lab or packet transmission is
+needed. An installed tshark supplies independent decoding.
+
+Both retained wired/wireless samples show a Profile-2 Search followed by a
+Profile-1 Response, and a controller WSC message with two M2 payloads plus M8.
+The guide explains why these need compatibility and complete-request review.
+A result of `review_required` is a useful outcome: it identifies work to resolve
+before claiming that the controller can onboard EMOSA. Do not treat native peer
+traffic as traffic emitted or processed by EMOSA.
+
 ## 11. Run EMOSA through OVSDB to hwsim and real clients
 
 **Goal:** show that a request handled by EMOSA causes a configuration change
@@ -2798,6 +2835,12 @@ The draft is always `writable: false`. Private identifiers/SSIDs and raw collect
 evidence remain outside Git. Send only the absolute connection-file path to the
 coding agent, never credentials in chat. Physical connection stays pending until
 that populated file and path actually exist.
+
+The draft also includes `radio_scope_candidates`, described in the
+[scope walkthrough](onboarding-readiness.md#6-apply-the-same-questions-to-a-physical-pod-without-writing-it).
+These assess the collected reference graph. Credential maps are deliberately
+uncollected, so `credential_layout` remains `not_collected`. Even a positive
+structural candidate needs the M0 checks below; it cannot enable writes.
 
 ### 14.3 Complete M0 separately
 
@@ -3372,6 +3415,12 @@ two configured pods, and provides an executable live-controller preparation.
 The [WFA procedure audit](../protocol/procedure-audit.md) records available
 inclusion/field rules and unresolved dependencies. These advances leave the
 real controller-to-EMOSA wire connection as the next central boundary.
+
+The [radio scope and native capture checks](onboarding-readiness.md) now make
+two additional prerequisites inspectable: atomic scope protection for the narrow
+simulation mapping and concrete profile/payload findings in the retained native
+traffic. Resolve those findings for the selected controller policy/build as part
+of the wire trial; do not weaken the normative contract to hide a mismatch.
 
 Pick work that closes a named gap and declare what evidence would close it
 before implementation. A parser test, packet capture, controller inventory entry

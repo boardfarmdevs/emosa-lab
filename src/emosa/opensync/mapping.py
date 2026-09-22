@@ -4,6 +4,12 @@ from emosa.backends.base import Snapshot, SubmitResult
 from emosa.clock import utc_now
 from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
+from emosa.opensync.radio_scope import (
+    assess,
+    decode_rows,
+    require_synthetic_scope,
+    transaction_guards,
+)
 
 
 def where_uuid(row_id):
@@ -57,6 +63,7 @@ class OpenSyncBackend:
         backend_mode="ovsdb-sim",
         state_provenance="independent-simulated-manager:Wifi_VIF_State",
         expected_serial=None,
+        mapping_scope="existing-bss",
     ):
         if backend_mode != "ovsdb-sim":
             raise EmosaError(
@@ -67,6 +74,11 @@ class OpenSyncBackend:
         self.if_name, self.radio_name = if_name, radio_name
         self.bss_id, self.radio_id = bss_id, radio_id
         self.expected_serial = expected_serial
+        if mapping_scope not in {"existing-bss", "sole-fronthaul-radio"}:
+            raise EmosaError(Reason.INVALID_INPUT, "unknown mapping scope")
+        if mapping_scope == "sole-fronthaul-radio" and not expected_serial:
+            raise EmosaError(Reason.INVALID_INPUT, "sole-radio simulation requires a bound serial")
+        self.mapping_scope = mapping_scope
         if state_provenance not in {
             "independent-simulated-manager:Wifi_VIF_State",
             "independent-hostapd-nl80211-manager:Wifi_VIF_State",
@@ -106,6 +118,8 @@ class OpenSyncBackend:
             nodes = list(decoded.get("AWLAN_Node", {}).values())
             if len(nodes) != 1 or nodes[0].get("serial_number") != self.expected_serial:
                 raise EmosaError(Reason.NOT_READY, "simulated pod identity absent or mismatched")
+        if self.mapping_scope == "sole-fronthaul-radio":
+            require_synthetic_scope(snapshot, if_name=self.if_name, radio_name=self.radio_name)
         configs = [
             (u, r)
             for u, r in decoded.get("Wifi_VIF_Config", {}).items()
@@ -248,6 +262,32 @@ class OpenSyncBackend:
             "secret_ref": intent.secret_ref,
             "guard": "VIF fields, security and radio/VIF references",
             "shared_radio_actuation": False,
+            "mapping_scope": self.mapping_scope,
+        }
+
+    async def radio_scope(self):
+        raw = await self.session.snapshot()
+        report = assess(
+            decode_rows(raw),
+            if_name=self.if_name,
+            radio_name=self.radio_name,
+            ready=raw["ready"],
+            credentials_available=True,
+        )
+        nodes = decode_rows(raw).get("AWLAN_Node", {})
+        if (
+            self.expected_serial is None
+            or len(nodes) != 1
+            or next(iter(nodes.values())).get("serial_number") != self.expected_serial
+        ):
+            report["blockers"].append("configured_serial_not_matched")
+            report["synthetic_mapping_candidate"] = False
+        return {
+            **report,
+            "pod_id": self.pod_id,
+            "generation": raw["generation"],
+            "schema_fingerprint": raw["schema"].fingerprint,
+            "mapping_scope": self.mapping_scope,
         }
 
     async def submit(self, intent, attempt):
@@ -294,6 +334,8 @@ class OpenSyncBackend:
                 ],
             },
         ]
+        if self.mapping_scope == "sole-fronthaul-radio":
+            transaction[0:0] = transaction_guards(raw)
         if self.expected_serial is not None:
             # Guard the complete identity set atomically with Config changes. A different
             # or additional node arriving after planning must not inherit write authority.
@@ -325,9 +367,7 @@ class OpenSyncBackend:
                 attempt["session_generation"],
                 discard_reply=discard,
             )
-            check_results(
-                results, ([None] if self.expected_serial is not None else []) + [None, None, 1, 1]
-            )
+            check_results(results, [None] * (len(transaction) - 2) + [1, 1])
         except (ConnectionError, TimeoutError):
             return SubmitResult("unknown", {"attribution": "unknown"}, Reason.OUTCOME_UNKNOWN)
         except EmosaError as exc:

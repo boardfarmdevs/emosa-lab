@@ -22,10 +22,14 @@ Profile-1 devices that do not meet all Profile-2/3 requirements. A feature name
 containing “Profile-2” does not by itself make its TLV absent from a Profile-1
 exchange: §6.1 and §7.1 explicitly require that capability TLV in relevant cases.
 
-The retained prplMesh baseline reports Profile-2; its full normative qualification
-is pending. That observation does not select EMOSA's profile or prove that this
-peer accepts the proposed 6.1 subset. The controller trial must record the actual
-search/response profile and required fields when wire execution becomes possible.
+The retained prplMesh baseline sends a Profile-2 Search, but its corresponding
+Response carries Profile 1 in both reviewed wired/wireless captures. This is an
+observed compatibility gap against §6.1's response-profile rule, not a qualified
+profile selection for EMOSA. See the [offline capture review](../guides/onboarding-readiness.md#5-interpret-the-actual-findings-and-act-on-them)
+and [retained observations](../evidence/onboarding-readiness/summary.json).
+The controller also sends two M2 payloads plus M8 in the selected baseline policy;
+that complete request is outside the proposed single-M2 mapping. The controller
+trial must resolve the peer/build/profile and policy intersection.
 Do not force old peer behavior into the normative matrix as an exception.
 
 ## Message inclusion and applicability

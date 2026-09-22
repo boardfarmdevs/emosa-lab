@@ -165,6 +165,11 @@ flowchart LR
 Find these checkpoints in the result and accompanying files:
 
 - `before_connection` / `pod_connected`: pending-to-ready identity and inventory.
+- `radio_scope`: the fresh complete Config/State graph satisfies the stricter
+  synthetic sole-BSS policy. Both physical qualification and wire admission stay
+  false. Read [the scope walkthrough](onboarding-readiness.md) for its blockers
+  and atomic transaction guards. Current runs have 15 checkpoints; the earlier
+  retained service runs have 14.
 - `configuration_applied` and `clients-changed.json`: one acknowledged change,
   then independent wireless authentication, ping and fresh HTTP nonce from both
   clients. Repeating the request retains one operation and one attempt.

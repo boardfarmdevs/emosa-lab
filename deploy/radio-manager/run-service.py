@@ -38,7 +38,12 @@ async def experiment(label):
     listener = "unix:" + str(db.directory / "emosa.sock")
     config = configuration(directory, listener)
     config["request_source"] = "service-radio-lab"
-    config["pods"][0].update(if_name="wlan0", radio_name="phy1", state_provenance=PROVENANCE)
+    config["pods"][0].update(
+        if_name="wlan0",
+        radio_name="phy1",
+        state_provenance=PROVENANCE,
+        mapping_scope="sole-fronthaul-radio",
+    )
     write(directory / "adapter.json", config)
     load("config", directory / "adapter.json")
     service = AdapterProcess(
@@ -156,6 +161,8 @@ async def experiment(label):
         )
         await db.manager_remote(listener)
         first = cases["pod_connected"] = await agents("ready")
+        cases["radio_scope"] = await service.call("radio.scope", {"pod_id": "pod-1"})
+        assert cases["radio_scope"]["synthetic_mapping_candidate"]
         assert first["agents"][0]["inventory"]["device_identity"][0]["serial_number"] == SERIAL
         connect("emosa-radio-initial", "RadioInitial2026!")
         cases["initial_clients"] = await clients(directory, "initial", "emosa-radio-initial")

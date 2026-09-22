@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "scope": "offline selected WFA inclusion review of native peer traffic",
+  "status": "review_required",
+  "full_protocol_conformance": false,
+  "controller_onboarding_by_emosa_proven": false,
+  "physical_pod_proven": false,
+  "controller_al": "02:00:00:e0:00:01",
+  "agent_al": "02:00:00:e0:00:02",
+  "decoded_frames": 59,
+  "selected_peer_frames": 59,
+  "assessed_frames": [
+    1,
+    2,
+    5,
+    7,
+    14,
+    20,
+    32,
+    33,
+    36,
+    37
+  ],
+  "unassessed_partial_or_malformed": [
+    6
+  ],
+  "findings": [
+    {
+      "frame": 2,
+      "rule": "discovery_profile_response",
+      "condition": "response profile follows the correlated agent Search profile",
+      "observed": {
+        "search_frame": 1,
+        "search": [
+          2
+        ],
+        "response": [
+          1
+        ]
+      },
+      "source": "EasyMesh 6.1 §6.1 p.63"
+    }
+  ],
+  "observations": [
+    {
+      "frame": 5,
+      "advertised_max_bss": [
+        2
+      ],
+      "actual_radio_capabilities_verified": false
+    },
+    {
+      "frame": 7,
+      "m2_payload_count": 2,
+      "other_wps_types": [
+        12
+      ],
+      "single_bss_payload_count": false,
+      "encrypted_roles_and_credentials": "not_inspected",
+      "complete_request_mapping": "not_qualified"
+    }
+  ],
+  "correlation_policy": {
+    "same_mid_and_selected_peers": true,
+    "window_seconds": 5,
+    "normative_timer": false,
+    "ambiguous_pairs_assessed": false
+  },
+  "limitations": [
+    "Dissector output is an independent implementation observation, not a specification.",
+    "Only the listed WFA inclusion conditions are checked; IEEE base/amendment remain pending.",
+    "No exchange authentication, decryption, replay, physical scope or write authorization.",
+    "Reassembled messages rely on the recorded tshark implementation.",
+    "No live traffic is generated, replayed or forwarded.",
+    "Selected lab peers use their AL as the Ethernet source; relayed/other links require separate identity qualification."
+  ],
+  "capture": {
+    "sha256": "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964",
+    "bytes": 10255
+  },
+  "dissector": {
+    "version": "TShark (Wireshark) 3.6.2 (Git v3.6.2 packaged as 3.6.2-2)",
+    "executable_sha256": "a65608d17a78f255c7a9aaa08244f3fe284ce752f6818fd87fee9ca6e5bb4d54",
+    "fields": [
+      "frame.number",
+      "frame.time_epoch",
+      "frame.len",
+      "frame.cap_len",
+      "eth.src",
+      "eth.dst",
+      "ieee1905.message_type",
+      "ieee1905.message_id",
+      "ieee1905.fragment_id",
+      "ieee1905.last_fragment",
+      "ieee1905.fragment.reassembled.length",
+      "ieee1905.tlv_type",
+      "ieee1905.multi_ap_version",
+      "wps.message_type",
+      "wps.mac_address",
+      "ieee1905.radio_basic_cap.max_bss",
+      "_ws.malformed"
+    ]
+  },
+  "projected_fields_sha256": "a65be8159f3a11eb2033d6d6f3234866d914ad99681f2e266f26942b20557070"
+}

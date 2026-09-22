@@ -22,6 +22,7 @@ async def seed_radio_database(session):
         "bridge": "br-lan",
         "mode": "ap",
         "enabled": True,
+        "multi_ap": "none",
         "ssid": "emosa-radio-initial",
         "wpa": True,
         "wpa_key_mgmt": ["set", ["wpa2-psk"]],
@@ -101,7 +102,7 @@ def desired_config(vif, radio):
         or vif.get("wpa_pairwise_tkip") is not False
         or vif.get("wpa_pairwise_ccmp") is not False
         or vif.get("security")
-        or vif.get("multi_ap") not in (None, 0)
+        or vif.get("multi_ap") not in (None, "none")
         or set(vif.get("wpa_psks", {})) != {"key"}
         or radio.get("if_name") != "phy1"
         or radio.get("freq_band") != "2.4G"

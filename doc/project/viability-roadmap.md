@@ -12,6 +12,14 @@ initiation separate from the absent EMOSA wire exchange. The
 [available WFA audit](../protocol/procedure-audit.md) advances the contract while
 the exact IEEE base/amendment inputs remain pending.
 
+The [onboarding readiness checks](../guides/onboarding-readiness.md) now add
+strict synthetic sole-radio scope admission and offline review of native captures.
+The scope passed an actual-service hwsim/client run. Both native captures expose
+a Profile-2 Search/Profile-1 Response mismatch against the proposed 6.1 discovery
+rule and a two-M2-plus-M8 request outside the narrow mapping. Resolve the named
+controller policy/build intersection alongside P0. These observations do not
+select a fully qualified profile or enable the missing wire connection.
+
 The user-facing proof is specifically **an EasyMesh controller discovers and
 onboards an OpenSync extender as another EasyMesh agent, represented by the
 adapter around the controller**. The extender remains an OpenSync device;

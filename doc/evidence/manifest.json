@@ -1041,6 +1041,46 @@
       "path": "service-integration/unit-results.xml",
       "sha256": "0ff69af667db80d501a062db8959c1172f21c0ad316cc7c14daa67ad4aed18d4",
       "size": 24872
+    },
+    {
+      "path": "onboarding-readiness/ovsdb-results.xml",
+      "sha256": "257a7dde08aeb07ef04c6ae4f40ba2248f83d9233e9f331c775a7577ba511b99",
+      "size": 4775
+    },
+    {
+      "path": "onboarding-readiness/radio-source-hashes.json",
+      "sha256": "2af2e9cdca3b6c765afa87f179d464b954e8dfe30d0325a8a288b0801877e34b",
+      "size": 5602
+    },
+    {
+      "path": "onboarding-readiness/summary.json",
+      "sha256": "ae1333fc5bd5078b92dd9546ada24f1a218fea6cef290cf42853a974ede58553",
+      "size": 10328
+    },
+    {
+      "path": "onboarding-readiness/unit-results.xml",
+      "sha256": "06b414b130c9ac28b4c840c74fe7caefa33d573781e70c38875660d5ec25eb5e",
+      "size": 27728
+    },
+    {
+      "path": "onboarding-readiness/wired-tshark-3.6.json",
+      "sha256": "844b8b5b735a2364e14a9e64d4703a7d1f91852c8132cd15f1c3b73d939c24c5",
+      "size": 2933
+    },
+    {
+      "path": "onboarding-readiness/wired-tshark-4.2.json",
+      "sha256": "92779e871fcadc52ea3cbf29ae7279bfe2e69deca06838c7f99aea61920a4ba2",
+      "size": 2942
+    },
+    {
+      "path": "onboarding-readiness/wireless-tshark-3.6.json",
+      "sha256": "8ef59c1eb5b92081dab5c68d1fab022ef035aaa961a9ecea9d342011ef4286a4",
+      "size": 2932
+    },
+    {
+      "path": "onboarding-readiness/wireless-tshark-4.2.json",
+      "sha256": "460b920c6119ea0e47aec11bf1ecff2c5f36cbbea18a643f2cf45ba8cadc8805",
+      "size": 2941
     }
   ]
 }

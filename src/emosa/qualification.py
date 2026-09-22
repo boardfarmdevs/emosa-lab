@@ -11,6 +11,7 @@ from emosa.clock import utc_now
 from emosa.config import validate
 from emosa.errors import EmosaError, Reason
 from emosa.evaluation.evidence import artifact, write_json
+from emosa.opensync.radio_scope import assess
 from emosa.opensync.session import OvsSession
 
 # Deliberately omit security, wpa_psks, certificates, manager/cloud and credentials.
@@ -252,6 +253,18 @@ def draft_profile(config, snap, trust_evidence):
         },
         "missing_observation_tables": [
             t for t in QUALIFICATION_COLUMNS if t not in schema.db.tables
+        ],
+        "radio_scope_candidates": [
+            assess(
+                rows,
+                if_name=vif.get("if_name"),
+                radio_name=radio.get("if_name"),
+                ready=snap["ready"],
+                credentials_available=False,
+            )
+            for radio in rows.get("Wifi_Radio_Config", {}).values()
+            for uid, vif in vif_configs.items()
+            if uid in radio.get("vif_configs", []) and vif.get("mode") == "ap"
         ],
         "remaining_checks": [
             "Confirm physical model/build and trusted session-to-pod binding.",

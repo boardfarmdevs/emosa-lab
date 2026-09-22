@@ -1,0 +1,281 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-09-21",
+  "scope": "Strict sole-radio simulation admission and offline native peer compatibility review",
+  "base_commit": "5feec9fd8646003b2c638b77cbac456172a900e6",
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "acceptance_path": [
+    "real EasyMesh messages",
+    "EMOSA adapter",
+    "unchanged physical pod",
+    "independently observed behavior"
+  ],
+  "tests": {
+    "unit": 203,
+    "ovsdb": 37,
+    "scope_regressions": 16,
+    "capture_review_regressions": 18
+  },
+  "radio_run": {
+    "label": "scope-20260921-a",
+    "status": "passed",
+    "initiating_interface": "semantic local API",
+    "elapsed_seconds": 26.063,
+    "checkpoint_count": 15,
+    "checkpoints": [
+      "before_connection",
+      "pod_connected",
+      "radio_scope",
+      "initial_clients",
+      "configuration_applied",
+      "changed_clients",
+      "withhold_barrier",
+      "committed_before_crash",
+      "withheld_clients",
+      "pending_after_restart",
+      "applied_after_restart",
+      "restart_clients",
+      "pod_disconnected",
+      "clients_without_management",
+      "pod_reconnected"
+    ],
+    "radio_scope": {
+      "schema_version": 1,
+      "scope": "sole-fronthaul-radio",
+      "topology_candidate": true,
+      "synthetic_mapping_candidate": true,
+      "credential_layout": "single_wpa2_psk_observed",
+      "binding": {
+        "radio_config_uuid": "9ff2ac28-467c-47e4-91d7-63f643bf0567",
+        "vif_config_uuid": "c5fbe08b-d719-44ac-aea0-f5c87ddbd965",
+        "radio_name": "phy1",
+        "if_name": "wlan0"
+      },
+      "blockers": [],
+      "physical_qualification": false,
+      "wire_admission": false,
+      "unresolved": [
+        "controller/exchange authentication and complete CMDU semantics",
+        "physical identity, firmware and manager behavior",
+        "exclusive writers, management/backhaul dependencies and recovery",
+        "actual radio capabilities; observed BSS count is not Max_BSS"
+      ],
+      "pod_id": "pod-1",
+      "generation": 1,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "mapping_scope": "sole-fronthaul-radio"
+    },
+    "configuration_operation": {
+      "operation_id": "0ac0dca6-16f9-466e-a0d2-40704080b85b",
+      "state": "OBSERVED_APPLIED",
+      "attempt_count": 1,
+      "mapping_scope": "sole-fronthaul-radio",
+      "transaction_result_count": 9
+    },
+    "recovered_operation": {
+      "operation_id": "4d2cd221-383b-46d7-b8f6-c54207c7ead8",
+      "state_before_crash": "CONFIG_COMMITTED",
+      "state_after_restart": "CONFIG_COMMITTED",
+      "final_state": "OBSERVED_APPLIED",
+      "attempt_count": 1
+    },
+    "client_checks": {
+      "initial_clients": {
+        "clients": "passed",
+        "nonce": "036d55f1d85f488ffe85d20328f2324b"
+      },
+      "changed_clients": {
+        "clients": "passed",
+        "nonce": "69fc7a547ecfcff668e3f7a5a283229f"
+      },
+      "withheld_clients": {
+        "clients": "passed",
+        "nonce": "1ad9b6e0d26619e3e1170fd077d815dd"
+      },
+      "restart_clients": {
+        "clients": "passed",
+        "nonce": "9c84b81cfe9b3ec518d165d97476f224"
+      },
+      "clients_without_management": {
+        "clients": "passed",
+        "nonce": "1b54054397da2f461ca2aa061c344aef"
+      }
+    },
+    "service_lifecycle": [
+      {
+        "event": "started",
+        "pid": 62492,
+        "adapter_instance_id": "b8441121-eafb-4de7-8dd5-11b7db5afae6"
+      },
+      {
+        "event": "stopped",
+        "pid": 62492,
+        "requested_crash": true,
+        "kill_escalation": false,
+        "returncode": -9
+      },
+      {
+        "event": "started",
+        "pid": 63717,
+        "adapter_instance_id": "1150302f-9a21-4147-8f89-07a5ba26981f"
+      },
+      {
+        "event": "stopped",
+        "pid": 63717,
+        "requested_crash": false,
+        "kill_escalation": false,
+        "returncode": 0
+      }
+    ],
+    "cleanup_errors": [],
+    "raw_result_sha256": "321826c800ff542530095218ab13f83e86174f233a76c1f0f01fbdae6cddc321",
+    "private_artifacts": [
+      {
+        "path": "clients-changed.json",
+        "sha256": "2a423bc2c96b6687c3aef906dcc90acfc56d0fe39bc00b790a6f117608a22556",
+        "size": 2614
+      },
+      {
+        "path": "clients-disconnected.json",
+        "sha256": "2c375f52fedfb3237993eb4a218d8c2cae5dc5a9cc3b3b6f1878bc0d965e903d",
+        "size": 2638
+      },
+      {
+        "path": "clients-initial.json",
+        "sha256": "b50d561a0c8e5255ce4ede45f0c80e8b098286b699ee4cf25c83a147858607e8",
+        "size": 2610
+      },
+      {
+        "path": "clients-restarted.json",
+        "sha256": "7423e0435d70aff43ec4e279e0390694a0c8204881348db5a6eec798272c7dee",
+        "size": 2622
+      },
+      {
+        "path": "clients-withheld.json",
+        "sha256": "e6eaa900f471514b239e6d0fe0138aeb5ae0318d5ee33197dc11df644a70bcd0",
+        "size": 2625
+      },
+      {
+        "path": "events.json",
+        "sha256": "f81aee745d75b83dd31c6577895b4d2f4cdcfcbe46ad869386343eadfbbbbfee",
+        "size": 14403
+      },
+      {
+        "path": "final-pods.json",
+        "sha256": "b42ddff09a6e77fcfdc3065a65e7a07d833175cb55da5ba9eb41173e238c5bbc",
+        "size": 1883
+      },
+      {
+        "path": "operations.json",
+        "sha256": "8cd1d2b3385babb7f3291fe1bf3960e9d9883a262820de8ed65eaf00a07ff29f",
+        "size": 6200
+      },
+      {
+        "path": "packet-observations.json",
+        "sha256": "5b1e245c73485caf8bb27890fb64fc5a991a5e6ab1e4380c605b74b7efaceeb1",
+        "size": 338
+      },
+      {
+        "path": "source-hashes.json",
+        "sha256": "2af2e9cdca3b6c765afa87f179d464b954e8dfe30d0325a8a288b0801877e34b",
+        "size": 5602
+      },
+      {
+        "path": "topology-before.json",
+        "sha256": "71fcf7eab97563fb701edf0a5bf76c1e1d4bd191133bf3e5bd6e172994ef17fe",
+        "size": 7743
+      },
+      {
+        "path": "topology.json",
+        "sha256": "f16cec2dce703d9c88a78802a509a210cc7bea0104ead60cc2e95a311fe637f1",
+        "size": 9963
+      }
+    ],
+    "staged_source": {
+      "source_archive_sha256": "6eda80e9c2986d61748211c4dcec8a1728d7d3b054f2593b9bf8ea4fb1bf5aee",
+      "base_commit": "5feec9fd8646003b2c638b77cbac456172a900e6",
+      "ovsdb_binaries": {
+        "ovsdb-server": "93714d2adf2e847697807a77515d527ff7281c270170a01864e2f8194ac49b68",
+        "ovsdb-tool": "c664d4a282a3fe77356b02e025e3d419b7857bfdc92a289b23c81a030e3ec257"
+      }
+    }
+  },
+  "peer_review": {
+    "capture_sources": [
+      "doc/evidence/peer-baseline/samples/wired/ethernet.pcap",
+      "doc/evidence/peer-baseline/samples/wireless/ethernet.pcap"
+    ],
+    "reports": [
+      "wired-tshark-3.6.json",
+      "wired-tshark-4.2.json",
+      "wireless-tshark-3.6.json",
+      "wireless-tshark-4.2.json"
+    ],
+    "versions_agree_on_review": true,
+    "results": "Both samples: discovery Search profile 2 / Response profile 1; two M2 payloads plus M8 in reassembled controller WSC.",
+    "normative_comparison": "EasyMesh 6.1 §6.1 p.63; §7.1 pp.67–69; §17.1.3 p.111",
+    "scope": "Native controller/standard-agent traffic; not EMOSA traffic or physical OpenSync traffic. Complete protocol and encrypted configuration are not validated.",
+    "staged_source_for_4_2_review": {
+      "source_archive_sha256": "210c3bc73fb6d79adcb6d7b76c42921ca1163b9337ae4d925c2f41c232a9991a",
+      "base_commit": "5feec9fd8646003b2c638b77cbac456172a900e6",
+      "ovsdb_binaries": {
+        "ovsdb-server": "93714d2adf2e847697807a77515d527ff7281c270170a01864e2f8194ac49b68",
+        "ovsdb-tool": "c664d4a282a3fe77356b02e025e3d419b7857bfdc92a289b23c81a030e3ec257"
+      }
+    }
+  },
+  "unit_report_curation": {
+    "raw_report_sha256": "b0fd81dad85393b6bb36501bb843a40a90e90ff8c88a9ea2029039015a26b199",
+    "transformation": "Replace only testcase name attributes longer than 256 characters with function name and full name SHA-256; retain results/counts/timings/other attributes and format XML whitespace.",
+    "replaced_names": [
+      {
+        "name": "test_invalid_public_keys_include_non_subgroup_value[parameter-id-sha256=0ddf1271dbe71f8523e4f854c167f2e0832a410242c09a756dafc22141375e59]",
+        "original_name_characters": 516
+      },
+      {
+        "name": "test_invalid_public_keys_include_non_subgroup_value[parameter-id-sha256=ecd1cc290596487c216cd4c288e42fe758f2cd0cbc839d84e29066ee2b50562b]",
+        "original_name_characters": 516
+      },
+      {
+        "name": "test_invalid_public_keys_include_non_subgroup_value[parameter-id-sha256=837b09fd7f1e2cc75e1b35398333d0c0b991a84c09b5645d38cbb9da8eeee2b3]",
+        "original_name_characters": 516
+      },
+      {
+        "name": "test_truncation_and_component_admission_limits[parameter-id-sha256=610b045ce393c679d7a57f8a89228dd394d0a1e007131e5d5164a28670481fd5]",
+        "original_name_characters": 4194356
+      },
+      {
+        "name": "test_truncation_and_component_admission_limits[parameter-id-sha256=761da621a05d844b529b5a5ac27e5cdceaa2d4f633bab85d192b584212d58dbb]",
+        "original_name_characters": 65600
+      }
+    ]
+  },
+  "limitations": [
+    "No EMOSA IEEE packet endpoint or causal native-controller-to-operation exchange.",
+    "Physical connection credentials and exact IEEE base/amendment remain external inputs.",
+    "Positive simulation scope does not authorize hardware writes or prove manager/backhaul ownership.",
+    "Read-only physical draft still omits credential maps and remains unwritable.",
+    "Native peer/profile and complete-request compatibility findings require resolution before a selected wire trial."
+  ],
+  "documentation_validation": {
+    "links_and_references": 470,
+    "shell_examples_syntax_checked": 101,
+    "interactive_explorer": {
+      "passed": true,
+      "checked_source_targets": 73,
+      "all_architecture_nodes": 8,
+      "all_lab_modes": 5,
+      "retained_runs": 6,
+      "documentation_index": true,
+      "viewports": [
+        "1440x1100",
+        "390x844"
+      ],
+      "errors": []
+    },
+    "radio_scope_cli": "Actual service and pod-initiated database; default fixture returned the expected role and additional-credential blockers without writes.",
+    "package_build": "source distribution and wheel built successfully",
+    "historical_evidence_entries_preserved": 208
+  }
+}

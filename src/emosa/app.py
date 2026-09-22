@@ -46,6 +46,7 @@ class Application:
                     bss_id=pod["bss_id"],
                     radio_id=pod["radio_id"],
                     expected_serial=pod.get("virtual_agent", {}).get("expected_serial"),
+                    mapping_scope=pod.get("mapping_scope", "existing-bss"),
                     state_provenance=pod.get(
                         "state_provenance", "independent-simulated-manager:Wifi_VIF_State"
                     ),
@@ -147,10 +148,17 @@ class Application:
             return {"pods": list(self.cache.values())[offset : offset + limit], "offset": offset}
         if method == "agents":
             return self.agents.view(offset=params.get("offset", 0), limit=params.get("limit", 100))
-        if method in {"inventory", "capabilities", "ownership"}:
+        if method in {"inventory", "capabilities", "ownership", "radio.scope"}:
             pod_id = params["pod_id"]
             if pod_id not in self.backends:
                 raise EmosaError(Reason.NOT_FOUND, "unknown configured pod")
+            if method == "radio.scope":
+                backend = self.backends[pod_id]
+                if not hasattr(backend, "radio_scope"):
+                    raise EmosaError(
+                        Reason.UNSUPPORTED_OPERATION, "radio scope requires OVSDB inventory"
+                    )
+                return await backend.radio_scope()
             if method == "ownership":
                 return {
                     "pod_id": pod_id,

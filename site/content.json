@@ -441,10 +441,22 @@
       "title": "Available WFA procedure audit",
       "category": "Service and protocol integration",
       "description": "EasyMesh 6.1 and WPS 2.0.10 inclusion conditions, selected fields and remaining IEEE dependencies."
+    },
+    {
+      "path": "doc/guides/onboarding-readiness.md",
+      "title": "Onboarding readiness checks",
+      "category": "Service and protocol integration",
+      "description": "Read-only radio scope, atomic simulation guards and offline native capture review with profile/payload findings."
+    },
+    {
+      "path": "doc/evidence/onboarding-readiness/summary.json",
+      "title": "Onboarding readiness evidence",
+      "category": "Service and protocol integration",
+      "description": "Stricter service/hwsim run and matching native-capture findings under two tshark versions; wire and physical proof pending."
     }
   ],
   "suite_evidence": {
-    "unit": "service-integration/unit-results.xml",
-    "ovsdb": "service-integration/ovsdb-results.xml"
+    "unit": "onboarding-readiness/unit-results.xml",
+    "ovsdb": "onboarding-readiness/ovsdb-results.xml"
   }
 }

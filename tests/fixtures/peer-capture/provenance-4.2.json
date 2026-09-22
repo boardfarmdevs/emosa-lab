@@ -1,0 +1,33 @@
+{
+  "scope": "Selected fields from existing synthetic native-peer traffic; not normative vectors or EMOSA traffic",
+  "source_capture": "doc/evidence/peer-baseline/samples/wired/ethernet.pcap",
+  "capture": {
+    "sha256": "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964",
+    "bytes": 10255
+  },
+  "dissector": {
+    "version": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+    "executable_sha256": "1be3296c467ba299c4e89b4d6a2dfb8d0985a8bba2a8af3fa2ac3f10c3062668",
+    "fields": [
+      "frame.number",
+      "frame.time_epoch",
+      "frame.len",
+      "frame.cap_len",
+      "eth.src",
+      "eth.dst",
+      "ieee1905.message_type",
+      "ieee1905.message_id",
+      "ieee1905.fragment_id",
+      "ieee1905.last_fragment",
+      "ieee1905.fragment.reassembled.length",
+      "ieee1905.tlv_type",
+      "ieee1905.multi_ap_version",
+      "wps.message_type",
+      "wps.mac_address",
+      "ieee1905.radio_basic_cap.max_bss",
+      "_ws.malformed"
+    ]
+  },
+  "projected_fields_sha256": "58359cefbb37e4d6a101b81d1fe5061c49a4e3b910278ca4a83c1c25884a44bf",
+  "transformation": "tshark -n -2 with ieee1905 display filter; tab-separated ordered field allowlist; no payload or credential field"
+}

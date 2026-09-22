@@ -73,3 +73,17 @@ def test_agents_local_request_contract():
         "local-api",
         {"schema_version": 1, "request_id": "one", "method": "agents", "params": {"limit": 1}},
     )
+
+
+@pytest.mark.parametrize("fault", ["missing-binding", "model-mode"])
+def test_sole_radio_scope_requires_bound_ovsdb_simulation(tmp_path, fault):
+    config = configuration(tmp_path, "unix:/private/one.sock")
+    config["pods"][0]["mapping_scope"] = "sole-fronthaul-radio"
+    if fault == "missing-binding":
+        config["pods"][0].pop("virtual_agent")
+    else:
+        config["backend_mode"] = "model"
+    path = tmp_path / "config.json"
+    path.write_text(json.dumps(config))
+    with pytest.raises(EmosaError, match="sole-radio scope requires"):
+        load("config", path)

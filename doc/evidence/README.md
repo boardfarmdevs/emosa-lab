@@ -11,6 +11,8 @@ for navigation and commands.
 | Collection | Entry point |
 | --- | --- |
 | Connecting-pod diagnostic demonstration | [Qualification summary](connecting-pod/qualification-summary.json) |
+| Service, two pods and process-crash recovery | [Run summary](service-integration/summary.json) |
+| Sole-radio scope and native capture review | [Run summary](onboarding-readiness/summary.json) |
 | Semantic EMOSA/OVSDB/hwsim integration | [Run summary](radio-manager/summary.json) |
 | Native controller–agent baseline | [Run summary](peer-baseline/summary.json) |
 | Initial independent-controller experiment | [Qualification summary](peer/qualification-summary.json) |
