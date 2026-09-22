@@ -155,10 +155,17 @@ the database and observe the requirement for a new Search. Repeat with
 `--discovery` in the VM. Automatic Early Report and M1 remain blocked; explain
 the distinction between correlation, read-only reporting and full admission.
 
+Continue with the [authenticated WSC-to-OVSDB handoff](../protocol/wsc-provisioning.md)
+and [manual §13.12](team-manual.md#1312-turn-authenticated-wsc-input-into-a-durable-operation).
+Build the small pinned hostap payload peer, run the four owned database cases
+and compare commit evidence with separately published State. Show that one
+M2 creates one component operation without a semantic submission, and that
+a real adapter crash after commit cannot cause an automatic second write.
+
 **Checkpoint:** distinguish a reassembled message, a correlated discovery response,
-an authenticated WSC candidate and an admitted operation. The new components
-stop before operation creation. The complete profile/capability and controller
-coordinator still precede the full wire scenario. A decoded fixture inventory
+an authenticated WSC candidate and a durable component operation. Explain why
+`wsc-component` does not mean the regular service has admitted a real controller.
+The complete profile/capability and controller coordinator still precede the full wire scenario. A decoded fixture inventory
 is not the native controller’s managed-agent inventory.
 
 

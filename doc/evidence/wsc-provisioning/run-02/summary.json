@@ -1,0 +1,31 @@
+{
+  "scope": "owned_simulation_wsc_component",
+  "cases": 4,
+  "passed": true,
+  "registrar": {
+    "scope": "synthetic WSC payload peer, not an EasyMesh controller",
+    "source_url": "https://w1.fi/releases/hostapd-2.11.tar.gz",
+    "source_sha256": "2b3facb632fd4f65e32f4bf82a76b4b72c501f995a4f62e330219fe7aed1747a",
+    "harness_sha256": "782e3e21f6cf91ed0d6811d27681ce23df689767deb78d3f439e99dfd5063c5c",
+    "binary_sha256": "475d5179cfd134a1789eecf4f796d498767e948f63264f17959185ddba77329c",
+    "compiler": "cc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0",
+    "openssl": "OpenSSL 3.0.2 15 Mar 2022 (Library: OpenSSL 3.0.2 15 Mar 2022)",
+    "source_files": {
+      "src/wps/wps_common.c": "86b81668a0e736f1cf51536694fb0eccfafa4a64fed43905c631e9aa4c7d4a27",
+      "src/wps/wps_attr_build.c": "6a57c10310d044d2dbf93eb7e39990663613661e0a100f963f0703347f752354",
+      "src/wps/wps_attr_process.c": "f98e5feb45c031070d8e30ff8417a022be1f0d58e1d2f03414e3a6ad8d4a716c",
+      "src/crypto/crypto_openssl.c": "629f6328b9bfde95b6e7c280aea25a3b8d328c849286268b8be80662ecfb085a",
+      "src/utils/wpabuf.c": "959ae9b5d51a03d0ee52ffe6c8eec027abe9db603c99699c4fdea9d867c49e0b",
+      "src/utils/common.c": "309edb4af12f5ddbb7b17e5f1f80d25304cdde4a985f314dc371a65b3a076ae3",
+      "src/utils/os_unix.c": "b92b2cd3503e4e837f31e0b95ca5329d2827dcb4bd3d58d4fea43546b9ea125d",
+      "src/wps/wps_dev_attr.c": "62caa3a55b4e26db680f471699c6772665623d3a93f76f610d0d96db5889e183",
+      "src/wps/wps_attr_parse.c": "5acade21fc03bcd89b269e20d5e69172c9afbe8c8ca8c3ea9288336806bc9f62",
+      "src/wps/wps_validate.c": "e78da3692d714c3a5f6c0f6b4f09b27b5149906a5499ff91261ccd843953b28c",
+      "src/wps/wps_enrollee.c": "4969b154e9544498e865a91b16426253b76b52738b5cce43654a31b03c123e95"
+    },
+    "fresh_entropy": true,
+    "credential_is_public_fixture": true
+  },
+  "full_wire_gate": "blocked_P0",
+  "physical_pod": false
+}

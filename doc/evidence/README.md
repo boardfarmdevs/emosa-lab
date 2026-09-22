@@ -13,6 +13,7 @@ for navigation and commands.
 | Read-only database-backed report coordinator | [Ack/retry, State-derived reports, withdrawal and real Ethernet runs](coordinator/README.md) |
 | Capability and topology report components | [Offline, isolated Ethernet and independent field checks](reports/README.md) |
 | Bounded controller discovery and WSC exchanges | [Peer/radio binding, replay controls and native compatibility gaps](autoconfiguration/README.md) |
+| Authenticated WSC to real owned OVSDB | [Durable operation, duplicate, lost-reply, identity-race and process-crash cases](wsc-provisioning/README.md) |
 | IEEE 1905 envelope and packet transport | [Native frame comparison and isolated Ethernet runs](ieee1905/README.md) |
 | Authenticated fleet, repeated recovery and clean runtime | [Workloads, measurements, retained failures and image provenance](reliability/README.md) |
 | Connecting-pod diagnostic demonstration | [Qualification summary](connecting-pod/qualification-summary.json) |

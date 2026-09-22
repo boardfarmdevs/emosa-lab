@@ -53,6 +53,8 @@ class Store:
                     PRIMARY KEY(run,seq));
                 CREATE TABLE IF NOT EXISTS ownership (
                     pod TEXT PRIMARY KEY, record TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS wsc_receipts (
+                    operation_id TEXT PRIMARY KEY, record TEXT NOT NULL);
             """)
         version = self.db.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
@@ -118,8 +120,22 @@ class Store:
         )
         return [Operation.from_dict(json.loads(r[0])) for r in rows]
 
-    def add(self, op: Operation):
+    def add(self, op: Operation, *, wsc_receipt=None):
         validate("operation", op.to_dict())
+        if wsc_receipt is not None:
+            validate("wsc-receipt", wsc_receipt)
+            if (
+                op.initiating_interface != "wsc-component"
+                or wsc_receipt["process_id"] != self.process_id
+                or wsc_receipt["exchange_id"] != op.idempotency_key
+                or wsc_receipt["pod_id"] != op.pod_id
+                or wsc_receipt["radio_id"] != op.intent["radio_id"]
+                or wsc_receipt["bss_id"] != op.intent["bss_id"]
+                or op.request_source != "wsc-component:" + wsc_receipt["controller_al"]
+            ):
+                raise EmosaError(Reason.INVALID_INPUT, "WSC receipt and operation binding differ")
+        elif op.initiating_interface == "wsc-component":
+            raise EmosaError(Reason.INVALID_INPUT, "WSC operation requires its atomic receipt")
         if self.db.execute("SELECT count(*) FROM operations").fetchone()[0] >= self.max_operations:
             raise EmosaError(
                 Reason.BUSY, "journal operation budget exhausted; archive before reuse"
@@ -138,6 +154,18 @@ class Store:
                 ),
             )
             self._event(op.run_id, op.operation_id, op.pod_id, op.state, {}, op.created_at)
+            if wsc_receipt is not None:
+                self.db.execute(
+                    "INSERT INTO wsc_receipts VALUES (?,?)",
+                    (op.operation_id, json.dumps(wsc_receipt)),
+                )
+
+    def wsc_receipt(self, operation_id):
+        """Private journal correlation, not an admission or controller verdict."""
+        row = self.db.execute(
+            "SELECT record FROM wsc_receipts WHERE operation_id=?", (operation_id,)
+        ).fetchone()
+        return json.loads(row[0]) if row else None
 
     def save(self, op: Operation, payload=None):
         validate("operation", op.to_dict())

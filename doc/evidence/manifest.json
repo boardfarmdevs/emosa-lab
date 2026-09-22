@@ -2311,6 +2311,86 @@
       "path": "discovery-session/browser-result.json",
       "size": 228,
       "sha256": "d85f875a7499b8bb622c8ee37f34dea9fa463e0ffab2d063f7adb90779798d3e"
+    },
+    {
+      "path": "wsc-provisioning/independent-reference.txt",
+      "sha256": "5fe6d7c3a0bc303c99184f163d5e0cf6dbaa1dd62508f37f028192b6f6e358b9",
+      "size": 133
+    },
+    {
+      "path": "wsc-provisioning/ovsdb-results.xml",
+      "sha256": "b9338211ce685097b31191bbfc7456955579feea2dd44c5174c4100d8619bf97",
+      "size": 7085
+    },
+    {
+      "path": "wsc-provisioning/run-01/configure.json",
+      "sha256": "86c60d75ec2e00b515611dbe154e3295b29c387512de13f0062da5d0679c68df",
+      "size": 19781
+    },
+    {
+      "path": "wsc-provisioning/run-01/crash-after-commit.json",
+      "sha256": "3ebf26dfdb8e01d83e56d6b8ca9b9c94be9c577af0988e26f22e0a10806adb57",
+      "size": 6358
+    },
+    {
+      "path": "wsc-provisioning/run-01/identity-race.json",
+      "sha256": "eeadd386187cb7ee8ecbe85ce0b9b0c829ad416f201565875ed5a4cf688575d9",
+      "size": 18403
+    },
+    {
+      "path": "wsc-provisioning/run-01/lost-reply.json",
+      "sha256": "8f0af84f80b8cc46ce216599a2a7936f0f8151586abfda4119bf6b6987b2776f",
+      "size": 18553
+    },
+    {
+      "path": "wsc-provisioning/run-01/summary.json",
+      "sha256": "af41704f55a9102fe149af63142c96bacefe259249c206b6ee550720e4ef0ac9",
+      "size": 1903
+    },
+    {
+      "path": "wsc-provisioning/run-02/configure.json",
+      "sha256": "8c0b5b83d593e5b585b17758a09fff1b714d2995fe2757d22304c9fe96f56040",
+      "size": 19781
+    },
+    {
+      "path": "wsc-provisioning/run-02/crash-after-commit.json",
+      "sha256": "0d48734d22d7ba5c6f6c20bc239fdb94da9c5aa85fd4ce275b52a39fc12f6e44",
+      "size": 6358
+    },
+    {
+      "path": "wsc-provisioning/run-02/identity-race.json",
+      "sha256": "6eaa476d079a7b4295871a62194d6d524c53183daeb4dc8194114365f664f2b7",
+      "size": 18403
+    },
+    {
+      "path": "wsc-provisioning/run-02/lost-reply.json",
+      "sha256": "c748cfe1c5e025c21a010d4f9c9100d9960315a0719ba772c2f09de1d63b4c22",
+      "size": 18553
+    },
+    {
+      "path": "wsc-provisioning/run-02/summary.json",
+      "sha256": "af41704f55a9102fe149af63142c96bacefe259249c206b6ee550720e4ef0ac9",
+      "size": 1903
+    },
+    {
+      "path": "wsc-provisioning/summary.json",
+      "sha256": "a22fe8fea01d82b36bc5f4ce4140eb455eda4076e9a71f4f4c7641a1657af2ac",
+      "size": 3883
+    },
+    {
+      "path": "wsc-provisioning/unit-results.xml",
+      "sha256": "b378973d07e274e9a65a12dfa27413082f5efd97c13b2421375c69cf89f4c28d",
+      "size": 128279
+    },
+    {
+      "path": "wsc-provisioning/wheel-check.json",
+      "sha256": "a7d30474cfcd498107579c0380c9f1d253ff1b61911192a17cd941b2f1d36bf8",
+      "size": 358
+    },
+    {
+      "path": "wsc-provisioning/wire-gate.json",
+      "sha256": "9bacc91dfdb2c36184810c80e753cef8f81722cb8da4f1e4243ad4cc7719d4a9",
+      "size": 481
     }
   ]
 }

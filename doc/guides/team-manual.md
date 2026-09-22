@@ -2,7 +2,7 @@
 
 **Audience:** new developers, test engineers, lab operators and demo presenters.
 
-**Reference date:** 2026-09-16. Commands describe the implementation in this checkout.
+**Reference date:** 2026-09-22. Commands describe the implementation in this checkout.
 
 **Start here:** complete chapters 1–6 before using a shared radio lab.
 
@@ -107,7 +107,8 @@ the experiment, runs its checks, collects evidence and cleans up owned processes
 | Native controller–agent baseline | Dedicated VM and four nested containers | Wired/wireless onboarding and recovery for the named patched prplMesh tuple | EMOSA, OpenSync, universal onboarding or certification |
 | EMOSA/OVSDB/radio integration | Prepared four-container lab | Semantic changes cause independently observed hostapd/hwsim behavior and client outcomes | EasyMesh initiation, native OpenSync firmware or physical RF |
 | Controller discovery candidate | Separate prepared peer topology | Native controller discovery frames reach the EMOSA container | An EMOSA response or controller-visible virtual agent |
-| WSC crypto/M1/M2/radio admission components | Development checkout | Bounded authenticated payload processing and admission checks | Complete IEEE 1905 framing, exchange binding or write authorization |
+| WSC crypto/M1/M2 and exchange components | Development checkout | Bounded complete-message authentication, peer/radio binding and replay checks | Native controller admission or physical authorization |
+| Authenticated WSC-to-OVSDB component | HOST, local hostap helper and OVSDB builds | M2 creates a durable operation, guarded Config and separately observed State; duplicates, lost reply and real process crash | Ethernet socket delivery, full discovery/profile, native inventory, radio/client or physical acceptance |
 | Native OpenSync R0 investigation | Separate VM container | Native manager consumes Config and emits State with dummy-driver feedback | Qualified application backend; database-restart recovery currently fails |
 | Read-only pod collector | Machine with private authorized pod access | Actual schema and available identity/inventory facts in a draft profile | Permission to write, mapping qualification or physical acceptance |
 
@@ -274,6 +275,7 @@ For hands-on work:
 | `src/emosa/app.py`, `cli.py`, `local_api.py` | Adapter service and local Unix-socket commands |
 | `src/emosa/evaluation/` | Scenarios, gates, reports, comparisons and LXD routing |
 | `src/emosa/wsc*.py` | Bounded payload and radio-request components |
+| `src/emosa/wire/operation_bridge.py` | Authenticated WSC candidate to durable component operation; owned simulation only, explained in §13.12 |
 | `schemas/`, `scenarios/`, `tests/` | Versioned contracts, runnable experiments and checks |
 | `deploy/` | Dedicated VM, peer, radio, native-manager and qualification workflows |
 | `doc/evidence/`, `site/`, `scripts/build-site.py` | Reviewed evidence and static explorer |
@@ -304,6 +306,7 @@ radio/BSS resources, and selects journal, secret and local API locations.
 | OpenSync mapping | [opensync/mapping.py](../../src/emosa/opensync/mapping.py), `OpenSyncBackend` | Binds designated resources and translates supported intent into guarded Config updates and State predicates |
 | OVSDB communication | [opensync/session.py](../../src/emosa/opensync/session.py), `OvsSession` | Uses upstream OVS JSON-RPC/stream code for schema retrieval, monitoring, transactions and reconnect |
 | WSC components | [wsc.py](../../src/emosa/wsc.py), [wsc_messages.py](../../src/emosa/wsc_messages.py), [wsc_radio.py](../../src/emosa/wsc_radio.py) | Build/check bounded provisioning payloads; these components are not yet connected to a complete wire procedure or authorized pod-write path |
+| WSC operation handoff | [operation_bridge.py](../../src/emosa/wire/operation_bridge.py) | Connects authenticated whole M2 scope to one durable operation in owned simulation; regular service and physical writes remain gated |
 
 The OpenSync mapper is the **southbound part** of EMOSA. Calling that mapper the
 entire adapter would omit the controller-facing role, operation lifecycle,
@@ -424,7 +427,7 @@ also lab tooling rather than part of the long-running adapter service.
 | `ovsdb-server` and `ovsdb-tool` | C | Upstream Open vSwitch 4.0.0, built separately |
 | OpenSync OWM/OW/OSW native managers and dummy-driver facilities | C | Pinned upstream OpenSync, used only in the optional R0 experiment |
 | Native dummy-driver glue | C | Our `deploy/native/driver.c`, calling OpenSync's existing dummy-driver API |
-| Independent WSC reference harnesses | C | Our two `tests/fixtures/protocol/*/reference.c` harnesses call upstream hostap 2.11 functions; they do not link EMOSA |
+| Independent WSC reference harnesses | C | Two `tests/fixtures/protocol/*/reference.c` vector harnesses and the fresh-M2 `deploy/wire/component-registrar.c` payload peer call upstream hostap 2.11 functions; they do not link EMOSA |
 | hostapd / wpa_supplicant | C | Upstream hostap; native peer baseline uses the recorded 2.10 build and explicit lab patch, separately from the 2.11 vector reference |
 | Reference EasyMesh controller and native baseline agent | Primarily C++ | Pinned prplMesh 6.0.0/companion build, plus documented lab patches; separate executables |
 | mac80211_hwsim and Linux wireless stack | C | Existing Linux kernel code, configured by lab scripts |
@@ -1116,6 +1119,7 @@ build as your normal user:
 
 ```bash
 bash scripts/build-ovsdb.sh
+python3 scripts/build-wsc-registrar.py
 uv run pytest -m ovsdb
 ```
 
@@ -1125,6 +1129,12 @@ binary hashes. It performs no system install and starts no switch datapath.
 `configure-emosa.log`, `generated-emosa.log` and `build-emosa.log` in that build
 directory explain failures. `EMOSA_BUILD_JOBS=2 bash scripts/build-ovsdb.sh`
 reduces concurrent compiler work on a small machine.
+
+The second build supplies a small synthetic WSC registrar using pinned hostap
+2.11 functions. The complete OVSDB test suite now includes the authenticated
+provisioning cases from §13.12 and needs that helper. It lives under
+`.cache/wsc-registrar/`, requires the same compiler/OpenSSL prerequisites, and
+does not install or start a native controller or radio daemon.
 
 If using separately retained tools, set `EMOSA_OVS_BIN` to the directory containing
 both executables and record their versions/hashes. The override is searched first;
@@ -2053,7 +2063,8 @@ exit
 ```
 
 Back in VM, enter `lxc exec emosa -- bash` and perform the same container setup.
-Also run `bash scripts/build-ovsdb.sh` and `uv run pytest -m ovsdb` in the `emosa`
+Also run `bash scripts/build-ovsdb.sh`, `python3 scripts/build-wsc-registrar.py`
+and `uv run pytest -m ovsdb` in the `emosa`
 container before exiting. These package commands resolve the available Ubuntu
 packages; capture `dpkg-query -W` and compiler/tool versions and repeat validation
 for the installed tuple. They are not an exact package-locked runtime image.
@@ -3129,7 +3140,8 @@ cleanup. Two retained runs passed, with received bytes inspected independently.
 **Checkpoint:** distinguish encoded facts, socket delivery, native controller
 inventory and physical behavior. The first two are established by this exercise.
 Full AP Capability Report support, profile/peer reconciliation, the trusted-link
-coordinator and durable WSC-to-operation integration remain follow-on work.
+coordinator admission remain follow-on work. The separate WSC-to-operation
+component in §13.12 now tests the durable handoff within owned simulation.
 
 ### 13.10 Keep reports current with the read-only coordinator
 
@@ -3179,8 +3191,8 @@ creating operations; the selected full-procedure gate remains closed.
 **Checkpoint:** show the Config-only and State-updated reports, identify the
 separate fixture writers, and explain why stale or incomplete facts stop output.
 Continue with the discovery lifecycle below. Complete profile admission, full AP
-Capability, native controller visibility and durable WSC-to-operation handling
-remain separate requirements.
+Capability and native controller visibility remain separate requirements.
+The owned WSC handoff in §13.12 tests the durable operation boundary separately.
 
 ### 13.11 Discover the controller before reporting the simulated pod
 
@@ -3230,6 +3242,80 @@ or a qualified profile. The unchanged physical-pod proof remains pending.
 **Checkpoint:** explain why a complete database snapshot can still receive no
 topology reply, why reconnect requires discovery again, and why a successful
 read-only response does not authorize provisioning.
+
+### 13.12 Turn authenticated WSC input into a durable operation
+
+Earlier exercises stop at different boundaries: discovery correlates a controller,
+reports describe a simulated pod, and the WSC component returns authenticated
+configuration. The next exercise joins **that configuration to the operation
+engine**. It answers a specific implementation question: can a supported M2
+cause the intended Config change without a second request through the semantic
+API? The answer is now yes within this owned component experiment.
+
+An M2 is not simply JSON containing an SSID. It belongs to an active M1 exchange,
+contains encrypted settings and must pass authentication, peer, radio and complete
+request checks. The bridge accepts only the fixture's one existing fronthaul
+WPA2-PSK/CCMP BSS. A teardown or extra configuration cannot be silently ignored.
+The peer here is a synthetic C program built with independent hostap helpers,
+not prplMesh or another complete EasyMesh controller.
+
+Run on **HOST**, from the checkout. No VM, hwsim radio or physical pod is needed:
+
+```bash
+bash scripts/build-ovsdb.sh
+python3 scripts/build-wsc-registrar.py
+uv run python -m emosa.simulation.wsc_provisioning \
+  --registrar .cache/wsc-registrar/component-registrar \
+  --output .lab/manual-wsc-provisioning-01
+uv run pytest tests/test_wsc_operation_bridge.py tests/test_wsc_provisioning.py -q
+```
+
+The builds may be reused from chapter 5. Use a new result directory for each run.
+The runner owns disposable databases, manager processes and private journals;
+it cleans them after recording public results. It accepts no pod endpoint.
+Credentials and exchange private keys are not copied into the result directory.
+The fixture PSK in the C source is intentionally public and is used only in its
+owned simulation. An uncatchable kill of the parent runner may leave temporary
+resources for the operator to inspect; normal completion cleans its resources.
+
+Open `summary.json` and the four named case files:
+
+1. **`configure.json`:** read `operation.initiating_interface`. It must be
+   `wsc-component`. One authenticated request created the operation. Identical
+   and freshly re-encrypted retries reuse it, even with a changed MID. Invalid
+   authentication and unsupported complete requests created no operations.
+2. **`lost-reply.json`:** the database applied Config but EMOSA lost the reply.
+   The initial state is `INDETERMINATE`. The separate manager later publishes
+   matching State. Application becomes observed, while commitment attribution
+   remains `unknown`; current conditions cannot reconstruct a lost reply.
+3. **`identity-race.json`:** the fixture changes the target BSSID after planning.
+   Atomic transaction guards reject the request and leave the original Config
+   SSID. One transaction attempt does not mean one successful change.
+4. **`crash-after-commit.json`:** the runner kills a real adapter child after the
+   database commit, before the reply reaches the journal. The replacement
+   process recovers the submitted operation as uncertain and observes State
+   without resending Config. An old M2 fails against its fresh M1.
+
+Compare `checks.rows_before_manager_apply` with `checks.rows_at_end`. In a normal
+run, Config changes while State still names the initial network. Only the manager
+then publishes State. This demonstrates why EMOSA has separate committed and
+observed phases. No client has associated: the manager in this exercise is a
+separate simulation process, and Ethernet frame delivery is in memory.
+
+The credential is persisted privately before its operation reference. The
+operation, initial event and exchange receipt are inserted atomically into the
+journal. Restart cancels unsent component requests because their old exchange
+authority is gone. Submitted requests are reconciled without automatic replay.
+Read the [full walkthrough](../protocol/wsc-provisioning.md) for credential
+durability, source-generation checks, receipt fields and restart limitations.
+
+**Checkpoint:** explain why the four cases can pass while `full_wire_gate` stays
+`blocked_P0`. This bridge is separate from the discovery lifecycle in §13.11;
+it does not resolve automatic Early Report/profile admission or populate a
+native controller's inventory. Next we must join an admitted native-controller
+exchange to this handoff, then the existing hwsim manager and independent
+wpa_supplicant client. Physical acceptance still requires an unchanged,
+qualified OpenSync pod and independent observations.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

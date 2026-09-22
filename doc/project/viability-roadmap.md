@@ -25,7 +25,12 @@ now passes native-capture and isolated packet checks. The later
 [discovery-to-topology lifecycle](../protocol/discovery-session.md) joins selected
 Search/Response checks to the real database source, with reconnect invalidation
 and repeated socket tests. Automatic Early Report, complete profile admission,
-native controller visibility and durable WSC-to-operation integration are next.
+native controller visibility and admission into the complete lifecycle remain next.
+The [owned WSC provisioning experiment](../protocol/wsc-provisioning.md) now
+joins authenticated M2 input to durable operations, guarded OVSDB and separately
+observed State. Lost replies, duplicates, identity races and real process death
+are exercised. It uses a synthetic hostap payload peer and in-memory Ethernet;
+the native-controller/hwsim integration is still required.
 
 The [onboarding readiness checks](../guides/onboarding-readiness.md) now add
 strict synthetic sole-radio scope admission and offline review of native captures.

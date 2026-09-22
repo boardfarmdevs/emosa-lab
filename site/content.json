@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Restricted discovery-to-topology lifecycle now checks controller fields and requires discovery again after source loss or reconnect. Next resolve automatic Early Report/profile admission, full AP Capability and native inventory, then durable WSC-to-operation handling.",
+      "next": "Restricted discovery/reporting and a separate authenticated WSC-to-operation/OVSDB component are tested. Join them after Early/profile/capability admission and native controller compatibility are resolved; retain controller inventory and independent client evidence.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -40,7 +40,7 @@
         "Guard existing resource references and preserve unrelated configuration.",
         "Reconcile lost outcomes, restart, ownership conflicts and deadlines."
       ],
-      "next": "Bind this tested semantic path to genuine provisioning; keep client behavior as a separate observation boundary.",
+      "next": "Authenticated M2 now drives one durable operation in owned simulation, including lost-reply and real process-crash recovery. Next connect admitted native-controller messages and the hwsim/client path.",
       "path": "src/emosa/reconcile.py"
     },
     "journal": {
@@ -651,10 +651,22 @@
       "title": "Discovery session evidence",
       "description": "Real database, repeated isolated Ethernet, independent packet checks and unchanged operation gate.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/wsc-provisioning.md",
+      "title": "Authenticated WSC to durable operation",
+      "description": "Build the independent hostap payload peer; follow M2 through private persistence, guarded OVSDB, separate State and crash recovery.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/wsc-provisioning/README.md",
+      "title": "WSC provisioning component evidence",
+      "description": "Four repeated owned-database cases; no full controller, Ethernet socket, radio or physical acceptance claim.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "discovery-session/unit-results.xml",
-    "ovsdb": "discovery-session/ovsdb-results.xml"
+    "unit": "wsc-provisioning/unit-results.xml",
+    "ovsdb": "wsc-provisioning/ovsdb-results.xml"
   }
 }

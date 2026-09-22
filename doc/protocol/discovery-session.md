@@ -21,7 +21,9 @@ They do not authenticate an arbitrary Ethernet sender.
 
 **Admission** is the larger decision to allow a configuration procedure. It
 also needs qualified controller authority, complete applicable profile behavior,
-pod/radio scope and a durable operation boundary. Matching a MAC address or
+pod/radio scope and a durable operation boundary. The separate
+[owned WSC handoff](wsc-provisioning.md) now tests that boundary, but this discovery
+lifecycle does not activate it. Matching a MAC address or
 receiving a capability flag cannot supply those requirements.
 
 ```mermaid

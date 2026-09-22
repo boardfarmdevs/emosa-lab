@@ -143,8 +143,9 @@ Read the outcomes in this order:
    Failed authenticated-configuration processing closes that transcript and
    requires a fresh discovery cycle, consistent with IEEE §10.1.2.
 
-The future coordinator still needs durable operation idempotency across process
-restarts. In-memory duplicate detection does not provide it. A peer-binding
+The [owned provisioning bridge](wsc-provisioning.md) now adds a durable receipt
+and operation, with cancellation of unsent work and uncertain-commit recovery
+after process death. In-memory duplicate detection alone does not provide that. A peer-binding
 change must call `close()` and create a new exchange; a restart cannot recover an
 old transcript by trusting a recorded MID.
 
@@ -177,9 +178,11 @@ trusted-link lifecycle, and fresh complete radio admission. The
 that integration. The [read-only report coordinator](report-coordinator.md) now
 exercises Query/Ack/retry and source withdrawal against a real disposable database;
 its fixture facts do not qualify an actual pod.
-Then connect an admitted WSC candidate directly to the guarded operation engine
-with durable exchange-to-operation correlation. An extra semantic request must
-not supply the actual Config change in that experiment.
+The [separate WSC handoff experiment](wsc-provisioning.md) now connects a
+validated candidate directly to the guarded operation engine with a durable
+receipt. It uses owned simulation inputs and has no admission from this
+discovery lifecycle. Integrate it only after that admission contract is complete;
+an extra semantic request must not supply the actual Config change.
 
 Run that causal path with the existing OVSDB/hwsim manager and independent
 wpa_supplicant client, including duplicate/fault/restart cases. Then qualify and

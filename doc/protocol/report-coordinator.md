@@ -9,7 +9,9 @@ step from isolated encoders toward a controller-facing adapter.
 controller exerciser. The regular `emosa serve` application still has its wire
 operation gate closed; no configuration switch promotes this exercise into a
 qualified EasyMesh agent. Native controller discovery/inventory, full AP
-Capability/profile admission and WSC-to-operation integration remain pending.
+Capability/profile admission remains pending. A separate
+[owned WSC provisioning component](wsc-provisioning.md) now exercises durable
+operation handoff; this read-only coordinator does not activate it.
 
 ## 1. Understand the parts and their authority
 
@@ -167,7 +169,8 @@ An adapter restart creates a new coordinator and source; it does not recover a
 pending notification. The default initial MID is randomized and then sequential.
 That is not cryptographic replay protection. MAC/MID correlation does not
 establish controller authority; the supplied peer binding still needs a qualified
-trusted link. Durable WSC/operation recovery is a separate unfinished boundary.
+trusted link. The separate [WSC handoff](wsc-provisioning.md) tests durable recovery in owned
+simulation; admission into this lifecycle remains unfinished.
 
 ## 5. Know what is and is not running
 

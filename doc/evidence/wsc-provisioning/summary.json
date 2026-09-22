@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-22",
+  "base_revision": "2c069b90ee898a44c34eaeb4a4347ed418cc533e",
+  "scope": "Authenticated WSC component to durable operation and real owned OVSDB; not full controller onboarding",
+  "source_hashes": {
+    "src/emosa/wire/autoconfiguration.py": "b42f7d3d2be9e44c0a12c68926c198a670f352855f0cb6ebdfb09079d3960e4d",
+    "src/emosa/wire/operation_bridge.py": "6997767700cadf6d60cc0651cb2cb209be2c3e3217c0f1906d2fc9cb9adc50e0",
+    "src/emosa/simulation/wsc_provisioning.py": "7e7063f529600af1b57cd729f40a9eef85f2a8c7d36fa484ef349a4784f4b6ff",
+    "src/emosa/reconcile.py": "e24c1d9bbd785a1b184e141fd46369065c7f166ab53752cf58eae3f80d16d848",
+    "src/emosa/store.py": "cca0bcc46558b8f26b84b6b6c6ae8077c95e87241cf54e8743f71729302c2326",
+    "src/emosa/secrets.py": "acec208d14d946348451cd7c551a21ee267cd37de13651fd4b2a682dcce1d5ee",
+    "schemas/wsc-receipt.schema.json": "ba1bb1c59f792da4f122a946f87b06e2e8cd16a580ac9e034585d3d7ea5c362b",
+    "deploy/wire/component-registrar.c": "782e3e21f6cf91ed0d6811d27681ce23df689767deb78d3f439e99dfd5063c5c",
+    "scripts/build-wsc-registrar.py": "5975267b0a50b46d2973a3ba88dced2ca570bff41c413d626134f1aacbb4ec2d",
+    "tests/test_wsc_operation_bridge.py": "43884045a3e8ab40fb9db3db8f07bde4ec3da3bd978149a4e1ad08eb7824ebec",
+    "tests/test_wsc_provisioning.py": "b4162fda52527da85c4c32133326e8c1fab1b95e57118b530d616df362674f1f"
+  },
+  "suites": {
+    "unit": 920,
+    "ovsdb": 53,
+    "new_unit": 22,
+    "new_ovsdb": 4
+  },
+  "runs": 2,
+  "cases_per_run": 4,
+  "retained_mapping": {
+    "run-01": "development run-06",
+    "run-02": "development run-07"
+  },
+  "installed_wheel": "wheel-check.json",
+  "host": {
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "Python 3.13.7"
+  },
+  "ovsdb_tools": {
+    "ovsdb-server": {
+      "sha256": "cfdea3b398d5c619accbbcc933377f9a35211304126e73b22cca04e4cd832f27",
+      "version": "ovsdb-server (Open vSwitch) 4.0.0"
+    },
+    "ovsdb-tool": {
+      "sha256": "f30e9ce3707cdf217a926e99d8c956384e8774852a231edf15a91b5beb917559",
+      "version": "ovsdb-tool (Open vSwitch) 4.0.0"
+    }
+  },
+  "upstream_schema": "plume-design/opensync@78d8a7194d5e77635877cc456231e7be5cf03d68 interfaces/opensync.ovsschema",
+  "initiating_interface": "wsc-component",
+  "semantic_fallback": false,
+  "fresh_exchange_material_between_runs": true,
+  "independent_registrar": "hostapd 2.11 unmodified WPS helpers in synthetic C payload exerciser; provenance in each run summary",
+  "development_findings": [
+    "Initial driver used an unavailable session.start method; removed before passing runs.",
+    "Initial fixture pinned database generation for all observations and suppressed uncertain-commit resolution after reconnect. Fixed by allowing fresh observations while the bridge and transport keep old write authority invalid.",
+    "Unit crash-state setup initially omitted the required submitted attempt record; corrected before retained suites.",
+    "Final review found that transient snapshot failure could leave an old exchange live; it now closes even if the source returns unchanged, with a regression test and final repeated runs."
+  ],
+  "real_process_crash": true,
+  "full_wire_gate": "blocked_P0",
+  "ethernet_delivery": "serialized frames decoded in memory",
+  "socket_io": false,
+  "native_controller_used": false,
+  "radio_or_client_observed": false,
+  "physical_pod_proven": false,
+  "controller_onboarding_proven": false,
+  "remaining": [
+    "Discovery/Early/profile admission and compatible native-controller inventory",
+    "Actual Ethernet integration of provisioning with existing lifecycle",
+    "Hwsim manager and independent client driven by that complete wire path",
+    "Production credential/exchange retention and multi-agent wire isolation",
+    "Qualified unchanged physical pod and independent behavior"
+  ]
+}

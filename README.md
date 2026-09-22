@@ -25,7 +25,11 @@ those reports to a real disposable database with Ack/retry and source-withdrawal
 checks. The [discovery-to-topology lifecycle](doc/protocol/discovery-session.md)
 adds bounded Search/Response handling, capability-gap diagnostics and fresh
 discovery after reconnect. Automatic Early Report/M1 admission, complete
-controller onboarding and physical acceptance remain pending.
+controller onboarding and physical acceptance remain pending. The
+[authenticated WSC handoff](doc/protocol/wsc-provisioning.md) now drives durable
+operations and real owned OVSDB directly from independent hostap M2 payloads,
+including duplicate, lost-reply and real process-crash cases. This component
+uses in-memory Ethernet delivery; it is not native-controller onboarding.
 
 ## Architecture
 
@@ -112,6 +116,7 @@ uv run ruff check .
 uv run ruff format --check .
 uv run pytest -m unit
 bash scripts/build-ovsdb.sh
+python3 scripts/build-wsc-registrar.py
 uv run pytest -m ovsdb
 uv run emosa-lab run scenarios/component-bss-change.json --backend ovsdb-sim
 uv run emosa-lab run scenarios/component-lost-reply.json --backend ovsdb-sim

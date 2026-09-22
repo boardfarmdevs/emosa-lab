@@ -16,7 +16,11 @@ message construction and isolated Ethernet delivery. Their synthetic receiver
 inventory does not satisfy this experiment’s native-controller inventory step.
 The [read-only report coordinator](../protocol/report-coordinator.md) now handles
 Query/Ack/retry with a real database source in isolation. Discovery/profile
-admission and durable WSC-to-operation integration remain unfinished.
+admission into the complete lifecycle remain unfinished. The separate
+[WSC provisioning component](../protocol/wsc-provisioning.md) now turns
+authenticated M2 into a durable operation and real simulated Config change,
+with duplicate/uncertainty/crash tests. Its synthetic payload peer and in-memory
+Ethernet do not satisfy controller inventory or radio/client acceptance.
 
 EMOSA means **EasyMesh to OpenSync Adapter**. Its virtual agent is the EasyMesh
 representation it presents to the controller. The OpenSync extender connects to
@@ -179,7 +183,7 @@ because changing the serving BSS can interrupt the adapter's own connection.
 | Isolated peer compatibility | Candidate HAL length fix and live policy experiment; retained results and remaining native findings are in the [compatibility guide](native-compatibility.md) |
 | First complete experiment definition | This contract defines target, admission, causal evidence, negative controls and physical substitution |
 | Complete capability requirements | Selected value/mapping components tested; `0x88` ordering, mandatory report dependencies and full profile applicability remain pending |
-| Complete wire exchange | IEEE access complete; envelope/packet and bounded discovery/WSC components tested; full I3/I4 coordinator, profile validation and operation integration pending; the existing gate rejects execution |
+| Complete wire exchange | IEEE access complete; envelope/packet and bounded discovery/WSC components tested; owned WSC-to-operation integration tested separately; full I3/I4 coordinator and profile admission pending; the existing gate rejects execution |
 | Physical qualification and proof | Collector/examples available; actual private connection, qualification and physical run remain pending |
 
 The final acceptance path remains **real EasyMesh messages → EMOSA → unchanged

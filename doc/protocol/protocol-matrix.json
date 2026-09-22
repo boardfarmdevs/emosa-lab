@@ -1138,7 +1138,7 @@
       "IEEE 1905.1-2013 and IEEE 1905.1a-2014 operator-supplied full texts"
     ],
     "permitted_scope": "Implement and independently test standalone components whose normative definitions are complete in the available sources; continue semantic service/radio tests and native peer observations.",
-    "boundary": "Envelope, discovery/WSC components, restricted reports and read-only Query/Ack coordinator with owned database source implemented; no full P0 procedure freeze, qualified profile, durable operation integration or native controller/physical acceptance.",
+    "boundary": "Envelope, discovery/WSC, restricted reports and owned WSC-to-operation/OVSDB handoff implemented separately; no full P0 freeze, qualified profile, native controller inventory, hwsim wire causality or physical acceptance.",
     "document": "doc/protocol/ieee1905-envelope.md"
   },
   "ieee1905_envelope": {
@@ -1265,7 +1265,7 @@
       "Table 117 early capability bit-6/reserved overlap; restricted early report implemented, integrated procedure/admission pending",
       "Security capability applicability and trusted-link lifecycle",
       "Full topology, capability and scheduled controller-facing coordinator",
-      "Durable exchange-to-operation binding, fresh complete radio admission and recovery",
+      "Native lifecycle admission and physical scope qualification; owned durable handoff and recovery now tested separately",
       "Controller-to-OVSDB/hwsim causal run and unchanged physical-pod qualification"
     ],
     "full_procedure_gate_satisfied": false,
@@ -1446,7 +1446,7 @@
       "Actual pod fact/profile and trusted-link qualification",
       "Discovery/profile admission and full AP Capability requirements",
       "Native controller inventory and peer compatibility",
-      "Durable WSC-to-operation integration and real-message-driven OVSDB/hwsim/client experiment",
+      "Admitted lifecycle integration of the separately tested durable WSC handoff and real-message-driven OVSDB/hwsim/client experiment",
       "Unchanged physical-pod acceptance"
     ],
     "adapter_config_writes": 0,
@@ -1510,7 +1510,7 @@
       "Complete profile/security applicability and AP Capability Report",
       "LLDP and periodic registrar-detection lifecycle",
       "Compatible native controller with its own inventory proof",
-      "Durable WSC-to-operation admission",
+      "Full discovery/profile admission into the owned WSC-to-operation component",
       "Qualified unchanged physical pod and independent behavior"
     ],
     "full_procedure_gate_satisfied": false,
@@ -1518,5 +1518,87 @@
     "adapter_config_writes": 0,
     "controller_onboarding_proven": false,
     "physical_pod_proven": false
+  },
+  "wsc_operation_handoff": {
+    "status": "owned_simulation_component_implemented",
+    "guide": "doc/protocol/wsc-provisioning.md",
+    "evidence": "doc/evidence/wsc-provisioning/summary.json",
+    "implementation": [
+      "src/emosa/wire/operation_bridge.py",
+      "src/emosa/reconcile.py",
+      "src/emosa/store.py",
+      "src/emosa/secrets.py",
+      "src/emosa/simulation/wsc_provisioning.py",
+      "schemas/wsc-receipt.schema.json"
+    ],
+    "tests": [
+      "tests/test_wsc_operation_bridge.py",
+      "tests/test_wsc_provisioning.py"
+    ],
+    "independent_peer": {
+      "source": "hostapd 2.11 unmodified WPS helpers and validators",
+      "harness": "deploy/wire/component-registrar.c",
+      "build": "scripts/build-wsc-registrar.py",
+      "scope": "synthetic payload exerciser, not a controller or normative substitute",
+      "fresh_entropy": true
+    },
+    "sources": [
+      {
+        "specification": "IEEE 1905.1-2013",
+        "sections": [
+          "10.1-10.1.2 pp.56-57 (trusted link, parameter-configuration phase, failure restarts discovery)"
+        ]
+      },
+      {
+        "specification": "EasyMesh 6.1",
+        "sections": [
+          "7.1 pp.67-69 (per-radio request and whole BSS scope)",
+          "17.1.3 p.111 (M2 and conditional configuration companions)",
+          "15.1 p.104 (retry with new MID)"
+        ]
+      },
+      {
+        "specification": "WPS 2.0.10",
+        "sections": [
+          "7.2-7.3, 7.5 and 8.3.9 Table 20 (M1/M2, authenticated settings)",
+          "Network Key Table 40 (selected printable PSK)"
+        ]
+      }
+    ],
+    "local_policies": [
+      "Only isolated owned simulation; public request/serve cannot choose wsc-component origin and full-wire gate stays closed.",
+      "One complete supported pure-fronthaul WPA2-PSK/CCMP M2 for one existing BSS. Unsupported companions/roles or multiple M2s reject the whole request.",
+      "Persist private credential before atomically journaling initial event, WSC receipt and operation; no second semantic request supplies configuration.",
+      "Bind exchange, peer/link generation, radio/BSSID, schema, database generation and graph; atomic Config/State/identity guards protect submission.",
+      "Same live complete configuration reuses operation across MIDs/re-encryption. Changed duplicates reject; no exactly-once claim across new enrolments.",
+      "Restart cancels unsent component work; submitted work becomes uncertain and is reconciled without resubmission. Old transcript authority is not restored.",
+      "Fresh observations after reconnect can resolve unknown application while commit attribution stays unknown.",
+      "30-second component lifetime/deadline is local. Orphan secrets before journal commit need production retention/GC; owned temporary vault is cleaned by fixture."
+    ],
+    "cases": [
+      "configure and duplicate",
+      "lost database reply",
+      "BSSID changes before atomic transaction",
+      "real SIGKILL after commit before journal reply"
+    ],
+    "origin": "wsc-component",
+    "ethernet_delivery": "serialized frames decoded in memory",
+    "real_ovsdb": true,
+    "adapter_config_writes": true,
+    "socket_io": false,
+    "automatic_discovery_early_m1_admission": false,
+    "regular_service_activation": false,
+    "native_controller_used": false,
+    "radio_or_client_observed": false,
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "pending": [
+      "Admitted native discovery/Early/capability/WSC lifecycle and controller inventory",
+      "Controller profile/capability compatibility and remaining normative dependencies",
+      "Real Ethernet and hwsim/client causal reproduction of this handoff",
+      "Production exchange/credential lifecycle and multi-agent wire demultiplexing",
+      "Qualified unchanged physical pod and independently observed behavior"
+    ]
   }
 }

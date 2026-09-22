@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import math
 import time
+import uuid
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -354,6 +355,8 @@ class WscExchange(_Lifetime):
         self.binding, self.basic, self.mids = binding, basic, mids
         self.capabilities = (_tlv(basic), _tlv(profile2), _tlv(advanced))
         self._transcript = M1Transcript.create(device)
+        self.exchange_id = uuid.uuid4().hex
+        self.m1_sha256 = hashlib.sha256(self._transcript.message).hexdigest()
         self._digest = None
         self._candidate = None
         self._configuration = None
