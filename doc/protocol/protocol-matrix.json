@@ -586,13 +586,20 @@
       "edition": "IEEE Std 802.11-2024",
       "reference": "https://standards.ieee.org/ieee/802.11/10548/",
       "access_route": "https://ieeexplore.ieee.org/browse/standards/get-program/page/series?id=68",
-      "access_status": "publisher_offers_GET_full_text_not_retrieved_HTTP_418",
+      "access_status": "operator_obtained_local_path_and_content_review_pending",
       "source_sections": [
         "EasyMesh 6.1 section 2 reference [1]",
         "EasyMesh 6.1 section 9.1 and applicable 17.2 capability fields"
       ],
       "affected_work": "operating-class and actual radio capability encoding",
-      "content_sha256": null
+      "content_sha256": null,
+      "operator_report": {
+        "date": "2026-09-21",
+        "filename": "80211-2024.pdf",
+        "reported_edition": "IEEE Std 802.11-2024",
+        "absolute_path_supplied": false,
+        "artifact_inspected": false
+      }
     },
     {
       "id": "ieee8023-2015",
@@ -605,7 +612,9 @@
         "EasyMesh 6.1 section 14.1.3 references IEEE section 3; IEEE text not read"
       ],
       "affected_work": "logical Ethernet link-driven onboarding and applicable frame handling",
-      "content_sha256": null
+      "content_sha256": null,
+      "candidate_comparison_document": "operator-reported-ieee8023-2022",
+      "substitution_status": "not_selected_relevant_clause_comparison_and_cited_edition_access_unresolved"
     },
     {
       "id": "wfa-security-requirements",
@@ -673,5 +682,20 @@
     "guide": "doc/guides/onboarding-readiness.md",
     "physical_qualification": false,
     "wire_admission": false
-  }
+  },
+  "operator_reported_comparison_documents": [
+    {
+      "id": "operator-reported-ieee8023-2022",
+      "reported_edition": "IEEE Std 802.3-2022",
+      "filename": "IEEE_Standard_for_Ethernet.pdf",
+      "reported_on": "2026-09-21",
+      "access_status": "operator_obtained_local_path_and_content_review_pending",
+      "absolute_path_supplied": false,
+      "artifact_inspected": false,
+      "content_sha256": null,
+      "selected_as_normative_replacement": false,
+      "comparison_target": "ieee8023-2015",
+      "next_review": "Inspect edition and relevant Ethernet link/frame clauses; document correspondence and gaps before deciding whether to substitute or acquire the cited edition."
+    }
+  ]
 }

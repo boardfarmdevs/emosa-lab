@@ -13,8 +13,8 @@ is selected by this checklist.
 | --- | --- | --- | --- |
 | ☐ | **IEEE Std 1905.1-2013** | [IEEE publisher](https://standards.ieee.org/ieee/1905.1/4995/), [Xplore](https://ieeexplore.ieee.org/document/6502164/) | Base framing, discovery, autoconfiguration, WSC transport and reliability. No local copy or supplied access mechanism. |
 | ☐ | **IEEE Std 1905.1a-2014** | [IEEE publisher](https://standards.ieee.org/ieee/1905.1a/5820/) | Amendment effects on those procedures and media definitions. No local copy or supplied access mechanism. Must be reviewed with the base. |
-| ☐ | **IEEE Std 802.11-2024** | [IEEE publisher](https://standards.ieee.org/ieee/802.11/10548/), [IEEE GET](https://ieeexplore.ieee.org/browse/standards/get-program/page/series?id=68) | Operating classes and reported radio capabilities: EasyMesh §9.1 and applicable §17.2 fields reference this edition. GET is offered by IEEE; full text could not be retrieved here. An operator download may resolve this without a subscription. |
-| ☐ | **IEEE Std 802.3-2015** | [IEEE Xplore record cited by EasyMesh](https://ieeexplore.ieee.org/document/7428776/) | Ethernet LINK_UP/LINK_DOWN in EasyMesh §5.2.6; Ethernet handling in §14.1.3 points to §3 of this standard. Full text not obtained; IEEE clause pointers are not yet independently verified. |
+| ☑ (reported) | **IEEE Std 802.11-2024** | [IEEE publisher](https://standards.ieee.org/ieee/802.11/10548/), [IEEE GET](https://ieeexplore.ieee.org/browse/standards/get-program/page/series?id=68) | Operator reports obtaining `80211-2024.pdf`. Absolute local path, edition/content verification, digest and clause review are pending. Needed for operating classes and radio capability fields in EasyMesh §9.1 and applicable §17.2 definitions. |
+| ☐ | **IEEE Std 802.3-2015** | [IEEE Xplore record cited by EasyMesh](https://ieeexplore.ieee.org/document/7428776/) | Ethernet LINK_UP/LINK_DOWN in EasyMesh §5.2.6; Ethernet handling in §14.1.3 points to §3 of this standard. Exact cited edition not obtained. Operator instead obtained the 2022 edition; relevant-clause comparison and any substitution decision remain pending. |
 | ☐ | **Wi-Fi Alliance Security Requirements — revision to be identified** | [Member route cited by EasyMesh](https://www.wi-fi.org/members/wi-fi-alliance-security-requirements) | EasyMesh §13 refers to its Personal AP/STA requirements. Reference [22] gives no revision. The publisher route redirects to a Wi-Fi Alliance login; no account access was supplied. Obtain an authorized copy and record its revision/date before resolving the proposed WPA2-Personal scope. |
 
 These dependencies come from [EasyMesh 6.1](https://www.wi-fi.org/system/files/Wi-Fi%20EasyMesh%20Specification%20v6.1.pdf)
@@ -22,6 +22,17 @@ These dependencies come from [EasyMesh 6.1](https://www.wi-fi.org/system/files/W
 that the proposed subset satisfies all mandatory profile requirements. The
 [protocol matrix](protocol-matrix.json) retains the incomplete applicability
 audit and unfrozen procedure selection.
+
+On 2026-09-21 the operator reported obtaining **IEEE Std 802.11-2024** and
+**IEEE Std 802.3-2022**, with no other new documents obtained. This records
+acquisition, not inspection: neither absolute local path has been supplied and
+neither new PDF has been read or hashed by the coding agent. The 802.11 filename
+matches the requested edition by operator report. The newer Ethernet edition
+can support comparison once available; it does not automatically replace the
+2015 reference. First inspect the obtained material and identify the relevant
+clause correspondence and remaining gaps before deciding whether another
+Ethernet purchase is needed. Both IEEE 1905 documents remain the primary missing
+inputs for the wire procedure.
 
 The [2026-09-21 available-document audit](procedure-audit.md) now records WFA
 message inclusion conditions, selected field definitions and unresolved source
@@ -51,6 +62,8 @@ This is not an instruction to purchase every document in both bibliographies.
 
 | Document | Status |
 | --- | --- |
+| IEEE Std 802.11-2024 — `80211-2024.pdf` | Operator reports obtaining it; local path, content verification, digest and review pending. |
+| IEEE Std 802.3-2022 — `IEEE_Standard_for_Ethernet.pdf` | Operator reports obtaining it; local path, content verification and digest pending. Candidate comparison material, not a selected replacement for the cited 2015 edition. |
 | [Wi-Fi EasyMesh 6.1](https://www.wi-fi.org/system/files/Wi-Fi%20EasyMesh%20Specification%20v6.1.pdf), 2025-12-15 | Publisher PDF obtained; digest in the protocol matrix. Full procedure/profile selection remains proposed. |
 | [Wi-Fi Protected Setup 2.0.10](https://www.wi-fi.org/system/files/Wi-Fi%20Protected%20Setup%20Specification%20v2.0.10.pdf), 2025-12-15 | Publisher PDF obtained; digest recorded. Selected for the bounded WSC cryptographic component only. |
 | Public cryptographic references | RFC [2104](https://www.rfc-editor.org/rfc/rfc2104), [3526](https://www.rfc-editor.org/rfc/rfc3526), [2785](https://www.rfc-editor.org/rfc/rfc2785) and the NIST/PKCS references cited in WPS can be reviewed independently. Pin the referenced versions when used; these are not requests for operator subscription credentials. |

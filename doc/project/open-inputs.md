@@ -2,7 +2,7 @@
 
 | Gate | Missing input | Affected work | Independent work |
 | --- | --- | --- | --- |
-| P0 | [Specification acquisition checklist](../protocol/specification-acquisition.md): IEEE 1905.1-2013, 1905.1a-2014, 802.11-2024, 802.3-2015 and WFA Security Requirements; conditional dependencies and full rule/vector review. EasyMesh 6.1 and WPS 2.0.10 are obtained. | I3, I4, wire tests/provisioning | I0–I2, selected WSC crypto component, component evaluation |
+| P0 | [Specification acquisition checklist](../protocol/specification-acquisition.md): IEEE 1905.1-2013, 1905.1a-2014, cited 802.3-2015 and WFA Security Requirements remain missing. Operator obtained 802.11-2024 and 802.3-2022; local paths and review pending, with Ethernet edition comparison unresolved. EasyMesh 6.1 and WPS 2.0.10 are obtained and inspected. Full rule/vector review remains pending. | I3, I4, wire tests/provisioning | I0–I2, selected WSC crypto component, component evaluation |
 | M0 | Named pod/build, actual schema, endpoint direction/trust, managed radio/VIF, writer evidence, management/recovery and client profile | I5 and hardware writes | Simulators, package, reports |
 | X1 | The prplMesh candidate now starts and sends discovery to the EMOSA container; actual EMOSA exchanges, profile/BSS policy and shutdown/recovery remain unqualified | I7 | [Peer baseline and startup commands](../../deploy/peer/README.md) |
 | LXD | Ubuntu 24.04 component tests and VM-driven scenarios passed; base image export retained. Final runtime images and clean full-procedure reruns remain pending | Full reference deployment acceptance | Component and peer baselines now exercised in the dedicated VM |
@@ -17,13 +17,21 @@ and cryptographic checks; actual IEEE messages, exchange state and complete
 radio mapping remain gated. The [radio payload interpreter](../protocol/wsc-radio.md)
 now checks encrypted roles and whole-set candidate scope, without a write path.
 
-The user confirmed that no specification editions or actual pod profile have yet
-been selected/supplied. See [the proposed corpus and access details](../protocol/protocol-inputs.md).
+The initial user input supplied no selected specification editions or actual pod
+profile. See [the proposed corpus and access details](../protocol/protocol-inputs.md).
 The operator subsequently confirmed that **IEEE Std 1905.1-2013** and
 **IEEE Std 1905.1a-2014** are not available locally and no subscription-access
 mechanism has been supplied. Both exact editions remain pending external inputs;
 specification-dependent wire validation stays pending. Acquisition requests are
 consolidated in the checklist above.
+
+The operator now reports obtaining `80211-2024.pdf` (**IEEE Std 802.11-2024**)
+and `IEEE_Standard_for_Ethernet.pdf` (**IEEE Std 802.3-2022**), with no other new
+documents obtained. Absolute local paths have not been provided; these PDFs are
+not yet inspected or hashed. Review the obtained Ethernet edition against the
+relevant cited requirements before selecting a replacement for 802.3-2015.
+This acquisition report leaves the IEEE 1905 base/amendment gate unchanged.
+
 The read-only collector in [pod-qualification.md](../guides/pod-qualification.md) can produce
 a draft once real connection inputs arrive. Existing direct access and the ability
 to disable/redirect cloud writers are confirmed intentions, not verified lab setup.
