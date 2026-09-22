@@ -202,7 +202,7 @@ uv run pytest tests/test_radio_capability_service.py
 python3 scripts/check-easymesh-reference.py
 ```
 
-The last command requires `tshark` and checks ten independently dissected values
+The last command requires `tshark` and now checks seventeen independently dissected values
 from the existing synthetic native-peer capture. Frame 5 supplies a real native
 Radio Basic Capabilities value. It is prplMesh traffic, not an EMOSA onboarding
 exchange. The fixture expectations are extracted without importing EMOSA;
@@ -224,8 +224,9 @@ schema or country field equals this simulation reference. A non-TLS management
 capture can help characterize that interface, but does not by itself establish
 maximum radio limits or trusted identity.
 
-Next, extend the reviewed feature inputs needed by the chosen profile, complete
-the mandatory-function audit, and resolve the native controller's recorded
+The [profile-readiness audit](../protocol/profile-readiness.md) now inventories
+mandatory-function gaps and selected feature conditions. Next, extend technology
+capability inputs, complete that clause review, and resolve the native controller's recorded
 Profile-2 Search/Profile-1 Response mismatch. Complete IEEE transport and
 procedure validation still requires **IEEE 1905.1-2013 and IEEE 1905.1a-2014**.
 The acceptance path remains **real EasyMesh messages → EMOSA adapter → unchanged

@@ -31,8 +31,12 @@ UUID recreation and actual service restart with two simulated pods. The
 synthetic capacity/class/EIRP inputs, evidence hashes, validity windows and a
 read-only mapping that withdraws values on changed inputs, firmware, country or
 topology. It does not qualify physical claims or a complete AP Capability Report.
-Next are reviewed feature inputs for the chosen profile, its mandatory-function
-audit, and resolution of the native peer's profile mismatch. Actual capability
+The [profile-readiness report](../protocol/profile-readiness.md) now inventories
+15 requirement families and selected feature-dependent obligations. AP,
+Profile-2 AP and Radio Advanced value codecs and counter-unit decisions are
+tested independently; they do not implement the features they describe.
+Next are HT/VHT/HE and Device Inventory inputs/mapping, remaining mandatory
+functions and clause review, and resolution of the native peer's profile mismatch. Actual capability
 qualification needs a named pod. Complete IEEE message processing remains
 P0-dependent.
 

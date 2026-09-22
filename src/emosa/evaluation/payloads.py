@@ -6,10 +6,16 @@ import stat
 from pathlib import Path
 
 from emosa.easymesh_payloads import (
+    ADVANCED_FEATURE_BITS,
+    AP_FEATURE_BITS,
     MAX_VALUE_BYTES,
+    PROFILE2_FEATURE_BITS,
+    APCapability,
     APOperationalBss,
+    APRadioAdvancedCapabilities,
     APRadioBasicCapabilities,
     MultiAPProfile,
+    Profile2APCapability,
     RadioIdentifier,
     SearchedServices,
     SupportedServices,
@@ -44,6 +50,33 @@ def read_value(*, value_hex: str | None = None, value_file: Path | None = None) 
 
 
 def describe(payload):
+    if isinstance(payload, (APCapability, Profile2APCapability, APRadioAdvancedCapabilities)):
+        bits = (
+            AP_FEATURE_BITS
+            if isinstance(payload, APCapability)
+            else PROFILE2_FEATURE_BITS
+            if isinstance(payload, Profile2APCapability)
+            else ADVANCED_FEATURE_BITS
+        )
+        result = {
+            "flags": payload.flags,
+            "features": {name: bool(payload.flags & (1 << bit)) for name, bit in bits.items()},
+            "reserved_bits": payload.flags
+            & (1 if isinstance(payload, APRadioAdvancedCapabilities) else 7),
+        }
+        if isinstance(payload, APRadioAdvancedCapabilities):
+            result["ruid"] = payload.ruid.hex(":")
+        if isinstance(payload, Profile2APCapability):
+            units = payload.byte_counter_units
+            result.update(
+                max_prioritization_rules=payload.max_prioritization_rules,
+                max_vids=payload.max_vids,
+                reserved_octet=payload.reserved_octet,
+                byte_counter_units=units,
+                counter_unit={0: "bytes", 1: "KiB", 2: "MiB"}.get(units),
+                bytes_per_counter_unit={0: 1, 1: 1024, 2: 1048576}.get(units),
+            )
+        return result
     if isinstance(payload, APRadioBasicCapabilities):
         return {
             "ruid": payload.ruid.hex(":"),

@@ -80,3 +80,11 @@
   mapping to reviewed IEEE 802.11-2024 Table E-4 entries, never silently omit
   unsupported classes, and keep full profile/AP Capability Report and wire
   admission pending. See the [input walkthrough](../guides/radio-capabilities.md).
+
+- Keep profile readiness separate from component readiness. The offline
+  [profile audit](../protocol/profile-readiness.md) inventories mandatory
+  requirement families and selected conditional capability inclusions. Unknown
+  conditions remain unknown and no planning declaration qualifies a feature.
+  AP/Profile-2/Advanced value codecs preserve reserved fields on receipt and
+  reject reserved output; counter units require explicit peer facts. Older
+  dissector labels never replace current normative bit meanings.

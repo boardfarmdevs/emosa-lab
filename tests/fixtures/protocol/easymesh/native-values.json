@@ -48,6 +48,17 @@
       }
     },
     {
+      "frame": 2,
+      "type": "0xb4",
+      "value_hex": "00004000",
+      "decoded": {
+        "max_prioritization_rules": 0,
+        "flags": 64,
+        "byte_counter_units": 1,
+        "max_vids": 0
+      }
+    },
+    {
       "frame": 5,
       "type": "0x85",
       "value_hex": "020000ec020002035114020c0d5314005414020c0d",
@@ -77,6 +88,26 @@
             ]
           }
         ]
+      }
+    },
+    {
+      "frame": 5,
+      "type": "0xb4",
+      "value_hex": "00004010",
+      "decoded": {
+        "max_prioritization_rules": 0,
+        "flags": 64,
+        "byte_counter_units": 1,
+        "max_vids": 16
+      }
+    },
+    {
+      "frame": 5,
+      "type": "0xbe",
+      "value_hex": "020000ec020080",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00",
+        "flags": 128
       }
     },
     {
@@ -126,6 +157,66 @@
       "value_hex": "02",
       "decoded": {
         "profile": 2
+      }
+    },
+    {
+      "frame": 22,
+      "type": "0xa1",
+      "value_hex": "f0",
+      "decoded": {
+        "flags": 240
+      }
+    },
+    {
+      "frame": 22,
+      "type": "0x85",
+      "value_hex": "020000ec020002035114020c0d5314005414020c0d",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00",
+        "max_bss": 2,
+        "operating_classes": [
+          {
+            "operating_class": 81,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": [
+              12,
+              13
+            ]
+          },
+          {
+            "operating_class": 83,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": []
+          },
+          {
+            "operating_class": 84,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": [
+              12,
+              13
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "frame": 22,
+      "type": "0xbe",
+      "value_hex": "020000ec020080",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00",
+        "flags": 128
+      }
+    },
+    {
+      "frame": 22,
+      "type": "0xb4",
+      "value_hex": "01006010",
+      "decoded": {
+        "max_prioritization_rules": 1,
+        "flags": 96,
+        "byte_counter_units": 1,
+        "max_vids": 16
       }
     }
   ]

@@ -12,6 +12,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.evaluation.evidence import compare
 from emosa.evaluation.lxd import invoke
 from emosa.evaluation.payloads import inspect_value, read_value
+from emosa.evaluation.profile_audit import audit, markdown, read_features
 from emosa.evaluation.runner import all_events, run
 from emosa.store import Store
 
@@ -71,8 +72,22 @@ def main(argv=None):
     value.add_argument("--value-hex", help="value octets only, without a TLV header or frame")
     value.add_argument("--value-file", type=Path, help="regular file containing raw value octets")
     payload.add_argument("--receiver-profile", type=int, choices=(1, 2, 3))
+    profile = sub.add_parser(
+        "profile-audit", help="inspect Profile-1 requirements without qualifying a profile"
+    )
+    profile.add_argument("--features", type=Path, help="optional unqualified planning conditions")
+    profile.add_argument("--format", choices=("json", "markdown"), default="json")
     args = parser.parse_args(argv)
     try:
+        if args.command == "profile-audit":
+            if args.execution != "local":
+                raise EmosaError(Reason.INVALID_INPUT, "offline profile audit runs locally")
+            report = audit(read_features(args.features) if args.features is not None else None)
+            if args.format == "json":
+                output(report)
+            else:
+                print(markdown(report), end="")
+            return 5  # Requirements remain incomplete; this is not a conformance certifier.
         if args.command == "payload":
             if args.execution != "local":
                 raise EmosaError(Reason.INVALID_INPUT, "offline payload inspection runs locally")

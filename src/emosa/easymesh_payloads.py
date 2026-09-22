@@ -1,6 +1,6 @@
 """Selected EasyMesh 6.1 TLV *values*, without TLV headers or IEEE 1905 frames.
 
-Sections 3.1.2, 17.2.1–4, 17.2.7 and 17.2.47 define this component. SSID octets use
+Selected fields in sections 3.1.2 and 17.2 define this component. SSID octets use
 IEEE 802.11-2024 section 9.4.2.2. See doc/protocol/easymesh-payloads.md.
 These objects establish neither trusted identities nor a qualified profile.
 """
@@ -105,6 +105,51 @@ class APRadioBasicCapabilities:
     operating_classes: tuple[BasicOperatingClass, ...]
 
 
+AP_FEATURE_BITS = {
+    "unassociated_metrics_on_channel": 7,
+    "unassociated_metrics_off_channel": 6,
+    "agent_initiated_rcpi_steering": 5,
+    "m8_backhaul_sta_reconfiguration": 4,
+    "rsn_overriding": 3,
+}
+PROFILE2_FEATURE_BITS = {"prioritization": 5, "dpp_onboarding": 4, "traffic_separation": 3}
+ADVANCED_FEATURE_BITS = {
+    "combined_fronthaul_backhaul": 7,
+    "combined_profile1_profile2": 6,
+    "mscs": 5,
+    "scs": 4,
+    "qos_map": 3,
+    "dscp_policy": 2,
+    "qm_scs_traffic_description": 1,
+}
+
+
+@dataclass(frozen=True)
+class APCapability:
+    kind: ClassVar[int] = 0xA1
+    flags: int
+
+
+@dataclass(frozen=True)
+class Profile2APCapability:
+    kind: ClassVar[int] = 0xB4
+    max_prioritization_rules: int
+    reserved_octet: int
+    flags: int
+    max_vids: int
+
+    @property
+    def byte_counter_units(self):
+        return (self.flags >> 6) & 3
+
+
+@dataclass(frozen=True)
+class APRadioAdvancedCapabilities:
+    kind: ClassVar[int] = 0xBE
+    ruid: bytes
+    flags: int
+
+
 @dataclass(frozen=True)
 class MultiAPProfile:
     kind: ClassVar[int] = 0xB3
@@ -127,6 +172,9 @@ type Payload = (
     | RadioIdentifier
     | APOperationalBss
     | APRadioBasicCapabilities
+    | APCapability
+    | Profile2APCapability
+    | APRadioAdvancedCapabilities
     | MultiAPProfile
 )
 
@@ -183,6 +231,12 @@ def decode_value(kind: int, value: bytes) -> Payload:
             result = APOperationalBss(tuple(radios))
         case 0xB3:
             result = MultiAPProfile(reader.octet())
+        case 0xA1:
+            result = APCapability(reader.octet())
+        case 0xB4:
+            result = Profile2APCapability(*(reader.octet() for _ in range(4)))
+        case 0xBE:
+            result = APRadioAdvancedCapabilities(reader.take(6), reader.octet())
         case 0x85:
             ruid, max_bss = reader.take(6), reader.octet()
             if max_bss == 0:
@@ -221,6 +275,24 @@ def encode_value(payload: Payload) -> bytes:
         value = _octet(payload.profile)
         if payload.profile not in (1, 2, 3):
             raise _invalid()
+    elif type(payload) in (APCapability, Profile2APCapability, APRadioAdvancedCapabilities):
+        flags = _octet(payload.flags)
+        reserved_mask = 1 if type(payload) is APRadioAdvancedCapabilities else 7
+        if payload.flags & reserved_mask:
+            raise _invalid()
+        if type(payload) is APCapability:
+            value = flags
+        elif type(payload) is APRadioAdvancedCapabilities:
+            value = _octets(payload.ruid, length=6) + flags
+        else:
+            value = (
+                _octet(payload.max_prioritization_rules)
+                + _octet(payload.reserved_octet)
+                + flags
+                + _octet(payload.max_vids)
+            )
+            if payload.reserved_octet != 0 or payload.byte_counter_units == 3:
+                raise _invalid()
     elif type(payload) is APRadioBasicCapabilities:
         value = bytearray(_octets(payload.ruid, length=6) + _octet(payload.max_bss))
         if payload.max_bss == 0:

@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "execution": "installed wheel with isolated Python outside checkout",
+  "wheel_sha256": "139408f9cd222449404e19ddeca4def57e0b748c00b3137b11f6bcc004306318",
+  "packaged_planning_contract_used": true,
+  "checks": [
+    {
+      "command": "audit",
+      "exit_code": 5,
+      "passed": true
+    },
+    {
+      "command": "planning",
+      "exit_code": 5,
+      "passed": true
+    },
+    {
+      "command": "value",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "no_runtime_state_created": true,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

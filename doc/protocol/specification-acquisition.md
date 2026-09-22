@@ -43,6 +43,7 @@ mandatory acquisition beyond the consolidated entries below.
 | --- | --- | --- |
 | ☐ | **ISO 3166-1 country-code reference** | CAC reporting in EasyMesh §9.1 uses two-letter country codes. Reference [6] omits an edition but links to [ISO 3166-1:2013](https://www.iso.org/standard/63545.html). Resolve the edition and authorized maintained code source if CAC is emitted; do not silently substitute the newer edition or infer the pod's regulatory domain. Full standard not obtained. |
 | ☐ | **IEEE Std 802.11-2012** | WPS 2.0.10 §2 reference [17] selects this older edition. Review affected WPS definitions if used; the current adapter does not implement WPS over 802.11 management frames. Do not treat 802.11-2024 as an automatic replacement for every historical WPS reference. |
+| ☐ | **ISO 80000-1:2009** | EasyMesh reference [26] is cited by Table 71's byte-counter units. See the [publisher reference](https://www.iso.org/en/contents/data/standard/03/06/30669.html). Full text/access not supplied; retain for the complete units/telemetry review. The current component only exposes the WFA codes and conventional binary-prefix metadata; it implements no traffic-counter conversion or ODH transport. |
 | ☐ | **Applicable errata/corrigenda and further normative dependencies** | Check publisher records for the acquired editions, then audit the full IEEE texts. Exact additional documents cannot be determined before reading them. Record either identified corrections or the dated result of the check; no guessed amendment list. |
 
 Feature-dependent bibliography entries remain deferred: IEEE 802.1Q-2018 for
@@ -54,6 +55,13 @@ UPnP, EAP/802.1X, P2P and certificate-request documents are also outside the
 current Ethernet M1/M2 component. A complete mandatory-field audit may promote
 an item into the required list; EMOSA must not advertise an unreviewed feature.
 This is not an instruction to purchase every document in both bibliographies.
+
+The [feature/profile audit](profile-readiness.md) now makes the deferred triggers
+more explicit: the DPP, traffic-separation, RSN Overriding and QoS bits require
+the corresponding complete behavior and referenced documents before support can
+be advertised. Their standalone value codecs do not promote those features into
+the implemented profile. IEEE 1905.1-2013 and 1905.1a-2014 remain the immediate
+external acquisition priorities.
 
 ## Already obtained or available for independent work
 

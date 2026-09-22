@@ -1,0 +1,12 @@
+{
+  "status": "match",
+  "scope": "selected native-peer value bytes and fields only",
+  "cases": 17,
+  "dissector": "TShark (Wireshark) 3.6.2 (Git v3.6.2 packaged as 3.6.2-2)",
+  "dissector_sha256": "a65608d17a78f255c7a9aaa08244f3fe284ce752f6818fd87fee9ca6e5bb4d54",
+  "capture_sha256": "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964",
+  "vectors_sha256": "bb1a5cf36c529c6185c1f1e15c326f1ba60d6be13d468e33b7cc8711036e95c7",
+  "extractor_sha256": "fea2c358aaf1b66f4f5151a4668c257061df907bfec3defb19bba6bbca1ea4d4",
+  "emosa_imported": false,
+  "full_protocol_conformance": false
+}

@@ -59,11 +59,19 @@ zero-valued capabilities.
 ## Selected field definitions that can be resolved now
 
 The [selected value component](easymesh-payloads.md) now implements service lists,
-Radio Identifier, Operational BSS and profile values, with independent native
+Radio Identifier, Operational BSS, Basic/AP/Profile-2/Advanced Capabilities and profile values, with independent native
 capture checks. It also exposes the native sender's reserved `0xA1` service in
 Search and Topology Response: the receiver ignores it as a role, while the encoder
 refuses to emit it under §3.1.2. This is an additional bounded compatibility
 observation, not a complete assessment of that native build.
+
+The [executable profile audit](profile-readiness.md) now inventories 15 requirement
+families and evaluates selected HT/VHT/HE/EHT/QoS inclusion conditions. It retains
+unknown inputs, unresolved applicability and the distinction between a value
+codec, truthful target input and a complete mandatory procedure. It does not
+complete a clause-by-clause profile assessment. The AP/Profile-2/Advanced codecs
+have independent native numeric-field examples; older dissector feature labels
+are explicitly insufficient to establish the EasyMesh 6.1 semantics.
 
 These are factual field summaries, **not a complete message encoder contract**. Outer
 CMDU framing, TLV sequencing/end markers, base field byte order, fragmentation,
@@ -106,6 +114,31 @@ complete field mappings remain pending. The supplied Ethernet document is
 5. §9.1/§17.1.7 and §18 must be read together for newer feature capability
    TLVs. The structural message list alone does not establish support or permit
    invented capability data. The full feature-field audit remains open.
+6. Table 133 has both older Profile-1 and “Profile-1 as of Release 4” columns.
+   Reliability (§15.1) and higher-layer delivery (§16) differ between the columns,
+   while the sections still define procedures and conditions. Preserve this
+   distinction during the clause review; do not turn an informative blank into
+   a normative exemption. The new audit marks these families `review_pending`.
+
+## Feature inputs and unchanged-pod viability
+
+AP capability bits describe behavior of the represented agent, including the
+adapter and pod mapping. A pod's hardware support alone cannot justify setting
+a bit if EMOSA cannot execute the associated complete procedure. In particular,
+RSN Overriding combines the special WSC authentication value, companion RSN
+parameter application and the referenced WPA3 behavior (§9.1, p.80); the new
+`0xA1` codec does not implement those features.
+
+For the actual unchanged pod, qualification must also resolve applicable WPS
+advertisement and Multi-AP information elements (§5.2.2), complete-radio BSS
+configuration (§7.1), Wi-Fi backhaul address handling (§14), and the manager's
+existing configuration/reporting interfaces. Unsupported behavior here is a
+viability finding, even if standalone controller-facing bytes are valid.
+
+Counter-unit choice is now a tested pure component of §9.1: known Profile-1
+without a KiB/MiB indication selects bytes; the other defined cases require an
+explicit KiB/MiB selection. Unknown peer facts are not silently assumed. No
+actual peer negotiation, traffic-statistics reporting or ODH delivery is added.
 
 ## What remains before wire code can be enabled
 

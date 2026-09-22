@@ -1,6 +1,6 @@
 # EasyMesh value components and offline inspection
 
-EMOSA now encodes and decodes six selected EasyMesh **TLV values**. This is
+EMOSA now encodes and decodes nine selected EasyMesh **TLV values**. This is
 preparation for discovery and topology reporting while the IEEE 1905 documents
 are being acquired. It does not enable a packet endpoint, controller discovery,
 onboarding or pod writes. Run this exercise on **HOST**, in your development or
@@ -40,7 +40,10 @@ No licensed document or page extract is redistributed.
 | `0x82` / `RadioIdentifier` | Six RUID octets | EasyMesh §17.2.3, Table 26, pp.125–126 |
 | `0x83` / `APOperationalBss` | Radio count; per-radio RUID and BSS count; per-BSS AP_MAC, SSID byte length and SSID octets | EasyMesh §17.2.4, Table 27, p.126 |
 | `0x85` / `APRadioBasicCapabilities` | RUID, nonzero Max_BSS, class count; per-class identifier, signed EIRP dBm, non-operable channel count/list | EasyMesh §17.2.7, Table 30, pp.127–128; selected classes in IEEE 802.11-2024 Table E-4, pp.5658–5659 |
+| `0xA1` / `APCapability` | One octet of AP feature flags; preserve reserved bits on receive, reject them on send | EasyMesh §17.2.6, Table 29, p.127 |
 | `0xB3` / `MultiAPProfile` | One profile octet; defined profiles 1, 2 and 3 | EasyMesh §17.2.47, Table 70, p.157 |
+| `0xB4` / `Profile2APCapability` | Rule capacity, reserved octet, counter-unit/feature octet, VID capacity | EasyMesh §17.2.48, Table 71, pp.157–158 |
+| `0xBE` / `APRadioAdvancedCapabilities` | RUID and one octet of combined-role and QoS feature flags | EasyMesh §17.2.52, Table 75, p.160 |
 | SSID representation | Preserve original octets and the 0–32-octet structural bound; do not assume UTF-8 | IEEE 802.11-2024 §9.4.2.2, Figure 9-209, p.934 |
 
 All counts in these selected values are single octets. Addresses and SSIDs are
@@ -179,7 +182,7 @@ uv run pytest tests/test_easymesh_payloads.py
 
 They compare exact independently extracted bytes and decoded fields, hand-derived
 table examples, malformed/truncated input, reserved-code behavior, count and SSID
-boundaries, resource limits and the offline CLI. There are 73 selected cases;
+boundaries, resource limits and the offline CLI. There are 87 selected cases;
 [radio capability tests](../../tests/test_radio_capabilities.py) add signed-power
 boundaries and input-mapping checks. The `0x85` decoder preserves unfamiliar
 classes for inspection; its encoder accepts only audited classes 81–84 and 115.
@@ -194,11 +197,16 @@ python3 scripts/check-easymesh-reference.py
 ```
 
 The script validates the retained input digests, invokes Wireshark's decoder,
-uses its reassembly and field boundaries, and compares **ten** retained values
+uses its reassembly and field boundaries, and compares **seventeen** retained values
 and interpretations. It imports no EMOSA code and never regenerates expected
 values during the check. Both tshark 3.6.2 and 4.2.2 matched locally; CI includes
 the same check. The [provenance](../../tests/fixtures/protocol/easymesh/provenance.json)
 identifies the capture, extractor, fixture and original dissector.
+
+The [feature/profile walkthrough](profile-readiness.md) adds exhaustive reserved
+bit/unit tests and planning audits. For the new capability types, older dissector
+feature labels are incomplete or outdated; independent checks compare numeric
+fields and raw flags, while EasyMesh 6.1 supplies their current meanings.
 
 These native implementation observations supplement the specification. They
 cannot qualify missing IEEE rules or prove the complete native exchange conforms
@@ -211,9 +219,10 @@ Stable per-pod radio/BSS identity binding and complete observed topology project
 now have a [synthetic service exercise](../guides/observed-topology.md). The
 [radio-capability diagnostic](../guides/radio-capabilities.md) maps explicit
 synthetic inputs to `0x85`, rechecking identity, evidence and current context.
-Physical capability qualification and other mandatory feature inputs remain
-pending. Profile advertisement must wait for the complete mandatory-function
-audit. Actual discovery/topology/WSC exchange processing also
+Selected AP/Profile-2/Advanced feature value codecs and an executable
+[requirement-family audit](profile-readiness.md) are now available. Physical
+capability qualification, technology feature inputs and the complete
+mandatory-function review remain pending. Actual discovery/topology/WSC processing also
 needs the missing **IEEE 1905.1-2013 and IEEE 1905.1a-2014** review, independent
 full-message vectors, peer/exchange binding and recovery rules.
 

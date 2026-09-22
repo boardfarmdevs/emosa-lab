@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emosa.local/schemas/profile-features.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "scope": {
+      "const": "unqualified_planning_input"
+    },
+    "controller": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "enum": [
+            1,
+            2,
+            3,
+            null
+          ]
+        },
+        "kib_mib": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "preferred_scaled_unit": {
+          "enum": [
+            1,
+            2,
+            null
+          ]
+        }
+      },
+      "required": [
+        "profile",
+        "kib_mib",
+        "preferred_scaled_unit"
+      ],
+      "additionalProperties": false
+    },
+    "radios": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "properties": {
+          "radio_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+          },
+          "ht": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "vht": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "he": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "eht": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "advanced_qos": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "radio_id",
+          "ht",
+          "vht",
+          "he",
+          "eht",
+          "advanced_qos"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "scope",
+    "controller",
+    "radios"
+  ],
+  "additionalProperties": false
+}

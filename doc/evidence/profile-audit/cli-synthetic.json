@@ -1,0 +1,367 @@
+{
+  "schema_version": 1,
+  "scope": "EasyMesh 6.1 proposed Profile-1 requirement-family and selected inclusion audit",
+  "input_assurance": "planning only; no live device or evidence verification",
+  "default_unknown_radio": false,
+  "profile_advertisement_ready": false,
+  "qualified_easymesh_profile": null,
+  "full_clause_audit_complete": false,
+  "requirements": [
+    {
+      "id": "onboarding",
+      "family": "Layer-2 onboarding and backhaul roles",
+      "sections": "5.1–5.2",
+      "status": "partial_component",
+      "remaining": "Native peers are a separate baseline; no EMOSA peer exchange or qualified pod backhaul"
+    },
+    {
+      "id": "discovery",
+      "family": "Controller discovery and topology",
+      "sections": "6.1–6.2; Table 4",
+      "status": "partial_component",
+      "remaining": "Value codecs/topology exist; IEEE processing and controller inventory proof are absent"
+    },
+    {
+      "id": "profile",
+      "family": "Profile indication and mandatory functions",
+      "sections": "6.1–6.2; 17.2.47; 18",
+      "status": "partial_component",
+      "remaining": "A profile-value codec is not qualification of the mandatory functions"
+    },
+    {
+      "id": "configuration",
+      "family": "Radio configuration and policy",
+      "sections": "7",
+      "status": "partial_component",
+      "remaining": "WSC payloads and an existing-BSS operation do not implement general radio configuration"
+    },
+    {
+      "id": "channel_selection",
+      "family": "Channel preferences and selection",
+      "sections": "8.1–8.2",
+      "status": "not_implemented",
+      "remaining": "Supported-class input is not a preference report or channel-selection procedure"
+    },
+    {
+      "id": "ap_capability",
+      "family": "Complete AP capability reporting",
+      "sections": "9.1; 17.1.7",
+      "status": "partial_component",
+      "remaining": "Basic radio mapping/codecs lack conditional fields and the complete report"
+    },
+    {
+      "id": "client_capability",
+      "family": "Client capability reporting",
+      "sections": "9.2",
+      "status": "not_implemented",
+      "remaining": "Client inventory does not supply the association frame or query/error procedure"
+    },
+    {
+      "id": "metrics",
+      "family": "Link and station metrics",
+      "sections": "10.1; 10.2.1; 10.3–10.4",
+      "status": "not_implemented",
+      "remaining": "Counter units alone lack measurements, reporting and the ODH delivery path"
+    },
+    {
+      "id": "steering",
+      "family": "Client steering",
+      "sections": "11",
+      "status": "not_implemented",
+      "remaining": "No qualified steering request, policy, outcome or failure mapping"
+    },
+    {
+      "id": "backhaul",
+      "family": "Backhaul optimization",
+      "sections": "12",
+      "status": "not_implemented",
+      "remaining": "No qualified backhaul steering or management-path recovery mapping"
+    },
+    {
+      "id": "four_address",
+      "family": "Wi-Fi backhaul address handling",
+      "sections": "14",
+      "status": "qualification_pending",
+      "remaining": "Path-dependent; native-peer hwsim results do not qualify unchanged OpenSync behavior"
+    },
+    {
+      "id": "reliability",
+      "family": "Control-message reliability",
+      "sections": "15.1; 18",
+      "status": "review_pending",
+      "remaining": "Table 133 columns differ; resolve normative procedures and missing IEEE rules"
+    },
+    {
+      "id": "higher_layer",
+      "family": "Higher-layer payload delivery",
+      "sections": "16; 18",
+      "status": "review_pending",
+      "remaining": "Table 133 columns differ; HLE trigger and receive/ack obligations remain unimplemented"
+    },
+    {
+      "id": "message_format",
+      "family": "Complete message formats",
+      "sections": "17",
+      "status": "blocked_external",
+      "remaining": "IEEE 1905.1-2013/1905.1a-2014 are pending; value codecs do not define the envelope"
+    },
+    {
+      "id": "release4_features",
+      "family": "Additional current Profile-1 conditions",
+      "sections": "6.3; 7.3; 9.1; 10.2.2; 11.4–11.7; 13; 19; 8.2.4; 18",
+      "status": "review_pending",
+      "remaining": "Resolve data elements, scans and conditional functions for the actual target"
+    }
+  ],
+  "ap_capability_report": {
+    "ready": false,
+    "obligations": [
+      {
+        "type": "0xa1",
+        "name": "AP Capability",
+        "scope": "agent",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §17.1.7",
+        "value_component_available": true,
+        "qualified_value_available": false,
+        "remaining": "Qualified feature evidence for adapter and represented pod"
+      },
+      {
+        "type": "0xb4",
+        "name": "Profile-2 AP Capability",
+        "scope": "agent",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §17.1.7",
+        "value_component_available": true,
+        "qualified_value_available": false,
+        "remaining": "Qualified feature/limit claims and actual peer-dependent counter-unit choice"
+      },
+      {
+        "type": "0xc5",
+        "name": "Metric Collection Interval",
+        "scope": "agent",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §17.1.7",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Qualified measurement interval and reviewed field encoding"
+      },
+      {
+        "type": "0xd4",
+        "name": "Device Inventory",
+        "scope": "agent",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §17.1.7",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Stable qualified serial, active firmware/environment and per-radio vendor data"
+      },
+      {
+        "type": "0x85",
+        "name": "Radio Basic Capabilities",
+        "scope": "radio-1",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §17.2.7",
+        "value_component_available": true,
+        "qualified_value_available": false,
+        "remaining": "Existing synthetic input mapper is not qualified physical capability evidence"
+      },
+      {
+        "type": "0x86",
+        "name": "HT Capabilities",
+        "scope": "radio-1",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Planning only; verify complete feature implementation and truthful field inputs"
+      },
+      {
+        "type": "0x87",
+        "name": "VHT Capabilities",
+        "scope": "radio-1",
+        "decision": "omit_if_unsupported",
+        "source": "EasyMesh 6.1 §9.1 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Planning only; verify complete feature implementation and truthful field inputs"
+      },
+      {
+        "type": "0x88",
+        "name": "HE Capabilities",
+        "scope": "radio-1",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Planning only; verify complete feature implementation and truthful field inputs"
+      },
+      {
+        "type": "0xaa",
+        "name": "Wi-Fi 6 Capabilities",
+        "scope": "radio-1",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Planning only; verify complete feature implementation and truthful field inputs"
+      },
+      {
+        "type": "0xbe",
+        "name": "Radio Advanced Capabilities",
+        "scope": "radio-1",
+        "decision": "omit_if_unsupported",
+        "source": "EasyMesh 6.1 §9.1 / §18",
+        "value_component_available": true,
+        "qualified_value_available": false,
+        "remaining": "Planning only; verify complete feature implementation and truthful field inputs"
+      },
+      {
+        "type": "0x85",
+        "name": "Radio Basic Capabilities",
+        "scope": "radio-2",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §17.2.7",
+        "value_component_available": true,
+        "qualified_value_available": false,
+        "remaining": "Existing synthetic input mapper is not qualified physical capability evidence"
+      },
+      {
+        "type": "0x86",
+        "name": "HT Capabilities",
+        "scope": "radio-2",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Planning only; verify complete feature implementation and truthful field inputs"
+      },
+      {
+        "type": "0x87",
+        "name": "VHT Capabilities",
+        "scope": "radio-2",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Planning only; verify complete feature implementation and truthful field inputs"
+      },
+      {
+        "type": "0x88",
+        "name": "HE Capabilities",
+        "scope": "radio-2",
+        "decision": "omit_if_unsupported",
+        "source": "EasyMesh 6.1 §9.1 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Planning only; verify complete feature implementation and truthful field inputs"
+      },
+      {
+        "type": "0xaa",
+        "name": "Wi-Fi 6 Capabilities",
+        "scope": "radio-2",
+        "decision": "omit_if_unsupported",
+        "source": "EasyMesh 6.1 §9.1 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Planning only; verify complete feature implementation and truthful field inputs"
+      },
+      {
+        "type": "0xbe",
+        "name": "Radio Advanced Capabilities",
+        "scope": "radio-2",
+        "decision": "required",
+        "source": "EasyMesh 6.1 §9.1 / §18",
+        "value_component_available": true,
+        "qualified_value_available": false,
+        "remaining": "Planning only; verify complete feature implementation and truthful field inputs"
+      },
+      {
+        "type": "0xdf",
+        "name": "Wi-Fi 7 Agent Capabilities",
+        "scope": "agent",
+        "decision": "unresolved",
+        "source": "EasyMesh 6.1 §9.1 / §17.1.7",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Required if any radio supports EHT; qualified feature and operation inputs pending"
+      },
+      {
+        "type": "0xe7",
+        "name": "EHT Operations",
+        "scope": "agent",
+        "decision": "unresolved",
+        "source": "EasyMesh 6.1 §9.1 / §17.1.7",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Required if any radio supports EHT; qualified feature and operation inputs pending"
+      },
+      {
+        "type": "0xcc",
+        "name": "AKM Suite Capabilities",
+        "scope": "agent",
+        "decision": "applicability_review_pending",
+        "source": "EasyMesh 6.1 §9.1 / §17.1.7 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Reconcile message inclusion, supported features and current Profile-1 conditions"
+      },
+      {
+        "type": "0xa5",
+        "name": "Channel Scan Capabilities",
+        "scope": "agent",
+        "decision": "applicability_review_pending",
+        "source": "EasyMesh 6.1 §9.1 / §17.1.7 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Reconcile message inclusion, supported features and current Profile-1 conditions"
+      },
+      {
+        "type": "0xa9",
+        "name": "1905 Layer Security Capability",
+        "scope": "agent",
+        "decision": "applicability_review_pending",
+        "source": "EasyMesh 6.1 §9.1 / §17.1.7 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Reconcile message inclusion, supported features and current Profile-1 conditions"
+      },
+      {
+        "type": "0xb2",
+        "name": "CAC Capabilities",
+        "scope": "agent",
+        "decision": "applicability_review_pending",
+        "source": "EasyMesh 6.1 §9.1 / §17.1.7 / §18",
+        "value_component_available": false,
+        "qualified_value_available": false,
+        "remaining": "Reconcile message inclusion, supported features and current Profile-1 conditions"
+      }
+    ]
+  },
+  "wsc_m1_companions": {
+    "source": "EasyMesh 6.1 §7.1 / §17.1.3",
+    "ready": false,
+    "required_per_radio": [
+      "0x85",
+      "0x11 (WSC M1)",
+      "0xb4",
+      "0xbe"
+    ],
+    "note": "M1 requires Advanced Capabilities independently of AP report QoS conditions. IEEE envelope and trusted exchange remain pending."
+  },
+  "counter_units": {
+    "decision": "conditional_choice",
+    "code": 0,
+    "unit": "bytes",
+    "basis": "unqualified planning inputs; actual exchange is not observed"
+  },
+  "blockers": [
+    "IEEE_1905_base_and_amendment_pending",
+    "mandatory_functions_incomplete",
+    "qualified_target_feature_inputs_pending",
+    "native_peer_profile_intersection_unresolved"
+  ],
+  "easymesh_wire_state": "blocked_P0",
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

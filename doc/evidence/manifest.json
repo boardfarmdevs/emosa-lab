@@ -1221,6 +1221,61 @@
       "path": "radio-capabilities/wheel-smoke.json",
       "sha256": "33926c706d1fd8f84a89914497a0c09e0885372550e5a8a8405663f2df397db0",
       "size": 341
+    },
+    {
+      "path": "profile-audit/browser-result.json",
+      "sha256": "290673f96d7e381615f0e65d77263b28c58261595dd384649b77c356a3a29752",
+      "size": 227
+    },
+    {
+      "path": "profile-audit/cli-capability.json",
+      "sha256": "d71e588ec9d400aca0c535213c236379fdeb527bac13b8bb310d55080864d133",
+      "size": 642
+    },
+    {
+      "path": "profile-audit/cli-markdown.md",
+      "sha256": "ea87b36274393c3aa465faedb489e70969b3417017b370349430a0c78539e900",
+      "size": 4251
+    },
+    {
+      "path": "profile-audit/cli-synthetic.json",
+      "sha256": "0bc14783bacdb04fee0ee52920d6acb932d3c9f594626bfaf650f842ccb247bc",
+      "size": 13656
+    },
+    {
+      "path": "profile-audit/cli-unknown.json",
+      "sha256": "ee8c5d3560fd03c54a7c3f4795c51394ebfd3289eb7d009d7b5f6b871125e3c5",
+      "size": 11376
+    },
+    {
+      "path": "profile-audit/native-reference-host.json",
+      "sha256": "724619cb41c49c0d4e580fc57ec05afa9af38167d72eec98a446f28d03973383",
+      "size": 599
+    },
+    {
+      "path": "profile-audit/native-reference-vm.json",
+      "sha256": "096a420470e859d5f3b4c204e42e7a414ac7ce05dbae20e6d762fcfb0c21e499",
+      "size": 608
+    },
+    {
+      "path": "profile-audit/ovsdb-results.xml",
+      "sha256": "e035a0f5ae11cb2b3f4716c68a365ef755e42b60e9898f11293be9d0085eae10",
+      "size": 5071
+    },
+    {
+      "path": "profile-audit/summary.json",
+      "sha256": "ac78d3030047cd776605993e474e4ababb0e74bc5cdb12ddef19607e46fd6f51",
+      "size": 5752
+    },
+    {
+      "path": "profile-audit/unit-results.xml",
+      "sha256": "c14ce65e34d80fcb6ae0288d6a5d887ee47600a770349dc3703e68416e696764",
+      "size": 66742
+    },
+    {
+      "path": "profile-audit/wheel-smoke.json",
+      "sha256": "40ce2db1de1ad7149842052e6f5fcff0b6e4040707a49831d1ad24d8fb370d86",
+      "size": 598
     }
   ]
 }

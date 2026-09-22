@@ -1471,23 +1471,28 @@
         "src/emosa/topology_bindings.py",
         "src/emosa/opensync/topology.py",
         "src/emosa/radio_capabilities.py",
-        "src/emosa/operating_classes.py"
+        "src/emosa/operating_classes.py",
+        "src/emosa/evaluation/profile_audit.py",
+        "src/emosa/counter_units.py"
       ],
       "test_refs": [
         "tests/test_gated.py",
         "tests/test_topology.py",
         "tests/test_topology_service.py",
         "tests/test_radio_capabilities.py",
-        "tests/test_radio_capability_service.py"
+        "tests/test_radio_capability_service.py",
+        "tests/test_feature_capabilities.py",
+        "tests/test_profile_audit.py"
       ],
       "evidence_refs": [
         "doc/evidence/observed-topology/summary.json",
-        "doc/evidence/radio-capabilities/summary.json"
+        "doc/evidence/radio-capabilities/summary.json",
+        "doc/evidence/profile-audit/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
-      "independent_work": "Complete synthetic topology and evidence-bound Radio Basic Capabilities diagnostics tested via read-only two-pod service. Actual capability qualification, complete profile and wire/physical gates remain pending."
+      "independent_work": "Synthetic topology/basic capability mapping, AP/Profile-2/Advanced value codecs and offline requirement-family audit available; complete procedures, feature qualification and wire/physical proof pending."
     },
     {
       "id": "WIRE-03",

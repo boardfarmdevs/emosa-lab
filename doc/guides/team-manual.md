@@ -2796,7 +2796,8 @@ of the history; an old `protoc-c` bootstrap failure is not the current blocker.
 ### 13.3 Inspect EasyMesh value components without a lab
 
 Discovery and topology messages carry small structured fields describing services,
-radios, BSSs, radio capabilities and profiles. EMOSA now has Python codecs for six such **TLV values**.
+radios, BSSs, radio capabilities and profiles. EMOSA now has Python codecs for
+nine such **TLV values**.
 A TLV means type/length/value; this component handles the value inside that
 structure. It provides useful progress from EasyMesh's explicit field definitions
 while the IEEE 1905 base/amendment are pending. It does not enable the packet
@@ -2827,6 +2828,36 @@ observed graph are separate from the older selected-BSS inventory. The
 after validating explicit evidence inputs against fresh observations. The IEEE
 exchange layer and qualified advertised profile remain pending; successful value
 encoding alone does not establish either.
+
+### 13.4 Understand what is still required before claiming a profile
+
+An advertised EasyMesh profile promises mandatory behavior beyond our first
+onboarding experiment. A passing radio-capability diagnostic cannot establish
+channel selection, client capability reporting, metrics, steering or backhaul
+procedures. The new [profile-readiness walkthrough](../protocol/profile-readiness.md)
+explains the distinction and inventories the unresolved requirement families.
+
+On HOST, without starting any lab services:
+
+```bash
+uv run emosa-lab profile-audit --format markdown
+uv run emosa-lab profile-audit \
+  --features examples/protocol/profile-features.synthetic.json
+```
+
+Both commands return **5**, the expected blocked-profile result. The first
+retains unknown feature conditions; the second uses invented conditions to show
+how HT/VHT/HE/EHT and QoS support change report obligations. `null` means unknown,
+not unsupported. A feature set to `true` adds requirements; it does not qualify
+the implementation. The command reads no pod or controller and creates no runtime
+state. The walkthrough explains each field, the checked-in examples and how to
+make a scratch copy safely.
+
+It also covers the new `0xA1`, `0xB4` and `0xBE` value codecs and the counter-unit
+rule. Bytes, KiB and MiB must retain their meanings on the eventual telemetry path
+to ODH; an unknown/reserved unit must not silently become bytes. No ODH delivery
+or automatic profile advertisement is added. Use this audit to explain the next
+development and qualification work during a demo.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
@@ -3196,7 +3227,7 @@ correctly blocked before any operation was allowed.
 | 2 | Invalid input, including argparse/configuration errors |
 | 3 | Local API caller wait expired; the operation may continue |
 | 4 | Local adapter service unavailable, often wrong socket or stopped service |
-| 5 | Blocked/unsupported operation, missing prerequisite, conflict, busy/precondition rejection, blocked run, or unavailable `pod topology` / `pod radio-capabilities` projection |
+| 5 | Blocked/unsupported operation, missing prerequisite, conflict, busy/precondition rejection, blocked run, incomplete `profile-audit`, or unavailable `pod topology` / `pod radio-capabilities` projection |
 | 130 | CLI interrupt where handled as such; interrupted experiments can instead retain an inconclusive run and return nonzero |
 
 Native lab scripts use their own nonzero results for failed readiness/acceptance
