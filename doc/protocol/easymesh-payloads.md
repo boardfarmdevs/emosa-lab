@@ -230,7 +230,7 @@ Selected AP/Profile-2/Advanced feature value codecs and an executable
 capability qualification and the complete mandatory-function review remain
 pending. The [technology/inventory exercise](../guides/technology-inventory.md)
 now maps explicit synthetic HT/VHT and Device Inventory inputs; HE conversion
-and complete Wi-Fi 6 input mapping remain unfinished. The [HE/Wi-Fi 6 exercise](../guides/he-wifi6.md) now adds the standalone `0xAA` codec and IEEE MCS field parser, including the captured native zero-length negative case. Actual discovery/topology/WSC processing also
+remains unfinished; a [selected Wi-Fi 6 role mapper](../guides/wifi6-inputs.md) now provides the companion through a separate read-only service result. The [HE/Wi-Fi 6 exercise](../guides/he-wifi6.md) now adds the standalone `0xAA` codec and IEEE MCS field parser, including the captured native zero-length negative case. Actual discovery/topology/WSC processing also
 needs the missing **IEEE 1905.1-2013 and IEEE 1905.1a-2014** review, independent
 full-message vectors, peer/exchange binding and recovery rules.
 

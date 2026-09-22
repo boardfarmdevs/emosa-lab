@@ -83,7 +83,8 @@ def unavailable(pod_id, binding, code):
         "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
         "ready_scope": "basic_radio_capabilities_only",
         "extension_scope": (
-            "Selected HT/VHT and Device Inventory mapping; HE/Wi-Fi 6 pending, EHT unassessed"
+            "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; "
+            "complete HE technology set pending, EHT unassessed"
         ),
         "binding_sha256": binding_digest(binding) if binding else None,
         "ready": False,

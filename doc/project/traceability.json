@@ -1487,19 +1487,21 @@
         "tests/test_profile_audit.py",
         "tests/test_technology_values.py",
         "tests/test_capability_extensions.py",
-        "tests/test_he_wifi6.py"
+        "tests/test_he_wifi6.py",
+        "tests/test_wifi6_projection.py"
       ],
       "evidence_refs": [
         "doc/evidence/observed-topology/summary.json",
         "doc/evidence/radio-capabilities/summary.json",
         "doc/evidence/profile-audit/summary.json",
         "doc/evidence/technology-inventory/summary.json",
-        "doc/evidence/he-wifi6/summary.json"
+        "doc/evidence/he-wifi6/summary.json",
+        "doc/evidence/wifi6-inputs/summary.json"
       ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification. Standalone Wi-Fi 6/IEEE HE MCS codecs now checked, including native zero-length rejection; complete HE mapping and wire/profile qualification remain pending.",
+      "scope": "Selected standalone values and read-only synthetic mappings only. Wi-Fi 6 role inputs do not imply complete HE/report, profile, wire or physical qualification.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
-      "independent_work": "Selected value codecs including IEEE HE MCS and Wi-Fi 6, plus read-only synthetic topology, Basic/HT/VHT and Device Inventory mapping; 0x88 conversion and full per-role HE mapping, procedures and physical qualification remain pending."
+      "independent_work": "Read-only topology, Basic/HT/VHT/Device Inventory and separate evidence-bound Wi-Fi 6 role mapping; 0x88 conversion, complete HE set, full procedures and physical qualification remain pending."
     },
     {
       "id": "WIRE-03",

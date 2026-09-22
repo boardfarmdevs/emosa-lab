@@ -1,7 +1,7 @@
 """Selected synthetic capability inputs, after the Basic input/topology gate.
 
-No driver inference or physical qualification. HE support stays explicit and
-blocks technology readiness until HE/Wi-Fi 6 mapping is implemented.
+No driver inference or physical qualification. The Wi-Fi 6 companion has its
+own readiness result; HE support still blocks the complete technology set.
 """
 
 import hashlib
@@ -9,12 +9,36 @@ import hashlib
 from emosa.easymesh_payloads import (
     APHTCapabilities,
     APVHTCapabilities,
+    APWifi6Capabilities,
     DeviceInventory,
     InventoryRadio,
+    Wifi6Role,
     encode_value,
 )
 from emosa.errors import EmosaError
 from emosa.evaluation.payloads import describe
+from emosa.he_mcs import HEMCSPair, HESupportedMCS
+
+WIFI6_BEAMFORMING_BITS = {
+    "su_beamformer": 7,
+    "su_beamformee": 6,
+    "mu_beamformer": 5,
+    "beamformee_sts_le_80": 4,
+    "beamformee_sts_gt_80": 3,
+    "ul_mu_mimo": 2,
+    "ul_ofdma": 1,
+    "dl_ofdma": 0,
+}
+WIFI6_FEATURE_BITS = {
+    "rts": 7,
+    "mu_rts": 6,
+    "multi_bssid": 5,
+    "mu_edca": 4,
+    "twt_requester": 3,
+    "twt_responder": 2,
+    "spatial_reuse": 1,
+    "anticipated_channel_usage": 0,
+}
 
 
 class Unavailable(Exception):
@@ -34,6 +58,7 @@ def unavailable():
     return {
         "technology": missing("basic_capability_context_unavailable"),
         "device_inventory": missing("basic_capability_context_unavailable"),
+        "wifi6": missing("basic_capability_context_unavailable"),
     }
 
 
@@ -133,6 +158,106 @@ def _technology(profile, observed):
     return values
 
 
+def _wifi6_role(row):
+    # Scope policy: initial service mapping supports the <=80 MHz IEEE pair.
+    # Wider field layouts work in the codec but their target context is unaudited.
+    mcs = row["mcs"]
+    require(
+        mcs["mhz160"] is None and mcs["mhz80plus80"] is None,
+        "wifi6_wider_context_review_pending",
+    )
+    pair = mcs["up_to_80"]
+    for codes in (pair["rx_codes"], pair["tx_codes"]):
+        require(
+            len(codes) == 8 and all(type(c) is int and 0 <= c <= 3 for c in codes),
+            "invalid_wifi6_mcs_codes",
+        )
+        require(any(c != 3 for c in codes), "wifi6_direction_has_no_supported_nss")
+    features = row["features"]
+    beamforming = _bits(features, WIFI6_BEAMFORMING_BITS)
+    general = _bits(features, WIFI6_FEATURE_BITS)
+    require(not features["beamformee_sts_gt_80"], "wifi6_width_feature_mismatch")
+    # These bits describe complete EasyMesh configuration/reporting behavior,
+    # not just hardware support. No such adapter procedures exist yet.
+    require(
+        not features["spatial_reuse"] and not features["anticipated_channel_usage"],
+        "wifi6_adapter_feature_unimplemented",
+    )
+    limits = row["ap_user_limits"]
+    for name, maximum in (
+        ("dl_mu_mimo_tx", 15),
+        ("ul_mu_mimo_rx", 15),
+        ("dl_ofdma_tx", 255),
+        ("ul_ofdma_rx", 255),
+    ):
+        n = limits[name]
+        require(type(n) is int and 0 <= n <= maximum, "invalid_wifi6_user_limit")
+    if row["role"] == "non_ap_sta":
+        # Table 95 defines these user counts for AP operation. Local inputs must
+        # leave them zero for a STA; do not infer that zero is a normative rule.
+        require(not any(limits.values()), "wifi6_sta_ap_limits_not_zero")
+    else:
+        for name, feature in (
+            ("dl_mu_mimo_tx", "mu_beamformer"),
+            ("ul_mu_mimo_rx", "ul_mu_mimo"),
+            ("dl_ofdma_tx", "dl_ofdma"),
+            ("ul_ofdma_rx", "ul_ofdma"),
+        ):
+            require((limits[name] > 0) == features[feature], "wifi6_ap_limit_feature_mismatch")
+    return Wifi6Role(
+        {"ap": 0, "non_ap_sta": 1}[row["role"]],
+        HESupportedMCS(HEMCSPair(tuple(pair["rx_codes"]), tuple(pair["tx_codes"]))),
+        beamforming,
+        (limits["dl_mu_mimo_tx"] << 4) | limits["ul_mu_mimo_rx"],
+        limits["dl_ofdma_tx"],
+        limits["ul_ofdma_rx"],
+        general,
+    )
+
+
+def _wifi6(profile, observed):
+    extensions = profile.get("extensions", {})
+    technology = extensions.get("technology")
+    require(technology is not None, "technology_input_not_configured")
+    _inventory(technology, observed)
+    for row in technology:
+        _evidence(profile, row["evidence_id"], "technology")
+        require(type(row["he"]) is bool, "wifi6_he_support_unknown")
+    he_radios = {r["radio_id"] for r in technology if r["he"]}
+    rows = extensions.get("wifi6")
+    if rows is None:
+        require(not he_radios, "wifi6_input_not_configured")
+        return []
+    require(
+        len({r["radio_id"] for r in rows}) == len(rows)
+        and {r["radio_id"] for r in rows} == he_radios,
+        "wifi6_radio_inventory_mismatch",
+    )
+    values = []
+    for row in sorted(rows, key=lambda r: r["radio_id"]):
+        _evidence(profile, row["evidence_id"], "wifi6")
+        require(row["complete_role_inventory"], "wifi6_role_inventory_incomplete")
+        roles = row["roles"]
+        identifiers = {r["role"] for r in roles}
+        require(len(identifiers) == len(roles), "wifi6_duplicate_role")
+        radio = next(r for r in observed if r["radio_id"] == row["radio_id"])
+        modes = {i["mode"] for i in radio["interfaces"]}
+        require("ap" not in modes or "ap" in identifiers, "wifi6_observed_ap_role_missing")
+        require(
+            "sta" not in modes or "non_ap_sta" in identifiers,
+            "wifi6_observed_sta_role_missing",
+        )
+        values.append(
+            _value(
+                APWifi6Capabilities(
+                    bytes.fromhex(radio["ruid"].replace(":", "")),
+                    tuple(_wifi6_role(r) for r in sorted(roles, key=lambda r: r["role"])),
+                )
+            )
+        )
+    return values
+
+
 def _text(value):
     # Synthetic OVSDB/profile strings use explicit UTF-8; Table 99's codec
     # remains byte preserving and does not impose this as a normative charset.
@@ -174,6 +299,7 @@ def project(profile, observed, node):
     for name, build in (
         ("technology", lambda: _technology(profile, observed)),
         ("device_inventory", lambda: _device(profile, observed, node)),
+        ("wifi6", lambda: _wifi6(profile, observed)),
     ):
         try:
             result[name] = {"ready": True, "blockers": [], "values": build()}

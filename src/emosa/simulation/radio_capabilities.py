@@ -68,12 +68,82 @@ def fixture_extensions(binding):
     }
 
 
-def fixture_profile(binding, schema_fingerprint, *, now=None, with_extensions=False):
+def fixture_wifi6(binding):
+    """Invented role capabilities, not facts inferred from OVSDB or hwsim."""
+    radios = []
+    for radio in binding["topology"]["radios"]:
+        ap = {
+            "role": "ap",
+            "mcs": {
+                "up_to_80": {
+                    "rx_codes": [2, 1, 0, 3, 3, 3, 3, 3],
+                    "tx_codes": [1, 2, 3, 3, 3, 3, 3, 3],
+                },
+                "mhz160": None,
+                "mhz80plus80": None,
+            },
+            "features": {
+                "su_beamformer": True,
+                "su_beamformee": False,
+                "mu_beamformer": True,
+                "beamformee_sts_le_80": False,
+                "beamformee_sts_gt_80": False,
+                "ul_mu_mimo": True,
+                "ul_ofdma": True,
+                "dl_ofdma": True,
+                "rts": True,
+                "mu_rts": True,
+                "multi_bssid": False,
+                "mu_edca": False,
+                "twt_requester": False,
+                "twt_responder": True,
+                "spatial_reuse": False,
+                "anticipated_channel_usage": False,
+            },
+            "ap_user_limits": {
+                "dl_mu_mimo_tx": 2,
+                "ul_mu_mimo_rx": 3,
+                "dl_ofdma_tx": 18,
+                "ul_ofdma_rx": 9,
+            },
+        }
+        roles = [ap]
+        if any(i["mode"] == "sta" for i in radio["interfaces"]):
+            sta = copy.deepcopy(ap)
+            sta["role"] = "non_ap_sta"
+            sta["mcs"]["up_to_80"] = {
+                "rx_codes": [1, 3, 3, 3, 3, 3, 3, 3],
+                "tx_codes": [2, 3, 3, 3, 3, 3, 3, 3],
+            }
+            sta["features"].update(
+                su_beamformer=False,
+                su_beamformee=True,
+                mu_beamformer=False,
+                twt_requester=True,
+                twt_responder=False,
+            )
+            sta["ap_user_limits"] = dict.fromkeys(sta["ap_user_limits"], 0)
+            roles.append(sta)
+        radios.append(
+            {
+                "radio_id": radio["radio_id"],
+                "evidence_id": "synthetic-radio-contract",
+                "complete_role_inventory": True,
+                "roles": roles,
+            }
+        )
+    return radios
+
+
+def fixture_profile(
+    binding, schema_fingerprint, *, now=None, with_extensions=False, with_wifi6=False
+):
     """Explicit invented lab capacities, independent of observed BSS/channel counts.
 
     This helper is exclusively for our owned two-radio fixture, never hardware.
     """
     now = now or datetime.now(UTC)
+    with_extensions = with_extensions or with_wifi6
     radios = []
     for radio in binding["topology"]["radios"]:
         first = radio["radio_id"] == "radio-1"
@@ -114,6 +184,10 @@ def fixture_profile(binding, schema_fingerprint, *, now=None, with_extensions=Fa
     }
     if with_extensions:
         evidence["extensions"] = fixture_extensions(binding)
+    if with_wifi6:
+        evidence["extensions"]["wifi6"] = fixture_wifi6(binding)
+        for row in evidence["extensions"]["technology"]:
+            row["he"] = True
     evidence_bytes = (json.dumps(evidence, indent=2) + "\n").encode()
     profile = {
         "schema_version": 1,
@@ -144,20 +218,25 @@ def fixture_profile(binding, schema_fingerprint, *, now=None, with_extensions=Fa
     if with_extensions:
         profile["extensions"] = copy.deepcopy(evidence["extensions"])
         profile["evidence"][0]["covers"] += ["technology", "device_inventory"]
+    if with_wifi6:
+        profile["evidence"][0]["covers"].append("wifi6")
     validate("radio-capabilities", profile)
     return profile, evidence_bytes
 
 
-def write_inputs(directory, binding, fingerprint, *, with_extensions=False):
+def write_inputs(directory, binding, fingerprint, *, with_extensions=False, with_wifi6=False):
     directory.mkdir(mode=0o700)
-    profile, evidence = fixture_profile(binding, fingerprint, with_extensions=with_extensions)
+    profile, evidence = fixture_profile(
+        binding, fingerprint, with_extensions=with_extensions, with_wifi6=with_wifi6
+    )
     path = directory / "capabilities.json"
     write_json(path, profile)
     (directory / profile["evidence"][0]["file"]).write_bytes(evidence)
     return {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
-async def run(directory, *, with_extensions=False):
+async def run(directory, *, with_extensions=False, with_wifi6=False):
+    with_extensions = with_extensions or with_wifi6
     directory = directory.resolve()
     directory.mkdir(parents=True, mode=0o700, exist_ok=False)
     databases = [SimDatabase(), SimDatabase()]
@@ -180,6 +259,7 @@ async def run(directory, *, with_extensions=False):
         "radio_behavior_proven": False,
         "stages": {},
         "selected_technology_and_inventory_inputs": with_extensions,
+        "selected_wifi6_inputs": with_wifi6,
     }
     stages = report["stages"]
 
@@ -243,6 +323,7 @@ async def run(directory, *, with_extensions=False):
                 canonical_binding(pod),
                 raw["schema"].fingerprint,
                 with_extensions=with_extensions,
+                with_wifi6=with_wifi6,
             )
         write_json(config_path, config)
         load("config", config_path)
@@ -254,8 +335,14 @@ async def run(directory, *, with_extensions=False):
             assert all(
                 r["extensions"][name]["ready"]
                 for r in stages["connected"]
-                for name in ("technology", "device_inventory")
+                for name in ("wifi6", "device_inventory")
             )
+            for r in stages["connected"]:
+                technology = r["extensions"]["technology"]
+                assert technology["ready"] is (not with_wifi6)
+                if with_wifi6:
+                    assert technology["values"] == []
+                    assert technology["blockers"] == ["he_and_wifi6_mapping_pending"]
         stages["cli_ready"] = await cli(0)
         profile_path = Path(config["pods"][0]["radio_capabilities"]["path"])
         original = profile_path.read_bytes()
@@ -295,6 +382,8 @@ async def run(directory, *, with_extensions=False):
             != stages["connected"][0]["adapter_instance_id"]
         )
         assert stages["other_pod_unchanged"]["radios"] == stages["connected"][1]["radios"]
+        for stage in ("other_pod_unchanged", "other_pod_while_disconnected"):
+            assert stages[stage]["extensions"] == stages["connected"][1]["extensions"]
         assert all(
             not s["radios"]
             for s in stages.values()
@@ -329,8 +418,15 @@ def main():
         action="store_true",
         help="include synthetic HT/VHT and Device Inventory inputs",
     )
+    parser.add_argument(
+        "--with-wifi6",
+        action="store_true",
+        help="include synthetic HE support and per-role Wi-Fi 6 inputs; implies --with-extensions",
+    )
     args = parser.parse_args()
-    result = asyncio.run(run(args.output, with_extensions=args.with_extensions))
+    result = asyncio.run(
+        run(args.output, with_extensions=args.with_extensions, with_wifi6=args.with_wifi6)
+    )
     print(
         json.dumps(
             {

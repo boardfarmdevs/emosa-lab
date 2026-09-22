@@ -93,11 +93,12 @@
                 "max_bss",
                 "complete_operating_classes",
                 "technology",
-                "device_inventory"
+                "device_inventory",
+                "wifi6"
               ]
             },
             "minItems": 4,
-            "maxItems": 6,
+            "maxItems": 7,
             "uniqueItems": true,
             "allOf": [
               {
@@ -426,6 +427,197 @@
             "radios"
           ],
           "additionalProperties": false
+        },
+        "wifi6": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "properties": {
+              "radio_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "evidence_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "complete_role_inventory": {
+                "type": "boolean"
+              },
+              "roles": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 2,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "enum": [
+                        "ap",
+                        "non_ap_sta"
+                      ]
+                    },
+                    "mcs": {
+                      "type": "object",
+                      "properties": {
+                        "up_to_80": {
+                          "$ref": "#/$defs/he_mcs_pair"
+                        },
+                        "mhz160": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/$defs/he_mcs_pair"
+                            }
+                          ]
+                        },
+                        "mhz80plus80": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/$defs/he_mcs_pair"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "up_to_80",
+                        "mhz160",
+                        "mhz80plus80"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "features": {
+                      "type": "object",
+                      "properties": {
+                        "su_beamformer": {
+                          "type": "boolean"
+                        },
+                        "su_beamformee": {
+                          "type": "boolean"
+                        },
+                        "mu_beamformer": {
+                          "type": "boolean"
+                        },
+                        "beamformee_sts_le_80": {
+                          "type": "boolean"
+                        },
+                        "beamformee_sts_gt_80": {
+                          "type": "boolean"
+                        },
+                        "ul_mu_mimo": {
+                          "type": "boolean"
+                        },
+                        "ul_ofdma": {
+                          "type": "boolean"
+                        },
+                        "dl_ofdma": {
+                          "type": "boolean"
+                        },
+                        "rts": {
+                          "type": "boolean"
+                        },
+                        "mu_rts": {
+                          "type": "boolean"
+                        },
+                        "multi_bssid": {
+                          "type": "boolean"
+                        },
+                        "mu_edca": {
+                          "type": "boolean"
+                        },
+                        "twt_requester": {
+                          "type": "boolean"
+                        },
+                        "twt_responder": {
+                          "type": "boolean"
+                        },
+                        "spatial_reuse": {
+                          "type": "boolean"
+                        },
+                        "anticipated_channel_usage": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "su_beamformer",
+                        "su_beamformee",
+                        "mu_beamformer",
+                        "beamformee_sts_le_80",
+                        "beamformee_sts_gt_80",
+                        "ul_mu_mimo",
+                        "ul_ofdma",
+                        "dl_ofdma",
+                        "rts",
+                        "mu_rts",
+                        "multi_bssid",
+                        "mu_edca",
+                        "twt_requester",
+                        "twt_responder",
+                        "spatial_reuse",
+                        "anticipated_channel_usage"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "ap_user_limits": {
+                      "type": "object",
+                      "properties": {
+                        "dl_mu_mimo_tx": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 15
+                        },
+                        "ul_mu_mimo_rx": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 15
+                        },
+                        "dl_ofdma_tx": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "ul_ofdma_rx": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        }
+                      },
+                      "required": [
+                        "dl_mu_mimo_tx",
+                        "ul_mu_mimo_rx",
+                        "dl_ofdma_tx",
+                        "ul_ofdma_rx"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "mcs",
+                    "features",
+                    "ap_user_limits"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "radio_id",
+              "evidence_id",
+              "complete_role_inventory",
+              "roles"
+            ],
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false,
@@ -445,5 +637,37 @@
     "evidence",
     "radios"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "he_mcs_pair": {
+      "type": "object",
+      "properties": {
+        "rx_codes": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          }
+        },
+        "tx_codes": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          }
+        }
+      },
+      "required": [
+        "rx_codes",
+        "tx_codes"
+      ],
+      "additionalProperties": false
+    }
+  }
 }

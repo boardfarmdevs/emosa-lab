@@ -37,7 +37,9 @@ Profile-2 AP and Radio Advanced value codecs and counter-unit decisions are
 tested independently; they do not implement the features they describe.
 The [technology/inventory extension](../guides/technology-inventory.md) now maps
 explicit synthetic HT/VHT and Device Inventory inputs through the read-only
-two-pod service. Next are reviewed HE conversion and Wi-Fi 6 companion inputs,
+two-pod service. The [Wi-Fi 6 role exercise](../guides/wifi6-inputs.md) also maps
+evidence-bound synthetic AP/STA capabilities, without making complete HE
+reporting ready. Next are reviewed `0x88` conversion and independent peer vectors,
 remaining mandatory functions/clause review and the native peer profile mismatch. Actual capability
 qualification needs a named pod. Complete IEEE message processing remains
 P0-dependent.

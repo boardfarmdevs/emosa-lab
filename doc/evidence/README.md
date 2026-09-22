@@ -21,6 +21,7 @@ for navigation and commands.
 | Retained model/OVSDB scenarios | [Run directories](runs/) and the [interactive explorer](https://boardfarmdevs.github.io/emosa-lab/#evidence) |
 | WSC components | [M1/M2 evidence](wsc-messages.json) and [radio interpretation](wsc-radio.json) |
 | EasyMesh value components | [Codec, CLI and independent native-capture checks](easymesh-payloads/summary.json) |
+| Wi-Fi 6 role inputs through the service | [Two-pod mapping, withdrawal and installed-wheel checks](wifi6-inputs/summary.json) |
 | HE/Wi-Fi 6 components and native source review | [Value checks, compatibility findings and limits](he-wifi6/summary.json) |
 | Complete synthetic observed topology | [Stable bindings, full graph checks and two-pod service recovery](observed-topology/summary.json) |
 

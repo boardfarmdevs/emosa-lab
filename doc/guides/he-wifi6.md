@@ -143,14 +143,16 @@ qualified replacement build.
 Run `uv run emosa-lab profile-audit --format markdown`. Exit **5** still means
 the full advertised profile is blocked. The Wi-Fi 6 row now has a value codec,
 but no qualified mapped value. The read-only radio-capability service still
-blocks technology readiness when HE support is true or unknown: its complete
-HE/Wi-Fi 6 input mapping has not been implemented. Hardware support alone also
+blocks complete technology readiness when HE support is true or unknown:
+its `0x88` conversion is unfinished. The [Wi-Fi 6 input exercise](wifi6-inputs.md)
+now maps explicit synthetic AP/STA declarations to `0xAA` values through a
+separate service result, with up-to-80 MHz scope and independent readiness. Hardware support alone also
 cannot justify features such as spatial reuse or anticipated channel usage
 when the adapter cannot perform the associated configuration/reporting.
 
 The next useful work is to resolve the `0x88` conversion with independent,
-asymmetric examples, then add evidence-backed per-role HE/Wi-Fi 6 inputs and
-atomic report projection. In parallel, qualify a native peer/profile and BSS
+asymmetric examples or publisher clarification, then combine it with the
+implemented Wi-Fi 6 companion mapping into atomic HE technology projection. In parallel, qualify a native peer/profile and BSS
 policy intersection: changing a profile number alone does not implement its
 mandatory features, and the retained two-M2-plus-M8 request exceeds the current
 narrow projection. The [acquisition checklist](../protocol/specification-acquisition.md)

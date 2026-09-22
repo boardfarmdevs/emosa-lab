@@ -175,8 +175,37 @@ field meanings. Class 128's center-channel numbers are distinct from primary
 channels. No management-frame parser or driver-capability inference is added.
 
 The HE field remains opaque: normalized Tx/Rx ordering and independent asymmetric
-vectors need further work, together with the required Wi-Fi 6 companion. Old
+vectors need further work. The required Wi-Fi 6 companion now has a
+[selected synthetic role mapper](../guides/wifi6-inputs.md) with its own readiness
+result; this cannot make the complete HE technology set ready. Old
 native dissector labels are cross-check material, not authority. Inventory
 strings retain their original octets; synthetic UTF-8 input is an explicit local
 representation. Current serial/firmware matching cannot prove lifetime identity,
 active-image semantics or the execution environment on physical firmware.
+
+
+## Unresolved HE field reordering
+
+EasyMesh 6.1 §17.2.10 Table 33 names a Tx/Rx HE MCS support field and requires
+big-endian reordering. The reviewed IEEE 802.11-2024 Figure 9-901 field is a
+sequence of little-endian Rx/Tx map words, with optional width pairs. The
+selected references do not yet give this implementation an unambiguous reviewed
+choice of reordering group. The pinned native implementation reverses each
+four-octet pair on its little-endian host; that is an implementation observation,
+not sufficient normative authority to select the conversion.
+
+For the invented IEEE bytes `e41bc6e4fafffdffc0fff6ff`, the choices differ:
+
+| Comparison operation | Resulting octets |
+| --- | --- |
+| Reverse each two-octet map word | `1be4e4c6fffafffdffc0fff6` |
+| Reverse each four-octet Rx/Tx pair | `e4c61be4fffdfffafff6ffc0` |
+| Reverse the entire twelve-octet field | `fff6ffc0fffdfffae4c61be4` |
+
+These are comparison examples, **not selected `0x88` encodings**. A publisher
+clarification or authoritative worked example must resolve map direction and
+width-group order for all 4/8/12-octet cases; an independent asymmetric peer
+example can then cross-check the result. Repeating the same symmetric native
+sample cannot distinguish these choices. The mapper continues withholding the
+entire HE technology set. The separately referenced Figure-9-901 representation
+in Table 95 supports the bounded `0xAA` role mapping without resolving Table 33.

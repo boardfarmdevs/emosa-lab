@@ -148,7 +148,8 @@
     "EasyMesh 6.1 section 17.1.3 points to IEEE section 6.3.8 for WSC, while its section 6.1 uses that IEEE pointer for the autoconfiguration response. Verify the WSC base clause from IEEE rather than silently correcting the reference.",
     "EasyMesh 6.1 section 9.1, section 17.1.7 and section 18 must be read together to resolve feature-conditional reporting for the proposed Profile-1 subset.",
     "Section 6.2 Topology Query prose references Profile-2 AP Capability in a Search message; preserve the reference and resolve any needed interpretation before freezing the query contract.",
-    "Section 6.1 requires Profile-2 AP Capability in the stated Profile-1 Search case although section 17.1.1 does not list it. See the available procedure audit."
+    "Section 6.1 requires Profile-2 AP Capability in the stated Profile-1 Search case although section 17.1.1 does not list it. See the available procedure audit.",
+    "EasyMesh 6.1 Table 33 does not yet provide an unambiguous reviewed conversion from IEEE 802.11-2024 Figure 9-901: resolve map-word versus Rx/Tx-pair versus whole-field reordering, direction and width-group order for 4/8/12 octets using publisher clarification/authoritative examples; then independent peer cross-check. See procedure-audit.md."
   ],
   "independent_references": [
     {
@@ -895,7 +896,8 @@
       "Native peer profile mismatch resolution",
       "IEEE 1905 base/amendment review and full wire exchange integration"
     ],
-    "extension_guide": "doc/guides/technology-inventory.md"
+    "extension_guide": "doc/guides/technology-inventory.md",
+    "extension_scope": "Selected HT/VHT, Device Inventory and independent Wi-Fi 6 companion mapping; complete HE set pending"
   },
   "profile_readiness_audit": {
     "status": "requirement_families_and_selected_feature_conditions_reviewed",
@@ -957,7 +959,7 @@
     "controller_onboarding_proven": false,
     "physical_pod_proven": false,
     "remaining_gaps": [
-      "Reviewed 0x88 conversion, independent asymmetric positive peer evidence and complete HE/Wi-Fi 6 service inputs; standalone 0xaa codec now exists",
+      "Reviewed 0x88 conversion and independent asymmetric positive peer evidence; selected <=80 MHz Wi-Fi 6 role mapping exists separately",
       "Independent VHT target evidence; remaining complete technology/width contexts",
       "Actual serial lifetime, active-image/environment semantics and chipset evidence",
       "Complete capability report/profile and IEEE message processing"
@@ -982,13 +984,53 @@
     "interpretation": "0xaa directly uses Figure 9-901 Rx then Tx little-endian maps; 0x88 Table 33 conversion remains opaque/pending",
     "remaining_gaps": [
       "Independent positive asymmetric Wi-Fi 6 peer vectors and compatibility review",
-      "Complete per-role normalized HE/Wi-Fi 6 inputs and 0x88 conversion",
+      "0x88 conversion, wider role contexts and physical qualification; selected up-to-80 MHz synthetic Wi-Fi 6 role mapping now exists",
       "Native controller profile intersection, HE-without-VHT length bug and native pair reordering",
       "Remaining AP capability/profile requirements including Metric Collection Interval"
     ],
     "procedure_gate_satisfied": false,
     "profile_advertisement_ready": false,
     "controller_onboarding_proven": false,
-    "physical_pod_proven": false
+    "physical_pod_proven": false,
+    "service_projection": "doc/guides/wifi6-inputs.md"
+  },
+  "synthetic_wifi6_role_projection": {
+    "status": "implemented_selected_simulation_diagnostics_only",
+    "guide": "doc/guides/wifi6-inputs.md",
+    "implementation": "src/emosa/capability_extensions.py",
+    "input_schema": "schemas/radio-capabilities.schema.json",
+    "evidence": "doc/evidence/wifi6-inputs/summary.json",
+    "tests": [
+      "tests/test_wifi6_projection.py",
+      "tests/test_radio_capability_service.py"
+    ],
+    "normative_sections": [
+      "EasyMesh 6.1 section 17.2.72 Table 95 pp.169-170; section 9.1 pp.79-80",
+      "IEEE 802.11-2024 section 9.2.2 p.656; section 9.4.2.247.4 Figure 9-901 / Tables 9-377-378 pp.1455-1457"
+    ],
+    "scope": "Evidence-bound AP/non-AP STA roles using up-to-80 MHz maps; independent extensions.wifi6 readiness; all declared HE radios or no values; full HE technology set remains blocked",
+    "input_checks": [
+      "Exact declared HE radio set, explicit complete unique roles and evidence covers wifi6",
+      "Every observed AP/STA mode represented; role capability is distinct from active link",
+      "Strict eight-code Rx/Tx maps, explicit feature flags and AP limits",
+      "Fresh parent topology/device/regulatory context, hashes and validity on every request"
+    ],
+    "local_mapping_policies": [
+      "No 160 or 80+80 MHz target context yet, although standalone codecs support those fields",
+      "At least one supported NSS in each direction; AP user counts consistent with corresponding MU-MIMO/OFDMA flags",
+      "AP-only user limits zero for non-AP STA declarations",
+      "Spatial reuse and anticipated channel usage false because complete adapter procedures are unimplemented"
+    ],
+    "procedure_gate_satisfied": false,
+    "complete_ap_capability_report": false,
+    "qualified_easymesh_profile": null,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "remaining_gaps": [
+      "Unambiguous reviewed 0x88 conversion and independent positive asymmetric peer examples",
+      "Combined complete HE technology/report procedure and wider feature contexts",
+      "Native profile/request/capability compatibility and IEEE 1905 processing",
+      "Actual unchanged-pod capability evidence and independently observed behavior"
+    ]
   }
 }

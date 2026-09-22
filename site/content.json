@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Standalone Wi-Fi 6 and IEEE HE MCS codecs are checked. Next: resolve 0x88 conversion and per-role inputs, native profile/length compatibility, complete report/profile requirements and IEEE processing.",
+      "next": "Selected Wi-Fi 6 role inputs now map through the read-only two-pod service. Next: resolve 0x88 conversion and independent peer vectors, complete HE/report procedures, native compatibility and IEEE processing.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -531,10 +531,22 @@
       "title": "HE and Wi-Fi 6 component evidence",
       "category": "Service and protocol integration",
       "description": "Source-derived asymmetric checks, two independent dissector versions, native source findings and installed-wheel smoke; onboarding remains pending."
+    },
+    {
+      "path": "doc/guides/wifi6-inputs.md",
+      "title": "Wi-Fi 6 role inputs through the service",
+      "category": "Service and protocol integration",
+      "description": "Declare AP/STA roles and evidence, run two simulated pods, interpret separate readiness and test withdrawal and crash recovery."
+    },
+    {
+      "path": "doc/evidence/wifi6-inputs/summary.json",
+      "title": "Wi-Fi 6 role mapping evidence",
+      "category": "Service and protocol integration",
+      "description": "Exact asymmetric role values, input failures, two-pod isolation and installed-wheel recovery; complete HE reporting and physical onboarding remain pending."
     }
   ],
   "suite_evidence": {
-    "unit": "he-wifi6/unit-results.xml",
-    "ovsdb": "he-wifi6/ovsdb-results.xml"
+    "unit": "wifi6-inputs/unit-results.xml",
+    "ovsdb": "wifi6-inputs/ovsdb-results.xml"
   }
 }

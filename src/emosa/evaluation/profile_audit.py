@@ -251,7 +251,7 @@ def audit(features=None):
                 (
                     "HE 0x88 MCS conversion and complete normalized HE/Wi-Fi 6 mapping pending"
                     if kind == "0x88"
-                    else "Standalone codec exists; qualified per-role inputs and mapping pending"
+                    else "Synthetic <=80 MHz role mapper exists; qualified physical inputs pending"
                     if kind == "0xaa"
                     else "Planning only; qualify feature behavior and truthful inputs"
                 ),

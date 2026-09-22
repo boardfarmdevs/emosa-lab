@@ -2882,8 +2882,9 @@ The walkthrough explains the generated input files and how to inspect the report
 Read `extensions.technology` and `extensions.device_inventory` separately from
 top-level Basic readiness. Unknown inputs block their extension. HE support
 currently blocks technology mapping because the IEEE-to-EasyMesh MCS conversion
-and complete Wi-Fi 6 companion input mapping are unfinished; offline `0x88`
-inspection preserves the HE bytes without guessing their meaning. No extension qualifies a full report,
+for `0x88` remains unfinished; its offline inspection preserves the HE bytes
+without guessing their meaning. The companion now has a separate Wi-Fi 6 mapping,
+covered below. No extension qualifies a full report,
 profile or physical pod. The demonstration stops its services when finished.
 
 ### 13.6 Inspect HE MCS maps and Wi-Fi 6 roles
@@ -2907,10 +2908,23 @@ reproduce the native peer's zero-length negative case. The values are invented
 layout examples; they are not truthful capabilities for a pod. A valid field
 also does not establish any of the three false wire/onboarding/physical flags.
 
-This adds the standalone Wi-Fi 6 codec. The separate `0x88` HE conversion and
-complete per-role input mapping remain pending, so the service's HE readiness
-gate remains in place. The guide also explains the source findings behind the
-native profile/length incompatibilities and the next controlled peer-build work.
+The [Wi-Fi 6 input walkthrough](wifi6-inputs.md) continues from that codec to
+evidence-bound role mapping through the actual service. On HOST, with disposable
+OVSDB installed and a fresh output directory:
+
+```bash
+uv run python -m emosa.simulation.radio_capabilities \
+  --with-wifi6 --output .lab/wifi6-role-first
+```
+
+The exercise connects two simulated pods, maps AP/STA role capabilities, checks
+withdrawal when inputs or observations change, and verifies crash recovery.
+Expect `extensions.wifi6.ready: true` but `extensions.technology.ready: false`:
+the `0xAA` companion is available, while its required `0x88` HE partner remains
+unfinished. Top-level readiness and CLI exit 0 cover Basic capabilities only.
+The walkthrough explains all three results, the input fields and the local
+mapping limits. No full report, advertised profile or physical capability is
+qualified by this run. Native profile/length compatibility work remains separate.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

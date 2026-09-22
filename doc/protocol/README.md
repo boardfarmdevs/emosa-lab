@@ -12,6 +12,7 @@
 | [Profile readiness and feature values](profile-readiness.md) | Inspect mandatory-function gaps, conditional report obligations, AP/Profile-2/Advanced capability bits and counter-unit decisions |
 | [Technology and Device Inventory mapping](../guides/technology-inventory.md) | Selected technology codecs, explicit synthetic input mapping and HE conversion limits |
 | [HE MCS and Wi-Fi 6 capability values](../guides/he-wifi6.md) | Inspect direction/width/role fields, reproduce a native negative case and understand remaining report/peer gaps |
+| [Wi-Fi 6 role inputs through the service](../guides/wifi6-inputs.md) | Map explicit AP/STA capabilities, inspect separate readiness, and test two-pod withdrawal/isolation/crash recovery |
 | [WSC cryptographic component](wsc-component.md) | Bounded cryptography, independent vectors and validation limits |
 | [WSC M1/M2 payloads](wsc-messages.md) | Payload construction, authentication and required-field checks |
 | [WSC radio interpretation](wsc-radio.md) | Authenticated BSS roles, teardown and complete-radio admission |

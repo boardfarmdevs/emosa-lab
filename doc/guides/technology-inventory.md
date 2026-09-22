@@ -87,10 +87,12 @@ independent asymmetric examples. Older dissector labels do not settle it.
 The codec accepts MCS-field lengths of 4, 8 or 12 octets. It reports whether the
 length matches the 160 MHz and 80+80 MHz flags; the encoder rejects a mismatch.
 It does not identify the individual Tx/Rx maps or infer their supported MCSs.
-A future service mapper must also supply the required **Wi-Fi 6 Capabilities
+A complete HE service mapper must also supply the required **Wi-Fi 6 Capabilities
 value (`0xAA`)** when HE is supported. A working `0x88` codec alone is insufficient.
 The [HE/Wi-Fi 6 walkthrough](he-wifi6.md) now provides that standalone codec
-and an IEEE MCS field parser; complete service inputs and mapping remain pending.
+and an IEEE MCS field parser. The [Wi-Fi 6 input exercise](wifi6-inputs.md)
+now maps explicit role inputs in a separate service section; the full HE set
+stays blocked until the `0x88` conversion is resolved.
 
 ## 4. Run the complete local service demonstration
 
@@ -234,7 +236,7 @@ and selected Table E-4 classes. Exact references and limitations accompany the
 [codec provenance](../../tests/fixtures/protocol/easymesh/provenance.json).
 
 Next, resolve the HE conversion using independently derived asymmetric examples,
-implement the Wi-Fi 6 companion inputs and continue the complete capability-report
+combine it with the selected Wi-Fi 6 companion mapping and continue the complete capability-report
 and profile procedure audit. Full wire processing still requires IEEE 1905.1-2013
 and IEEE 1905.1a-2014. Actual pod access and qualification remain pending.
 The acceptance path remains **real EasyMesh messages → EMOSA adapter → unchanged

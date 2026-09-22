@@ -1406,6 +1406,56 @@
       "path": "he-wifi6/wheel-smoke.json",
       "sha256": "9fd5bc4ab08834accbb8c8a2c80e40a92b02bede5c663aa4963bf027c8b1edcc",
       "size": 589
+    },
+    {
+      "path": "wifi6-inputs/browser-result.json",
+      "sha256": "419cb38022626e8df8d9f201ba2d27c9dca4a10b32eee0bf82d345b47d569787",
+      "size": 227
+    },
+    {
+      "path": "wifi6-inputs/inputs/pod-1/capabilities.json",
+      "sha256": "55820794b98c3a6096617ccca5c06848d2d143898414053dc80a0425d583c9ed",
+      "size": 8863
+    },
+    {
+      "path": "wifi6-inputs/inputs/pod-1/synthetic-radio-contract.json",
+      "sha256": "d09c40d701874a6f52982f3fd23028d7e6ab6fbf161b6c7e105ab1c9f495c3b2",
+      "size": 8226
+    },
+    {
+      "path": "wifi6-inputs/inputs/pod-2/capabilities.json",
+      "sha256": "a8b3c593a7a6246318a17b0df7e29fe39ff0752563fadb38efc241c8a0ff700f",
+      "size": 8863
+    },
+    {
+      "path": "wifi6-inputs/inputs/pod-2/synthetic-radio-contract.json",
+      "sha256": "8e243d2ae57842135dff0f92c4d9a1f05578a4d0d2d9cbdacd5bfb7b43ccb370",
+      "size": 8226
+    },
+    {
+      "path": "wifi6-inputs/ovsdb-results.xml",
+      "sha256": "479149b56cc957b749b5eddb40419d3481c8c53bc71357234a8835d3542faa80",
+      "size": 5379
+    },
+    {
+      "path": "wifi6-inputs/service-report.json",
+      "sha256": "66740a191da6b9ca10090f461ab6e5169f4c5ffa99203fde2c54c7fd3728bc30",
+      "size": 118488
+    },
+    {
+      "path": "wifi6-inputs/summary.json",
+      "sha256": "e25657c798860b9d5b68e5439d0dd33fda47fb378a338250a480ecebf1eabe02",
+      "size": 5099
+    },
+    {
+      "path": "wifi6-inputs/unit-results.xml",
+      "sha256": "8aae5013fc32d5ea93233b7ee52279d2e873bfae749d60ca36d8ee6ec8f28747",
+      "size": 91997
+    },
+    {
+      "path": "wifi6-inputs/wheel-smoke.json",
+      "sha256": "ab772d53261c455931ab4d2c6de8847cbdd3a0f0392f5b379520d273b4ededbe",
+      "size": 890
     }
   ]
 }

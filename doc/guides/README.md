@@ -14,6 +14,7 @@
 | [Profile-readiness walkthrough](../protocol/profile-readiness.md) | Distinguish a working component from a qualified profile, audit feature conditions and inspect feature/counter-unit values offline |
 | [Technology and Device Inventory](technology-inventory.md) | Map explicit HT/VHT and inventory claims through two simulated pods; understand opaque HE and separate readiness results |
 | [HE MCS and Wi-Fi 6 capability values](he-wifi6.md) | Inspect direction/width/role fields, reproduce a native negative case and understand remaining report/peer gaps |
+| [Wi-Fi 6 role inputs through the service](wifi6-inputs.md) | Map explicit AP/STA capabilities, inspect separate readiness, and test two-pod withdrawal/isolation/crash recovery |
 | [Read-only physical-pod qualification](pod-qualification.md) | Prepare private local connection inputs, collect an actual schema/inventory and supply useful root-pod/cloud captures |
 
 For the distinction between the adapter, its virtual-agent role and the native
