@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-09-22T05:34:44.289961+00:00",
+  "base_revision": "428ed61b6947142c77621934ecba6aeef502f84f",
+  "scope": "Evidence-bound synthetic Wi-Fi 6 AP/non-AP STA role mapping through a read-only two-pod service; complete HE technology set withheld",
+  "working_tree_sha256": {
+    "schemas/radio-capabilities.schema.json": "493f4e559b5dec6d49d972494234e735fc48a95a5f70dcbd03b9b3121cf063ed",
+    "src/emosa/capability_extensions.py": "8bf59c818aa5716f3f72bf7feda4b7d69e9ea8c6f208c04a108d0649957631c6",
+    "src/emosa/evaluation/profile_audit.py": "94e04ad3bd7d89d5846bf23d3bb4300fcb9ce9c0e0bb59dff1271a8bf9ac15fd",
+    "src/emosa/radio_capabilities.py": "15d5a988fd196713cbaee635f1828f420b9f6af968bf2dbd3475d202b0d2dd09",
+    "src/emosa/simulation/radio_capabilities.py": "c4305d7cbe67ee39d69a418463d135e30f1013a141b5d4e16b107185d3d7777a",
+    "tests/test_radio_capability_service.py": "c2fef7c7097e6d705b6d937914e30ccf977687eff47182c5ef6fc8ec165caa2c",
+    "tests/test_wifi6_projection.py": "848abdbdd39ab3d29fe643e315450da3f4f04bfdc115a5822f73d77308c2e402",
+    "uv.lock": "4e61b047439d7320aa55032e1d59690845af09dddd2d20e6269e4cbc32f32894"
+  },
+  "guide": "doc/guides/wifi6-inputs.md",
+  "service_report": "doc/evidence/wifi6-inputs/service-report.json",
+  "tests": {
+    "unit": 658,
+    "ovsdb": 41,
+    "wifi6_projection": 47,
+    "radio_capability_service": 3
+  },
+  "junit_curation": {
+    "unit": {
+      "raw_sha256": "ba31cfea733351e00e52a26bf50573adbd168887ffceaf7c6c13cd26b111267d",
+      "long_names_replaced": 5,
+      "transformation": "Replace testcase names over 256 characters with function and original-name digest; preserve counts, outcomes and timing"
+    },
+    "ovsdb": {
+      "raw_sha256": "7164d3b0d3ae004a8bf01c766b315247585fd217f6412b05046b142f6a212f0d",
+      "long_names_replaced": 0,
+      "transformation": "Replace testcase names over 256 characters with function and original-name digest; preserve counts, outcomes and timing"
+    }
+  },
+  "observed": {
+    "configured_pods": 2,
+    "radios_per_pod": 2,
+    "mapped_type": "0xaa",
+    "roles_per_radio": [
+      [
+        "ap"
+      ],
+      [
+        "ap",
+        "non_ap_sta"
+      ]
+    ],
+    "role_width_scope": "up_to_80_mhz",
+    "wifi6_ready": true,
+    "technology_ready": false,
+    "device_inventory_ready": true,
+    "technology_blocker": "he_and_wifi6_mapping_pending",
+    "stages": [
+      "connected",
+      "cli_ready",
+      "profile_changed",
+      "cli_blocked",
+      "other_pod_unchanged",
+      "evidence_changed",
+      "country_changed",
+      "firmware_changed",
+      "disconnected",
+      "other_pod_while_disconnected",
+      "reconnected",
+      "restarted"
+    ],
+    "adapter_write_mode": "read-only",
+    "monitored_tables_match_after_fixture_fault_restoration": true
+  },
+  "verification": {
+    "ruff_lint": "pass",
+    "ruff_format": "pass",
+    "unit": "pass",
+    "ovsdb": "pass",
+    "installed_wheel": "Two-pod role projection, input/context withdrawal, isolation, reconnect and actual process-crash recovery pass outside checkout with packaged contracts/schema",
+    "documentation_links_and_references": 640,
+    "shell_blocks_syntax_checked": 148,
+    "explorer_browser": {
+      "passed": true,
+      "checked_source_targets": 88,
+      "all_architecture_nodes": 8,
+      "all_lab_modes": 5,
+      "retained_runs": 6,
+      "documentation_index": true,
+      "viewports": [
+        "1440x1100",
+        "390x844"
+      ],
+      "errors": []
+    }
+  },
+  "publication_review": "Synthetic role declarations, already public fixture identities, lifecycle/outcomes and curated test results only; no private connection files, credentials, databases/logs, endpoints, physical captures or licensed extracts",
+  "p0_satisfied": false,
+  "complete_ap_capability_report": false,
+  "qualified_easymesh_profile": null,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "pod_accessed": false,
+  "native_runtime_modified": false,
+  "limits": [
+    "Hashes identify declared material and cannot prove physical hardware capabilities",
+    "0x88 conversion unresolved; selected 0xaa companion mapping cannot qualify the complete HE/report set",
+    "No 160/80+80 MHz target context, spatial reuse or ACU configuration/reporting; explicit local policies are not normative exclusions",
+    "Positive normalized role examples are primary-source-derived synthetic inputs; independent qualifying positive peer vectors remain pending",
+    "Native profile/request compatibility, complete IEEE 1905 processing, physical qualification and independent client proof remain pending"
+  ],
+  "acceptance_path": [
+    "real EasyMesh messages",
+    "EMOSA adapter",
+    "unchanged physical pod",
+    "independently observed behavior"
+  ],
+  "next": "Obtain authoritative clarification/examples for Table 33 conversion and independent asymmetric peer checks; combine complete HE technology set; continue peer/profile and report dependencies while exact IEEE 1905 editions and physical inputs are pending"
+}

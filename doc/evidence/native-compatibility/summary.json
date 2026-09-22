@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "reviewed_utc": "2026-09-22T06:10:52.872548+00:00",
+  "base_revision": "9dc3723cb10a7f8cdd953f5e49cf7dced7b9f48d",
+  "scope": "Isolated native libbwl HE-length fix and sole-fronthaul wired controller policy; no EMOSA/native wire integration",
+  "working_tree_sha256": {
+    "deploy/peer-baseline/compatibility/he-length.cpp": "991d04bde3b705f17ed51604c9ccd94d0cf083f88bea4d8df59e8180b8f876d6",
+    "deploy/peer-baseline/compatibility/check-capture.py": "9c515d4193ba568cf6f4d551640be4f93f5de0a399239413992016647ebf8626",
+    "deploy/peer-baseline/compatibility/build.sh": "e595f5ef580b5c30ab5e4602d735009f14f9602c002fd0fdbeeb34bb24b3875c",
+    "deploy/peer-baseline/compatibility/run.py": "43142879aaf7a325293979eb6e2298ff8d75005c1082304f0306a708895fb158",
+    "deploy/peer-baseline/bwl-overlay/CMakeLists.txt": "9a8c18620f6fe47261af7e82c97e584930753f2b920b75e1faa520504caab0a6",
+    "deploy/peer-baseline/patches/0003-prplmesh-he-mcs-length.patch": "eddc5141abc8464671a269ebb1adbdee97a76bb7193ad8617c2b9913bcd4182d",
+    "deploy/peer-baseline/node.py": "6fe151976ff335a425f3923735ed4544b0ca0bbf23562b5694a083d0636fe10b",
+    "deploy/peer-baseline/run.py": "b1410bdf1c552cc989e93461085abf665b2e7dfb9530580610cc396ee1392ca3",
+    "tests/test_native_policy.py": "bea732fd46045bdf5009c6002440822563bfc4e03cd0270ebd7960a8f879aa3e",
+    ".github/workflows/checks.yml": "9c6c8953c802e8294daa106f11ca615eae05f4db4e03ee7009276f784b76a0fc"
+  },
+  "candidate_library_sha256": "20c15dd8122f51511423b55445a14c368ffa7e0dbea5d24ba5a0ddc0be151bd5",
+  "restored_baseline_library_sha256": "0dfa6fab56238bf0817c9a3299e671ab6ca66798858179b9262dd3d285d261b1",
+  "native_executables_reference": "deploy/peer/prplmesh.reference.json",
+  "build_provenance": "build-provenance.json",
+  "build_sequence_note": "Fresh isolated build; subsequent whitespace-only patch normalization and a stronger repeated-iftype test were rebuilt. Retained final source, patch, probe and library hashes identify tested bytes. build.sh now automates the separately executed before/after regression commands.",
+  "tests": {
+    "unit": 666,
+    "ovsdb": 41,
+    "native_policy_unit_cases": 8,
+    "actual_native_parser_cases": 9,
+    "old_library_passed": 3,
+    "old_library_failed": 6,
+    "candidate_library_passed": 9
+  },
+  "junit_curation": {
+    "unit": {
+      "raw_sha256": "694eec26b1f9a69671d4e5b0b0614c7f0c287fb46526276417f8d035f4ce8794",
+      "long_names_replaced": 5,
+      "transformation": "Names over 256 characters replaced by function and original-name digest; outcomes/counts/timing preserved"
+    },
+    "ovsdb": {
+      "raw_sha256": "bdefaa4f01de5d393e89abed828104ca151bd206bb688d3584ea4ffd421592ed",
+      "long_names_replaced": 0,
+      "transformation": "Names over 256 characters replaced by function and original-name digest; outcomes/counts/timing preserved"
+    }
+  },
+  "native_attempts": [
+    {
+      "label": "candidate-sole-fronthaul-01",
+      "outcome": "preflight_reference_mismatch",
+      "runtime_changed": false
+    },
+    {
+      "label": "candidate-sole-fronthaul-02",
+      "outcome": "failed_duplicate_eth1_attachment",
+      "baseline_restored": true
+    },
+    {
+      "label": "candidate-sole-fronthaul-03",
+      "outcome": "functional_pass",
+      "baseline_restored": true,
+      "abnormal_shutdown": true
+    },
+    {
+      "label": "candidate-sole-fronthaul-04",
+      "outcome": "functional_pass",
+      "baseline_restored": true,
+      "abnormal_shutdown": true
+    }
+  ],
+  "observed": {
+    "clean_native_wired_passes": 2,
+    "external_agent_bss_count": 1,
+    "m2_count_per_selected_request": 1,
+    "m8_count_per_selected_request": 0,
+    "ap_and_sta_mcs_lengths": [
+      4,
+      4
+    ],
+    "search_profile": 2,
+    "response_profile": 1,
+    "independent_clients": [
+      "wired container eth1",
+      "wpa_supplicant container wlan0 pinned BSSID"
+    ],
+    "post_client_stability_seconds": 30,
+    "fresh_client_probes_after_stability": true,
+    "baseline_restored": true,
+    "owned_native_services_stopped": true
+  },
+  "native_harness_note": "Each run retains its executed harness hashes. The final stricter inventory row-count check was also replayed against both saved inventories and passed; the Python unit suite covers one/two-BSS policy checks.",
+  "independent_capture_checks": [
+    "TShark 3.6.2",
+    "TShark 4.2.2"
+  ],
+  "wire_gate": {
+    "verdict": "blocked",
+    "operations": 0,
+    "semantic_fallback": false
+  },
+  "five_step_status": {
+    "native_peer_compatibility": "length_fixed_and_policy_tested_profile_ordering_shutdown_pending",
+    "first_complete_experiment": "defined_in_doc/guides/first-wire-experiment.md",
+    "complete_capabilities": "selected_components_tested_normative_ambiguities_and_mandatory_dependencies_pending",
+    "wire_exchange": "pending_IEEE_inputs_review_and_I3_I4_implementation",
+    "physical_pod": "readonly_collector_and_examples_ready_private_connection_pending"
+  },
+  "remaining": [
+    "Native Profile-2 Search/Profile-1 Response mismatch and mandatory behavior review",
+    "HE 0x88 ordering clarification; native 0xAA MCS semantics/ordering not qualified",
+    "Data Elements 3.0 CollectionInterval and WFA Security Requirements access/revision",
+    "Exact IEEE 1905.1-2013 and IEEE 1905.1a-2014 full texts and complete wire implementation",
+    "Actual pod connection, schema/mapping/writer/recovery/client qualification",
+    "Native shutdown SIGABRT"
+  ],
+  "full_protocol_conformance": false,
+  "candidate_promoted_to_qualified_profile": false,
+  "emosa_wire_onboarding": false,
+  "physical_pod_accessed": false,
+  "physical_acceptance_proven": false,
+  "acceptance_path": "real EasyMesh messages -> EMOSA adapter -> unchanged physical pod -> independently observed behavior",
+  "documentation": {
+    "browser": "browser-result.json",
+    "checks": "documentation-checks.json",
+    "guides": [
+      "doc/guides/native-compatibility.md",
+      "doc/guides/first-wire-experiment.md"
+    ]
+  },
+  "candidate_value_cli_structural_decode": "passed; raw MCS semantics/order remain unqualified"
+}

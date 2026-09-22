@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checked_source_targets": 82,
+  "all_architecture_nodes": 8,
+  "all_lab_modes": 5,
+  "retained_runs": 6,
+  "documentation_index": true,
+  "viewports": [
+    "1440x1100",
+    "390x844"
+  ],
+  "errors": []
+}

@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-09-22T04:36:42.719049+00:00",
+  "base_revision": "6c56853e64a1de624c0db47ad40ec343bee4376a",
+  "scope": "Selected HT/VHT and Device Inventory values through evidence-bound read-only two-pod service; opaque HE inspection only",
+  "working_tree_sha256": {
+    "schemas/radio-capabilities.schema.json": "da50ee570c49fbd3c45f7ea33dfbff30fbfbfcbbc8b4e1744ef20063a8a28076",
+    "scripts/check-easymesh-reference.py": "8ba14438faab1dd30deab2af3770e5bd3a671d6c60d9acda4758660175914be9",
+    "src/emosa/capability_extensions.py": "16847dc816050df18c1acee62338edddff3827c95873788358bf44a52c4c72de",
+    "src/emosa/easymesh_payloads.py": "580c9a8f71949d5063bc3370fc2347f5be864018239ba6a2428b7ead0d236c6e",
+    "src/emosa/evaluation/payloads.py": "8fb5c609d3f94356a494d6e6b65b95e77a1a181531884aaac7f3196e687a9c02",
+    "src/emosa/evaluation/profile_audit.py": "346acf9e378bda06bda335067c78d0fe4ad3d21bb8d9e0bea1d30662a3161581",
+    "src/emosa/operating_classes.py": "83f00162a2e5d4ac2f728cd14e626de9af5a4c4d5b829902a75293b48f575c1a",
+    "src/emosa/radio_capabilities.py": "c7ddabdb652ee32a689ecda6902de3f98e9d4ff75e34dce81ada86e85e7dacdc",
+    "src/emosa/simulation/radio_capabilities.py": "955e3df97cea23e891a2489bbd1159692c4de12f4c5e11a12cc0ea2d303fb083",
+    "tests/fixtures/protocol/easymesh/native-values.json": "b8a585f041b12161afde58bb69adf80d29a55783e125ee8d2514e8a6c99edbd3",
+    "tests/fixtures/protocol/easymesh/provenance.json": "ebd7d9aa7c270395179e4ddf794c326872ef95e543c16240a0db541eccfd48fe",
+    "tests/test_capability_extensions.py": "914cb3efb1668036a30e9749d01b93a2451f6b0c881961081c4a00bc96b54b0d",
+    "tests/test_radio_capabilities.py": "40cc012ba22b1ff791a7219c198bcfd5aef96c22705729be255d865b286ea538",
+    "tests/test_radio_capability_service.py": "49aad9f43948cc57b51a5984b662ac5138f86b36446f40951df9c35ddc0043f9",
+    "tests/test_technology_values.py": "4884d205c165f605d1d5db66e9591b8b27c4db060699a03a632c1c0b0d88e200",
+    "uv.lock": "4e61b047439d7320aa55032e1d59690845af09dddd2d20e6269e4cbc32f32894"
+  },
+  "tests": {
+    "unit": 571,
+    "ovsdb": 40,
+    "base_value_codec": 93,
+    "technology_values": 44,
+    "capability_extensions": 38,
+    "radio_capability_service": 2
+  },
+  "junit_curation": {
+    "unit": {
+      "raw_sha256": "86347267e495d4040cfb3542d580e1cf0288caa7bb05572e01749d245454f51d",
+      "long_names_replaced": 5,
+      "transformation": "Replace testcase names over 256 characters with function and original-name digest; preserve counts, outcomes and timing"
+    },
+    "ovsdb": {
+      "raw_sha256": "eb592b7230c401a3e8ae39c27f6563f39b06fbe9dba64714331c4224a677728d",
+      "long_names_replaced": 0,
+      "transformation": "Replace testcase names over 256 characters with function and original-name digest; preserve counts, outcomes and timing"
+    }
+  },
+  "guide": "doc/guides/technology-inventory.md",
+  "service_report": "doc/evidence/technology-inventory/service-report.json",
+  "observed": {
+    "configured_pods": 2,
+    "radios_per_pod": 2,
+    "mapped_types": [
+      "0x86",
+      "0x87",
+      "0xd4"
+    ],
+    "he_codec": "opaque MCS bytes with explicit mapping-pending metadata",
+    "synthetic_he_support": false,
+    "audited_classes": [
+      81,
+      82,
+      83,
+      84,
+      115,
+      116,
+      117,
+      128
+    ],
+    "center_channels_distinguished_from_primary": true,
+    "stages": [
+      "connected",
+      "cli_ready",
+      "profile_changed",
+      "cli_blocked",
+      "other_pod_unchanged",
+      "evidence_changed",
+      "country_changed",
+      "firmware_changed",
+      "disconnected",
+      "other_pod_while_disconnected",
+      "reconnected",
+      "restarted"
+    ],
+    "adapter_write_mode": "read-only",
+    "monitored_tables_match_after_fixture_fault_restoration": true,
+    "basic_and_extension_readiness_separate": true
+  },
+  "verification": {
+    "ruff_lint": "pass",
+    "ruff_format": "pass",
+    "unit": "pass",
+    "ovsdb": "pass",
+    "native_tshark_3_6_2": "20 values match",
+    "native_tshark_4_2_2": "20 values match",
+    "installed_wheel": "pass two-pod extended service outside checkout with isolated Python and packaged contracts/schema",
+    "documentation_links_and_references": 600,
+    "shell_blocks_syntax_checked": 139,
+    "explorer_browser": {
+      "passed": true,
+      "checked_source_targets": 84,
+      "all_architecture_nodes": 8,
+      "all_lab_modes": 5,
+      "retained_runs": 6,
+      "documentation_index": true,
+      "viewports": [
+        "1440x1100",
+        "390x844"
+      ],
+      "errors": []
+    }
+  },
+  "publication_review": "Explicit synthetic technology/inventory inputs, value bytes, service lifecycle, hashes and curated test results only; no endpoint, private connection configuration, credentials, database/journal/log files or licensed document extracts published",
+  "p0_satisfied": false,
+  "complete_ap_capability_report": false,
+  "qualified_easymesh_profile": null,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "pod_accessed": false,
+  "limits": [
+    "Hashes identify declared evidence bytes, not hardware truth or attestation",
+    "HE MCS ordering/conversion and mandatory Wi-Fi 6 companion remain pending; HE support cannot make service technology mapping ready",
+    "Native fixture includes HT/opaque HE/inventory but no VHT; source-derived asymmetric VHT tests are not independent target evidence",
+    "160/80+80 MHz service mapping, EHT/Wi-Fi 7, extended NSS/driver contexts and full capability reporting remain unqualified",
+    "Inventory execution environment and chipset vendors are declared synthetic inputs, not observed pod fields; serial lifetime and active-image semantics need physical qualification",
+    "No IEEE envelope, controller exchange, profile advertisement or new write authority"
+  ],
+  "acceptance_path": [
+    "real EasyMesh messages",
+    "EMOSA adapter",
+    "unchanged physical pod",
+    "independently observed behavior"
+  ],
+  "next": "Review HE conversion using asymmetric independent vectors, add Wi-Fi 6 companion inputs, continue complete capability/profile procedure review and resolve native profile compatibility; acquire IEEE 1905 editions and qualify actual pod"
+}

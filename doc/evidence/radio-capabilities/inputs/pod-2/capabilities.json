@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "source_kind": "synthetic_fixture",
+  "pod_id": "pod-2",
+  "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+  "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+  "device": {
+    "model": "EMOSA synthetic extender",
+    "firmware_version": "simulation-only"
+  },
+  "issued_at": "2026-09-22T03:42:20.269204Z",
+  "expires_at": "2026-09-23T03:43:20.269204Z",
+  "complete_operating_class_inventory": true,
+  "evidence": [
+    {
+      "id": "synthetic-radio-contract",
+      "file": "synthetic-radio-contract.json",
+      "sha256": "d9883ea7870a037541900b422adcc9da97578f5f990df5f4133474a0622172fe",
+      "review_note": "Synthetic fixture declaration only; not physical qualification",
+      "covers": [
+        "device_identity",
+        "regulatory_domain",
+        "max_bss",
+        "complete_operating_classes"
+      ]
+    }
+  ],
+  "radios": [
+    {
+      "radio_id": "radio-1",
+      "ruid": "02:00:00:02:40:01",
+      "country": "US",
+      "max_bss": 4,
+      "operating_classes": [
+        {
+          "operating_class": 115,
+          "max_eirp_dbm": 20,
+          "non_operable_channels": []
+        }
+      ],
+      "evidence_id": "synthetic-radio-contract"
+    },
+    {
+      "radio_id": "radio-2",
+      "ruid": "02:00:00:02:40:02",
+      "country": "US",
+      "max_bss": 2,
+      "operating_classes": [
+        {
+          "operating_class": 81,
+          "max_eirp_dbm": 17,
+          "non_operable_channels": [
+            12,
+            13
+          ]
+        },
+        {
+          "operating_class": 83,
+          "max_eirp_dbm": 17,
+          "non_operable_channels": []
+        },
+        {
+          "operating_class": 84,
+          "max_eirp_dbm": 17,
+          "non_operable_channels": [
+            12,
+            13
+          ]
+        }
+      ],
+      "evidence_id": "synthetic-radio-contract"
+    }
+  ]
+}

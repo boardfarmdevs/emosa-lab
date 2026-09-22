@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "execution": "installed wheel with isolated Python outside checkout",
+  "wheel_sha256": "f80e918205f86b0c96e653dbd889a9c571fca47297c579c28cdc11be047513a9",
+  "packaged_contract_and_schema_used": true,
+  "two_pod_service_extensions": true,
+  "observed_tables_unchanged": true,
+  "reconnect_and_restart": true,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

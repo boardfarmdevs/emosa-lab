@@ -4,6 +4,12 @@ Reviewed 2026-09-15 against architecture 3.6, especially WIRE-01, WIRE-07,
 WIRE-08 and the P0 gate. The machine-readable record is
 [protocol-matrix.json](protocol-matrix.json).
 
+Update 2026-09-21: operator-supplied 802.11-2024 and 802.3-2022 PDFs are now
+verified and hashed. See the [bounded media-clause review](ieee-media-review.md)
+for what was inspected and the unresolved 2015/2022 Ethernet edition decision.
+The IEEE 1905 base and amendment remain missing; the historical research below
+does not imply that the newly supplied radio document is still unavailable.
+
 **P0 remains blocked.** The Wi-Fi Alliance documents below were obtained from
 its public publisher site. IEEE full text, a complete rule matrix and independent
 vectors are still missing. The proposed editions and profile are not a frozen

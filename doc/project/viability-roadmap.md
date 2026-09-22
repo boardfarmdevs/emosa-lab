@@ -4,6 +4,53 @@ The critical milestone is **real EasyMesh messages → EMOSA adapter → unchang
 physical pod → independently observed behavior**. Neither an OVSDB component pass
 nor a successful hwsim association completes that objective.
 
+The [service integration walkthrough](../guides/service-integration.md) now
+provides a two-pod service exercise, actual process-crash recovery with hwsim
+clients, and live native-controller preparation. The
+[retained results](../evidence/service-integration/summary.json) keep semantic
+initiation separate from the absent EMOSA wire exchange. The
+[available WFA audit](../protocol/procedure-audit.md) advances the contract while
+the exact IEEE base/amendment inputs remain pending.
+
+The [onboarding readiness checks](../guides/onboarding-readiness.md) now add
+strict synthetic sole-radio scope admission and offline review of native captures.
+The scope passed an actual-service hwsim/client run. Both native captures expose
+a Profile-2 Search/Profile-1 Response mismatch against the proposed 6.1 discovery
+rule and a two-M2-plus-M8 request outside the narrow mapping. Resolve the named
+controller policy/build intersection alongside P0. These observations do not
+select a fully qualified profile or enable the missing wire connection.
+
+The [isolated compatibility experiment](../guides/native-compatibility.md) now
+fixes the candidate HAL's HE MCS length and records two clean native wired runs
+with one agent BSS, one M2 and no M8. Independent clients passed; original
+libraries were restored. Profile 2/1 mismatch, MCS ordering and native shutdown
+abort remain open. The [first complete wire experiment contract](../guides/first-wire-experiment.md)
+defines the next causal integration and its five-step completion status.
+
+The [EasyMesh value components](../protocol/easymesh-payloads.md) now implement
+service lists, Radio Identifier, Operational BSS and profile values, with an
+offline inspection CLI and independent native-capture checks. The
+[observed-topology exercise](../guides/observed-topology.md) now pins explicit
+per-pod radio/VIF identities in the local journal, validates the full observed
+graph and builds an Operational BSS value without transmission. It survives
+UUID recreation and actual service restart with two simulated pods. The
+[radio-capability exercise](../guides/radio-capabilities.md) now adds explicit
+synthetic capacity/class/EIRP inputs, evidence hashes, validity windows and a
+read-only mapping that withdraws values on changed inputs, firmware, country or
+topology. It does not qualify physical claims or a complete AP Capability Report.
+The [profile-readiness report](../protocol/profile-readiness.md) now inventories
+15 requirement families and selected feature-dependent obligations. AP,
+Profile-2 AP and Radio Advanced value codecs and counter-unit decisions are
+tested independently; they do not implement the features they describe.
+The [technology/inventory extension](../guides/technology-inventory.md) now maps
+explicit synthetic HT/VHT and Device Inventory inputs through the read-only
+two-pod service. The [Wi-Fi 6 role exercise](../guides/wifi6-inputs.md) also maps
+evidence-bound synthetic AP/STA capabilities, without making complete HE
+reporting ready. Next are reviewed `0x88` conversion and independent peer vectors,
+remaining mandatory functions/clause review and the native peer profile mismatch. Actual capability
+qualification needs a named pod. Complete IEEE message processing remains
+P0-dependent.
+
 The user-facing proof is specifically **an EasyMesh controller discovers and
 onboards an OpenSync extender as another EasyMesh agent, represented by the
 adapter around the controller**. The extender remains an OpenSync device;

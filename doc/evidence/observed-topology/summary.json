@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-09-22T03:08:02.866180+00:00",
+  "base_revision": "2c0c4e3bbc470836c89c578c72a76dc76607d309",
+  "scope": "Explicit persisted synthetic radio/VIF identities and complete State-derived AP Operational BSS value through one read-only adapter and two real OVSDB simulations",
+  "working_tree_sha256": {
+    "src/emosa/topology_bindings.py": "82174d78632a9275fd95b76b57c21ef5aee7e0195a35cb79b12e04d27a1cf839",
+    "src/emosa/opensync/topology.py": "c7715579c934ef1d443ef83587a9e030952701523d49d654fccf5b61fc42fac4",
+    "src/emosa/agents.py": "497215db4705675fa4f40c72572c1bb71206e828acf831f4cf96ae700e1ac530",
+    "src/emosa/app.py": "fc3c6536d333db0961b1089eb5b81162324392918685318b25f5bda0ce603ded",
+    "src/emosa/cli.py": "96afad81493464fdc03a479a7685c8535be2964bdc0fb05768d17d804acbfa3e",
+    "src/emosa/store.py": "76399f0136bac8eb83a3f443ddfbdcfc4adc21603ad7672d77d6700e32f96bc0",
+    "src/emosa/opensync/mapping.py": "0ceb907b4fc339c5d3684a51d48e5cf69ef7a475b9760a45cbccfc8b16113b63",
+    "src/emosa/opensync/schema.py": "34d22e1ab36e59793108e35c36efdb26bef5990b2b9e45fcc64902bbedc96738",
+    "src/emosa/simulation/database.py": "f7c83446be2210f946fda5243dea2e9e638f713c539948afad46ca8210623074",
+    "src/emosa/simulation/radio.py": "aedf5ba00df0784dce13734a6fd4721ee1ef40ac17b90609e0bdfabda9348c5e",
+    "src/emosa/simulation/topology.py": "aba6a379095db7bc3759924752a65e9de1c143a2ab5a4ca74e08a0c8c6344d88",
+    "schemas/config.schema.json": "11a13c7df8f50c3dffc3b96ab32cd5e38c6adf95b5ebc1b7780cc26b01f2f8f8",
+    "schemas/local-api.schema.json": "1b3fa0f6e5fd228cdfe2b1fceeed17b6ee232a0a24b780cb670ebe22661b5af6",
+    "tests/test_topology.py": "e9ddc407bd4c5385a1f72845e74660c6654b52405d489f92c381a76189d904bf",
+    "tests/test_topology_service.py": "791b17e682afe874238548d8ca87121b694069df56d9d07179822f3c3679049c",
+    "examples/topology/single-radio.json": "49a9f922969637faa1ee2091b73be7b00bb0cf73aff63fd1b2abb17b5b3fd1a0",
+    "uv.lock": "4e61b047439d7320aa55032e1d59690845af09dddd2d20e6269e4cbc32f32894"
+  },
+  "tests": {
+    "unit": 323,
+    "ovsdb": 38,
+    "topology_unit": 49,
+    "topology_service": 1
+  },
+  "junit_curation": {
+    "unit": {
+      "raw_sha256": "fd03595f4b7196e74c76a6c4bc588294a42bd1e89624ebe236a3c7cd110d4110",
+      "long_names_replaced": 5,
+      "transformation": "Replace testcase names over 256 characters with function and original-name digest; retain outcomes, counts and timing"
+    },
+    "ovsdb": {
+      "raw_sha256": "9f52bc7fbdfe4e32856031a27579ec27a351ff790614973e98aa1055de7902ec",
+      "long_names_replaced": 0,
+      "transformation": "Replace testcase names over 256 characters with function and original-name digest; retain outcomes, counts and timing"
+    }
+  },
+  "guide": "doc/guides/observed-topology.md",
+  "service_report": "doc/evidence/observed-topology/service-report.json",
+  "observed": {
+    "configured_pods": 2,
+    "radios_per_pod": 2,
+    "interfaces_per_pod": 4,
+    "ap_bsses_per_pod": 3,
+    "stations_per_pod": 1,
+    "fixture_uuid_recreation": {
+      "rows_recreated": 12,
+      "all_uuids_changed": true
+    },
+    "cli_exit_codes": [
+      0,
+      5
+    ],
+    "stages": [
+      "connected",
+      "cli_ready",
+      "config_only",
+      "manager_applied",
+      "other_pod_unchanged",
+      "unexpected_interface",
+      "cli_blocked",
+      "disconnected",
+      "other_pod_while_disconnected",
+      "uuid_recreation",
+      "reconnected",
+      "restarted"
+    ],
+    "adapter_write_mode": "read-only"
+  },
+  "verification": {
+    "ruff_lint": "pass",
+    "ruff_format": "pass",
+    "sdist_wheel": "built",
+    "installed_wheel_demo": "pass outside checkout with isolated Python and packaged schema/contracts",
+    "documentation_links_and_references": 527,
+    "shell_blocks_syntax_checked": 117,
+    "explorer_browser": "desktop/mobile pass, 78 source targets, eight architecture nodes, five modes, six retained runs"
+  },
+  "publication_review": "Only simulated fixture MACs/SSIDs, logical IDs, snapshot metadata, digests and process lifecycle. No private configuration, credentials, journal, endpoints or adapter logs published. SSID hex is intentionally retained synthetic data, not anonymization.",
+  "p0_satisfied": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "pod_accessed": false,
+  "limits": [
+    "Local simulation identities and serial cross-checks are not physical attestation",
+    "Complete radio/VIF graph is not a complete IEEE Topology Response or physical-link topology",
+    "No wire messages, profile/capability inference, MLD qualification or new actuation authority",
+    "Identity migration/retirement command not implemented; changed bindings rejected and removed allocations reserved"
+  ],
+  "acceptance_path": [
+    "real EasyMesh messages",
+    "EMOSA adapter",
+    "unchanged physical pod",
+    "independently observed behavior"
+  ],
+  "next": "Qualified capability inputs and field mapping; complete profile and IEEE procedure review; actual controller onboarding and physical qualification"
+}

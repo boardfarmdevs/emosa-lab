@@ -1,0 +1,130 @@
+{
+  "em-baseline-controller": [
+    {
+      "unit": "agent",
+      "before": {
+        "MainPID": "7088",
+        "ActiveState": "active"
+      },
+      "after": {
+        "Result": "core-dump",
+        "ExecMainStatus": "6"
+      }
+    },
+    {
+      "unit": "controller",
+      "before": {
+        "MainPID": "7081",
+        "ActiveState": "active"
+      },
+      "after": {
+        "Result": "core-dump",
+        "ExecMainStatus": "6"
+      }
+    },
+    {
+      "unit": "transport",
+      "before": {
+        "MainPID": "7077",
+        "ActiveState": "active"
+      },
+      "after": {
+        "Result": "success",
+        "ExecMainStatus": "0"
+      }
+    },
+    {
+      "unit": "bus",
+      "before": {
+        "MainPID": "7073",
+        "ActiveState": "active"
+      },
+      "after": {
+        "Result": "success",
+        "ExecMainStatus": "0"
+      }
+    },
+    {
+      "unit": "hostap",
+      "before": {
+        "MainPID": "7059",
+        "ActiveState": "active"
+      },
+      "after": {
+        "Result": "success",
+        "ExecMainStatus": "0"
+      }
+    },
+    {
+      "unit": "data",
+      "before": {
+        "MainPID": "7131",
+        "ActiveState": "active"
+      },
+      "after": {
+        "Result": "success",
+        "ExecMainStatus": "0"
+      }
+    }
+  ],
+  "em-baseline-agent": [
+    {
+      "unit": "agent",
+      "before": {
+        "MainPID": "8038",
+        "ActiveState": "active"
+      },
+      "after": {
+        "Result": "core-dump",
+        "ExecMainStatus": "6"
+      }
+    },
+    {
+      "unit": "transport",
+      "before": {
+        "MainPID": "8032",
+        "ActiveState": "active"
+      },
+      "after": {
+        "Result": "success",
+        "ExecMainStatus": "0"
+      }
+    },
+    {
+      "unit": "bus",
+      "before": {
+        "MainPID": "8028",
+        "ActiveState": "active"
+      },
+      "after": {
+        "Result": "success",
+        "ExecMainStatus": "0"
+      }
+    },
+    {
+      "unit": "hostap",
+      "before": {
+        "MainPID": "8020",
+        "ActiveState": "active"
+      },
+      "after": {
+        "Result": "success",
+        "ExecMainStatus": "0"
+      }
+    }
+  ],
+  "em-baseline-wired": [],
+  "em-baseline-wifi": [
+    {
+      "unit": "client",
+      "before": {
+        "MainPID": "6704",
+        "ActiveState": "active"
+      },
+      "after": {
+        "Result": "success",
+        "ExecMainStatus": "0"
+      }
+    }
+  ]
+}

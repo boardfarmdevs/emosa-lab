@@ -1,0 +1,14 @@
+{
+  "source": "independent tshark decoding",
+  "beacon_counts": {
+    "emosa-radio-initial": 106,
+    "emosa-service-changed": 68,
+    "emosa-service-restarted": 69
+  },
+  "eapol_frames": 12,
+  "capture": {
+    "path": "radio.pcap",
+    "sha256": "55fdebeb8389ca18e30b4828f717797ebc285251d1dbf472fdd343f41049c8a8",
+    "size": 94782
+  }
+}

@@ -1,0 +1,9 @@
+he_without_vht observed=4 result=PASS
+he_with_vht observed=4 result=PASS
+he_160_without_vht observed=8 result=PASS
+he_160_with_vht observed=8 result=PASS
+he_both_wide_without_vht observed=12 result=PASS
+he_both_wide_with_vht observed=12 result=PASS
+two_iftypes observed=8 result=PASS
+split_repeated_band observed=4 result=PASS
+independent_bands observed=12,4 result=PASS

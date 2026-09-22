@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-09-22T02:17:44.659278+00:00",
+  "scope": "Five standalone EasyMesh TLV value codecs and offline CLI; no TLV headers, IEEE message processing, runtime advertisement or physical pod access",
+  "base_revision": "94d95b4bf9adac32fc8fde55aaaa569cb509cd37",
+  "working_tree_sha256": {
+    "src/emosa/easymesh_payloads.py": "6319b13365d05c2f5b22515dcf5fa93dea161fd1011f4337886e3ec1bdef7ceb",
+    "src/emosa/evaluation/payloads.py": "818c1685ac32c1b2392188174ad7a59effdee75c4a3e8f4cf5e3dd7a7c17cb51",
+    "src/emosa/evaluation/cli.py": "c2896ec4dab06a45865321802255dafee28c89bdc61a2a65a6f3947a3cd2333a",
+    "tests/test_easymesh_payloads.py": "58af8ce184dd74d2e9b9349f28d6fa697fecb58aabbbdaa2f75aa1f70ea475ef",
+    "scripts/check-easymesh-reference.py": "68cef4fc06d43605e5f5616752f501a775a938486c3190f399915a3796bfaeac",
+    "tests/fixtures/protocol/easymesh/native-values.json": "be1b6d67bb879dd040a0781e7dc6d8d5195dd6ce10ffcfaa7622f7506dc5fb96",
+    "tests/fixtures/protocol/easymesh/provenance.json": "7f4663e264fc80f60b466a91a9277fed854e59e5046f39bc2c5d335ebeb03091",
+    "doc/protocol/protocol-matrix.json": "77bd4a12e745ba9d965b5dc47d8754940b50e3b530e71f1a78660871ec02c7b9",
+    "uv.lock": "4e61b047439d7320aa55032e1d59690845af09dddd2d20e6269e4cbc32f32894",
+    ".github/workflows/checks.yml": "ab8d49494bd2bba09e621856826cf371ae0656b705d3f3c911aeab279294d784"
+  },
+  "rules": "doc/protocol/easymesh-payloads.md",
+  "tests": {
+    "unit": 274,
+    "ovsdb": 37,
+    "new_value_component": 71
+  },
+  "independent_reference": {
+    "fixture": "tests/fixtures/protocol/easymesh/provenance.json",
+    "cases": 9,
+    "tshark_versions": [
+      "3.6.2",
+      "4.2.2"
+    ],
+    "both_match": true,
+    "imports_emosa": false,
+    "full_protocol_conformance": false
+  },
+  "native_observation": {
+    "capture": "doc/evidence/peer-baseline/samples/wired/ethernet.pcap",
+    "frames": [
+      1,
+      20
+    ],
+    "type": "0x80",
+    "reserved_service": "0xa1",
+    "interpretation": "Reserved under EasyMesh 6.1 sections 3.1.2 and 17.2.1; preserved for diagnostics, ignored as a role, prohibited by encoder; not a full sender conformance assessment"
+  },
+  "validation": {
+    "ruff_lint": "pass",
+    "ruff_format": "pass",
+    "sdist_wheel": "built",
+    "isolated_installed_wheel_cli": "pass",
+    "offline_cli_examples": "pass",
+    "documentation_links_and_references": 506,
+    "shell_blocks_syntax_checked": 109,
+    "site_browser": "pass: desktop/mobile, eight architecture nodes, five modes, six retained runs, 76 source targets"
+  },
+  "junit_curation": {
+    "unit": {
+      "raw_sha256": "4e7915bf0976cca60a13836294a229b21d25e6d463c48b828fc828b67297dc27",
+      "long_test_names_replaced": 5,
+      "transformation": "Names over 256 characters replaced by function name and SHA-256 of original name; assertions, counts, timing and outcomes preserved"
+    },
+    "ovsdb": {
+      "raw_sha256": "fd4f2a0988153f6baf39d9a6a67dd66fafa5f4cb77ede298b0f5f67b3ef6ebad",
+      "long_test_names_replaced": 0,
+      "transformation": "Names over 256 characters replaced by function name and SHA-256 of original name; assertions, counts, timing and outcomes preserved"
+    }
+  },
+  "wire_envelope_validated": false,
+  "controller_onboarding_by_emosa_proven": false,
+  "physical_pod_proven": false,
+  "pod_accessed": false,
+  "p0_satisfied": false,
+  "acceptance_path": [
+    "real EasyMesh messages",
+    "EMOSA adapter",
+    "unchanged physical pod",
+    "independently observed behavior"
+  ],
+  "remaining": [
+    "Stable qualified radio/BSS identities and complete observed topology projection",
+    "Truthful capability values and complete profile audit",
+    "IEEE 1905.1-2013 and IEEE 1905.1a-2014 full-text review and independent full-message vectors",
+    "Peer/exchange/radio binding, actual controller discovery/onboarding, and physical qualification"
+  ]
+}

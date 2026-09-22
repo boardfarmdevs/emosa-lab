@@ -1,0 +1,29 @@
+{
+  "evidence_level": "standalone_easymesh_tlv_value",
+  "type": "0x88",
+  "byte_length": 13,
+  "sha256": "c48b45887beaf809e6297a796817f875e8118adcac65d49235b1be42c5d17dc7",
+  "decoded": {
+    "ruid": "02:00:00:ec:02:00",
+    "stream_flags": 36,
+    "feature_flags": 54,
+    "max_tx_streams": 2,
+    "max_rx_streams": 2,
+    "reserved_bits": 0,
+    "mcs_hex": "00000040",
+    "mcs_interpretation": "opaque_mapping_pending",
+    "mcs_length_matches_width_flags": true,
+    "he8080": false,
+    "he160": false,
+    "su_beamformer": false,
+    "mu_beamformer": false,
+    "ul_mu_mimo": true,
+    "ul_mu_mimo_ofdma": true,
+    "dl_mu_mimo_ofdma": false,
+    "ul_ofdma": true,
+    "dl_ofdma": true
+  },
+  "wire_envelope_validated": false,
+  "controller_onboarding_by_emosa_proven": false,
+  "physical_pod_proven": false
+}

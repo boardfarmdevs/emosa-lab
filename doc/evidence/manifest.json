@@ -1021,6 +1021,616 @@
       "path": "connecting-pod/unit-results.xml",
       "sha256": "b4938252a517dfb2e3ceb945f60a26d39298f4ee557eb6a988fb72276282423a",
       "size": 4284777
+    },
+    {
+      "path": "service-integration/ovsdb-results.xml",
+      "sha256": "c404b80c4713cfda0b150864fbc69ba30c2b0178055f627eb20b2bd12faa05aa",
+      "size": 2742
+    },
+    {
+      "path": "service-integration/packet-observations.json",
+      "sha256": "71366aa8870fd126c8b97aab08165e07e390f2fc581595b86194c7df3f215153",
+      "size": 339
+    },
+    {
+      "path": "service-integration/summary.json",
+      "sha256": "b4d09a5bc1345b4d94827ee85d0c279566e74bb934a1c4dd2b7ae571a43b287f",
+      "size": 19267
+    },
+    {
+      "path": "service-integration/unit-results.xml",
+      "sha256": "0ff69af667db80d501a062db8959c1172f21c0ad316cc7c14daa67ad4aed18d4",
+      "size": 24872
+    },
+    {
+      "path": "onboarding-readiness/ovsdb-results.xml",
+      "sha256": "257a7dde08aeb07ef04c6ae4f40ba2248f83d9233e9f331c775a7577ba511b99",
+      "size": 4775
+    },
+    {
+      "path": "onboarding-readiness/radio-source-hashes.json",
+      "sha256": "2af2e9cdca3b6c765afa87f179d464b954e8dfe30d0325a8a288b0801877e34b",
+      "size": 5602
+    },
+    {
+      "path": "onboarding-readiness/summary.json",
+      "sha256": "ae1333fc5bd5078b92dd9546ada24f1a218fea6cef290cf42853a974ede58553",
+      "size": 10328
+    },
+    {
+      "path": "onboarding-readiness/unit-results.xml",
+      "sha256": "06b414b130c9ac28b4c840c74fe7caefa33d573781e70c38875660d5ec25eb5e",
+      "size": 27728
+    },
+    {
+      "path": "onboarding-readiness/wired-tshark-3.6.json",
+      "sha256": "844b8b5b735a2364e14a9e64d4703a7d1f91852c8132cd15f1c3b73d939c24c5",
+      "size": 2933
+    },
+    {
+      "path": "onboarding-readiness/wired-tshark-4.2.json",
+      "sha256": "92779e871fcadc52ea3cbf29ae7279bfe2e69deca06838c7f99aea61920a4ba2",
+      "size": 2942
+    },
+    {
+      "path": "onboarding-readiness/wireless-tshark-3.6.json",
+      "sha256": "8ef59c1eb5b92081dab5c68d1fab022ef035aaa961a9ecea9d342011ef4286a4",
+      "size": 2932
+    },
+    {
+      "path": "onboarding-readiness/wireless-tshark-4.2.json",
+      "sha256": "460b920c6119ea0e47aec11bf1ecff2c5f36cbbea18a643f2cf45ba8cadc8805",
+      "size": 2941
+    },
+    {
+      "path": "easymesh-payloads/browser-result.json",
+      "sha256": "30eb3c4701c59b3ca5da6d763749c5ff1f79821b18b9d2ffda93dbbf8a8bb00b",
+      "size": 227
+    },
+    {
+      "path": "easymesh-payloads/cli-operational-bss.json",
+      "sha256": "d02ae0409d5d6567c118e132e2b81e6208e302cc162d77e4abb4848cf6f61260",
+      "size": 708
+    },
+    {
+      "path": "easymesh-payloads/cli-profile.json",
+      "sha256": "81f14f4150b9b41d878bde62d307b4f92a162c6857824172006c3517354135d1",
+      "size": 408
+    },
+    {
+      "path": "easymesh-payloads/cli-service.json",
+      "sha256": "653195dfa9bc51ea61d1711ea4cc97e9cf31f28eb062ac7834c02a8d5c6423d2",
+      "size": 438
+    },
+    {
+      "path": "easymesh-payloads/ovsdb-results.xml",
+      "sha256": "efdd24c96eac83ff287e2d4219de9727ea3f258007eda32439515772cf0652ec",
+      "size": 4776
+    },
+    {
+      "path": "easymesh-payloads/reference-3.6.json",
+      "sha256": "628b05c8dd5a2fa648db18a8375d069246bb3094568bda30e47e15df5b2422d8",
+      "size": 598
+    },
+    {
+      "path": "easymesh-payloads/reference-4.2.json",
+      "sha256": "606b2988c1a39fadd903bdc6013e01459232a5fcfa2ceaf0dbaa5715610168e4",
+      "size": 607
+    },
+    {
+      "path": "easymesh-payloads/summary.json",
+      "sha256": "8235e84bb7177495da7baed6b425babf914ef9a0aacdb9ad8dc4b47403e54b35",
+      "size": 3910
+    },
+    {
+      "path": "easymesh-payloads/unit-results.xml",
+      "sha256": "b265a779eab8831fa256602eaa3165527a17a08be3c0d974a3f0e95871c6df38",
+      "size": 37022
+    },
+    {
+      "path": "easymesh-payloads/wheel-smoke.json",
+      "sha256": "b0486659b1b4af0c5216da87ed358b9c7e6d0d9fdbb9b3a1e932c36c885986ab",
+      "size": 693
+    },
+    {
+      "path": "observed-topology/browser-result.json",
+      "sha256": "d12ab09238bed03bd13ba4bdb496f132580f237b8f9742b5a13f23d14024ad06",
+      "size": 227
+    },
+    {
+      "path": "observed-topology/ovsdb-results.xml",
+      "sha256": "28a2ae326441f066beb5aff5b2307cc819c24641a979d60a11c65f21716025dc",
+      "size": 4924
+    },
+    {
+      "path": "observed-topology/service-report.json",
+      "sha256": "6be826951bffd124efa0fea73fb14a536365107ecc548ca8fdf2ee2071fdf59b",
+      "size": 38986
+    },
+    {
+      "path": "observed-topology/summary.json",
+      "sha256": "144cd0e9a5205f38e41a70b1a8adbf4f770aa1f86f789fb56be26a2b735031e7",
+      "size": 5130
+    },
+    {
+      "path": "observed-topology/unit-results.xml",
+      "sha256": "0da124ef2f5afe33fa5975acbf64a588c3f535b2694435150cc452350a2259ea",
+      "size": 43778
+    },
+    {
+      "path": "observed-topology/wheel-smoke.json",
+      "sha256": "9bebb9e2edff347f4919c580223de02a6ae50a622d48a5419facb9ef48475433",
+      "size": 430
+    },
+    {
+      "path": "radio-capabilities/browser-result.json",
+      "sha256": "fceaf6ddd1b179007321fd082d6085792b8c3b7f7a3b77acb45cef90a92147eb",
+      "size": 227
+    },
+    {
+      "path": "radio-capabilities/inputs/pod-1/capabilities.json",
+      "sha256": "929680ce1ba7bf1afb72a06fc98ce8eaf17c506bdf2624becc61d1e6d06cf399",
+      "size": 1936
+    },
+    {
+      "path": "radio-capabilities/inputs/pod-1/synthetic-radio-contract.json",
+      "sha256": "a6becde3b23156731505cf2db067a0b21634eb09c2cfced8f981acc39a752bc3",
+      "size": 1366
+    },
+    {
+      "path": "radio-capabilities/inputs/pod-2/capabilities.json",
+      "sha256": "537b524fbfa101113e5854a90a11456ce21d2c1ff402f03db38ec0e4ad63abae",
+      "size": 1936
+    },
+    {
+      "path": "radio-capabilities/inputs/pod-2/synthetic-radio-contract.json",
+      "sha256": "d9883ea7870a037541900b422adcc9da97578f5f990df5f4133474a0622172fe",
+      "size": 1366
+    },
+    {
+      "path": "radio-capabilities/native-reference-host.json",
+      "sha256": "cd15e0459c0cdad44b84ff49b3253a75057e81c2df5d56217eaf1ad0f9a395b1",
+      "size": 599
+    },
+    {
+      "path": "radio-capabilities/native-reference-vm.json",
+      "sha256": "da2005708c998d090a2ea28e48027c1b7228512d1e78ba574b6fd45630fc00cd",
+      "size": 608
+    },
+    {
+      "path": "radio-capabilities/ovsdb-results.xml",
+      "sha256": "9de787df1a8e9f21f33910d6842b6db047c178f9beefddce1c4e74eaa9f3adfd",
+      "size": 5070
+    },
+    {
+      "path": "radio-capabilities/service-report.json",
+      "sha256": "ace56d6fdb22155d9097b4c44de91af7f683f4c6ed6dad9cf565a7b06c5bf0d6",
+      "size": 32027
+    },
+    {
+      "path": "radio-capabilities/summary.json",
+      "sha256": "ccd1a3a098cc9c8c93e77668aabca703fe3e69a3c1733e6d0e7f8e5934f1fb70",
+      "size": 5861
+    },
+    {
+      "path": "radio-capabilities/unit-results.xml",
+      "sha256": "d6cbfb4d523a4cfb53f4a85e50f24e0405c19bafc9b96827ec09ee7b551c5a09",
+      "size": 53468
+    },
+    {
+      "path": "radio-capabilities/wheel-smoke.json",
+      "sha256": "33926c706d1fd8f84a89914497a0c09e0885372550e5a8a8405663f2df397db0",
+      "size": 341
+    },
+    {
+      "path": "profile-audit/browser-result.json",
+      "sha256": "290673f96d7e381615f0e65d77263b28c58261595dd384649b77c356a3a29752",
+      "size": 227
+    },
+    {
+      "path": "profile-audit/cli-capability.json",
+      "sha256": "d71e588ec9d400aca0c535213c236379fdeb527bac13b8bb310d55080864d133",
+      "size": 642
+    },
+    {
+      "path": "profile-audit/cli-markdown.md",
+      "sha256": "ea87b36274393c3aa465faedb489e70969b3417017b370349430a0c78539e900",
+      "size": 4251
+    },
+    {
+      "path": "profile-audit/cli-synthetic.json",
+      "sha256": "0bc14783bacdb04fee0ee52920d6acb932d3c9f594626bfaf650f842ccb247bc",
+      "size": 13656
+    },
+    {
+      "path": "profile-audit/cli-unknown.json",
+      "sha256": "ee8c5d3560fd03c54a7c3f4795c51394ebfd3289eb7d009d7b5f6b871125e3c5",
+      "size": 11376
+    },
+    {
+      "path": "profile-audit/native-reference-host.json",
+      "sha256": "724619cb41c49c0d4e580fc57ec05afa9af38167d72eec98a446f28d03973383",
+      "size": 599
+    },
+    {
+      "path": "profile-audit/native-reference-vm.json",
+      "sha256": "096a420470e859d5f3b4c204e42e7a414ac7ce05dbae20e6d762fcfb0c21e499",
+      "size": 608
+    },
+    {
+      "path": "profile-audit/ovsdb-results.xml",
+      "sha256": "e035a0f5ae11cb2b3f4716c68a365ef755e42b60e9898f11293be9d0085eae10",
+      "size": 5071
+    },
+    {
+      "path": "profile-audit/summary.json",
+      "sha256": "ac78d3030047cd776605993e474e4ababb0e74bc5cdb12ddef19607e46fd6f51",
+      "size": 5752
+    },
+    {
+      "path": "profile-audit/unit-results.xml",
+      "sha256": "c14ce65e34d80fcb6ae0288d6a5d887ee47600a770349dc3703e68416e696764",
+      "size": 66742
+    },
+    {
+      "path": "profile-audit/wheel-smoke.json",
+      "sha256": "40ce2db1de1ad7149842052e6f5fcff0b6e4040707a49831d1ad24d8fb370d86",
+      "size": 598
+    },
+    {
+      "path": "technology-inventory/browser-result.json",
+      "sha256": "9c5aadb0baa8947406e2fa995b545138500386d56b290ad3a564fde0322a8ca9",
+      "size": 227
+    },
+    {
+      "path": "technology-inventory/cli-he.json",
+      "sha256": "456b3900f25bc6ce859106b775a8e417f5ad8f517bddcb2d1064909d7d712d3a",
+      "size": 817
+    },
+    {
+      "path": "technology-inventory/cli-ht.json",
+      "sha256": "e2c1fa4690588dc0079aa15b13a4361512c21ab4951e017ca2f853fca67bcffe",
+      "size": 504
+    },
+    {
+      "path": "technology-inventory/cli-vht.json",
+      "sha256": "68bf52436be0a88ef70604798d826a839f40b8fb35cb8843b034ecb594fde052",
+      "size": 860
+    },
+    {
+      "path": "technology-inventory/inputs/pod-1/capabilities.json",
+      "sha256": "68817379563f0cb68ce1019997a28fad26b68c02d9c69bc3733de206ccf46d0a",
+      "size": 4184
+    },
+    {
+      "path": "technology-inventory/inputs/pod-1/synthetic-radio-contract.json",
+      "sha256": "4ec95281172997b28a3e6c1d3ad453350eb637437cc65e6477fb9f1681643e12",
+      "size": 3564
+    },
+    {
+      "path": "technology-inventory/inputs/pod-2/capabilities.json",
+      "sha256": "3dbe72300ab5fd15df76db3a0350105ddc6d9be7263236d82b38264708394a66",
+      "size": 4184
+    },
+    {
+      "path": "technology-inventory/inputs/pod-2/synthetic-radio-contract.json",
+      "sha256": "0e88747f08966d46113ab8e46acd84305814ce8c069c6442a8d5d6cb20f7ea0a",
+      "size": 3564
+    },
+    {
+      "path": "technology-inventory/native-reference-host.json",
+      "sha256": "74e6aadb788f163b0a9806726d27303348a9736f0ea2184272e0a7d7fdcc5209",
+      "size": 599
+    },
+    {
+      "path": "technology-inventory/native-reference-vm.json",
+      "sha256": "3226611c7c4ffb8d23f954e30e36d006a937372a8cadd9f817840121d30cce07",
+      "size": 608
+    },
+    {
+      "path": "technology-inventory/ovsdb-results.xml",
+      "sha256": "8b0c547665481ad0315f7782418777deb3713f9dad436f2c32f18d6fe142ae81",
+      "size": 5226
+    },
+    {
+      "path": "technology-inventory/service-report.json",
+      "sha256": "b3c28923ab30007ee19391bce0fd4e0e1eac2d92017e057f213954e0a9a36c6e",
+      "size": 72351
+    },
+    {
+      "path": "technology-inventory/summary.json",
+      "sha256": "376c40c27472ff788b12f0148256800655f2ce9b58484fa0369d22113b6bf02e",
+      "size": 6277
+    },
+    {
+      "path": "technology-inventory/unit-results.xml",
+      "sha256": "f5efd486c248e83764cbd595498aa7901e19a9405a9d1f955e5b870b546df201",
+      "size": 79520
+    },
+    {
+      "path": "technology-inventory/wheel-smoke.json",
+      "sha256": "b4ce635d8ad5836f3f81bd762e18421d1f9e46b9c192f0688484f74bc1c5cd55",
+      "size": 405
+    },
+    {
+      "path": "he-wifi6/browser-result.json",
+      "sha256": "f0fb356fbe238b38af7b76aca7aa23dbc43f1c808a6c4974c118a4e52a0f2bf8",
+      "size": 227
+    },
+    {
+      "path": "he-wifi6/cli-native-negative.json",
+      "sha256": "7509b350fda4c145420ccb0987b5d7516aeb9ba65a0917a587a6ae88565f2f3e",
+      "size": 140
+    },
+    {
+      "path": "he-wifi6/cli-wifi6.json",
+      "sha256": "1c2a13a9fe26d38240b755d8447954ae2f15d7e4407550f83eaebc39b3923cfc",
+      "size": 1939
+    },
+    {
+      "path": "he-wifi6/native-host.json",
+      "sha256": "04df337d22d4f6875ac043c83c0fab9e54d55aae30f841297d3ec0e43eb67751",
+      "size": 622
+    },
+    {
+      "path": "he-wifi6/native-source-review.json",
+      "sha256": "c092455ab46b1400b390beec3f7a579adc12d8db6694f69603545636e51e0b80",
+      "size": 3454
+    },
+    {
+      "path": "he-wifi6/native-vm.json",
+      "sha256": "a2ca1ab9817398d20b798ec70f81e40858477839b3d9b77957530b5561c4d259",
+      "size": 631
+    },
+    {
+      "path": "he-wifi6/ovsdb-results.xml",
+      "sha256": "d83ad44a43a0ee0295862794b647ff37749dcb6348f7755826060b29dcc86c3e",
+      "size": 5226
+    },
+    {
+      "path": "he-wifi6/profile-audit.json",
+      "sha256": "6214263a59858f16aef45c82893dfd127a627ff3a3f0a912e436f4b48288c2dc",
+      "size": 11469
+    },
+    {
+      "path": "he-wifi6/summary.json",
+      "sha256": "1367c6f9e7482992361e3fcfce9b3ab6762c67d4dc4841f163e7b76d5d54ed32",
+      "size": 4371
+    },
+    {
+      "path": "he-wifi6/unit-results.xml",
+      "sha256": "d66b36b0fe465a5c44d3bda871ea46a1330aef5fed6664d124c050836fbdea39",
+      "size": 84110
+    },
+    {
+      "path": "he-wifi6/wheel-smoke.json",
+      "sha256": "9fd5bc4ab08834accbb8c8a2c80e40a92b02bede5c663aa4963bf027c8b1edcc",
+      "size": 589
+    },
+    {
+      "path": "wifi6-inputs/browser-result.json",
+      "sha256": "419cb38022626e8df8d9f201ba2d27c9dca4a10b32eee0bf82d345b47d569787",
+      "size": 227
+    },
+    {
+      "path": "wifi6-inputs/inputs/pod-1/capabilities.json",
+      "sha256": "55820794b98c3a6096617ccca5c06848d2d143898414053dc80a0425d583c9ed",
+      "size": 8863
+    },
+    {
+      "path": "wifi6-inputs/inputs/pod-1/synthetic-radio-contract.json",
+      "sha256": "d09c40d701874a6f52982f3fd23028d7e6ab6fbf161b6c7e105ab1c9f495c3b2",
+      "size": 8226
+    },
+    {
+      "path": "wifi6-inputs/inputs/pod-2/capabilities.json",
+      "sha256": "a8b3c593a7a6246318a17b0df7e29fe39ff0752563fadb38efc241c8a0ff700f",
+      "size": 8863
+    },
+    {
+      "path": "wifi6-inputs/inputs/pod-2/synthetic-radio-contract.json",
+      "sha256": "8e243d2ae57842135dff0f92c4d9a1f05578a4d0d2d9cbdacd5bfb7b43ccb370",
+      "size": 8226
+    },
+    {
+      "path": "wifi6-inputs/ovsdb-results.xml",
+      "sha256": "479149b56cc957b749b5eddb40419d3481c8c53bc71357234a8835d3542faa80",
+      "size": 5379
+    },
+    {
+      "path": "wifi6-inputs/service-report.json",
+      "sha256": "66740a191da6b9ca10090f461ab6e5169f4c5ffa99203fde2c54c7fd3728bc30",
+      "size": 118488
+    },
+    {
+      "path": "wifi6-inputs/summary.json",
+      "sha256": "e25657c798860b9d5b68e5439d0dd33fda47fb378a338250a480ecebf1eabe02",
+      "size": 5099
+    },
+    {
+      "path": "wifi6-inputs/unit-results.xml",
+      "sha256": "8aae5013fc32d5ea93233b7ee52279d2e873bfae749d60ca36d8ee6ec8f28747",
+      "size": 91997
+    },
+    {
+      "path": "wifi6-inputs/wheel-smoke.json",
+      "sha256": "ab772d53261c455931ab4d2c6de8847cbdd3a0f0392f5b379520d273b4ededbe",
+      "size": 890
+    },
+    {
+      "path": "native-compatibility/browser-result.json",
+      "sha256": "ea13ba933407a71cc3ff1ffc6feec1826c4829ad7a11acf38ae662f0c0cc974e",
+      "size": 227
+    },
+    {
+      "path": "native-compatibility/build-packages.txt",
+      "sha256": "5e732e120990b5e6c7b5b6c3024be2f8297acff61b884a2f1dca43afaa82fccc",
+      "size": 166
+    },
+    {
+      "path": "native-compatibility/build-provenance.json",
+      "sha256": "bd0f5c9340cb349878525342e1ba446958eb58db04583256b35f5a1674a6db47",
+      "size": 1837
+    },
+    {
+      "path": "native-compatibility/capture-check-vm.json",
+      "sha256": "6c363b7d0b96786072a41bfe56da17874e7aee508e32d9b7ce57af507be73d47",
+      "size": 1027
+    },
+    {
+      "path": "native-compatibility/capture-check.json",
+      "sha256": "e0ff26d028c989e6c8320ad9c97fe8eb8aef3e8a21ac53b8d9f6841eca671656",
+      "size": 1018
+    },
+    {
+      "path": "native-compatibility/clients-03.json",
+      "sha256": "73e8aff2c5219d2430ceff7ce73e7b67260045ad5127bbe276615f46a42b8816",
+      "size": 4893
+    },
+    {
+      "path": "native-compatibility/clients-04.json",
+      "sha256": "07a1a01e25acd58c1d3671f82338efd43ab9b0c158fe705c56cf4d3b04ff180b",
+      "size": 4893
+    },
+    {
+      "path": "native-compatibility/documentation-checks.json",
+      "sha256": "1aeed7052720c7cb782ea3c62561b8b443eb6c95d86f656b28e15428d63874d8",
+      "size": 240
+    },
+    {
+      "path": "native-compatibility/ethernet.pcap",
+      "sha256": "331e9f4a58cc78e5c84036d3e24087ebad31891f03c5cb2c45173e145dd2997f",
+      "size": 8942
+    },
+    {
+      "path": "native-compatibility/failed-restoration-02.json",
+      "sha256": "e98e91a3bc3be0fdc1a985499871ee2136a61b4b8b1e937e643a50f13e102fb2",
+      "size": 377
+    },
+    {
+      "path": "native-compatibility/failed-run-02.json",
+      "sha256": "25e4472092bed78f3524105a2a1c54c38d4a539ed4e0abb6194359a17d1eada1",
+      "size": 857
+    },
+    {
+      "path": "native-compatibility/harness-03.json",
+      "sha256": "2be40ddd14126a15656559ccef3d08523092136b22a72cc1d20c093542b4b650",
+      "size": 678
+    },
+    {
+      "path": "native-compatibility/harness-04.json",
+      "sha256": "2be40ddd14126a15656559ccef3d08523092136b22a72cc1d20c093542b4b650",
+      "size": 678
+    },
+    {
+      "path": "native-compatibility/input-check.json",
+      "sha256": "b47f73a88cd5fca173610ebd93c7116747befa168288b686d8de38fd87aff716",
+      "size": 742
+    },
+    {
+      "path": "native-compatibility/inventory-03.json",
+      "sha256": "00d3bcc9c6bc3f5cc0329d97f01a2168ea6d4dd8ad89bf4ad95939fe8c6c7dbc",
+      "size": 31873
+    },
+    {
+      "path": "native-compatibility/inventory-04.json",
+      "sha256": "59f4e77eadff00586eb16a8b34f65604bafccf099527521904bd50792b84d43e",
+      "size": 31874
+    },
+    {
+      "path": "native-compatibility/ovsdb-results.xml",
+      "sha256": "44888ac4d7de2478f3bbc7fe6034b1e2868556bcc0b96804384f4a966964f370",
+      "size": 5379
+    },
+    {
+      "path": "native-compatibility/patches.sha256",
+      "sha256": "06977f56221d18922d5b86a8c5d1cd6f89e609934a3bac6dc531b9d3412782eb",
+      "size": 247
+    },
+    {
+      "path": "native-compatibility/preflight-failure-01.json",
+      "sha256": "9e5a5d489e882723501ef477c60773b53dde8a6b4dd46fa618be783aa165fcc3",
+      "size": 483
+    },
+    {
+      "path": "native-compatibility/private-run-artifact-hashes.json",
+      "sha256": "c50cd442362c8a1684dacdae80425b036724d0e8caa4e32f75f5f6195919bcb6",
+      "size": 13789
+    },
+    {
+      "path": "native-compatibility/regression-before.txt",
+      "sha256": "2f07ef028d4d7213f037675b50ee073be18949985ad486475c4d46c8cb298cbb",
+      "size": 372
+    },
+    {
+      "path": "native-compatibility/regression.txt",
+      "sha256": "1d18884cd9c9a27519fa17b4999f5fef15bce2b4aafb670f2ea02137e93c59c1",
+      "size": 371
+    },
+    {
+      "path": "native-compatibility/restoration-03.json",
+      "sha256": "82829452e21c0a0561a71d0c0520ad2ee9417f19798f2581d5a0726a03f55125",
+      "size": 376
+    },
+    {
+      "path": "native-compatibility/restoration-04.json",
+      "sha256": "82829452e21c0a0561a71d0c0520ad2ee9417f19798f2581d5a0726a03f55125",
+      "size": 376
+    },
+    {
+      "path": "native-compatibility/review-03.json",
+      "sha256": "824563c3f05af6927a67feb916f751ef926733cade4850933c8d020652ed735d",
+      "size": 2904
+    },
+    {
+      "path": "native-compatibility/review-04.json",
+      "sha256": "286c8ce565c22a8faf0dd1a2c8a1aede40bc423a1ff60e0a52d75b05758ed4ca",
+      "size": 2904
+    },
+    {
+      "path": "native-compatibility/run-03.json",
+      "sha256": "1af51440fdbe8e66d6c9041c49167be66e2deec3b23e575a40209f1fcefb2905",
+      "size": 1068
+    },
+    {
+      "path": "native-compatibility/run-04.json",
+      "sha256": "d565d38f01bb6156e147a9d28e13d5dd81239daf62796e1ad423cfb7f5a69976",
+      "size": 1066
+    },
+    {
+      "path": "native-compatibility/shutdown-03.json",
+      "sha256": "45623cd21b1b4ae7c32600c1950f9876a99cc26d8a7b3992839d09f21ea0789e",
+      "size": 2404
+    },
+    {
+      "path": "native-compatibility/shutdown-04.json",
+      "sha256": "260a71bcadba5e16395731cbfef205bc20130d1fa2ed1a26dcf143f4c3d80975",
+      "size": 2404
+    },
+    {
+      "path": "native-compatibility/stability-03.json",
+      "sha256": "ed0ae39f3cd33b6e8ecfa02f7b593cc9260f2304b4b2bce92767233755996cd3",
+      "size": 1094
+    },
+    {
+      "path": "native-compatibility/stability-04.json",
+      "sha256": "93fe44f07b8e5380b9e670aadce9b3d14950f9aea2b7592a5ed90cda871b40d6",
+      "size": 1094
+    },
+    {
+      "path": "native-compatibility/summary.json",
+      "sha256": "80be02d7ec0bf8fe1eb578c54d1f176f917707cb25f15307c491598e5e6f6b3a",
+      "size": 6113
+    },
+    {
+      "path": "native-compatibility/unit-results.xml",
+      "sha256": "74afaef078f7ac16b409c9a972e933b875605abfdca5523682bf7880634e0068",
+      "size": 93285
+    },
+    {
+      "path": "native-compatibility/wire-gate.json",
+      "sha256": "e276c154bcf03b401b0cf97ed1df301956f79e8d64c238fbb06a4f602964fe52",
+      "size": 4945
     }
   ]
 }

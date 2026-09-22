@@ -126,6 +126,11 @@ The Ubuntu 24.04 LXD layout has pinned candidate images. Its standalone radio
 smoke has passed; full application deployment and retained image exports remain
 pending.
 
+The [service integration walkthrough](doc/guides/service-integration.md) adds two
+connecting pods through one adapter, actual service-process crash recovery with
+hwsim clients, guarded restoration after VM reboot, and a live controller
+preparation that explicitly retains the missing wire connection.
+
 The [integrated OVSDB/hwsim experiment](doc/evaluation/radio-manager.md) now connects the
 semantic EMOSA engine to a separate hostapd/nl80211 manager. Three repeat runs
 passed 13 change, failure and recovery cases with independent wired and wireless

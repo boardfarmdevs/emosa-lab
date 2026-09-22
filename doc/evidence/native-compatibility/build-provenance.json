@@ -1,0 +1,46 @@
+{
+  "scope": "isolated candidate HAL, existing executables unchanged",
+  "artifacts": [
+    {
+      "path": "/opt/emosa-baseline/candidate-he-length-01/source/common/beerocks/bwl/shared/nl80211_client_impl.cpp",
+      "sha256": "02d6eb38bdd528ba54dd1b0267f9baa9f1e4f4ebb014b060661a71cc94ec2d16",
+      "bytes": 59482
+    },
+    {
+      "path": "/opt/emosa-baseline/candidate-he-length-01/build/emosa-he-length",
+      "sha256": "060d8e5749a55685cce1b0566c695185609a4cfc9dc491a61a28530852ff1c0c",
+      "bytes": 624504
+    },
+    {
+      "path": "/opt/emosa-baseline/candidate-he-length-01/build/compile_commands.json",
+      "sha256": "b6142609b649daf8b16ee1c36c9ebf1b12d2cf822b323a3de3e02d98c80ce333",
+      "bytes": 19882
+    },
+    {
+      "path": "/opt/emosa-baseline/candidate-he-length-01/build.log",
+      "sha256": "bc37dfc60100da409601d43d51a0e703ab127fc329e106daebe6aa7b8cff186a",
+      "bytes": 2815
+    },
+    {
+      "path": "/opt/emosa-baseline/candidate-he-length-01/configure.log",
+      "sha256": "e09ffe11f55ba52c1825e8e6f0f1f523612dee9c19dd0a2d25f20ed2766b85ae",
+      "bytes": 828
+    },
+    {
+      "path": "/opt/emosa-baseline/candidate-he-length-01/stage/lib/libbwl.so.6.0.0",
+      "sha256": "20c15dd8122f51511423b55445a14c368ffa7e0dbea5d24ba5a0ddc0be151bd5",
+      "bytes": 12171136
+    },
+    {
+      "path": "/opt/emosa-baseline/build-bwl/stage/lib/libbwl.so.6.0.0",
+      "sha256": "0dfa6fab56238bf0817c9a3299e671ab6ca66798858179b9262dd3d285d261b1",
+      "bytes": 12170736
+    },
+    {
+      "path": "/opt/emosa-baseline/compatibility/he-length.cpp",
+      "sha256": "991d04bde3b705f17ed51604c9ccd94d0cf083f88bea4d8df59e8180b8f876d6",
+      "bytes": 3404
+    }
+  ],
+  "kernel": "Linux emosa-lab 6.8.0-139-generic #139-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 03:52:05 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux"
+}

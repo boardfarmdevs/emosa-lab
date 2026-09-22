@@ -5,17 +5,32 @@ import time
 import uuid
 
 from emosa.errors import EmosaError, Reason
+from emosa.topology_bindings import validate_config_topologies
 
 FRESHNESS_SECONDS = 2.0
 
 
 def validate_bindings(config):
+    for pod in config["pods"]:
+        if "radio_capabilities" in pod and (
+            config["backend_mode"] != "ovsdb-sim" or "topology" not in pod.get("virtual_agent", {})
+        ):
+            raise EmosaError(
+                Reason.INVALID_INPUT, "radio capabilities require a bound simulation topology"
+            )
+        if pod.get("mapping_scope") == "sole-fronthaul-radio" and (
+            config["backend_mode"] != "ovsdb-sim" or "virtual_agent" not in pod
+        ):
+            raise EmosaError(
+                Reason.INVALID_INPUT, "sole-radio scope requires a bound simulation pod"
+            )
     bindings = [p["virtual_agent"] for p in config["pods"] if "virtual_agent" in p]
     if bindings and config["backend_mode"] != "ovsdb-sim":
         raise EmosaError(Reason.INVALID_INPUT, "virtual agent directory requires ovsdb-sim")
     for field in ("al_mac", "expected_serial"):
         if len({b[field] for b in bindings}) != len(bindings):
             raise EmosaError(Reason.INVALID_INPUT, "duplicate virtual agent binding", field=field)
+    validate_config_topologies(config["pods"])
 
 
 class AgentDirectory:

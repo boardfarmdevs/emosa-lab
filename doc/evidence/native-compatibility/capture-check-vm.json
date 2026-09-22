@@ -1,0 +1,50 @@
+{
+  "passed": true,
+  "capture_sha256": "331e9f4a58cc78e5c84036d3e24087ebad31891f03c5cb2c45173e145dd2997f",
+  "dissector": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+  "records": [
+    {
+      "frame": 1,
+      "wifi6_values": [],
+      "profiles": [
+        2
+      ],
+      "wps_types": []
+    },
+    {
+      "frame": 2,
+      "wifi6_values": [],
+      "profiles": [
+        1
+      ],
+      "wps_types": []
+    },
+    {
+      "frame": 3,
+      "wifi6_values": [
+        "020000ec020002040000004003221212d0440000004003221212d0"
+      ],
+      "profiles": [],
+      "wps_types": []
+    },
+    {
+      "frame": 6,
+      "wifi6_values": [],
+      "profiles": [],
+      "wps_types": [
+        5
+      ]
+    },
+    {
+      "frame": 21,
+      "wifi6_values": [
+        "020000ec020002040000004003221212d0440000004003221212d0"
+      ],
+      "profiles": [],
+      "wps_types": []
+    }
+  ],
+  "full_protocol_conformance": false,
+  "mcs_value_ordering_qualified": false,
+  "emosa_wire_onboarding": false
+}

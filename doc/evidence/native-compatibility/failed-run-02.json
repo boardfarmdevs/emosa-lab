@@ -1,0 +1,15 @@
+{
+  "mode": "wired",
+  "kind": "clean",
+  "started_utc": "2026-09-22T05:56:44.445373+00:00",
+  "status": "failed",
+  "phases": {},
+  "acceptance_version": 2,
+  "post_client_stability_seconds": 30,
+  "policy": "sole-fronthaul",
+  "error": "Command '('lxc', '--force-local', '--project', 'default', 'config', 'device', 'add', 'em-baseline-agent', 'backhaul', 'nic', 'network=em-base-bh', 'name=eth1')' returned non-zero exit status 1.",
+  "command_stdout": "",
+  "command_stderr": "Error: Invalid expanded devices: Device validation failed for \"backhaul\": Invalid value for device option \"name\": Duplicate NIC name detected \"eth1\"\n",
+  "collection_error": "Command '('lxc', '--force-local', '--project', 'default', 'exec', 'em-baseline-agent', '--', 'cat', '/var/run/hostapd-phy0.conf')' returned non-zero exit status 1.",
+  "elapsed_seconds": 1.341
+}

@@ -119,7 +119,7 @@ class SimDatabase:
 
         await asyncio.to_thread(command)
 
-    async def seed(self, *, serial_number=None):
+    async def seed(self, *, serial_number=None, sole_radio=False):
         # Fixed, explicitly synthetic device records. No adapter predicate imports.
         ap = {
             "if_name": "lab-ap",
@@ -137,12 +137,16 @@ class SimDatabase:
             "wpa_pairwise_ccmp": False,
             "security": ["map", []],
         }
+        if sole_radio:
+            ap["wpa_psks"] = ["map", [["key", "initial-simulation-key"]]]
         state = {**ap, "vif_config": ["named-uuid", "vif"], "mac": "02:00:00:00:10:01"}
         config = {
             **ap,
             "bridge": "preserved-lab-bridge",
             "wpa_oftags": ["map", [["guest", "preserved-tag"]]],
         }
+        if sole_radio:
+            config.update(multi_ap="none", wpa_oftags=["map", []])
         rows = [
             ("Wifi_VIF_Config", "vif", config),
             ("Wifi_VIF_State", "vifstate", state),
@@ -163,6 +167,7 @@ class SimDatabase:
                     "if_name": "lab-radio",
                     "freq_band": "5G",
                     "radio_config": ["named-uuid", "radio"],
+                    "enabled": True,
                     "channel": 36,
                     "mac": "02:00:00:00:20:01",
                     "vif_states": ["set", [["named-uuid", "vifstate"]]],

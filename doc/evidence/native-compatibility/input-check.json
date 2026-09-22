@@ -1,0 +1,21 @@
+{
+  "checked_utc": "2026-09-22T06:10:52.872475+00:00",
+  "known_specification_directory": "/home/rev/.local/share/emosa/specifications",
+  "available_wfa_pdfs": [
+    "Wi-Fi-EasyMesh-6.1.pdf",
+    "Wi-Fi-Protected-Setup-2.0.10.pdf"
+  ],
+  "pending_exact_editions": [
+    "IEEE Std 1905.1-2013",
+    "IEEE Std 1905.1a-2014"
+  ],
+  "private_configuration_directory_exists": false,
+  "actual_pod_endpoint_or_authentication_supplied": false,
+  "credential_free_examples_schema_validated": [
+    "deploy/qualification.example.json",
+    "deploy/qualification-unix.example.json",
+    "deploy/qualification-tunnel.example.json"
+  ],
+  "connection_opened": false,
+  "clarifications_and_other_documents": "doc/protocol/specification-acquisition.md"
+}

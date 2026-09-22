@@ -1,0 +1,909 @@
+{
+  "schema_version": 1,
+  "scope": "synthetic capability inputs via a read-only adapter service",
+  "passed": true,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "stages": {
+    "connected": [
+      {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "ready": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:01",
+              "max_bss": 4,
+              "operating_classes": [
+                {
+                  "operating_class": 115,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "0200000140010401731400",
+              "sha256": "1abf811016a4d7741ba3868c49cf244ede78c093a58b5af8218201890f062c54"
+            }
+          },
+          {
+            "radio_id": "radio-2",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:02",
+              "max_bss": 2,
+              "operating_classes": [
+                {
+                  "operating_class": 81,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                },
+                {
+                  "operating_class": 83,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 84,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000001400202035111020c0d5311005411020c0d",
+              "sha256": "2ff4e0f72d68754afe28d230e90f9dd7ad4768d77991da969cfdf5b1ad49f9fa"
+            }
+          }
+        ],
+        "snapshot_fresh": true,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "generation": 1,
+        "revision": 1,
+        "observed_at": "2026-09-22T03:43:20.568Z",
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "profile_sha256": "929680ce1ba7bf1afb72a06fc98ce8eaf17c506bdf2624becc61d1e6d06cf399",
+        "evidence": [
+          {
+            "id": "synthetic-radio-contract",
+            "sha256": "a6becde3b23156731505cf2db067a0b21634eb09c2cfced8f981acc39a752bc3"
+          }
+        ],
+        "issued_at": "2026-09-22T03:42:20.027555Z",
+        "expires_at": "2026-09-23T03:43:20.027555Z",
+        "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+      },
+      {
+        "schema_version": 1,
+        "pod_id": "pod-2",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+        "ready": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:02:40:01",
+              "max_bss": 4,
+              "operating_classes": [
+                {
+                  "operating_class": 115,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "0200000240010401731400",
+              "sha256": "61dc62bdf00b4ec206913c45c17b391d625d0f062afd953a952b9ec781a67a1d"
+            }
+          },
+          {
+            "radio_id": "radio-2",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:02:40:02",
+              "max_bss": 2,
+              "operating_classes": [
+                {
+                  "operating_class": 81,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                },
+                {
+                  "operating_class": 83,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 84,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000002400202035111020c0d5311005411020c0d",
+              "sha256": "27222737292fafa53587d055bfa66554d1ab7e009eaf4ff20d150bb89e674873"
+            }
+          }
+        ],
+        "snapshot_fresh": true,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "generation": 1,
+        "revision": 1,
+        "observed_at": "2026-09-22T03:43:20.573Z",
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "profile_sha256": "537b524fbfa101113e5854a90a11456ce21d2c1ff402f03db38ec0e4ad63abae",
+        "evidence": [
+          {
+            "id": "synthetic-radio-contract",
+            "sha256": "d9883ea7870a037541900b422adcc9da97578f5f990df5f4133474a0622172fe"
+          }
+        ],
+        "issued_at": "2026-09-22T03:42:20.269204Z",
+        "expires_at": "2026-09-23T03:43:20.269204Z",
+        "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+      }
+    ],
+    "cli_ready": {
+      "exit_code": 0,
+      "result": {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "ready": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:01",
+              "max_bss": 4,
+              "operating_classes": [
+                {
+                  "operating_class": 115,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "0200000140010401731400",
+              "sha256": "1abf811016a4d7741ba3868c49cf244ede78c093a58b5af8218201890f062c54"
+            }
+          },
+          {
+            "radio_id": "radio-2",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:02",
+              "max_bss": 2,
+              "operating_classes": [
+                {
+                  "operating_class": 81,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                },
+                {
+                  "operating_class": 83,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 84,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000001400202035111020c0d5311005411020c0d",
+              "sha256": "2ff4e0f72d68754afe28d230e90f9dd7ad4768d77991da969cfdf5b1ad49f9fa"
+            }
+          }
+        ],
+        "snapshot_fresh": true,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "generation": 1,
+        "revision": 1,
+        "observed_at": "2026-09-22T03:43:20.669Z",
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "profile_sha256": "929680ce1ba7bf1afb72a06fc98ce8eaf17c506bdf2624becc61d1e6d06cf399",
+        "evidence": [
+          {
+            "id": "synthetic-radio-contract",
+            "sha256": "a6becde3b23156731505cf2db067a0b21634eb09c2cfced8f981acc39a752bc3"
+          }
+        ],
+        "issued_at": "2026-09-22T03:42:20.027555Z",
+        "expires_at": "2026-09-23T03:43:20.027555Z",
+        "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+      }
+    },
+    "profile_changed": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": false,
+      "blockers": [
+        "profile_digest_mismatch"
+      ],
+      "radios": [],
+      "snapshot_fresh": false,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+    },
+    "cli_blocked": {
+      "exit_code": 5,
+      "result": {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "ready": false,
+        "blockers": [
+          "profile_digest_mismatch"
+        ],
+        "radios": [],
+        "snapshot_fresh": false,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+      }
+    },
+    "other_pod_unchanged": {
+      "schema_version": 1,
+      "pod_id": "pod-2",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+      "ready": true,
+      "blockers": [],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:02:40:01",
+            "max_bss": 4,
+            "operating_classes": [
+              {
+                "operating_class": 115,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "0200000240010401731400",
+            "sha256": "61dc62bdf00b4ec206913c45c17b391d625d0f062afd953a952b9ec781a67a1d"
+          }
+        },
+        {
+          "radio_id": "radio-2",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:02:40:02",
+            "max_bss": 2,
+            "operating_classes": [
+              {
+                "operating_class": 81,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              },
+              {
+                "operating_class": 83,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 84,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "02000002400202035111020c0d5311005411020c0d",
+            "sha256": "27222737292fafa53587d055bfa66554d1ab7e009eaf4ff20d150bb89e674873"
+          }
+        }
+      ],
+      "snapshot_fresh": true,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "generation": 1,
+      "revision": 1,
+      "observed_at": "2026-09-22T03:43:20.803Z",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "profile_sha256": "537b524fbfa101113e5854a90a11456ce21d2c1ff402f03db38ec0e4ad63abae",
+      "evidence": [
+        {
+          "id": "synthetic-radio-contract",
+          "sha256": "d9883ea7870a037541900b422adcc9da97578f5f990df5f4133474a0622172fe"
+        }
+      ],
+      "issued_at": "2026-09-22T03:42:20.269204Z",
+      "expires_at": "2026-09-23T03:43:20.269204Z",
+      "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+    },
+    "evidence_changed": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": false,
+      "blockers": [
+        "evidence_digest_mismatch"
+      ],
+      "radios": [],
+      "snapshot_fresh": false,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+    },
+    "country_changed": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": false,
+      "blockers": [
+        "regulatory_context_mismatch"
+      ],
+      "radios": [],
+      "snapshot_fresh": true,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "generation": 1,
+      "revision": 2,
+      "observed_at": "2026-09-22T03:43:20.815Z",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+    },
+    "firmware_changed": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": false,
+      "blockers": [
+        "capability_device_mismatch"
+      ],
+      "radios": [],
+      "snapshot_fresh": true,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "generation": 1,
+      "revision": 4,
+      "observed_at": "2026-09-22T03:43:20.827Z",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+    },
+    "disconnected": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": false,
+      "blockers": [
+        "snapshot_unavailable"
+      ],
+      "radios": [],
+      "snapshot_fresh": false,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+    },
+    "other_pod_while_disconnected": {
+      "schema_version": 1,
+      "pod_id": "pod-2",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+      "ready": true,
+      "blockers": [],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:02:40:01",
+            "max_bss": 4,
+            "operating_classes": [
+              {
+                "operating_class": 115,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "0200000240010401731400",
+            "sha256": "61dc62bdf00b4ec206913c45c17b391d625d0f062afd953a952b9ec781a67a1d"
+          }
+        },
+        {
+          "radio_id": "radio-2",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:02:40:02",
+            "max_bss": 2,
+            "operating_classes": [
+              {
+                "operating_class": 81,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              },
+              {
+                "operating_class": 83,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 84,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "02000002400202035111020c0d5311005411020c0d",
+            "sha256": "27222737292fafa53587d055bfa66554d1ab7e009eaf4ff20d150bb89e674873"
+          }
+        }
+      ],
+      "snapshot_fresh": true,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "generation": 1,
+      "revision": 1,
+      "observed_at": "2026-09-22T03:43:20.838Z",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "profile_sha256": "537b524fbfa101113e5854a90a11456ce21d2c1ff402f03db38ec0e4ad63abae",
+      "evidence": [
+        {
+          "id": "synthetic-radio-contract",
+          "sha256": "d9883ea7870a037541900b422adcc9da97578f5f990df5f4133474a0622172fe"
+        }
+      ],
+      "issued_at": "2026-09-22T03:42:20.269204Z",
+      "expires_at": "2026-09-23T03:43:20.269204Z",
+      "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+    },
+    "reconnected": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": true,
+      "blockers": [],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:01:40:01",
+            "max_bss": 4,
+            "operating_classes": [
+              {
+                "operating_class": 115,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "0200000140010401731400",
+            "sha256": "1abf811016a4d7741ba3868c49cf244ede78c093a58b5af8218201890f062c54"
+          }
+        },
+        {
+          "radio_id": "radio-2",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:01:40:02",
+            "max_bss": 2,
+            "operating_classes": [
+              {
+                "operating_class": 81,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              },
+              {
+                "operating_class": 83,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 84,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "02000001400202035111020c0d5311005411020c0d",
+            "sha256": "2ff4e0f72d68754afe28d230e90f9dd7ad4768d77991da969cfdf5b1ad49f9fa"
+          }
+        }
+      ],
+      "snapshot_fresh": true,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "generation": 2,
+      "revision": 6,
+      "observed_at": "2026-09-22T03:43:20.912Z",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "profile_sha256": "929680ce1ba7bf1afb72a06fc98ce8eaf17c506bdf2624becc61d1e6d06cf399",
+      "evidence": [
+        {
+          "id": "synthetic-radio-contract",
+          "sha256": "a6becde3b23156731505cf2db067a0b21634eb09c2cfced8f981acc39a752bc3"
+        }
+      ],
+      "issued_at": "2026-09-22T03:42:20.027555Z",
+      "expires_at": "2026-09-23T03:43:20.027555Z",
+      "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+    },
+    "restarted": [
+      {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "ready": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:01",
+              "max_bss": 4,
+              "operating_classes": [
+                {
+                  "operating_class": 115,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "0200000140010401731400",
+              "sha256": "1abf811016a4d7741ba3868c49cf244ede78c093a58b5af8218201890f062c54"
+            }
+          },
+          {
+            "radio_id": "radio-2",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:02",
+              "max_bss": 2,
+              "operating_classes": [
+                {
+                  "operating_class": 81,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                },
+                {
+                  "operating_class": 83,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 84,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000001400202035111020c0d5311005411020c0d",
+              "sha256": "2ff4e0f72d68754afe28d230e90f9dd7ad4768d77991da969cfdf5b1ad49f9fa"
+            }
+          }
+        ],
+        "snapshot_fresh": true,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "generation": 1,
+        "revision": 1,
+        "observed_at": "2026-09-22T03:43:22.056Z",
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "profile_sha256": "929680ce1ba7bf1afb72a06fc98ce8eaf17c506bdf2624becc61d1e6d06cf399",
+        "evidence": [
+          {
+            "id": "synthetic-radio-contract",
+            "sha256": "a6becde3b23156731505cf2db067a0b21634eb09c2cfced8f981acc39a752bc3"
+          }
+        ],
+        "issued_at": "2026-09-22T03:42:20.027555Z",
+        "expires_at": "2026-09-23T03:43:20.027555Z",
+        "adapter_instance_id": "91d38798-e83d-4d51-8906-35f8d0926b03"
+      },
+      {
+        "schema_version": 1,
+        "pod_id": "pod-2",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+        "ready": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:02:40:01",
+              "max_bss": 4,
+              "operating_classes": [
+                {
+                  "operating_class": 115,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "0200000240010401731400",
+              "sha256": "61dc62bdf00b4ec206913c45c17b391d625d0f062afd953a952b9ec781a67a1d"
+            }
+          },
+          {
+            "radio_id": "radio-2",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:02:40:02",
+              "max_bss": 2,
+              "operating_classes": [
+                {
+                  "operating_class": 81,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                },
+                {
+                  "operating_class": 83,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 84,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000002400202035111020c0d5311005411020c0d",
+              "sha256": "27222737292fafa53587d055bfa66554d1ab7e009eaf4ff20d150bb89e674873"
+            }
+          }
+        ],
+        "snapshot_fresh": true,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "generation": 1,
+        "revision": 1,
+        "observed_at": "2026-09-22T03:43:22.061Z",
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "profile_sha256": "537b524fbfa101113e5854a90a11456ce21d2c1ff402f03db38ec0e4ad63abae",
+        "evidence": [
+          {
+            "id": "synthetic-radio-contract",
+            "sha256": "d9883ea7870a037541900b422adcc9da97578f5f990df5f4133474a0622172fe"
+          }
+        ],
+        "issued_at": "2026-09-22T03:42:20.269204Z",
+        "expires_at": "2026-09-23T03:43:20.269204Z",
+        "adapter_instance_id": "91d38798-e83d-4d51-8906-35f8d0926b03"
+      }
+    ]
+  },
+  "observed_tables_unchanged_after_restoring_fixture_faults": true,
+  "service_lifecycle": [
+    {
+      "event": "started",
+      "pid": 231398,
+      "adapter_instance_id": "67be8f25-f2b6-4602-b4aa-d97207132e62"
+    },
+    {
+      "event": "stopped",
+      "pid": 231398,
+      "requested_crash": true,
+      "kill_escalation": false,
+      "returncode": -9
+    },
+    {
+      "event": "started",
+      "pid": 231410,
+      "adapter_instance_id": "91d38798-e83d-4d51-8906-35f8d0926b03"
+    },
+    {
+      "event": "stopped",
+      "pid": 231410,
+      "requested_crash": false,
+      "kill_escalation": false,
+      "returncode": 0
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-09-22T04:12:54.148901+00:00",
+  "base_revision": "0dce71addb7d892f7389ba152610867c69cf0027",
+  "scope": "EasyMesh 6.1 AP/Profile-2/Radio Advanced value components, explicit counter-unit decision and offline unqualified Profile-1 planning audit",
+  "working_tree_sha256": {
+    "examples/protocol/profile-features.synthetic.json": "b75ee982337ca07a4e63c4d5ed6319c45fc3147da9ed850530552a62171beb64",
+    "examples/protocol/profile-features.unknown.json": "0420ea37785695f0153afd63bf6717950b6db311032207eac6b04e78ffb89469",
+    "schemas/profile-features.schema.json": "a03fba4a731336144a0256e7c6fbe4d87ee91095c3cff659b02b394cd92c35c5",
+    "scripts/check-easymesh-reference.py": "fea2c358aaf1b66f4f5151a4668c257061df907bfec3defb19bba6bbca1ea4d4",
+    "src/emosa/counter_units.py": "b0fde4e053e498a442dd08f9e60563c158363a0141d016006cafb034cec84ce7",
+    "src/emosa/easymesh_payloads.py": "148cb5ede4057ea345a7a532eef5b27ddbe213fd7ef689cbce8ffe9df22508af",
+    "src/emosa/evaluation/cli.py": "b4c899b63d12bb17df7e9aec012ff747094dfb05d5b2f240cf269c3d02620e61",
+    "src/emosa/evaluation/payloads.py": "e19c7de265f3c4f5fbcc458ceebae1c8167adcab88c36ec0124ae561b9810d54",
+    "src/emosa/evaluation/profile_audit.py": "d790c23ba2a4925b561caa8cfd6ca5e21f931a3996ec653f3ea4600723ea0b3a",
+    "tests/fixtures/protocol/easymesh/native-values.json": "bb1a5cf36c529c6185c1f1e15c326f1ba60d6be13d468e33b7cc8711036e95c7",
+    "tests/fixtures/protocol/easymesh/provenance.json": "8d73e022b3fff3dfa0f3e77a210b20062ec28442b7d70c0d0c62cf628c9cd2e4",
+    "tests/test_easymesh_payloads.py": "58af8ce184dd74d2e9b9349f28d6fa697fecb58aabbbdaa2f75aa1f70ea475ef",
+    "tests/test_feature_capabilities.py": "470e5a54d17291b3d9ea1087b9b46e1d0a1a932a267c1508b157b86139318f9e",
+    "tests/test_profile_audit.py": "3cb406f86cd64ac7ab06e9f8e738ad4aa36c74ed653089887d1e482264dbc6d2",
+    "uv.lock": "4e61b047439d7320aa55032e1d59690845af09dddd2d20e6269e4cbc32f32894"
+  },
+  "tests": {
+    "unit": 483,
+    "ovsdb": 39,
+    "base_value_codec": 87,
+    "feature_capability": 52,
+    "profile_audit": 25
+  },
+  "junit_curation": {
+    "unit": {
+      "raw_sha256": "773b72d98a58d5a8d7b52dd74afcf2e009dae41540c3097504449dea3b918b5d",
+      "long_names_replaced": 5,
+      "transformation": "Replace testcase names over 256 characters with function and original-name digest; preserve counts, outcomes and timing"
+    },
+    "ovsdb": {
+      "raw_sha256": "f440da2e44eb57e529918bf77d987067063c7cd0bff5131fd34b15df1e84af0c",
+      "long_names_replaced": 0,
+      "transformation": "Replace testcase names over 256 characters with function and original-name digest; preserve counts, outcomes and timing"
+    }
+  },
+  "guide": "doc/protocol/profile-readiness.md",
+  "observed": {
+    "requirement_families": 15,
+    "new_value_types": [
+      "0xa1",
+      "0xb4",
+      "0xbe"
+    ],
+    "unknown_inputs_preserved": true,
+    "feature_plan_does_not_qualify_profile": true,
+    "cli_exit_codes": {
+      "profile_audit_unknown": 5,
+      "profile_audit_synthetic": 5,
+      "profile_audit_markdown": 5,
+      "payload": 0
+    },
+    "counter_unit_selection": "explicit unqualified peer facts; no live negotiation or counter conversion",
+    "independent_native_values": 17
+  },
+  "verification": {
+    "ruff_lint": "pass",
+    "ruff_format": "pass",
+    "unit": "pass",
+    "ovsdb": "pass",
+    "native_tshark_3_6_2": "17 values match",
+    "native_tshark_4_2_2": "17 values match",
+    "installed_wheel": "pass outside checkout with isolated Python and packaged planning contract",
+    "documentation_links_and_references": 579,
+    "shell_blocks_syntax_checked": 130,
+    "explorer_browser": {
+      "passed": true,
+      "checked_source_targets": 82,
+      "all_architecture_nodes": 8,
+      "all_lab_modes": 5,
+      "retained_runs": 6,
+      "documentation_index": true,
+      "viewports": [
+        "1440x1100",
+        "390x844"
+      ],
+      "errors": []
+    }
+  },
+  "publication_review": "Synthetic planning conditions, diagnostic value bytes, curated test results, native value comparison metadata and code digests only; no pod endpoint, private configuration, credentials or licensed document extracts published",
+  "p0_satisfied": false,
+  "full_clause_audit_complete": false,
+  "complete_ap_capability_report": false,
+  "profile_advertisement_ready": false,
+  "qualified_easymesh_profile": null,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "pod_accessed": false,
+  "limits": [
+    "No IEEE 1905 envelope, live controller exchange, profile advertisement or added write authority",
+    "Source capture is native prplMesh traffic, not EMOSA onboarding",
+    "Older dissector semantic labels are incomplete for EasyMesh 6.1; raw flags/numeric fields cross-check bytes and the specification defines current meanings",
+    "Planning declarations are not qualified adapter or hardware support",
+    "Family inventory and selected message-inclusion conditions are not a complete clause audit; current Profile-1 conditions need further review",
+    "Physical-pod compatibility, native peer profile mismatch and exact IEEE 1905 editions remain pending",
+    "ISO 80000-1:2009 access recorded for the later complete units/telemetry review; current component only reports codes and scale metadata"
+  ],
+  "acceptance_path": [
+    "real EasyMesh messages",
+    "EMOSA adapter",
+    "unchanged physical pod",
+    "independently observed behavior"
+  ],
+  "next": "Review and implement target-dependent HT/VHT/HE capability input mapping and Device Inventory; continue mandatory procedure audit, resolve native profile compatibility, acquire IEEE 1905 editions and qualify actual pod"
+}

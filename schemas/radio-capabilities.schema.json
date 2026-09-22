@@ -1,0 +1,673 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emosa.local/schemas/radio-capabilities.schema.json",
+  "description": "Explicit input claims for read-only synthetic AP Radio Basic Capabilities projection. Hash verification does not qualify physical hardware.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "source_kind": {
+      "enum": [
+        "synthetic_fixture",
+        "physical_pod_draft"
+      ]
+    },
+    "pod_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "binding_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "schema_fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "device": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "firmware_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "model",
+        "firmware_version"
+      ],
+      "additionalProperties": false
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "maxLength": 32
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "maxLength": 32
+    },
+    "complete_operating_class_inventory": {
+      "type": "boolean"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "file": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "review_note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "covers": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "device_identity",
+                "regulatory_domain",
+                "max_bss",
+                "complete_operating_classes",
+                "technology",
+                "device_inventory",
+                "wifi6"
+              ]
+            },
+            "minItems": 4,
+            "maxItems": 7,
+            "uniqueItems": true,
+            "allOf": [
+              {
+                "contains": {
+                  "const": "device_identity"
+                }
+              },
+              {
+                "contains": {
+                  "const": "regulatory_domain"
+                }
+              },
+              {
+                "contains": {
+                  "const": "max_bss"
+                }
+              },
+              {
+                "contains": {
+                  "const": "complete_operating_classes"
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "file",
+          "sha256",
+          "review_note",
+          "covers"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 8
+    },
+    "radios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "radio_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "ruid": {
+            "type": "string",
+            "pattern": "^[0-9a-f][26ae](?::[0-9a-f]{2}){5}$"
+          },
+          "country": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$"
+          },
+          "max_bss": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 255
+          },
+          "operating_classes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "operating_class": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                "max_eirp_dbm": {
+                  "type": "integer",
+                  "minimum": -128,
+                  "maximum": 127
+                },
+                "non_operable_channels": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 255
+                  },
+                  "minItems": 0,
+                  "maxItems": 64,
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "operating_class",
+                "max_eirp_dbm",
+                "non_operable_channels"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 32
+          },
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "radio_id",
+          "ruid",
+          "country",
+          "max_bss",
+          "operating_classes",
+          "evidence_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 8
+    },
+    "extensions": {
+      "type": "object",
+      "properties": {
+        "technology": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "properties": {
+              "radio_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "evidence_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "ht": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "const": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "max_tx_streams": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 4
+                      },
+                      "max_rx_streams": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 4
+                      },
+                      "short_gi_20": {
+                        "type": "boolean"
+                      },
+                      "short_gi_40": {
+                        "type": "boolean"
+                      },
+                      "ht40": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "max_tx_streams",
+                      "max_rx_streams",
+                      "short_gi_20",
+                      "short_gi_40",
+                      "ht40"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "vht": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "const": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "max_tx_streams": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 8
+                      },
+                      "max_rx_streams": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 8
+                      },
+                      "tx_mcs_codes": {
+                        "type": "array",
+                        "minItems": 8,
+                        "maxItems": 8,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 3
+                        }
+                      },
+                      "rx_mcs_codes": {
+                        "type": "array",
+                        "minItems": 8,
+                        "maxItems": 8,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 3
+                        }
+                      },
+                      "short_gi_80": {
+                        "type": "boolean"
+                      },
+                      "short_gi_160": {
+                        "type": "boolean"
+                      },
+                      "vht8080": {
+                        "type": "boolean"
+                      },
+                      "vht160": {
+                        "type": "boolean"
+                      },
+                      "su_beamformer": {
+                        "type": "boolean"
+                      },
+                      "mu_beamformer": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "max_tx_streams",
+                      "max_rx_streams",
+                      "tx_mcs_codes",
+                      "rx_mcs_codes",
+                      "short_gi_80",
+                      "short_gi_160",
+                      "vht8080",
+                      "vht160",
+                      "su_beamformer",
+                      "mu_beamformer"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "he": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "radio_id",
+              "evidence_id",
+              "ht",
+              "vht",
+              "he"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "device_inventory": {
+          "type": "object",
+          "properties": {
+            "evidence_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "serial_number": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "software_version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "execution_env": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "radios": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "radio_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "chipset_vendor": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "radio_id",
+                  "chipset_vendor"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "evidence_id",
+            "serial_number",
+            "software_version",
+            "execution_env",
+            "radios"
+          ],
+          "additionalProperties": false
+        },
+        "wifi6": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "properties": {
+              "radio_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "evidence_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "complete_role_inventory": {
+                "type": "boolean"
+              },
+              "roles": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 2,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "enum": [
+                        "ap",
+                        "non_ap_sta"
+                      ]
+                    },
+                    "mcs": {
+                      "type": "object",
+                      "properties": {
+                        "up_to_80": {
+                          "$ref": "#/$defs/he_mcs_pair"
+                        },
+                        "mhz160": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/$defs/he_mcs_pair"
+                            }
+                          ]
+                        },
+                        "mhz80plus80": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/$defs/he_mcs_pair"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "up_to_80",
+                        "mhz160",
+                        "mhz80plus80"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "features": {
+                      "type": "object",
+                      "properties": {
+                        "su_beamformer": {
+                          "type": "boolean"
+                        },
+                        "su_beamformee": {
+                          "type": "boolean"
+                        },
+                        "mu_beamformer": {
+                          "type": "boolean"
+                        },
+                        "beamformee_sts_le_80": {
+                          "type": "boolean"
+                        },
+                        "beamformee_sts_gt_80": {
+                          "type": "boolean"
+                        },
+                        "ul_mu_mimo": {
+                          "type": "boolean"
+                        },
+                        "ul_ofdma": {
+                          "type": "boolean"
+                        },
+                        "dl_ofdma": {
+                          "type": "boolean"
+                        },
+                        "rts": {
+                          "type": "boolean"
+                        },
+                        "mu_rts": {
+                          "type": "boolean"
+                        },
+                        "multi_bssid": {
+                          "type": "boolean"
+                        },
+                        "mu_edca": {
+                          "type": "boolean"
+                        },
+                        "twt_requester": {
+                          "type": "boolean"
+                        },
+                        "twt_responder": {
+                          "type": "boolean"
+                        },
+                        "spatial_reuse": {
+                          "type": "boolean"
+                        },
+                        "anticipated_channel_usage": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "su_beamformer",
+                        "su_beamformee",
+                        "mu_beamformer",
+                        "beamformee_sts_le_80",
+                        "beamformee_sts_gt_80",
+                        "ul_mu_mimo",
+                        "ul_ofdma",
+                        "dl_ofdma",
+                        "rts",
+                        "mu_rts",
+                        "multi_bssid",
+                        "mu_edca",
+                        "twt_requester",
+                        "twt_responder",
+                        "spatial_reuse",
+                        "anticipated_channel_usage"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "ap_user_limits": {
+                      "type": "object",
+                      "properties": {
+                        "dl_mu_mimo_tx": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 15
+                        },
+                        "ul_mu_mimo_rx": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 15
+                        },
+                        "dl_ofdma_tx": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "ul_ofdma_rx": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        }
+                      },
+                      "required": [
+                        "dl_mu_mimo_tx",
+                        "ul_mu_mimo_rx",
+                        "dl_ofdma_tx",
+                        "ul_ofdma_rx"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "mcs",
+                    "features",
+                    "ap_user_limits"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "radio_id",
+              "evidence_id",
+              "complete_role_inventory",
+              "roles"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "source_kind",
+    "pod_id",
+    "binding_sha256",
+    "schema_fingerprint",
+    "device",
+    "issued_at",
+    "expires_at",
+    "complete_operating_class_inventory",
+    "evidence",
+    "radios"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "he_mcs_pair": {
+      "type": "object",
+      "properties": {
+        "rx_codes": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          }
+        },
+        "tx_codes": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          }
+        }
+      },
+      "required": [
+        "rx_codes",
+        "tx_codes"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

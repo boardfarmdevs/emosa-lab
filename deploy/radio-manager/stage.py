@@ -54,6 +54,12 @@ for name in ('em-baseline-controller','em-baseline-agent','em-baseline-wired','e
         bundle.add(REPO / "schemas", arcname="schemas")
         bundle.add(REPO / "tests/fixtures/opensync", arcname="tests/fixtures/opensync")
         bundle.add(REPO / "deploy/peer-baseline/reference.json", arcname="peer-reference.json")
+        for path in sorted((REPO / "deploy/peer-baseline").glob("*.py")):
+            bundle.add(path, arcname="peer-baseline/" + path.name)
+        bundle.add(
+            REPO / "deploy/peer-baseline/reference.json", arcname="peer-baseline/reference.json"
+        )
+        bundle.add(REPO / "doc/protocol/protocol-matrix.json", arcname="protocol-matrix.json")
     vm("mkdir", "-p", "-m", "700", TARGET)
     command(
         "lxc",

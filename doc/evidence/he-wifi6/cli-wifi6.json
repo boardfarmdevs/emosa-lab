@@ -1,0 +1,74 @@
+{
+  "evidence_level": "standalone_easymesh_tlv_value",
+  "type": "0xaa",
+  "byte_length": 17,
+  "sha256": "6ed4e5e3f850f35c9082e55fdc4b1a0562a83d2c6bf29f682e045c8df475e81c",
+  "decoded": {
+    "ruid": "02:00:00:01:40:01",
+    "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+    "roles": [
+      {
+        "role": 0,
+        "known_role": "ap",
+        "he160": false,
+        "he8080": false,
+        "mcs_length": 4,
+        "mcs_hex": "e41bc6e4",
+        "mcs": {
+          "up_to_80_mhz": {
+            "rx_codes_nss_1_to_8": [
+              0,
+              1,
+              2,
+              3,
+              3,
+              2,
+              1,
+              0
+            ],
+            "tx_codes_nss_1_to_8": [
+              2,
+              1,
+              0,
+              3,
+              0,
+              1,
+              2,
+              3
+            ]
+          },
+          "160_mhz": null,
+          "80_plus_80_mhz": null
+        },
+        "beamforming_flags": 165,
+        "max_dl_mu_mimo_tx_users": 3,
+        "max_ul_mu_mimo_rx_users": 9,
+        "max_dl_ofdma_tx_users": 18,
+        "max_ul_ofdma_rx_users": 52,
+        "user_limits_apply_to_ap_role": true,
+        "feature_flags": 90,
+        "features": {
+          "su_beamformer": true,
+          "su_beamformee": false,
+          "mu_beamformer": true,
+          "beamformee_sts_le_80": false,
+          "beamformee_sts_gt_80": false,
+          "ul_mu_mimo": true,
+          "ul_ofdma": false,
+          "dl_ofdma": true,
+          "rts": false,
+          "mu_rts": true,
+          "multi_bssid": false,
+          "mu_edca": true,
+          "twt_requester": true,
+          "twt_responder": false,
+          "spatial_reuse": true,
+          "anticipated_channel_usage": false
+        }
+      }
+    ]
+  },
+  "wire_envelope_validated": false,
+  "controller_onboarding_by_emosa_proven": false,
+  "physical_pod_proven": false
+}

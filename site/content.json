@@ -11,7 +11,7 @@
         "Exercise discovery, capabilities and selected provisioning procedures.",
         "Retain captures from an independent bridge observation point."
       ],
-      "next": "Use the recorded peer build and explicit BSS-policy readiness sequence for EMOSA discovery/WSC after P0. Keep the native shutdown aborts and unguarded-restart failure visible when assessing reliability.",
+      "next": "Two isolated native wired trials passed with one agent BSS, one M2 and no M8; original runtime restored. Resolve the retained profile mismatch, capability ordering and shutdown abort before qualification.",
       "path": "deploy/peer/README.md"
     },
     "agent": {
@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "M1 construction and M2 payload authentication now have independent hostap fixtures. Complete IEEE framing, controller/radio binding, exchange state and complete-radio mapping before any wire-driven pod operation.",
+      "next": "Follow the first complete wire experiment contract. IEEE 1905 inputs, complete capability/profile rules and actual wire implementation remain pending; physical qualification needs the private connection path.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -423,10 +423,148 @@
       "title": "OVSDB-to-hwsim integration results",
       "description": "Three runs, independent radio State and client traffic, retained negative and recovery observations.",
       "category": "Retained radio evidence"
+    },
+    {
+      "path": "doc/guides/service-integration.md",
+      "title": "Service integration walkthrough",
+      "category": "Service and protocol integration",
+      "description": "Two configured pods, actual service crash recovery with hwsim, and a live controller preparation with wire onboarding still blocked."
+    },
+    {
+      "path": "doc/evidence/service-integration/summary.json",
+      "title": "Service integration evidence",
+      "category": "Service and protocol integration",
+      "description": "Reviewed service/radio observations and native controller preparation; captures, source digests and known shutdown defects."
+    },
+    {
+      "path": "doc/protocol/procedure-audit.md",
+      "title": "Available WFA procedure audit",
+      "category": "Service and protocol integration",
+      "description": "EasyMesh 6.1 and WPS 2.0.10 inclusion conditions, selected fields and remaining IEEE dependencies."
+    },
+    {
+      "path": "doc/guides/onboarding-readiness.md",
+      "title": "Onboarding readiness checks",
+      "category": "Service and protocol integration",
+      "description": "Read-only radio scope, atomic simulation guards and offline native capture review with profile/payload findings."
+    },
+    {
+      "path": "doc/evidence/onboarding-readiness/summary.json",
+      "title": "Onboarding readiness evidence",
+      "category": "Service and protocol integration",
+      "description": "Stricter service/hwsim run and matching native-capture findings under two tshark versions; wire and physical proof pending."
+    },
+    {
+      "path": "doc/protocol/ieee-media-review.md",
+      "title": "IEEE radio and Ethernet input review",
+      "category": "Protocol components",
+      "description": "Verified operator-supplied 802.11-2024 and 802.3-2022 artifacts, selected clause references and remaining edition/IEEE 1905 gaps."
+    },
+    {
+      "path": "doc/protocol/easymesh-payloads.md",
+      "title": "EasyMesh value components and offline inspection",
+      "category": "Protocol components",
+      "description": "Thirteen standalone value codecs and twenty independent native values; HE MCS stays opaque pending reviewed conversion."
+    },
+    {
+      "path": "doc/evidence/easymesh-payloads/summary.json",
+      "title": "EasyMesh value component evidence",
+      "category": "Protocol components",
+      "description": "Component/regression tests, two independent dissector versions and bounded native observations; no complete wire or physical claim."
+    },
+    {
+      "path": "doc/guides/observed-topology.md",
+      "title": "Stable identities and complete observed topology",
+      "category": "Service and protocol integration",
+      "description": "Persist explicit synthetic bindings, inspect every radio/VIF through the real service, and test State-only AP values across reconnect, UUID recreation and process death."
+    },
+    {
+      "path": "doc/evidence/observed-topology/summary.json",
+      "title": "Observed topology evidence",
+      "category": "Service and protocol integration",
+      "description": "Two-pod read-only adapter experiment and graph/identity regressions; complete wire and physical proof remain pending."
+    },
+    {
+      "path": "doc/guides/radio-capabilities.md",
+      "title": "Radio capability inputs and diagnostic values",
+      "category": "Service and protocol integration",
+      "description": "Understand supported limits versus observed State, provide explicit evidence inputs, and test withdrawal on changed profile, firmware or regulatory context."
+    },
+    {
+      "path": "doc/evidence/radio-capabilities/summary.json",
+      "title": "Radio capability component evidence",
+      "category": "Service and protocol integration",
+      "description": "Two-pod read-only mapping, signed value boundaries, independent native dissectors and unchanged physical/wire gates."
+    },
+    {
+      "path": "doc/protocol/profile-readiness.md",
+      "title": "Profile readiness and feature capability values",
+      "category": "Protocol components",
+      "description": "Audit mandatory requirement families, preserve unknown feature inputs, understand message-specific inclusions and counter units."
+    },
+    {
+      "path": "doc/evidence/profile-audit/summary.json",
+      "title": "Feature codec and profile audit evidence",
+      "category": "Protocol components",
+      "description": "Reserved-field tests, conditional inclusion audits, independent native values and installed-wheel verification; profile and physical gates remain open."
+    },
+    {
+      "path": "doc/guides/technology-inventory.md",
+      "title": "Technology capabilities and Device Inventory",
+      "category": "Service and protocol integration",
+      "description": "Understand HT/VHT/MCS and represented-pod identity, then run the two-pod read-only mapping with separate readiness results."
+    },
+    {
+      "path": "doc/evidence/technology-inventory/summary.json",
+      "title": "Technology and inventory evidence",
+      "category": "Service and protocol integration",
+      "description": "Exact value tests, two-pod fault/restart checks, installed-wheel verification and independent native comparisons; physical onboarding pending."
+    },
+    {
+      "path": "doc/guides/he-wifi6.md",
+      "title": "HE MCS and Wi-Fi 6 capability values",
+      "category": "Service and protocol integration",
+      "description": "Learn Rx/Tx maps, widths and roles; reproduce the native zero-length negative case and review the remaining peer/report gaps."
+    },
+    {
+      "path": "doc/evidence/he-wifi6/summary.json",
+      "title": "HE and Wi-Fi 6 component evidence",
+      "category": "Service and protocol integration",
+      "description": "Source-derived asymmetric checks, two independent dissector versions, native source findings and installed-wheel smoke; onboarding remains pending."
+    },
+    {
+      "path": "doc/guides/wifi6-inputs.md",
+      "title": "Wi-Fi 6 role inputs through the service",
+      "category": "Service and protocol integration",
+      "description": "Declare AP/STA roles and evidence, run two simulated pods, interpret separate readiness and test withdrawal and crash recovery."
+    },
+    {
+      "path": "doc/evidence/wifi6-inputs/summary.json",
+      "title": "Wi-Fi 6 role mapping evidence",
+      "category": "Service and protocol integration",
+      "description": "Exact asymmetric role values, input failures, two-pod isolation and installed-wheel recovery; complete HE reporting and physical onboarding remain pending."
+    },
+    {
+      "path": "doc/guides/native-compatibility.md",
+      "title": "Isolated native compatibility trial",
+      "category": "Service and protocol integration",
+      "description": "Build and test the native HE length fix, use a sole-fronthaul policy, observe clients and restore the pinned runtime."
+    },
+    {
+      "path": "doc/guides/first-wire-experiment.md",
+      "title": "First complete wire experiment contract",
+      "category": "Service and protocol integration",
+      "description": "Declared one-pod/radio/BSS target, causal evidence, negative controls, five-step status and physical-pod handoff."
+    },
+    {
+      "path": "doc/evidence/native-compatibility/summary.json",
+      "title": "Native compatibility candidate evidence",
+      "category": "Service and protocol integration",
+      "description": "Actual parser regressions, two clean wired trials, one-M2 captures, client evidence, setup failures and verified runtime restoration."
     }
   ],
   "suite_evidence": {
-    "unit": "connecting-pod/unit-results.xml",
-    "ovsdb": "connecting-pod/ovsdb-results.xml"
+    "unit": "native-compatibility/unit-results.xml",
+    "ovsdb": "native-compatibility/ovsdb-results.xml"
   }
 }

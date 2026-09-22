@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "source_kind": "synthetic_fixture",
+  "pod_id": "pod-2",
+  "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+  "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+  "device": {
+    "model": "EMOSA synthetic extender",
+    "firmware_version": "simulation-only"
+  },
+  "issued_at": "2026-09-22T04:28:30.945233Z",
+  "expires_at": "2026-09-23T04:29:30.945233Z",
+  "complete_operating_class_inventory": true,
+  "evidence": [
+    {
+      "id": "synthetic-radio-contract",
+      "file": "synthetic-radio-contract.json",
+      "sha256": "0e88747f08966d46113ab8e46acd84305814ce8c069c6442a8d5d6cb20f7ea0a",
+      "review_note": "Synthetic fixture declaration only; not physical qualification",
+      "covers": [
+        "device_identity",
+        "regulatory_domain",
+        "max_bss",
+        "complete_operating_classes",
+        "technology",
+        "device_inventory"
+      ]
+    }
+  ],
+  "radios": [
+    {
+      "radio_id": "radio-1",
+      "ruid": "02:00:00:02:40:01",
+      "country": "US",
+      "max_bss": 4,
+      "operating_classes": [
+        {
+          "operating_class": 115,
+          "max_eirp_dbm": 20,
+          "non_operable_channels": []
+        },
+        {
+          "operating_class": 116,
+          "max_eirp_dbm": 20,
+          "non_operable_channels": []
+        },
+        {
+          "operating_class": 117,
+          "max_eirp_dbm": 20,
+          "non_operable_channels": []
+        },
+        {
+          "operating_class": 128,
+          "max_eirp_dbm": 20,
+          "non_operable_channels": [
+            58,
+            106,
+            122,
+            138,
+            155,
+            171
+          ]
+        }
+      ],
+      "evidence_id": "synthetic-radio-contract"
+    },
+    {
+      "radio_id": "radio-2",
+      "ruid": "02:00:00:02:40:02",
+      "country": "US",
+      "max_bss": 2,
+      "operating_classes": [
+        {
+          "operating_class": 81,
+          "max_eirp_dbm": 17,
+          "non_operable_channels": [
+            12,
+            13
+          ]
+        },
+        {
+          "operating_class": 83,
+          "max_eirp_dbm": 17,
+          "non_operable_channels": []
+        },
+        {
+          "operating_class": 84,
+          "max_eirp_dbm": 17,
+          "non_operable_channels": [
+            12,
+            13
+          ]
+        }
+      ],
+      "evidence_id": "synthetic-radio-contract"
+    }
+  ],
+  "extensions": {
+    "technology": [
+      {
+        "radio_id": "radio-1",
+        "evidence_id": "synthetic-radio-contract",
+        "ht": {
+          "max_tx_streams": 2,
+          "max_rx_streams": 2,
+          "short_gi_20": true,
+          "short_gi_40": true,
+          "ht40": true
+        },
+        "vht": {
+          "max_tx_streams": 2,
+          "max_rx_streams": 3,
+          "tx_mcs_codes": [
+            2,
+            1,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "rx_mcs_codes": [
+            1,
+            2,
+            0,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "short_gi_80": true,
+          "short_gi_160": false,
+          "vht8080": false,
+          "vht160": false,
+          "su_beamformer": true,
+          "mu_beamformer": false
+        },
+        "he": false
+      },
+      {
+        "radio_id": "radio-2",
+        "evidence_id": "synthetic-radio-contract",
+        "ht": {
+          "max_tx_streams": 2,
+          "max_rx_streams": 2,
+          "short_gi_20": true,
+          "short_gi_40": true,
+          "ht40": true
+        },
+        "vht": false,
+        "he": false
+      }
+    ],
+    "device_inventory": {
+      "evidence_id": "synthetic-radio-contract",
+      "serial_number": "EMOSA-TOPOLOGY-SIM-002",
+      "software_version": "simulation-only",
+      "execution_env": "EMOSA synthetic environment",
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "chipset_vendor": "EMOSA synthetic radio"
+        },
+        {
+          "radio_id": "radio-2",
+          "chipset_vendor": "EMOSA synthetic radio"
+        }
+      ]
+    }
+  }
+}

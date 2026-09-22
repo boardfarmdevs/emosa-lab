@@ -48,6 +48,8 @@ def test_read_only_collects_draft_without_credentials_or_writes(tmp_path):
             assert profile["radios"][0]["vif_config_refs"] == [profile["vifs"][0]["config_uuid"]]
             assert profile["configuration_representations"]["modern_wpa_columns_present"]
             assert not profile["configuration_representations"]["credential_values_collected"]
+            assert profile["radio_scope_candidates"][0]["credential_layout"] == "not_collected"
+            assert not profile["radio_scope_candidates"][0]["wire_admission"]
             assert "initial-simulation-key" not in json.dumps(profile)
             assert "preserved-guest-key" not in json.dumps(profile)
             assert (await admin.snapshot())["tables"] == before

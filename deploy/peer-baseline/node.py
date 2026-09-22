@@ -62,7 +62,7 @@ def active(unit):
     ).strip() in {"active", "activating", "deactivating"}
 
 
-def prepare(ordinal, backhaul):
+def prepare(ordinal, backhaul, policy_name="front-and-backhaul"):
     if any(active(unit) for unit in UNITS):
         raise SystemExit("Stop and collect the previous peer processes before preparing")
     if Path("/tmp/beerocks/logs").exists():
@@ -147,6 +147,8 @@ wpa_passphrase={INITIAL_KEY}
 rsn_pairwise=CCMP
 multi_ap=1
 """
+    if ordinal == 2 and policy_name == "sole-fronthaul":
+        config = config.split("bss=wlan0.0\n", 1)[0]
     Path("/var/run/hostapd-phy0.conf").write_text(config)
     (ROOT / "initial-hostapd.conf").write_text(config)
     if ordinal == 2 and backhaul == "wireless":
@@ -239,7 +241,7 @@ def start(ordinal, action):
         launch("controller", str(INSTALL / "bin/beerocks_controller"))
 
 
-def policy(ordinal):
+def policy(ordinal, policy_name="front-and-backhaul"):
     if ordinal != 1:
         raise SystemExit("BSS policy belongs on the controller")
 
@@ -253,7 +255,8 @@ def policy(ordinal):
         al = f"02:00:00:e0:00:{target:02x}"
         bml("bml_clear_wifi_credentials", al)
         bml("bml_set_wifi_credentials", al, FRONTHAUL, KEY, "24g-5g", "fronthaul", "0")
-        bml("bml_set_wifi_credentials", al, BACKHAUL, KEY, "24g-5g", "backhaul", "0")
+        if target == 1 or policy_name != "sole-fronthaul":
+            bml("bml_set_wifi_credentials", al, BACKHAUL, KEY, "24g-5g", "backhaul", "0")
     bml("bml_update_wifi_credentials")
     print("Controller BSS policy submitted; verify actual M2 and agent state independently")
 
@@ -286,12 +289,17 @@ def main():
         ),
     )
     parser.add_argument("--backhaul", choices=("wired", "wireless"), default="wired")
+    parser.add_argument(
+        "--policy", choices=("front-and-backhaul", "sole-fronthaul"), default="front-and-backhaul"
+    )
     args = parser.parse_args()
+    if args.policy == "sole-fronthaul" and args.backhaul != "wired":
+        parser.error("The sole-fronthaul experiment requires wired management")
     ordinal = guard()
     if args.action == "prepare":
-        prepare(ordinal, args.backhaul)
+        prepare(ordinal, args.backhaul, args.policy)
     elif args.action == "policy":
-        policy(ordinal)
+        policy(ordinal, args.policy)
     elif args.action == "stop":
         stop()
     else:

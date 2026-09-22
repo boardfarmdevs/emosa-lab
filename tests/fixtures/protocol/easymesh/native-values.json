@@ -1,0 +1,275 @@
+{
+  "cases": [
+    {
+      "frame": 1,
+      "type": "0x80",
+      "value_hex": "0201a1",
+      "decoded": {
+        "services": [
+          1,
+          161
+        ]
+      }
+    },
+    {
+      "frame": 1,
+      "type": "0x81",
+      "value_hex": "0100",
+      "decoded": {
+        "services": [
+          0
+        ]
+      }
+    },
+    {
+      "frame": 1,
+      "type": "0xb3",
+      "value_hex": "02",
+      "decoded": {
+        "profile": 2
+      }
+    },
+    {
+      "frame": 2,
+      "type": "0x80",
+      "value_hex": "0100",
+      "decoded": {
+        "services": [
+          0
+        ]
+      }
+    },
+    {
+      "frame": 2,
+      "type": "0xb3",
+      "value_hex": "01",
+      "decoded": {
+        "profile": 1
+      }
+    },
+    {
+      "frame": 2,
+      "type": "0xb4",
+      "value_hex": "00004000",
+      "decoded": {
+        "max_prioritization_rules": 0,
+        "flags": 64,
+        "byte_counter_units": 1,
+        "max_vids": 0
+      }
+    },
+    {
+      "frame": 5,
+      "type": "0x85",
+      "value_hex": "020000ec020002035114020c0d5314005414020c0d",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00",
+        "max_bss": 2,
+        "operating_classes": [
+          {
+            "operating_class": 81,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": [
+              12,
+              13
+            ]
+          },
+          {
+            "operating_class": 83,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": []
+          },
+          {
+            "operating_class": 84,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": [
+              12,
+              13
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "frame": 5,
+      "type": "0xb4",
+      "value_hex": "00004010",
+      "decoded": {
+        "max_prioritization_rules": 0,
+        "flags": 64,
+        "byte_counter_units": 1,
+        "max_vids": 16
+      }
+    },
+    {
+      "frame": 5,
+      "type": "0xbe",
+      "value_hex": "020000ec020080",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00",
+        "flags": 128
+      }
+    },
+    {
+      "frame": 7,
+      "type": "0x82",
+      "value_hex": "020000ec0200",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00"
+      }
+    },
+    {
+      "frame": 20,
+      "type": "0x80",
+      "value_hex": "0201a1",
+      "decoded": {
+        "services": [
+          1,
+          161
+        ]
+      }
+    },
+    {
+      "frame": 20,
+      "type": "0x83",
+      "value_hex": "01020000ec020002020000ec020015656d6f73612d756e70726f766973696f6e65642d32020000ec02011e656d6f73612d756e70726f766973696f6e65642d6261636b6861756c2d32",
+      "decoded": {
+        "radios": [
+          {
+            "ruid": "02:00:00:ec:02:00",
+            "bsses": [
+              {
+                "ap_mac": "02:00:00:ec:02:00",
+                "ssid_hex": "656d6f73612d756e70726f766973696f6e65642d32"
+              },
+              {
+                "ap_mac": "02:00:00:ec:02:01",
+                "ssid_hex": "656d6f73612d756e70726f766973696f6e65642d6261636b6861756c2d32"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "frame": 20,
+      "type": "0xb3",
+      "value_hex": "02",
+      "decoded": {
+        "profile": 2
+      }
+    },
+    {
+      "frame": 22,
+      "type": "0xa1",
+      "value_hex": "f0",
+      "decoded": {
+        "flags": 240
+      }
+    },
+    {
+      "frame": 22,
+      "type": "0x85",
+      "value_hex": "020000ec020002035114020c0d5314005414020c0d",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00",
+        "max_bss": 2,
+        "operating_classes": [
+          {
+            "operating_class": 81,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": [
+              12,
+              13
+            ]
+          },
+          {
+            "operating_class": 83,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": []
+          },
+          {
+            "operating_class": 84,
+            "max_eirp_dbm": 20,
+            "non_operable_channels": [
+              12,
+              13
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "frame": 22,
+      "type": "0x86",
+      "value_hex": "020000ec02007e",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00",
+        "flags": 126,
+        "max_tx_streams": 2,
+        "max_rx_streams": 4
+      }
+    },
+    {
+      "frame": 22,
+      "type": "0x88",
+      "value_hex": "020000ec020004000000402436",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00",
+        "mcs_hex": "00000040",
+        "stream_flags": 36,
+        "feature_flags": 54
+      }
+    },
+    {
+      "frame": 22,
+      "type": "0xbe",
+      "value_hex": "020000ec020080",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00",
+        "flags": 128
+      }
+    },
+    {
+      "frame": 22,
+      "type": "0xb4",
+      "value_hex": "01006010",
+      "decoded": {
+        "max_prioritization_rules": 1,
+        "flags": 96,
+        "byte_counter_units": 1,
+        "max_vids": 16
+      }
+    },
+    {
+      "frame": 22,
+      "type": "0xd4",
+      "value_hex": "0d7072706c6d657368313233343505362e302e30125562756e74752032342e30342e35204c545301020000ec020000",
+      "decoded": {
+        "serial_number_hex": "7072706c6d6573683132333435",
+        "software_version_hex": "362e302e30",
+        "execution_env_hex": "5562756e74752032342e30342e35204c5453",
+        "radios": [
+          {
+            "ruid": "02:00:00:ec:02:00",
+            "chipset_vendor_hex": ""
+          }
+        ]
+      }
+    }
+  ],
+  "rejected_cases": [
+    {
+      "frame": 22,
+      "type": "0xaa",
+      "value_hex": "020000ec020002000000004003221212d0400000004003221212d0",
+      "observed": {
+        "ruid": "02:00:00:ec:02:00",
+        "role_flags": [
+          0,
+          64
+        ]
+      }
+    }
+  ]
+}

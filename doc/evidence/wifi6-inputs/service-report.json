@@ -1,0 +1,3173 @@
+{
+  "schema_version": 1,
+  "scope": "synthetic capability inputs via a read-only adapter service",
+  "passed": true,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "stages": {
+    "connected": [
+      {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "ready_scope": "basic_radio_capabilities_only",
+        "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "ready": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:01",
+              "max_bss": 4,
+              "operating_classes": [
+                {
+                  "operating_class": 115,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 116,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 117,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 128,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": [
+                    58,
+                    106,
+                    122,
+                    138,
+                    155,
+                    171
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000001400104047314007414007514008014063a6a7a8a9bab",
+              "sha256": "b74501fb457ed3752f5fedafbec5b1f0a772ae82c22fdb9a7d0f04e67947852c"
+            }
+          },
+          {
+            "radio_id": "radio-2",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:02",
+              "max_bss": 2,
+              "operating_classes": [
+                {
+                  "operating_class": 81,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                },
+                {
+                  "operating_class": 83,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 84,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000001400202035111020c0d5311005411020c0d",
+              "sha256": "2ff4e0f72d68754afe28d230e90f9dd7ad4768d77991da969cfdf5b1ad49f9fa"
+            }
+          }
+        ],
+        "extensions": {
+          "technology": {
+            "ready": false,
+            "blockers": [
+              "he_and_wifi6_mapping_pending"
+            ],
+            "values": []
+          },
+          "device_inventory": {
+            "ready": true,
+            "blockers": [],
+            "values": [
+              {
+                "type": "0xd4",
+                "value_hex": "16454d4f53412d544f504f4c4f47592d53494d2d3030310f73696d756c6174696f6e2d6f6e6c791b454d4f53412073796e74686574696320656e7669726f6e6d656e740202000001400115454d4f53412073796e74686574696320726164696f02000001400215454d4f53412073796e74686574696320726164696f",
+                "sha256": "5abf89dd0cdc247beb3d6b52f18add43f77e733b3e54ce9e9bf270fcf0d2f239",
+                "decoded": {
+                  "serial_number_hex": "454d4f53412d544f504f4c4f47592d53494d2d303031",
+                  "software_version_hex": "73696d756c6174696f6e2d6f6e6c79",
+                  "execution_env_hex": "454d4f53412073796e74686574696320656e7669726f6e6d656e74",
+                  "radios": [
+                    {
+                      "ruid": "02:00:00:01:40:01",
+                      "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                    },
+                    {
+                      "ruid": "02:00:00:01:40:02",
+                      "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "wifi6": {
+            "ready": true,
+            "blockers": [],
+            "values": [
+              {
+                "type": "0xaa",
+                "value_hex": "0200000140010104c6fff9ffa7231209c4",
+                "sha256": "98b020f874da5be62e4c85329dccdb626815fe771d6f971bcf608b9d3cd21daf",
+                "decoded": {
+                  "ruid": "02:00:00:01:40:01",
+                  "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                  "roles": [
+                    {
+                      "role": 0,
+                      "known_role": "ap",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "c6fff9ff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            2,
+                            1,
+                            0,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            1,
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 167,
+                      "max_dl_mu_mimo_tx_users": 2,
+                      "max_ul_mu_mimo_rx_users": 3,
+                      "max_dl_ofdma_tx_users": 18,
+                      "max_ul_ofdma_rx_users": 9,
+                      "user_limits_apply_to_ap_role": true,
+                      "feature_flags": 196,
+                      "features": {
+                        "su_beamformer": true,
+                        "su_beamformee": false,
+                        "mu_beamformer": true,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": false,
+                        "twt_responder": true,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "0xaa",
+                "value_hex": "0200000140020204c6fff9ffa7231209c444fdfffeff47000000c8",
+                "sha256": "dc74a645b09267148c057fb3c29a4e701f7c20af01dac2bea20ae6f2113e5018",
+                "decoded": {
+                  "ruid": "02:00:00:01:40:02",
+                  "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                  "roles": [
+                    {
+                      "role": 0,
+                      "known_role": "ap",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "c6fff9ff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            2,
+                            1,
+                            0,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            1,
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 167,
+                      "max_dl_mu_mimo_tx_users": 2,
+                      "max_ul_mu_mimo_rx_users": 3,
+                      "max_dl_ofdma_tx_users": 18,
+                      "max_ul_ofdma_rx_users": 9,
+                      "user_limits_apply_to_ap_role": true,
+                      "feature_flags": 196,
+                      "features": {
+                        "su_beamformer": true,
+                        "su_beamformee": false,
+                        "mu_beamformer": true,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": false,
+                        "twt_responder": true,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    },
+                    {
+                      "role": 1,
+                      "known_role": "non_ap_sta",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "fdfffeff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            1,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 71,
+                      "max_dl_mu_mimo_tx_users": 0,
+                      "max_ul_mu_mimo_rx_users": 0,
+                      "max_dl_ofdma_tx_users": 0,
+                      "max_ul_ofdma_rx_users": 0,
+                      "user_limits_apply_to_ap_role": false,
+                      "feature_flags": 200,
+                      "features": {
+                        "su_beamformer": false,
+                        "su_beamformee": true,
+                        "mu_beamformer": false,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": true,
+                        "twt_responder": false,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "snapshot_fresh": true,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "generation": 1,
+        "revision": 1,
+        "observed_at": "2026-09-22T05:32:32.738Z",
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "profile_sha256": "55820794b98c3a6096617ccca5c06848d2d143898414053dc80a0425d583c9ed",
+        "evidence": [
+          {
+            "id": "synthetic-radio-contract",
+            "sha256": "d09c40d701874a6f52982f3fd23028d7e6ab6fbf161b6c7e105ab1c9f495c3b2"
+          }
+        ],
+        "issued_at": "2026-09-22T05:31:32.118965Z",
+        "expires_at": "2026-09-23T05:32:32.118965Z",
+        "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+      },
+      {
+        "schema_version": 1,
+        "pod_id": "pod-2",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "ready_scope": "basic_radio_capabilities_only",
+        "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+        "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+        "ready": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:02:40:01",
+              "max_bss": 4,
+              "operating_classes": [
+                {
+                  "operating_class": 115,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 116,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 117,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 128,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": [
+                    58,
+                    106,
+                    122,
+                    138,
+                    155,
+                    171
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000002400104047314007414007514008014063a6a7a8a9bab",
+              "sha256": "639c4d8e7f5595cc5b116031c7e416e6a8c813bf41bd58f53faa3a0f98ab4345"
+            }
+          },
+          {
+            "radio_id": "radio-2",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:02:40:02",
+              "max_bss": 2,
+              "operating_classes": [
+                {
+                  "operating_class": 81,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                },
+                {
+                  "operating_class": 83,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 84,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000002400202035111020c0d5311005411020c0d",
+              "sha256": "27222737292fafa53587d055bfa66554d1ab7e009eaf4ff20d150bb89e674873"
+            }
+          }
+        ],
+        "extensions": {
+          "technology": {
+            "ready": false,
+            "blockers": [
+              "he_and_wifi6_mapping_pending"
+            ],
+            "values": []
+          },
+          "device_inventory": {
+            "ready": true,
+            "blockers": [],
+            "values": [
+              {
+                "type": "0xd4",
+                "value_hex": "16454d4f53412d544f504f4c4f47592d53494d2d3030320f73696d756c6174696f6e2d6f6e6c791b454d4f53412073796e74686574696320656e7669726f6e6d656e740202000002400115454d4f53412073796e74686574696320726164696f02000002400215454d4f53412073796e74686574696320726164696f",
+                "sha256": "582b223894809edce3c11b0b3190e3660458a24f4add865f30fba916b65ecf0b",
+                "decoded": {
+                  "serial_number_hex": "454d4f53412d544f504f4c4f47592d53494d2d303032",
+                  "software_version_hex": "73696d756c6174696f6e2d6f6e6c79",
+                  "execution_env_hex": "454d4f53412073796e74686574696320656e7669726f6e6d656e74",
+                  "radios": [
+                    {
+                      "ruid": "02:00:00:02:40:01",
+                      "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                    },
+                    {
+                      "ruid": "02:00:00:02:40:02",
+                      "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "wifi6": {
+            "ready": true,
+            "blockers": [],
+            "values": [
+              {
+                "type": "0xaa",
+                "value_hex": "0200000240010104c6fff9ffa7231209c4",
+                "sha256": "d7b80c20d7c08f42ef1be616815b624f5277a209f09b02350f5dc064a70d57ed",
+                "decoded": {
+                  "ruid": "02:00:00:02:40:01",
+                  "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                  "roles": [
+                    {
+                      "role": 0,
+                      "known_role": "ap",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "c6fff9ff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            2,
+                            1,
+                            0,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            1,
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 167,
+                      "max_dl_mu_mimo_tx_users": 2,
+                      "max_ul_mu_mimo_rx_users": 3,
+                      "max_dl_ofdma_tx_users": 18,
+                      "max_ul_ofdma_rx_users": 9,
+                      "user_limits_apply_to_ap_role": true,
+                      "feature_flags": 196,
+                      "features": {
+                        "su_beamformer": true,
+                        "su_beamformee": false,
+                        "mu_beamformer": true,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": false,
+                        "twt_responder": true,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "0xaa",
+                "value_hex": "0200000240020204c6fff9ffa7231209c444fdfffeff47000000c8",
+                "sha256": "038bd6de29039b64b27d234c8bbe4796e4beb82f00c2d0f7971edff238aff6f1",
+                "decoded": {
+                  "ruid": "02:00:00:02:40:02",
+                  "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                  "roles": [
+                    {
+                      "role": 0,
+                      "known_role": "ap",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "c6fff9ff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            2,
+                            1,
+                            0,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            1,
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 167,
+                      "max_dl_mu_mimo_tx_users": 2,
+                      "max_ul_mu_mimo_rx_users": 3,
+                      "max_dl_ofdma_tx_users": 18,
+                      "max_ul_ofdma_rx_users": 9,
+                      "user_limits_apply_to_ap_role": true,
+                      "feature_flags": 196,
+                      "features": {
+                        "su_beamformer": true,
+                        "su_beamformee": false,
+                        "mu_beamformer": true,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": false,
+                        "twt_responder": true,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    },
+                    {
+                      "role": 1,
+                      "known_role": "non_ap_sta",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "fdfffeff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            1,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 71,
+                      "max_dl_mu_mimo_tx_users": 0,
+                      "max_ul_mu_mimo_rx_users": 0,
+                      "max_dl_ofdma_tx_users": 0,
+                      "max_ul_ofdma_rx_users": 0,
+                      "user_limits_apply_to_ap_role": false,
+                      "feature_flags": 200,
+                      "features": {
+                        "su_beamformer": false,
+                        "su_beamformee": true,
+                        "mu_beamformer": false,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": true,
+                        "twt_responder": false,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "snapshot_fresh": true,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "generation": 1,
+        "revision": 1,
+        "observed_at": "2026-09-22T05:32:32.745Z",
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "profile_sha256": "a8b3c593a7a6246318a17b0df7e29fe39ff0752563fadb38efc241c8a0ff700f",
+        "evidence": [
+          {
+            "id": "synthetic-radio-contract",
+            "sha256": "8e243d2ae57842135dff0f92c4d9a1f05578a4d0d2d9cbdacd5bfb7b43ccb370"
+          }
+        ],
+        "issued_at": "2026-09-22T05:31:32.372798Z",
+        "expires_at": "2026-09-23T05:32:32.372798Z",
+        "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+      }
+    ],
+    "cli_ready": {
+      "exit_code": 0,
+      "result": {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "ready_scope": "basic_radio_capabilities_only",
+        "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "ready": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:01",
+              "max_bss": 4,
+              "operating_classes": [
+                {
+                  "operating_class": 115,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 116,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 117,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 128,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": [
+                    58,
+                    106,
+                    122,
+                    138,
+                    155,
+                    171
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000001400104047314007414007514008014063a6a7a8a9bab",
+              "sha256": "b74501fb457ed3752f5fedafbec5b1f0a772ae82c22fdb9a7d0f04e67947852c"
+            }
+          },
+          {
+            "radio_id": "radio-2",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:02",
+              "max_bss": 2,
+              "operating_classes": [
+                {
+                  "operating_class": 81,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                },
+                {
+                  "operating_class": 83,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 84,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000001400202035111020c0d5311005411020c0d",
+              "sha256": "2ff4e0f72d68754afe28d230e90f9dd7ad4768d77991da969cfdf5b1ad49f9fa"
+            }
+          }
+        ],
+        "extensions": {
+          "technology": {
+            "ready": false,
+            "blockers": [
+              "he_and_wifi6_mapping_pending"
+            ],
+            "values": []
+          },
+          "device_inventory": {
+            "ready": true,
+            "blockers": [],
+            "values": [
+              {
+                "type": "0xd4",
+                "value_hex": "16454d4f53412d544f504f4c4f47592d53494d2d3030310f73696d756c6174696f6e2d6f6e6c791b454d4f53412073796e74686574696320656e7669726f6e6d656e740202000001400115454d4f53412073796e74686574696320726164696f02000001400215454d4f53412073796e74686574696320726164696f",
+                "sha256": "5abf89dd0cdc247beb3d6b52f18add43f77e733b3e54ce9e9bf270fcf0d2f239",
+                "decoded": {
+                  "serial_number_hex": "454d4f53412d544f504f4c4f47592d53494d2d303031",
+                  "software_version_hex": "73696d756c6174696f6e2d6f6e6c79",
+                  "execution_env_hex": "454d4f53412073796e74686574696320656e7669726f6e6d656e74",
+                  "radios": [
+                    {
+                      "ruid": "02:00:00:01:40:01",
+                      "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                    },
+                    {
+                      "ruid": "02:00:00:01:40:02",
+                      "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "wifi6": {
+            "ready": true,
+            "blockers": [],
+            "values": [
+              {
+                "type": "0xaa",
+                "value_hex": "0200000140010104c6fff9ffa7231209c4",
+                "sha256": "98b020f874da5be62e4c85329dccdb626815fe771d6f971bcf608b9d3cd21daf",
+                "decoded": {
+                  "ruid": "02:00:00:01:40:01",
+                  "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                  "roles": [
+                    {
+                      "role": 0,
+                      "known_role": "ap",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "c6fff9ff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            2,
+                            1,
+                            0,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            1,
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 167,
+                      "max_dl_mu_mimo_tx_users": 2,
+                      "max_ul_mu_mimo_rx_users": 3,
+                      "max_dl_ofdma_tx_users": 18,
+                      "max_ul_ofdma_rx_users": 9,
+                      "user_limits_apply_to_ap_role": true,
+                      "feature_flags": 196,
+                      "features": {
+                        "su_beamformer": true,
+                        "su_beamformee": false,
+                        "mu_beamformer": true,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": false,
+                        "twt_responder": true,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "0xaa",
+                "value_hex": "0200000140020204c6fff9ffa7231209c444fdfffeff47000000c8",
+                "sha256": "dc74a645b09267148c057fb3c29a4e701f7c20af01dac2bea20ae6f2113e5018",
+                "decoded": {
+                  "ruid": "02:00:00:01:40:02",
+                  "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                  "roles": [
+                    {
+                      "role": 0,
+                      "known_role": "ap",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "c6fff9ff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            2,
+                            1,
+                            0,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            1,
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 167,
+                      "max_dl_mu_mimo_tx_users": 2,
+                      "max_ul_mu_mimo_rx_users": 3,
+                      "max_dl_ofdma_tx_users": 18,
+                      "max_ul_ofdma_rx_users": 9,
+                      "user_limits_apply_to_ap_role": true,
+                      "feature_flags": 196,
+                      "features": {
+                        "su_beamformer": true,
+                        "su_beamformee": false,
+                        "mu_beamformer": true,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": false,
+                        "twt_responder": true,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    },
+                    {
+                      "role": 1,
+                      "known_role": "non_ap_sta",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "fdfffeff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            1,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 71,
+                      "max_dl_mu_mimo_tx_users": 0,
+                      "max_ul_mu_mimo_rx_users": 0,
+                      "max_dl_ofdma_tx_users": 0,
+                      "max_ul_ofdma_rx_users": 0,
+                      "user_limits_apply_to_ap_role": false,
+                      "feature_flags": 200,
+                      "features": {
+                        "su_beamformer": false,
+                        "su_beamformee": true,
+                        "mu_beamformer": false,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": true,
+                        "twt_responder": false,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "snapshot_fresh": true,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "generation": 1,
+        "revision": 1,
+        "observed_at": "2026-09-22T05:32:32.849Z",
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "profile_sha256": "55820794b98c3a6096617ccca5c06848d2d143898414053dc80a0425d583c9ed",
+        "evidence": [
+          {
+            "id": "synthetic-radio-contract",
+            "sha256": "d09c40d701874a6f52982f3fd23028d7e6ab6fbf161b6c7e105ab1c9f495c3b2"
+          }
+        ],
+        "issued_at": "2026-09-22T05:31:32.118965Z",
+        "expires_at": "2026-09-23T05:32:32.118965Z",
+        "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+      }
+    },
+    "profile_changed": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "ready_scope": "basic_radio_capabilities_only",
+      "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": false,
+      "blockers": [
+        "profile_digest_mismatch"
+      ],
+      "radios": [],
+      "extensions": {
+        "technology": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        },
+        "device_inventory": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        },
+        "wifi6": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        }
+      },
+      "snapshot_fresh": false,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+    },
+    "cli_blocked": {
+      "exit_code": 5,
+      "result": {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "ready_scope": "basic_radio_capabilities_only",
+        "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "ready": false,
+        "blockers": [
+          "profile_digest_mismatch"
+        ],
+        "radios": [],
+        "extensions": {
+          "technology": {
+            "ready": false,
+            "blockers": [
+              "basic_capability_context_unavailable"
+            ],
+            "values": []
+          },
+          "device_inventory": {
+            "ready": false,
+            "blockers": [
+              "basic_capability_context_unavailable"
+            ],
+            "values": []
+          },
+          "wifi6": {
+            "ready": false,
+            "blockers": [
+              "basic_capability_context_unavailable"
+            ],
+            "values": []
+          }
+        },
+        "snapshot_fresh": false,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+      }
+    },
+    "other_pod_unchanged": {
+      "schema_version": 1,
+      "pod_id": "pod-2",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "ready_scope": "basic_radio_capabilities_only",
+      "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+      "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+      "ready": true,
+      "blockers": [],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:02:40:01",
+            "max_bss": 4,
+            "operating_classes": [
+              {
+                "operating_class": 115,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 116,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 117,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 128,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": [
+                  58,
+                  106,
+                  122,
+                  138,
+                  155,
+                  171
+                ]
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "02000002400104047314007414007514008014063a6a7a8a9bab",
+            "sha256": "639c4d8e7f5595cc5b116031c7e416e6a8c813bf41bd58f53faa3a0f98ab4345"
+          }
+        },
+        {
+          "radio_id": "radio-2",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:02:40:02",
+            "max_bss": 2,
+            "operating_classes": [
+              {
+                "operating_class": 81,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              },
+              {
+                "operating_class": 83,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 84,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "02000002400202035111020c0d5311005411020c0d",
+            "sha256": "27222737292fafa53587d055bfa66554d1ab7e009eaf4ff20d150bb89e674873"
+          }
+        }
+      ],
+      "extensions": {
+        "technology": {
+          "ready": false,
+          "blockers": [
+            "he_and_wifi6_mapping_pending"
+          ],
+          "values": []
+        },
+        "device_inventory": {
+          "ready": true,
+          "blockers": [],
+          "values": [
+            {
+              "type": "0xd4",
+              "value_hex": "16454d4f53412d544f504f4c4f47592d53494d2d3030320f73696d756c6174696f6e2d6f6e6c791b454d4f53412073796e74686574696320656e7669726f6e6d656e740202000002400115454d4f53412073796e74686574696320726164696f02000002400215454d4f53412073796e74686574696320726164696f",
+              "sha256": "582b223894809edce3c11b0b3190e3660458a24f4add865f30fba916b65ecf0b",
+              "decoded": {
+                "serial_number_hex": "454d4f53412d544f504f4c4f47592d53494d2d303032",
+                "software_version_hex": "73696d756c6174696f6e2d6f6e6c79",
+                "execution_env_hex": "454d4f53412073796e74686574696320656e7669726f6e6d656e74",
+                "radios": [
+                  {
+                    "ruid": "02:00:00:02:40:01",
+                    "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                  },
+                  {
+                    "ruid": "02:00:00:02:40:02",
+                    "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "wifi6": {
+          "ready": true,
+          "blockers": [],
+          "values": [
+            {
+              "type": "0xaa",
+              "value_hex": "0200000240010104c6fff9ffa7231209c4",
+              "sha256": "d7b80c20d7c08f42ef1be616815b624f5277a209f09b02350f5dc064a70d57ed",
+              "decoded": {
+                "ruid": "02:00:00:02:40:01",
+                "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                "roles": [
+                  {
+                    "role": 0,
+                    "known_role": "ap",
+                    "he160": false,
+                    "he8080": false,
+                    "mcs_length": 4,
+                    "mcs_hex": "c6fff9ff",
+                    "mcs": {
+                      "up_to_80_mhz": {
+                        "rx_codes_nss_1_to_8": [
+                          2,
+                          1,
+                          0,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ],
+                        "tx_codes_nss_1_to_8": [
+                          1,
+                          2,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ]
+                      },
+                      "160_mhz": null,
+                      "80_plus_80_mhz": null
+                    },
+                    "beamforming_flags": 167,
+                    "max_dl_mu_mimo_tx_users": 2,
+                    "max_ul_mu_mimo_rx_users": 3,
+                    "max_dl_ofdma_tx_users": 18,
+                    "max_ul_ofdma_rx_users": 9,
+                    "user_limits_apply_to_ap_role": true,
+                    "feature_flags": 196,
+                    "features": {
+                      "su_beamformer": true,
+                      "su_beamformee": false,
+                      "mu_beamformer": true,
+                      "beamformee_sts_le_80": false,
+                      "beamformee_sts_gt_80": false,
+                      "ul_mu_mimo": true,
+                      "ul_ofdma": true,
+                      "dl_ofdma": true,
+                      "rts": true,
+                      "mu_rts": true,
+                      "multi_bssid": false,
+                      "mu_edca": false,
+                      "twt_requester": false,
+                      "twt_responder": true,
+                      "spatial_reuse": false,
+                      "anticipated_channel_usage": false
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "0xaa",
+              "value_hex": "0200000240020204c6fff9ffa7231209c444fdfffeff47000000c8",
+              "sha256": "038bd6de29039b64b27d234c8bbe4796e4beb82f00c2d0f7971edff238aff6f1",
+              "decoded": {
+                "ruid": "02:00:00:02:40:02",
+                "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                "roles": [
+                  {
+                    "role": 0,
+                    "known_role": "ap",
+                    "he160": false,
+                    "he8080": false,
+                    "mcs_length": 4,
+                    "mcs_hex": "c6fff9ff",
+                    "mcs": {
+                      "up_to_80_mhz": {
+                        "rx_codes_nss_1_to_8": [
+                          2,
+                          1,
+                          0,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ],
+                        "tx_codes_nss_1_to_8": [
+                          1,
+                          2,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ]
+                      },
+                      "160_mhz": null,
+                      "80_plus_80_mhz": null
+                    },
+                    "beamforming_flags": 167,
+                    "max_dl_mu_mimo_tx_users": 2,
+                    "max_ul_mu_mimo_rx_users": 3,
+                    "max_dl_ofdma_tx_users": 18,
+                    "max_ul_ofdma_rx_users": 9,
+                    "user_limits_apply_to_ap_role": true,
+                    "feature_flags": 196,
+                    "features": {
+                      "su_beamformer": true,
+                      "su_beamformee": false,
+                      "mu_beamformer": true,
+                      "beamformee_sts_le_80": false,
+                      "beamformee_sts_gt_80": false,
+                      "ul_mu_mimo": true,
+                      "ul_ofdma": true,
+                      "dl_ofdma": true,
+                      "rts": true,
+                      "mu_rts": true,
+                      "multi_bssid": false,
+                      "mu_edca": false,
+                      "twt_requester": false,
+                      "twt_responder": true,
+                      "spatial_reuse": false,
+                      "anticipated_channel_usage": false
+                    }
+                  },
+                  {
+                    "role": 1,
+                    "known_role": "non_ap_sta",
+                    "he160": false,
+                    "he8080": false,
+                    "mcs_length": 4,
+                    "mcs_hex": "fdfffeff",
+                    "mcs": {
+                      "up_to_80_mhz": {
+                        "rx_codes_nss_1_to_8": [
+                          1,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ],
+                        "tx_codes_nss_1_to_8": [
+                          2,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ]
+                      },
+                      "160_mhz": null,
+                      "80_plus_80_mhz": null
+                    },
+                    "beamforming_flags": 71,
+                    "max_dl_mu_mimo_tx_users": 0,
+                    "max_ul_mu_mimo_rx_users": 0,
+                    "max_dl_ofdma_tx_users": 0,
+                    "max_ul_ofdma_rx_users": 0,
+                    "user_limits_apply_to_ap_role": false,
+                    "feature_flags": 200,
+                    "features": {
+                      "su_beamformer": false,
+                      "su_beamformee": true,
+                      "mu_beamformer": false,
+                      "beamformee_sts_le_80": false,
+                      "beamformee_sts_gt_80": false,
+                      "ul_mu_mimo": true,
+                      "ul_ofdma": true,
+                      "dl_ofdma": true,
+                      "rts": true,
+                      "mu_rts": true,
+                      "multi_bssid": false,
+                      "mu_edca": false,
+                      "twt_requester": true,
+                      "twt_responder": false,
+                      "spatial_reuse": false,
+                      "anticipated_channel_usage": false
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "snapshot_fresh": true,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "generation": 1,
+      "revision": 1,
+      "observed_at": "2026-09-22T05:32:32.987Z",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "profile_sha256": "a8b3c593a7a6246318a17b0df7e29fe39ff0752563fadb38efc241c8a0ff700f",
+      "evidence": [
+        {
+          "id": "synthetic-radio-contract",
+          "sha256": "8e243d2ae57842135dff0f92c4d9a1f05578a4d0d2d9cbdacd5bfb7b43ccb370"
+        }
+      ],
+      "issued_at": "2026-09-22T05:31:32.372798Z",
+      "expires_at": "2026-09-23T05:32:32.372798Z",
+      "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+    },
+    "evidence_changed": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "ready_scope": "basic_radio_capabilities_only",
+      "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": false,
+      "blockers": [
+        "evidence_digest_mismatch"
+      ],
+      "radios": [],
+      "extensions": {
+        "technology": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        },
+        "device_inventory": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        },
+        "wifi6": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        }
+      },
+      "snapshot_fresh": false,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+    },
+    "country_changed": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "ready_scope": "basic_radio_capabilities_only",
+      "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": false,
+      "blockers": [
+        "regulatory_context_mismatch"
+      ],
+      "radios": [],
+      "extensions": {
+        "technology": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        },
+        "device_inventory": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        },
+        "wifi6": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        }
+      },
+      "snapshot_fresh": true,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "generation": 1,
+      "revision": 2,
+      "observed_at": "2026-09-22T05:32:33.000Z",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+    },
+    "firmware_changed": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "ready_scope": "basic_radio_capabilities_only",
+      "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": false,
+      "blockers": [
+        "capability_device_mismatch"
+      ],
+      "radios": [],
+      "extensions": {
+        "technology": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        },
+        "device_inventory": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        },
+        "wifi6": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        }
+      },
+      "snapshot_fresh": true,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "generation": 1,
+      "revision": 4,
+      "observed_at": "2026-09-22T05:32:33.010Z",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+    },
+    "disconnected": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "ready_scope": "basic_radio_capabilities_only",
+      "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": false,
+      "blockers": [
+        "snapshot_unavailable"
+      ],
+      "radios": [],
+      "extensions": {
+        "technology": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        },
+        "device_inventory": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        },
+        "wifi6": {
+          "ready": false,
+          "blockers": [
+            "basic_capability_context_unavailable"
+          ],
+          "values": []
+        }
+      },
+      "snapshot_fresh": false,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+    },
+    "other_pod_while_disconnected": {
+      "schema_version": 1,
+      "pod_id": "pod-2",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "ready_scope": "basic_radio_capabilities_only",
+      "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+      "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+      "ready": true,
+      "blockers": [],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:02:40:01",
+            "max_bss": 4,
+            "operating_classes": [
+              {
+                "operating_class": 115,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 116,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 117,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 128,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": [
+                  58,
+                  106,
+                  122,
+                  138,
+                  155,
+                  171
+                ]
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "02000002400104047314007414007514008014063a6a7a8a9bab",
+            "sha256": "639c4d8e7f5595cc5b116031c7e416e6a8c813bf41bd58f53faa3a0f98ab4345"
+          }
+        },
+        {
+          "radio_id": "radio-2",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:02:40:02",
+            "max_bss": 2,
+            "operating_classes": [
+              {
+                "operating_class": 81,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              },
+              {
+                "operating_class": 83,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 84,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "02000002400202035111020c0d5311005411020c0d",
+            "sha256": "27222737292fafa53587d055bfa66554d1ab7e009eaf4ff20d150bb89e674873"
+          }
+        }
+      ],
+      "extensions": {
+        "technology": {
+          "ready": false,
+          "blockers": [
+            "he_and_wifi6_mapping_pending"
+          ],
+          "values": []
+        },
+        "device_inventory": {
+          "ready": true,
+          "blockers": [],
+          "values": [
+            {
+              "type": "0xd4",
+              "value_hex": "16454d4f53412d544f504f4c4f47592d53494d2d3030320f73696d756c6174696f6e2d6f6e6c791b454d4f53412073796e74686574696320656e7669726f6e6d656e740202000002400115454d4f53412073796e74686574696320726164696f02000002400215454d4f53412073796e74686574696320726164696f",
+              "sha256": "582b223894809edce3c11b0b3190e3660458a24f4add865f30fba916b65ecf0b",
+              "decoded": {
+                "serial_number_hex": "454d4f53412d544f504f4c4f47592d53494d2d303032",
+                "software_version_hex": "73696d756c6174696f6e2d6f6e6c79",
+                "execution_env_hex": "454d4f53412073796e74686574696320656e7669726f6e6d656e74",
+                "radios": [
+                  {
+                    "ruid": "02:00:00:02:40:01",
+                    "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                  },
+                  {
+                    "ruid": "02:00:00:02:40:02",
+                    "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "wifi6": {
+          "ready": true,
+          "blockers": [],
+          "values": [
+            {
+              "type": "0xaa",
+              "value_hex": "0200000240010104c6fff9ffa7231209c4",
+              "sha256": "d7b80c20d7c08f42ef1be616815b624f5277a209f09b02350f5dc064a70d57ed",
+              "decoded": {
+                "ruid": "02:00:00:02:40:01",
+                "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                "roles": [
+                  {
+                    "role": 0,
+                    "known_role": "ap",
+                    "he160": false,
+                    "he8080": false,
+                    "mcs_length": 4,
+                    "mcs_hex": "c6fff9ff",
+                    "mcs": {
+                      "up_to_80_mhz": {
+                        "rx_codes_nss_1_to_8": [
+                          2,
+                          1,
+                          0,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ],
+                        "tx_codes_nss_1_to_8": [
+                          1,
+                          2,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ]
+                      },
+                      "160_mhz": null,
+                      "80_plus_80_mhz": null
+                    },
+                    "beamforming_flags": 167,
+                    "max_dl_mu_mimo_tx_users": 2,
+                    "max_ul_mu_mimo_rx_users": 3,
+                    "max_dl_ofdma_tx_users": 18,
+                    "max_ul_ofdma_rx_users": 9,
+                    "user_limits_apply_to_ap_role": true,
+                    "feature_flags": 196,
+                    "features": {
+                      "su_beamformer": true,
+                      "su_beamformee": false,
+                      "mu_beamformer": true,
+                      "beamformee_sts_le_80": false,
+                      "beamformee_sts_gt_80": false,
+                      "ul_mu_mimo": true,
+                      "ul_ofdma": true,
+                      "dl_ofdma": true,
+                      "rts": true,
+                      "mu_rts": true,
+                      "multi_bssid": false,
+                      "mu_edca": false,
+                      "twt_requester": false,
+                      "twt_responder": true,
+                      "spatial_reuse": false,
+                      "anticipated_channel_usage": false
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "0xaa",
+              "value_hex": "0200000240020204c6fff9ffa7231209c444fdfffeff47000000c8",
+              "sha256": "038bd6de29039b64b27d234c8bbe4796e4beb82f00c2d0f7971edff238aff6f1",
+              "decoded": {
+                "ruid": "02:00:00:02:40:02",
+                "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                "roles": [
+                  {
+                    "role": 0,
+                    "known_role": "ap",
+                    "he160": false,
+                    "he8080": false,
+                    "mcs_length": 4,
+                    "mcs_hex": "c6fff9ff",
+                    "mcs": {
+                      "up_to_80_mhz": {
+                        "rx_codes_nss_1_to_8": [
+                          2,
+                          1,
+                          0,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ],
+                        "tx_codes_nss_1_to_8": [
+                          1,
+                          2,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ]
+                      },
+                      "160_mhz": null,
+                      "80_plus_80_mhz": null
+                    },
+                    "beamforming_flags": 167,
+                    "max_dl_mu_mimo_tx_users": 2,
+                    "max_ul_mu_mimo_rx_users": 3,
+                    "max_dl_ofdma_tx_users": 18,
+                    "max_ul_ofdma_rx_users": 9,
+                    "user_limits_apply_to_ap_role": true,
+                    "feature_flags": 196,
+                    "features": {
+                      "su_beamformer": true,
+                      "su_beamformee": false,
+                      "mu_beamformer": true,
+                      "beamformee_sts_le_80": false,
+                      "beamformee_sts_gt_80": false,
+                      "ul_mu_mimo": true,
+                      "ul_ofdma": true,
+                      "dl_ofdma": true,
+                      "rts": true,
+                      "mu_rts": true,
+                      "multi_bssid": false,
+                      "mu_edca": false,
+                      "twt_requester": false,
+                      "twt_responder": true,
+                      "spatial_reuse": false,
+                      "anticipated_channel_usage": false
+                    }
+                  },
+                  {
+                    "role": 1,
+                    "known_role": "non_ap_sta",
+                    "he160": false,
+                    "he8080": false,
+                    "mcs_length": 4,
+                    "mcs_hex": "fdfffeff",
+                    "mcs": {
+                      "up_to_80_mhz": {
+                        "rx_codes_nss_1_to_8": [
+                          1,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ],
+                        "tx_codes_nss_1_to_8": [
+                          2,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ]
+                      },
+                      "160_mhz": null,
+                      "80_plus_80_mhz": null
+                    },
+                    "beamforming_flags": 71,
+                    "max_dl_mu_mimo_tx_users": 0,
+                    "max_ul_mu_mimo_rx_users": 0,
+                    "max_dl_ofdma_tx_users": 0,
+                    "max_ul_ofdma_rx_users": 0,
+                    "user_limits_apply_to_ap_role": false,
+                    "feature_flags": 200,
+                    "features": {
+                      "su_beamformer": false,
+                      "su_beamformee": true,
+                      "mu_beamformer": false,
+                      "beamformee_sts_le_80": false,
+                      "beamformee_sts_gt_80": false,
+                      "ul_mu_mimo": true,
+                      "ul_ofdma": true,
+                      "dl_ofdma": true,
+                      "rts": true,
+                      "mu_rts": true,
+                      "multi_bssid": false,
+                      "mu_edca": false,
+                      "twt_requester": true,
+                      "twt_responder": false,
+                      "spatial_reuse": false,
+                      "anticipated_channel_usage": false
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "snapshot_fresh": true,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "generation": 1,
+      "revision": 1,
+      "observed_at": "2026-09-22T05:32:33.022Z",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "profile_sha256": "a8b3c593a7a6246318a17b0df7e29fe39ff0752563fadb38efc241c8a0ff700f",
+      "evidence": [
+        {
+          "id": "synthetic-radio-contract",
+          "sha256": "8e243d2ae57842135dff0f92c4d9a1f05578a4d0d2d9cbdacd5bfb7b43ccb370"
+        }
+      ],
+      "issued_at": "2026-09-22T05:31:32.372798Z",
+      "expires_at": "2026-09-23T05:32:32.372798Z",
+      "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+    },
+    "reconnected": {
+      "schema_version": 1,
+      "pod_id": "pod-1",
+      "interface": "local-diagnostic",
+      "backend_mode": "ovsdb-sim",
+      "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+      "ready_scope": "basic_radio_capabilities_only",
+      "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+      "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+      "ready": true,
+      "blockers": [],
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:01:40:01",
+            "max_bss": 4,
+            "operating_classes": [
+              {
+                "operating_class": 115,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 116,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 117,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 128,
+                "max_eirp_dbm": 20,
+                "non_operable_channels": [
+                  58,
+                  106,
+                  122,
+                  138,
+                  155,
+                  171
+                ]
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "02000001400104047314007414007514008014063a6a7a8a9bab",
+            "sha256": "b74501fb457ed3752f5fedafbec5b1f0a772ae82c22fdb9a7d0f04e67947852c"
+          }
+        },
+        {
+          "radio_id": "radio-2",
+          "country": "US",
+          "evidence_id": "synthetic-radio-contract",
+          "decoded": {
+            "ruid": "02:00:00:01:40:02",
+            "max_bss": 2,
+            "operating_classes": [
+              {
+                "operating_class": 81,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              },
+              {
+                "operating_class": 83,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": []
+              },
+              {
+                "operating_class": 84,
+                "max_eirp_dbm": 17,
+                "non_operable_channels": [
+                  12,
+                  13
+                ]
+              }
+            ]
+          },
+          "value": {
+            "type": "0x85",
+            "value_hex": "02000001400202035111020c0d5311005411020c0d",
+            "sha256": "2ff4e0f72d68754afe28d230e90f9dd7ad4768d77991da969cfdf5b1ad49f9fa"
+          }
+        }
+      ],
+      "extensions": {
+        "technology": {
+          "ready": false,
+          "blockers": [
+            "he_and_wifi6_mapping_pending"
+          ],
+          "values": []
+        },
+        "device_inventory": {
+          "ready": true,
+          "blockers": [],
+          "values": [
+            {
+              "type": "0xd4",
+              "value_hex": "16454d4f53412d544f504f4c4f47592d53494d2d3030310f73696d756c6174696f6e2d6f6e6c791b454d4f53412073796e74686574696320656e7669726f6e6d656e740202000001400115454d4f53412073796e74686574696320726164696f02000001400215454d4f53412073796e74686574696320726164696f",
+              "sha256": "5abf89dd0cdc247beb3d6b52f18add43f77e733b3e54ce9e9bf270fcf0d2f239",
+              "decoded": {
+                "serial_number_hex": "454d4f53412d544f504f4c4f47592d53494d2d303031",
+                "software_version_hex": "73696d756c6174696f6e2d6f6e6c79",
+                "execution_env_hex": "454d4f53412073796e74686574696320656e7669726f6e6d656e74",
+                "radios": [
+                  {
+                    "ruid": "02:00:00:01:40:01",
+                    "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                  },
+                  {
+                    "ruid": "02:00:00:01:40:02",
+                    "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "wifi6": {
+          "ready": true,
+          "blockers": [],
+          "values": [
+            {
+              "type": "0xaa",
+              "value_hex": "0200000140010104c6fff9ffa7231209c4",
+              "sha256": "98b020f874da5be62e4c85329dccdb626815fe771d6f971bcf608b9d3cd21daf",
+              "decoded": {
+                "ruid": "02:00:00:01:40:01",
+                "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                "roles": [
+                  {
+                    "role": 0,
+                    "known_role": "ap",
+                    "he160": false,
+                    "he8080": false,
+                    "mcs_length": 4,
+                    "mcs_hex": "c6fff9ff",
+                    "mcs": {
+                      "up_to_80_mhz": {
+                        "rx_codes_nss_1_to_8": [
+                          2,
+                          1,
+                          0,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ],
+                        "tx_codes_nss_1_to_8": [
+                          1,
+                          2,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ]
+                      },
+                      "160_mhz": null,
+                      "80_plus_80_mhz": null
+                    },
+                    "beamforming_flags": 167,
+                    "max_dl_mu_mimo_tx_users": 2,
+                    "max_ul_mu_mimo_rx_users": 3,
+                    "max_dl_ofdma_tx_users": 18,
+                    "max_ul_ofdma_rx_users": 9,
+                    "user_limits_apply_to_ap_role": true,
+                    "feature_flags": 196,
+                    "features": {
+                      "su_beamformer": true,
+                      "su_beamformee": false,
+                      "mu_beamformer": true,
+                      "beamformee_sts_le_80": false,
+                      "beamformee_sts_gt_80": false,
+                      "ul_mu_mimo": true,
+                      "ul_ofdma": true,
+                      "dl_ofdma": true,
+                      "rts": true,
+                      "mu_rts": true,
+                      "multi_bssid": false,
+                      "mu_edca": false,
+                      "twt_requester": false,
+                      "twt_responder": true,
+                      "spatial_reuse": false,
+                      "anticipated_channel_usage": false
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "0xaa",
+              "value_hex": "0200000140020204c6fff9ffa7231209c444fdfffeff47000000c8",
+              "sha256": "dc74a645b09267148c057fb3c29a4e701f7c20af01dac2bea20ae6f2113e5018",
+              "decoded": {
+                "ruid": "02:00:00:01:40:02",
+                "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                "roles": [
+                  {
+                    "role": 0,
+                    "known_role": "ap",
+                    "he160": false,
+                    "he8080": false,
+                    "mcs_length": 4,
+                    "mcs_hex": "c6fff9ff",
+                    "mcs": {
+                      "up_to_80_mhz": {
+                        "rx_codes_nss_1_to_8": [
+                          2,
+                          1,
+                          0,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ],
+                        "tx_codes_nss_1_to_8": [
+                          1,
+                          2,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ]
+                      },
+                      "160_mhz": null,
+                      "80_plus_80_mhz": null
+                    },
+                    "beamforming_flags": 167,
+                    "max_dl_mu_mimo_tx_users": 2,
+                    "max_ul_mu_mimo_rx_users": 3,
+                    "max_dl_ofdma_tx_users": 18,
+                    "max_ul_ofdma_rx_users": 9,
+                    "user_limits_apply_to_ap_role": true,
+                    "feature_flags": 196,
+                    "features": {
+                      "su_beamformer": true,
+                      "su_beamformee": false,
+                      "mu_beamformer": true,
+                      "beamformee_sts_le_80": false,
+                      "beamformee_sts_gt_80": false,
+                      "ul_mu_mimo": true,
+                      "ul_ofdma": true,
+                      "dl_ofdma": true,
+                      "rts": true,
+                      "mu_rts": true,
+                      "multi_bssid": false,
+                      "mu_edca": false,
+                      "twt_requester": false,
+                      "twt_responder": true,
+                      "spatial_reuse": false,
+                      "anticipated_channel_usage": false
+                    }
+                  },
+                  {
+                    "role": 1,
+                    "known_role": "non_ap_sta",
+                    "he160": false,
+                    "he8080": false,
+                    "mcs_length": 4,
+                    "mcs_hex": "fdfffeff",
+                    "mcs": {
+                      "up_to_80_mhz": {
+                        "rx_codes_nss_1_to_8": [
+                          1,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ],
+                        "tx_codes_nss_1_to_8": [
+                          2,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ]
+                      },
+                      "160_mhz": null,
+                      "80_plus_80_mhz": null
+                    },
+                    "beamforming_flags": 71,
+                    "max_dl_mu_mimo_tx_users": 0,
+                    "max_ul_mu_mimo_rx_users": 0,
+                    "max_dl_ofdma_tx_users": 0,
+                    "max_ul_ofdma_rx_users": 0,
+                    "user_limits_apply_to_ap_role": false,
+                    "feature_flags": 200,
+                    "features": {
+                      "su_beamformer": false,
+                      "su_beamformee": true,
+                      "mu_beamformer": false,
+                      "beamformee_sts_le_80": false,
+                      "beamformee_sts_gt_80": false,
+                      "ul_mu_mimo": true,
+                      "ul_ofdma": true,
+                      "dl_ofdma": true,
+                      "rts": true,
+                      "mu_rts": true,
+                      "multi_bssid": false,
+                      "mu_edca": false,
+                      "twt_requester": true,
+                      "twt_responder": false,
+                      "spatial_reuse": false,
+                      "anticipated_channel_usage": false
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "snapshot_fresh": true,
+      "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+      "complete_ap_capability_report": false,
+      "qualified_easymesh_profile": null,
+      "easymesh_wire_state": "blocked_P0",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false,
+      "generation": 2,
+      "revision": 6,
+      "observed_at": "2026-09-22T05:32:33.094Z",
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "profile_sha256": "55820794b98c3a6096617ccca5c06848d2d143898414053dc80a0425d583c9ed",
+      "evidence": [
+        {
+          "id": "synthetic-radio-contract",
+          "sha256": "d09c40d701874a6f52982f3fd23028d7e6ab6fbf161b6c7e105ab1c9f495c3b2"
+        }
+      ],
+      "issued_at": "2026-09-22T05:31:32.118965Z",
+      "expires_at": "2026-09-23T05:32:32.118965Z",
+      "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+    },
+    "restarted": [
+      {
+        "schema_version": 1,
+        "pod_id": "pod-1",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "ready_scope": "basic_radio_capabilities_only",
+        "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+        "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+        "ready": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:01",
+              "max_bss": 4,
+              "operating_classes": [
+                {
+                  "operating_class": 115,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 116,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 117,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 128,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": [
+                    58,
+                    106,
+                    122,
+                    138,
+                    155,
+                    171
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000001400104047314007414007514008014063a6a7a8a9bab",
+              "sha256": "b74501fb457ed3752f5fedafbec5b1f0a772ae82c22fdb9a7d0f04e67947852c"
+            }
+          },
+          {
+            "radio_id": "radio-2",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:01:40:02",
+              "max_bss": 2,
+              "operating_classes": [
+                {
+                  "operating_class": 81,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                },
+                {
+                  "operating_class": 83,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 84,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000001400202035111020c0d5311005411020c0d",
+              "sha256": "2ff4e0f72d68754afe28d230e90f9dd7ad4768d77991da969cfdf5b1ad49f9fa"
+            }
+          }
+        ],
+        "extensions": {
+          "technology": {
+            "ready": false,
+            "blockers": [
+              "he_and_wifi6_mapping_pending"
+            ],
+            "values": []
+          },
+          "device_inventory": {
+            "ready": true,
+            "blockers": [],
+            "values": [
+              {
+                "type": "0xd4",
+                "value_hex": "16454d4f53412d544f504f4c4f47592d53494d2d3030310f73696d756c6174696f6e2d6f6e6c791b454d4f53412073796e74686574696320656e7669726f6e6d656e740202000001400115454d4f53412073796e74686574696320726164696f02000001400215454d4f53412073796e74686574696320726164696f",
+                "sha256": "5abf89dd0cdc247beb3d6b52f18add43f77e733b3e54ce9e9bf270fcf0d2f239",
+                "decoded": {
+                  "serial_number_hex": "454d4f53412d544f504f4c4f47592d53494d2d303031",
+                  "software_version_hex": "73696d756c6174696f6e2d6f6e6c79",
+                  "execution_env_hex": "454d4f53412073796e74686574696320656e7669726f6e6d656e74",
+                  "radios": [
+                    {
+                      "ruid": "02:00:00:01:40:01",
+                      "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                    },
+                    {
+                      "ruid": "02:00:00:01:40:02",
+                      "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "wifi6": {
+            "ready": true,
+            "blockers": [],
+            "values": [
+              {
+                "type": "0xaa",
+                "value_hex": "0200000140010104c6fff9ffa7231209c4",
+                "sha256": "98b020f874da5be62e4c85329dccdb626815fe771d6f971bcf608b9d3cd21daf",
+                "decoded": {
+                  "ruid": "02:00:00:01:40:01",
+                  "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                  "roles": [
+                    {
+                      "role": 0,
+                      "known_role": "ap",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "c6fff9ff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            2,
+                            1,
+                            0,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            1,
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 167,
+                      "max_dl_mu_mimo_tx_users": 2,
+                      "max_ul_mu_mimo_rx_users": 3,
+                      "max_dl_ofdma_tx_users": 18,
+                      "max_ul_ofdma_rx_users": 9,
+                      "user_limits_apply_to_ap_role": true,
+                      "feature_flags": 196,
+                      "features": {
+                        "su_beamformer": true,
+                        "su_beamformee": false,
+                        "mu_beamformer": true,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": false,
+                        "twt_responder": true,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "0xaa",
+                "value_hex": "0200000140020204c6fff9ffa7231209c444fdfffeff47000000c8",
+                "sha256": "dc74a645b09267148c057fb3c29a4e701f7c20af01dac2bea20ae6f2113e5018",
+                "decoded": {
+                  "ruid": "02:00:00:01:40:02",
+                  "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                  "roles": [
+                    {
+                      "role": 0,
+                      "known_role": "ap",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "c6fff9ff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            2,
+                            1,
+                            0,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            1,
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 167,
+                      "max_dl_mu_mimo_tx_users": 2,
+                      "max_ul_mu_mimo_rx_users": 3,
+                      "max_dl_ofdma_tx_users": 18,
+                      "max_ul_ofdma_rx_users": 9,
+                      "user_limits_apply_to_ap_role": true,
+                      "feature_flags": 196,
+                      "features": {
+                        "su_beamformer": true,
+                        "su_beamformee": false,
+                        "mu_beamformer": true,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": false,
+                        "twt_responder": true,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    },
+                    {
+                      "role": 1,
+                      "known_role": "non_ap_sta",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "fdfffeff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            1,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 71,
+                      "max_dl_mu_mimo_tx_users": 0,
+                      "max_ul_mu_mimo_rx_users": 0,
+                      "max_dl_ofdma_tx_users": 0,
+                      "max_ul_ofdma_rx_users": 0,
+                      "user_limits_apply_to_ap_role": false,
+                      "feature_flags": 200,
+                      "features": {
+                        "su_beamformer": false,
+                        "su_beamformee": true,
+                        "mu_beamformer": false,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": true,
+                        "twt_responder": false,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "snapshot_fresh": true,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "generation": 1,
+        "revision": 1,
+        "observed_at": "2026-09-22T05:32:34.240Z",
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "profile_sha256": "55820794b98c3a6096617ccca5c06848d2d143898414053dc80a0425d583c9ed",
+        "evidence": [
+          {
+            "id": "synthetic-radio-contract",
+            "sha256": "d09c40d701874a6f52982f3fd23028d7e6ab6fbf161b6c7e105ab1c9f495c3b2"
+          }
+        ],
+        "issued_at": "2026-09-22T05:31:32.118965Z",
+        "expires_at": "2026-09-23T05:32:32.118965Z",
+        "adapter_instance_id": "50512b91-4040-4014-82ec-f4d1cbed518b"
+      },
+      {
+        "schema_version": 1,
+        "pod_id": "pod-2",
+        "interface": "local-diagnostic",
+        "backend_mode": "ovsdb-sim",
+        "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "ready_scope": "basic_radio_capabilities_only",
+        "extension_scope": "Selected HT/VHT, Wi-Fi 6 companion and Device Inventory mapping; complete HE technology set pending, EHT unassessed",
+        "binding_sha256": "6a5f22ce280ec1d0757c9a1beaf31bba7c9251f498677396577f1fc7de08006f",
+        "ready": true,
+        "blockers": [],
+        "radios": [
+          {
+            "radio_id": "radio-1",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:02:40:01",
+              "max_bss": 4,
+              "operating_classes": [
+                {
+                  "operating_class": 115,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 116,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 117,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 128,
+                  "max_eirp_dbm": 20,
+                  "non_operable_channels": [
+                    58,
+                    106,
+                    122,
+                    138,
+                    155,
+                    171
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000002400104047314007414007514008014063a6a7a8a9bab",
+              "sha256": "639c4d8e7f5595cc5b116031c7e416e6a8c813bf41bd58f53faa3a0f98ab4345"
+            }
+          },
+          {
+            "radio_id": "radio-2",
+            "country": "US",
+            "evidence_id": "synthetic-radio-contract",
+            "decoded": {
+              "ruid": "02:00:00:02:40:02",
+              "max_bss": 2,
+              "operating_classes": [
+                {
+                  "operating_class": 81,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                },
+                {
+                  "operating_class": 83,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": []
+                },
+                {
+                  "operating_class": 84,
+                  "max_eirp_dbm": 17,
+                  "non_operable_channels": [
+                    12,
+                    13
+                  ]
+                }
+              ]
+            },
+            "value": {
+              "type": "0x85",
+              "value_hex": "02000002400202035111020c0d5311005411020c0d",
+              "sha256": "27222737292fafa53587d055bfa66554d1ab7e009eaf4ff20d150bb89e674873"
+            }
+          }
+        ],
+        "extensions": {
+          "technology": {
+            "ready": false,
+            "blockers": [
+              "he_and_wifi6_mapping_pending"
+            ],
+            "values": []
+          },
+          "device_inventory": {
+            "ready": true,
+            "blockers": [],
+            "values": [
+              {
+                "type": "0xd4",
+                "value_hex": "16454d4f53412d544f504f4c4f47592d53494d2d3030320f73696d756c6174696f6e2d6f6e6c791b454d4f53412073796e74686574696320656e7669726f6e6d656e740202000002400115454d4f53412073796e74686574696320726164696f02000002400215454d4f53412073796e74686574696320726164696f",
+                "sha256": "582b223894809edce3c11b0b3190e3660458a24f4add865f30fba916b65ecf0b",
+                "decoded": {
+                  "serial_number_hex": "454d4f53412d544f504f4c4f47592d53494d2d303032",
+                  "software_version_hex": "73696d756c6174696f6e2d6f6e6c79",
+                  "execution_env_hex": "454d4f53412073796e74686574696320656e7669726f6e6d656e74",
+                  "radios": [
+                    {
+                      "ruid": "02:00:00:02:40:01",
+                      "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                    },
+                    {
+                      "ruid": "02:00:00:02:40:02",
+                      "chipset_vendor_hex": "454d4f53412073796e74686574696320726164696f"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "wifi6": {
+            "ready": true,
+            "blockers": [],
+            "values": [
+              {
+                "type": "0xaa",
+                "value_hex": "0200000240010104c6fff9ffa7231209c4",
+                "sha256": "d7b80c20d7c08f42ef1be616815b624f5277a209f09b02350f5dc064a70d57ed",
+                "decoded": {
+                  "ruid": "02:00:00:02:40:01",
+                  "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                  "roles": [
+                    {
+                      "role": 0,
+                      "known_role": "ap",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "c6fff9ff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            2,
+                            1,
+                            0,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            1,
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 167,
+                      "max_dl_mu_mimo_tx_users": 2,
+                      "max_ul_mu_mimo_rx_users": 3,
+                      "max_dl_ofdma_tx_users": 18,
+                      "max_ul_ofdma_rx_users": 9,
+                      "user_limits_apply_to_ap_role": true,
+                      "feature_flags": 196,
+                      "features": {
+                        "su_beamformer": true,
+                        "su_beamformee": false,
+                        "mu_beamformer": true,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": false,
+                        "twt_responder": true,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "0xaa",
+                "value_hex": "0200000240020204c6fff9ffa7231209c444fdfffeff47000000c8",
+                "sha256": "038bd6de29039b64b27d234c8bbe4796e4beb82f00c2d0f7971edff238aff6f1",
+                "decoded": {
+                  "ruid": "02:00:00:02:40:02",
+                  "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+                  "roles": [
+                    {
+                      "role": 0,
+                      "known_role": "ap",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "c6fff9ff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            2,
+                            1,
+                            0,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            1,
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 167,
+                      "max_dl_mu_mimo_tx_users": 2,
+                      "max_ul_mu_mimo_rx_users": 3,
+                      "max_dl_ofdma_tx_users": 18,
+                      "max_ul_ofdma_rx_users": 9,
+                      "user_limits_apply_to_ap_role": true,
+                      "feature_flags": 196,
+                      "features": {
+                        "su_beamformer": true,
+                        "su_beamformee": false,
+                        "mu_beamformer": true,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": false,
+                        "twt_responder": true,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    },
+                    {
+                      "role": 1,
+                      "known_role": "non_ap_sta",
+                      "he160": false,
+                      "he8080": false,
+                      "mcs_length": 4,
+                      "mcs_hex": "fdfffeff",
+                      "mcs": {
+                        "up_to_80_mhz": {
+                          "rx_codes_nss_1_to_8": [
+                            1,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ],
+                          "tx_codes_nss_1_to_8": [
+                            2,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3,
+                            3
+                          ]
+                        },
+                        "160_mhz": null,
+                        "80_plus_80_mhz": null
+                      },
+                      "beamforming_flags": 71,
+                      "max_dl_mu_mimo_tx_users": 0,
+                      "max_ul_mu_mimo_rx_users": 0,
+                      "max_dl_ofdma_tx_users": 0,
+                      "max_ul_ofdma_rx_users": 0,
+                      "user_limits_apply_to_ap_role": false,
+                      "feature_flags": 200,
+                      "features": {
+                        "su_beamformer": false,
+                        "su_beamformee": true,
+                        "mu_beamformer": false,
+                        "beamformee_sts_le_80": false,
+                        "beamformee_sts_gt_80": false,
+                        "ul_mu_mimo": true,
+                        "ul_ofdma": true,
+                        "dl_ofdma": true,
+                        "rts": true,
+                        "mu_rts": true,
+                        "multi_bssid": false,
+                        "mu_edca": false,
+                        "twt_requester": true,
+                        "twt_responder": false,
+                        "spatial_reuse": false,
+                        "anticipated_channel_usage": false
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "snapshot_fresh": true,
+        "input_assurance": "operator-declared synthetic facts; digests are not attestation",
+        "complete_ap_capability_report": false,
+        "qualified_easymesh_profile": null,
+        "easymesh_wire_state": "blocked_P0",
+        "controller_onboarding_proven": false,
+        "physical_pod_proven": false,
+        "generation": 1,
+        "revision": 1,
+        "observed_at": "2026-09-22T05:32:34.246Z",
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "profile_sha256": "a8b3c593a7a6246318a17b0df7e29fe39ff0752563fadb38efc241c8a0ff700f",
+        "evidence": [
+          {
+            "id": "synthetic-radio-contract",
+            "sha256": "8e243d2ae57842135dff0f92c4d9a1f05578a4d0d2d9cbdacd5bfb7b43ccb370"
+          }
+        ],
+        "issued_at": "2026-09-22T05:31:32.372798Z",
+        "expires_at": "2026-09-23T05:32:32.372798Z",
+        "adapter_instance_id": "50512b91-4040-4014-82ec-f4d1cbed518b"
+      }
+    ]
+  },
+  "selected_technology_and_inventory_inputs": true,
+  "selected_wifi6_inputs": true,
+  "observed_tables_unchanged_after_restoring_fixture_faults": true,
+  "service_lifecycle": [
+    {
+      "event": "started",
+      "pid": 249568,
+      "adapter_instance_id": "cd6c2705-3771-4be4-b487-9db952c67844"
+    },
+    {
+      "event": "stopped",
+      "pid": 249568,
+      "requested_crash": true,
+      "kill_escalation": false,
+      "returncode": -9
+    },
+    {
+      "event": "started",
+      "pid": 249579,
+      "adapter_instance_id": "50512b91-4040-4014-82ec-f4d1cbed518b"
+    },
+    {
+      "event": "stopped",
+      "pid": 249579,
+      "requested_crash": false,
+      "kill_escalation": false,
+      "returncode": 0
+    }
+  ]
+}

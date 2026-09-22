@@ -536,7 +536,9 @@ The current code already has useful parts of this structure:
 A connection from an unknown device is therefore **not currently automatic
 onboarding**. Configuration is loaded when the service starts; there is no
 production “new pod connected, create and authorize its agent” enrollment service.
-Nor does a one-entry connecting-pod demonstration establish a shared listener
+The [two-pod service exercise](service-integration.md) now measures separate
+requests, histories, disconnects and crash recovery through two explicitly
+configured simulation listeners. It does not establish a shared network listener
 that authenticates and dispatches a fleet of physical devices.
 
 Multiple adapter instances may become useful for fault isolation, separate
@@ -1600,6 +1602,108 @@ a restart, and distinguish a caller wait timeout from an application timeout.
 Finish by stopping only the processes you started. Your retained journal and run
 notes should let a teammate understand the experiment without repeating it.
 
+### 6.11 Two connecting pods and a process crash
+
+The [service integration walkthrough](service-integration.md#1-exercise-two-pods-through-one-service-on-host)
+extends §6.10 to two separately bound databases and one `emosa serve` process.
+It checks different SSIDs/keys, per-pod idempotency/history, continued progress
+when the other pod is unavailable, and rejection of a changed synthetic identity.
+It also kills the adapter process while Config is committed but not applied,
+then verifies recovery with the same operation and a single transaction attempt.
+
+Run it on HOST with the chapter 5 database prerequisites. No LXD or radio is
+needed. This bounded two-pod exercise is the first executable check of §2.6's
+one-service/many-pods arrangement; it does not establish production scale,
+automatic discovery or tenant security. The walkthrough explains each report
+stage and how to preserve its private journal and secrets.
+
+### 6.12 Check whether the complete radio fits the intended request
+
+One radio can host several BSSs. Our original semantic operation changes one
+existing BSS, while EasyMesh provisioning may describe the radio's entire BSS
+set. A successful single-row patch therefore does not establish that the full
+controller request can be represented. An extra BSS, additional credentials or
+a management/backhaul dependency can change the answer.
+
+The [onboarding readiness walkthrough](onboarding-readiness.md) explains the
+new read-only `pod pod-1 radio-scope --json` command and its result fields. Run
+it against the interactive connecting-pod service from §6.10. Its default fixture
+deliberately fails the narrower scope because it contains a guest credential and
+has no explicit ordinary-AP role. Keep that evidence visible: the older exercise
+is testing preservation of unrelated settings, not full-radio provisioning.
+
+The optional `sole-fronthaul-radio` simulation policy guards every radio/VIF
+reference and row identity at commit, so an intervening scope change aborts the
+transaction. Chapter 11's actual-service harness now uses a compatible synthetic
+fixture and checks this policy before exercising clients. Neither a positive
+scope report nor enabling this simulation policy authorizes wire or physical writes.
+
+### 6.13 Bind stable identities and report the complete observed topology
+
+The older `radios` and `bsses` views describe the designated resource used by a
+semantic operation. A complete agent report must account for every represented
+radio and VIF. It must also survive database row recreation: an OVSDB UUID names
+a current row, while a logical `radio_id` or `bss_id` names a resource across
+reconnects and restarts.
+
+The [observed-topology walkthrough](observed-topology.md) explains the new optional
+binding, local journal persistence and `pod pod-1 topology --json` command. Begin
+with its automated exercise on HOST:
+
+```bash
+uv run python -m emosa.simulation.topology --output .lab/topology-demo
+```
+
+It starts one read-only adapter and two connecting simulated pods. Each has two
+radios, three AP BSSs and a station interface. It checks Config-versus-State
+reporting, rejects an unexpected interface, replaces every radio/VIF UUID and
+restarts the actual service. `passed: true` means those component checks passed;
+the false onboarding/physical flags remain visible. Owned processes stop on exit.
+
+Continue the guide for a three-terminal live exercise and the credentials-free
+example matching the loader. The binding is pinned before connecting, so an
+unexpected changed MAC cannot silently acquire an existing identity. Reconnects
+rebuild current references; unknown or incomplete graphs produce no Operational
+BSS value. A valid report provides value bytes for later protocol integration,
+without emitting an IEEE message or expanding the semantic write scope.
+
+### 6.14 Supply and inspect radio capability inputs
+
+The controller needs to know what a represented radio supports before choosing
+a configuration. Current State alone cannot answer that question: one active
+BSS does not establish maximum BSS capacity, and a current channel does not
+establish the complete supported channel set. EMOSA therefore requires explicit
+capability inputs with evidence references, validity dates and a binding to the
+specific pod/radios, firmware, schema and regulatory context.
+
+The [radio-capability walkthrough](radio-capabilities.md) explains these concepts,
+the exact input fields, blocked results and the path to physical qualification.
+Run its complete demonstration on HOST after chapter 5:
+
+```bash
+uv run python -m emosa.simulation.radio_capabilities \
+  --output .lab/radio-capabilities-demo
+```
+
+This starts two disposable simulated pods and one read-only adapter. It verifies
+explicit capacities different from the active BSS counts, checks independently
+bound per-radio values, modifies owned fixture inputs to demonstrate withdrawal,
+disconnects one pod and restarts the service. Owned processes stop on exit.
+Inspect the generated profiles and `report.json` as explained in the walkthrough.
+
+On a live simulation service configured with those inputs, the command is
+`emosa --socket /absolute/path/to/control.sock pod pod-1 radio-capabilities --json`.
+The older `pod pod-1 capabilities` command still describes available semantic
+operations. The new command returns radio facts and `0x85` value bytes. Exit 0
+means those diagnostic checks passed; exit 5 means no current values are available.
+A default service without capability inputs reports that prerequisite explicitly.
+
+The demonstration's declared limits are synthetic. Hash verification identifies
+the files used; it cannot prove their claims. No EasyMesh message is emitted,
+no complete profile is advertised and no physical pod is qualified. Actual radio
+limits, other mandatory feature capabilities and the IEEE procedure layer remain
+required before a controller can rely on this representation.
+
 ## 7. Explore evidence and the GitHub Pages manual
 
 The explorer is a **static publication of reviewed results and documentation**.
@@ -2263,6 +2367,22 @@ the assigned PHYs. There is no baseline `cleanup` command; retirement requires
 ownership-aware operator cleanup after evidence is retained. Never use the
 standalone smoke cleanup script to delete baseline resources.
 
+### 10.7 Compare captured native behavior with the proposed procedure
+
+The native baseline establishes behavior for its named build, policy and run.
+It does not establish that the controller implements every requirement of our
+proposed EasyMesh edition. Before connecting EMOSA, inspect the actual discovery
+profiles and WSC payload set using the [offline review exercise](onboarding-readiness.md#4-review-the-native-controllers-retained-messages-offline).
+This reads existing captures on HOST; no running lab or packet transmission is
+needed. An installed tshark supplies independent decoding.
+
+Both retained wired/wireless samples show a Profile-2 Search followed by a
+Profile-1 Response, and a controller WSC message with two M2 payloads plus M8.
+The guide explains why these need compatibility and complete-request review.
+A result of `review_required` is a useful outcome: it identifies work to resolve
+before claiming that the controller can onboard EMOSA. Do not treat native peer
+traffic as traffic emitted or processed by EMOSA.
+
 ## 11. Run EMOSA through OVSDB to hwsim and real clients
 
 **Goal:** show that a request handled by EMOSA causes a configuration change
@@ -2453,6 +2573,27 @@ and which independently tests traffic. Show a case where those observations
 differ. Explain that this experiment starts with a semantic request; it does
 not yet establish that a real controller caused the EMOSA operation.
 
+### 11.5 Test the actual service and recover from process death
+
+The thirteen-case runner above embeds `Engine`. The new
+[service-level radio exercise](service-integration.md#3-run-the-actual-adapter-service-with-hwsim)
+uses the running `emosa serve` process through its local API. Its simulated pod
+initiates the OVSDB connection, and its separate radio manager still derives
+State from live hostapd/nl80211 observations. It checks real `SIGKILL` recovery
+while a change is pending, then verifies the new SSID/key with independent wired
+and wireless clients. The original thirteen-case run remains useful for its
+additional lost-reply, deadline and radio/backhaul fault coverage.
+
+If VM reboot removed the radios, use the walkthrough's guarded restoration
+procedure. The old ownership file is not proof that PHYs exist after boot.
+Restore only the already owned missing topology, then run with a new label.
+Do not rerun full container setup over the existing lab.
+
+The same walkthrough provides a [live controller preparation](service-integration.md#4-prepare-the-live-controller-trial-and-understand-its-blocked-result).
+It retains native inventory beside the diagnostic virtual-agent view and keeps
+wire onboarding explicitly blocked. A local ready entry cannot be presented
+as controller discovery or onboarding.
+
 ## 12. Use the controller discovery candidate
 
 A **discovery frame** is an early protocol message used to make a device's
@@ -2541,12 +2682,13 @@ radio teardown. Actual exchange binding and write admission remain P0 work.
 
 ## 13. Exercise WSC components and native OpenSync research
 
-This chapter contains **two independent specialist paths**. WSC component tests
+This chapter contains **three independent specialist paths**. WSC component tests
 run locally and check provisioning-message processing. The native OpenSync R0
 investigation builds selected upstream managers in a separate lab container.
 You can complete ordinary adapter learning and demonstrations without running
 R0; its known failure remains a research task rather than a broken prerequisite
-for the simulator or radio integration.
+for the simulator or radio integration. Section 13.3 adds offline inspection of
+selected EasyMesh values and explains what that component evidence establishes.
 
 ### 13.1 WSC payload implementation and independent vectors
 
@@ -2650,6 +2792,139 @@ callback/application appears within the probe deadline. The path probe exits
 Fix/requalify reconnect/resubscription or explicit supervisor recovery without
 writing synthetic success into State. Earlier failed build attempts remain part
 of the history; an old `protoc-c` bootstrap failure is not the current blocker.
+
+### 13.3 Inspect EasyMesh value components without a lab
+
+Discovery and topology messages carry small structured fields describing services,
+radios, BSSs, radio capabilities and profiles. EMOSA now has Python codecs for
+fourteen such **TLV values**.
+A TLV means type/length/value; this component handles the value inside that
+structure. It provides useful progress from EasyMesh's explicit field definitions
+while the IEEE 1905 base/amendment are pending. It does not enable the packet
+endpoint or cause the controller to discover an agent.
+
+On HOST, in the installed checkout, run:
+
+```bash
+uv run emosa-lab payload --type 0x80 --value-hex 0101
+uv run pytest tests/test_easymesh_payloads.py
+```
+
+Here `0x80` selects SupportedService. The value's first `01` says one service;
+the second says Multi-AP Agent. Inspect `decoded.known_services`, the byte count
+and hash, then the three false wire/onboarding/physical flags. The command starts
+no service and creates no runtime state. No VM, radio or pod is needed.
+
+Follow the [complete payload exercise](../protocol/easymesh-payloads.md) to inspect
+the native fixture's one-radio/two-BSS report, understand reserved service/profile
+values, build an agent-service value in Python and reproduce the independent
+Wireshark check. SSIDs are shown as hex to preserve their original bytes; hex is
+not anonymization. Use private files for future physical observations.
+
+The running service now uses the Operational BSS codec in its optional read-only
+[complete topology report](observed-topology.md). Its explicit bindings and full
+observed graph are separate from the older selected-BSS inventory. The
+[radio-capability diagnostic](radio-capabilities.md) also uses the `0x85` codec
+after validating explicit evidence inputs against fresh observations. The IEEE
+exchange layer and qualified advertised profile remain pending; successful value
+encoding alone does not establish either.
+
+### 13.4 Understand what is still required before claiming a profile
+
+An advertised EasyMesh profile promises mandatory behavior beyond our first
+onboarding experiment. A passing radio-capability diagnostic cannot establish
+channel selection, client capability reporting, metrics, steering or backhaul
+procedures. The new [profile-readiness walkthrough](../protocol/profile-readiness.md)
+explains the distinction and inventories the unresolved requirement families.
+
+On HOST, without starting any lab services:
+
+```bash
+uv run emosa-lab profile-audit --format markdown
+uv run emosa-lab profile-audit \
+  --features examples/protocol/profile-features.synthetic.json
+```
+
+Both commands return **5**, the expected blocked-profile result. The first
+retains unknown feature conditions; the second uses invented conditions to show
+how HT/VHT/HE/EHT and QoS support change report obligations. `null` means unknown,
+not unsupported. A feature set to `true` adds requirements; it does not qualify
+the implementation. The command reads no pod or controller and creates no runtime
+state. The walkthrough explains each field, the checked-in examples and how to
+make a scratch copy safely.
+
+It also covers the new `0xA1`, `0xB4` and `0xBE` value codecs and the counter-unit
+rule. Bytes, KiB and MiB must retain their meanings on the eventual telemetry path
+to ODH; an unknown/reserved unit must not silently become bytes. No ODH delivery
+or automatic profile advertisement is added. Use this audit to explain the next
+development and qualification work during a demo.
+
+### 13.5 Map technology capabilities and device identity
+
+A controller needs more than the radio's current channel and SSID. HT/VHT
+capabilities describe stream limits and supported modulation/coding sets. Device
+Inventory identifies the represented pod's stable serial, active firmware,
+execution environment and radio vendors. These must describe the pod, not the
+machine running EMOSA.
+
+Follow the [technology/inventory walkthrough](technology-inventory.md) on HOST:
+
+```bash
+uv run python -m emosa.simulation.radio_capabilities \
+  --with-extensions --output .lab/technology-inventory-first
+```
+
+This needs the disposable OVSDB binaries from chapter 3, but no VM or radio.
+It creates two synthetic pods, checks the real read-only service, injects owned
+fixture faults and verifies reconnect/restart behavior. Use a fresh output path.
+The walkthrough explains the generated input files and how to inspect the report.
+
+Read `extensions.technology` and `extensions.device_inventory` separately from
+top-level Basic readiness. Unknown inputs block their extension. HE support
+currently blocks technology mapping because the IEEE-to-EasyMesh MCS conversion
+for `0x88` remains unfinished; its offline inspection preserves the HE bytes
+without guessing their meaning. The companion now has a separate Wi-Fi 6 mapping,
+covered below. No extension qualifies a full report,
+profile or physical pod. The demonstration stops its services when finished.
+
+### 13.6 Inspect HE MCS maps and Wi-Fi 6 roles
+
+HE capability maps describe supported modulation/coding ranges separately for
+receiving and transmitting, for each spatial-stream count and supported width.
+Wi-Fi 6 capabilities additionally distinguish an AP role from a backhaul STA
+role. A current channel and SSID cannot supply those facts.
+
+The [HE/Wi-Fi 6 walkthrough](he-wifi6.md) explains the fields, byte order and
+four/eight/twelve-octet lengths, with step-by-step examples. On HOST, without a VM:
+
+```bash
+uv run emosa-lab payload --type 0xaa \
+  --value-hex 0200000140010104e41bc6e4a53912345a
+```
+
+Expect exit 0, one synthetic AP role and a four-octet MCS field. The guide shows
+how to read the direction-specific lists, build the IEEE field in Python and
+reproduce the native peer's zero-length negative case. The values are invented
+layout examples; they are not truthful capabilities for a pod. A valid field
+also does not establish any of the three false wire/onboarding/physical flags.
+
+The [Wi-Fi 6 input walkthrough](wifi6-inputs.md) continues from that codec to
+evidence-bound role mapping through the actual service. On HOST, with disposable
+OVSDB installed and a fresh output directory:
+
+```bash
+uv run python -m emosa.simulation.radio_capabilities \
+  --with-wifi6 --output .lab/wifi6-role-first
+```
+
+The exercise connects two simulated pods, maps AP/STA role capabilities, checks
+withdrawal when inputs or observations change, and verifies crash recovery.
+Expect `extensions.wifi6.ready: true` but `extensions.technology.ready: false`:
+the `0xAA` companion is available, while its required `0x88` HE partner remains
+unfinished. Top-level readiness and CLI exit 0 cover Basic capabilities only.
+The walkthrough explains all three results, the input fields and the local
+mapping limits. No full report, advertised profile or physical capability is
+qualified by this run. Native profile/length compatibility work remains separate.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
@@ -2761,6 +3036,12 @@ evidence remain outside Git. Send only the absolute connection-file path to the
 coding agent, never credentials in chat. Physical connection stays pending until
 that populated file and path actually exist.
 
+The draft also includes `radio_scope_candidates`, described in the
+[scope walkthrough](onboarding-readiness.md#6-apply-the-same-questions-to-a-physical-pod-without-writing-it).
+These assess the collected reference graph. Credential maps are deliberately
+uncollected, so `credential_layout` remains `not_collected`. Even a positive
+structural candidate needs the M0 checks below; it cannot enable writes.
+
 ### 14.3 Complete M0 separately
 
 M0 is the physical mapping qualification gate. To see why a successful read is
@@ -2813,9 +3094,12 @@ of selecting incompatible editions independently for each new feature.
 [specification-acquisition.md](../protocol/specification-acquisition.md) is the single access
 checklist. Exact **IEEE 1905.1-2013** and **IEEE 1905.1a-2014** remain pending
 external inputs, with no authorized local copies or subscription mechanism.
-Other required/applicable items include IEEE 802.11-2024, IEEE 802.3-2015,
-Wi-Fi Alliance Security Requirements with revision to identify, and conditional
-references/errata identified there.
+IEEE 802.11-2024 is now obtained, verified and hashed. The supplied Ethernet
+document is IEEE 802.3-2022; equivalence to the cited IEEE 802.3-2015 remains
+unresolved. The [media input review](../protocol/ieee-media-review.md) identifies
+the selected radio and Ethernet clauses inspected so far. Wi-Fi Alliance Security
+Requirements with revision to identify and conditional references/corrections
+remain on the acquisition checklist.
 
 EasyMesh 6.1 and WPS 2.0.10 publisher PDFs were obtained and hashed outside Git.
 Selected WSC payload rules use them; the complete Profile-1 procedure proposal
@@ -3010,7 +3294,7 @@ correctly blocked before any operation was allowed.
 | 2 | Invalid input, including argparse/configuration errors |
 | 3 | Local API caller wait expired; the operation may continue |
 | 4 | Local adapter service unavailable, often wrong socket or stopped service |
-| 5 | Blocked/unsupported operation, missing prerequisite, conflict, busy/precondition rejection, or blocked run |
+| 5 | Blocked/unsupported operation, missing prerequisite, conflict, busy/precondition rejection, blocked run, incomplete `profile-audit`, or unavailable `pod topology` / `pod radio-capabilities` projection |
 | 130 | CLI interrupt where handled as such; interrupted experiments can instead retain an inconclusive run and return nonzero |
 
 Native lab scripts use their own nonzero results for failed readiness/acceptance
@@ -3028,6 +3312,9 @@ and specific script's logs are the authority for what actually executed.
 | Unix socket path too long | Use a shorter private exercise path/checkout. Linux Unix sockets have a small path limit; this fixture keeps its database socket under private `/tmp`, but the API socket follows your exercise directory |
 | Secret unavailable/invalid | Check owned regular file, no symlink, directory 0700/file 0600, valid basename and printable ASCII PSK of 8–63 bytes. A trailing newline is part of the value and is rejected; do not create PSKs with default `echo` |
 | Inventory `NOT_READY`/`fresh: false` | Allow initial synchronization; verify database/manager process and endpoint. Stale rows are not positive application evidence |
+| Topology has no value and lists blockers | Inspect the full graph and explicit binding using the [topology guide](observed-topology.md); an unexpected interface or identity cannot be silently omitted |
+| Radio capabilities are unavailable | Check the named blocker against the [input guide](radio-capabilities.md): missing/expired evidence, changed firmware/country or incomplete inventory must withdraw values |
+| Persisted topology binding differs | Review the changed configuration and restore the intended identity. Migration is not implemented; preserve the journal instead of deleting it to bypass the check |
 | Service directory already locked | Another adapter owns it; inspect/stop that process deliberately. Do not remove a live lock or share one journal between daemons |
 | Fixture/label already exists | Use a new path/label; preserve previous evidence. Fixture config endpoints become stale after its database closes |
 | `BUSY` or ownership conflict | Inspect active operations and writer/guard evidence. There is no hidden queue or automatic conflict override |
@@ -3160,8 +3447,8 @@ is no need to invent runtime tests that merely duplicate prose.
 
 Use these checks according to the changed scope and repository requirements.
 Formatting/lint catches source consistency problems; unit tests isolate logic;
-OVSDB tests cross the real database interface; WSC reference checks compare
-selected native bytes; the site build validates the published evidence selection.
+OVSDB tests cross the real database interface; WSC and EasyMesh reference checks
+compare selected native bytes; the site build validates the published evidence selection.
 Passing one does not substitute for another boundary's test.
 
 ```bash
@@ -3171,11 +3458,13 @@ uv run ruff format --check .
 uv run pytest -m unit
 uv run pytest -m ovsdb
 python3 scripts/check-wsc-reference.py
+python3 scripts/check-easymesh-reference.py
 python3 scripts/build-site.py
 ```
 
-Build OVSDB once first and provide the C/OpenSSL prerequisites for independent
-vectors. CI has separate unit, OVSDB and WSC-reference jobs. Its green result
+Build OVSDB once first, provide the C/OpenSSL prerequisites for the WSC vectors,
+and install tshark for EasyMesh value re-extraction. CI has separate unit, OVSDB,
+WSC-reference and EasyMesh-reference jobs. Its green result
 does not run or certify the privileged radio/native/physical experiments.
 Use focused tests while developing, then the required relevant checks before
 delivery. Selecting `uv run pytest -m wire`, `-m hardware` or `-m external`
@@ -3328,10 +3617,37 @@ their separate successes do not establish that causal connection. Subsequent
 physical qualification must show that the same supported request works through
 an unchanged actual pod and is observed by independent clients.
 
+The [service integration work](service-integration.md) now joins pod-initiated
+management to the actual adapter process and independent hwsim clients, verifies
+two configured pods, and provides an executable live-controller preparation.
+The [WFA procedure audit](../protocol/procedure-audit.md) records available
+inclusion/field rules and unresolved dependencies. These advances leave the
+real controller-to-EMOSA wire connection as the next central boundary.
+
+The [radio scope and native capture checks](onboarding-readiness.md) now make
+two additional prerequisites inspectable: atomic scope protection for the narrow
+simulation mapping and concrete profile/payload findings in the retained native
+traffic. Resolve those findings for the selected controller policy/build as part
+of the wire trial; do not weaken the normative contract to hide a mismatch.
+
 Pick work that closes a named gap and declare what evidence would close it
 before implementation. A parser test, packet capture, controller inventory entry
 and client response each answer different parts of the question. The final
 chain needs them to agree for the same request, device, build and run.
+
+Use the [first complete wire experiment](first-wire-experiment.md) as the detailed
+acceptance contract: it fixes the initial wired-management, one-pod/radio/BSS
+scope, explains which observations must belong to the same request, and lists
+the negative controls and physical substitution steps. Its five-step status table
+separates completed preparation from the unavailable wire and hardware evidence.
+
+The [native compatibility walkthrough](native-compatibility.md) provides the next
+runnable specialist exercise. It rebuilds an isolated C++ HAL fix, tests the
+actual parser, temporarily runs the native peers with a one-BSS policy, captures
+client behavior and restores the original runtime. Two retained runs passed
+functionally with one M2 and no M8. The profile mismatch and shutdown abort still
+matter; the walkthrough explains why those results do not qualify EMOSA's wire
+path or a physical OpenSync pod.
 
 | Priority | Work | Evidence required before calling it complete |
 | --- | --- | --- |
@@ -3375,3 +3691,9 @@ were checked against the existing harnesses and retained qualification records;
 creating a fresh VM or rerunning radio/native qualification was not part of this
 documentation change. Fresh machines must still obtain the named external runtime
 inputs and qualify their actual environment as described above.
+
+The later [native compatibility follow-up](../evidence/native-compatibility/summary.json)
+adds two newly executed wired candidate trials, actual C++ parser regressions,
+independent packet checks, current Python suites and the blocked wire-gate check.
+Those results apply to the isolated candidate described in its guide. They do
+not supersede the earlier baseline or complete physical-pod qualification.

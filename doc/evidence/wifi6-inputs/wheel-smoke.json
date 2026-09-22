@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "python": "3.13.7",
+  "isolated_python": true,
+  "outside_checkout": true,
+  "packaged_contracts_and_opensync_schema": true,
+  "wheel_sha256": "f5180a05335cf27737e6f3c9fa906dedaaa6ca9a0b27554e3e230793debd5b2e",
+  "configured_pods": 2,
+  "wifi6_values_per_pod": 2,
+  "roles_per_radio": [
+    [
+      "ap"
+    ],
+    [
+      "ap",
+      "non_ap_sta"
+    ]
+  ],
+  "service_stages": [
+    "connected",
+    "cli_ready",
+    "profile_changed",
+    "cli_blocked",
+    "other_pod_unchanged",
+    "evidence_changed",
+    "country_changed",
+    "firmware_changed",
+    "disconnected",
+    "other_pod_while_disconnected",
+    "reconnected",
+    "restarted"
+  ],
+  "adapter_write_mode": "read-only",
+  "monitored_rows_match_after_fixture_fault_restoration": true,
+  "complete_ap_capability_report": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

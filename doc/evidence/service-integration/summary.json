@@ -1,0 +1,575 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-09-21",
+  "scope": "Actual adapter service, two configured simulated pods, hwsim clients and live native controller preparation",
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "acceptance_path": [
+    "real EasyMesh messages",
+    "EMOSA adapter",
+    "unchanged physical pod",
+    "independently observed behavior"
+  ],
+  "base_commit": "470d25e823f6d496f26eb0ab726ca3792a9c44da",
+  "source_provenance": {
+    "final_stage": {
+      "source_archive_sha256": "215545eaa01946dd6219963a0a979b43b678ec0bc830f2e5cff81c084fbcc926",
+      "base_commit": "470d25e823f6d496f26eb0ab726ca3792a9c44da",
+      "ovsdb_binaries": {
+        "ovsdb-server": "93714d2adf2e847697807a77515d527ff7281c270170a01864e2f8194ac49b68",
+        "ovsdb-tool": "c664d4a282a3fe77356b02e025e3d419b7857bfdc92a289b23c81a030e3ec257"
+      }
+    },
+    "note": "Working implementation source was staged before commit. Archive digest and per-run source hashes identify measured inputs. Only the final b runs select the final harness behavior."
+  },
+  "radio_runs": [
+    {
+      "label": "service-20260921-a",
+      "status": "passed",
+      "elapsed_seconds": 27.229,
+      "checkpoint_count": 14,
+      "service_lifecycle": [
+        {
+          "event": "started",
+          "pid": 45962,
+          "adapter_instance_id": "91600222-a4bd-4659-92df-082dde092997"
+        },
+        {
+          "event": "stopped",
+          "pid": 45962,
+          "requested_crash": true,
+          "kill_escalation": false,
+          "returncode": -9
+        },
+        {
+          "event": "started",
+          "pid": 47555,
+          "adapter_instance_id": "3bbe2ad0-e15c-43a0-a9b2-37ac725d3bea"
+        },
+        {
+          "event": "stopped",
+          "pid": 47555,
+          "requested_crash": false,
+          "kill_escalation": false,
+          "returncode": 0
+        }
+      ],
+      "configuration_operation": {
+        "operation_id": "113b7d68-246f-4387-a150-a97c602ec92d",
+        "state": "OBSERVED_APPLIED",
+        "attempts": 1
+      },
+      "recovered_operation": {
+        "operation_id": "0920c9ee-262c-4567-809c-7842ac1af69b",
+        "state_before_crash": "CONFIG_COMMITTED",
+        "state_after_restart": "CONFIG_COMMITTED",
+        "final_state": "OBSERVED_APPLIED",
+        "attempts": 1
+      },
+      "client_checks": {
+        "initial_clients": {
+          "clients": "passed",
+          "nonce": "d06b2bbe8c766823581ebd697537a326"
+        },
+        "changed_clients": {
+          "clients": "passed",
+          "nonce": "7d293fe0007d76d3afeaca09f904c662"
+        },
+        "withheld_clients": {
+          "clients": "passed",
+          "nonce": "116c1a678a4aa795f51e2263c837985c"
+        },
+        "restart_clients": {
+          "clients": "passed",
+          "nonce": "567375f92e1d643066d6522677c8d6c3"
+        },
+        "clients_without_management": {
+          "clients": "passed",
+          "nonce": "f944360b88ba0231a7dec160446600dd"
+        }
+      },
+      "raw_result_sha256": "17e288063e0ce57231aad52472ec41b5e550683612947ddc4ac6966f521c0f07",
+      "private_artifacts": [
+        {
+          "path": "clients-changed.json",
+          "sha256": "780ba8a1e1d4d5afc8346a86344350fed3318d2e678ef73af0b59a6150166d9b",
+          "size": 2614
+        },
+        {
+          "path": "clients-disconnected.json",
+          "sha256": "aaeedaa1c5571c41eb2d5ce1cd98da9b190c38684c0a2eeb74fd39abddae869b",
+          "size": 2638
+        },
+        {
+          "path": "clients-initial.json",
+          "sha256": "056cdfa481991c40e4374b0ad2debe82de545c587bd95d5820c3cbb949521263",
+          "size": 2603
+        },
+        {
+          "path": "clients-restarted.json",
+          "sha256": "a20d0101ca548adb3e60a458309d5e5e00c5b0e707afe1aacb6efed4a2c94c1c",
+          "size": 2621
+        },
+        {
+          "path": "clients-withheld.json",
+          "sha256": "3ab72d97e9cef1cde154510058cea45d84f4fbffd5284c12b91693c524ddde27",
+          "size": 2625
+        },
+        {
+          "path": "events.json",
+          "sha256": "faff6c2471fc75357778bd30730edbb70c26f1b4b44fa18a7bdc11c68a8d3d57",
+          "size": 14331
+        },
+        {
+          "path": "final-pods.json",
+          "sha256": "7d207a910dd48978a125925d0432816391ce7c8e8fe6ec39b809d82bf28b7b92",
+          "size": 1883
+        },
+        {
+          "path": "operations.json",
+          "sha256": "f617cbb965aafa572b3bcc2b175e77c1509bc8863fac51484d1bdd6ce88b49e1",
+          "size": 6013
+        },
+        {
+          "path": "packet-observations.json",
+          "sha256": "90f7e71759d7f3ca22ad691fb9e3d255714ee1aa4a97a26b3cc7a23819c19c86",
+          "size": 338
+        },
+        {
+          "path": "source-hashes.json",
+          "sha256": "2dce666a9160b5c78d52a752e7281adcc2944fa374f0f6ded62967a25b589608",
+          "size": 5379
+        },
+        {
+          "path": "topology-before.json",
+          "sha256": "c04ce4957426bce887b3e9ff220a20e13cec87eb982c20bea9679828a8853f9d",
+          "size": 7401
+        },
+        {
+          "path": "topology.json",
+          "sha256": "4b1cb9d06fa92e629a3685e32fd11994086af8ae04c8824e17bdebca3a06b752",
+          "size": 9950
+        }
+      ],
+      "cleanup_errors": []
+    },
+    {
+      "label": "service-20260921-b",
+      "status": "passed",
+      "elapsed_seconds": 31.978,
+      "checkpoint_count": 14,
+      "service_lifecycle": [
+        {
+          "event": "started",
+          "pid": 53628,
+          "adapter_instance_id": "fdc58f36-143d-4118-89cb-f94affa4219f"
+        },
+        {
+          "event": "stopped",
+          "pid": 53628,
+          "requested_crash": true,
+          "kill_escalation": false,
+          "returncode": -9
+        },
+        {
+          "event": "started",
+          "pid": 55353,
+          "adapter_instance_id": "5f5ba35b-53c1-474a-b995-389d7a115f2d"
+        },
+        {
+          "event": "stopped",
+          "pid": 55353,
+          "requested_crash": false,
+          "kill_escalation": false,
+          "returncode": 0
+        }
+      ],
+      "configuration_operation": {
+        "operation_id": "c6fb9e5d-b77f-4752-8132-2f845d2569bc",
+        "state": "OBSERVED_APPLIED",
+        "attempts": 1
+      },
+      "recovered_operation": {
+        "operation_id": "4e21d044-5bf6-45aa-bdd1-4b52eb2f5739",
+        "state_before_crash": "CONFIG_COMMITTED",
+        "state_after_restart": "CONFIG_COMMITTED",
+        "final_state": "OBSERVED_APPLIED",
+        "attempts": 1
+      },
+      "client_checks": {
+        "initial_clients": {
+          "clients": "passed",
+          "nonce": "c354179f6c2fca6b69df8367d60a738e"
+        },
+        "changed_clients": {
+          "clients": "passed",
+          "nonce": "1fe06bd3db4d3101c5a81869042ffdd6"
+        },
+        "withheld_clients": {
+          "clients": "passed",
+          "nonce": "099f3db7830170bd47d45157a079f7fd"
+        },
+        "restart_clients": {
+          "clients": "passed",
+          "nonce": "a69280c8df88cd2cf520b8d2711500eb"
+        },
+        "clients_without_management": {
+          "clients": "passed",
+          "nonce": "dea798c3465fa339ba2a3ee54d14c1d3"
+        }
+      },
+      "raw_result_sha256": "31a718ce80bd6d567a85e4fea86f4fccf9d972958f80a3fcf2d0ba10f1cf5cf3",
+      "private_artifacts": [
+        {
+          "path": "clients-changed.json",
+          "sha256": "f3186e1776c6aa75193862d15b657c1fff1b1b83352626936e60a9a97fb6285d",
+          "size": 2614
+        },
+        {
+          "path": "clients-disconnected.json",
+          "sha256": "445983d076e79bcff11b3072eb72e339c9b47b7848ba75ce5af553ef84ff1c8d",
+          "size": 2638
+        },
+        {
+          "path": "clients-initial.json",
+          "sha256": "86f34d4f31e5fd73040b857675c5970bbf2e99c7622620c12a45594761d966f4",
+          "size": 2555
+        },
+        {
+          "path": "clients-restarted.json",
+          "sha256": "f0f5dff604112dc808f0ed62eb83524a741bba46da89cbf84c9df91728c9f773",
+          "size": 2622
+        },
+        {
+          "path": "clients-withheld.json",
+          "sha256": "7e03c2b1d76d278e8e515f5e93f4c90dabb2794a0e8621862f5e74d42e0853d6",
+          "size": 2625
+        },
+        {
+          "path": "events.json",
+          "sha256": "2d0428784fef4bdc8b475ab8f2b0983f80ead99791a34ed892cf8b792ed48814",
+          "size": 14331
+        },
+        {
+          "path": "final-pods.json",
+          "sha256": "75e3141125e770ed2fb11f037f0680ad4936b824eb80714c3425dcfe7461ae1b",
+          "size": 1883
+        },
+        {
+          "path": "operations.json",
+          "sha256": "b448097f466bda86ed6d90c7c3f8078025665cbd51a123f3219003addf69efa0",
+          "size": 6006
+        },
+        {
+          "path": "packet-observations.json",
+          "sha256": "71366aa8870fd126c8b97aab08165e07e390f2fc581595b86194c7df3f215153",
+          "size": 339
+        },
+        {
+          "path": "source-hashes.json",
+          "sha256": "2c286dfd17cb3e601849516837d5ba7481d4c45eb9bdc1679d5c02561991887c",
+          "size": 5379
+        },
+        {
+          "path": "topology-before.json",
+          "sha256": "63c588833a979e997ebacbff675ddd84058b5f51325654cf6a4a72cb144d076f",
+          "size": 7740
+        },
+        {
+          "path": "topology.json",
+          "sha256": "f16cec2dce703d9c88a78802a509a210cc7bea0104ead60cc2e95a311fe637f1",
+          "size": 9963
+        }
+      ],
+      "cleanup_errors": []
+    }
+  ],
+  "controller_preparations": [
+    {
+      "label": "controller-20260921-a",
+      "status": "prepared_wire_blocked",
+      "preparation_checks_passed": true,
+      "virtual_agent_in_local_directory": true,
+      "virtual_agent_in_controller_inventory": false,
+      "independent_controller_link_frames": 0,
+      "matrix_sha256": "13854c8d4e56322e4a6e6693210c3c76fd7ff9fd3a38edde893884c69f885797",
+      "controller_shutdown": {
+        "em-baseline-controller": [
+          {
+            "unit": "agent",
+            "before": {
+              "MainPID": "6150",
+              "ActiveState": "active"
+            },
+            "after": {
+              "Result": "core-dump",
+              "ExecMainStatus": "6"
+            }
+          },
+          {
+            "unit": "controller",
+            "before": {
+              "MainPID": "6143",
+              "ActiveState": "active"
+            },
+            "after": {
+              "Result": "core-dump",
+              "ExecMainStatus": "6"
+            }
+          },
+          {
+            "unit": "transport",
+            "before": {
+              "MainPID": "6139",
+              "ActiveState": "active"
+            },
+            "after": {
+              "Result": "success",
+              "ExecMainStatus": "0"
+            }
+          },
+          {
+            "unit": "bus",
+            "before": {
+              "MainPID": "6135",
+              "ActiveState": "active"
+            },
+            "after": {
+              "Result": "success",
+              "ExecMainStatus": "0"
+            }
+          },
+          {
+            "unit": "hostap",
+            "before": {
+              "MainPID": "6125",
+              "ActiveState": "active"
+            },
+            "after": {
+              "Result": "success",
+              "ExecMainStatus": "0"
+            }
+          }
+        ]
+      },
+      "raw_result_sha256": "383fcf92517049c70c52bcd9d8ab81b092a62d62fbc25d6356f74fc8d843e8b9",
+      "private_artifacts": [
+        {
+          "path": "adapter.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "path": "capture.log",
+          "sha256": "c544e87f06f25562bde1bfbcaac7010cb8974d1440b08c8e1aba84886109d544",
+          "size": 168
+        },
+        {
+          "path": "controller-after.json",
+          "sha256": "34cdde7d6486ce87b7268602cbdc33c0ca141938ee474af32e2af24fdad60a3a",
+          "size": 873
+        },
+        {
+          "path": "controller-before.json",
+          "sha256": "34cdde7d6486ce87b7268602cbdc33c0ca141938ee474af32e2af24fdad60a3a",
+          "size": 873
+        },
+        {
+          "path": "controller-frames.tsv",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "path": "controller-link.pcap",
+          "sha256": "704e5e5b3234433c01fcfd1b20a306e77e985038120492dc53965c3edd38a4ea",
+          "size": 24
+        },
+        {
+          "path": "report.json",
+          "sha256": "1616f7ac7d232ecee81353f2b0c993e48f4ef9125a4107876c99855e9ec801e7",
+          "size": 15766
+        }
+      ],
+      "cleanup_errors": []
+    },
+    {
+      "label": "controller-20260921-b",
+      "status": "prepared_wire_blocked",
+      "preparation_checks_passed": true,
+      "virtual_agent_in_local_directory": true,
+      "virtual_agent_in_controller_inventory": false,
+      "independent_controller_link_frames": 0,
+      "matrix_sha256": "0771b64d61755f82ba34a44e46de225cd5deef66f32ce41b70e153ec9ea67891",
+      "controller_shutdown": {
+        "em-baseline-controller": [
+          {
+            "unit": "agent",
+            "before": {
+              "MainPID": "6317",
+              "ActiveState": "active"
+            },
+            "after": {
+              "Result": "core-dump",
+              "ExecMainStatus": "6"
+            }
+          },
+          {
+            "unit": "controller",
+            "before": {
+              "MainPID": "6310",
+              "ActiveState": "active"
+            },
+            "after": {
+              "Result": "core-dump",
+              "ExecMainStatus": "6"
+            }
+          },
+          {
+            "unit": "transport",
+            "before": {
+              "MainPID": "6306",
+              "ActiveState": "active"
+            },
+            "after": {
+              "Result": "success",
+              "ExecMainStatus": "0"
+            }
+          },
+          {
+            "unit": "bus",
+            "before": {
+              "MainPID": "6302",
+              "ActiveState": "active"
+            },
+            "after": {
+              "Result": "success",
+              "ExecMainStatus": "0"
+            }
+          },
+          {
+            "unit": "hostap",
+            "before": {
+              "MainPID": "6292",
+              "ActiveState": "active"
+            },
+            "after": {
+              "Result": "success",
+              "ExecMainStatus": "0"
+            }
+          }
+        ]
+      },
+      "raw_result_sha256": "2686f5368bf6ca80fa8c357c2b12254f8e8b2e7a5a8a125e0cb703ed208db220",
+      "private_artifacts": [
+        {
+          "path": "adapter.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "path": "capture.log",
+          "sha256": "c544e87f06f25562bde1bfbcaac7010cb8974d1440b08c8e1aba84886109d544",
+          "size": 168
+        },
+        {
+          "path": "controller-after.json",
+          "sha256": "88576b793fe009fc053322cfc6e3803bff4711ad582d1c752d1a9ecd43c18e0e",
+          "size": 873
+        },
+        {
+          "path": "controller-before.json",
+          "sha256": "88576b793fe009fc053322cfc6e3803bff4711ad582d1c752d1a9ecd43c18e0e",
+          "size": 873
+        },
+        {
+          "path": "controller-frames.tsv",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "path": "controller-link.pcap",
+          "sha256": "704e5e5b3234433c01fcfd1b20a306e77e985038120492dc53965c3edd38a4ea",
+          "size": 24
+        },
+        {
+          "path": "report.json",
+          "sha256": "49faf3b58ff526bd6f7848fd46db5c8fe7f7753a88d8bcc07f635c32bf51d203",
+          "size": 15769
+        }
+      ],
+      "cleanup_errors": []
+    }
+  ],
+  "topology_restore": {
+    "owner": "emosa-standard-agent-baseline-v1",
+    "boot_id": "ca767a73-c232-414c-9713-831e6b49dab3",
+    "kernel": "6.8.0-139-generic",
+    "module": "/lib/modules/6.8.0-139-generic/kernel/drivers/net/wireless/virtual/mac80211_hwsim.ko.zst",
+    "container_pids": {
+      "em-baseline-controller": 1494,
+      "em-baseline-agent": 1437,
+      "em-baseline-wired": 1750,
+      "em-baseline-wifi": 1577
+    },
+    "status": "restored",
+    "historical_ownership_rewritten": false,
+    "assignments": {
+      "em-baseline-controller": {
+        "phy": "phy0",
+        "interface": "wlan0",
+        "driver": "/sys/bus/platform/drivers/mac80211_hwsim"
+      },
+      "em-baseline-agent": {
+        "phy": "phy1",
+        "interface": "wlan0",
+        "driver": "/sys/bus/platform/drivers/mac80211_hwsim"
+      },
+      "em-baseline-wifi": {
+        "phy": "phy2",
+        "interface": "wlan0",
+        "driver": "/sys/bus/platform/drivers/mac80211_hwsim"
+      }
+    }
+  },
+  "two_pod_regression": {
+    "test": "tests/test_connecting_fleet.py",
+    "result": "passed in the retained 21-case OVSDB suite",
+    "scope": "Two explicit identities, different SSIDs/keys, per-pod history/idempotency, unavailable peer isolation, rejected identity change, SIGKILL recovery without a second attempt",
+    "tenant_isolation_proven": false,
+    "production_capacity_proven": false
+  },
+  "limitations": [
+    "Semantic local requests initiated the Config changes; there is no EMOSA IEEE packet endpoint.",
+    "Both short controller preparation captures contained zero IEEE frames; neither demonstrates discovery traffic.",
+    "Native controller and local-agent shutdowns still abort (signal 6); preparation is not native lifecycle qualification.",
+    "Radio manager is lab code using hostapd and hwsim, not native OpenSync firmware.",
+    "Physical connection details and IEEE base/amendment remain pending.",
+    "Physical trace analysis and an ODH ingestion contract remain follow-up work."
+  ],
+  "unit_report_curation": {
+    "raw_report_sha256": "105afb4ab04d1a3b867fbca9f8c7bb1fadaedbae196de514c8a646646d2e80e9",
+    "transformation": "Replace only testcase name attributes longer than 256 characters with function name and full parameter-ID SHA-256; preserve every result, count, duration and other attribute. Format XML whitespace.",
+    "replaced_names": [
+      {
+        "name": "test_invalid_public_keys_include_non_subgroup_value[parameter-id-sha256=0ddf1271dbe71f8523e4f854c167f2e0832a410242c09a756dafc22141375e59]",
+        "original_name_characters": 516
+      },
+      {
+        "name": "test_invalid_public_keys_include_non_subgroup_value[parameter-id-sha256=ecd1cc290596487c216cd4c288e42fe758f2cd0cbc839d84e29066ee2b50562b]",
+        "original_name_characters": 516
+      },
+      {
+        "name": "test_invalid_public_keys_include_non_subgroup_value[parameter-id-sha256=837b09fd7f1e2cc75e1b35398333d0c0b991a84c09b5645d38cbb9da8eeee2b3]",
+        "original_name_characters": 516
+      },
+      {
+        "name": "test_truncation_and_component_admission_limits[parameter-id-sha256=610b045ce393c679d7a57f8a89228dd394d0a1e007131e5d5164a28670481fd5]",
+        "original_name_characters": 4194356
+      },
+      {
+        "name": "test_truncation_and_component_admission_limits[parameter-id-sha256=761da621a05d844b529b5a5ac27e5cdceaa2d4f633bab85d192b584212d58dbb]",
+        "original_name_characters": 65600
+      }
+    ]
+  }
+}

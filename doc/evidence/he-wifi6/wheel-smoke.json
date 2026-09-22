@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "python": "3.13.7",
+  "isolated_python": true,
+  "outside_checkout": true,
+  "wheel_sha256": "0d8c61b7c6cc2d6a521f47ffd710e50a348a1db934cae62315fa9fc277afe877",
+  "cases": [
+    {
+      "case": "cli-wifi6",
+      "expected_exit": 0,
+      "actual_exit": 0
+    },
+    {
+      "case": "cli-native-negative",
+      "expected_exit": 2,
+      "actual_exit": 2
+    },
+    {
+      "case": "profile-audit",
+      "expected_exit": 5,
+      "actual_exit": 5
+    }
+  ],
+  "ieee_mcs_import_and_asymmetric_map": "pass",
+  "wire_enabled": false,
+  "physical_pod_accessed": false
+}

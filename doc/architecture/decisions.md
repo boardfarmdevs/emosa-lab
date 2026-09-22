@@ -1,5 +1,14 @@
 # Implementation decisions
 
+- Add opt-in complete synthetic topology bindings with explicit per-pod logical
+  IDs, RUIDs, names/modes and expected MACs. Pin canonical bindings in versioned
+  local journal metadata; retain removed allocations and reject silent changes.
+  Rebuild UUID references from each monitored snapshot. All configured resources
+  must have unambiguous observed counterparts before producing an AP Operational
+  BSS value. State supplies operational facts, and stations remain separate.
+  The read-only diagnostic grants no actuation authority and keeps full protocol,
+  capabilities, physical topology, MLD and hardware qualification pending. A
+  deliberate identity migration/retirement interface is deferred and documented.
 - I0: CPython 3.13.7 is the installed bootstrap runtime and is pinned in
   `.python-version`. Ubuntu 22.04 x86-64 is the inspected development host;
   it is not the required Ubuntu 24.04 nested-LXD reference deployment.
@@ -62,3 +71,28 @@
   uses a single existing BSS/PSK profile, and exposes client success separately
   from radio State. Reuse the stopped native baseline containers and retained
   database/Python tools; keep the native OpenSync backend and wire gates closed.
+
+- Bind AP Radio Basic Capabilities inputs to the persisted synthetic topology,
+  model/firmware, schema and fresh regulatory context. Require pinned evidence
+  files, explicit completeness and an expiring validity window. A separate
+  read-only diagnostic produces values only after these checks; hash verification
+  establishes input identity, not the truth of physical claims. Limit class
+  mapping to reviewed IEEE 802.11-2024 Table E-4 entries, never silently omit
+  unsupported classes, and keep full profile/AP Capability Report and wire
+  admission pending. See the [input walkthrough](../guides/radio-capabilities.md).
+
+- Keep profile readiness separate from component readiness. The offline
+  [profile audit](../protocol/profile-readiness.md) inventories mandatory
+  requirement families and selected conditional capability inclusions. Unknown
+  conditions remain unknown and no planning declaration qualifies a feature.
+  AP/Profile-2/Advanced value codecs preserve reserved fields on receipt and
+  reject reserved output; counter units require explicit peer facts. Older
+  dissector labels never replace current normative bit meanings.
+
+
+Technology and Device Inventory mapping reuse the validated Basic context but
+expose separate readiness results. Unknown support remains unknown. Selected
+HT/VHT claims use explicit normalized inputs; unsupported HE mapping blocks that
+extension instead of fabricating capabilities. Inventory represents the pod,
+not the adapter host. IEEE center-channel classes never validate an observed
+primary channel. See [the walkthrough](../guides/technology-inventory.md).

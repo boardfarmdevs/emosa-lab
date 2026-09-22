@@ -161,8 +161,9 @@ def stop_collect(directory, names=NODES):
 
 
 class Attempt:
-    def __init__(self, directory, mode, kind):
+    def __init__(self, directory, mode, kind, policy="front-and-backhaul"):
         self.directory, self.mode, self.kind = directory, mode, kind
+        self.policy = policy
         directory.mkdir(parents=True, exist_ok=False)
         self.started = time.monotonic()
         self.result = {
@@ -173,6 +174,7 @@ class Attempt:
             "phases": {},
             "acceptance_version": 2,
             "post_client_stability_seconds": 30,
+            "policy": policy,
         }
         self.capture = None
         self.capture_log = None
@@ -298,14 +300,19 @@ class Attempt:
             for k, v in data.items()
             if re.fullmatch(re.escape(prefix) + r"Radio\.\d+\.", k) and v.get("ID") == RUID
         ]
-        if len(radios) != 1 or data[radios[0]].get("BSSNumberOfEntries") != 2:
+        expected_bss = 1 if self.policy == "sole-fronthaul" else 2
+        if len(radios) != 1 or data[radios[0]].get("BSSNumberOfEntries") != expected_bss:
             return False
-        bsses = {
-            v.get("BSSID"): v
-            for k, v in data.items()
-            if k.startswith(radios[0] + "BSS.") and "SSID" in v
-        }
-        for bssid, ssid, front in [(RUID, FRONTHAUL, True), ("02:00:00:ec:02:01", BACKHAUL, False)]:
+        bss_rows = [
+            v for k, v in data.items() if re.fullmatch(re.escape(radios[0]) + r"BSS\.\d+\.", k)
+        ]
+        bsses = {v.get("BSSID"): v for v in bss_rows}
+        if len(bss_rows) != expected_bss or len(bsses) != expected_bss:
+            return False
+        expected = [(RUID, FRONTHAUL, True)]
+        if self.policy != "sole-fronthaul":
+            expected.append(("02:00:00:ec:02:01", BACKHAUL, False))
+        for bssid, ssid, front in expected:
             bss = bsses.get(bssid, {})
             if (
                 bss.get("SSID") != ssid
@@ -329,11 +336,12 @@ class Attempt:
         status = ap(name, "status")
         (self.directory / f"{name}-hostap-status.txt").write_text(status)
         info = values(status)
-        return (
-            info.get("state") == "ENABLED"
-            and info.get("ssid[0]") == FRONTHAUL
-            and info.get("ssid[1]") == BACKHAUL
+        scope_ok = (
+            "ssid[1]" not in info
+            if name == AGENT and self.policy == "sole-fronthaul"
+            else info.get("ssid[1]") == BACKHAUL
         )
+        return info.get("state") == "ENABLED" and info.get("ssid[0]") == FRONTHAUL and scope_ok
 
     def operational(self, name):
         raw = inside(
@@ -493,9 +501,15 @@ class Attempt:
     def clean(self):
         entries = json.loads(lxc("list", AGENT, "--format", "json"))
         devices = next(item for item in entries if item["name"] == AGENT)["devices"]
-        if self.mode == "wireless" and "backhaul" in devices:
-            lxc("config", "device", "remove", AGENT, "backhaul")
-        elif self.mode == "wired" and "backhaul" not in devices:
+        backhauls = [key for key, value in devices.items() if value.get("name") == "eth1"]
+        if len(backhauls) > 1 or any(
+            devices[key].get("type") != "nic" or devices[key].get("network") != "em-base-bh"
+            for key in backhauls
+        ):
+            raise RuntimeError("Unexpected agent eth1 attachment; preserve and inspect it")
+        if self.mode == "wireless" and backhauls:
+            lxc("config", "device", "remove", AGENT, backhauls[0])
+        elif self.mode == "wired" and not backhauls:
             lxc(
                 "config",
                 "device",
@@ -507,7 +521,7 @@ class Attempt:
                 "name=eth1",
             )
         for name in (CONTROLLER, AGENT):
-            node(name, "prepare", "--backhaul", self.mode)
+            node(name, "prepare", "--backhaul", self.mode, "--policy", self.policy)
             node(name, "hostap")
             self.poll(
                 name + "-initial-ap",
@@ -531,7 +545,9 @@ class Attempt:
             ),
             15,
         )
-        (self.directory / "policy.txt").write_text(node(CONTROLLER, "policy"))
+        (self.directory / "policy.txt").write_text(
+            node(CONTROLLER, "policy", "--policy", self.policy)
+        )
         self.poll("controller-ap", lambda: self.applied(CONTROLLER))
         if self.mode == "wireless":
             self.bootstrap()
@@ -808,6 +824,9 @@ def main():
     parser.add_argument("--mode", choices=("wired", "wireless"), required=True)
     parser.add_argument("--label", required=True)
     parser.add_argument(
+        "--policy", choices=("front-and-backhaul", "sole-fronthaul"), default="front-and-backhaul"
+    )
+    parser.add_argument(
         "--suite", action="store_true", help="Five clean starts and three of each recovery"
     )
     parser.add_argument(
@@ -816,6 +835,10 @@ def main():
         default="clean",
     )
     args = parser.parse_args()
+    if args.policy == "sole-fronthaul" and (
+        args.mode != "wired" or args.kind != "clean" or args.suite
+    ):
+        parser.error("Sole-fronthaul currently supports a single clean wired trial")
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,70}", args.label):
         raise SystemExit("Use a unique lowercase label")
     guard()
@@ -846,7 +869,7 @@ def main():
         label = f"{kind}-{counts[kind]:02d}"
         if kind == "clean":
             stop_collect(suite / f"before-{label}")
-        attempt = Attempt(suite / label, args.mode, kind)
+        attempt = Attempt(suite / label, args.mode, kind, args.policy)
         passed = attempt.execute()
         results.append(attempt.result)
         write(

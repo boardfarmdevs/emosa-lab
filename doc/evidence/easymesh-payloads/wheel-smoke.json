@@ -1,0 +1,24 @@
+{
+  "installed_wheel": "emosa-0.1.0-py3-none-any.whl",
+  "isolated_python": true,
+  "working_directory_outside_checkout": true,
+  "dependency_installation": "network registry; first offline attempt lacked cached cryptography wheel",
+  "result": {
+    "evidence_level": "standalone_easymesh_tlv_value",
+    "type": "0x80",
+    "byte_length": 2,
+    "sha256": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2",
+    "decoded": {
+      "services": [
+        1
+      ],
+      "known_services": [
+        1
+      ],
+      "reserved_services": []
+    },
+    "wire_envelope_validated": false,
+    "controller_onboarding_by_emosa_proven": false,
+    "physical_pod_proven": false
+  }
+}

@@ -25,6 +25,11 @@ class Application:
         self.config = config
         self.agents = AgentDirectory(config["pods"], config["backend_mode"])
         self.store = Store(Path(config["state_directory"]))
+        try:
+            topology_bindings = self.store.pin_topologies(config["pods"])
+        except BaseException:
+            self.store.close()
+            raise
         self.vault = SecretStore(Path(config["secret_directory"]))
         self.clock = Clock()
         self.backends = {}
@@ -46,6 +51,12 @@ class Application:
                     bss_id=pod["bss_id"],
                     radio_id=pod["radio_id"],
                     expected_serial=pod.get("virtual_agent", {}).get("expected_serial"),
+                    mapping_scope=pod.get("mapping_scope", "existing-bss"),
+                    topology_binding=topology_bindings.get(pod_id),
+                    radio_capabilities=pod.get("radio_capabilities"),
+                    state_provenance=pod.get(
+                        "state_provenance", "independent-simulated-manager:Wifi_VIF_State"
+                    ),
                 )
             else:
                 raise EmosaError(Reason.MISSING_PREREQUISITE, "backend qualification pending")
@@ -144,10 +155,44 @@ class Application:
             return {"pods": list(self.cache.values())[offset : offset + limit], "offset": offset}
         if method == "agents":
             return self.agents.view(offset=params.get("offset", 0), limit=params.get("limit", 100))
-        if method in {"inventory", "capabilities", "ownership"}:
+        if method in {
+            "inventory",
+            "capabilities",
+            "ownership",
+            "radio.scope",
+            "topology",
+            "radio.capabilities",
+        }:
             pod_id = params["pod_id"]
             if pod_id not in self.backends:
                 raise EmosaError(Reason.NOT_FOUND, "unknown configured pod")
+            if method == "radio.capabilities":
+                backend = self.backends[pod_id]
+                if not hasattr(backend, "radio_capabilities"):
+                    raise EmosaError(
+                        Reason.UNSUPPORTED_OPERATION, "radio capabilities require OVSDB inventory"
+                    )
+                return {
+                    **await backend.radio_capabilities(),
+                    "adapter_instance_id": self.agents.instance_id,
+                }
+            if method == "topology":
+                backend = self.backends[pod_id]
+                if not hasattr(backend, "topology"):
+                    raise EmosaError(
+                        Reason.UNSUPPORTED_OPERATION, "topology requires OVSDB inventory"
+                    )
+                return {
+                    **await backend.topology(),
+                    "adapter_instance_id": self.agents.instance_id,
+                }
+            if method == "radio.scope":
+                backend = self.backends[pod_id]
+                if not hasattr(backend, "radio_scope"):
+                    raise EmosaError(
+                        Reason.UNSUPPORTED_OPERATION, "radio scope requires OVSDB inventory"
+                    )
+                return await backend.radio_scope()
             if method == "ownership":
                 return {
                     "pod_id": pod_id,

@@ -1,0 +1,24 @@
+{
+  "evidence_level": "standalone_easymesh_tlv_value",
+  "type": "0xb4",
+  "byte_length": 4,
+  "sha256": "df500e020316dcf50538f411f88db766c7f3f85d2f359d26abe1f4cdff3204d7",
+  "decoded": {
+    "flags": 120,
+    "features": {
+      "prioritization": true,
+      "dpp_onboarding": true,
+      "traffic_separation": true
+    },
+    "reserved_bits": 0,
+    "max_prioritization_rules": 1,
+    "max_vids": 2,
+    "reserved_octet": 0,
+    "byte_counter_units": 1,
+    "counter_unit": "KiB",
+    "bytes_per_counter_unit": 1024
+  },
+  "wire_envelope_validated": false,
+  "controller_onboarding_by_emosa_proven": false,
+  "physical_pod_proven": false
+}

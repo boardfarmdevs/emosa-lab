@@ -10,6 +10,7 @@ from emosa.config import validate
 from emosa.errors import EmosaError, Reason
 from emosa.model import Operation
 from emosa.secrets import redact
+from emosa.topology_bindings import REGISTRY_KEY, merge_registry
 
 
 class Store:
@@ -67,6 +68,33 @@ class Store:
         if self.lock:
             self.lock.close()
             self.lock = None
+
+    def pin_topologies(self, pods):
+        """Persist explicit simulation identities under the existing writer lock.
+
+        This additive versioned metadata record needs no operation-schema change.
+        Removed pods remain reserved; a changed binding needs a future explicit
+        migration, not silent replacement or automatic trust on first connection.
+        """
+        if self.read_only:
+            raise EmosaError(Reason.UNSUPPORTED_OPERATION, "read-only journal")
+        row = self.db.execute("SELECT value FROM metadata WHERE key=?", (REGISTRY_KEY,)).fetchone()
+        try:
+            saved = json.loads(row[0]) if row else {}
+            if not isinstance(saved, dict):
+                raise ValueError
+            merged = merge_registry(saved, pods)
+        except (ValueError, TypeError, KeyError):
+            raise EmosaError(
+                Reason.SCHEMA_MISMATCH, "invalid persisted topology registry"
+            ) from None
+        if merged != saved:
+            with self.db:
+                self.db.execute(
+                    "INSERT OR REPLACE INTO metadata VALUES (?,?)",
+                    (REGISTRY_KEY, json.dumps(merged, sort_keys=True)),
+                )
+        return {p["pod_id"]: merged[p["pod_id"]] for p in pods if p["pod_id"] in merged}
 
     def get(self, operation_id: str) -> Operation:
         row = self.db.execute(

@@ -1,0 +1,349 @@
+{
+  "schema_version": 1,
+  "source_kind": "synthetic_fixture",
+  "pod_id": "pod-1",
+  "binding_sha256": "8be9b46438939ac2f3b6bc71a93d42725912a118b5089bd60f5309bd78008939",
+  "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+  "device": {
+    "model": "EMOSA synthetic extender",
+    "firmware_version": "simulation-only"
+  },
+  "issued_at": "2026-09-22T05:31:32.118965Z",
+  "expires_at": "2026-09-23T05:32:32.118965Z",
+  "complete_operating_class_inventory": true,
+  "evidence": [
+    {
+      "id": "synthetic-radio-contract",
+      "file": "synthetic-radio-contract.json",
+      "sha256": "d09c40d701874a6f52982f3fd23028d7e6ab6fbf161b6c7e105ab1c9f495c3b2",
+      "review_note": "Synthetic fixture declaration only; not physical qualification",
+      "covers": [
+        "device_identity",
+        "regulatory_domain",
+        "max_bss",
+        "complete_operating_classes",
+        "technology",
+        "device_inventory",
+        "wifi6"
+      ]
+    }
+  ],
+  "radios": [
+    {
+      "radio_id": "radio-1",
+      "ruid": "02:00:00:01:40:01",
+      "country": "US",
+      "max_bss": 4,
+      "operating_classes": [
+        {
+          "operating_class": 115,
+          "max_eirp_dbm": 20,
+          "non_operable_channels": []
+        },
+        {
+          "operating_class": 116,
+          "max_eirp_dbm": 20,
+          "non_operable_channels": []
+        },
+        {
+          "operating_class": 117,
+          "max_eirp_dbm": 20,
+          "non_operable_channels": []
+        },
+        {
+          "operating_class": 128,
+          "max_eirp_dbm": 20,
+          "non_operable_channels": [
+            58,
+            106,
+            122,
+            138,
+            155,
+            171
+          ]
+        }
+      ],
+      "evidence_id": "synthetic-radio-contract"
+    },
+    {
+      "radio_id": "radio-2",
+      "ruid": "02:00:00:01:40:02",
+      "country": "US",
+      "max_bss": 2,
+      "operating_classes": [
+        {
+          "operating_class": 81,
+          "max_eirp_dbm": 17,
+          "non_operable_channels": [
+            12,
+            13
+          ]
+        },
+        {
+          "operating_class": 83,
+          "max_eirp_dbm": 17,
+          "non_operable_channels": []
+        },
+        {
+          "operating_class": 84,
+          "max_eirp_dbm": 17,
+          "non_operable_channels": [
+            12,
+            13
+          ]
+        }
+      ],
+      "evidence_id": "synthetic-radio-contract"
+    }
+  ],
+  "extensions": {
+    "technology": [
+      {
+        "radio_id": "radio-1",
+        "evidence_id": "synthetic-radio-contract",
+        "ht": {
+          "max_tx_streams": 2,
+          "max_rx_streams": 2,
+          "short_gi_20": true,
+          "short_gi_40": true,
+          "ht40": true
+        },
+        "vht": {
+          "max_tx_streams": 2,
+          "max_rx_streams": 3,
+          "tx_mcs_codes": [
+            2,
+            1,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "rx_mcs_codes": [
+            1,
+            2,
+            0,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "short_gi_80": true,
+          "short_gi_160": false,
+          "vht8080": false,
+          "vht160": false,
+          "su_beamformer": true,
+          "mu_beamformer": false
+        },
+        "he": true
+      },
+      {
+        "radio_id": "radio-2",
+        "evidence_id": "synthetic-radio-contract",
+        "ht": {
+          "max_tx_streams": 2,
+          "max_rx_streams": 2,
+          "short_gi_20": true,
+          "short_gi_40": true,
+          "ht40": true
+        },
+        "vht": false,
+        "he": true
+      }
+    ],
+    "device_inventory": {
+      "evidence_id": "synthetic-radio-contract",
+      "serial_number": "EMOSA-TOPOLOGY-SIM-001",
+      "software_version": "simulation-only",
+      "execution_env": "EMOSA synthetic environment",
+      "radios": [
+        {
+          "radio_id": "radio-1",
+          "chipset_vendor": "EMOSA synthetic radio"
+        },
+        {
+          "radio_id": "radio-2",
+          "chipset_vendor": "EMOSA synthetic radio"
+        }
+      ]
+    },
+    "wifi6": [
+      {
+        "radio_id": "radio-1",
+        "evidence_id": "synthetic-radio-contract",
+        "complete_role_inventory": true,
+        "roles": [
+          {
+            "role": "ap",
+            "mcs": {
+              "up_to_80": {
+                "rx_codes": [
+                  2,
+                  1,
+                  0,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3
+                ],
+                "tx_codes": [
+                  1,
+                  2,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3
+                ]
+              },
+              "mhz160": null,
+              "mhz80plus80": null
+            },
+            "features": {
+              "su_beamformer": true,
+              "su_beamformee": false,
+              "mu_beamformer": true,
+              "beamformee_sts_le_80": false,
+              "beamformee_sts_gt_80": false,
+              "ul_mu_mimo": true,
+              "ul_ofdma": true,
+              "dl_ofdma": true,
+              "rts": true,
+              "mu_rts": true,
+              "multi_bssid": false,
+              "mu_edca": false,
+              "twt_requester": false,
+              "twt_responder": true,
+              "spatial_reuse": false,
+              "anticipated_channel_usage": false
+            },
+            "ap_user_limits": {
+              "dl_mu_mimo_tx": 2,
+              "ul_mu_mimo_rx": 3,
+              "dl_ofdma_tx": 18,
+              "ul_ofdma_rx": 9
+            }
+          }
+        ]
+      },
+      {
+        "radio_id": "radio-2",
+        "evidence_id": "synthetic-radio-contract",
+        "complete_role_inventory": true,
+        "roles": [
+          {
+            "role": "ap",
+            "mcs": {
+              "up_to_80": {
+                "rx_codes": [
+                  2,
+                  1,
+                  0,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3
+                ],
+                "tx_codes": [
+                  1,
+                  2,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3
+                ]
+              },
+              "mhz160": null,
+              "mhz80plus80": null
+            },
+            "features": {
+              "su_beamformer": true,
+              "su_beamformee": false,
+              "mu_beamformer": true,
+              "beamformee_sts_le_80": false,
+              "beamformee_sts_gt_80": false,
+              "ul_mu_mimo": true,
+              "ul_ofdma": true,
+              "dl_ofdma": true,
+              "rts": true,
+              "mu_rts": true,
+              "multi_bssid": false,
+              "mu_edca": false,
+              "twt_requester": false,
+              "twt_responder": true,
+              "spatial_reuse": false,
+              "anticipated_channel_usage": false
+            },
+            "ap_user_limits": {
+              "dl_mu_mimo_tx": 2,
+              "ul_mu_mimo_rx": 3,
+              "dl_ofdma_tx": 18,
+              "ul_ofdma_rx": 9
+            }
+          },
+          {
+            "role": "non_ap_sta",
+            "mcs": {
+              "up_to_80": {
+                "rx_codes": [
+                  1,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3
+                ],
+                "tx_codes": [
+                  2,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3,
+                  3
+                ]
+              },
+              "mhz160": null,
+              "mhz80plus80": null
+            },
+            "features": {
+              "su_beamformer": false,
+              "su_beamformee": true,
+              "mu_beamformer": false,
+              "beamformee_sts_le_80": false,
+              "beamformee_sts_gt_80": false,
+              "ul_mu_mimo": true,
+              "ul_ofdma": true,
+              "dl_ofdma": true,
+              "rts": true,
+              "mu_rts": true,
+              "multi_bssid": false,
+              "mu_edca": false,
+              "twt_requester": true,
+              "twt_responder": false,
+              "spatial_reuse": false,
+              "anticipated_channel_usage": false
+            },
+            "ap_user_limits": {
+              "dl_mu_mimo_tx": 0,
+              "ul_mu_mimo_rx": 0,
+              "dl_ofdma_tx": 0,
+              "ul_ofdma_rx": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

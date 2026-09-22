@@ -5,13 +5,13 @@
   "tasks": {
     "I0": "local and nested Ubuntu 24.04 component foundation tested; full reference wire/hardware deployment and runtime image exports pending",
     "I1": "implemented with model tests",
-    "I2": "real OVSDB component path and independent hostapd/hwsim manager tested with wired/wireless clients; semantic initiation only; see doc/evaluation/radio-manager.md",
+    "I2": "Real OVSDB and independent hostapd/hwsim clients tested through actual adapter service with pod-initiated connection and SIGKILL recovery; bounded two-pod test; semantic initiation only; see doc/guides/service-integration.md; strict sole-radio scope and atomic graph guards verified; see doc/guides/onboarding-readiness.md",
     "R0": "native apply/withhold experiment runs; database-restart recovery N03 fails and production backend remains disabled",
     "I3": "blocked P0",
     "I4": "WSC M1/M2 payload component independently tested; full procedure remains blocked P0/I3",
     "I5": "read-only draft collector implemented; physical qualification and writes blocked M0/P0",
     "I6": "incremental component runner/watch/inspect/report/compare; complete reference release pending",
-    "I7": "native wired/wireless controller-agent baseline recorded; EMOSA wire exchanges, clean native shutdown and hardware interoperability remain pending"
+    "I7": "Native wired/wireless baseline and live controller preparation retained; diagnostic virtual AL is absent from native inventory; EMOSA wire exchanges, clean native shutdown and hardware interoperability remain pending; offline native capture review exposes discovery-profile and whole-request compatibility work"
   },
   "rows": [
     {
@@ -44,12 +44,16 @@
       "id": "ARCH-03",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/opensync/mapping.py"
+        "src/emosa/opensync/mapping.py",
+        "src/emosa/opensync/radio_scope.py"
       ],
       "test_refs": [
-        "tests/test_ovsdb.py"
+        "tests/test_ovsdb.py",
+        "tests/test_radio_scope.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/onboarding-readiness/summary.json"
+      ],
       "mode": null,
       "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
     },
@@ -422,28 +426,46 @@
       "id": "MODEL-02",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/opensync/mapping.py"
+        "src/emosa/opensync/mapping.py",
+        "src/emosa/topology_bindings.py",
+        "src/emosa/opensync/topology.py"
       ],
       "test_refs": [
-        "tests/test_ovsdb.py"
+        "tests/test_ovsdb.py",
+        "tests/test_topology.py",
+        "tests/test_topology_service.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/observed-topology/summary.json"
+      ],
       "mode": null,
-      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+      "scope": "Complete synthetic radio/VIF identity and observation mapping tested through the actual read-only service; hardware/trusted-identity and wire qualification remain pending."
     },
     {
       "id": "MODEL-03",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/opensync/mapping.py"
+        "src/emosa/opensync/mapping.py",
+        "src/emosa/topology_bindings.py",
+        "src/emosa/opensync/topology.py",
+        "src/emosa/radio_capabilities.py",
+        "src/emosa/operating_classes.py"
       ],
       "test_refs": [
         "tests/test_ovsdb.py",
-        "tests/test_qualification.py"
+        "tests/test_qualification.py",
+        "tests/test_topology.py",
+        "tests/test_topology_service.py",
+        "tests/test_radio_capabilities.py",
+        "tests/test_radio_capability_service.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/observed-topology/summary.json",
+        "doc/evidence/radio-capabilities/summary.json"
+      ],
       "mode": null,
-      "scope": "Implemented foundation path; full requirement/environment qualification is incomplete."
+      "scope": "Complete synthetic radio/VIF identity and observation mapping tested through the actual read-only service; hardware/trusted-identity and wire qualification remain pending.",
+      "independent_work": "Complete synthetic topology and evidence-bound Radio Basic Capabilities diagnostics tested via read-only two-pod service. Actual capability qualification, complete profile and wire/physical gates remain pending."
     },
     {
       "id": "MODEL-04",
@@ -1445,16 +1467,41 @@
       "id": "WIRE-02",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/topology_bindings.py",
+        "src/emosa/opensync/topology.py",
+        "src/emosa/radio_capabilities.py",
+        "src/emosa/operating_classes.py",
+        "src/emosa/evaluation/profile_audit.py",
+        "src/emosa/counter_units.py",
+        "src/emosa/capability_extensions.py",
+        "src/emosa/he_mcs.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_topology.py",
+        "tests/test_topology_service.py",
+        "tests/test_radio_capabilities.py",
+        "tests/test_radio_capability_service.py",
+        "tests/test_feature_capabilities.py",
+        "tests/test_profile_audit.py",
+        "tests/test_technology_values.py",
+        "tests/test_capability_extensions.py",
+        "tests/test_he_wifi6.py",
+        "tests/test_wifi6_projection.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/observed-topology/summary.json",
+        "doc/evidence/radio-capabilities/summary.json",
+        "doc/evidence/profile-audit/summary.json",
+        "doc/evidence/technology-inventory/summary.json",
+        "doc/evidence/he-wifi6/summary.json",
+        "doc/evidence/wifi6-inputs/summary.json"
+      ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Selected standalone values and read-only synthetic mappings only. Wi-Fi 6 role inputs do not imply complete HE/report, profile, wire or physical qualification.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
-      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+      "independent_work": "Read-only topology, Basic/HT/VHT/Device Inventory and separate evidence-bound Wi-Fi 6 role mapping; 0x88 conversion, complete HE set, full procedures and physical qualification remain pending."
     },
     {
       "id": "WIRE-03",
@@ -2247,18 +2294,24 @@
       "id": "A15",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "src/emosa/qualification.py",
+        "src/emosa/topology_bindings.py",
+        "src/emosa/opensync/topology.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
         "tests/test_ovsdb.py",
-        "tests/test_model.py"
+        "tests/test_model.py",
+        "tests/test_topology.py",
+        "tests/test_topology_service.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/observed-topology/summary.json"
+      ],
       "mode": null,
       "scope": "A-tests require hardware acceptance; component counterparts are not physical passes.",
       "blocker": "M0: no qualified physical pod/build/schema/ownership/topology/client evidence.",
-      "independent_work": "Read-only qualification tool and simulator evidence."
+      "independent_work": "Explicit persisted synthetic topology bindings and complete graph projection tested with real OVSDB, two pods, UUID recreation and adapter restart; full wire/physical gate remains open."
     },
     {
       "id": "A16",
@@ -2494,16 +2547,22 @@
       "id": "W05",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/topology_bindings.py",
+        "src/emosa/opensync/topology.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_topology.py",
+        "tests/test_topology_service.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/observed-topology/summary.json"
+      ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
-      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+      "independent_work": "Explicit persisted synthetic topology bindings and complete graph projection tested with real OVSDB, two pods, UUID recreation and adapter restart; full wire/physical gate remains open."
     },
     {
       "id": "W06",

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "scope": "unqualified_planning_input",
+  "controller": {
+    "profile": null,
+    "kib_mib": null,
+    "preferred_scaled_unit": null
+  },
+  "radios": [
+    {
+      "radio_id": "radio-1",
+      "ht": null,
+      "vht": null,
+      "he": null,
+      "eht": null,
+      "advanced_qos": null
+    }
+  ]
+}
