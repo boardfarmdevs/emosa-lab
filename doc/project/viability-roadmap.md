@@ -20,6 +20,14 @@ rule and a two-M2-plus-M8 request outside the narrow mapping. Resolve the named
 controller policy/build intersection alongside P0. These observations do not
 select a fully qualified profile or enable the missing wire connection.
 
+The [EasyMesh value components](../protocol/easymesh-payloads.md) now implement
+service lists, Radio Identifier, Operational BSS and profile values, with an
+offline inspection CLI and independent native-capture checks. The next work
+available before IEEE intake is stable per-pod radio/BSS identity binding and
+complete observed topology projection. Qualified capability values and the full
+profile audit follow; existing selected-BSS inventory cannot silently become a
+complete agent report. Complete IEEE message processing remains P0-dependent.
+
 The user-facing proof is specifically **an EasyMesh controller discovers and
 onboards an OpenSync extender as another EasyMesh agent, represented by the
 adapter around the controller**. The extender remains an OpenSync device;

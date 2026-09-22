@@ -1,0 +1,21 @@
+{
+  "evidence_level": "standalone_easymesh_tlv_value",
+  "type": "0x80",
+  "byte_length": 3,
+  "sha256": "5d72354902a56c3e54f17ec0c6d64dbfa5df7a9eeb4993ad3f085239a7151f8a",
+  "decoded": {
+    "services": [
+      1,
+      161
+    ],
+    "known_services": [
+      1
+    ],
+    "reserved_services": [
+      161
+    ]
+  },
+  "wire_envelope_validated": false,
+  "controller_onboarding_by_emosa_proven": false,
+  "physical_pod_proven": false
+}

@@ -11,6 +11,7 @@ from emosa.config import load
 from emosa.errors import EmosaError, Reason
 from emosa.evaluation.evidence import compare
 from emosa.evaluation.lxd import invoke
+from emosa.evaluation.payloads import inspect_value, read_value
 from emosa.evaluation.runner import all_events, run
 from emosa.store import Store
 
@@ -64,8 +65,25 @@ def main(argv=None):
     comparison.add_argument("run_a")
     comparison.add_argument("run_b")
     comparison.add_argument("--format", choices=["json", "html", "markdown"], default="json")
+    payload = sub.add_parser("payload", help="inspect one EasyMesh TLV value offline")
+    payload.add_argument("--type", dest="kind", type=lambda value: int(value, 0), required=True)
+    value = payload.add_mutually_exclusive_group(required=True)
+    value.add_argument("--value-hex", help="value octets only, without a TLV header or frame")
+    value.add_argument("--value-file", type=Path, help="regular file containing raw value octets")
+    payload.add_argument("--receiver-profile", type=int, choices=(1, 2, 3))
     args = parser.parse_args(argv)
     try:
+        if args.command == "payload":
+            if args.execution != "local":
+                raise EmosaError(Reason.INVALID_INPUT, "offline payload inspection runs locally")
+            output(
+                inspect_value(
+                    args.kind,
+                    read_value(value_hex=args.value_hex, value_file=args.value_file),
+                    receiver_profile=args.receiver_profile,
+                )
+            )
+            return 0
         if args.execution == "lxd":
             for flag in ("--execution", "--state-dir"):
                 if flag in raw_arguments:

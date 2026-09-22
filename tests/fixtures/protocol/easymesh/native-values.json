@@ -1,0 +1,100 @@
+{
+  "cases": [
+    {
+      "frame": 1,
+      "type": "0x80",
+      "value_hex": "0201a1",
+      "decoded": {
+        "services": [
+          1,
+          161
+        ]
+      }
+    },
+    {
+      "frame": 1,
+      "type": "0x81",
+      "value_hex": "0100",
+      "decoded": {
+        "services": [
+          0
+        ]
+      }
+    },
+    {
+      "frame": 1,
+      "type": "0xb3",
+      "value_hex": "02",
+      "decoded": {
+        "profile": 2
+      }
+    },
+    {
+      "frame": 2,
+      "type": "0x80",
+      "value_hex": "0100",
+      "decoded": {
+        "services": [
+          0
+        ]
+      }
+    },
+    {
+      "frame": 2,
+      "type": "0xb3",
+      "value_hex": "01",
+      "decoded": {
+        "profile": 1
+      }
+    },
+    {
+      "frame": 7,
+      "type": "0x82",
+      "value_hex": "020000ec0200",
+      "decoded": {
+        "ruid": "02:00:00:ec:02:00"
+      }
+    },
+    {
+      "frame": 20,
+      "type": "0x80",
+      "value_hex": "0201a1",
+      "decoded": {
+        "services": [
+          1,
+          161
+        ]
+      }
+    },
+    {
+      "frame": 20,
+      "type": "0x83",
+      "value_hex": "01020000ec020002020000ec020015656d6f73612d756e70726f766973696f6e65642d32020000ec02011e656d6f73612d756e70726f766973696f6e65642d6261636b6861756c2d32",
+      "decoded": {
+        "radios": [
+          {
+            "ruid": "02:00:00:ec:02:00",
+            "bsses": [
+              {
+                "ap_mac": "02:00:00:ec:02:00",
+                "ssid_hex": "656d6f73612d756e70726f766973696f6e65642d32"
+              },
+              {
+                "ap_mac": "02:00:00:ec:02:01",
+                "ssid_hex": "656d6f73612d756e70726f766973696f6e65642d6261636b6861756c2d32"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "frame": 20,
+      "type": "0xb3",
+      "value_hex": "02",
+      "decoded": {
+        "profile": 2
+      }
+    }
+  ]
+}

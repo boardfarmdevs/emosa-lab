@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "M1 construction and M2 payload authentication now have independent hostap fixtures. Complete IEEE framing, controller/radio binding, exchange state and complete-radio mapping before any wire-driven pod operation.",
+      "next": "Standalone discovery/topology value codecs and authenticated WSC payloads have independent checks. Complete observed topology and stable radio bindings, then IEEE framing, trusted exchange state and complete-radio mapping, before wire-driven pod operations.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -459,10 +459,22 @@
       "title": "IEEE radio and Ethernet input review",
       "category": "Protocol components",
       "description": "Verified operator-supplied 802.11-2024 and 802.3-2022 artifacts, selected clause references and remaining edition/IEEE 1905 gaps."
+    },
+    {
+      "path": "doc/protocol/easymesh-payloads.md",
+      "title": "EasyMesh value components and offline inspection",
+      "category": "Protocol components",
+      "description": "Five standalone value codecs, beginner exercises, reserved-code rules and nine native payloads cross-checked by Wireshark; complete wire onboarding remains pending."
+    },
+    {
+      "path": "doc/evidence/easymesh-payloads/summary.json",
+      "title": "EasyMesh value component evidence",
+      "category": "Protocol components",
+      "description": "Component/regression tests, two independent dissector versions and bounded native observations; no complete wire or physical claim."
     }
   ],
   "suite_evidence": {
-    "unit": "onboarding-readiness/unit-results.xml",
-    "ovsdb": "onboarding-readiness/ovsdb-results.xml"
+    "unit": "easymesh-payloads/unit-results.xml",
+    "ovsdb": "easymesh-payloads/ovsdb-results.xml"
   }
 }

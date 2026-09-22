@@ -24,6 +24,7 @@ it does not supply the capabilities of the actual OpenSync pod.
 
 | Selected reference | What was inspected | Consequence for EMOSA |
 | --- | --- | --- |
+| §9.4.2.2, Figure 9-209, printed p.934; subsequent component review | SSID's 0–32-octet structure and character encoding conditional on UTF-8 capability information. | The [EasyMesh value component](easymesh-payloads.md) preserves original SSID bytes without assuming UTF-8. Structural parsing does not qualify an operational BSS or wildcard use in a procedure. |
 | Annex E.1, printed p.5648; Table E-4 starts p.5656 | Operating classes combine frequency/channel, width and behavioral constraints; global and regional class tables are distinct. Inspected the table structure and the 2.4 GHz entries on p.5658. | Resolve class values from the referenced global table together with qualified target capabilities and regulatory restrictions. A configured channel or schema column alone cannot establish every supported class/channel. |
 | §9.4.2.52, printed pp.1120–1121 | Supported Operating Classes element and its optional extension/duple structures. | This Wi-Fi element is a separate structure from an EasyMesh Radio Basic Capabilities TLV. Use EasyMesh §17.2.7 for its outer fields; do not copy a Wi-Fi element wholesale into it. |
 | §9.4.2.54.1–2, starting printed p.1122 | HT element structure and capability-information fields. | Provides input definitions for the feature-by-feature HT mapping; actual support and complete mapping remain to be qualified. |

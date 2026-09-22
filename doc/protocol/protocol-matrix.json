@@ -577,6 +577,50 @@
         "tests/test_wsc_radio.py"
       ],
       "evidence": "doc/evidence/wsc-radio.json"
+    },
+    "easymesh_values": {
+      "status": "selected_component_only",
+      "specifications": [
+        "wfa-easymesh-6.1",
+        "ieee80211-2024"
+      ],
+      "rules": "doc/protocol/easymesh-payloads.md",
+      "normative_sections": [
+        "EasyMesh 6.1 section 3.1.2 page 16",
+        "EasyMesh 6.1 sections 17.2.1-4 Tables 24-27 pages 125-126",
+        "EasyMesh 6.1 section 17.2.47 Table 70 page 157",
+        "IEEE 802.11-2024 section 9.4.2.2 Figure 9-209 page 934"
+      ],
+      "implementation": "src/emosa/easymesh_payloads.py",
+      "inspection": "src/emosa/evaluation/payloads.py",
+      "types": [
+        "0x80",
+        "0x81",
+        "0x82",
+        "0x83",
+        "0xb3"
+      ],
+      "procedure_gate_satisfied": false,
+      "scope": "Standalone value encoding/decoding and offline inspection only; no outer TLV headers, IEEE frames, runtime inventory mapping, transport, peer trust or pod writes",
+      "local_policies": [
+        "16384-byte value budget is a local resource limit, not a normative frame or TLV limit",
+        "Exact single-value parsing rejects trailing/truncated bytes; no unknown-TLV or duplicate-identity procedure inference",
+        "Opaque SSID bytes; no UTF-8 assumption or Config-to-State substitution"
+      ],
+      "validation": "71 component cases, including exact native bytes/fields, hand-derived table examples and negative/boundary/CLI tests; nine native projections reproduced under tshark 3.6.2 and 4.2.2",
+      "tests": [
+        "tests/test_easymesh_payloads.py"
+      ],
+      "vectors": "tests/fixtures/protocol/easymesh/native-values.json",
+      "provenance": "tests/fixtures/protocol/easymesh/provenance.json",
+      "independent_checker": "scripts/check-easymesh-reference.py",
+      "evidence": "doc/evidence/easymesh-payloads/summary.json",
+      "remaining_gaps": [
+        "Complete observed radio/BSS inventory and stable qualified identity bindings",
+        "Full advertised-profile audit and actual radio capabilities",
+        "IEEE 1905.1-2013 / 1905.1a-2014 base rules and independent full-message vectors",
+        "Real controller discovery/onboarding and physical-pod acceptance"
+      ]
     }
   },
   "acquisition_checklist": "doc/protocol/specification-acquisition.md",
@@ -591,7 +635,7 @@
         "EasyMesh 6.1 section 2 reference [1]",
         "EasyMesh 6.1 section 9.1 and applicable 17.2 capability fields"
       ],
-      "affected_work": "operating-class and actual radio capability encoding",
+      "affected_work": "opaque SSID representation, operating-class and actual radio capability encoding",
       "content_sha256": "4b263f76cc12a6aad0e8edbf65e5fc9ab9772520cdc1c0aac994b85449c9bd55",
       "operator_report": {
         "date": "2026-09-21",
@@ -608,7 +652,8 @@
         "9.4.2.52 printed pp.1120–1121",
         "9.4.2.54.1–2 starting printed p.1122",
         "9.4.2.156.1 printed p.1292",
-        "9.4.2.247.1 printed p.1437"
+        "9.4.2.247.1 printed p.1437",
+        "9.4.2.2 Figure 9-209 printed p.934 (SSID structure and encoding)"
       ],
       "review_scope": "Selected definitions and element structures; not full field/profile audit or actual pod capability qualification",
       "corrections_check": {

@@ -2616,12 +2616,13 @@ radio teardown. Actual exchange binding and write admission remain P0 work.
 
 ## 13. Exercise WSC components and native OpenSync research
 
-This chapter contains **two independent specialist paths**. WSC component tests
+This chapter contains **three independent specialist paths**. WSC component tests
 run locally and check provisioning-message processing. The native OpenSync R0
 investigation builds selected upstream managers in a separate lab container.
 You can complete ordinary adapter learning and demonstrations without running
 R0; its known failure remains a research task rather than a broken prerequisite
-for the simulator or radio integration.
+for the simulator or radio integration. Section 13.3 adds offline inspection of
+selected EasyMesh values and explains what that component evidence establishes.
 
 ### 13.1 WSC payload implementation and independent vectors
 
@@ -2725,6 +2726,38 @@ callback/application appears within the probe deadline. The path probe exits
 Fix/requalify reconnect/resubscription or explicit supervisor recovery without
 writing synthetic success into State. Earlier failed build attempts remain part
 of the history; an old `protoc-c` bootstrap failure is not the current blocker.
+
+### 13.3 Inspect EasyMesh value components without a lab
+
+Discovery and topology messages carry small structured fields describing services,
+radios, BSSs and profiles. EMOSA now has Python codecs for five such **TLV values**.
+A TLV means type/length/value; this component handles the value inside that
+structure. It provides useful progress from EasyMesh's explicit field definitions
+while the IEEE 1905 base/amendment are pending. It does not enable the packet
+endpoint or cause the controller to discover an agent.
+
+On HOST, in the installed checkout, run:
+
+```bash
+uv run emosa-lab payload --type 0x80 --value-hex 0101
+uv run pytest tests/test_easymesh_payloads.py
+```
+
+Here `0x80` selects SupportedService. The value's first `01` says one service;
+the second says Multi-AP Agent. Inspect `decoded.known_services`, the byte count
+and hash, then the three false wire/onboarding/physical flags. The command starts
+no service and creates no runtime state. No VM, radio or pod is needed.
+
+Follow the [complete payload exercise](../protocol/easymesh-payloads.md) to inspect
+the native fixture's one-radio/two-BSS report, understand reserved service/profile
+values, build an agent-service value in Python and reproduce the independent
+Wireshark check. SSIDs are shown as hex to preserve their original bytes; hex is
+not anonymization. Use private files for future physical observations.
+
+The running service does not yet use these codecs. Complete observed inventory,
+stable pod/radio identity binding and the eventual IEEE exchange layer are still
+required. In particular, encoding one selected BSS cannot establish a complete
+radio topology or a qualified advertised profile.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
@@ -3244,8 +3277,8 @@ is no need to invent runtime tests that merely duplicate prose.
 
 Use these checks according to the changed scope and repository requirements.
 Formatting/lint catches source consistency problems; unit tests isolate logic;
-OVSDB tests cross the real database interface; WSC reference checks compare
-selected native bytes; the site build validates the published evidence selection.
+OVSDB tests cross the real database interface; WSC and EasyMesh reference checks
+compare selected native bytes; the site build validates the published evidence selection.
 Passing one does not substitute for another boundary's test.
 
 ```bash
@@ -3255,11 +3288,13 @@ uv run ruff format --check .
 uv run pytest -m unit
 uv run pytest -m ovsdb
 python3 scripts/check-wsc-reference.py
+python3 scripts/check-easymesh-reference.py
 python3 scripts/build-site.py
 ```
 
-Build OVSDB once first and provide the C/OpenSSL prerequisites for independent
-vectors. CI has separate unit, OVSDB and WSC-reference jobs. Its green result
+Build OVSDB once first, provide the C/OpenSSL prerequisites for the WSC vectors,
+and install tshark for EasyMesh value re-extraction. CI has separate unit, OVSDB,
+WSC-reference and EasyMesh-reference jobs. Its green result
 does not run or certify the privileged radio/native/physical experiments.
 Use focused tests while developing, then the required relevant checks before
 delivery. Selecting `uv run pytest -m wire`, `-m hardware` or `-m external`

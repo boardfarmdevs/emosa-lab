@@ -8,6 +8,7 @@
 | [Connecting-pod walkthrough](connecting-pod.md) | Run a simulated extender that initiates OVSDB to EMOSA, inspect its diagnostic virtual agent, apply configuration and demonstrate recovery |
 | [Service integration walkthrough](service-integration.md) | Exercise two pods, restore owned radios after reboot, test the actual service with hwsim clients, and prepare the live controller trial |
 | [Onboarding readiness checks](onboarding-readiness.md) | Check complete radio/BSS scope and review the native controller's captured profiles and WSC payload set |
+| [Offline EasyMesh payload exercise](../protocol/easymesh-payloads.md) | Decode/build selected values and reproduce their independent native-capture checks without a VM or pod |
 | [Read-only physical-pod qualification](pod-qualification.md) | Prepare private local connection inputs, collect an actual schema/inventory and supply useful root-pod/cloud captures |
 
 For the distinction between the adapter, its virtual-agent role and the native

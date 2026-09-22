@@ -58,7 +58,14 @@ zero-valued capabilities.
 
 ## Selected field definitions that can be resolved now
 
-These are factual field summaries, **not a complete encoder contract**. Outer
+The [selected value component](easymesh-payloads.md) now implements service lists,
+Radio Identifier, Operational BSS and profile values, with independent native
+capture checks. It also exposes the native sender's reserved `0xA1` service in
+Search and Topology Response: the receiver ignores it as a role, while the encoder
+refuses to emit it under §3.1.2. This is an additional bounded compatibility
+observation, not a complete assessment of that native build.
+
+These are factual field summaries, **not a complete message encoder contract**. Outer
 CMDU framing, TLV sequencing/end markers, base field byte order, fragmentation,
 unknown-field processing and duplicate/replay handling still require the IEEE
 review. Values below must not be confused with qualified values for a real pod.

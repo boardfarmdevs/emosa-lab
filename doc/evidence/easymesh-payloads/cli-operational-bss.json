@@ -1,0 +1,26 @@
+{
+  "evidence_level": "standalone_easymesh_tlv_value",
+  "type": "0x83",
+  "byte_length": 73,
+  "sha256": "5eb09409cff3abf6306f908b64ad86aca8b4b3f549436969912a387fba446800",
+  "decoded": {
+    "radios": [
+      {
+        "ruid": "02:00:00:ec:02:00",
+        "bsses": [
+          {
+            "ap_mac": "02:00:00:ec:02:00",
+            "ssid_hex": "656d6f73612d756e70726f766973696f6e65642d32"
+          },
+          {
+            "ap_mac": "02:00:00:ec:02:01",
+            "ssid_hex": "656d6f73612d756e70726f766973696f6e65642d6261636b6861756c2d32"
+          }
+        ]
+      }
+    ]
+  },
+  "wire_envelope_validated": false,
+  "controller_onboarding_by_emosa_proven": false,
+  "physical_pod_proven": false
+}

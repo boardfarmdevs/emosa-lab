@@ -13,6 +13,12 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -m unit --junitxml=unit-results.xml
+  easymesh-reference:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y tshark
+      - run: python3 scripts/check-easymesh-reference.py
   wsc-reference:
     runs-on: ubuntu-24.04
     steps:

@@ -1081,6 +1081,56 @@
       "path": "onboarding-readiness/wireless-tshark-4.2.json",
       "sha256": "460b920c6119ea0e47aec11bf1ecff2c5f36cbbea18a643f2cf45ba8cadc8805",
       "size": 2941
+    },
+    {
+      "path": "easymesh-payloads/browser-result.json",
+      "sha256": "30eb3c4701c59b3ca5da6d763749c5ff1f79821b18b9d2ffda93dbbf8a8bb00b",
+      "size": 227
+    },
+    {
+      "path": "easymesh-payloads/cli-operational-bss.json",
+      "sha256": "d02ae0409d5d6567c118e132e2b81e6208e302cc162d77e4abb4848cf6f61260",
+      "size": 708
+    },
+    {
+      "path": "easymesh-payloads/cli-profile.json",
+      "sha256": "81f14f4150b9b41d878bde62d307b4f92a162c6857824172006c3517354135d1",
+      "size": 408
+    },
+    {
+      "path": "easymesh-payloads/cli-service.json",
+      "sha256": "653195dfa9bc51ea61d1711ea4cc97e9cf31f28eb062ac7834c02a8d5c6423d2",
+      "size": 438
+    },
+    {
+      "path": "easymesh-payloads/ovsdb-results.xml",
+      "sha256": "efdd24c96eac83ff287e2d4219de9727ea3f258007eda32439515772cf0652ec",
+      "size": 4776
+    },
+    {
+      "path": "easymesh-payloads/reference-3.6.json",
+      "sha256": "628b05c8dd5a2fa648db18a8375d069246bb3094568bda30e47e15df5b2422d8",
+      "size": 598
+    },
+    {
+      "path": "easymesh-payloads/reference-4.2.json",
+      "sha256": "606b2988c1a39fadd903bdc6013e01459232a5fcfa2ceaf0dbaa5715610168e4",
+      "size": 607
+    },
+    {
+      "path": "easymesh-payloads/summary.json",
+      "sha256": "8235e84bb7177495da7baed6b425babf914ef9a0aacdb9ad8dc4b47403e54b35",
+      "size": 3910
+    },
+    {
+      "path": "easymesh-payloads/unit-results.xml",
+      "sha256": "b265a779eab8831fa256602eaa3165527a17a08be3c0d974a3f0e95871c6df38",
+      "size": 37022
+    },
+    {
+      "path": "easymesh-payloads/wheel-smoke.json",
+      "sha256": "b0486659b1b4af0c5216da87ed358b9c7e6d0d9fdbb9b3a1e932c36c885986ab",
+      "size": 693
     }
   ]
 }
