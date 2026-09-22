@@ -46,6 +46,9 @@ class Application:
                     bss_id=pod["bss_id"],
                     radio_id=pod["radio_id"],
                     expected_serial=pod.get("virtual_agent", {}).get("expected_serial"),
+                    state_provenance=pod.get(
+                        "state_provenance", "independent-simulated-manager:Wifi_VIF_State"
+                    ),
                 )
             else:
                 raise EmosaError(Reason.MISSING_PREREQUISITE, "backend qualification pending")

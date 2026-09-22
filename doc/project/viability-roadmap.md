@@ -4,6 +4,14 @@ The critical milestone is **real EasyMesh messages → EMOSA adapter → unchang
 physical pod → independently observed behavior**. Neither an OVSDB component pass
 nor a successful hwsim association completes that objective.
 
+The [service integration walkthrough](../guides/service-integration.md) now
+provides a two-pod service exercise, actual process-crash recovery with hwsim
+clients, and live native-controller preparation. The
+[retained results](../evidence/service-integration/summary.json) keep semantic
+initiation separate from the absent EMOSA wire exchange. The
+[available WFA audit](../protocol/procedure-audit.md) advances the contract while
+the exact IEEE base/amendment inputs remain pending.
+
 The user-facing proof is specifically **an EasyMesh controller discovers and
 onboards an OpenSync extender as another EasyMesh agent, represented by the
 adapter around the controller**. The extender remains an OpenSync device;

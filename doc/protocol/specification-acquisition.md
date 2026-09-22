@@ -23,6 +23,12 @@ that the proposed subset satisfies all mandatory profile requirements. The
 [protocol matrix](protocol-matrix.json) retains the incomplete applicability
 audit and unfrozen procedure selection.
 
+The [2026-09-21 available-document audit](procedure-audit.md) now records WFA
+message inclusion conditions, selected field definitions and unresolved source
+ambiguities. It also distinguishes the existing independent WSC payload/crypto
+vectors from the still-missing complete IEEE message vectors. It adds no new
+mandatory acquisition beyond the consolidated entries below.
+
 ## Resolve only if the selected fields require it
 
 | Done | Document or input | Trigger / disposition |

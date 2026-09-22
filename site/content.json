@@ -423,10 +423,28 @@
       "title": "OVSDB-to-hwsim integration results",
       "description": "Three runs, independent radio State and client traffic, retained negative and recovery observations.",
       "category": "Retained radio evidence"
+    },
+    {
+      "path": "doc/guides/service-integration.md",
+      "title": "Service integration walkthrough",
+      "category": "Service and protocol integration",
+      "description": "Two configured pods, actual service crash recovery with hwsim, and a live controller preparation with wire onboarding still blocked."
+    },
+    {
+      "path": "doc/evidence/service-integration/summary.json",
+      "title": "Service integration evidence",
+      "category": "Service and protocol integration",
+      "description": "Reviewed service/radio observations and native controller preparation; captures, source digests and known shutdown defects."
+    },
+    {
+      "path": "doc/protocol/procedure-audit.md",
+      "title": "Available WFA procedure audit",
+      "category": "Service and protocol integration",
+      "description": "EasyMesh 6.1 and WPS 2.0.10 inclusion conditions, selected fields and remaining IEEE dependencies."
     }
   ],
   "suite_evidence": {
-    "unit": "connecting-pod/unit-results.xml",
-    "ovsdb": "connecting-pod/ovsdb-results.xml"
+    "unit": "service-integration/unit-results.xml",
+    "ovsdb": "service-integration/ovsdb-results.xml"
   }
 }

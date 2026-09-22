@@ -1021,6 +1021,26 @@
       "path": "connecting-pod/unit-results.xml",
       "sha256": "b4938252a517dfb2e3ceb945f60a26d39298f4ee557eb6a988fb72276282423a",
       "size": 4284777
+    },
+    {
+      "path": "service-integration/ovsdb-results.xml",
+      "sha256": "c404b80c4713cfda0b150864fbc69ba30c2b0178055f627eb20b2bd12faa05aa",
+      "size": 2742
+    },
+    {
+      "path": "service-integration/packet-observations.json",
+      "sha256": "71366aa8870fd126c8b97aab08165e07e390f2fc581595b86194c7df3f215153",
+      "size": 339
+    },
+    {
+      "path": "service-integration/summary.json",
+      "sha256": "b4d09a5bc1345b4d94827ee85d0c279566e74bb934a1c4dd2b7ae571a43b287f",
+      "size": 19267
+    },
+    {
+      "path": "service-integration/unit-results.xml",
+      "sha256": "0ff69af667db80d501a062db8959c1172f21c0ad316cc7c14daa67ad4aed18d4",
+      "size": 24872
     }
   ]
 }

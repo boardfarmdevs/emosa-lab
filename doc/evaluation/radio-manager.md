@@ -1,5 +1,12 @@
 # EMOSA, OVSDB and real hwsim observations
 
+The additional [service integration walkthrough](../guides/service-integration.md)
+now tests an actual `emosa serve` process with a pod-initiated OVSDB connection,
+independent hwsim clients and recovery after `SIGKILL`. Its separate
+[evidence summary](../evidence/service-integration/summary.json) complements the
+historical thirteen-case engine-in-runner results below. It does not turn either
+experiment into a controller-originated or physical-pod proof.
+
 The semantic EMOSA operation engine now changes an actual hostapd AP through
 OVSDB and an independent manager. Three selected repeat runs passed all 13 cases
 with separate wired and wpa_supplicant client containers. The experiment uses

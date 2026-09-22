@@ -5,13 +5,13 @@
   "tasks": {
     "I0": "local and nested Ubuntu 24.04 component foundation tested; full reference wire/hardware deployment and runtime image exports pending",
     "I1": "implemented with model tests",
-    "I2": "real OVSDB component path and independent hostapd/hwsim manager tested with wired/wireless clients; semantic initiation only; see doc/evaluation/radio-manager.md",
+    "I2": "Real OVSDB and independent hostapd/hwsim clients tested through actual adapter service with pod-initiated connection and SIGKILL recovery; bounded two-pod test; semantic initiation only; see doc/guides/service-integration.md",
     "R0": "native apply/withhold experiment runs; database-restart recovery N03 fails and production backend remains disabled",
     "I3": "blocked P0",
     "I4": "WSC M1/M2 payload component independently tested; full procedure remains blocked P0/I3",
     "I5": "read-only draft collector implemented; physical qualification and writes blocked M0/P0",
     "I6": "incremental component runner/watch/inspect/report/compare; complete reference release pending",
-    "I7": "native wired/wireless controller-agent baseline recorded; EMOSA wire exchanges, clean native shutdown and hardware interoperability remain pending"
+    "I7": "Native wired/wireless baseline and live controller preparation retained; diagnostic virtual AL is absent from native inventory; EMOSA wire exchanges, clean native shutdown and hardware interoperability remain pending"
   },
   "rows": [
     {

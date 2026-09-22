@@ -536,7 +536,9 @@ The current code already has useful parts of this structure:
 A connection from an unknown device is therefore **not currently automatic
 onboarding**. Configuration is loaded when the service starts; there is no
 production “new pod connected, create and authorize its agent” enrollment service.
-Nor does a one-entry connecting-pod demonstration establish a shared listener
+The [two-pod service exercise](service-integration.md) now measures separate
+requests, histories, disconnects and crash recovery through two explicitly
+configured simulation listeners. It does not establish a shared network listener
 that authenticates and dispatches a fleet of physical devices.
 
 Multiple adapter instances may become useful for fault isolation, separate
@@ -1600,6 +1602,21 @@ a restart, and distinguish a caller wait timeout from an application timeout.
 Finish by stopping only the processes you started. Your retained journal and run
 notes should let a teammate understand the experiment without repeating it.
 
+### 6.11 Two connecting pods and a process crash
+
+The [service integration walkthrough](service-integration.md#1-exercise-two-pods-through-one-service-on-host)
+extends §6.10 to two separately bound databases and one `emosa serve` process.
+It checks different SSIDs/keys, per-pod idempotency/history, continued progress
+when the other pod is unavailable, and rejection of a changed synthetic identity.
+It also kills the adapter process while Config is committed but not applied,
+then verifies recovery with the same operation and a single transaction attempt.
+
+Run it on HOST with the chapter 5 database prerequisites. No LXD or radio is
+needed. This bounded two-pod exercise is the first executable check of §2.6's
+one-service/many-pods arrangement; it does not establish production scale,
+automatic discovery or tenant security. The walkthrough explains each report
+stage and how to preserve its private journal and secrets.
+
 ## 7. Explore evidence and the GitHub Pages manual
 
 The explorer is a **static publication of reviewed results and documentation**.
@@ -2452,6 +2469,27 @@ radio-boundary proof; it has no EMOSA EasyMesh packet exchange.
 and which independently tests traffic. Show a case where those observations
 differ. Explain that this experiment starts with a semantic request; it does
 not yet establish that a real controller caused the EMOSA operation.
+
+### 11.5 Test the actual service and recover from process death
+
+The thirteen-case runner above embeds `Engine`. The new
+[service-level radio exercise](service-integration.md#3-run-the-actual-adapter-service-with-hwsim)
+uses the running `emosa serve` process through its local API. Its simulated pod
+initiates the OVSDB connection, and its separate radio manager still derives
+State from live hostapd/nl80211 observations. It checks real `SIGKILL` recovery
+while a change is pending, then verifies the new SSID/key with independent wired
+and wireless clients. The original thirteen-case run remains useful for its
+additional lost-reply, deadline and radio/backhaul fault coverage.
+
+If VM reboot removed the radios, use the walkthrough's guarded restoration
+procedure. The old ownership file is not proof that PHYs exist after boot.
+Restore only the already owned missing topology, then run with a new label.
+Do not rerun full container setup over the existing lab.
+
+The same walkthrough provides a [live controller preparation](service-integration.md#4-prepare-the-live-controller-trial-and-understand-its-blocked-result).
+It retains native inventory beside the diagnostic virtual-agent view and keeps
+wire onboarding explicitly blocked. A local ready entry cannot be presented
+as controller discovery or onboarding.
 
 ## 12. Use the controller discovery candidate
 
@@ -3327,6 +3365,13 @@ and semantic adapter experiments give useful components on either side, but
 their separate successes do not establish that causal connection. Subsequent
 physical qualification must show that the same supported request works through
 an unchanged actual pod and is observed by independent clients.
+
+The [service integration work](service-integration.md) now joins pod-initiated
+management to the actual adapter process and independent hwsim clients, verifies
+two configured pods, and provides an executable live-controller preparation.
+The [WFA procedure audit](../protocol/procedure-audit.md) records available
+inclusion/field rules and unresolved dependencies. These advances leave the
+real controller-to-EMOSA wire connection as the next central boundary.
 
 Pick work that closes a named gap and declare what evidence would close it
 before implementation. A parser test, packet capture, controller inventory entry

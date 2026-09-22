@@ -74,6 +74,13 @@
             "minLength": 1,
             "maxLength": 128
           },
+          "state_provenance": {
+            "description": "Declared simulation State producer; evidence must independently verify it. Does not qualify hardware or enable wire processing.",
+            "enum": [
+              "independent-simulated-manager:Wifi_VIF_State",
+              "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+            ]
+          },
           "virtual_agent": {
             "type": "object",
             "properties": {

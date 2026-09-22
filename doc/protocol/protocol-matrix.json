@@ -3,7 +3,7 @@
   "architecture_version": "3.6",
   "status": "blocked",
   "gate": "P0",
-  "reviewed_on": "2026-09-15",
+  "reviewed_on": "2026-09-21",
   "specifications": {
     "ieee1905": null,
     "easymesh": null,
@@ -146,7 +146,9 @@
   "document_ambiguities": [
     "EasyMesh 6.1 section 2 reference [2] names the IEEE 1905.1-2013 base but links to an amendment URL; reference [11] separately names 1905.1a-2014. Preserve and review both documents.",
     "EasyMesh 6.1 section 17.1.3 points to IEEE section 6.3.8 for WSC, while its section 6.1 uses that IEEE pointer for the autoconfiguration response. Verify the WSC base clause from IEEE rather than silently correcting the reference.",
-    "EasyMesh 6.1 section 9.1, section 17.1.7 and section 18 must be read together to resolve feature-conditional reporting for the proposed Profile-1 subset."
+    "EasyMesh 6.1 section 9.1, section 17.1.7 and section 18 must be read together to resolve feature-conditional reporting for the proposed Profile-1 subset.",
+    "Section 6.2 Topology Query prose references Profile-2 AP Capability in a Search message; preserve the reference and resolve any needed interpretation before freezing the query contract.",
+    "Section 6.1 requires Profile-2 AP Capability in the stated Profile-1 Search case although section 17.1.1 does not list it. See the available procedure audit."
   ],
   "independent_references": [
     {
@@ -232,7 +234,7 @@
         }
       ],
       "tlvs": [],
-      "tlv_audit_status": "pending_complete_field_and_profile_applicability_matrix",
+      "tlv_audit_status": "WFA_inclusion_reviewed_complete_base_and_feature_field_contract_pending",
       "timers": [],
       "verified_findings": [
         "EasyMesh extends the IEEE topology response with service and BSS reporting; section 6.2 adds client reporting when clients are present.",
@@ -247,7 +249,8 @@
         "IEEE discovery format/timing and complete base response TLVs remain unverified.",
         "Real physical topology and mandatory supported-resource inventory are not yet qualified."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing."
+      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
+      "available_rule_audit": "doc/protocol/procedure-audit.md"
     },
     {
       "name": "AP autoconfiguration search/response",
@@ -300,7 +303,7 @@
         }
       ],
       "tlvs": [],
-      "tlv_audit_status": "pending_complete_field_and_profile_applicability_matrix",
+      "tlv_audit_status": "WFA_inclusion_reviewed_complete_base_and_feature_field_contract_pending",
       "timers": [],
       "verified_findings": [
         "Service discovery links the controller to the IEEE registrar role; EasyMesh service/profile additions supplement the IEEE fields.",
@@ -315,7 +318,8 @@
         "IEEE search cadence, response timers, relaying, retry and duplicate rules need the base and amendment.",
         "Selected peer profile and all conditional security/capability TLVs remain unresolved."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing."
+      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
+      "available_rule_audit": "doc/protocol/procedure-audit.md"
     },
     {
       "name": "AP capability query/report",
@@ -367,7 +371,7 @@
         }
       ],
       "tlvs": [],
-      "tlv_audit_status": "pending_complete_field_and_profile_applicability_matrix",
+      "tlv_audit_status": "WFA_inclusion_reviewed_complete_base_and_feature_field_contract_pending",
       "timers": [
         {
           "event": "Reply to a received AP Capability Query with an AP Capability Report",
@@ -390,7 +394,8 @@
         "Mandatory feature/field interpretation is pending complete profile audit.",
         "IEEE 802.11 capability references and actual represented-pod capability evidence remain pending."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing."
+      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
+      "available_rule_audit": "doc/protocol/procedure-audit.md"
     },
     {
       "name": "AP autoconfiguration WSC M1/M2",
@@ -469,7 +474,7 @@
         }
       ],
       "tlvs": [],
-      "tlv_audit_status": "pending_complete_field_and_profile_applicability_matrix",
+      "tlv_audit_status": "WFA_inclusion_reviewed_complete_base_and_feature_field_contract_pending",
       "timers": [
         {
           "event": "Controller replies to received M1 using the defined M2 configuration or teardown response",
@@ -492,11 +497,12 @@
       ],
       "remaining_gaps": [
         "IEEE WSC encapsulation, ordering, retry/duplicate and failure behavior require full normative review.",
-        "Independent M1/M2, key derivation, authenticator and key-wrap vectors are absent.",
+        "Independent full IEEE/EasyMesh message vectors remain pending; independent WSC crypto and M1/M2 payload vectors already exist (see component_selections).",
         "The one-BSS component patch has not been qualified as full-radio WSC semantics.",
         "Hardware must establish sole-BSS radio scope or a complete supported mapping; shared management/backhaul dependencies and recovery remain unverified."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing."
+      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
+      "available_rule_audit": "doc/protocol/procedure-audit.md"
     }
   ],
   "gate_completion_requirements": [
@@ -637,5 +643,11 @@
       "affected_work": "historical WPS cross-reference review if those definitions are used; no automatic substitution by 802.11-2024",
       "content_sha256": null
     }
-  ]
+  ],
+  "available_procedure_audit": {
+    "document": "doc/protocol/procedure-audit.md",
+    "reviewed_on": "2026-09-21",
+    "status": "WFA_inclusion_conditions_and_selected_fields_reviewed_IEEE_and_full_feature_audit_pending",
+    "procedure_gate_satisfied": false
+  }
 }
