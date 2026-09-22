@@ -31,7 +31,7 @@ existing EMOSA protocol components and their installed dependencies.
    ```bash
    mkdir -p .cache/ieee1905
    tar --exclude=__pycache__ -cf .cache/ieee1905/wire-source.tar \
-     src/emosa deploy/wire
+     src/emosa deploy/wire tests/fixtures/opensync schemas
    lxc file push .cache/ieee1905/wire-source.tar emosa-lab/opt/emosa-wire-source.tar
    lxc exec emosa-lab -- mkdir /opt/emosa-wire-check
    lxc exec emosa-lab -- tar -xf /opt/emosa-wire-source.tar -C /opt/emosa-wire-check
@@ -91,3 +91,47 @@ existing EMOSA protocol components and their installed dependencies.
 
 For controller-facing acceptance continue with the
 [first complete wire experiment](../../doc/guides/first-wire-experiment.md).
+
+## Database-backed report coordinator
+
+Read the [coordinator walkthrough](../../doc/protocol/report-coordinator.md)
+first. Stage the full bundle from step 2; it includes the pinned schema needed by
+the disposable database. This mode needs the selected OVSDB 4.0.0 tools and the
+existing installed Python dependencies. It needs no hwsim PHY or native controller.
+
+In the retained VM, the earlier native-manager experiment left the selected
+tools at `/opt/native-ovsdb-server` and `/opt/native-ovsdb-tool`. Verify them and
+create symlinks only inside the new staging directory:
+
+```bash
+lxc exec emosa-lab -- /opt/native-ovsdb-server --version
+lxc exec emosa-lab -- /opt/native-ovsdb-tool --version
+lxc exec emosa-lab -- mkdir /opt/emosa-wire-check/bin
+lxc exec emosa-lab -- ln -s /opt/native-ovsdb-server /opt/emosa-wire-check/bin/ovsdb-server
+lxc exec emosa-lab -- ln -s /opt/native-ovsdb-tool /opt/emosa-wire-check/bin/ovsdb-tool
+lxc exec emosa-lab -- env PYTHONPATH=/opt/emosa-wire-check/src \
+  EMOSA_OVS_BIN=/opt/emosa-wire-check/bin \
+  /opt/emosa/.venv/bin/python /opt/emosa-wire-check/deploy/wire/check-endpoint.py \
+  --coordinator --directory /opt/emosa-wire-check/coordinator-01
+```
+
+On a fresh VM those retained paths may not exist. Build the selected tools using
+[manual chapter 5](../../doc/guides/team-manual.md#5-build-and-exercise-the-real-ovsdb-simulator)
+in that environment and point `EMOSA_OVS_BIN` to their directory. Do not assume the
+binaries are included in a Git clone. Use a new staging name if `bin` already
+exists; do not replace another experiment's links.
+
+The left worker starts an owned real database and separate manager, with a
+pod-initiated read-only monitor. The right worker deliberately drops one Ack and
+queries before/after fixture Config and manager State changes. Each worker
+receives five frames. Queries 600/601/602 receive Responses; Query 603 receives
+none after database disconnection. Both Early Report MIDs (1 and 2) differ, and
+Ack MID 2 appears in the left capture. Root is required only for the namespace
+and packet-socket setup. The driver allows extra readiness time for its database.
+
+Pull `coordinator-01` using step 4's command pattern and inspect worker JSON and
+PCAPs. Fixture marker files synchronize stage readiness; their role is described
+in the walkthrough. Finalizers preserve received-byte traces, close the owned
+database/manager and remove owned namespaces. As with other modes, an abrupt VM
+kill can require owner inspection. The adapter reports zero Config writes; the
+fixture administrator/manager explicitly perform the simulated changes.

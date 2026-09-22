@@ -142,6 +142,12 @@ Run the three-frame offline exercise, read its synthetic receiver inventory,
 and optionally repeat over isolated VM Ethernet sockets. Explain the one-second
 response deadline and why absent association-age data cannot be invented.
 
+Next run the [database-backed report coordinator](../protocol/report-coordinator.md)
+and [manual §13.10](team-manual.md#1310-keep-reports-current-with-the-read-only-coordinator).
+Observe a Config-only change, a separate manager State change, missing client age,
+disconnection and fresh reconnect. Then repeat with `--coordinator` in the isolated
+VM packet runbook. Explain why an Ack establishes receipt rather than WSC admission.
+
 **Checkpoint:** distinguish a reassembled message, a correlated discovery response,
 an authenticated WSC candidate and an admitted operation. The new components
 stop before operation creation. The complete profile/capability and controller

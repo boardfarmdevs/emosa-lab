@@ -3131,6 +3131,56 @@ inventory and physical behavior. The first two are established by this exercise.
 Full AP Capability Report support, profile/peer reconciliation, the trusted-link
 coordinator and durable WSC-to-operation integration remain follow-on work.
 
+### 13.10 Keep reports current with the read-only coordinator
+
+The previous exercise used fixed facts. The next step is a **running report
+coordinator** that gets fresh facts from a real database, answers Topology Queries
+and handles an Early Report's acknowledgment and retries. This is still a
+restricted simulation component: its peer is a synthetic controller exerciser,
+and it has no path to create an operation or enable the regular service's wire gate.
+
+Run on **HOST** after building the OVSDB tools from chapter 5:
+
+```bash
+uv run python -m emosa.simulation.coordinator --output .lab/manual-coordinator-01
+uv run emosa-lab wire-inspect --capture .lab/manual-coordinator-01/messages.pcap
+uv run pytest tests/test_report_coordinator.py -q
+uv run pytest tests/test_report_coordinator_ovsdb.py -q
+```
+
+The database initiates a local JSON-RPC connection to a read-only monitor. The
+fixture administrator changes Config, and a separate manager later publishes
+State. The coordinator itself performs no Config writes. This separation lets
+us test the rule that an operational report must describe what is observed,
+rather than what was merely requested.
+
+Read the eight stages in `result.json`. A deliberately lost Ack produces a retry
+with a new MID. The first topology report describes the initial BSS. A Config-only
+change leaves the reported SSID unchanged. After the independent manager updates
+State, the report changes. An associated client without a qualified age source
+withdraws reporting; removing it restores a complete inventory. Database loss
+also withdraws reports, and reconnect requires fresh observations from the new
+connection generation.
+
+The in-memory Ethernet delivery has `socket_io: false`; the OVSDB socket is real.
+To cross the Ethernet boundary, follow the [VM endpoint runbook](../../deploy/wire/README.md)
+with `--coordinator`. That version uses actual AF_PACKET sockets and no radio.
+Its Queries 600/601/602 receive Responses, while Query 603 after disconnection
+does not. Its marker files coordinate fixture timing; they are not a new protocol.
+Both repeated VM runs passed, with independent packet-field checks.
+
+The [coordinator walkthrough](../protocol/report-coordinator.md) explains the
+source lease, fixed Ack budget, retry counts, duplicate/rate limits and exact
+normative references. A matching Ack confirms receipt of a report. It does not
+establish native controller inventory, full profile qualification or permission
+to start M1. The component exposes unsupported WSC/AP Capability inputs without
+creating operations; the selected full-procedure gate remains closed.
+
+**Checkpoint:** show the Config-only and State-updated reports, identify the
+separate fixture writers, and explain why stale or incomplete facts stop output.
+The next integration is discovery/profile admission plus full AP Capability and
+native controller visibility, followed by durable WSC-to-operation handling.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

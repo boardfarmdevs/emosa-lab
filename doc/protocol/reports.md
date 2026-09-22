@@ -184,6 +184,11 @@ Keep the observations as compatibility work, alongside the earlier profile 2/1
 and controller-capability findings. Do not modify the normative rules to make an
 older capture pass. No native peer or original capture was changed here.
 
+Continue with the [read-only coordinator walkthrough](report-coordinator.md) to
+connect this contract to a real disposable database. Its Query/Ack/retry loop and
+source withdrawal are implemented; discovery/profile and WSC-operation admission
+remain separate pending work.
+
 ## 8. References and next implementation boundary
 
 These are section/page references to the locally reviewed editions, not copies

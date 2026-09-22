@@ -2076,6 +2076,121 @@
       "path": "reports/wire-gate.json",
       "sha256": "54dcd6cd4f1216ee775b8d436c3ed27a33a04f2cecb21d9ca3439178b590cdc6",
       "size": 477
+    },
+    {
+      "path": "coordinator/README.md",
+      "sha256": "e1793d4d18e33b41475b0b02c2a63c06853db99250a23a85472307063112366f",
+      "size": 3715
+    },
+    {
+      "path": "coordinator/browser-result.json",
+      "sha256": "f752761295d644735fa1ba9180a2259b359ddc47e3f842e40ecea2fead26a24e",
+      "size": 228
+    },
+    {
+      "path": "coordinator/database/messages.pcap",
+      "sha256": "9a53b5b2c948d5fcd6bbf01a47573892d537fcb2ab648e231b03a6c585165abe",
+      "size": 1565
+    },
+    {
+      "path": "coordinator/database/result.json",
+      "sha256": "a557f98a3b646a6cca6c62eddcf7f253b7e70cd17fc63ab1fd1637e401aa28e1",
+      "size": 2601
+    },
+    {
+      "path": "coordinator/ovsdb-results.xml",
+      "sha256": "3b422ac58c7b6190fe697c5d2a9e472113adb791a2f75c67eae04cc4742c2d57",
+      "size": 6364
+    },
+    {
+      "path": "coordinator/reference-host.json",
+      "sha256": "ba2214b6dd4d6517597734ac8d7f1c717bf6fba333ca8f018400ed453f0a55cb",
+      "size": 1354
+    },
+    {
+      "path": "coordinator/reference-vm.json",
+      "sha256": "19e652bd00fdf76972754988bc0dfc1924a675d275a65d2650273f9199a9e1c6",
+      "size": 1363
+    },
+    {
+      "path": "coordinator/run-01/driver.json",
+      "sha256": "d720b1909babbee1110c78180c045e5474dcc25998cadc3f1e2a9a662b229768",
+      "size": 154
+    },
+    {
+      "path": "coordinator/run-01/left.json",
+      "sha256": "f9ee6f45e4ecc69deb84fae6b07b0b080bf7768df2d434f1b080e28a60dd45bf",
+      "size": 1359
+    },
+    {
+      "path": "coordinator/run-01/left.pcap",
+      "sha256": "a2768e8b636d5329b29267ac814dd53a55465ee42286cca46fbe71e367f7a53e",
+      "size": 245
+    },
+    {
+      "path": "coordinator/run-01/right.json",
+      "sha256": "4d8dab01ba51293571af54cde11da64e283a3e643f0b98f2aa6a55c7ac8ab313",
+      "size": 627
+    },
+    {
+      "path": "coordinator/run-01/right.pcap",
+      "sha256": "03a7d637bbb142cc7f3e4ecafbc3ef16fffd9d0fbf40552c8af7e4fe0bb249e3",
+      "size": 819
+    },
+    {
+      "path": "coordinator/run-02/driver.json",
+      "sha256": "6db3d484a2f677a068cafc93feda2883e1f00ba2dc04eebb7dfb811451b9e95c",
+      "size": 154
+    },
+    {
+      "path": "coordinator/run-02/left.json",
+      "sha256": "f9ee6f45e4ecc69deb84fae6b07b0b080bf7768df2d434f1b080e28a60dd45bf",
+      "size": 1359
+    },
+    {
+      "path": "coordinator/run-02/left.pcap",
+      "sha256": "a2768e8b636d5329b29267ac814dd53a55465ee42286cca46fbe71e367f7a53e",
+      "size": 245
+    },
+    {
+      "path": "coordinator/run-02/right.json",
+      "sha256": "2f439f054943df66be690b883488b98cb087a274aa54d3cff0a7736341957c54",
+      "size": 627
+    },
+    {
+      "path": "coordinator/run-02/right.pcap",
+      "sha256": "03a7d637bbb142cc7f3e4ecafbc3ef16fffd9d0fbf40552c8af7e4fe0bb249e3",
+      "size": 819
+    },
+    {
+      "path": "coordinator/shell-check.json",
+      "sha256": "83814058b58d6769abe42b0217aee575039e99ab82d271954fa51e8c763c0942",
+      "size": 41
+    },
+    {
+      "path": "coordinator/summary.json",
+      "sha256": "dbb2eac40f5493de74dbbcba457484b85448ec0ab6930f2608c7167188ddfa65",
+      "size": 5007
+    },
+    {
+      "path": "coordinator/unit-results.xml",
+      "sha256": "b337610d5c4675a6480227757464044b553ac6a151b806c5aa834f7d03cbbf33",
+      "size": 120409
+    },
+    {
+      "path": "coordinator/vm-provenance.json",
+      "sha256": "9a2db77d5336a11bb27d0f111c6a3b32d0972bda453379d681edffaf0ab042d1",
+      "size": 970
+    },
+    {
+      "path": "coordinator/wheel-check.json",
+      "sha256": "62a2265daee224f14e47de9d00d422413f1e6f60877733f4679396113d542f3e",
+      "size": 304
+    },
+    {
+      "path": "coordinator/wire-gate.json",
+      "sha256": "54dcd6cd4f1216ee775b8d436c3ed27a33a04f2cecb21d9ca3439178b590cdc6",
+      "size": 477
     }
   ]
 }

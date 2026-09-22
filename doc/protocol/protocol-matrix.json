@@ -293,7 +293,7 @@
         "src/emosa/wire/topology_values.py"
       ],
       "remaining_gaps": [
-        "Restricted complete response and isolated Ethernet runs implemented; live trusted-link topology coordinator, paired LLDP and scheduling remain pending.",
+        "Restricted read-only report coordinator with real database source and isolated Ethernet tested; full trusted-link/discovery lifecycle, paired LLDP and native controller integration remain pending.",
         "Real physical topology and mandatory supported-resource inventory are not yet qualified."
       ],
       "reason": "Restricted builder and guarded delivery tested; qualified actual facts and complete native controller integration remain pending.",
@@ -1138,7 +1138,7 @@
       "IEEE 1905.1-2013 and IEEE 1905.1a-2014 operator-supplied full texts"
     ],
     "permitted_scope": "Implement and independently test standalone components whose normative definitions are complete in the available sources; continue semantic service/radio tests and native peer observations.",
-    "boundary": "Envelope, bounded discovery/WSC exchanges and restricted report builders implemented; no full P0 procedure freeze, qualified profile, durable operation integration or controller/physical acceptance.",
+    "boundary": "Envelope, discovery/WSC components, restricted reports and read-only Query/Ack coordinator with owned database source implemented; no full P0 procedure freeze, qualified profile, durable operation integration or native controller/physical acceptance.",
     "document": "doc/protocol/ieee1905-envelope.md"
   },
   "ieee1905_envelope": {
@@ -1361,7 +1361,7 @@
     },
     "pod_qualification_gap": "Pinned Wifi_Associated_Clients schema has no association age; qualify an existing source or actual association episode. Adapter first-seen is not association time.",
     "pending": [
-      "Qualified actual facts and trusted-link coordinator",
+      "Read-only coordinator and owned database source tested; qualified actual facts and full trusted-link/discovery admission pending",
       "Applicable ACK/retry scheduling and full AP Capability/Profile obligations",
       "Native peer profile/security/media compatibility",
       "Controller inventory visibility and durable WSC-to-operation binding",
@@ -1370,6 +1370,88 @@
     "new_isolated_af_packet_runs": 2,
     "native_controller_used": false,
     "operations_created": 0,
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "report_coordinator": {
+    "status": "read_only_runtime_component_tested_with_owned_ovsdb_fixture",
+    "guide": "doc/protocol/report-coordinator.md",
+    "implementation": [
+      "src/emosa/wire/coordinator.py",
+      "src/emosa/simulation/report_source.py",
+      "src/emosa/simulation/coordinator.py",
+      "src/emosa/simulation/coordinator_wire.py"
+    ],
+    "tests": [
+      "tests/test_report_coordinator.py",
+      "tests/test_report_coordinator_ovsdb.py",
+      "scripts/check-report-reference.py"
+    ],
+    "evidence": "doc/evidence/coordinator/summary.json",
+    "sources": [
+      {
+        "specification": "IEEE 1905.1-2013",
+        "sections": [
+          "7.7 p.45 (unseen unicast processing)",
+          "7.8 p.46 (sequential modulo-65536 new MIDs)",
+          "8.2.2.2 p.48 (Topology Response echo/deadline)"
+        ]
+      },
+      {
+        "specification": "IEEE 1905.1a-2014",
+        "sections": [
+          "7.9 p.18 (unknown/reserved TLV reception)"
+        ]
+      },
+      {
+        "specification": "EasyMesh 6.1",
+        "sections": [
+          "5.2.2 p.28 (Early Report before M1 when required)",
+          "15.1 p.104 (unicast notification Ack and new-MID retry)",
+          "17.1.32 pp.115-116 (Ack contents)",
+          "17.2.36 Table 59 p.148 (Error Code)"
+        ]
+      }
+    ],
+    "scope": "One explicitly bound peer/pod source, Topology Query/Response and Early Report/Ack. No Discovery admission, M1 trigger, full AP Capability handler or operation-engine callback.",
+    "source_contract": [
+      "Atomic immutable facts from one snapshot and explicit synthetic capability/virtual-adjacency inputs; only owned fixture source currently implemented.",
+      "Source instance and immutable pod/peer/input context plus invalidation epoch and monotonically ordered database generation/revision distinguish observations.",
+      "Changed facts under unchanged revision, backwards observation times and expired publication are rejected. Renewing the source cannot extend an already prepared message.",
+      "Read-only OVSDB session monitors selected noncredential columns. Complete schema selection and graph, role/security/band/channel and explicit client absence checked.",
+      "Config-only changes keep observed SSID; separate manager State updates change wire reports. Unknown client age and disconnect withdraw source. Reconnect requires fresh complete inventory."
+    ],
+    "local_limits": {
+      "pending_early_reports": 1,
+      "early_transmissions": 3,
+      "retry_interval_seconds": 0.25,
+      "ack_budget_seconds": 1,
+      "fixture_source_lease_seconds": 1,
+      "maximum_source_lease_seconds": 2,
+      "query_burst": 8,
+      "queries_per_second": 4,
+      "query_mid_retention_seconds": 5,
+      "query_mid_entries": 128,
+      "diagnostic_events": 64
+    },
+    "local_policies": [
+      "Ack accepted only for a completely sent still-live attempt from the bound peer/link generation; any live retry MID can correlate it.",
+      "Errors and unsupported security companions do not become successful receipts; unrelated unknown TLVs ignored.",
+      "Partial/late sends are failures; already emitted bytes cannot be recalled. No durable notification recovery or cryptographic Ethernet replay claim.",
+      "Unsupported WSC/AP Capability inputs produce diagnostic events and no operation. Source availability is not profile qualification."
+    ],
+    "new_af_packet_runs": 2,
+    "pending": [
+      "Actual pod fact/profile and trusted-link qualification",
+      "Discovery/profile admission and full AP Capability requirements",
+      "Native controller inventory and peer compatibility",
+      "Durable WSC-to-operation integration and real-message-driven OVSDB/hwsim/client experiment",
+      "Unchanged physical-pod acceptance"
+    ],
+    "adapter_config_writes": 0,
+    "fixture_admin_and_manager_writes": true,
+    "native_controller_used": false,
     "full_procedure_gate_satisfied": false,
     "controller_onboarding_proven": false,
     "physical_pod_proven": false

@@ -3,9 +3,12 @@
 The default exercise exchanges empty IEEE Topology Queries. With --reports,
 synthetic peers exchange an Early AP Capability Report and a Topology Query /
 Response. Neither mode uses a native controller or provisions a pod.
+With --coordinator, a read-only real OVSDB source drives reports and Ack/retry
+handling; only its separate owned fixture administrator/manager changes data.
 """
 
 import argparse
+import asyncio
 import json
 import os
 import socket
@@ -152,15 +155,22 @@ def main():
     parser.add_argument("--directory", type=Path, required=True)
     parser.add_argument("--worker", choices=("left", "right"))
     parser.add_argument("--interface")
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--reports",
         action="store_true",
         help="exchange synthetic complete reports instead of empty transport probes",
     )
+    mode.add_argument("--coordinator", action="store_true", help="read-only OVSDB report loop")
     args = parser.parse_args()
     if socket.gethostname() != "emosa-lab" or os.geteuid() != 0:
         raise SystemExit("Run as root only inside the dedicated emosa-lab VM")
     if args.worker:
+        if args.coordinator:
+            from emosa.simulation.coordinator_wire import worker as coordinator_worker
+
+            asyncio.run(coordinator_worker(args.worker, args.interface, args.directory))
+            return
         (report_worker if args.reports else worker)(args.worker, args.interface, args.directory)
         return
     args.directory.mkdir(parents=True, exist_ok=False, mode=0o700)
@@ -212,19 +222,22 @@ def main():
                     "--interface",
                     link,
                     *(["--reports"] if args.reports else []),
+                    *(["--coordinator"] if args.coordinator else []),
                 ],
                 stdout=log,
                 stderr=log,
             )
             log.close()
             children.append(process)
-            end = time.monotonic() + 5
+            end = time.monotonic() + (15 if args.coordinator else 5)
             while not (args.directory / (side + ".ready")).exists():
                 if process.poll() is not None or time.monotonic() >= end:
                     raise RuntimeError("packet endpoint did not become ready; inspect its log")
                 time.sleep(0.05)
         for process in children:
-            assert process.wait(timeout=10) == 0, "endpoint failed; retain worker logs"
+            assert process.wait(timeout=25 if args.coordinator else 10) == 0, (
+                "endpoint failed; retain worker logs"
+            )
     finally:
         for process in children:
             if process.poll() is None:

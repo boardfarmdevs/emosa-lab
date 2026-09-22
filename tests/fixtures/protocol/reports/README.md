@@ -34,3 +34,9 @@ The optional `--report-capture` arguments independently check the two retained
 AF_PACKET receiver traces: types, MIDs, security values, required TLV inventory,
 media lengths, bridge tuple and decoded BSS fields. They are not native controller
 acceptance checks.
+
+Use `--coordinator-directory doc/evidence/coordinator/run-01` (and `run-02`)
+to independently inspect the newer database-backed coordinator traces: both
+directions, Early Report retries, matching Ack, State-derived old/old/new SSIDs
+and the Query after disconnection with no captured response. No native controller
+is used in that experiment.

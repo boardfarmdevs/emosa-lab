@@ -19,8 +19,10 @@ native captures and test bounded reassembly and isolated Ethernet delivery.
 Continue with [controller discovery and WSC exchange handling](doc/protocol/autoconfiguration.md)
 for peer/radio binding, replay controls and the actual native compatibility findings.
 Then construct and inspect [capability and topology reports](doc/protocol/reports.md),
-including the new offline and isolated Ethernet exercises. Complete controller
-onboarding and physical acceptance remain pending.
+including the offline and isolated Ethernet exercises. The
+[read-only report coordinator](doc/protocol/report-coordinator.md) now connects
+those reports to a real disposable database with Ack/retry and source-withdrawal
+checks. Complete controller onboarding and physical acceptance remain pending.
 
 ## Architecture
 

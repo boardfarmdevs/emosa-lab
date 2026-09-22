@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Connect the restricted Early/Topology report components to qualified facts and a trusted-link coordinator. Resolve full AP Capability/profile and native compatibility, then prove controller inventory and durable WSC-to-operation integration; physical qualification remains pending.",
+      "next": "Read-only reporting now follows a real database source with Query/Ack/retry and withdrawal tested over Ethernet. Next reconcile native peer/full AP Capability/profile, integrate discovery and prove controller inventory, then durable WSC-to-operation admission.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -627,10 +627,22 @@
       "title": "Capability and topology report evidence",
       "description": "824 unit / 46 OVSDB passes, two isolated AF_PACKET runs and independent fields; synthetic inventory is not native controller onboarding.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/report-coordinator.md",
+      "title": "Read-only report coordinator walkthrough",
+      "description": "Real database source, Early Report Ack/retry, State-derived topology, withdrawal and reconnect, then actual Ethernet reproduction.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/coordinator/README.md",
+      "title": "Read-only report coordinator evidence",
+      "description": "866 unit / 48 OVSDB passes, two database-backed Ethernet runs, independent fields and installed-package reproduction.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "reports/unit-results.xml",
-    "ovsdb": "reports/ovsdb-results.xml"
+    "unit": "coordinator/unit-results.xml",
+    "ovsdb": "coordinator/ovsdb-results.xml"
   }
 }

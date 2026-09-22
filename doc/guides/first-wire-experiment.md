@@ -14,6 +14,9 @@ operation; full profile admission and the running coordinator remain pending.
 [Restricted Early/Topology reports](../protocol/reports.md) now add complete
 message construction and isolated Ethernet delivery. Their synthetic receiver
 inventory does not satisfy this experiment’s native-controller inventory step.
+The [read-only report coordinator](../protocol/report-coordinator.md) now handles
+Query/Ack/retry with a real database source in isolation. Discovery/profile
+admission and durable WSC-to-operation integration remain unfinished.
 
 EMOSA means **EasyMesh to OpenSync Adapter**. Its virtual agent is the EasyMesh
 representation it presents to the controller. The OpenSync extender connects to
@@ -120,8 +123,8 @@ in the linked guide; later complete procedures remain unfinished:
    Continue reconciling the selected
    EasyMesh/WPS rules and dependencies, profile conditions, field lengths,
    addressing, reassembly, retransmission and timers in the protocol matrix.
-2. Compose the implemented packet, discovery and restricted Early/Topology report
-   components into the trusted-link coordinator. Supply qualified fresh facts and
+2. Extend the tested read-only report coordinator with the implemented discovery
+   component and qualified trusted-link admission. Supply qualified fresh facts and
    complete full AP Capability/profile/ACK/retry obligations. Independent vectors
    and isolated Ethernet checks exist; native controller acceptance remains pending.
 3. Bind genuine WSC exchanges to the authenticated peer, exchange and represented

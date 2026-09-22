@@ -174,7 +174,9 @@ Implement the complete controller-facing coordinator: qualified feature/profile
 intersection, full AP capability reporting, controller inventory visibility,
 trusted-link lifecycle, and fresh complete radio admission. The
 [restricted Early/Topology report components](reports.md) are now available for
-that integration; their synthetic facts do not qualify an actual pod.
+that integration. The [read-only report coordinator](report-coordinator.md) now
+exercises Query/Ack/retry and source withdrawal against a real disposable database;
+its fixture facts do not qualify an actual pod.
 Then connect an admitted WSC candidate directly to the guarded operation engine
 with durable exchange-to-operation correlation. An extra semantic request must
 not supply the actual Config change in that experiment.

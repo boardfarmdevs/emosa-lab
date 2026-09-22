@@ -1,0 +1,35 @@
+{
+  "passed": true,
+  "cases": 5,
+  "capture_sha256": "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964",
+  "fixture_sha256": "a390028d7920a5835a1e9b71efcfc27ccd0bbb6128603d6b26620d324754db04",
+  "dissector": "TShark (Wireshark) 3.6.2 (Git v3.6.2 packaged as 3.6.2-2)",
+  "scope": "native fields and selected-edition negatives; not conformance",
+  "generated_report_checks": [],
+  "coordinator_checks": [
+    {
+      "directory": "run-05",
+      "capture_sha256": {
+        "left": "a2768e8b636d5329b29267ac814dd53a55465ee42286cca46fbe71e367f7a53e",
+        "right": "03a7d637bbb142cc7f3e4ecafbc3ef16fffd9d0fbf40552c8af7e4fe0bb249e3"
+      },
+      "new_mid_retry_and_ack": true,
+      "config_only_preserves_observed_bss": true,
+      "state_change_reported": true,
+      "last_query_has_no_captured_response": true,
+      "native_controller_acceptance": false
+    },
+    {
+      "directory": "run-06",
+      "capture_sha256": {
+        "left": "a2768e8b636d5329b29267ac814dd53a55465ee42286cca46fbe71e367f7a53e",
+        "right": "03a7d637bbb142cc7f3e4ecafbc3ef16fffd9d0fbf40552c8af7e4fe0bb249e3"
+      },
+      "new_mid_retry_and_ack": true,
+      "config_only_preserves_observed_bss": true,
+      "state_change_reported": true,
+      "last_query_has_no_captured_response": true,
+      "native_controller_acceptance": false
+    }
+  ]
+}

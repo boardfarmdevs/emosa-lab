@@ -1,0 +1,18 @@
+{
+  "vm": "emosa-lab",
+  "staging": "/opt/emosa-coordinator-20260922",
+  "staged_sources_match_checkout": true,
+  "source_hashes": {
+    "src/emosa/wire/coordinator.py": "5703c1f3ed3e82a52bcacf4760c534ed602d5cdad5ce53f693488ee66a61572a",
+    "src/emosa/simulation/coordinator.py": "a93d150270f95cdca97d458316e68ca584c5477bb7ca2c84dbb15f76a5309a3d",
+    "src/emosa/simulation/coordinator_wire.py": "5e435e4ccfe77095b32289f6a232cc6478b94c3d8003c3f4460ae250305b7214",
+    "src/emosa/simulation/report_source.py": "f32b41de3146a7237131eb9498a75dd999b9b3fca1039b41527e083c274c55ab",
+    "deploy/wire/check-endpoint.py": "953200c2dd1ed7d61720cf03bb09a5650e090d8546a0d22dce7eba878132119d"
+  },
+  "ovsdb_version": "4.0.0",
+  "binary_sha256": {
+    "/opt/native-ovsdb-server": "93714d2adf2e847697807a77515d527ff7281c270170a01864e2f8194ac49b68",
+    "/opt/native-ovsdb-tool": "c664d4a282a3fe77356b02e025e3d419b7857bfdc92a289b23c81a030e3ec257"
+  },
+  "new_upstream_build": false
+}

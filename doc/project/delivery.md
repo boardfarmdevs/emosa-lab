@@ -33,6 +33,19 @@ Wi-Fi 6 media-length mismatch against the selected edition. A running controller
 coordinator, full AP Capability procedure and actual controller inventory remain
 pending; no physical pod was contacted or changed.
 
+## Read-only report coordinator increment
+
+The [coordinator](../protocol/report-coordinator.md) connects the report builders
+to an expiring, revision-bound source and handles Topology Query dispatch plus
+Early Report acknowledgment/retries. A real pod-initiated OVSDB fixture supplies
+observed facts through a noncredential read-only monitor. Config-only changes do
+not become operational SSID reports; manager State changes do. Missing client age
+and database loss withdraw reporting, while reconnect requires fresh inventory.
+Two isolated AF_PACKET runs and independent dissector checks pass. The new
+[evidence](../evidence/coordinator/README.md) includes 866 unit and 48 OVSDB passes.
+No actual-pod source, native controller onboarding, discovery/profile admission
+or operation integration is enabled by this component.
+
 ## Secure fleet and clean reproduction increment
 
 The [secure-fleet workflow](../guides/secure-fleet.md) adds authenticated

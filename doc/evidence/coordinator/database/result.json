@@ -1,0 +1,105 @@
+{
+  "passed": true,
+  "scope": "read_only_report_coordinator_with_real_ovsdb_and_in_memory_ethernet",
+  "pod_initiated_connection": true,
+  "monitor_read_only": true,
+  "credential_columns_monitored": false,
+  "stages": {
+    "lost_ack": {
+      "first_mid": 65535,
+      "retry_mid": 0,
+      "acknowledged": true
+    },
+    "initial_state": {
+      "outcome": "topology_response_sent",
+      "response_frames": 1
+    },
+    "config_only_keeps_observed_ssid": {
+      "outcome": "topology_response_sent",
+      "response_frames": 1
+    },
+    "independent_manager_state_change": {
+      "outcome": "topology_response_sent",
+      "response_frames": 1
+    },
+    "unknown_client_age_withdraws_report": {
+      "outcome": "input_or_source_rejected",
+      "response_frames": 0
+    },
+    "complete_inventory_restored": {
+      "outcome": "topology_response_sent",
+      "response_frames": 1
+    },
+    "database_disconnect_withdraws_report": {
+      "outcome": "input_or_source_rejected",
+      "response_frames": 0
+    },
+    "database_reconnect_fresh_inventory": {
+      "outcome": "topology_response_sent",
+      "response_frames": 1
+    }
+  },
+  "coordinator": {
+    "scope": "read_only_report_coordinator",
+    "closed": false,
+    "source_available": true,
+    "early_pending": false,
+    "counts": {
+      "early_sent": 2,
+      "early_acknowledged": 1,
+      "topology_response_sent": 5,
+      "input_or_source_rejected": 2
+    },
+    "events": [
+      {
+        "event": "early_sent",
+        "mid": 65535
+      },
+      {
+        "event": "early_sent",
+        "mid": 0
+      },
+      {
+        "event": "early_acknowledged",
+        "mid": 0
+      },
+      {
+        "event": "topology_response_sent",
+        "mid": 200
+      },
+      {
+        "event": "topology_response_sent",
+        "mid": 201
+      },
+      {
+        "event": "topology_response_sent",
+        "mid": 202
+      },
+      {
+        "event": "input_or_source_rejected"
+      },
+      {
+        "event": "topology_response_sent",
+        "mid": 204
+      },
+      {
+        "event": "input_or_source_rejected"
+      },
+      {
+        "event": "topology_response_sent",
+        "mid": 206
+      }
+    ],
+    "operations_created": 0,
+    "wsc_admission": "blocked_full_profile_and_durable_operation_integration",
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "socket_io": false,
+  "radio_used": false,
+  "native_controller_used": false,
+  "fixture_admin_and_manager_writes": true,
+  "adapter_config_writes": 0,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

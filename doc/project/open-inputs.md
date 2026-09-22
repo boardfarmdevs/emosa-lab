@@ -61,7 +61,9 @@ N03 recovery fails after database restart, so the backend remains disabled.
 This is an implementation/qualification gap, not another external specification
 or pod credential request.
 
-Report integration also needs qualified interface/bridge/neighbor inventories and
+The [read-only coordinator](../protocol/report-coordinator.md) now consumes a real
+simulation database, with Query/Ack/retry and source withdrawal tested. Actual-pod
+report integration still needs qualified interface/bridge/neighbor inventories and
 an actual client association-age source. The pinned OpenSync client schema has
 no such age field. See the [report fact contract](../protocol/reports.md#5-supply-facts-not-guesses)
 and [read-only qualification guide](../guides/pod-qualification.md). These are

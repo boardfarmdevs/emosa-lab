@@ -127,11 +127,63 @@ def check_generated(tshark, capture):
     return {"capture": capture.name, "sha256": hashlib.sha256(capture.read_bytes()).hexdigest()}
 
 
+def check_coordinator(tshark, directory):
+    """Compare independently received Query/Ack and State-derived report fields."""
+    sides, digests = {}, {}
+    for side in ("left", "right"):
+        path = directory / (side + ".pcap")
+        data = subprocess.check_output(
+            [tshark, "-n", "-2", "-r", str(path), "-T", "pdml"], timeout=30
+        )
+        sides[side] = ET.fromstring(data).findall("packet")
+        digests[side] = hashlib.sha256(path.read_bytes()).hexdigest()
+    left, right = sides["left"], sides["right"]
+
+    def selected(packets, kind):
+        return [p for p in packets if values(p, "ieee1905.message_type") == [kind]]
+
+    def mids(packets):
+        return [int(values(p, "ieee1905.message_id")[0], 16) for p in packets]
+
+    assert len(left) == len(right) == 5
+    assert mids(selected(left, "0002")) == [600, 601, 602, 603]
+    assert mids(selected(left, "8000")) == [2]
+    assert mids(selected(right, "8043")) == [1, 2]
+    responses = selected(right, "0003")
+    assert mids(responses) == [600, 601, 602]
+    expected = [b"EMOSA-report-before", b"EMOSA-report-before", b"EMOSA-report-after"]
+    for packet, ssid in zip(responses, expected, strict=True):
+        prefix = "ieee1905.bss_config_report."
+        assert values(packet, prefix + "ssid") == [ssid.hex()]
+        assert values(packet, prefix + "radio_id") == ["020000004010"]
+        assert values(packet, prefix + "mac_addr") == ["020000004011"]
+        assert {int(k, 16) for k in values(packet, "ieee1905.tlv_type")} == {
+            0,
+            3,
+            4,
+            7,
+            0x80,
+            0x83,
+            0xB7,
+            0xB3,
+        }
+    return {
+        "directory": directory.name,
+        "capture_sha256": digests,
+        "new_mid_retry_and_ack": True,
+        "config_only_preserves_observed_bss": True,
+        "state_change_reported": True,
+        "last_query_has_no_captured_response": True,
+        "native_controller_acceptance": False,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--record", action="store_true")
     parser.add_argument("--tshark", default="tshark")
     parser.add_argument("--report-capture", type=Path, action="append", default=[])
+    parser.add_argument("--coordinator-directory", type=Path, action="append", default=[])
     args = parser.parse_args()
     assert hashlib.sha256(CAPTURE.read_bytes()).hexdigest() == CAPTURE_SHA
     result = subprocess.run(
@@ -169,6 +221,9 @@ def main():
                 "scope": "native fields and selected-edition negatives; not conformance",
                 "generated_report_checks": [
                     check_generated(args.tshark, capture) for capture in args.report_capture
+                ],
+                "coordinator_checks": [
+                    check_coordinator(args.tshark, path) for path in args.coordinator_directory
                 ],
             },
             indent=2,
