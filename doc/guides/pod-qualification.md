@@ -136,6 +136,23 @@ The eventual acceptance path remains **real EasyMesh messages → EMOSA → unch
 physical pod → independent observed behavior**. This collector and the simulator
 are preparation and component evidence, respectively.
 
+## Facts needed for controller-facing reports
+
+The [report components](../protocol/reports.md) require the complete actual
+interface/bridge/neighbor inventory, RUID/BSSID bindings, capability evidence,
+matching Config/State BSS facts and known client association ages. Qualification
+must distinguish the virtual agent's adjacency from the physical pod backhaul.
+Unknown powered-off, L2-neighbor, MLD/backhaul or other conditional features must
+remain pending rather than be recorded as absent.
+
+The pinned upstream `Wifi_Associated_Clients` table has client identities and
+security/state fields but no association age. EasyMesh requires seconds since
+association, saturated at 65535. Identify an existing authorized pod source or a
+qualified observation of the actual association episode and its restart rules.
+Time since EMOSA first saw a row cannot substitute. The current read-only draft
+collector does not qualify this source; record it among remaining checks. Do
+not install a pod agent, alter firmware or fabricate zero to fill the gap.
+
 ## Supplementary root-pod/cloud packet capture
 
 An operator-provided passive capture can help establish transport initiation,

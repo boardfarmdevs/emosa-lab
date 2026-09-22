@@ -18,7 +18,9 @@ The IEEE 1905.1-2013 and 1905.1a-2014 PDFs are now obtained. Follow the
 native captures and test bounded reassembly and isolated Ethernet delivery.
 Continue with [controller discovery and WSC exchange handling](doc/protocol/autoconfiguration.md)
 for peer/radio binding, replay controls and the actual native compatibility findings.
-Complete controller onboarding and physical acceptance remain pending.
+Then construct and inspect [capability and topology reports](doc/protocol/reports.md),
+including the new offline and isolated Ethernet exercises. Complete controller
+onboarding and physical acceptance remain pending.
 
 ## Architecture
 

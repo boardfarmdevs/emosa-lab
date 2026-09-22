@@ -1,8 +1,8 @@
 # EasyMesh value components and offline inspection
 
-EMOSA now encodes and decodes fourteen selected EasyMesh **TLV values**. This is
-preparation for discovery and topology reporting while the IEEE 1905 documents
-are being acquired. It does not enable a packet endpoint, controller discovery,
+EMOSA now encodes and decodes eighteen selected EasyMesh **TLV values**. This is
+the value layer used by selected discovery and topology report components.
+Both IEEE 1905 editions are obtained. It does not enable a packet endpoint, controller discovery,
 onboarding or pod writes. Run this exercise on **HOST**, in your development or
 learning checkout; no LXD, OVSDB server, radio or physical pod is required.
 
@@ -49,9 +49,14 @@ No licensed document or page extract is redistributed.
 | `0xAA` / `APWifi6Capabilities` | RUID, counted roles, explicit width/length fields, IEEE HE MCS pairs and per-role feature/user limits | EasyMesh §17.2.72, Table 95, pp.169–170; IEEE §9.2.2 p.656 and §9.4.2.247.4 pp.1455–1457 |
 | `0x88` / `APHECapabilities` | RUID, opaque already-ordered MCS bytes and stream/feature flags; automatic map conversion pending | EasyMesh §17.2.10, Table 33, pp.130–131; IEEE §9.4.2.247.4, pp.1455–1457 |
 | `0xD4` / `DeviceInventory` | Counted 0–64-octet identity/software/environment strings and one or more radio/vendor entries | EasyMesh §9.1, pp.79–80; §17.2.76, Table 99, p.172 |
+| `0x84` / `AssociatedClients` | BSS count, BSSID, two-octet client count; client MAC and seconds since association | EasyMesh §17.2.5, Table 28, pp.126–127 |
+| `0xB7` / `BssConfigurationReport` | Radio/BSS counts, identities, role flags, reserved octet and SSID | EasyMesh §17.2.75, Table 98, pp.171–172 |
+| `0xCC` / `AKMSuiteCapabilities` | Separate counted backhaul/fronthaul lists of four-octet suite selectors | EasyMesh §17.2.78, Table 101, pp.173–174 |
+| `0xED` / `SupportedCipherSuites` | Counted list of four-octet cipher selectors | EasyMesh §17.2.109, Table 132, pp.195–196 |
 | SSID representation | Preserve original octets and the 0–32-octet structural bound; do not assume UTF-8 | IEEE 802.11-2024 §9.4.2.2, Figure 9-209, p.934 |
 
-All counts in these selected values are single octets. Addresses, SSIDs and
+Counts are single octets except the per-BSS client count, which is a two-octet
+big-endian integer. Client association age is also two octets, saturating at 65535. Addresses, SSIDs and
 inventory strings preserve their octets. VHT uses the explicit big-endian rule
 in EasyMesh Table 32; HE preserves already-ordered MCS bytes while conversion
 remains pending. This component does **not** encode the outer type/length fields.
@@ -81,7 +86,7 @@ Other deliberate boundaries:
 - The component preserves order and repeated identities. It checks structure;
   identity uniqueness, real inventory completeness, message inclusion and actual
   supported roles/profile require the later procedure layer.
-- Unsupported types, including other capability and associated-client TLVs, remain
+- Other unsupported types, including unimplemented capability TLVs, remain
   explicit errors. This standalone API makes no assertion about how a complete
   IEEE receiver handles unknown TLVs.
 
@@ -238,3 +243,7 @@ Then connect real controller messages through the adapter to the simulation and
 independent hwsim clients. The eventual acceptance path remains **real EasyMesh
 messages → EMOSA adapter → unchanged physical pod → independently observed
 behavior**. Component tests and simulator results alone do not complete it.
+
+Continue with the [report walkthrough](reports.md) for complete-message builders,
+freshness/deadline guards, actual Ethernet exercises and the association-age
+qualification gap. These generic values alone do not authorize advertisement.

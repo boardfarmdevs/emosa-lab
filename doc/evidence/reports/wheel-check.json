@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "python_files_matched": 62,
+  "installed_package_outside_checkout": true,
+  "offline_exercise_passed": true,
+  "wheel_sha256": "ba3bc1cab1310b387e539fa230914a4452f303ca172d8d038cd8c41e1dbe5da8",
+  "dependencies": "uv export --frozen --no-dev --no-emit-project, then uv pip sync"
+}

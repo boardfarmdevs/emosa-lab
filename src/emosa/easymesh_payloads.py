@@ -105,6 +105,56 @@ class APOperationalBss:
 
 
 @dataclass(frozen=True)
+class ConfiguredBss:
+    bssid: bytes
+    flags: int
+    ssid: bytes = field(repr=False)
+
+
+@dataclass(frozen=True)
+class ConfiguredRadio:
+    ruid: bytes
+    bsses: tuple[ConfiguredBss, ...]
+
+
+@dataclass(frozen=True)
+class BssConfigurationReport:
+    kind: ClassVar[int] = 0xB7
+    radios: tuple[ConfiguredRadio, ...]
+
+
+@dataclass(frozen=True)
+class AssociatedClient:
+    mac: bytes
+    association_seconds: int
+
+
+@dataclass(frozen=True)
+class BssClients:
+    bssid: bytes
+    clients: tuple[AssociatedClient, ...]
+
+
+@dataclass(frozen=True)
+class AssociatedClients:
+    kind: ClassVar[int] = 0x84
+    bsses: tuple[BssClients, ...]
+
+
+@dataclass(frozen=True)
+class AKMSuiteCapabilities:
+    kind: ClassVar[int] = 0xCC
+    backhaul: tuple[bytes, ...]
+    fronthaul: tuple[bytes, ...]
+
+
+@dataclass(frozen=True)
+class SupportedCipherSuites:
+    kind: ClassVar[int] = 0xED
+    selectors: tuple[bytes, ...]
+
+
+@dataclass(frozen=True)
 class BasicOperatingClass:
     operating_class: int
     max_eirp_dbm: int
@@ -256,6 +306,10 @@ type Payload = (
     | Profile2APCapability
     | APRadioAdvancedCapabilities
     | MultiAPProfile
+    | BssConfigurationReport
+    | AssociatedClients
+    | AKMSuiteCapabilities
+    | SupportedCipherSuites
 )
 
 
@@ -301,6 +355,32 @@ def decode_value(kind: int, value: bytes) -> Payload:
     _octet(kind)
     reader = _Reader(value)
     match kind:
+        case 0xCC:
+            lists = [tuple(reader.take(4) for _ in range(reader.octet())) for _ in range(2)]
+            result = AKMSuiteCapabilities(*lists)
+        case 0xED:
+            result = SupportedCipherSuites(tuple(reader.take(4) for _ in range(reader.octet())))
+        case 0x84:
+            bsses = []
+            for _ in range(reader.octet()):
+                bssid, count = reader.take(6), int.from_bytes(reader.take(2), "big")
+                clients = tuple(
+                    AssociatedClient(reader.take(6), int.from_bytes(reader.take(2), "big"))
+                    for _ in range(count)
+                )
+                bsses.append(BssClients(bssid, clients))
+            result = AssociatedClients(tuple(bsses))
+        case 0xB7:
+            radios = []
+            for _ in range(reader.octet()):
+                ruid, count = reader.take(6), reader.octet()
+                bsses = []
+                for _ in range(count):
+                    bssid, flags = reader.take(6), reader.octet() & 0xFC
+                    reader.octet()  # Entire reserved octet ignored on reception.
+                    bsses.append(ConfiguredBss(bssid, flags, reader.ssid()))
+                radios.append(ConfiguredRadio(ruid, tuple(bsses)))
+            result = BssConfigurationReport(tuple(radios))
         case 0x80 | 0x81:
             services = tuple(reader.take(reader.octet()))
             result = SupportedServices(services) if kind == 0x80 else SearchedServices(services)
@@ -388,7 +468,47 @@ def encode_value(payload: Payload) -> bytes:
     All counts are derived, identities are opaque six-octet values, and SSIDs
     preserve their original octets, including non-UTF-8 and embedded NULs.
     """
-    if type(payload) in (SupportedServices, SearchedServices):
+    if type(payload) in (AKMSuiteCapabilities, SupportedCipherSuites):
+        lists = (
+            (payload.backhaul, payload.fronthaul)
+            if type(payload) is AKMSuiteCapabilities
+            else (payload.selectors,)
+        )
+        value = b"".join(
+            _count(selectors) + b"".join(_octets(s, length=4) for s in selectors)
+            for selectors in lists
+        )
+    elif type(payload) is AssociatedClients:
+        value = bytearray(_count(payload.bsses))
+        for bss in payload.bsses:
+            if type(bss) is not BssClients or type(bss.clients) is not tuple:
+                raise _invalid()
+            value.extend(_octets(bss.bssid, length=6) + _u16(len(bss.clients)))
+            for client in bss.clients:
+                if type(client) is not AssociatedClient:
+                    raise _invalid()
+                seconds = client.association_seconds
+                if type(seconds) is not int or seconds < 0:
+                    raise _invalid()
+                value.extend(_octets(client.mac, length=6) + _u16(min(seconds, 65535)))
+                _bounded(value)
+        value = bytes(value)
+    elif type(payload) is BssConfigurationReport:
+        value = bytearray(_count(payload.radios))
+        for radio in payload.radios:
+            if type(radio) is not ConfiguredRadio:
+                raise _invalid()
+            value.extend(_octets(radio.ruid, length=6) + _count(radio.bsses))
+            for bss in radio.bsses:
+                if type(bss) is not ConfiguredBss:
+                    raise _invalid()
+                ssid = _octets(bss.ssid)
+                if len(ssid) > 32 or _octet(bss.flags)[0] & 3:
+                    raise _invalid()
+                value.extend(_octets(bss.bssid, length=6) + bytes((bss.flags, 0, len(ssid))) + ssid)
+                _bounded(value)
+        value = bytes(value)
+    elif type(payload) in (SupportedServices, SearchedServices):
         value = _count(payload.services)
         allowed = (0, 1) if type(payload) is SupportedServices else (0,)
         for service in payload.services:

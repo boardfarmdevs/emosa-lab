@@ -9,12 +9,13 @@
 
 `qualified` requires referenced evidence and compatible current configuration.
 No boolean in an input manifest enables hardware writes. The upstream schema is
-a simulation reference. Complete protocol frames remain pending; the separately
+a simulation reference. Selected complete frame/exchange/report components now
+exist; full qualified procedures and their running coordinator remain pending; the separately
 selected [WSC cryptographic component](../protocol/wsc-component.md) has synthetic payload
 vectors independently checked with hostap 2.11.
 The [M1/M2 payload component](../protocol/wsc-messages.md) also has independent required-field
-and cryptographic checks; actual IEEE messages, exchange state and complete
-radio mapping remain gated. The [radio payload interpreter](../protocol/wsc-radio.md)
+and cryptographic checks; selected IEEE message/exchange components exist, while full procedure admission
+and complete qualified radio mapping remain gated. The [radio payload interpreter](../protocol/wsc-radio.md)
 now checks encrypted roles and whole-set candidate scope, without a write path.
 
 The [native compatibility candidate](../guides/native-compatibility.md) now has a
@@ -59,3 +60,9 @@ builds and runs, with 39 upstream units and the native apply/withhold path check
 N03 recovery fails after database restart, so the backend remains disabled.
 This is an implementation/qualification gap, not another external specification
 or pod credential request.
+
+Report integration also needs qualified interface/bridge/neighbor inventories and
+an actual client association-age source. The pinned OpenSync client schema has
+no such age field. See the [report fact contract](../protocol/reports.md#5-supply-facts-not-guesses)
+and [read-only qualification guide](../guides/pod-qualification.md). These are
+pod/profile inputs, not a renewed request for the already obtained IEEE PDFs.

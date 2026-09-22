@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "scope": "offline_synthetic_complete_reports",
+  "early_report_message_type": "0x8043",
+  "query_mid": 65535,
+  "response_mid": 65535,
+  "frames": 3,
+  "receiver_inventory": {
+    "source": "synthetic_receiver_decoded_topology_response",
+    "radios": [
+      {
+        "ruid": "02:00:00:00:40:10",
+        "bssids": [
+          "02:00:00:00:40:11"
+        ]
+      }
+    ],
+    "native_controller_inventory": false
+  },
+  "socket_io": false,
+  "operations_created": 0,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

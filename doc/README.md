@@ -6,7 +6,8 @@ simulators and experiments used to evaluate it. Start with the
 the [architecture overview](architecture/overview.md) for the main building blocks.
 New team members should follow the [learning sequence](guides/learning-path.md):
 model → real database → persistent service → authenticated TLS → fleet/recovery
-measurements → clean LXD reproduction → radio and eventual wire/physical proof.
+measurements → clean LXD reproduction → wire envelope/discovery/reports →
+radio and eventual controller-to-physical-pod proof.
 
 ## Guides: learn, run and demonstrate
 

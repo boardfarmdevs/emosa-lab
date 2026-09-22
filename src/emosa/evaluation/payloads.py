@@ -10,6 +10,7 @@ from emosa.easymesh_payloads import (
     AP_FEATURE_BITS,
     MAX_VALUE_BYTES,
     PROFILE2_FEATURE_BITS,
+    AKMSuiteCapabilities,
     APCapability,
     APHECapabilities,
     APHTCapabilities,
@@ -18,11 +19,14 @@ from emosa.easymesh_payloads import (
     APRadioBasicCapabilities,
     APVHTCapabilities,
     APWifi6Capabilities,
+    AssociatedClients,
+    BssConfigurationReport,
     DeviceInventory,
     MultiAPProfile,
     Profile2APCapability,
     RadioIdentifier,
     SearchedServices,
+    SupportedCipherSuites,
     SupportedServices,
     decode_value,
 )
@@ -56,6 +60,47 @@ def read_value(*, value_hex: str | None = None, value_file: Path | None = None) 
 
 
 def describe(payload):
+    if isinstance(payload, AKMSuiteCapabilities):
+        return {
+            "backhaul_selectors": [s.hex() for s in payload.backhaul],
+            "fronthaul_selectors": [s.hex() for s in payload.fronthaul],
+        }
+    if isinstance(payload, SupportedCipherSuites):
+        return {"cipher_selectors": [s.hex() for s in payload.selectors]}
+    if isinstance(payload, AssociatedClients):
+        return {
+            "bsses": [
+                {
+                    "bssid": bss.bssid.hex(":"),
+                    "clients": [
+                        {
+                            "mac": client.mac.hex(":"),
+                            "association_seconds": client.association_seconds,
+                            "age_saturated": client.association_seconds == 65535,
+                        }
+                        for client in bss.clients
+                    ],
+                }
+                for bss in payload.bsses
+            ]
+        }
+    if isinstance(payload, BssConfigurationReport):
+        return {
+            "radios": [
+                {
+                    "ruid": radio.ruid.hex(":"),
+                    "bsses": [
+                        {
+                            "bssid": bss.bssid.hex(":"),
+                            "flags": bss.flags,
+                            "ssid_hex": bss.ssid.hex(),
+                        }
+                        for bss in radio.bsses
+                    ],
+                }
+                for radio in payload.radios
+            ]
+        }
     if isinstance(payload, APWifi6Capabilities):
         return {
             "ruid": payload.ruid.hex(":"),

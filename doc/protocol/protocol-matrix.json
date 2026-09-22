@@ -260,33 +260,46 @@
           "name": "Topology Query",
           "message_type": "0x0002",
           "source": "wfa-easymesh-6.1 section 17.1 Table 22",
-          "status": "verified_identifier_only"
+          "status": "restricted_component_implemented_full_procedure_pending"
         },
         {
           "name": "Topology Response",
           "message_type": "0x0003",
           "source": "wfa-easymesh-6.1 section 17.1 Table 22",
-          "status": "verified_identifier_only"
+          "status": "restricted_component_implemented_full_procedure_pending"
         }
       ],
       "tlvs": [],
       "tlv_audit_status": "WFA_inclusion_reviewed_complete_base_and_feature_field_contract_pending",
-      "timers": [],
+      "timers": [
+        {
+          "event": "Send Topology Response with Query MID",
+          "maximum_seconds": 1,
+          "source": "IEEE 1905.1-2013 8.2.2.2 p.48",
+          "status": "restricted_builder_and_guarded_send_implemented_coordinator_pending"
+        }
+      ],
       "verified_findings": [
         "EasyMesh extends the IEEE topology response with service and BSS reporting; section 6.2 adds client reporting when clients are present.",
         "Current profile indications and profile-conditional extensions require a complete audit; the static message list alone is insufficient.",
         "Report virtual protocol adjacency separately from the physical pod backhaul; BSSID/radio/client facts need fresh qualified evidence."
       ],
-      "vectors": [],
+      "vectors": [
+        "tests/fixtures/protocol/reports/native-values.json"
+      ],
       "implementation_refs": [
-        "wireshark-4.4.0-ieee1905"
+        "wireshark-4.4.0-ieee1905",
+        "src/emosa/wire/reports.py",
+        "src/emosa/wire/topology_values.py"
       ],
       "remaining_gaps": [
-        "Base Topology Discovery fields and bounded envelope implemented; full topology responder, paired LLDP and coordinator scheduling remain pending.",
+        "Restricted complete response and isolated Ethernet runs implemented; live trusted-link topology coordinator, paired LLDP and scheduling remain pending.",
         "Real physical topology and mandatory supported-resource inventory are not yet qualified."
       ],
-      "reason": "IEEE base/amendment obtained and envelope component implemented; complete normative procedure/profile contract and exchange validation remain pending.",
-      "available_rule_audit": "doc/protocol/procedure-audit.md"
+      "reason": "Restricted builder and guarded delivery tested; qualified actual facts and complete native controller integration remain pending.",
+      "available_rule_audit": "doc/protocol/procedure-audit.md",
+      "component_status": "restricted_query_response_builder_and_packet_exercise_implemented_full_procedure_blocked",
+      "component_contract": "doc/protocol/reports.md"
     },
     {
       "name": "AP autoconfiguration search/response",
@@ -1125,7 +1138,7 @@
       "IEEE 1905.1-2013 and IEEE 1905.1a-2014 operator-supplied full texts"
     ],
     "permitted_scope": "Implement and independently test standalone components whose normative definitions are complete in the available sources; continue semantic service/radio tests and native peer observations.",
-    "boundary": "Envelope and bounded discovery/WSC exchange components implemented; no full P0 procedure freeze, qualified profile, operation integration or controller/physical acceptance.",
+    "boundary": "Envelope, bounded discovery/WSC exchanges and restricted report builders implemented; no full P0 procedure freeze, qualified profile, durable operation integration or controller/physical acceptance.",
     "document": "doc/protocol/ieee1905-envelope.md"
   },
   "ieee1905_envelope": {
@@ -1249,7 +1262,7 @@
     },
     "pending": [
       "Complete profile/feature qualification and native profile/capability reconciliation",
-      "Table 117 early capability bit-6/reserved overlap and complete early report",
+      "Table 117 early capability bit-6/reserved overlap; restricted early report implemented, integrated procedure/admission pending",
       "Security capability applicability and trusted-link lifecycle",
       "Full topology, capability and scheduled controller-facing coordinator",
       "Durable exchange-to-operation binding, fresh complete radio admission and recovery",
@@ -1259,5 +1272,106 @@
     "controller_onboarding_proven": false,
     "physical_pod_proven": false,
     "operations_created": 0
+  },
+  "controller_reports": {
+    "status": "restricted_complete_message_builders_implemented_full_procedures_pending",
+    "guide": "doc/protocol/reports.md",
+    "implementation": [
+      "src/emosa/wire/reports.py",
+      "src/emosa/wire/topology_values.py",
+      "src/emosa/easymesh_payloads.py",
+      "src/emosa/simulation/wire_reports.py"
+    ],
+    "tests": [
+      "tests/test_wire_reports.py",
+      "scripts/check-report-reference.py",
+      "deploy/wire/check-endpoint.py"
+    ],
+    "evidence": "doc/evidence/reports/summary.json",
+    "sources": [
+      {
+        "specification": "IEEE 1905.1-2013",
+        "sections": [
+          "6.3.3 p.31",
+          "6.4.5-9 pp.35-38",
+          "8.2.2.2 p.48"
+        ]
+      },
+      {
+        "specification": "IEEE 1905.1a-2014",
+        "sections": [
+          "6.3.3 p.7",
+          "6.4.5 p.8",
+          "6.4.7 Tables 6-12/13 pp.9-10"
+        ]
+      },
+      {
+        "specification": "EasyMesh 6.1",
+        "sections": [
+          "5.2.2 p.28",
+          "6 Table 14 p.62",
+          "6.2 pp.63-64",
+          "17.1 Table 22 pp.107-110",
+          "17.1.4 pp.111-112",
+          "17.1.62 p.119",
+          "17.2.5 Table 28 pp.126-127",
+          "17.2.75 Table 98 pp.171-172",
+          "17.2.78 Table 101 pp.173-174",
+          "17.2.109 Table 132 pp.195-196"
+        ]
+      },
+      {
+        "specification": "IEEE 802.11-2024",
+        "sections": [
+          "9.4.2.23.2 Table 9-188 p.1048",
+          "9.4.2.23.3 Table 9-190 pp.1049-1050"
+        ]
+      }
+    ],
+    "scope": "Early Report 0x8043 for explicit non-DFS 2.4 GHz/optional HT/PSK/CCMP pure-fronthaul scope; Profile-1 Topology Response 0x0003 for complete restricted synthetic inventories. Not AP Capability Report 0x8002.",
+    "normative_rules": [
+      "Topology Response echoes Query MID and is sent within one second of complete Query receipt.",
+      "Device Information required; Bridging Capability required with more than one local interface; neighbor lists include known per-interface neighbors.",
+      "Selected EasyMesh Wi-Fi 6/7 media types 0x0108/0109 carry zero media-specific bytes; reserved IEEE media/role values require ignoring the whole TLV.",
+      "Report actual Operational BSS and BSS Configuration consistently; include clients when present with big-endian association age saturated at 65535.",
+      "Early Report includes AP/Radio Basic/AKM/Profile-2/Radio Advanced/Supported Cipher Suites and applicable technology companions before M1 when requested."
+    ],
+    "local_policies": [
+      "Coordinator-supplied complete facts and explicit conditional absence; no unknown-to-absent default.",
+      "Opaque source token covers adapter instance/pod/binding generation/database revision/input hashes; maximum two-second source window; original lease cannot be renewed by callback.",
+      "Synchronous source and clock rechecks before/after every fragment; late/partial transmissions fail without claiming emitted bytes were recalled.",
+      "32 radios, 64 local interfaces, 256 clients and 256 neighbors per interface maximum in this local report builder; generic TLV byte budget remains 16383."
+    ],
+    "native_findings": {
+      "capture": "doc/evidence/peer-baseline/samples/wired/ethernet.pcap",
+      "early_frame": 3,
+      "early_missing_cipher_tlv": "0xED",
+      "akm_backhaul_count": 0,
+      "akm_fronthaul_count": 0,
+      "topology_frame": 20,
+      "local_interface_count": 5,
+      "missing_bridging_tlv": "0x04",
+      "wifi6_media_length_observed": 10,
+      "wifi6_media_length_selected": 0,
+      "fixture": "tests/fixtures/protocol/reports/native-values.json",
+      "independent_dissectors": [
+        "tshark 3.6.2",
+        "tshark 4.2.2"
+      ]
+    },
+    "pod_qualification_gap": "Pinned Wifi_Associated_Clients schema has no association age; qualify an existing source or actual association episode. Adapter first-seen is not association time.",
+    "pending": [
+      "Qualified actual facts and trusted-link coordinator",
+      "Applicable ACK/retry scheduling and full AP Capability/Profile obligations",
+      "Native peer profile/security/media compatibility",
+      "Controller inventory visibility and durable WSC-to-operation binding",
+      "OVSDB/hwsim causal run then unchanged physical-pod proof"
+    ],
+    "new_isolated_af_packet_runs": 2,
+    "native_controller_used": false,
+    "operations_created": 0,
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
   }
 }

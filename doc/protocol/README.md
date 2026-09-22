@@ -8,6 +8,7 @@
 | [Acquisition checklist](specification-acquisition.md) | Required, obtained and pending external documents |
 | [IEEE 1905 envelope implementation](ieee1905-envelope.md) | Obtained base/amendment, audited frame/TLV rules, bounded reassembly, native vectors and isolated Ethernet checks |
 | [Controller discovery and WSC exchanges](autoconfiguration.md) | Search/M1 construction, Response/M2 binding, lifetime/replay controls, native compatibility findings and beginner exercise |
+| [Capability and topology reports](reports.md) | Restricted Early Report and Topology Response, facts/freshness checks, offline and Ethernet exercises, native compatibility findings |
 | [IEEE media input review](ieee-media-review.md) | Verified 802.11-2024 and 802.3-2022 PDFs, selected clauses, corrections and Ethernet edition gap |
 | [Protocol matrix](protocol-matrix.json) | Rules, sections, implementation evidence and unresolved procedure requirements |
 | [EasyMesh value components](easymesh-payloads.md) | Service, radio identity, Operational BSS and profile values; offline CLI, exact references and independent native-capture checks |

@@ -1,0 +1,69 @@
+{
+  "packets": 59,
+  "completed_messages": 58,
+  "envelope_rejections": 0,
+  "selected_reports": [
+    {
+      "completed_at_frame": 3,
+      "message_type": "0x8043",
+      "report_review": {
+        "missing_required_tlvs": [
+          "0xed"
+        ],
+        "repeated_required_tlvs": [],
+        "invalid_or_unsupported_value_tlvs": [
+          "0xaa"
+        ],
+        "conditional_procedure_audit_complete": false,
+        "profile_qualified": false
+      }
+    },
+    {
+      "completed_at_frame": 20,
+      "message_type": "0x0003",
+      "report_review": {
+        "missing_required_tlvs": [
+          "0x04"
+        ],
+        "repeated_required_tlvs": [],
+        "invalid_or_unsupported_value_tlvs": [
+          "0x03"
+        ],
+        "conditional_procedure_audit_complete": false,
+        "profile_qualified": false
+      }
+    },
+    {
+      "completed_at_frame": 33,
+      "message_type": "0x0003",
+      "report_review": {
+        "missing_required_tlvs": [
+          "0x04"
+        ],
+        "repeated_required_tlvs": [],
+        "invalid_or_unsupported_value_tlvs": [
+          "0x03"
+        ],
+        "conditional_procedure_audit_complete": false,
+        "profile_qualified": false
+      }
+    },
+    {
+      "completed_at_frame": 37,
+      "message_type": "0x0003",
+      "report_review": {
+        "missing_required_tlvs": [
+          "0x04"
+        ],
+        "repeated_required_tlvs": [],
+        "invalid_or_unsupported_value_tlvs": [
+          "0x03"
+        ],
+        "conditional_procedure_audit_complete": false,
+        "profile_qualified": false
+      }
+    }
+  ],
+  "operations_created": 0,
+  "onboarding_proven": false
+}

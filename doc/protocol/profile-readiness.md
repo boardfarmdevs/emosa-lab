@@ -223,9 +223,10 @@ gap to record, not a bit to advertise optimistically.
 
 The [technology/inventory exercise](../guides/technology-inventory.md) now adds
 synthetic HT/VHT and Device Inventory mapping, plus an opaque HE value codec.
-The [HE/Wi-Fi 6 exercise](../guides/he-wifi6.md) adds the standalone companion codec and IEEE MCS parser. The [Wi-Fi 6 input exercise](../guides/wifi6-inputs.md) now maps explicit synthetic AP/STA declarations through the service. The separate `0x88` conversion and independently qualified feature inputs remain next. These components do not complete AP reporting. Full exchange processing still needs **IEEE 1905.1-2013 and
-IEEE 1905.1a-2014**, and the native peer's recorded profile mismatch must be
-resolved for the chosen build/policy. Physical access remains pending.
+The [HE/Wi-Fi 6 exercise](../guides/he-wifi6.md) adds the standalone companion codec and IEEE MCS parser. The [Wi-Fi 6 input exercise](../guides/wifi6-inputs.md) now maps explicit synthetic AP/STA declarations through the service. The separate `0x88` conversion and independently qualified feature inputs remain next. These components do not complete AP reporting. Both **IEEE 1905.1-2013 and IEEE 1905.1a-2014** are now obtained.
+Restricted [Early/Topology report builders](reports.md) are implemented; full AP
+Capability/profile integration and the native peer's recorded profile mismatch
+still need resolution for the chosen build/policy. Physical access remains pending.
 
 The proof remains **real EasyMesh messages → EMOSA adapter → unchanged physical
 pod → independently observed behavior**. A complete audit helps choose and

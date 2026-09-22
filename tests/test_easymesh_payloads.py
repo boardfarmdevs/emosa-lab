@@ -200,7 +200,7 @@ def test_invalid_api_inputs_have_component_errors(kind, value):
 
 def test_unsupported_type_is_not_silently_interpreted():
     with pytest.raises(EmosaError) as error:
-        em.decode_value(0x84, b"\0")
+        em.decode_value(0x89, b"\0")
     assert error.value.code == Reason.UNSUPPORTED_OPERATION
 
 

@@ -30,7 +30,9 @@ The diagram shows the intended composition and the current gap. The tests exerci
 discovery and WSC separately. They do not use a deficient discovery response to
 automatically start M1. A controller's capability advertisement can require an
 Early AP Capability Report before BSS configuration; that intervening procedure
-and its complete contents must be implemented before connecting this path.
+now has a [restricted complete-message builder](reports.md). Its integration,
+qualified facts, acknowledgment/retry handling and full profile admission remain
+pending before connecting this path.
 
 An **AL MAC** identifies the represented 1905 device. A **RUID** identifies its
 radio. An Ethernet source may instead be one of the controller's interface MACs.
@@ -169,8 +171,10 @@ missing dependencies.
 ## 5. What follows this component
 
 Implement the complete controller-facing coordinator: qualified feature/profile
-intersection, required early/AP capability reports, topology and controller
-inventory visibility, trusted-link lifecycle, and fresh complete radio admission.
+intersection, full AP capability reporting, controller inventory visibility,
+trusted-link lifecycle, and fresh complete radio admission. The
+[restricted Early/Topology report components](reports.md) are now available for
+that integration; their synthetic facts do not qualify an actual pod.
 Then connect an admitted WSC candidate directly to the guarded operation engine
 with durable exchange-to-operation correlation. An extra semantic request must
 not supply the actual Config change in that experiment.

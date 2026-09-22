@@ -1,0 +1,88 @@
+[
+  {
+    "frame": 3,
+    "type": 204,
+    "value_hex": "0000",
+    "decoded": {
+      "backhaul_count": 0,
+      "fronthaul_count": 0
+    }
+  },
+  {
+    "frame": 20,
+    "type": 3,
+    "value_hex": "020000e0000205020000ec020101080a020000ec02010000060000163ee0402100010000163e0d9aca000100020000ec020001080a020000ec020000000600020000e00002000100",
+    "decoded": {
+      "al_mac": "020000e00002",
+      "interfaces": [
+        {
+          "mac": "020000ec0201",
+          "media_type": 264,
+          "media_length": 10
+        },
+        {
+          "mac": "00163ee04021",
+          "media_type": 1,
+          "media_length": 0
+        },
+        {
+          "mac": "00163e0d9aca",
+          "media_type": 1,
+          "media_length": 0
+        },
+        {
+          "mac": "020000ec0200",
+          "media_type": 264,
+          "media_length": 10
+        },
+        {
+          "mac": "020000e00002",
+          "media_type": 1,
+          "media_length": 0
+        }
+      ]
+    }
+  },
+  {
+    "frame": 20,
+    "type": 6,
+    "value_hex": "00163ee0402100163e790aa8",
+    "decoded": {
+      "local_interface": "00163ee04021",
+      "neighbors": [
+        "00163e790aa8"
+      ]
+    }
+  },
+  {
+    "frame": 20,
+    "type": 6,
+    "value_hex": "00163e0d9aca020000e00001",
+    "decoded": {
+      "local_interface": "00163e0d9aca",
+      "neighbors": [
+        "020000e00001"
+      ]
+    }
+  },
+  {
+    "frame": 20,
+    "type": 183,
+    "value_hex": "01020000ec020002020000ec0200400015656d6f73612d756e70726f766973696f6e65642d32020000ec020180001e656d6f73612d756e70726f766973696f6e65642d6261636b6861756c2d32",
+    "decoded": {
+      "ruid": "020000ec0200",
+      "bsses": [
+        {
+          "bssid": "020000ec0200",
+          "flags": 64,
+          "ssid_hex": "656d6f73612d756e70726f766973696f6e65642d32"
+        },
+        {
+          "bssid": "020000ec0201",
+          "flags": 128,
+          "ssid_hex": "656d6f73612d756e70726f766973696f6e65642d6261636b6861756c2d32"
+        }
+      ]
+    }
+  }
+]

@@ -1,7 +1,8 @@
 """Exercise actual AF_PACKET endpoints in fresh, isolated VM network namespaces.
 
-Only empty IEEE Topology Queries are sent. This is transport verification, not
-a topology responder, EasyMesh controller, virtual agent or provisioning demo.
+The default exercise exchanges empty IEEE Topology Queries. With --reports,
+synthetic peers exchange an Early AP Capability Report and a Topology Query /
+Response. Neither mode uses a native controller or provisions a pod.
 """
 
 import argparse
@@ -67,16 +68,100 @@ def worker(side, interface, directory):
     )
 
 
+def report_worker(side, interface, directory):
+    from emosa.easymesh_payloads import decode_value
+    from emosa.simulation.wire_reports import fixtures, inventory, pcap, query_frames
+    from emosa.wire.cmdu import MidSequence
+    from emosa.wire.reports import ReportStamp, early_report, topology_response
+
+    directory = Path(directory)
+    own, peer = (LEFT, RIGHT) if side == "left" else (RIGHT, LEFT)
+    binding, capabilities, topology = fixtures(ingress=interface)
+    captures, messages = [], []
+    with EthernetEndpoint(interface, own, timeout=0.5) as endpoint:
+        (directory / (side + ".ready")).touch()
+        if side == "left":
+            now = time.monotonic()
+            stamp = ReportStamp("owned-synthetic-report-fixture", now, now + 2)
+            early_report(binding, capabilities, stamp, MidSequence(0)).send(
+                endpoint.send, lambda: stamp
+            )
+        end = time.monotonic() + 5
+        assembly = Reassembler()
+        result = None
+        while time.monotonic() < end:
+            frame = endpoint.receive()
+            if frame is None:
+                continue
+            captures.append(frame)
+            message = assembly.feed(frame)
+            if message is None:
+                continue
+            assert message.source == peer and message.destination == own
+            messages.append(message.message_type)
+            if side == "right" and message.message_type == 0x8043:
+                assert decode_value(
+                    0xED, next(t.value for t in message.tlvs if t.kind == 0xED)
+                ).selectors == (bytes.fromhex("000fac04"),)
+                for request in query_frames():
+                    endpoint.send(request)
+            elif side == "left" and message.message_type == 2:
+                now = time.monotonic()
+                stamp = ReportStamp("owned-synthetic-report-fixture", now, now + 2)
+                reply = topology_response(
+                    message,
+                    binding,
+                    topology,
+                    stamp,
+                    ingress=interface,
+                    generation=1,
+                    received_at=now,
+                )
+                reply.send(endpoint.send, lambda stamp=stamp: stamp)
+                result = {"query_mid": message.mid, "response_mid": reply.mid}
+                break
+            elif side == "right" and message.message_type == 3:
+                assert message.mid == 65535
+                result = inventory(message)
+                break
+            else:
+                raise AssertionError("unexpected report exercise message")
+        assert result is not None, "report exchange timed out"
+    (directory / (side + ".pcap")).write_bytes(pcap(captures))
+    (directory / (side + ".json")).write_text(
+        json.dumps(
+            {
+                "passed": True,
+                "scope": "synthetic_report_exchange_over_AF_PACKET",
+                "messages_received": messages,
+                "result": result,
+                "native_controller_used": False,
+                "radio_used": False,
+                "config_writes": 0,
+                "onboarding_proven": False,
+                "physical_pod_proven": False,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", type=Path, required=True)
     parser.add_argument("--worker", choices=("left", "right"))
     parser.add_argument("--interface")
+    parser.add_argument(
+        "--reports",
+        action="store_true",
+        help="exchange synthetic complete reports instead of empty transport probes",
+    )
     args = parser.parse_args()
     if socket.gethostname() != "emosa-lab" or os.geteuid() != 0:
         raise SystemExit("Run as root only inside the dedicated emosa-lab VM")
     if args.worker:
-        worker(args.worker, args.interface, args.directory)
+        (report_worker if args.reports else worker)(args.worker, args.interface, args.directory)
         return
     args.directory.mkdir(parents=True, exist_ok=False, mode=0o700)
     token = uuid.uuid4().hex[:8]
@@ -126,6 +211,7 @@ def main():
                     side,
                     "--interface",
                     link,
+                    *(["--reports"] if args.reports else []),
                 ],
                 stdout=log,
                 stderr=log,

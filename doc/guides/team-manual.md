@@ -2868,7 +2868,7 @@ of the history; an old `protoc-c` bootstrap failure is not the current blocker.
 
 Discovery and topology messages carry small structured fields describing services,
 radios, BSSs, radio capabilities and profiles. EMOSA now has Python codecs for
-fourteen such **TLV values**.
+eighteen such **TLV values**, including BSS/client and security-suite fields.
 A TLV means type/length/value; this component handles the value inside that
 structure. It provides useful progress from EasyMesh's explicit field definitions
 alongside the [IEEE envelope implementation](../protocol/ieee1905-envelope.md)
@@ -3082,6 +3082,54 @@ The full wire scenario remains blocked with zero operations. The next end-to-end
 experiment must use the real controller message to cause the guarded Config
 transaction, then observe State and the independent client without issuing a
 second semantic request to supply the change.
+
+### 13.9 Explain the agent with capability and topology reports
+
+A controller needs to know both **what the represented extender can do** and
+**what it is doing now**. An Early AP Capability Report answers the first
+question before configuration. A Topology Response describes current interfaces,
+neighbors, radios, BSSs and clients. It must not turn desired Config into a claim
+that a BSS is already operational.
+
+On **HOST**, run the new offline exercise after the normal installation:
+
+```bash
+uv run python -m emosa.simulation.wire_reports --output .lab/manual-reports-01
+uv run emosa-lab wire-inspect --capture .lab/manual-reports-01/synthetic-reports.pcap
+uv run pytest tests/test_wire_reports.py -q
+python3 scripts/check-report-reference.py
+```
+
+Use a new directory on every run. The final command requires `tshark`; the others
+need no VM, radio or pod. The exercise creates three complete synthetic frames:
+an Early Report, a Topology Query with MID 65535, and its Response with the same
+MID. Its receiver decodes one radio and BSS. Read `receiver_inventory.source` and
+`native_controller_inventory: false`: this is a fixture receiver, not an agent
+appearing in prplMesh's inventory. There are zero operations and no socket I/O.
+
+A valid report requires complete, matching facts. An unknown technology cannot
+be advertised as unsupported merely to omit its required TLVs. A missing client
+list cannot mean zero clients. In particular, the pinned OpenSync client table
+has no association-age field; we must qualify an existing source before emitting
+an actual client's age. Adapter first-seen time does not establish association.
+
+The response has **one second from complete Query receipt** to be sent. Its
+source snapshot also has a short freshness window. These are different from an
+operation's pod apply deadline: reporting a BSS does not configure one. The send
+component rechecks facts and time around every fragment, and reports a late or
+partial send as failure. It cannot recall bytes already transmitted.
+
+Read the [complete report walkthrough](../protocol/reports.md) for field examples,
+exact scope, selected specification sections and native compatibility findings.
+Then use the [VM packet runbook](../../deploy/wire/README.md) with `--reports` to
+cross the socket boundary. That creates only its owned private namespaces; it
+needs neither hwsim nor a physical pod. Keep worker JSON/PCAP files and confirm
+cleanup. Two retained runs passed, with received bytes inspected independently.
+
+**Checkpoint:** distinguish encoded facts, socket delivery, native controller
+inventory and physical behavior. The first two are established by this exercise.
+Full AP Capability Report support, profile/peer reconciliation, the trusted-link
+coordinator and durable WSC-to-operation integration remain follow-on work.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

@@ -20,6 +20,7 @@ jobs:
       - run: sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y tshark
       - run: python3 scripts/check-easymesh-reference.py
       - run: python3 scripts/check-ieee1905-reference.py
+      - run: python3 scripts/check-report-reference.py --report-capture doc/evidence/reports/run-01/right.pcap --report-capture doc/evidence/reports/run-02/right.pcap
       - run: python3 deploy/peer-baseline/compatibility/check-capture.py
   wsc-reference:
     runs-on: ubuntu-24.04

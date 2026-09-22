@@ -153,11 +153,13 @@ ignores outgoing copies and checks destination. It does not enable promiscuous
 mode or change an existing interface. Socket ownership includes multicast
 membership cleanup.
 
-The two repeated endpoint runs establish actual AF_PACKET delivery. Their PCAP
+The two retained original endpoint runs establish actual AF_PACKET delivery. Their PCAP
 files are written from received bytes, with synthetic timestamps; they are not
 an independent sniffer's timing evidence. Empty reverse-direction queries are
-transport probes, not Topology Responses. The helper is deliberately not a
-complete topology responder and never advertises an EasyMesh profile.
+transport probes, not Topology Responses. The default mode does not advertise an EasyMesh profile. Its newer `--reports`
+mode also sends restricted Early/Topology reports from synthetic facts; see the
+[report walkthrough](reports.md). That mode still does not run a native controller
+or qualify a profile.
 
 ## 6. Continue toward onboarding
 

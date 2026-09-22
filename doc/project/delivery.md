@@ -15,9 +15,23 @@ implements bounded Ethernet/CMDU transport and inspection. The
 Search/Response and M1/M2 exchanges, explicit peer/radio generation binding,
 complete-request checks, duplicate handling and expiration. Retained native
 traffic exposes profile and capability gaps. No operation engine or pod writes
-are enabled by these components; live topology/capability/coordinator procedures
+are enabled by these components; full topology/capability/coordinator procedures
 and qualification remain incomplete. Current evidence is in the
 [exchange collection](../evidence/autoconfiguration/README.md).
+
+## Capability and topology report increment
+
+The [report components](../protocol/reports.md) add restricted complete Early AP
+Capability Report and Topology Response construction, IEEE device/bridge/neighbor
+values, security selectors, BSS configuration and associated-client values.
+Identity, complete-inventory, source-change and deadline checks guard delivery.
+An offline exercise and two isolated VM AF_PACKET runs decode the advertised
+radio/BSS at a synthetic receiver. The [new evidence](../evidence/reports/README.md)
+retains 824 unit and 46 OVSDB passes, native field comparisons and zero-operation
+wire gating. Native capture review identifies missing cipher/bridge fields and a
+Wi-Fi 6 media-length mismatch against the selected edition. A running controller
+coordinator, full AP Capability procedure and actual controller inventory remain
+pending; no physical pod was contacted or changed.
 
 ## Secure fleet and clean reproduction increment
 

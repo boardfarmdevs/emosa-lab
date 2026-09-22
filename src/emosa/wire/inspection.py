@@ -8,6 +8,7 @@ from pathlib import Path
 from emosa.errors import EmosaError, Reason
 from emosa.wire.autoconfiguration import parse_response, parse_search
 from emosa.wire.cmdu import ETHERTYPE, MULTICAST, Reassembler, invalid
+from emosa.wire.topology_values import decode_topology
 
 NAMES = {
     0: "Topology Discovery",
@@ -24,6 +25,7 @@ NAMES = {
     0x8000: "1905 Ack",
     0x8001: "AP Capability Query",
     0x8002: "AP Capability Report",
+    0x8043: "Early AP Capability Report",
 }
 MAX_CAPTURE = 64 * 1024 * 1024
 
@@ -77,7 +79,66 @@ def describe(message):
             "pending_requirements": list(response.pending_requirements),
         }
         result["procedure_validation"] = "selected_response_fields_only"
+    elif message.message_type in (3, 0x8043):
+        result["report_review"] = review_report(message)
+        result["procedure_validation"] = "diagnostic_report_review_only"
     return result
+
+
+def review_report(message):
+    """Expose selected missing/invalid fields, without interpreting private values.
+
+    This deliberately reports gaps inside the inspection result rather than
+    conflating a structurally valid capture with a qualified complete procedure.
+    """
+    from emosa.easymesh_payloads import decode_value
+
+    required = (
+        {3, 0x80, 0x83, 0xB7, 0xB3}
+        if message.message_type == 3
+        else {0xA1, 0x85, 0xCC, 0xB4, 0xBE, 0xED}
+    )
+    present = {t.kind for t in message.tlvs}
+    missing = required - present
+    repeated = {
+        kind for kind in required - {0x85, 0xBE} if sum(t.kind == kind for t in message.tlvs) > 1
+    }
+    invalid_types = set()
+    for tlv in message.tlvs:
+        try:
+            if tlv.kind in (3, 4, 6, 7):
+                if tlv.kind == 3 and len(tlv.value) >= 7 and tlv.value[6] > 1 and 4 not in present:
+                    missing.add(4)  # Declared count; does not validate individual interfaces.
+                decoded = decode_topology(tlv.kind, tlv.value)
+                if tlv.kind == 3 and len(decoded.interfaces) > 1 and 4 not in present:
+                    missing.add(4)
+            elif tlv.kind in (
+                0x80,
+                0x83,
+                0x84,
+                0x85,
+                0x86,
+                0x87,
+                0x88,
+                0xAA,
+                0xA1,
+                0xB3,
+                0xB4,
+                0xB7,
+                0xBE,
+                0xCC,
+                0xED,
+            ):
+                decode_value(tlv.kind, tlv.value)
+        except EmosaError:
+            invalid_types.add(tlv.kind)
+    return {
+        "missing_required_tlvs": [f"0x{k:02x}" for k in sorted(missing)],
+        "repeated_required_tlvs": [f"0x{k:02x}" for k in sorted(repeated)],
+        "invalid_or_unsupported_value_tlvs": [f"0x{k:02x}" for k in sorted(invalid_types)],
+        "conditional_procedure_audit_complete": False,
+        "profile_qualified": False,
+    }
 
 
 def discovery_pairs(messages):

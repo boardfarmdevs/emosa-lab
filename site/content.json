@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Complete profile and early capability requirements, topology and the running coordinator. Bounded discovery/WSC components now validate peer/radio binding and replay lifetime; durable operation integration and physical qualification remain pending.",
+      "next": "Connect the restricted Early/Topology report components to qualified facts and a trusted-link coordinator. Resolve full AP Capability/profile and native compatibility, then prove controller inventory and durable WSC-to-operation integration; physical qualification remains pending.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -615,10 +615,22 @@
       "title": "Discovery and WSC exchange evidence",
       "description": "762 unit / 46 OVSDB checks, independent references and preserved zero-operation wire gate; no live controller onboarding claim.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/reports.md",
+      "title": "Capability and topology reports walkthrough",
+      "description": "Learn capability versus current facts, run offline and isolated Ethernet exercises, inspect native compatibility gaps and understand deadlines.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/reports/README.md",
+      "title": "Capability and topology report evidence",
+      "description": "824 unit / 46 OVSDB passes, two isolated AF_PACKET runs and independent fields; synthetic inventory is not native controller onboarding.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "autoconfiguration/unit-results.xml",
-    "ovsdb": "autoconfiguration/ovsdb-results.xml"
+    "unit": "reports/unit-results.xml",
+    "ovsdb": "reports/ovsdb-results.xml"
   }
 }

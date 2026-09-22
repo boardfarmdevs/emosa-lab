@@ -136,10 +136,17 @@ Compare the native Search/Response profiles, explain why their matching MID is
 insufficient, and reproduce rejection of wrong-radio, stale-generation, replayed
 and unsupported complete configuration requests.
 
+Continue with [capability and topology reports](../protocol/reports.md) and
+[manual §13.9](team-manual.md#139-explain-the-agent-with-capability-and-topology-reports).
+Run the three-frame offline exercise, read its synthetic receiver inventory,
+and optionally repeat over isolated VM Ethernet sockets. Explain the one-second
+response deadline and why absent association-age data cannot be invented.
+
 **Checkpoint:** distinguish a reassembled message, a correlated discovery response,
 an authenticated WSC candidate and an admitted operation. The new components
 stop before operation creation. The complete profile/capability and controller
-coordinator still precede the full wire scenario.
+coordinator still precede the full wire scenario. A decoded fixture inventory
+is not the native controller’s managed-agent inventory.
 
 
 | Question | Next guide | Additional inputs |

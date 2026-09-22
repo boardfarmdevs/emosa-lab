@@ -11,6 +11,9 @@ The next [discovery/WSC component](../protocol/autoconfiguration.md) now checks
 selected complete messages, peer/link generation, radio binding, authenticated
 M2 scope and replay lifetime. It returns a secret candidate without creating an
 operation; full profile admission and the running coordinator remain pending.
+[Restricted Early/Topology reports](../protocol/reports.md) now add complete
+message construction and isolated Ethernet delivery. Their synthetic receiver
+inventory does not satisfy this experiment’s native-controller inventory step.
 
 EMOSA means **EasyMesh to OpenSync Adapter**. Its virtual agent is the EasyMesh
 representation it presents to the controller. The OpenSync extender connects to
@@ -117,9 +120,10 @@ in the linked guide; later complete procedures remain unfinished:
    Continue reconciling the selected
    EasyMesh/WPS rules and dependencies, profile conditions, field lengths,
    addressing, reassembly, retransmission and timers in the protocol matrix.
-2. Implement bounded receive/transmit and discovery/topology/capability exchanges.
-   Use independently derived/captured vectors for the complete messages. Existing
-   standalone value codecs are reusable components, not a complete endpoint.
+2. Compose the implemented packet, discovery and restricted Early/Topology report
+   components into the trusted-link coordinator. Supply qualified fresh facts and
+   complete full AP Capability/profile/ACK/retry obligations. Independent vectors
+   and isolated Ethernet checks exist; native controller acceptance remains pending.
 3. Bind genuine WSC exchanges to the authenticated peer, exchange and represented
    radio. Validate the complete request, cryptographic authentication and supported
    scope before creating an operation. Preserve one operation across legitimate
