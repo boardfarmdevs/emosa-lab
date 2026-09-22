@@ -786,7 +786,35 @@
       "Both retained native captures: Search profile 2, correlated Response profile 1.",
       "Reassembled controller WSC contains two M2 payloads plus M8; complete mapping unqualified."
     ],
-    "qualification_effect": "No P0 freeze, full profile qualification, IEEE vector validation or EMOSA wire onboarding."
+    "qualification_effect": "No P0 freeze, full profile qualification, IEEE vector validation or EMOSA wire onboarding.",
+    "candidate_experiment": {
+      "guide": "doc/guides/native-compatibility.md",
+      "evidence": "doc/evidence/native-compatibility/summary.json",
+      "status": "two_bounded_native_wired_passes_profile_and_ordering_gaps_remain",
+      "change": "Isolated NL80211 libbwl HE length fix; sole-fronthaul policy for external native agent",
+      "observed_m2_count": 1,
+      "observed_m8_count": 0,
+      "wifi6_mcs_lengths": [
+        4,
+        4
+      ],
+      "search_profile": 2,
+      "response_profile": 1,
+      "physical_pod_accessed": false,
+      "emosa_wire_onboarding": false,
+      "candidate_promoted_to_qualified_profile": false,
+      "remaining": [
+        "Native profile mismatch and mandatory behavior review",
+        "HE/Wi-Fi 6 MCS ordering and capability semantics",
+        "Native shutdown abort",
+        "IEEE 1905 base/amendment inputs and complete wire implementation"
+      ],
+      "specification_references": [
+        "EasyMesh 6.1 section 6.1 p.63",
+        "EasyMesh 6.1 section 7.1 pp.67\u201369",
+        "EasyMesh 6.1 section 17.2.72 Table 95 pp.169\u2013170"
+      ]
+    }
   },
   "synthetic_radio_scope_preparation": {
     "implementation": "src/emosa/opensync/radio_scope.py",
@@ -1032,5 +1060,6 @@
       "Native profile/request/capability compatibility and IEEE 1905 processing",
       "Actual unchanged-pod capability evidence and independently observed behavior"
     ]
-  }
+  },
+  "first_complete_experiment_contract": "doc/guides/first-wire-experiment.md"
 }

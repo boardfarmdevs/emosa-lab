@@ -11,6 +11,11 @@ missed an agent reset loop; the final selections use the native HAL fix and
 stricter operational/stability checks described below. Preliminary passes and
 failed attempts remain in the history. Native shutdown still aborts.
 
+For the separate candidate HAL experiment and a wired sole-fronthaul policy,
+follow [native compatibility](../../doc/guides/native-compatibility.md). It uses
+isolated build directories and temporary libraries with restoration. The pinned
+baseline artifacts and the default two-BSS policy remain the reference above.
+
 ## Acceptance scope
 
 Both Ethernet and mac80211_hwsim wireless backhaul must pass:

@@ -1,0 +1,10 @@
+{
+  "baseline_library_sha256": "0dfa6fab56238bf0817c9a3299e671ab6ca66798858179b9262dd3d285d261b1",
+  "candidate_library_sha256": "20c15dd8122f51511423b55445a14c368ffa7e0dbea5d24ba5a0ddc0be151bd5",
+  "policy": "sole-fronthaul",
+  "emosa_wire_onboarding": false,
+  "physical_pod_accessed": false,
+  "run_exit_code": 0,
+  "abnormal_shutdown": true,
+  "baseline_restored": true
+}

@@ -209,3 +209,17 @@ example can then cross-check the result. Repeating the same symmetric native
 sample cannot distinguish these choices. The mapper continues withholding the
 entire HE technology set. The separately referenced Figure-9-901 representation
 in Table 95 supports the bounded `0xAA` role mapping without resolving Table 33.
+
+## Native candidate follow-up
+
+The [isolated native compatibility trial](../guides/native-compatibility.md) now
+demonstrates a rebuilt HAL whose advertised `0xAA` MCS length matches its reported
+HE width flags. Nine injected parser cases pass; the original library fails six.
+Two native wired runs with a sole-fronthaul agent policy pass client and inventory
+checks and contain one M2 with no M8. The native Profile-2 Search/Profile-1 Response
+mismatch and shutdown abort remain. No MCS ordering, complete request mapping,
+profile conformance or EMOSA wire claim follows from the length fix.
+
+The [acquisition checklist](specification-acquisition.md) includes the exact
+clarification questions for Table 33 and Controller Capability Table 117. This
+keeps the remaining source questions together with document access requests.

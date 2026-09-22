@@ -1,0 +1,55 @@
+--- a/common/beerocks/bwl/shared/nl80211_client_impl.cpp
++++ b/common/beerocks/bwl/shared/nl80211_client_impl.cpp
+@@ -225,7 +225,6 @@
+     bool width_80    = false;
+     bool width_80_80 = false;
+     bool width_160   = false;
+-    int mcs_nss_size = 0;
+ 
+     radio_info = {};
+ 
+@@ -347,7 +346,6 @@
+                     band.vht_capability = nla_get_u32(tb_band[NL80211_BAND_ATTR_VHT_CAPA]);
+ 
+                     width_80 = true;
+-                    mcs_nss_size += 4;
+ 
+                     switch ((band.vht_capability >> 2) & 3) {
+                     case 2:
+@@ -422,7 +420,6 @@
+                                 band.he_capability    = band.he_capability | (1 << 8);
+                                 band.he_capability    = band.he_capability | (1 << 9);
+                                 band.wifi6_capability = band.wifi6_capability | ((uint64_t)3 << 44);
+-                                mcs_nss_size += 8;
+ 
+                                 //UL and DL OFDMA can be supported 74 users with 160 and 80 + 80.
+                                 band.wifi6_capability = band.wifi6_capability | (74 << 8);
+@@ -431,8 +428,7 @@
+                             case 1:
+                                 band.he_capability    = band.he_capability | (1 << 8);
+                                 band.wifi6_capability = band.wifi6_capability | ((uint64_t)1 << 45);
+-                                mcs_nss_size += 4;
+-
++
+                                 band.wifi6_capability = band.wifi6_capability | (74 << 8);
+                                 band.wifi6_capability = band.wifi6_capability | (74 << 16);
+                                 break;
+@@ -449,8 +445,17 @@
+                                 }
+                                 break;
+                             }
++                            // Every HE width set includes the <=80 MHz Rx/Tx pair, even
++                            // without VHT (e.g. 2.4 GHz). Derive the length from the
++                            // advertised HE widths, not a counter shared across bands,
++                            // iftypes or split wiphy replies. Preserve the existing
++                            // band's width aggregation; replace rather than OR length.
++                            const uint64_t mcs_nss_size =
++                                4 + 4 * ((band.wifi6_capability >> 45) & 1) +
++                                4 * ((band.wifi6_capability >> 44) & 1);
+                             band.wifi6_capability =
+-                                band.wifi6_capability | ((uint64_t)mcs_nss_size << 40);
++                                (band.wifi6_capability & ~(uint64_t(0xf) << 40)) |
++                                (mcs_nss_size << 40);
+ 
+                             /**
+ 			     * check whether UL_MU_MIMO and UL_MU_MIMO plus OFDMA

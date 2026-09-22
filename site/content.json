@@ -11,7 +11,7 @@
         "Exercise discovery, capabilities and selected provisioning procedures.",
         "Retain captures from an independent bridge observation point."
       ],
-      "next": "Use the recorded peer build and explicit BSS-policy readiness sequence for EMOSA discovery/WSC after P0. Keep the native shutdown aborts and unguarded-restart failure visible when assessing reliability.",
+      "next": "Two isolated native wired trials passed with one agent BSS, one M2 and no M8; original runtime restored. Resolve the retained profile mismatch, capability ordering and shutdown abort before qualification.",
       "path": "deploy/peer/README.md"
     },
     "agent": {
@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Selected Wi-Fi 6 role inputs now map through the read-only two-pod service. Next: resolve 0x88 conversion and independent peer vectors, complete HE/report procedures, native compatibility and IEEE processing.",
+      "next": "Follow the first complete wire experiment contract. IEEE 1905 inputs, complete capability/profile rules and actual wire implementation remain pending; physical qualification needs the private connection path.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -543,10 +543,28 @@
       "title": "Wi-Fi 6 role mapping evidence",
       "category": "Service and protocol integration",
       "description": "Exact asymmetric role values, input failures, two-pod isolation and installed-wheel recovery; complete HE reporting and physical onboarding remain pending."
+    },
+    {
+      "path": "doc/guides/native-compatibility.md",
+      "title": "Isolated native compatibility trial",
+      "category": "Service and protocol integration",
+      "description": "Build and test the native HE length fix, use a sole-fronthaul policy, observe clients and restore the pinned runtime."
+    },
+    {
+      "path": "doc/guides/first-wire-experiment.md",
+      "title": "First complete wire experiment contract",
+      "category": "Service and protocol integration",
+      "description": "Declared one-pod/radio/BSS target, causal evidence, negative controls, five-step status and physical-pod handoff."
+    },
+    {
+      "path": "doc/evidence/native-compatibility/summary.json",
+      "title": "Native compatibility candidate evidence",
+      "category": "Service and protocol integration",
+      "description": "Actual parser regressions, two clean wired trials, one-M2 captures, client evidence, setup failures and verified runtime restoration."
     }
   ],
   "suite_evidence": {
-    "unit": "wifi6-inputs/unit-results.xml",
-    "ovsdb": "wifi6-inputs/ovsdb-results.xml"
+    "unit": "native-compatibility/unit-results.xml",
+    "ovsdb": "native-compatibility/ovsdb-results.xml"
   }
 }

@@ -3635,6 +3635,20 @@ before implementation. A parser test, packet capture, controller inventory entry
 and client response each answer different parts of the question. The final
 chain needs them to agree for the same request, device, build and run.
 
+Use the [first complete wire experiment](first-wire-experiment.md) as the detailed
+acceptance contract: it fixes the initial wired-management, one-pod/radio/BSS
+scope, explains which observations must belong to the same request, and lists
+the negative controls and physical substitution steps. Its five-step status table
+separates completed preparation from the unavailable wire and hardware evidence.
+
+The [native compatibility walkthrough](native-compatibility.md) provides the next
+runnable specialist exercise. It rebuilds an isolated C++ HAL fix, tests the
+actual parser, temporarily runs the native peers with a one-BSS policy, captures
+client behavior and restores the original runtime. Two retained runs passed
+functionally with one M2 and no M8. The profile mismatch and shutdown abort still
+matter; the walkthrough explains why those results do not qualify EMOSA's wire
+path or a physical OpenSync pod.
+
 | Priority | Work | Evidence required before calling it complete |
 | --- | --- | --- |
 | 1 | Acquire pending IEEE/WFA inputs and complete the proposed procedure/profile audit | Exact editions, authorized provenance, applicable clauses/errata and independent vectors in the protocol matrix |
@@ -3677,3 +3691,9 @@ were checked against the existing harnesses and retained qualification records;
 creating a fresh VM or rerunning radio/native qualification was not part of this
 documentation change. Fresh machines must still obtain the named external runtime
 inputs and qualify their actual environment as described above.
+
+The later [native compatibility follow-up](../evidence/native-compatibility/summary.json)
+adds two newly executed wired candidate trials, actual C++ parser regressions,
+independent packet checks, current Python suites and the blocked wire-gate check.
+Those results apply to the isolated candidate described in its guide. They do
+not supersede the earlier baseline or complete physical-pod qualification.

@@ -66,6 +66,26 @@ external acquisition priorities.
 
 ## Already obtained or available for independent work
 
+### Include these clarification questions in the same acquisition effort
+
+The documents and source ambiguities can be resolved together. No request has
+been sent to IEEE, Wi-Fi Alliance or another party by this agent. Keep authorized
+answers and worked examples outside Git until their redistribution terms are
+reviewed; record their provenance and digest in the protocol matrix.
+
+| Source | Precise clarification needed |
+| --- | --- |
+| EasyMesh 6.1 §17.2.10 Table 33, compared with IEEE 802.11-2024 Figure 9-901 | Define `0x88` Rx/Tx direction, width-group ordering and the unit of big-endian reordering. Supply asymmetric 4-, 8- and 12-octet examples that distinguish word, pair and whole-field reversal. The alternatives are listed in the [procedure audit](procedure-audit.md#unresolved-he-field-reordering). |
+| EasyMesh 6.1 §17.2.94 Table 117 | Resolve the overlap between the named Early AP Capability bit and the stated reserved-bit range. We must not silently repair a normative table when encoding controller capability. |
+| EasyMesh reference [10] and §17.2.59 Table 82 | Supply the selected Data Elements 3.0 package, including the referenced spreadsheet, to establish CollectionInterval units and valid values. |
+| EasyMesh reference [22] and §13 | Identify the applicable Security Requirements revision and provide authorized access for the selected WPA2-Personal procedure review. |
+
+The [isolated native HE-length fix](../guides/native-compatibility.md) does not
+resolve these questions. Native source and captures can cross-check an answer;
+they do not replace its normative authority.
+
+### Available documents
+
 | Document | Status |
 | --- | --- |
 | IEEE Std 802.11-2024 — `80211-2024.pdf` | Local PDF verified and hashed; selected operating-class and capability structures inspected. Full field/profile review remains pending. |

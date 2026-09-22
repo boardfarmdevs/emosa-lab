@@ -1,0 +1,52 @@
+{
+  "mode": "wired",
+  "kind": "clean",
+  "started_utc": "2026-09-22T05:57:24.107146+00:00",
+  "status": "passed",
+  "phases": {
+    "em-baseline-controller-initial-ap": {
+      "seconds": 0.199,
+      "budget": 15
+    },
+    "em-baseline-agent-initial-ap": {
+      "seconds": 0.09,
+      "budget": 15
+    },
+    "platform": {
+      "seconds": 1.097,
+      "budget": 15
+    },
+    "controller-ap": {
+      "seconds": 13.228,
+      "budget": 120
+    },
+    "onboarding": {
+      "seconds": 71.662,
+      "budget": 120
+    },
+    "clients-01-em-baseline-wired": {
+      "seconds": 2.207,
+      "budget": 30
+    },
+    "clients-01-em-baseline-wifi": {
+      "seconds": 2.176,
+      "budget": 30
+    },
+    "clients-02-em-baseline-wired": {
+      "seconds": 2.201,
+      "budget": 30
+    },
+    "clients-02-em-baseline-wifi": {
+      "seconds": 2.175,
+      "budget": 30
+    }
+  },
+  "acceptance_version": 2,
+  "post_client_stability_seconds": 30,
+  "policy": "sole-fronthaul",
+  "stability": {
+    "seconds": 30.328,
+    "samples": 22
+  },
+  "elapsed_seconds": 146.708
+}

@@ -20,6 +20,13 @@ rule and a two-M2-plus-M8 request outside the narrow mapping. Resolve the named
 controller policy/build intersection alongside P0. These observations do not
 select a fully qualified profile or enable the missing wire connection.
 
+The [isolated compatibility experiment](../guides/native-compatibility.md) now
+fixes the candidate HAL's HE MCS length and records two clean native wired runs
+with one agent BSS, one M2 and no M8. Independent clients passed; original
+libraries were restored. Profile 2/1 mismatch, MCS ordering and native shutdown
+abort remain open. The [first complete wire experiment contract](../guides/first-wire-experiment.md)
+defines the next causal integration and its five-step completion status.
+
 The [EasyMesh value components](../protocol/easymesh-payloads.md) now implement
 service lists, Radio Identifier, Operational BSS and profile values, with an
 offline inspection CLI and independent native-capture checks. The

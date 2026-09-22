@@ -37,3 +37,10 @@ if(NOT BWL_TYPE STREQUAL "NL80211")
     message(FATAL_ERROR "Native baseline requires the real nl80211 HAL")
 endif()
 set_target_properties(bwl PROPERTIES INSTALL_RPATH "$ORIGIN")
+if(EMOSA_HE_REGRESSION)
+    add_executable(emosa-he-length "${EMOSA_HE_REGRESSION}")
+    target_include_directories(emosa-he-length PRIVATE
+        "${PEER_SOURCE}/common/beerocks/bwl/shared"
+        "${PEER_SOURCE}/common/beerocks/bwl/include")
+    target_link_libraries(emosa-he-length PRIVATE bwl)
+endif()

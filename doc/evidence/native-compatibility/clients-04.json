@@ -1,0 +1,142 @@
+{
+  "nonce": "4227a8d5-8632-4a9a-9f12-4e74f63cb698",
+  "clients": {
+    "em-baseline-wired": {
+      "client": "em-baseline-wired",
+      "interface": "eth1",
+      "addresses": [
+        {
+          "ifindex": 14,
+          "link_index": 15,
+          "ifname": "eth1",
+          "flags": [
+            "BROADCAST",
+            "MULTICAST",
+            "UP",
+            "LOWER_UP"
+          ],
+          "mtu": 1500,
+          "qdisc": "noqueue",
+          "operstate": "UP",
+          "group": "default",
+          "txqlen": 1000,
+          "link_type": "ether",
+          "address": "00:16:3e:79:0a:a8",
+          "broadcast": "ff:ff:ff:ff:ff:ff",
+          "link_netnsid": 0,
+          "addr_info": [
+            {
+              "family": "inet",
+              "local": "192.0.2.20",
+              "prefixlen": 24,
+              "scope": "global",
+              "label": "eth1",
+              "valid_life_time": 4294967295,
+              "preferred_life_time": 4294967295
+            },
+            {
+              "family": "inet6",
+              "local": "fe80::216:3eff:fe79:aa8",
+              "prefixlen": 64,
+              "scope": "link",
+              "valid_life_time": 4294967295,
+              "preferred_life_time": 4294967295
+            }
+          ]
+        }
+      ],
+      "routes": [
+        {
+          "dst": "192.0.2.0/24",
+          "dev": "eth1",
+          "protocol": "kernel",
+          "scope": "link",
+          "prefsrc": "192.0.2.20",
+          "flags": []
+        }
+      ],
+      "ping": "PING 192.0.2.1 (192.0.2.1) from 192.0.2.20 eth1: 56(84) bytes of data.\n64 bytes from 192.0.2.1: icmp_seq=1 ttl=64 time=0.051 ms\n64 bytes from 192.0.2.1: icmp_seq=2 ttl=64 time=0.112 ms\n64 bytes from 192.0.2.1: icmp_seq=3 ttl=64 time=0.120 ms\n\n--- 192.0.2.1 ping statistics ---\n3 packets transmitted, 3 received, 0% packet loss, time 2036ms\nrtt min/avg/max/mdev = 0.051/0.094/0.120/0.030 ms\n",
+      "application": {
+        "nonce": "4227a8d5-8632-4a9a-9f12-4e74f63cb698",
+        "attempt": "clean-01",
+        "peer": "192.0.2.20"
+      }
+    },
+    "em-baseline-wifi": {
+      "client": "em-baseline-wifi",
+      "interface": "wlan0",
+      "addresses": [
+        {
+          "ifindex": 18,
+          "ifname": "wlan0",
+          "flags": [
+            "BROADCAST",
+            "MULTICAST",
+            "UP",
+            "LOWER_UP"
+          ],
+          "mtu": 1500,
+          "qdisc": "noqueue",
+          "operstate": "UP",
+          "group": "default",
+          "txqlen": 1000,
+          "link_type": "ether",
+          "address": "02:00:00:00:02:00",
+          "broadcast": "ff:ff:ff:ff:ff:ff",
+          "addr_info": [
+            {
+              "family": "inet",
+              "local": "192.0.2.21",
+              "prefixlen": 24,
+              "scope": "global",
+              "label": "wlan0",
+              "valid_life_time": 4294967295,
+              "preferred_life_time": 4294967295
+            },
+            {
+              "family": "inet6",
+              "local": "fe80::ff:fe00:200",
+              "prefixlen": 64,
+              "scope": "link",
+              "valid_life_time": 4294967295,
+              "preferred_life_time": 4294967295
+            }
+          ]
+        }
+      ],
+      "routes": [
+        {
+          "dst": "192.0.2.0/24",
+          "dev": "wlan0",
+          "protocol": "kernel",
+          "scope": "link",
+          "prefsrc": "192.0.2.21",
+          "flags": []
+        }
+      ],
+      "supplicant": {
+        "bssid": "02:00:00:ec:02:00",
+        "freq": "2437",
+        "ssid": "emosa-baseline-provisioned",
+        "id": "0",
+        "mode": "station",
+        "wifi_generation": "4",
+        "pairwise_cipher": "CCMP",
+        "group_cipher": "CCMP",
+        "key_mgmt": "WPA2-PSK",
+        "wpa_state": "COMPLETED",
+        "ip_address": "192.0.2.21",
+        "p2p_device_address": "42:00:00:00:02:00",
+        "address": "02:00:00:00:02:00",
+        "uuid": "a134bcd4-edf6-548b-87e5-49d3aedf9b60"
+      },
+      "link": "Connected to 02:00:00:ec:02:00 (on wlan0)\n\tSSID: emosa-baseline-provisioned\n\tfreq: 2437.0\n\tRX: 87073 bytes (751 packets)\n\tTX: 1795 bytes (19 packets)\n\tsignal: -30 dBm\n\trx bitrate: 13.0 MBit/s MCS 8\n\ttx bitrate: 1.0 MBit/s\n\tbss flags: short-slot-time\n\tdtim period: 2\n\tbeacon int: 100\n",
+      "ping": "PING 192.0.2.1 (192.0.2.1) from 192.0.2.21 wlan0: 56(84) bytes of data.\n64 bytes from 192.0.2.1: icmp_seq=1 ttl=64 time=0.099 ms\n64 bytes from 192.0.2.1: icmp_seq=2 ttl=64 time=0.229 ms\n64 bytes from 192.0.2.1: icmp_seq=3 ttl=64 time=0.209 ms\n\n--- 192.0.2.1 ping statistics ---\n3 packets transmitted, 3 received, 0% packet loss, time 2048ms\nrtt min/avg/max/mdev = 0.099/0.179/0.229/0.057 ms\n",
+      "application": {
+        "nonce": "4227a8d5-8632-4a9a-9f12-4e74f63cb698",
+        "attempt": "clean-01",
+        "peer": "192.0.2.21"
+      }
+    }
+  }
+}

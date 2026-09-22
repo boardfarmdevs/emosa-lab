@@ -17,6 +17,14 @@ and cryptographic checks; actual IEEE messages, exchange state and complete
 radio mapping remain gated. The [radio payload interpreter](../protocol/wsc-radio.md)
 now checks encrypted roles and whole-set candidate scope, without a write path.
 
+The [native compatibility candidate](../guides/native-compatibility.md) now has a
+tested HE-length fix and two wired sole-fronthaul runs. One M2/no M8 narrows the
+observed policy; profile 2/1 mismatch, MCS ordering and shutdown abort remain.
+The [first complete wire experiment contract](../guides/first-wire-experiment.md)
+records the five-step status and the required physical evidence. Data Elements
+3.0 and the WFA table clarification questions are consolidated in the acquisition
+checklist, alongside the two exact IEEE 1905 editions.
+
 The initial user input supplied no selected specification editions or actual pod
 profile. See [the proposed corpus and access details](../protocol/protocol-inputs.md).
 The operator subsequently confirmed that **IEEE Std 1905.1-2013** and

@@ -1,0 +1,8 @@
+{
+  "label": "candidate-sole-fronthaul-01",
+  "status": "refused_before_runtime_mutation",
+  "reason": "Peer reference differs from VM reference",
+  "difference": "Documentation status and qualification description; selected binary/library digests identical",
+  "resolution": "Preserved stale reference and synchronized current checked-in reference across VM and peers; new run label",
+  "raw_private_evidence": "/opt/emosa-baseline/compatibility-runs/candidate-sole-fronthaul-01"
+}

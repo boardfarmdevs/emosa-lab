@@ -8,6 +8,8 @@
 | [Connecting-pod walkthrough](connecting-pod.md) | Run a simulated extender that initiates OVSDB to EMOSA, inspect its diagnostic virtual agent, apply configuration and demonstrate recovery |
 | [Service integration walkthrough](service-integration.md) | Exercise two pods, restore owned radios after reboot, test the actual service with hwsim clients, and prepare the live controller trial |
 | [Onboarding readiness checks](onboarding-readiness.md) | Check complete radio/BSS scope and review the native controller's captured profiles and WSC payload set |
+| [Isolated native compatibility trial](native-compatibility.md) | Rebuild and test the HE-length fix, observe a one-BSS controller policy, and restore the pinned runtime |
+| [First complete wire experiment](first-wire-experiment.md) | Follow the declared target, causal acceptance evidence, remaining implementation sequence and physical-pod handoff |
 | [Offline EasyMesh payload exercise](../protocol/easymesh-payloads.md) | Decode/build selected values and reproduce their independent native-capture checks without a VM or pod |
 | [Stable identities and observed topology](observed-topology.md) | Bind every simulated radio/VIF, inspect a complete State-derived AP value, and test reconnect/row recreation/service restart |
 | [Radio capability inputs](radio-capabilities.md) | Supply explicit evidence-backed synthetic limits, inspect per-radio values, and test withdrawal on changed inputs or observations |

@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "run_id": "run-d977886dc6654ee7",
+  "scenario_id": "provision-one-bss",
+  "execution_status": "blocked",
+  "verdict": "blocked",
+  "interoperability_verdict": "blocked",
+  "manifest": {
+    "software_version": "0.1.0",
+    "git_revision": "9dc3723cb10a7f8cdd953f5e49cf7dced7b9f48d",
+    "source_tree_sha256": "ee56edefec43430a13de02dd1426bf2cf9716d7c21bd986f582072cb18984c2c",
+    "source_hash_scope": "checkout code/contracts/scenarios",
+    "dependencies": {
+      "ovs": "4.0.0",
+      "jsonschema": "4.26.0",
+      "cryptography": "50.0.1"
+    },
+    "python": "3.13.7",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "uv_lock_sha256": "4e61b047439d7320aa55032e1d59690845af09dddd2d20e6269e4cbc32f32894",
+    "scenario": {
+      "schema_version": 1,
+      "id": "provision-one-bss",
+      "purpose": "Pending genuine EasyMesh WSC provisioning; P0 required. No semantic fallback.",
+      "initiating_interface": "easymesh-wire",
+      "required_backend": "any-simulation",
+      "requirements": [
+        "W01",
+        "W02",
+        "W04"
+      ],
+      "prerequisites": [
+        "P0",
+        "synthetic-existing-bss-v1"
+      ],
+      "target_allowlist": [
+        "pod-1"
+      ],
+      "intent": {
+        "pod_id": "pod-1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1",
+        "ssid": "emosa-lab",
+        "secret_ref": "scenario-key",
+        "enabled": true,
+        "security_mode": "wpa2-psk"
+      },
+      "expected": {
+        "state": "OBSERVED_APPLIED",
+        "commit_attribution": "reply",
+        "changed_fields": [
+          "ssid",
+          "wpa_psks[key]"
+        ]
+      },
+      "fault": {
+        "point": "after-config-commit",
+        "action": "none",
+        "duration_seconds": 0
+      },
+      "seed": 7,
+      "repetitions": 1,
+      "deadlines": {
+        "apply_seconds": 30,
+        "overall_seconds": 45
+      },
+      "topology": {
+        "management_path": "private-unix-socket",
+        "target_carries_management": false
+      },
+      "cleanup": "dispose-simulation",
+      "evidence_required": [
+        "events",
+        "observations",
+        "transaction",
+        "pcap"
+      ]
+    },
+    "backend_mode": "ovsdb-sim",
+    "initiating_interface": "easymesh-wire",
+    "trial": 1,
+    "started_at": "2026-09-22T06:00:08.889Z",
+    "mapping_version": "synthetic-existing-bss-v1",
+    "schema_fingerprints": {},
+    "pod_identities": [
+      "pod-1"
+    ],
+    "controller": "not_started",
+    "virtual_agent": null,
+    "topology": {
+      "management_path": "private-unix-socket",
+      "target_carries_management": false
+    },
+    "resource_budget": {
+      "writes_per_pod": 1,
+      "queued_modifying_requests": 0,
+      "ovsdb_requests_per_session": 16,
+      "monitor_rows": 10000
+    },
+    "finished_at": "2026-09-22T06:00:08.899Z"
+  },
+  "checks": [],
+  "coverage": {
+    "selected": [
+      "W01",
+      "W02",
+      "W04"
+    ],
+    "eligible": 0,
+    "attempted": 0,
+    "passing": 0,
+    "omitted": [
+      "all wire, RF, hardware and external-peer acceptance"
+    ]
+  },
+  "operations": [],
+  "timings": {
+    "clock": "single-process-monotonic",
+    "samples": [],
+    "client_recovery": null,
+    "management_interruption": null,
+    "runner_wall_seconds": 0.0061178410542197526
+  },
+  "prerequisites": [
+    {
+      "gate": "P0",
+      "status": "blocked",
+      "reason": "exact normative matrix, independent vectors and wire implementation required"
+    },
+    {
+      "gate": "evidence:pcap",
+      "status": "blocked",
+      "reason": "required evidence cannot be produced by the available component backend"
+    }
+  ],
+  "cleanup": {
+    "status": "completed",
+    "policy": "dispose-simulation",
+    "errors": [],
+    "physical_pod_changes": false
+  },
+  "artifacts": [
+    {
+      "path": "inputs.json",
+      "sha256": "ffb3c3fb47a262ebcef1493bfa791bc47bcd24288acd62cfc796b534eb1adb43",
+      "size": 1200
+    },
+    {
+      "path": "events.json",
+      "sha256": "b53731a752fbb34086a6af3f9caf1f09fac0a5650fd6feccd2aacdf24d41d577",
+      "size": 810
+    },
+    {
+      "path": "observations.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "size": 3
+    }
+  ],
+  "limitations": [
+    "Semantic component testing does not evaluate EasyMesh provisioning or interoperability.",
+    "No physical radio or independent Wi-Fi client evidence.",
+    "Upstream reference schema and synthetic identities do not qualify a pod build.",
+    "Lost-reply injection discards a real response at adapter ingress before interpretation.",
+    "Simulation event triggers are controlled; OS scheduling is not deterministic."
+  ],
+  "seamlessness": {
+    "controller_workflow": "not_evaluated",
+    "pod_compatibility": "not_evaluated",
+    "semantic_accuracy": "not_evaluated",
+    "operational_continuity": "not_evaluated",
+    "timing_and_observability": "not_evaluated"
+  }
+}

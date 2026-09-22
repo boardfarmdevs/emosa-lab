@@ -1456,6 +1456,181 @@
       "path": "wifi6-inputs/wheel-smoke.json",
       "sha256": "ab772d53261c455931ab4d2c6de8847cbdd3a0f0392f5b379520d273b4ededbe",
       "size": 890
+    },
+    {
+      "path": "native-compatibility/browser-result.json",
+      "sha256": "ea13ba933407a71cc3ff1ffc6feec1826c4829ad7a11acf38ae662f0c0cc974e",
+      "size": 227
+    },
+    {
+      "path": "native-compatibility/build-packages.txt",
+      "sha256": "5e732e120990b5e6c7b5b6c3024be2f8297acff61b884a2f1dca43afaa82fccc",
+      "size": 166
+    },
+    {
+      "path": "native-compatibility/build-provenance.json",
+      "sha256": "bd0f5c9340cb349878525342e1ba446958eb58db04583256b35f5a1674a6db47",
+      "size": 1837
+    },
+    {
+      "path": "native-compatibility/capture-check-vm.json",
+      "sha256": "6c363b7d0b96786072a41bfe56da17874e7aee508e32d9b7ce57af507be73d47",
+      "size": 1027
+    },
+    {
+      "path": "native-compatibility/capture-check.json",
+      "sha256": "e0ff26d028c989e6c8320ad9c97fe8eb8aef3e8a21ac53b8d9f6841eca671656",
+      "size": 1018
+    },
+    {
+      "path": "native-compatibility/clients-03.json",
+      "sha256": "73e8aff2c5219d2430ceff7ce73e7b67260045ad5127bbe276615f46a42b8816",
+      "size": 4893
+    },
+    {
+      "path": "native-compatibility/clients-04.json",
+      "sha256": "07a1a01e25acd58c1d3671f82338efd43ab9b0c158fe705c56cf4d3b04ff180b",
+      "size": 4893
+    },
+    {
+      "path": "native-compatibility/documentation-checks.json",
+      "sha256": "1aeed7052720c7cb782ea3c62561b8b443eb6c95d86f656b28e15428d63874d8",
+      "size": 240
+    },
+    {
+      "path": "native-compatibility/ethernet.pcap",
+      "sha256": "331e9f4a58cc78e5c84036d3e24087ebad31891f03c5cb2c45173e145dd2997f",
+      "size": 8942
+    },
+    {
+      "path": "native-compatibility/failed-restoration-02.json",
+      "sha256": "e98e91a3bc3be0fdc1a985499871ee2136a61b4b8b1e937e643a50f13e102fb2",
+      "size": 377
+    },
+    {
+      "path": "native-compatibility/failed-run-02.json",
+      "sha256": "25e4472092bed78f3524105a2a1c54c38d4a539ed4e0abb6194359a17d1eada1",
+      "size": 857
+    },
+    {
+      "path": "native-compatibility/harness-03.json",
+      "sha256": "2be40ddd14126a15656559ccef3d08523092136b22a72cc1d20c093542b4b650",
+      "size": 678
+    },
+    {
+      "path": "native-compatibility/harness-04.json",
+      "sha256": "2be40ddd14126a15656559ccef3d08523092136b22a72cc1d20c093542b4b650",
+      "size": 678
+    },
+    {
+      "path": "native-compatibility/input-check.json",
+      "sha256": "b47f73a88cd5fca173610ebd93c7116747befa168288b686d8de38fd87aff716",
+      "size": 742
+    },
+    {
+      "path": "native-compatibility/inventory-03.json",
+      "sha256": "00d3bcc9c6bc3f5cc0329d97f01a2168ea6d4dd8ad89bf4ad95939fe8c6c7dbc",
+      "size": 31873
+    },
+    {
+      "path": "native-compatibility/inventory-04.json",
+      "sha256": "59f4e77eadff00586eb16a8b34f65604bafccf099527521904bd50792b84d43e",
+      "size": 31874
+    },
+    {
+      "path": "native-compatibility/ovsdb-results.xml",
+      "sha256": "44888ac4d7de2478f3bbc7fe6034b1e2868556bcc0b96804384f4a966964f370",
+      "size": 5379
+    },
+    {
+      "path": "native-compatibility/patches.sha256",
+      "sha256": "06977f56221d18922d5b86a8c5d1cd6f89e609934a3bac6dc531b9d3412782eb",
+      "size": 247
+    },
+    {
+      "path": "native-compatibility/preflight-failure-01.json",
+      "sha256": "9e5a5d489e882723501ef477c60773b53dde8a6b4dd46fa618be783aa165fcc3",
+      "size": 483
+    },
+    {
+      "path": "native-compatibility/private-run-artifact-hashes.json",
+      "sha256": "c50cd442362c8a1684dacdae80425b036724d0e8caa4e32f75f5f6195919bcb6",
+      "size": 13789
+    },
+    {
+      "path": "native-compatibility/regression-before.txt",
+      "sha256": "2f07ef028d4d7213f037675b50ee073be18949985ad486475c4d46c8cb298cbb",
+      "size": 372
+    },
+    {
+      "path": "native-compatibility/regression.txt",
+      "sha256": "1d18884cd9c9a27519fa17b4999f5fef15bce2b4aafb670f2ea02137e93c59c1",
+      "size": 371
+    },
+    {
+      "path": "native-compatibility/restoration-03.json",
+      "sha256": "82829452e21c0a0561a71d0c0520ad2ee9417f19798f2581d5a0726a03f55125",
+      "size": 376
+    },
+    {
+      "path": "native-compatibility/restoration-04.json",
+      "sha256": "82829452e21c0a0561a71d0c0520ad2ee9417f19798f2581d5a0726a03f55125",
+      "size": 376
+    },
+    {
+      "path": "native-compatibility/review-03.json",
+      "sha256": "824563c3f05af6927a67feb916f751ef926733cade4850933c8d020652ed735d",
+      "size": 2904
+    },
+    {
+      "path": "native-compatibility/review-04.json",
+      "sha256": "286c8ce565c22a8faf0dd1a2c8a1aede40bc423a1ff60e0a52d75b05758ed4ca",
+      "size": 2904
+    },
+    {
+      "path": "native-compatibility/run-03.json",
+      "sha256": "1af51440fdbe8e66d6c9041c49167be66e2deec3b23e575a40209f1fcefb2905",
+      "size": 1068
+    },
+    {
+      "path": "native-compatibility/run-04.json",
+      "sha256": "d565d38f01bb6156e147a9d28e13d5dd81239daf62796e1ad423cfb7f5a69976",
+      "size": 1066
+    },
+    {
+      "path": "native-compatibility/shutdown-03.json",
+      "sha256": "45623cd21b1b4ae7c32600c1950f9876a99cc26d8a7b3992839d09f21ea0789e",
+      "size": 2404
+    },
+    {
+      "path": "native-compatibility/shutdown-04.json",
+      "sha256": "260a71bcadba5e16395731cbfef205bc20130d1fa2ed1a26dcf143f4c3d80975",
+      "size": 2404
+    },
+    {
+      "path": "native-compatibility/stability-03.json",
+      "sha256": "ed0ae39f3cd33b6e8ecfa02f7b593cc9260f2304b4b2bce92767233755996cd3",
+      "size": 1094
+    },
+    {
+      "path": "native-compatibility/stability-04.json",
+      "sha256": "93fe44f07b8e5380b9e670aadce9b3d14950f9aea2b7592a5ed90cda871b40d6",
+      "size": 1094
+    },
+    {
+      "path": "native-compatibility/summary.json",
+      "sha256": "80be02d7ec0bf8fe1eb578c54d1f176f917707cb25f15307c491598e5e6f6b3a",
+      "size": 6113
+    },
+    {
+      "path": "native-compatibility/unit-results.xml",
+      "sha256": "74afaef078f7ac16b409c9a972e933b875605abfdca5523682bf7880634e0068",
+      "size": 93285
+    },
+    {
+      "path": "native-compatibility/wire-gate.json",
+      "sha256": "e276c154bcf03b401b0cf97ed1df301956f79e8d64c238fbb06a4f602964fe52",
+      "size": 4945
     }
   ]
 }

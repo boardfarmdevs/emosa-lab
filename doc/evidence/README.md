@@ -15,6 +15,7 @@ for navigation and commands.
 | Sole-radio scope and native capture review | [Run summary](onboarding-readiness/summary.json) |
 | Semantic EMOSA/OVSDB/hwsim integration | [Run summary](radio-manager/summary.json) |
 | Native controller–agent baseline | [Run summary](peer-baseline/summary.json) |
+| Isolated native HE-length fix and sole-fronthaul policy | [Candidate build, two live trials and retained failures](native-compatibility/summary.json) |
 | Initial independent-controller experiment | [Qualification summary](peer/qualification-summary.json) |
 | Standalone hwsim smoke | [Qualification summary](hwsim/qualification-summary.json) |
 | Native OpenSync R0 | [Qualification](native/qualification.json) and [application/recovery summary](native/path-summary.json) |
