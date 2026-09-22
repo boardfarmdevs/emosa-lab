@@ -269,3 +269,41 @@ the captured byte and initial device entry; no native source or binary was
 changed in this trial. A candidate fix still needs behavior validation and a
 separate rebuild. See the retained source hashes and
 [evidence](../evidence/native-discovery/README.md).
+
+## Counter-capability candidate and feature applicability review, 2026-09-22
+
+The [isolated native controller experiment](../guides/controller-counter-candidate.md)
+sets the existing bit-7 field in the real Search-response builder. The unchanged
+`db::recalculate_attr_to_byte_units` converts the three defined byte-counter
+units correctly for all 12 selected C++ regression inputs, including maximum
+32-bit counters. Actual candidate Responses carry `0xC0`; the retained baseline
+carries `0x40`. Native shared libraries and EMOSA's admission code are unchanged.
+This is a selected native conversion and advertisement result, not a complete
+metrics procedure or promotion of the candidate to the baseline.
+
+The same local EasyMesh 6.1 PDF was rechecked at §13/§13.1 p.97, §17.1.2 p.111,
+§17.2.67/Table 90 p.167 and §18/Table 133 pp.197–198. Record these separately:
+
+| Source | Meaning for the selected non-DPP review |
+| --- | --- |
+| §17.1.2 | Lists one Device 1905 Layer Security Capability in the Response. Read this with feature applicability, not alone. |
+| §13.1 | Connects the specified security-capability advertisement to devices indicating DPP Onboarding support. |
+| §18 normative text | Provides the rule to omit corresponding capability TLVs when a feature is unsupported. This is the basis for a feature-specific omission decision. |
+| Table 133 | Informative profile applicability summary; distinguishes Profile-3 and conditional later Profile-1 security behavior. It does not by itself prove a particular peer's supported features. |
+| Table 90 | `00 00 00` identifies DPP, HMAC-SHA256 and AES-SIV. It is not an encoding for “no security support.” |
+
+Consequently, a missing `0xA9` is **not automatically a controller defect for
+every Profile-1 exchange**. The probe's current `security_capability_absent`
+diagnostic records that observation conservatively. Next establish and validate
+an explicit non-DPP feature contract for both endpoints and encode the §18
+omission decision in admission. Do not add a dummy TLV, infer a full feature set
+from a profile number, or treat that diagnostic as evidence that DPP is supported.
+No new document acquisition is needed to read this omission rule.
+
+The separate Table 117 issue remains: the named Early bit uses bit 6 while the
+printed reserved range also includes bit 6. The candidate retains the baseline's
+Early bit; it only changes unambiguous bit 7. Automatic Early/AP reporting and
+complete profile admission remain closed pending their explicit procedure
+decision and the outstanding capability dependencies. Then join admitted
+discovery to WSC and require actual native radio/BSS inventory and independent
+client observations. No full-wire or physical acceptance flag is changed here.

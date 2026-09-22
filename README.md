@@ -37,6 +37,10 @@ The [native discovery probe](doc/guides/native-discovery.md) now sends EMOSA's
 Profile-1 Search to the real controller and observes its Response and newly
 created device entry. That entry has no radios/BSSs yet; the missing controller
 capability fields and full admission remain open.
+An [isolated native controller candidate](doc/guides/controller-counter-candidate.md)
+now corrects the KiB/MiB advertisement, checks the native conversion behavior and
+compares captured responses before restoring the baseline. Full controller-to-pod
+onboarding remains the next integration boundary.
 
 ## Architecture
 

@@ -31,6 +31,7 @@ jobs:
           python3 scripts/check-controller-probe.py
           --directory doc/evidence/native-discovery/run-06
           --directory doc/evidence/native-discovery/run-07
+      - run: python3 scripts/check-controller-candidate.py
       - run: >-
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01

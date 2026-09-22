@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-22",
+  "base_revision": "42edad128408a296cf55042f18f6a97b472441de",
+  "scope": "Isolated native controller counter flag correction; complete admission and onboarding still pending",
+  "candidate_sha256": "4ea936ede9a3d332923ec3ca6d714aee978b1f9208da7550bb48b536f0a23a9a",
+  "retained_runs": {
+    "candidate-01": "counter-pass-02",
+    "candidate-02": "counter-pass-03",
+    "restored-baseline": "counter-restored-01",
+    "failure-restoration.json": "counter-failure-02"
+  },
+  "native_counter_regression": {
+    "passed": 12,
+    "implementation": "Actual unchanged native db::recalculate_attr_to_byte_units",
+    "scope": "Three defined units, zero/one/typical/maximum 32-bit counters; not a full metrics-message test"
+  },
+  "observed": {
+    "baseline_flags_hex": "40",
+    "candidate_flags_hex": "c0",
+    "restored_baseline_flags_hex": "40",
+    "response_profile": 1,
+    "discovered_device_entry": true,
+    "radio_count": 0,
+    "bss_count": 0,
+    "security_capability_present": false
+  },
+  "source_sha256": {
+    "deploy/peer-baseline/compatibility/build-controller.py": "2105b0733e7112547adfa01f01ea66faa66d2558388a72150c6a27aa586c2f67",
+    "deploy/peer-baseline/compatibility/controller-candidate.py": "bdf3c423943a4418e0d1c28b04635ce19e8fd130b60e0f5779453e8dd56279b1",
+    "deploy/peer-baseline/compatibility/counter-units.cpp": "43ee476d30737010b9f70691cb6c74cecc089652bab38122bc39cdeb1afdeb5a",
+    "deploy/peer-baseline/controller-overlay/CMakeLists.txt": "12d9be4bc31f0aea8ff0555437b4e8505e399d78bae299847af0e28a3a308dcf",
+    "deploy/peer-baseline/patches/0004-controller-counter-capability.patch": "d070bdf880224a6f702c5f951ebb8ad25f3a499871236bd30f41262dfdc73082",
+    "scripts/check-controller-candidate.py": "778f83bf8f2afe3e163c9d412329c262c49f613b0b83d6a42420cf6b5e54136e",
+    "scripts/check-controller-probe.py": "fca0e1d43951180cf69ae25c73a9e94e8ad72f33ef80d646fecead155de457da",
+    "src/emosa/wire/controller_probe.py": "3dcb67e8c37d11316ad7bcf71c4cd4639b9e6993ce005da1ef33b0c4b653ecec",
+    "src/emosa/wire/autoconfiguration.py": "b42f7d3d2be9e44c0a12c68926c198a670f352855f0cb6ebdfb09079d3960e4d"
+  },
+  "unit_tests": {
+    "command": "uv run pytest -m unit -q",
+    "passed": 937,
+    "deselected": 55,
+    "new_python_unit_tests": 0,
+    "private_log_sha256": "9469f52b26c1cbf619bc78fd9a16d62c2e57d508a4d249f602280a07d2837af4"
+  },
+  "development_findings": [
+    "Initial overlay needed non-exported transport/common headers and explicit mapfcommon linkage. Added exact Ambiorix header commits and installed two missing host runtime dependencies.",
+    "The archive contains an unused external_toolchain.cfg parent symlink. Verified extraction excludes that path; overlay uses the host compiler.",
+    "counter-pass-01 captured c0 but wrapper restoration collided with the discovery shutdown archive name. Failed attempt retained privately; baseline manually restored and both reference/executable digests verified. Separate restoration archive added; repeated injected failure and two clean candidate runs selected."
+  ],
+  "preserved_known_defects": [
+    "Native controller/helper shutdown aborts are retained in discovery results"
+  ],
+  "baseline_restored": true,
+  "candidate_promoted_to_baseline": false,
+  "emosa_admission_changed": false,
+  "native_shared_libraries_changed": false,
+  "complete_wire_gate": {
+    "exit_code": 5,
+    "execution_status": "blocked",
+    "operations": []
+  },
+  "wsc_started": false,
+  "operations_created": 0,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "security_applicability_review": "EasyMesh 6.1 section 18 supplies an unsupported-feature capability omission rule; explicit non-DPP feature contract and admission encoding remain next. Zero-filled 0xA9 would promise actual DPP/security capabilities.",
+  "next": [
+    "Qualify explicit non-DPP feature contract and resolve Early/AP capability sequence",
+    "Integrate admitted native discovery/capabilities/WSC with tested OVSDB/hwsim/client path",
+    "Require complete native radio/BSS inventory in the same run",
+    "Qualify unchanged physical pod and independent physical client"
+  ]
+}

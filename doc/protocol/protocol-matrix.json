@@ -1689,5 +1689,33 @@
     "full_procedure_gate_satisfied": false,
     "controller_onboarding_proven": false,
     "physical_pod_proven": false
+  },
+  "native_controller_counter_candidate": {
+    "guide": "doc/guides/controller-counter-candidate.md",
+    "evidence": "doc/evidence/native-controller-counter/summary.json",
+    "patch": "deploy/peer-baseline/patches/0004-controller-counter-capability.patch",
+    "build": "deploy/peer-baseline/compatibility/build-controller.py",
+    "runner": "deploy/peer-baseline/compatibility/controller-candidate.py",
+    "independent_check": "scripts/check-controller-candidate.py",
+    "source_sections": [
+      "EasyMesh 6.1 6.1 p.63; 17.2.94 Table 117 p.182 (KiB/MiB bit 7)",
+      "EasyMesh 6.1 9.1 pp.79-80; 17.2.48 Table 71 pp.157-158 (counter units)",
+      "EasyMesh 6.1 13.1 p.97; 17.1.2 p.111; 17.2.67 Table 90 p.167; 18/Table 133 pp.197-198 (security feature applicability)"
+    ],
+    "scope": "Isolated native executable candidate; pinned libraries and EMOSA admission unchanged",
+    "candidate_flag_hex": "c0",
+    "baseline_flag_hex": "40",
+    "native_counter_regression_cases": 12,
+    "security_review": "Section 18 supplies an unsupported-feature omission rule; missing 0xA9 is not automatically a defect for every Profile-1 peer. Explicit non-DPP feature contract/admission decision pending; zero-filled 0xA9 would advertise real security algorithms.",
+    "baseline_promoted": false,
+    "operations_created": 0,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "next": [
+      "Validate and encode explicit non-DPP feature applicability",
+      "Resolve Early/AP capability admission and outstanding dependencies",
+      "Join native discovery and WSC to existing radio/client path",
+      "Require correct native radio/BSS inventory; qualify unchanged physical pod"
+    ]
   }
 }

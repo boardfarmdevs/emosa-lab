@@ -175,6 +175,13 @@ Observe the real controller answering EMOSA's Profile-1 Search and creating a
 device entry. Its zero radio/BSS counts and remaining response capability issues
 explain why discovery visibility is still short of completed onboarding.
 
+Then follow the [isolated controller fix](controller-counter-candidate.md) and
+[manual §13.15](team-manual.md#1315-fix-and-compare-one-native-controller-capability).
+Build on HOST, run the native conversion checks, stage in the VM, exercise
+post-install failure recovery, and compare baseline/candidate/restored packets.
+Explain why `40 → c0 → 40` establishes a corrected flag and successful restoration,
+while zero represented radios/BSSs still leave the onboarding objective open.
+
 **Checkpoint:** distinguish a reassembled message, a correlated discovery response,
 an authenticated WSC candidate and a durable component operation. Explain why
 `wsc-component` does not mean the regular service has admitted a real controller.

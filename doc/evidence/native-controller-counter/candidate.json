@@ -1,0 +1,73 @@
+{
+  "scope": "Native controller counter advertisement candidate; not admitted onboarding",
+  "input_archives": {
+    "prplmesh-patched-source.tar.gz": "ebc771d43279cdb6b1cf5e2c09eb51d66ef3a8afab6b97f4561439d2606ac549",
+    "prpl-install-nl80211-6.0.0.tar.gz": "a98a6903fb9db1494ece0c292dd85c7d4d8ff2f570b5b85768ed6f299f72fb1f",
+    "prpl-runtime-deps-6.0.0.tar.gz": "ad912dc63b7d2188096bd6c0a42978590c4a4b82b0590da1198514e122cec4d2"
+  },
+  "header_dependencies": {
+    "scope": "Header-only dependencies matching the pinned runtime library versions; no Ambiorix libraries rebuilt",
+    "libraries": [
+      {
+        "name": "libamxb",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxb.git",
+        "commit": "e918ad3db7dfc1bf30c35c2f41215234c1af878a"
+      },
+      {
+        "name": "libamxc",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxc.git",
+        "commit": "3cd324a664d2735eeec4ad4978eb040a851c6928"
+      },
+      {
+        "name": "libamxd",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxd.git",
+        "commit": "46c6d88064e38f261023d4015fb9ef4b49e04292"
+      },
+      {
+        "name": "libamxo",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxo.git",
+        "commit": "859db3fb1397215605db9050fedb86dfd0ba4788"
+      },
+      {
+        "name": "libamxp",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxp.git",
+        "commit": "873b53069855414d35b821fcb46ed0f8ae108b3e"
+      },
+      {
+        "name": "libamxrt",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxrt.git",
+        "commit": "8ac23096b0797a203c12425646c195600dd583ec"
+      },
+      {
+        "name": "libamxs",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxs.git",
+        "commit": "1caf2c44031711351b36033ad59ce73187b9c616"
+      }
+    ]
+  },
+  "patch_sha256": "d070bdf880224a6f702c5f951ebb8ad25f3a499871236bd30f41262dfdc73082",
+  "candidate_sha256": "4ea936ede9a3d332923ec3ca6d714aee978b1f9208da7550bb48b536f0a23a9a",
+  "unstripped_candidate_sha256": "6e104d14c91efcf3927a254f2df10842778c0862de3e1019499462e2d1cead5b",
+  "source_sha256": {
+    "controller/src/beerocks/master/controller.cpp": "66d865f25cd486c0bda8258540395828d6ea8319e031867d5c9fc18c6bca0077",
+    "controller/src/beerocks/master/db/db.cpp": "67cfc5754e5f8b542ab6b8b2a46700838007931a5c9809f68903a6bed62458d7"
+  },
+  "recipe_sha256": {
+    "build-controller.py": "2105b0733e7112547adfa01f01ea66faa66d2558388a72150c6a27aa586c2f67",
+    "counter-units.cpp": "43ee476d30737010b9f70691cb6c74cecc089652bab38122bc39cdeb1afdeb5a",
+    "controller-headers.json": "952ad9fa51452ad5f022dc6c2ae0ee6bac8799ed4e7afbb0086915ccddd4c0da",
+    "CMakeLists.txt": "12d9be4bc31f0aea8ff0555437b4e8505e399d78bae299847af0e28a3a308dcf"
+  },
+  "tools": {
+    "cmake": "cmake version 3.31.6",
+    "g++": "g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0",
+    "git": "git version 2.53.0",
+    "strip": "GNU strip (GNU Binutils for Ubuntu) 2.38"
+  },
+  "counter_regression": {
+    "passed": 12,
+    "implementation": "native db::recalculate_attr_to_byte_units",
+    "scope": "bytes/KiB/MiB; zero, one, typical and maximum 32-bit counter"
+  },
+  "installed_in_peer": false
+}

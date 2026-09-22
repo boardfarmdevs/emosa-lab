@@ -92,6 +92,11 @@ Profile-1 Search: the pinned controller answers with Profile 1 and creates a
 device entry, with zero radios/BSSs. Thus the earlier Profile-2/1 mismatch is not
 reproduced by this particular Search. Missing KiB/MiB and security capability
 fields still prevent full admission; the new entry does not establish onboarding.
+The [isolated controller candidate](controller-counter-candidate.md) corrects
+the KiB/MiB advertisement and restores the pinned controller after measurement.
+It does not activate the complete procedure. Security-capability applicability
+must use §13.1 and §18's unsupported-feature omission rule in the selected
+non-DPP contract; the absence diagnostic alone is not a direction to add `0xA9`.
 
 ## 3. Complete the available preparation exercises
 

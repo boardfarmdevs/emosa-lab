@@ -2796,6 +2796,136 @@
       "path": "native-discovery/wire-gate.json",
       "sha256": "0330949ecfc391aef1ec5e8088822e9c7270548bdfc342c3afe9eb9a0bd18447",
       "size": 451
+    },
+    {
+      "path": "native-controller-counter/README.md",
+      "sha256": "1e239f59987d4ffedbc2b5919871316911d4c3591b49b15d0a4be4c7cf7a5ed7",
+      "size": 3075
+    },
+    {
+      "path": "native-controller-counter/candidate-01/candidate-trial.json",
+      "sha256": "182808daeae4df6cd88718cf4152708672ec38e533822a5e5a86019bc51eb237",
+      "size": 1485
+    },
+    {
+      "path": "native-controller-counter/candidate-01/controller-after.json",
+      "sha256": "617c4a41c5ad29ad6d24654e721341aab8e74129145f93af9862f670797c2a6c",
+      "size": 14887
+    },
+    {
+      "path": "native-controller-counter/candidate-01/controller-before.json",
+      "sha256": "05d2a132707c049fb45b74a43b8d11037f35582f9463440a6acd136edb04452e",
+      "size": 10353
+    },
+    {
+      "path": "native-controller-counter/candidate-01/ethernet.pcap",
+      "sha256": "3d18a384e47d57086b3b6f6c961d9e8e02da00801fd1cd331a28f3c3dbbf4620",
+      "size": 172
+    },
+    {
+      "path": "native-controller-counter/candidate-01/probe.json",
+      "sha256": "af76face773c54341c20a5e7bd9b07548f10712e2f2e26aa143648aed35124b7",
+      "size": 801
+    },
+    {
+      "path": "native-controller-counter/candidate-01/reference-candidate.json",
+      "sha256": "32be632a46683a4ed844a30087f8efe6a803b34c2ef04fbcaf483851a574d776",
+      "size": 2177
+    },
+    {
+      "path": "native-controller-counter/candidate-01/result.json",
+      "sha256": "7ad9108f15a814199e80476a3a988f3c6118b6f0e66790b339bd2c817257a216",
+      "size": 3952
+    },
+    {
+      "path": "native-controller-counter/candidate-02/candidate-trial.json",
+      "sha256": "7caadb025e126299022cd57139bfda9b6b0b6b7df0ffbe46e0c7108589dd7810",
+      "size": 1485
+    },
+    {
+      "path": "native-controller-counter/candidate-02/controller-after.json",
+      "sha256": "8f7587e5d5fb0060a40ef2c8366b53a17f28a7b687d2fe86237fbdf1e8918bc9",
+      "size": 14887
+    },
+    {
+      "path": "native-controller-counter/candidate-02/controller-before.json",
+      "sha256": "c51bbcad21589309e1e8c3972ecad0dcb037c748335cff0b0ea086bf5ceaafcb",
+      "size": 10353
+    },
+    {
+      "path": "native-controller-counter/candidate-02/ethernet.pcap",
+      "sha256": "ff5dc7cb8d11f460da5ef54f463091dd254d6932eae671790de972c650d20879",
+      "size": 172
+    },
+    {
+      "path": "native-controller-counter/candidate-02/probe.json",
+      "sha256": "af76face773c54341c20a5e7bd9b07548f10712e2f2e26aa143648aed35124b7",
+      "size": 801
+    },
+    {
+      "path": "native-controller-counter/candidate-02/reference-candidate.json",
+      "sha256": "0d5797ffdf2376621530f89fd9370dd06b596d207896276817c5a64ec65f1634",
+      "size": 2177
+    },
+    {
+      "path": "native-controller-counter/candidate-02/result.json",
+      "sha256": "e39c878f63144348acacda697351b6fcd7605f7b3190d98b5eb445e94177c97e",
+      "size": 3952
+    },
+    {
+      "path": "native-controller-counter/candidate.json",
+      "sha256": "5f3fbe4ed7a354008e4fc82dfc7257cb9aac6dff573e1f717b3c26a7e6157f58",
+      "size": 3428
+    },
+    {
+      "path": "native-controller-counter/failure-restoration.json",
+      "sha256": "8b3ed860f213d3a698c65abb67e4a2e44ff9f519f0ea7f22d77755c05353c42f",
+      "size": 606
+    },
+    {
+      "path": "native-controller-counter/independent-check.json",
+      "sha256": "8bd7ca3bf9e74dfac59e0d48b49be4c1a233cd1073a0f39c3b7bb09e679b5993",
+      "size": 2690
+    },
+    {
+      "path": "native-controller-counter/independent-vm.json",
+      "sha256": "585d43e57b8189258be13f2b7ab54d5765227737eab1a91dc2c4c61ac25c13a9",
+      "size": 2032
+    },
+    {
+      "path": "native-controller-counter/restored-baseline/controller-after.json",
+      "sha256": "5f167e7a9a39d99281670e03222b57fb1c2829a61fb2941f7883db3a2ce800c7",
+      "size": 14887
+    },
+    {
+      "path": "native-controller-counter/restored-baseline/controller-before.json",
+      "sha256": "58cc6a45e9d8c8d03c7eda5b2f8582d69abc6d7384f8ebb247fdad85435b760f",
+      "size": 10353
+    },
+    {
+      "path": "native-controller-counter/restored-baseline/ethernet.pcap",
+      "sha256": "75a02e1eb87455cf3e8baca437f071dfbad4dc123b5de22270d0bebc2cd8a46e",
+      "size": 172
+    },
+    {
+      "path": "native-controller-counter/restored-baseline/probe.json",
+      "sha256": "090fe57296e499a24a0071bd891730a21524c360588b13b365bef6fdc34f1510",
+      "size": 861
+    },
+    {
+      "path": "native-controller-counter/restored-baseline/result.json",
+      "sha256": "a3c11413334740bb8a797d6ff5cd0ee371bad1409e1a3ef9666f67a304d05b05",
+      "size": 4020
+    },
+    {
+      "path": "native-controller-counter/summary.json",
+      "sha256": "63a94d841a35f248aebaaa2192912637e22e7c2d0b3bcabe5d725919fadf805a",
+      "size": 4199
+    },
+    {
+      "path": "native-controller-counter/wire-gate.json",
+      "sha256": "4ed20447a56153fd009bf24523586f873f3c0591da8ededa6319c015163a88c6",
+      "size": 4944
     }
   ]
 }

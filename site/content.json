@@ -693,6 +693,18 @@
       "title": "Optional external IEEE 1905 components",
       "description": "Pinned source review of meshComms, Technicolor, RDK Rust and pyieee1905; component fit, adaptation work and proposed evaluation gates. No integration selected.",
       "category": "Architecture"
+    },
+    {
+      "path": "doc/guides/controller-counter-candidate.md",
+      "title": "Native controller counter-capability candidate",
+      "description": "Build the C++ fix, run 12 native conversion checks, compare actual responses, exercise failure recovery and restore the baseline. Admission remains pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/native-controller-counter/README.md",
+      "title": "Controller candidate comparison evidence",
+      "description": "Two corrected-flag captures, restored-baseline capture, post-install failure recovery and recorded build provenance; no radio/BSS onboarding.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {

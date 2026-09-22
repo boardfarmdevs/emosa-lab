@@ -40,6 +40,12 @@ The [native discovery probe](../guides/native-discovery.md) now confirms a match
 Profile-1 Search/Response with EMOSA and a controller-created initial device
 entry. It has no represented radios or BSSs. Remaining capability omissions,
 complete admission and the causal WSC-to-radio integration are still required.
+The [native controller candidate](../guides/controller-counter-candidate.md)
+now fixes the missing KiB/MiB advertisement in an isolated C++ build. Its native
+counter regression and differential discovery experiment address one defect;
+the pinned baseline is restored afterward. Next apply the unsupported-feature
+rule to an explicit non-DPP contract, resolve Early/AP capability admission, then
+join the tested WSC path to complete native radio/BSS inventory and client proof.
 
 The [onboarding readiness checks](../guides/onboarding-readiness.md) now add
 strict synthetic sole-radio scope admission and offline review of native captures.

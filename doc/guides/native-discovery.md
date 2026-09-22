@@ -117,7 +117,9 @@ WSC to the running virtual-agent coordinator. The pinned controller source
 already exposes a KiB/MiB support field but its Search-response builder sets only
 the Early flag. A candidate fix must validate the associated behavior and be
 rebuilt/tested separately; it must not simply fabricate a compatible response in
-EMOSA.
+EMOSA. The [counter-capability candidate exercise](controller-counter-candidate.md)
+now supplies that isolated build, native conversion regression, differential
+packet measurement and automatic baseline restoration.
 
 After admission is qualified, reuse the tested
 [packet-to-Wi-Fi WSC path](../protocol/wsc-wire-radio.md). Require the controller

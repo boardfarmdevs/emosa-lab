@@ -3424,6 +3424,39 @@ represented radio/BSS. This exercise establishes the first two. The next step
 must resolve capability admission and join the tested WSC/radio path, with the
 controller's complete inventory and independent client evidence in the same run.
 
+### 13.15 Fix and compare one native controller capability
+
+A **capability flag** is a promise about supported behavior. The baseline native
+controller omits the KiB/MiB flag although it implements the corresponding
+counter conversion. The [controller candidate guide](controller-counter-candidate.md)
+teaches how to fix that defect in C++, build only the controller against the
+pinned libraries, and compare the actual packets without changing EMOSA's checks.
+
+Build on HOST in a new private directory. The build runs 12 checks against the
+native counter-conversion function, including the maximum 32-bit input. Stage
+only the small executable and provenance in the VM. First inject a failure just
+after installation: that command is expected to fail, but its result must show
+`baseline_restored: true`. Then run a normal candidate trial with a fresh label.
+The runner saves the original executable, marks the temporary native reference,
+collects the discovery exchange and restores the baseline after stopping services.
+
+Compare baseline `controller_flags_hex: 40` with candidate `c0`. The added bit
+means the controller now advertises its counter support. Check the restored
+baseline too: it must return to `40`, which demonstrates that the change was
+isolated. The C++ conversion checks establish numerical behavior; the capture
+establishes the advertisement. Neither is a full traffic-metrics test.
+
+Security Capability remains absent. Do not add a zero-filled TLV to silence that
+diagnostic: its zero values mean specific DPP and cryptographic capabilities.
+The specification's unsupported-feature omission rule must be applied to an
+explicit non-DPP feature contract. The procedure review and automatic Early/AP
+capability sequence remain prerequisites to the admitted WSC integration.
+
+**Learning checkpoint:** explain why this patch belongs to the native test peer,
+why EMOSA must continue to check the received response, and why a corrected flag
+still leaves zero radio/BSS onboarding evidence. Follow the linked guide's build,
+failure, packet-comparison and restoration steps before claiming this result.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

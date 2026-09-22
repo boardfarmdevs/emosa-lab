@@ -1,0 +1,10 @@
+--- a/controller/src/beerocks/master/controller.cpp
++++ b/controller/src/beerocks/master/controller.cpp
+@@ -825,6 +825,7 @@
+             LOG(ERROR) << "addClass wfa_map::tlvControllerCapability failed";
+             return false;
+         }
++        tlvControllerCapability->flags().kibmib_counter_supported = 1;
+         tlvControllerCapability->flags().early_ap_capability = 1;
+     }
+ 
