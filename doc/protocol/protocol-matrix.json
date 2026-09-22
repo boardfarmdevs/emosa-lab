@@ -137,10 +137,10 @@
     "IEEE base and amendment full text, amendment effects and applicable corrections are unavailable.",
     "A complete mandatory/optional/conditional field and profile-applicability audit is pending; current entries are partial source-backed research.",
     "Byte-level lengths, ordering, duplicate detection, message-ID rollover, all timers/retries, reassembly limits and malformed/unknown-field behavior are not yet frozen.",
-    "IEEE 802.11-2024 reference [1] must be accessible wherever capability fields require its operating-class and radio-capability definitions; no such values may be fabricated.",
+    "IEEE 802.11-2024 is verified and selected definitions reviewed; full field mappings and actual target capability/regulatory evidence remain pending.",
     "Independent full-message packet vectors and peer interpretation remain pending. Independent WSC crypto and M1/M2 payload vectors are retained separately; they contain no IEEE frames.",
     "No physical-pod mapping or independent-controller qualification has been completed.",
-    "IEEE 802.3-2015 Ethernet link/frame definitions referenced by EasyMesh 5.2.6 and 14.1.3 require review.",
+    "IEEE 802.3-2015 remains unavailable; supplied 802.3-2022 Clause 3 was reviewed without selecting a normative substitution. Actual link-state/frame-interface qualification remains pending.",
     "Wi-Fi Alliance Security Requirements referenced by EasyMesh section 13 have no obtained full text or resolved edition."
   ],
   "document_ambiguities": [
@@ -392,7 +392,7 @@
       ],
       "remaining_gaps": [
         "Mandatory feature/field interpretation is pending complete profile audit.",
-        "IEEE 802.11 capability references and actual represented-pod capability evidence remain pending."
+        "IEEE 802.11-2024 selected references are now inspected; complete field mapping and actual represented-pod capability evidence remain pending."
       ],
       "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
       "available_rule_audit": "doc/protocol/procedure-audit.md"
@@ -586,19 +586,35 @@
       "edition": "IEEE Std 802.11-2024",
       "reference": "https://standards.ieee.org/ieee/802.11/10548/",
       "access_route": "https://ieeexplore.ieee.org/browse/standards/get-program/page/series?id=68",
-      "access_status": "operator_obtained_local_path_and_content_review_pending",
+      "access_status": "operator_supplied_pdf_verified_hashed_selected_clauses_reviewed",
       "source_sections": [
         "EasyMesh 6.1 section 2 reference [1]",
         "EasyMesh 6.1 section 9.1 and applicable 17.2 capability fields"
       ],
       "affected_work": "operating-class and actual radio capability encoding",
-      "content_sha256": null,
+      "content_sha256": "4b263f76cc12a6aad0e8edbf65e5fc9ab9772520cdc1c0aac994b85449c9bd55",
       "operator_report": {
         "date": "2026-09-21",
         "filename": "80211-2024.pdf",
         "reported_edition": "IEEE Std 802.11-2024",
-        "absolute_path_supplied": false,
-        "artifact_inspected": false
+        "absolute_path_supplied": true,
+        "artifact_inspected": true
+      },
+      "bytes": 53718551,
+      "pdf_pages": 5956,
+      "review_document": "doc/protocol/ieee-media-review.md",
+      "reviewed_sections": [
+        "Annex E.1 printed p.5648; Table E-4 starting p.5656; 2.4 GHz entries p.5658",
+        "9.4.2.52 printed pp.1120–1121",
+        "9.4.2.54.1–2 starting printed p.1122",
+        "9.4.2.156.1 printed p.1292",
+        "9.4.2.247.1 printed p.1437"
+      ],
+      "review_scope": "Selected definitions and element structures; not full field/profile audit or actual pod capability qualification",
+      "corrections_check": {
+        "date": "2026-09-21",
+        "source": "https://standards.ieee.org/ieee/802.11/10548/",
+        "finding": "Main 2024 publisher entry lists amendments but no separate errata/corrigendum link; not an exhaustive maintenance audit."
       }
     },
     {
@@ -613,8 +629,9 @@
       ],
       "affected_work": "logical Ethernet link-driven onboarding and applicable frame handling",
       "content_sha256": null,
-      "candidate_comparison_document": "operator-reported-ieee8023-2022",
-      "substitution_status": "not_selected_relevant_clause_comparison_and_cited_edition_access_unresolved"
+      "candidate_comparison_document": "ieee8023-2022-comparison",
+      "substitution_status": "not_selected_2022_clause3_reviewed_direct_2015_comparison_unavailable",
+      "review_document": "doc/protocol/ieee-media-review.md"
     },
     {
       "id": "wfa-security-requirements",
@@ -683,19 +700,48 @@
     "physical_qualification": false,
     "wire_admission": false
   },
-  "operator_reported_comparison_documents": [
+  "comparison_documents": [
     {
-      "id": "operator-reported-ieee8023-2022",
+      "id": "ieee8023-2022-comparison",
       "reported_edition": "IEEE Std 802.3-2022",
       "filename": "IEEE_Standard_for_Ethernet.pdf",
       "reported_on": "2026-09-21",
-      "access_status": "operator_obtained_local_path_and_content_review_pending",
-      "absolute_path_supplied": false,
-      "artifact_inspected": false,
-      "content_sha256": null,
+      "access_status": "operator_supplied_pdf_verified_hashed_selected_clause3_review",
+      "absolute_path_supplied": true,
+      "artifact_inspected": true,
+      "content_sha256": "e49257a2d250128afe894763a1216ed732d75c35d4e722d6407df4b123e6d425",
       "selected_as_normative_replacement": false,
       "comparison_target": "ieee8023-2015",
-      "next_review": "Inspect edition and relevant Ethernet link/frame clauses; document correspondence and gaps before deciding whether to substitute or acquire the cited edition."
+      "next_review": "Resolve correspondence to the cited 2015 edition and qualify actual platform link/frame observations. No normative substitution selected.",
+      "verified_edition": "IEEE Std 802.3-2022",
+      "reference": "https://standards.ieee.org/ieee/802.3/10422/",
+      "bytes": 54473053,
+      "pdf_pages": 7025,
+      "review_document": "doc/protocol/ieee-media-review.md",
+      "reviewed_sections": [
+        "3.1.1–2 printed pp.239–240",
+        "3.2.3–6 printed pp.240–242",
+        "3.2.7–9 printed pp.242–243"
+      ],
+      "corrections_check": {
+        "date": "2026-09-21",
+        "errata_reference": "https://standards.ieee.org/wp-content/uploads/2024/02/802.3-2022_errata.pdf",
+        "errata_date": "2024-02-09",
+        "status": "publisher_browser_copy_reviewed_local_download_HTTP_403_no_local_hash",
+        "finding": "Corrections concern Clauses 30 and 78; no Clause 3 correction listed.",
+        "corrigendum": "802.3-2022/Cor 1-2024",
+        "corrigendum_status": "publisher scope inspected: automotive PHY Clauses 149/165; full text not obtained; revisit if applicable"
+      }
     }
-  ]
+  ],
+  "independent_work_while_ieee1905_pending": {
+    "available_authorities": [
+      "Wi-Fi EasyMesh 6.1 for its fully specified extensions and procedures",
+      "WPS 2.0.10 for selected WSC payload/authentication components",
+      "IEEE 802.11-2024 for referenced radio definitions"
+    ],
+    "permitted_scope": "Implement and independently test standalone components whose normative definitions are complete in the available sources; continue semantic service/radio tests and native peer observations.",
+    "boundary": "No guessed IEEE base rules, no P0 freeze, no complete wire onboarding or physical acceptance claim from component tests.",
+    "document": "doc/protocol/ieee-media-review.md"
+  }
 }

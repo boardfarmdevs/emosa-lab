@@ -2894,9 +2894,12 @@ of selecting incompatible editions independently for each new feature.
 [specification-acquisition.md](../protocol/specification-acquisition.md) is the single access
 checklist. Exact **IEEE 1905.1-2013** and **IEEE 1905.1a-2014** remain pending
 external inputs, with no authorized local copies or subscription mechanism.
-Other required/applicable items include IEEE 802.11-2024, IEEE 802.3-2015,
-Wi-Fi Alliance Security Requirements with revision to identify, and conditional
-references/errata identified there.
+IEEE 802.11-2024 is now obtained, verified and hashed. The supplied Ethernet
+document is IEEE 802.3-2022; equivalence to the cited IEEE 802.3-2015 remains
+unresolved. The [media input review](../protocol/ieee-media-review.md) identifies
+the selected radio and Ethernet clauses inspected so far. Wi-Fi Alliance Security
+Requirements with revision to identify and conditional references/corrections
+remain on the acquisition checklist.
 
 EasyMesh 6.1 and WPS 2.0.10 publisher PDFs were obtained and hashed outside Git.
 Selected WSC payload rules use them; the complete Profile-1 procedure proposal

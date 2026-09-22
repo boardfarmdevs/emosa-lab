@@ -453,6 +453,12 @@
       "title": "Onboarding readiness evidence",
       "category": "Service and protocol integration",
       "description": "Stricter service/hwsim run and matching native-capture findings under two tshark versions; wire and physical proof pending."
+    },
+    {
+      "path": "doc/protocol/ieee-media-review.md",
+      "title": "IEEE radio and Ethernet input review",
+      "category": "Protocol components",
+      "description": "Verified operator-supplied 802.11-2024 and 802.3-2022 artifacts, selected clause references and remaining edition/IEEE 1905 gaps."
     }
   ],
   "suite_evidence": {

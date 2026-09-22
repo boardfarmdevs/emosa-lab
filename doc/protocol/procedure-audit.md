@@ -74,6 +74,13 @@ review. Values below must not be confused with qualified values for a real pod.
 | Radio Advanced Capabilities | Type `0xBE`; six-octet RUID and feature bits for combined BSS/traffic separation and supported QoS functions. | §17.2.52 Table 75 p.160 | Truthful feature evidence and interpretation with §7.1/§9.1/§18. |
 | WSC authentication | Group-5 DH input padded to 192 bytes; KDK binds N1, enrollee MAC and N2; separate derived keys; randomized AES-CBC wrapping with verified Key Wrap Authenticator. | WPS §7.3 pp.51–53, §7.5 p.57 | Independent crypto vectors already exist; complete trusted protocol exchange does not. |
 
+The [IEEE media input review](ieee-media-review.md) now records verified access to
+802.11-2024, including selected Annex E/operating-class and capability-structure
+references. This closes that document's access gap; actual target values and
+complete field mappings remain pending. The supplied Ethernet document is
+802.3-2022, with selected Clause 3 definitions reviewed. Equivalence to the
+802.3-2015 edition cited by EasyMesh has not been established.
+
 ## Ambiguities retained instead of silently repaired
 
 1. §17.1.1 permits zero/one Supported/Searched Service entries, while §6.1
