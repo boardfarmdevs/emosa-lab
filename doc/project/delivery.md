@@ -7,6 +7,18 @@ evaluation tooling and a read-only physical-pod preparation command. It does
 Every architecture requirement and acceptance row is listed in
 `traceability.json`; verification is scoped to the recorded mode.
 
+## IEEE envelope and discovery/WSC increment
+
+Both IEEE 1905 PDFs are obtained. The [envelope component](../protocol/ieee1905-envelope.md)
+implements bounded Ethernet/CMDU transport and inspection. The
+[autoconfiguration component](../protocol/autoconfiguration.md) adds selected
+Search/Response and M1/M2 exchanges, explicit peer/radio generation binding,
+complete-request checks, duplicate handling and expiration. Retained native
+traffic exposes profile and capability gaps. No operation engine or pod writes
+are enabled by these components; live topology/capability/coordinator procedures
+and qualification remain incomplete. Current evidence is in the
+[exchange collection](../evidence/autoconfiguration/README.md).
+
 ## Secure fleet and clean reproduction increment
 
 The [secure-fleet workflow](../guides/secure-fleet.md) adds authenticated
@@ -123,8 +135,9 @@ fabricated.
 P0 research proposes **IEEE 1905.1-2013 + 1905.1a-2014, EasyMesh 6.1 and WPS
 2.0.10**, with a Profile-1 procedure subset. The WFA PDFs were obtained from the
 publisher and hashed; the proposal is not a frozen selection. IEEE base/amendment
-and applicable 802.11-2024 text still need lawful access. Complete the normative
-rule matrix and independent packet/crypto vectors before I3/I4. See
+and 802.11-2024 texts are now obtained and hashed; selected clauses and bounded
+components have been implemented. Complete the remaining normative procedure
+matrix, profile qualification and endpoint/operation integration for I3/I4. See
 `../protocol/protocol-inputs.md` for authoritative links, sections and document ambiguities.
 
 The WSC radio-wide BSS semantics are a concrete scope constraint. Qualify a radio

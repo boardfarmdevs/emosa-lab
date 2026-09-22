@@ -42,13 +42,14 @@ profile or modify the native binaries.
 ## Message inclusion and applicability
 
 “One” below describes the WFA rule for the specified circumstance. Base IEEE
-TLVs remain additional and unreviewed. Feature-dependent fields must be checked
+TLVs remain additional; selected Search/Response/WSC fields are now reviewed in
+[autoconfiguration](autoconfiguration.md), while the full procedure audit remains open. Feature-dependent fields must be checked
 against the corresponding procedure and §18, rather than emitted with invented
 zero-valued capabilities.
 
 | Message / circumstance | WFA requirements reviewed | Source | EMOSA disposition |
 | --- | --- | --- | --- |
-| Agent searches for a controller | Registrar role; agent in supported services; controller in searched services; one profile TLV for the highest fully implemented profile. A device not meeting Profile-2/3 uses Profile-1 and includes supported feature bits in Profile-2 AP Capability. | §6.1 p.63; §17.1.1 p.111 | Service names/profile semantics reviewed; IEEE role/band fields, transport, trust and actual supported features remain pending. |
+| Agent searches for a controller | Registrar role; agent in supported services; controller in searched services; one profile TLV for the highest fully implemented profile. A device not meeting Profile-2/3 uses Profile-1 and includes supported feature bits in Profile-2 AP Capability. | §6.1 p.63; §17.1.1 p.111 | Selected base/extension Search fields and Response correlation now implemented; trusted link, qualified profile and actual feature behavior remain pending. |
 | Controller responds to that search | Registrar role, controller service, profile response matching the discovery rules; Controller Capability with KiB/MiB support and, when no DPP chirp was received, early capability support. The message list also includes Device 1905 Layer Security Capability; resolve feature applicability with §18. | §6.1 p.63; §17.1.2 p.111 | Must inspect the real peer response; neither an empty reply nor a presumed older response qualifies the trial. |
 | Topology Query | Include profile information; obtain the remaining query structure from IEEE. | §6.2 pp.63–64; §17.1.38 p.116; §18 p.197 | No query encoder or response correlation implemented. |
 | Agent Topology Response | Supported services, AP Operational BSS, profile; Associated Clients when direct clients exist. The message list also names BSS Configuration Report and conditional backhaul/MLD/TID information. | §6.2 p.64; §17.1.4 pp.111–112 | Local inventory provides some semantic facts, but lacks qualified complete topology, association time, MLD/backhaul semantics and wire encoding. |
@@ -56,10 +57,10 @@ zero-valued capabilities.
 | AP Capability Report: core | AP Capability; Radio Basic Capabilities for every AP radio; Metric Collection Interval; Device Inventory; supported-feature TLVs under the Profile-1 rule. | §9.1 pp.79–80; §17.1.7 p.112 | Actual resource/capability evidence and complete applicability review required. Local config limits cannot be advertised as radio capabilities. |
 | AP Capability Report: technology | HT/VHT capability TLVs for radios supporting each technology; HE plus Wi-Fi 6 per HE radio; Wi-Fi 7/EHT information when supported. Distinct virtual radios have distinct RUIDs and truthful per-radio capability data. | §9.1 pp.79–80; §17.1.7 p.112 | IEEE 802.11-2024 and qualified radio inventory required. An hwsim radio is not evidence about physical pod hardware. |
 | AP Capability Report: other features | Review AKM Suite, Channel Scan, Device 1905 Layer Security, CAC, Profile-2 AP Capability and conditional Radio Advanced Capabilities with §9.1 and §18. Unsupported feature capability TLVs are omitted under §18. | §9.1 pp.79–80; §17.1.7 p.112; §18 pp.197–198 | No blanket “include everything” or “omit every newer TLV” policy. A future emitter needs a qualified feature-by-feature decision. |
-| Agent WSC M1 envelope | One Radio Basic Capabilities, one WSC carrying M1, one Profile-2 AP Capability and one Radio Advanced Capabilities; separate exchange per radio. M1 MAC is the represented AL MAC. | §7.1 p.67; §17.1.3 p.111 | M1 payload component exists. Complete envelope, qualified RUID/capabilities and exchange lifecycle remain pending. |
+| Agent WSC M1 envelope | One Radio Basic Capabilities, one WSC carrying M1, one Profile-2 AP Capability and one Radio Advanced Capabilities; separate exchange per radio. M1 MAC is the represented AL MAC. | §7.1 p.67; §17.1.3 p.111 | Selected complete M1 envelope and bounded exchange lifetime implemented; qualified capabilities, early report and live coordinator admission remain pending. |
 | Controller WSC M2 envelope | One Radio Identifier and one or more WSC/M2 payloads; count cannot exceed the reported radio limit; RUID matches the initiating radio. Review conditional M8, VLAN/traffic-separation, MLD, RSN and advanced BSS configuration TLVs. | §7.1 pp.67–69; §17.1.3 p.111 | Authenticate and interpret the entire request before mapping. No supported partial application of a larger radio request. |
 | M2 response and complete radio configuration | Controller response within one second; unique N2 for each M2; configure the requested BSS set and remove unmatched existing BSSs. Teardown indicates zero BSSs. | §7.1 pp.67–69 | Components validate M2 sets and distinguish teardown. Existing-BSS patch cannot provide general create/delete/teardown semantics. Sole-BSS scope still needs qualification. |
-| M2 roles and credentials | Fronthaul/backhaul/teardown roles live in the WFA Multi-AP extension within encrypted ConfigData. Authenticate settings before releasing a candidate. | §7.1 pp.68–69 Table 20; WPS §7.2–3, §7.5, §8.3.9 Table 20 | Implemented bounded crypto/payload/role components; caller-to-controller/radio binding and replay protection are still missing. |
+| M2 roles and credentials | Fronthaul/backhaul/teardown roles live in the WFA Multi-AP extension within encrypted ConfigData. Authenticate settings before releasing a candidate. | §7.1 pp.68–69 Table 20; WPS §7.2–3, §7.5, §8.3.9 Table 20 | Bounded peer/link-generation, RUID and M1-transcript checks now compose with payload/role validation; live trust and durable operation binding remain pending. |
 | BSS index and companion TLVs | Optional BSS_Index immediately precedes Authenticator; uniqueness within a radio; companion configuration binds using its index. A nonzero BSSID takes precedence in a TLV containing both. | §7.1 p.67 Table 19 | Payload placement/index checks exist. Complete companion-TLV mapping is unsupported and must not be discarded. |
 | Autoconfiguration Renew | Per-radio WSC response within one second; retain policy not explicitly updated. Unicast transmission and possible two-second multicast fallback rely on the referenced IEEE procedures. | §7.1 p.69; §17.1.72 p.121 | Add to the implemented subset if the chosen controller requires it. No guessed IEEE timer/retransmission implementation. |
 
@@ -81,9 +82,10 @@ have independent native numeric-field examples; older dissector feature labels
 are explicitly insufficient to establish the EasyMesh 6.1 semantics.
 
 These are factual field summaries, **not a complete message encoder contract**. Outer
-CMDU framing, TLV sequencing/end markers, base field byte order, fragmentation,
-unknown-field processing and duplicate/replay handling still require the IEEE
-review. Values below must not be confused with qualified values for a real pod.
+CMDU framing, TLV sequencing/end markers, base field byte order and bounded
+fragmentation now have the [IEEE envelope review](ieee1905-envelope.md). Selected
+exchange/replay rules are in [autoconfiguration](autoconfiguration.md); complete
+procedure applicability and coordinator integration remain pending. Values below must not be confused with qualified values for a real pod.
 
 | Field/TLV | Definition reviewed | Source | Remaining input |
 | --- | --- | --- | --- |
@@ -115,9 +117,9 @@ complete field mappings remain pending. The supplied Ethernet document is
    an Autoconfiguration Search message. Do not silently rewrite that reference
    into a Topology Query requirement; obtain clarification if the trial depends
    on that interpretation.
-4. §17.1.3 points to IEEE §6.3.8 for additions to WSC. The IEEE full text is
-   unavailable, so this pointer is recorded without treating it as a verified
-   WSC-envelope definition.
+4. **Resolved with the supplied IEEE base on 2026-09-22:** §17.1.3 points to
+   IEEE §6.3.8, which is Response. The actual WSC message is IEEE §6.3.9 and
+   its TLV is §6.4.18. The implementation uses those reviewed base clauses.
 5. §9.1/§17.1.7 and §18 must be read together for newer feature capability
    TLVs. The structural message list alone does not establish support or permit
    invented capability data. The full feature-field audit remains open.
@@ -149,13 +151,14 @@ actual peer negotiation, traffic-statistics reporting or ODH delivery is added.
 
 ## What remains before wire code can be enabled
 
-Obtain **IEEE 1905.1-2013 and IEEE 1905.1a-2014**, resolve applicable corrections,
-and finish the exact base fields, Ethernet rules, addressing, MID lifecycle,
-fragments, duplicate rules, timers and failure behavior. Resolve dependent
+The **IEEE 1905.1-2013 and IEEE 1905.1a-2014** PDFs are obtained, hashed and
+selected framing/discovery/WSC rules implemented. Continue the full procedure
+and corrections review, including trusted-link admission, topology, capability
+reports, scheduling and durable exchange/operation correlation. Resolve dependent
 capability/security documents in the [single acquisition checklist](specification-acquisition.md).
 Then qualify the actual peer/profile intersection and represented complete-radio
-scope, bind the existing authenticated payload components to an exchange, and
-validate independently generated full-message positive and negative vectors.
+scope, integrate the now-tested bounded exchanges into the running coordinator,
+and retain independent full-path positive and negative evidence.
 
 The first live controller trial deliberately retains a **negative control**:
 the adapter's local directory contains the simulated virtual agent, while native
@@ -224,3 +227,13 @@ profile conformance or EMOSA wire claim follows from the length fix.
 The [acquisition checklist](specification-acquisition.md) includes the exact
 clarification questions for Table 33 and Controller Capability Table 117. This
 keeps the remaining source questions together with document access requests.
+
+## Native discovery follow-up, 2026-09-22
+
+The [exchange walkthrough](autoconfiguration.md) exposes the retained controller
+capability byte `0x40`, independently checked in capture frame 2. Under EasyMesh
+6.1 §6.1/Table 117, KiB/MiB bit 7 is absent. Device 1905 Layer Security Capability
+is also absent, with feature applicability still pending. Early capability
+reporting (§5.2.2 p.28) precedes M1 when requested; Table 117’s bit-6/reserved
+overlap remains an unresolved source issue. These are additional peer/profile
+work items, not permission to omit obligations from EMOSA.

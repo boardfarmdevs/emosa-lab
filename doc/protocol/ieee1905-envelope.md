@@ -38,9 +38,10 @@ flowchart LR
     W --> O[Guarded operation engine]
 ```
 
-The implemented path ends at inspection. The future procedure handler must
-validate its required/conditional TLVs, derive peer identity correctly, bind the
-exchange to a radio and preserve operation idempotency. A parser accepting bytes
+The [subsequent exchange component](autoconfiguration.md) now constructs Search/M1
+and checks selected Response/M2 fields, peer/radio correlation and replay lifetime.
+The live coordinator still needs complete required/conditional procedures,
+trusted peer admission and durable operation idempotency. A parser accepting bytes
 does not mean those bytes describe a valid, supported or authorized procedure.
 
 ## 2. Review the exact rules implemented
@@ -71,8 +72,9 @@ The review also resolves a WFA cross-reference: the IEEE WSC message is
 **§6.3.9**, its TLV is **§6.4.18**, and the AP configuration procedure is
 **§10.1.2**. Section 6.3.8 is the Search Response. The base WSC procedure assigns
 a new MID; do not generalize Search/Response MID copying to WSC. The complete
-EasyMesh-specific exchange rules still need to be composed with the existing
-WPS authentication and radio-scope components.
+EasyMesh-specific [bounded exchange component](autoconfiguration.md) now composes
+the payload authentication with selected peer/radio checks; endpoint integration
+and complete profile admission remain pending.
 
 ## 3. Inspect native traffic on HOST
 
@@ -93,8 +95,10 @@ frame 4 has different AL and interface MAC addresses. That is valid and explains
 why a future peer tracker cannot equate every Ethernet source with an AL address.
 
 Each output item includes message type, MID, fragment count and TLV types/lengths.
-`procedure_validation` normally says `not_performed`; only base Topology Discovery
-gets an additional field check. `operations_created` stays zero and
+`procedure_validation` normally says `not_performed`; base Topology Discovery and
+selected Search/Response fields get additional checks. The
+`autoconfiguration_pairs` summary exposes the native discovery profile mismatch
+and pending controller capabilities. `operations_created` stays zero and
 `onboarding_proven` stays false. No WSC values, decrypted settings or credentials
 are printed. The second command covers malformed input, reserved fields, fragment
 reordering/conflicts, limits, expiration, MID rollover and independent vectors.

@@ -1,0 +1,1 @@
+Independent hostap wsc-messages: 1 cases match retained expected bytes

@@ -6,6 +6,7 @@ import struct
 from pathlib import Path
 
 from emosa.errors import EmosaError, Reason
+from emosa.wire.autoconfiguration import parse_response, parse_search
 from emosa.wire.cmdu import ETHERTYPE, MULTICAST, Reassembler, invalid
 
 NAMES = {
@@ -60,7 +61,59 @@ def describe(message):
     if message.message_type == 0:
         result["discovery"] = discovery(message)
         result["procedure_validation"] = "base_topology_discovery_only"
+    elif message.message_type == 7:
+        search = parse_search(message)
+        result["autoconfiguration"] = {
+            "al_mac": search.al_mac.hex(":"),
+            "band": search.band,
+            "advertised_profile": search.profile,
+        }
+        result["procedure_validation"] = "selected_search_fields_only"
+    elif message.message_type == 8:
+        response = parse_response(message)
+        result["autoconfiguration"] = {
+            "band": response.band,
+            "advertised_profile": response.profile,
+            "pending_requirements": list(response.pending_requirements),
+        }
+        result["procedure_validation"] = "selected_response_fields_only"
     return result
+
+
+def discovery_pairs(messages):
+    """Read-only capture correlation; matching a MID/MAC never authenticates a peer."""
+    searches, pairs = {}, []
+    for message in messages:
+        facts = message.get("autoconfiguration")
+        if facts is None:
+            continue
+        if message["message_type"] == "0x0007":
+            key = (facts["al_mac"], message["mid"])
+            if key not in searches and len(searches) >= 4096:
+                searches.pop(next(iter(searches)))
+            searches[key] = message
+        elif message["message_type"] == "0x0008":
+            request = searches.get((message["destination"], message["mid"]))
+            if request is None:
+                continue  # Missing/out-of-window traffic is not invented.
+            previous = request["autoconfiguration"]
+            sent, received = previous["advertised_profile"], facts["advertised_profile"]
+            effective = received if received in (1, 2, 3) else sent
+            pairs.append(
+                {
+                    "search_frame": request["completed_at_frame"],
+                    "response_frame": message["completed_at_frame"],
+                    "mid": message["mid"],
+                    "search_profile": sent,
+                    "response_profile": received,
+                    "profile_matches": effective == sent if sent in (1, 2, 3) else None,
+                    "band_matches": previous["band"] == facts["band"],
+                    "pending_requirements": facts["pending_requirements"],
+                    "correlation": "capture_addresses_and_mid_only",
+                    "onboarding_proven": False,
+                }
+            )
+    return pairs
 
 
 def packets(path):
@@ -138,6 +191,7 @@ def inspect_capture(path):
         "ignored_non_1905": ignored,
         "unsupported_tagged_frames": tagged,
         "messages": messages,
+        "autoconfiguration_pairs": discovery_pairs(messages),
         "rejected": rejected,
         "expired_assemblies": expired,
         "incomplete_or_quarantined": len(reassembler.contexts),

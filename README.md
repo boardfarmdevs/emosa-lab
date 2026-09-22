@@ -16,6 +16,8 @@ The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotiona
 The IEEE 1905.1-2013 and 1905.1a-2014 PDFs are now obtained. Follow the
 [wire-envelope learning exercise](doc/protocol/ieee1905-envelope.md) to inspect
 native captures and test bounded reassembly and isolated Ethernet delivery.
+Continue with [controller discovery and WSC exchange handling](doc/protocol/autoconfiguration.md)
+for peer/radio binding, replay controls and the actual native compatibility findings.
 Complete controller onboarding and physical acceptance remain pending.
 
 ## Architecture
@@ -79,9 +81,10 @@ acceptance remain gated; simulator passes do not establish interoperability.
 
 The [WSC payload component](doc/protocol/wsc-messages.md) builds M1 and authenticates
 M2 AP settings against its exact bytes, with independent hostap fixtures. It
-checks complete sets of payloads before returning settings; controller trust,
-IEEE exchange state and approval of the complete radio configuration are still
-required before connecting those results to OVSDB.
+checks complete sets of payloads before returning settings. The bounded exchange
+component now adds peer/link, RUID and transcript-lifetime checks. Controller trust,
+complete profile/coordinator behavior and qualified radio admission still precede
+connecting those results to OVSDB.
 
 The [independent controller candidate](deploy/peer/README.md) now emits real
 discovery frames captured at the EMOSA container. Its agent inventory is empty:

@@ -7,6 +7,11 @@ are implemented. Complete procedure/profile audit and exchange integration remai
 sides separately. Their successes must not be combined into a wire-onboarding
 verdict.
 
+The next [discovery/WSC component](../protocol/autoconfiguration.md) now checks
+selected complete messages, peer/link generation, radio binding, authenticated
+M2 scope and replay lifetime. It returns a secret candidate without creating an
+operation; full profile admission and the running coordinator remain pending.
+
 EMOSA means **EasyMesh to OpenSync Adapter**. Its virtual agent is the EasyMesh
 representation it presents to the controller. The OpenSync extender connects to
 EMOSA through its existing management interface and keeps its own managers.
@@ -167,7 +172,7 @@ because changing the serving BSS can interrupt the adapter's own connection.
 | Isolated peer compatibility | Candidate HAL length fix and live policy experiment; retained results and remaining native findings are in the [compatibility guide](native-compatibility.md) |
 | First complete experiment definition | This contract defines target, admission, causal evidence, negative controls and physical substitution |
 | Complete capability requirements | Selected value/mapping components tested; `0x88` ordering, mandatory report dependencies and full profile applicability remain pending |
-| Complete wire exchange | IEEE access complete; envelope/packet components tested, full I3/I4 exchange and profile validation pending; the existing gate rejects execution |
+| Complete wire exchange | IEEE access complete; envelope/packet and bounded discovery/WSC components tested; full I3/I4 coordinator, profile validation and operation integration pending; the existing gate rejects execution |
 | Physical qualification and proof | Collector/examples available; actual private connection, qualification and physical run remain pending |
 
 The final acceptance path remains **real EasyMesh messages → EMOSA → unchanged

@@ -1901,6 +1901,66 @@
       "path": "ieee1905/wire-gate.json",
       "sha256": "aa8728546fee7d674cc37ecb45b5e3edbec4f43ef412a0db90f2289c44d926b2",
       "size": 207
+    },
+    {
+      "path": "autoconfiguration/README.md",
+      "sha256": "39d932e4406faec6b9df9e2851c2659d6d06b1473cf6afa47e6add469bc832b6",
+      "size": 2299
+    },
+    {
+      "path": "autoconfiguration/ieee-reference.json",
+      "sha256": "8de85f76223a8119305b05f80dde00d0cd46e50ddf4e6634bd5f34ad1b6b280c",
+      "size": 457
+    },
+    {
+      "path": "autoconfiguration/native-discovery.json",
+      "sha256": "592974a6bf8b5c8cbabd505798a679ddf534f4a4a681f3b981904bd1df1f2085",
+      "size": 732
+    },
+    {
+      "path": "autoconfiguration/ovsdb-results.xml",
+      "sha256": "69b690e4b9dc4e8d53c23f7b949bd8656a8170b0214adfa0d29710531c91b8e7",
+      "size": 6059
+    },
+    {
+      "path": "autoconfiguration/summary.json",
+      "sha256": "4315895f48e4f084e01f89847cb72c54ddb5b79ca1c94e90befb5bb358a3214c",
+      "size": 3430
+    },
+    {
+      "path": "autoconfiguration/unit-results.xml",
+      "sha256": "df43272086cd24f32e511faf17f4ff68dc2de3444d4f317a9336c1ea8ea89769",
+      "size": 105587
+    },
+    {
+      "path": "autoconfiguration/wheel-smoke.json",
+      "sha256": "87000c66d27a0cde11d411503f91bcef3618c0122bc985e89674c008039ce9a9",
+      "size": 366
+    },
+    {
+      "path": "autoconfiguration/wire-gate.json",
+      "sha256": "875ec9e088c528ac67d484fecf03b1ab0b9311767bee92e8afd0f944230141cd",
+      "size": 630
+    },
+    {
+      "path": "autoconfiguration/wsc-reference.txt",
+      "sha256": "216cfb935596c4bb12808be91ae7c1a9449f5c0f5dff54e802a76202cae1aa89",
+      "size": 71
+    },
+    {
+      "path": "autoconfiguration/browser-result.json",
+      "sha256": "98331b7c4f744cb3130b01bb1259ca036f2e255a3a99f174a0649e272faa53a8",
+      "size": 228
+    },
+    {
+      "path": "autoconfiguration/mermaid-result.json",
+      "sha256": "1428fac1e49c660c339f8090ef24535eda7aa3abb9993c3c95a99d5678e51633",
+      "size": 1303
+    },
+    {
+      "path": "autoconfiguration/shell-blocks.json",
+      "sha256": "efb0c1a83989e6a30fd9656812dedfa40a3cf89f52278dcac118e95f8c0e990b",
+      "size": 36
     }
   ]
 }

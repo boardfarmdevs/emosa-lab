@@ -1,0 +1,20 @@
+{
+  "exit_code": 5,
+  "scenario": "provision-one-bss",
+  "source_tree_sha256_at_execution": "e65025e111150e8b128e38f10a1d91bccaa7da54271491ee542af7baa0bce183",
+  "status": "blocked",
+  "operations": [],
+  "prerequisites": [
+    {
+      "gate": "P0",
+      "status": "blocked",
+      "reason": "exact normative matrix, independent vectors and wire implementation required"
+    },
+    {
+      "gate": "evidence:pcap",
+      "status": "blocked",
+      "reason": "required evidence cannot be produced by the available component backend"
+    }
+  ],
+  "note": "Gate run before final retry refinement; gate and engine code unchanged."
+}

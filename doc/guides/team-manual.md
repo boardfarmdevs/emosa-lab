@@ -3037,6 +3037,52 @@ It does not use radios, native peers or physical pods. This is a packet transpor
 test; complete discovery/capability/WSC handlers must still connect these bytes
 to the adapter's guarded operation engine.
 
+### 13.8 Follow controller discovery into a radio-bound WSC exchange
+
+Continue with the [autoconfiguration walkthrough](../protocol/autoconfiguration.md).
+**Discovery** finds the controller for the requested band. **WSC configuration**
+carries its requested BSS settings for a specific radio. Those are separate
+conversations: a discovery Response echoes the Search MID, while WSC uses new
+MIDs and binds its authenticated settings to the original M1 transcript.
+
+On **HOST**, after the ordinary installation:
+
+```bash
+uv run pytest tests/test_autoconfiguration.py tests/test_ieee1905.py -q
+uv run emosa-lab wire-inspect \
+  --capture doc/evidence/peer-baseline/samples/wired/ethernet.pcap
+```
+
+The current focused suite contains 88 checks. These need no VM or radio. The
+tests construct/reassemble complete Ethernet messages and use independently
+built hostap M1/M2 payloads; they do not send test credentials to a network.
+In the inspector output, find `autoconfiguration_pairs`: frames 1 and 2 share
+MID 1 and a matching band, but Search Profile 2 and Response Profile 1 differ.
+The captured controller capability byte is `0x40`; the selected EasyMesh edition
+requires KiB/MiB support at bit 7, which is absent. Read `pending_requirements`
+as actual follow-up work, not optional warnings that an onboarding demo can omit.
+
+The new component requires an explicit controller AL, permitted source/interface
+MACs, ingress and binding generation. This distinguishes an old connection from
+the current one. It does not authenticate an Ethernet sender; the future endpoint
+must establish the trusted link and controller relationship separately. RUID
+matching selects the initiating radio, not a VIF chosen from an M2 MAC attribute.
+
+A valid complete M2 returns a secret candidate. Repeating it returns that same
+candidate marked as a duplicate. A re-encrypted M2 must authenticate again and
+match the entire decoded configuration; a changed request cannot overwrite it. Invalid authentication, teardown, multiple BSSs or unsupported
+configuration companions never yield a partial patch. Expiration drops the
+exchange's private-material references, and a new exchange uses fresh material
+so an old M2 cannot simply be replayed after restart.
+
+**Checkpoint:** explain why the candidate is not yet an operation. Full profile
+and early capability procedures, fresh qualified sole-radio admission, durable
+exchange/operation correlation and controller-visible topology are still needed.
+The full wire scenario remains blocked with zero operations. The next end-to-end
+experiment must use the real controller message to cause the guarded Config
+transaction, then observe State and the independent client without issuing a
+second semantic request to supply the change.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

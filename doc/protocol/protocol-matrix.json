@@ -282,7 +282,7 @@
         "wireshark-4.4.0-ieee1905"
       ],
       "remaining_gaps": [
-        "IEEE discovery format/timing and complete base response TLVs remain unverified.",
+        "Base Topology Discovery fields and bounded envelope implemented; full topology responder, paired LLDP and coordinator scheduling remain pending.",
         "Real physical topology and mandatory supported-resource inventory are not yet qualified."
       ],
       "reason": "IEEE base/amendment obtained and envelope component implemented; complete normative procedure/profile contract and exchange validation remain pending.",
@@ -329,13 +329,13 @@
           "name": "AP-Autoconfiguration Search",
           "message_type": "0x0007",
           "source": "wfa-easymesh-6.1 section 17.1 Table 22",
-          "status": "verified_identifier_only"
+          "status": "selected_fields_and_bounded_exchange_implemented_full_procedure_pending"
         },
         {
           "name": "AP-Autoconfiguration Response",
           "message_type": "0x0008",
           "source": "wfa-easymesh-6.1 section 17.1 Table 22",
-          "status": "verified_identifier_only"
+          "status": "selected_fields_and_bounded_exchange_implemented_full_procedure_pending"
         }
       ],
       "tlvs": [],
@@ -346,16 +346,22 @@
         "Section 6.1 contains current Profile-1 capability and controller-capability requirements that must be reconciled with the message definitions.",
         "This exchange alone causes no OVSDB configuration change."
       ],
-      "vectors": [],
+      "vectors": [
+        "tests/fixtures/protocol/wsc-messages/vectors.json",
+        "doc/evidence/peer-baseline/samples/wired/ethernet.pcap"
+      ],
       "implementation_refs": [
-        "wireshark-4.4.0-ieee1905"
+        "wireshark-4.4.0-ieee1905",
+        "src/emosa/wire/autoconfiguration.py"
       ],
       "remaining_gaps": [
-        "IEEE search cadence, response timers, relaying, retry and duplicate rules need the base and amendment.",
+        "Full live coordinator, scheduling/relay and trusted-link behavior; selected IEEE encoding, MID and exchange failure rules now implemented.",
         "Selected peer profile and all conditional security/capability TLVs remain unresolved."
       ],
-      "reason": "IEEE base/amendment obtained and envelope component implemented; complete normative procedure/profile contract and exchange validation remain pending.",
-      "available_rule_audit": "doc/protocol/procedure-audit.md"
+      "reason": "Bounded component implemented; complete profile, trusted-link coordinator and operation binding remain pending.",
+      "available_rule_audit": "doc/protocol/procedure-audit.md",
+      "component_status": "selected_exchange_component_implemented_full_procedure_blocked",
+      "component_contract": "doc/protocol/autoconfiguration.md"
     },
     {
       "name": "AP capability query/report",
@@ -506,7 +512,7 @@
           "name": "AP-Autoconfiguration WSC",
           "message_type": "0x0009",
           "source": "wfa-easymesh-6.1 section 17.1 Table 22",
-          "status": "verified_identifier_only"
+          "status": "selected_fields_and_bounded_exchange_implemented_full_procedure_pending"
         }
       ],
       "tlvs": [],
@@ -527,18 +533,24 @@
         "The candidate WPS edition explicitly reserves current EasyMesh extensions. It does not authorize substituting plaintext credentials or skipping authenticator verification.",
         "Reject an unsupported overall semantic request before any pod write; map its wire behavior only after the IEEE/EasyMesh failure rules are verified."
       ],
-      "vectors": [],
+      "vectors": [
+        "tests/fixtures/protocol/wsc-messages/vectors.json",
+        "doc/evidence/peer-baseline/samples/wired/ethernet.pcap"
+      ],
       "implementation_refs": [
-        "wireshark-4.4.0-ieee1905"
+        "wireshark-4.4.0-ieee1905",
+        "src/emosa/wire/autoconfiguration.py"
       ],
       "remaining_gaps": [
-        "IEEE WSC encapsulation, ordering, retry/duplicate and failure behavior require full normative review.",
-        "Independent full IEEE/EasyMesh message vectors remain pending; independent WSC crypto and M1/M2 payload vectors already exist (see component_selections).",
+        "Full live coordinator, scheduling/relay and trusted-link behavior; selected IEEE encoding, MID and exchange failure rules now implemented.",
+        "Independent native WSC payload and captured-envelope inputs tested together; independent live full-controller-to-operation proof pending.",
         "The one-BSS component patch has not been qualified as full-radio WSC semantics.",
         "Hardware must establish sole-BSS radio scope or a complete supported mapping; shared management/backhaul dependencies and recovery remain unverified."
       ],
-      "reason": "IEEE base/amendment obtained and envelope component implemented; complete normative procedure/profile contract and exchange validation remain pending.",
-      "available_rule_audit": "doc/protocol/procedure-audit.md"
+      "reason": "Bounded component implemented; complete profile, trusted-link coordinator and operation binding remain pending.",
+      "available_rule_audit": "doc/protocol/procedure-audit.md",
+      "component_status": "selected_exchange_component_implemented_full_procedure_blocked",
+      "component_contract": "doc/protocol/autoconfiguration.md"
     }
   ],
   "gate_completion_requirements": [
@@ -1113,7 +1125,7 @@
       "IEEE 1905.1-2013 and IEEE 1905.1a-2014 operator-supplied full texts"
     ],
     "permitted_scope": "Implement and independently test standalone components whose normative definitions are complete in the available sources; continue semantic service/radio tests and native peer observations.",
-    "boundary": "Envelope component is implemented; no full P0 procedure freeze or controller/physical acceptance from component checks.",
+    "boundary": "Envelope and bounded discovery/WSC exchange components implemented; no full P0 procedure freeze, qualified profile, operation integration or controller/physical acceptance.",
     "document": "doc/protocol/ieee1905-envelope.md"
   },
   "ieee1905_envelope": {
@@ -1147,7 +1159,105 @@
       "VLAN encapsulation",
       "reserved-message relay and interface authentication",
       "live discovery/topology/capability state machine",
-      "WSC exchange and operation binding"
+      "Live coordinator and durable WSC-to-operation integration (bounded exchange component implemented separately)"
     ]
+  },
+  "autoconfiguration_exchange": {
+    "status": "selected_bounded_components_implemented",
+    "guide": "doc/protocol/autoconfiguration.md",
+    "implementation": [
+      "src/emosa/wire/autoconfiguration.py",
+      "src/emosa/wire/inspection.py"
+    ],
+    "tests": [
+      "tests/test_autoconfiguration.py",
+      "tests/test_ieee1905.py"
+    ],
+    "evidence": "doc/evidence/autoconfiguration/summary.json",
+    "sources": [
+      {
+        "specification": "IEEE 1905.1-2013",
+        "sections": [
+          "6.2 Table 6-4 p.30",
+          "6.3.7-9 p.32",
+          "6.4.13-18 pp.42-43",
+          "7.8 p.46",
+          "10.1-10.1.2 pp.56-57"
+        ]
+      },
+      {
+        "specification": "IEEE 1905.1a-2014",
+        "sections": [
+          "7.9 p.18",
+          "10.1.4 p.24 (periodic scheduler still pending)"
+        ]
+      },
+      {
+        "specification": "EasyMesh 6.1",
+        "sections": [
+          "5.2.2 p.28",
+          "6.1 pp.62-63",
+          "7.1 pp.67-69",
+          "15.1 p.104",
+          "17.1.1-3 p.111",
+          "17.2.94 Table 117 p.182"
+        ]
+      },
+      {
+        "specification": "WPS 2.0.10",
+        "sections": [
+          "7.2-3",
+          "7.5",
+          "8.3.9 Table 20"
+        ]
+      }
+    ],
+    "scope": "Search/M1 encoding; selected Response correlation; complete M2 authentication bound to explicit peer/link generation and RUID; secret candidate only, no backend or operation calls",
+    "local_limits": {
+      "default_exchange_seconds": 5,
+      "default_transmissions": 3,
+      "maximum_exchange_seconds": 60,
+      "maximum_transmissions": 16,
+      "maximum_m2_payloads": 16,
+      "maximum_peer_source_macs": 16,
+      "offline_search_keys": 4096
+    },
+    "normative_rules": [
+      "Search uses multicast/relay=1; Response is unicast/relay=0 with the Search MID; WSC uses new MIDs.",
+      "Agent Search identifies Registrar/Controller services and highest fully implemented profile; narrow component emitter limited to Profile-1 2.4/5 GHz, without qualifying that profile.",
+      "M1 contains Basic, WSC, Profile-2 and Advanced capability TLVs; AL in WSC MAC; capability RUIDs agree.",
+      "M2 RUID identifies initiating radio; authenticate the complete received WSC set; no partial mapping of extra BSS/M8/teardown/configuration companions.",
+      "Retried requests may use new MID; original active M1 transcript remains the authenticator input; failed parameter configuration requires fresh discovery.",
+      "MAC binding and WSC transcript authentication do not establish the trusted link/controller authority required by IEEE 10.1."
+    ],
+    "local_policies": [
+      "Fixed deadline from creation; retries/duplicates do not extend it; close releases private material references without claiming memory erasure.",
+      "Identical accepted M2 bytes under a new MID return the same candidate; re-encrypted M2 is authenticated again and must match the entire decoded configuration to be duplicate; conflicting configurations are rejected.",
+      "Wrong peer/link generation/radio does not consume a valid pending exchange; coordinator must explicitly invalidate changed bindings.",
+      "Reject 0xB5/0xB6/0xE0/0xE1/0xEB/0xEC configuration companions and unsupported 0xAB/0xAC security processing; ignore unrelated unknown TLVs."
+    ],
+    "native_observation": {
+      "capture": "doc/evidence/peer-baseline/samples/wired/ethernet.pcap",
+      "search_frame": 1,
+      "response_frame": 2,
+      "search_profile": 2,
+      "response_profile": 1,
+      "controller_capability_hex": "40",
+      "kib_mib_bit7_present": false,
+      "security_capability_present": false,
+      "independent_check": "tshark frame 2 raw bytes dd000140; older labels do not replace EasyMesh 6.1 Table 117"
+    },
+    "pending": [
+      "Complete profile/feature qualification and native profile/capability reconciliation",
+      "Table 117 early capability bit-6/reserved overlap and complete early report",
+      "Security capability applicability and trusted-link lifecycle",
+      "Full topology, capability and scheduled controller-facing coordinator",
+      "Durable exchange-to-operation binding, fresh complete radio admission and recovery",
+      "Controller-to-OVSDB/hwsim causal run and unchanged physical-pod qualification"
+    ],
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "operations_created": 0
   }
 }

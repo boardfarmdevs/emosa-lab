@@ -7,8 +7,8 @@
     "I1": "implemented with model tests",
     "I2": "Real OVSDB and independent hostapd/hwsim clients tested through actual adapter service with pod-initiated connection and SIGKILL recovery; bounded two-pod test; semantic initiation only; see doc/guides/service-integration.md; strict sole-radio scope and atomic graph guards verified; see doc/guides/onboarding-readiness.md",
     "R0": "native apply/withhold experiment runs; database-restart recovery N03 fails and production backend remains disabled",
-    "I3": "IEEE base/amendment obtained; bounded envelope, native capture cross-check and isolated AF_PACKET tests implemented. Full discovery/capabilities/profile and procedure validation pending; see doc/protocol/ieee1905-envelope.md",
-    "I4": "WSC M1/M2 payload component independently tested; full procedure remains blocked P0/I3",
+    "I3": "IEEE base/amendment obtained; bounded envelope/AF_PACKET and Search/Response components tested. Complete topology, capabilities, trusted-link coordinator and qualified profile remain pending; see doc/protocol/autoconfiguration.md",
+    "I4": "Independent WSC payloads composed with complete-message peer/link-generation/RUID binding, duplicate/lifetime checks and secret candidate projection. Full profile admission, durable operation binding and live controller provisioning remain blocked P0/I3.",
     "I5": "read-only draft collector implemented; physical qualification and writes blocked M0/P0",
     "I6": "incremental component runner/watch/inspect/report/compare; complete reference release pending",
     "I7": "Native wired/wireless baseline and live controller preparation retained; diagnostic virtual AL is absent from native inventory; EMOSA wire exchanges, clean native shutdown and hardware interoperability remain pending; offline native capture review exposes discovery-profile and whole-request compatibility work"

@@ -10,6 +10,8 @@ for navigation and commands.
 
 | Collection | Entry point |
 | --- | --- |
+| Bounded controller discovery and WSC exchanges | [Peer/radio binding, replay controls and native compatibility gaps](autoconfiguration/README.md) |
+| IEEE 1905 envelope and packet transport | [Native frame comparison and isolated Ethernet runs](ieee1905/README.md) |
 | Authenticated fleet, repeated recovery and clean runtime | [Workloads, measurements, retained failures and image provenance](reliability/README.md) |
 | Connecting-pod diagnostic demonstration | [Qualification summary](connecting-pod/qualification-summary.json) |
 | Service, two pods and process-crash recovery | [Run summary](service-integration/summary.json) |

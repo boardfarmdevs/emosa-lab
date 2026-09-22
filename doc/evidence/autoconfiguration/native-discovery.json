@@ -1,0 +1,28 @@
+{
+  "packets": 59,
+  "autoconfiguration_pairs": [
+    {
+      "search_frame": 1,
+      "response_frame": 2,
+      "mid": 1,
+      "search_profile": 2,
+      "response_profile": 1,
+      "profile_matches": false,
+      "band_matches": true,
+      "pending_requirements": [
+        "profile_qualification",
+        "security_capability_applicability",
+        "security_capability_absent",
+        "kib_mib_support_absent",
+        "early_ap_capability_procedure_and_table117_review"
+      ],
+      "correlation": "capture_addresses_and_mid_only",
+      "onboarding_proven": false
+    }
+  ],
+  "rejected": [],
+  "incomplete_or_quarantined": 0,
+  "operations_created": 0,
+  "onboarding_proven": false,
+  "physical_pod_proven": false
+}

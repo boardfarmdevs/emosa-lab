@@ -130,9 +130,16 @@ retained native PCAP, explain why 59 frames produce 58 messages, run the boundar
 and negative tests, then compare with the independent dissector. Optionally run
 the isolated VM packet check. No radio or pod is required for this step.
 
-**Checkpoint:** distinguish a structurally reassembled WSC message from a validated,
-authorized provisioning exchange. The new parser creates no operation; the
-controller-to-EMOSA state machine is still needed before the full wire scenario.
+Then follow the [discovery and WSC exchange walkthrough](../protocol/autoconfiguration.md)
+and [manual §13.8](team-manual.md#138-follow-controller-discovery-into-a-radio-bound-wsc-exchange).
+Compare the native Search/Response profiles, explain why their matching MID is
+insufficient, and reproduce rejection of wrong-radio, stale-generation, replayed
+and unsupported complete configuration requests.
+
+**Checkpoint:** distinguish a reassembled message, a correlated discovery response,
+an authenticated WSC candidate and an admitted operation. The new components
+stop before operation creation. The complete profile/capability and controller
+coordinator still precede the full wire scenario.
 
 
 | Question | Next guide | Additional inputs |
