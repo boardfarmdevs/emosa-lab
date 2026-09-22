@@ -89,6 +89,8 @@ length matches the 160 MHz and 80+80 MHz flags; the encoder rejects a mismatch.
 It does not identify the individual Tx/Rx maps or infer their supported MCSs.
 A future service mapper must also supply the required **Wi-Fi 6 Capabilities
 value (`0xAA`)** when HE is supported. A working `0x88` codec alone is insufficient.
+The [HE/Wi-Fi 6 walkthrough](he-wifi6.md) now provides that standalone codec
+and an IEEE MCS field parser; complete service inputs and mapping remain pending.
 
 ## 4. Run the complete local service demonstration
 

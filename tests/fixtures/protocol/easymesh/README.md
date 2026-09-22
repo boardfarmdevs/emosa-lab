@@ -1,8 +1,11 @@
 # Selected native EasyMesh value fixtures
 
-`native-values.json` contains nine values from frames 1, 2, 7 and 20 of the
-already published synthetic native-peer wired capture. They cover Supported
-Service, Searched Service, Radio Identifier, Operational BSS and Multi-AP Profile.
+`native-values.json` contains twenty selected values from frames 1, 2, 5, 7, 20
+and 22 of the already published synthetic native-peer wired capture. They cover
+service/profile/identity/topology values, selected radio capability fields and
+Device Inventory. Its separate `rejected_cases` retains frame 22 AP Wi-Fi 6
+raw bytes and role flags: both length nibbles are zero. The selected Table 95
+codec rejects this value; older Wireshark labels are not normative authority.
 Wireshark supplies both bytes and expected field interpretation; EMOSA supplied
 neither. These are native implementation cross-checks, not independent normative
 full-message vectors or evidence of EMOSA onboarding.

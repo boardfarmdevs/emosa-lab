@@ -195,6 +195,42 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def rejected_projection(pdml):
+    """Extract raw fields of an observed value rejected under selected 6.1 rules.
+
+    Older Wireshark labels the length nibble reserved. It supplies boundaries
+    and raw flags here, not an authority for whether that value conforms.
+    """
+    cases = []
+    for packet in ET.fromstring(pdml).findall("packet"):
+        for tlv in packet.iter("field"):
+            kind = tlv.find("field[@name='ieee1905.tlv_type']")
+            if kind is None or int(kind.attrib["value"], 16) != 0xAA:
+                continue
+            length = field(tlv, "ieee1905.tlv_length")
+            header_size = int(kind.attrib["size"]) + int(length.attrib["size"])
+            raw = bytes.fromhex(tlv.attrib["value"])[header_size:]
+            if len(raw) != int(length.attrib["show"]):
+                raise ValueError("dissector value length mismatch")
+            cases.append(
+                {
+                    "frame": int(field(packet, "frame.number").attrib["show"]),
+                    "type": "0xaa",
+                    "value_hex": raw.hex(),
+                    "observed": {
+                        "ruid": address(tlv, "ieee1905.ap_wifi_6_capabilities.radio_id"),
+                        "role_flags": [
+                            int(f.attrib["value"], 16)
+                            for f in tlv.iterfind(
+                                ".//field[@name='ieee1905.ap_wifi_6_capabilities.role_flags']"
+                            )
+                        ],
+                    },
+                }
+            )
+    return cases
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tshark", default="tshark")
@@ -221,7 +257,9 @@ def main():
         timeout=30,
     )
     cases = projection(result.stdout)
-    if cases != json.loads((FIXTURE / "native-values.json").read_text())["cases"]:
+    rejected = rejected_projection(result.stdout)
+    retained = json.loads((FIXTURE / "native-values.json").read_text())
+    if cases != retained["cases"] or rejected != retained["rejected_cases"]:
         raise SystemExit("independent dissector output differs from retained values")
     print(
         json.dumps(
@@ -229,6 +267,7 @@ def main():
                 "status": "match",
                 "scope": "selected native-peer value bytes and fields only",
                 "cases": len(cases),
+                "rejected_cases": len(rejected),
                 "dissector": version,
                 "dissector_sha256": digest(Path(executable).resolve()),
                 "capture_sha256": digest(capture),

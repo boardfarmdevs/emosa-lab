@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import ClassVar
 
 from emosa.errors import EmosaError, Reason
+from emosa.he_mcs import HESupportedMCS, decode_he_mcs, encode_he_mcs
 from emosa.operating_classes import GLOBAL_OPERATING_CLASSES
 
 # A local parser/encoder resource budget, not a normative TLV or CMDU limit.
@@ -147,6 +148,24 @@ class APHECapabilities:
 
 
 @dataclass(frozen=True)
+class Wifi6Role:
+    role: int
+    mcs: HESupportedMCS
+    beamforming_flags: int
+    mu_mimo_users: int
+    max_dl_ofdma_tx: int
+    max_ul_ofdma_rx: int
+    feature_flags: int
+
+
+@dataclass(frozen=True)
+class APWifi6Capabilities:
+    kind: ClassVar[int] = 0xAA
+    ruid: bytes
+    roles: tuple[Wifi6Role, ...]
+
+
+@dataclass(frozen=True)
 class InventoryRadio:
     ruid: bytes
     chipset_vendor: bytes
@@ -231,6 +250,7 @@ type Payload = (
     | APHTCapabilities
     | APVHTCapabilities
     | APHECapabilities
+    | APWifi6Capabilities
     | DeviceInventory
     | APCapability
     | Profile2APCapability
@@ -318,6 +338,18 @@ def decode_value(kind: int, value: bytes) -> Payload:
             if length not in (4, 8, 12):
                 raise _invalid()
             result = APHECapabilities(ruid, reader.take(length), reader.octet(), reader.octet())
+        case 0xAA:
+            ruid, count = reader.take(6), reader.octet()
+            roles = []
+            for _ in range(count):
+                flags = reader.octet()
+                # Table 95 carries an explicit length nibble. In particular,
+                # do not repair an older peer's zero nibble using width flags.
+                mcs = decode_he_mcs(
+                    reader.take(flags & 15), he160=bool(flags & 32), he8080=bool(flags & 16)
+                )
+                roles.append(Wifi6Role(flags >> 6, mcs, *(reader.octet() for _ in range(5))))
+            result = APWifi6Capabilities(ruid, tuple(roles))
         case 0xD4:
             serial, version, env = (reader.inventory_string() for _ in range(3))
             count = reader.octet()
@@ -404,6 +436,32 @@ def encode_value(payload: Payload) -> bytes:
             if type(radio) is not InventoryRadio:
                 raise _invalid()
             value.extend(_octets(radio.ruid, length=6) + _inventory_string(radio.chipset_vendor))
+            _bounded(value)
+        value = bytes(value)
+    elif type(payload) is APWifi6Capabilities:
+        value = bytearray(_octets(payload.ruid, length=6) + _count(payload.roles))
+        for role in payload.roles:
+            if type(role) is not Wifi6Role:
+                raise _invalid()
+            _octet(role.role)
+            if role.role not in (0, 1):
+                raise _invalid()
+            mcs = encode_he_mcs(role.mcs)
+            flags = (
+                (role.role << 6)
+                | (32 if role.mcs.mhz160 is not None else 0)
+                | (16 if role.mcs.mhz80plus80 is not None else 0)
+                | len(mcs)
+            )
+            value.extend(_octet(flags) + mcs)
+            for octet in (
+                role.beamforming_flags,
+                role.mu_mimo_users,
+                role.max_dl_ofdma_tx,
+                role.max_ul_ofdma_rx,
+                role.feature_flags,
+            ):
+                value.extend(_octet(octet))
             _bounded(value)
         value = bytes(value)
     elif type(payload) in (APCapability, Profile2APCapability, APRadioAdvancedCapabilities):

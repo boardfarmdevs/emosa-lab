@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-09-22T05:10:16.463370+00:00",
+  "scope": "Source-assisted explanation of retained native peer compatibility findings; no binary replacement or conformance qualification",
+  "upstream_commit": "2e153c7e00cbcab6b8ee35082f494a364e23f018",
+  "peer_reference": "deploy/peer/prplmesh.reference.json",
+  "source_files": [
+    {
+      "path": "controller/src/beerocks/master/controller.cpp",
+      "sha256": "8f01b0d42cf9d622d02ad77242efd80bc19b901950b9919ec98c5aa187564827"
+    },
+    {
+      "path": "common/beerocks/bwl/shared/nl80211_client_impl.cpp",
+      "sha256": "acc94d0078a06457078fd802da65fb813da1152fcc77b2192f20f4587a810f96"
+    },
+    {
+      "path": "agent/src/beerocks/slave/tasks/capability_reporting_task.cpp",
+      "sha256": "5a8f15f0632864bb091385045fc8cf598e3cfc7496872d4e58f33e99425dd01e"
+    },
+    {
+      "path": "framework/tlvf/yaml/tlvf/wfa_map/tlvApWifi6Capabilities.yaml",
+      "sha256": "bab5948f7ba9642ae8a1a483b8699a38036554ae58eee76d1f274a910f5491e9"
+    }
+  ],
+  "companion_patch_review": {
+    "commit": "fcb0b97910e0e9d164578565b970c130d766e88e",
+    "patch_count": 22,
+    "result": "Only patch 0018 touches the listed files, in later station-metric handlers; the reviewed discovery and HE/Wi-Fi 6 routines are untouched."
+  },
+  "findings": [
+    {
+      "id": "response_profile",
+      "observation": "Retained frame 1 Search profile 2; frame 2 Response profile 1",
+      "source": "controller.cpp lines 802-830 sets MULTIAP_PROFILE_1 when a Search profile TLV is present; agent profile storage is separate",
+      "authority": "EasyMesh 6.1 section 6.1 p.63",
+      "disposition": "Resolve qualified controller/profile intersection; do not merely relabel unimplemented features."
+    },
+    {
+      "id": "wifi6_length",
+      "observation": "Frame 22 type 0xaa role flags 0x00 and 0x40: length nibbles zero",
+      "source": "nl80211_client_impl.cpp line 228 initializes mcs_nss_size to zero; lines 345-350 add base four in VHT branch; lines 412-453 add wider HE pairs. capability_reporting_task.cpp lines 923-935 copies this length to role flags. YAML parses maps using widths, ignoring length nibble.",
+      "authority": "EasyMesh 6.1 section 17.2.72 Table 95 pp.169-170",
+      "disposition": "Native HE-without-VHT branch explains possible zero base length; fix and rebuild companion, then repeat capture before qualifying. Current EMOSA codec rejects zero."
+    },
+    {
+      "id": "wifi6_mcs_order",
+      "observation": "Native builder applies htonl to each 32-bit IEEE Rx/Tx pair before copying; wider setters also use numeric words",
+      "source": "capability_reporting_task.cpp lines 937-954; implementation cross-check, not normative authority",
+      "authority": "Table 95 refers to IEEE 802.11-2024 Figure 9-901; its Rx/Tx maps follow section 9.2.2 octet ordering. Table 33 separately specifies a reordering for 0x88.",
+      "disposition": "Need independent positive asymmetric 0xaa compatibility vectors and native-build review. Do not copy native conversion into the new Figure-9-901 codec or infer the unresolved 0x88 mapping."
+    }
+  ],
+  "limits": [
+    "No full profile, firmware or binary/source equivalence qualification",
+    "No change to native binaries, running lab services or physical pods",
+    "No IEEE 1905 validation; no controller onboarding by EMOSA"
+  ],
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

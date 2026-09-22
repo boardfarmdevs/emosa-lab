@@ -17,6 +17,7 @@ from emosa.easymesh_payloads import (
     APRadioAdvancedCapabilities,
     APRadioBasicCapabilities,
     APVHTCapabilities,
+    APWifi6Capabilities,
     DeviceInventory,
     MultiAPProfile,
     Profile2APCapability,
@@ -26,6 +27,7 @@ from emosa.easymesh_payloads import (
     decode_value,
 )
 from emosa.errors import EmosaError, Reason
+from emosa.he_mcs import describe_he_mcs, encode_he_mcs
 
 
 def read_value(*, value_hex: str | None = None, value_file: Path | None = None) -> bytes:
@@ -54,6 +56,56 @@ def read_value(*, value_hex: str | None = None, value_file: Path | None = None) 
 
 
 def describe(payload):
+    if isinstance(payload, APWifi6Capabilities):
+        return {
+            "ruid": payload.ruid.hex(":"),
+            "mcs_interpretation": "ieee_80211_2024_figure_9_901_rx_then_tx_little_endian_maps",
+            "roles": [
+                {
+                    "role": role.role,
+                    "known_role": {0: "ap", 1: "non_ap_sta"}.get(role.role),
+                    "he160": role.mcs.mhz160 is not None,
+                    "he8080": role.mcs.mhz80plus80 is not None,
+                    "mcs_length": len(encode_he_mcs(role.mcs)),
+                    "mcs_hex": encode_he_mcs(role.mcs).hex(),
+                    "mcs": describe_he_mcs(role.mcs),
+                    "beamforming_flags": role.beamforming_flags,
+                    "max_dl_mu_mimo_tx_users": role.mu_mimo_users >> 4,
+                    "max_ul_mu_mimo_rx_users": role.mu_mimo_users & 15,
+                    "max_dl_ofdma_tx_users": role.max_dl_ofdma_tx,
+                    "max_ul_ofdma_rx_users": role.max_ul_ofdma_rx,
+                    "user_limits_apply_to_ap_role": role.role == 0,
+                    "feature_flags": role.feature_flags,
+                    "features": {
+                        name: bool(role.beamforming_flags & (1 << bit))
+                        for name, bit in {
+                            "su_beamformer": 7,
+                            "su_beamformee": 6,
+                            "mu_beamformer": 5,
+                            "beamformee_sts_le_80": 4,
+                            "beamformee_sts_gt_80": 3,
+                            "ul_mu_mimo": 2,
+                            "ul_ofdma": 1,
+                            "dl_ofdma": 0,
+                        }.items()
+                    }
+                    | {
+                        name: bool(role.feature_flags & (1 << bit))
+                        for name, bit in {
+                            "rts": 7,
+                            "mu_rts": 6,
+                            "multi_bssid": 5,
+                            "mu_edca": 4,
+                            "twt_requester": 3,
+                            "twt_responder": 2,
+                            "spatial_reuse": 1,
+                            "anticipated_channel_usage": 0,
+                        }.items()
+                    },
+                }
+                for role in payload.roles
+            ],
+        }
     if isinstance(payload, DeviceInventory):
         return {
             "serial_number_hex": payload.serial_number.hex(),

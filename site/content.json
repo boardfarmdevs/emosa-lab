@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Selected HT/VHT and Device Inventory mapping now runs through the read-only service. Next: reviewed HE conversion and Wi-Fi 6 inputs, complete report/profile procedures, native peer compatibility and IEEE processing.",
+      "next": "Standalone Wi-Fi 6 and IEEE HE MCS codecs are checked. Next: resolve 0x88 conversion and per-role inputs, native profile/length compatibility, complete report/profile requirements and IEEE processing.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -519,10 +519,22 @@
       "title": "Technology and inventory evidence",
       "category": "Service and protocol integration",
       "description": "Exact value tests, two-pod fault/restart checks, installed-wheel verification and independent native comparisons; physical onboarding pending."
+    },
+    {
+      "path": "doc/guides/he-wifi6.md",
+      "title": "HE MCS and Wi-Fi 6 capability values",
+      "category": "Service and protocol integration",
+      "description": "Learn Rx/Tx maps, widths and roles; reproduce the native zero-length negative case and review the remaining peer/report gaps."
+    },
+    {
+      "path": "doc/evidence/he-wifi6/summary.json",
+      "title": "HE and Wi-Fi 6 component evidence",
+      "category": "Service and protocol integration",
+      "description": "Source-derived asymmetric checks, two independent dissector versions, native source findings and installed-wheel smoke; onboarding remains pending."
     }
   ],
   "suite_evidence": {
-    "unit": "technology-inventory/unit-results.xml",
-    "ovsdb": "technology-inventory/ovsdb-results.xml"
+    "unit": "he-wifi6/unit-results.xml",
+    "ovsdb": "he-wifi6/ovsdb-results.xml"
   }
 }

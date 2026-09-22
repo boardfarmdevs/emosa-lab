@@ -598,7 +598,9 @@
         "EasyMesh 6.1 sections 17.2.8-10 Tables 31-33 pp.128-131",
         "EasyMesh 6.1 section 9.1 pp.79-80 and section 17.2.76 Table 99 p.172",
         "IEEE 802.11-2024 section 9.4.2.156.3 Figure 9-707 p.1299",
-        "IEEE 802.11-2024 section 9.4.2.247.4 Figure 9-901, Tables 9-377-378 pp.1455-1457"
+        "IEEE 802.11-2024 section 9.4.2.247.4 Figure 9-901, Tables 9-377-378 pp.1455-1457",
+        "EasyMesh 6.1 section 17.2.72 Table 95 pp.169-170",
+        "IEEE 802.11-2024 section 9.2.2 p.656"
       ],
       "implementation": "src/emosa/easymesh_payloads.py",
       "inspection": "src/emosa/evaluation/payloads.py",
@@ -612,6 +614,7 @@
         "0x87",
         "0x88",
         "0xa1",
+        "0xaa",
         "0xb3",
         "0xb4",
         "0xbe",
@@ -623,15 +626,17 @@
         "16384-byte value budget is a local resource limit, not a normative frame or TLV limit",
         "Exact single-value parsing rejects trailing/truncated bytes; no unknown-TLV or duplicate-identity procedure inference",
         "Opaque SSID bytes; no UTF-8 assumption or Config-to-State substitution",
-        "HE MCS bytes remain opaque; automatic IEEE-to-EasyMesh conversion pending",
-        "Inventory codec retains 0-64 raw octets; synthetic input mapper separately uses nonempty UTF-8 strings"
+        "0x88 HE MCS bytes remain opaque; its IEEE-to-EasyMesh conversion pending",
+        "Inventory codec retains 0-64 raw octets; synthetic input mapper separately uses nonempty UTF-8 strings",
+        "Wi-Fi 6 length nibble must match explicit widths; Figure 9-901 Rx/Tx maps retained, reserved roles diagnostic only; no 0x88 conversion inferred"
       ],
-      "validation": "93 base value tests plus feature/radio/technology boundary tests; twenty native values reproduced under tshark 3.6.2 and 4.2.2. HT flags, opaque HE bytes and original inventory string bytes checked; native VHT evidence absent.",
+      "validation": "611 unit and 40 OVSDB tests pass; twenty positive native value extractions plus one Wi-Fi 6 negative case reproduced under tshark 3.6.2 and 4.2.2. New positive HE/Wi-Fi 6 vectors are hand-derived from primary sources, not independent native positive evidence.",
       "tests": [
         "tests/test_easymesh_payloads.py",
         "tests/test_radio_capabilities.py",
         "tests/test_feature_capabilities.py",
-        "tests/test_technology_values.py"
+        "tests/test_technology_values.py",
+        "tests/test_he_wifi6.py"
       ],
       "vectors": "tests/fixtures/protocol/easymesh/native-values.json",
       "provenance": "tests/fixtures/protocol/easymesh/provenance.json",
@@ -645,7 +650,8 @@
       ],
       "additional_evidence": "doc/evidence/radio-capabilities/summary.json",
       "feature_evidence": "doc/evidence/profile-audit/summary.json",
-      "technology_inventory_evidence": "doc/evidence/technology-inventory/summary.json"
+      "technology_inventory_evidence": "doc/evidence/technology-inventory/summary.json",
+      "he_wifi6_evidence": "doc/evidence/he-wifi6/summary.json"
     }
   },
   "acquisition_checklist": "doc/protocol/specification-acquisition.md",
@@ -746,6 +752,16 @@
       "access_status": "pending_not_supplied",
       "scope": "Full units/telemetry normative review; conventional prefix metadata alone does not qualify statistics conversion",
       "publisher_reference": "https://www.iso.org/en/contents/data/standard/03/06/30669.html"
+    },
+    {
+      "id": "wfa-data-elements-3.0",
+      "edition": "Wi-Fi Data Elements Specification 3.0 package including TR-181-2-17_DEr3.xlsx",
+      "source_url": "https://www.wi-fi.org/file-member/wi-fi-data-elements-specification-package",
+      "status": "pending_authorized_package_access",
+      "needed_for": "EasyMesh 6.1 reference 10 and section 17.2.59 Table 82 Device.CollectionInterval; required capability-report definition, not merely ODH transport",
+      "access_checked_on": "2026-09-22",
+      "access_result": "Publisher member route redirects to Wi-Fi Alliance login; no package or credentials supplied",
+      "wire_value_implemented": false
     }
   ],
   "available_procedure_audit": {
@@ -941,10 +957,38 @@
     "controller_onboarding_proven": false,
     "physical_pod_proven": false,
     "remaining_gaps": [
-      "Reviewed HE MCS conversion, independent asymmetric vectors and Wi-Fi 6 companion",
+      "Reviewed 0x88 conversion, independent asymmetric positive peer evidence and complete HE/Wi-Fi 6 service inputs; standalone 0xaa codec now exists",
       "Independent VHT target evidence; remaining complete technology/width contexts",
       "Actual serial lifetime, active-image/environment semantics and chipset evidence",
       "Complete capability report/profile and IEEE message processing"
     ]
+  },
+  "he_wifi6_component": {
+    "status": "standalone_component_only",
+    "guide": "doc/guides/he-wifi6.md",
+    "implementation": [
+      "src/emosa/he_mcs.py",
+      "src/emosa/easymesh_payloads.py"
+    ],
+    "tests": [
+      "tests/test_he_wifi6.py"
+    ],
+    "evidence": "doc/evidence/he-wifi6/summary.json",
+    "native_source_review": "doc/evidence/he-wifi6/native-source-review.json",
+    "normative_sections": [
+      "IEEE 802.11-2024 section 9.2.2 p.656; section 9.4.2.247.4 Figure 9-901 / Tables 9-377-378 pp.1455-1457",
+      "EasyMesh 6.1 section 17.2.72 Table 95 pp.169-170; section 9.1 pp.79-80"
+    ],
+    "interpretation": "0xaa directly uses Figure 9-901 Rx then Tx little-endian maps; 0x88 Table 33 conversion remains opaque/pending",
+    "remaining_gaps": [
+      "Independent positive asymmetric Wi-Fi 6 peer vectors and compatibility review",
+      "Complete per-role normalized HE/Wi-Fi 6 inputs and 0x88 conversion",
+      "Native controller profile intersection, HE-without-VHT length bug and native pair reordering",
+      "Remaining AP capability/profile requirements including Metric Collection Interval"
+    ],
+    "procedure_gate_satisfied": false,
+    "profile_advertisement_ready": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
   }
 }

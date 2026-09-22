@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "error": {
+    "code": "INVALID_INPUT",
+    "message": "invalid supported HE MCS field",
+    "details": {}
+  }
+}

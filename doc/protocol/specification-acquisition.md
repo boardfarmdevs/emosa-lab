@@ -15,6 +15,7 @@ is selected by this checklist.
 | ☐ | **IEEE Std 1905.1a-2014** | [IEEE publisher](https://standards.ieee.org/ieee/1905.1a/5820/) | Amendment effects on those procedures and media definitions. No local copy or supplied access mechanism. Must be reviewed with the base. |
 | ☑ | **IEEE Std 802.11-2024** | [IEEE publisher](https://standards.ieee.org/ieee/802.11/10548/), [IEEE GET](https://ieeexplore.ieee.org/browse/standards/get-program/page/series?id=68) | Operator supplied `80211-2024.pdf`; cover/metadata verified, digest recorded and selected clauses reviewed. See [media review](ieee-media-review.md). Complete field/profile audit remains pending. Needed for operating classes and radio capability fields in EasyMesh §9.1 and applicable §17.2 definitions. |
 | ☐ | **IEEE Std 802.3-2015** | [IEEE Xplore record cited by EasyMesh](https://ieeexplore.ieee.org/document/7428776/) | Ethernet LINK_UP/LINK_DOWN in EasyMesh §5.2.6; Ethernet handling in §14.1.3 points to §3 of this standard. Exact cited edition not obtained. Operator supplied the 2022 edition; it is verified and hashed, with selected Clause 3 definitions reviewed. Direct comparison to 2015 and any substitution decision remain pending. |
+| ☐ | **Wi-Fi Data Elements 3.0 package, including TR-181-2-17_DEr3.xlsx** | [Member package cited by EasyMesh reference 10](https://www.wi-fi.org/file-member/wi-fi-data-elements-specification-package) | EasyMesh §9.1 requires Metric Collection Interval; §17.2.59 Table 82 p.164 points to Device.CollectionInterval. Obtain the definition, units and valid values before implementing `0xC5`. The publisher route redirected to Wi-Fi Alliance login on 2026-09-22; no authorized package/access supplied. This is a capability-report dependency, separate from choosing ODH transport. |
 | ☐ | **Wi-Fi Alliance Security Requirements — revision to be identified** | [Member route cited by EasyMesh](https://www.wi-fi.org/members/wi-fi-alliance-security-requirements) | EasyMesh §13 refers to its Personal AP/STA requirements. Reference [22] gives no revision. The publisher route redirects to a Wi-Fi Alliance login; no account access was supplied. Obtain an authorized copy and record its revision/date before resolving the proposed WPA2-Personal scope. |
 
 These dependencies come from [EasyMesh 6.1](https://www.wi-fi.org/system/files/Wi-Fi%20EasyMesh%20Specification%20v6.1.pdf)
@@ -34,8 +35,8 @@ missing inputs for the wire procedure.
 The [2026-09-21 available-document audit](procedure-audit.md) now records WFA
 message inclusion conditions, selected field definitions and unresolved source
 ambiguities. It also distinguishes the existing independent WSC payload/crypto
-vectors from the still-missing complete IEEE message vectors. It adds no new
-mandatory acquisition beyond the consolidated entries below.
+vectors from the still-missing complete IEEE message vectors. The later [HE/Wi-Fi 6 review](../guides/he-wifi6.md) promotes Data Elements 3.0
+from a deferred telemetry dependency to the initial capability-report checklist.
 
 ## Resolve only if the selected fields require it
 
@@ -48,8 +49,8 @@ mandatory acquisition beyond the consolidated entries below.
 
 Feature-dependent bibliography entries remain deferred: IEEE 802.1Q-2018 for
 traffic separation; Agile Multiband 1.2, Optimized Connectivity 1.0, WMM 1.2.0
-and QoS Management 3.0 for their features; Data Elements 3.0 and the cited TR-181
-models for corresponding telemetry; Easy Connect for DPP; 802.11be/D5.0 for
+and QoS Management 3.0 for their features; additional TR-181 model dependencies
+for corresponding telemetry; Easy Connect for DPP; 802.11be/D5.0 for
 EHT/MLO; WPA3 3.5-or-later, OWE 1.2 and AFC 1.5 for their features. WPS NFC,
 UPnP, EAP/802.1X, P2P and certificate-request documents are also outside the
 current Ethernet M1/M2 component. A complete mandatory-field audit may promote

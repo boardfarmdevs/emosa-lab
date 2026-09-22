@@ -1351,6 +1351,61 @@
       "path": "technology-inventory/wheel-smoke.json",
       "sha256": "b4ce635d8ad5836f3f81bd762e18421d1f9e46b9c192f0688484f74bc1c5cd55",
       "size": 405
+    },
+    {
+      "path": "he-wifi6/browser-result.json",
+      "sha256": "f0fb356fbe238b38af7b76aca7aa23dbc43f1c808a6c4974c118a4e52a0f2bf8",
+      "size": 227
+    },
+    {
+      "path": "he-wifi6/cli-native-negative.json",
+      "sha256": "7509b350fda4c145420ccb0987b5d7516aeb9ba65a0917a587a6ae88565f2f3e",
+      "size": 140
+    },
+    {
+      "path": "he-wifi6/cli-wifi6.json",
+      "sha256": "1c2a13a9fe26d38240b755d8447954ae2f15d7e4407550f83eaebc39b3923cfc",
+      "size": 1939
+    },
+    {
+      "path": "he-wifi6/native-host.json",
+      "sha256": "04df337d22d4f6875ac043c83c0fab9e54d55aae30f841297d3ec0e43eb67751",
+      "size": 622
+    },
+    {
+      "path": "he-wifi6/native-source-review.json",
+      "sha256": "c092455ab46b1400b390beec3f7a579adc12d8db6694f69603545636e51e0b80",
+      "size": 3454
+    },
+    {
+      "path": "he-wifi6/native-vm.json",
+      "sha256": "a2ca1ab9817398d20b798ec70f81e40858477839b3d9b77957530b5561c4d259",
+      "size": 631
+    },
+    {
+      "path": "he-wifi6/ovsdb-results.xml",
+      "sha256": "d83ad44a43a0ee0295862794b647ff37749dcb6348f7755826060b29dcc86c3e",
+      "size": 5226
+    },
+    {
+      "path": "he-wifi6/profile-audit.json",
+      "sha256": "6214263a59858f16aef45c82893dfd127a627ff3a3f0a912e436f4b48288c2dc",
+      "size": 11469
+    },
+    {
+      "path": "he-wifi6/summary.json",
+      "sha256": "1367c6f9e7482992361e3fcfce9b3ab6762c67d4dc4841f163e7b76d5d54ed32",
+      "size": 4371
+    },
+    {
+      "path": "he-wifi6/unit-results.xml",
+      "sha256": "d66b36b0fe465a5c44d3bda871ea46a1330aef5fed6664d124c050836fbdea39",
+      "size": 84110
+    },
+    {
+      "path": "he-wifi6/wheel-smoke.json",
+      "sha256": "9fd5bc4ab08834accbb8c8a2c80e40a92b02bede5c663aa4963bf027c8b1edcc",
+      "size": 589
     }
   ]
 }

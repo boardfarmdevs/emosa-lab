@@ -32,6 +32,12 @@ that complete request is outside the proposed single-M2 mapping. The controller
 trial must resolve the peer/build/profile and policy intersection.
 Do not force old peer behavior into the normative matrix as an exception.
 
+The [HE/Wi-Fi 6 review](../guides/he-wifi6.md) now traces the response mismatch
+to the pinned controller's fixed Profile-1 assignment. It also records a native
+Wi-Fi 6 zero-length value rejected under Table 95 and the relevant source paths.
+These findings narrow the peer-build work; they do not qualify a substitute
+profile or modify the native binaries.
+
 ## Message inclusion and applicability
 
 “One” below describes the WFA rule for the specified circumstance. Base IEEE

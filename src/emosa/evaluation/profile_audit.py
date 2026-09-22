@@ -247,10 +247,12 @@ def audit(features=None):
                 identifier,
                 _condition(radio[feature]),
                 "§9.1 / §18",
-                kind in {"0x86", "0x87", "0x88", "0xbe"},
+                kind in {"0x86", "0x87", "0x88", "0xaa", "0xbe"},
                 (
-                    "HE MCS remains opaque; normalized mapping and Wi-Fi 6 companion pending"
+                    "HE 0x88 MCS conversion and complete normalized HE/Wi-Fi 6 mapping pending"
                     if kind == "0x88"
+                    else "Standalone codec exists; qualified per-role inputs and mapping pending"
+                    if kind == "0xaa"
                     else "Planning only; qualify feature behavior and truthful inputs"
                 ),
             )

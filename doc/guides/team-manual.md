@@ -2797,7 +2797,7 @@ of the history; an old `protoc-c` bootstrap failure is not the current blocker.
 
 Discovery and topology messages carry small structured fields describing services,
 radios, BSSs, radio capabilities and profiles. EMOSA now has Python codecs for
-thirteen such **TLV values**.
+fourteen such **TLV values**.
 A TLV means type/length/value; this component handles the value inside that
 structure. It provides useful progress from EasyMesh's explicit field definitions
 while the IEEE 1905 base/amendment are pending. It does not enable the packet
@@ -2882,9 +2882,35 @@ The walkthrough explains the generated input files and how to inspect the report
 Read `extensions.technology` and `extensions.device_inventory` separately from
 top-level Basic readiness. Unknown inputs block their extension. HE support
 currently blocks technology mapping because the IEEE-to-EasyMesh MCS conversion
-and required Wi-Fi 6 companion are unfinished; offline inspection preserves the
-HE bytes without guessing their meaning. No extension qualifies a full report,
+and complete Wi-Fi 6 companion input mapping are unfinished; offline `0x88`
+inspection preserves the HE bytes without guessing their meaning. No extension qualifies a full report,
 profile or physical pod. The demonstration stops its services when finished.
+
+### 13.6 Inspect HE MCS maps and Wi-Fi 6 roles
+
+HE capability maps describe supported modulation/coding ranges separately for
+receiving and transmitting, for each spatial-stream count and supported width.
+Wi-Fi 6 capabilities additionally distinguish an AP role from a backhaul STA
+role. A current channel and SSID cannot supply those facts.
+
+The [HE/Wi-Fi 6 walkthrough](he-wifi6.md) explains the fields, byte order and
+four/eight/twelve-octet lengths, with step-by-step examples. On HOST, without a VM:
+
+```bash
+uv run emosa-lab payload --type 0xaa \
+  --value-hex 0200000140010104e41bc6e4a53912345a
+```
+
+Expect exit 0, one synthetic AP role and a four-octet MCS field. The guide shows
+how to read the direction-specific lists, build the IEEE field in Python and
+reproduce the native peer's zero-length negative case. The values are invented
+layout examples; they are not truthful capabilities for a pod. A valid field
+also does not establish any of the three false wire/onboarding/physical flags.
+
+This adds the standalone Wi-Fi 6 codec. The separate `0x88` HE conversion and
+complete per-role input mapping remain pending, so the service's HE readiness
+gate remains in place. The guide also explains the source findings behind the
+native profile/length incompatibilities and the next controlled peer-build work.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

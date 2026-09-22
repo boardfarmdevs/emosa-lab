@@ -1,6 +1,6 @@
 # EasyMesh value components and offline inspection
 
-EMOSA now encodes and decodes thirteen selected EasyMesh **TLV values**. This is
+EMOSA now encodes and decodes fourteen selected EasyMesh **TLV values**. This is
 preparation for discovery and topology reporting while the IEEE 1905 documents
 are being acquired. It does not enable a packet endpoint, controller discovery,
 onboarding or pod writes. Run this exercise on **HOST**, in your development or
@@ -46,6 +46,7 @@ No licensed document or page extract is redistributed.
 | `0xBE` / `APRadioAdvancedCapabilities` | RUID and one octet of combined-role and QoS feature flags | EasyMesh §17.2.52, Table 75, p.160 |
 | `0x86` / `APHTCapabilities` | RUID, stream counts and HT flags | EasyMesh §17.2.8, Table 31, p.128 |
 | `0x87` / `APVHTCapabilities` | RUID, big-endian Tx/Rx MCS maps and stream/feature flags | EasyMesh §17.2.9, Table 32, p.129; IEEE §9.4.2.156.3, Figure 9-707, p.1299 |
+| `0xAA` / `APWifi6Capabilities` | RUID, counted roles, explicit width/length fields, IEEE HE MCS pairs and per-role feature/user limits | EasyMesh §17.2.72, Table 95, pp.169–170; IEEE §9.2.2 p.656 and §9.4.2.247.4 pp.1455–1457 |
 | `0x88` / `APHECapabilities` | RUID, opaque already-ordered MCS bytes and stream/feature flags; automatic map conversion pending | EasyMesh §17.2.10, Table 33, pp.130–131; IEEE §9.4.2.247.4, pp.1455–1457 |
 | `0xD4` / `DeviceInventory` | Counted 0–64-octet identity/software/environment strings and one or more radio/vendor entries | EasyMesh §9.1, pp.79–80; §17.2.76, Table 99, p.172 |
 | SSID representation | Preserve original octets and the 0–32-octet structural bound; do not assume UTF-8 | IEEE 802.11-2024 §9.4.2.2, Figure 9-209, p.934 |
@@ -229,7 +230,7 @@ Selected AP/Profile-2/Advanced feature value codecs and an executable
 capability qualification and the complete mandatory-function review remain
 pending. The [technology/inventory exercise](../guides/technology-inventory.md)
 now maps explicit synthetic HT/VHT and Device Inventory inputs; HE conversion
-and its Wi-Fi 6 companion remain unfinished. Actual discovery/topology/WSC processing also
+and complete Wi-Fi 6 input mapping remain unfinished. The [HE/Wi-Fi 6 exercise](../guides/he-wifi6.md) now adds the standalone `0xAA` codec and IEEE MCS field parser, including the captured native zero-length negative case. Actual discovery/topology/WSC processing also
 needs the missing **IEEE 1905.1-2013 and IEEE 1905.1a-2014** review, independent
 full-message vectors, peer/exchange binding and recovery rules.
 
