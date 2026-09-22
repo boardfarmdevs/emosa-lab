@@ -1138,7 +1138,7 @@
       "IEEE 1905.1-2013 and IEEE 1905.1a-2014 operator-supplied full texts"
     ],
     "permitted_scope": "Implement and independently test standalone components whose normative definitions are complete in the available sources; continue semantic service/radio tests and native peer observations.",
-    "boundary": "Envelope, discovery/WSC, restricted reports and owned WSC-to-operation/OVSDB handoff implemented separately; no full P0 freeze, qualified profile, native controller inventory, hwsim wire causality or physical acceptance.",
+    "boundary": "Envelope, restricted discovery/reports and owned WSC operation components implemented. Synthetic Ethernet WSC now drives OVSDB/hwsim/independent clients; no full P0 freeze, qualified profile, native controller inventory or physical acceptance.",
     "document": "doc/protocol/ieee1905-envelope.md"
   },
   "ieee1905_envelope": {
@@ -1596,9 +1596,72 @@
     "pending": [
       "Admitted native discovery/Early/capability/WSC lifecycle and controller inventory",
       "Controller profile/capability compatibility and remaining normative dependencies",
-      "Real Ethernet and hwsim/client causal reproduction of this handoff",
       "Production exchange/credential lifecycle and multi-agent wire demultiplexing",
       "Qualified unchanged physical pod and independently observed behavior"
+    ],
+    "follow_on": "doc/protocol/wsc-wire-radio.md"
+  },
+  "wsc_packet_radio_component": {
+    "status": "owned_component_demonstrated",
+    "guide": "doc/protocol/wsc-wire-radio.md",
+    "evidence": "doc/evidence/wsc-wire/summary.json",
+    "implementation": [
+      "src/emosa/wire/provisioning_session.py",
+      "src/emosa/simulation/wsc_wire.py",
+      "deploy/wire/check-endpoint.py",
+      "deploy/radio-manager/run-wsc.py"
+    ],
+    "tests": [
+      "tests/test_provisioning_session.py",
+      "scripts/check-wsc-wire-reference.py"
+    ],
+    "authority": "Uses the reviewed wsc_operation_handoff and ieee1905_envelope rules; no additional specification requirement inferred from the fixture.",
+    "normative_sections": [
+      "IEEE 1905.1-2013 6.3.9, 6.4.18, 7.8 and 10.1-10.1.2",
+      "IEEE 1905.1a-2014 amended 6.4 and 7.8",
+      "EasyMesh 6.1 7.1, 15.1-15.2 and 17.1.3",
+      "WPS 2.0.10 7.2-7.3, 7.5 and 8.3.9 Table 20"
+    ],
+    "local_limits": {
+      "reassembly_contexts": 2,
+      "fragments_per_message": 8,
+      "message_bytes": 8192,
+      "aggregate_bytes": 16384,
+      "fragment_expiry_seconds": 5,
+      "token_burst": 32,
+      "tokens_per_second": 16,
+      "input_waiter_queue": 0,
+      "event_history": 32,
+      "exchange_seconds": 30,
+      "owned_operation_seconds": 120
+    },
+    "explicit_boundary": "Synthetic peer begins at an owned bound M1 exchange, without discovery/profile/service activation. AL/ingress checks are not link authentication.",
+    "ethernet_capture": "Received bytes/order with synthetic timestamps; no latency claim.",
+    "radio_contract": "One sole fronthaul BSS, WPA2-PSK/CCMP, 2.4 GHz channel 6, wired management. No OpenSync firmware.",
+    "cases": [
+      "Invalid authentication creates zero operations/credentials/writes",
+      "Wrong RUID rejects before allocation of an operation",
+      "Last fragment arrives first; no operation before whole message",
+      "Normal duplicate and re-encrypted retry share one operation/write",
+      "Changed configuration refuses another write",
+      "Config changes while manager withholds; old SSID and independent clients survive",
+      "Release applies configuration; hostapd/nl80211 State plus separate wired/wireless clients",
+      "Wrong key produces fresh authentication failure; correct key restores clients",
+      "Lost commit reply invalidates old exchange authority; fresh State resolves current condition without resend",
+      "Interrupted driver removes its owned namespaces and worker groups"
+    ],
+    "socket_io": true,
+    "radio_or_client_observed": true,
+    "semantic_submission": false,
+    "native_controller_used": false,
+    "regular_service_activation": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "pending": [
+      "Compatible native discovery/Early/profile/full-capability admission and native inventory",
+      "Remaining normative dependencies and full-radio qualification",
+      "Production exchange/secret retention and multi-agent wire demultiplexing",
+      "Qualified unchanged physical pod and independent physical client"
     ]
   }
 }

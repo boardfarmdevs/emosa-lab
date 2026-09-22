@@ -1,0 +1,19 @@
+{
+  "exit_code": 5,
+  "run_id": "run-cde7fd22ed8e4461",
+  "execution_status": "blocked",
+  "operations": [],
+  "prerequisites": [
+    {
+      "gate": "P0",
+      "status": "blocked",
+      "reason": "exact normative matrix, independent vectors and wire implementation required"
+    },
+    {
+      "gate": "evidence:pcap",
+      "status": "blocked",
+      "reason": "required evidence cannot be produced by the available component backend"
+    }
+  ],
+  "source_tree_sha256": "3a207bd3a4ad003e8f6115bb4f43d8eb1761fe2ace9677920c368fafaaf7e274"
+}

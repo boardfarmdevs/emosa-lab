@@ -1,0 +1,154 @@
+{
+  "passed": true,
+  "before_application": {
+    "operation": {
+      "operation_id": "d40063ae-a17a-4b3b-bfc0-f1ca6abfc573",
+      "initiating_interface": "wsc-component",
+      "state": "INDETERMINATE",
+      "reason": "OUTCOME_UNKNOWN",
+      "attempts": 1,
+      "commit_attribution": "unknown",
+      "application_evidence": null,
+      "receipt": {
+        "scope": "owned_simulation_wsc_component",
+        "m1_sha256": "0bb95fbf49d4a965e306706a91e9b77499349f75474eb9d014dac86604d80881",
+        "controller_al": "020000005002",
+        "agent_al": "020000005001",
+        "ruid": "020000005010",
+        "bssid": "020000ec0200",
+        "ingress": "emw75c698e3a",
+        "link_generation": 1,
+        "database_generation": 1,
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "first_mid": 503,
+        "pod_id": "pod-1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1"
+      }
+    },
+    "config_ssid": "EMOSA-WSC-component",
+    "observed_ssid": "emosa-radio-initial",
+    "packet_session": {
+      "counts": {
+        "rejected": 4,
+        "incomplete": 1,
+        "operation": 1
+      },
+      "events": [
+        {
+          "status": "rejected",
+          "reason": "INVALID_INPUT"
+        },
+        {
+          "status": "incomplete",
+          "mid": 503
+        },
+        {
+          "status": "operation",
+          "mid": 503,
+          "operation_id": "d40063ae-a17a-4b3b-bfc0-f1ca6abfc573",
+          "state": "INDETERMINATE"
+        },
+        {
+          "status": "rejected",
+          "reason": "NOT_READY"
+        },
+        {
+          "status": "rejected",
+          "reason": "NOT_READY"
+        },
+        {
+          "status": "rejected",
+          "reason": "NOT_READY"
+        }
+      ],
+      "closed": false,
+      "scope": "owned_simulation_wsc_component",
+      "full_controller_onboarding": false
+    },
+    "transaction_attempts": 1
+  },
+  "operation": {
+    "operation_id": "d40063ae-a17a-4b3b-bfc0-f1ca6abfc573",
+    "initiating_interface": "wsc-component",
+    "state": "OBSERVED_APPLIED",
+    "reason": "OUTCOME_UNKNOWN",
+    "attempts": 1,
+    "commit_attribution": "unknown",
+    "application_evidence": {
+      "fresh": true,
+      "predicate_satisfied": true,
+      "generation": 2,
+      "revision": 4,
+      "received_at": "2026-09-22T21:35:01.172Z",
+      "source": "ovsdb",
+      "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State",
+      "attribution": "current_condition_only"
+    },
+    "receipt": {
+      "scope": "owned_simulation_wsc_component",
+      "m1_sha256": "0bb95fbf49d4a965e306706a91e9b77499349f75474eb9d014dac86604d80881",
+      "controller_al": "020000005002",
+      "agent_al": "020000005001",
+      "ruid": "020000005010",
+      "bssid": "020000ec0200",
+      "ingress": "emw75c698e3a",
+      "link_generation": 1,
+      "database_generation": 1,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "first_mid": 503,
+      "pod_id": "pod-1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1"
+    }
+  },
+  "packet_session": {
+    "counts": {
+      "rejected": 4,
+      "incomplete": 1,
+      "operation": 1
+    },
+    "events": [
+      {
+        "status": "rejected",
+        "reason": "INVALID_INPUT"
+      },
+      {
+        "status": "incomplete",
+        "mid": 503
+      },
+      {
+        "status": "operation",
+        "mid": 503,
+        "operation_id": "d40063ae-a17a-4b3b-bfc0-f1ca6abfc573",
+        "state": "INDETERMINATE"
+      },
+      {
+        "status": "rejected",
+        "reason": "NOT_READY"
+      },
+      {
+        "status": "rejected",
+        "reason": "NOT_READY"
+      },
+      {
+        "status": "rejected",
+        "reason": "NOT_READY"
+      }
+    ],
+    "closed": false,
+    "scope": "owned_simulation_wsc_component",
+    "full_controller_onboarding": false
+  },
+  "invalid_authentication_operations": 0,
+  "incomplete_request_operations": 0,
+  "transaction_attempts": 1,
+  "scope": "owned_WSC_provisioning_over_AF_PACKET",
+  "socket_io": true,
+  "native_controller_used": false,
+  "full_controller_onboarding": false,
+  "physical_pod_proven": false,
+  "radio_used": true,
+  "lost_reply_injected": true,
+  "frames_received": 7
+}

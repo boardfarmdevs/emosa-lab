@@ -162,6 +162,13 @@ and compare commit evidence with separately published State. Show that one
 M2 creates one component operation without a semantic submission, and that
 a real adapter crash after commit cannot cause an automatic second write.
 
+Now cross the actual packet/radio boundary with [Ethernet WSC to observed Wi-Fi](../protocol/wsc-wire-radio.md)
+and [manual §13.13](team-manual.md#1313-drive-wi-fi-from-an-ethernet-wsc-exchange).
+First run the packet-only case, then normal and lost-reply radio runs. Match the
+received M1 digest to the operation receipt, show old State while application is
+withheld, and verify new SSID/authentication/traffic from separate clients.
+Explain why the synthetic hostap peer cannot establish native-controller inventory.
+
 **Checkpoint:** distinguish a reassembled message, a correlated discovery response,
 an authenticated WSC candidate and a durable component operation. Explain why
 `wsc-component` does not mean the regular service has admitted a real controller.

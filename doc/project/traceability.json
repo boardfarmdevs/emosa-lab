@@ -8,7 +8,7 @@
     "I2": "Real OVSDB and independent hostapd/hwsim clients tested through actual adapter service with pod-initiated connection and SIGKILL recovery; bounded two-pod test; semantic initiation only; see doc/guides/service-integration.md; strict sole-radio scope and atomic graph guards verified; see doc/guides/onboarding-readiness.md",
     "R0": "native apply/withhold experiment runs; database-restart recovery N03 fails and production backend remains disabled",
     "I3": "IEEE envelope, discovery/WSC, restricted reports and Query/Ack coordinator tested. Restricted discovery-to-topology lifecycle now adds required-field diagnostics and reconnect invalidation through real OVSDB and isolated AF_PACKET. Automatic Early/M1, complete profile, full AP Capability and native inventory pending; see doc/protocol/discovery-session.md",
-    "I4": "Owned WSC component now creates atomic durable receipt/operation from authenticated independent hostap M2 and drives real OVSDB; duplicate, lost reply, identity race and real process-crash recovery tested. No semantic fallback. Full profile/native lifecycle admission, socket/hwsim/client causality and physical acceptance remain pending; see doc/protocol/wsc-provisioning.md",
+    "I4": "Owned authenticated WSC now drives a durable operation over actual Ethernet into real OVSDB, hostapd/hwsim and independent clients, with normal/lost-reply, duplicate, fragment, withholding and wrong-key controls. Earlier identity-race/process-crash handoff tests remain. Synthetic hostap payload peer; no semantic fallback. Native lifecycle/profile admission, controller inventory and physical acceptance remain pending; see doc/protocol/wsc-wire-radio.md",
     "I5": "read-only draft collector implemented; physical qualification and writes blocked M0/P0",
     "I6": "incremental component runner/watch/inspect/report/compare; complete reference release pending",
     "I7": "Native wired/wireless baseline and live controller preparation retained; diagnostic virtual AL is absent from native inventory; EMOSA wire exchanges, clean native shutdown and hardware interoperability remain pending; offline native capture review exposes discovery-profile and whole-request compatibility work"
@@ -2625,16 +2625,23 @@
       "id": "W04",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/operation_bridge.py",
+        "src/emosa/wire/provisioning_session.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_wsc_operation_bridge.py",
+        "tests/test_provisioning_session.py",
+        "scripts/check-wsc-wire-reference.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/wsc-wire/summary.json"
+      ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
-      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+      "independent_work": "Owned synthetic Ethernet WSC drives durable operations, real OVSDB, hwsim and independent clients. This component does not satisfy full native admission or physical acceptance."
     },
     {
       "id": "W05",

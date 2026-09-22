@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "python_isolated": true,
+  "outside_checkout": true,
+  "matching_python_sources": 73,
+  "packet_modules_imported": true,
+  "installed_handoff_cases": 4,
+  "wheel_sha256": "c7045b382cd2f15b1a1fffdb5c1b7d60385ba741eb8d76212052e051c0c54e14",
+  "radio_or_socket_execution_from_installed_wheel": false
+}

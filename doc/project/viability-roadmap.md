@@ -30,7 +30,11 @@ The [owned WSC provisioning experiment](../protocol/wsc-provisioning.md) now
 joins authenticated M2 input to durable operations, guarded OVSDB and separately
 observed State. Lost replies, duplicates, identity races and real process death
 are exercised. It uses a synthetic hostap payload peer and in-memory Ethernet;
-the native-controller/hwsim integration is still required.
+the subsequent [Ethernet WSC/radio experiment](../protocol/wsc-wire-radio.md)
+now connects the component over actual Ethernet to hwsim and independent clients.
+Normal and lost-reply runs pass, including withholding and wrong-key rejection.
+Native-controller admission, its own inventory and physical acceptance remain
+required; neither component opens the full-wire gate.
 
 The [onboarding readiness checks](../guides/onboarding-readiness.md) now add
 strict synthetic sole-radio scope admission and offline review of native captures.
@@ -101,7 +105,7 @@ not remove EMOSA's specification or physical-pod gates.
 | Order | Work | Exit evidence / decision |
 | --- | --- | --- |
 | 1 — P0 | Freeze proposed editions and procedure subset; use the acquired IEEE text; resolve remaining LLDP/WFA dependencies and complete normative rules and independent packet/crypto vectors | Reproducible encodings, authentication rules, timers and radio-wide BSS semantics with exact references |
-| 2 — I3/I4 | Implement actual packet endpoints, discovery/capabilities and genuine WSC provisioning; bind to the operation engine | Wire-driven OVSDB simulation and captures; valid/invalid authentication, duplicate/retry and lost-reply cases; no semantic fallback |
+| 2 — I3/I4 | Join compatible native discovery/profile/capability admission to the tested Ethernet WSC/operation/hwsim path | Wire-driven OVSDB simulation and captures; valid/invalid authentication, duplicate/retry and lost-reply cases; no semantic fallback |
 | In parallel — M0 | Run read-only qualification when trusted local inputs arrive; inspect pod/build, schema, managed radio/VIF, writers, recovery and client | Reviewed profile; sole-BSS radio or full radio-scope mapping; actual wired management and independent observer |
 | 3 — I5 | Execute one SSID/PSK change over wired management on an unchanged physical pod | Correlated EasyMesh exchange, Config delta, fresh State, observed BSSID/SSID, station authentication and usable traffic |
 | 4 — recovery | Repeat with lost acknowledgement and adapter restart; then qualify wireless management independently | Truthful unknown attribution; bounded recovery; no duplicate effects or unsupported rollback; outage/intervention duration retained |

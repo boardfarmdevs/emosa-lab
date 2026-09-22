@@ -14,6 +14,7 @@
 | [Isolated native compatibility trial](native-compatibility.md) | Rebuild and test the HE-length fix, observe a one-BSS controller policy, and restore the pinned runtime |
 | [First complete wire experiment](first-wire-experiment.md) | Follow the declared target, causal acceptance evidence, remaining implementation sequence and physical-pod handoff |
 | [Authenticated WSC handoff](../protocol/wsc-provisioning.md) | Follow independent hostap M2 into a durable operation and real owned OVSDB, including duplicate, lost-reply and real process-crash recovery |
+| [Ethernet WSC to observed Wi-Fi](../protocol/wsc-wire-radio.md) | Drive one packet-originated operation through OVSDB, hwsim and independent clients; compare normal and lost-reply outcomes |
 | [Offline EasyMesh payload exercise](../protocol/easymesh-payloads.md) | Decode/build selected values and reproduce their independent native-capture checks without a VM or pod |
 | [Stable identities and observed topology](observed-topology.md) | Bind every simulated radio/VIF, inspect a complete State-derived AP value, and test reconnect/row recreation/service restart |
 | [Radio capability inputs](radio-capabilities.md) | Supply explicit evidence-backed synthetic limits, inspect per-radio values, and test withdrawal on changed inputs or observations |

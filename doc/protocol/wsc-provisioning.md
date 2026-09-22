@@ -177,8 +177,9 @@ See the [protocol matrix](protocol-matrix.json),
 [complete experiment contract](../guides/first-wire-experiment.md).
 The next integration needs a compatible native controller, admitted
 discovery/Early/capability sequence and controller-owned inventory evidence.
-Then route that controller's genuine provisioning through this handoff into
-the existing hwsim manager and independent wpa_supplicant client. Finally,
+The next [Ethernet WSC/radio exercise](wsc-wire-radio.md) already reproduces this
+handoff through actual packet sockets, hwsim and independent clients with the
+synthetic peer. Route an admitted native controller through that path. Finally,
 qualify and substitute the unchanged physical pod. The acceptance path remains
 **real EasyMesh controller → EMOSA → unchanged physical pod → independently
 observed behavior**.

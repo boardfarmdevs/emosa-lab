@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "condition": "SIGTERM to driver while its owned peer is SIGSTOPped",
+  "driver_exit": 143,
+  "owned_workers": 1,
+  "remaining_owned_processes": 0,
+  "namespaces_restored": true,
+  "physical_interfaces_used": false
+}

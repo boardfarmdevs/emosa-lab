@@ -58,6 +58,23 @@ Ethernet exercises cover rejection, retry and withdrawal. The
 passes. Automatic Early Report and M1 remain blocked by the recorded normative
 and admission gaps; no native controller or physical pod was used in these runs.
 
+## Packet-driven WSC and radio increment
+
+The [WSC handoff](../protocol/wsc-provisioning.md) now creates durable operations
+from authenticated complete M2 input. The subsequent
+[Ethernet/radio experiment](../protocol/wsc-wire-radio.md) carries that input
+through actual AF_PACKET sockets into real OVSDB, a separate hostapd/hwsim manager
+and independent wired/wpa_supplicant clients. Normal and lost-reply runs preserve
+one operation/transaction; invalid input, fragments, retries, withheld application
+and wrong client keys have explicit checks. The
+[evidence](../evidence/wsc-wire/README.md) includes 928 unit / 53 OVSDB passes,
+independent packet correlation and interruption cleanup.
+
+The peer is a synthetic hostap payload exerciser. Native discovery/Early/profile/
+capability admission, controller-owned inventory, service integration of the full
+wire lifecycle and unchanged physical-pod acceptance remain pending. The full
+wire scenario still exits blocked with zero operations.
+
 ## Secure fleet and clean reproduction increment
 
 The [secure-fleet workflow](../guides/secure-fleet.md) adds authenticated

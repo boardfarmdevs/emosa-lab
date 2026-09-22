@@ -161,3 +161,17 @@ Pull both JSON and PCAP files and retain logs/driver output, as in step 4. Check
 them with `scripts/check-discovery-reference.py --directory LOCAL_RUN_DIRECTORY`.
 It requires tshark and imports no adapter code. This experiment uses owned
 isolated namespaces; it does not start or join the native peer baseline.
+
+## Authenticated WSC provisioning component
+
+`--provisioning --registrar PATH` adds an explicitly bound synthetic M1/M2
+exchange that creates a durable operation and changes owned OVSDB. Optional
+`--lost-reply` tests uncertain commitment without resending Config. It receives
+seven M2 frames at the adapter and two fresh M1s at the synthetic peer. It does
+not join the discovery mode above or activate native-controller admission.
+
+Use the [WSC packet/radio walkthrough](../../doc/protocol/wsc-wire-radio.md) for
+build, provenance-checked staging, commands, negative controls and interpretation.
+Its `stage.py --wsc` route supplies the compiled helper as well as the Python
+source. The same packet driver is used by the ownership-checked radio runner to
+reach hwsim and independent clients; no arbitrary physical endpoint is accepted.

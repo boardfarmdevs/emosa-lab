@@ -12,6 +12,7 @@
 | [Read-only report coordinator](report-coordinator.md) | Real database source, Topology Query loop, Early Report Ack/retry, source withdrawal and isolated Ethernet reproduction |
 | [Discovery before reporting](discovery-session.md) | Bounded Search/Response lifecycle, required-field diagnostics, reconnect invalidation and read-only topology |
 | [Authenticated WSC to durable operation](wsc-provisioning.md) | Independent hostap M2 drives real owned OVSDB; atomic receipt, duplicate, lost-reply, identity-race and process-crash cases |
+| [Ethernet WSC to observed Wi-Fi](wsc-wire-radio.md) | Actual packet receiver, authenticated operation, real OVSDB, separate hwsim manager and client evidence; synthetic peer, native admission pending |
 | [IEEE media input review](ieee-media-review.md) | Verified 802.11-2024 and 802.3-2022 PDFs, selected clauses, corrections and Ethernet edition gap |
 | [Protocol matrix](protocol-matrix.json) | Rules, sections, implementation evidence and unresolved procedure requirements |
 | [EasyMesh value components](easymesh-payloads.md) | Service, radio identity, Operational BSS and profile values; offline CLI, exact references and independent native-capture checks |

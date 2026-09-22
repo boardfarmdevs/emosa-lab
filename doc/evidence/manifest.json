@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scope": "Component, native manager R0 with recovery failure, bounded native peer baseline, semantic EMOSA/OVSDB/hostapd-hwsim client integration and guide evidence; no EMOSA wire onboarding or physical qualification",
+  "scope": "Component, native baseline, semantic service and owned synthetic Ethernet WSC/OVSDB/hwsim/client evidence; no native-controller EMOSA onboarding or physical qualification",
   "artifacts": [
     {
       "path": "api-results.xml",
@@ -2391,6 +2391,331 @@
       "path": "wsc-provisioning/wire-gate.json",
       "sha256": "9bacc91dfdb2c36184810c80e753cef8f81722cb8da4f1e4243ad4cc7719d4a9",
       "size": 481
+    },
+    {
+      "path": "wsc-wire/README.md",
+      "sha256": "f16c808e5cabea2b1821b4b3d476f823360e1a17ed61256e50cf1dcc81cde77e",
+      "size": 6181
+    },
+    {
+      "path": "wsc-wire/browser-result.json",
+      "sha256": "6157f1e1e42298614e89f5a65839413c427251cba50a82e50e7003c793b1ea85",
+      "size": 228
+    },
+    {
+      "path": "wsc-wire/cancel-result.json",
+      "sha256": "29594c9dd3fd034600fb42a8454ced7aa090432494bc7557e3a1f3a04e66f3fb",
+      "size": 238
+    },
+    {
+      "path": "wsc-wire/independent-reference.json",
+      "sha256": "45a741b1c4c3fad469694717a0951455810185fdef28e6d9464e637cd515aa32",
+      "size": 2545
+    },
+    {
+      "path": "wsc-wire/independent-wsc.txt",
+      "sha256": "5fe6d7c3a0bc303c99184f163d5e0cf6dbaa1dd62508f37f028192b6f6e358b9",
+      "size": 133
+    },
+    {
+      "path": "wsc-wire/links.json",
+      "sha256": "facced4d3470c1f0f552c00d765bdef361f9f9fd005b6e07fd6f47d6be782d62",
+      "size": 94
+    },
+    {
+      "path": "wsc-wire/mermaid.json",
+      "sha256": "4124d4e5c94287199f882a2db92298a4ca3a224b39fe9c11d4e4903efbc14c51",
+      "size": 1584
+    },
+    {
+      "path": "wsc-wire/ovsdb-junit-curation.json",
+      "sha256": "c45a72e6596cc828c3f921fe6bbcb048a9da79977444630db2080c8e93cfe421",
+      "size": 182
+    },
+    {
+      "path": "wsc-wire/ovsdb-results.xml",
+      "sha256": "e850ac0b8ed443a03e632c22eb91bb6010b4dd0cebb65a1ae10a4fd6eaf60524",
+      "size": 7158
+    },
+    {
+      "path": "wsc-wire/packet-lost-reply/driver.log",
+      "sha256": "33aaa78ef42da0443e6c64b1553c3478ba4da5336b1f0963d355d2fae7e354f7",
+      "size": 430
+    },
+    {
+      "path": "wsc-wire/packet-lost-reply/left.json",
+      "sha256": "5628405c21800287700915f6d3e641ab4da86f29b1e691827c41973b6d4a4e3f",
+      "size": 4258
+    },
+    {
+      "path": "wsc-wire/packet-lost-reply/left.pcap",
+      "sha256": "22163c8dc0d99a5385321a2f60903374a9396bcb0f3caeb51a52c6c45260248b",
+      "size": 5025
+    },
+    {
+      "path": "wsc-wire/packet-lost-reply/right.json",
+      "sha256": "f27a1e7b091fb201b19f9435090edb1392a56c4be804f8b3941a3958a202c6e3",
+      "size": 2354
+    },
+    {
+      "path": "wsc-wire/packet-lost-reply/right.pcap",
+      "sha256": "a586571418d9add9467d12e03c7eed7e0fb7b00e528b22700142af5cef9b3a46",
+      "size": 1066
+    },
+    {
+      "path": "wsc-wire/packet-lost-reply/wire-ready.json",
+      "sha256": "aee9dcbcb8652d1e773e977156c8da9909df764b763df82cecce2ab1e998dde2",
+      "size": 1764
+    },
+    {
+      "path": "wsc-wire/packet-normal/driver.log",
+      "sha256": "538f076a6232f9aaede1eb090cb015886699fafac623f9f3dc46c634583ec01a",
+      "size": 430
+    },
+    {
+      "path": "wsc-wire/packet-normal/left.json",
+      "sha256": "3a8ed8bd10a8de805b5dd168504b914f1146a411c4ab39e424c1de76d5de6b2f",
+      "size": 4571
+    },
+    {
+      "path": "wsc-wire/packet-normal/left.pcap",
+      "sha256": "16ba0b526bcd6eda05365dce67c3e19538a1e73c48f526d5b9b53f367086be08",
+      "size": 5025
+    },
+    {
+      "path": "wsc-wire/packet-normal/right.json",
+      "sha256": "793ec3d5c8a0ede215d1a0028094821ec0d24daa9e9954856c48e71ac6b3a7e0",
+      "size": 2355
+    },
+    {
+      "path": "wsc-wire/packet-normal/right.pcap",
+      "sha256": "f28f11730b1c30efddf743cba0d38e29045ba7aa33fa0f5edd2fe05b4ddeff24",
+      "size": 1066
+    },
+    {
+      "path": "wsc-wire/packet-normal/wire-ready.json",
+      "sha256": "850d4576864e382c9610f9ed5274fa1f4223052293846b29c7e98b8d7564356a",
+      "size": 1941
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/clients-changed.json",
+      "sha256": "fac9a89f3475d41b18ec51c5f8cbe6e215da6082ffce239b498d8f98cfb3604c",
+      "size": 2610
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/clients-initial.json",
+      "sha256": "02a71ae34211f0d14d32f82a1b577f65d73f64e79e5f67fc6f4fba6959f20929",
+      "size": 2610
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/clients-restored.json",
+      "sha256": "74d80f643bc3c2d2bf8b57e9f5c69e68714ac38a46eb085c096ba447299c76d1",
+      "size": 2612
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/clients-withheld.json",
+      "sha256": "ddf1c45c4d044e103a18c09981fa1d89bcfe341836ff07c24034e62e9886c0e3",
+      "size": 2622
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/eapol.tsv",
+      "sha256": "f12a6f1e1b23debf1dcee332a5de70ffe705707863825b90af57a036ca9d8d01",
+      "size": 116
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/ethernet/left.json",
+      "sha256": "749f8e7a4cf1e32c3cdd78f21f1a00496db483c119a5b0d231d02ddf4cabc3ed",
+      "size": 4267
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/ethernet/left.pcap",
+      "sha256": "ed88dc288d385d0928efe57661e7c1d7756863776b6a8628ee3eb923d22aec63",
+      "size": 5025
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/ethernet/right.json",
+      "sha256": "422f4eb2d4f2fa29a8aa4907ec24bb4f3819b1d9cb9b6cac93f81d9b9703d1f5",
+      "size": 2353
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/ethernet/right.pcap",
+      "sha256": "5a8270bf565fe7729d7df446cd9ebbde685ee99f13b38cc03fb0b3d10e45f03f",
+      "size": 1066
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/ethernet/wire-ready.json",
+      "sha256": "b9c91d7e13c82faf94d7e8ff3ae8d97937a7bd5511a554a68a399ac5d01b6f9d",
+      "size": 1768
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/manager.jsonl",
+      "sha256": "f5ed0c0d5cf2a9910749178914a88f9a8fd0ed18a7e61fb7e604ac7355d24349",
+      "size": 9499
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/packet-observations.json",
+      "sha256": "95d328b451538a7db86d7f8f25f92cb51b9872de1ec28d8c557fff68b84f0729",
+      "size": 292
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/radio.pcap",
+      "sha256": "b27ec8a5b30234dfb3800222d542d4e48e7d2306140695f326f530fdfff3b3b1",
+      "size": 77028
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/result.json",
+      "sha256": "a171e99a66bfca6e7a09138b0d37d75262563eb1b2bf21283c9f59653756b474",
+      "size": 4773
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/source-hashes.json",
+      "sha256": "db529e02dbc9ae15e6eddc7722c9dea0dbab0ff8d73c1ac38b64b3cee59dd0f9",
+      "size": 10014
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/topology.json",
+      "sha256": "a209ec951837f5f5899fd098f4d74cfe19da35532dae7e2380ac9fc0e5d4cbaa",
+      "size": 9479
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/wire-driver.log",
+      "sha256": "da455e7e33dad51f0f633a694fe0043b87972fc22863a9a2e95c579645f80905",
+      "size": 430
+    },
+    {
+      "path": "wsc-wire/radio-lost-reply/wrong-key.log",
+      "sha256": "7d26833f96af0e9c5f83a1a897dac6e467e9a28dd705ba7ec13f225593d8aa0a",
+      "size": 1089
+    },
+    {
+      "path": "wsc-wire/radio-normal/clients-changed.json",
+      "sha256": "a3ddda801d517fb9562bd994e4b2a559f20d353229a083fe89654df2dbc0fd40",
+      "size": 2611
+    },
+    {
+      "path": "wsc-wire/radio-normal/clients-initial.json",
+      "sha256": "2c7875f4f755ec40a39f7bde477fc9ec4d3490516ac1a72f8609808d3bad3895",
+      "size": 2610
+    },
+    {
+      "path": "wsc-wire/radio-normal/clients-restored.json",
+      "sha256": "af9f1b6ad3c9c7baebbcaa113971547a67b80522bf9389c1b1cf232192bb74c0",
+      "size": 2613
+    },
+    {
+      "path": "wsc-wire/radio-normal/clients-withheld.json",
+      "sha256": "be6a285ac7348fef05f68a9665d7d177aebc9f6f854586964ec0f9e063d70fe2",
+      "size": 2622
+    },
+    {
+      "path": "wsc-wire/radio-normal/eapol.tsv",
+      "sha256": "f5bb5ca1a31fa7eb58c41165ef295fe4cc3af2e01d85a8da20d48ecd1ca001a6",
+      "size": 116
+    },
+    {
+      "path": "wsc-wire/radio-normal/ethernet/left.json",
+      "sha256": "0b51c93893e70b8729c66b351aaa2ba838fdb428ec8f8390a74d0b48bc361365",
+      "size": 4580
+    },
+    {
+      "path": "wsc-wire/radio-normal/ethernet/left.pcap",
+      "sha256": "c260099bf751e0b06d8d03bd1bf31bd06863561f65e83ea49ac1995f401bb487",
+      "size": 5025
+    },
+    {
+      "path": "wsc-wire/radio-normal/ethernet/right.json",
+      "sha256": "e4d090af8040831c4276d75ecf47b78c401f91b9b5f9b9e5995e81d899c55524",
+      "size": 2354
+    },
+    {
+      "path": "wsc-wire/radio-normal/ethernet/right.pcap",
+      "sha256": "b76f779b1792f387468315aee159796e89c4b57520d9110604cfc720698edb43",
+      "size": 1066
+    },
+    {
+      "path": "wsc-wire/radio-normal/ethernet/wire-ready.json",
+      "sha256": "449b352ebe949c8dbda32c5d4d22727f94afaa6faa2fc1c9ea43c5efd0f4ca13",
+      "size": 1945
+    },
+    {
+      "path": "wsc-wire/radio-normal/manager.jsonl",
+      "sha256": "0dc1dec78daa0e264fda1f6f96a346a0a541c6e7e52d1bbff4f5ceb828e691e1",
+      "size": 8240
+    },
+    {
+      "path": "wsc-wire/radio-normal/packet-observations.json",
+      "sha256": "5d9e567f429ca2bf5d7506ee9e3f0fe46d1c1344d733ff6a47e4204a50bdd958",
+      "size": 292
+    },
+    {
+      "path": "wsc-wire/radio-normal/radio.pcap",
+      "sha256": "456225b01e29867cae0e2120d8f6bf24960078d11db869c5df6883d122fd11a2",
+      "size": 72778
+    },
+    {
+      "path": "wsc-wire/radio-normal/result.json",
+      "sha256": "d3cf7d9da0dab080753391fa9bd0fc5e2137b24d6dfe9224850368699256fe26",
+      "size": 4903
+    },
+    {
+      "path": "wsc-wire/radio-normal/source-hashes.json",
+      "sha256": "db529e02dbc9ae15e6eddc7722c9dea0dbab0ff8d73c1ac38b64b3cee59dd0f9",
+      "size": 10014
+    },
+    {
+      "path": "wsc-wire/radio-normal/topology.json",
+      "sha256": "a209ec951837f5f5899fd098f4d74cfe19da35532dae7e2380ac9fc0e5d4cbaa",
+      "size": 9479
+    },
+    {
+      "path": "wsc-wire/radio-normal/wire-driver.log",
+      "sha256": "3f916ae3aec7773d0ea665c4e23a6986b48ebe9b6800186124ef77721c9566c0",
+      "size": 430
+    },
+    {
+      "path": "wsc-wire/radio-normal/wrong-key.log",
+      "sha256": "7d26833f96af0e9c5f83a1a897dac6e467e9a28dd705ba7ec13f225593d8aa0a",
+      "size": 1089
+    },
+    {
+      "path": "wsc-wire/runtime.json",
+      "sha256": "295acb1a874cf6db725ef39da382eccaf63b3c199c4d407d6cc22a6b6dcf06c2",
+      "size": 880
+    },
+    {
+      "path": "wsc-wire/shell-check.json",
+      "sha256": "db03c4e79a0aaf9162db60d716e5d6794f34b6ef110ad84b83777246aafe7347",
+      "size": 107
+    },
+    {
+      "path": "wsc-wire/summary.json",
+      "sha256": "8e133fad5d7e5cef5ec4fc9fb036bb7c1608a460a3a47b0896682ee7ea73f880",
+      "size": 3730
+    },
+    {
+      "path": "wsc-wire/transport-regression.json",
+      "sha256": "ee5ef4941ba6e01bf05c6630710cb96eed19104bdbce1d099c6e9ddebece2241",
+      "size": 154
+    },
+    {
+      "path": "wsc-wire/unit-junit-curation.json",
+      "sha256": "55cbb6a4bc2a3dbfa3a447a0be9709440e791c3f7e2738481cb5fa3c975b75b4",
+      "size": 183
+    },
+    {
+      "path": "wsc-wire/unit-results.xml",
+      "sha256": "5f0e69d4198bf90207fa996116909260a066bc29c411836f54543b7e0ccd41bf",
+      "size": 132419
+    },
+    {
+      "path": "wsc-wire/wheel-check.json",
+      "sha256": "daf4ba4b583c3931a2da6b7a7036aa7ab8a8a1fccd86adbb29bc4140a81218fa",
+      "size": 321
+    },
+    {
+      "path": "wsc-wire/wire-gate.json",
+      "sha256": "83a087c092f895aed53724192c03452887382bd3db8b3a1f42bce3dd0dcab044",
+      "size": 543
     }
   ]
 }

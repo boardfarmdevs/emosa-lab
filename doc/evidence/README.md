@@ -10,6 +10,7 @@ for navigation and commands.
 
 | Collection | Entry point |
 | --- | --- |
+| Ethernet WSC to OVSDB, hwsim and independent clients | [Normal/fault runs, received captures and cleanup](wsc-wire/README.md) |
 | Read-only database-backed report coordinator | [Ack/retry, State-derived reports, withdrawal and real Ethernet runs](coordinator/README.md) |
 | Capability and topology report components | [Offline, isolated Ethernet and independent field checks](reports/README.md) |
 | Bounded controller discovery and WSC exchanges | [Peer/radio binding, replay controls and native compatibility gaps](autoconfiguration/README.md) |

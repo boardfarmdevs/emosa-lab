@@ -109,6 +109,7 @@ the experiment, runs its checks, collects evidence and cleans up owned processes
 | Controller discovery candidate | Separate prepared peer topology | Native controller discovery frames reach the EMOSA container | An EMOSA response or controller-visible virtual agent |
 | WSC crypto/M1/M2 and exchange components | Development checkout | Bounded complete-message authentication, peer/radio binding and replay checks | Native controller admission or physical authorization |
 | Authenticated WSC-to-OVSDB component | HOST, local hostap helper and OVSDB builds | M2 creates a durable operation, guarded Config and separately observed State; duplicates, lost reply and real process crash | Ethernet socket delivery, full discovery/profile, native inventory, radio/client or physical acceptance |
+| Ethernet WSC-to-radio component | HOST commands, owned VM/containers from chapter 11 | Synthetic peer sends actual Ethernet M2; EMOSA drives OVSDB, hwsim and independent clients, with normal/lost-reply controls | Native discovery/profile admission, controller inventory, OpenSync firmware or physical acceptance |
 | Native OpenSync R0 investigation | Separate VM container | Native manager consumes Config and emits State with dummy-driver feedback | Qualified application backend; database-restart recovery currently fails |
 | Read-only pod collector | Machine with private authorized pod access | Actual schema and available identity/inventory facts in a draft profile | Permission to write, mapping qualification or physical acceptance |
 
@@ -3313,9 +3314,89 @@ durability, source-generation checks, receipt fields and restart limitations.
 `blocked_P0`. This bridge is separate from the discovery lifecycle in §13.11;
 it does not resolve automatic Early Report/profile admission or populate a
 native controller's inventory. Next we must join an admitted native-controller
-exchange to this handoff, then the existing hwsim manager and independent
-wpa_supplicant client. Physical acceptance still requires an unchanged,
+exchange to this handoff. The next section joins its synthetic packet peer to
+the hwsim manager and independent client. Physical acceptance still requires an unchanged,
 qualified OpenSync pod and independent observations.
+
+### 13.13 Drive Wi-Fi from an Ethernet WSC exchange
+
+The preceding exercise establishes the durable handoff without a radio. This
+one makes a stronger, bounded observation: **an authenticated request received
+through an actual Ethernet socket causes the database, radio and client changes
+in the same run**. The configuration comes from M2; a semantic API call does not
+supply it. The small hostap payload peer is still synthetic. A real controller
+has neither admitted this agent nor recorded it in its inventory.
+
+Read the [illustrated walkthrough](../protocol/wsc-wire-radio.md) before running.
+Use HOST for the commands below. `lxc exec` runs the process inside the dedicated
+VM. You need chapter 11's existing owned containers/radios and idle services,
+plus §13.12's built registrar. This does not establish a new VM:
+
+```bash
+python3 scripts/build-wsc-registrar.py
+python3 deploy/radio-manager/stage.py --wsc
+lxc exec emosa-lab -- env \
+  PYTHONPATH=/opt/emosa-radio-manager/source \
+  EMOSA_OVS_BIN=/opt/emosa-radio-manager/ovsdb \
+  /opt/emosa/.venv/bin/python /opt/emosa-radio-manager/run-wsc.py \
+  --label manual-wsc-radio-01
+```
+
+First-time operators should run the walkthrough's **packet-only** command before
+this radio command. That isolates frame receipt, authentication and operation
+creation from AP/client setup. A packet failure is then easier to distinguish
+from a radio failure. Each command requires a new output directory or label so
+that earlier evidence survives.
+
+The runner automatically performs this learning sequence:
+
+1. Start the initial AP and confirm both independent clients work. This proves
+   the observation path is usable before changing anything.
+2. Send invalid M2 authentication, close that exchange, and generate a fresh M1.
+   No operation or credential file may exist after the rejected exchange.
+3. Reject a wrong RUID, then receive the valid request's last fragment first.
+   There must be no operation until the whole message is available and checked.
+4. Create and execute one `wsc-component` operation. Same-content retries, even
+   with fresh encryption and a changed MID, reuse it. A changed configuration
+   cannot create another write in that exchange.
+5. Withhold manager application. Config names the new network while State and
+   client probes still identify the old network. This directly demonstrates
+   why Config commitment alone is insufficient.
+6. Release the manager. It applies Config through hostapd, reads back live
+   hostapd/nl80211 facts, and publishes State. Separate clients must authenticate
+   and carry fresh, interface-bound application traffic.
+7. Try a wrong client key. Require a new supplicant `WRONG_KEY` event and no
+   completed association. Restore the correct key and require traffic again.
+
+Read `/opt/emosa-radio-manager/runs/manual-wsc-radio-01/result.json` in the VM,
+then `ethernet/left.json` and the four `clients-*.json` files. Match the operation
+receipt's M1 digest to `ethernet/right.json` and the capture. The normal case has
+one transaction attempt, `CONFIG_COMMITTED` before application, then
+`OBSERVED_APPLIED`. The AP changes to `EMOSA-WSC-component`; client observations
+pin its BSSID and use different nonces for each check.
+
+Repeat the same command with a new label and `--lost-reply`. Now the pre-application
+state must be `INDETERMINATE`. The database reconnect invalidates the old exchange's
+write authority, so further retries are refused. Fresh State later establishes
+application without a second transaction. Commit attribution remains `unknown`,
+and application attribution is `current_condition_only`; current success does
+not reconstruct a missing historical reply.
+
+The runner stops its services and database, retains raw results, and removes its
+owned packet workers/namespaces. Containers and their radio assignments remain,
+with the lab in wired topology. Raw runs include private simulation credential
+files and journals; publish only reviewed results/captures. The
+[independent packet checker](../../scripts/check-wsc-wire-reference.py) uses
+external tshark headers and a separate TLV reader. Ethernet capture timestamps
+are synthetic; their received bytes/order and the receipt establish correlation,
+not measured packet latency. The radio capture retains actual observation times.
+
+**Checkpoint:** explain the five different observations: authenticated M2,
+durable operation, Config result, observed radio State and independent client
+traffic. Identify the remaining first arrow: compatible native-controller
+admission and its own inventory. This fixture does not run OpenSync firmware,
+qualify a physical pod, or open the complete wire gate. See the
+[retained normal and fault runs](../evidence/wsc-wire/README.md).
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
@@ -3660,6 +3741,21 @@ management/service demonstration; actual controller onboarding remains pending.
 | Does this test RF performance, roaming, DHCP or every security mode? | No; those are outside the current bounded profiles |
 | Can every standard agent always onboard? | No universal claim; the recorded native baseline covers a finite selected tuple/case set with known shutdown defects |
 | What unlocks the next proof? | Complete normative/exchange binding work, then a qualified physical endpoint, mapping and independent physical client |
+
+### 15.8 Demo F: a packet-driven change reaches a wireless client
+
+Prepare §13.13's build/staging before the audience arrives. State the scope:
+“An owned synthetic WSC peer sends Ethernet provisioning to EMOSA. We will
+observe the resulting radio and client behavior. Native-controller onboarding
+and the unchanged physical pod remain the next boundaries.”
+
+Run a fresh normal label, then inspect its receipt, the before-application
+Config/State mismatch and the changed-client result. Show that the operation's
+origin is `wsc-component`, not a local semantic submission. Use the independent
+capture checker to correlate M1 and the accepted M2 with that receipt. Show the
+wrong-key control, then correct-key recovery. Repeat with `--lost-reply` or open
+a clearly labelled retained fault run to explain unknown commit attribution
+and one transaction attempt. Keep the native-controller inventory gap explicit.
 
 ## 16. Troubleshoot, recover and retain evidence
 
@@ -4018,6 +4114,8 @@ operator should additionally demonstrate setup ownership, collection and recover
 
 ### 18.2 What should happen next
 
+The [Ethernet WSC/radio component](../protocol/wsc-wire-radio.md) now joins
+authenticated packet input to observed clients with a synthetic peer.
 The next major integration boundary is **a real controller causing an admitted
 EMOSA operation through an actual EasyMesh exchange**. Today's native baseline
 and semantic adapter experiments give useful components on either side, but
@@ -4059,9 +4157,9 @@ path or a physical OpenSync pod.
 
 | Priority | Work | Evidence required before calling it complete |
 | --- | --- | --- |
-| 1 | Acquire pending IEEE/WFA inputs and complete the proposed procedure/profile audit | Exact editions, authorized provenance, applicable clauses/errata and independent vectors in the protocol matrix |
+| 1 | Use the obtained IEEE 1905 editions, resolve remaining LLDP/WFA inputs and complete the procedure/profile audit | Exact editions, authorized provenance, applicable clauses/errata and independent vectors in the protocol matrix |
 | 2 | Bind real controller discovery/topology/autoconfiguration/WSC to an EMOSA virtual agent | Independent captures, controller inventory, peer/exchange/radio binding, replay/retry/timer handling and complete request admission |
-| 3 | Connect that genuine wire path to the established OVSDB/radio boundary | A causal captured request → admitted operation → guarded Config → observed radio → independent clients, including failures/recovery |
+| 3 | Route admitted native input through the tested WSC/OVSDB/radio component | A causal captured request → admitted operation → guarded Config → observed radio → independent clients, including failures/recovery |
 | 4 | Collect and qualify the actual unchanged pod | Private connection path, read-only actual profile, verified writer controls, supported complete-radio mapping and physical recovery/client evidence |
 | 5 | Run the real acceptance path | Named controller → EMOSA → unchanged pod, independent wired/physical-Wi-Fi observations, negative controls and retained repeated wired/wireless-management outcomes |
 | 6 | Broaden confidence | Another independent peer/build, sustained/restart/reboot cases, supported capability combinations and documented remaining incompatibilities |

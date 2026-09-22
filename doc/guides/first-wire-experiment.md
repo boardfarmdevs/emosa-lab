@@ -21,6 +21,10 @@ admission into the complete lifecycle remain unfinished. The separate
 authenticated M2 into a durable operation and real simulated Config change,
 with duplicate/uncertainty/crash tests. Its synthetic payload peer and in-memory
 Ethernet do not satisfy controller inventory or radio/client acceptance.
+The follow-on [Ethernet WSC/radio experiment](../protocol/wsc-wire-radio.md) now
+joins that handoff to actual packet sockets, hwsim and independent clients in one
+run. Normal and lost-reply cases pass with a synthetic hostap peer; compatible
+native admission and controller-owned inventory remain absent.
 
 EMOSA means **EasyMesh to OpenSync Adapter**. Its virtual agent is the EasyMesh
 representation it presents to the controller. The OpenSync extender connects to
@@ -101,7 +105,10 @@ VM and its owned containers.
 4. Run the [isolated native compatibility trial](native-compatibility.md).
    Inspect the entire selected controller provisioning message and the observed
    agent/BSS inventory. This uses a standard native agent, without EMOSA.
-5. Review the [profile audit](../protocol/profile-readiness.md) and
+5. Run the [Ethernet WSC/radio component](../protocol/wsc-wire-radio.md) to connect
+   packet-driven operations to independent client evidence. Preserve its synthetic
+   peer scope; no semantic submission supplies the change.
+6. Review the [profile audit](../protocol/profile-readiness.md) and
    [single acquisition checklist](../protocol/specification-acquisition.md).
    Supply missing authorized document paths outside Git when available.
 
@@ -183,7 +190,7 @@ because changing the serving BSS can interrupt the adapter's own connection.
 | Isolated peer compatibility | Candidate HAL length fix and live policy experiment; retained results and remaining native findings are in the [compatibility guide](native-compatibility.md) |
 | First complete experiment definition | This contract defines target, admission, causal evidence, negative controls and physical substitution |
 | Complete capability requirements | Selected value/mapping components tested; `0x88` ordering, mandatory report dependencies and full profile applicability remain pending |
-| Complete wire exchange | IEEE access complete; envelope/packet and bounded discovery/WSC components tested; owned WSC-to-operation integration tested separately; full I3/I4 coordinator and profile admission pending; the existing gate rejects execution |
+| Complete wire exchange | IEEE access complete; envelope/packet and bounded discovery/WSC components tested; owned Ethernet WSC-to-operation/hwsim/client integration tested with a synthetic peer; full I3/I4 coordinator and profile admission pending; the existing gate rejects execution |
 | Physical qualification and proof | Collector/examples available; actual private connection, qualification and physical run remain pending |
 
 The final acceptance path remains **real EasyMesh messages → EMOSA → unchanged

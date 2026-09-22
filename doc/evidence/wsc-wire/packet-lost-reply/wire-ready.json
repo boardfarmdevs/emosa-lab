@@ -1,0 +1,68 @@
+{
+  "operation": {
+    "operation_id": "27d06a68-f4f6-4dcb-9cfe-0c169e62a04f",
+    "initiating_interface": "wsc-component",
+    "state": "INDETERMINATE",
+    "reason": "OUTCOME_UNKNOWN",
+    "attempts": 1,
+    "commit_attribution": "unknown",
+    "application_evidence": null,
+    "receipt": {
+      "scope": "owned_simulation_wsc_component",
+      "m1_sha256": "7e4f9744c9eeebd36ecc527fa2892ab81ebf7b22f74f939400acf30c92e5d156",
+      "controller_al": "020000005002",
+      "agent_al": "020000005001",
+      "ruid": "020000005010",
+      "bssid": "020000005011",
+      "ingress": "emw977db6e2a",
+      "link_generation": 1,
+      "database_generation": 1,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "first_mid": 503,
+      "pod_id": "pod-1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1"
+    }
+  },
+  "config_ssid": "EMOSA-WSC-component",
+  "observed_ssid": "initial-network",
+  "packet_session": {
+    "counts": {
+      "rejected": 4,
+      "incomplete": 1,
+      "operation": 1
+    },
+    "events": [
+      {
+        "status": "rejected",
+        "reason": "INVALID_INPUT"
+      },
+      {
+        "status": "incomplete",
+        "mid": 503
+      },
+      {
+        "status": "operation",
+        "mid": 503,
+        "operation_id": "27d06a68-f4f6-4dcb-9cfe-0c169e62a04f",
+        "state": "INDETERMINATE"
+      },
+      {
+        "status": "rejected",
+        "reason": "NOT_READY"
+      },
+      {
+        "status": "rejected",
+        "reason": "NOT_READY"
+      },
+      {
+        "status": "rejected",
+        "reason": "NOT_READY"
+      }
+    ],
+    "closed": false,
+    "scope": "owned_simulation_wsc_component",
+    "full_controller_onboarding": false
+  },
+  "transaction_attempts": 1
+}

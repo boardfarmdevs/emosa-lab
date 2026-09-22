@@ -7,7 +7,8 @@ the [architecture overview](architecture/overview.md) for the main building bloc
 New team members should follow the [learning sequence](guides/learning-path.md):
 model → real database → persistent service → authenticated TLS → fleet/recovery
 measurements → clean LXD reproduction → wire envelope/discovery/reports → read-only report coordination →
-discovery-to-topology lifecycle → radio and eventual controller-to-physical-pod proof.
+discovery-to-topology lifecycle → durable WSC handoff → Ethernet WSC driving
+hwsim and independent clients → eventual native-controller-to-physical-pod proof.
 
 ## Guides: learn, run and demonstrate
 

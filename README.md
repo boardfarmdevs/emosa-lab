@@ -29,7 +29,10 @@ controller onboarding and physical acceptance remain pending. The
 [authenticated WSC handoff](doc/protocol/wsc-provisioning.md) now drives durable
 operations and real owned OVSDB directly from independent hostap M2 payloads,
 including duplicate, lost-reply and real process-crash cases. This component
-uses in-memory Ethernet delivery; it is not native-controller onboarding.
+uses in-memory Ethernet delivery. The next [Ethernet-to-radio exercise](doc/protocol/wsc-wire-radio.md)
+now carries the same handoff over actual packet sockets into hostapd/hwsim and
+separate wired/wpa_supplicant clients. Normal and lost-reply runs passed; the
+peer is still synthetic, so native-controller onboarding remains pending.
 
 ## Architecture
 

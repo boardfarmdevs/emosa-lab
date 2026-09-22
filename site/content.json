@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Restricted discovery/reporting and a separate authenticated WSC-to-operation/OVSDB component are tested. Join them after Early/profile/capability admission and native controller compatibility are resolved; retain controller inventory and independent client evidence.",
+      "next": "Synthetic Ethernet WSC now drives a durable operation, OVSDB, hwsim and separate clients. Join compatible native discovery/Early/profile/capability admission and retain the controller’s own inventory.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -40,7 +40,7 @@
         "Guard existing resource references and preserve unrelated configuration.",
         "Reconcile lost outcomes, restart, ownership conflicts and deadlines."
       ],
-      "next": "Authenticated M2 now drives one durable operation in owned simulation, including lost-reply and real process-crash recovery. Next connect admitted native-controller messages and the hwsim/client path.",
+      "next": "Authenticated Ethernet M2 now drives one operation through hwsim and independent clients, including uncertain-commit recovery without resend. Native admission and physical qualification remain pending.",
       "path": "src/emosa/reconcile.py"
     },
     "journal": {
@@ -663,10 +663,22 @@
       "title": "WSC provisioning component evidence",
       "description": "Four repeated owned-database cases; no full controller, Ethernet socket, radio or physical acceptance claim.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/wsc-wire-radio.md",
+      "title": "Ethernet WSC to observed Wi-Fi",
+      "description": "Run actual packet input through the durable operation, real OVSDB, hwsim manager and independent clients; interpret normal and lost-reply evidence.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/wsc-wire/README.md",
+      "title": "Ethernet WSC and radio evidence",
+      "description": "928 unit / 53 OVSDB checks, normal and lost-reply packet/radio runs, independent captures and interruption cleanup. Synthetic peer; native onboarding pending.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "wsc-provisioning/unit-results.xml",
-    "ovsdb": "wsc-provisioning/ovsdb-results.xml"
+    "unit": "wsc-wire/unit-results.xml",
+    "ovsdb": "wsc-wire/ovsdb-results.xml"
   }
 }

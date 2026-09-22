@@ -46,10 +46,28 @@ CASES = ("configure", "lost-reply", "identity-race", "crash-after-commit")
 class BoundBackend(OpenSyncBackend):
     """Fixture identity is pinned across every plan/read/submit, not M2 MAC data."""
 
-    def __init__(self, session, vault):
+    def __init__(
+        self,
+        session,
+        vault,
+        *,
+        radio_mac="02:00:00:00:50:10",
+        bssid="02:00:00:00:50:11",
+        if_name="lab-ap",
+        radio_name="lab-radio",
+        state_provenance="independent-simulated-manager:Wifi_VIF_State",
+    ):
         super().__init__(
-            "pod-1", session, vault, expected_serial=SERIAL, mapping_scope="sole-fronthaul-radio"
+            "pod-1",
+            session,
+            vault,
+            expected_serial=SERIAL,
+            mapping_scope="sole-fronthaul-radio",
+            if_name=if_name,
+            radio_name=radio_name,
+            state_provenance=state_provenance,
         )
+        self.radio_mac, self.bssid = radio_mac, bssid
         self.anchor = None
 
     def _binding(self, raw):
@@ -59,8 +77,8 @@ class BoundBackend(OpenSyncBackend):
         vif = next(iter(rows["Wifi_VIF_State"].values()))
         if (
             not raw["ready"]
-            or radio.get("mac") != "02:00:00:00:50:10"
-            or vif.get("mac") != "02:00:00:00:50:11"
+            or radio.get("mac") != self.radio_mac
+            or vif.get("mac") != self.bssid
             or radio.get("freq_band") != "2.4G"
             or radio.get("channel") != 6
         ):
@@ -106,10 +124,10 @@ def registrar_reply(executable, m1, mode="configure"):
     return result.stdout
 
 
-def make_bridge(engine, backend, run_id):
+def make_bridge(engine, backend, run_id, *, binding=BINDING, target=TARGET, deadline=30, mids=None):
     device = M1Device(
         uuid=bytes.fromhex("02000000500140008000000000000001"),
-        al_mac=AGENT,
+        al_mac=binding.local_al,
         authentication_types=0x20,
         encryption_types=8,
         connection_types=1,
@@ -128,15 +146,17 @@ def make_bridge(engine, backend, run_id):
         os_version=1,
     )
     exchange = WscExchange(
-        BINDING,
+        binding,
         device,
-        APRadioBasicCapabilities(RUID, 1, (BasicOperatingClass(81, 20, ()),)),
+        APRadioBasicCapabilities(target.ruid, 1, (BasicOperatingClass(81, 20, ()),)),
         Profile2APCapability(0, 0, 0, 0),
-        APRadioAdvancedCapabilities(RUID, 0),
-        mids=MidSequence(100),
+        APRadioAdvancedCapabilities(target.ruid, 0),
+        mids=MidSequence(100) if mids is None else mids,
         timeout=30,
     )
-    return WscComponentBridge(engine, exchange, TARGET, backend.context, run_id=run_id)
+    return WscComponentBridge(
+        engine, exchange, target, backend.context, run_id=run_id, deadline=deadline
+    )
 
 
 async def start_exchange(bridge, registrar, frames):

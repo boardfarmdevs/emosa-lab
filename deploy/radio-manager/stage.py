@@ -1,5 +1,6 @@
 """Stage the radio experiment in the existing dedicated VM without host installs."""
 
+import argparse
 import hashlib
 import json
 import subprocess
@@ -19,6 +20,17 @@ def vm(*args):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--wsc", action="store_true", help="include the built synthetic WSC peer")
+    args = parser.parse_args()
+    if args.wsc:
+        reference = json.loads((REPO / ".cache/wsc-registrar/provenance.json").read_text())
+        for key, path in (
+            ("binary_sha256", REPO / ".cache/wsc-registrar/component-registrar"),
+            ("harness_sha256", REPO / "deploy/wire/component-registrar.c"),
+        ):
+            if reference[key] != hashlib.sha256(path.read_bytes()).hexdigest():
+                raise SystemExit("Build the current WSC registrar before staging")
     if vm("hostname").strip() != "emosa-lab" or vm("systemd-detect-virt", "--vm").strip() != "kvm":
         raise SystemExit("Expected the existing dedicated VM")
     # Refuse replacement during any active experiment, including a paused AP.
@@ -51,6 +63,14 @@ for name in ('em-baseline-controller','em-baseline-agent','em-baseline-wired','e
             bundle.add(path, arcname="source/" + str(path.relative_to(REPO / "src")))
         for path in sorted((REPO / "deploy/radio-manager").glob("*.py")):
             bundle.add(path, arcname=path.name)
+        if args.wsc:
+            bundle.add(REPO / "deploy/wire/check-endpoint.py", arcname="wire-endpoint.py")
+            for name in ("component-registrar", "provenance.json"):
+                bundle.add(REPO / ".cache/wsc-registrar" / name, arcname="registrar/" + name)
+            bundle.add(
+                REPO / ".cache/wsc-registrar/hostapd-2.11/COPYING",
+                arcname="registrar/COPYING.hostap",
+            )
         bundle.add(REPO / "schemas", arcname="schemas")
         bundle.add(REPO / "tests/fixtures/opensync", arcname="tests/fixtures/opensync")
         bundle.add(REPO / "deploy/peer-baseline/reference.json", arcname="peer-reference.json")

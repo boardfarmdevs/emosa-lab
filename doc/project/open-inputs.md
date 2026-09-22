@@ -75,3 +75,9 @@ the retained native response's missing KiB/MiB support and Security Capability.
 Table 117's Early bit/reserved-range conflict remains a consolidated acquisition
 clarification; automatic Early Report and M1 initiation stay blocked. This work
 adds no new document request and does not establish a qualified native profile.
+
+The [Ethernet WSC/radio component](../protocol/wsc-wire-radio.md) now joins a
+synthetic authenticated packet exchange to real OVSDB, hwsim and independent
+clients, with normal and lost-reply evidence. It adds no external input request.
+Native controller compatibility/admission and the actual physical profile remain
+required before the complete viability claim.

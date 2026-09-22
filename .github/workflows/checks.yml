@@ -31,6 +31,14 @@ jobs:
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01
           --directory doc/evidence/discovery-session/run-02
+      - run: >-
+          python3 scripts/check-wsc-wire-reference.py
+          --directory doc/evidence/wsc-wire/packet-normal
+          --directory doc/evidence/wsc-wire/packet-lost-reply
+          --directory doc/evidence/wsc-wire/radio-normal/ethernet
+          --directory doc/evidence/wsc-wire/radio-lost-reply/ethernet
+          --radio-directory doc/evidence/wsc-wire/radio-normal
+          --radio-directory doc/evidence/wsc-wire/radio-lost-reply
   wsc-reference:
     runs-on: ubuntu-24.04
     steps:
