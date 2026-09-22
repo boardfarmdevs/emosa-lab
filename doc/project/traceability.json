@@ -106,31 +106,47 @@
       "id": "LANG-02",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/opensync/session.py"
+        "src/emosa/opensync/session.py",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
       "test_refs": [
-        "tests/test_ovsdb.py"
+        "tests/test_ovsdb.py",
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
       ],
       "evidence_refs": [
-        "doc/evidence/ovsdb-results.xml"
+        "doc/evidence/ovsdb-results.xml",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": "ovsdb-sim",
-      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "LANG-03",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/opensync/session.py"
+        "src/emosa/opensync/session.py",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
       "test_refs": [
-        "tests/test_ovsdb.py"
+        "tests/test_ovsdb.py",
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
       ],
       "evidence_refs": [
-        "doc/evidence/ovsdb-results.xml"
+        "doc/evidence/ovsdb-results.xml",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": "ovsdb-sim",
-      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "LANG-04",
@@ -146,48 +162,72 @@
       "status": "blocked",
       "implementation_refs": [
         "deploy/README.md",
-        "deploy/images.lock.json"
+        "deploy/images.lock.json",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
-      "test_refs": [],
+      "test_refs": [
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
+      ],
       "evidence_refs": [
-        "doc/evidence/peer/qualification-summary.json"
+        "doc/evidence/peer/qualification-summary.json",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
-      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
-      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+      "blocker": "Actual M0 trust/topology and complete wire/physical procedure qualification remain pending.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "DEP-02",
       "status": "blocked",
       "implementation_refs": [
         "deploy/README.md",
-        "deploy/images.lock.json"
+        "deploy/images.lock.json",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
-      "test_refs": [],
+      "test_refs": [
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
+      ],
       "evidence_refs": [
-        "doc/evidence/peer/qualification-summary.json"
+        "doc/evidence/peer/qualification-summary.json",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
-      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
-      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+      "blocker": "Actual M0 trust/topology and complete wire/physical procedure qualification remain pending.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "DEP-03",
       "status": "blocked",
       "implementation_refs": [
         "deploy/README.md",
-        "deploy/images.lock.json"
+        "deploy/images.lock.json",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
-      "test_refs": [],
+      "test_refs": [
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
+      ],
       "evidence_refs": [
-        "doc/evidence/peer/qualification-summary.json"
+        "doc/evidence/peer/qualification-summary.json",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
-      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
-      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+      "blocker": "Actual M0 trust/topology and complete wire/physical procedure qualification remain pending.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "DEP-04",
@@ -290,32 +330,48 @@
       "status": "blocked",
       "implementation_refs": [
         "deploy/README.md",
-        "deploy/images.lock.json"
+        "deploy/images.lock.json",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
-      "test_refs": [],
+      "test_refs": [
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
+      ],
       "evidence_refs": [
-        "doc/evidence/peer/qualification-summary.json"
+        "doc/evidence/peer/qualification-summary.json",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
-      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
-      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+      "blocker": "Actual M0 trust/topology and complete wire/physical procedure qualification remain pending.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "DEP-11",
       "status": "blocked",
       "implementation_refs": [
         "deploy/README.md",
-        "deploy/images.lock.json"
+        "deploy/images.lock.json",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
-      "test_refs": [],
+      "test_refs": [
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
+      ],
       "evidence_refs": [
-        "doc/evidence/peer/qualification-summary.json"
+        "doc/evidence/peer/qualification-summary.json",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
-      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
-      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+      "blocker": "Actual M0 trust/topology and complete wire/physical procedure qualification remain pending.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "DEP-12",

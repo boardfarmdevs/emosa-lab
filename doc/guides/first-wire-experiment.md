@@ -136,7 +136,7 @@ before any independent interoperability claim.
 
 No private pod connection file or authentication material has been supplied.
 The [qualification guide](pod-qualification.md) describes the implemented loader
-and the three credentials-free examples: mutual TLS, an existing private Unix
+and the credentials-free examples: dialing/listening mutual TLS, an existing private Unix
 socket, or an independently established authenticated tunnel.
 
 On the machine running EMOSA, the operator places the populated file at an

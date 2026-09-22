@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "reviewed_utc": "2026-09-22T07:14:15.237799+00:00",
+  "base_revision": "6dbb6cd16030193492839d5847ced1d4e512581e",
+  "scope": "Authenticated synthetic OVSDB fleet and actual adapter service recovery; installed-wheel nested-LXD reproduction",
+  "working_tree_sha256": {
+    "src/emosa/secrets.py": "8e6b739c869abe7b5742e7caa8ebb942ddf8b0646848c005e495771f69fdd2e6",
+    "src/emosa/operations.py": "54d9737d6c9884e0b49282dc9bc749152d42b00a85946d5d76d91d4db834938e",
+    "src/emosa/he_mcs.py": "afa90c1e9fb45803e31ed8ae963d555d0ed2590bc0be99fab06ffe48ba08d53c",
+    "src/emosa/qualification.py": "52a3539170ba9d2c7d3cf59667874ee1d38f1847bf7abd0cca2eca6013280e15",
+    "src/emosa/clock.py": "3438a5c3931086fa29b7cc1f0beb69f1831ac3016337def36883d68ceba1efd8",
+    "src/emosa/app.py": "72060ad2c0b70e3780e2fd9c27f313b9fe479e634e973ff9c9bb1b61ece8feb7",
+    "src/emosa/cli.py": "6012eadd766c55e1e1cafd7ce0e505e0c8de1b9a9932a98cf5813e25933a9e09",
+    "src/emosa/errors.py": "18202efebe9c8853826867ebf012c93db853fc934a23a66be0c1dfff586c4f09",
+    "src/emosa/config.py": "b3a23eb83acc30a348b8f3918fad4a7ce1d4d9186a7da4f57b62a541caddc835",
+    "src/emosa/wsc_messages.py": "8f4beaacbc32278e043d75aacc44c4aa1dcfe0ebcbc23dff33af150c2c363551",
+    "src/emosa/local_api.py": "f83fe146843c6d60fe08ef9776713aa4f8cd951103d188a7d4e27525a5be333a",
+    "src/emosa/reconcile.py": "ad8d06f0489ccc294a2da81e83fa5bdb4ad474f5c0a45895b1e8ac3d22594100",
+    "src/emosa/easymesh_payloads.py": "075decb6f5f0b55f933e5fb61d606fba42e5042b583bac2e553a37489ad2b77b",
+    "src/emosa/topology_bindings.py": "82174d78632a9275fd95b76b57c21ef5aee7e0195a35cb79b12e04d27a1cf839",
+    "src/emosa/capability_extensions.py": "8bf59c818aa5716f3f72bf7feda4b7d69e9ea8c6f208c04a108d0649957631c6",
+    "src/emosa/wsc_radio.py": "9c0139b3fb386d315b2bbd91f45f0df8b8f4690c937861ac513c07de96f3d073",
+    "src/emosa/model.py": "0e51efda5dcef130031c012a5fa6467373eb109f044f51190478df68752f3308",
+    "src/emosa/radio_capabilities.py": "15d5a988fd196713cbaee635f1828f420b9f6af968bf2dbd3475d202b0d2dd09",
+    "src/emosa/capabilities.py": "aeb35487468bff43bfc9d963effb527a0eb36c555fb9f2651c6e977a2a949fad",
+    "src/emosa/agents.py": "bbe5099cfd9cc23b623094a280119b18ba088d72ba02947c3aa08093c3dcea87",
+    "src/emosa/counter_units.py": "b0fde4e053e498a442dd08f9e60563c158363a0141d016006cafb034cec84ce7",
+    "src/emosa/store.py": "76399f0136bac8eb83a3f443ddfbdcfc4adc21603ad7672d77d6700e32f96bc0",
+    "src/emosa/__init__.py": "c030ae7eef7f1025dab638a930f2956378dc4eb38dd81323867b3b09ab4ee886",
+    "src/emosa/operating_classes.py": "83f00162a2e5d4ac2f728cd14e626de9af5a4c4d5b829902a75293b48f575c1a",
+    "src/emosa/wsc.py": "91b6e830aa24e841d828f37c23dd1d878e5a418ba6d9dea78c2c9d464e93da46",
+    "src/emosa/simulation/manager.py": "b6febaa881c1bec580359eba9b6cdb5bdba16c4e4ca6d0f89b754ef0caa58036",
+    "src/emosa/simulation/tls.py": "17a234a2ef3b490a841f5e77e4cdd3ae204d381cf4874cd04ae974f2171b4d30",
+    "src/emosa/simulation/connecting_fleet.py": "72cbb4b76a9e795fe9f916ab01d47b0d23db427c035710423e34f8f9df0cf3fd",
+    "src/emosa/simulation/connecting_pod.py": "d2e2d19029fa1216f77903d100ddd6566007c311999b057e8afc04bf434de871",
+    "src/emosa/simulation/radio_capabilities.py": "c4305d7cbe67ee39d69a418463d135e30f1013a141b5d4e16b107185d3d7777a",
+    "src/emosa/simulation/radio.py": "aedf5ba00df0784dce13734a6fd4721ee1ef40ac17b90609e0bdfabda9348c5e",
+    "src/emosa/simulation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/emosa/simulation/database.py": "19c0541c238e91b9fc18589d0e75a94a9efd1c96ead7f3b329d2e8a34e0b673e",
+    "src/emosa/simulation/topology.py": "aba6a379095db7bc3759924752a65e9de1c143a2ab5a4ca74e08a0c8c6344d88",
+    "src/emosa/simulation/reliability.py": "45edb810647991d5c7774f88f3d4b91ba9a34669b63ecd244239c7e57b742a9d",
+    "src/emosa/evaluation/cli.py": "b4c899b63d12bb17df7e9aec012ff747094dfb05d5b2f240cf269c3d02620e61",
+    "src/emosa/evaluation/service.py": "b2da5791bb8591eb1c0608e48c3f5da4edaabe405a6a80515d265e292e847474",
+    "src/emosa/evaluation/runner.py": "87e927221f6b97ce56303b84dab0391f3a46f6122216ca6b33b7e4ff9aabe1d2",
+    "src/emosa/evaluation/payloads.py": "dc2da901a98ba7b8a71ea2c91ee84fcfa63aa03fc32e7dc458d1ebdaaac98430",
+    "src/emosa/evaluation/peer_capture.py": "ea4f9f43b85d43874b400675cbcfc71f2d63c9df5c1c776b4673820191e52073",
+    "src/emosa/evaluation/profile_audit.py": "94e04ad3bd7d89d5846bf23d3bb4300fcb9ce9c0e0bb59dff1271a8bf9ac15fd",
+    "src/emosa/evaluation/evidence.py": "fdf1bf27619d7bb30e7c9f022d1f46ebee80501866f7e494549aa502c20f90b5",
+    "src/emosa/evaluation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/emosa/evaluation/lxd.py": "9763bf2ee703d051449678f1de416f3e8ff3c910c2bcdcfcdad9a678d2b0a41e",
+    "src/emosa/opensync/mapping.py": "0daaf9766c6c2cca3dc0a57f2bcd4c21292c9fa1709233285e85756a6f8f49e1",
+    "src/emosa/opensync/tls_listener.py": "fe840cf445a9e0b5744622d71187675efa27118d8174dfb4a59245ebbc6e641f",
+    "src/emosa/opensync/schema.py": "89c05c3763129d63a2d9ef9511a9ea6fd84f7f4f44ae5b272d4e537e38265be5",
+    "src/emosa/opensync/session.py": "4cdd6f631f7f7f1ed33c11a281d1ce7527fff1f15a5c2ab9c0c092731b1a6f18",
+    "src/emosa/opensync/radio_scope.py": "a98bd567a10f4d243088b941c369a057f44c6c0da3273ecad9dec24d170725ba",
+    "src/emosa/opensync/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/emosa/opensync/topology.py": "c7715579c934ef1d443ef83587a9e030952701523d49d654fccf5b61fc42fac4",
+    "src/emosa/backends/base.py": "67379fe53d41d5042465d84ef6589d274e3604fdaec0af92f71d3a3de4d7bfe3",
+    "src/emosa/backends/mock.py": "8f521f2dd6fbd31b1a88ef954973a2406ad606778f342fce01d22f362c2c6ac4",
+    "src/emosa/backends/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "schemas/observation.schema.json": "d0bd32384f2ed71aff057ae58ffa86854cba5b0f20a07c3bf88990b13a9bf08b",
+    "schemas/event.schema.json": "fe6cb0216995179dd7b1f1be91de52dae8b1caa378638730e6a7d8e870d48b5c",
+    "schemas/profile-features.schema.json": "a03fba4a731336144a0256e7c6fbe4d87ee91095c3cff659b02b394cd92c35c5",
+    "schemas/scenario.schema.json": "1ca91b0ad6a7b253b4a54ffe3d507e4c5a7d039dd293f55dc7bf233306c5c272",
+    "schemas/qualification.schema.json": "ecf9d56ac8d2e393fb6fef804903d8576a3ff730cc45a1b49d4f714bc0848b6b",
+    "schemas/radio-capabilities.schema.json": "493f4e559b5dec6d49d972494234e735fc48a95a5f70dcbd03b9b3121cf063ed",
+    "schemas/run-result.schema.json": "633ff04d12ad5d6d69e00f9d8c5de2178a76574c3e4ca868dacadb52661c51cd",
+    "schemas/config.schema.json": "9589e0e580d812208685d45c74aa551c68f472b5913fa7efdda9c94b97e21917",
+    "schemas/operation.schema.json": "060cfd9faf6637ddc84cfffb1562fa6fa8443a885ee1d0b5b3b91e1041b2cc52",
+    "schemas/local-api.schema.json": "31354f6503bdc4842f956a28370395f12c5860a9e76473cccb0c4c7264a21b44",
+    "deploy/reliability/README.md": "b1f8e942b6b57dd1e32bf2a5db2813c320061c7e4447d1d7be30fa64db677fc5",
+    "deploy/reliability/prepare-runtime.sh": "a3a37637063c4c572975d908f84d34ecbe1bc8d4e809a236898edcaa074d953a",
+    "deploy/reliability/lab.py": "dbae12c162a8aba7a7ea6d2b7f3f171658957f7621af8710246b5b58d4d10d2d",
+    "tests/test_reliability.py": "56af99d66f36dc4c02610fbe1b60069b36a8f9c43abe1e8d7ee655702d8a3d44",
+    "tests/test_reliability_deployment.py": "57e28c82a2a6e3366887b3f28566e4331c5517261bb4b868e1b541a565f52c21",
+    "tests/test_tls_listener.py": "48ad85045f7b7e72df8beda1fa2cd796b01dace5e7fbb88fbfae1b3b28fe1d43",
+    "tests/test_agents.py": "36e9ef3f8a269248cfee55ded669eaa18f2f71aff200e1cbbfaeea315fcb72b7",
+    "scripts/build-ovsdb.sh": "5ca9b7a4aaf20fceceb685d827b3184fadae0cf358fc44f3b5e24fbfb32c416a"
+  },
+  "tests": {
+    "unit": 674,
+    "ovsdb": 46,
+    "clean_runtime_tls": 4
+  },
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "production_capacity_proven": false,
+  "host": {
+    "system": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "cpu_count": 16
+  },
+  "runtime_image": "runtime-image.json",
+  "wheel_sha256": "02b4c2340e488e3fa0b53ef2721aba18389bdcce1ae0ded632e53bbff2b4ec51",
+  "wheel_source_files_verified_identical": 54,
+  "remaining_inputs": [
+    "IEEE 1905.1-2013",
+    "IEEE 1905.1a-2014",
+    "actual private pod connection and qualified profile"
+  ],
+  "scope_notes": [
+    "one configured authenticated listener per pod; no dynamic enrollment/shared-port router",
+    "real OVS JSON-RPC; no EasyMesh packets in these workloads",
+    "TLS service writes remain loopback ovsdb-sim only; actual collector read-only",
+    "resources sampled every 0.5 seconds cover adapter only; CPU counters are per PID",
+    "fault targets pod 1, pod 2 must progress, other pods remain monitored",
+    "short bounded recovery exercise is not production lifetime qualification"
+  ],
+  "host_ovs_sha256": {
+    "ovsdb-server": "cfdea3b398d5c619accbbcc933377f9a35211304126e73b22cca04e4cd832f27",
+    "ovsdb-tool": "f30e9ce3707cdf217a926e99d8c956384e8774852a231edf15a91b5beb917559"
+  },
+  "clean_runtime": {
+    "vm": "emosa-reliability",
+    "base_images": "deploy/images.lock.json",
+    "cpus": 2,
+    "memory_gib": 4,
+    "container_memory_limit_gib": 3,
+    "user_identity": "uid=1001(emosa) gid=1001(emosa) groups=1001(emosa)",
+    "python": "3.13.7",
+    "uv": "0.11.17",
+    "image_alias": "emosa-secure-runtime-r3",
+    "image_manifest": "runtime-image.json",
+    "no_radio_lab_changes": true,
+    "no_physical_pod_changes": true
+  },
+  "measurement_limits": [
+    "Host and nested VM share the physical host; final host/VM workloads overlapped. Results are scoped behavior/resource observations, not controlled comparative benchmarks.",
+    "Only adapter resources are sampled; system/pod fixture totals and short-lived peaks are not measured.",
+    "No production SLO, days-long soak, certificate rotation/revocation or dynamic enrollment qualification."
+  ],
+  "retained_failures": [
+    {
+      "artifact": "initial-observer-failure.json",
+      "diagnosis": "Idle test observer saw stale monitor after independently observed adapter recovery."
+    },
+    {
+      "artifact": "soak-observer-backoff-failure.json",
+      "diagnosis": "Repeated forced observer reconnect retained backoff longer than one read budget; fixture sessions now restart after adapter recovery is observed."
+    },
+    {
+      "artifact": "lxd-startup-failure.json",
+      "diagnosis": "Database socket appeared before administrative listener accepted; startup now probes both actual endpoints."
+    },
+    {
+      "artifact": "initial-build-failure.log",
+      "diagnosis": "Host Python 3.10 lacks hashlib.file_digest; deployment driver now hashes in bounded chunks."
+    }
+  ],
+  "review_corrections": [
+    "Synthetic CA/leaf key-usage and key-identifier extensions added for Python strict X.509 verification. A test-server certificate failure now fails the negative test; pin_rejected == 1 verifies that the actual wrong-pin branch executed. Earlier TLS-negative passes are preliminary.",
+    "Explicit non-root UID and GID for runtime execution; pytest cache disabled for installed read-only test location.",
+    "Only VM-agent/nested-daemon read readiness is retried after VM start, never a mutation."
+  ],
+  "build_sequence": "Fresh pinned-base build of installed wheel/Python/OpenSSL OVS tools; fixture/readiness/test-review fixes installed as new wheel revisions before final image publication. No experiments ran in the build image. Final wheel source files match the recorded source hashes.",
+  "runs": [
+    {
+      "environment": "host",
+      "artifact": "host-4.json",
+      "pods": 4,
+      "cycles_requested": 1,
+      "elapsed_seconds": 11.597202386008576,
+      "operation_latency_seconds": {
+        "samples": 10,
+        "p50": 0.1292704840307124,
+        "p95": 0.17249006795464084,
+        "max": 0.17249006795464084
+      },
+      "adapter_peaks": {
+        "rss_kib": 53748,
+        "threads": 5,
+        "file_descriptors": 19
+      }
+    },
+    {
+      "environment": "host",
+      "artifact": "host-8.json",
+      "pods": 8,
+      "cycles_requested": 1,
+      "elapsed_seconds": 14.303358613979071,
+      "operation_latency_seconds": {
+        "samples": 14,
+        "p50": 0.29732918995432556,
+        "p95": 0.6066930790548213,
+        "max": 0.6066930790548213
+      },
+      "adapter_peaks": {
+        "rss_kib": 69132,
+        "threads": 9,
+        "file_descriptors": 28
+      }
+    },
+    {
+      "environment": "host",
+      "artifact": "host-16.json",
+      "pods": 16,
+      "cycles_requested": 1,
+      "elapsed_seconds": 19.37811748002423,
+      "operation_latency_seconds": {
+        "samples": 22,
+        "p50": 0.4325170399970375,
+        "p95": 1.3526102649630047,
+        "max": 1.4313727819826454
+      },
+      "adapter_peaks": {
+        "rss_kib": 99364,
+        "threads": 17,
+        "file_descriptors": 59
+      }
+    },
+    {
+      "environment": "host",
+      "artifact": "host-32.json",
+      "pods": 32,
+      "cycles_requested": 1,
+      "elapsed_seconds": 29.41530418302864,
+      "operation_latency_seconds": {
+        "samples": 38,
+        "p50": 1.7174001350067556,
+        "p95": 1.7842858799849637,
+        "max": 1.7860867700073868
+      },
+      "adapter_peaks": {
+        "rss_kib": 155672,
+        "threads": 33,
+        "file_descriptors": 107
+      }
+    },
+    {
+      "environment": "host",
+      "artifact": "host-soak.json",
+      "pods": 4,
+      "cycles_requested": 12,
+      "elapsed_seconds": 156.4093068119837,
+      "operation_latency_seconds": {
+        "samples": 54,
+        "p50": 0.1305075820419006,
+        "p95": 0.1637868499965407,
+        "max": 0.34311820002039894
+      },
+      "adapter_peaks": {
+        "rss_kib": 54740,
+        "threads": 5,
+        "file_descriptors": 20
+      }
+    },
+    {
+      "environment": "lxd",
+      "artifact": "lxd-4.json",
+      "pods": 4,
+      "cycles_requested": 1,
+      "elapsed_seconds": 14.236867971000002,
+      "operation_latency_seconds": {
+        "samples": 10,
+        "p50": 0.14395471499999957,
+        "p95": 0.3072357650000015,
+        "max": 0.3072357650000015
+      },
+      "adapter_peaks": {
+        "rss_kib": 60676,
+        "threads": 5,
+        "file_descriptors": 22
+      }
+    },
+    {
+      "environment": "lxd",
+      "artifact": "lxd-8.json",
+      "pods": 8,
+      "cycles_requested": 1,
+      "elapsed_seconds": 17.104130276999996,
+      "operation_latency_seconds": {
+        "samples": 14,
+        "p50": 0.39772460900000084,
+        "p95": 0.40498954699999956,
+        "max": 0.40498954699999956
+      },
+      "adapter_peaks": {
+        "rss_kib": 75884,
+        "threads": 9,
+        "file_descriptors": 36
+      }
+    },
+    {
+      "environment": "lxd",
+      "artifact": "lxd-16.json",
+      "pods": 16,
+      "cycles_requested": 1,
+      "elapsed_seconds": 24.072206702000003,
+      "operation_latency_seconds": {
+        "samples": 22,
+        "p50": 0.8010265420000025,
+        "p95": 0.8087323550000036,
+        "max": 0.8110900519999973
+      },
+      "adapter_peaks": {
+        "rss_kib": 105452,
+        "threads": 17,
+        "file_descriptors": 60
+      }
+    },
+    {
+      "environment": "lxd",
+      "artifact": "lxd-32.json",
+      "pods": 32,
+      "cycles_requested": 1,
+      "elapsed_seconds": 38.528036423,
+      "operation_latency_seconds": {
+        "samples": 38,
+        "p50": 1.9310435990000059,
+        "p95": 3.758619048,
+        "max": 3.759213595999995
+      },
+      "adapter_peaks": {
+        "rss_kib": 153860,
+        "threads": 33,
+        "file_descriptors": 108
+      }
+    },
+    {
+      "environment": "lxd",
+      "artifact": "lxd-soak.json",
+      "pods": 4,
+      "cycles_requested": 12,
+      "elapsed_seconds": 159.63862841899999,
+      "operation_latency_seconds": {
+        "samples": 54,
+        "p50": 0.14766202200002,
+        "p95": 0.2108991919999994,
+        "max": 0.36335760100001835
+      },
+      "adapter_peaks": {
+        "rss_kib": 63312,
+        "threads": 5,
+        "file_descriptors": 22
+      }
+    }
+  ],
+  "all_final_runs_passed": true,
+  "cleanup": {
+    "reproduction_vm": "Stopped",
+    "existing_radio_vm": "Running",
+    "owned_run_container_removed": true,
+    "build_container_and_images_retained": true,
+    "host_export_retained": true
+  }
+}

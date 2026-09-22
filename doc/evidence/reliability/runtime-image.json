@@ -1,0 +1,24 @@
+{
+  "image": {
+    "fingerprint": "d3998c33a6c3580eb3227931e1130539e66caee391f9f4f4530b3d2ba88d9d87",
+    "architecture": "x86_64",
+    "type": "container",
+    "size": 791499989,
+    "created_at": "2026-09-22T07:08:48.032169637Z",
+    "properties": {
+      "architecture": "x86_64",
+      "description": "Ubuntu 24.04 LTS server (20260911)",
+      "os": "ubuntu",
+      "release": "noble"
+    }
+  },
+  "exports": [
+    {
+      "filename": "runtime-d3998c33a6c3580eb3227931e1130539e66caee391f9f4f4530b3d2ba88d9d87.tar.gz",
+      "sha256": "d3998c33a6c3580eb3227931e1130539e66caee391f9f4f4530b3d2ba88d9d87",
+      "size": 791499989
+    }
+  ],
+  "published_before_experiments": true,
+  "contains_pod_credentials": false
+}

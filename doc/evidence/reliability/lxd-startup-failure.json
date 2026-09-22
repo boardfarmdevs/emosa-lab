@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "scope": "real adapter service, synthetic pod-initiated mutual TLS OVSDB fleet",
+  "pods": 4,
+  "cycles_requested": 1,
+  "interval_seconds": 0,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "production_capacity_proven": false,
+  "passed": false,
+  "checks": [
+    "all distinct TLS certificates and serial bindings admitted",
+    "concurrent per-pod writes, database keys and idempotent replay",
+    "trusted certificate with wrong database serial rejected; peer progresses"
+  ],
+  "cycles": [],
+  "resource_samples": [
+    {
+      "elapsed_seconds": 2.0426164269999987,
+      "pid": 528,
+      "rss_kib": 30508,
+      "threads": 1,
+      "file_descriptors": 4,
+      "cpu_seconds": 0.23
+    },
+    {
+      "elapsed_seconds": 2.5453489209999987,
+      "pid": 528,
+      "rss_kib": 52392,
+      "threads": 5,
+      "file_descriptors": 20,
+      "cpu_seconds": 0.6
+    },
+    {
+      "elapsed_seconds": 3.0811209719999937,
+      "pid": 528,
+      "rss_kib": 59708,
+      "threads": 5,
+      "file_descriptors": 20,
+      "cpu_seconds": 0.8
+    },
+    {
+      "elapsed_seconds": 3.720024608999992,
+      "pid": 528,
+      "rss_kib": 59708,
+      "threads": 5,
+      "file_descriptors": 20,
+      "cpu_seconds": 0.92
+    },
+    {
+      "elapsed_seconds": 4.22072447699999,
+      "pid": 546,
+      "rss_kib": 41436,
+      "threads": 5,
+      "file_descriptors": 16,
+      "cpu_seconds": 0.42
+    },
+    {
+      "elapsed_seconds": 4.721924817999991,
+      "pid": 546,
+      "rss_kib": 41436,
+      "threads": 5,
+      "file_descriptors": 16,
+      "cpu_seconds": 0.45
+    },
+    {
+      "elapsed_seconds": 5.223299322000003,
+      "pid": 546,
+      "rss_kib": 59952,
+      "threads": 5,
+      "file_descriptors": 20,
+      "cpu_seconds": 0.78
+    },
+    {
+      "elapsed_seconds": 5.724749852000002,
+      "pid": 546,
+      "rss_kib": 59952,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 0.86
+    },
+    {
+      "elapsed_seconds": 6.225899286000001,
+      "pid": 546,
+      "rss_kib": 59952,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 0.93
+    },
+    {
+      "elapsed_seconds": 6.726776739999991,
+      "pid": 546,
+      "rss_kib": 59952,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 0.99
+    },
+    {
+      "elapsed_seconds": 7.2275127810000015,
+      "pid": 546,
+      "rss_kib": 59952,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 1.07
+    },
+    {
+      "elapsed_seconds": 7.728064564999997,
+      "pid": 546,
+      "rss_kib": 60300,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 1.22
+    },
+    {
+      "elapsed_seconds": 8.229299733999994,
+      "pid": 546,
+      "rss_kib": 60300,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 1.29
+    },
+    {
+      "elapsed_seconds": 8.730005653999996,
+      "pid": 546,
+      "rss_kib": 60300,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 1.36
+    },
+    {
+      "elapsed_seconds": 9.230969579999993,
+      "pid": 546,
+      "rss_kib": 60300,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 1.43
+    },
+    {
+      "elapsed_seconds": 9.731877413999996,
+      "pid": 546,
+      "rss_kib": 60300,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 1.52
+    }
+  ],
+  "connection_seconds": 2.697600652999995,
+  "failure_type": "EmosaError",
+  "service_lifecycle": [
+    {
+      "event": "started",
+      "pid": 528,
+      "adapter_instance_id": "d4b2165c-f551-4af5-80dc-3209418e5a09"
+    },
+    {
+      "event": "stopped",
+      "pid": 528,
+      "requested_crash": true,
+      "kill_escalation": false,
+      "returncode": -9
+    },
+    {
+      "event": "started",
+      "pid": 546,
+      "adapter_instance_id": "9c175f43-2624-4d68-9789-fe835e7a7438"
+    },
+    {
+      "event": "stopped",
+      "pid": 546,
+      "requested_crash": false,
+      "kill_escalation": false,
+      "returncode": 0
+    }
+  ],
+  "cleanup_passed": true,
+  "elapsed_seconds": 10.317730865999991,
+  "adapter_peaks": {
+    "rss_kib": 60300,
+    "threads": 5,
+    "file_descriptors": 20
+  }
+}

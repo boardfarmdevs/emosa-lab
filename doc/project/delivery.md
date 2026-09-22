@@ -7,6 +7,20 @@ evaluation tooling and a read-only physical-pod preparation command. It does
 Every architecture requirement and acceptance row is listed in
 `traceability.json`; verification is scoped to the recorded mode.
 
+## Secure fleet and clean reproduction increment
+
+The [secure-fleet workflow](../guides/secure-fleet.md) adds authenticated
+pod-initiated TLS, per-pod certificate/serial bindings, bounded handshake rejection,
+4/8/16/32 real database sessions through one service, resource/latency observations
+and repeated crash/reconnect/database/late-State/conflict checks. The
+[clean runtime workflow](../../deploy/reliability/README.md) repeats these from an
+installed wheel in a fresh nested-LXD container and retains a private image export.
+Current results and preserved earlier failures are in
+[reliability evidence](../evidence/reliability/README.md). The
+[learning sequence](../guides/learning-path.md) and manual explain each stage.
+Earlier delivery tables below remain historical; they are not the current suite
+counts or a statement that the new component runtime has not been exercised.
+
 ## Explorer and radio-lab increment
 
 The [interactive field guide](https://boardfarmdevs.github.io/emosa-lab/) adds a

@@ -38,6 +38,13 @@ realistic interface. For example, a timeout in a software model is easier to
 understand before diagnosing a timeout involving a database and wireless clients.
 Keep your own run IDs and notes; they are the basis for a useful team handover.
 
+The [new guided learning sequence](learning-path.md) turns this into explicit
+checkpoints: architecture → installation → model outcomes → real OVSDB → one
+persistent service → authenticated pod connections → 4/8/16/32-pod measurements
+→ repeated recovery → clean installed-runtime reproduction. It then branches
+into radio/client work, native peer baselines and the remaining wire/physical
+proof. Use it as your first-week checklist and return here for detailed commands.
+
 ## Contents
 
 1. [Choose a learning path](#1-choose-a-learning-path)
@@ -93,6 +100,8 @@ the experiment, runs its checks, collects evidence and cleans up owned processes
 | Deterministic model scenarios | Linux development checkout | Operation lifecycle, fault expectations, journal and evaluator behavior | Actual OVSDB, Wi-Fi, EasyMesh and pods |
 | Real OVSDB simulator | Same checkout; local C build | Real upstream database protocol, schema monitoring, guarded Config changes and separately simulated State | Radio actuation and EasyMesh |
 | Long-running adapter/local API | Same checkout plus teaching fixture | Inventory, planning, semantic submission, idempotency, waiting, quiescing and service restart | A live EasyMesh controller |
+| Secure TLS fleet and repeated recovery | HOST, TLS-enabled OVSDB build | Authenticated pod-initiated sessions, actual service with 4/8/16/32 pods, identity isolation, sampled resources and fault recovery | Production capacity, radio behavior or wire onboarding |
+| Clean installed-runtime reproduction | Separate owned VM and nested containers | Same TLS/fleet/fault behavior from an installed wheel and retained image outside a checkout | Full wire/physical application deployment |
 | Static explorer | Browser, or local HTTP server | Inspection of retained, reviewed evidence | Live execution; the website has no lab connection |
 | Standalone hwsim smoke | Dedicated VM and two nested containers | Linux WPA2 association and interface-bound traffic | EMOSA or OVSDB actuation |
 | Native controller–agent baseline | Dedicated VM and four nested containers | Wired/wireless onboarding and recovery for the named patched prplMesh tuple | EMOSA, OpenSync, universal onboarding or certification |
@@ -114,6 +123,7 @@ pod profile or grant access.
 | --- | --- | --- |
 | First hour | Chapters 2–4 and browser tour in chapter 7 | Explain the architecture; produce and interpret a model run |
 | First half day | Chapters 5–6 | OVSDB baseline/fault results; show a planned and observed operation through the service |
+| Secure service and fleet | [§6.15](#615-authenticate-pods-measure-a-fleet-and-reproduce-recovery) and [learning steps 6–9](learning-path.md#6-authenticate-the-connecting-pod--host-priority-1) | Explain trust, run 4/8/16/32 pods, inspect repeated faults and reproduce the installed runtime |
 | Lab orientation | Chapter 8 and one of 9–11 with the lab owner | Draw the actual topology and locate independent client evidence |
 | Protocol/development orientation | Chapters 12–14 and 17 | Identify P0/M0/R0/X1 and trace one feature from contract to evidence |
 | Demo rehearsal | Chapter 15 | Deliver a scoped demo and explain one failure without concealing it |
@@ -462,6 +472,7 @@ Do not infer a required fresh native build from every use of EMOSA Lab:
 | --- | --- |
 | Model scenarios, evaluator and reports | No |
 | Ordinary OVSDB simulator and connecting-pod diagnostic demo | No; compatible Open vSwitch database tools are required separately |
+| TLS fleet/recovery and clean installed-runtime reproduction | No; TLS-enabled OVSDB tools are required; the clean runtime builds them |
 | Standalone two-container hwsim smoke | No; it uses the Linux wireless stack and hostap tools |
 | Native controller–agent baseline | Yes; reuse matching prebuilt artifacts or produce them with the companion build |
 | Current four-container EMOSA/OVSDB/radio integration | Uses the prepared native-baseline lab and retained runtime inputs; its run stops the native peer services and initiates EMOSA semantically |
@@ -527,11 +538,11 @@ The current code already has useful parts of this structure:
 
 | Item | Implemented behavior | Remaining production work |
 | --- | --- | --- |
-| `pods[]` configuration | Declares 1–32 pod entries; `Application` creates a backend and refresh task per pod | The limit is an input bound, not measured capacity or a production sizing claim |
+| `pods[]` configuration | Declares 1–32 pod entries; 4/8/16/32 real TLS database sessions are exercised through one service | The limit and bounded measurements do not establish production sizing |
 | Resource and request binding | Pod IDs select configured resources and scope idempotency/ownership; virtual-agent entries bind configured AL identities and expected serials | Authenticated physical identity, complete radio scope and multi-agent wire representation |
-| Concurrency | One modifying operation per pod; other pods can progress | Stress, fairness, memory/CPU limits and isolation under many slow/reconnecting pods |
-| Enrollment | Explicit configured pod entries and bounded simulation listeners | Automatic authenticated admission, device authorization, dynamic add/remove and lifecycle policy |
-| Recovery | Journaled operations and reconnect observations | Deployment-level failover, exclusive ownership transfer and multi-instance recovery |
+| Concurrency | One modifying operation per pod; concurrent fleet writes and peer progress during a selected pod's failure are measured, with sampled CPU/RSS/FDs | Fairness/SLOs, sustained load and production resource policies |
+| Enrollment | Explicit entries with per-listener CA, certificate pin and expected serial; bounded TLS admission and negative tests | Physical trust enrollment, shared-port routing, dynamic add/remove and lifecycle policy |
+| Recovery | Journaled operations and repeated service-kill/database-restart/reconnect/late-State/conflict checks | Long-duration qualification, deployment failover, exclusive ownership transfer and multi-instance recovery |
 
 A connection from an unknown device is therefore **not currently automatic
 onboarding**. Configuration is loaded when the service starts; there is no
@@ -540,6 +551,10 @@ The [two-pod service exercise](service-integration.md) now measures separate
 requests, histories, disconnects and crash recovery through two explicitly
 configured simulation listeners. It does not establish a shared network listener
 that authenticates and dispatches a fleet of physical devices.
+The [secure-fleet extension](secure-fleet.md) adds explicit TLS bindings, four
+measured fleet sizes, repeated faults and a clean installed-runtime reproduction.
+It retains the same distinction between configured synthetic admission and
+automatic onboarding of physical devices.
 
 Multiple adapter instances may become useful for fault isolation, separate
 sites or measured capacity limits. That is a deployment/scaling choice. It
@@ -1093,7 +1108,7 @@ prerequisites are:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y build-essential pkg-config curl
+sudo apt-get install -y build-essential pkg-config libssl-dev curl
 ```
 
 Skip package installation when these already exist. Run the actual repository
@@ -1114,9 +1129,10 @@ reduces concurrent compiler work on a small machine.
 If using separately retained tools, set `EMOSA_OVS_BIN` to the directory containing
 both executables and record their versions/hashes. The override is searched first;
 the source-tree build and PATH are fallbacks. Verify the chosen tools explicitly
-instead of assuming a system OVS package matches the reference. This build disables
-server TLS for local simulation; the separately installed Python OVS client handles
-the qualified collector's TLS connection path.
+instead of assuming a system OVS package matches the reference. The current build
+enables OpenSSL for authenticated connecting-pod simulation. Rebuild an older
+TLS-disabled local binary before starting §6.15. Historical reports retain their
+original binary hashes; they do not identify this new TLS-enabled build.
 
 ### 5.2 Run the normal and lost-reply experiments
 
@@ -1704,6 +1720,61 @@ no complete profile is advertised and no physical pod is qualified. Actual radio
 limits, other mandatory feature capabilities and the IEEE procedure layer remain
 required before a controller can rely on this representation.
 
+### 6.15 Authenticate pods, measure a fleet and reproduce recovery
+
+The earlier Unix-socket lessons teach direction and operation semantics. The
+next question is whether the service can admit the intended authenticated pod,
+isolate its work from other pods, and preserve correct outcomes through repeated
+faults. Follow the [secure fleet guide](secure-fleet.md) for the complete exercise
+and result field reference. These commands run on **HOST**, without a VM or radio:
+
+```sh
+uv run pytest tests/test_tls_listener.py -q
+uv run python -m emosa.simulation.reliability \
+  --directory .cache/reliability/manual-two --pods 2 --cycles 1
+```
+
+Each simulated pod initiates mutual TLS to its own explicitly configured listener.
+EMOSA validates its certificate chain and leaf pin before passing the connection
+to upstream OVS JSON-RPC, then checks the expected database serial before making
+the diagnostic identity ready. The CA, certificate pin and serial have different
+jobs; understanding those distinctions is part of the lesson. Invalid clients
+cannot replace an existing authenticated session. Four pending handshakes per
+listener expire after three seconds, bounding stalled clients.
+
+The command creates one actual adapter process plus a real database and independent
+simulated manager per pod. It first verifies concurrent configuration and
+idempotent replay. It then withholds State, kills/restarts the service, disconnects
+a pod, restarts its database, publishes late State and injects a competing writer.
+Pod 2 must keep progressing while pod 1 waits or is offline. A timeout remains a
+timeout after late application; an ownership conflict survives service restart.
+
+Inspect `report.json` in the selected directory. `passed` must be true,
+`cleanup_passed` must be true and the stated checks must be present. Read the
+`cycles`, operation latency distribution, sampled RSS/threads/file descriptors
+and service lifecycle. Resources cover the adapter process only; simulated pod
+processes also consume memory and CPU. Certificates, keys and journals in that
+private directory are not public evidence.
+
+Now run `--pods 4`, `8`, `16` and `32` sequentially using fresh directories, then
+run four pods with `--cycles 12 --interval 5`. The guide supplies complete command
+blocks. Counts and durations matter: a bounded 32-pod experiment is not a promise
+of production capacity, and a few minutes of recovery testing is not a long-term
+reliability qualification.
+
+Finally follow the [clean nested-LXD workflow](../../deploy/reliability/README.md).
+Its HOST driver preflights a separate owned VM, builds an installed wheel/runtime,
+publishes a private local image before test secrets exist, and repeats the same
+tests in a fresh unprivileged container. Retain image/export hashes and reports,
+then run its ownership-checked cleanup. This workflow is separate from the
+radio/native-peer containers in chapters 8–12.
+
+**What you have established:** authenticated simulation sessions and measured
+service behavior across named workloads and failures, reproduced outside a
+checkout. **What remains:** actual pod trust/schema qualification and real
+EasyMesh controller messages through EMOSA into unchanged pod/client behavior.
+The local `agents` view remains a diagnostic view, even after all these tests pass.
+
 ## 7. Explore evidence and the GitHub Pages manual
 
 The explorer is a **static publication of reviewed results and documentation**.
@@ -1969,7 +2040,7 @@ In that **CONTAINER** root shell:
 
 ```bash
 apt-get update
-apt-get install -y curl build-essential pkg-config
+apt-get install -y curl build-essential pkg-config libssl-dev
 curl --fail --location https://astral.sh/uv/0.11.17/install.sh -o /tmp/emosa-uv-install.sh
 sh /tmp/emosa-uv-install.sh
 export PATH="$HOME/.local/bin:$PATH"
@@ -2967,6 +3038,7 @@ example:
 | Actual existing access | Example |
 | --- | --- |
 | Mutual TLS | [qualification.example.json](../../deploy/qualification.example.json) |
+| Pod-initiated mutual TLS | [qualification-tls-listen.example.json](../../deploy/qualification-tls-listen.example.json) |
 | Authenticated SSH/VPN/etc. tunnel to loopback TCP | [qualification-tunnel.example.json](../../deploy/qualification-tunnel.example.json) |
 | Owned private local Unix socket | [qualification-unix.example.json](../../deploy/qualification-unix.example.json) |
 
@@ -3241,7 +3313,22 @@ Suggested wording: “This establishes onboarding for this named patched native
 peer tuple over both backhauls. It supplies a control experiment before EMOSA
 represents an OpenSync extender; it does not establish universal compatibility.”
 
-### 15.6 Questions a presenter must answer accurately
+### 15.6 Demo E: authenticated connecting pods and recovery
+
+Use [§6.15](#615-authenticate-pods-measure-a-fleet-and-reproduce-recovery) and
+[the secure fleet guide](secure-fleet.md). Before presenting, build TLS-enabled
+OVSDB, run the four transport tests and retain a clean-runtime report. During the
+demo, run two pods with one cycle in a fresh directory, explain the chain/pin/
+serial checks, and inspect `checks`, `cycles` and `service_lifecycle`. Show how
+one pod progresses while the other waits and why late evidence preserves a timeout.
+
+Then open the retained 32-pod report and image manifest to show how the same
+experiment was reproduced. State the workload, machine, observation interval and
+evidence boundary with any performance number. Do not build the VM in front of
+the audience or display the generated private trust directory. This is a secure
+management/service demonstration; actual controller onboarding remains pending.
+
+### 15.7 Questions a presenter must answer accurately
 
 | Audience question | Answer supported today |
 | --- | --- |

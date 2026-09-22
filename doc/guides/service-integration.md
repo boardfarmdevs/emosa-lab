@@ -3,6 +3,10 @@
 These exercises advance three different boundaries. Run them in order. The first
 needs only the development host; the others reuse the dedicated `emosa-lab` VM
 and the four containers prepared in chapter 10 of the [team manual](team-manual.md).
+After the first two-pod lesson, use [secure fleet and recovery](secure-fleet.md)
+for authenticated connections, 4/8/16/32-session measurements and clean runtime
+reproduction. The [learning sequence](learning-path.md) puts these steps before
+optional radio work; the historical two-pod report below keeps its original scope.
 
 | Exercise | What it establishes | What it does not establish |
 | --- | --- | --- |

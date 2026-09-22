@@ -4,7 +4,10 @@
 
 | Guide | Use it to |
 | --- | --- |
+| [New learning sequence](learning-path.md) | Progress from architecture and a first model result through TLS, fleet/recovery measurements, clean reproduction and the remaining proof boundaries |
 | [Beginner’s team and operator manual](team-manual.md) | Learn the concepts and purpose of each step, establish a checkout, interpret results, operate every supported experiment and deliver scoped demos |
+| [Secure fleet and repeated recovery](secure-fleet.md) | Authenticate connecting pods, measure 4/8/16/32 real sessions, repeat faults and interpret resource/latency evidence |
+| [Clean nested-LXD reproduction](../../deploy/reliability/README.md) | Build and retain a runtime image, repeat priorities 1–3 from an installed wheel and clean up only owned resources |
 | [Connecting-pod walkthrough](connecting-pod.md) | Run a simulated extender that initiates OVSDB to EMOSA, inspect its diagnostic virtual agent, apply configuration and demonstrate recovery |
 | [Service integration walkthrough](service-integration.md) | Exercise two pods, restore owned radios after reboot, test the actual service with hwsim clients, and prepare the live controller trial |
 | [Onboarding readiness checks](onboarding-readiness.md) | Check complete radio/BSS scope and review the native controller's captured profiles and WSC payload set |

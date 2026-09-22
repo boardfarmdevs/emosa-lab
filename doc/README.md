@@ -4,6 +4,9 @@ EMOSA is the **EasyMesh to OpenSync Adapter**. EMOSA Lab contains the adapter,
 simulators and experiments used to evaluate it. Start with the
 [team manual](guides/team-manual.md) for setup, exercises and demonstrations, or
 the [architecture overview](architecture/overview.md) for the main building blocks.
+New team members should follow the [learning sequence](guides/learning-path.md):
+model → real database → persistent service → authenticated TLS → fleet/recovery
+measurements → clean LXD reproduction → radio and eventual wire/physical proof.
 
 ## Guides: learn, run and demonstrate
 

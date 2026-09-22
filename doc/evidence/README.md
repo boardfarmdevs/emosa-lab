@@ -10,6 +10,7 @@ for navigation and commands.
 
 | Collection | Entry point |
 | --- | --- |
+| Authenticated fleet, repeated recovery and clean runtime | [Workloads, measurements, retained failures and image provenance](reliability/README.md) |
 | Connecting-pod diagnostic demonstration | [Qualification summary](connecting-pod/qualification-summary.json) |
 | Service, two pods and process-crash recovery | [Run summary](service-integration/summary.json) |
 | Sole-radio scope and native capture review | [Run summary](onboarding-readiness/summary.json) |

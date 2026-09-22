@@ -4,6 +4,15 @@ The critical milestone is **real EasyMesh messages → EMOSA adapter → unchang
 physical pod → independently observed behavior**. Neither an OVSDB component pass
 nor a successful hwsim association completes that objective.
 
+The next independent work package is now implemented as
+[authenticated TLS, real-service fleet measurements and repeated recovery](../guides/secure-fleet.md),
+followed by [clean nested-LXD reproduction](../../deploy/reliability/README.md).
+The [new learning sequence](../guides/learning-path.md) teaches those boundaries
+in order. See [retained evidence](../evidence/reliability/README.md) for the exact
+host/container workloads, resource samples, earlier failures and installed image.
+These results reduce southbound/service risk while P0 and physical inputs remain
+pending; they do not populate an EasyMesh controller's inventory.
+
 The [service integration walkthrough](../guides/service-integration.md) now
 provides a two-pod service exercise, actual process-crash recovery with hwsim
 clients, and live native-controller preparation. The

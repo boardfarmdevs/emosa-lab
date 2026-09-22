@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "scope": "real adapter service, synthetic pod-initiated mutual TLS OVSDB fleet",
+  "pods": 4,
+  "cycles_requested": 1,
+  "interval_seconds": 0,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "production_capacity_proven": false,
+  "passed": true,
+  "checks": [
+    "all distinct TLS certificates and serial bindings admitted",
+    "concurrent per-pod writes, database keys and idempotent replay",
+    "trusted certificate with wrong database serial rejected; peer progresses",
+    "competing writer latches ownership across service restart; peer progresses",
+    "stable virtual AL identities and disjoint operation histories"
+  ],
+  "cycles": [
+    {
+      "cycle": 1,
+      "seconds": 7.698205059044994,
+      "crash_restart": true,
+      "disconnect_reconnect": true,
+      "database_restart": true,
+      "late_timeout_preserved": true
+    }
+  ],
+  "resource_samples": [
+    {
+      "elapsed_seconds": 1.0230645000119694,
+      "pid": 291024,
+      "rss_kib": 35004,
+      "threads": 5,
+      "file_descriptors": 15,
+      "cpu_seconds": 0.09
+    },
+    {
+      "elapsed_seconds": 1.524372221028898,
+      "pid": 291024,
+      "rss_kib": 51668,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 0.48
+    },
+    {
+      "elapsed_seconds": 2.0249483690131456,
+      "pid": 291024,
+      "rss_kib": 51896,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 0.55
+    },
+    {
+      "elapsed_seconds": 2.5263660740456544,
+      "pid": 291080,
+      "rss_kib": 35224,
+      "threads": 5,
+      "file_descriptors": 15,
+      "cpu_seconds": 0.12
+    },
+    {
+      "elapsed_seconds": 3.0275194750283845,
+      "pid": 291080,
+      "rss_kib": 35412,
+      "threads": 5,
+      "file_descriptors": 16,
+      "cpu_seconds": 0.15
+    },
+    {
+      "elapsed_seconds": 3.5285285010468215,
+      "pid": 291080,
+      "rss_kib": 47664,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 0.39
+    },
+    {
+      "elapsed_seconds": 4.0295165900024585,
+      "pid": 291080,
+      "rss_kib": 50948,
+      "threads": 5,
+      "file_descriptors": 18,
+      "cpu_seconds": 0.54
+    },
+    {
+      "elapsed_seconds": 4.530543040018529,
+      "pid": 291080,
+      "rss_kib": 51056,
+      "threads": 5,
+      "file_descriptors": 18,
+      "cpu_seconds": 0.6
+    },
+    {
+      "elapsed_seconds": 5.03207148401998,
+      "pid": 291080,
+      "rss_kib": 51148,
+      "threads": 5,
+      "file_descriptors": 18,
+      "cpu_seconds": 0.68
+    },
+    {
+      "elapsed_seconds": 5.532916944008321,
+      "pid": 291080,
+      "rss_kib": 51208,
+      "threads": 5,
+      "file_descriptors": 18,
+      "cpu_seconds": 0.74
+    },
+    {
+      "elapsed_seconds": 6.03340738202678,
+      "pid": 291080,
+      "rss_kib": 53432,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 0.88
+    },
+    {
+      "elapsed_seconds": 6.534704354009591,
+      "pid": 291080,
+      "rss_kib": 53432,
+      "threads": 5,
+      "file_descriptors": 18,
+      "cpu_seconds": 0.95
+    },
+    {
+      "elapsed_seconds": 7.035359306028113,
+      "pid": 291080,
+      "rss_kib": 53432,
+      "threads": 5,
+      "file_descriptors": 18,
+      "cpu_seconds": 1.02
+    },
+    {
+      "elapsed_seconds": 7.536473824002314,
+      "pid": 291080,
+      "rss_kib": 53432,
+      "threads": 5,
+      "file_descriptors": 18,
+      "cpu_seconds": 1.08
+    },
+    {
+      "elapsed_seconds": 8.03685693902662,
+      "pid": 291080,
+      "rss_kib": 53476,
+      "threads": 5,
+      "file_descriptors": 18,
+      "cpu_seconds": 1.14
+    },
+    {
+      "elapsed_seconds": 8.537635701999534,
+      "pid": 291080,
+      "rss_kib": 53740,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 1.28
+    },
+    {
+      "elapsed_seconds": 9.038323279004544,
+      "pid": 291080,
+      "rss_kib": 53740,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 1.36
+    },
+    {
+      "elapsed_seconds": 9.538998492993414,
+      "pid": 291080,
+      "rss_kib": 53740,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 1.44
+    },
+    {
+      "elapsed_seconds": 10.039868176041637,
+      "pid": 291080,
+      "rss_kib": 53748,
+      "threads": 5,
+      "file_descriptors": 19,
+      "cpu_seconds": 1.56
+    },
+    {
+      "elapsed_seconds": 10.541019789001439,
+      "pid": 291317,
+      "rss_kib": 35400,
+      "threads": 5,
+      "file_descriptors": 15,
+      "cpu_seconds": 0.13
+    },
+    {
+      "elapsed_seconds": 11.042525572993327,
+      "pid": 291317,
+      "rss_kib": 35596,
+      "threads": 5,
+      "file_descriptors": 15,
+      "cpu_seconds": 0.17
+    }
+  ],
+  "connection_seconds": 1.4448096030391753,
+  "operation_latency_seconds": {
+    "samples": 10,
+    "p50": 0.1292704840307124,
+    "p95": 0.17249006795464084,
+    "max": 0.17249006795464084
+  },
+  "service_lifecycle": [
+    {
+      "event": "started",
+      "pid": 291024,
+      "adapter_instance_id": "9acc6447-a8a2-4408-8653-51262ad3ce58"
+    },
+    {
+      "event": "stopped",
+      "pid": 291024,
+      "requested_crash": true,
+      "kill_escalation": false,
+      "returncode": -9
+    },
+    {
+      "event": "started",
+      "pid": 291080,
+      "adapter_instance_id": "5e0a1dab-d9a0-4628-a304-367dd6d6753f"
+    },
+    {
+      "event": "stopped",
+      "pid": 291080,
+      "requested_crash": true,
+      "kill_escalation": false,
+      "returncode": -9
+    },
+    {
+      "event": "started",
+      "pid": 291317,
+      "adapter_instance_id": "c3e9c96b-947e-4c6b-a0c7-33e646d59d6d"
+    },
+    {
+      "event": "stopped",
+      "pid": 291317,
+      "requested_crash": false,
+      "kill_escalation": false,
+      "returncode": 0
+    }
+  ],
+  "cleanup_passed": true,
+  "elapsed_seconds": 11.597202386008576,
+  "adapter_peaks": {
+    "rss_kib": 53748,
+    "threads": 5,
+    "file_descriptors": 19
+  }
+}

@@ -1,10 +1,12 @@
 """Local diagnostic representations, never evidence of EasyMesh wire onboarding."""
 
 import copy
+import re
 import time
 import uuid
 
 from emosa.errors import EmosaError, Reason
+from emosa.opensync.tls_listener import listener_address
 from emosa.topology_bindings import validate_config_topologies
 
 FRESHNESS_SECONDS = 2.0
@@ -12,6 +14,18 @@ FRESHNESS_SECONDS = 2.0
 
 def validate_bindings(config):
     for pod in config["pods"]:
+        if (pod.get("endpoint", "").startswith("pssl:") or "tls" in pod) and (
+            config["backend_mode"] != "ovsdb-sim"
+            or "virtual_agent" not in pod
+            or "tls" not in pod
+            or not re.fullmatch(r"pssl:[0-9]+:127\.0\.0\.1", pod.get("endpoint", ""))
+        ):
+            raise EmosaError(
+                Reason.INVALID_INPUT,
+                "service TLS requires an explicitly bound loopback simulation pod",
+            )
+        if "tls" in pod:
+            listener_address(pod["endpoint"])
         if "radio_capabilities" in pod and (
             config["backend_mode"] != "ovsdb-sim" or "topology" not in pod.get("virtual_agent", {})
         ):
@@ -31,12 +45,16 @@ def validate_bindings(config):
         if len({b[field] for b in bindings}) != len(bindings):
             raise EmosaError(Reason.INVALID_INPUT, "duplicate virtual agent binding", field=field)
     validate_config_topologies(config["pods"])
+    pins = [pod["tls"]["peer_certificate_sha256"] for pod in config["pods"] if "tls" in pod]
+    if len(pins) != len(set(pins)):
+        raise EmosaError(Reason.INVALID_INPUT, "TLS certificate cannot bind multiple pods")
 
 
 class AgentDirectory:
     def __init__(self, pods, backend_mode="ovsdb-sim"):
         self.bindings = {p["pod_id"]: p["virtual_agent"] for p in pods if "virtual_agent" in p}
         self.backend_mode = backend_mode
+        self.tls_pods = {p["pod_id"] for p in pods if "tls" in p}
         self.instance_id = str(uuid.uuid4())
         self.observations = {}
         self.failures = {}
@@ -61,7 +79,12 @@ class AgentDirectory:
                     "pod_id": pod_id,
                     "al_mac": binding["al_mac"],
                     "identity_source": "configured synthetic AL address",
-                    "identity_check": "serial match in private simulation; not attestation",
+                    "identity_check": (
+                        "trusted TLS certificate, pinned peer and expected database serial; "
+                        "synthetic simulation binding"
+                        if pod_id in self.tls_pods
+                        else "serial match in private simulation; not attestation"
+                    ),
                     "state": "ready" if fresh else "unavailable" if inventory else "pending",
                     "fresh": fresh,
                     "reason": None if fresh else self.failures.get(pod_id, "NOT_READY"),

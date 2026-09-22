@@ -32,7 +32,10 @@
 - Actual pod preparation is a separate read-only collector with a restricted
   monitor allowlist. It never retrieves PSKs/security maps and never enables
   writes. Dialing TLS requires existing client credentials, verified CA chain
-  and a trusted peer certificate pin; native listening TLS remains unqualified.
+  and a trusted peer certificate pin. A bounded per-session TLS accept boundary
+  now supplies authenticated streams to upstream OVS for listening-manager mode.
+  [Synthetic TLS/fleet tests](../guides/secure-fleet.md) qualify that component;
+  actual pod trust, direction and physical behavior remain pending.
 - Per-pod modifying queue capacity is zero in this foundation: one operation
   may be active and excess requests receive `BUSY`. This is a finite queue and
   avoids retaining stale queued intents; a bounded waiting queue can be added

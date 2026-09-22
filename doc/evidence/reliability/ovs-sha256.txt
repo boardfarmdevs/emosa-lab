@@ -1,0 +1,2 @@
+4186d0781a4259d2b46196369ff62598ac52243ea1dcb9a9fa0bd1fa45a48d8f  /opt/emosa-ovs/ovsdb-server
+e05ed3e33cd1477a3dbe6813089d818939dc7b73a457812d93fc0c56e155e160  /opt/emosa-ovs/ovsdb-tool

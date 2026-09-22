@@ -60,9 +60,9 @@
     "ovsdb": {
       "label": "05",
       "title": "The existing management boundary",
-      "status": "Real ovsdb-server tested",
+      "status": "Authenticated connecting pods and 4–32 real sessions tested",
       "state": "pass",
-      "description": "The adapter uses the upstream OVS client with bounded sessions, monitor caches and guarded transactions.",
+      "description": "The adapter uses upstream OVS JSON-RPC with bounded sessions, monitor caches and guarded transactions. A per-session TLS accept boundary authenticates configured connecting pods before upstream session admission.",
       "responsibilities": [
         "Read the actual schema, radio/VIF references and supported security representation.",
         "Patch only fields covered by a qualified mapping.",
@@ -132,14 +132,14 @@
       "title": "Cross the real database boundary",
       "status": "Implemented & tested",
       "state": "pass",
-      "description": "Use a real ovsdb-server with the pinned OpenSync schema and a separate manager simulator. Only that manager writes simulated State. A connecting-pod demo also exposes observed inventory through emosa agents and tests reconnect/restart.",
+      "description": "Use real ovsdb-server instances with the pinned OpenSync schema and independent simulated State publishers. The secure fleet exercise connects 4, 8, 16 or 32 explicitly bound TLS pods to one actual adapter service and repeats recovery faults.",
       "path": "Semantic scenario → EMOSA → real OVSDB → simulated manager → observed State",
       "proves": "Schema/monitor handling, guarded Config edits, independent simulated application and lost-reply reconciliation.",
       "limits": "The initiating request is semantic. There are no EasyMesh packets, Linux Wi-Fi association or physical device claims.",
-      "prerequisites": "Locked Python environment plus a C compiler, make, libc headers and pkg-config for the isolated OVSDB build.",
-      "command": "bash scripts/build-ovsdb.sh\nuv run pytest -m ovsdb\nuv run emosa-lab run scenarios/component-bss-change.json --backend ovsdb-sim\nuv run emosa-lab run scenarios/component-lost-reply.json --backend ovsdb-sim\n# Choose a new run directory for the connecting-pod demo\nuv run python -m emosa.simulation.connecting_pod --directory .lab/connecting-pod-01 --verify",
+      "prerequisites": "Locked Python environment plus a C compiler, make, libc/OpenSSL development headers and pkg-config for the isolated OVSDB build.",
+      "command": "bash scripts/build-ovsdb.sh\nuv run pytest -m ovsdb\nuv run emosa-lab run scenarios/component-bss-change.json --backend ovsdb-sim\nuv run emosa-lab run scenarios/component-lost-reply.json --backend ovsdb-sim\n# Choose a new run directory for the connecting-pod demo\nuv run python -m emosa.simulation.connecting_pod --directory .lab/connecting-pod-01 --verify\n# Authenticated two-pod service exercise, using a new directory\nuv run python -m emosa.simulation.reliability --directory .cache/reliability/explorer-two --pods 2 --cycles 1",
       "note": "The upstream plume-design/opensync schema is pinned at 78d8a7194d5e77635877cc456231e7be5cf03d68. It is not a qualified profile of any actual pod.",
-      "reference": "doc/architecture/operation-mappings.md"
+      "reference": "doc/guides/secure-fleet.md"
     },
     "hwsim": {
       "title": "Drive hwsim through EMOSA and OVSDB",
@@ -561,10 +561,34 @@
       "title": "Native compatibility candidate evidence",
       "category": "Service and protocol integration",
       "description": "Actual parser regressions, two clean wired trials, one-M2 captures, client evidence, setup failures and verified runtime restoration."
+    },
+    {
+      "path": "doc/guides/learning-path.md",
+      "title": "New team learning sequence",
+      "category": "Learning and service reliability",
+      "description": "Checkpoints from first checkout and model outcomes through authenticated fleet, recovery, clean runtime and eventual wire/physical proof."
+    },
+    {
+      "path": "doc/guides/secure-fleet.md",
+      "title": "Secure fleet and repeated recovery",
+      "category": "Learning and service reliability",
+      "description": "TLS trust, 4/8/16/32 real sessions, resource and latency interpretation, process/database faults and durable truthful outcomes."
+    },
+    {
+      "path": "deploy/reliability/README.md",
+      "title": "Clean nested-LXD runtime reproduction",
+      "category": "Learning and service reliability",
+      "description": "Preflight, build/install, retain a private image, reproduce priorities 1–3 outside a checkout, and clean up owned resources."
+    },
+    {
+      "path": "doc/evidence/reliability/README.md",
+      "title": "Secure fleet and clean runtime evidence",
+      "category": "Learning and service reliability",
+      "description": "Measured host/container results, retained failures, suite results, package manifests and private image export digests."
     }
   ],
   "suite_evidence": {
-    "unit": "native-compatibility/unit-results.xml",
-    "ovsdb": "native-compatibility/ovsdb-results.xml"
+    "unit": "reliability/unit-results.xml",
+    "ovsdb": "reliability/ovsdb-results.xml"
   }
 }

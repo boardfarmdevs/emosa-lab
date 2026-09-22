@@ -6,8 +6,11 @@ dedicated Ubuntu 24.04 nested-LXD environment: 69 unit and 13 OVSDB tests passed
 and VM-driven component provisioning/lost-reply scenarios completed. See
 [the retained runtime evidence](../doc/evidence/peer/qualification-summary.json).
 Full wire/hardware deployment remains unqualified. `images.lock.json` records
-the base image and its retained split export; final runtime image exports and
-clean full-procedure reruns remain pending.
+the base image and its retained split export; wire/physical procedure reruns
+remain pending. A newer, separately scoped
+[secure-fleet reproduction](reliability/README.md) now supplies a retained installed
+runtime image and clean TLS/4–32-pod/recovery exercises. Use that workflow for
+priorities 1–4; the older numbers above describe the original deployment evidence.
 
 ## Dedicated VM and inner system containers
 
@@ -39,7 +42,7 @@ Install a pinned `uv` executable in each Python container. Copy the source to
 Ubuntu's default Python is not the selected runtime. Verify all CLI help and
 unit checks inside each container. Build OVSDB tools explicitly with
 `bash scripts/build-ovsdb.sh` for a component simulator hosted there; this needs
-a qualified C compiler, make, libc headers and pkg-config, but no switch daemon.
+a qualified C compiler, make, libc/OpenSSL headers and pkg-config, but no switch daemon.
 Capture exact packages using `dpkg-query -W`, compiler versions, build logs and
 binary hashes. Do not treat this package list as already validated for Ubuntu 24.04.
 

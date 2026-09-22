@@ -19,6 +19,10 @@ The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotiona
 
 [**New team members: step-by-step setup, operator and demo manual**](doc/guides/team-manual.md)
 
+[**Start here: the new learning sequence**](doc/guides/learning-path.md) ·
+[Secure fleet and recovery exercises](doc/guides/secure-fleet.md) ·
+[Clean runtime reproduction](deploy/reliability/README.md)
+
 [Interactive explorer & lab manual](https://boardfarmdevs.github.io/emosa-lab/) ·
 [Architecture diagram and boundaries](doc/architecture/overview.md) ·
 [Next viability experiments](doc/project/viability-roadmap.md)
@@ -122,9 +126,10 @@ Prepare actual pod evidence without changing it using
 [dependency/R0 findings](doc/evaluation/dependency-qualification.md),
 [WSC component scope](doc/protocol/wsc-component.md),
 [open inputs](doc/project/open-inputs.md), and [traceability](doc/project/traceability.json).
-The Ubuntu 24.04 LXD layout has pinned candidate images. Its standalone radio
-smoke has passed; full application deployment and retained image exports remain
-pending.
+The Ubuntu 24.04 LXD layout has pinned base images. The separate
+[secure-fleet runtime](deploy/reliability/README.md) builds and retains an installed
+wheel/container image for TLS, fleet and recovery reproduction. This is a semantic
+component runtime; full wire/physical application deployment remains pending.
 
 The [service integration walkthrough](doc/guides/service-integration.md) adds two
 connecting pods through one adapter, actual service-process crash recovery with

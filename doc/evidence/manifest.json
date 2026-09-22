@@ -1631,6 +1631,171 @@
       "path": "native-compatibility/wire-gate.json",
       "sha256": "e276c154bcf03b401b0cf97ed1df301956f79e8d64c238fbb06a4f602964fe52",
       "size": 4945
+    },
+    {
+      "path": "reliability/README.md",
+      "sha256": "38ee6f0eabdedb944af7c15a3c0595a25f8e94278f0248263f48069bf4f0a677",
+      "size": 5499
+    },
+    {
+      "path": "reliability/SHA256SUMS",
+      "sha256": "210b8cab20b7a1e004b2e553ffef2b5edef855a1b7f3e66138b82cfbe57ffe3c",
+      "size": 717
+    },
+    {
+      "path": "reliability/browser-result.json",
+      "sha256": "25a4d2982dea75cedc4bbb72fc8246c4f013f543f3a8edc1f138080c9cfc8b31",
+      "size": 227
+    },
+    {
+      "path": "reliability/host-16.json",
+      "sha256": "e7789157c58a6c4076a68a3e29e477178174b23ec0ef866e14c676acb6be05ad",
+      "size": 7553
+    },
+    {
+      "path": "reliability/host-32.json",
+      "sha256": "1159e7e7f1bda1a401254789d5a13c81d3acb5988f10e5a48740de75e575f30a",
+      "size": 9382
+    },
+    {
+      "path": "reliability/host-4.json",
+      "sha256": "0ca8089fd1b4ea96aeb773e3a501cb2eb58f69a4d7bab29823abef8d1f663a7c",
+      "size": 5917
+    },
+    {
+      "path": "reliability/host-8.json",
+      "sha256": "c7c2937d24ad1dee3eec61f0dda716bcff07aa4b59a7eba1ed49b0b506121550",
+      "size": 6454
+    },
+    {
+      "path": "reliability/host-soak.json",
+      "sha256": "368d628365b38257c4840d8ccafb6eed6b43fa166fad4a4718a86264f0d7cbf6",
+      "size": 62678
+    },
+    {
+      "path": "reliability/initial-build-failure.log",
+      "sha256": "08e2f1dfd56c9070b5717e11e18550ea52b173e8a1843dd1f7c254e7bba84694",
+      "size": 648
+    },
+    {
+      "path": "reliability/initial-observer-failure.json",
+      "sha256": "877bae123f07907fc5972751ea7f49ae97c842d625f09ab0c0f66043f754b9f1",
+      "size": 4278
+    },
+    {
+      "path": "reliability/links.json",
+      "sha256": "c8aff694a824405ea098a940ca1bf293e2322d72aaaf213bc44959e343c6e9c1",
+      "size": 93
+    },
+    {
+      "path": "reliability/lxd-16.json",
+      "sha256": "8c1963890b40e16615f254ee4393e11a4eaab7b8d461101628578c763df94665",
+      "size": 7608
+    },
+    {
+      "path": "reliability/lxd-32.json",
+      "sha256": "16061f9154740f304467282b950b99fd8a88fc4511db634abcbe3696707120f6",
+      "size": 9764
+    },
+    {
+      "path": "reliability/lxd-4.json",
+      "sha256": "11434a8796344c6f067fc833c825955736420a0174dcad3250fb729ec16f88bc",
+      "size": 6338
+    },
+    {
+      "path": "reliability/lxd-8.json",
+      "sha256": "98b02b0c199ad9a9d43ef6a695c8ca2f84b374c64d08a3ec762115f6f88e6371",
+      "size": 6521
+    },
+    {
+      "path": "reliability/lxd-runtime-identity.txt",
+      "sha256": "a87f4af48b974d839e0f9a0294d2e615e68d4196e0caccec9cc25c250c55b169",
+      "size": 51
+    },
+    {
+      "path": "reliability/lxd-soak.json",
+      "sha256": "abb39cec35c5a8bc56a7f4ba5eb9c12071ca66e7fd6a8312bb7b48f3388121d4",
+      "size": 62219
+    },
+    {
+      "path": "reliability/lxd-startup-failure.json",
+      "sha256": "d791aa2d0f54ad6fbd62329b22b8d0fc1ea11d3326809c15c496062a6637fb92",
+      "size": 4215
+    },
+    {
+      "path": "reliability/lxd-tls-results.xml",
+      "sha256": "3ece8100dbf0774bffca28b015fd49773e517fd15b5f42b41a4bf0abc355398d",
+      "size": 703
+    },
+    {
+      "path": "reliability/lxd-version.txt",
+      "sha256": "4b9ea6525eff5bb478c4a1f837a60ca9ea460d8ec0f98c0d407af7e65a1a2da8",
+      "size": 121
+    },
+    {
+      "path": "reliability/mermaid.json",
+      "sha256": "742f1f75bf674ceaebe5ca44fd406f144a08f283286fc26de0edd8c3595ffd22",
+      "size": 1737
+    },
+    {
+      "path": "reliability/ovs-sha256.txt",
+      "sha256": "092397cfb22bc3d0718a272a14b2b78a2af9685fd613919e8354b25069422507",
+      "size": 186
+    },
+    {
+      "path": "reliability/ovsdb-junit-curation.json",
+      "sha256": "a81f9c44d75862cf221571d3ece7a587ef5ecd7db3ce280f9344a5687172ea49",
+      "size": 150
+    },
+    {
+      "path": "reliability/ovsdb-results.xml",
+      "sha256": "fb66ba8fa14a652b744c8d2202920d4c447e56cd96841412293c26e47f0dca32",
+      "size": 6059
+    },
+    {
+      "path": "reliability/packages.tsv",
+      "sha256": "c71e9e61317a7b38cf4f1532754aa62c918e44cc26f40632924e21b475180549",
+      "size": 21896
+    },
+    {
+      "path": "reliability/python-packages.txt",
+      "sha256": "e4d6219fc510820d3e2c4a9b1eeba12a8f5bd3950d7cbca27408b810c5c69e3a",
+      "size": 344
+    },
+    {
+      "path": "reliability/python-version.txt",
+      "sha256": "01623849c8d1730b6d859e0d292d5459342aeee8145d1eeb2813bd6cd516419a",
+      "size": 14
+    },
+    {
+      "path": "reliability/runtime-image.json",
+      "sha256": "47ab45e4e11a9b5a2f2052e5b91210b31bb86f4a989ff10d19a96275dacb255a",
+      "size": 720
+    },
+    {
+      "path": "reliability/shell-blocks.json",
+      "sha256": "c2550fa8fc9b71d6fcd5906a6860e94d2f6123af1fc85f401b0e125fb4c36799",
+      "size": 36
+    },
+    {
+      "path": "reliability/soak-observer-backoff-failure.json",
+      "sha256": "b036553dc9e3914fd086b9610e218017a6d5586680c0b31e11713d5e74faf599",
+      "size": 24782
+    },
+    {
+      "path": "reliability/summary.json",
+      "sha256": "c708ae6a4bd0a8e65318863433a410bd416152b8f7e65a39c959505a5584a74f",
+      "size": 16407
+    },
+    {
+      "path": "reliability/unit-junit-curation.json",
+      "sha256": "989ab07dcca8ef5f95531e325715dbc7e2929e69d27fd15e4cdf6df417295571",
+      "size": 150
+    },
+    {
+      "path": "reliability/unit-results.xml",
+      "sha256": "5437833325b61ff916b9f80f1d915f358b8bf31807e77b0a6d036b65d9540a0d",
+      "size": 94299
     }
   ]
 }

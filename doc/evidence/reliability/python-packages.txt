@@ -1,0 +1,17 @@
+attrs==26.1.0
+cffi==2.1.1
+cryptography==50.0.1
+emosa @ file:///root/emosa-bundle/emosa-0.1.0-py3-none-any.whl
+iniconfig==2.3.0
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+ovs==4.0.0
+packaging==26.3
+pluggy==1.6.0
+pycparser==3.0
+pygments==2.21.0
+pytest==9.1.1
+referencing==0.37.0
+rpds-py==2026.6.3
+ruff==0.16.7
+sortedcontainers==2.4.0

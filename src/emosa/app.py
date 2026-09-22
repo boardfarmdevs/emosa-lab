@@ -14,6 +14,8 @@ from emosa.local_api import LocalServer
 from emosa.model import Intent
 from emosa.opensync.mapping import OpenSyncBackend
 from emosa.opensync.session import OvsSession
+from emosa.opensync.tls_listener import server_context
+from emosa.qualification import private_reference
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
 from emosa.store import Store
@@ -23,6 +25,24 @@ class Application:
     def __init__(self, config):
         validate_bindings(config)
         self.config = config
+        # Validate/load every context before acquiring the journal lock or workers.
+        tls_options = {}
+        for pod in config["pods"]:
+            if "tls" in pod:
+                trust = pod["tls"]
+                files = {
+                    key: str(private_reference(config["secret_directory"], trust[ref]))
+                    for key, ref in (
+                        ("certificate", "certificate_ref"),
+                        ("private_key", "private_key_ref"),
+                        ("ca", "ca_ref"),
+                    )
+                }
+                server_context(files)
+                tls_options[pod["pod_id"]] = {
+                    "tls_files": files,
+                    "peer_certificate_sha256": trust["peer_certificate_sha256"],
+                }
         self.agents = AgentDirectory(config["pods"], config["backend_mode"])
         self.store = Store(Path(config["state_directory"]))
         try:
@@ -44,6 +64,7 @@ class Application:
                         pod["endpoint"],
                         pod["database"],
                         request_limit=config.get("limits", {}).get("ovsdb_requests", 16),
+                        **tls_options.get(pod_id, {}),
                     ),
                     self.vault,
                     if_name=pod["if_name"],

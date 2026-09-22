@@ -17,6 +17,13 @@ COPYING/NOTICE files remain in that archive/build tree. Retain them with any
 distributed binary bundle. Ruff/pytest/uv and the native experiment's
 kconfiglib/Jinja build tools retain their respective upstream licenses.
 
+The secure-fleet listener uses Python's standard `ssl` module and the runtime's
+OpenSSL; the current OVSDB tools are also built with OpenSSL enabled. Synthetic
+certificate generation uses the already locked `cryptography` dependency.
+The retained clean runtime includes the upstream OVS source/notice files and
+installed Debian/Python license metadata. Its exact package inventory and image
+digest are recorded in [reliability evidence](../evidence/reliability/README.md).
+
 No prplMesh dependency is linked, imported or fetched by the Python package build. Normative
 IEEE/Wi-Fi Alliance specification documents are referenced, not redistributed.
 

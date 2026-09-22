@@ -1,7 +1,9 @@
 import asyncio
 import json
 import os
+import re
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -35,7 +37,7 @@ def binary(name):
 class SimDatabase:
     """Disposable private Unix-socket database, no host daemon or switch datapath."""
 
-    def __init__(self, directory=None):
+    def __init__(self, directory=None, *, tls_files=None):
         self.temporary = (
             tempfile.TemporaryDirectory(prefix="emosa-db-") if directory is None else None
         )
@@ -44,6 +46,7 @@ class SimDatabase:
         self.endpoint = "unix:" + str(self.directory / "db.sock")
         self.process = None
         self.log = None
+        self.tls_files = tls_files
 
     async def start(self):
         server, tool = binary("ovsdb-server"), binary("ovsdb-tool")
@@ -68,14 +71,37 @@ class SimDatabase:
                 "--unixctl=" + str(self.directory / "control.sock"),
                 "--pidfile=" + str(self.directory / "server.pid"),
                 "--no-chdir",
+                *(
+                    [
+                        "--private-key=" + str(self.tls_files["private_key"]),
+                        "--certificate=" + str(self.tls_files["certificate"]),
+                        "--ca-cert=" + str(self.tls_files["ca"]),
+                    ]
+                    if self.tls_files
+                    else []
+                ),
             ],
             stdout=self.log,
             stderr=self.log,
         )
         end = asyncio.get_running_loop().time() + 5
-        while not (self.directory / "db.sock").exists():
+
+        def accepting(name):
+            # A pathname can be stale, and the database listener can appear
+            # before unixctl. Both endpoints must actually accept connections.
+            try:
+                with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as probe:
+                    probe.settimeout(0.05)
+                    probe.connect(str(self.directory / name))
+                return True
+            except OSError:
+                return False
+
+        while True:
             if self.process.poll() is not None or asyncio.get_running_loop().time() >= end:
                 raise EmosaError(Reason.NOT_READY, "disposable ovsdb-server did not start")
+            if accepting("db.sock") and accepting("control.sock"):
+                break
             await asyncio.sleep(0.01)
         return self
 
@@ -97,7 +123,9 @@ class SimDatabase:
 
     async def manager_remote(self, endpoint, *, connect=True):
         """Make this disposable database initiate a connection to a private local listener."""
-        if not endpoint.startswith("unix:/"):
+        if not endpoint.startswith("unix:/") and not (
+            self.tls_files and re.fullmatch(r"ssl:127\.0\.0\.1:[0-9]+", endpoint)
+        ):
             raise EmosaError(Reason.INVALID_INPUT, "simulation remote must be a local Unix socket")
 
         def command():
