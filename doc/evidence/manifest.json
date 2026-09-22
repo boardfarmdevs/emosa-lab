@@ -1276,6 +1276,81 @@
       "path": "profile-audit/wheel-smoke.json",
       "sha256": "40ce2db1de1ad7149842052e6f5fcff0b6e4040707a49831d1ad24d8fb370d86",
       "size": 598
+    },
+    {
+      "path": "technology-inventory/browser-result.json",
+      "sha256": "9c5aadb0baa8947406e2fa995b545138500386d56b290ad3a564fde0322a8ca9",
+      "size": 227
+    },
+    {
+      "path": "technology-inventory/cli-he.json",
+      "sha256": "456b3900f25bc6ce859106b775a8e417f5ad8f517bddcb2d1064909d7d712d3a",
+      "size": 817
+    },
+    {
+      "path": "technology-inventory/cli-ht.json",
+      "sha256": "e2c1fa4690588dc0079aa15b13a4361512c21ab4951e017ca2f853fca67bcffe",
+      "size": 504
+    },
+    {
+      "path": "technology-inventory/cli-vht.json",
+      "sha256": "68bf52436be0a88ef70604798d826a839f40b8fb35cb8843b034ecb594fde052",
+      "size": 860
+    },
+    {
+      "path": "technology-inventory/inputs/pod-1/capabilities.json",
+      "sha256": "68817379563f0cb68ce1019997a28fad26b68c02d9c69bc3733de206ccf46d0a",
+      "size": 4184
+    },
+    {
+      "path": "technology-inventory/inputs/pod-1/synthetic-radio-contract.json",
+      "sha256": "4ec95281172997b28a3e6c1d3ad453350eb637437cc65e6477fb9f1681643e12",
+      "size": 3564
+    },
+    {
+      "path": "technology-inventory/inputs/pod-2/capabilities.json",
+      "sha256": "3dbe72300ab5fd15df76db3a0350105ddc6d9be7263236d82b38264708394a66",
+      "size": 4184
+    },
+    {
+      "path": "technology-inventory/inputs/pod-2/synthetic-radio-contract.json",
+      "sha256": "0e88747f08966d46113ab8e46acd84305814ce8c069c6442a8d5d6cb20f7ea0a",
+      "size": 3564
+    },
+    {
+      "path": "technology-inventory/native-reference-host.json",
+      "sha256": "74e6aadb788f163b0a9806726d27303348a9736f0ea2184272e0a7d7fdcc5209",
+      "size": 599
+    },
+    {
+      "path": "technology-inventory/native-reference-vm.json",
+      "sha256": "3226611c7c4ffb8d23f954e30e36d006a937372a8cadd9f817840121d30cce07",
+      "size": 608
+    },
+    {
+      "path": "technology-inventory/ovsdb-results.xml",
+      "sha256": "8b0c547665481ad0315f7782418777deb3713f9dad436f2c32f18d6fe142ae81",
+      "size": 5226
+    },
+    {
+      "path": "technology-inventory/service-report.json",
+      "sha256": "b3c28923ab30007ee19391bce0fd4e0e1eac2d92017e057f213954e0a9a36c6e",
+      "size": 72351
+    },
+    {
+      "path": "technology-inventory/summary.json",
+      "sha256": "376c40c27472ff788b12f0148256800655f2ce9b58484fa0369d22113b6bf02e",
+      "size": 6277
+    },
+    {
+      "path": "technology-inventory/unit-results.xml",
+      "sha256": "f5efd486c248e83764cbd595498aa7901e19a9405a9d1f955e5b870b546df201",
+      "size": 79520
+    },
+    {
+      "path": "technology-inventory/wheel-smoke.json",
+      "sha256": "b4ce635d8ad5836f3f81bd762e18421d1f9e46b9c192f0688484f74bc1c5cd55",
+      "size": 405
     }
   ]
 }

@@ -153,7 +153,7 @@ def test_inconsistent_claims_withdraw_whole_pod_payload(tmp_path, fault):
     elif fault == "duplicate-class":
         p["radios"][0]["operating_classes"].append(copy.deepcopy(op))
     elif fault == "unknown-class":
-        op["operating_class"] = 128
+        op["operating_class"] = 129
     elif fault == "wrong-channel":
         op["non_operable_channels"] = [1]
     elif fault == "no-operable-channel":

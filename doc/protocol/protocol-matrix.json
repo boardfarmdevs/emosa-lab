@@ -591,10 +591,14 @@
         "EasyMesh 6.1 section 17.2.47 Table 70 page 157",
         "IEEE 802.11-2024 section 9.4.2.2 Figure 9-209 page 934",
         "EasyMesh 6.1 section 17.2.7 Table 30 pages 127-128",
-        "IEEE 802.11-2024 Table E-4 selected global operating classes pages 5658-5659",
+        "IEEE 802.11-2024 Table E-4 selected global operating classes pages 5658-5660",
         "EasyMesh 6.1 section 17.2.6 Table 29 p.127",
         "EasyMesh 6.1 section 17.2.48 Table 71 pp.157-158",
-        "EasyMesh 6.1 section 17.2.52 Table 75 p.160"
+        "EasyMesh 6.1 section 17.2.52 Table 75 p.160",
+        "EasyMesh 6.1 sections 17.2.8-10 Tables 31-33 pp.128-131",
+        "EasyMesh 6.1 section 9.1 pp.79-80 and section 17.2.76 Table 99 p.172",
+        "IEEE 802.11-2024 section 9.4.2.156.3 Figure 9-707 p.1299",
+        "IEEE 802.11-2024 section 9.4.2.247.4 Figure 9-901, Tables 9-377-378 pp.1455-1457"
       ],
       "implementation": "src/emosa/easymesh_payloads.py",
       "inspection": "src/emosa/evaluation/payloads.py",
@@ -604,23 +608,30 @@
         "0x82",
         "0x83",
         "0x85",
+        "0x86",
+        "0x87",
+        "0x88",
         "0xa1",
         "0xb3",
         "0xb4",
-        "0xbe"
+        "0xbe",
+        "0xd4"
       ],
       "procedure_gate_satisfied": false,
       "scope": "Standalone value encoding/decoding and offline inspection only; no outer TLV headers, IEEE frames, runtime inventory mapping, transport, peer trust or pod writes",
       "local_policies": [
         "16384-byte value budget is a local resource limit, not a normative frame or TLV limit",
         "Exact single-value parsing rejects trailing/truncated bytes; no unknown-TLV or duplicate-identity procedure inference",
-        "Opaque SSID bytes; no UTF-8 assumption or Config-to-State substitution"
+        "Opaque SSID bytes; no UTF-8 assumption or Config-to-State substitution",
+        "HE MCS bytes remain opaque; automatic IEEE-to-EasyMesh conversion pending",
+        "Inventory codec retains 0-64 raw octets; synthetic input mapper separately uses nonempty UTF-8 strings"
       ],
-      "validation": "87 base value tests plus feature/radio boundary tests; seventeen independent native values reproduced under tshark 3.6.2 and 4.2.2. Feature values compare numeric fields/raw flags because older dissector labels differ from EasyMesh 6.1.",
+      "validation": "93 base value tests plus feature/radio/technology boundary tests; twenty native values reproduced under tshark 3.6.2 and 4.2.2. HT flags, opaque HE bytes and original inventory string bytes checked; native VHT evidence absent.",
       "tests": [
         "tests/test_easymesh_payloads.py",
         "tests/test_radio_capabilities.py",
-        "tests/test_feature_capabilities.py"
+        "tests/test_feature_capabilities.py",
+        "tests/test_technology_values.py"
       ],
       "vectors": "tests/fixtures/protocol/easymesh/native-values.json",
       "provenance": "tests/fixtures/protocol/easymesh/provenance.json",
@@ -633,7 +644,8 @@
         "Real controller discovery/onboarding and physical-pod acceptance"
       ],
       "additional_evidence": "doc/evidence/radio-capabilities/summary.json",
-      "feature_evidence": "doc/evidence/profile-audit/summary.json"
+      "feature_evidence": "doc/evidence/profile-audit/summary.json",
+      "technology_inventory_evidence": "doc/evidence/technology-inventory/summary.json"
     }
   },
   "acquisition_checklist": "doc/protocol/specification-acquisition.md",
@@ -662,8 +674,8 @@
       "review_document": "doc/protocol/ieee-media-review.md",
       "reviewed_sections": [
         "Annex E.1 printed p.5648; Table E-4 starting p.5656; 2.4 GHz entries p.5658",
-        "9.4.2.52 printed pp.1120–1121",
-        "9.4.2.54.1–2 starting printed p.1122",
+        "9.4.2.52 printed pp.1120\u20131121",
+        "9.4.2.54.1\u20132 starting printed p.1122",
         "9.4.2.156.1 printed p.1292",
         "9.4.2.247.1 printed p.1437",
         "9.4.2.2 Figure 9-209 printed p.934 (SSID structure and encoding)"
@@ -750,7 +762,7 @@
     "status": "compatibility_findings_open",
     "normative_references": [
       "EasyMesh 6.1 section 6.1 p.63",
-      "EasyMesh 6.1 section 7.1 pp.67–69",
+      "EasyMesh 6.1 section 7.1 pp.67\u201369",
       "EasyMesh 6.1 section 17.1.3 p.111"
     ],
     "observations": [
@@ -785,9 +797,9 @@
       "pdf_pages": 7025,
       "review_document": "doc/protocol/ieee-media-review.md",
       "reviewed_sections": [
-        "3.1.1–2 printed pp.239–240",
-        "3.2.3–6 printed pp.240–242",
-        "3.2.7–9 printed pp.242–243"
+        "3.1.1\u20132 printed pp.239\u2013240",
+        "3.2.3\u20136 printed pp.240\u2013242",
+        "3.2.7\u20139 printed pp.242\u2013243"
       ],
       "corrections_check": {
         "date": "2026-09-21",
@@ -845,14 +857,15 @@
     ],
     "normative_sections": [
       "EasyMesh 6.1 sections 3.1.2 and 17.2.7 Table 30 pp.127-128",
-      "IEEE 802.11-2024 Table E-4 pp.5658-5659; global classes 81,82,83,84,115"
+      "IEEE 802.11-2024 Table E-4 pp.5658-5660; global classes 81,82,83,84,115,116,117,128"
     ],
     "scope": "Read-only per-radio 0x85 values from pinned, expiring synthetic evidence inputs and fresh complete topology; no inference of supported limits from current State",
     "checks": [
       "Complete declared class inventory, reviewed class/channel sets and explicit signed EIRP",
       "Stable binding, pod/RUID, model/firmware, schema and observed country match",
       "Active BSS count and enabled-radio channel consistent with claimed limits",
-      "Profile/evidence digest and validity rechecked for each request; whole-pod withdrawal on failure"
+      "Profile/evidence digest and validity rechecked for each request; whole-pod withdrawal on failure",
+      "Class 128 center channels cannot validate an observed primary channel"
     ],
     "input_assurance": "Operator-declared synthetic facts; digest verification is not attestation or physical qualification",
     "procedure_gate_satisfied": false,
@@ -862,10 +875,11 @@
     "physical_pod_proven": false,
     "remaining_gaps": [
       "Actual target capability evidence and qualification",
-      "AP/HT/VHT/HE/Profile-2/advanced capability requirements and complete profile audit",
+      "HE/Wi-Fi 6 mapping, complete AP capability and profile procedures; selected HT/VHT/inventory projections exist",
       "Native peer profile mismatch resolution",
       "IEEE 1905 base/amendment review and full wire exchange integration"
-    ]
+    ],
+    "extension_guide": "doc/guides/technology-inventory.md"
   },
   "profile_readiness_audit": {
     "status": "requirement_families_and_selected_feature_conditions_reviewed",
@@ -887,7 +901,7 @@
     "procedure_gate_satisfied": false,
     "remaining_gaps": [
       "All mandatory procedures and actual feature behavior",
-      "HT/VHT/HE and Device Inventory field/input mapping",
+      "HE/Wi-Fi 6 mapping and qualified technology/inventory inputs",
       "AKM/scan/security/CAC supported-feature applicability and current Profile-1 conditions",
       "IEEE base/amendment review and native peer profile mismatch",
       "Actual unchanged-pod qualification and independent controller/client proof"
@@ -895,6 +909,42 @@
     "tests": [
       "tests/test_feature_capabilities.py",
       "tests/test_profile_audit.py"
+    ]
+  },
+  "synthetic_technology_inventory_projection": {
+    "status": "implemented_selected_simulation_diagnostics_only",
+    "guide": "doc/guides/technology-inventory.md",
+    "implementation": "src/emosa/capability_extensions.py",
+    "input_schema": "schemas/radio-capabilities.schema.json",
+    "evidence": "doc/evidence/technology-inventory/summary.json",
+    "tests": [
+      "tests/test_technology_values.py",
+      "tests/test_capability_extensions.py",
+      "tests/test_radio_capability_service.py"
+    ],
+    "normative_sections": [
+      "EasyMesh 6.1 section 9.1 pp.79-80; sections 17.2.8-10 Tables 31-33 pp.128-131; section 17.2.76 Table 99 p.172",
+      "IEEE 802.11-2024 section 9.4.2.54 pp.1122-1126; section 9.4.2.156.3 Figure 9-707 p.1299",
+      "IEEE 802.11-2024 section 9.4.2.247.4 Figure 9-901 / Tables 9-377-378 pp.1455-1457; Table E-4 pp.5658-5660"
+    ],
+    "scope": "Explicit normalized synthetic HT/VHT and Device Inventory inputs; separate extension readiness after Basic context gate; HE true/unknown blocks technology projection, EHT unassessed",
+    "checks": [
+      "Exact complete bound radio lists; explicit known support conditions and scoped evidence",
+      "VHT low-bit NSS1 maps with big-endian words; max supported NSS matches stream claim",
+      "HT40/VHT80 need audited class context; wider VHT mapping remains pending",
+      "Serial/firmware match observed AWLAN_Node; explicit declared execution environment/vendors; 1-64 UTF-8 octets without truncation",
+      "Every request rechecks parent hashes, validity and complete fresh topology; stale parent withdraws all values"
+    ],
+    "procedure_gate_satisfied": false,
+    "complete_ap_capability_report": false,
+    "qualified_easymesh_profile": null,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "remaining_gaps": [
+      "Reviewed HE MCS conversion, independent asymmetric vectors and Wi-Fi 6 companion",
+      "Independent VHT target evidence; remaining complete technology/width contexts",
+      "Actual serial lifetime, active-image/environment semantics and chipset evidence",
+      "Complete capability report/profile and IEEE message processing"
     ]
   }
 }

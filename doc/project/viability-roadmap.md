@@ -35,8 +35,10 @@ The [profile-readiness report](../protocol/profile-readiness.md) now inventories
 15 requirement families and selected feature-dependent obligations. AP,
 Profile-2 AP and Radio Advanced value codecs and counter-unit decisions are
 tested independently; they do not implement the features they describe.
-Next are HT/VHT/HE and Device Inventory inputs/mapping, remaining mandatory
-functions and clause review, and resolution of the native peer's profile mismatch. Actual capability
+The [technology/inventory extension](../guides/technology-inventory.md) now maps
+explicit synthetic HT/VHT and Device Inventory inputs through the read-only
+two-pod service. Next are reviewed HE conversion and Wi-Fi 6 companion inputs,
+remaining mandatory functions/clause review and the native peer profile mismatch. Actual capability
 qualification needs a named pod. Complete IEEE message processing remains
 P0-dependent.
 

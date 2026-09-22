@@ -192,9 +192,9 @@ python3 scripts/check-easymesh-reference.py
 ```
 
 The second command needs `tshark`, but only reads the already published synthetic
-native-peer capture. Seventeen values now include AP/Radio Advanced/Profile-2
+native-peer capture. Twenty values now include AP/Radio Advanced/Profile-2
 capabilities from a native AP Capability Report in frame 22, plus the existing
-discovery/topology/M1 examples. The expected values are independently extracted
+discovery/topology/M1 examples and selected HT/opaque-HE/Device Inventory values. The expected values are independently extracted
 without importing EMOSA. Both tshark 3.6.2 and 4.2.2 reproduce them.
 
 Those older dissectors do not know all EasyMesh 6.1 feature meanings: for example,
@@ -220,10 +220,10 @@ applicable, backhaul address handling, steering and recovery. A radio feature
 that EMOSA cannot configure or observe through that interface is a compatibility
 gap to record, not a bit to advertise optimistically.
 
-The next independently implementable work is technology capability input and
-field mapping, beginning with HT/VHT/HE as the selected target requires, plus
-Device Inventory. These need reviewed IEEE 802.11 definitions and truthful
-inputs. Full exchange processing still needs **IEEE 1905.1-2013 and
+The [technology/inventory exercise](../guides/technology-inventory.md) now adds
+synthetic HT/VHT and Device Inventory mapping, plus an opaque HE value codec.
+HE conversion, its mandatory Wi-Fi 6 companion and independently qualified
+feature inputs remain next. These components do not complete AP reporting. Full exchange processing still needs **IEEE 1905.1-2013 and
 IEEE 1905.1a-2014**, and the native peer's recorded profile mismatch must be
 resolved for the chosen build/policy. Physical access remains pending.
 

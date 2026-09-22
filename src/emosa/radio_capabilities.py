@@ -11,12 +11,13 @@ import stat
 from datetime import UTC, datetime
 from pathlib import Path
 
+from emosa import capability_extensions
 from emosa.config import validate
 from emosa.easymesh_payloads import APRadioBasicCapabilities, BasicOperatingClass, encode_value
 from emosa.errors import EmosaError
 from emosa.evaluation.payloads import describe
 from emosa.opensync.topology import project as project_topology
-from emosa.operating_classes import GLOBAL_OPERATING_CLASSES
+from emosa.operating_classes import CENTER_CHANNEL_CLASSES, GLOBAL_OPERATING_CLASSES
 from emosa.topology_bindings import binding_digest
 
 PROFILE_BYTES = 65_536
@@ -80,10 +81,15 @@ def unavailable(pod_id, binding, code):
         "interface": "local-diagnostic",
         "backend_mode": "ovsdb-sim",
         "scope": "AP Radio Basic Capabilities values from explicit synthetic inputs",
+        "ready_scope": "basic_radio_capabilities_only",
+        "extension_scope": (
+            "Selected HT/VHT and Device Inventory mapping; HE/Wi-Fi 6 pending, EHT unassessed"
+        ),
         "binding_sha256": binding_digest(binding) if binding else None,
         "ready": False,
         "blockers": [code],
         "radios": [],
+        "extensions": capability_extensions.unavailable(),
         "snapshot_fresh": False,
         "input_assurance": "operator-declared synthetic facts; digests are not attestation",
         "complete_ap_capability_report": False,
@@ -153,6 +159,14 @@ def project(pod_id, raw, binding, profile, reference, *, state_provenance, now=N
         evidence=[{"id": e["id"], "sha256": e["sha256"]} for e in profile["evidence"]],
         issued_at=profile["issued_at"],
         expires_at=profile["expires_at"],
+        extensions=capability_extensions.project(
+            profile,
+            topology["radios"],
+            raw["schema"].row(
+                "AWLAN_Node",
+                {k: node[k] for k in ("serial_number", "firmware_version") if k in node},
+            ),
+        ),
     )
     return report
 
@@ -178,7 +192,8 @@ def _radio(facts, observed):
         require(set(excluded) <= set(all_channels), "non_operable_channel_outside_class")
         channels = set(all_channels) - set(excluded)
         require(bool(channels), "supported_class_has_no_operable_channels")
-        capable.extend((band, c) for c in channels)
+        if number not in CENTER_CHANNEL_CLASSES:
+            capable.extend((band, c) for c in channels)
         classes.append(BasicOperatingClass(number, op["max_eirp_dbm"], tuple(sorted(excluded))))
     active_bsses = sum(v["mode"] == "ap" and v["enabled"] for v in observed["interfaces"])
     require(active_bsses <= facts["max_bss"], "observed_bsses_exceed_claimed_capacity")

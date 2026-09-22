@@ -218,8 +218,8 @@ def audit(features=None):
         (
             "0xd4",
             "Device Inventory",
-            False,
-            "Stable qualified serial, active firmware/environment and per-radio vendor data",
+            True,
+            "Synthetic mapper exists; qualify identity, firmware/environment and radio vendors",
         ),
     ):
         add(kind, name, "agent", "required", "§9.1 / §17.1.7", component, remaining)
@@ -247,8 +247,12 @@ def audit(features=None):
                 identifier,
                 _condition(radio[feature]),
                 "§9.1 / §18",
-                kind == "0xbe",
-                "Planning only; verify complete feature implementation and truthful field inputs",
+                kind in {"0x86", "0x87", "0x88", "0xbe"},
+                (
+                    "HE MCS remains opaque; normalized mapping and Wi-Fi 6 companion pending"
+                    if kind == "0x88"
+                    else "Planning only; qualify feature behavior and truthful inputs"
+                ),
             )
     eht = _any([r["eht"] for r in inputs["radios"]])
     for kind, name in (("0xdf", "Wi-Fi 7 Agent Capabilities"), ("0xe7", "EHT Operations")):

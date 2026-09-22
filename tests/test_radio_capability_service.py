@@ -24,3 +24,20 @@ def test_two_pod_service_revalidates_capability_inputs_and_reconnects(tmp_path):
     assert "initial-simulation-key" not in serialized and str(tmp_path) not in serialized
     assert not result["controller_onboarding_proven"] and not result["physical_pod_proven"]
     assert not (tmp_path / "radio-capabilities/control.sock").exists()
+
+
+def test_two_pod_technology_and_inventory_survive_reconnect_and_process_restart(tmp_path):
+    result = asyncio.run(run(tmp_path / "extensions", with_extensions=True))
+    assert result["passed"] and result["observed_tables_unchanged_after_restoring_fixture_faults"]
+    for pod in result["stages"]["connected"]:
+        ext = pod["extensions"]
+        assert [v["type"] for v in ext["technology"]["values"]] == ["0x86", "0x87", "0x86"]
+        inventory = decode_value(
+            0xD4, bytes.fromhex(ext["device_inventory"]["values"][0]["value_hex"])
+        )
+        assert len(inventory.radios) == 2 and inventory.serial_number
+    for stage in ("reconnected", "restarted"):
+        pod = result["stages"][stage]
+        if isinstance(pod, list):
+            pod = pod[0]
+        assert pod["extensions"] == result["stages"]["connected"][0]["extensions"]

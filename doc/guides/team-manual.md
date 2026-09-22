@@ -2797,7 +2797,7 @@ of the history; an old `protoc-c` bootstrap failure is not the current blocker.
 
 Discovery and topology messages carry small structured fields describing services,
 radios, BSSs, radio capabilities and profiles. EMOSA now has Python codecs for
-nine such **TLV values**.
+thirteen such **TLV values**.
 A TLV means type/length/value; this component handles the value inside that
 structure. It provides useful progress from EasyMesh's explicit field definitions
 while the IEEE 1905 base/amendment are pending. It does not enable the packet
@@ -2858,6 +2858,33 @@ rule. Bytes, KiB and MiB must retain their meanings on the eventual telemetry pa
 to ODH; an unknown/reserved unit must not silently become bytes. No ODH delivery
 or automatic profile advertisement is added. Use this audit to explain the next
 development and qualification work during a demo.
+
+### 13.5 Map technology capabilities and device identity
+
+A controller needs more than the radio's current channel and SSID. HT/VHT
+capabilities describe stream limits and supported modulation/coding sets. Device
+Inventory identifies the represented pod's stable serial, active firmware,
+execution environment and radio vendors. These must describe the pod, not the
+machine running EMOSA.
+
+Follow the [technology/inventory walkthrough](technology-inventory.md) on HOST:
+
+```bash
+uv run python -m emosa.simulation.radio_capabilities \
+  --with-extensions --output .lab/technology-inventory-first
+```
+
+This needs the disposable OVSDB binaries from chapter 3, but no VM or radio.
+It creates two synthetic pods, checks the real read-only service, injects owned
+fixture faults and verifies reconnect/restart behavior. Use a fresh output path.
+The walkthrough explains the generated input files and how to inspect the report.
+
+Read `extensions.technology` and `extensions.device_inventory` separately from
+top-level Basic readiness. Unknown inputs block their extension. HE support
+currently blocks technology mapping because the IEEE-to-EasyMesh MCS conversion
+and required Wi-Fi 6 companion are unfinished; offline inspection preserves the
+HE bytes without guessing their meaning. No extension qualifies a full report,
+profile or physical pod. The demonstration stops its services when finished.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

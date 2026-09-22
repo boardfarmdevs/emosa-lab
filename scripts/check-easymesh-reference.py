@@ -29,6 +29,14 @@ def address(element, name):
     return bytes.fromhex(field(element, name).attrib["value"]).hex(":")
 
 
+def raw_field(tlv, element):
+    # String dissectors can suppress NULs in their displayed/value text. Their
+    # byte positions and sizes retain the original counted field boundaries.
+    start = int(element.attrib["pos"]) - int(tlv.attrib["pos"])
+    length = int(element.attrib["size"])
+    return bytes.fromhex(tlv.attrib["value"])[start : start + length].hex()
+
+
 def projection(pdml):
     """Project independently dissected field values, not EMOSA's interpretation."""
     cases = []
@@ -39,7 +47,7 @@ def projection(pdml):
             if kind_field is None:
                 continue
             kind = int(kind_field.attrib["value"], 16)
-            if kind not in (0x80, 0x81, 0x82, 0x83, 0x85, 0xA1, 0xB3, 0xB4, 0xBE):
+            if kind not in (0x80, 0x81, 0x82, 0x83, 0x85, 0x86, 0x88, 0xA1, 0xB3, 0xB4, 0xBE, 0xD4):
                 continue
             length_field = field(tlv, "ieee1905.tlv_length")
             # Sizes come from the independent decoder, including on reassembled
@@ -88,6 +96,46 @@ def projection(pdml):
                         field(tlv, "ieee1905.ap_advanced_capabilities.flags").attrib["value"], 16
                     ),
                 }
+            elif kind == 0x86:
+                decoded = {
+                    "ruid": address(tlv, "ieee1905.ap_ht.radio_id"),
+                    "flags": int(field(tlv, "ieee1905.ap_ht.caps").attrib["value"], 16),
+                    "max_tx_streams": int(
+                        field(tlv, "ieee1905.ap_ht.max_tx_streams").attrib["value"], 16
+                    )
+                    + 1,
+                    "max_rx_streams": int(
+                        field(tlv, "ieee1905.ap_ht.max_rx_streams").attrib["value"], 16
+                    )
+                    + 1,
+                }
+            elif kind == 0x88:
+                count = field(tlv, "ieee1905.ap_he_capability.he_mcs_count")
+                start = int(count.attrib["pos"]) + 1 - int(tlv.attrib["pos"])
+                mcs = bytes.fromhex(tlv.attrib["value"])[start : start + int(count.attrib["show"])]
+                flags = bytes.fromhex(field(tlv, "ieee1905.ap_he.caps").attrib["value"])
+                decoded = {
+                    "ruid": address(tlv, "ieee1905.ap_he_capability.radio_id"),
+                    "mcs_hex": mcs.hex(),
+                    "stream_flags": flags[0],
+                    "feature_flags": flags[1],
+                }
+            elif kind == 0xD4:
+                prefix = "ieee1905.device_inventory."
+                decoded = {
+                    name + "_hex": raw_field(tlv, field(tlv, prefix + name))
+                    for name in ("serial_number", "software_version", "execution_env")
+                }
+                parents = {child: parent for parent in tlv.iter() for child in parent}
+                decoded["radios"] = [
+                    {
+                        "ruid": bytes.fromhex(r.attrib["value"]).hex(":"),
+                        "chipset_vendor_hex": raw_field(
+                            tlv, field(parents[r], prefix + "chipset_vendor")
+                        ),
+                    }
+                    for r in tlv.iterfind(f".//field[@name='{prefix}radio_id']")
+                ]
             elif kind == 0x85:
                 parents = {child: parent for parent in tlv.iter() for child in parent}
                 classes = []

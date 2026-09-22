@@ -1,6 +1,6 @@
 # EasyMesh value components and offline inspection
 
-EMOSA now encodes and decodes nine selected EasyMesh **TLV values**. This is
+EMOSA now encodes and decodes thirteen selected EasyMesh **TLV values**. This is
 preparation for discovery and topology reporting while the IEEE 1905 documents
 are being acquired. It does not enable a packet endpoint, controller discovery,
 onboarding or pod writes. Run this exercise on **HOST**, in your development or
@@ -39,16 +39,21 @@ No licensed document or page extract is redistributed.
 | `0x81` / `SearchedServices` | One-octet count, then that many searched services; only `0` controller is defined | EasyMesh §17.2.2, Table 25, p.125 |
 | `0x82` / `RadioIdentifier` | Six RUID octets | EasyMesh §17.2.3, Table 26, pp.125–126 |
 | `0x83` / `APOperationalBss` | Radio count; per-radio RUID and BSS count; per-BSS AP_MAC, SSID byte length and SSID octets | EasyMesh §17.2.4, Table 27, p.126 |
-| `0x85` / `APRadioBasicCapabilities` | RUID, nonzero Max_BSS, class count; per-class identifier, signed EIRP dBm, non-operable channel count/list | EasyMesh §17.2.7, Table 30, pp.127–128; selected classes in IEEE 802.11-2024 Table E-4, pp.5658–5659 |
+| `0x85` / `APRadioBasicCapabilities` | RUID, nonzero Max_BSS, class count; per-class identifier, signed EIRP dBm, non-operable channel count/list | EasyMesh §17.2.7, Table 30, pp.127–128; selected classes in IEEE 802.11-2024 Table E-4, pp.5658–5660 |
 | `0xA1` / `APCapability` | One octet of AP feature flags; preserve reserved bits on receive, reject them on send | EasyMesh §17.2.6, Table 29, p.127 |
 | `0xB3` / `MultiAPProfile` | One profile octet; defined profiles 1, 2 and 3 | EasyMesh §17.2.47, Table 70, p.157 |
 | `0xB4` / `Profile2APCapability` | Rule capacity, reserved octet, counter-unit/feature octet, VID capacity | EasyMesh §17.2.48, Table 71, pp.157–158 |
 | `0xBE` / `APRadioAdvancedCapabilities` | RUID and one octet of combined-role and QoS feature flags | EasyMesh §17.2.52, Table 75, p.160 |
+| `0x86` / `APHTCapabilities` | RUID, stream counts and HT flags | EasyMesh §17.2.8, Table 31, p.128 |
+| `0x87` / `APVHTCapabilities` | RUID, big-endian Tx/Rx MCS maps and stream/feature flags | EasyMesh §17.2.9, Table 32, p.129; IEEE §9.4.2.156.3, Figure 9-707, p.1299 |
+| `0x88` / `APHECapabilities` | RUID, opaque already-ordered MCS bytes and stream/feature flags; automatic map conversion pending | EasyMesh §17.2.10, Table 33, pp.130–131; IEEE §9.4.2.247.4, pp.1455–1457 |
+| `0xD4` / `DeviceInventory` | Counted 0–64-octet identity/software/environment strings and one or more radio/vendor entries | EasyMesh §9.1, pp.79–80; §17.2.76, Table 99, p.172 |
 | SSID representation | Preserve original octets and the 0–32-octet structural bound; do not assume UTF-8 | IEEE 802.11-2024 §9.4.2.2, Figure 9-209, p.934 |
 
-All counts in these selected values are single octets. Addresses and SSIDs are
-opaque octet sequences. This work therefore needs no invented multi-octet IEEE
-byte-order rule. It does **not** encode the outer type/length fields.
+All counts in these selected values are single octets. Addresses, SSIDs and
+inventory strings preserve their octets. VHT uses the explicit big-endian rule
+in EasyMesh Table 32; HE preserves already-ordered MCS bytes while conversion
+remains pending. This component does **not** encode the outer type/length fields.
 
 Receive and send behavior differ deliberately. EasyMesh §3.1.2 requires receivers
 to ignore reserved service codes for interpretation, while senders must not use
@@ -182,10 +187,10 @@ uv run pytest tests/test_easymesh_payloads.py
 
 They compare exact independently extracted bytes and decoded fields, hand-derived
 table examples, malformed/truncated input, reserved-code behavior, count and SSID
-boundaries, resource limits and the offline CLI. There are 87 selected cases;
+boundaries, resource limits and the offline CLI. There are 93 selected cases;
 [radio capability tests](../../tests/test_radio_capabilities.py) add signed-power
 boundaries and input-mapping checks. The `0x85` decoder preserves unfamiliar
-classes for inspection; its encoder accepts only audited classes 81–84 and 115.
+classes for inspection; its encoder accepts only audited classes 81–84, 115–117 and 128.
 
 For the independent re-extraction, install `tshark` on a machine where you can
 inspect the retained public capture. On Ubuntu, the package can be installed
@@ -197,7 +202,7 @@ python3 scripts/check-easymesh-reference.py
 ```
 
 The script validates the retained input digests, invokes Wireshark's decoder,
-uses its reassembly and field boundaries, and compares **seventeen** retained values
+uses its reassembly and field boundaries, and compares **twenty** retained values
 and interpretations. It imports no EMOSA code and never regenerates expected
 values during the check. Both tshark 3.6.2 and 4.2.2 matched locally; CI includes
 the same check. The [provenance](../../tests/fixtures/protocol/easymesh/provenance.json)
@@ -221,8 +226,10 @@ now have a [synthetic service exercise](../guides/observed-topology.md). The
 synthetic inputs to `0x85`, rechecking identity, evidence and current context.
 Selected AP/Profile-2/Advanced feature value codecs and an executable
 [requirement-family audit](profile-readiness.md) are now available. Physical
-capability qualification, technology feature inputs and the complete
-mandatory-function review remain pending. Actual discovery/topology/WSC processing also
+capability qualification and the complete mandatory-function review remain
+pending. The [technology/inventory exercise](../guides/technology-inventory.md)
+now maps explicit synthetic HT/VHT and Device Inventory inputs; HE conversion
+and its Wi-Fi 6 companion remain unfinished. Actual discovery/topology/WSC processing also
 needs the missing **IEEE 1905.1-2013 and IEEE 1905.1a-2014** review, independent
 full-message vectors, peer/exchange binding and recovery rules.
 

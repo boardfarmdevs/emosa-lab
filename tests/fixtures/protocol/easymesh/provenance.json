@@ -7,8 +7,8 @@
   "dissector": "TShark (Wireshark) 3.6.2 (Git v3.6.2 packaged as 3.6.2-2)",
   "dissector_executable_sha256": "a65608d17a78f255c7a9aaa08244f3fe284ce752f6818fd87fee9ca6e5bb4d54",
   "extractor": "scripts/check-easymesh-reference.py",
-  "extractor_sha256": "fea2c358aaf1b66f4f5151a4668c257061df907bfec3defb19bba6bbca1ea4d4",
-  "vectors_sha256": "bb1a5cf36c529c6185c1f1e15c326f1ba60d6be13d468e33b7cc8711036e95c7",
+  "extractor_sha256": "8ba14438faab1dd30deab2af3770e5bd3a671d6c60d9acda4758660175914be9",
+  "vectors_sha256": "b8a585f041b12161afde58bb69adf80d29a55783e125ee8d2514e8a6c99edbd3",
   "display_filter": "frame.number == 1 || frame.number == 2 || frame.number == 5 || frame.number == 7 || frame.number == 20 || frame.number == 22",
   "transformation": "tshark -n -2 -T pdml; selected TLV values and dissector field interpretations only. Header boundaries come from dissector sizes; frame 7 uses its reassembled data source. No EMOSA module is imported.",
   "review": "Synthetic SSIDs and MAC identities already present in public native baseline; no WSC content or credentials projected. Reserved service 0xa1 retained for receiver tests, prohibited in encoder output under EasyMesh 6.1 section 3.1.2.",
@@ -17,7 +17,10 @@
     "IEEE 802.11-2024 section 9.4.2.2, Figure 9-209, printed page 934",
     "EasyMesh 6.1 section 17.2.7, Table 30, printed pages 127-128",
     "IEEE 802.11-2024 Table E-4, selected global operating classes, printed pages 5658-5659",
-    "EasyMesh 6.1 sections 17.2.6 Table 29 p.127, 17.2.48 Table 71 pp.157-158, 17.2.52 Table 75 p.160"
+    "EasyMesh 6.1 sections 17.2.6 Table 29 p.127, 17.2.48 Table 71 pp.157-158, 17.2.52 Table 75 p.160",
+    "EasyMesh 6.1 sections 17.2.8-10 Tables 31-33 pp.128-131; section 17.2.76 Table 99 p.172",
+    "IEEE 802.11-2024 section 9.4.2.156.3 Figure 9-707 p.1299; section 9.4.2.247.4 Figure 9-901 / Tables 9-377-378 pp.1455-1457"
   ],
-  "feature_cross_check_limits": "For 0xa1/0xb4/0xbe compare raw flags and numeric fields. Older dissectors omit new feature bits and use outdated semantic labels; EasyMesh 6.1 is authority for current meanings. No feature capability of EMOSA or a physical pod is inferred."
+  "feature_cross_check_limits": "For 0xa1/0xb4/0xbe compare raw flags and numeric fields. Older dissectors omit new feature bits and use outdated semantic labels; EasyMesh 6.1 is authority for current meanings. No feature capability of EMOSA or a physical pod is inferred.",
+  "technology_inventory_limits": "HT flags and opaque HE MCS bytes only; no native VHT value in selected capture. Inventory strings projected by byte positions/sizes, preserving NULs suppressed by dissector text. HE Tx/Rx/NSS semantics and IEEE-to-EasyMesh ordering remain under review."
 }

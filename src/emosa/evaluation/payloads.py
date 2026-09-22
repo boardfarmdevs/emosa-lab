@@ -11,9 +11,13 @@ from emosa.easymesh_payloads import (
     MAX_VALUE_BYTES,
     PROFILE2_FEATURE_BITS,
     APCapability,
+    APHECapabilities,
+    APHTCapabilities,
     APOperationalBss,
     APRadioAdvancedCapabilities,
     APRadioBasicCapabilities,
+    APVHTCapabilities,
+    DeviceInventory,
     MultiAPProfile,
     Profile2APCapability,
     RadioIdentifier,
@@ -50,6 +54,70 @@ def read_value(*, value_hex: str | None = None, value_file: Path | None = None) 
 
 
 def describe(payload):
+    if isinstance(payload, DeviceInventory):
+        return {
+            "serial_number_hex": payload.serial_number.hex(),
+            "software_version_hex": payload.software_version.hex(),
+            "execution_env_hex": payload.execution_env.hex(),
+            "radios": [
+                {"ruid": r.ruid.hex(":"), "chipset_vendor_hex": r.chipset_vendor.hex()}
+                for r in payload.radios
+            ],
+        }
+    if isinstance(payload, APHTCapabilities):
+        return {
+            "ruid": payload.ruid.hex(":"),
+            "flags": payload.flags,
+            "max_tx_streams": (payload.flags >> 6) + 1,
+            "max_rx_streams": ((payload.flags >> 4) & 3) + 1,
+            "short_gi_20": bool(payload.flags & 8),
+            "short_gi_40": bool(payload.flags & 4),
+            "ht40": bool(payload.flags & 2),
+            "reserved_bits": payload.flags & 1,
+        }
+    if isinstance(payload, (APVHTCapabilities, APHECapabilities)):
+        he = isinstance(payload, APHECapabilities)
+        result = {
+            "ruid": payload.ruid.hex(":"),
+            "stream_flags": payload.stream_flags,
+            "feature_flags": payload.feature_flags,
+            "max_tx_streams": (payload.stream_flags >> 5) + 1,
+            "max_rx_streams": ((payload.stream_flags >> 2) & 7) + 1,
+            "reserved_bits": payload.feature_flags & (1 if he else 15),
+        }
+        if he:
+            result.update(
+                mcs_hex=payload.mcs.hex(),
+                mcs_interpretation="opaque_mapping_pending",
+                mcs_length_matches_width_flags=len(payload.mcs)
+                == (4 + 4 * bool(payload.stream_flags & 1) + 4 * bool(payload.stream_flags & 2)),
+            )
+            result.update(
+                he8080=bool(payload.stream_flags & 2), he160=bool(payload.stream_flags & 1)
+            )
+            bits = {
+                "su_beamformer": 7,
+                "mu_beamformer": 6,
+                "ul_mu_mimo": 5,
+                "ul_mu_mimo_ofdma": 4,
+                "dl_mu_mimo_ofdma": 3,
+                "ul_ofdma": 2,
+                "dl_ofdma": 1,
+            }
+        else:
+            result.update(
+                tx_mcs=payload.tx_mcs,
+                rx_mcs=payload.rx_mcs,
+                tx_mcs_codes=[(payload.tx_mcs >> (2 * n)) & 3 for n in range(8)],
+                rx_mcs_codes=[(payload.rx_mcs >> (2 * n)) & 3 for n in range(8)],
+                short_gi_80=bool(payload.stream_flags & 2),
+                short_gi_160=bool(payload.stream_flags & 1),
+            )
+            bits = {"vht8080": 7, "vht160": 6, "su_beamformer": 5, "mu_beamformer": 4}
+        result.update(
+            {name: bool(payload.feature_flags & (1 << bit)) for name, bit in bits.items()}
+        )
+        return result
     if isinstance(payload, (APCapability, Profile2APCapability, APRadioAdvancedCapabilities)):
         bits = (
             AP_FEATURE_BITS

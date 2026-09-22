@@ -20,7 +20,55 @@ from emosa.simulation.topology import agent_binding, seed
 from emosa.topology_bindings import binding_digest, canonical_binding
 
 
-def fixture_profile(binding, schema_fingerprint, *, now=None):
+def fixture_extensions(binding):
+    """Invented HT/VHT device, explicitly without HE; never inferred from hwsim."""
+    technology = []
+    inventory_radios = []
+    for radio in binding["topology"]["radios"]:
+        technology.append(
+            {
+                "radio_id": radio["radio_id"],
+                "evidence_id": "synthetic-radio-contract",
+                "ht": {
+                    "max_tx_streams": 2,
+                    "max_rx_streams": 2,
+                    "short_gi_20": True,
+                    "short_gi_40": True,
+                    "ht40": True,
+                },
+                "vht": {
+                    "max_tx_streams": 2,
+                    "max_rx_streams": 3,
+                    "tx_mcs_codes": [2, 1, 3, 3, 3, 3, 3, 3],
+                    "rx_mcs_codes": [1, 2, 0, 3, 3, 3, 3, 3],
+                    "short_gi_80": True,
+                    "short_gi_160": False,
+                    "vht8080": False,
+                    "vht160": False,
+                    "su_beamformer": True,
+                    "mu_beamformer": False,
+                }
+                if radio["radio_id"] == "radio-1"
+                else False,
+                "he": False,
+            }
+        )
+        inventory_radios.append(
+            {"radio_id": radio["radio_id"], "chipset_vendor": "EMOSA synthetic radio"}
+        )
+    return {
+        "technology": technology,
+        "device_inventory": {
+            "evidence_id": "synthetic-radio-contract",
+            "serial_number": binding["expected_serial"],
+            "software_version": "simulation-only",
+            "execution_env": "EMOSA synthetic environment",
+            "radios": inventory_radios,
+        },
+    }
+
+
+def fixture_profile(binding, schema_fingerprint, *, now=None, with_extensions=False):
     """Explicit invented lab capacities, independent of observed BSS/channel counts.
 
     This helper is exclusively for our owned two-radio fixture, never hardware.
@@ -39,9 +87,19 @@ def fixture_profile(binding, schema_fingerprint, *, now=None):
                     {
                         "operating_class": op,
                         "max_eirp_dbm": 20 if first else 17,
-                        "non_operable_channels": [12, 13] if op in (81, 84) else [],
+                        "non_operable_channels": (
+                            [58, 106, 122, 138, 155, 171]
+                            if op == 128
+                            else [12, 13]
+                            if op in (81, 84)
+                            else []
+                        ),
                     }
-                    for op in ([115] if first else [81, 83, 84])
+                    for op in (
+                        ([115, 116, 117, 128] if with_extensions else [115])
+                        if first
+                        else [81, 83, 84]
+                    )
                 ],
                 "evidence_id": "synthetic-radio-contract",
             }
@@ -54,6 +112,8 @@ def fixture_profile(binding, schema_fingerprint, *, now=None):
         "radios": radios,
         "complete_operating_class_inventory": True,
     }
+    if with_extensions:
+        evidence["extensions"] = fixture_extensions(binding)
     evidence_bytes = (json.dumps(evidence, indent=2) + "\n").encode()
     profile = {
         "schema_version": 1,
@@ -81,20 +141,23 @@ def fixture_profile(binding, schema_fingerprint, *, now=None):
         ],
         "radios": radios,
     }
+    if with_extensions:
+        profile["extensions"] = copy.deepcopy(evidence["extensions"])
+        profile["evidence"][0]["covers"] += ["technology", "device_inventory"]
     validate("radio-capabilities", profile)
     return profile, evidence_bytes
 
 
-def write_inputs(directory, binding, fingerprint):
+def write_inputs(directory, binding, fingerprint, *, with_extensions=False):
     directory.mkdir(mode=0o700)
-    profile, evidence = fixture_profile(binding, fingerprint)
+    profile, evidence = fixture_profile(binding, fingerprint, with_extensions=with_extensions)
     path = directory / "capabilities.json"
     write_json(path, profile)
     (directory / profile["evidence"][0]["file"]).write_bytes(evidence)
     return {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
-async def run(directory):
+async def run(directory, *, with_extensions=False):
     directory = directory.resolve()
     directory.mkdir(parents=True, mode=0o700, exist_ok=False)
     databases = [SimDatabase(), SimDatabase()]
@@ -116,6 +179,7 @@ async def run(directory):
         "physical_pod_proven": False,
         "radio_behavior_proven": False,
         "stages": {},
+        "selected_technology_and_inventory_inputs": with_extensions,
     }
     stages = report["stages"]
 
@@ -175,7 +239,10 @@ async def run(directory):
             initial.append(raw["tables"])
             pod = config["pods"][index]
             pod["radio_capabilities"] = write_inputs(
-                directory / pod["pod_id"], canonical_binding(pod), raw["schema"].fingerprint
+                directory / pod["pod_id"],
+                canonical_binding(pod),
+                raw["schema"].fingerprint,
+                with_extensions=with_extensions,
             )
         write_json(config_path, config)
         load("config", config_path)
@@ -183,6 +250,12 @@ async def run(directory):
         for db, listener in zip(databases, listeners, strict=True):
             await db.manager_remote(listener)
         stages["connected"] = [await view(0), await view(1)]
+        if with_extensions:
+            assert all(
+                r["extensions"][name]["ready"]
+                for r in stages["connected"]
+                for name in ("technology", "device_inventory")
+            )
         stages["cli_ready"] = await cli(0)
         profile_path = Path(config["pods"][0]["radio_capabilities"]["path"])
         original = profile_path.read_bytes()
@@ -216,6 +289,7 @@ async def run(directory):
         stages["restarted"] = [await view(0), await view(1)]
         for result in (stages["reconnected"], stages["restarted"][0]):
             assert result["radios"] == stages["connected"][0]["radios"]
+            assert result["extensions"] == stages["connected"][0]["extensions"]
         assert (
             stages["restarted"][0]["adapter_instance_id"]
             != stages["connected"][0]["adapter_instance_id"]
@@ -225,6 +299,12 @@ async def run(directory):
             not s["radios"]
             for s in stages.values()
             if isinstance(s, dict) and s.get("ready") is False
+        )
+        assert all(
+            not ext["values"] and not ext["ready"]
+            for s in stages.values()
+            if isinstance(s, dict) and s.get("ready") is False
+            for ext in s["extensions"].values()
         )
         for admin, before in zip(admins, initial, strict=True):
             assert (await admin.snapshot())["tables"] == before
@@ -244,8 +324,13 @@ async def run(directory):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True, help="new private result directory")
+    parser.add_argument(
+        "--with-extensions",
+        action="store_true",
+        help="include synthetic HT/VHT and Device Inventory inputs",
+    )
     args = parser.parse_args()
-    result = asyncio.run(run(args.output))
+    result = asyncio.run(run(args.output, with_extensions=args.with_extensions))
     print(
         json.dumps(
             {

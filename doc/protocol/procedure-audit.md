@@ -155,3 +155,22 @@ the adapter's local directory contains the simulated virtual agent, while native
 controller inventory does not. The actual peer capture and the semantic operation
 are separate observations. Their presence in the same evidence directory cannot
 be used to claim that a controller message caused the Config change.
+
+
+## Selected technology and Device Inventory mapping
+
+The [new walkthrough](../guides/technology-inventory.md) records HT/VHT normalized
+inputs and Device Inventory projection through the existing read-only service.
+EasyMesh 6.1 §17.2.8–10 (Tables 31–33, pp.128–131) and §17.2.76 (Table 99, p.172)
+define the new value structures. IEEE 802.11-2024 §9.4.2.54 (pp.1122–1126),
+§9.4.2.156.3/Figure 9-707 (p.1299), §9.4.2.247.4/Figure 9-901/Tables 9-377–378
+(pp.1455–1457), and selected Table E-4 classes (pp.5658–5660) define the reviewed
+field meanings. Class 128's center-channel numbers are distinct from primary
+channels. No management-frame parser or driver-capability inference is added.
+
+The HE field remains opaque: normalized Tx/Rx ordering and independent asymmetric
+vectors need further work, together with the required Wi-Fi 6 companion. Old
+native dissector labels are cross-check material, not authority. Inventory
+strings retain their original octets; synthetic UTF-8 input is an explicit local
+representation. Current serial/firmware matching cannot prove lifetime identity,
+active-image semantics or the execution environment on physical firmware.

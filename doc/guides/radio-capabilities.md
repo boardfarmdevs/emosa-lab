@@ -182,7 +182,7 @@ No licensed text or page image is redistributed.
 The [codec](../../src/emosa/easymesh_payloads.py) validates counts, lengths,
 nonzero Max_BSS and signed power encoding. Its decoder retains unfamiliar class
 identifiers for diagnostics. Its encoder and the mapper accept only reviewed
-global classes **81, 82, 83, 84 and 115**. An input containing another class is
+global classes **81, 82, 83, 84, 115, 116, 117 and 128**. An input containing another class is
 blocked in full; the mapper never silently drops it. Extending this catalogue
 requires source review and independent tests. Channel-set validation does not
 establish regulatory permission, bandwidth support or HT/VHT/HE feature support.
@@ -202,7 +202,7 @@ uv run pytest tests/test_radio_capability_service.py
 python3 scripts/check-easymesh-reference.py
 ```
 
-The last command requires `tshark` and now checks seventeen independently dissected values
+The last command requires `tshark` and now checks twenty independently dissected values
 from the existing synthetic native-peer capture. Frame 5 supplies a real native
 Radio Basic Capabilities value. It is prplMesh traffic, not an EMOSA onboarding
 exchange. The fixture expectations are extracted without importing EMOSA;
@@ -232,3 +232,8 @@ procedure validation still requires **IEEE 1905.1-2013 and IEEE 1905.1a-2014**.
 The acceptance path remains **real EasyMesh messages → EMOSA adapter → unchanged
 physical pod → independently observed behavior**. These simulation results are
 preparation for that proof.
+
+The optional [technology and Device Inventory extension](technology-inventory.md)
+uses the same validated context. It has separate readiness results; Basic readiness
+is unchanged. Class 128 uses center channels, so it cannot validate the observed
+primary channel. The extension demo includes explicit 40/80 MHz class inputs.

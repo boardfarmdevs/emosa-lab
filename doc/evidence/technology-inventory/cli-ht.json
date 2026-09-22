@@ -1,0 +1,19 @@
+{
+  "evidence_level": "standalone_easymesh_tlv_value",
+  "type": "0x86",
+  "byte_length": 7,
+  "sha256": "dacbbc1dbb76e89f6cdd606a66434e6deaac6d8b95311b2a9c8ec1288b25e8c8",
+  "decoded": {
+    "ruid": "02:00:00:01:40:01",
+    "flags": 126,
+    "max_tx_streams": 2,
+    "max_rx_streams": 4,
+    "short_gi_20": true,
+    "short_gi_40": true,
+    "ht40": true,
+    "reserved_bits": 0
+  },
+  "wire_envelope_validated": false,
+  "controller_onboarding_by_emosa_proven": false,
+  "physical_pod_proven": false
+}

@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Use the new profile audit to track mandatory functions and conditional capability inputs. AP/Profile-2/Advanced codecs are components only; technology inputs, actual pod qualification, native profile compatibility and IEEE processing remain required.",
+      "next": "Selected HT/VHT and Device Inventory mapping now runs through the read-only service. Next: reviewed HE conversion and Wi-Fi 6 inputs, complete report/profile procedures, native peer compatibility and IEEE processing.",
       "path": "doc/protocol/protocol-inputs.md"
     },
     "engine": {
@@ -464,7 +464,7 @@
       "path": "doc/protocol/easymesh-payloads.md",
       "title": "EasyMesh value components and offline inspection",
       "category": "Protocol components",
-      "description": "Nine standalone value codecs, reserved-field rules and seventeen independent native values; feature interpretation follows EasyMesh 6.1 rather than older dissector labels."
+      "description": "Thirteen standalone value codecs and twenty independent native values; HE MCS stays opaque pending reviewed conversion."
     },
     {
       "path": "doc/evidence/easymesh-payloads/summary.json",
@@ -507,10 +507,22 @@
       "title": "Feature codec and profile audit evidence",
       "category": "Protocol components",
       "description": "Reserved-field tests, conditional inclusion audits, independent native values and installed-wheel verification; profile and physical gates remain open."
+    },
+    {
+      "path": "doc/guides/technology-inventory.md",
+      "title": "Technology capabilities and Device Inventory",
+      "category": "Service and protocol integration",
+      "description": "Understand HT/VHT/MCS and represented-pod identity, then run the two-pod read-only mapping with separate readiness results."
+    },
+    {
+      "path": "doc/evidence/technology-inventory/summary.json",
+      "title": "Technology and inventory evidence",
+      "category": "Service and protocol integration",
+      "description": "Exact value tests, two-pod fault/restart checks, installed-wheel verification and independent native comparisons; physical onboarding pending."
     }
   ],
   "suite_evidence": {
-    "unit": "profile-audit/unit-results.xml",
-    "ovsdb": "profile-audit/ovsdb-results.xml"
+    "unit": "technology-inventory/unit-results.xml",
+    "ovsdb": "technology-inventory/ovsdb-results.xml"
   }
 }

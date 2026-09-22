@@ -12,6 +12,7 @@
 | [Stable identities and observed topology](observed-topology.md) | Bind every simulated radio/VIF, inspect a complete State-derived AP value, and test reconnect/row recreation/service restart |
 | [Radio capability inputs](radio-capabilities.md) | Supply explicit evidence-backed synthetic limits, inspect per-radio values, and test withdrawal on changed inputs or observations |
 | [Profile-readiness walkthrough](../protocol/profile-readiness.md) | Distinguish a working component from a qualified profile, audit feature conditions and inspect feature/counter-unit values offline |
+| [Technology and Device Inventory](technology-inventory.md) | Map explicit HT/VHT and inventory claims through two simulated pods; understand opaque HE and separate readiness results |
 | [Read-only physical-pod qualification](pod-qualification.md) | Prepare private local connection inputs, collect an actual schema/inventory and supply useful root-pod/cloud captures |
 
 For the distinction between the adapter, its virtual-agent role and the native

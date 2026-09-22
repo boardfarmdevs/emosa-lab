@@ -31,6 +31,19 @@ def _octets(value, *, length=None):
     return value
 
 
+def _u16(value):
+    if type(value) is not int or not 0 <= value <= 65535:
+        raise _invalid()
+    return value.to_bytes(2, "big")
+
+
+def _inventory_string(value):
+    raw = _octets(value)
+    if len(raw) > 64:
+        raise _invalid()
+    return _octet(len(raw)) + raw
+
+
 def _count(items):
     if type(items) is not tuple:
         raise _invalid()
@@ -105,6 +118,49 @@ class APRadioBasicCapabilities:
     operating_classes: tuple[BasicOperatingClass, ...]
 
 
+@dataclass(frozen=True)
+class APHTCapabilities:
+    kind: ClassVar[int] = 0x86
+    ruid: bytes
+    flags: int
+
+
+@dataclass(frozen=True)
+class APVHTCapabilities:
+    kind: ClassVar[int] = 0x87
+    ruid: bytes
+    tx_mcs: int
+    rx_mcs: int
+    stream_flags: int
+    feature_flags: int
+
+
+@dataclass(frozen=True)
+class APHECapabilities:
+    kind: ClassVar[int] = 0x88
+    ruid: bytes
+    # Already ordered EasyMesh field bytes. No conversion from IEEE IEs or
+    # inferred Tx/Rx map order: that separate mapping remains under review.
+    mcs: bytes
+    stream_flags: int
+    feature_flags: int
+
+
+@dataclass(frozen=True)
+class InventoryRadio:
+    ruid: bytes
+    chipset_vendor: bytes
+
+
+@dataclass(frozen=True)
+class DeviceInventory:
+    kind: ClassVar[int] = 0xD4
+    serial_number: bytes
+    software_version: bytes
+    execution_env: bytes
+    radios: tuple[InventoryRadio, ...]
+
+
 AP_FEATURE_BITS = {
     "unassociated_metrics_on_channel": 7,
     "unassociated_metrics_off_channel": 6,
@@ -172,6 +228,10 @@ type Payload = (
     | RadioIdentifier
     | APOperationalBss
     | APRadioBasicCapabilities
+    | APHTCapabilities
+    | APVHTCapabilities
+    | APHECapabilities
+    | DeviceInventory
     | APCapability
     | Profile2APCapability
     | APRadioAdvancedCapabilities
@@ -198,6 +258,12 @@ class _Reader:
     def ssid(self):
         length = self.octet()
         if length > 32:
+            raise _invalid()
+        return self.take(length)
+
+    def inventory_string(self):
+        length = self.octet()
+        if length > 64:
             raise _invalid()
         return self.take(length)
 
@@ -237,6 +303,34 @@ def decode_value(kind: int, value: bytes) -> Payload:
             result = Profile2APCapability(*(reader.octet() for _ in range(4)))
         case 0xBE:
             result = APRadioAdvancedCapabilities(reader.take(6), reader.octet())
+        case 0x86:
+            result = APHTCapabilities(reader.take(6), reader.octet())
+        case 0x87:
+            result = APVHTCapabilities(
+                reader.take(6),
+                int.from_bytes(reader.take(2), "big"),
+                int.from_bytes(reader.take(2), "big"),
+                reader.octet(),
+                reader.octet(),
+            )
+        case 0x88:
+            ruid, length = reader.take(6), reader.octet()
+            if length not in (4, 8, 12):
+                raise _invalid()
+            result = APHECapabilities(ruid, reader.take(length), reader.octet(), reader.octet())
+        case 0xD4:
+            serial, version, env = (reader.inventory_string() for _ in range(3))
+            count = reader.octet()
+            if count == 0:
+                raise _invalid()
+            result = DeviceInventory(
+                serial,
+                version,
+                env,
+                tuple(
+                    InventoryRadio(reader.take(6), reader.inventory_string()) for _ in range(count)
+                ),
+            )
         case 0x85:
             ruid, max_bss = reader.take(6), reader.octet()
             if max_bss == 0:
@@ -275,6 +369,43 @@ def encode_value(payload: Payload) -> bytes:
         value = _octet(payload.profile)
         if payload.profile not in (1, 2, 3):
             raise _invalid()
+    elif type(payload) is APHTCapabilities:
+        value = _octets(payload.ruid, length=6) + _octet(payload.flags)
+        if payload.flags & 1:
+            raise _invalid()
+    elif type(payload) in (APVHTCapabilities, APHECapabilities):
+        value = _octets(payload.ruid, length=6)
+        if type(payload) is APVHTCapabilities:
+            value += _u16(payload.tx_mcs) + _u16(payload.rx_mcs)
+            mask = 15
+        else:
+            mcs = _octets(payload.mcs)
+            if len(mcs) not in (4, 8, 12):
+                raise _invalid()
+            value += _octet(len(mcs)) + mcs
+            mask = 1
+        value += _octet(payload.stream_flags) + _octet(payload.feature_flags)
+        if payload.feature_flags & mask:
+            raise _invalid()
+        if type(payload) is APHECapabilities and len(payload.mcs) != (
+            4 + 4 * bool(payload.stream_flags & 1) + 4 * bool(payload.stream_flags & 2)
+        ):
+            raise _invalid()
+    elif type(payload) is DeviceInventory:
+        value = bytearray(
+            _inventory_string(payload.serial_number)
+            + _inventory_string(payload.software_version)
+            + _inventory_string(payload.execution_env)
+            + _count(payload.radios)
+        )
+        if not payload.radios:
+            raise _invalid()
+        for radio in payload.radios:
+            if type(radio) is not InventoryRadio:
+                raise _invalid()
+            value.extend(_octets(radio.ruid, length=6) + _inventory_string(radio.chipset_vendor))
+            _bounded(value)
+        value = bytes(value)
     elif type(payload) in (APCapability, Profile2APCapability, APRadioAdvancedCapabilities):
         flags = _octet(payload.flags)
         reserved_mask = 1 if type(payload) is APRadioAdvancedCapabilities else 7

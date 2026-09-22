@@ -88,3 +88,11 @@
   AP/Profile-2/Advanced value codecs preserve reserved fields on receipt and
   reject reserved output; counter units require explicit peer facts. Older
   dissector labels never replace current normative bit meanings.
+
+
+Technology and Device Inventory mapping reuse the validated Basic context but
+expose separate readiness results. Unknown support remains unknown. Selected
+HT/VHT claims use explicit normalized inputs; unsupported HE mapping blocks that
+extension instead of fabricating capabilities. Inventory represents the pod,
+not the adapter host. IEEE center-channel classes never validate an observed
+primary channel. See [the walkthrough](../guides/technology-inventory.md).
