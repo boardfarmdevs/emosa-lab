@@ -822,7 +822,10 @@
       "needed_for": "EasyMesh 6.1 reference 10 and section 17.2.59 Table 82 Device.CollectionInterval; required capability-report definition, not merely ODH transport; also section 17.2.35 Table 58 STA byte/packet/error/retry definitions for final and periodic reports",
       "access_checked_on": "2026-09-22",
       "access_result": "Publisher member route redirects to Wi-Fi Alliance login; no package or credentials supplied",
-      "wire_value_implemented": false
+      "wire_value_implemented": true,
+      "public_definition_review": "doc/protocol/bbf-data-elements.md",
+      "public_definition_status": "BBF_2.17_sources_verified_selected_representation_bridge_implemented_exact_WFA_equivalence_pending",
+      "wire_value_scope": "Table 82 C5 millisecond value using explicitly selected BBF 2.17 Device.CollectionInterval; not live cadence advertisement or WFA package validation"
     },
     {
       "id": "ieee8021ab-2009",
@@ -834,6 +837,31 @@
       ],
       "affected_work": "LLDP bridge discovery accompanying a live Topology Discovery procedure; not required by the current unicast transport probe",
       "content_sha256": null
+    },
+    {
+      "id": "bbf-tr181-2.17.0-selected-data-elements",
+      "edition": "TR-181 Issue 2 Amendment 17, Device:2.17 USP and CWMP full XML as served 2026-09-23",
+      "access_status": "public_publisher_files_obtained_verified_and_hashed",
+      "reviewed_on": "2026-09-23",
+      "sources": {
+        "usp": {
+          "url": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp-full.xml",
+          "sha256": "4907bdbd5802a40b9d0e493d9c5c1884a25ab3b0437f725f71a39604eaefb5f7",
+          "bytes": 4446760
+        },
+        "cwmp": {
+          "url": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp-full.xml",
+          "sha256": "5c0f218337ec4831b3583c1ec7ed7b974dd5e57ef3281d01052f84337538a303",
+          "bytes": 4138455
+        }
+      },
+      "selected_parameters": 33,
+      "selected_definitions_usp_cwmp_equal": true,
+      "guide": "doc/protocol/bbf-data-elements.md",
+      "evidence": "doc/evidence/bbf-data-elements/source-review.json",
+      "scope": "Explicit BBF definitions for bounded independent encoding; no silent substitution for exact WFA DEr3 package",
+      "wfa_der3_equivalence_verified": false,
+      "measurement_source_qualified": false
     }
   ],
   "available_procedure_audit": {
@@ -1822,7 +1850,7 @@
           "source_provenance": "doc/evidence/counter-accounting/source-provenance.json",
           "runtime_provenance": "doc/evidence/counter-accounting/kernel-runtime.json",
           "kernel_package_version": "6.8.0-139.139",
-          "counter_reference": "EasyMesh 6.1 Table 58; selected Wi-Fi Data Elements 3.0 package still pending",
+          "counter_reference": "EasyMesh 6.1 Table 58 plus pinned BBF TR-181 2.17 selected definitions; exact WFA DEr3 equivalence and measurement-source semantics pending",
           "public_crosscheck": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.RetransCount",
           "raw_counter_passthrough_valid": false,
           "final_counter_source_qualified": false,
@@ -1886,7 +1914,7 @@
         "native_final_statistics_delivery_proven": false,
         "physical_pod_proven": false,
         "remaining": [
-          "Acquire selected Wi-Fi Data Elements counter definitions",
+          "Use pinned BBF definitions for counter-source qualification; resolve remaining boundaries and compare exact WFA DEr3 package when acquired",
           "Qualify complete counter conversion and online source handoff",
           "Observe required AP/STA and final-statistics reports in native controller",
           "Repeat complete sustained acceptance; physical pod remains separate"
@@ -2347,7 +2375,8 @@
         "Tables 44/45 pp.138-140; 47 pp.140-141; 58 p.147",
         "Tables 83/84 p.164; 85 p.165; 96 pp.170-171",
         "IEEE 802.11-2024 9.4.2.172 Figure 9-740 Tables 9-332-334; source conversion pending",
-        "Wi-Fi Data Elements 3.0 package including TR-181-2-17_DEr3.xlsx: authorized access pending"
+        "Wi-Fi Data Elements 3.0 package including TR-181-2-17_DEr3.xlsx: authorized access pending",
+        "BBF TR-181 2.17.0 public USP/CWMP full XML: 33 selected definitions and statistics types reviewed; doc/protocol/bbf-data-elements.md"
       ],
       "contract": "One non-MLD radio/BSS, Profile-1 byte units, <=32 stations. Mandatory AP94/C7, C6 for periodic or requested radio; policy flags require A2, both96/C8 and B0. Complete membership and current source revision, <=2s lease, no inferred missing values.",
       "scheduling": "Reserve due period durably before I/O, preserve origin across reconnect/restart, attempt at most one current report, retain uncertain or unavailable periods without replay. Successful send is not controller receipt.",
@@ -2361,7 +2390,7 @@
       "required_reporting_proven": false,
       "remaining": [
         "Qualify AP utilization and mandatory BE ESP estimator; review IEEE/EasyMesh subfield reordering",
-        "Acquire referenced Data Elements definitions and qualify radio/AP/STA conversions and counter epochs",
+        "Qualify radio/AP/STA sources and epochs against pinned BBF definitions; resolve width and representation ambiguities and compare exact WFA DEr3 package",
         "Connect native publisher and independently verify all received controller values",
         "Resolve unsolicited AP delivery/reliability interpretation; thresholds, multiple BSS/radios and MLD remain unsupported",
         "Complete final-session publisher and integrated 15-minute acceptance with every required report enabled"
@@ -2384,6 +2413,33 @@
         "measurement_source_qualified": false,
         "complete_ap_report_delivery_proven": false,
         "scope": "Synthetic single-AP-Metrics-TLV parser diagnostic after worker exit; cannot accompany sustained acceptance"
+      },
+      "bbf_representation_bridge": {
+        "status": "public_definition_review_and_bounded_value_bridge_implemented",
+        "reviewed_on": "2026-09-23",
+        "implementation": "src/emosa/wire/bbf_metrics.py",
+        "tests": "tests/test_bbf_metrics.py",
+        "source_review": "scripts/review-bbf-data-elements.py",
+        "evidence": "doc/evidence/bbf-data-elements/source-review.json",
+        "guide": "doc/protocol/bbf-data-elements.md",
+        "field_paths_in_evidence": true,
+        "implemented": [
+          "0xC5 unsigned 32-bit millisecond collection interval value",
+          "0xC6 already encoded ANPI and 0..255 primary-channel utilization inputs",
+          "0xC7 six StatsCounter64 byte values, unavailable detection before unit scaling and width guard",
+          "0xC8 last rates in kbps and duration in milliseconds, explicit 64-to-32-bit overflow rejection"
+        ],
+        "not_inferred": [
+          "Live measurement qualification and collection cadence",
+          "ESP estimation or subfield conversion",
+          "STA PacketsSent successful-transmission semantics from a generic BBF or kernel field",
+          "Noise dBm-to-ANPI conversion or inconsistent BBF SignalStrength units",
+          "Unspecified rollover for Tables 84/85"
+        ],
+        "runtime_publisher_enabled": false,
+        "wfa_der3_equivalence_verified": false,
+        "measurement_source_qualified": false,
+        "native_delivery_proven": false
       }
     },
     "native_lifecycle": {

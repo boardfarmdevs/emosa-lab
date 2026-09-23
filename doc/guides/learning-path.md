@@ -313,6 +313,12 @@ OpenSync-format telemetry. Work through these exercises in order:
     baseline crash with the corrected candidate, then inspect all eight presence
     combinations and malformed-array rejection. This prepares the controller to
     receive later qualified AP reports; it does not supply their measurements.
+23. **Use public metric definitions without confusing encoding with measurement.**
+    Follow the [BBF definition exercise](../protocol/bbf-data-elements.md) and
+    manual section 13.33 on HOST. Reproduce the 33-field USP/CWMP comparison,
+    explain radio fractions versus STA millisecond durations, and test unavailable
+    counters and width overflow. Use these definitions for source qualification;
+    retain the exact WFA package comparison and live reporting gaps explicitly.
 
 
 The real controller must supply WSC configuration, the independent manager must

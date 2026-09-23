@@ -58,6 +58,12 @@ a string does not establish their real-world meaning. A change or expired source
 withdraws the sample; a duplicate cannot renew its lease. The selected lease is
 at most two seconds. A physical publisher needs its own clock/error qualification.
 
+The [public BBF definition review](bbf-data-elements.md) now supplies an internal
+conversion bridge for explicitly qualified BBF 2.17 values: radio representation,
+six BSS byte totals and STA extended rates/durations. It rejects missing values,
+statistics sentinels and unreviewed width overflow. It does not supply the live
+measurement publisher or establish equivalence to the exact WFA DEr3 package.
+
 The builder accepts ESP as three already encoded octets per access category and
 Data Elements values in their already encoded representation. It validates the
 outer layout and bounds; it does not infer airtime from a PHY rate or manufacture
@@ -177,6 +183,7 @@ peer-query attempt and its bounded-wait fix as well as the subsequent result.
 | Table 96, pp.170–171 | TID queue inventory and encoded queue sizes |
 | IEEE 802.11-2024 §9.4.2.172, Figure 9-740/Tables 9-332–334 | ESP subfields; conversion and estimator qualification remain pending |
 | Wi-Fi Data Elements 3.0 package, including `TR-181-2-17_DEr3.xlsx` | Authorized local access still pending; acquire through the [consolidated checklist](specification-acquisition.md) |
+| [BBF TR-181 2.17 USP/CWMP review](bbf-data-elements.md) | Public definitions pinned and compared; selected representation bridge implemented, WFA equivalence and actual source qualification pending |
 
 Next qualify each actual observation and conversion, including mandatory BE ESP,
 then connect the publisher and verify the native controller's received values.

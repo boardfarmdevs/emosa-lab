@@ -4300,6 +4300,79 @@ Follow [native AP service-field reception](../protocol/native-ap-esp.md):
 its bytes to the right controller field and establishing the meaning of those
 bytes are three separate checks.
 
+### 13.33 Learn metric meanings from the public BBF data model
+
+A **data model** defines named quantities: their meaning, direction, type and
+units. An **encoding** puts a value into a message. A **measurement source**
+establishes that the value actually describes a specific radio, BSS or client at
+a known time. We need all three. A field can be encoded perfectly and still
+report the wrong thing if its source counts a different layer or time interval.
+
+For example, the BBF station field `UtilizationReceive` measures accumulated
+milliseconds spent receiving from that station. The similarly named radio
+`ReceiveSelf` is a time fraction on a 0–255 scale. Copying one into the other
+would not be a harmless naming choice: it would change the reported quantity.
+Likewise, the last-used data rate is in kbps, while estimated achievable MAC
+throughput is in Mbps and requires a separate estimate.
+
+The official public **BBF TR-181 2.17** USP and CWMP models now provide selected
+definitions for independent implementation. Those are two management-protocol
+views of the model; using their definitions does not add a USP or CWMP transport
+to this lab. The exact WFA `TR-181-2-17_DEr3.xlsx` package remains pending for
+comparison. BBF's 2.17 release notes identify R2.1 additions, so we do not assume
+the spreadsheet and public XML are identical from their filenames.
+
+Run this exercise on **HOST**, in the checkout with its installed `uv` environment.
+It needs no running lab VM, radio or pod connection.
+
+1. Read the [BBF metric guide](../protocol/bbf-data-elements.md), especially its
+   units table and counter limitations. Learn the difference between an
+   `unsignedLong` value and a `StatsCounter64` value. The latter reserves its
+   maximum value to mean unavailable; converting it blindly would create a
+   very large false statistic.
+2. Reproduce the pinned source comparison:
+
+   ```bash
+   python3 scripts/review-bbf-data-elements.py .lab/bbf-manual-01.json
+   ```
+
+   Use a new output filename. On the first run the script downloads public XML
+   into your home directory's `.local/share/emosa/specifications/bbf-tr181-2.17.0/`,
+   outside Git. It checks full-file hashes and compares 33 selected definitions
+   from both publisher views. It refuses changed inputs rather than silently
+   switching editions. `--offline` reuses the exact cached files without network
+   access. The output contains references and hashes, not a redistributed copy
+   of the specifications.
+3. Inspect `selected_parameters: 33` and
+   `usp_cwmp_selected_definitions_equal: true`. Follow a parameter's publisher
+   link and compare its units with the guide. The result deliberately retains
+   `wfa_der3_equivalence_verified: false` and
+   `measurement_source_qualified: false`.
+4. Run the conversion and reporting checks:
+
+   ```bash
+   uv run pytest -q tests/test_bbf_metrics.py tests/test_ap_metrics.py tests/test_disassociation.py
+   ```
+
+   These exercise actual wire-value builders in memory. A 1000 ms interval
+   becomes `c50004000003e8`; no packet is transmitted. Tests also reject missing
+   counters and unreviewed width overflow. Passing proves the bounded
+   conversion behavior, not that a pod measures anything every second.
+5. Trace the output of `src/emosa/wire/bbf_metrics.py` into the existing typed
+   radio/AP/link report objects. The module consumes already qualified BBF
+   representations. It does not replace the live publisher or relax membership,
+   identity, freshness or complete-report checks. In particular, it does not
+   treat hwsim's dummy radio survey as a measurement.
+6. Return to sections 13.31 and 13.32. We now have a live reason join, a corrected
+   controller parser and selected public metric definitions. The connected next
+   step is to qualify the actual AP/STA and final-counter sources, connect their
+   complete observations, verify received values, and repeat the 15-minute
+   recovery run with all required reports enabled.
+
+**Learning checkpoint:** explain why receiving an integer from a pod does not
+establish its units, direction, counter epoch or availability. Identify which
+check establishes each fact before the controller sees that integer.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and
@@ -4473,9 +4546,13 @@ IEEE 802.11-2024 is now obtained, verified and hashed. The supplied Ethernet
 document is IEEE 802.3-2022; equivalence to the cited IEEE 802.3-2015 remains
 unresolved. The [media input review](../protocol/ieee-media-review.md) identifies
 the selected radio and Ethernet clauses inspected so far. Wi-Fi Alliance Security
-Requirements with revision to identify, Data Elements 3.0, the LLDP dependency
+Requirements with revision to identify, the exact WFA Data Elements 3.0 package, the LLDP dependency
 IEEE 802.1AB-2009 and conditional references/corrections
 remain on the acquisition checklist.
+
+The public BBF 2.17 metric definitions are now obtained, pinned and compared;
+section 13.33 explains the selected encoding work they enable. Exact WFA package
+equivalence and actual measurement-source qualification remain separate checks.
 
 EasyMesh 6.1 and WPS 2.0.10 publisher PDFs were obtained and hashed outside Git.
 Selected WSC payload rules use them; the complete Profile-1 procedure proposal

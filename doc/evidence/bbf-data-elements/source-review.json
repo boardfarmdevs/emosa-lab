@@ -1,0 +1,405 @@
+{
+  "scope": "BBF TR-181 2.17.0 selected definitions as served and pinned on 2026-09-23",
+  "sources": {
+    "usp": {
+      "url": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp-full.xml",
+      "sha256": "4907bdbd5802a40b9d0e493d9c5c1884a25ab3b0437f725f71a39604eaefb5f7",
+      "bytes": 4446760
+    },
+    "cwmp": {
+      "url": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp-full.xml",
+      "sha256": "5c0f218337ec4831b3583c1ec7ed7b974dd5e57ef3281d01052f84337538a303",
+      "bytes": 4138455
+    }
+  },
+  "selected_parameters": 33,
+  "usp_cwmp_selected_definitions_equal": true,
+  "parameters": {
+    "Device.WiFi.DataElements.Network.Device.{i}.CollectionInterval": {
+      "definition_sha256": "a8aa3a94552686fd8498ca9e7086dcb89876a395ce9c77f0c30f9e09e01bd000",
+      "syntax_sha256": "82beddf3ffa4b741e6597574f2a355dc054f46ad64c212d487d0ef7f45b4622a",
+      "type": "unsignedInt",
+      "units": "milliseconds",
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.CollectionInterval",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.CollectionInterval"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.Noise": {
+      "definition_sha256": "4bd9cdccb1f60427575d3d709b193b381c7f5a866e0935fab9dbb49fb965a4c4",
+      "syntax_sha256": "8f19de777f48fa6d9a5f75c1a20d74ee2d2795bf4a8311e4d9abe74cde9d964d",
+      "type": "unsignedInt",
+      "units": null,
+      "range": {
+        "maxInclusive": "255"
+      },
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.Noise",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.Noise"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.Utilization": {
+      "definition_sha256": "6a78e3a0fd9d9d422e7664658b07426bf81d3a228d2f0cee327082f4d277749a",
+      "syntax_sha256": "443e7f0c8da3ba16e2dc9c40d1521b566660763b63cca0ecc6b028b41a33ca89",
+      "type": "unsignedInt",
+      "units": null,
+      "range": {
+        "minInclusive": "0",
+        "maxInclusive": "255"
+      },
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.Utilization",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.Utilization"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.Transmit": {
+      "definition_sha256": "f724e2842eaedd8e2a24c73cdc17e899242bad16ee521122ebefb4c85efdbe11",
+      "syntax_sha256": "443e7f0c8da3ba16e2dc9c40d1521b566660763b63cca0ecc6b028b41a33ca89",
+      "type": "unsignedInt",
+      "units": null,
+      "range": {
+        "minInclusive": "0",
+        "maxInclusive": "255"
+      },
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.Transmit",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.Transmit"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.ReceiveSelf": {
+      "definition_sha256": "d28bf08ea84ef1be1375b08dfd97f579683cd6d555bf073063d0cf1aea9f2f42",
+      "syntax_sha256": "8f19de777f48fa6d9a5f75c1a20d74ee2d2795bf4a8311e4d9abe74cde9d964d",
+      "type": "unsignedInt",
+      "units": null,
+      "range": {
+        "maxInclusive": "255"
+      },
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.ReceiveSelf",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.ReceiveSelf"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.ReceiveOther": {
+      "definition_sha256": "c15fa88b52f9871f82a4cfad751c8b550c77fc2d7d9f989e1192871e6609975d",
+      "syntax_sha256": "443e7f0c8da3ba16e2dc9c40d1521b566660763b63cca0ecc6b028b41a33ca89",
+      "type": "unsignedInt",
+      "units": null,
+      "range": {
+        "minInclusive": "0",
+        "maxInclusive": "255"
+      },
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.ReceiveOther",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.ReceiveOther"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.UnicastBytesSent": {
+      "definition_sha256": "f5920a930f200c95c776e863fea27d3ab4dd66674f5b3b14f760759a7e4a3aca",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.UnicastBytesSent",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.UnicastBytesSent"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.UnicastBytesReceived": {
+      "definition_sha256": "23b13433aa5017df6aaeebf851a73c878baa3605acc8f1c7f7a486ede3cc458a",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.UnicastBytesReceived",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.UnicastBytesReceived"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.MulticastBytesSent": {
+      "definition_sha256": "4dc9da8eed37b3dce20a72d45a823fa7e6769162488d6489168250fc014875ac",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.MulticastBytesSent",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.MulticastBytesSent"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.MulticastBytesReceived": {
+      "definition_sha256": "5011f309e1350f4c593482e89ae7b0b1cae187718362480bc24ca60744e640c2",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.MulticastBytesReceived",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.MulticastBytesReceived"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.BroadcastBytesSent": {
+      "definition_sha256": "78bf9a8467153707841483a0e96a59daa3f44b0f0e40e27d5e5d12f19498b747",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.BroadcastBytesSent",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.BroadcastBytesSent"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.BroadcastBytesReceived": {
+      "definition_sha256": "374d41f7a6ec8bb9416d06bcdb5c8308cce11cc27dc0c029dcffe1c2e2455f50",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.BroadcastBytesReceived",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.BroadcastBytesReceived"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.BytesSent": {
+      "definition_sha256": "667e6521805384353504bd0dddf2aa6df76a13104d0ed90c5efcd6d78b1fdc53",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.BytesSent",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.BytesSent"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.BytesReceived": {
+      "definition_sha256": "21bb62167ec02ccaa4534e943ab33ee1709b6bbe75759cbbcc764973013e3424",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.BytesReceived",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.BytesReceived"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.PacketsSent": {
+      "definition_sha256": "5dcbf6eae7666a1eaa9c92c18ff00c1363c9cd3500c1057acf5f9e42b98ce6bf",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.PacketsSent",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.PacketsSent"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.PacketsReceived": {
+      "definition_sha256": "b7078b3ffb08a191fdfde6c672e5856792ef571f9204b7f203b370c98b51d46a",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.PacketsReceived",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.PacketsReceived"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.ErrorsSent": {
+      "definition_sha256": "6e9985fb02a3f9054b2b574d68de7c41cc848e98520a090fdf94e1d5191988cc",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.ErrorsSent",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.ErrorsSent"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.ErrorsReceived": {
+      "definition_sha256": "a442e762ad3d6f85099dc94d11fa1e3711da2c5627250932d2ad357fc1e23cfe",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.ErrorsReceived",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.ErrorsReceived"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.RetransCount": {
+      "definition_sha256": "7bb48f2ea4b20d48c842630e9d9d061b6dd99e117540926a0482e843f0e48487",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.RetransCount",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.RetransCount"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.LastDataDownlinkRate": {
+      "definition_sha256": "2ce686ed70e70bc6b1b2c522fb597ab0b017f561d7eb4a008b4e7c90c91575c1",
+      "syntax_sha256": "0e0f35442e10dabfbe7cf62f3594330e48fa08cc5c775fd36a4f607b4dd3d06f",
+      "type": "unsignedInt",
+      "units": "kbps",
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.LastDataDownlinkRate",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.LastDataDownlinkRate"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.LastDataUplinkRate": {
+      "definition_sha256": "a7724cc50c2ee71f6e0334b83ea5f5ecd1e693d98130f0b71be2e0865c19d0d8",
+      "syntax_sha256": "0e0f35442e10dabfbe7cf62f3594330e48fa08cc5c775fd36a4f607b4dd3d06f",
+      "type": "unsignedInt",
+      "units": "kbps",
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.LastDataUplinkRate",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.LastDataUplinkRate"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.UtilizationReceive": {
+      "definition_sha256": "28db9ab746bc01576a59c715898663254956a8be0fc12bd9527080092bdb993c",
+      "syntax_sha256": "308cc1946d025bbc001b0985b8b359939ecf7cca4827c6fa4a4f6194df6e03e2",
+      "type": "unsignedLong",
+      "units": "milliseconds",
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.UtilizationReceive",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.UtilizationReceive"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.UtilizationTransmit": {
+      "definition_sha256": "914f3cbe7a8aaefebd01ea94bf6cf8eb143903df8b7c6276a945a554a28fb4ee",
+      "syntax_sha256": "308cc1946d025bbc001b0985b8b359939ecf7cca4827c6fa4a4f6194df6e03e2",
+      "type": "unsignedLong",
+      "units": "milliseconds",
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.UtilizationTransmit",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.UtilizationTransmit"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.EstMACDataRateDownlink": {
+      "definition_sha256": "583706172341ddebe3a24afc120d7a3b6c02b20d8f823524a123931a6e6e2ecb",
+      "syntax_sha256": "600e0c55b7d98963023e5c60a8ae0f5aebb0e4bed9695343df3af6f71b28ecf5",
+      "type": "unsignedInt",
+      "units": "Mbps",
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.EstMACDataRateDownlink",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.EstMACDataRateDownlink"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.EstMACDataRateUplink": {
+      "definition_sha256": "92f5ca3d79eed5e1794aa1b6763cc88d28b7a26d5db7ba451bb6d16d80e45bd9",
+      "syntax_sha256": "600e0c55b7d98963023e5c60a8ae0f5aebb0e4bed9695343df3af6f71b28ecf5",
+      "type": "unsignedInt",
+      "units": "Mbps",
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.EstMACDataRateUplink",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.EstMACDataRateUplink"
+      }
+    },
+    "Device.WiFi.DataElements.Network.Device.{i}.Radio.{i}.BSS.{i}.STA.{i}.SignalStrength": {
+      "definition_sha256": "5a71b9c24f5a7308f51ba28e58e241c75af5752510fd4ad0ade7983a5f15676f",
+      "syntax_sha256": "5c3656ef954d3bf6df73dc3c9d2059230592a27640217f1e01621abbf39be9d2",
+      "type": "unsignedInt",
+      "units": "dBm",
+      "range": {
+        "maxInclusive": "255"
+      },
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.SignalStrength",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.SignalStrength"
+      }
+    },
+    "Device.WiFi.AccessPoint.{i}.AssociatedDevice.{i}.Stats.BytesSent": {
+      "definition_sha256": "6d21f5734dc352deaeb3fde365daa83a468e86a66f55baac62361d4c7fb513d8",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.BytesSent",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.BytesSent"
+      }
+    },
+    "Device.WiFi.AccessPoint.{i}.AssociatedDevice.{i}.Stats.BytesReceived": {
+      "definition_sha256": "9b45b6acdcad51c39c93fbeaeb5340b90b9c1989a310ae4b4c79e84546a4eb0b",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.BytesReceived",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.BytesReceived"
+      }
+    },
+    "Device.WiFi.AccessPoint.{i}.AssociatedDevice.{i}.Stats.PacketsSent": {
+      "definition_sha256": "21d8df4747857b0f66d5e9f6ee03181f58d5cc2bce9df5e777f319340653f72f",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.PacketsSent",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.PacketsSent"
+      }
+    },
+    "Device.WiFi.AccessPoint.{i}.AssociatedDevice.{i}.Stats.PacketsReceived": {
+      "definition_sha256": "daf167b93c0b48baf38981250f4262aa12969c0583109fbcca4d363abec357c5",
+      "syntax_sha256": "9311b7250ae956d49d70578cff14ff205b6e4a0bc99b78be5210513e5b2f0e2f",
+      "type": "StatsCounter64",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.PacketsReceived",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.PacketsReceived"
+      }
+    },
+    "Device.WiFi.AccessPoint.{i}.AssociatedDevice.{i}.Stats.ErrorsSent": {
+      "definition_sha256": "41db136da7af97f696ca6c06c517654df0824832d5e36797d58d959de938cdd1",
+      "syntax_sha256": "d127258954683a6905e753ae1ed78f745c28412acc7fd4ed94c4b8450c20bec2",
+      "type": "StatsCounter32",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.ErrorsSent",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.ErrorsSent"
+      }
+    },
+    "Device.WiFi.AccessPoint.{i}.AssociatedDevice.{i}.Stats.ErrorsReceived": {
+      "definition_sha256": "008051cd27c360691986387c8c37cf56c38b0921a525ab0535dce2ed793140ff",
+      "syntax_sha256": "d127258954683a6905e753ae1ed78f745c28412acc7fd4ed94c4b8450c20bec2",
+      "type": "StatsCounter32",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.ErrorsReceived",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.ErrorsReceived"
+      }
+    },
+    "Device.WiFi.AccessPoint.{i}.AssociatedDevice.{i}.Stats.RetransCount": {
+      "definition_sha256": "f02c737bb220c4394eb31ecca85b6f6de8901c275eaf895a187d4de08ba632b5",
+      "syntax_sha256": "d127258954683a6905e753ae1ed78f745c28412acc7fd4ed94c4b8450c20bec2",
+      "type": "StatsCounter32",
+      "units": null,
+      "range": null,
+      "references": {
+        "usp": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.RetransCount",
+        "cwmp": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.AccessPoint.AssociatedDevice.Stats.RetransCount"
+      }
+    }
+  },
+  "statistics_types": {
+    "StatsCounter32": "03c172e751cb18fffb2e4f9678fd968cbdeda98462e25a91a735cf4878c795af",
+    "StatsCounter64": "0fa169e54743346930f5a2329531a475d2491fe913d5265936e6428dac8b40ef"
+  },
+  "associated_stats_object_description_sha256": "94de08cdd7b6275d14116e70673fc0c59027e998528f0ac3cde7336812cb3a9b",
+  "wfa_der3_equivalence_verified": false,
+  "measurement_source_qualified": false,
+  "sustained_operation_proven": false
+}

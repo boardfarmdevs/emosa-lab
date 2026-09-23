@@ -141,11 +141,12 @@ different kernel field is not automatically a correction.
 EasyMesh 6.1 Table 58 and its selected Wi-Fi Data Elements reference govern the
 wire quantities. The Wi-Fi Data Elements 3.0 package, including
 `TR-181-2-17_DEr3.xlsx`, remains in the
-[acquisition checklist](specification-acquisition.md). A useful public cross-check
-is BBF's [TR-181 2.17 RetransCount definition](https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.RetransCount):
+[acquisition checklist](specification-acquisition.md). The subsequent
+[BBF review](bbf-data-elements.md) pins and compares 33 public definitions and
+now uses BBF as an explicit source for independent representation work. Its [TR-181 2.17 RetransCount definition](https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.RetransCount):
 retransmitting the same packet twice adds two, not one. This corrects the idea
 that the requested retry quantity must count distinct original packets. It does
-not replace the pending selected Wi-Fi Alliance package or qualify Linux retry
+not establish equivalence to the pending Wi-Fi Alliance package or qualify Linux retry
 accounting under failed/aggregated traffic.
 
 Next exercise known failed, retried and queued traffic; establish the requested

@@ -58,6 +58,11 @@ assembles the selected complete response and dispatches periodic reports under a
 durable schedule. Independent synthetic byte checks pass; the native lab still
 withholds AP reports until their measurement sources are qualified.
 
+The [public BBF metric review](doc/protocol/bbf-data-elements.md) now pins and
+compares 33 USP/CWMP definitions and supplies bounded representation conversions.
+It enables independent metric encoding work while the exact WFA package
+comparison and actual measurement-source qualification remain pending.
+
 The optional [native sparse-ESP parser fix](doc/protocol/native-ap-esp.md) now
 prevents a controller crash on valid reports that omit intermediate service
 categories. Native packet/inventory checks verify the fix; ESP measurement

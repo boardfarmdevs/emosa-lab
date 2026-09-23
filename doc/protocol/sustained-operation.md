@@ -13,6 +13,10 @@ candidate fixes the selected Linux lifetime defect; original baseline files are
 restored after the trial. Fifteen AP reporting periods remain explicitly
 unfulfilled. This closes the candidate lifecycle gap, not complete reporting.
 
+The [BBF metric review](bbf-data-elements.md) now supplies public definitions and
+bounded representation conversions. It narrows the document-access gap without
+qualifying live AP/STA measurements or completing the WFA DEr3 comparison.
+
 ## What must be demonstrated
 
 The first sustained acceptance run is a 15-minute owned-lab experiment with the

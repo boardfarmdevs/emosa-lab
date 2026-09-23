@@ -164,7 +164,9 @@ notification. It also checks the measured join deadline and capture health.
 Read `final_counter_source_qualified: false` and
 `native_final_statistics_delivery_proven: false` literally. A successful reason
 join does not correct Linux byte, successful-packet, error or retry semantics.
-Next resolve the selected Wi-Fi Data Elements definitions, qualify the complete
-counter mapping and connect a current, session-bound source to the sender. The
+The [public BBF review](bbf-data-elements.md) now establishes selected units,
+types and unavailable values for independent implementation. Next qualify the
+complete counter mapping, resolve remaining source ambiguities and connect a
+current, session-bound source to the sender. The
 native controller must then acknowledge the actual final report with values
 checked independently before this reporting requirement can pass.

@@ -28,8 +28,10 @@ neighbor publisher to both recovery faults and clean native main-process exits.
 The [live reason/removal join](../protocol/live-session-reasons.md) now closes
 the offline-only disconnect-correlation gap for the owned sole-client hwsim
 profile. It records the actual reason and final raw kernel sample in real time.
-Next acquire the selected Wi-Fi Data Elements definitions, qualify counter
-conversion, connect the reporting source, and independently verify complete
+The [public BBF definition review](../protocol/bbf-data-elements.md) now pins
+33 matching USP/CWMP parameters and implements bounded representation conversions.
+Next qualify counter conversion against those explicit definitions, resolve the
+remaining source/width ambiguities, connect the reporting source, and verify complete
 AP/STA and final-session delivery. The physical-pod profile remains pending.
 
 The [native sparse-ESP fix](../protocol/native-ap-esp.md) closes a concrete

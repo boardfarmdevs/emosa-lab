@@ -1,0 +1,144 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/rev/git/emosa-lab
+configfile: pyproject.toml
+testpaths: tests
+collected 1579 items / 62 deselected / 1517 selected
+
+tests/test_agents.py ..............                                      [  0%]
+tests/test_ap_metrics.py .................................               [  3%]
+tests/test_api.py ..                                                     [  3%]
+tests/test_autoconfiguration.py ........................................ [  5%]
+................                                                         [  6%]
+tests/test_backhaul_accounting.py ..........                             [  7%]
+tests/test_bbf_metrics.py .............................................  [ 10%]
+tests/test_capability_extensions.py .................................... [ 12%]
+..                                                                       [ 13%]
+tests/test_capture_health.py ............                                [ 13%]
+tests/test_channel_procedures.py ............................            [ 15%]
+tests/test_controller_probe.py .........                                 [ 16%]
+tests/test_disassociation.py ................................            [ 18%]
+tests/test_discovery_session.py ................................         [ 20%]
+tests/test_easymesh_payloads.py ........................................ [ 23%]
+.....................................................                    [ 26%]
+tests/test_egress_accounting.py ............................             [ 28%]
+tests/test_evaluation.py ......................                          [ 29%]
+tests/test_feature_capabilities.py ..................................... [ 32%]
+...............                                                          [ 33%]
+tests/test_forwarding.py ...............................                 [ 35%]
+tests/test_he_wifi6.py ........................................          [ 38%]
+tests/test_ieee1905.py ................................                  [ 40%]
+tests/test_link_metrics.py ............................................. [ 43%]
+.......................                                                  [ 44%]
+tests/test_medium_accounting.py ........................                 [ 46%]
+tests/test_model.py .............                                        [ 47%]
+tests/test_native_ap_esp_audit.py .....................                  [ 48%]
+tests/test_native_inventory.py ...                                       [ 48%]
+tests/test_native_lifecycle_audit.py ...........                         [ 49%]
+tests/test_native_onboarding.py ....................                     [ 50%]
+tests/test_native_policy.py ........                                     [ 51%]
+tests/test_neighbor_binding.py ............................              [ 53%]
+tests/test_neighbor_metric_audit.py .........                            [ 53%]
+tests/test_ovsdb.py .                                                    [ 53%]
+tests/test_peer_capture.py ..................                            [ 54%]
+tests/test_peer_metrics.py .............                                 [ 55%]
+tests/test_profile_audit.py .........................                    [ 57%]
+tests/test_provisioning_session.py ........                              [ 57%]
+tests/test_qualification.py .                                            [ 58%]
+tests/test_radio_capabilities.py ....................................... [ 60%]
+............................                                             [ 62%]
+tests/test_radio_guard.py ....                                           [ 62%]
+tests/test_radio_manager.py .............                                [ 63%]
+tests/test_receive_accounting.py ..............                          [ 64%]
+tests/test_reliability_deployment.py ....                                [ 64%]
+tests/test_report_coordinator.py ....................................... [ 67%]
+..............                                                           [ 68%]
+tests/test_reporting_policy.py .........................                 [ 69%]
+tests/test_session_reasons.py ...........................                [ 71%]
+tests/test_shaped_backhaul.py ........                                   [ 72%]
+tests/test_station_accounting.py ...                                     [ 72%]
+tests/test_station_events.py ..................                          [ 73%]
+tests/test_station_telemetry.py .............                            [ 74%]
+tests/test_technology_values.py ........................................ [ 77%]
+....                                                                     [ 77%]
+tests/test_telemetry_gap.py ....                                         [ 77%]
+tests/test_topology.py ................................................. [ 80%]
+                                                                         [ 80%]
+tests/test_traceability.py .                                             [ 80%]
+tests/test_tx_status_accounting.py ...............                       [ 81%]
+tests/test_virtual_capacity.py ..................                        [ 83%]
+tests/test_wifi6_projection.py ......................................... [ 85%]
+......                                                                   [ 86%]
+tests/test_wire_reports.py ............................................. [ 89%]
+.....................                                                    [ 90%]
+tests/test_wsc.py .........................                              [ 92%]
+tests/test_wsc_messages.py ............................................. [ 95%]
+..........                                                               [ 95%]
+tests/test_wsc_operation_bridge.py ......................                [ 97%]
+tests/test_wsc_radio.py ..........................................       [100%]
+
+=============================== warnings summary ===============================
+src/emosa/wsc.py:106
+  /home/rev/git/emosa-lab/src/emosa/wsc.py:106: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+    _private: dh.DHPrivateKey = field(repr=False)
+
+tests/test_autoconfiguration.py: 28 warnings
+tests/test_native_onboarding.py: 19 warnings
+tests/test_provisioning_session.py: 8 warnings
+tests/test_wsc_messages.py: 44 warnings
+tests/test_wsc_operation_bridge.py: 22 warnings
+tests/test_wsc_radio.py: 42 warnings
+  /home/rev/git/emosa/tests/test_wsc_messages.py:34: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+
+tests/test_autoconfiguration.py: 28 warnings
+tests/test_native_onboarding.py: 19 warnings
+tests/test_provisioning_session.py: 8 warnings
+tests/test_wsc_messages.py: 44 warnings
+tests/test_wsc_operation_bridge.py: 22 warnings
+tests/test_wsc_radio.py: 42 warnings
+  /home/rev/git/emosa/tests/test_wsc_messages.py:35: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+
+tests/test_autoconfiguration.py: 28 warnings
+tests/test_native_onboarding.py: 19 warnings
+tests/test_provisioning_session.py: 8 warnings
+tests/test_wsc_messages.py: 44 warnings
+tests/test_wsc_operation_bridge.py: 22 warnings
+tests/test_wsc_radio.py: 42 warnings
+  /home/rev/git/emosa/tests/test_wsc_messages.py:37: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+
+tests/test_autoconfiguration.py: 29 warnings
+tests/test_native_onboarding.py: 19 warnings
+tests/test_provisioning_session.py: 8 warnings
+tests/test_wsc.py: 12 warnings
+tests/test_wsc_messages.py: 48 warnings
+tests/test_wsc_operation_bridge.py: 22 warnings
+tests/test_wsc_radio.py: 42 warnings
+  /home/rev/git/emosa-lab/src/emosa/wsc.py:109: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+    if not isinstance(self._private, dh.DHPrivateKey):
+
+tests/test_autoconfiguration.py::test_m1_contains_all_selected_companions_and_native_transcript
+  /home/rev/git/emosa-lab/src/emosa/wsc.py:101: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+    return dh.DHParameterNumbers(MODP_1536, 2, (MODP_1536 - 1) // 2).parameters()
+
+tests/test_autoconfiguration.py: 19 warnings
+tests/test_native_onboarding.py: 5 warnings
+tests/test_provisioning_session.py: 3 warnings
+tests/test_wsc.py: 2 warnings
+tests/test_wsc_messages.py: 18 warnings
+tests/test_wsc_operation_bridge.py: 15 warnings
+tests/test_wsc_radio.py: 42 warnings
+  /home/rev/git/emosa-lab/src/emosa/wsc.py:138: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+    peer = dh.DHPublicNumbers(peer_number, _parameters().parameter_numbers()).public_key()
+
+tests/test_wsc.py: 11 warnings
+  /home/rev/git/emosa/tests/test_wsc.py:37: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+
+tests/test_wsc.py: 11 warnings
+  /home/rev/git/emosa/tests/test_wsc.py:38: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+
+tests/test_wsc.py: 11 warnings
+  /home/rev/git/emosa/tests/test_wsc.py:40: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+---- generated xml file: /home/rev/git/emosa-lab/.lab/bbf-unit-results.xml -----
+============== 1517 passed, 62 deselected, 808 warnings in 16.78s ==============

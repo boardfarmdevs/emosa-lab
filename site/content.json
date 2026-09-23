@@ -975,10 +975,16 @@
       "title": "Sparse ESP controller crash and corrected receipt",
       "description": "Actual baseline SIGSEGV, 240 compiled cases and 16 live packet/inventory cases; measurement and complete reporting qualification remain pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/bbf-data-elements.md",
+      "title": "Use public BBF metric definitions",
+      "description": "Compare 33 pinned USP/CWMP definitions, learn millisecond and rate units, reject unknown counters and width overflow, and separate representation from source qualification.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "ap-esp/unit-results.xml",
+    "unit": "bbf-data-elements/unit-results.xml",
     "ovsdb": "native-lifecycle/ovsdb-results.xml"
   }
 }

@@ -3,7 +3,8 @@
 EasyMesh 6.1 §10.2.1 and Tables 44/45/47/58/83/84/85/96 define
 composition and wire layouts. This internal handoff does not qualify a sensor.
 ESP octets and Data Elements-derived values must already have their specified
-representation: pending source definitions must not become guessed conversions.
+representation. bbf_metrics supplies selected BBF-based conversions; source
+qualification and the exact WFA package comparison remain separate checks.
 """
 
 import math
@@ -92,7 +93,7 @@ class APExtendedMetrics:
 @dataclass(frozen=True)
 class RadioMetrics:
     ruid: bytes
-    # Table 83 order. No guessed dBm conversion or percentages.
+    # Table 83 order: encoded ANPI and 0..255 fractions, not signed dBm/percent.
     noise_encoded: int
     transmit_encoded: int
     receive_self_encoded: int
@@ -117,7 +118,8 @@ class StationLinkMetrics:
     downlink_mac_mbps: int
     uplink_mac_mbps: int
     rcpi: int
-    # Table 85 values, already encoded in the selected Data Elements units.
+    # Table 85 / selected BBF values: last rates in kbps, durations in ms.
+    # Wider source durations require a reviewed conversion before this handoff.
     last_downlink_encoded: int
     last_uplink_encoded: int
     receive_utilization_encoded: int

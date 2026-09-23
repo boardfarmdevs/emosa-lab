@@ -4,6 +4,7 @@
 
 | Document | Scope |
 | --- | --- |
+| [Public BBF metric definitions](bbf-data-elements.md) | Pin USP/CWMP definitions, encode explicit units, reject unavailable/overflowing values and identify remaining source gaps |
 | [Native sparse ESP reception](native-ap-esp.md) | Validate optional AP service fields and reproduce a controller parser fix |
 | [Specification inputs](protocol-inputs.md) | Authoritative sources, proposed editions and selected procedure scope |
 | [Acquisition checklist](specification-acquisition.md) | Required, obtained and pending external documents |
