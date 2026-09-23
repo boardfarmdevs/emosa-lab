@@ -1,5 +1,11 @@
 # Next experiments toward a bounded viability result
 
+The current follow-on is [sustained operation](../protocol/sustained-operation.md):
+keep EMOSA active through client activity, handle recurring native-controller
+procedures, and validate restart/reconnect recovery in a 15-minute acceptance
+run. Measured OVSDB/MQTT station reporting and an active pilot are implemented;
+the complete sustained acceptance result remains pending.
+
 The critical milestone is **real EasyMesh messages → EMOSA adapter → unchanged
 physical pod → independently observed behavior**. Neither an OVSDB component pass
 nor a successful hwsim association completes that objective.

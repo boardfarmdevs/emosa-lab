@@ -1,0 +1,474 @@
+
+æ\
+opensync_stats.protosts"Q
+AvgType
+avg (Ravg
+min (Rmin
+max (Rmax
+num (Rnum"W
+AvgTypeSigned
+avg (Ravg
+min (Rmin
+max (Rmax
+num (Rnum"˛
+Neighbor&
+band (2.sts.RadioBandTypeRband.
+	scan_type (2.sts.NeighborTypeRscanType!
+timestamp_ms (RtimestampMs4
+bss_list (2.sts.Neighbor.NeighborBssRbssList0
+report_type (2.sts.ReportTypeR
+reportTypeé
+NeighborBss
+bssid (	Rbssid
+ssid (	Rssid
+rssi (Rrssi
+tsf (Rtsf-
+
+chan_width (2.sts.ChanWidthR	chanWidth
+channel (Rchannel%
+status (2.sts.DiffTypeRstatus 
+c_freq0_chan (R
+cFreq0Chan
+
+beacon_ies	 (R	beaconIes"Ù
+Client
+mac_address (	R
+macAddress
+ssid (	Rssid
+	connected (R	connected#
+connect_count (RconnectCount)
+disconnect_count (RdisconnectCount*
+connect_offset_ms (RconnectOffsetMs0
+disconnect_offset_ms (RdisconnectOffsetMs
+duration_ms (R
+durationMs'
+stats	 (2.sts.Client.StatsRstats.
+rx_stats
+ (2.sts.Client.RxStatsRrxStats.
+tx_stats (2.sts.Client.TxStatsRtxStats1
+	tid_stats (2.sts.Client.TidStatsRtidStats
+uapsd (Ruapsd
+
+network_id (	R	networkId
+mld_address (	R
+mldAddressç
+Stats
+rx_bytes (RrxBytes
+tx_bytes (RtxBytes
+	rx_frames (RrxFrames
+	tx_frames (RtxFrames
+
+rx_retries (R	rxRetries
+
+tx_retries (R	txRetries
+	rx_errors (RrxErrors
+	tx_errors (RtxErrors
+rx_rate	 (RrxRate
+tx_rate
+ (RtxRate
+rssi (Rrssi*
+rx_rate_perceived (RrxRatePerceived*
+tx_rate_perceived (RtxRatePerceived‡
+RxStats
+mcs (Rmcs
+nss (Rnss
+bw (Rbw
+bytes (Rbytes
+msdus (Rmsdus
+mpdus (Rmpdus
+ppdus (Rppdus
+retries (Rretries
+errors	 (Rerrors
+rssi
+ (Rrssi<
+
+chain_rssi (2.sts.Client.RxStats.ChainRSSIR	chainRssiE
+	ChainRSSI
+chain (Rchain
+ht (Rht
+rssi (Rrssi«
+TxStats
+mcs (Rmcs
+nss (Rnss
+bw (Rbw
+bytes (Rbytes
+msdus (Rmsdus
+mpdus (Rmpdus
+ppdus (Rppdus
+retries (Rretries
+errors	 (Rerrors¯
+TidStats6
+sojourn (2.sts.Client.TidStats.SojournRsojourn
+	offset_ms (RoffsetMsñ
+Sojourn
+ac (2
+.sts.WmmAcRac
+tid (Rtid 
+ewma_time_ms (R
+ewmaTimeMs
+sum_time_ms (R	sumTimeMs
+	num_msdus (RnumMsdus"È
+ClientReport&
+band (2.sts.RadioBandTypeRband!
+timestamp_ms (RtimestampMs,
+client_list (2.sts.ClientR
+clientList
+channel (Rchannel
+uplink_type (	R
+uplinkType%
+uplink_changed (RuplinkChanged"Õ
+ClientAuthFailsReport&
+band (2.sts.RadioBandTypeRband9
+bss_list (2.sts.ClientAuthFailsReport.BSSRbssList–
+BSS
+ifname (	RifnameF
+client_list (2%.sts.ClientAuthFailsReport.BSS.ClientR
+clientListi
+Client
+mac_address (	R
+macAddress
+
+auth_fails (R	authFails
+invalid_psk (R
+invalidPsk"ï
+Survey&
+band (2.sts.RadioBandTypeRband0
+survey_type (2.sts.SurveyTypeR
+surveyType!
+timestamp_ms (RtimestampMs9
+survey_list (2.sts.Survey.SurveySampleR
+surveyList4
+
+survey_avg (2.sts.Survey.SurveyAvgR	surveyAvg0
+report_type (2.sts.ReportTypeR
+reportType…
+SurveySample
+channel (Rchannel
+duration_ms (R
+durationMs
+total_count (R
+totalCount!
+sample_count (RsampleCount
+busy (Rbusy
+busy_tx (RbusyTx
+busy_rx (RbusyRx
+	busy_self (RbusySelf
+	offset_ms	 (RoffsetMs
+busy_ext
+ (RbusyExt
+noise_floor (R
+noiseFloorû
+	SurveyAvg
+channel (Rchannel 
+busy (2.sts.AvgTypeRbusy%
+busy_tx (2.sts.AvgTypeRbusyTx%
+busy_rx (2.sts.AvgTypeRbusyRx)
+	busy_self (2.sts.AvgTypeRbusySelf'
+busy_ext (2.sts.AvgTypeRbusyExt3
+noise_floor (2.sts.AvgTypeSignedR
+noiseFloor"π
+Capacity&
+band (2.sts.RadioBandTypeRband!
+timestamp_ms (RtimestampMs8
+
+queue_list (2.sts.Capacity.QueueSampleR	queueListß
+QueueSample
+busy_tx (RbusyTx
+bytes_tx (RbytesTx!
+sample_count (RsampleCount
+Vo_count (RVoCount
+Vi_count (RViCount
+Be_count (RBeCount
+Bk_count (RBkCount
+	Bcn_count (RBcnCount
+	Cab_count	 (RCabCount
+	offset_ms
+ (RoffsetMs"ù
+Device'
+load (2.sts.Device.LoadAvgRload4
+
+radio_temp (2.sts.Device.RadioTempR	radioTemp!
+timestamp_ms (RtimestampMs
+uptime (Ruptime8
+thermal_stats (2.sts.Device.ThermalRthermalStats.
+mem_util (2.sts.Device.MemUtilRmemUtil+
+fs_util (2.sts.Device.FsUtilRfsUtil-
+cpuUtil (2.sts.Device.CpuUtilRcpuUtil:
+ps_cpu_util	 (2.sts.Device.PerProcessUtilR	psCpuUtil:
+ps_mem_util
+ (2.sts.Device.PerProcessUtilR	psMemUtil3
+	powerInfo (2.sts.Device.PowerInfoR	powerInfo*
+used_file_handles (RusedFileHandles,
+total_file_handles (RtotalFileHandlesI
+LoadAvg
+one (Rone
+five (Rfive
+fifteen (RfifteenI
+	RadioTemp&
+band (2.sts.RadioBandTypeRband
+value (Rvalue¬
+ThermalF
+txchainmask (2$.sts.Device.Thermal.RadioTxChainMaskRtxchainmask
+fan_rpm (RfanRpm!
+timestamp_ms (RtimestampMs$
+fan_duty_cycle (RfanDutyCycle#
+thermal_state (RthermalState
+
+target_rpm (R	targetRpm9
+	led_state (2.sts.Device.Thermal.LedStateRledStateP
+RadioTxChainMask&
+band (2.sts.RadioBandTypeRband
+value (Rvalue<
+LedState
+position (Rposition
+value (Rvalue}
+MemUtil
+	mem_total (RmemTotal
+mem_used (RmemUsed
+
+swap_total (R	swapTotal
+	swap_used (RswapUsedb
+FsUtil$
+fs_type (2.sts.FsTypeRfsType
+fs_total (RfsTotal
+fs_used (RfsUsed$
+CpuUtil
+cpu_util (RcpuUtilH
+PerProcessUtil
+pid (Rpid
+cmd (	Rcmd
+util (Rutil~
+	PowerInfo-
+ps_type (2.sts.PowerSupplyTypeRpsType#
+p_consumption (RpConsumption
+
+batt_level (R	battLevel"®
+BSClient
+mac_address (	R
+macAddress@
+bs_band_report (2.sts.BSClient.BSBandReportRbsBandReport
+mld_address (	R
+mldAddressâ
+
+BSEvent$
+type (2.sts.BSEventTypeRtype
+	offset_ms (RoffsetMs
+rssi (Rrssi
+probe_bcast (R
+probeBcast#
+probe_blocked (RprobeBlocked9
+disconnect_src (2.sts.DisconnectSrcRdisconnectSrc<
+disconnect_type (2.sts.DisconnectTypeRdisconnectType+
+disconnect_reason (RdisconnectReason'
+backoff_enabled	 (RbackoffEnabled
+active
+ (Ractive
+rejected (Rrejected(
+is_BTM_supported (RisBTMSupported(
+is_RRM_supported (RisRRMSupported
+max_chwidth (R
+maxChwidth
+max_streams (R
+maxStreams
+phy_mode (RphyMode
+max_mcs (RmaxMcs
+max_txpower (R
+maxTxpower$
+is_static_smps (RisStaticSmps/
+is_mu_mimo_supported (RisMuMimoSupported
+band_cap_2G (R	bandCap2G
+band_cap_5G (R	bandCap5G+
+rrm_caps_link_meas (RrrmCapsLinkMeas+
+rrm_caps_neigh_rpt (RrrmCapsNeighRpt6
+rrm_caps_bcn_rpt_passive (RrrmCapsBcnRptPassive4
+rrm_caps_bcn_rpt_active (RrrmCapsBcnRptActive2
+rrm_caps_bcn_rpt_table (RrrmCapsBcnRptTable)
+rrm_caps_lci_meas (RrrmCapsLciMeas2
+rrm_caps_ftm_range_rpt (RrrmCapsFtmRangeRpt%
+backoff_period (RbackoffPeriod
+	assoc_ies (RassocIes
+
+btm_status  (R	btmStatus
+band_cap_6G! (R	bandCap6Gã
+BSBandReport&
+band (2.sts.RadioBandTypeRband
+	connected (R	connected
+rejects (Rrejects
+connects (Rconnects 
+disconnects (Rdisconnects)
+activity_changes (RactivityChanges0
+steering_success_cnt (RsteeringSuccessCnt*
+steering_fail_cnt (RsteeringFailCnt*
+steering_kick_cnt	 (RsteeringKickCnt&
+sticky_kick_cnt
+ (RstickyKickCnt&
+probe_bcast_cnt (RprobeBcastCnt.
+probe_bcast_blocked (RprobeBcastBlocked(
+probe_direct_cnt (RprobeDirectCnt0
+probe_direct_blocked (RprobeDirectBlocked4
+
+event_list (2.sts.BSClient.BSEventR	eventList
+ifname (	Rifname"V
+BSReport!
+timestamp_ms (RtimestampMs'
+clients (2.sts.BSClientRclients"Ó
+RssiPeer
+mac_address (	R
+macAddress9
+rssi_source (2.sts.RssiPeer.RssiSourceR
+rssiSource5
+	rssi_list (2.sts.RssiPeer.RssiSampleRrssiList'
+rssi_avg (2.sts.AvgTypeRrssiAvg
+rx_ppdus (RrxPpdus
+tx_ppdus (RtxPpdus=
+
+RssiSample
+rssi (Rrssi
+	offset_ms (RoffsetMs"1
+
+RssiSource
+
+CLIENT 	
+PROBE
+NEIGHBOR"µ
+
+RssiReport&
+band (2.sts.RadioBandTypeRband0
+report_type (2.sts.ReportTypeR
+reportType!
+timestamp_ms (RtimestampMs*
+	peer_list (2.sts.RssiPeerRpeerList"¡
+RadiusReport!
+timestamp_ms (RtimestampMs?
+radius_list (2.sts.RadiusReport.RadiusRecordR
+radiusListÃ
+RadiusRecord
+vif_name (	RvifName
+vif_role (	RvifRole$
+ServerAddress (	RServerAddress 
+ServerIndex (RServerIndex6
+ClientServerPortNumber (RClientServerPortNumber0
+ClientRoundTripTime (RClientRoundTripTime2
+ClientAccessRequests (RClientAccessRequests@
+ClientAccessRetransmissions (RClientAccessRetransmissions0
+ClientAccessAccepts	 (RClientAccessAccepts0
+ClientAccessRejects
+ (RClientAccessRejects6
+ClientAccessChallenges (RClientAccessChallengesF
+ClientMalformedAccessResponses (RClientMalformedAccessResponses8
+ClientBadAuthenticators (RClientBadAuthenticators4
+ClientPendingRequests (RClientPendingRequests&
+ClientTimeouts (RClientTimeouts.
+ClientUnknownTypes (RClientUnknownTypes2
+ClientPacketsDropped (RClientPacketsDropped"˘
+Report
+nodeID (	RnodeID#
+survey (2.sts.SurveyRsurvey)
+capacity (2.sts.CapacityRcapacity+
+	neighbors (2.sts.NeighborR	neighbors+
+clients (2.sts.ClientReportRclients#
+device (2.sts.DeviceRdevice*
+	bs_report (2.sts.BSReportRbsReport0
+rssi_report (2.sts.RssiReportR
+rssiReportS
+client_auth_fails_report	 (2.sts.ClientAuthFailsReportRclientAuthFailsReport6
+radius_report
+ (2.sts.RadiusReportRradiusReport
+
+power_mode (	R	powerMode*M
+RadioBandType
+
+BAND2G 
+
+BAND5G
+BAND5GL
+BAND5GU
+
+BAND6G*7
+
+SurveyType
+
+ON_CHANNEL 
+OFF_CHANNEL
+FULL*@
+NeighborType
+ONCHAN_SCAN 
+OFFCHAN_SCAN
+	FULL_SCAN*È
+	ChanWidth
+CHAN_WIDTH_UNKNOWN 
+CHAN_WIDTH_20MHZ
+CHAN_WIDTH_40MHZ
+CHAN_WIDTH_40MHZ_ABOVE
+CHAN_WIDTH_40MHZ_BELOW
+CHAN_WIDTH_80MHZ
+CHAN_WIDTH_160MHZ
+CHAN_WIDTH_80_PLUS_80MHZ
+CHAN_WIDTH_320MHZ*C
+WmmAc
+	WMM_AC_VO
+	WMM_AC_VI
+	WMM_AC_BE
+	WMM_AC_BK*˚
+BSEventType	
+PROBE 
+CONNECT
+
+DISCONNECT
+BACKOFF
+ACTIVITY
+OVERRUN
+BAND_STEERING_ATTEMPT
+CLIENT_STEERING_ATTEMPT
+CLIENT_STEERING_STARTED
+CLIENT_STEERING_DISABLED	
+CLIENT_STEERING_EXPIRED
+
+CLIENT_STEERING_FAILED
+
+AUTH_BLOCK
+CLIENT_KICKED
+CLIENT_BS_BTM
+CLIENT_STICKY_BTM
+
+CLIENT_BTM
+CLIENT_CAPABILITIES
+CLIENT_BS_BTM_RETRY
+CLIENT_STICKY_BTM_RETRY
+CLIENT_BTM_RETRY
+CLIENT_RRM_BCN_RPT
+CLIENT_BS_KICK
+CLIENT_STICKY_KICK
+CLIENT_SPECULATIVE_KICK
+CLIENT_DIRECTED_KICK
+CLIENT_GHOST_DEVICE_KICK
+CLIENT_BTM_STATUS*&
+DisconnectSrc	
+LOCAL 
+
+REMOTE**
+DisconnectType
+DISASSOC 
+
+DEAUTH*K
+
+ReportType
+RAW 
+AVERAGE
+	HISTOGRAM
+
+PERCENTILE
+DIFF*/
+FsType
+FS_TYPE_ROOTFS 
+FS_TYPE_TMPFS*"
+DiffType	
+ADDED 
+REMOVED*r
+PowerSupplyType
+PS_TYPE_UNKNOWN 
+
+PS_TYPE_AC
+PS_TYPE_BATTERY
+PS_TYPE_POE
+PS_TYPE_POE_PLUS

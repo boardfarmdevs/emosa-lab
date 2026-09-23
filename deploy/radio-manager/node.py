@@ -8,6 +8,7 @@ import re
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -118,9 +119,68 @@ def observe():
                 "config": live,
                 "interface": iface,
                 "observed_monotonic": time.monotonic(),
+                "stations": stations(),
             }
         )
     )
+
+
+def stations():
+    """Read the complete authorized station list over hostapd's control socket.
+
+    Missing/partial replies are unknown, never an empty positive inventory.
+    The association duration comes from hostapd, not from our first sighting.
+    """
+    started = int(time.time() * 1000)
+    try:
+        with (
+            tempfile.TemporaryDirectory(prefix="emosa-sta-") as directory,
+            socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as control,
+        ):
+            control.settimeout(1)
+            control.bind(directory + "/ctrl")
+            control.connect(str(ROOT / "ctrl/wlan0"))
+
+            def request(command):
+                control.send(command.encode())
+                answer = control.recv(65536).decode()
+                # This pinned hostap build returns an empty datagram at end of
+                # station enumeration. STATUS below independently checks zero.
+                if answer and not answer.endswith("\n"):
+                    raise ValueError("incomplete hostapd response")
+                return answer
+
+            def collect():
+                result = []
+                raw = request("STA-FIRST")
+                while raw not in ("FAIL\n", ""):
+                    mac = raw.splitlines()[0]
+                    fields = values(raw)
+                    if (
+                        not re.fullmatch(r"[0-9a-f]{2}(?::[0-9a-f]{2}){5}", mac)
+                        or mac in {entry["mac"] for entry in result}
+                        or len(result) >= 64
+                        or "[ASSOC]" not in fields.get("flags", "")
+                        or "[AUTHORIZED]" not in fields.get("flags", "")
+                    ):
+                        raise ValueError("incomplete station inventory")
+                    seconds = int(fields["connected_time"])
+                    if not 0 <= seconds <= 4294967:
+                        raise ValueError("association age outside telemetry representation")
+                    result.append({"mac": mac, "connected_seconds": seconds})
+                    raw = request("STA-NEXT " + mac)
+                return result
+
+            clients = collect()
+            # Detect membership changes across the sequential read.
+            if {c["mac"] for c in clients} != {c["mac"] for c in collect()}:
+                raise ValueError("station membership changed while reading")
+            status = values(request("STATUS"))
+            if status.get("state") != "ENABLED" or int(status["num_sta[0]"]) != len(clients):
+                raise ValueError("station list and AP status disagree")
+        return {"complete": True, "timestamp_ms": started, "clients": clients}
+    except (OSError, ValueError, KeyError):
+        return {"complete": False}
 
 
 if __name__ == "__main__":

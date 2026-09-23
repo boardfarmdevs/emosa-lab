@@ -87,7 +87,10 @@ class BoundBackend(OpenSyncBackend):
             raw["generation"],
             raw["schema"].fingerprint,
             hashlib.sha256(
-                json.dumps({t: sorted(rs) for t, rs in rows.items()}, sort_keys=True).encode()
+                json.dumps(
+                    {t: sorted(rs) for t, rs in rows.items() if t != "Wifi_Associated_Clients"},
+                    sort_keys=True,
+                ).encode()
             ).hexdigest(),
         )
         if self.anchor is not None and (

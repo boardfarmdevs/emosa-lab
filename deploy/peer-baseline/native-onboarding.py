@@ -45,7 +45,21 @@ def inventory_bss(objects):
     }
 
 
-async def experiment(label):
+def inventory_stations(objects):
+    bsses = [k for k, v in inventory_bss(objects).items() if v.get("BSSID") == RADIO_BSSID]
+    if len(bsses) != 1:
+        return {}
+    return {
+        k: v
+        for obj in objects
+        for k, v in obj.items()
+        if k.startswith(bsses[0] + "STA.")
+        and isinstance(v, dict)
+        and v.get("MACAddress") == "02:00:00:00:02:00"
+    }
+
+
+async def experiment(label, *, active_seconds=0):
     helpers = runpy.run_path(str(ROOT / "controller-trial.py"))
     helpers["idle"]()
     sys.path.insert(0, str(RADIO_ROOT_DIR))
@@ -62,6 +76,8 @@ async def experiment(label):
         "native_controller": True,
         "semantic_submission": False,
         "cases": {},
+        "active_seconds_requested": active_seconds,
+        "sustained_operation_proven": False,
     }
     write(directory / "result.json", report)
     write(
@@ -81,7 +97,7 @@ async def experiment(label):
     )
     db = SimDatabase(directory / "database")
     admin = OvsSession(db.endpoint, monitor_columns=MONITOR)
-    manager = worker = None
+    manager = worker = broker = None
     captures, logs = [], []
     namespace, link = "em-native-" + uuid.uuid4().hex[:8], "en" + uuid.uuid4().hex[:8]
     ns_created = link_created = False
@@ -130,6 +146,40 @@ async def experiment(label):
 
     try:
         write(directory / "topology.json", radio["setup"](directory))
+        if active_seconds:
+            mqtt_root = RADIO_ROOT_DIR / "mqtt-inputs/stage"
+            executable = mqtt_root / "usr/sbin/mosquitto"
+            configuration = directory / "mosquitto.conf"
+            configuration.write_text(
+                f"listener 0 {directory}/mqtt.sock\n"
+                "allow_anonymous true\nuser root\npersistence false\n"
+                "message_size_limit 65536\nmax_connections 4\n"
+            )
+            write(
+                directory / "mqtt-provenance.json",
+                {
+                    "binary_sha256": hashlib.sha256(executable.read_bytes()).hexdigest(),
+                    "packages": {
+                        p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                        for p in sorted((RADIO_ROOT_DIR / "mqtt-inputs").glob("*.deb"))
+                    },
+                    "transport": "owned private Unix socket",
+                    "physical_qualified": False,
+                },
+            )
+            broker = await asyncio.create_subprocess_exec(
+                str(executable),
+                "-c",
+                str(configuration),
+                env={**os.environ, "LD_LIBRARY_PATH": str(mqtt_root / "usr/lib/x86_64-linux-gnu")},
+                stdout=log("mqtt"),
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            end = time.monotonic() + 5
+            while not (directory / "mqtt.sock").exists():
+                if broker.returncode is not None or time.monotonic() > end:
+                    raise RuntimeError("owned MQTT broker did not start")
+                await asyncio.sleep(0.05)
         await db.start()
         await seed_radio_database(admin)
         results = await admin.transact(
@@ -155,8 +205,7 @@ async def experiment(label):
             stderr=asyncio.subprocess.STDOUT,
         )
         await radio["eventually"](state, lambda v: v.get("enabled") is True)
-        # No client is associated while topology is reported: the original
-        # manager does not yet publish station association ages/inventory.
+        # Initial provisioning remains separate from the later client cycles.
         write(directory / "policy.json", {"withhold": True})
         await wait_json("policy.json", lambda v: v["withhold"])
         capture("hwsim0", "radio")
@@ -185,6 +234,7 @@ async def experiment(label):
         report["controller_policy"] = helpers["bml_policy"]()
         run("ip", "netns", "add", namespace)
         ns_created = True
+        run("ip", "netns", "exec", namespace, "ip", "link", "set", "lo", "up")
         run("ip", "link", "add", link, "type", "veth", "peer", "name", link + "p")
         link_created = True
         run("ip", "link", "set", link + "p", "netns", namespace)
@@ -218,6 +268,7 @@ async def experiment(label):
             "-m",
             "emosa.simulation.native_onboarding",
             str(directory),
+            *(["--telemetry", "--duration", str(active_seconds + 180)] if active_seconds else []),
             stdout=log("native-worker"),
             stderr=asyncio.subprocess.STDOUT,
         )
@@ -250,15 +301,66 @@ async def experiment(label):
             await asyncio.sleep(0.3)
         write(directory / "controller-after.json", after)
         report["controller_radio_bss"] = bsses
-        # Freeze the no-client report phase before observing the independent
-        # client. Client inventory/long-lived management is a separate follow-on.
-        (directory / "stop-worker").touch()
-        await asyncio.wait_for(worker.wait(), 10)
-        assert worker.returncode == 0
+        if not active_seconds:
+            # Reproduce the earlier bounded onboarding experiment unchanged.
+            (directory / "stop-worker").touch()
+            await asyncio.wait_for(worker.wait(), 10)
+            assert worker.returncode == 0
         radio["connect"]("emosa-controller-trial", helpers["KEY"])
         report["cases"]["clients"] = await radio["clients"](
             directory, "onboarded", "emosa-controller-trial"
         )
+        if active_seconds:
+            started = time.monotonic()
+            samples = []
+            next_disconnect = 25
+            while time.monotonic() - started < active_seconds:
+                if worker.returncode is not None:
+                    raise RuntimeError("adapter exited during client activity")
+                index = len(samples)
+                current = json.loads((directory / "native-session.json").read_text())
+                native = helpers["inventory"](depth=8)
+                write(directory / f"active-inventory-{index:04d}.json", native)
+                probes = await radio["clients"](
+                    directory, f"active-{index:04d}", "emosa-controller-trial"
+                )
+                sample = {
+                    "elapsed": time.monotonic() - started,
+                    "adapter_pid": worker.pid,
+                    "session": current,
+                    "clients": probes,
+                    "controller_station_present": bool(inventory_stations(native)),
+                    "process_status": Path(f"/proc/{worker.pid}/status").read_text(),
+                    "open_descriptors": len(list(Path(f"/proc/{worker.pid}/fd").iterdir())),
+                }
+                samples.append(sample)
+                write(directory / "active-samples.json", samples)
+                if time.monotonic() - started >= next_disconnect:
+                    next_disconnect += 25
+                    radio["inside"](
+                        radio["CLIENTS"][1],
+                        "systemctl",
+                        "stop",
+                        "emosa-radio-manager-client.service",
+                    )
+                    await asyncio.sleep(4)
+                    detached = helpers["inventory"](depth=8)
+                    write(directory / f"detached-inventory-{index:04d}.json", detached)
+                    write(
+                        directory / f"detached-session-{index:04d}.json",
+                        json.loads((directory / "native-session.json").read_text()),
+                    )
+                    radio["connect"]("emosa-controller-trial", helpers["KEY"])
+                await asyncio.sleep(3)
+            report["active_observed_seconds"] = time.monotonic() - started
+            report["active_samples"] = len(samples)
+            report["active_controller_station_seen"] = any(
+                s["controller_station_present"] for s in samples
+            )
+            # This is a pilot, not the full soak/recovery acceptance verdict.
+            (directory / "stop-worker").touch()
+            await asyncio.wait_for(worker.wait(), 10)
+            assert worker.returncode == 0
         report.update(
             status="observed_pending_capture_review",
             operation=applied,
@@ -269,7 +371,7 @@ async def experiment(label):
         raise
     finally:
         errors = []
-        for child in (worker, manager):
+        for child in (worker, manager, broker):
             if child and child.returncode is None:
                 try:
                     child.terminate()
@@ -322,11 +424,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, required=True)
     parser.add_argument("--label", required=True)
+    parser.add_argument(
+        "--active-seconds",
+        type=int,
+        default=0,
+        help="Keep adapter active for a measured client-traffic pilot",
+    )
     args = parser.parse_args()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", args.label):
         parser.error("use a new label of 1–24 lowercase letters, digits or hyphens")
     if args.build.resolve().parent != ROOT or not args.build.name.startswith("candidate-"):
         parser.error("stage a separate candidate directory directly under /opt/emosa-baseline")
+    if args.active_seconds and not 30 <= args.active_seconds <= 3600:
+        parser.error("active-seconds must be zero or 30–3600")
     os.umask(0o077)
     wrapper = runpy.run_path(str(ROOT / "compatibility/controller-candidate.py"))
     with (RADIO_ROOT_DIR / "run.lock").open("a+") as lock:
@@ -334,7 +444,11 @@ if __name__ == "__main__":
         previous = signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
         try:
             wrapper["trial"](
-                args.build, args.label, experiment=lambda label: asyncio.run(experiment(label))
+                args.build,
+                args.label,
+                experiment=lambda label: asyncio.run(
+                    experiment(label, active_seconds=args.active_seconds)
+                ),
             )
         finally:
             signal.signal(signal.SIGTERM, previous)

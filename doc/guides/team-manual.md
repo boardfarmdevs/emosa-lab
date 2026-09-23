@@ -3482,10 +3482,10 @@ not the controller's database. Read `controller-before.json` and
 controller-provisioned SSID. The radio capture and separate client traffic then
 establish behavior beyond both software inventories.
 
-The initial scope ends topology reporting before the independent Wi-Fi client
-joins, because continuous station reporting is not implemented in this radio
-fixture. Policy/metrics, channel management, full profile qualification and a
-physical unchanged extender remain further work. The run's
+The retained initial scope ends topology reporting before the independent Wi-Fi
+client joins. The follow-on exercise below keeps the adapter active and adds
+measured station reporting. Policy/metrics, channel management, full profile
+qualification and a physical unchanged extender remain further work. The run's
 `observed_pending_capture_review` status requires independent packet review
 before a bounded onboarding success can be declared.
 
@@ -3493,6 +3493,45 @@ before a bounded onboarding success can be declared.
 actual WSC M2, durable receipt, Config, independently observed State, native BSS
 inventory and client traffic. Identify which evidence would be missing if any
 one link in that chain failed. Do not substitute a semantic API request for M2.
+
+### 13.17 Keep the virtual agent active while clients use it
+
+An onboarded agent must continue participating in the network. A station can
+connect successfully even after the adapter has stopped, because hostapd keeps
+serving the last configuration. Therefore a traffic test alone does not prove
+that the controller still manages the represented OpenSync extender.
+
+Follow [the sustained-operation guide](../protocol/sustained-operation.md).
+It defines the complete 15-minute acceptance target and the current 90-second
+pilot. Establish the same owned VM first, stage the updated Python and helper
+files, add the pinned telemetry dependencies and private broker, then run the
+native onboarding command with `--active-seconds 90` and a new label. The helper
+keeps EMOSA running while clients pass traffic and reconnect; it records process
+samples and detailed controller inventory during these phases.
+
+**Why add telemetry?** OVSDB tells EMOSA which station belongs to the BSS, but the
+pinned table lacks association duration. The simulated pod's existing lab
+manager now reads that duration from hostapd and sends a separate OpenSync-format
+Protobuf message through a private MQTT broker. EMOSA joins the two observations
+only when identity, membership, SSID and freshness agree. It never treats first
+sighting after reconnect as the actual association time. This lab publisher does
+not qualify a physical pod's telemetry interface.
+
+**How do I interpret a result?** Check that the same adapter process was running
+when the independent clients passed traffic. Then inspect the STA object under
+the virtual agent's exact BSS in the controller's inventory, the captured client
+event and any capability response. A gateway neighbor entry containing the same
+MAC is insufficient. A capability-unavailable error is an explicit limitation;
+it is not a successful measurement. Check leaves and subsequent joins separately.
+
+The pilot is an implementation aid. The guide's remaining policy/channel,
+disassociation-statistics and recovery checks must pass before sustained
+operation is established. Increasing the duration parameter alone cannot satisfy
+those requirements, and simulation cannot establish physical-pod acceptance.
+
+**Learning checkpoint:** explain why fresh OVSDB membership, measured association
+age, native controller inventory, adapter liveness and independent traffic are
+five different observations. Locate each in the run artifacts.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

@@ -3026,6 +3026,271 @@
       "path": "native-onboarding/unit-results.xml",
       "sha256": "e168f412c3c9e82407ce53a32532e64b7d1e76485d52d317d1f3371a3ddcaefe",
       "size": 4393670
+    },
+    {
+      "path": "native-active/README.md",
+      "sha256": "8f800c52ea6e70229b11013254691f0949eba2c36b82b194828f9f73dc3263ab",
+      "size": 2845
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0000.json",
+      "sha256": "85cde9d72cee1b97e612080ffbbe749ff60d7373bfa5a28ee80b04aa23296cce",
+      "size": 31046
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0001.json",
+      "sha256": "f82ab81a2e2aa85fdfb06211ae9028a6a2518dbd9b343291e5f45a8e19664b29",
+      "size": 31046
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0002.json",
+      "sha256": "2a980a7dae62c7af6202cb6cc727ffca613c462587ecccd652152e6fe118c829",
+      "size": 31047
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0003.json",
+      "sha256": "3ce22b45bd6499134cdc3c71d2a4ff79d79e006e47ae41a72113c4c8ed80bfa6",
+      "size": 31047
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0004.json",
+      "sha256": "0be10dff5617e1dd3993c6518a990ed7a2ef15e65b4c9570290d2f8087fe32d5",
+      "size": 31047
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0005.json",
+      "sha256": "467ce068ada6f28b8067d0d3553fa0175bffc8d85d19971aba1b19a0a16c5e1a",
+      "size": 31047
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0006.json",
+      "sha256": "b204fc788e5e324b18b00b2171ce2c3098358608d4952801c1c27a0349836659",
+      "size": 31046
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0007.json",
+      "sha256": "c817654720225d3db06a96c61ad36a5630f8d613b6ecddad92acd381c76bea9a",
+      "size": 31046
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0008.json",
+      "sha256": "b41871960539f0d499de07db6be2c1bceba0ed05ceb6884dcb2045021a7cb1b0",
+      "size": 31047
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0009.json",
+      "sha256": "c9d976567c8d2a8d1b2d5fb1641bfec171cd0f4d04641133a6201361ed3a7c95",
+      "size": 31046
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0010.json",
+      "sha256": "9f7fbdbc0ca17d63f6d9c1ebee774ac67d90b96484fb484397edbe215df28b7d",
+      "size": 31046
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0011.json",
+      "sha256": "809cd287d411470d140b753fb8a21cb29e0133d75d3d8e0551344a1859299df7",
+      "size": 31047
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0012.json",
+      "sha256": "aac3e0ec4262bf4b8b0ce67494c0d5f1f24f4a53b82b66b5274b2ea02eed5981",
+      "size": 31047
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0013.json",
+      "sha256": "741c6d41ebfc14201ba88e6a4d67ff6796ab98f483ccb90543b6387625d901dd",
+      "size": 31047
+    },
+    {
+      "path": "native-active/run-03/active-inventory-0014.json",
+      "sha256": "7c2f974993b4e726f55f41b65ceda5cda6c8838947a4842de6d024f6b242ee66",
+      "size": 31047
+    },
+    {
+      "path": "native-active/run-03/active-samples.json",
+      "sha256": "fbe8d71c18ded071355aa42d2aab454defb98c087268358eaa0e3eea6542ce32",
+      "size": 69528
+    },
+    {
+      "path": "native-active/run-03/candidate-trial.json",
+      "sha256": "4fe60cf5de1fa8588397e61e9641cdd25625d4233632c65287cc84018dfeb307",
+      "size": 6051
+    },
+    {
+      "path": "native-active/run-03/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "native-active/run-03/clients-active-0000.json",
+      "sha256": "104233a3209ddacd16c8b3329efd4a68acf7734db0083c0cfd398282b479659f",
+      "size": 2633
+    },
+    {
+      "path": "native-active/run-03/clients-active-0001.json",
+      "sha256": "dafabd805f41e4606872a6e70585c77bab36aa531a3a5820a993839be542856b",
+      "size": 2634
+    },
+    {
+      "path": "native-active/run-03/clients-active-0002.json",
+      "sha256": "ef870e383ee3de127e39dbe394f4126a1d3edbcdbe916676c098a03f4c4d0925",
+      "size": 2632
+    },
+    {
+      "path": "native-active/run-03/clients-active-0003.json",
+      "sha256": "ac1df241939bdf14e79bc50a13de40b9bd5873c3b441d9086ecca85af221ebfa",
+      "size": 2634
+    },
+    {
+      "path": "native-active/run-03/clients-active-0004.json",
+      "sha256": "146949e77a10a0cf1c9136e53b2b52e7930d8a05e17355310000e3c666f66bd4",
+      "size": 2634
+    },
+    {
+      "path": "native-active/run-03/clients-active-0005.json",
+      "sha256": "ee3b8d56c64b46304912dd123d84e1b533722b7974d6195960225d3d06ed11a8",
+      "size": 2634
+    },
+    {
+      "path": "native-active/run-03/clients-active-0006.json",
+      "sha256": "f2edfbc1bcd04f4539b4ca38bbc79337965b8baa092ea81601028d59282b1d18",
+      "size": 2625
+    },
+    {
+      "path": "native-active/run-03/clients-active-0007.json",
+      "sha256": "0f712ade932842e53af410096457bdb4367f50ea65e90da4e25c804822f07f4a",
+      "size": 2634
+    },
+    {
+      "path": "native-active/run-03/clients-active-0008.json",
+      "sha256": "c9637c1290cedc92867719629d05495733175f7195f9592ddae3572d6cfa2603",
+      "size": 2633
+    },
+    {
+      "path": "native-active/run-03/clients-active-0009.json",
+      "sha256": "0f0464fdec5072df322fd44bc105d4e05bc6dc25ead98fff315395d6b91d25cb",
+      "size": 2625
+    },
+    {
+      "path": "native-active/run-03/clients-active-0010.json",
+      "sha256": "b39c690d8fe08af9d975475750ab33754c0e28a25bd25851e6fa96c226b76114",
+      "size": 2634
+    },
+    {
+      "path": "native-active/run-03/clients-active-0011.json",
+      "sha256": "33b2464b616778683bb24f4ffc5e5bcb9d055bb26cbb4dde931f2ea8dc5ee3cd",
+      "size": 2634
+    },
+    {
+      "path": "native-active/run-03/clients-active-0012.json",
+      "sha256": "36c81f0f0c2db6de0b53817e2cbc3a8673f390a0be355822d4fde54c1d73aa9b",
+      "size": 2634
+    },
+    {
+      "path": "native-active/run-03/clients-active-0013.json",
+      "sha256": "9958f88dbbb2f07db5b7cb4a27f546db516bf0ff9e063a9d838ac9fb89c87928",
+      "size": 2625
+    },
+    {
+      "path": "native-active/run-03/clients-active-0014.json",
+      "sha256": "59c7d36b346474f9c9fdea9413469ad822a006bb375c033a07c54a0ba5fbd5cf",
+      "size": 2634
+    },
+    {
+      "path": "native-active/run-03/clients-onboarded.json",
+      "sha256": "e52b0ee13eba4d62fe49163ba80fcde95b1997b22bc43cf446025b8ce88469f4",
+      "size": 2620
+    },
+    {
+      "path": "native-active/run-03/controller-after.json",
+      "sha256": "b4abc7bfbcba9241ae64a01fd38b09c29eaa14ca28c805ed6628659bdaa94cb7",
+      "size": 26206
+    },
+    {
+      "path": "native-active/run-03/controller-before.json",
+      "sha256": "b118b8ef76ea7f554885168aabea36e6542ab2128038795af030097b2cdfee67",
+      "size": 10353
+    },
+    {
+      "path": "native-active/run-03/detached-inventory-0005.json",
+      "sha256": "9292b3f27709c24ba142f5003101a490e6688c23dc3eb75ab4b7ceddfcaeabd6",
+      "size": 30256
+    },
+    {
+      "path": "native-active/run-03/detached-inventory-0008.json",
+      "sha256": "2ee56969eda31a3990c5686605c1b5cfab61ca9b77d353df3fc67c1a76a970b5",
+      "size": 30256
+    },
+    {
+      "path": "native-active/run-03/detached-inventory-0012.json",
+      "sha256": "c69068f5dbbad1eeb2fbfe3f22403474ea85deda2a68b25266028d154a846687",
+      "size": 30256
+    },
+    {
+      "path": "native-active/run-03/detached-session-0005.json",
+      "sha256": "783824bbd1a1b46759aba729a1362b2ad364eefaa98c2ecb286ec376164f7bf3",
+      "size": 2295
+    },
+    {
+      "path": "native-active/run-03/detached-session-0008.json",
+      "sha256": "dbda674d6c1d1a7979c8ec16fa909700760ea70b8f1c52ebbdd43cd3b34b557c",
+      "size": 2480
+    },
+    {
+      "path": "native-active/run-03/detached-session-0012.json",
+      "sha256": "6ff26ab4fdeccd7ef2b4759718864e300b8065f894bf33148d513ff812ae35cd",
+      "size": 2666
+    },
+    {
+      "path": "native-active/run-03/ethernet.pcap",
+      "sha256": "b4a039c20858b4d7228286ae110e4f0b723e82a566d0788b4b9c6a1d2d1eafdd",
+      "size": 3681
+    },
+    {
+      "path": "native-active/run-03/independent-check.json",
+      "sha256": "034110173b02ff8c60ae147f10e41c189a2510a0cbee08a3edefc2a0013d9997",
+      "size": 1515
+    },
+    {
+      "path": "native-active/run-03/manager.jsonl",
+      "sha256": "87ffbb1aec2617c0fdc090c0d78297ee35e17705f0261be5c78ba93f56adc8a0",
+      "size": 97367
+    },
+    {
+      "path": "native-active/run-03/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "native-active/run-03/native-operation.json",
+      "sha256": "4a03b1452697ce788c7414a0de611224c5aa2cdbdeffd23b9a1b320da85ac812",
+      "size": 1225
+    },
+    {
+      "path": "native-active/run-03/native-session.json",
+      "sha256": "c48cf81ccf91f8ad70e9b3e8514bcdd493e8f3266b55ec47637064e56db51498",
+      "size": 2601
+    },
+    {
+      "path": "native-active/run-03/radio.pcap",
+      "sha256": "a8ca646dd6eeb0370f81617b41626277448b05dc32de5833a1adc76955bf9e6c",
+      "size": 1091243
+    },
+    {
+      "path": "native-active/run-03/result.json",
+      "sha256": "ee8cc64c05190ca0634988bce649db35ffa9f6d516b1743d9739dea28b54af94",
+      "size": 5087
+    },
+    {
+      "path": "native-active/run-03/source-hashes.json",
+      "sha256": "a40dc75934a6858e9df6f433b8c29b6d4323d10b8524b37335255b88ec55f382",
+      "size": 11031
+    },
+    {
+      "path": "native-active/run-03/withheld-operation.json",
+      "sha256": "43d0cb8bd248179761a7e92eb30cbc0ccd8295d4d5d06f352b7522ec3bb6fe7a",
+      "size": 972
     }
   ]
 }

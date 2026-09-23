@@ -184,6 +184,12 @@ while zero represented radios/BSSs still leave the onboarding objective open.
 
 Next join those boundaries in [native simulated-pod onboarding](../protocol/native-onboarding.md)
 and [manual §13.16](team-manual.md#1316-join-the-real-controller-to-the-simulated-opensync-extender).
+
+Continue with [sustained operation](../protocol/sustained-operation.md) and
+[manual §13.17](team-manual.md#1317-keep-the-virtual-agent-active-while-clients-use-it).
+Learn to distinguish an AP that retains its configuration from an adapter that
+continues reporting clients to its controller. The active pilot adds measured
+OpenSync-format telemetry; the full soak and recovery acceptance remain pending.
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client
 traffic is checked. Read the retained negative trials and the bounded scope first.

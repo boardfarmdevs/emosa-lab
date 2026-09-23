@@ -146,13 +146,15 @@ failure is retained under its original label; do not overwrite it with a rerun.
 
 ## Current limits and the next proof
 
-The first experiment keeps the independent Wi-Fi client disconnected during
-topology reporting, then ends the report worker before the client joins. The
-current radio manager does not publish complete station association inventory
-and age. This sequencing avoids advertising an invented empty client list.
-Continuous agent management, client notifications, metrics/policy and channel
-procedures require subsequent implementation and a sustained run. Unsupported
-requests are recorded, not acknowledged as applied.
+The retained first experiment keeps the independent Wi-Fi client disconnected
+during topology reporting, then ends the report worker before the client joins.
+The subsequent [sustained-operation work](sustained-operation.md) adds measured
+client membership/age and an active-worker pilot, including client join/leave
+notifications and explicit capability-unavailable responses. Read its separate
+evidence and limits; this does not retroactively extend the original proof.
+Metrics/policy, channel procedures and integrated recovery still require work
+before the sustained acceptance run. Unsupported requests are recorded, not
+acknowledged as applied.
 
 The initial native trial confirmed Early/M1/M2 exchange but rejected unsolicited
 VLAN/advanced-BSS companions, and exposed EMOSA's overly strict topology-query

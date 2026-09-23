@@ -1,0 +1,39 @@
+{
+  "operation": {
+    "operation_id": "feba081b-a7f1-4bc1-8642-b867ee51336a",
+    "initiating_interface": "wsc-component",
+    "state": "OBSERVED_APPLIED",
+    "reason": null,
+    "attempts": 1,
+    "commit_attribution": "reply",
+    "application_evidence": {
+      "fresh": true,
+      "predicate_satisfied": true,
+      "generation": 1,
+      "revision": 3,
+      "received_at": "2026-09-23T00:56:03.440Z",
+      "source": "ovsdb",
+      "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+    },
+    "receipt": {
+      "scope": "owned_simulation_wsc_component",
+      "m1_sha256": "83be414bfdeb3379e893bc338ff5901f069d9ceca54ee40772db364dd0256723",
+      "controller_al": "020000e00001",
+      "agent_al": "020000003001",
+      "ruid": "020000ec0200",
+      "bssid": "020000ec0200",
+      "ingress": "probe0",
+      "link_generation": 1,
+      "database_generation": 1,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "first_mid": 19,
+      "pod_id": "pod-1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1"
+    }
+  },
+  "operation_count": 1,
+  "writes": 1,
+  "config_ssid": "emosa-controller-trial",
+  "observed_ssid": "emosa-controller-trial"
+}

@@ -14,6 +14,7 @@ from common import AP, ROOT, guard
 
 from emosa.opensync.session import OvsSession
 from emosa.simulation.radio import MONITOR, RadioManager
+from emosa.simulation.station_telemetry import LabMqtt
 
 
 class Driver:
@@ -57,6 +58,7 @@ async def serve(directory):
     endpoint = "unix:" + str(directory / "database/db.sock")
     session = OvsSession(endpoint, monitor_columns=MONITOR)
     manager = RadioManager(session, Driver())
+    mqtt = LabMqtt(directory) if (directory / "native-owner.json").exists() else None
     stopped = asyncio.Event()
     for sig in (signal.SIGINT, signal.SIGTERM):
         asyncio.get_running_loop().add_signal_handler(sig, stopped.set)
@@ -67,6 +69,14 @@ async def serve(directory):
                 try:
                     policy = json.loads((directory / "policy.json").read_text())
                     event = await manager.cycle(withhold=policy["withhold"])
+                    if (
+                        mqtt
+                        and event.get("publication") == "observed-state"
+                        and "stations" in event
+                    ):
+                        event["telemetry_published"] = mqtt.publish(
+                            event["stations"], event["observation"]["ssid"]
+                        )
                 except Exception as error:
                     event = {"error": type(error).__name__}
                 event["monotonic"] = time.monotonic()
@@ -75,6 +85,8 @@ async def serve(directory):
                 with suppress(TimeoutError):
                     await asyncio.wait_for(stopped.wait(), 0.5)
         finally:
+            if mqtt:
+                mqtt.close()
             await session.close()
 
 

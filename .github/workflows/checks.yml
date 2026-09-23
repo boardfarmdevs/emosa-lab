@@ -33,6 +33,7 @@ jobs:
           --directory doc/evidence/native-discovery/run-07
       - run: python3 scripts/check-controller-candidate.py
       - run: python3 scripts/check-native-onboarding.py doc/evidence/native-onboarding/run-05
+      - run: python3 scripts/check-native-active.py doc/evidence/native-active/run-03
       - run: >-
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01

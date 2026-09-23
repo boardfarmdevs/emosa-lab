@@ -1,5 +1,6 @@
 import asyncio
 import importlib.util
+import time
 from pathlib import Path
 
 import pytest
@@ -75,6 +76,48 @@ def test_privileged_helpers_refuse_other_hosts_before_commands(name, monkeypatch
     )
     with pytest.raises(RuntimeError):
         module.guard()
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "ending, count, complete",
+    [(b"", 0, True), (b"FAIL\n", 0, True), (b"", 1, False), (b"broken", 0, False)],
+)
+def test_hostap_empty_enumeration_requires_confirming_status(monkeypatch, ending, count, complete):
+    spec = importlib.util.spec_from_file_location("station_reader", "deploy/radio-manager/node.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    class Control:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            pass
+
+        def settimeout(self, *_):
+            pass
+
+        def bind(self, *_):
+            pass
+
+        def connect(self, *_):
+            pass
+
+        def send(self, command):
+            self.command = command
+
+        def recv(self, *_):
+            if self.command == b"STATUS":
+                return f"state=ENABLED\nnum_sta[0]={count}\n".encode()
+            assert self.command == b"STA-FIRST"
+            return ending
+
+    monkeypatch.setattr(module.socket, "socket", lambda *_: Control())
+    actual = module.stations()
+    assert actual["complete"] is complete
+    if complete:
+        assert actual["clients"] == []
 
 
 @pytest.mark.ovsdb
@@ -162,6 +205,97 @@ def test_manager_never_echoes_requested_state_and_rejects_unsupported_scope(tmp_
             assert event["publication"] == "conflict"
             state = next(iter((await session.snapshot())["tables"]["Wifi_VIF_State"].values()))
             assert state["enabled"] is False  # A raced read cannot republish positive State.
+        finally:
+            await session.close()
+            await db.close()
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.ovsdb
+def test_station_membership_age_and_binding_with_real_ovsdb(tmp_path):
+    from emosa.secrets import SecretStore
+    from emosa.simulation.native_onboarding import AGENT, CONTROLLER, RadioReportSource
+    from emosa.simulation.station_telemetry import NODE_ID, TOPIC, encode_stations
+    from emosa.simulation.wsc_provisioning import BoundBackend
+    from emosa.telemetry.stations import StationSource
+    from emosa.wire.autoconfiguration import PeerBinding
+
+    class Driver:
+        clients = []
+
+        async def apply(self, config):
+            pass
+
+        async def observe(self):
+            return observation() | {
+                "stations": {
+                    "complete": True,
+                    "timestamp_ms": int(time.time() * 1000),
+                    "clients": self.clients,
+                }
+            }
+
+    async def scenario():
+        db = await SimDatabase(tmp_path / "db").start()
+        session = OvsSession(db.endpoint, monitor_columns=MONITOR)
+        try:
+            await seed_radio_database(session)
+            await session.transact(
+                [{"op": "insert", "table": "AWLAN_Node", "row": {"serial_number": NODE_ID}}]
+            )
+            driver = Driver()
+            manager = RadioManager(session, driver)
+            backend = BoundBackend(
+                session,
+                SecretStore(tmp_path / "secrets"),
+                radio_mac="02:00:00:ec:02:00",
+                bssid="02:00:00:ec:02:00",
+                if_name="wlan0",
+                radio_name="phy1",
+            )
+            telemetry = StationSource(NODE_ID, TOPIC)
+            source = RadioReportSource(
+                backend, PeerBinding("probe0", 1, AGENT, CONTROLLER, (CONTROLLER,)), telemetry
+            )
+
+            async def cycle():
+                event = await manager.cycle()
+                assert event["publication"] == "observed-state"
+                assert telemetry.receive(TOPIC, encode_stations(event["stations"], "driver-ssid"))
+                assert await source.refresh()
+                return await session.snapshot(), source.source.current()
+
+            _, initial = await cycle()
+            assert initial.topology.inventory_complete
+            anchor = backend.anchor.binding_token
+            driver.clients = [{"mac": "02:00:00:00:02:00", "connected_seconds": 37}]
+            raw, current = await cycle()
+            assert current.context_token == initial.context_token
+            assert backend.anchor.binding_token == anchor
+            client = current.topology.clients.bsses[0].clients[0]
+            assert client.mac == bytes.fromhex("020000000200") and client.association_seconds == 37
+            station_uuid = next(iter(raw["tables"]["Wifi_Associated_Clients"]))
+            driver.clients[0]["connected_seconds"] = 38
+            await asyncio.sleep(0.003)
+            raw, current = await cycle()
+            assert list(raw["tables"]["Wifi_Associated_Clients"]) == [station_uuid]
+            assert current.topology.clients.bsses[0].clients[0].association_seconds == 38
+            telemetry.disconnect()
+            assert await source.refresh()
+            assert not source.source.current().topology.inventory_complete
+            # OVSDB membership alone does not establish association time.
+            assert (
+                next(iter(raw["tables"]["Wifi_Associated_Clients"].values()))["mac"]
+                == "02:00:00:00:02:00"
+            )
+            driver.clients = []
+            await asyncio.sleep(0.003)
+            raw, current = await cycle()
+            assert current.topology.inventory_complete
+            assert current.topology.clients.bsses[0].clients == ()
+            assert not raw["tables"].get("Wifi_Associated_Clients")
+            assert backend.anchor.binding_token == anchor
         finally:
             await session.close()
             await db.close()

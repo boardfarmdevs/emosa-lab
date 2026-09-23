@@ -168,6 +168,61 @@ def row_guard(table, row_id, row):
     }
 
 
+def station_updates(snap, station_read):
+    """One atomic membership snapshot, preserving existing station UUIDs."""
+    table = "Wifi_Associated_Clients"
+    previous = snap["tables"].get(table, {})
+    decoded = {u: snap["schema"].row(table, row) for u, row in previous.items()}
+    current = {row["mac"]: u for u, row in decoded.items()}
+    desired = {row["mac"] for row in station_read["clients"]}
+    if len(current) != len(decoded) or len(desired) != len(station_read["clients"]):
+        raise ValueError("duplicate station identity")
+    ops = [
+        {
+            "op": "wait",
+            "table": table,
+            "where": [],
+            "columns": ["_uuid", "mac", "state"],
+            "until": "==",
+            "timeout": 0,
+            "rows": [
+                {"_uuid": ["uuid", u], "mac": r["mac"], "state": r["state"]}
+                for u, r in decoded.items()
+            ],
+        }
+    ]
+    references = []
+    for index, mac in enumerate(sorted(desired)):
+        if mac in current:
+            u = current[mac]
+            if decoded[u]["state"] != "active":
+                ops.append(
+                    {
+                        "op": "update",
+                        "table": table,
+                        "where": [["_uuid", "==", ["uuid", u]]],
+                        "row": {"state": "active"},
+                    }
+                )
+            references.append(["uuid", u])
+        else:
+            name = f"station{index}"
+            ops.append(
+                {
+                    "op": "insert",
+                    "table": table,
+                    "uuid-name": name,
+                    "row": {"mac": mac, "state": "active"},
+                }
+            )
+            references.append(["named-uuid", name])
+    for mac in current.keys() - desired:
+        ops.append(
+            {"op": "delete", "table": table, "where": [["_uuid", "==", ["uuid", current[mac]]]]}
+        )
+    return ops, ["set", references]
+
+
 class RadioManager:
     def __init__(self, session, driver):
         self.session, self.driver = session, driver
@@ -223,6 +278,11 @@ class RadioManager:
             state = {"enabled": False, "wpa_psks": ["map", []]}
             outcome["radio"] = "unavailable"
         ops = [row_guard(t, rows[t][0], rows[t][1]) for t in names]
+        if outcome["radio"] == "observed" and observed.get("stations", {}).get("complete") is True:
+            station_ops, references = station_updates(snap, observed["stations"])
+            ops += station_ops
+            state["associated_clients"] = references
+            outcome["stations"] = observed["stations"]
         ops += [
             {
                 "op": "update",
@@ -247,7 +307,11 @@ class RadioManager:
             not isinstance(r, dict) or "error" in r for r in results
         ):
             outcome["publication"] = "conflict"
-        elif any(r.get("count") != 1 for r in results[len(names) :]):
+        elif any(
+            r.get("count") != 1
+            for op, r in zip(ops, results, strict=True)
+            if op["op"] in ("update", "delete")
+        ):
             raise RuntimeError("unexpected State publication count")
         else:
             outcome["publication"] = "observed-state"

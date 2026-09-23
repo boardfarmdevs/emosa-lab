@@ -57,6 +57,7 @@ class OnboardingSession:
         self.state = "waiting_source"
         self.discovery = self.reports = self.provisioning = None
         self.context = self.capabilities = self.last_topology = None
+        self.last_clients = set()
         self.next_search = 0
         self.counts, self.events = {}, deque(maxlen=64)
         self.tokens, self.token_time = 32.0, clock()
@@ -139,6 +140,37 @@ class OnboardingSession:
                     self.send_frame(frame)
                 self.last_topology = snapshot.topology.operational
                 self._record("observed_topology_notification")
+            if snapshot.topology.inventory_complete:
+                clients = {
+                    (b.bssid, c.mac) for b in snapshot.topology.clients.bsses for c in b.clients
+                }
+                for bssid, mac in sorted(clients ^ self.last_clients):
+                    joined = (bssid, mac) in clients
+                    for frame in fragment_message(
+                        MULTICAST,
+                        self.binding.local_al,
+                        1,
+                        self.mids.next(),
+                        (
+                            Tlv(1, self.binding.local_al),
+                            Tlv(0x92, mac + bssid + bytes([0x80 if joined else 0])),
+                        ),
+                        relay=True,
+                    ):
+                        snapshot.stamp.check(self._stamp(), self.clock())
+                        self.send_frame(frame)
+                        snapshot.stamp.check(self._stamp(), self.clock())
+                    self._record(
+                        "client_join_notification" if joined else "client_leave_notification"
+                    )
+                    if not joined:
+                        # EasyMesh 6.1 §6.3 also requires final statistics/reason.
+                        # Membership alone cannot supply these. Retain the gap.
+                        self._record("disassociation_statistics_unavailable")
+                    if joined:
+                        self.last_clients.add((bssid, mac))
+                    else:
+                        self.last_clients.discard((bssid, mac))
 
     async def receive(self, frame, *, ingress, generation):
         if self.state in ("closed", "source_lost", "failed", "incompatible"):
@@ -226,6 +258,30 @@ class OnboardingSession:
                 )
                 response.send(self.send_frame, self._stamp, clock=self.clock)
                 return self._record("ap_capability_report_sent")
+            if message.message_type == 0x8009 and self.provisioning:
+                infos = [t for t in message.tlvs if t.kind == 0x90]
+                if len(infos) != 1 or len(infos[0].value) != 12:
+                    raise EmosaError(Reason.INVALID_INPUT, "one complete Client Info TLV required")
+                if not snapshot.topology.inventory_complete:
+                    raise EmosaError(Reason.NOT_READY, "client inventory unavailable")
+                info = infos[0]
+                mac = info.value[6:]
+                associated = any(
+                    c.mac == mac for b in snapshot.topology.clients.bsses for c in b.clients
+                )
+                # §9.2: 02 = not associated; 03 = associated but frame unavailable.
+                tlvs = (info, Tlv(0x91, b"\x01"), Tlv(0xA3, bytes([3 if associated else 2]) + mac))
+                response = PreparedReport(
+                    0x800A,
+                    message.mid,
+                    snapshot.stamp,
+                    min(now + 1, snapshot.stamp.valid_until),
+                    fragment_message(
+                        self.binding.controller_al, self.binding.local_al, 0x800A, message.mid, tlvs
+                    ),
+                )
+                response.send(self.send_frame, self._stamp, clock=self.clock)
+                return self._record("client_capability_unavailable_report")
             return self._record(f"unsupported_message_{message.message_type:04x}")
         except (EmosaError, OSError) as exc:
             # A failed admission/handoff never restarts implicitly.

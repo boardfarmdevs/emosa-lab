@@ -17,6 +17,7 @@ from emosa.easymesh_payloads import (
     APOperationalBss,
     APRadioAdvancedCapabilities,
     APRadioBasicCapabilities,
+    AssociatedClient,
     AssociatedClients,
     BasicOperatingClass,
     BssClients,
@@ -33,6 +34,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
+from emosa.simulation.station_telemetry import NODE_ID, TOPIC, LabMqtt
 from emosa.simulation.wire_reports import fixtures
 from emosa.simulation.wsc_provisioning import (
     SERIAL,
@@ -43,6 +45,7 @@ from emosa.simulation.wsc_provisioning import (
 )
 from emosa.simulation.wsc_wire import RADIO_BSSID, RADIO_ROOT, write
 from emosa.store import Store
+from emosa.telemetry.stations import StationSource
 from emosa.wire.autoconfiguration import PeerBinding
 from emosa.wire.coordinator import ReportSource
 from emosa.wire.ethernet import EthernetEndpoint
@@ -64,8 +67,11 @@ OWNER = {"owner": "emosa-native-onboarding-v1", "backend": "ovsdb-sim"}
 class RadioReportSource:
     """Explicit fixture capabilities plus a fresh complete observed OVSDB graph."""
 
-    def __init__(self, backend, binding):
+    def __init__(self, backend, binding, stations=None):
         self.backend = backend
+        self.stations = stations
+        self.last_revision = None
+        self.revision = 0
         _, caps, self.template = fixtures()
         radio = replace(
             caps.radios[0],
@@ -113,10 +119,31 @@ class RadioReportSource:
             ):
                 raise EmosaError(Reason.NOT_READY, "radio State is unavailable")
             associated = rows.get("Wifi_Associated_Clients", {})
-            if associated or vif.get("associated_clients"):
-                raise EmosaError(
-                    Reason.NOT_READY, "station reporting requires further implementation"
+            membership = {
+                bytes.fromhex(row["mac"].replace(":", ""))
+                for row in associated.values()
+                if row.get("state") == "active"
+            }
+            sample = self.stations.current() if self.stations else None
+            # Old experiments without telemetry still support a proved empty
+            # database inventory. A nonempty list always requires measured age.
+            complete = (
+                set(associated) == set(vif.get("associated_clients") or [])
+                and len(membership) == len(associated)
+                and (
+                    (self.stations is None and not membership)
+                    or (
+                        sample is not None
+                        and membership == {mac for mac, _ in sample.clients}
+                        and (not membership or sample.ssid == vif["ssid"])
+                    )
                 )
+            )
+            clients = (
+                tuple(AssociatedClient(mac, seconds) for mac, seconds in sample.clients)
+                if complete and sample
+                else ()
+            )
             ssid = vif["ssid"].encode()
             topology = replace(
                 self.template,
@@ -135,14 +162,24 @@ class RadioReportSource:
                 configuration=BssConfigurationReport(
                     (ConfiguredRadio(RADIO, (ConfiguredBss(RADIO, 0x40, ssid),)),)
                 ),
-                clients=AssociatedClients((BssClients(RADIO, ()),)),
+                clients=AssociatedClients((BssClients(RADIO, clients),)),
+                inventory_complete=complete,
             )
+            revision = (
+                raw["generation"],
+                raw["revision"],
+                sample.timestamp_ms if sample else None,
+                complete,
+            )
+            if revision != self.last_revision:
+                self.revision += 1
+                self.last_revision = revision
             self.source.publish(
-                (raw["generation"], raw["revision"]),
+                (raw["generation"], self.revision),
                 self.capabilities,
                 topology,
                 observed_at=started,
-                lifetime=2,
+                lifetime=min(2, sample.valid_until - started) if complete and sample else 2,
             )
             return True
         except (EmosaError, ConnectionError, TimeoutError):
@@ -150,7 +187,7 @@ class RadioReportSource:
             return False
 
 
-async def worker(directory):
+async def worker(directory, *, duration=110, telemetry=False):
     directory = directory.resolve(strict=True)
     if (
         directory.parent != RADIO_ROOT
@@ -171,7 +208,9 @@ async def worker(directory):
     binding = PeerBinding("probe0", 1, AGENT, CONTROLLER, (CONTROLLER,))
     target = replace(TARGET, ruid=RADIO, bssid=RADIO)
     engine = Engine(store, vault, {"pod-1": backend})
-    facts = RadioReportSource(backend, binding)
+    stations = StationSource(NODE_ID, TOPIC) if telemetry else None
+    mqtt = LabMqtt(directory, stations) if telemetry else None
+    facts = RadioReportSource(backend, binding, stations)
     lifecycle = None
     try:
         with EthernetEndpoint("probe0", AGENT, timeout=0.03) as endpoint:
@@ -189,8 +228,10 @@ async def worker(directory):
                 )
 
             lifecycle = OnboardingSession(facts.source, endpoint.send, factory, facts.inventory)
-            end = time.monotonic() + 110
+            end = time.monotonic() + duration
             while time.monotonic() < end and not (directory / "stop-worker").exists():
+                if mqtt:
+                    mqtt.poll()
                 await facts.refresh()
                 await lifecycle.tick()
                 try:
@@ -214,7 +255,17 @@ async def worker(directory):
                             "observed_ssid": snapshot.observed.values.get("ssid"),
                         },
                     )
-                write(directory / "native-session.json", lifecycle.status())
+                status = lifecycle.status()
+                if stations:
+                    sample = stations.current()
+                    status["telemetry"] = {
+                        "accepted": stations.accepted,
+                        "rejected": stations.rejected,
+                        "generation": stations.generation,
+                        "timestamp_ms": sample.timestamp_ms if sample else None,
+                        "station_count": len(sample.clients) if sample else None,
+                    }
+                write(directory / "native-session.json", status)
                 if lifecycle.state in ("failed", "source_lost", "incompatible"):
                     raise RuntimeError("onboarding lifecycle stopped; inspect native-session.json")
     finally:
@@ -222,10 +273,17 @@ async def worker(directory):
             write(directory / "native-session.json", lifecycle.status())
             lifecycle.close()
         store.close()
+        if mqtt:
+            mqtt.close()
         await session.close()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
-    asyncio.run(worker(parser.parse_args().directory))
+    parser.add_argument("--duration", type=int, default=110)
+    parser.add_argument("--telemetry", action="store_true")
+    args = parser.parse_args()
+    if not 30 <= args.duration <= 86400:
+        parser.error("duration must be 30–86400 seconds")
+    asyncio.run(worker(args.directory, duration=args.duration, telemetry=args.telemetry))

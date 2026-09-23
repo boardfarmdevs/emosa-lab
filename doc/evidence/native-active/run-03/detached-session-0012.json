@@ -1,0 +1,104 @@
+{
+  "scope": "owned_non_dpp_sole_radio_onboarding",
+  "state": "provisioning",
+  "counts": {
+    "search_sent": 1,
+    "early_then_m1_sent": 1,
+    "observed_topology_notification": 2,
+    "wsc_operation": 1,
+    "unsupported_message_8006": 3,
+    "unsupported_message_8003": 1,
+    "unsupported_message_8004": 1,
+    "ap_capability_report_sent": 1,
+    "rejected_INVALID_INPUT": 2,
+    "unsupported_message_0001": 1,
+    "client_join_notification": 3,
+    "client_capability_unavailable_report": 3,
+    "unsupported_message_0005": 2,
+    "client_leave_notification": 3,
+    "disassociation_statistics_unavailable": 3
+  },
+  "events": [
+    "search_sent",
+    "early_then_m1_sent",
+    "observed_topology_notification",
+    "wsc_operation",
+    "observed_topology_notification",
+    "unsupported_message_8006",
+    "unsupported_message_8003",
+    "unsupported_message_8006",
+    "unsupported_message_8004",
+    "ap_capability_report_sent",
+    "unsupported_message_8006",
+    "rejected_INVALID_INPUT",
+    "unsupported_message_0001",
+    "client_join_notification",
+    "client_capability_unavailable_report",
+    "unsupported_message_0005",
+    "client_leave_notification",
+    "disassociation_statistics_unavailable",
+    "client_join_notification",
+    "client_capability_unavailable_report",
+    "rejected_INVALID_INPUT",
+    "client_leave_notification",
+    "disassociation_statistics_unavailable",
+    "client_join_notification",
+    "client_capability_unavailable_report",
+    "client_leave_notification",
+    "disassociation_statistics_unavailable",
+    "unsupported_message_0005"
+  ],
+  "admission_issues": [],
+  "reports": {
+    "counts": {
+      "early_sent": 1,
+      "early_source_invalidated": 1,
+      "input_or_source_rejected": 1,
+      "topology_response_sent": 2
+    },
+    "events": [
+      {
+        "event": "early_sent",
+        "mid": 102
+      },
+      {
+        "event": "early_source_invalidated"
+      },
+      {
+        "event": "input_or_source_rejected"
+      },
+      {
+        "event": "topology_response_sent",
+        "mid": 21
+      },
+      {
+        "event": "topology_response_sent",
+        "mid": 25
+      }
+    ],
+    "early_pending": false
+  },
+  "wsc": {
+    "counts": {
+      "operation": 1
+    },
+    "events": [
+      {
+        "status": "operation",
+        "mid": 19,
+        "operation_id": "feba081b-a7f1-4bc1-8642-b867ee51336a",
+        "state": "CONFIG_COMMITTED"
+      }
+    ],
+    "closed": false
+  },
+  "full_profile_qualified": false,
+  "physical_pod_proven": false,
+  "telemetry": {
+    "accepted": 143,
+    "rejected": 0,
+    "generation": 0,
+    "timestamp_ms": 1790125059319,
+    "station_count": 0
+  }
+}

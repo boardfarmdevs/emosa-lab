@@ -19,7 +19,7 @@
       "title": "The extender’s EasyMesh representation",
       "status": "Bounded virtual-agent onboarding verified",
       "state": "pending",
-      "description": "EMOSA represents the simulated OpenSync extender to the real controller through discovery, Early/AP capabilities, authenticated WSC and observed topology. OVSDB connects to the simulated pod; a separate manager applies the radio settings. The report worker stops before the independent client joins; continuous management is not yet proven.",
+      "description": "EMOSA represents the simulated OpenSync extender through native discovery, authenticated WSC and observed topology. A separate active-worker pilot now verifies measured client reporting, repeated joins/leaves and native STA inventory. Complete 15-minute operation with recovery, recurring policy/channel handling and physical acceptance remain pending.",
       "responsibilities": [
         "Map stable agent/radio/BSS identities and advertised capabilities to a qualified actual pod.",
         "Bound framing, TLVs, reassembly, retries and timers using the selected specifications.",
@@ -716,6 +716,18 @@
       "path": "doc/evidence/native-onboarding/README.md",
       "title": "Native simulated onboarding evidence",
       "description": "Correlated packet capture, durable receipt, native radio/BSS inventory, independent client traffic and baseline restoration, with retained failure and explicit limits.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/sustained-operation.md",
+      "title": "Keep EMOSA active through client activity",
+      "description": "Measured OVSDB/MQTT station reporting, native client events and active pilot; full sustained-operation acceptance and recovery remain pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/native-active/README.md",
+      "title": "Active client pilot evidence",
+      "description": "Independently checked 95-second native-worker pilot with four joins, three leaves, controller STA inventory and traffic. Fifteen-minute recovery acceptance remains pending.",
       "category": "Wire implementation"
     }
   ],

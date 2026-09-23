@@ -11,6 +11,8 @@ dependencies = [
     "cryptography==50.0.1",
     "jsonschema==4.26.0",
     "ovs==4.0.0",
+    "paho-mqtt==2.1.0",
+    "protobuf==6.33.5",
 ]
 
 [project.scripts]

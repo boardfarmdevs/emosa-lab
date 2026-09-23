@@ -171,3 +171,81 @@ def test_missing_security_is_contextual_not_a_change_to_general_diagnostics():
     ad = parse_response(assemble((response(),)))
     assert ad.selected_response_issues == ("security_capability_absent",)
     assert non_dpp_admission(ad) == ()
+
+
+def test_station_join_age_update_unknown_and_leave_notifications(rig):
+    from emosa.easymesh_payloads import AssociatedClient, AssociatedClients, BssClients
+
+    async def scenario():
+        session, source, sent = lifecycle(rig)
+        await session.tick()
+        await receive(session, response())
+        snap = source.current()
+        bssid = snap.topology.clients.bsses[0].bssid
+        mac = bytes.fromhex("020000000200")
+
+        def publish(revision, clients, complete=True):
+            source.publish(
+                (1, revision),
+                snap.capabilities,
+                replace(
+                    snap.topology,
+                    inventory_complete=complete,
+                    clients=AssociatedClients((BssClients(bssid, clients),)),
+                ),
+                observed_at=snap.stamp.observed_at,
+            )
+
+        publish(2, (AssociatedClient(mac, 123),))
+        await session.tick()
+        notification = assemble((sent[-1],))
+        assert notification.message_type == 1 and notification.relay
+        assert notification.tlvs == (Tlv(1, BINDING.local_al), Tlv(0x92, mac + bssid + b"\x80"))
+        count = len(sent)
+        publish(3, (AssociatedClient(mac, 124),))
+        await session.tick()
+        assert len(sent) == count  # Duration advancing is not another association.
+        publish(4, (), False)
+        await session.tick()
+        assert len(sent) == count  # Unknown is not a disassociation.
+        publish(5, ())
+        await session.tick()
+        notification = assemble((sent[-1],))
+        assert notification.tlvs[-1] == Tlv(0x92, mac + bssid + b"\0")
+        assert session.counts["disassociation_statistics_unavailable"] == 1
+        session.close()
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("associated,reason", [(True, 3), (False, 2)])
+def test_client_capability_unavailable_is_explicit_specification_error(rig, associated, reason):
+    from emosa.easymesh_payloads import AssociatedClient, AssociatedClients, BssClients
+
+    async def scenario():
+        session, source, sent = lifecycle(rig)
+        await session.tick()
+        await receive(session, response())
+        snap = source.current()
+        bssid = snap.topology.clients.bsses[0].bssid
+        mac = bytes.fromhex("020000000200")
+        source.publish(
+            (1, 2),
+            snap.capabilities,
+            replace(
+                snap.topology,
+                clients=AssociatedClients(
+                    (BssClients(bssid, (AssociatedClient(mac, 5),) if associated else ()),)
+                ),
+            ),
+            observed_at=snap.stamp.observed_at,
+        )
+        info = Tlv(0x90, bssid + mac)
+        query = fragment_message(BINDING.local_al, BINDING.controller_al, 0x8009, 712, (info,))[0]
+        assert await receive(session, query) == "client_capability_unavailable_report"
+        report = assemble((sent[-1],))
+        assert (report.message_type, report.mid) == (0x800A, 712)
+        assert report.tlvs == (info, Tlv(0x91, b"\x01"), Tlv(0xA3, bytes([reason]) + mac))
+        session.close()
+
+    asyncio.run(scenario())
