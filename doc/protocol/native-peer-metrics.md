@@ -143,6 +143,10 @@ owned simulation; no package is installed on a physical pod.
      deploy/radio-manager/egress-observer.py deploy/radio-manager/virtual-link.py \
      emosa-lab/opt/emosa-radio-manager/
    lxc file push deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
+   lxc file push deploy/peer-baseline/node.py emosa-lab/opt/emosa-baseline/
+   lxc file push deploy/peer-baseline/compatibility/controller-candidate.py \
+     deploy/peer-baseline/compatibility/lifecycle-observer.py \
+     emosa-lab/opt/emosa-baseline/compatibility/
    ```
 
 2. Run with the declared service, peer reporting and the actual path fault:

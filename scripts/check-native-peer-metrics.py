@@ -190,17 +190,22 @@ def check(directory):
         first["shaped_backhaul"]["window"]["last_read_ns"][0] / 1e9 + min(offsets) / 1e9 - 0.001
     )
     baseline_queries = [q["frame"] for q in queries if baseline_start < q["time"] < baseline_end]
-    excluded = set(path_fault_queries + connection_fault_queries + baseline_queries)
-    assert not any(
-        r["mid"] == q["mid"] and 0 <= r["time"] - q["time"] < 1
+    unavailable_at_receipt = set(path_fault_queries + connection_fault_queries + baseline_queries)
+    # A query may wait for new measurements within its original one-second
+    # deadline. Validate every resulting reply against fresh source observations
+    # below; unavailable-at-receipt is an exemption only for unanswered queries.
+    recovered_queries = {
+        q["frame"]
         for q in queries
-        if q["frame"] in excluded
-        for r in responses
-    )
+        if q["frame"] in unavailable_at_receipt
+        and any(r["mid"] == q["mid"] and 0 <= r["time"] - q["time"] < 1 for r in responses)
+    }
+    excluded = unavailable_at_receipt - recovered_queries
     assert len(queries) >= 3 and len(queries) - len(excluded) == len(responses) >= 2, (
         "unanswered live peer query or unexpected reply count"
     )
     queries = [q for q in queries if q["frame"] not in excluded]
+    active_samples = read(directory / "active-samples.json")
     records = []
     for query in queries:
         assert query["tlvs"] == [(8, b"\0\2")]
@@ -225,12 +230,12 @@ def check(directory):
             "ErrorsReceived": window["receive_losses"],
         }
         receipts = []
+        subsequent = [r["time"] for r in responses if r["time"] > response["time"]]
         # The native unmodified data model exposes per-interface packet/error
         # values. Capacity/availability remain independently checked on the wire.
         for f in sorted(directory.glob("active-inventory-*.json")):
             index = int(f.stem.rsplit("-", 1)[1])
-            timing = read(directory / "active-samples.json")[index]["inventory_observation"]
-            subsequent = [r["time"] for r in responses if r["time"] > response["time"]]
+            timing = active_samples[index]["inventory_observation"]
             if (
                 not response["time"] + 0.001
                 < timing["wall_started_ns"] / 1e9
@@ -302,10 +307,13 @@ def check(directory):
         "proxy_reflected_frames_in_published_intervals": 0,
         "peer_path_fault_withdrawal_checked": True,
         "queries_after_confirmed_worker_exit": [q["frame"] for q in teardown_queries],
-        "queries_withheld_during_observed_invalid_path": path_fault_queries,
+        "queries_withheld_during_observed_invalid_path": [
+            q for q in path_fault_queries if q in excluded
+        ],
         "queries_during_confirmed_pod_connection_loss": connection_fault_queries,
         "queries_before_post_discovery_baseline_complete": baseline_queries,
         "post_discovery_baseline_unavailable_bounds": [baseline_start, baseline_end],
+        "queries_answered_after_measurement_recovery": sorted(recovered_queries),
         "native_queries_answered": len(records),
         "responses": records,
         "complete_sustained_operation_proven": False,

@@ -9,7 +9,11 @@ The [retained report](../../doc/evaluation/peer-baseline.md) records 14 selected
 passes per backhaul mode under acceptance version 2. Earlier traffic checks
 missed an agent reset loop; the final selections use the native HAL fix and
 stricter operational/stability checks described below. Preliminary passes and
-failed attempts remain in the history. Native shutdown still aborts.
+failed attempts remain in the history. This baseline still aborts at shutdown.
+The separate [lifecycle candidate](../../doc/protocol/native-lifecycle.md) fixes
+the selected controller-container BPL owner and verifies normal main-process
+exits after a 15-minute EMOSA recovery workload. It is optional and the original
+baseline is restored afterward.
 
 For the separate candidate HAL experiment and a wired sole-fronthaul policy,
 follow [native compatibility](../../doc/guides/native-compatibility.md). It uses
@@ -58,9 +62,10 @@ contain them; retain raw execution artifacts privately under `.lab/peer-baseline
 and review before publication. The final report must identify package/image,
 kernel, native binary and harness revisions. Clean process exit is a separate
 result: this native build repeatedly aborts on SIGTERM, even when functional
-restart recovery succeeds. Missing IEEE documents continue to
-gate EMOSA wire implementation and normative validation, not this existing-peer
-behavioral experiment.
+restart recovery succeeds. The selected IEEE 1905 documents are now available;
+see the [protocol matrix](../../doc/protocol/protocol-matrix.json) for implemented
+procedures and remaining qualification boundaries. This existing-peer experiment
+does not establish EMOSA conformance.
 
 References: [pinned prplMesh peer](../peer/prplmesh.reference.json),
 [Linux hwsim documentation](https://wireless.docs.kernel.org/en/latest/en/users/drivers/mac80211_hwsim.html),

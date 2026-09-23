@@ -151,3 +151,13 @@ Next resolve the selected feature/admission contract and Early/AP capability
 sequence, join the existing authenticated WSC-to-radio path, and require exact
 controller radio/BSS inventory plus independent client behavior in the same run.
 Physical acceptance still requires an unchanged qualified OpenSync pod.
+
+## Optional lifecycle follow-up
+
+For a full-duration recovery workload, follow the
+[native lifecycle guide](../protocol/native-lifecycle.md). Its explicit
+`--lifecycle` option additionally rebuilds the selected Linux BPL library and
+compares actual baseline/candidate model destruction order. The guarded runner
+backs up and restores that library as well as the controller. The default
+counter/onboarding candidate described above retains the historical shared
+libraries and their recorded shutdown defect.

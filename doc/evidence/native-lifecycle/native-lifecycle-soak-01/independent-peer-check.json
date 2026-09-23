@@ -1,0 +1,378 @@
+{
+  "owned_native_peer_metric_checks_passed": true,
+  "qualified_profile": "owned-isolated-peer-path-v1",
+  "published_observations_checked": 1194,
+  "counter_windows": 1222,
+  "control_contexts": 3,
+  "connection_generations": 3,
+  "worker_processes": 2,
+  "proxy_reflected_frames_in_published_intervals": 0,
+  "peer_path_fault_withdrawal_checked": true,
+  "queries_after_confirmed_worker_exit": [],
+  "queries_withheld_during_observed_invalid_path": [],
+  "queries_during_confirmed_pod_connection_loss": [],
+  "queries_before_post_discovery_baseline_complete": [],
+  "post_discovery_baseline_unavailable_bounds": [
+    1790163172.859046,
+    1790163174.0101469
+  ],
+  "queries_answered_after_measurement_recovery": [],
+  "native_queries_answered": 15,
+  "responses": [
+    {
+      "query_frame": 29,
+      "response_frame": 30,
+      "mid": 31,
+      "latency_seconds": 0.0007338523864746094,
+      "controller_statistics": {
+        "PacketsSent": 2,
+        "PacketsReceived": 2,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0002.json",
+        "active-inventory-0003.json",
+        "active-inventory-0004.json",
+        "active-inventory-0005.json",
+        "active-inventory-0006.json",
+        "active-inventory-0007.json",
+        "active-inventory-0008.json",
+        "active-inventory-0009.json",
+        "active-inventory-0010.json"
+      ],
+      "counter_epoch": "cc35022e88781730d1d1b5c4f0ed39f75a53471d69dd26b1066f53141e47c38b"
+    },
+    {
+      "query_frame": 42,
+      "response_frame": 43,
+      "mid": 40,
+      "latency_seconds": 0.01902914047241211,
+      "controller_statistics": {
+        "PacketsSent": 5,
+        "PacketsReceived": 4,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0011.json",
+        "active-inventory-0012.json",
+        "active-inventory-0013.json",
+        "active-inventory-0014.json",
+        "active-inventory-0015.json",
+        "active-inventory-0016.json",
+        "active-inventory-0017.json",
+        "active-inventory-0018.json",
+        "active-inventory-0019.json",
+        "active-inventory-0020.json"
+      ],
+      "counter_epoch": "cc35022e88781730d1d1b5c4f0ed39f75a53471d69dd26b1066f53141e47c38b"
+    },
+    {
+      "query_frame": 52,
+      "response_frame": 53,
+      "mid": 48,
+      "latency_seconds": 0.0023009777069091797,
+      "controller_statistics": {
+        "PacketsSent": 8,
+        "PacketsReceived": 8,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0021.json",
+        "active-inventory-0022.json",
+        "active-inventory-0023.json",
+        "active-inventory-0024.json",
+        "active-inventory-0025.json",
+        "active-inventory-0026.json",
+        "active-inventory-0027.json",
+        "active-inventory-0028.json"
+      ],
+      "counter_epoch": "cc35022e88781730d1d1b5c4f0ed39f75a53471d69dd26b1066f53141e47c38b"
+    },
+    {
+      "query_frame": 66,
+      "response_frame": 67,
+      "mid": 57,
+      "latency_seconds": 0.0008909702301025391,
+      "controller_statistics": {
+        "PacketsSent": 4,
+        "PacketsReceived": 4,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0029.json",
+        "active-inventory-0030.json",
+        "active-inventory-0031.json",
+        "active-inventory-0032.json",
+        "active-inventory-0033.json",
+        "active-inventory-0034.json",
+        "active-inventory-0035.json",
+        "active-inventory-0036.json",
+        "active-inventory-0037.json",
+        "active-inventory-0038.json"
+      ],
+      "counter_epoch": "cc35022e88781730d1d1b5c4f0ed39f75a53471d69dd26b1066f53141e47c38b"
+    },
+    {
+      "query_frame": 76,
+      "response_frame": 77,
+      "mid": 65,
+      "latency_seconds": 0.00040411949157714844,
+      "controller_statistics": {
+        "PacketsSent": 4,
+        "PacketsReceived": 4,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0039.json",
+        "active-inventory-0040.json",
+        "active-inventory-0041.json",
+        "active-inventory-0042.json",
+        "active-inventory-0043.json",
+        "active-inventory-0044.json",
+        "active-inventory-0045.json"
+      ],
+      "counter_epoch": "cc35022e88781730d1d1b5c4f0ed39f75a53471d69dd26b1066f53141e47c38b"
+    },
+    {
+      "query_frame": 110,
+      "response_frame": 111,
+      "mid": 81,
+      "latency_seconds": 0.0005960464477539062,
+      "controller_statistics": {
+        "PacketsSent": 2,
+        "PacketsReceived": 2,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0046.json",
+        "active-inventory-0047.json",
+        "active-inventory-0048.json",
+        "active-inventory-0049.json",
+        "active-inventory-0050.json",
+        "active-inventory-0051.json",
+        "active-inventory-0052.json",
+        "active-inventory-0053.json",
+        "active-inventory-0054.json"
+      ],
+      "counter_epoch": "4ca2ff9cfc70be0f0322a185d8d68681f0eaffcd3301dce5e5f4042079875128"
+    },
+    {
+      "query_frame": 123,
+      "response_frame": 124,
+      "mid": 90,
+      "latency_seconds": 0.0004911422729492188,
+      "controller_statistics": {
+        "PacketsSent": 8,
+        "PacketsReceived": 8,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0055.json",
+        "active-inventory-0056.json",
+        "active-inventory-0057.json",
+        "active-inventory-0058.json",
+        "active-inventory-0059.json",
+        "active-inventory-0060.json",
+        "active-inventory-0061.json",
+        "active-inventory-0062.json",
+        "active-inventory-0063.json"
+      ],
+      "counter_epoch": "4903c7459470f5f4548b30e14a7ed2de6197f9b9b33a773113edf721b59c9875"
+    },
+    {
+      "query_frame": 137,
+      "response_frame": 138,
+      "mid": 99,
+      "latency_seconds": 0.0009789466857910156,
+      "controller_statistics": {
+        "PacketsSent": 9,
+        "PacketsReceived": 7,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0064.json",
+        "active-inventory-0065.json",
+        "active-inventory-0066.json",
+        "active-inventory-0067.json",
+        "active-inventory-0068.json",
+        "active-inventory-0069.json",
+        "active-inventory-0070.json",
+        "active-inventory-0071.json",
+        "active-inventory-0072.json",
+        "active-inventory-0073.json"
+      ],
+      "counter_epoch": "4903c7459470f5f4548b30e14a7ed2de6197f9b9b33a773113edf721b59c9875"
+    },
+    {
+      "query_frame": 147,
+      "response_frame": 148,
+      "mid": 107,
+      "latency_seconds": 0.0010519027709960938,
+      "controller_statistics": {
+        "PacketsSent": 5,
+        "PacketsReceived": 5,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0074.json",
+        "active-inventory-0075.json",
+        "active-inventory-0076.json",
+        "active-inventory-0077.json",
+        "active-inventory-0078.json",
+        "active-inventory-0079.json",
+        "active-inventory-0080.json",
+        "active-inventory-0081.json",
+        "active-inventory-0082.json"
+      ],
+      "counter_epoch": "4903c7459470f5f4548b30e14a7ed2de6197f9b9b33a773113edf721b59c9875"
+    },
+    {
+      "query_frame": 158,
+      "response_frame": 159,
+      "mid": 115,
+      "latency_seconds": 0.0008299350738525391,
+      "controller_statistics": {
+        "PacketsSent": 13,
+        "PacketsReceived": 13,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0083.json",
+        "active-inventory-0084.json",
+        "active-inventory-0085.json",
+        "active-inventory-0086.json",
+        "active-inventory-0087.json",
+        "active-inventory-0088.json",
+        "active-inventory-0089.json",
+        "active-inventory-0090.json"
+      ],
+      "counter_epoch": "4903c7459470f5f4548b30e14a7ed2de6197f9b9b33a773113edf721b59c9875"
+    },
+    {
+      "query_frame": 194,
+      "response_frame": 195,
+      "mid": 132,
+      "latency_seconds": 0.000720977783203125,
+      "controller_statistics": {
+        "PacketsSent": 16,
+        "PacketsReceived": 14,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0091.json",
+        "active-inventory-0092.json",
+        "active-inventory-0093.json",
+        "active-inventory-0094.json",
+        "active-inventory-0095.json",
+        "active-inventory-0096.json",
+        "active-inventory-0097.json",
+        "active-inventory-0098.json",
+        "active-inventory-0099.json",
+        "active-inventory-0100.json"
+      ],
+      "counter_epoch": "6ccd39f4bec61885aa5d0129c5b43c5d24df032317ab75e81ce6e28ece82c53e"
+    },
+    {
+      "query_frame": 204,
+      "response_frame": 205,
+      "mid": 140,
+      "latency_seconds": 0.01793980598449707,
+      "controller_statistics": {
+        "PacketsSent": 4,
+        "PacketsReceived": 4,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0101.json",
+        "active-inventory-0102.json",
+        "active-inventory-0103.json",
+        "active-inventory-0104.json",
+        "active-inventory-0105.json",
+        "active-inventory-0106.json",
+        "active-inventory-0107.json",
+        "active-inventory-0108.json"
+      ],
+      "counter_epoch": "6ccd39f4bec61885aa5d0129c5b43c5d24df032317ab75e81ce6e28ece82c53e"
+    },
+    {
+      "query_frame": 218,
+      "response_frame": 219,
+      "mid": 149,
+      "latency_seconds": 0.0007028579711914062,
+      "controller_statistics": {
+        "PacketsSent": 4,
+        "PacketsReceived": 4,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0109.json",
+        "active-inventory-0110.json",
+        "active-inventory-0111.json",
+        "active-inventory-0112.json",
+        "active-inventory-0113.json",
+        "active-inventory-0114.json",
+        "active-inventory-0115.json",
+        "active-inventory-0116.json",
+        "active-inventory-0117.json",
+        "active-inventory-0118.json"
+      ],
+      "counter_epoch": "6ccd39f4bec61885aa5d0129c5b43c5d24df032317ab75e81ce6e28ece82c53e"
+    },
+    {
+      "query_frame": 228,
+      "response_frame": 229,
+      "mid": 157,
+      "latency_seconds": 0.0005681514739990234,
+      "controller_statistics": {
+        "PacketsSent": 5,
+        "PacketsReceived": 5,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0119.json",
+        "active-inventory-0120.json",
+        "active-inventory-0121.json",
+        "active-inventory-0122.json",
+        "active-inventory-0123.json",
+        "active-inventory-0124.json",
+        "active-inventory-0125.json",
+        "active-inventory-0126.json",
+        "active-inventory-0127.json"
+      ],
+      "counter_epoch": "ff2a8f7eb16166aa7615dd3836c1054dad573f716a10caf5c6866c8648cea443"
+    },
+    {
+      "query_frame": 242,
+      "response_frame": 243,
+      "mid": 166,
+      "latency_seconds": 0.005124807357788086,
+      "controller_statistics": {
+        "PacketsSent": 4,
+        "PacketsReceived": 4,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0128.json",
+        "active-inventory-0129.json"
+      ],
+      "counter_epoch": "ff2a8f7eb16166aa7615dd3836c1054dad573f716a10caf5c6866c8648cea443"
+    }
+  ],
+  "complete_sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

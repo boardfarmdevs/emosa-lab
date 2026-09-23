@@ -107,6 +107,13 @@ jobs:
           python3 scripts/check-native-recovery.py
           doc/evidence/ap-reporting/native-ap-report-02 --minimum-seconds 210
       - run: python3 scripts/check-telemetry-gap.py doc/evidence/ap-reporting/native-ap-report-02
+      - name: Verify the 15-minute lifecycle and recovery evidence
+        run: |
+          python3 scripts/check-native-lifecycle.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
+          python3 scripts/check-native-recovery.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
+          python3 scripts/check-native-peer-metrics.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
+          python3 scripts/check-native-ap-withholding.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
+          python3 scripts/check-telemetry-gap.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
       - name: Preserve the observed early peer-query failure
         run: |
           python3 - <<'PY'

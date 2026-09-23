@@ -3,6 +3,8 @@ project(emosa_controller_overlay LANGUAGES C CXX)
 # Build the native controller, retaining the pinned runtime libraries and NBAPI.
 # Inputs are verified by compatibility/build-controller.py before configuring.
 set(prplmesh_VERSION 6.0.0)
+set(prplmesh_VERSION_MAJOR 6)
+option(EMOSA_LIFECYCLE "Rebuild the selected Linux BPL model owner" OFF)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -27,6 +29,9 @@ include_directories("${PEER_INSTALL}/include"
     "${PEER_SOURCE}/framework/transport/ieee1905_transport"
     "${PEER_SOURCE}/common/beerocks/multi_vendor")
 foreach(lib bpl bcl btl tlvf elpp btlvf nbapi ieee1905_transport_lib multi_vendor mapfcommon)
+    if(lib STREQUAL "bpl" AND EMOSA_LIFECYCLE)
+        continue()
+    endif()
     add_library(${lib} SHARED IMPORTED)
     set_target_properties(${lib} PROPERTIES
         IMPORTED_LOCATION "${PEER_INSTALL}/lib/lib${lib}.so.6.0.0")
@@ -43,6 +48,25 @@ endforeach()
 link_directories("${RUNTIME}/usr/lib/x86_64-linux-gnu" "${RUNTIME}/usr/lib")
 add_link_options("-Wl,-rpath-link,${RUNTIME}/usr/lib/x86_64-linux-gnu"
     "-Wl,-rpath-link,${RUNTIME}/usr/lib" "-Wl,-rpath-link,${PEER_INSTALL}/lib")
+if(EMOSA_LIFECYCLE)
+    set(BUILD_SHARED_LIBS ON)
+    # Match the selected Linux baseline's interface and private platform DB paths.
+    set(TMP_PATH "/tmp/beerocks")
+    set(BEEROCKS_WLAN1_IFACE "wlan0")
+    set(BEEROCKS_WLAN2_IFACE "wlan2")
+    set(BEEROCKS_WLAN3_IFACE "wlan4")
+    set(CMAKE_MULTIAP_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/generated")
+    configure_file("${PEER_SOURCE}/framework/common/mapf_config.h.in"
+        "${CMAKE_BINARY_DIR}/generated/include/mapf/common/config.h")
+    include_directories("${CMAKE_BINARY_DIR}/generated/include")
+    include(GNUInstallDirs)
+    add_subdirectory("${PEER_SOURCE}/framework/platform/bpl" bpl)
+    target_link_libraries(bpl PRIVATE tlvf)
+    set_target_properties(bpl PROPERTIES INSTALL_RPATH "$ORIGIN"
+        INSTALL_RPATH_USE_LINK_PATH FALSE)
+    add_executable(emosa-model-lifetime "../compatibility/model-lifetime.cpp")
+    target_link_libraries(emosa-model-lifetime PRIVATE bpl nbapi bcl elpp mapfcommon)
+endif()
 add_subdirectory("${PEER_SOURCE}/controller/src/beerocks/master" controller)
 set_target_properties(beerocks_controller PROPERTIES
     INSTALL_RPATH "$ORIGIN/../lib" INSTALL_RPATH_USE_LINK_PATH FALSE)

@@ -119,6 +119,10 @@ async def experiment(
                 Path(__file__),
                 ROOT / "controller-trial.py",
                 ROOT / "node.py",
+                ROOT / "run.py",
+                ROOT / "setup.py",
+                ROOT / "compatibility/controller-candidate.py",
+                ROOT / "compatibility/lifecycle-observer.py",
                 ROOT / "prplmesh.reference.json",
                 RADIO_ROOT_DIR / "manager.py",
                 RADIO_ROOT_DIR / "node.py",
@@ -437,6 +441,11 @@ async def experiment(
                     raise
                 await asyncio.sleep(0.25)
         write(directory / "controller-before.json", before)
+        lifecycle_observer = (ROOT / "compatibility/lifecycle-observer.py").read_text()
+        write(
+            directory / "native-processes-start.json",
+            json.loads(radio["inside"](CONTROLLER, "python3", "-c", lifecycle_observer)),
+        )
         assert not inventory_bss(before)
         report["controller_policy"] = helpers["bml_policy"]()
         run("ip", "netns", "add", namespace)
@@ -1031,6 +1040,14 @@ async def experiment(
                     f"emosa-radio-manager-{unit}.service",
                     check=False,
                 )
+        try:
+            if (directory / "native-processes-start.json").exists():
+                write(
+                    directory / "native-processes-stop.json",
+                    json.loads(radio["inside"](CONTROLLER, "python3", "-c", lifecycle_observer)),
+                )
+        except Exception as exc:
+            errors.append("native_process_observation:" + type(exc).__name__)
         try:
             report["native_shutdown"] = stop_collect(
                 directory / "native-shutdown", names=(CONTROLLER,)

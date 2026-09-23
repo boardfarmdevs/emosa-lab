@@ -1,0 +1,19 @@
+{
+  "scanned": [
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libbtl.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libmapfcommon.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libbwl.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libelpp.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libtlvf.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libbcl.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libbpl.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libbtlvf.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libmulti_vendor.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libieee1905_transport_messages.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libprplmesh_hostapd.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/lib/libnbapi.so.6.0.0",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/bin/beerocks_controller",
+    ".lab/native-shutdown-analysis-01/sysroot/opt/prpl-install-nl80211/bin/beerocks_agent"
+  ],
+  "external_undefined_references": []
+}

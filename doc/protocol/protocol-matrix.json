@@ -1782,8 +1782,8 @@
     "remaining": [
       "Qualify final-session publisher/counter/reason semantics and integrate measured records with implemented sender",
       "Reporting policy and qualified utilization/ESP/link/traffic metrics",
-      "Integrated acceptance of the optional owned peer-metric publisher; physical and multiple-peer qualification remain separate",
-      "Complete 15-minute acceptance with independent capture review"
+      "Complete 15-minute acceptance with independent capture review",
+      "Physical and multiple-peer qualification of neighbor metrics; the owned sole-peer profile passes the 901-second operational run"
     ],
     "sustained_operation_proven": false,
     "physical_pod_proven": false,
@@ -2331,6 +2331,49 @@
         "Connect native publisher and independently verify all received controller values",
         "Resolve unsolicited AP delivery/reliability interpretation; thresholds, multiple BSS/radios and MLD remain unsupported",
         "Complete final-session publisher, native shutdown fix and integrated 15-minute acceptance"
+      ]
+    },
+    "native_lifecycle": {
+      "status": "selected_linux_candidate_lifetime_and_901_second_operational_recovery_verified",
+      "guide": "doc/protocol/native-lifecycle.md",
+      "evidence": "doc/evidence/native-lifecycle/README.md",
+      "implementation_refs": [
+        "deploy/peer-baseline/patches/0006-bpl-model-lifetime.patch",
+        "deploy/peer-baseline/compatibility/model-lifetime.cpp",
+        "deploy/peer-baseline/compatibility/build-controller.py",
+        "deploy/peer-baseline/compatibility/controller-candidate.py",
+        "deploy/peer-baseline/compatibility/lifecycle-observer.py"
+      ],
+      "audit_refs": [
+        "scripts/check-native-lifecycle.py",
+        "scripts/observe-native-restoration.py",
+        "tests/test_native_lifecycle_audit.py"
+      ],
+      "candidate_controller_sha256": "dd5784852f384069d40274a322b6a7530931bb8b3760d40085a3e02f7db2d55e",
+      "runtime_libraries": {
+        "libbpl.so.6.0.0": {
+          "baseline_sha256": "2e4d0b2ef7dc68e11ad8e6686418555100768634f7462a24f6bb454c77b42cf6",
+          "candidate_sha256": "7bc9b040738b30759c73da2a9b3907328e1c468141a332a55e56fd71adf68a0d",
+          "unstripped_sha256": "c38342f3274f70f47d65a4b82f23e62c2358f87ef7222e0348a3ad26c421c183"
+        }
+      },
+      "native_counter_regression_passed": 12,
+      "baseline_bad_lifetime_order_reproduced": true,
+      "candidate_lifetime_order_verified": true,
+      "active_seconds": 901.4729816190011,
+      "native_queries_answered": 15,
+      "native_controller_and_helper_exit_status": 0,
+      "stop_policy_unchanged": true,
+      "interrupted_install_restoration_verified": true,
+      "baseline_restored": true,
+      "original_baseline_retains_shutdown_defect": true,
+      "unfulfilled_ap_reporting_periods": 15,
+      "complete_sustained_operation_proven": false,
+      "physical_pod_proven": false,
+      "limits": [
+        "Selected Linux/no-WHM native evaluation profile only",
+        "Other platform builds and arbitrary external consumers unqualified",
+        "Qualified AP/STA and final-session reporting still absent"
       ]
     }
   }

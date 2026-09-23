@@ -17256,6 +17256,2066 @@
       "path": "ap-reporting/vectors/synthetic-ap-metrics.pcap",
       "sha256": "fad04b6f85ceb3862cb95d570ee6ffb473dfa70a4e466165908a1aeda429ac2c",
       "size": 929
+    },
+    {
+      "path": "native-lifecycle/README.md",
+      "sha256": "cdfe4f76f568104fa45a5a90c9bd22dc00780b6df526f25c5f90ab816fb401be",
+      "size": 9395
+    },
+    {
+      "path": "native-lifecycle/build-01/CMakeLists.executed.txt",
+      "sha256": "93e0ee22f80cb5d8a3ee15145e9e23515654f94a9c29a32754af123e5f20e10f",
+      "size": 4259
+    },
+    {
+      "path": "native-lifecycle/build-01/build-controller.executed.py.txt",
+      "sha256": "775e2818a04e9d8413d05ea1cd784a3ff70d248407d7508f22f63960e386e91b",
+      "size": 11366
+    },
+    {
+      "path": "native-lifecycle/build-01/build.log",
+      "sha256": "a151bcc161aef2d1f1a819a2ee1e31511398501998f459989e760b210318a6ea",
+      "size": 5634
+    },
+    {
+      "path": "native-lifecycle/build-01/console.log",
+      "sha256": "bb0655d6c4512d798bb02196abf5c3502c4a505addca7afa0b7dc7420dd4c2c5",
+      "size": 1114
+    },
+    {
+      "path": "native-lifecycle/build-02/CMakeLists.executed.txt",
+      "sha256": "a2b4d8507fbbcdf712a3f873cf97be0809546c8cf369702cfa0ed2d4b78b59ec",
+      "size": 4464
+    },
+    {
+      "path": "native-lifecycle/build-02/build-controller.executed.py.txt",
+      "sha256": "775e2818a04e9d8413d05ea1cd784a3ff70d248407d7508f22f63960e386e91b",
+      "size": 11366
+    },
+    {
+      "path": "native-lifecycle/build-02/build.log",
+      "sha256": "cce4efb7ff84f491a32eea031d1dab6e1814b0af070b4a72da08b7f45b73c169",
+      "size": 9985
+    },
+    {
+      "path": "native-lifecycle/build-02/console.log",
+      "sha256": "6d150539590a1e3f6c1b3f014b3fa5d6d2223441ded56725bafd76c1dcf5fa20",
+      "size": 826
+    },
+    {
+      "path": "native-lifecycle/build-02/regression.json",
+      "sha256": "87310a8430bafa43d8400c294eb15dbe10d025ecbbbad7595776f0b2d4dc8f08",
+      "size": 151
+    },
+    {
+      "path": "native-lifecycle/build-03/CMakeLists.executed.txt",
+      "sha256": "17e209c93baf73b6cdd6a948c29963ba2a6d4b000d26134acdd38a0c74c6146b",
+      "size": 4494
+    },
+    {
+      "path": "native-lifecycle/build-03/build-controller.executed.py.txt",
+      "sha256": "775e2818a04e9d8413d05ea1cd784a3ff70d248407d7508f22f63960e386e91b",
+      "size": 11366
+    },
+    {
+      "path": "native-lifecycle/build-03/build.log",
+      "sha256": "8a4943fcd24824eb74ece7181b7d0fe211ddaab4c79baf257ddf98227e069c3e",
+      "size": 6241
+    },
+    {
+      "path": "native-lifecycle/build-03/console.log",
+      "sha256": "bf89afc3d37802122f1b10899cf32f65ccf7928a5275720484a36b3fa1aa7626",
+      "size": 1114
+    },
+    {
+      "path": "native-lifecycle/build-04/build.log",
+      "sha256": "813a38bef8cc5c6e37eafd08a921fbbfbe467c23c760b49533409c8c3fdefc72",
+      "size": 10313
+    },
+    {
+      "path": "native-lifecycle/build-04/candidate.json",
+      "sha256": "2c4a8bbb398c894269bf7bc840ae52563bc173a8acdc58ea4a50234777c115e9",
+      "size": 5634
+    },
+    {
+      "path": "native-lifecycle/build-04/console.log",
+      "sha256": "2c4a8bbb398c894269bf7bc840ae52563bc173a8acdc58ea4a50234777c115e9",
+      "size": 5634
+    },
+    {
+      "path": "native-lifecycle/build-04/controller-headers.json",
+      "sha256": "952ad9fa51452ad5f022dc6c2ae0ee6bac8799ed4e7afbb0086915ccddd4c0da",
+      "size": 1520
+    },
+    {
+      "path": "native-lifecycle/build-04/independent-provenance-check.json",
+      "sha256": "f51cae4c87a476222cafb2203ff67953288c8a54608c72a7ccc227a43213d132",
+      "size": 1617
+    },
+    {
+      "path": "native-lifecycle/build-04/lifetime-regression.json",
+      "sha256": "8e85d4c01f3689d02bfb13e8b6c73a723c0b5374c04c63be5e7fb9a193a70bd7",
+      "size": 746
+    },
+    {
+      "path": "native-lifecycle/build-04/regression.json",
+      "sha256": "87310a8430bafa43d8400c294eb15dbe10d025ecbbbad7595776f0b2d4dc8f08",
+      "size": 151
+    },
+    {
+      "path": "native-lifecycle/diagnosis/agent-backtrace-resolved.txt",
+      "sha256": "6666c0b1e761faa182efead1e95553f886aeec5a013e6d1d27531cffbe56a3c5",
+      "size": 3059
+    },
+    {
+      "path": "native-lifecycle/diagnosis/controller-backtrace-resolved.txt",
+      "sha256": "87035c9ba0e93db7d87837d15b33b357021e3f928605c47276fdc6cfe891415d",
+      "size": 2851
+    },
+    {
+      "path": "native-lifecycle/diagnosis/owner-symbol-consumers.json",
+      "sha256": "cd16a6d82ec084fba03ce830bbf29c0ac3f463273f487518e99aa7d53737187c",
+      "size": 1425
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0000.json",
+      "sha256": "bc3cac39cbda973ca9b4301584c7194e991503ce1fd9c8fe87cfd2a3571e4f0c",
+      "size": 38144
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0001.json",
+      "sha256": "aaef886db1d878d6a734e71a3a82278cb63ad214197ba0db5bd9f5c114f79e64",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0002.json",
+      "sha256": "edceef354b9438f1c0c4e389b9423af8cd3ff1504fa3f3ce9006f3b6d3f0569b",
+      "size": 33982
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0003.json",
+      "sha256": "98b12b202b148718f9808fa068e1a85d138e382afae7d4aefed05a2bc6ff3443",
+      "size": 33982
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0004.json",
+      "sha256": "a1922de4d8321c40a8770e500a26dad19c2de45e1251a7da3a70e102a31e8e17",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0005.json",
+      "sha256": "197e28600f2e573b5f5d0d68e223ae5750e1b5c907c4ca1f7c69d116a3f608fe",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0006.json",
+      "sha256": "da98eb0e8d7b1c4f1671f4269b6e63681b964da4d93cd749f1ef1fa61ce70c38",
+      "size": 33982
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0007.json",
+      "sha256": "b20594c1393d31a54987c3c56f8a4d8a98e7f4bfdb5da293aafeead3c99dbdc8",
+      "size": 33982
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0008.json",
+      "sha256": "603c07a8db4971b74b6d2f211efa95ab9ee062b276d560a11ea43a39d2012720",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0009.json",
+      "sha256": "400ad9575e39e86024b3159f4359d53a3783a3c1249f8287146fb8d5cda806d6",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0010.json",
+      "sha256": "55418cc3fac6a45c3de81a0da25a11ee5e8acd032bf6e5c9ee3361e3fa384a77",
+      "size": 33982
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0011.json",
+      "sha256": "f102c8a49eb592029548fc1d28845d0e7e3e7827c186785b38c89bc920770c0d",
+      "size": 33982
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0012.json",
+      "sha256": "caa53a09c8fa92088e7068f2816d840b394eea586ddfa3823c9cc110ba933845",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0013.json",
+      "sha256": "5342889bf24d9913279fdad419e9fa573e17818e57b59c435c722bea60db903d",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0014.json",
+      "sha256": "27d0579ea440a2aa72e007f373cf2eb9fc1bbdf7976252d6ce81071e12491e5b",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0015.json",
+      "sha256": "d2ba7fe5ea52306ff499d8a77bb3be23a65e4fae59d7327270c6b88290a25278",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0016.json",
+      "sha256": "8816bdda63fd6fea6e123f2a5e005e80b9457bfc3b43fda768dae37083679cb9",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0017.json",
+      "sha256": "94e60c09b1c94ff0037c278338773541ef2697f6566ef6b22a391a1d7b975b81",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0018.json",
+      "sha256": "56d6c0329986f0d927e381ee0b4a45c6bff743f88c058cb64663b9938e0ce60e",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0019.json",
+      "sha256": "7d72e1abd267153d6becb4de52473c7709357021b7d02758ee2b4dfbf78f0d74",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0020.json",
+      "sha256": "1448f3be20b4ecd27b2f878f8be8e83e55b86575c821c3b1ceae61ecca3550be",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0021.json",
+      "sha256": "cf8dc6bcad077b6a9029c48819252289b24514ee04bbb226937afa8c1ffca57f",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0022.json",
+      "sha256": "199163ef976a4c13c842139221aedef6e4c07de89e2a37e508d22d337170dca0",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0023.json",
+      "sha256": "b3b88cf4f3f8a862e01edc603a6a9e4632cb2a76c611ad4898db1785975bac2d",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0024.json",
+      "sha256": "b4faee042f2aed3124b6d25ad0cb07b8c0190d32eaf5c9422501451e1e86d7bf",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0025.json",
+      "sha256": "5fd1502f10c53dc5f2290813851601d9ded13e1af2e4f5436e7b66f6af6450cc",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0026.json",
+      "sha256": "2abb95071a37ca571f22d7498acda3867cb323b5fca50410db866726a5f681cd",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0027.json",
+      "sha256": "8ad29ee4760bede431741137716b84993ade0d2fd37289bee0f474b3376d8cce",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0028.json",
+      "sha256": "f323ecaa1f9b95667e6a18f026804303c99742689974537fb2320d83cc363f84",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0029.json",
+      "sha256": "e3222da23a528e240358380d7df74bf26d676da60cd286bfc1f2dc3be17743a9",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0030.json",
+      "sha256": "1894baabb76aa5237700fd606591b545314fd43b3f30ef6dd6fbe1825aef0281",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0031.json",
+      "sha256": "3eb817c847fe1a63b417605c4c64e506e45c04db41005a1d652db4e491226f82",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0032.json",
+      "sha256": "a0b1ad8ab20e9cfc66cdd17770b25cd812f62b68b4462beec8a9cc806a54964e",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0033.json",
+      "sha256": "380538564cd39afc9afdda5ebb66af58765c1ec1aefbe94f877fd812ef2bf0e9",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0034.json",
+      "sha256": "e32c734fc7a85035c85c85ad1ae32ef623c31aa07b33d899c2ade836a2801c19",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0035.json",
+      "sha256": "cad06cd3c8fbf0686fe98f3074025313418f24b07803d82cf9a373b9fe42fde1",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0036.json",
+      "sha256": "8f93eeca3d6d3b9c3c68d826c0b97f7253a607a0f4ca76ef386fd3a529690685",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0037.json",
+      "sha256": "bc4427896e8d916308af6db3061771b656b00d72ee75cf5947789a72fed7a55d",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0038.json",
+      "sha256": "bf25439907ecb931b5dacab191067f39e113df0e4dd6e577d67df3d158e8501a",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0039.json",
+      "sha256": "dfd5688f28bedd2f9d9fa3a42c0892438a98568390aaf3884a990a03762016fd",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0040.json",
+      "sha256": "fd202cafdb0337eba242d1c61462ac6564dc205c5da908b5ba674f4d88d9d378",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0041.json",
+      "sha256": "9dabdb22add872086d75b548fb9657ae7ec5b3e347823a42ac21dd5d5e3d4e6f",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0042.json",
+      "sha256": "72f85605e7e5b5e6161f0d62fed49932d7442f777de3c01f7de2c68104f27de7",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0043.json",
+      "sha256": "df19537d654b399b18c1ba49f7e2da875a19c0dad5e989a201acfc86958825cc",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0044.json",
+      "sha256": "872a6a784a39c40fd9f1b5d5f23e2ffd6d33b124ab8a55c5d558cebb6de48497",
+      "size": 33982
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0045.json",
+      "sha256": "edef81d20bff0fd34ca0569b962a24472c1cd42a7eebf7b47385e65e07f7809e",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0046.json",
+      "sha256": "2304260d05f7b80fb4740e8e4af4c080613a3275a31b5650147975c227f1fc36",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0047.json",
+      "sha256": "540f277fe700069496e392ae2fbbd4842e1ed1efbe149513342399f4feca35f9",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0048.json",
+      "sha256": "be3b96ac9455531a7ff4b8748e77205d7561bda990b190e671ac7a8239599708",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0049.json",
+      "sha256": "24db940d45d1b35bec23051c6e9052f68c8216502a907f117bbf92f013f7896f",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0050.json",
+      "sha256": "c37b8f93ed0f379e24fb696fdaf08b3dd9f429ebb656ce8cbc3a68545e2e1d3e",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0051.json",
+      "sha256": "973681ac943adf9d8d2ac913de05ddf51a71214834c515439e6ee4062f94f674",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0052.json",
+      "sha256": "a71503ec373848a9acb94e68a6c531f8a968642d1ab9c79322cea55e74b1b2fd",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0053.json",
+      "sha256": "6235b97b3dff7c71846e73303aa0b9e337139bddcf4eb0099c208222dd30f410",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0054.json",
+      "sha256": "5aa61600889eed44b80cab552cf90c9604b69e93022c2a9cef3dcc8c4a3f302e",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0055.json",
+      "sha256": "cadc2c6e9fadedb8f59d4d58a4d6ca06bb1d0aa580cbbd327f6e213b92982d64",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0056.json",
+      "sha256": "7a53a210a28db03d42ea2271ae8e9a9c181b45a6b169499be923fd5e370562e5",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0057.json",
+      "sha256": "fc384a9506f4ebb68c21fcfd6e5a328ec1b4575de7ea9d2fec8052b824063af0",
+      "size": 33983
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0058.json",
+      "sha256": "a01a2b1f367822376d8db736a308a5ba7f894e6f37c1783da0054f9711e6f24e",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0059.json",
+      "sha256": "04fddb1e773f488d5b6ece8b894127e0e929e423cb1259daa569a530f314f6e0",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0060.json",
+      "sha256": "0d1bfb45ed8ecfbd31bc7951df7e183f8d898c347876bb95f0993b3c1a41ceeb",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0061.json",
+      "sha256": "030e236d7ae495d6f485351c8fd9df9f5104393644bb860acad11a2406ceb791",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0062.json",
+      "sha256": "01392f803e0d03d94e3db65b4950bd8fdb444394efe1f821082d9bcbe77bb081",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0063.json",
+      "sha256": "cb3a3ed8c82e7ed54815d6056d33d844823b3adcedcb402ef661496c3d2664d6",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0064.json",
+      "sha256": "6ca7474b052cf52fa59dc376de665b6dd4b854d6fc40bbd1c69b4b8a13e71ad3",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0065.json",
+      "sha256": "464559ec721fd4a72f381553b454fc14f861802fbfa314642f42d992cfad5486",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0066.json",
+      "sha256": "ae87a2370141d146b67434ea45e71ab8026a6f4fca54ec6986158469fc42996e",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0067.json",
+      "sha256": "18686ed37d9718518b30bc8ce92dd8cb41a7c0ee476aae5cf3d626d0d1f13acd",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0068.json",
+      "sha256": "91af391f6a27eab965ed2af1a46c52b602891fddba97b1498afd3a1e74fe27c3",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0069.json",
+      "sha256": "9906eae099a67fea4002c107a3f3c5fb9bcd9f60db20506d4f9c78b95826e646",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0070.json",
+      "sha256": "86109cd5b4d668b8d683b775d72fc6acdd998d719841dae4dffc65ad8fac902a",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0071.json",
+      "sha256": "2489fc7bc26415b5cedcf6d94b5e7523cbf704b8e493c14ae086d9fcf97c4986",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0072.json",
+      "sha256": "bd21f00e8328fbf59138f556bfe061554adcef0caef5c64e3872ec2f8c0e63ac",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0073.json",
+      "sha256": "251d4ce6651f28eb0cb152e86f5f30f7b90cba35398b3fa8de28163a70b0858a",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0074.json",
+      "sha256": "e27141f0b8e2411489bd9a8bf6603c28822407774f7e6599f7965f4e686ab361",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0075.json",
+      "sha256": "4e4bd4225c32e7ea458223aaf3e6232d53dd49c9e445715e5dc740482da817e1",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0076.json",
+      "sha256": "2c3aa74c02a5c8e38cd9a116feb5a102e3da8dedd150b9a72e59ce2721512127",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0077.json",
+      "sha256": "cea81e1f43911958619b00105fbd757002202a5b5522fa46a2dc32e7c23e00e5",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0078.json",
+      "sha256": "e8b1686bd3e0821a5f8b15c07c6692f2395bcf7801733a725cedb0164d6a74cd",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0079.json",
+      "sha256": "35563738702d03b5b3079180add649da1f56901248b76deff6ba066b37c4f930",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0080.json",
+      "sha256": "af8f1714dbf54b3be8c7483131d03da6f77dfb637785fbc317e88295a2b1ca42",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0081.json",
+      "sha256": "c5e32e4fc44ab491c519f63e3d6cdfc659313fe0192bc7576651c0fba673f6a1",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0082.json",
+      "sha256": "f92f282f1f6821c1ea27f977a77ba455bd5d1f9e8a19552ffa15b9b20799f69b",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0083.json",
+      "sha256": "ff202becd0bd62da7c075f4fd277ec5ff24c975a775e9484490e40ef189598e6",
+      "size": 33986
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0084.json",
+      "sha256": "1df711a915ce07054e0a9e0d69b1589393420d122763e4a8b7389cd660474427",
+      "size": 33986
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0085.json",
+      "sha256": "2dc909188744ef6ae350f2d43901c280c56720b54934aa35fefb0e4395e8616c",
+      "size": 33987
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0086.json",
+      "sha256": "53e553daee7010bd4175a9e5bbd3586c5de23fe9a286e66bae09f8472e8a4de0",
+      "size": 33987
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0087.json",
+      "sha256": "364b234b652caa5bf9b42c40f83c6c82a57af5143c9fcbb827a96124b91ccfbd",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0088.json",
+      "sha256": "43c382dadfc93705fe798f0fa8936cb49ede4ef277b82e5c8a5fc8cb4f38ed9e",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0089.json",
+      "sha256": "23f24630898d169a33fa3c5934b93016c6bf097c34a26d2066108e7bbae6de69",
+      "size": 33986
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0090.json",
+      "sha256": "6be892619dfddb2fa5df544fb42fade37ed6d64036fc25877b6ec09f7aaba144",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0091.json",
+      "sha256": "387f2963226c6e29b50e12b956d9fdbaf9c3d9c28a54821b9470ca873fe3ef65",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0092.json",
+      "sha256": "77f8d7880a577e2972d264364ef722ace5c14803ab419b89ab36ae91a4e31d7b",
+      "size": 33986
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0093.json",
+      "sha256": "ec046b33f751f183dd9af8dcb6ba4e4f82434ae321df898075446699b5c93824",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0094.json",
+      "sha256": "473d35bbc7bd1a09bfe09897637b83a7f599a0d91f63672127788bcb39c9c1fa",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0095.json",
+      "sha256": "b077c43d29e87874e37b557e5295e8b0f4145bb0c7f2a399f078378b3414b6d9",
+      "size": 33986
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0096.json",
+      "sha256": "8776cf71ef7ae686556d6fc9d517e2169b904e6f7131eb911baa59aa4dbc4819",
+      "size": 33986
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0097.json",
+      "sha256": "91453f040ca206df605660b9b5ef3a002fa3ce5163619cdae9c02c268acad9ba",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0098.json",
+      "sha256": "d8c5b6e67829535ae8b48f56463f3c88bc6a59737c6429722e6b7019dca39b5c",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0099.json",
+      "sha256": "24734b9ea8db8f82cd682375507b3e9bf56381da6899246b8b297044968a31b9",
+      "size": 33986
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0100.json",
+      "sha256": "972a622704cb83bdcdc7ecd1bc114bd4cdff1daf8714fa9c3e99b0c581108ea8",
+      "size": 33986
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0101.json",
+      "sha256": "066069c36729e9fcaef70d24986f999e88012dab900e6e60903a2bec04753830",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0102.json",
+      "sha256": "3a481973cec2a424b230df44cf0a48084e8aa60f3d364d7e2bb474b692b81391",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0103.json",
+      "sha256": "c47d599254e4b26b1b8a8c14f9d362b75b242e8778c50beaa4c22cebce4dbe5d",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0104.json",
+      "sha256": "ec78c1ce52fb334a4ebfc4555ade18d2a55c58a042656c62972a1a4a7a527b8b",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0105.json",
+      "sha256": "821ad9b0aa804d34d73fc3ccfb148161ba92a7a7074b1303f4df126bd8509dc8",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0106.json",
+      "sha256": "ce3543f61b30011a656b3e847afa6dfecdb2acdc6a5ef7deada593aae1ad7863",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0107.json",
+      "sha256": "29a6cadd2889c5f8d5797c2b90a3929e602031497f88cce4473a13a8c98afcb8",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0108.json",
+      "sha256": "a2d9ad4af031598ff97eaa645781f26db8cf62c01d63ccee17a995862ec5c438",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0109.json",
+      "sha256": "630f49c493af8c822ea2d9adb1245e4928228ebc58053686b69b6e110105418a",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0110.json",
+      "sha256": "d3a11d075c42e17e1f2b8c6df61eb686a727c973b71293d641a72b5bd75bc864",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0111.json",
+      "sha256": "13519a2d787c4e9488100a00bb9940b640995bed0d1eab8ca47851dbee8ebc46",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0112.json",
+      "sha256": "89ef7f0d7994b8cd260cd1ba9c6f27035358bcbb3d6f44f65cd683059c602f06",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0113.json",
+      "sha256": "528203962f7ab500b315201818c009893b9df0bfa548a37a64ca4bf3c36fdb03",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0114.json",
+      "sha256": "e56502d81e85c7574dc0a0c5d790a83d5fb730677765acb8a0a73c699dffdb69",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0115.json",
+      "sha256": "dc4002e21fb110814da5bd1395204a51eaef61166fc2e39636844239d74da939",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0116.json",
+      "sha256": "0db771c4a068c48a5f92b386b0b25254781e48d635140746f87e4533fa57b785",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0117.json",
+      "sha256": "6b1bccf64e904fb35370194ed32db509b03e9407dd7bf0cd8b67a6ed465a4087",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0118.json",
+      "sha256": "53a89f9083f09102bf625afefbed7e98e1064f39c9688c574eda78208396ec74",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0119.json",
+      "sha256": "51d65c7d9f05dafafe1f8ae5907e4b93f2f7b80eebda33bc98e55895710cb027",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0120.json",
+      "sha256": "fda4f7b74f25b534898241af605358de79ca792908e0a014a6f238cdaaed4038",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0121.json",
+      "sha256": "5ecc36224a9a3831fb21ec664dea5a3826a396dd102ae661ff3518f0471af71e",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0122.json",
+      "sha256": "a00ea74043d64fe5fe6feb16b89e0f2cfaf682b322f8aabc83c5e5454c2d1066",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0123.json",
+      "sha256": "fbb6d0a2328b14c0f543502e6e45633c1f4a219c7ca03f3f0954aeb0d7bfb126",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0124.json",
+      "sha256": "346ec0e4f59d8116e77a2aff63461e3d18b564c115350b42fcb4e59222a9df54",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0125.json",
+      "sha256": "c6261535ad61969c414e3973038b6b51056cd9ee08f8dc32fe458cb509f740a5",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0126.json",
+      "sha256": "9f70ec31f6d55a1787ba9ce567a4bcb83c4febcd867cd2cfb7228a2e09cd9cb2",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0127.json",
+      "sha256": "34c7bf022e470d0eb9022d30d4b82df1d0b06e27b6512e56eb3a3b3c8659ed60",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0128.json",
+      "sha256": "72a4fece971bf4a9a7b61803712c94a14d54f84e18724bc23bc52fb415a4d388",
+      "size": 33984
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-inventory-0129.json",
+      "sha256": "bedadc67aec1169292b0b7be89c9e8082ffa1b642882e00fd037410c7a7502fd",
+      "size": 33985
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/active-samples.json",
+      "sha256": "0973d645ed207b1eef817261154bed3a6288b3d31396dfced6c6cf684b32aee5",
+      "size": 10927497
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/candidate-trial.json",
+      "sha256": "66e255b03b4cd1b9fe8da7a7d43038a254601873a83d017bf444f19338015bcf",
+      "size": 69047
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/candidate.json",
+      "sha256": "2c4a8bbb398c894269bf7bc840ae52563bc173a8acdc58ea4a50234777c115e9",
+      "size": 5634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/client-outages.json",
+      "sha256": "b02cf6308140e119fd212e45b7f5f3af829cc1848aaecb233dc4868994466ea2",
+      "size": 2962
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0000.json",
+      "sha256": "bc6ccbf935dbc71854cba22863e528f2283d7e6a89dc936d83fecc176ca2c35e",
+      "size": 2628
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0001.json",
+      "sha256": "9fb44264f4bc3d798a83d01f103173e67712a346597b9931d40f59e7c4b787b2",
+      "size": 2626
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0002.json",
+      "sha256": "b47fa8463fc18aa19815215b4cd1df4d4f2e37415c2a9eb7de023c84abf247ff",
+      "size": 2631
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0003.json",
+      "sha256": "d3fa211e6e3f05531fb8f3b18c8efa21546a16ff156a3afe0810dae616af547f",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0004.json",
+      "sha256": "1155316ea9a9390ede89a1aa95b4aee19f041ab1c4c7a9280587fa797dd5f3a4",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0005.json",
+      "sha256": "8a7d81327a0bf8b940f510054f52d54add410edcbf9e58f49e638b359db73589",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0006.json",
+      "sha256": "a275c257e1327330bdd0084f1c3fa52469ef30378d441775a560ac5f8333a13a",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0007.json",
+      "sha256": "1b36bcec715023aa5d515b97d2f98abe2ad1f981dbf0732dc1342b40ae5e199c",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0008.json",
+      "sha256": "35632ece183c3ee42f205f97522a5d043b7523aaa7d6faa0f86419ef5b20fd3a",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0009.json",
+      "sha256": "e532018089f3c11b03f2c48593037f8b46e2d8379a0e143eed405505537422eb",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0010.json",
+      "sha256": "bc69721921b2a60f956dec4f2b4310e54a6b42965623f9b414369bc683c9baff",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0011.json",
+      "sha256": "3694d9d96f545af225607868c2cb09b8eb65510eae6539bbdf5dbbd04d5cb69b",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0012.json",
+      "sha256": "664f3858d9aba850766607b74be334a8b951488dacf261d0b5c3d443cad59793",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0013.json",
+      "sha256": "cfe795ebe7b652031dd930cd1374c9bc043363cae3d12cfe5361cdb35f35169f",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0014.json",
+      "sha256": "1e04fdef828a6786abe52fac86a4e6f2224d99a0e226265af44707d1e3f965b4",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0015.json",
+      "sha256": "ea719f3d25cd5b2198554420f56aa90ea0b952782b1d1239841be19022e2ffce",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0016.json",
+      "sha256": "0d32fe4ce16e24ece1da2c387f0fd3d0867059b0ce76a1d940843d61527de908",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0017.json",
+      "sha256": "045b4b563b507c7e1eea54b0142705ce7007ec1a1bc7aa99a33a9d784a522718",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0018.json",
+      "sha256": "80d3a4c3ce55390976f48721229091d0c1a2d6da768684212826c14137862097",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0019.json",
+      "sha256": "130af1456999395a181c4f349bb8b74b165fee213c59bee11a4124f473099fc7",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0020.json",
+      "sha256": "fdfb6776e1a0bf1d3fcd5cea08a608606a5beab09a11c2927be571ead414e965",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0021.json",
+      "sha256": "22b5e290adbbdc66df1e35869eae034b76f303a592b53c2d0dcc585dd3baa21c",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0022.json",
+      "sha256": "47031795d508a714cca53d94d5cb6a5ab6b3c4fd65658276a3af1ce6a7dc5198",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0023.json",
+      "sha256": "c5f817bafdc6631239a3a66a31dd9494eeb75886c7af611966c99b3d6b9f94ec",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0024.json",
+      "sha256": "ae6750d29cf4033d30364261ec23cbbf1274891ef19401969a34123db526874f",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0025.json",
+      "sha256": "75d7b650934ededc071ad289688b8bd1465b3f8b108997d74018aedc27860399",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0026.json",
+      "sha256": "d4c5c611e5e7ef184cbef87ecf02b3ca8235a4807ca9c7473a2ad74f2f7fcdf9",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0027.json",
+      "sha256": "120133487a39b2e0d89c1dd732d90fff077fc6e49d22f353e38eb63b04c79c79",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0028.json",
+      "sha256": "b71fbad05ea2aaab52eac3d988fc13cd18c3ed27dc5960ffdbb5f7e6d34a266e",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0029.json",
+      "sha256": "615ac04bdba29d7e61d91f563653417843d8b628f6297c0cbd3312bd2667ede1",
+      "size": 2631
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0030.json",
+      "sha256": "169e535103a5222d4b955c447f1326b5d66eb201c5b0407eccf3cd2382048269",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0031.json",
+      "sha256": "94a7d795dc087dd2e071de037fbfc18f33318d00309b1ef6bb6f8c41b433f1b6",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0032.json",
+      "sha256": "5df84b7220243538f82a9d79627d1f230f5e3e46cc427e9beb564531073551d0",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0033.json",
+      "sha256": "fa5b938ed7d8c819ec6d5cdce48eb989e6d365284a9173f43170827f20c29117",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0034.json",
+      "sha256": "4758bf2e78d3af1f72134ddd6fb7f454a35476366ce7f38792a15551326cba04",
+      "size": 2631
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0035.json",
+      "sha256": "a3b08fdc2b7aca65409406e2fe3eca20c37eec49d4b5e49244d26caf1d4d1896",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0036.json",
+      "sha256": "62fe69568c59d7aac8b0a3affddbabe0fef1998dbfb5e8f376a07235e6406c90",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0037.json",
+      "sha256": "e08ae454152b8434dab0ef4b132bcd4dad893414ee07d85fcc58914b2cc98c77",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0038.json",
+      "sha256": "996b1572506b895ad7a103308be68cebd2a263207dba8be7457e235708660bdd",
+      "size": 2631
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0039.json",
+      "sha256": "d00cea975305f086de2108028b8b0dcc3cdc1841096c5f97beaedf5b5473cce5",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0040.json",
+      "sha256": "b0b51b3ddb28e9ddebd36bb5b1a73a6a6191413cb716baeaa7256875cfe96037",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0041.json",
+      "sha256": "ce1cb3b9bb764700c7ec05bb567cadec7157e6c91fdbc33c14eb206af96ff48a",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0042.json",
+      "sha256": "af0ad56b7c71371f1bb8eb6ddb5b89a3d976cabf31f4f64647fd94d54bb52c8d",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0043.json",
+      "sha256": "bec9edcef499d3688e5a3498f64ba2f64ac83647dba59601f65403be657095dc",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0044.json",
+      "sha256": "7578edfdb93c9df1fa4022957b2868e05dc21d9ce73bf71fbd2ca3f7609eefe4",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0045.json",
+      "sha256": "0c06a53d49ea121d48ddb99c72bef13e54c19fe599f04a9fcee320af6443d1ca",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0046.json",
+      "sha256": "1d55370b8c9a5f3db469a47eee6488f8a8a4daf45de709cb05eac1664c80fc32",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0047.json",
+      "sha256": "d09881df80874bad1e1dbe71115dc096039610254d4d1f0604fb6990886c02f3",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0048.json",
+      "sha256": "ddb5fdf8f88cc29b900b7a7f1606c84229bb9e534e9fb6b26b64e88d18674b0f",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0049.json",
+      "sha256": "f60d50f5a07ce7e881032ea7c831193f6d3e216975c1c86ff12fcf1bcc24346d",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0050.json",
+      "sha256": "6df4a52d99aaee9d2b1f88715344e044a114c2517fd3c343c39399991893416a",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0051.json",
+      "sha256": "5bf7dc8c588bc6a662f0b52e818a65b59e6b50b25a632feceef50fcbad7c21e4",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0052.json",
+      "sha256": "14ce61a6348a6f89da41a11b6a9f799cb0324e72fcd4b692df4864bc880f55fc",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0053.json",
+      "sha256": "abd2a63f303f48434f96dcf7170f6c865c24d7827ecfd5236e15346eb9e5edee",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0054.json",
+      "sha256": "ca802ce50ec5c5f48387944154e8e85441376246a3da979adb561ff3d22f9dba",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0055.json",
+      "sha256": "9f6530ece1bdb991997b085d7b98c45e10e5dc9398ad5b01eea5e8caa88b9d98",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0056.json",
+      "sha256": "70cee3d13b33773cc06e80954bbf3f2f4a854b18277cacffa863d7e4de1a836e",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0057.json",
+      "sha256": "6bd0e6980b7ce4b0d4183cd5d57326c58c52df1244af6153e96e7684542084c4",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0058.json",
+      "sha256": "4c46d0fb19791e68d311e6171947d00a478563601126b5f1de42dec14a553aa0",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0059.json",
+      "sha256": "7793d972b84d3cc89b279bc2c698afc5fe990e1c37a91bb41496762e782edc7d",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0060.json",
+      "sha256": "4f1484b77c1eff05541c33729ba0bfc1f2216c5fb055e22ec174dfe42af75629",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0061.json",
+      "sha256": "97c392a807a1c0ab5e71960f99df5e2eb76a27643327d702d8d4aaad453fe2cc",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0062.json",
+      "sha256": "2846187673b5a92ae8606252659af3668b20b4beb1bc58a09f81b75a3dc4cc9b",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0063.json",
+      "sha256": "8d332b21e2199856aeaf352cc7ec257889104c786d933559bd7412ae94e77b5a",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0064.json",
+      "sha256": "164e3505b77488501eb01d9acb8e066df56035f0fd28ff84be3123a8626280df",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0065.json",
+      "sha256": "922b427e051a3d3ff492c877204f143ad14dc129c21b13dadc2f0b03003b9821",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0066.json",
+      "sha256": "bf0f690edbb5eaeaa9f6570db9e84e1a4febb8eca3e1897e01cec97cbf68a596",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0067.json",
+      "sha256": "7060d4eedcb071354eb6031f4e8c84afc607cc67d2d12e4a55e2f8e3389cfb4a",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0068.json",
+      "sha256": "d7a6271483f97109d23a5e110540d3b664e2f3d44c8032e1ae235523ecca0a28",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0069.json",
+      "sha256": "04384e90aa111e26b8076fc746452ec82f7f90c6ef5fa61627caa3857b3f4bae",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0070.json",
+      "sha256": "f4f80df51770ef35d584780a715983b10d84d9b854b2844621609e966a2998b9",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0071.json",
+      "sha256": "f1822a523647bb2fd7d9ee2436c89fafe4f64eb630d7ca814bb10849d373b3fe",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0072.json",
+      "sha256": "b517bdaebde0ba884de4bcb98f319f85a7a667bb9ad33e07722b62d1832e656d",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0073.json",
+      "sha256": "b5a60c843683625e0dcfc27f304ef2d87f55547467eaf6ce1bc707c6e3b84992",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0074.json",
+      "sha256": "61e97f54e85fec03d62b39591c1f44ec990e01fdba7670c816b8cefaab5081d1",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0075.json",
+      "sha256": "ea344aaf453673d2e8fbbb6636b5bdc9f62b5b7ced5b86e920a8b8083ede41d2",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0076.json",
+      "sha256": "bf82916522ffe004ce1a06ec42593a9cb7a5b833fdf394f52c5dc91b209259a7",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0077.json",
+      "sha256": "6cc3c093e007c99a3d5066750133027b30ab7599a70fc344251c022b32f2103c",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0078.json",
+      "sha256": "665b6643b8b4e897b8a68dc18dd3c6352fbe4d63db193bb0ec63c3a5f01f5da2",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0079.json",
+      "sha256": "20379c0151b5aa382fbd781721dd62cf6662e5d7a1b04d69a559403f1d1a358c",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0080.json",
+      "sha256": "44304d20326c73f480105e9b226cfcabc24d5d2d39dd7b1566c150f812540284",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0081.json",
+      "sha256": "252f633f10e564cd579ec8dfbdf333098e8be5ac9f9c298e0b860f5bb23d40d0",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0082.json",
+      "sha256": "0892458fb2508f80e406181013e0ffaa83e8eee853312a7dd05070085d48fbbc",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0083.json",
+      "sha256": "2c6e8b3cc2eda1d403516485f99326f7853c774e46d20045611443ee75a8db98",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0084.json",
+      "sha256": "6c25d5057405ba6a02517e123a0b1f520c1411bda530c1d531ed6e6104f5a2a3",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0085.json",
+      "sha256": "f2e1c6894ae9b86b44936cc669a9d39c2a4df59f36fbd3d38e502f5eb8d72657",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0086.json",
+      "sha256": "68ff69298fe595afd226bf6413fc8bb0797d96ce264c2a2f71ab3e77ce6ff580",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0087.json",
+      "sha256": "02ded206101e40c8c8611b760f1fd023854548662a23b27bce0ae40631c5df4a",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0088.json",
+      "sha256": "5f89d4be735bb69d0924616625d966945420c20f662b6e8a034935620fcd7110",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0089.json",
+      "sha256": "56117dbc5ec81658a34b677b89de2b83616fb29251661d7d90a280127584a61b",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0090.json",
+      "sha256": "ec2854f35529e236b21f5ffd1e17de61f2b814e6f74952fac5de4c35201e2d92",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0091.json",
+      "sha256": "75516d2bd068c35d6381f6d8dc3958c5beb0dc3aa43694acb6acf47d2280ee24",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0092.json",
+      "sha256": "ee974752e470cc3d3bdce051e050a757ceb43e1a4c31e0e55a07453ec70514bd",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0093.json",
+      "sha256": "4729d3c795b669ab06dbe2368a55f3e379f87cbbcdd0182006704767d909d25a",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0094.json",
+      "sha256": "776368fd8e6ab8ba6fb5a0dc83bcd7a7443a73d8c73451a9412177c82e80272c",
+      "size": 2627
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0095.json",
+      "sha256": "179cefa49acfc78d9f6197d5ea6cea1f288437a442f864ef216566d5dff002a9",
+      "size": 2627
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0096.json",
+      "sha256": "ed78573b56ec33e95bcc9f341bf0c723be0a8a68be2f1cfa49cfcadc1bca0ae0",
+      "size": 2629
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0097.json",
+      "sha256": "c50d535abac417f4fdeb24d991f9f66d775e0aef000b7b44c825d4238fa2365b",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0098.json",
+      "sha256": "c02cb7863e2e1968cf83cac0fa453ddb2edb2f9b8551971c01cc3d44090f018a",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0099.json",
+      "sha256": "7f59350f330fc536d1c834e8518408dc4d98c9b5bc97698b5dd56cbc8b871c1a",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0100.json",
+      "sha256": "2a1ed395819d58fa2411437fbe7e26008f92d3eb4f193e9425dac9ffd1f20a6f",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0101.json",
+      "sha256": "c7f40eb450abfd644618aa728cd9fe16e09d17eb7430713ebe3f6a39e42c2387",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0102.json",
+      "sha256": "2c31a4f53f40ee5570e1a36816a77a76de05e9773609466234d315fe720a1da0",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0103.json",
+      "sha256": "b63b439c6440e9810de5941ed0f90be952822c3a7f3bfa4fc5ba01f0c1a37e96",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0104.json",
+      "sha256": "8dc272bcb7c6d6d2f8e278f04ecbcf6354aec298b1bc522937275cbcae8c4fb0",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0105.json",
+      "sha256": "298f42a4576c0a36a403d3e5c48c196aa1c1585443467787e439e628d8b42903",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0106.json",
+      "sha256": "fc8deae29ba317b7ac6a8026115263c1197b206de450914cef856e13f67b918c",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0107.json",
+      "sha256": "b9195c9e41b5a1f51b15de191c9fc0112173d419b3389b586acf100991267939",
+      "size": 2632
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0108.json",
+      "sha256": "83d8308405810a5e85600c0805bcaa4902e7f6c2ba4dede74cd012385e3940c2",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0109.json",
+      "sha256": "12bfd1bbb852a0cbd23a24dffd22494541a6d5a60030ef6a1f419789b719912b",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0110.json",
+      "sha256": "6b1cb8fd6ff35c8ad7b66f7e25de0b35021c6be838e185a2bd5aaf29a8de374c",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0111.json",
+      "sha256": "198059e95ec0b9e8d2cb2dc2c44c582fbacf7efd001a49ef0c6363a1c5f71461",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0112.json",
+      "sha256": "fbe3eb1f074bfa9b2e0277ffa19854e89c5485a84e9831fc6666842fc0a4f2b1",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0113.json",
+      "sha256": "2404db0eabf178fc547ebd6b1d514940364c0c0c4cedf0d5a9f0346557985dc4",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0114.json",
+      "sha256": "d616a289ae263d5fcb477748cc7b53fe1ee70355cdf0a5a1c33a1da182ccb564",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0115.json",
+      "sha256": "61ba38ba611f17f92e27926893de1db1d64bde91aad3690aadfdb32f0111db9a",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0116.json",
+      "sha256": "2878383f3e5fd7cb57d4cfcb2df181e4ac600e851c598b41976f3569585731d2",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0117.json",
+      "sha256": "c5bffdabd4fea809364510265145cd240f6321fe29b288cb4eae608ad69064d6",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0118.json",
+      "sha256": "f1c38f97ea425af6c9c18518051d11773f5d1f088ab60dd70947ff5ec822c855",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0119.json",
+      "sha256": "1dd9208f9e9cadfe8d4767b3efb6c1ec5fc9e81dadd7eb0200ecb24d762b1ab4",
+      "size": 2636
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0120.json",
+      "sha256": "e09cd749ee49b80ac91d7c959cc4676003c08022d58ca44b47f955532690e948",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0121.json",
+      "sha256": "006bc6d5d9308be5864e668c3aa7fd10ea20557df83803817e1b65fdf861fce9",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0122.json",
+      "sha256": "6c839e8f68086dbc12fe7171370ce2dc6b06b01efcefb3bc759517eb21fdaf86",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0123.json",
+      "sha256": "c897de48b854cd59ba2f05b6cc3f203896f86debddbd42866d5eb0fca2f50fa9",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0124.json",
+      "sha256": "cf8613703217f57afe09bae77a062c451b2bbc22fa6b5c90c19ea0311e8e6f46",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0125.json",
+      "sha256": "34efdf852a2e157cfba9f402d8c756e894325db259462d451d3989e0d9227de8",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0126.json",
+      "sha256": "b911330cd5911dcdd0208aae0a2dbbc01fca273832a199985de1af225dba613f",
+      "size": 2635
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0127.json",
+      "sha256": "cf2155dd785259332431efb4b4ff52d731c1e23512b0eda5538787bc3ef9eb6f",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0128.json",
+      "sha256": "52cb383f258489165c1180cec31cba6b1a90e95bdec86a9ee5218844ef524ec7",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-active-0129.json",
+      "sha256": "c70e9337361805fb483c6df4a1373f40657f55334d8bb23ad21bf11c6434d158",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-neighbor-withheld.json",
+      "sha256": "8ec6f9dfa74838784c3beff7fcec533bf6323f5cf8c1319e56c165187767e5c5",
+      "size": 2641
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-onboarded.json",
+      "sha256": "26de8c6fddb0399fa9c19d3f6c5519a9c54e8aadf3ef4d878f9364382e8f12fe",
+      "size": 2619
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-peer-path-gap.json",
+      "sha256": "ceae0d9145998afbb514ccd869740ce0a5324902f4c9873ef7b62596591daada",
+      "size": 2633
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-recovery-0.json",
+      "sha256": "a97d33ee415781a133faf5734c05cacc4b8b81f3c8dd79997ef63544967a2e8a",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-recovery-1.json",
+      "sha256": "b66465ae77a69c4e9413283849438a55dbe37ceb3ef7a3756271efb3a3ffd4e6",
+      "size": 2634
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/clients-telemetry-withheld.json",
+      "sha256": "611f4f316da501210f4307975056756f5398452ae5fc8149c2e44e348e58403b",
+      "size": 2641
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/controller-after.json",
+      "sha256": "ba4682a6a99e72253b89f634c8461c5f3b1d81f5b122bdb3af864b365b306ed5",
+      "size": 32146
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/controller-before.json",
+      "sha256": "22cde382273f725f132891edf61af7d1d9a4ac01549d4a8bc850708929c70c1c",
+      "size": 10353
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0001.json",
+      "sha256": "e2a05de86b58f356ebb9062953b24f8e514a21061570884c35e227cc3046c6fc",
+      "size": 33192
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0005.json",
+      "sha256": "6ebe5e60a45508d07571f36301266800eed94c89c172e8b44d29654180c859f9",
+      "size": 33192
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0009.json",
+      "sha256": "c645504ac548e38177a4fc66167d9ac161d4868ba22bffab96123898fec6c034",
+      "size": 33192
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0012.json",
+      "sha256": "c3625f6d35226e00ae271499be0174f5a660cce12143b539799046e2a504c8d3",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0016.json",
+      "sha256": "f03a0054c21d2df5e3e8c45330f7d0c0720c79658c6eb343d813fc0a41769834",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0020.json",
+      "sha256": "233c8b761ee89374b3e18edf95cf233aaa2dacd401893ac4b0c776a0d7574ec2",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0024.json",
+      "sha256": "c808040ca36195e30fee07a66b7774a11817ddbc8031ca92da5810c4b6631320",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0027.json",
+      "sha256": "b4323bcd081b6ca3359737715103a0853ad33771f5c1d8e2ef30918719c53c6d",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0031.json",
+      "sha256": "b349449a13c35f30b8e713f25c4325be9ee1fdb42fa3eeac247029b3964999e9",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0035.json",
+      "sha256": "fc2d8d45715be6d742e05ad816d320d3d54d2e11ca6e083e30f6dd79b1ae028e",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0039.json",
+      "sha256": "d66d5534ef9eccce9f5676fadc6b98bc1517ba45d90a01fffc0fb5012d55bb43",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0043.json",
+      "sha256": "712dc539518e477b4091a77eaf3e736243895e0128f67e8964d9bff610801e18",
+      "size": 33191
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0045.json",
+      "sha256": "a22d5673a35a2510919ef31c1f91fa414ff09286ef2308912a3894633799bce4",
+      "size": 33192
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0048.json",
+      "sha256": "f495ee3825da3f349d59584130306fca04df893c3d0b705082f1714e95689bc4",
+      "size": 33192
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0052.json",
+      "sha256": "3aa986a4a7b64a97d30f9a4776fc2303722e9535253acd225a11557dbd670b40",
+      "size": 33192
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0056.json",
+      "sha256": "d53c40968d71547396defef23f90591fe25067c23c20c8c42e677d70f8424172",
+      "size": 33192
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0059.json",
+      "sha256": "85859ebbdad47e5db51cd405cf9ca562ba8f02f97e2d30fa797715024f2c97a0",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0063.json",
+      "sha256": "aaabc985e58ac93241830f99426a59f587d4fa567ffab1791b0243107a26a0b3",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0067.json",
+      "sha256": "7b28924d93db21a285662a5e1b0b2b97586edc8485592c88631632135b27f16e",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0071.json",
+      "sha256": "75f3395262142fab3cd25dcbb7f00b398fc2d80a8698c63f23fec7abdbbff5f7",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0074.json",
+      "sha256": "3aa3c4954d1bcf609f898c021c30c6bca25a08fdd0dafc454b31c8277fd1996c",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0078.json",
+      "sha256": "4ce7aba6a39a4633e6163dab72610993b3487e388596878fd410d128ac7978c4",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0082.json",
+      "sha256": "7992991d12cc94c75b268e02e510311b6bb78323fe586212b1876f7d7a5b2f17",
+      "size": 33195
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0086.json",
+      "sha256": "681933db61c5fb51f94e41efa212c138e15e3490002c18515c71e4eb8ebdec81",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0089.json",
+      "sha256": "ac513c20c7b68b06837647c1f6a9676162666a037c566ab15cf557cb58ee8423",
+      "size": 33194
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0092.json",
+      "sha256": "219003b9e1ca604a56fe4cee14029d098aaa008bd4bd40e55748253112808479",
+      "size": 33194
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0096.json",
+      "sha256": "af4fc7569719ec469dec66bf8a31d24a0365f0604f555c6a4d1149d683e4b495",
+      "size": 33194
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0100.json",
+      "sha256": "922cefec4ae5b15b510d745e7ab44bb93694f33ce788878b1af71e2f58aac5fe",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0104.json",
+      "sha256": "8d5374832e75680efa517928dea5c738b99ad29d984681aea924c51c78b3aba2",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0107.json",
+      "sha256": "db49bf9f9ac13c5c708db2f54f77961abfa3502a9bdd743b0767d046c25dcbc9",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0111.json",
+      "sha256": "b22721a086868f5380827ca3bf750c4db3568abc3c0e32aeee6a5d24a9ea5885",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0115.json",
+      "sha256": "391e63832fe4e6eef5e0aedf4d23a262819908bd74376ff7398f8bf76ae98748",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0119.json",
+      "sha256": "2f8726abe516eed563d4de3040e28d1a0a8c9da70ac375daf9d5765979724b5c",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0122.json",
+      "sha256": "f48b7c5d96fc401998f195469b65cefcb1c613f463e45ce14a9c041cf2d08ab5",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-inventory-0126.json",
+      "sha256": "0bbb5cf0f73a866825ff251ec31c8b50c5e02cb6ce812c3a2b2ca79b0a98a07f",
+      "size": 33193
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0001.json",
+      "sha256": "8b633d22185318a547126ef5ead96eba75e9e91ce5831fec86798d4126d1ce95",
+      "size": 68450
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0005.json",
+      "sha256": "c11e1932c27da56ee2e3002e231112dace5bd7c688f0ff66f7499afad8e11992",
+      "size": 69041
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0009.json",
+      "sha256": "343d1e82f49dae63ce516e089d0c4899c4c178083dfb3fa7074bb5b080a5d12e",
+      "size": 69199
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0012.json",
+      "sha256": "e20350b5640179ab3800e479b6454fd886096701bd908e639629c287e1b99d52",
+      "size": 69395
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0016.json",
+      "sha256": "da8296c832d7037b3ddf6260a9ebdeb98ffc691831f5c7defd1bf9004a49466b",
+      "size": 69765
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0020.json",
+      "sha256": "cda97df0128167a9af84104ef1e86b22a1ecf68aa1d60e34f4ca65a25dbec131",
+      "size": 69957
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0024.json",
+      "sha256": "6b001e6a70faefbce6753028c81b4f324a93cd4c5f1567aea5b3c42be27ef426",
+      "size": 70146
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0027.json",
+      "sha256": "3c81434f4eb93ba2891728a6bfb77e46dcda8d1053b5b4ca0b90857a31a07c14",
+      "size": 70296
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0031.json",
+      "sha256": "c626e2f7e8c9782af8566e6d3ff25c3f2697459247485fce50e6a4462f9f243d",
+      "size": 70526
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0035.json",
+      "sha256": "f21c083bc3cd3191bc6a76a8d46a015db098c7a56bc89625ec9baff441f442e5",
+      "size": 70682
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0039.json",
+      "sha256": "997e56fee8e5c671369f442e62b2715baa1b79ec3f43288d0fd533a7091881e1",
+      "size": 70862
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0043.json",
+      "sha256": "94929fe74c47f5a9d27a28bb18d8566b63aabdd385c444c13c8c6d2a8120add4",
+      "size": 77464
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0045.json",
+      "sha256": "2113ef764142c57c52cf94754450d74777e1ae51d7695a064d57064b0b881845",
+      "size": 77729
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0048.json",
+      "sha256": "62a9145fceaad42e9929aee2cb7c0d3b6309282889127d078087d633ea691292",
+      "size": 77947
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0052.json",
+      "sha256": "2f1abb62e01990ea258b4573337c94d45576cbcc2e5ab8ee604cdb78d5415505",
+      "size": 78160
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0056.json",
+      "sha256": "cc23adfee8f69492204d0d4098b681ff1897f8c7c08030fe931c0dce76bcbe6c",
+      "size": 78390
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0059.json",
+      "sha256": "857674c2b48d4272c9031da2eefe4ad29f31d5b5fa6f6da5489571d39d1d7b3f",
+      "size": 78535
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0063.json",
+      "sha256": "9ba093c5076fceaa32fd007ca703f95f622e7fcd0ebde6ad451f32245238bafd",
+      "size": 78694
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0067.json",
+      "sha256": "3d253c6d31a8a0b30ec8f3f47e3d3e93c570cad8407f067c2e81bb2f1d76660a",
+      "size": 78917
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0071.json",
+      "sha256": "fc1a9c900d6aa8317f0b3938a5d35443c39faf1532c76525131aa3da7776f173",
+      "size": 79072
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0074.json",
+      "sha256": "9607e5088f2af67965615704356ff89eaddbcce51700b2ab799d028585c749ef",
+      "size": 79304
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0078.json",
+      "sha256": "29f60d2b9e9db87fa1186ae86fb7ee08401db550c0711bcf6290e68c201c8505",
+      "size": 79462
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0082.json",
+      "sha256": "a87c3c4830881b26c899e955008f397f9b56c74892acf87ca2ad235f3c3c16c3",
+      "size": 79609
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0086.json",
+      "sha256": "31dab12b70d727eab9023104814850370a5c4ca68e13f65064ae84fc11046302",
+      "size": 68627
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0089.json",
+      "sha256": "e51dcb182e66e097690026320cf20e5e2a9802b4c328f641ef8a0584767ad7e3",
+      "size": 68785
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0092.json",
+      "sha256": "e69af4834ac73a62ba5056ad508a2616659dcf82017c12379a0a30c979c5fe25",
+      "size": 69115
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0096.json",
+      "sha256": "cc84dcaa010adb6bb5141f399df85d0f2fedab988b49220a59b240d74b365ccd",
+      "size": 69331
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0100.json",
+      "sha256": "da47415287af1440302fe706720a92f5584a53f4e5d04ee5eb1874cd84f11cb9",
+      "size": 69559
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0104.json",
+      "sha256": "ce9eae4b46ccd8f4e21e67d17072b9315875fd5d35cf21082b80334d3adc007b",
+      "size": 69711
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0107.json",
+      "sha256": "25f1cecba36d8b3f8045fc2f343f4681c6dcd5a47a4f4b5ffb2ba64447d40094",
+      "size": 69861
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0111.json",
+      "sha256": "bd00eae056b92d86f9a365d5b28a7be9e2244a6ec36e9d020fa9a34bc6db1b82",
+      "size": 70091
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0115.json",
+      "sha256": "d28a902e85630b26d721a8a3d877b33a9fe2e6eb511fabe7932a5f4922b84eb7",
+      "size": 70247
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0119.json",
+      "sha256": "a777115a7cd128308fecf07689147d554708d9537f9512d425c3ec99cc94f4d7",
+      "size": 70475
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0122.json",
+      "sha256": "eec1ca1cff6820e7db9f47053249723fb5f7175254892e7103f61d097a18f7f2",
+      "size": 70627
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/detached-session-0126.json",
+      "sha256": "ee3ffb04c2bd640a02dd1a967d46d231f2dc9b322c70937176369fbee10f841d",
+      "size": 70766
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/egress-observations.jsonl",
+      "sha256": "7d71ee1dffa589e8e05a9b719b332c4127066c150a8c6c0078cb1aa76762b749",
+      "size": 16215006
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/egress-observer-final.json",
+      "sha256": "f90a66621f44a82f273938a69ff45822a0380f8b5fff09a742ab30429bd6d520",
+      "size": 519
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/em-baseline-wifi-continuous-ping.log",
+      "sha256": "75d6f11b5f6ed8068fd7f918bc4b4677476e28789d577b1d13f20062226b2b30",
+      "size": 234721
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/em-baseline-wired-continuous-ping.log",
+      "sha256": "f24bafcbf2202cb42b2e23160498987c56f3bb36b21fab9da5658c9ff8d357d5",
+      "size": 281501
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/ethernet-capture.log",
+      "sha256": "68bbfb253d038e4edaf9bc17cd8267382d9aa635b86005dedc2eb6903083e72a",
+      "size": 172
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/ethernet.pcap",
+      "sha256": "783aab6a6065f4425f35ecf5e11997b055d9db5ed9de24ef4a61fb5da38d75b0",
+      "size": 19927
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/executed-source/setup.py.txt",
+      "sha256": "94ca87f6efe76159008bcd2bde49951600238f2cf1b6e70f2a9441b3cbc06890",
+      "size": 7724
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/forwarding-capture.log",
+      "sha256": "9b89e2be3d57d5faf4cde16873457623fac99b32f8fa1483d21d0ed66c14ec7f",
+      "size": 178
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/forwarding-samples.jsonl",
+      "sha256": "01161e7a22bdf3bb35dbf0367060739758dee58b958bd68c1a01e9c113b67be0",
+      "size": 43953798
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/forwarding.pcap",
+      "sha256": "2c07f1593a92fadd5100fc5a841f8d536b0a588b6785313951486181f080e381",
+      "size": 1971599
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/independent-ap-withholding-check.json",
+      "sha256": "cc1e333501f0f37c7d2527d0945a3f69136055a5cd211e8d0e06c56b0d460b10",
+      "size": 2052
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/independent-lifecycle-check.json",
+      "sha256": "8137e1056d5301d159ff8755e01ab4ad30eb1be166098eb0f6335c2eb487c75b",
+      "size": 904
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/independent-peer-check.json",
+      "sha256": "b9541ac9309a3defc9ae608c2a6cabd963191d39d5cb17636fb0ce2242a5790d",
+      "size": 11986
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/independent-recovery-check.json",
+      "sha256": "08aa03b1157be6d5d1588ff0ad0edd59673835d2b89d4dc125ac03ffec14b1a9",
+      "size": 3285
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/independent-source-check.json",
+      "sha256": "0f35b60a6dfaceb9d9ea6f48a68fff70bf26d9ac66cad8ce923b166f4bc08c7c",
+      "size": 36285
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/independent-telemetry-check.json",
+      "sha256": "7b071185294c84a3954863478946b023ae762b11e9f5db650dc8370e7d88379f",
+      "size": 818
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/initial-audit-failure.json",
+      "sha256": "af5695e35c3d6d46d6f62fd0bef6ff01521d88fe0833b22ce35954f4cfb50e97",
+      "size": 466
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/manager.jsonl",
+      "sha256": "36115728a15b9727eff15f29f3ec2c2cbc7ff8392a37c5c47e8fcb061fb3f059",
+      "size": 40712377
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/native-operation.json",
+      "sha256": "e718ea81576587cfa78a55e23bf7e13a33e28097ff3606c5d4a1047586d41ea7",
+      "size": 4859
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/native-processes-start.json",
+      "sha256": "e66de7a34cd1217dbdee6dcfec1af892643ca4a0a27faa9ebb8ed9f2462d7f7b",
+      "size": 3075
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/native-processes-stop.json",
+      "sha256": "0d1fc6599d4ef53c7a9a0a0e11927b1a127f30b2ca70de47b40cbae1701dcd4b",
+      "size": 3075
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/native-session.json",
+      "sha256": "1159928c4332e2ababf1453c68ccadf4f2071908d169463bc80ff808d92ff62e",
+      "size": 70798
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/neighbor-gap-check.json",
+      "sha256": "5314a3b2d92aebbec6b7e622766132ec5ebd862b2b7a0e1bd33bb11d578ebcee",
+      "size": 221671
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/neighbor-link-observations.json",
+      "sha256": "567b2c0a8fb2a92ecf880a5cc99efa90b8cfcb81f227fc4ee722ba2cc2ba4180",
+      "size": 22616
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/neighbor-observer-final.json",
+      "sha256": "88b8cb950af6e6fde29542c871ee334ebf31fca389d4e24852b03285281ee3ed",
+      "size": 941
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/peer-path-gap-check.json",
+      "sha256": "7a069340742c5ae3a0dbcd316f57a8e2071e06c3186685944899636644c27e68",
+      "size": 222686
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/post-restoration-first-observation.json",
+      "sha256": "40fcd0fdac941a6e0d61cd3a9b3ecb3e01f98d28e9f82405494b7d25f5c9bbf2",
+      "size": 690
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/post-restoration-observation.json",
+      "sha256": "d966ea24f53187d264e4d46c3eb7d5d1ac9b26d4bd81f5b68b5b8e2839dcb68a",
+      "size": 690
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/radio-capture.log",
+      "sha256": "51f74e83a6967f7ffab94e28c62cde6c1bc69a4b96a0e1ee8c98329582320c29",
+      "size": 201
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/radio.pcap",
+      "sha256": "7984912ecfac52f1906841f520b75b8b571fea6f9df40dd9d0bb3c9d54c6d9a7",
+      "size": 8556084
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/recovery-checks.json",
+      "sha256": "a6b90e2f8043fcb1952af8674a28bbd0aa0034fa6f4520cd5aba9a688da111bc",
+      "size": 354717
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/reference-candidate.json",
+      "sha256": "d93bd3343c8255d3d94e759ecb7c4f55c36eb1bb3b0a8199301fadf44663ac74",
+      "size": 2315
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/result.json",
+      "sha256": "65d70c91bb3d5a5348454e31b874980a4fa22bc62f0f48f1188d64cbc1706afa",
+      "size": 63386
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/source-hashes.json",
+      "sha256": "81846e90e473f251714b55506061aa47f079e7e2fcc35aa85c462f266a9a9dbf",
+      "size": 14130
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/station-events.jsonl",
+      "sha256": "c296c51edd1bea90cfcff5d3eb1039d7e97465ea48b79fe31d90c84cc464f85b",
+      "size": 201493
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/telemetry-gap-check.json",
+      "sha256": "201d18ff59295d3cd1994cc7b552376fb25a69dcf02a6a499d286d0e9bad052d",
+      "size": 223087
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/withheld-operation.json",
+      "sha256": "2b89acfa9cb60833830a297d204580a1dc5a0fdb99581b7a1493f9b32f4a655e",
+      "size": 1963
+    },
+    {
+      "path": "native-lifecycle/native-lifecycle-soak-01/worker-stop.json",
+      "sha256": "1aeb40965ada26186d5b776a00aa240f5903113390a914bc15d20a6a7f61d3a4",
+      "size": 178
+    },
+    {
+      "path": "native-lifecycle/ovsdb-results.xml",
+      "sha256": "93a7035d62308895932bfb95846123eb2ccaf4fecb426b0be479342c94c0ee0a",
+      "size": 8071
+    },
+    {
+      "path": "native-lifecycle/restoration-fault/console.log",
+      "sha256": "99c4877cc965ad6aa02f85d198419b59831cee93cef8cc3d29d78de1be474f23",
+      "size": 620
+    },
+    {
+      "path": "native-lifecycle/restoration-fault/reference-before.json",
+      "sha256": "56a43853b8264ca48c6236fe9576bc66e490d8566f3bbe95ba24fc85b21f5121",
+      "size": 1941
+    },
+    {
+      "path": "native-lifecycle/restoration-fault/reference-candidate.json",
+      "sha256": "f2d8e8820b020ef8b753f2a61a91aef8097261e48edeea299729afe5faa43a38",
+      "size": 2311
+    },
+    {
+      "path": "native-lifecycle/restoration-fault/result.json",
+      "sha256": "6515278ae0d393f088ea8afb84842b2b637be071cd153b595ed02919b2022c6d",
+      "size": 1137
+    },
+    {
+      "path": "native-lifecycle/unit-results.xml",
+      "sha256": "f46924f4eb400b93de273686ee9e10eadb4e2bbc285eab076e39320ef1944f72",
+      "size": 4460019
+    },
+    {
+      "path": "native-lifecycle/restoration-fault/later-baseline-observation.json",
+      "sha256": "e5a1c48b5f3e16294fa3255e93de80957fd7c6aba70f71e7473cf70869fb0322",
+      "size": 690
     }
   ]
 }

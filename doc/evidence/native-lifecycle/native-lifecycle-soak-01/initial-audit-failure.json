@@ -1,0 +1,7 @@
+{
+  "audit": "scripts/check-native-recovery.py",
+  "stage": "check-native-onboarding.py candidate admission",
+  "reason": "Historical checker required exactly one extra patch; the explicitly named lifecycle candidate has two.",
+  "resolution": "Whitelist exact names and digests for the original recipe and the lifecycle recipe; require recorded library hashes and exact restoration. No wire/timing or workload assertion relaxed.",
+  "native_run_restarted": false
+}

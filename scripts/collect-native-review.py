@@ -50,6 +50,8 @@ FIXED = (
     "egress-observations.jsonl",
     "worker-stop.json",
     "peer-path-gap-check.json",
+    "native-processes-start.json",
+    "native-processes-stop.json",
 )
 PATTERNS = (
     "clients-*.json",

@@ -6,6 +6,13 @@ keeps the virtual agent active through client activity, channel exchanges,
 pod-connection loss and an actual adapter process restart. It also records the
 mandatory controller procedures that remain unanswered.
 
+The later [901-second lifecycle run](native-lifecycle.md) adds all 15 measured
+native neighbor replies, the same real recovery faults and normal native
+controller/helper shutdown under an unchanged SIGTERM policy. The optional BPL
+candidate fixes the selected Linux lifetime defect; original baseline files are
+restored after the trial. Fifteen AP reporting periods remain explicitly
+unfulfilled. This closes the candidate lifecycle gap, not complete reporting.
+
 ## What must be demonstrated
 
 The first sustained acceptance run is a 15-minute owned-lab experiment with the
@@ -139,7 +146,7 @@ TEL-01–04. Installing this simulation publisher on a physical pod is not allow
 | Client Capability Query | §9.2, §17.1.14–15, §17.2.18–19, §17.2.36 | Correlated failure report: reason 2 for an absent station, reason 3 for an associated station whose association frame is unavailable |
 | Disassociation statistics | §6.3, §17.1.41 | [Sender and guarded handoff implemented](final-session-statistics.md); actual final session counters/reason still unqualified, so native polling continues to record the gap |
 | Reporting policy and metrics | §7.3 and §10 | [Durable selected receipt/Ack](reporting-policy.md) and [AP report assembly/periodic dispatch](ap-metric-reports.md); measured field mappings and native AP delivery remain pending |
-| Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1; amendment pp.10–12; EasyMesh §10.1 | [Query/response and guarded handoff implemented](neighbor-link-metrics.md); the optional [owned peer profile](native-peer-metrics.md) supplies measured native replies and controller receipt. Physical/multiple-peer qualification and integrated 15-minute acceptance remain pending |
+| Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1; amendment pp.10–12; EasyMesh §10.1 | [Query/response and guarded handoff implemented](neighbor-link-metrics.md); the optional [owned peer profile](native-peer-metrics.md) supplies measured native replies and controller receipt. The owned publisher also passes the 901-second recovery run; physical/multiple-peer qualification and complete reporting acceptance remain pending |
 | Channel procedures | §8.1–2; §17.2.13–16/Tables 36, 38–40 | Sole advertised channel 6; durable preferences, acceptance of requests requiring no adjustment, measured operating power and correlated Ack/retry |
 
 ## Channel decisions in this bounded lab
@@ -240,6 +247,10 @@ Use a fresh label for every attempt. Preserve failed attempts.
      deploy/radio-manager/neighbor-observer.py deploy/radio-manager/egress-observer.py \
      emosa-lab/opt/emosa-radio-manager/
    lxc file push deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
+   lxc file push deploy/peer-baseline/node.py emosa-lab/opt/emosa-baseline/
+   lxc file push deploy/peer-baseline/compatibility/controller-candidate.py \
+     deploy/peer-baseline/compatibility/lifecycle-observer.py \
+     emosa-lab/opt/emosa-baseline/compatibility/
    ```
 
 2. Install the pinned Python observation dependencies in the VM's EMOSA virtual

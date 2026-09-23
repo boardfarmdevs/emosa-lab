@@ -95,6 +95,7 @@ lxc file push deploy/peer-baseline/patches/0004-controller-counter-capability.pa
   deploy/peer-baseline/patches/0005-controller-configuration-scope.patch \
   deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
 lxc file push deploy/peer-baseline/compatibility/controller-candidate.py \
+  deploy/peer-baseline/compatibility/lifecycle-observer.py \
   emosa-lab/opt/emosa-baseline/compatibility/
 python3 deploy/radio-manager/stage.py
 ```
@@ -106,6 +107,12 @@ Copying only the older onboarding modules can leave missing dependencies. See th
 [neighbor-binding guide](neighbor-discovery-binding.md) for the observation flow
 and focused recovery experiment, and the
 [egress guide](egress-accounting-source.md) for the selected loss-accounting path.
+
+For a new full-duration recovery experiment, build and stage the optional
+[native lifecycle candidate](native-lifecycle.md) as well. It adds the selected
+Linux BPL cleanup fix while retaining the original baseline for comparison and
+restoration. The basic `--onboarding` candidate above keeps the historical shared
+libraries and their recorded shutdown defect.
 
 ## Run and read the boundaries
 

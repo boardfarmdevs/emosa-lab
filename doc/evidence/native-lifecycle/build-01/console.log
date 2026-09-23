@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/home/rev/git/emosa-lab/deploy/peer-baseline/compatibility/build-controller.py", line 263, in <module>
+    main()
+    ~~~~^^
+  File "/home/rev/git/emosa-lab/deploy/peer-baseline/compatibility/build-controller.py", line 136, in main
+    run("cmake", "--build", str(args.build / "build"), "--parallel", str(args.jobs))
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rev/git/emosa-lab/deploy/peer-baseline/compatibility/build-controller.py", line 85, in run
+    return subprocess.run(
+           ~~~~~~~~~~~~~~^
+        command, check=True, stdout=log, stderr=log, timeout=900, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/lib/python3.13/subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '('cmake', '--build', '/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/build', '--parallel', '3')' returned non-zero exit status 2.

@@ -5,13 +5,13 @@
       "title": "An actual protocol peer",
       "status": "Bounded simulated onboarding verified",
       "state": "pending",
-      "description": "The native controller discovers EMOSA and supplies authenticated WSC configuration to the simulated OpenSync pod. Its inventory contains the observed radio, BSS and client. A 908-second run verifies continuous traffic and recovery from pod reconnect and adapter SIGKILL. The isolated patched controller candidate still needs mandatory metrics and physical qualification.",
+      "description": "The native controller discovers EMOSA and supplies authenticated WSC configuration to the simulated OpenSync pod. The latest 901-second run verifies repeated client activity, continuous traffic, measured neighbor replies, pod reconnect and adapter SIGKILL recovery. The optional native BPL candidate also exits cleanly. Complete reporting and physical qualification remain pending.",
       "responsibilities": [
         "Use the isolated em-protocol bridge, separate from pod management.",
         "Exercise discovery, capabilities and selected provisioning procedures.",
         "Retain captures from an independent bridge observation point."
       ],
-      "next": "Complete AP/STA and final-session reporting, resolve native shutdown and repeat integrated 15-minute acceptance. Review the optional owned neighbor-metric publisher and preserve the physical acceptance boundary.",
+      "next": "Qualify AP/STA and final-session measurements, verify native delivery and repeat complete 15-minute acceptance with all required reporting enabled.",
       "path": "doc/protocol/native-onboarding.md"
     },
     "agent": {
@@ -939,10 +939,22 @@
       "title": "AP reporting component and native recovery evidence",
       "description": "Independently decoded synthetic reports, native withholding/deadlines, actual recovery faults and the retained peer-query timing failure.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/native-lifecycle.md",
+      "title": "Native shutdown and the full recovery workload",
+      "description": "Compare real C++ library lifetimes, test interrupted-install restoration, and observe loaded libraries and normal process exits after 15 minutes.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/native-lifecycle/README.md",
+      "title": "901-second lifecycle and recovery evidence",
+      "description": "All 15 measured native neighbor replies, continuous traffic, real recovery faults, exact restoration and clean exits; AP/STA reporting remains pending.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "ap-reporting/unit-results.xml",
-    "ovsdb": "ap-reporting/ovsdb-results.xml"
+    "unit": "native-lifecycle/unit-results.xml",
+    "ovsdb": "native-lifecycle/ovsdb-results.xml"
   }
 }

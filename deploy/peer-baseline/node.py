@@ -37,6 +37,12 @@ def guard():
     for binary, expected in reference["binaries"].items():
         if hashlib.sha256((INSTALL / "bin" / binary).read_bytes()).hexdigest() != expected:
             raise SystemExit("Native binary differs from pinned peer")
+    libraries = reference.get("runtime_libraries", {})
+    if libraries and set(libraries) != {"libbpl.so.6.0.0"}:
+        raise SystemExit("Unknown experimental native runtime library")
+    for name, expected in libraries.items():
+        if hashlib.sha256((INSTALL / "lib" / name).read_bytes()).hexdigest() != expected:
+            raise SystemExit("Native runtime library differs from recorded candidate")
     baseline = json.loads((ROOT / "reference.json").read_text())
     expected = baseline["native_hal_overlay"]["library_sha256"]
     if hashlib.sha256((INSTALL / "lib/libbwl.so.6.0.0").read_bytes()).hexdigest() != expected:

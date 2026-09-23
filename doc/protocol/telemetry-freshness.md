@@ -55,6 +55,10 @@ lxc file push deploy/radio-manager/node.py deploy/radio-manager/manager.py \
   deploy/radio-manager/neighbor-observer.py deploy/radio-manager/egress-observer.py \
   emosa-lab/opt/emosa-radio-manager/
 lxc file push deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
+lxc file push deploy/peer-baseline/node.py emosa-lab/opt/emosa-baseline/
+lxc file push deploy/peer-baseline/compatibility/controller-candidate.py \
+  deploy/peer-baseline/compatibility/lifecycle-observer.py \
+  emosa-lab/opt/emosa-baseline/compatibility/
 
 lxc exec emosa-lab -- env PYTHONPATH=/opt/emosa-radio-manager/source \
   EMOSA_OVS_BIN=/opt/emosa-radio-manager/ovsdb \

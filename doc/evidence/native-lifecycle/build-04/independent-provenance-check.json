@@ -1,0 +1,20 @@
+{
+  "recipe_hashes_match": true,
+  "patched_source_hashes_match": true,
+  "recipes": {
+    "deploy/peer-baseline/compatibility/build-controller.py": "775e2818a04e9d8413d05ea1cd784a3ff70d248407d7508f22f63960e386e91b",
+    "deploy/peer-baseline/compatibility/counter-units.cpp": "43ee476d30737010b9f70691cb6c74cecc089652bab38122bc39cdeb1afdeb5a",
+    "deploy/peer-baseline/compatibility/controller-headers.json": "952ad9fa51452ad5f022dc6c2ae0ee6bac8799ed4e7afbb0086915ccddd4c0da",
+    "deploy/peer-baseline/controller-overlay/CMakeLists.txt": "dc05f5618be8095f424e4c41b72ffbdfd20f260546df5fda74c9605458471c8a",
+    "deploy/peer-baseline/compatibility/model-lifetime.cpp": "312817aafdd2b473b2b1d06695642fd361991f234bcafdaeec01dbdd0519aae5"
+  },
+  "source_files": {
+    "controller/src/beerocks/master/controller.cpp": "a3135e14748b51f282405e3c418c2968f4426929e2829bd5c3cbf4738715628f",
+    "controller/src/beerocks/master/db/db.cpp": "67cfc5754e5f8b542ab6b8b2a46700838007931a5c9809f68903a6bed62458d7",
+    "controller/src/beerocks/master/tasks/agent_monitoring_task.cpp": "b8ef0826d72674a2df50b16b1f4f18cb0d99e8d95540248550a15131fa2642d4",
+    "framework/platform/bpl/cfg/dm/bpl_amx.cpp": "64ec758bddcda68f9f1ccfc054991d76ea7f3fb73d810e6427e82adc1a106257",
+    "framework/platform/bpl/cfg/dm/bpl_amb_ptr.h": "32b97b4d03efacd64947012d29582d3a67b9e79b64c0495c6e17a2ae11716631",
+    "framework/platform/bpl/cfg/dm/bpl_cfg_amx_helper.h": "858866e171cd602864705f8bc8e323d591cfe9465e3038af2ce5e6a5087aafe7",
+    "framework/platform/bpl/cfg/dm/bpl.cpp": "4b7d54e83e635a8ee04aaf9ff6098aeb149ec7185aada5bf829c7929d53c8ab5"
+  }
+}

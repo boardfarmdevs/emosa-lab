@@ -1,0 +1,32 @@
+{
+  "baseline": {
+    "loaded_library_sha256": "2e4d0b2ef7dc68e11ad8e6686418555100768634f7462a24f6bb454c77b42cf6",
+    "observations": {
+      "implicit": [
+        "main_returning",
+        "runtime_destroyed",
+        "model_destroyed"
+      ],
+      "explicit_clear": [
+        "model_destroyed",
+        "main_returning",
+        "runtime_destroyed"
+      ]
+    }
+  },
+  "candidate": {
+    "loaded_library_sha256": "7bc9b040738b30759c73da2a9b3907328e1c468141a332a55e56fd71adf68a0d",
+    "observations": {
+      "implicit": [
+        "main_returning",
+        "model_destroyed",
+        "runtime_destroyed"
+      ],
+      "explicit_clear": [
+        "model_destroyed",
+        "main_returning",
+        "runtime_destroyed"
+      ]
+    }
+  }
+}

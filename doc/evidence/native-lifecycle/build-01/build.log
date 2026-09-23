@@ -1,0 +1,64 @@
+patching file controller/src/beerocks/master/controller.cpp
+patching file controller/src/beerocks/master/controller.cpp
+patching file controller/src/beerocks/master/tasks/agent_monitoring_task.cpp
+patching file framework/platform/bpl/cfg/dm/bpl_amb_ptr.h
+patching file framework/platform/bpl/cfg/dm/bpl_amx.cpp
+patching file framework/platform/bpl/cfg/dm/bpl_cfg_amx_helper.h
+patching file framework/platform/bpl/cfg/dm/bpl.cpp
+-- The C compiler identification is GNU 11.4.0
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+Preparing bpl for the linux platform
+CMake Warning (dev) at /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/CMakeLists.txt:16 (set):
+  implicitly converting 'INT' to 'STRING' type.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/CMakeLists.txt:17 (set):
+  implicitly converting 'INT' to 'STRING' type.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Found amxb: /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/usr/lib/x86_64-linux-gnu/libamxb.so
+-- Found amxc: /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/usr/lib/x86_64-linux-gnu/libamxc.so
+-- Found amxd: /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/usr/lib/x86_64-linux-gnu/libamxd.so
+-- Found amxp: /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/usr/lib/x86_64-linux-gnu/libamxp.so
+bpl_platform_sources: /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/arp/linux/bpl_arp.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/board/linux/bpl_board.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/cfg/dummy/bpl_cfg_dummy.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/cfg/linux/bpl.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/cfg/linux/bpl_cfg.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/cfg/linux/bpl_cfg_ifaces.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/cfg/linux/bpl_cfg_ifaces.cpp.in;/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/cfg/linux/bpl_cfg_wifi.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/db/linux/bpl_db.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/dhcp/linux/bpl_dhcp.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/service_prioritization/dummy/service_prio_utils_dummy.cpp
+APPEND bpl_platform_sources with /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/cfg/dm/bpl_amx.cpp
+Preparing beerocks_controller for the linux platform
+-- Found amxo: /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/usr/lib/x86_64-linux-gnu/libamxo.so
+-- Found libamxrt: /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/usr/lib/x86_64-linux-gnu/libamxrt.so
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/build
+[  1%] Building CXX object bpl/CMakeFiles/bpl.dir/common/utils/utils_net.cpp.o
+[  3%] Building CXX object bpl/CMakeFiles/bpl.dir/common/utils/utils.cpp.o
+[  5%] Building CXX object bpl/CMakeFiles/bpl.dir/arp/linux/bpl_arp.cpp.o
+In file included from /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/arp/linux/bpl_arp.cpp:16:
+/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/common/include/mapf/common/logger.h:14:10: fatal error: mapf/common/config.h: No such file or directory
+   14 | #include <mapf/common/config.h>
+      |          ^~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+In file included from /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/common/utils/utils_net.cpp:25:
+/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/common/include/mapf/common/logger.h:14:10: fatal error: mapf/common/config.h: No such file or directory
+   14 | #include <mapf/common/config.h>
+      |          ^~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [bpl/CMakeFiles/bpl.dir/build.make:107: bpl/CMakeFiles/bpl.dir/arp/linux/bpl_arp.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+gmake[2]: *** [bpl/CMakeFiles/bpl.dir/build.make:79: bpl/CMakeFiles/bpl.dir/common/utils/utils_net.cpp.o] Error 1
+In file included from /home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/platform/bpl/common/utils/utils.cpp:24:
+/home/rev/git/emosa-lab/.lab/controller-lifecycle-01/source/framework/common/include/mapf/common/logger.h:14:10: fatal error: mapf/common/config.h: No such file or directory
+   14 | #include <mapf/common/config.h>
+      |          ^~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [bpl/CMakeFiles/bpl.dir/build.make:93: bpl/CMakeFiles/bpl.dir/common/utils/utils.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:243: bpl/CMakeFiles/bpl.dir/all] Error 2
+gmake: *** [Makefile:136: all] Error 2

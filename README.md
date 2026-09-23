@@ -74,8 +74,11 @@ Its building blocks remain independently reproducible:
 [combined service/loss intervals](doc/protocol/shaped-backhaul-accounting.md).
 The combined audit reconciles 19,124 queue drops and 17 losses in each selected
 action direction. These scoped results support the selected lab publisher;
-complete AP/STA reporting, final-session reporting, native shutdown and a new
-integrated 15-minute acceptance run remain required.
+the [901-second lifecycle run](doc/protocol/native-lifecycle.md) now verifies the
+publisher throughout both recovery faults and resolves the selected native
+candidate's shutdown defect. Controller/helper processes exit normally, and the
+baseline is restored. Complete AP/STA reporting, final-session reporting and a
+new integrated acceptance run with those reports enabled remain required.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 
@@ -178,8 +181,9 @@ requirements beyond the selected simulated integration.
 The [independent controller candidate](deploy/peer/README.md) now emits real
 discovery frames captured at the EMOSA container. That earlier preparation run
 retains an empty inventory as a negative control. Ubuntu 24.04 nested-container
-component tests and VM-driven semantic scenarios pass; the peer's shutdown
-aborts are recorded as an unresolved recovery issue.
+component tests and VM-driven semantic scenarios pass. Its historical shutdown
+aborts remain recorded; the optional [lifecycle candidate](doc/protocol/native-lifecycle.md)
+now verifies normal exits for the controller and colocated helper.
 
 The separate [native controller–agent baseline](doc/evaluation/peer-baseline.md) exercises
 that controller against a normal prplMesh agent over Ethernet and hwsim wireless

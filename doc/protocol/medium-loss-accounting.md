@@ -68,6 +68,10 @@ lxc file push deploy/radio-manager/build-medium.py \
   deploy/radio-manager/medium.py emosa-lab/opt/emosa-radio-manager/
 lxc file push deploy/peer-baseline/native-onboarding.py \
   emosa-lab/opt/emosa-baseline/
+lxc file push deploy/peer-baseline/node.py emosa-lab/opt/emosa-baseline/
+lxc file push deploy/peer-baseline/compatibility/controller-candidate.py \
+  deploy/peer-baseline/compatibility/lifecycle-observer.py \
+  emosa-lab/opt/emosa-baseline/compatibility/
 ```
 
 Inside VM, install the build dependencies if they are absent:

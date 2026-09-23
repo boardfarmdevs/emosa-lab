@@ -294,6 +294,14 @@ OpenSync-format telemetry. Work through these exercises in order:
     reports and preserved deadlines through real recovery faults. Identify the
     qualified measurement inputs needed before native AP delivery can be tested.
 
+20. Follow [native lifecycle and the 15-minute workload](../protocol/native-lifecycle.md).
+    Explain how shared ownership can preserve an object past its runtime, compare
+    baseline/candidate C++ destruction events, and verify restoration after an
+    interrupted candidate install. Run the full workload with both real recovery
+    faults. Inspect loaded-library hashes, unchanged stop policy and actual
+    controller/helper exit results. Keep clean shutdown separate from the still
+    missing AP/STA and final-session reporting inputs.
+
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client
 traffic is checked. Read the retained negative trials and the bounded scope first.

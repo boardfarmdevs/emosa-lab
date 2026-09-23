@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/opt/emosa-baseline/compatibility/controller-candidate.py", line 268, in <module>
+    main()
+    ~~~~^^
+  File "/opt/emosa-baseline/compatibility/controller-candidate.py", line 262, in main
+    trial(args.build, args.label, fail_after_install=args.fail_after_install)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/emosa-baseline/compatibility/controller-candidate.py", line 167, in trial
+    raise RuntimeError("Deliberate post-install failure to test restoration")
+RuntimeError: Deliberate post-install failure to test restoration

@@ -77,6 +77,29 @@ def zero_packet_loss(text):
     return len(values) == 1 and float(values[0]) == 0
 
 
+def candidate_inputs(build, trial):
+    """Accept only the two explicitly qualified native candidate recipes."""
+    assert trial["candidate_sha256"] == build["candidate_sha256"]
+    assert build["counter_regression"]["passed"] == 12
+    onboarding = {
+        "name": "0005-controller-configuration-scope.patch",
+        "sha256": "9bcab5ce7b22b7d36bdb55b857eadfb0e75f71b03332e693f40226ba4ab31ddb",
+    }
+    lifecycle = {
+        "name": "0006-bpl-model-lifetime.patch",
+        "sha256": "fb9b3a45721952532b21592aafb2eba77e5795fd91543940e756510b60615785",
+    }
+    assert build["extra_patches"] in ([onboarding], [onboarding, lifecycle])
+    if lifecycle in build["extra_patches"]:
+        libraries = build["runtime_libraries"]
+        assert set(libraries) == {"libbpl.so.6.0.0"}
+        assert trial["runtime_libraries"] == libraries
+        assert trial["runtime_library_restoration"] == {
+            name: {"restored_sha256": hashes["baseline_sha256"], "restored": True}
+            for name, hashes in libraries.items()
+        }
+
+
 def check(directory, tool, *, initial_only=False):
     result, operation = read(directory / "result.json"), read(directory / "native-operation.json")
     capture_health = None
@@ -97,8 +120,7 @@ def check(directory, tool, *, initial_only=False):
         result["operation"]["operation_count"] if initial_only else 1
     )
     build = read(directory / "candidate.json")
-    assert trial["candidate_sha256"] == build["candidate_sha256"]
-    assert build["counter_regression"]["passed"] == 12 and len(build["extra_patches"]) == 1
+    candidate_inputs(build, trial)
     before = read(directory / "withheld-operation.json")
     assert before["operation"]["state"] == "CONFIG_COMMITTED"
     assert before["observed_ssid"] == "emosa-radio-initial" and before["config_ssid"] == SSID

@@ -42,6 +42,7 @@
 | [Virtual-link capacity](virtual-link-capacity.md) | Explicit software service, framing calibration, independently captured work and OVSDB recovery; full neighbor metrics pending |
 | [Combined shaped-backhaul accounting](shaped-backhaul-accounting.md) | Selected action, scheduler and interface losses with common service intervals; actual queue overflow and native OVSDB recovery |
 | [Native peer-metric delivery](native-peer-metrics.md) | Isolated owned peer profile, observed OVSDB inputs, real IEEE 1905 replies, controller statistics and fault withdrawal |
+| [Native lifecycle and 15-minute workload](native-lifecycle.md) | BPL ownership, actual loaded libraries, graceful main-process exits and candidate restoration |
 
 Component checks retain their individual scope. The native onboarding guide
 establishes the bounded simulated-pod exchange; full-profile sustained reporting

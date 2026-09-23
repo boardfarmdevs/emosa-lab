@@ -78,6 +78,10 @@ An open-source implementation is a cross-check, not a substitute for that input.
    ```bash
    lxc file push deploy/radio-manager/station-events.py emosa-lab/opt/emosa-radio-manager/
    lxc file push deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
+   lxc file push deploy/peer-baseline/node.py emosa-lab/opt/emosa-baseline/
+   lxc file push deploy/peer-baseline/compatibility/controller-candidate.py \
+     deploy/peer-baseline/compatibility/lifecycle-observer.py \
+     emosa-lab/opt/emosa-baseline/compatibility/
    ```
 
    The runner copies the observer into the owned AP container. Its guard checks

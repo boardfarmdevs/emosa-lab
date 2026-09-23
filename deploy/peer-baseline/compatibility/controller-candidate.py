@@ -1,6 +1,8 @@
 """Temporarily measure a native controller candidate in the owned lab, then restore.
 
-Only the controller executable and its explicit experimental reference change.
+The controller executable and its explicit experimental reference change. A
+separately recorded lifecycle candidate can also replace the sole Linux BPL
+library; every changed file is backed up and restored before baseline reuse.
 The same discovery probe and admission checks run for baseline and candidate.
 """
 
@@ -41,10 +43,37 @@ def trial(build, label, *, fail_after_install=False, experiment=None):
         raise RuntimeError("Native counter conversion regression is incomplete")
     for extra in provenance.get("extra_patches", []):
         if (
-            extra["name"] != "0005-controller-configuration-scope.patch"
+            extra["name"]
+            not in (
+                "0005-controller-configuration-scope.patch",
+                "0006-bpl-model-lifetime.patch",
+            )
             or digest(ROOT / extra["name"]) != extra["sha256"]
         ):
             raise RuntimeError("Unknown or mismatched additional candidate patch")
+    libraries = provenance.get("runtime_libraries", {})
+    lifecycle = any(
+        p["name"] == "0006-bpl-model-lifetime.patch" for p in provenance.get("extra_patches", [])
+    )
+    expected_libraries = {"libbpl.so.6.0.0"} if lifecycle else set()
+    if set(libraries) != expected_libraries:
+        raise RuntimeError("Lifecycle candidate must name exactly the selected BPL library")
+    if lifecycle:
+        observed = provenance["lifetime_regression"]["candidate"]
+        if (
+            observed["observations"]["implicit"]
+            != ["main_returning", "model_destroyed", "runtime_destroyed"]
+            or observed["loaded_library_sha256"] != libraries["libbpl.so.6.0.0"]["candidate_sha256"]
+        ):
+            raise RuntimeError("Native model lifetime regression is incomplete")
+    for name, hashes in libraries.items():
+        if digest(build / "stage/lib" / name) != hashes["candidate_sha256"]:
+            raise RuntimeError("Candidate runtime library differs from provenance")
+        if (
+            inside(CONTROLLER, "sha256sum", str(INSTALL / "lib" / name)).split()[0]
+            != hashes["baseline_sha256"]
+        ):
+            raise RuntimeError("Existing runtime library differs from the pinned build input")
     reference = ROOT / "prplmesh.reference.json"
     original = reference.read_bytes()
     baseline = json.loads(original)
@@ -72,7 +101,24 @@ def trial(build, label, *, fail_after_install=False, experiment=None):
     ):
         shutil.copyfileobj(source, target)
     temporary.unlink()  # Only this newly created staging copy; compressed backup is retained.
+    for name, hashes in libraries.items():
+        library_backup = state / ("baseline-" + name)
+        lxc(
+            "file", "pull", "--quiet", CONTROLLER + str(INSTALL / "lib" / name), str(library_backup)
+        )
+        if digest(library_backup) != hashes["baseline_sha256"]:
+            raise RuntimeError("Runtime library backup digest mismatch")
+        with (
+            library_backup.open("rb") as source,
+            gzip.open(str(library_backup) + ".gz", "wb") as target,
+        ):
+            shutil.copyfileobj(source, target)
+        library_backup.unlink()
     baseline["binaries"]["beerocks_controller"] = expected
+    if libraries:
+        baseline["runtime_libraries"] = {
+            name: value["candidate_sha256"] for name, value in libraries.items()
+        }
     baseline["candidate_experiment"] = {
         "label": label,
         "baseline_controller_sha256": original_sha,
@@ -90,10 +136,27 @@ def trial(build, label, *, fail_after_install=False, experiment=None):
         "physical_pod_proven": False,
         "failure_injection": fail_after_install,
         "runner_sha256": digest(Path(__file__)),
+        "runtime_libraries": libraries,
+        "runtime_library_restoration": {},
     }
     write(state / "result.json", report)
     try:
         reference.write_bytes((state / "reference-candidate.json").read_bytes())
+        for name, hashes in libraries.items():
+            library = INSTALL / "lib" / name
+            lxc(
+                "file",
+                "push",
+                "--quiet",
+                str(build / "stage/lib" / name),
+                CONTROLLER + str(library),
+            )
+            inside(CONTROLLER, "chmod", "0755", str(library))
+            if (
+                inside(CONTROLLER, "sha256sum", str(library)).split()[0]
+                != hashes["candidate_sha256"]
+            ):
+                raise RuntimeError("Installed runtime library digest mismatch")
         lxc("file", "push", "--quiet", str(candidate), CONTROLLER + str(binary))
         inside(CONTROLLER, "chmod", "0755", str(binary))
         lxc("file", "push", "--quiet", str(reference), CONTROLLER + str(reference))
@@ -135,6 +198,28 @@ def trial(build, label, *, fail_after_install=False, experiment=None):
                 raise RuntimeError("Restoration backup digest mismatch")
             lxc("file", "push", "--quiet", str(temporary), CONTROLLER + str(binary))
             inside(CONTROLLER, "chmod", "0755", str(binary))
+            for name, hashes in libraries.items():
+                library_backup = state / ("baseline-" + name)
+                with (
+                    gzip.open(str(library_backup) + ".gz", "rb") as source,
+                    library_backup.open("wb") as target,
+                ):
+                    shutil.copyfileobj(source, target)
+                if digest(library_backup) != hashes["baseline_sha256"]:
+                    raise RuntimeError("Runtime library restoration backup digest mismatch")
+                library = INSTALL / "lib" / name
+                lxc("file", "push", "--quiet", str(library_backup), CONTROLLER + str(library))
+                inside(CONTROLLER, "chmod", "0755", str(library))
+                if (
+                    inside(CONTROLLER, "sha256sum", str(library)).split()[0]
+                    != hashes["baseline_sha256"]
+                ):
+                    raise RuntimeError("Runtime library restoration digest mismatch")
+                report["runtime_library_restoration"][name] = {
+                    "restored_sha256": digest(library_backup),
+                    "restored": True,
+                }
+                library_backup.unlink()
             lxc(
                 "file",
                 "push",

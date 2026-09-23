@@ -84,6 +84,10 @@ lxc file push deploy/radio-manager/tx-status-trace.py \
   emosa-lab/opt/emosa-radio-manager/
 lxc file push deploy/peer-baseline/native-onboarding.py \
   emosa-lab/opt/emosa-baseline/
+lxc file push deploy/peer-baseline/node.py emosa-lab/opt/emosa-baseline/
+lxc file push deploy/peer-baseline/compatibility/controller-candidate.py \
+  deploy/peer-baseline/compatibility/lifecycle-observer.py \
+  emosa-lab/opt/emosa-baseline/compatibility/
 
 lxc exec emosa-lab -- env \
   PYTHONPATH=/opt/emosa-radio-manager/source \

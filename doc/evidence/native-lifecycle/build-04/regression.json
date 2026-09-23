@@ -1,0 +1,1 @@
+{"passed": 12, "implementation": "native db::recalculate_attr_to_byte_units", "scope": "bytes/KiB/MiB; zero, one, typical and maximum 32-bit counter"}

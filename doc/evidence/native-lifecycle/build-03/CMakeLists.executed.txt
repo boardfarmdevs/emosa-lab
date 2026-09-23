@@ -1,0 +1,81 @@
+cmake_minimum_required(VERSION 3.16)
+project(emosa_controller_overlay LANGUAGES C CXX)
+# Build the native controller, retaining the pinned runtime libraries and NBAPI.
+# Inputs are verified by compatibility/build-controller.py before configuring.
+set(prplmesh_VERSION 6.0.0)
+set(prplmesh_VERSION_MAJOR 6)
+option(EMOSA_LIFECYCLE "Rebuild the selected Linux BPL model owner" OFF)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -fno-exceptions")
+set(BUILD_TESTS OFF)
+set(ENABLE_NBAPI ON)
+set(USE_PRPLMESH_WHM OFF)
+set(ENABLE_VBSS OFF)
+set(TARGET_PLATFORM linux)
+set(CMAKE_MODULE_PATH "${PEER_SOURCE}/cmake")
+add_compile_definitions(BEEROCKS_LINUX BEEROCKS_VERSION="6.0.0"
+    BEEROCKS_BUILD_DATE="EMOSA-counter-candidate" BEEROCKS_REVISION="2e153c7+22lab+counter"
+    DATAELEMENTS_ROOT_DM="Device.WiFi.DataElements"
+    CONTROLLER_ROOT_DM="X_PRPLWARE-COM_Controller" AGENT_ROOT_DM="X_PRPLWARE-COM_Agent"
+    ELPP_THREAD_SAFE ELPP_FORCE_USE_STD_THREAD ELPP_NO_DEFAULT_LOG_FILE
+    ELPP_STL_LOGGING ELPP_LOG_UNORDERED_MAP ELPP_LOG_UNORDERED_SET ELPP_SYSLOG)
+include_directories("${PEER_INSTALL}/include"
+    "${PEER_SOURCE}/framework/platform/nbapi/include"
+    "${PEER_SOURCE}/framework/platform/bpl/include"
+    "${PEER_SOURCE}/common/beerocks/btl/include"
+    "${PEER_SOURCE}/framework/common/include"
+    "${PEER_SOURCE}/framework/transport/ieee1905_transport"
+    "${PEER_SOURCE}/common/beerocks/multi_vendor")
+foreach(lib bpl bcl btl tlvf elpp btlvf nbapi ieee1905_transport_lib multi_vendor mapfcommon)
+    if(lib STREQUAL "bpl" AND EMOSA_LIFECYCLE)
+        continue()
+    endif()
+    add_library(${lib} SHARED IMPORTED)
+    set_target_properties(${lib} PROPERTIES
+        IMPORTED_LOCATION "${PEER_INSTALL}/lib/lib${lib}.so.6.0.0")
+endforeach()
+set_target_properties(bcl PROPERTIES INTERFACE_LINK_LIBRARIES "mapfcommon")
+foreach(lib amxb amxc amxd amxp amxo amxrt amxs)
+    include_directories("${HEADERS}/lib${lib}/include")
+    # Upstream's master target will use these locations in find_package.
+    string(TOUPPER "${lib}" upper)
+    set(${upper}_LIBRARY "${RUNTIME}/usr/lib/x86_64-linux-gnu/lib${lib}.so" CACHE FILEPATH "Pinned library")
+    set(${upper}_INCLUDE_DIRS "${HEADERS}/lib${lib}/include" CACHE PATH "Pinned headers")
+    list(APPEND AMX_LIBRARIES "${RUNTIME}/usr/lib/x86_64-linux-gnu/lib${lib}.so")
+endforeach()
+link_directories("${RUNTIME}/usr/lib/x86_64-linux-gnu" "${RUNTIME}/usr/lib")
+add_link_options("-Wl,-rpath-link,${RUNTIME}/usr/lib/x86_64-linux-gnu"
+    "-Wl,-rpath-link,${RUNTIME}/usr/lib" "-Wl,-rpath-link,${PEER_INSTALL}/lib")
+if(EMOSA_LIFECYCLE)
+    set(BUILD_SHARED_LIBS ON)
+    # Match the selected Linux baseline's interface and private platform DB paths.
+    set(TMP_PATH "/tmp/beerocks")
+    set(BEEROCKS_WLAN1_IFACE "wlan0")
+    set(BEEROCKS_WLAN2_IFACE "wlan2")
+    set(BEEROCKS_WLAN3_IFACE "wlan4")
+    set(CMAKE_MULTIAP_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/generated")
+    configure_file("${PEER_SOURCE}/framework/common/mapf_config.h.in"
+        "${CMAKE_BINARY_DIR}/generated/include/mapf/common/config.h")
+    include_directories("${CMAKE_BINARY_DIR}/generated/include")
+    include(GNUInstallDirs)
+    add_subdirectory("${PEER_SOURCE}/framework/platform/bpl" bpl)
+    set_target_properties(bpl PROPERTIES INSTALL_RPATH "$ORIGIN"
+        INSTALL_RPATH_USE_LINK_PATH FALSE)
+    add_executable(emosa-model-lifetime "../compatibility/model-lifetime.cpp")
+    target_link_libraries(emosa-model-lifetime PRIVATE bpl nbapi bcl elpp mapfcommon)
+endif()
+add_subdirectory("${PEER_SOURCE}/controller/src/beerocks/master" controller)
+set_target_properties(beerocks_controller PROPERTIES
+    INSTALL_RPATH "$ORIGIN/../lib" INSTALL_RPATH_USE_LINK_PATH FALSE)
+add_executable(emosa-counter-regression "../compatibility/counter-units.cpp"
+    "${PEER_SOURCE}/controller/src/beerocks/master/db/db.cpp")
+target_compile_definitions(emosa-counter-regression PRIVATE ENABLE_NBAPI)
+target_compile_options(emosa-counter-regression PRIVATE -ffunction-sections -fdata-sections)
+target_include_directories(emosa-counter-regression PRIVATE
+    "${PEER_SOURCE}/controller/src/beerocks/master"
+    "${PEER_SOURCE}/controller/src/beerocks/bml")
+target_link_libraries(emosa-counter-regression PRIVATE bpl bcl btl tlvf elpp btlvf nbapi
+    ieee1905_transport_lib multi_vendor mapfcommon ${AMX_LIBRARIES})
+target_link_options(emosa-counter-regression PRIVATE -Wl,--gc-sections)

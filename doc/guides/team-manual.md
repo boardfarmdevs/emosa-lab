@@ -4180,6 +4180,52 @@ update prove. Native AP measurements, final-session reporting and the full
 integrated 15-minute acceptance remain required. ESP conversions and referenced
 Data Elements definitions cannot be replaced by invented fixture values.
 
+### 13.30 Prove clean native shutdown after the full workload
+
+A native process can successfully onboard a virtual agent, exchange traffic and
+then crash during cleanup. Earlier evidence records exactly that outcome. The
+workload's functional pass and the shutdown failure both matter when deciding
+whether an operator can rely on the system.
+
+Follow the [native lifecycle guide](../protocol/native-lifecycle.md). This work
+changes the selected C++ controller container's BPL library. EMOSA remains the
+Python EasyMesh-to-OpenSync adapter; the simulated OpenSync pod still has its
+separate manager. No native component is installed on a physical OpenSync pod.
+
+1. Read the ownership diagram. Ambiorix owns the runtime connection list, while
+   individual model objects free their own connections. Explain why the runtime
+   must survive those models. The old shared-library global owner caused the
+   model to survive too long; the patch corrects construction/destruction order.
+2. Build the optional `--lifecycle` candidate in a new HOST directory. Read the
+   C++ probe's baseline and candidate event sequences. This uses the actual BPL
+   libraries but a dummy model; it establishes ownership order, not live radio
+   behavior. The ordinary native counter regression must still pass too.
+3. Stage the candidate and its full provenance. The candidate directory is
+   separate from the container's installed runtime. The wrapper installs the
+   experimental executable/library only after ownership, idleness, hash and
+   backup checks. Do not copy a candidate directly over a running installation.
+4. Run the intentional post-install failure first. Expect a nonzero command
+   exit and a result showing restored original hashes. Check the actual restored
+   files. This demonstrates that the additional library participates in recovery,
+   rather than trusting a generic `baseline_restored` flag.
+5. Run 900 active seconds with client cycles, continuous independent traffic,
+   measured peer replies, actual OVSDB interruption and adapter SIGKILL. Startup
+   and cleanup add time. Poll the same live process if a console wait expires;
+   a timeout in an observer does not mean the experiment failed or stopped.
+6. Compare `native-processes-start.json` and `native-processes-stop.json`. Both
+   native PIDs should remain the same and map the recorded candidate BPL library.
+   Their stop policy must still use SIGTERM with no special success-exit codes.
+   In `result.json`, controller and helper must exit normally with status zero.
+7. Run every independent audit in the guide. A clean main-process exit, restored
+   baseline, successful reconnect and correctly received metrics each need their
+   own evidence. AP reports remain withheld while their sources are unqualified;
+   the resulting missing reporting periods must stay visible throughout the run.
+
+**Learning checkpoint:** explain why marking SIGABRT as a successful exit would
+hide a defect, why a library lifetime probe needs a live follow-up, and why a
+15-minute operational pass still cannot establish complete reporting or physical
+OpenSync-pod viability by itself.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and
