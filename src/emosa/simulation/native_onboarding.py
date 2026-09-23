@@ -37,6 +37,7 @@ from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
 from emosa.simulation.forwarding import ForwardingSource
+from emosa.simulation.neighbor_binding import NeighborSource
 from emosa.simulation.radio import MONITOR
 from emosa.simulation.station_telemetry import NODE_ID, TOPIC, LabMqtt
 from emosa.simulation.wire_reports import fixtures
@@ -74,12 +75,15 @@ OWNER = {"owner": "emosa-native-onboarding-v1", "backend": "ovsdb-sim"}
 class RadioReportSource:
     """Explicit fixture capabilities plus a fresh complete observed OVSDB graph."""
 
-    def __init__(self, backend, binding, stations=None):
+    def __init__(self, backend, binding, stations=None, *, forwarding_run=None):
         self.backend = backend
         self.stations = stations
         self.last_revision = None
         self.revision = 0
         self.forwarding = ForwardingSource()
+        self.neighbor = (
+            NeighborSource(CONTROLLER, AGENT, forwarding_run) if forwarding_run else None
+        )
         _, caps, self.template = fixtures()
         radio = replace(
             caps.radios[0],
@@ -99,7 +103,10 @@ class RadioReportSource:
         self.source = ReportSource(
             binding,
             "pod-1",
-            hashlib.sha256(b"owned-hwsim:sole-HT20-channel6:PSK-CCMP:nonDPP:v1").hexdigest(),
+            hashlib.sha256(
+                b"owned-hwsim:sole-HT20-channel6:PSK-CCMP:nonDPP:v1"
+                + (b":observed-forwarding-identity:v1" if forwarding_run else b"")
+            ).hexdigest(),
         )
         self.inventory = DeviceInventory(
             SERIAL.encode(),
@@ -113,6 +120,8 @@ class RadioReportSource:
         try:
             raw = await self.backend.session.snapshot()
             self.forwarding.refresh(raw)
+            if self.neighbor:
+                self.neighbor.refresh(self.forwarding.sample)
             self.backend._binding(raw)
             rows = {
                 t: {k: raw["schema"].row(t, v) for k, v in values.items()}
@@ -158,17 +167,48 @@ class RadioReportSource:
                 else ()
             )
             ssid = vif["ssid"].encode()
+            interfaces = (
+                LocalInterface(AGENT, 1, b""),
+                LocalInterface(RADIO, 0x103, RADIO + b"\0\0\x06\0"),
+            )
+            bridges = BridgingCapability(((AGENT, RADIO),))
+            neighbors = (Neighbors1905(AGENT, (Neighbor(CONTROLLER, False),)),)
+            neighbor_binding = self.neighbor.current() if self.neighbor else None
+            if self.neighbor:
+                complete = complete and neighbor_binding is not None
+                neighbors = ()
+                forwarding_sample = self.forwarding.sample
+                if forwarding_sample is not None:
+                    # This retains the owned simulator's Ethernet media fixture.
+                    # Only the MAC/bridge identities are newly measured here;
+                    # no physical 1000BASE-T PHY or throughput is asserted.
+                    interfaces = tuple(
+                        LocalInterface(
+                            bytes.fromhex(
+                                forwarding_sample.interfaces[name]["mac"].replace(":", "")
+                            ),
+                            1,
+                            b"",
+                        )
+                        for name in ("eth1", "eth2")
+                    ) + (interfaces[1],)
+                    if forwarding_sample.interfaces["wlan0"]["mac"] != RADIO_BSSID:
+                        raise EmosaError(
+                            Reason.NOT_READY, "observed forwarding AP identity changed"
+                        )
+                    bridges = BridgingCapability((tuple(i.mac for i in interfaces),))
+                if neighbor_binding:
+                    neighbors = (
+                        Neighbors1905(
+                            bytes.fromhex(neighbor_binding.local_interface.replace(":", "")),
+                            (Neighbor(CONTROLLER, neighbor_binding.bridges_present),),
+                        ),
+                    )
             topology = replace(
                 self.template,
-                device=DeviceInformation(
-                    AGENT,
-                    (
-                        LocalInterface(AGENT, 1, b""),
-                        LocalInterface(RADIO, 0x103, RADIO + b"\0\0\x06\0"),
-                    ),
-                ),
-                bridges=BridgingCapability(((AGENT, RADIO),)),
-                neighbors1905=(Neighbors1905(AGENT, (Neighbor(CONTROLLER, False),)),),
+                device=DeviceInformation(AGENT, interfaces),
+                bridges=bridges,
+                neighbors1905=neighbors,
                 operational=APOperationalBss(
                     (OperationalRadio(RADIO, (OperationalBss(RADIO, ssid),)),)
                 ),
@@ -183,6 +223,7 @@ class RadioReportSource:
                 raw["revision"],
                 sample.timestamp_ms if sample else None,
                 complete,
+                neighbor_binding,
             )
             if revision != self.last_revision:
                 self.revision += 1
@@ -194,6 +235,9 @@ class RadioReportSource:
                 observed_at=started,
                 lifetime=2,
                 telemetry_valid_until=sample.valid_until if sample else None,
+                topology_valid_until=neighbor_binding.valid_until_ns / 1e9
+                if neighbor_binding
+                else None,
                 operating_radios=(OperatingRadio(RADIO, 81, radio["channel"], radio["tx_power"]),)
                 if sample is not None and type(radio.get("tx_power")) is int
                 else (),
@@ -201,6 +245,8 @@ class RadioReportSource:
             return True
         except (EmosaError, ConnectionError, TimeoutError):
             self.forwarding.invalidate()
+            if self.neighbor:
+                self.neighbor.invalidate()
             self.source.invalidate()
             return False
 
@@ -231,7 +277,7 @@ async def worker(directory, *, duration=110, telemetry=False):
     engine.recover()
     stations = StationSource(NODE_ID, TOPIC) if telemetry else None
     mqtt = LabMqtt(directory, stations) if telemetry else None
-    facts = RadioReportSource(backend, binding, stations)
+    facts = RadioReportSource(backend, binding, stations, forwarding_run=directory.name)
     lifecycle = None
     channel_store = ChannelPolicyStore(directory / "channel-policy.sqlite") if telemetry else None
     reporting_policy_store = (
@@ -255,6 +301,7 @@ async def worker(directory, *, duration=110, telemetry=False):
             "operating_radio_count": len(snapshot.operating_radios) if snapshot else 0,
         }
         value["forwarding_observation"] = facts.forwarding.status()
+        value["observed_neighbor"] = facts.neighbor.status()
         if stations:
             sample = stations.current()
             value["telemetry"] = {
@@ -301,6 +348,7 @@ async def worker(directory, *, duration=110, telemetry=False):
                     mqtt.poll()
                 ready = await facts.refresh()
                 forwarding = facts.forwarding.status()
+                forwarding["observed_neighbor"] = facts.neighbor.status()
                 if forwarding != previous_forwarding:
                     with (directory / "forwarding-samples.jsonl").open("a") as observations:
                         observations.write(

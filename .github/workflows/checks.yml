@@ -107,6 +107,21 @@ jobs:
           python3 scripts/check-neighbor-metrics.py --native-directory
           doc/evidence/forwarding/native-forwarding-01
       - run: >-
+          python3 scripts/check-neighbor-binding.py
+          doc/evidence/neighbor-binding/native-link-binding-04
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/neighbor-binding/native-link-binding-04 --minimum-seconds 210
+      - run: >-
+          python3 scripts/check-telemetry-gap.py
+          doc/evidence/neighbor-binding/native-link-binding-04
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/neighbor-binding/native-link-binding-04
+      - run: >-
+          python3 scripts/check-neighbor-metrics.py --native-directory
+          doc/evidence/neighbor-binding/native-link-binding-04
+      - run: >-
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01
           --directory doc/evidence/discovery-session/run-02

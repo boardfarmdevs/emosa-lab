@@ -244,6 +244,12 @@ OpenSync-format telemetry. Work through these exercises in order:
     faults, and find client transit traffic plus the controller's interface
     advertisement in the separate backhaul capture. Explain the remaining
     difference between raw interface counts and qualified neighbor metrics.
+12. Follow [live neighbor discovery binding](../protocol/neighbor-discovery-binding.md).
+    Match discovery received on the pod's actual backhaul to the independent
+    capture, then inspect the observed interface identities in topology replies.
+    Pause the observer and explain why topology becomes unavailable while
+    control authority, radio observations and traffic remain live. Review the
+    retained failed attempts and distinguish media fixtures from measurements.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

@@ -18,6 +18,9 @@ from emosa.simulation.station_telemetry import LabMqtt
 
 
 class Driver:
+    def __init__(self, neighbor_label=None):
+        self.neighbor_label = neighbor_label
+
     async def request(self, action, payload=None):
         process = await asyncio.create_subprocess_exec(
             "lxc",
@@ -30,6 +33,11 @@ class Driver:
             "python3",
             str(ROOT / "node.py"),
             action,
+            *(
+                ["--neighbor-label", self.neighbor_label]
+                if action == "observe" and self.neighbor_label
+                else []
+            ),
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -57,7 +65,8 @@ async def serve(directory):
     guard()
     endpoint = "unix:" + str(directory / "database/db.sock")
     session = OvsSession(endpoint, monitor_columns=MONITOR)
-    manager = RadioManager(session, Driver())
+    native = (directory / "native-owner.json").exists()
+    manager = RadioManager(session, Driver(directory.name if native else None))
     mqtt = LabMqtt(directory) if (directory / "native-owner.json").exists() else None
     stopped = asyncio.Event()
     for sig in (signal.SIGINT, signal.SIGTERM):

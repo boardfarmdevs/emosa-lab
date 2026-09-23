@@ -1,0 +1,18 @@
+{
+  "label": "native-link-binding-02",
+  "native_trial_status": "failed",
+  "baseline_restored": true,
+  "cleanup_errors": [],
+  "captured_topology_discoveries": [
+    {
+      "frame": 11,
+      "time": 1790145500.108204,
+      "hex": "0180c2000013020000e00001893a0000000000190080010006020000e0000102000600163eb8c4a7000000"
+    }
+  ],
+  "final_collector_frames": 0,
+  "native_neighbor_binding_checks_passed": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "finding": "Independent veth capture contains controller discovery while the EtherType-specific slave-interface collector retained none; startup correctly stops without inventing a binding."
+}

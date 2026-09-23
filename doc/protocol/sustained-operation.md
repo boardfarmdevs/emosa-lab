@@ -207,7 +207,7 @@ Use a fresh label for every attempt. Preserve failed attempts.
    uv sync --locked
    tar -C src -cf - emosa | lxc exec emosa-lab -- tar -C /opt/emosa-radio-manager/source -xf -
    lxc file push deploy/radio-manager/node.py deploy/radio-manager/manager.py \
-     emosa-lab/opt/emosa-radio-manager/
+     deploy/radio-manager/neighbor-observer.py emosa-lab/opt/emosa-radio-manager/
    lxc file push deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
    ```
 
@@ -263,6 +263,13 @@ Use a fresh label for every attempt. Preserve failed attempts.
 
 The runner leaves `sustained_operation_proven` false. Independent capture review
 and the full acceptance criteria above must establish that result.
+
+Current native runs also start the read-only pod-side discovery observer and
+wait for an actual controller/interface binding before onboarding. Allow about
+one extra minute at startup for the candidate's periodic discovery; this is not
+part of active duration. The [binding guide](neighbor-discovery-binding.md)
+explains the observed topology identities and optional `--neighbor-gap-check`
+fault. Per-link metric-source qualification remains pending.
 
 ## Run the 15-minute operational soak with recovery
 

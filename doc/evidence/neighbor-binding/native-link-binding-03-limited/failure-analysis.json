@@ -1,0 +1,28 @@
+{
+  "label": "native-link-binding-03",
+  "native_trial_status": "experiment_finished",
+  "baseline_restored": true,
+  "cleanup_errors": [],
+  "captured_topology_discoveries": [
+    {
+      "frame": 1022,
+      "time": 1790145735.764014,
+      "hex": "0180c2000013020000e00001893a0000000000250080010006020000e0000102000600163eb8c4a7000000"
+    },
+    {
+      "frame": 2169,
+      "time": 1790145795.792892,
+      "hex": "0180c2000013020000e00001893a0000000000350080010006020000e0000102000600163eb8c4a7000000"
+    },
+    {
+      "frame": 3345,
+      "time": 1790145855.823794,
+      "hex": "0180c2000013020000e00001893a0000000000460080010006020000e0000102000600163eb8c4a7000000"
+    }
+  ],
+  "final_collector_frames": 3,
+  "native_neighbor_binding_checks_passed": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "finding": "Runtime recovery checks passed, but the first binding used a Discovery received before the independent forwarding capture began. The complete binding audit fails; later run starts capture before native controller startup."
+}

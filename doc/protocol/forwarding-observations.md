@@ -3,8 +3,11 @@
 This step acquires real interface observations in the **owned simulator**. It
 publishes them through the pinned OpenSync schema and reads them back in EMOSA.
 It does not yet enable native IEEE 1905 neighbor metric responses. The missing
-work is per-neighbor attribution, supported media/topology mapping and qualified
+work is per-neighbor attribution, media qualification and qualified
 capacity/availability estimates.
+The follow-on [live discovery binding](neighbor-discovery-binding.md) now joins
+these port identities to controller discovery observed at the pod and uses them
+in native topology reports. The media values remain explicit simulator fixtures.
 
 ## Understand the path before counting packets
 
@@ -144,7 +147,7 @@ per-neighbor packets or validate a throughput estimator.
 ## Reproduce with real recovery faults — HOST starts the VM experiment
 
 Complete the [sustained-operation prerequisites](sustained-operation.md) first.
-Stage the updated source, `deploy/radio-manager/node.py`, `manager.py`, and
+Stage the updated source, `deploy/radio-manager/node.py`, `manager.py`, `neighbor-observer.py`, and
 `deploy/peer-baseline/native-onboarding.py` using that guide's commands. The
 harness copies the guarded node helper into the owned AP container itself.
 
@@ -172,8 +175,9 @@ acceptance run.
 
 ## Next qualification step
 
-Bind the observed forwarding path and native peer discovery into the runtime
-topology; define a supported representation for the virtual Ethernet medium.
+The [live identity binding](neighbor-discovery-binding.md) now maps observed
+forwarding ports and native discovery into runtime topology. Qualify the medium
+representation beyond the explicit simulator fixture.
 Then reconcile interval counters against independent traffic at both endpoints,
 including transit/broadcast/control traffic and dropped/error categories.
 Qualify capacity and availability separately. Only then feed the guarded IEEE

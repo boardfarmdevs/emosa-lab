@@ -1,0 +1,2544 @@
+[
+  {
+    "kind": "pod_connection_loss",
+    "elapsed_start": 74.58376756299913,
+    "started_at": 1790146148.1606529,
+    "old_pid": 596781,
+    "before": {
+      "operation": {
+        "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+        "initiating_interface": "wsc-component",
+        "state": "OBSERVED_APPLIED",
+        "reason": null,
+        "attempts": 1,
+        "commit_attribution": "reply",
+        "application_evidence": {
+          "fresh": true,
+          "predicate_satisfied": true,
+          "generation": 1,
+          "revision": 3,
+          "received_at": "2026-09-23T06:47:38.119Z",
+          "source": "ovsdb",
+          "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+        },
+        "receipt": {
+          "scope": "owned_simulation_wsc_component",
+          "m1_sha256": "cd8626fe5737cb53340abb0f73ecb19e267c17e837824d70427903e67cee592f",
+          "controller_al": "020000e00001",
+          "agent_al": "020000003001",
+          "ruid": "020000ec0200",
+          "bssid": "020000ec0200",
+          "ingress": "probe0",
+          "link_generation": 1,
+          "database_generation": 1,
+          "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+          "first_mid": 19,
+          "pod_id": "pod-1",
+          "radio_id": "radio-1",
+          "bss_id": "bss-1"
+        }
+      },
+      "operations": [
+        {
+          "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+          "initiating_interface": "wsc-component",
+          "state": "OBSERVED_APPLIED",
+          "reason": null,
+          "attempts": 1,
+          "commit_attribution": "reply",
+          "application_evidence": {
+            "fresh": true,
+            "predicate_satisfied": true,
+            "generation": 1,
+            "revision": 3,
+            "received_at": "2026-09-23T06:47:38.119Z",
+            "source": "ovsdb",
+            "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+          },
+          "receipt": {
+            "scope": "owned_simulation_wsc_component",
+            "m1_sha256": "cd8626fe5737cb53340abb0f73ecb19e267c17e837824d70427903e67cee592f",
+            "controller_al": "020000e00001",
+            "agent_al": "020000003001",
+            "ruid": "020000ec0200",
+            "bssid": "020000ec0200",
+            "ingress": "probe0",
+            "link_generation": 1,
+            "database_generation": 1,
+            "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+            "first_mid": 19,
+            "pod_id": "pod-1",
+            "radio_id": "radio-1",
+            "bss_id": "bss-1"
+          }
+        }
+      ],
+      "operation_count": 1,
+      "writes": 1,
+      "journal_write_attempts": 1,
+      "process_id": "10283fa2-3b47-4faf-8316-a249b088e05e",
+      "config_ssid": "emosa-controller-trial",
+      "observed_ssid": "emosa-controller-trial"
+    },
+    "session_before": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 2,
+        "wsc_operation": 1,
+        "channel_selection_accepted": 2,
+        "operating_channel_acknowledged": 2,
+        "policy_receipt_ack_sent": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "rejected_INVALID_INPUT": 2,
+        "unsupported_message_0001": 1,
+        "client_join_notification": 3,
+        "client_capability_unavailable_report": 3,
+        "neighbor_measurement_unavailable": 1,
+        "client_leave_notification": 2,
+        "disassociation_statistics_unavailable": 2
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "observed_topology_notification",
+        "channel_selection_accepted",
+        "operating_channel_acknowledged",
+        "policy_receipt_ack_sent",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "rejected_INVALID_INPUT",
+        "unsupported_message_0001",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "neighbor_measurement_unavailable",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "rejected_INVALID_INPUT",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "input_or_source_rejected": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 3914
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 21
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 25
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 26
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 19,
+            "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+            "state": "CONFIG_COMMITTED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "reporting_policy": {
+        "counts": {
+          "policy_receipt_ack_sent": 1,
+          "metric_reporting_due_without_qualified_source": 1
+        },
+        "received_policy": {
+          "identity": {
+            "controller": "020000e00001",
+            "local_al": "020000003001",
+            "ruid": "020000ec0200"
+          },
+          "policy": {
+            "metrics": {
+              "interval_seconds": 60,
+              "radios": [
+                {
+                  "ruid": "020000ec0200",
+                  "rcpi_threshold": 0,
+                  "rcpi_hysteresis_db": 0,
+                  "utilization_threshold": 0,
+                  "include_traffic": true,
+                  "include_link": true,
+                  "include_wifi6_status": true
+                }
+              ]
+            },
+            "steering": {
+              "local_disallowed": [],
+              "btm_disallowed": [],
+              "radios": [
+                {
+                  "ruid": "020000ec0200",
+                  "policy": 0,
+                  "utilization_threshold": 0,
+                  "rcpi_threshold": 0
+                }
+              ]
+            },
+            "qos": [
+              {
+                "mscs_disallowed": [],
+                "scs_disallowed": []
+              }
+            ]
+          },
+          "receipt_count": 1,
+          "next_due": 25280.363095706,
+          "periods_due_without_report": 1,
+          "last_unfulfilled_due": 25220.363095706,
+          "boot_id": "ce35a9b0-e10d-4857-83cc-730ffd177a7d",
+          "schedule_rebases": 0,
+          "latest_mid": 23,
+          "latest_request": [
+            {
+              "kind": 138,
+              "value": "3c01020000ec0200000000e0"
+            },
+            {
+              "kind": 137,
+              "value": "000001020000ec0200000000"
+            },
+            {
+              "kind": 219,
+              "value": "00000000000000000000000000000000000000000000"
+            }
+          ]
+        },
+        "policy_application_proven": false,
+        "required_reporting_proven": false,
+        "reporting_gap": "qualified_measurements_and_metric_report_delivery_not_implemented"
+      },
+      "neighbor_link_metrics": {
+        "counts": {
+          "measurement_unavailable": 1
+        },
+        "measurement_available": false
+      },
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 2,
+          "operating_channel_report_sent": 2,
+          "operating_channel_acknowledged": 2,
+          "channel_preference_report_sent": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 25159.28820666
+          }
+        ]
+      },
+      "worker": {
+        "pid": 596781,
+        "process_id": "10283fa2-3b47-4faf-8316-a249b088e05e"
+      },
+      "report_source": {
+        "available": true,
+        "context_token": "3bd991469c3945a79678c391acfba8d7/0/1",
+        "inventory_complete": true,
+        "operating_radio_count": 1
+      },
+      "forwarding_observation": {
+        "profile": "owned-linux-bridge-observation-v1",
+        "available": true,
+        "reason": "raw_interface_window_available",
+        "sample": {
+          "generation": 1,
+          "started_ns": 25249808718564,
+          "ended_ns": 25249812673839,
+          "epoch": [
+            1,
+            "4646cf49-821c-4068-9b73-60e29bc0924d",
+            4026532652,
+            2,
+            "6e:ba:cb:f7:58:7b",
+            [
+              "eth1",
+              8,
+              "00:16:3e:b2:d2:c4",
+              9,
+              1500
+            ],
+            [
+              "eth2",
+              10,
+              "00:16:3e:e0:40:21",
+              11,
+              1500
+            ],
+            [
+              "wlan0",
+              17,
+              "02:00:00:ec:02:00",
+              0,
+              1500
+            ]
+          ],
+          "interfaces": {
+            "eth1": {
+              "ifindex": 8,
+              "mac": "00:16:3e:b2:d2:c4",
+              "peer_ifindex": 9,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 3491949,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 34894,
+                "tx_bytes": 3431600,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 34796
+              }
+            },
+            "eth2": {
+              "ifindex": 10,
+              "mac": "00:16:3e:e0:40:21",
+              "peer_ifindex": 11,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 1804390,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 18177,
+                "tx_bytes": 1986889,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 19868
+              }
+            },
+            "wlan0": {
+              "ifindex": 17,
+              "mac": "02:00:00:ec:02:00",
+              "peer_ifindex": 0,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 1523772,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 16347,
+                "tx_bytes": 2139650,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 18209
+              }
+            }
+          },
+          "neighbor_observation": {
+            "interface": "eth1",
+            "ifindex": 8,
+            "mac": "00:16:3e:b2:d2:c4",
+            "boot_id": "4646cf49-821c-4068-9b73-60e29bc0924d",
+            "netns_inode": 4026532652,
+            "capture_epoch": "8575b5ea-1be6-41ac-9d63-8f3455413303",
+            "run_label": "native-link-binding-04",
+            "collector_sha256": "594a33f222f2845a43bdc91d8faa6e6fef728aad1de37e758afdd1ad0c61bcb6",
+            "heartbeat_ns": 25249754285977,
+            "running": true,
+            "errors": [],
+            "frames": [
+              {
+                "received_ns": 25151175915772,
+                "frame_hex": "0180c2000013020000e00001893a0000000000060080010006020000e0000102000600163eb8c4a7000000"
+              },
+              {
+                "received_ns": 25211205941797,
+                "frame_hex": "0180c2000013020000e00001893a0000000000250080010006020000e0000102000600163eb8c4a7000000"
+              }
+            ],
+            "physical_pod_changed": false
+          }
+        },
+        "window": {
+          "first_read_ns": [
+            25249112702004,
+            25249115532780
+          ],
+          "last_read_ns": [
+            25249808718564,
+            25249812673839
+          ],
+          "deltas": {
+            "eth1": {
+              "rx_packets": 7,
+              "rx_bytes": 686,
+              "rx_errors": 0,
+              "rx_dropped": 0,
+              "tx_packets": 7,
+              "tx_bytes": 686,
+              "tx_errors": 0,
+              "tx_dropped": 0
+            },
+            "eth2": {
+              "rx_packets": 3,
+              "rx_bytes": 294,
+              "rx_errors": 0,
+              "rx_dropped": 0,
+              "tx_packets": 3,
+              "tx_bytes": 294,
+              "tx_errors": 0,
+              "tx_dropped": 0
+            },
+            "wlan0": {
+              "rx_packets": 4,
+              "rx_bytes": 392,
+              "rx_errors": 0,
+              "rx_dropped": 0,
+              "tx_packets": 4,
+              "tx_bytes": 472,
+              "tx_errors": 0,
+              "tx_dropped": 0
+            }
+          }
+        },
+        "counter_scope": "whole-interface-not-per-neighbor",
+        "measurement_source_qualified": false
+      },
+      "observed_neighbor": {
+        "available": true,
+        "reason": "observed_neighbor_bound",
+        "binding": {
+          "generation": 1,
+          "capture_epoch": "8575b5ea-1be6-41ac-9d63-8f3455413303",
+          "local_interface": "00:16:3e:b2:d2:c4",
+          "local_ifindex": 8,
+          "neighbor_al": "02:00:00:e0:00:01",
+          "neighbor_interface": "00:16:3e:b8:c4:a7",
+          "discovery_received_ns": 25211205941797,
+          "bridges_present": true,
+          "valid_until_ns": 25251754285977
+        },
+        "measurement_source_qualified": false,
+        "media_representation": "owned-simulator Ethernet fixture; physical PHY unqualified"
+      },
+      "telemetry": {
+        "accepted": 122,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790146147736,
+        "station_count": 1
+      }
+    },
+    "manual_intervention": false,
+    "session_unavailable": {
+      "state": "recovering",
+      "counts": {},
+      "events": [],
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 25253.244769891,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 25159.28820666
+          },
+          {
+            "event": "source_lost",
+            "attempt": 1,
+            "at": 25252.244730419,
+            "session": {
+              "scope": "owned_non_dpp_sole_radio_onboarding",
+              "state": "source_lost",
+              "counts": {
+                "search_sent": 1,
+                "early_then_m1_sent": 1,
+                "observed_topology_notification": 2,
+                "wsc_operation": 1,
+                "channel_selection_accepted": 2,
+                "operating_channel_acknowledged": 2,
+                "policy_receipt_ack_sent": 1,
+                "channel_preference_report_sent": 1,
+                "ap_capability_report_sent": 1,
+                "rejected_INVALID_INPUT": 2,
+                "unsupported_message_0001": 1,
+                "client_join_notification": 3,
+                "client_capability_unavailable_report": 3,
+                "neighbor_measurement_unavailable": 1,
+                "client_leave_notification": 2,
+                "disassociation_statistics_unavailable": 2,
+                "source_lost": 1
+              },
+              "events": [
+                "search_sent",
+                "early_then_m1_sent",
+                "observed_topology_notification",
+                "wsc_operation",
+                "observed_topology_notification",
+                "channel_selection_accepted",
+                "operating_channel_acknowledged",
+                "policy_receipt_ack_sent",
+                "channel_selection_accepted",
+                "channel_preference_report_sent",
+                "ap_capability_report_sent",
+                "operating_channel_acknowledged",
+                "rejected_INVALID_INPUT",
+                "unsupported_message_0001",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "neighbor_measurement_unavailable",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "source_lost"
+              ],
+              "admission_issues": [],
+              "reports": {
+                "counts": {
+                  "early_sent": 1,
+                  "early_source_invalidated": 1,
+                  "input_or_source_rejected": 1,
+                  "topology_response_sent": 2,
+                  "unmatched_ack": 1
+                },
+                "events": [
+                  {
+                    "event": "early_sent",
+                    "mid": 3914
+                  },
+                  {
+                    "event": "early_source_invalidated"
+                  },
+                  {
+                    "event": "input_or_source_rejected"
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 21
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 25
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 26
+                  }
+                ],
+                "early_pending": false
+              },
+              "wsc": {
+                "counts": {
+                  "operation": 1
+                },
+                "events": [
+                  {
+                    "status": "operation",
+                    "mid": 19,
+                    "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+                    "state": "CONFIG_COMMITTED"
+                  }
+                ],
+                "closed": true
+              },
+              "full_profile_qualified": false,
+              "physical_pod_proven": false,
+              "reporting_policy": {
+                "counts": {
+                  "policy_receipt_ack_sent": 1,
+                  "metric_reporting_due_without_qualified_source": 1
+                },
+                "received_policy": {
+                  "identity": {
+                    "controller": "020000e00001",
+                    "local_al": "020000003001",
+                    "ruid": "020000ec0200"
+                  },
+                  "policy": {
+                    "metrics": {
+                      "interval_seconds": 60,
+                      "radios": [
+                        {
+                          "ruid": "020000ec0200",
+                          "rcpi_threshold": 0,
+                          "rcpi_hysteresis_db": 0,
+                          "utilization_threshold": 0,
+                          "include_traffic": true,
+                          "include_link": true,
+                          "include_wifi6_status": true
+                        }
+                      ]
+                    },
+                    "steering": {
+                      "local_disallowed": [],
+                      "btm_disallowed": [],
+                      "radios": [
+                        {
+                          "ruid": "020000ec0200",
+                          "policy": 0,
+                          "utilization_threshold": 0,
+                          "rcpi_threshold": 0
+                        }
+                      ]
+                    },
+                    "qos": [
+                      {
+                        "mscs_disallowed": [],
+                        "scs_disallowed": []
+                      }
+                    ]
+                  },
+                  "receipt_count": 1,
+                  "next_due": 25280.363095706,
+                  "periods_due_without_report": 1,
+                  "last_unfulfilled_due": 25220.363095706,
+                  "boot_id": "ce35a9b0-e10d-4857-83cc-730ffd177a7d",
+                  "schedule_rebases": 0,
+                  "latest_mid": 23,
+                  "latest_request": [
+                    {
+                      "kind": 138,
+                      "value": "3c01020000ec0200000000e0"
+                    },
+                    {
+                      "kind": 137,
+                      "value": "000001020000ec0200000000"
+                    },
+                    {
+                      "kind": 219,
+                      "value": "00000000000000000000000000000000000000000000"
+                    }
+                  ]
+                },
+                "policy_application_proven": false,
+                "required_reporting_proven": false,
+                "reporting_gap": "qualified_measurements_and_metric_report_delivery_not_implemented"
+              },
+              "neighbor_link_metrics": {
+                "counts": {
+                  "measurement_unavailable": 1
+                },
+                "measurement_available": false
+              },
+              "channels": {
+                "counts": {
+                  "channel_selection_accepted": 2,
+                  "operating_channel_report_sent": 2,
+                  "operating_channel_acknowledged": 2,
+                  "channel_preference_report_sent": 1
+                },
+                "operating_ack_pending": false
+              },
+              "disassociations": {
+                "counts": {},
+                "pending": 0
+              }
+            }
+          }
+        ]
+      },
+      "worker": {
+        "pid": 596781,
+        "process_id": "10283fa2-3b47-4faf-8316-a249b088e05e"
+      },
+      "report_source": {
+        "available": false,
+        "context_token": null,
+        "inventory_complete": false,
+        "operating_radio_count": 0
+      },
+      "forwarding_observation": {
+        "profile": "owned-linux-bridge-observation-v1",
+        "available": false,
+        "reason": "source_unavailable",
+        "sample": null,
+        "window": null,
+        "counter_scope": "whole-interface-not-per-neighbor",
+        "measurement_source_qualified": false
+      },
+      "observed_neighbor": {
+        "available": false,
+        "reason": "source_unavailable",
+        "binding": null,
+        "measurement_source_qualified": false,
+        "media_representation": "owned-simulator Ethernet fixture; physical PHY unqualified"
+      },
+      "telemetry": {
+        "accepted": 123,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790146148416,
+        "station_count": 1
+      }
+    },
+    "restored_at": 1790146154.2851756,
+    "new_pid": 596781,
+    "after": {
+      "operation": {
+        "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+        "initiating_interface": "wsc-component",
+        "state": "OBSERVED_APPLIED",
+        "reason": null,
+        "attempts": 1,
+        "commit_attribution": "reply",
+        "application_evidence": {
+          "fresh": true,
+          "predicate_satisfied": true,
+          "generation": 1,
+          "revision": 3,
+          "received_at": "2026-09-23T06:47:38.119Z",
+          "source": "ovsdb",
+          "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+        },
+        "receipt": {
+          "scope": "owned_simulation_wsc_component",
+          "m1_sha256": "cd8626fe5737cb53340abb0f73ecb19e267c17e837824d70427903e67cee592f",
+          "controller_al": "020000e00001",
+          "agent_al": "020000003001",
+          "ruid": "020000ec0200",
+          "bssid": "020000ec0200",
+          "ingress": "probe0",
+          "link_generation": 1,
+          "database_generation": 1,
+          "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+          "first_mid": 19,
+          "pod_id": "pod-1",
+          "radio_id": "radio-1",
+          "bss_id": "bss-1"
+        }
+      },
+      "operations": [
+        {
+          "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+          "initiating_interface": "wsc-component",
+          "state": "OBSERVED_APPLIED",
+          "reason": null,
+          "attempts": 1,
+          "commit_attribution": "reply",
+          "application_evidence": {
+            "fresh": true,
+            "predicate_satisfied": true,
+            "generation": 1,
+            "revision": 3,
+            "received_at": "2026-09-23T06:47:38.119Z",
+            "source": "ovsdb",
+            "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+          },
+          "receipt": {
+            "scope": "owned_simulation_wsc_component",
+            "m1_sha256": "cd8626fe5737cb53340abb0f73ecb19e267c17e837824d70427903e67cee592f",
+            "controller_al": "020000e00001",
+            "agent_al": "020000003001",
+            "ruid": "020000ec0200",
+            "bssid": "020000ec0200",
+            "ingress": "probe0",
+            "link_generation": 1,
+            "database_generation": 1,
+            "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+            "first_mid": 19,
+            "pod_id": "pod-1",
+            "radio_id": "radio-1",
+            "bss_id": "bss-1"
+          }
+        },
+        {
+          "operation_id": "da3fb69b-448a-41e9-b7f6-547866b72d59",
+          "initiating_interface": "wsc-component",
+          "state": "OBSERVED_APPLIED",
+          "reason": null,
+          "attempts": 0,
+          "commit_attribution": "not_submitted",
+          "application_evidence": {
+            "fresh": true,
+            "predicate_satisfied": true,
+            "generation": 2,
+            "revision": 134,
+            "received_at": "2026-09-23T06:49:14.435Z",
+            "source": "ovsdb",
+            "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State",
+            "observed_noop": true
+          },
+          "receipt": {
+            "scope": "owned_simulation_wsc_component",
+            "m1_sha256": "19696089d765618401bd4a20ff370b3dcb19e77f67bbeb2ffa1468759064ec02",
+            "controller_al": "020000e00001",
+            "agent_al": "020000003001",
+            "ruid": "020000ec0200",
+            "bssid": "020000ec0200",
+            "ingress": "probe0",
+            "link_generation": 1,
+            "database_generation": 2,
+            "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+            "first_mid": 42,
+            "pod_id": "pod-1",
+            "radio_id": "radio-1",
+            "bss_id": "bss-1"
+          }
+        }
+      ],
+      "operation_count": 2,
+      "writes": 1,
+      "journal_write_attempts": 1,
+      "process_id": "10283fa2-3b47-4faf-8316-a249b088e05e",
+      "config_ssid": "emosa-controller-trial",
+      "observed_ssid": "emosa-controller-trial"
+    },
+    "session_after": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "client_join_notification": 1,
+        "wsc_operation": 1,
+        "client_capability_unavailable_report": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "client_join_notification",
+        "wsc_operation",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 3926
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 43
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 42,
+            "operation_id": "da3fb69b-448a-41e9-b7f6-547866b72d59",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "reporting_policy": {
+        "counts": {},
+        "received_policy": {
+          "boot_id": "ce35a9b0-e10d-4857-83cc-730ffd177a7d",
+          "identity": {
+            "controller": "020000e00001",
+            "local_al": "020000003001",
+            "ruid": "020000ec0200"
+          },
+          "last_unfulfilled_due": 25220.363095706,
+          "latest_mid": 23,
+          "latest_request": [
+            {
+              "kind": 138,
+              "value": "3c01020000ec0200000000e0"
+            },
+            {
+              "kind": 137,
+              "value": "000001020000ec0200000000"
+            },
+            {
+              "kind": 219,
+              "value": "00000000000000000000000000000000000000000000"
+            }
+          ],
+          "next_due": 25280.363095706,
+          "periods_due_without_report": 1,
+          "policy": {
+            "metrics": {
+              "interval_seconds": 60,
+              "radios": [
+                {
+                  "include_link": true,
+                  "include_traffic": true,
+                  "include_wifi6_status": true,
+                  "rcpi_hysteresis_db": 0,
+                  "rcpi_threshold": 0,
+                  "ruid": "020000ec0200",
+                  "utilization_threshold": 0
+                }
+              ]
+            },
+            "qos": [
+              {
+                "mscs_disallowed": [],
+                "scs_disallowed": []
+              }
+            ],
+            "steering": {
+              "btm_disallowed": [],
+              "local_disallowed": [],
+              "radios": [
+                {
+                  "policy": 0,
+                  "rcpi_threshold": 0,
+                  "ruid": "020000ec0200",
+                  "utilization_threshold": 0
+                }
+              ]
+            }
+          },
+          "receipt_count": 1,
+          "schedule_rebases": 0
+        },
+        "policy_application_proven": false,
+        "required_reporting_proven": false,
+        "reporting_gap": "qualified_measurements_and_metric_report_delivery_not_implemented"
+      },
+      "neighbor_link_metrics": {
+        "counts": {},
+        "measurement_available": false
+      },
+      "channels": {
+        "counts": {},
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 2,
+        "next_start": 25253.244769891,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 25159.28820666
+          },
+          {
+            "event": "source_lost",
+            "attempt": 1,
+            "at": 25252.244730419,
+            "session": {
+              "scope": "owned_non_dpp_sole_radio_onboarding",
+              "state": "source_lost",
+              "counts": {
+                "search_sent": 1,
+                "early_then_m1_sent": 1,
+                "observed_topology_notification": 2,
+                "wsc_operation": 1,
+                "channel_selection_accepted": 2,
+                "operating_channel_acknowledged": 2,
+                "policy_receipt_ack_sent": 1,
+                "channel_preference_report_sent": 1,
+                "ap_capability_report_sent": 1,
+                "rejected_INVALID_INPUT": 2,
+                "unsupported_message_0001": 1,
+                "client_join_notification": 3,
+                "client_capability_unavailable_report": 3,
+                "neighbor_measurement_unavailable": 1,
+                "client_leave_notification": 2,
+                "disassociation_statistics_unavailable": 2,
+                "source_lost": 1
+              },
+              "events": [
+                "search_sent",
+                "early_then_m1_sent",
+                "observed_topology_notification",
+                "wsc_operation",
+                "observed_topology_notification",
+                "channel_selection_accepted",
+                "operating_channel_acknowledged",
+                "policy_receipt_ack_sent",
+                "channel_selection_accepted",
+                "channel_preference_report_sent",
+                "ap_capability_report_sent",
+                "operating_channel_acknowledged",
+                "rejected_INVALID_INPUT",
+                "unsupported_message_0001",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "neighbor_measurement_unavailable",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "source_lost"
+              ],
+              "admission_issues": [],
+              "reports": {
+                "counts": {
+                  "early_sent": 1,
+                  "early_source_invalidated": 1,
+                  "input_or_source_rejected": 1,
+                  "topology_response_sent": 2,
+                  "unmatched_ack": 1
+                },
+                "events": [
+                  {
+                    "event": "early_sent",
+                    "mid": 3914
+                  },
+                  {
+                    "event": "early_source_invalidated"
+                  },
+                  {
+                    "event": "input_or_source_rejected"
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 21
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 25
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 26
+                  }
+                ],
+                "early_pending": false
+              },
+              "wsc": {
+                "counts": {
+                  "operation": 1
+                },
+                "events": [
+                  {
+                    "status": "operation",
+                    "mid": 19,
+                    "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+                    "state": "CONFIG_COMMITTED"
+                  }
+                ],
+                "closed": true
+              },
+              "full_profile_qualified": false,
+              "physical_pod_proven": false,
+              "reporting_policy": {
+                "counts": {
+                  "policy_receipt_ack_sent": 1,
+                  "metric_reporting_due_without_qualified_source": 1
+                },
+                "received_policy": {
+                  "identity": {
+                    "controller": "020000e00001",
+                    "local_al": "020000003001",
+                    "ruid": "020000ec0200"
+                  },
+                  "policy": {
+                    "metrics": {
+                      "interval_seconds": 60,
+                      "radios": [
+                        {
+                          "ruid": "020000ec0200",
+                          "rcpi_threshold": 0,
+                          "rcpi_hysteresis_db": 0,
+                          "utilization_threshold": 0,
+                          "include_traffic": true,
+                          "include_link": true,
+                          "include_wifi6_status": true
+                        }
+                      ]
+                    },
+                    "steering": {
+                      "local_disallowed": [],
+                      "btm_disallowed": [],
+                      "radios": [
+                        {
+                          "ruid": "020000ec0200",
+                          "policy": 0,
+                          "utilization_threshold": 0,
+                          "rcpi_threshold": 0
+                        }
+                      ]
+                    },
+                    "qos": [
+                      {
+                        "mscs_disallowed": [],
+                        "scs_disallowed": []
+                      }
+                    ]
+                  },
+                  "receipt_count": 1,
+                  "next_due": 25280.363095706,
+                  "periods_due_without_report": 1,
+                  "last_unfulfilled_due": 25220.363095706,
+                  "boot_id": "ce35a9b0-e10d-4857-83cc-730ffd177a7d",
+                  "schedule_rebases": 0,
+                  "latest_mid": 23,
+                  "latest_request": [
+                    {
+                      "kind": 138,
+                      "value": "3c01020000ec0200000000e0"
+                    },
+                    {
+                      "kind": 137,
+                      "value": "000001020000ec0200000000"
+                    },
+                    {
+                      "kind": 219,
+                      "value": "00000000000000000000000000000000000000000000"
+                    }
+                  ]
+                },
+                "policy_application_proven": false,
+                "required_reporting_proven": false,
+                "reporting_gap": "qualified_measurements_and_metric_report_delivery_not_implemented"
+              },
+              "neighbor_link_metrics": {
+                "counts": {
+                  "measurement_unavailable": 1
+                },
+                "measurement_available": false
+              },
+              "channels": {
+                "counts": {
+                  "channel_selection_accepted": 2,
+                  "operating_channel_report_sent": 2,
+                  "operating_channel_acknowledged": 2,
+                  "channel_preference_report_sent": 1
+                },
+                "operating_ack_pending": false
+              },
+              "disassociations": {
+                "counts": {},
+                "pending": 0
+              }
+            }
+          },
+          {
+            "event": "attempt_started",
+            "attempt": 2,
+            "at": 25256.446059552
+          }
+        ]
+      },
+      "worker": {
+        "pid": 596781,
+        "process_id": "10283fa2-3b47-4faf-8316-a249b088e05e"
+      },
+      "report_source": {
+        "available": true,
+        "context_token": "3bd991469c3945a79678c391acfba8d7/5/2",
+        "inventory_complete": true,
+        "operating_radio_count": 1
+      },
+      "forwarding_observation": {
+        "profile": "owned-linux-bridge-observation-v1",
+        "available": true,
+        "reason": "awaiting_second_sample",
+        "sample": {
+          "generation": 2,
+          "started_ns": 25255928847300,
+          "ended_ns": 25255932557283,
+          "epoch": [
+            2,
+            "4646cf49-821c-4068-9b73-60e29bc0924d",
+            4026532652,
+            2,
+            "6e:ba:cb:f7:58:7b",
+            [
+              "eth1",
+              8,
+              "00:16:3e:b2:d2:c4",
+              9,
+              1500
+            ],
+            [
+              "eth2",
+              10,
+              "00:16:3e:e0:40:21",
+              11,
+              1500
+            ],
+            [
+              "wlan0",
+              17,
+              "02:00:00:ec:02:00",
+              0,
+              1500
+            ]
+          ],
+          "interfaces": {
+            "eth1": {
+              "ifindex": 8,
+              "mac": "00:16:3e:b2:d2:c4",
+              "peer_ifindex": 9,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 3497708,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 34950,
+                "tx_bytes": 3436859,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 34851
+              }
+            },
+            "eth2": {
+              "ifindex": 10,
+              "mac": "00:16:3e:e0:40:21",
+              "peer_ifindex": 11,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 1806742,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 18201,
+                "tx_bytes": 1989592,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 19893
+              }
+            },
+            "wlan0": {
+              "ifindex": 17,
+              "mac": "02:00:00:ec:02:00",
+              "peer_ifindex": 0,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 1526679,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 16378,
+                "tx_bytes": 2143695,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 18241
+              }
+            }
+          },
+          "neighbor_observation": {
+            "interface": "eth1",
+            "ifindex": 8,
+            "mac": "00:16:3e:b2:d2:c4",
+            "boot_id": "4646cf49-821c-4068-9b73-60e29bc0924d",
+            "netns_inode": 4026532652,
+            "capture_epoch": "8575b5ea-1be6-41ac-9d63-8f3455413303",
+            "run_label": "native-link-binding-04",
+            "collector_sha256": "594a33f222f2845a43bdc91d8faa6e6fef728aad1de37e758afdd1ad0c61bcb6",
+            "heartbeat_ns": 25255898309603,
+            "running": true,
+            "errors": [],
+            "frames": [
+              {
+                "received_ns": 25151175915772,
+                "frame_hex": "0180c2000013020000e00001893a0000000000060080010006020000e0000102000600163eb8c4a7000000"
+              },
+              {
+                "received_ns": 25211205941797,
+                "frame_hex": "0180c2000013020000e00001893a0000000000250080010006020000e0000102000600163eb8c4a7000000"
+              }
+            ],
+            "physical_pod_changed": false
+          }
+        },
+        "window": null,
+        "counter_scope": "whole-interface-not-per-neighbor",
+        "measurement_source_qualified": false
+      },
+      "observed_neighbor": {
+        "available": true,
+        "reason": "observed_neighbor_bound",
+        "binding": {
+          "generation": 2,
+          "capture_epoch": "8575b5ea-1be6-41ac-9d63-8f3455413303",
+          "local_interface": "00:16:3e:b2:d2:c4",
+          "local_ifindex": 8,
+          "neighbor_al": "02:00:00:e0:00:01",
+          "neighbor_interface": "00:16:3e:b8:c4:a7",
+          "discovery_received_ns": 25211205941797,
+          "bridges_present": true,
+          "valid_until_ns": 25257898309603
+        },
+        "measurement_source_qualified": false,
+        "media_representation": "owned-simulator Ethernet fixture; physical PHY unqualified"
+      },
+      "telemetry": {
+        "accepted": 129,
+        "rejected": 2,
+        "generation": 0,
+        "timestamp_ms": 1790146153856,
+        "station_count": 1
+      }
+    },
+    "recovered_at": 1790146154.4860198,
+    "elapsed_end": 80.90913584599912,
+    "clients": {
+      "clients": "passed",
+      "nonce": "563fb41ce8424c35b23b4f54392b32c1"
+    }
+  },
+  {
+    "kind": "adapter_sigkill",
+    "elapsed_start": 140.1624432110002,
+    "started_at": 1790146213.739328,
+    "old_pid": 596781,
+    "before": {
+      "operation": {
+        "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+        "initiating_interface": "wsc-component",
+        "state": "OBSERVED_APPLIED",
+        "reason": null,
+        "attempts": 1,
+        "commit_attribution": "reply",
+        "application_evidence": {
+          "fresh": true,
+          "predicate_satisfied": true,
+          "generation": 1,
+          "revision": 3,
+          "received_at": "2026-09-23T06:47:38.119Z",
+          "source": "ovsdb",
+          "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+        },
+        "receipt": {
+          "scope": "owned_simulation_wsc_component",
+          "m1_sha256": "cd8626fe5737cb53340abb0f73ecb19e267c17e837824d70427903e67cee592f",
+          "controller_al": "020000e00001",
+          "agent_al": "020000003001",
+          "ruid": "020000ec0200",
+          "bssid": "020000ec0200",
+          "ingress": "probe0",
+          "link_generation": 1,
+          "database_generation": 1,
+          "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+          "first_mid": 19,
+          "pod_id": "pod-1",
+          "radio_id": "radio-1",
+          "bss_id": "bss-1"
+        }
+      },
+      "operations": [
+        {
+          "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+          "initiating_interface": "wsc-component",
+          "state": "OBSERVED_APPLIED",
+          "reason": null,
+          "attempts": 1,
+          "commit_attribution": "reply",
+          "application_evidence": {
+            "fresh": true,
+            "predicate_satisfied": true,
+            "generation": 1,
+            "revision": 3,
+            "received_at": "2026-09-23T06:47:38.119Z",
+            "source": "ovsdb",
+            "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+          },
+          "receipt": {
+            "scope": "owned_simulation_wsc_component",
+            "m1_sha256": "cd8626fe5737cb53340abb0f73ecb19e267c17e837824d70427903e67cee592f",
+            "controller_al": "020000e00001",
+            "agent_al": "020000003001",
+            "ruid": "020000ec0200",
+            "bssid": "020000ec0200",
+            "ingress": "probe0",
+            "link_generation": 1,
+            "database_generation": 1,
+            "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+            "first_mid": 19,
+            "pod_id": "pod-1",
+            "radio_id": "radio-1",
+            "bss_id": "bss-1"
+          }
+        },
+        {
+          "operation_id": "da3fb69b-448a-41e9-b7f6-547866b72d59",
+          "initiating_interface": "wsc-component",
+          "state": "OBSERVED_APPLIED",
+          "reason": null,
+          "attempts": 0,
+          "commit_attribution": "not_submitted",
+          "application_evidence": {
+            "fresh": true,
+            "predicate_satisfied": true,
+            "generation": 2,
+            "revision": 134,
+            "received_at": "2026-09-23T06:49:14.435Z",
+            "source": "ovsdb",
+            "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State",
+            "observed_noop": true
+          },
+          "receipt": {
+            "scope": "owned_simulation_wsc_component",
+            "m1_sha256": "19696089d765618401bd4a20ff370b3dcb19e77f67bbeb2ffa1468759064ec02",
+            "controller_al": "020000e00001",
+            "agent_al": "020000003001",
+            "ruid": "020000ec0200",
+            "bssid": "020000ec0200",
+            "ingress": "probe0",
+            "link_generation": 1,
+            "database_generation": 2,
+            "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+            "first_mid": 42,
+            "pod_id": "pod-1",
+            "radio_id": "radio-1",
+            "bss_id": "bss-1"
+          }
+        }
+      ],
+      "operation_count": 2,
+      "writes": 1,
+      "journal_write_attempts": 1,
+      "process_id": "10283fa2-3b47-4faf-8316-a249b088e05e",
+      "config_ssid": "emosa-controller-trial",
+      "observed_ssid": "emosa-controller-trial"
+    },
+    "session_before": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "client_join_notification": 4,
+        "wsc_operation": 1,
+        "client_capability_unavailable_report": 4,
+        "policy_receipt_ack_sent": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 3,
+        "disassociation_statistics_unavailable": 3,
+        "rejected_INVALID_INPUT": 1,
+        "neighbor_measurement_unavailable": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "client_join_notification",
+        "wsc_operation",
+        "client_capability_unavailable_report",
+        "policy_receipt_ack_sent",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "rejected_INVALID_INPUT",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "neighbor_measurement_unavailable"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 3926
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 43
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 47
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 48
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 42,
+            "operation_id": "da3fb69b-448a-41e9-b7f6-547866b72d59",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "reporting_policy": {
+        "counts": {
+          "policy_receipt_ack_sent": 1,
+          "metric_reporting_due_without_qualified_source": 1
+        },
+        "received_policy": {
+          "boot_id": "ce35a9b0-e10d-4857-83cc-730ffd177a7d",
+          "identity": {
+            "controller": "020000e00001",
+            "local_al": "020000003001",
+            "ruid": "020000ec0200"
+          },
+          "last_unfulfilled_due": 25280.363095706,
+          "latest_mid": 45,
+          "latest_request": [
+            {
+              "kind": 138,
+              "value": "3c01020000ec0200000000e0"
+            },
+            {
+              "kind": 137,
+              "value": "000001020000ec0200000000"
+            },
+            {
+              "kind": 219,
+              "value": "00000000000000000000000000000000000000000000"
+            }
+          ],
+          "next_due": 25340.363095706,
+          "periods_due_without_report": 2,
+          "policy": {
+            "metrics": {
+              "interval_seconds": 60,
+              "radios": [
+                {
+                  "ruid": "020000ec0200",
+                  "rcpi_threshold": 0,
+                  "rcpi_hysteresis_db": 0,
+                  "utilization_threshold": 0,
+                  "include_traffic": true,
+                  "include_link": true,
+                  "include_wifi6_status": true
+                }
+              ]
+            },
+            "qos": [
+              {
+                "mscs_disallowed": [],
+                "scs_disallowed": []
+              }
+            ],
+            "steering": {
+              "local_disallowed": [],
+              "btm_disallowed": [],
+              "radios": [
+                {
+                  "ruid": "020000ec0200",
+                  "policy": 0,
+                  "utilization_threshold": 0,
+                  "rcpi_threshold": 0
+                }
+              ]
+            }
+          },
+          "receipt_count": 2,
+          "schedule_rebases": 0
+        },
+        "policy_application_proven": false,
+        "required_reporting_proven": false,
+        "reporting_gap": "qualified_measurements_and_metric_report_delivery_not_implemented"
+      },
+      "neighbor_link_metrics": {
+        "counts": {
+          "measurement_unavailable": 1
+        },
+        "measurement_available": false
+      },
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 2,
+        "next_start": 25253.244769891,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 25159.28820666
+          },
+          {
+            "event": "source_lost",
+            "attempt": 1,
+            "at": 25252.244730419,
+            "session": {
+              "scope": "owned_non_dpp_sole_radio_onboarding",
+              "state": "source_lost",
+              "counts": {
+                "search_sent": 1,
+                "early_then_m1_sent": 1,
+                "observed_topology_notification": 2,
+                "wsc_operation": 1,
+                "channel_selection_accepted": 2,
+                "operating_channel_acknowledged": 2,
+                "policy_receipt_ack_sent": 1,
+                "channel_preference_report_sent": 1,
+                "ap_capability_report_sent": 1,
+                "rejected_INVALID_INPUT": 2,
+                "unsupported_message_0001": 1,
+                "client_join_notification": 3,
+                "client_capability_unavailable_report": 3,
+                "neighbor_measurement_unavailable": 1,
+                "client_leave_notification": 2,
+                "disassociation_statistics_unavailable": 2,
+                "source_lost": 1
+              },
+              "events": [
+                "search_sent",
+                "early_then_m1_sent",
+                "observed_topology_notification",
+                "wsc_operation",
+                "observed_topology_notification",
+                "channel_selection_accepted",
+                "operating_channel_acknowledged",
+                "policy_receipt_ack_sent",
+                "channel_selection_accepted",
+                "channel_preference_report_sent",
+                "ap_capability_report_sent",
+                "operating_channel_acknowledged",
+                "rejected_INVALID_INPUT",
+                "unsupported_message_0001",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "neighbor_measurement_unavailable",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "source_lost"
+              ],
+              "admission_issues": [],
+              "reports": {
+                "counts": {
+                  "early_sent": 1,
+                  "early_source_invalidated": 1,
+                  "input_or_source_rejected": 1,
+                  "topology_response_sent": 2,
+                  "unmatched_ack": 1
+                },
+                "events": [
+                  {
+                    "event": "early_sent",
+                    "mid": 3914
+                  },
+                  {
+                    "event": "early_source_invalidated"
+                  },
+                  {
+                    "event": "input_or_source_rejected"
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 21
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 25
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 26
+                  }
+                ],
+                "early_pending": false
+              },
+              "wsc": {
+                "counts": {
+                  "operation": 1
+                },
+                "events": [
+                  {
+                    "status": "operation",
+                    "mid": 19,
+                    "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+                    "state": "CONFIG_COMMITTED"
+                  }
+                ],
+                "closed": true
+              },
+              "full_profile_qualified": false,
+              "physical_pod_proven": false,
+              "reporting_policy": {
+                "counts": {
+                  "policy_receipt_ack_sent": 1,
+                  "metric_reporting_due_without_qualified_source": 1
+                },
+                "received_policy": {
+                  "identity": {
+                    "controller": "020000e00001",
+                    "local_al": "020000003001",
+                    "ruid": "020000ec0200"
+                  },
+                  "policy": {
+                    "metrics": {
+                      "interval_seconds": 60,
+                      "radios": [
+                        {
+                          "ruid": "020000ec0200",
+                          "rcpi_threshold": 0,
+                          "rcpi_hysteresis_db": 0,
+                          "utilization_threshold": 0,
+                          "include_traffic": true,
+                          "include_link": true,
+                          "include_wifi6_status": true
+                        }
+                      ]
+                    },
+                    "steering": {
+                      "local_disallowed": [],
+                      "btm_disallowed": [],
+                      "radios": [
+                        {
+                          "ruid": "020000ec0200",
+                          "policy": 0,
+                          "utilization_threshold": 0,
+                          "rcpi_threshold": 0
+                        }
+                      ]
+                    },
+                    "qos": [
+                      {
+                        "mscs_disallowed": [],
+                        "scs_disallowed": []
+                      }
+                    ]
+                  },
+                  "receipt_count": 1,
+                  "next_due": 25280.363095706,
+                  "periods_due_without_report": 1,
+                  "last_unfulfilled_due": 25220.363095706,
+                  "boot_id": "ce35a9b0-e10d-4857-83cc-730ffd177a7d",
+                  "schedule_rebases": 0,
+                  "latest_mid": 23,
+                  "latest_request": [
+                    {
+                      "kind": 138,
+                      "value": "3c01020000ec0200000000e0"
+                    },
+                    {
+                      "kind": 137,
+                      "value": "000001020000ec0200000000"
+                    },
+                    {
+                      "kind": 219,
+                      "value": "00000000000000000000000000000000000000000000"
+                    }
+                  ]
+                },
+                "policy_application_proven": false,
+                "required_reporting_proven": false,
+                "reporting_gap": "qualified_measurements_and_metric_report_delivery_not_implemented"
+              },
+              "neighbor_link_metrics": {
+                "counts": {
+                  "measurement_unavailable": 1
+                },
+                "measurement_available": false
+              },
+              "channels": {
+                "counts": {
+                  "channel_selection_accepted": 2,
+                  "operating_channel_report_sent": 2,
+                  "operating_channel_acknowledged": 2,
+                  "channel_preference_report_sent": 1
+                },
+                "operating_ack_pending": false
+              },
+              "disassociations": {
+                "counts": {},
+                "pending": 0
+              }
+            }
+          },
+          {
+            "event": "attempt_started",
+            "attempt": 2,
+            "at": 25256.446059552
+          }
+        ]
+      },
+      "worker": {
+        "pid": 596781,
+        "process_id": "10283fa2-3b47-4faf-8316-a249b088e05e"
+      },
+      "report_source": {
+        "available": true,
+        "context_token": "3bd991469c3945a79678c391acfba8d7/5/2",
+        "inventory_complete": true,
+        "operating_radio_count": 1
+      },
+      "forwarding_observation": {
+        "profile": "owned-linux-bridge-observation-v1",
+        "available": true,
+        "reason": "raw_interface_window_available",
+        "sample": {
+          "generation": 2,
+          "started_ns": 25315529573455,
+          "ended_ns": 25315532094883,
+          "epoch": [
+            2,
+            "4646cf49-821c-4068-9b73-60e29bc0924d",
+            4026532652,
+            2,
+            "6e:ba:cb:f7:58:7b",
+            [
+              "eth1",
+              8,
+              "00:16:3e:b2:d2:c4",
+              9,
+              1500
+            ],
+            [
+              "eth2",
+              10,
+              "00:16:3e:e0:40:21",
+              11,
+              1500
+            ],
+            [
+              "wlan0",
+              17,
+              "02:00:00:ec:02:00",
+              0,
+              1500
+            ]
+          ],
+          "interfaces": {
+            "eth1": {
+              "ifindex": 8,
+              "mac": "00:16:3e:b2:d2:c4",
+              "peer_ifindex": 9,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 3552794,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 35516,
+                "tx_bytes": 3490212,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 35418
+              }
+            },
+            "eth2": {
+              "ifindex": 10,
+              "mac": "00:16:3e:e0:40:21",
+              "peer_ifindex": 11,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 1835799,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 18507,
+                "tx_bytes": 2020929,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 20221
+              }
+            },
+            "wlan0": {
+              "ifindex": 17,
+              "mac": "02:00:00:ec:02:00",
+              "peer_ifindex": 0,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 1551313,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 16641,
+                "tx_bytes": 2176174,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 18519
+              }
+            }
+          },
+          "neighbor_observation": {
+            "interface": "eth1",
+            "ifindex": 8,
+            "mac": "00:16:3e:b2:d2:c4",
+            "boot_id": "4646cf49-821c-4068-9b73-60e29bc0924d",
+            "netns_inode": 4026532652,
+            "capture_epoch": "8575b5ea-1be6-41ac-9d63-8f3455413303",
+            "run_label": "native-link-binding-04",
+            "collector_sha256": "594a33f222f2845a43bdc91d8faa6e6fef728aad1de37e758afdd1ad0c61bcb6",
+            "heartbeat_ns": 25315522284498,
+            "running": true,
+            "errors": [],
+            "frames": [
+              {
+                "received_ns": 25151175915772,
+                "frame_hex": "0180c2000013020000e00001893a0000000000060080010006020000e0000102000600163eb8c4a7000000"
+              },
+              {
+                "received_ns": 25211205941797,
+                "frame_hex": "0180c2000013020000e00001893a0000000000250080010006020000e0000102000600163eb8c4a7000000"
+              },
+              {
+                "received_ns": 25271235675958,
+                "frame_hex": "0180c2000013020000e00001893a0000000000350080010006020000e0000102000600163eb8c4a7000000"
+              }
+            ],
+            "physical_pod_changed": false
+          }
+        },
+        "window": {
+          "first_read_ns": [
+            25314841527713,
+            25314844110554
+          ],
+          "last_read_ns": [
+            25315529573455,
+            25315532094883
+          ],
+          "deltas": {
+            "eth1": {
+              "rx_packets": 6,
+              "rx_bytes": 588,
+              "rx_errors": 0,
+              "rx_dropped": 0,
+              "tx_packets": 6,
+              "tx_bytes": 588,
+              "tx_errors": 0,
+              "tx_dropped": 0
+            },
+            "eth2": {
+              "rx_packets": 3,
+              "rx_bytes": 294,
+              "rx_errors": 0,
+              "rx_dropped": 0,
+              "tx_packets": 3,
+              "tx_bytes": 294,
+              "tx_errors": 0,
+              "tx_dropped": 0
+            },
+            "wlan0": {
+              "rx_packets": 3,
+              "rx_bytes": 294,
+              "rx_errors": 0,
+              "rx_dropped": 0,
+              "tx_packets": 3,
+              "tx_bytes": 354,
+              "tx_errors": 0,
+              "tx_dropped": 0
+            }
+          }
+        },
+        "counter_scope": "whole-interface-not-per-neighbor",
+        "measurement_source_qualified": false
+      },
+      "observed_neighbor": {
+        "available": true,
+        "reason": "observed_neighbor_bound",
+        "binding": {
+          "generation": 2,
+          "capture_epoch": "8575b5ea-1be6-41ac-9d63-8f3455413303",
+          "local_interface": "00:16:3e:b2:d2:c4",
+          "local_ifindex": 8,
+          "neighbor_al": "02:00:00:e0:00:01",
+          "neighbor_interface": "00:16:3e:b8:c4:a7",
+          "discovery_received_ns": 25271235675958,
+          "bridges_present": true,
+          "valid_until_ns": 25317522284498
+        },
+        "measurement_source_qualified": false,
+        "media_representation": "owned-simulator Ethernet fixture; physical PHY unqualified"
+      },
+      "telemetry": {
+        "accepted": 216,
+        "rejected": 2,
+        "generation": 0,
+        "timestamp_ms": 1790146213457,
+        "station_count": 1
+      }
+    },
+    "manual_intervention": false,
+    "exit_code": -9,
+    "restored_at": 1790146213.7511272,
+    "new_pid": 609613,
+    "after": {
+      "operation": {
+        "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+        "initiating_interface": "wsc-component",
+        "state": "OBSERVED_APPLIED",
+        "reason": null,
+        "attempts": 1,
+        "commit_attribution": "reply",
+        "application_evidence": {
+          "fresh": true,
+          "predicate_satisfied": true,
+          "generation": 1,
+          "revision": 3,
+          "received_at": "2026-09-23T06:47:38.119Z",
+          "source": "ovsdb",
+          "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+        },
+        "receipt": {
+          "scope": "owned_simulation_wsc_component",
+          "m1_sha256": "cd8626fe5737cb53340abb0f73ecb19e267c17e837824d70427903e67cee592f",
+          "controller_al": "020000e00001",
+          "agent_al": "020000003001",
+          "ruid": "020000ec0200",
+          "bssid": "020000ec0200",
+          "ingress": "probe0",
+          "link_generation": 1,
+          "database_generation": 1,
+          "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+          "first_mid": 19,
+          "pod_id": "pod-1",
+          "radio_id": "radio-1",
+          "bss_id": "bss-1"
+        }
+      },
+      "operations": [
+        {
+          "operation_id": "e342ca40-d428-4432-bf5f-201f2953c42b",
+          "initiating_interface": "wsc-component",
+          "state": "OBSERVED_APPLIED",
+          "reason": null,
+          "attempts": 1,
+          "commit_attribution": "reply",
+          "application_evidence": {
+            "fresh": true,
+            "predicate_satisfied": true,
+            "generation": 1,
+            "revision": 3,
+            "received_at": "2026-09-23T06:47:38.119Z",
+            "source": "ovsdb",
+            "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+          },
+          "receipt": {
+            "scope": "owned_simulation_wsc_component",
+            "m1_sha256": "cd8626fe5737cb53340abb0f73ecb19e267c17e837824d70427903e67cee592f",
+            "controller_al": "020000e00001",
+            "agent_al": "020000003001",
+            "ruid": "020000ec0200",
+            "bssid": "020000ec0200",
+            "ingress": "probe0",
+            "link_generation": 1,
+            "database_generation": 1,
+            "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+            "first_mid": 19,
+            "pod_id": "pod-1",
+            "radio_id": "radio-1",
+            "bss_id": "bss-1"
+          }
+        },
+        {
+          "operation_id": "da3fb69b-448a-41e9-b7f6-547866b72d59",
+          "initiating_interface": "wsc-component",
+          "state": "OBSERVED_APPLIED",
+          "reason": null,
+          "attempts": 0,
+          "commit_attribution": "not_submitted",
+          "application_evidence": {
+            "fresh": true,
+            "predicate_satisfied": true,
+            "generation": 2,
+            "revision": 134,
+            "received_at": "2026-09-23T06:49:14.435Z",
+            "source": "ovsdb",
+            "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State",
+            "observed_noop": true
+          },
+          "receipt": {
+            "scope": "owned_simulation_wsc_component",
+            "m1_sha256": "19696089d765618401bd4a20ff370b3dcb19e77f67bbeb2ffa1468759064ec02",
+            "controller_al": "020000e00001",
+            "agent_al": "020000003001",
+            "ruid": "020000ec0200",
+            "bssid": "020000ec0200",
+            "ingress": "probe0",
+            "link_generation": 1,
+            "database_generation": 2,
+            "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+            "first_mid": 42,
+            "pod_id": "pod-1",
+            "radio_id": "radio-1",
+            "bss_id": "bss-1"
+          }
+        },
+        {
+          "operation_id": "1749716d-9af4-4ea5-8def-24f373dfc86b",
+          "initiating_interface": "wsc-component",
+          "state": "OBSERVED_APPLIED",
+          "reason": null,
+          "attempts": 0,
+          "commit_attribution": "not_submitted",
+          "application_evidence": {
+            "fresh": true,
+            "predicate_satisfied": true,
+            "generation": 1,
+            "revision": 2,
+            "received_at": "2026-09-23T06:50:14.895Z",
+            "source": "ovsdb",
+            "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State",
+            "observed_noop": true
+          },
+          "receipt": {
+            "scope": "owned_simulation_wsc_component",
+            "m1_sha256": "d00eed7ce809ac9b06f23518ecc18094c2d54e2a8e2ece63c46808f9894b6453",
+            "controller_al": "020000e00001",
+            "agent_al": "020000003001",
+            "ruid": "020000ec0200",
+            "bssid": "020000ec0200",
+            "ingress": "probe0",
+            "link_generation": 1,
+            "database_generation": 1,
+            "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+            "first_mid": 59,
+            "pod_id": "pod-1",
+            "radio_id": "radio-1",
+            "bss_id": "bss-1"
+          }
+        }
+      ],
+      "operation_count": 3,
+      "writes": 0,
+      "journal_write_attempts": 1,
+      "process_id": "5ac07c16-6e0e-4f23-9daa-8e98d152dffc",
+      "config_ssid": "emosa-controller-trial",
+      "observed_ssid": "emosa-controller-trial"
+    },
+    "session_after": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "input_or_source_rejected": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 53545
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "input_or_source_rejected"
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 59,
+            "operation_id": "1749716d-9af4-4ea5-8def-24f373dfc86b",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "reporting_policy": {
+        "counts": {},
+        "received_policy": {
+          "boot_id": "ce35a9b0-e10d-4857-83cc-730ffd177a7d",
+          "identity": {
+            "controller": "020000e00001",
+            "local_al": "020000003001",
+            "ruid": "020000ec0200"
+          },
+          "last_unfulfilled_due": 25280.363095706,
+          "latest_mid": 45,
+          "latest_request": [
+            {
+              "kind": 138,
+              "value": "3c01020000ec0200000000e0"
+            },
+            {
+              "kind": 137,
+              "value": "000001020000ec0200000000"
+            },
+            {
+              "kind": 219,
+              "value": "00000000000000000000000000000000000000000000"
+            }
+          ],
+          "next_due": 25340.363095706,
+          "periods_due_without_report": 2,
+          "policy": {
+            "metrics": {
+              "interval_seconds": 60,
+              "radios": [
+                {
+                  "include_link": true,
+                  "include_traffic": true,
+                  "include_wifi6_status": true,
+                  "rcpi_hysteresis_db": 0,
+                  "rcpi_threshold": 0,
+                  "ruid": "020000ec0200",
+                  "utilization_threshold": 0
+                }
+              ]
+            },
+            "qos": [
+              {
+                "mscs_disallowed": [],
+                "scs_disallowed": []
+              }
+            ],
+            "steering": {
+              "btm_disallowed": [],
+              "local_disallowed": [],
+              "radios": [
+                {
+                  "policy": 0,
+                  "rcpi_threshold": 0,
+                  "ruid": "020000ec0200",
+                  "utilization_threshold": 0
+                }
+              ]
+            }
+          },
+          "receipt_count": 2,
+          "schedule_rebases": 0
+        },
+        "policy_application_proven": false,
+        "required_reporting_proven": false,
+        "reporting_gap": "qualified_measurements_and_metric_report_delivery_not_implemented"
+      },
+      "neighbor_link_metrics": {
+        "counts": {},
+        "measurement_available": false
+      },
+      "channels": {
+        "counts": {},
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 25316.89621058
+          }
+        ]
+      },
+      "worker": {
+        "pid": 609613,
+        "process_id": "5ac07c16-6e0e-4f23-9daa-8e98d152dffc"
+      },
+      "report_source": {
+        "available": true,
+        "context_token": "5bcf4410079d4b2e9a287e02fc0b2d86/0/1",
+        "inventory_complete": false,
+        "operating_radio_count": 0
+      },
+      "forwarding_observation": {
+        "profile": "owned-linux-bridge-observation-v1",
+        "available": true,
+        "reason": "raw_interface_window_available",
+        "sample": {
+          "generation": 1,
+          "started_ns": 25316885339274,
+          "ended_ns": 25316888080507,
+          "epoch": [
+            1,
+            "4646cf49-821c-4068-9b73-60e29bc0924d",
+            4026532652,
+            2,
+            "6e:ba:cb:f7:58:7b",
+            [
+              "eth1",
+              8,
+              "00:16:3e:b2:d2:c4",
+              9,
+              1500
+            ],
+            [
+              "eth2",
+              10,
+              "00:16:3e:e0:40:21",
+              11,
+              1500
+            ],
+            [
+              "wlan0",
+              17,
+              "02:00:00:ec:02:00",
+              0,
+              1500
+            ]
+          ],
+          "interfaces": {
+            "eth1": {
+              "ifindex": 8,
+              "mac": "00:16:3e:b2:d2:c4",
+              "peer_ifindex": 9,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 3554478,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 35533,
+                "tx_bytes": 3491747,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 35435
+              }
+            },
+            "eth2": {
+              "ifindex": 10,
+              "mac": "00:16:3e:e0:40:21",
+              "peer_ifindex": 11,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 1836289,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 18512,
+                "tx_bytes": 2021419,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 20226
+              }
+            },
+            "wlan0": {
+              "ifindex": 17,
+              "mac": "02:00:00:ec:02:00",
+              "peer_ifindex": 0,
+              "mtu": 1500,
+              "counters": {
+                "rx_bytes": 1552358,
+                "rx_dropped": 0,
+                "rx_errors": 0,
+                "rx_packets": 16653,
+                "tx_bytes": 2177608,
+                "tx_dropped": 0,
+                "tx_errors": 0,
+                "tx_packets": 18531
+              }
+            }
+          },
+          "neighbor_observation": {
+            "interface": "eth1",
+            "ifindex": 8,
+            "mac": "00:16:3e:b2:d2:c4",
+            "boot_id": "4646cf49-821c-4068-9b73-60e29bc0924d",
+            "netns_inode": 4026532652,
+            "capture_epoch": "8575b5ea-1be6-41ac-9d63-8f3455413303",
+            "run_label": "native-link-binding-04",
+            "collector_sha256": "594a33f222f2845a43bdc91d8faa6e6fef728aad1de37e758afdd1ad0c61bcb6",
+            "heartbeat_ns": 25316802269802,
+            "running": true,
+            "errors": [],
+            "frames": [
+              {
+                "received_ns": 25151175915772,
+                "frame_hex": "0180c2000013020000e00001893a0000000000060080010006020000e0000102000600163eb8c4a7000000"
+              },
+              {
+                "received_ns": 25211205941797,
+                "frame_hex": "0180c2000013020000e00001893a0000000000250080010006020000e0000102000600163eb8c4a7000000"
+              },
+              {
+                "received_ns": 25271235675958,
+                "frame_hex": "0180c2000013020000e00001893a0000000000350080010006020000e0000102000600163eb8c4a7000000"
+              }
+            ],
+            "physical_pod_changed": false
+          }
+        },
+        "window": {
+          "first_read_ns": [
+            25316203363507,
+            25316205967727
+          ],
+          "last_read_ns": [
+            25316885339274,
+            25316888080507
+          ],
+          "deltas": {
+            "eth1": {
+              "rx_packets": 6,
+              "rx_bytes": 588,
+              "rx_errors": 0,
+              "rx_dropped": 0,
+              "tx_packets": 6,
+              "tx_bytes": 588,
+              "tx_errors": 0,
+              "tx_dropped": 0
+            },
+            "eth2": {
+              "rx_packets": 3,
+              "rx_bytes": 294,
+              "rx_errors": 0,
+              "rx_dropped": 0,
+              "tx_packets": 3,
+              "tx_bytes": 294,
+              "tx_errors": 0,
+              "tx_dropped": 0
+            },
+            "wlan0": {
+              "rx_packets": 3,
+              "rx_bytes": 294,
+              "rx_errors": 0,
+              "rx_dropped": 0,
+              "tx_packets": 3,
+              "tx_bytes": 354,
+              "tx_errors": 0,
+              "tx_dropped": 0
+            }
+          }
+        },
+        "counter_scope": "whole-interface-not-per-neighbor",
+        "measurement_source_qualified": false
+      },
+      "observed_neighbor": {
+        "available": true,
+        "reason": "observed_neighbor_bound",
+        "binding": {
+          "generation": 1,
+          "capture_epoch": "8575b5ea-1be6-41ac-9d63-8f3455413303",
+          "local_interface": "00:16:3e:b2:d2:c4",
+          "local_ifindex": 8,
+          "neighbor_al": "02:00:00:e0:00:01",
+          "neighbor_interface": "00:16:3e:b8:c4:a7",
+          "discovery_received_ns": 25271235675958,
+          "bridges_present": true,
+          "valid_until_ns": 25318802269802
+        },
+        "measurement_source_qualified": false,
+        "media_representation": "owned-simulator Ethernet fixture; physical PHY unqualified"
+      },
+      "telemetry": {
+        "accepted": 0,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": null,
+        "station_count": null
+      }
+    },
+    "recovered_at": 1790146214.9574397,
+    "elapsed_end": 141.38055587100098,
+    "clients": {
+      "clients": "passed",
+      "nonce": "ed4ed6895cd5c68d45e0772debac5f4c"
+    }
+  }
+]

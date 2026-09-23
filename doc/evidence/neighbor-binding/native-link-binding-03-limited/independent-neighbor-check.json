@@ -1,0 +1,36 @@
+{
+  "native_unavailable_source_checks_passed": true,
+  "capture_health": {
+    "ethernet": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 113,
+      "captured": 113,
+      "received_by_filter": 113,
+      "dropped_by_kernel": 0
+    },
+    "radio": {
+      "passed": true,
+      "linktype": 127,
+      "pcap_records": 11715,
+      "captured": 11715,
+      "received_by_filter": 11715,
+      "dropped_by_kernel": 0
+    }
+  },
+  "native_query_frames": [
+    33,
+    68,
+    101,
+    113
+  ],
+  "queries_handled_without_measurement": 4,
+  "fabricated_metric_or_invalid_neighbor_responses": 0,
+  "proxy_control_interface_distinct_from_pod_backhaul": true,
+  "shared_vm_bridge_observed": true,
+  "virtual_to_pod_interface_mapping_qualified": false,
+  "native_neighbor_metric_delivery_proven": false,
+  "measurement_source_qualified": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

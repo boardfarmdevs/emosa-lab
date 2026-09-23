@@ -96,12 +96,15 @@ lxc file push deploy/peer-baseline/patches/0004-controller-counter-capability.pa
   deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
 lxc file push deploy/peer-baseline/compatibility/controller-candidate.py \
   emosa-lab/opt/emosa-baseline/compatibility/
-lxc file push src/emosa/wire/onboarding.py src/emosa/wire/autoconfiguration.py \
-  src/emosa/wire/reports.py emosa-lab/opt/emosa-radio-manager/source/emosa/wire/
-lxc file push src/emosa/simulation/native_onboarding.py \
-  src/emosa/simulation/wsc_provisioning.py \
-  emosa-lab/opt/emosa-radio-manager/source/emosa/simulation/
+python3 deploy/radio-manager/stage.py
 ```
+
+Stage the complete current source and radio helpers together. The native runner
+now requires the passive `neighbor-observer.py` helper and live pod-side
+discovery before it starts the adapter. Copying only the older onboarding modules
+can leave missing dependencies. See the
+[neighbor-binding guide](neighbor-discovery-binding.md) for the observation flow
+and focused recovery experiment.
 
 ## Run and read the boundaries
 

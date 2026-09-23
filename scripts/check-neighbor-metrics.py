@@ -80,6 +80,27 @@ def check_vectors(directory, tool="tshark"):
     }
 
 
+def queries_during_source_loss(queries, recoveries, events):
+    """Classify only frames strictly inside independently timed source-loss windows."""
+    offsets = [e["received_wall_ns"] - e["received_monotonic_ns"] for e in events]
+    assert offsets and max(offsets) - min(offsets) < 20_000_000
+    offset = sorted(offsets)[len(offsets) // 2] / 1e9
+    frames = set()
+    for fault in recoveries:
+        if fault["kind"] != "pod_connection_loss":
+            continue
+        lost = fault["session_unavailable"]
+        assert lost["state"] == "recovering" and not lost["report_source"]["available"]
+        losses = [e for e in lost["recovery"]["history"] if e["event"] == "source_lost"]
+        assert losses
+        start = losses[-1]["at"] + offset
+        end = fault["restored_at"]
+        assert fault["started_at"] <= start < end <= fault["recovered_at"]
+        # Leave boundary races unexplained instead of excusing a live query.
+        frames.update(q["frame"] for q in queries if start + 0.02 < q["time"] < end - 0.02)
+    return sorted(frames)
+
+
 def check_native(directory):
     base = runpy.run_path(str(ROOT / "scripts/check-native-onboarding.py"))
     health = runpy.run_path(str(ROOT / "scripts/check-capture-health.py"))["check"](directory)
@@ -94,16 +115,24 @@ def check_native(directory):
     assert not any(p["source"] == base["AGENT"] and p["kind"] == 6 for p in packets), (
         "unqualified metrics emitted"
     )
-    snapshots = [f["session_before"] for f in read("recovery-checks.json")] + [
-        read("native-session.json")
-    ]
+    recoveries = read("recovery-checks.json")
+    snapshots = [f["session_before"] for f in recoveries] + [read("native-session.json")]
     for s in snapshots:
         assert not s["neighbor_link_metrics"]["measurement_available"]
         assert s["counts"].get("neighbor_measurement_unavailable", 0) >= 1
     handled = sum(
         s["neighbor_link_metrics"]["counts"]["measurement_unavailable"] for s in snapshots
     )
-    assert handled == len(queries), "captured queries and unavailable-source decisions differ"
+    outage_frames = []
+    if handled != len(queries):
+        events = [
+            json.loads(line)
+            for line in (directory / "station-events.jsonl").read_text().splitlines()
+        ]
+        outage_frames = queries_during_source_loss(queries, recoveries, events)
+    assert handled + len(outage_frames) == len(queries), (
+        "captured queries and unavailable-source decisions/outage windows differ"
+    )
     links = read("neighbor-link-observations.json")
     assert not links["measurement_source_qualified"]
     (adapter,) = links["adapter_control_interface"]
@@ -123,6 +152,7 @@ def check_native(directory):
         "capture_health": health,
         "native_query_frames": [p["frame"] for p in queries],
         "queries_handled_without_measurement": handled,
+        "queries_during_observed_source_loss": outage_frames,
         "fabricated_metric_or_invalid_neighbor_responses": 0,
         "proxy_control_interface_distinct_from_pod_backhaul": True,
         "shared_vm_bridge_observed": True,

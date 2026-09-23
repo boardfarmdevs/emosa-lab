@@ -32,11 +32,13 @@ indices, veth peers, bridge membership and raw interface statistics during the
 native experiment. It is read-only inventory evidence. Its single snapshot does
 not establish a measurement interval or per-neighbor counter attribution.
 
-The old bounded topology fixture's virtual interface and bridge assumptions are
-not a qualified mapping to the pod's actual backhaul. Before enabling a publisher,
-bind the observed pod/peer interface pair into the represented topology and
-verify bridge presence. The source rejects measurements whose interface, media
-or bridge fields disagree with that current topology.
+The historical bounded topology fixture's virtual interface and bridge assumptions
+are not a qualified mapping to the pod's actual backhaul. The follow-on
+[discovery binding](neighbor-discovery-binding.md) now uses observed pod ports,
+the native peer's advertised interface and bridge inference in runtime topology.
+Media values remain simulator fixtures, and measurements still need qualification.
+The source rejects measurements whose interface, media or bridge fields disagree
+with that current topology.
 
 ## Rules and their source
 
@@ -154,12 +156,11 @@ The [forwarding-observation implementation](forwarding-observations.md) now
 acquires raw pod port identities/counters through the pinned OVSDB schema,
 checks intervals across reconnect/restart, and captures the actual backhaul
 path independently. These are whole-interface observations. The represented
-topology and per-neighbor metric source remain unqualified.
+topology now uses the follow-on live identity binding; the per-neighbor metric
+source and physical media remain unqualified.
 
-First bind the represented virtual interface to the pod's observed forwarding
-interface and the controller's actual peer interface. Verify this through the
-bridged path instead of assigning the controller AL MAC to every peer field.
-Then acquire synchronized per-link counters with reset detection and qualify
+Continue from the [observed pod/peer binding](neighbor-discovery-binding.md).
+Acquire synchronized per-link counters with reset detection and qualify
 capacity/availability estimates. Shared-interface traffic must be attributed
 correctly, including transit client traffic. Feed those measurements through the
 implemented handoff, verify the controller's decoded values independently, and

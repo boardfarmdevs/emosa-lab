@@ -1,0 +1,17 @@
+{
+  "label": "native-link-binding-02",
+  "candidate_sha256": "d6db692f97b5b1dd2bb20c7810bbe0a775351d6f5fd8e3c7e21310a230bf5436",
+  "baseline_sha256": "737ab07f89fec1aabcc861bd90ddafda931be2e3e1a108cc7352ea2c3ecd994c",
+  "baseline_restored": true,
+  "status": "failed",
+  "operations_created": 0,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "failure_injection": false,
+  "runner_sha256": "f3141bcb573dadffdbb12301486bd019f92424e11fb5ac526befdd1119702847",
+  "candidate_installed": true,
+  "error": "TimeoutError",
+  "restoration_shutdown": {
+    "em-baseline-controller": []
+  }
+}

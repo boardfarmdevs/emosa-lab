@@ -1,0 +1,100 @@
+{
+  "bound_observation_samples": 321,
+  "correct_topology_frames": [
+    10,
+    24,
+    51,
+    62,
+    98
+  ],
+  "independently_matched_discovery_frames": [
+    7,
+    760,
+    1942,
+    3152
+  ],
+  "measurement_source_qualified": false,
+  "media_values_are_simulation_fixtures": true,
+  "native_controller_interface_inventories_checked": 28,
+  "native_neighbor_binding_checks_passed": true,
+  "native_neighbor_metric_delivery_proven": false,
+  "new_config_writes_during_observer_pause": 0,
+  "new_onboarding_operations_during_observer_pause": 0,
+  "observer_pause_seconds": 6.567177057266235,
+  "owned_interface_identity_mapping_observed": true,
+  "physical_pod_proven": false,
+  "raw_forwarding": {
+    "accepted_samples": 328,
+    "capture_health": {
+      "captured": 4266,
+      "dropped_by_kernel": 0,
+      "linktype": 1,
+      "passed": true,
+      "pcap_records": 4266,
+      "received_by_filter": 4266
+    },
+    "checked_counter_windows": 325,
+    "connection_generations": 3,
+    "controller_advertised_interface_mac": "00:16:3e:b8:c4:a7",
+    "controller_discovery_frames": [
+      7,
+      760,
+      1942,
+      3152,
+      4266
+    ],
+    "measurement_source_qualified": false,
+    "native_neighbor_metric_delivery_proven": false,
+    "nonoverlapping_raw_counter_deltas": {
+      "eth1": {
+        "rx_bytes": 200875,
+        "rx_dropped": 0,
+        "rx_errors": 0,
+        "rx_packets": 2052,
+        "tx_bytes": 193656,
+        "tx_dropped": 0,
+        "tx_errors": 0,
+        "tx_packets": 2059
+      },
+      "eth2": {
+        "rx_bytes": 102617,
+        "rx_dropped": 0,
+        "rx_errors": 0,
+        "rx_packets": 1082,
+        "tx_bytes": 111362,
+        "tx_dropped": 0,
+        "tx_errors": 0,
+        "tx_packets": 1154
+      },
+      "wlan0": {
+        "rx_bytes": 91707,
+        "rx_dropped": 0,
+        "rx_errors": 0,
+        "rx_packets": 982,
+        "tx_bytes": 122162,
+        "tx_dropped": 0,
+        "tx_errors": 0,
+        "tx_packets": 1036
+      }
+    },
+    "physical_pod_proven": false,
+    "pod_backhaul_mac": "00:16:3e:b2:d2:c4",
+    "raw_forwarding_available_during_telemetry_gap": true,
+    "raw_forwarding_observation_checks_passed": true,
+    "scope": "Observed interface identities and raw interval transport; counters not yet reconciled per neighbor",
+    "status_only_events": 1,
+    "successful_manager_publications": 386,
+    "sustained_operation_proven": false,
+    "transit_icmp_frames": {
+      "client_20_to_gateway": 906,
+      "client_21_to_gateway": 773,
+      "gateway_to_client_20": 906,
+      "gateway_to_client_21": 773
+    },
+    "virtual_to_pod_interface_mapping_qualified": false,
+    "withdrawals": 1,
+    "worker_processes": 2
+  },
+  "sustained_operation_proven": false,
+  "topology_withdrawn_without_control_or_radio_loss": true
+}

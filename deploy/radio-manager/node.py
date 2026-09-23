@@ -101,7 +101,7 @@ config_methods=push_button
     print(json.dumps({"action": "started"}))
 
 
-def observe():
+def observe(neighbor_label=None):
     ctl = (str(HOSTAP / "bin/hostapd_cli"), "-p", str(ROOT / "ctrl"), "-i", "wlan0")
     status = values(command(*ctl, "status"))
     live = values(command(*ctl, "get_config"))
@@ -129,20 +129,20 @@ def observe():
                 "interface": iface,
                 "observed_monotonic": time.monotonic(),
                 "stations": stations(),
-                "forwarding": forwarding(),
+                "forwarding": forwarding(neighbor_label),
             }
         )
     )
 
 
-def forwarding():
+def forwarding(neighbor_label=None):
     """Read-only rtnetlink observation. Recheck membership/identities after the dump."""
     try:
         started = time.monotonic_ns()
         links = json.loads(command("ip", "-j", "-d", "-s", "link", "show"))
         after = json.loads(command("ip", "-j", "-d", "link", "show"))
         ended = time.monotonic_ns()
-        return {
+        result = {
             "complete": True,
             "started_ns": started,
             "ended_ns": ended,
@@ -151,6 +151,17 @@ def forwarding():
             "links": links,
             "links_after": after,
         }
+        if neighbor_label is not None:
+            if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", neighbor_label):
+                raise ValueError("invalid owned neighbor observation label")
+            path = ROOT / "neighbor-observations" / (neighbor_label + ".json")
+            try:
+                if path.stat().st_size > 262144:
+                    raise ValueError("neighbor observation exceeds the local budget")
+                result["neighbor_observation"] = json.loads(path.read_text())
+            except (OSError, ValueError):
+                result["neighbor_observation"] = None
+        return result
     except (OSError, RuntimeError, ValueError):
         return {"complete": False}
 
@@ -216,10 +227,14 @@ def stations():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("apply", "observe", "stop"))
+    parser.add_argument("--neighbor-label")
     args = parser.parse_args()
     try:
         guard()
-        {"apply": apply, "observe": observe, "stop": stop}[args.action]()
+        if args.action == "observe":
+            observe(args.neighbor_label)
+        else:
+            {"apply": apply, "stop": stop}[args.action]()
     except Exception as error:
         print(json.dumps({"error": type(error).__name__}), file=sys.stderr)
         raise SystemExit(1) from None

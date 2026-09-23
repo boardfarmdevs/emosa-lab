@@ -5,6 +5,7 @@ The external_ids clock/epoch convention belongs only to this simulation profile.
 Nothing here installs a manager on, or qualifies, a physical pod.
 """
 
+import json
 import re
 import time
 import uuid
@@ -155,6 +156,11 @@ def normalize(observation):
             "statistics": ["map", sorted(counters.items())],
             "external_ids": ["map", sorted((common | {"peer_ifindex": str(peer)}).items())],
         }
+        if name == "eth1" and observation.get("neighbor_observation") is not None:
+            payload = json.dumps(observation["neighbor_observation"], separators=(",", ":"))
+            if len(payload) > 262144:
+                raise ValueError("neighbor observation exceeds the local budget")
+            interfaces[name]["external_ids"][1].append(("neighbor_observation", payload))
     return interfaces, [
         "map",
         sorted((common | {"bridge_ifindex": str(identity[0]), "bridge_mac": identity[1]}).items()),
@@ -254,6 +260,7 @@ class Sample:
     ended_ns: int
     epoch: tuple
     interfaces: dict
+    neighbor_observation: dict | None = None
 
 
 class ForwardingSource:
@@ -334,7 +341,17 @@ class ForwardingSource:
                 or len({r["ifindex"] for r in result.values()}) != 3
             ):
                 raise ValueError("duplicate interface identity")
-            sample = Sample(snapshot["generation"], start, end, tuple(epoch), result)
+            payload = interfaces["eth1"][1]["external_ids"].get("neighbor_observation")
+            if payload is not None and len(payload) > 262144:
+                raise ValueError("neighbor observation exceeds the local budget")
+            sample = Sample(
+                snapshot["generation"],
+                start,
+                end,
+                tuple(epoch),
+                result,
+                json.loads(payload) if payload is not None else None,
+            )
             if self.sample == sample:
                 return
             if start <= self.watermark:

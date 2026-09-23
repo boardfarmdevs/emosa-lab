@@ -3810,13 +3810,57 @@ the next step beyond chapter 13.20's single inventory snapshot:
 **Why is `measurement_source_qualified` still false?** We now have the raw
 observations and a checked transport path. We must still establish which packets
 belong to each neighbor, what each error/drop counter means for the selected
-IEEE field, and how to estimate capacity and availability. The virtual agent's
-represented topology also needs a live binding to the observed interfaces.
+IEEE field, and how to estimate capacity and availability. Chapter 13.22 explains
+the new live binding between the virtual agent's topology and observed interfaces.
 Publishing raw counters alone does not close those requirements.
 
 **Learning checkpoint:** explain the difference between a cumulative sample,
 a valid interval, a whole-interface count and a qualified per-neighbor report.
 Find the explicit unknown state and explain why it must not be displayed as zero.
+
+### 13.22 Learn how the controller becomes an observed neighbor
+
+Knowing a controller's address is different from observing its connection to a
+particular pod interface. The [neighbor-discovery guide](../protocol/neighbor-discovery-binding.md)
+connects chapter 13.21's port inventory to real discovery packets received at the
+simulated pod's `eth1` backhaul. A separate passive observer is necessary because
+the adapter's `probe0` interface is a different endpoint on the VM bridge.
+
+1. Read the guide's diagram. Follow one controller Topology Discovery into the
+   pod observer, the independent manager, OVSDB and the adapter's binding. The
+   observer records packet facts; it does not configure the pod or authenticate
+   the controller. The owned lab supplies the trusted endpoint scope.
+2. Compare the AL-address and interface-address TLVs in a captured discovery.
+   The controller AL identifies a device; its interface MAC identifies one end
+   of a link. Compare the latter with the independently observed controller
+   `eth1` MAC. Do not substitute the known AL address for an unknown interface.
+3. Run the retained binding checker on HOST. It compares actual packet bytes
+   and timing at two observation points, then checks the interfaces and bridge
+   tuple in every emitted topology response. The virtual agent keeps its AL
+   address while reporting the pod's three actual interface identities.
+4. Inspect `neighbor-gap-check.json`. The harness pauses the passive observer,
+   not the AP. Its heartbeat becomes stale, so topology reporting becomes
+   unavailable. Fresh OVSDB authority, radio observations and traffic survive.
+   Resume must restore the binding without another onboarding or Config write.
+5. Run the guide's focused VM experiment. Include the new observer helper in
+   staging and allow roughly one minute for the controller's first periodic
+   discovery. The harness waits for an observation; it does not invent one to
+   shorten startup. This preparation is outside the active test duration.
+6. Compare all three limited attempts with the fourth run. The first two exposed
+   missing discovery at the packet receive point on a Linux bridge port. The
+   third fixed reception but missed the initial discovery in the independent
+   capture. The fourth starts capture before controller startup. Retained
+   evidence explains both the working receive path and its independent audit.
+
+**Why are metrics still pending?** A valid link identity tells us which endpoints
+a report would describe. It does not establish per-neighbor packet attribution,
+error accounting, throughput or availability. Ethernet media codes are still
+explicit simulator fixtures, not a measured physical PHY. This step establishes
+the identity prerequisite for those measurements.
+
+**Learning checkpoint:** distinguish controller identity, sending-interface
+identity, a pod forwarding port, an observation deadline and configuration
+authority. Explain why pausing an observer must not look like the client leaving.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

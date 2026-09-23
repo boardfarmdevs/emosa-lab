@@ -24,7 +24,9 @@ from setup import ROOT, run
 
 from emosa.opensync.session import OvsSession
 from emosa.simulation.database import SimDatabase
+from emosa.simulation.forwarding import ForwardingSource
 from emosa.simulation.native_onboarding import OWNER, RADIO_ROOT
+from emosa.simulation.neighbor_binding import NeighborSource
 from emosa.simulation.radio import MONITOR, seed_radio_database
 from emosa.simulation.wsc_provisioning import SERIAL
 from emosa.simulation.wsc_wire import RADIO_BSSID, write
@@ -68,6 +70,7 @@ async def experiment(
     medium_loss=False,
     observe_tx_status=False,
     telemetry_gap_check=False,
+    neighbor_gap_check=False,
 ):
     helpers = runpy.run_path(str(ROOT / "controller-trial.py"))
     helpers["idle"]()
@@ -97,6 +100,8 @@ async def experiment(
         "tx_status_observation_requested": observe_tx_status,
         "telemetry_gap_check_requested": telemetry_gap_check,
         "forwarding_observation_requested": True,
+        "neighbor_binding_requested": True,
+        "neighbor_gap_check_requested": neighbor_gap_check,
         "netlink_capture_buffer_kib": 32768 if medium_loss else None,
     }
     write(directory / "result.json", report)
@@ -111,6 +116,7 @@ async def experiment(
                 ROOT / "prplmesh.reference.json",
                 RADIO_ROOT_DIR / "manager.py",
                 RADIO_ROOT_DIR / "node.py",
+                RADIO_ROOT_DIR / "neighbor-observer.py",
                 *([RADIO_ROOT_DIR / "station-events.py"] if observe_station_removal else []),
                 *([RADIO_ROOT_DIR / "medium.py"] if medium_loss else []),
                 *([RADIO_ROOT_DIR / "tx-status-trace.py"] if observe_tx_status else []),
@@ -122,6 +128,8 @@ async def experiment(
     admin = OvsSession(db.endpoint, monitor_columns=MONITOR)
     manager = worker = broker = None
     station_unit = None
+    neighbor_unit = None
+    neighbor_path = RADIO_ROOT_DIR / "neighbor-observations" / (label + ".json")
     station_path = RADIO_ROOT_DIR / "station-events" / (label + ".jsonl")
     captures, logs = [], []
     namespace, link = "em-native-" + uuid.uuid4().hex[:8], "en" + uuid.uuid4().hex[:8]
@@ -196,6 +204,35 @@ async def experiment(
 
     try:
         write(directory / "topology.json", radio["setup"](directory))
+        collector = RADIO_ROOT_DIR / "neighbor-observer.py"
+        radio["lxc"]("file", "push", "--quiet", str(collector), radio["AP"] + str(collector))
+        neighbor_unit = "emosa-native-neighbor-" + label + ".service"
+        radio["inside"](
+            radio["AP"],
+            "systemd-run",
+            "--quiet",
+            "--property=Type=exec",
+            "--property=RemainAfterExit=yes",
+            "--property=TimeoutStopSec=5",
+            "--unit",
+            neighbor_unit,
+            "python3",
+            str(collector),
+            label,
+            "--seconds",
+            str(active_seconds + 180),
+        )
+        end = time.monotonic() + 8
+        while True:
+            try:
+                value = json.loads(radio["inside"](radio["AP"], "cat", str(neighbor_path)))
+                if value.get("running") and not value["errors"]:
+                    break
+            except (ValueError, subprocess.CalledProcessError):
+                pass
+            if time.monotonic() >= end:
+                raise RuntimeError("pod backhaul discovery observer did not become ready")
+            await asyncio.sleep(0.1)
         if medium_loss:
             module = runpy.run_path(str(RADIO_ROOT_DIR / "medium.py"))
             medium = module["Medium"](directory, active_seconds)
@@ -312,6 +349,25 @@ async def experiment(
         report["previous_controller_collection"] = stop_collect(
             directory / "previous-controller", names=(CONTROLLER,)
         )
+        # Capture before native startup: the passive pod listener can receive
+        # the initial Discovery before the controller's inventory is ready.
+        pod_link = next(
+            r
+            for r in json.loads(radio["inside"](radio["AP"], "ip", "-j", "-d", "link", "show"))
+            if r["ifname"] == "eth1"
+        )
+        forwarding_peer = next(
+            r
+            for r in json.loads(run("ip", "-j", "-d", "link", "show"))
+            if r["ifindex"] == pod_link["link_index"]
+        )
+        if (
+            forwarding_peer.get("master") != "em-base-bh"
+            or forwarding_peer.get("link_index") != pod_link["ifindex"]
+        ):
+            raise RuntimeError("unexpected initial pod backhaul veth path")
+        capture(forwarding_peer["ifname"], "forwarding")
+        await asyncio.sleep(0.2)
         node(CONTROLLER, "prepare", "--backhaul", "wired")
         node(CONTROLLER, "hostap")
         node(CONTROLLER, "services")
@@ -362,7 +418,11 @@ async def experiment(
             or pod_peer.get("link_index") != pod_backhaul["ifindex"]
         ):
             raise RuntimeError("owned pod forwarding veth is not on the expected backhaul bridge")
-        capture(pod_peer["ifname"], "forwarding")
+        if (pod_peer["ifindex"], pod_peer["ifname"]) != (
+            forwarding_peer["ifindex"],
+            forwarding_peer["ifname"],
+        ):
+            raise RuntimeError("pod backhaul veth changed during controller startup")
         write(
             directory / "neighbor-link-observations.json",
             {
@@ -405,6 +465,23 @@ async def experiment(
             "02:00:00:00:30:01",
         )
         await asyncio.sleep(0.2)
+        # The native candidate first advertises topology on its periodic timer.
+        # Wait for the observed pod-side binding instead of racing the shorter
+        # controller BSS-inventory deadline or seeding a fabricated neighbor.
+        forwarding_source = ForwardingSource()
+        neighbor_source = NeighborSource(
+            bytes.fromhex("020000e00001"), bytes.fromhex("020000003001"), label
+        )
+        end = time.monotonic() + 70
+        while True:
+            forwarding_source.refresh(await admin.snapshot())
+            neighbor_source.refresh(forwarding_source.sample)
+            if neighbor_source.current() is not None:
+                report["initial_observed_neighbor"] = neighbor_source.status()
+                break
+            if time.monotonic() >= end:
+                raise TimeoutError("pod-side controller discovery did not establish a live binding")
+            await asyncio.sleep(0.1)
         await db.manager_remote("unix:" + str(db.directory / "native-pod.sock"))
         worker = await start_worker()
         withheld = await wait_json("native-operation.json", lambda v: v["writes"] == 1)
@@ -547,6 +624,62 @@ async def experiment(
                     assert gap["session_withheld"]["report_source"]["operating_radio_count"] == 0
                     assert gap["operation_after"] == gap["operation_before"]
                     report["telemetry_gap_check_completed"] = True
+                if neighbor_gap_check and index == 1:
+                    fresh = await wait_json(
+                        "native-session.json",
+                        lambda v: (
+                            v["observed_neighbor"]["available"]
+                            and v["report_source"]["inventory_complete"]
+                        ),
+                    )
+                    gap = {
+                        "started_at": time.time(),
+                        "session_before": fresh,
+                        "operation_before": json.loads(
+                            (directory / "native-operation.json").read_text()
+                        ),
+                    }
+                    radio["inside"](
+                        radio["AP"], "systemctl", "kill", "--signal=SIGSTOP", neighbor_unit
+                    )
+                    try:
+                        await asyncio.sleep(4)
+                        gap["session_withheld"] = await wait_json(
+                            "native-session.json", lambda v: not v["observed_neighbor"]["available"]
+                        )
+                        gap["clients_withheld"] = await radio["clients"](
+                            directory, "neighbor-withheld", "emosa-controller-trial"
+                        )
+                    finally:
+                        radio["inside"](
+                            radio["AP"], "systemctl", "kill", "--signal=SIGCONT", neighbor_unit
+                        )
+                    gap["restored_at"] = time.time()
+                    gap["session_after"] = await wait_json(
+                        "native-session.json",
+                        lambda v: (
+                            v["observed_neighbor"]["available"]
+                            and v["report_source"]["inventory_complete"]
+                        ),
+                    )
+                    gap["operation_after"] = json.loads(
+                        (directory / "native-operation.json").read_text()
+                    )
+                    gap["completed_at"] = time.time()
+                    write(directory / "neighbor-gap-check.json", gap)
+                    for key in ("session_withheld", "session_after"):
+                        value = gap[key]
+                        assert value["report_source"]["available"]
+                        assert (
+                            value["report_source"]["context_token"]
+                            == fresh["report_source"]["context_token"]
+                        )
+                        assert value["counts"].get("search_sent") == 1
+                        assert value["counts"].get("client_leave_notification", 0) == 0
+                    assert not gap["session_withheld"]["report_source"]["inventory_complete"]
+                    assert gap["session_withheld"]["report_source"]["operating_radio_count"] == 1
+                    assert gap["operation_after"] == gap["operation_before"]
+                    report["neighbor_gap_check_completed"] = True
                 if (
                     recovery_checks
                     and len(recoveries) < 2
@@ -704,6 +837,15 @@ async def experiment(
                 report["station_removal_observation"] = records[-1]
             except Exception as exc:
                 errors.append("station_observer:" + str(exc))
+        if neighbor_unit:
+            try:
+                radio["inside"](radio["AP"], "systemctl", "stop", neighbor_unit)
+                observed = json.loads(radio["inside"](radio["AP"], "cat", str(neighbor_path)))
+                write(directory / "neighbor-observer-final.json", observed)
+                if observed["running"] or observed["errors"]:
+                    raise RuntimeError("neighbor observer did not complete cleanly")
+            except Exception as exc:
+                errors.append("neighbor_observer:" + str(exc))
         if medium:
             try:
                 medium.stop()
@@ -806,6 +948,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Withhold station telemetry while OVSDB and client traffic stay active",
     )
+    parser.add_argument(
+        "--neighbor-gap-check",
+        action="store_true",
+        help="Pause passive neighbor observation while OVSDB and traffic stay active",
+    )
     args = parser.parse_args()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", args.label):
         parser.error("use a new label of 1–24 lowercase letters, digits or hyphens")
@@ -823,6 +970,8 @@ if __name__ == "__main__":
         parser.error("TX-status observation requires the medium-loss experiment")
     if args.telemetry_gap_check and args.active_seconds < 150:
         parser.error("telemetry gap check requires at least 150 active seconds")
+    if args.neighbor_gap_check and args.active_seconds < 150:
+        parser.error("neighbor gap check requires at least 150 active seconds")
     os.umask(0o077)
     wrapper = runpy.run_path(str(ROOT / "compatibility/controller-candidate.py"))
     with (RADIO_ROOT_DIR / "run.lock").open("a+") as lock:
@@ -841,6 +990,7 @@ if __name__ == "__main__":
                         medium_loss=args.medium_loss,
                         observe_tx_status=args.observe_tx_status,
                         telemetry_gap_check=args.telemetry_gap_check,
+                        neighbor_gap_check=args.neighbor_gap_check,
                     )
                 ),
             )

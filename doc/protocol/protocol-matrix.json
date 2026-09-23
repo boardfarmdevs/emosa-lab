@@ -1935,7 +1935,7 @@
       "measurement_source_qualified": false,
       "native_neighbor_metric_delivery_proven": false,
       "remaining": [
-        "Bind represented virtual interfaces to actual pod/peer forwarding interfaces and verified bridge state",
+        "Qualify media/rate representation beyond the observed owned-lab interface/neighbor identities; expand to physical and multi-neighbor profiles",
         "Acquire and qualify per-link TX/RX counters over a common measurement period with reset detection",
         "Qualify capacity and availability estimates; do not attribute proxy control-veth counters to pod traffic",
         "Supply live measurements, verify native controller values and include in full sustained acceptance"
@@ -1956,10 +1956,64 @@
         "measurement_source_qualified": false,
         "virtual_to_pod_interface_mapping_qualified": false,
         "remaining": [
-          "Runtime peer discovery/expiry and represented topology/media mapping",
+          "Follow live_identity_binding for implemented discovery/expiry and topology identities; physical media qualification remains pending",
           "Independent packet/error/drop attribution for every neighbor over a common window",
           "Qualified capacity and availability estimates",
           "Guarded native metric delivery and complete 15-minute acceptance"
+        ]
+      },
+      "live_identity_binding": {
+        "status": "owned_pod_discovery_topology_identity_and_observation_recovery_verified_measurements_pending",
+        "guide": "doc/protocol/neighbor-discovery-binding.md",
+        "implementation": [
+          "deploy/radio-manager/neighbor-observer.py",
+          "src/emosa/simulation/neighbor_binding.py",
+          "src/emosa/simulation/native_onboarding.py",
+          "src/emosa/wire/coordinator.py"
+        ],
+        "source_references": [
+          "IEEE 1905.1-2013 6.1 (LLDP shape and TTL), 6.3.1 (Topology Discovery), 8.1 and 8.2.1 (AL/interface identities, bridge inference and discovery period)",
+          "IEEE 1905.1a-2014 amended reserved-field receive rules",
+          "https://man7.org/linux/man-pages/man7/packet.7.html"
+        ],
+        "profile": "owned sole eth1 backhaul, one controller/interface pair, shared VM monotonic clock; passive pod observer through pinned OpenSync Interface.external_ids",
+        "local_limits": {
+          "discovery_lease_seconds": 65,
+          "observation_freshness_seconds": 2,
+          "initial_lldp_settle_seconds": 1,
+          "retained_frames": 64,
+          "capture_epochs": 8
+        },
+        "test_refs": [
+          "tests/test_neighbor_binding.py",
+          "tests/test_report_coordinator.py",
+          "tests/test_native_inventory.py",
+          "tests/test_neighbor_metric_audit.py"
+        ],
+        "independent_check": "scripts/check-neighbor-binding.py",
+        "evidence": "doc/evidence/neighbor-binding/native-link-binding-04/independent-binding-check.json",
+        "recovery_evidence": "doc/evidence/neighbor-binding/native-link-binding-04/independent-recovery-check.json",
+        "retained_attempts": "doc/evidence/neighbor-binding/README.md",
+        "active_seconds": 214.5637938280015,
+        "bound_samples": 321,
+        "native_controller_interface_inventories_checked": 28,
+        "observer_pause_seconds": 6.567177057266235,
+        "observed_interfaces": [
+          "eth1",
+          "eth2",
+          "wlan0"
+        ],
+        "owned_interface_identity_mapping_observed": true,
+        "media_values_are_simulation_fixtures": true,
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Qualify per-neighbor counters and common measurement windows",
+          "Qualify media, capacity and availability estimates",
+          "Verify native metric values and mandatory report delivery",
+          "Complete full 15-minute sustained acceptance and separate unchanged physical-pod qualification"
         ]
       }
     }

@@ -9581,6 +9581,741 @@
       "path": "forwarding/unit-results.xml",
       "sha256": "29eb9ad02e59b73d037f31163341927441ccdd2da577c07727c5960481b59f76",
       "size": 4432445
+    },
+    {
+      "path": "neighbor-binding/README.md",
+      "sha256": "d764a75bd9d56c208174f364deeee44fef6bca86112d836b9811df0af2bdc2a9",
+      "size": 6337
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-01-limited/candidate-trial.json",
+      "sha256": "cbc0b015c2a8175825e45682757c107fa3e859e19ef8a71ecd9321278d41eebc",
+      "size": 611
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-01-limited/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-01-limited/failure-analysis.json",
+      "sha256": "b48fb886cf5cf2a6ee482342a4110adbeb9f50c0f6ee302aabc6329eeb1e24a4",
+      "size": 468
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-01-limited/forwarding-capture.log",
+      "sha256": "a84a57bfac770cb0a7c2c887cce30c22a457414f60248b1b067c499b044150f5",
+      "size": 172
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-01-limited/forwarding.pcap",
+      "sha256": "85d95e830c36c8b528404ad574fe2a86b8bab49921eae7989fb67b31b0ce210b",
+      "size": 2194
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-01-limited/neighbor-link-observations.json",
+      "sha256": "b2acf0843fbef291e64613c565d3015bd3ef5bcaa5884eccbee6a35aa2c30ccc",
+      "size": 22605
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-01-limited/neighbor-observer-final.json",
+      "sha256": "82e8b07ecd3459b4cbc26145f855802a6a0c047a7623f5c6162b525ae70d44b0",
+      "size": 463
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-01-limited/result.json",
+      "sha256": "7e68c3d1c4f1d771baa4064f872b8b7709150e071e8cab011e90a90b374e3f4d",
+      "size": 2706
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-01-limited/source-hashes.json",
+      "sha256": "0871d458d638d6a60290d6dbb5748eed6c70116d2f879ee0ced2cea4f21898f6",
+      "size": 12351
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-02-limited/candidate-trial.json",
+      "sha256": "df3a5cacd2ad3ebae16a941acc57b9934c30eaccbceb0e102126973a921adba6",
+      "size": 611
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-02-limited/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-02-limited/failure-analysis.json",
+      "sha256": "d7291cb009f3b64190a6d5bdd5ba7603a5f0f08f46e4741e8cf9aa6f82aeaa05",
+      "size": 682
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-02-limited/forwarding-capture.log",
+      "sha256": "9aea05264ee1ecfa9f20663a39076c89f3085e0550ebfc62d06d4d38da4362d2",
+      "size": 172
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-02-limited/forwarding.pcap",
+      "sha256": "0a6435dfa47f309431edac35c16bc815c12773aa537fc0b996a7e5abaa9afd28",
+      "size": 2074
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-02-limited/neighbor-link-observations.json",
+      "sha256": "0087174ecced7bcdfb51719ed86c132ad414088317a3dbcbbd894036851bf862",
+      "size": 22601
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-02-limited/neighbor-observer-final.json",
+      "sha256": "35d74bd925b2fb9f4a2bce2b30c0d4d6d20f9f3c109d092774877980f4918ff1",
+      "size": 463
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-02-limited/result.json",
+      "sha256": "0828d55e8facede66da765cc2ed7bc0ffde073b9eba0c98743d5f0c789c57764",
+      "size": 2696
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-02-limited/source-hashes.json",
+      "sha256": "f512774764007203720d353397acd49a263b5f68a8ed8a1c356926ff03a1000a",
+      "size": 12351
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/candidate-trial.json",
+      "sha256": "1e834cb29fa977cb9466ff0856ce0bf243776314246b50e1f5b1013619fa28b1",
+      "size": 14622
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/failure-analysis.json",
+      "sha256": "43103b68344f68080756b676ecad7631ce3604841756d0a9b0657e72cc648dc6",
+      "size": 1079
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/forwarding-capture.log",
+      "sha256": "2c7081e25442947a7f86ac94a8ac7db377546088ea9ea0b9ef9c2f20ef62f703",
+      "size": 176
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/forwarding-samples.jsonl",
+      "sha256": "e7d4fe8f2670b7f452866f9e98035da43ad3be3bb26e040f1fddd742a6eca94e",
+      "size": 989554
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/forwarding.pcap",
+      "sha256": "d0894a6ca128fbd12f671b9b6e304dcc01382e40c6ef9986bdc12b76a5dfbcc2",
+      "size": 478692
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/independent-neighbor-check.json",
+      "sha256": "c5fb95b7e068ea14974433c1c93c8d8d8bda7e424352e7889b208562cb13b4b4",
+      "size": 927
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/independent-policy-check.json",
+      "sha256": "50820b0ac0f1ac98fa89907818cea86df9c403b51c4d520160a9597349003de3",
+      "size": 1437
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/independent-recovery-check.json",
+      "sha256": "92325afacf309cf0cb33406889e8138aba81c64f4765b7683b56da81b9e2a00d",
+      "size": 3321
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/independent-telemetry-gap-check.json",
+      "sha256": "a0d508bcd1b0ed7acbee0c628e4031ed2e2a03cbce435b93742de4ecd0c429f5",
+      "size": 818
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/neighbor-link-observations.json",
+      "sha256": "eaeadbe309d409d87946a61466b4290da6ac990e238630e46ddf9b90c6bf9107",
+      "size": 22606
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/neighbor-observer-final.json",
+      "sha256": "f9ed58a47d3050f4564c9a9ebab1471bd9102b204101898e2c1f448857911ffd",
+      "size": 939
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/result.json",
+      "sha256": "ddf8b1ec2a6dbfaf3831813de02e776ac8eecb9cab69eb1096800b6a3794ccaa",
+      "size": 13196
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/source-hashes.json",
+      "sha256": "7af8bc8bd5f99e75dae3ba2e678887c7ec1d61e89a697048f1200ce39cc81bec",
+      "size": 12351
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-03-limited/station-events.jsonl",
+      "sha256": "67f9cf8bdbeb0c6b8da3251166a477bf386507f25780525196c01ae79ea268a7",
+      "size": 46881
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0000.json",
+      "sha256": "6bf27daec6c7cb52226ebe3109a258bdda83182d47dc1c567f8b3f2615a0f854",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0001.json",
+      "sha256": "4b87bace256cc311babd6b6c6efc6353fa1311e8e5c590f163bee71338804a39",
+      "size": 33983
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0002.json",
+      "sha256": "74b62765766de79b516719be0d39452dd9b9c1486ef62186b2604a08176a21cc",
+      "size": 33983
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0003.json",
+      "sha256": "92650de7db921a4246515807f6be15f6a54d8af3d86ff97744eb07a50a2781b7",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0004.json",
+      "sha256": "f67681b03ad7bff160ce345bffa464e3c7c7f3279aea15ff5a33644740d7143f",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0005.json",
+      "sha256": "57e83be4acebf634759cfe56a349b1fdaa772fc6ebfa3f74cf090afd7ae15360",
+      "size": 33983
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0006.json",
+      "sha256": "95fadbdaee7a90aab6302e9d006799b7fe09a6dce4ac74f9770a57cb3b801179",
+      "size": 33983
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0007.json",
+      "sha256": "0f69db8bdb2070ba2ed9a2fbc1e30ade5fb9759852203867c9c431d3ad461828",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0008.json",
+      "sha256": "b9f70e860d8253522ace526fc8114dc6fdd98bb2e0dc5c64b3ad68d6a941bdbe",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0009.json",
+      "sha256": "1df8cfe3cb4bd06335e10d2cb6de8336e12d68a09230fe8bd6934f8c4ce2e87d",
+      "size": 33983
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0010.json",
+      "sha256": "73b03a4a5ecafca5293b3ca42b65d297b47d58dae1809f6ec14912b1d465d5a9",
+      "size": 33981
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0011.json",
+      "sha256": "6312fb87ac282d2baaebf26b5ff1d8e32a63cfde615cabc43fc7fa6fe48c6e8b",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0012.json",
+      "sha256": "31711f36b256d70b3789b0154be88c965801fdd76ac546e056aadad16a90ff25",
+      "size": 33983
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0013.json",
+      "sha256": "dd3af9688cdd7ef0ba16cae62f6d195419f6d288b81a14483f402a3a3914f433",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0014.json",
+      "sha256": "a739beffc9bcce031a429ff41cff5fd23a14a5ea8cb190e394a8c4f377e1919a",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0015.json",
+      "sha256": "f2fdfaaaa8794552fb500e255cc7d0d7e2ad1a26953ccbb4f47bdc0639efd627",
+      "size": 33983
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0016.json",
+      "sha256": "e96754778e2e5adeb93b4322e3844105a9607f08e16841406f4d18d75571edbf",
+      "size": 33983
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0017.json",
+      "sha256": "56eb8f3318567e6e8e8708cd2a857d1e460edeb283e56f4f2a3fd173f0c71671",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0018.json",
+      "sha256": "972693cbbb8b873818869fc403d3fb03137e2e308a402fc812b04d5e051d668c",
+      "size": 33981
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0019.json",
+      "sha256": "e3da47ef1ca65c01d1b4f6f71cfc5001b469426c8fec7dfac896356efcc7755f",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0020.json",
+      "sha256": "8fccc88736a13d0a5ba5915ffe63adc113317c5cee4543407f9639bde5863835",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0021.json",
+      "sha256": "7e933e69782db94ba2f76620d1fb418ff612b608a288df678184cc1bd0c05e65",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0022.json",
+      "sha256": "c34b9228bea919dd345ff6245c2b2a8b622cf60b1051961421bb54a45888bfda",
+      "size": 33983
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0023.json",
+      "sha256": "3445c6b1aa36cec57ba8de17d9eccdddb45e04e3b0759794150502731270e73e",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0024.json",
+      "sha256": "46f86cb871f04fc500c55bc2ac343a7157a603fbfe107a05e604f0fa4a5a9d3c",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0025.json",
+      "sha256": "a72e38811d3624f5100a5fd5570cb6dd32e94fc8f94f8dada12ceb1f9fb54ccc",
+      "size": 33983
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0026.json",
+      "sha256": "0508436ced5022083907496399fa0355457bcf959580c42330178afa1c381d4e",
+      "size": 33983
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-inventory-0027.json",
+      "sha256": "d37fa605f63dd99d72e799b906911c59bd307c7bef19dbfe3bbf6cc3f3eed274",
+      "size": 33982
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/active-samples.json",
+      "sha256": "ac70c2d5861798f90950f5388fbce55b80a965dfd7e61baf093ed02edd6589d9",
+      "size": 433685
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/candidate-trial.json",
+      "sha256": "b4c080d68d1e230e79a50a56fccefacdd0015473a0d74a0866bcc95a65b59512",
+      "size": 14623
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/client-outages.json",
+      "sha256": "14f17f0d6aac132392139ce322e3749706476cb57347aee70e1de3b58b534cda",
+      "size": 679
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0000.json",
+      "sha256": "fc73da98f0f03a3a5a5e37e4b1bee6e2d19e3357b32dd6fe6792b57e917a3135",
+      "size": 2628
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0001.json",
+      "sha256": "32725bdde573a87be7afc07057e50ae255872bf547b70aaf853e89eb3cce5586",
+      "size": 2627
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0002.json",
+      "sha256": "20ae432ab8059e42dcf155bb44ce33c8f3b323f60c5178944e75b815a6e6c67d",
+      "size": 2628
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0003.json",
+      "sha256": "61b71e9aef00e6262ac975da5f80978889f049793445eeaedd55f42bb1ffe2f8",
+      "size": 2633
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0004.json",
+      "sha256": "20710346ea185de18094e86f60f247eea4aaf4fa67be0bbac7c9232c320412b0",
+      "size": 2633
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0005.json",
+      "sha256": "1b5ce2ebf576d33ad04f675e86874b10eef8f8d9d2908d4c359b13f7e947e7bb",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0006.json",
+      "sha256": "30cc6c469ceb194fd161c1f320286a9558c9baa3f281aa71db17620aae22e8b3",
+      "size": 2636
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0007.json",
+      "sha256": "e4d8e05b2c858f8bd6e9d804c53275dda72bf04f332d22f4cc647b59674f6fe6",
+      "size": 2635
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0008.json",
+      "sha256": "9b744ead9e8f6fc984dc87b548e14154984226e1748aa10b577d511780603ec4",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0009.json",
+      "sha256": "c0bb24b40f9e2c3d08fa7b696cb671409008096b2fba6f590a37193fc4ad0b5a",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0010.json",
+      "sha256": "a2c05b76892608f91e007e424a77f55200d17f81a115d6f334bd8439d2cf2ef0",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0011.json",
+      "sha256": "a4093a38a177f3a518af37b21a11a4799a5d48ee873836e86f00d6cce4f3aa8f",
+      "size": 2633
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0012.json",
+      "sha256": "e3007a7359518fd479e1b1bfcfab83fea0d177109d9bb758cfc1e3ecd4afb40b",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0013.json",
+      "sha256": "3d88433edd84e91cfcfe3fa1dbccfc28cf2334e732f2bbf608f60320ddae8aab",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0014.json",
+      "sha256": "0a7eef3014e7569298456d21f85113ed7709078c11ee0a434f54d1e2e48d293d",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0015.json",
+      "sha256": "f0d845ae9d8a9c1cfba0ed1471145337855e04f439f08ae2ac265bdc5a6e7f32",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0016.json",
+      "sha256": "930ef601627970495bc42c2b3cfd238fa8649bb882d21ade6c24ab2401c30304",
+      "size": 2636
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0017.json",
+      "sha256": "79897922bc3b927a24e9b52b28f46d596ebd337634bdbc3ebfa6ef0c9bf150f0",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0018.json",
+      "sha256": "a944fd95a4a8873ecc5e74feb4b209a8a56d8fb70bf411c646e8ccbe1d67da99",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0019.json",
+      "sha256": "2cc46cbdbb8203c03538b06f5a91a84f786c7f0535fcfc045f828ca4fdb0db82",
+      "size": 2636
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0020.json",
+      "sha256": "5b1df0326e67e2153574a3973c777b9da061170a3fb48af033dde305b1e3014f",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0021.json",
+      "sha256": "7b86311fc7104232f291430785570089e12101d418593ef70decbc1cc5bd7f0e",
+      "size": 2633
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0022.json",
+      "sha256": "25f890ef9e9b168f2bb5890c07970e95d1587bba4c6bb6f5aaf40b5469e3be18",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0023.json",
+      "sha256": "172e138a1f732a9fbd8dc9ad309ca122359ab6bfb992f4239f6f2cf2bae5ab75",
+      "size": 2635
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0024.json",
+      "sha256": "08c0ceb611ff4c774174d09f4f5aa02061e817b2b87c536b98983aeb44838355",
+      "size": 2633
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0025.json",
+      "sha256": "e0a14a8db9a4a59dc213c6f50049fbacb8f7703359e094590c8b0b79a2ed5859",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0026.json",
+      "sha256": "ff993201e6564b38d2e2484d4248cbf6c47b1bf6f28637e8881860b16bb8edae",
+      "size": 2636
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-active-0027.json",
+      "sha256": "d93d031a86365d4d51a5ba0b1a505644f34358f13a28234cf753d099976caee5",
+      "size": 2631
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-neighbor-withheld.json",
+      "sha256": "3d43890b7ab0d4a8c686f97d07639885309df9b88407c9ca493ebcd0cdf8ab1a",
+      "size": 2641
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-onboarded.json",
+      "sha256": "e3ef8dadbc78796dfcf3eb0c86ac5d6425bc85bf6ad42f3bceaacc1cae9bc6d7",
+      "size": 2620
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-recovery-0.json",
+      "sha256": "0e5bbd083663d816c3b534c0611d1d7445fb96b69d7fc444740b4ec149582f34",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-recovery-1.json",
+      "sha256": "39d29060f61d049e31fe3d532731a64092a1c3b849563975ecb4572660e6bee6",
+      "size": 2632
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/clients-telemetry-withheld.json",
+      "sha256": "6d1bde402ce0d3d93debc005c601db91a7b0aa60e3b8ee93c2073cec1150d288",
+      "size": 2641
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/controller-after.json",
+      "sha256": "ecb7610098516d0d15fb174f933615a46cc1a3d2ba3ea8808310c2a961860898",
+      "size": 29142
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/controller-before.json",
+      "sha256": "c0e85ac8735b48f428935599a9346f05f22e196df9196c0aa8bfa64b7cee0a92",
+      "size": 10353
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-inventory-0002.json",
+      "sha256": "d8bfd4610fa02ef8460599b3a2e1c03235d0c48598cb0070fa580e27d7e1ef7e",
+      "size": 33192
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-inventory-0006.json",
+      "sha256": "7f50116184c818f00df6a6dc93b523a8b674ae3878ac9b8ac3febba1dae0f1b4",
+      "size": 33192
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-inventory-0009.json",
+      "sha256": "1330d5c128f1ae63f676e0ca5d0e93e94c6e4474d0d0756ee387f13245d61e6d",
+      "size": 33191
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-inventory-0012.json",
+      "sha256": "3866236f96ce22c72c138171eae265c253dca7a3419ec6899b02ec114a73ed93",
+      "size": 33192
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-inventory-0016.json",
+      "sha256": "1fe64929c97730604c7e1dcb10edd05dc09154c1ec14ee23a26fb183e2757f79",
+      "size": 33192
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-inventory-0019.json",
+      "sha256": "f73a2c07156a219d266b4ca1bbb4c253fcb258dd9576d70f3df2b5f682d9caf0",
+      "size": 33192
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-inventory-0022.json",
+      "sha256": "c4e78d6c58cee022f54f96ef775cb8e088f6b6b794eaca0b74d436dc40e33d6e",
+      "size": 33192
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-inventory-0026.json",
+      "sha256": "7e66d1fe3633211a15e3d8fb10686a9fa29f0aebcc895fc58fc84d70d60bf72d",
+      "size": 33192
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-session-0002.json",
+      "sha256": "67e5533e63a20c1f5632715615829e8a994196a50f75bd38f7eb15cccd4d754b",
+      "size": 9719
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-session-0006.json",
+      "sha256": "a0fd6cb1e35554fcb859ac4932712f19c9243ea15ca79a54451d061f9a283715",
+      "size": 10154
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-session-0009.json",
+      "sha256": "ea1c07a0213ef0bdd6237651bcabdfadb2292743612ce2f9a7881e893f0e0f3c",
+      "size": 16238
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-session-0012.json",
+      "sha256": "9ebbed2cb2428b5b868028a5b5cc23bf63b451ebdd6bdc7eed5fa226abae5089",
+      "size": 16695
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-session-0016.json",
+      "sha256": "bdb40b55d7aa641eed5843a7f15971ecb1f285e2c5123d600264dd446f6b42f4",
+      "size": 16849
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-session-0019.json",
+      "sha256": "a58e91cfc8081bbf75496e3d151aebff87fc736ceb0444b0814d854521007288",
+      "size": 9717
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-session-0022.json",
+      "sha256": "bacfde7c818fcb8e90d2d2ae725440dfbd9d373b8d56ada4d07dd582d0e0df6c",
+      "size": 9929
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/detached-session-0026.json",
+      "sha256": "91bc41c4a69cbf856281111ae3ee51cf934c6186935bdedbb58bce6d26b7505d",
+      "size": 10206
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/em-baseline-wifi-continuous-ping.log",
+      "sha256": "4589b9875fe9ec765690daaab30ea513e7b8293ca1f39b0d0966011f8e0a8a95",
+      "size": 56335
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/em-baseline-wired-continuous-ping.log",
+      "sha256": "812eb1b5979e8e66647b09cae42123468bf41515a836aa64c8ac28102c93f384",
+      "size": 66855
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/ethernet-capture.log",
+      "sha256": "03dff2a9d4b758808d148800c46b19bc4be8e7bf929ed5f55b767b0298cff848",
+      "size": 172
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/ethernet.pcap",
+      "sha256": "ffde74bc60b305e051c4e1a320a78517af6e7f06f1d60673cf355537fde44d40",
+      "size": 11035
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/forwarding-capture.log",
+      "sha256": "462a6c0482988a05ec9b0d6948860aac13f13debacb3379e4c5331c7e88452b9",
+      "size": 176
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/forwarding-samples.jsonl",
+      "sha256": "a1872b8fd04dbd4da59524e37fd27afba8e04a3ae24520b8f187b7d11b288782",
+      "size": 1045184
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/forwarding.pcap",
+      "sha256": "a3621bb0f5e8ded7ee5c16c625ed3a8c58bcac1fa93ad8557df22623d7a423c1",
+      "size": 477540
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/independent-binding-check.json",
+      "sha256": "a1f61e28ab22afb667ff4725b30ad1ee455bc310cb357c7acee57540b31a8759",
+      "size": 2805
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/independent-neighbor-check.json",
+      "sha256": "c220b752772b9db75838207c4025aab1147348d19656594214e088de126cef7a",
+      "size": 981
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/independent-policy-check.json",
+      "sha256": "154561a62cca7b6f75b55727c93b8f6625fee504d046b0bfbc0fadc13092ca30",
+      "size": 1434
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/independent-recovery-check.json",
+      "sha256": "9407caabcd4eeab973ac1d97f6ca098b46384f843307e24327ee032171dd9973",
+      "size": 3320
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/independent-telemetry-gap-check.json",
+      "sha256": "09946d9272723eb4637e6b339d457e210ffd36318200cc4fc453900555988987",
+      "size": 820
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/manager.jsonl",
+      "sha256": "c0a69cbbc211eff65a001b84bff2fe7922ce6623cc8ffd6b5d4c45c12700d3d5",
+      "size": 1308446
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/native-operation.json",
+      "sha256": "c174d40d279be0a2ff8a6e8dd1df58dcbf9c21a3610ae2e3a036588483ff7856",
+      "size": 4858
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/native-session.json",
+      "sha256": "31af77fa0f5c95bd9a68ef9228859d65245c3cee87019214e4933ed7ec2a7556",
+      "size": 10287
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/neighbor-gap-check.json",
+      "sha256": "caf12e729dddb76f8c09607ec1d27f24ed0e6e6ba35172d46a441c69a9459b9b",
+      "size": 36025
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/neighbor-link-observations.json",
+      "sha256": "59e64ff9d5b08b821ce1946cefa0ffc9403d3311e9efa564282ac7bde56d2690",
+      "size": 22598
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/neighbor-observer-final.json",
+      "sha256": "8bd85495c73fe05d9ec16e7241a76589c95c452c31dae132e7cffb988e28aab8",
+      "size": 939
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/radio-capture.log",
+      "sha256": "f613a84cbbcf9eadb75c2ad2ed5d92701e4c46c6aa2ffd765b34f9770c6119e0",
+      "size": 201
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/radio.pcap",
+      "sha256": "c7a360a990dfbbe369f59d1e054f399e7a56e77a8670e36b97676fc60e0eac31",
+      "size": 2335905
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/recovery-checks.json",
+      "sha256": "4f98abda0d84c93ee816eda58e25d8a16a4f1af644dded1028a1eb9167b615a6",
+      "size": 83812
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/restoration-check.json",
+      "sha256": "a23a6f20c53d519d73633c435a917d46e192ccee1b797d0b2634e32570fab973",
+      "size": 10298
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/result.json",
+      "sha256": "a518005adc980a2208ddd0224d875cbf060fd8377ba2577079844dc37f3f9540",
+      "size": 13197
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/source-hashes.json",
+      "sha256": "10173d9e88b6716db14bbd1deabab5c7450d5f9e3b473f614da533aa54fafd22",
+      "size": 12351
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/station-events.jsonl",
+      "sha256": "5faefdd1e98ee64bd6b7041289c3f0a2d7baf8a35e36a369d69c44baab1b7f11",
+      "size": 46887
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/telemetry-gap-check.json",
+      "sha256": "6caa3ca57dc25dadb40c2b00866b235bd5121659c208f6c428735f6c54823005",
+      "size": 36135
+    },
+    {
+      "path": "neighbor-binding/native-link-binding-04/withheld-operation.json",
+      "sha256": "6c555366a16f85b7352bd5e5ce66837a00c4648a2dbee27dafdeae93ab62fde3",
+      "size": 1963
+    },
+    {
+      "path": "neighbor-binding/ovsdb-results.xml",
+      "sha256": "30629df68461e513fc97797b6a5bffc22513633b308b34cfa831a1ebf1a06349",
+      "size": 7493
+    },
+    {
+      "path": "neighbor-binding/unit-results.xml",
+      "sha256": "fb60638a8cef9c9c0dda646db67132a840d426fc9a717c1e374670edef0dab10",
+      "size": 4438788
     }
   ]
 }

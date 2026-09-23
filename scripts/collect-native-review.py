@@ -44,6 +44,8 @@ FIXED = (
     "forwarding.pcap",
     "forwarding-capture.log",
     "forwarding-samples.jsonl",
+    "neighbor-observer-final.json",
+    "neighbor-gap-check.json",
 )
 PATTERNS = (
     "clients-*.json",

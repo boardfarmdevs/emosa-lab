@@ -843,10 +843,22 @@
       "title": "Native raw forwarding and recovery evidence",
       "description": "308 received samples and 305 checked intervals, independent client-transit capture and actual controller interface discovery; per-neighbor measurement qualification remains pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/neighbor-discovery-binding.md",
+      "title": "Bind the virtual agent to observed pod interfaces",
+      "description": "Trace pod-side discovery through OVSDB into native topology; learn independent identity leases and the passive-observer recovery check.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/neighbor-binding/README.md",
+      "title": "Live neighbor identity and recovery evidence",
+      "description": "321 bound samples, four independently matched discoveries and 28 native controller interface inventories; preserved failed attempts and remaining measurement limits.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "forwarding/unit-results.xml",
-    "ovsdb": "forwarding/ovsdb-results.xml"
+    "unit": "neighbor-binding/unit-results.xml",
+    "ovsdb": "neighbor-binding/ovsdb-results.xml"
   }
 }
