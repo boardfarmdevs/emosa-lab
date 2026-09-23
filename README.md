@@ -58,6 +58,11 @@ assembles the selected complete response and dispatches periodic reports under a
 durable schedule. Independent synthetic byte checks pass; the native lab still
 withholds AP reports until their measurement sources are qualified.
 
+The optional [native sparse-ESP parser fix](doc/protocol/native-ap-esp.md) now
+prevents a controller crash on valid reports that omit intermediate service
+categories. Native packet/inventory checks verify the fix; ESP measurement
+semantics and complete AP delivery remain pending.
+
 The [native peer-metric exercise](doc/protocol/native-peer-metrics.md) now joins
 observed pod counters, discovery and an isolated software Ethernet path to real
 IEEE 1905 replies. Independent capture checks the reply fields; subsequent

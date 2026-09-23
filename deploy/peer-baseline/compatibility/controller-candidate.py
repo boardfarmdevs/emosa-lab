@@ -47,10 +47,20 @@ def trial(build, label, *, fail_after_install=False, experiment=None):
             not in (
                 "0005-controller-configuration-scope.patch",
                 "0006-bpl-model-lifetime.patch",
+                "0007-controller-ap-esp-presence.patch",
             )
             or digest(ROOT / extra["name"]) != extra["sha256"]
         ):
             raise RuntimeError("Unknown or mismatched additional candidate patch")
+    if any(
+        p["name"] == "0007-controller-ap-esp-presence.patch"
+        for p in provenance.get("extra_patches", [])
+    ):
+        regression = provenance.get("ap_esp_regression", {})
+        if regression.get("passed") != 240 or not regression.get(
+            "baseline_fixed_vi_offset_returns_null"
+        ):
+            raise RuntimeError("Native AP ESP regression is incomplete")
     libraries = provenance.get("runtime_libraries", {})
     lifecycle = any(
         p["name"] == "0006-bpl-model-lifetime.patch" for p in provenance.get("extra_patches", [])

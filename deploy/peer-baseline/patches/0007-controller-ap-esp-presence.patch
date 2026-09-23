@@ -1,0 +1,109 @@
+--- a/controller/src/beerocks/master/controller.cpp
++++ b/controller/src/beerocks/master/controller.cpp
+@@ -7,6 +7,7 @@
+  */
+ 
+ #include "controller.h"
++#include "ap_metrics_esp.h"
+ #include "periodic/persistent_data_commit_operation.h"
+ #include "periodic/persistent_database_aging.h"
+ #include "son_actions.h"
+@@ -2170,6 +2171,14 @@
+     auto &ap_metric_data = database.get_ap_metric_data_map();
+ 
+     for (auto ap_metric_tlv : cmdu_rx.getClassList<wfa_map::tlvApMetrics>()) {
++        // Table 45 packs only the present ESP entries. Validate the complete
++        // array before updating this BSS, including its utilization/statistics.
++        son::ApMetricEspFields esp_fields;
++        if (!son::decode_ap_metric_esp(*ap_metric_tlv, esp_fields)) {
++            LOG(ERROR) << "Malformed AP Metrics ESP presence/length";
++            ret_val = false;
++            continue;
++        }
+         //parse tx_ap_metric_data
+         sMacAddr reporting_agent_bssid = ap_metric_tlv->bssid();
+ 
+@@ -2189,24 +2198,13 @@
+             continue;
+         }
+ 
+-        if (ap_metric_tlv->estimated_service_parameters().include_ac_be) {
+-            set_esp("EstServiceParametersBE", reporting_agent_bssid,
+-                    ap_metric_tlv->estimated_service_info_field());
+-        } else {
+-            LOG(WARNING) << "Include bit for the Estimated Service Parameters AC = BE should "
+-                            "always be 1";
+-        }
+-        if (ap_metric_tlv->estimated_service_parameters().include_ac_bk) {
+-            set_esp("EstServiceParametersBK", reporting_agent_bssid,
+-                    ap_metric_tlv->estimated_service_info_field(3));
+-        }
+-        if (ap_metric_tlv->estimated_service_parameters().include_ac_vo) {
+-            set_esp("EstServiceParametersVO", reporting_agent_bssid,
+-                    ap_metric_tlv->estimated_service_info_field(6));
+-        }
+-        if (ap_metric_tlv->estimated_service_parameters().include_ac_vi) {
+-            set_esp("EstServiceParametersVI", reporting_agent_bssid,
+-                    ap_metric_tlv->estimated_service_info_field(9));
++        static const std::array<const char *, 4> names{{
++            "EstServiceParametersBE", "EstServiceParametersBK",
++            "EstServiceParametersVO", "EstServiceParametersVI"}};
++        for (size_t i = 0; i < esp_fields.size(); ++i) {
++            if (esp_fields[i].present) {
++                set_esp(names[i], reporting_agent_bssid, esp_fields[i].value.data());
++            }
+         }
+     }
+ 
+--- /dev/null
++++ b/controller/src/beerocks/master/ap_metrics_esp.h
+@@ -0,0 +1,49 @@
++/* SPDX-License-Identifier: BSD-2-Clause-Patent */
++#ifndef EMOSA_AP_METRICS_ESP_H
++#define EMOSA_AP_METRICS_ESP_H
++
++#include <array>
++#include <algorithm>
++#include <tlvf/wfa_map/tlvApMetrics.h>
++
++namespace son {
++struct ApMetricEspField {
++    bool present = false;
++    std::array<uint8_t, 3> value{};
++};
++using ApMetricEspFields = std::array<ApMetricEspField, 4>;
++
++// EasyMesh 6.1 Table 45: mandatory BE, then optional BK, VO, VI.
++// This preserves the three opaque octets; it does not qualify their semantics.
++// Invalid input leaves the output unchanged and must precede BSS model updates.
++inline bool decode_ap_metric_esp(wfa_map::tlvApMetrics &tlv, ApMetricEspFields &output)
++{
++    if (!tlv.isInitialized()) {
++        return false;
++    }
++    const auto &flags = tlv.estimated_service_parameters();
++    const std::array<bool, 4> present{{bool(flags.include_ac_be), bool(flags.include_ac_bk),
++                                     bool(flags.include_ac_vo), bool(flags.include_ac_vi)}};
++    const size_t expected = 3 * std::count(present.begin(), present.end(), true);
++    if (!present[0] || tlv.estimated_service_info_field_length() != expected) {
++        return false;
++    }
++    ApMetricEspFields fields{};
++    size_t offset = 0;
++    for (size_t i = 0; i < present.size(); ++i) {
++        fields[i].present = present[i];
++        if (!present[i]) {
++            continue;
++        }
++        const auto bytes = tlv.estimated_service_info_field(offset);
++        if (!bytes) {
++            return false;
++        }
++        std::copy_n(bytes, 3, fields[i].value.begin());
++        offset += 3;
++    }
++    output = fields;
++    return true;
++}
++} // namespace son
++#endif

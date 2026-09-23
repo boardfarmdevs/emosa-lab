@@ -32,6 +32,11 @@ Next acquire the selected Wi-Fi Data Elements definitions, qualify counter
 conversion, connect the reporting source, and independently verify complete
 AP/STA and final-session delivery. The physical-pod profile remains pending.
 
+The [native sparse-ESP fix](../protocol/native-ap-esp.md) closes a concrete
+controller receipt defect: BE+VI reports caused SIGSEGV because absent categories
+were treated as fixed slots. The patched candidate passes actual receipt and
+malformed-input checks. This does not resolve ESP estimation or conversion.
+
 The critical milestone is **real EasyMesh messages → EMOSA adapter → unchanged
 physical pod → independently observed behavior**. Neither an OVSDB component pass
 nor a successful hwsim association completes that objective.

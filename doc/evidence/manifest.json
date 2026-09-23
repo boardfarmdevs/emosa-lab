@@ -22701,6 +22701,471 @@
       "path": "session-reasons/unit-tests.log",
       "sha256": "9445009c63b9c781633938a4d79b8315d0f377a238650a4f319ac7b9582b0ca5",
       "size": 10244
+    },
+    {
+      "path": "ap-esp/README.md",
+      "sha256": "c751cf4d7e65aa6ba32abdbf50951883fac549227ad28bf263e20a4322d528eb",
+      "size": 6172
+    },
+    {
+      "path": "ap-esp/build-01/ap-esp-regression-invalid-json.txt",
+      "sha256": "2c036e8283f683f85ce84fdc785d9f03771ba16b0fb02ea05e3f59889b08ae65",
+      "size": 298
+    },
+    {
+      "path": "ap-esp/build-01/build.log",
+      "sha256": "753518192b2cc719847bfd1ec1b0b1b67e2924aea871ea79def81f9eaede83b8",
+      "size": 15634
+    },
+    {
+      "path": "ap-esp/build-01/console.log",
+      "sha256": "33dfd325bb44d4f3757c50429cd4929557989381a409a9416fb566b4db00ca90",
+      "size": 627
+    },
+    {
+      "path": "ap-esp/build-01/executed-recipes/CMakeLists.txt.txt",
+      "sha256": "57fbdf24d1df9733728347ab547454e23fbfb98db18ea508a85789df83298fc4",
+      "size": 4885
+    },
+    {
+      "path": "ap-esp/build-01/executed-recipes/ap-esp.cpp.txt",
+      "sha256": "71b502a303c5196da6cf70eb36f2a2a6f77c9d1fdd06282e8752d751884c1ff1",
+      "size": 3019
+    },
+    {
+      "path": "ap-esp/build-01/executed-recipes/build-controller.py.txt",
+      "sha256": "630983ac8073b99f00ef4df3eaa88ff0aba6e50045672ffff0071cde8efde5fa",
+      "size": 12604
+    },
+    {
+      "path": "ap-esp/build-01/regression.json",
+      "sha256": "87310a8430bafa43d8400c294eb15dbe10d025ecbbbad7595776f0b2d4dc8f08",
+      "size": 151
+    },
+    {
+      "path": "ap-esp/build-02/ap-esp-regression.json",
+      "sha256": "a52af64347445b56c8655119293c03dcdb40a60f307b45eb268f093abf6f2292",
+      "size": 188
+    },
+    {
+      "path": "ap-esp/build-02/build.log",
+      "sha256": "68ba4f3e1a894f434cdb66444c74e379efccd7cb36fb1228735722c75e2432f4",
+      "size": 15634
+    },
+    {
+      "path": "ap-esp/build-02/candidate.json",
+      "sha256": "8f28a42cb404e3aa61a3ea3214ff54e3310d90915b7d5f5949fda1df7f53409d",
+      "size": 6245
+    },
+    {
+      "path": "ap-esp/build-02/console.log",
+      "sha256": "d66842409c749bff9258d02cd92c119d37ede6ecc0a2045dc3bc965a7c59566b",
+      "size": 6355
+    },
+    {
+      "path": "ap-esp/build-02/controller-headers.json",
+      "sha256": "952ad9fa51452ad5f022dc6c2ae0ee6bac8799ed4e7afbb0086915ccddd4c0da",
+      "size": 1520
+    },
+    {
+      "path": "ap-esp/build-02/independent-provenance-check.json",
+      "sha256": "1d7ec1decb32b08115592ff00c856ec498208c9ac29c2a35de0d270701c57fe0",
+      "size": 2107
+    },
+    {
+      "path": "ap-esp/build-02/lifetime-regression.json",
+      "sha256": "bf45a06052413230521a715c2de2f48d20dfbfe124ff9eeca5608729b512b324",
+      "size": 746
+    },
+    {
+      "path": "ap-esp/build-02/regression.json",
+      "sha256": "87310a8430bafa43d8400c294eb15dbe10d025ecbbbad7595776f0b2d4dc8f08",
+      "size": 151
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-00.json",
+      "sha256": "9fc416af1e3adbc732c4853d5bb63b0bc6311fdee49146924cf899b637f0bf1d",
+      "size": 31098
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-01.json",
+      "sha256": "6197ac2aa2b85fac4ce8dee5b9637a235530c639448a574bdb3695dd477f6b77",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-02.json",
+      "sha256": "038dfffd955ae1b2f96653d46c9e897ead3f7c522da902c97b222cc275b8763d",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-03.json",
+      "sha256": "550e8daea4818ca5330472b1e4c496d634a8dc2681405972426fe15b7a703cfa",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-04.json",
+      "sha256": "fc0f84e62d7b6faf9681f7e747408b5f87f72caf09c96b73d42563b8dad6d394",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-05.json",
+      "sha256": "d3fe83e35179cf030b63d01e9dcc67741dfb783525ef40382c12dfc3db098cf9",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-06.json",
+      "sha256": "edcddfd13329de2298ff68b1d632e99eabdaaa6d6a70ec1dc0751a24af711555",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-07.json",
+      "sha256": "7a63769eadfb8d7f1f9bf5c72efeef14e67fe2e01b9552925f921a2a6f306bc1",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-08.json",
+      "sha256": "0eebb4c5418d58b9cb8a86fb945af82e80ecb656a78a35efeab12432e9688c21",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-09.json",
+      "sha256": "f1dd6bab3a1fd2550416eb3e71de46412f307a58342757ca907d919e15be0d88",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-10.json",
+      "sha256": "eb39eea3582be9ddabd83ba417b828d76436a94b772abc230f44a8479dd6da95",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-11.json",
+      "sha256": "d7c04d5ea847839d45340fb9412916e648e3553d7e1181a1fcd3b7eb80be444c",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-12.json",
+      "sha256": "0f21f0dc673323fc697746449b229b9715a0ad5744845a0d12cbbf779a126662",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-13.json",
+      "sha256": "71c0f2f9cf466e5d3f1addded66fb91429c31b9cd9a584d188256e146795bae7",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-14.json",
+      "sha256": "35520bc8faf58f2e2c8da26933d9bd230cde45860de2cdcc8bd72f48e72a5bd9",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-inventory-15.json",
+      "sha256": "5a4c53d768d6bb7c11cfe6b8edae069db76615d8de7593a524f31a6b28d5aeec",
+      "size": 31110
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ap-esp-probe.json",
+      "sha256": "20bc6aa73dd46e136d2cdc3da1e41e9db51c994c32e3fdc58dccc30508cf4586",
+      "size": 14156
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/candidate-trial.json",
+      "sha256": "889ad7ec4fca952d79243a4bd6592de2625bb029b6b694a46b002e2eca57c7be",
+      "size": 28047
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/candidate.json",
+      "sha256": "8f28a42cb404e3aa61a3ea3214ff54e3310d90915b7d5f5949fda1df7f53409d",
+      "size": 6245
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/clients-onboarded.json",
+      "sha256": "d02c6adc8eea81b094c397ccf204a29d99d79eb732ce9245c39573cca662788a",
+      "size": 2620
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/console.log",
+      "sha256": "e8723ff857edcc97440a310606c3e013766cc1401b24e0649fffe6aaa581d31c",
+      "size": 28323
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/controller-after.json",
+      "sha256": "b9029fb6bb77a0c7983767c1a4dc9a26957b96ffe45b8aa721ea0fa53aa8c60d",
+      "size": 27035
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/controller-before.json",
+      "sha256": "05b0b329960f3953126ddc810e0d8a53de1b2b59c1814249a8b5029ac2831872",
+      "size": 10353
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/egress-observations.jsonl",
+      "sha256": "8f971cbe00ee8ed4a1d39bd1c3955173bd8e31c4f2feb5c79defc7566950ec8e",
+      "size": 1010603
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/egress-observer-final.json",
+      "sha256": "2194af7c14ff5a355e1ace96ecc428bec982d448029b448c6fa4123a5fd8e652",
+      "size": 515
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ethernet-capture.log",
+      "sha256": "a49c6d0f7425c61a131f4d45d74fd9a85c2c7e09b8a3080b09295d65a72c5696",
+      "size": 170
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/ethernet.pcap",
+      "sha256": "e9f93fd4c41b90621c77dbd3fd1fc0cfb2e8643d9919ae435bc03ae42e611704",
+      "size": 3873
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/forwarding-capture.log",
+      "sha256": "03c02b38240dcf2d27c2df8cb5174c848c1f5322885f609fa8392531f621f59c",
+      "size": 172
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/forwarding-samples.jsonl",
+      "sha256": "23b3c4f7bbacf7e82de38f51d6f28263072eb4fa9efa45127f2d586fc4e078e5",
+      "size": 260252
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/forwarding.pcap",
+      "sha256": "657443f629b9b5fed5f531ef924430d4fdaa5f86bb5fc6d8bcee8fb290d6c27c",
+      "size": 6533
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/independent-ap-esp-check.json",
+      "sha256": "58aea4d20bac19d24923198caabc9bdb2eef15936e0600db6e4ce9d933ac9b5b",
+      "size": 1829
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/independent-source-check.json",
+      "sha256": "40a59d2e21e78fdab4dbecd715beec89074ccae504ec873d3d51239168e2a212",
+      "size": 25841
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/manager.jsonl",
+      "sha256": "84264ca4fd5e9e2312a3ccb0babc5b5c385e26d0d33e74c15a47e3be3145ad0f",
+      "size": 986804
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/native-operation.json",
+      "sha256": "721fdc79278735a14fe850792fa9d7336859481f1e81271df49d364a1fc5fb68",
+      "size": 2482
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/native-processes-start.json",
+      "sha256": "0d1a5cd901fe32a601caa574f297563e8388f32b120c726ff0fd86e3435396b8",
+      "size": 3075
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/native-processes-stop.json",
+      "sha256": "05110c9a6a87bdfcae8d70b874491d48b802a557bc6b8b48542ac430aed96ec7",
+      "size": 3075
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/native-session.json",
+      "sha256": "31ec46cf8ef5d37d82cd9dc59da70566230f82e65289032631a910f094965890",
+      "size": 27625
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/neighbor-link-observations.json",
+      "sha256": "020b48fe24d6b102f00a92c99c3da4ad3f70cf7e075d532faa67cef8c2c6b1ad",
+      "size": 22625
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/neighbor-observer-final.json",
+      "sha256": "887fd70d3b756dc2531b8187714e687177be75de7b2d946ad1b177c2846d9ec9",
+      "size": 621
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/post-restoration-observation.json",
+      "sha256": "554557fb77fe3aaba2e64c700625f5ec5d4a01bec33565a7c7dfad2cb8ff3c04",
+      "size": 690
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/radio-capture.log",
+      "sha256": "a46cbdb72438ca31722605fbe0576347ad232e22249353084f64f6e66e476540",
+      "size": 199
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/radio.pcap",
+      "sha256": "42ae9b623628585a3244aad5ec210e12730552e522551beb09c6de266a89de72",
+      "size": 403415
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/reference-candidate.json",
+      "sha256": "9313397e4b92fae45012b3277b84b4d54addacc036ec33265f7f513c71c62805",
+      "size": 2311
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/result.json",
+      "sha256": "0823284d4db1a0670d08f2e6f1372df3ad305871ae0ac75322debd0b032fded1",
+      "size": 25374
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/source-hashes.json",
+      "sha256": "f447811783b9035fe7a3d38358a0c9cad9dff041e16fad523e3f3ba9abe10993",
+      "size": 14039
+    },
+    {
+      "path": "ap-esp/native-ap-esp-new-01/withheld-operation.json",
+      "sha256": "20ff327a9c560d2a774a98f732b34dbc1bd908eb675e866907d220737ecade98",
+      "size": 1963
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/ap-esp-probe.json",
+      "sha256": "48b902824f9ecf3a447d1a017ae5c7e57cdb540ebd7daf330a9029f6c9b7b13e",
+      "size": 759
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/candidate-trial.json",
+      "sha256": "247ddf4b25511ecf0a96a76ea6d50e630a96f68e532f9d3dc984da2763b3b5fb",
+      "size": 1144
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/candidate.json",
+      "sha256": "2c4a8bbb398c894269bf7bc840ae52563bc173a8acdc58ea4a50234777c115e9",
+      "size": 5634
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/clients-onboarded.json",
+      "sha256": "92cce73a003872d72b96c0224f09286f7285409128b8b3d76981ebdcaf4e5886",
+      "size": 2621
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/console.log",
+      "sha256": "b5e79ec9c6b2e221d7dcb71bc9668d15383634b907c5b4c0d1098710f34b821a",
+      "size": 3127
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/controller-after.json",
+      "sha256": "e9e4a7c8cfbdff6829a3fd0e7d49b0803d1fc690012a35780f18f935dd308239",
+      "size": 30041
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/controller-before.json",
+      "sha256": "aba7068280a81d1d11dc041e4a18ac96d6222880f23a2d6de06f54d062d6e236",
+      "size": 10353
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/egress-observations.jsonl",
+      "sha256": "442a2a313c9f7109a74d142f46ce2079681ce31b38c79db0c90afdae7159a44c",
+      "size": 1254191
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/egress-observer-final.json",
+      "sha256": "a4dbca01950a5f0121136df2a673e5aae11f2ce9f118e58498a76b5ccadbf44d",
+      "size": 515
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/ethernet-capture.log",
+      "sha256": "4b380aef57c29818d3dbe10fa322a949305d1afb48ff97e4fc76bd2de91b0f8a",
+      "size": 170
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/ethernet.pcap",
+      "sha256": "6d21f78fed2c15ba1504674f96ad6cd0470e8deb92985fc8400e48b3a0bb0d69",
+      "size": 2960
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/forwarding-capture.log",
+      "sha256": "2e154e7dea206abfc28b5c634e8e4d0e2d36fd8f5567e05635ccdbff3293af25",
+      "size": 172
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/forwarding-samples.jsonl",
+      "sha256": "e4a5fdbbcb744de227f694a3dcb17f2f096bbf93eeb8519bbf8cbdbe0e3ae588",
+      "size": 32996
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/forwarding.pcap",
+      "sha256": "95d8170edc973079b1b90801ee629544b8d4bfd9acaae48d6e1f634056fe2844",
+      "size": 6619
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/independent-ap-esp-check.json",
+      "sha256": "2b36045d9f001a4b4cbbad135d057165e0b30d65aa258dd71998417b0cef7e83",
+      "size": 514
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/independent-source-check.json",
+      "sha256": "1d2189b03dda11f23ddab1490233f9d76c2504bbd1cf5994bc74c4673f1687db",
+      "size": 25841
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/manager.jsonl",
+      "sha256": "849cd39aff88febb5cfc34222e9870d74013b384fe8dcaec35a49dcaefbb54ba",
+      "size": 1207234
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/native-operation.json",
+      "sha256": "d5b4a73e8d21341ce2ee549552fbadf539917af15eacd9fd98c293fc7a1280a7",
+      "size": 2482
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/native-processes-start.json",
+      "sha256": "9235e128e7c74e753ba4b27f386675b5a7f8362bc45399084abfc2aa0091b4bd",
+      "size": 3075
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/native-session.json",
+      "sha256": "1ea442d9b4cc2078bd7412c00a8a5bc79fc1966d47f3dc20abcafdd404f1804d",
+      "size": 9124
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/neighbor-link-observations.json",
+      "sha256": "e651d2e0572c51f2c2db7ad07c38ac7d964e319eea36a1cfdd0c712ec83753a5",
+      "size": 22625
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/neighbor-observer-final.json",
+      "sha256": "34bbd0ba08d71f9a7ee9ab837c882211b221e291b33c7de09f400866c6634e65",
+      "size": 621
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/post-restoration-observation.json",
+      "sha256": "30b8eb0bed268580309342b2e447b504a6767aac2a2f5e4c3436a9fd841478e3",
+      "size": 690
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/radio-capture.log",
+      "sha256": "0884006d75946681817bc19eddb66c69c43fc4b90a18b1786435cb0747bef668",
+      "size": 199
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/radio.pcap",
+      "sha256": "be9aaa05f54345fa9e3e7e0baa3f8b9b09ebc0141440d25cd3b8e5da3330c272",
+      "size": 504842
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/reference-candidate.json",
+      "sha256": "2ef1d501c7de934944033e2ff08601fb16bfa17f5e4d87363f4039e21ae41b43",
+      "size": 2311
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/result.json",
+      "sha256": "f76113432f9d72c9add339ab8c8599880220aff820c1aa49ceb6c5fd742e5fd9",
+      "size": 5366
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/source-hashes.json",
+      "sha256": "68ca0f62442a85249c50ea7890be0e1e82246af7dbda94bc86472adff99159e6",
+      "size": 14039
+    },
+    {
+      "path": "ap-esp/native-ap-esp-old-01/withheld-operation.json",
+      "sha256": "410788119925dd6e8d2634f8e0d7a2b2960a18e6d9b72f80ad1cd814e39e0d0c",
+      "size": 1963
+    },
+    {
+      "path": "ap-esp/unit-results.xml",
+      "sha256": "ae89f3d918a9b42efbd0819d9f44347cde71d8bfd4b053a78b4fa59bc6415b81",
+      "size": 4467493
+    },
+    {
+      "path": "ap-esp/unit-tests.log",
+      "sha256": "362d42f5ba8b96399e3a24a59bebca5215f8a8ad0b564bedd4dacc9369f8dbb3",
+      "size": 10319
     }
   ]
 }

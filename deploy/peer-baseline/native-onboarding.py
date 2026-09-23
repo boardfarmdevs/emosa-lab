@@ -65,6 +65,7 @@ async def experiment(
     label,
     *,
     active_seconds=0,
+    ap_esp_probe=False,
     recovery_checks=False,
     observe_station_removal=False,
     observe_session_reasons=False,
@@ -99,6 +100,7 @@ async def experiment(
         "station_removal_observation_requested": observe_station_removal,
         "session_reason_observation_requested": observe_session_reasons,
         "capture_health_required": True,
+        "synthetic_ap_esp_probe_requested": ap_esp_probe,
         "capture_buffer_kib": 8192,
         "reporting_policy_receipt_expected": active_seconds > 0,
         "medium_loss_requested": medium_loss,
@@ -133,6 +135,7 @@ async def experiment(
                 *([RADIO_ROOT_DIR / "virtual-link.py"] if virtual_link else []),
                 *([RADIO_ROOT_DIR / "peer-path.py"] if neighbor_metrics else []),
                 *([RADIO_ROOT_DIR / "station-events.py"] if observe_station_removal else []),
+                *([ROOT / "ap-esp-probe.py"] if ap_esp_probe else []),
                 *([RADIO_ROOT_DIR / "session-reasons.py"] if observe_session_reasons else []),
                 *([RADIO_ROOT_DIR / "medium.py"] if medium_loss else []),
                 *([RADIO_ROOT_DIR / "tx-status-trace.py"] if observe_tx_status else []),
@@ -592,6 +595,11 @@ async def experiment(
         report["cases"]["clients"] = await radio["clients"](
             directory, "onboarded", "emosa-controller-trial"
         )
+        if ap_esp_probe:
+            module = runpy.run_path(str(ROOT / "ap-esp-probe.py"))
+            report["synthetic_ap_esp_probe"] = await module["probe"](
+                directory, namespace, helpers["inventory"], write
+            )
         if active_seconds:
             for client, interface in zip(radio["CLIENTS"], ("eth1", "wlan0"), strict=True):
                 unit = "emosa-soak-" + label
@@ -1168,6 +1176,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Temporarily break owned peer isolation and verify metric withdrawal/recovery",
     )
+    parser.add_argument(
+        "--ap-esp-probe",
+        action="store_true",
+        help="Synthetic native parser diagnostic; not sustained acceptance",
+    )
     args = parser.parse_args()
     if args.peer_path_gap_check and (not args.neighbor_metrics or args.active_seconds < 150):
         parser.error("peer path gap requires neighbor metrics and at least 150 active seconds")
@@ -1179,6 +1192,8 @@ if __name__ == "__main__":
         parser.error("stage a separate candidate directory directly under /opt/emosa-baseline")
     if args.active_seconds and not 30 <= args.active_seconds <= 3600:
         parser.error("active-seconds must be zero or 30–3600")
+    if args.ap_esp_probe and args.active_seconds:
+        parser.error("synthetic AP parser probe must be separate from sustained acceptance")
     if args.recovery_checks and args.active_seconds < 150:
         parser.error("recovery checks require at least 150 active seconds")
     if args.observe_station_removal and not args.active_seconds:
@@ -1206,6 +1221,7 @@ if __name__ == "__main__":
                     experiment(
                         label,
                         active_seconds=args.active_seconds,
+                        ap_esp_probe=args.ap_esp_probe,
                         recovery_checks=args.recovery_checks,
                         observe_station_removal=args.observe_station_removal,
                         observe_session_reasons=args.observe_session_reasons,

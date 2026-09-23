@@ -77,6 +77,7 @@ reviewed; record their provenance and digest in the protocol matrix.
 | --- | --- |
 | EasyMesh 6.1 §17.2.10 Table 33, compared with IEEE 802.11-2024 Figure 9-901 | Define `0x88` Rx/Tx direction, width-group ordering and the unit of big-endian reordering. Supply asymmetric 4-, 8- and 12-octet examples that distinguish word, pair and whole-field reversal. The alternatives are listed in the [procedure audit](procedure-audit.md#unresolved-he-field-reordering). |
 | EasyMesh 6.1 §17.2.94 Table 117 | Resolve the overlap between the named Early AP Capability bit and the stated reserved-bit range. We must not silently repair a normative table when encoding controller capability. |
+| EasyMesh 6.1 §17.2.22 Table 45 and IEEE 802.11-2024 Figure 9-740 | Supply asymmetric three-octet ESP examples clarifying the stated big-endian subfield reordering, including the placement of Access Category and reserved bits. Existing opaque-byte/native-presence checks do not resolve this conversion. |
 | EasyMesh reference [10] and §17.2.59 Table 82 | Supply the selected Data Elements 3.0 package, including the referenced spreadsheet, to establish CollectionInterval units and valid values. |
 | EasyMesh reference [22] and §13 | Identify the applicable Security Requirements revision and provide authorized access for the selected WPA2-Personal procedure review. |
 

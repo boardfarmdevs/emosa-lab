@@ -78,7 +78,7 @@ def zero_packet_loss(text):
 
 
 def candidate_inputs(build, trial):
-    """Accept only the two explicitly qualified native candidate recipes."""
+    """Accept only the explicitly reviewed native candidate recipes."""
     assert trial["candidate_sha256"] == build["candidate_sha256"]
     assert build["counter_regression"]["passed"] == 12
     onboarding = {
@@ -89,7 +89,24 @@ def candidate_inputs(build, trial):
         "name": "0006-bpl-model-lifetime.patch",
         "sha256": "fb9b3a45721952532b21592aafb2eba77e5795fd91543940e756510b60615785",
     }
-    assert build["extra_patches"] in ([onboarding], [onboarding, lifecycle])
+    ap_esp = {
+        "name": "0007-controller-ap-esp-presence.patch",
+        "sha256": "021155b4127f604687ac17e04080c784163cee90921b5d9a13cef0b90251c737",
+    }
+    assert build["extra_patches"] in (
+        [onboarding],
+        [onboarding, lifecycle],
+        [onboarding, lifecycle, ap_esp],
+    )
+    if ap_esp in build["extra_patches"]:
+        assert build["ap_esp_regression"] == {
+            "passed": 240,
+            "valid_presence_combinations": 8,
+            "malformed_inputs_rejected": 232,
+            "baseline_fixed_vi_offset_returns_null": True,
+            "native_tlvf_used": True,
+            "measurement_semantics_qualified": False,
+        }
     if lifecycle in build["extra_patches"]:
         libraries = build["runtime_libraries"]
         assert set(libraries) == {"libbpl.so.6.0.0"}

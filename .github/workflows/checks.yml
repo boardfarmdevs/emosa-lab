@@ -114,6 +114,10 @@ jobs:
           python3 scripts/check-native-peer-metrics.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
           python3 scripts/check-native-ap-withholding.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
           python3 scripts/check-telemetry-gap.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
+      - name: Verify native sparse ESP failure and corrected receipt
+        run: |
+          python3 scripts/check-native-ap-esp.py --baseline-failure doc/evidence/ap-esp/native-ap-esp-old-01
+          python3 scripts/check-native-ap-esp.py doc/evidence/ap-esp/native-ap-esp-new-01
       - name: Verify live disconnect joins and 15-minute recovery
         run: |
           python3 scripts/check-session-reasons.py doc/evidence/session-reasons/native-reason-04

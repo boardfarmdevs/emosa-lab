@@ -4268,6 +4268,38 @@ and BSSID rather than assuming adjacent records belong together.
 final sample, a qualified counter conversion and a report acknowledged by the
 controller. Each is necessary evidence for a different part of the same path.
 
+### 13.32 Verify that the native controller can receive sparse AP service fields
+
+An optional field does not reserve space when absent. EasyMesh's AP Metrics TLV
+always carries BE service information, while BK, VO and VI can be omitted. The
+old native controller assumed all four entries occupied fixed positions. A
+BE+VI report therefore caused an out-of-bounds lookup and a real SIGSEGV.
+This defect belongs to the evaluation controller, not to the OpenSync pod.
+
+Follow [native AP service-field reception](../protocol/native-ap-esp.md):
+
+1. On HOST, inspect the retained baseline failure and corrected packet/inventory
+   audit. Read a six-octet BE+VI array and locate VI at offset three, not nine.
+2. Build the optional controller with `--onboarding --lifecycle --ap-esp` in a
+   new directory. The compiled test uses the real TLVF library and the same
+   decoding helper as the controller. Confirm eight valid and 232 invalid cases.
+3. While VM is idle, stage the new controller, BPL library, provenance and current
+   wrapper/probe files. Existing backup, ownership and restoration checks apply.
+4. Run `--ap-esp-probe` with a fresh label. EMOSA first onboards the simulated
+   OpenSync pod. Its worker then stops, and a separate diagnostic sends explicit
+   synthetic AP TLVs to test the controller's parser. This mode cannot accompany
+   an active soak and does not publish qualified telemetry.
+5. Collect the capture, per-case controller inventory, exact candidate reference
+   and restoration observation. Verify all present categories, unchanged values
+   after malformed inputs, clean native shutdown and restored baseline bytes.
+6. Keep parser acceptance separate from measurement correctness. The fix handles
+   presence and length; the ESP estimator, subfield conversion, complete AP/STA
+   source and final-session reporting still require qualification.
+
+**Learning checkpoint:** explain why receiving a correctly sized TLV, assigning
+its bytes to the right controller field and establishing the meaning of those
+bytes are three separate checks.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

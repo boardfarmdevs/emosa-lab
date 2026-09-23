@@ -1,0 +1,75 @@
+{
+  "observed_at": 1790168984.2212305,
+  "units": {
+    "controller": {
+      "properties": {
+        "Restart": "no",
+        "TimeoutStopUSec": "20s",
+        "SuccessExitStatus": "",
+        "MainPID": "18005",
+        "ExecStart": "{ path=/opt/prpl-install-nl80211/bin/beerocks_controller ; argv[]=/opt/prpl-install-nl80211/bin/beerocks_controller ; ignore_errors=no ; start_time=[Wed 2026-09-23 13:08:51 UTC] ; stop_time=[n/a] ; pid=18005 ; code=(null) ; status=0/0 }",
+        "KillMode": "control-group",
+        "KillSignal": "15",
+        "SendSIGKILL": "yes",
+        "ActiveState": "active"
+      },
+      "executable": "/opt/prpl-install-nl80211/bin/beerocks_controller",
+      "executable_sha256": "cec287b95d588ca715c7384a8bd6985f9b492e192becdf69b6e708067afc2b9d",
+      "libraries": {
+        "libamxrt.so.0.5.1": {
+          "path": "/usr/lib/x86_64-linux-gnu/libamxrt.so.0.5.1",
+          "sha256": "43096111e17c78d524ba1d62221be2610d3fd612bf6df8558edcc7aa4a4c0a2e",
+          "inode": 1387587,
+          "device": "08:01"
+        },
+        "libnbapi.so.6.0.0": {
+          "path": "/opt/prpl-install-nl80211/lib/libnbapi.so.6.0.0",
+          "sha256": "46b27d77aea3a224a803e0edb7d0f09828e555afef3f917483944627a92ec793",
+          "inode": 1387210,
+          "device": "08:01"
+        },
+        "libbpl.so.6.0.0": {
+          "path": "/opt/prpl-install-nl80211/lib/libbpl.so.6.0.0",
+          "sha256": "f25812f74db0996ae8bfb15360a775d536aee9f3c2ff44f5264f4dafe301582f",
+          "inode": 1387195,
+          "device": "08:01"
+        }
+      }
+    },
+    "agent": {
+      "properties": {
+        "Restart": "no",
+        "TimeoutStopUSec": "20s",
+        "SuccessExitStatus": "",
+        "MainPID": "18012",
+        "ExecStart": "{ path=/opt/prpl-install-nl80211/bin/beerocks_agent ; argv[]=/opt/prpl-install-nl80211/bin/beerocks_agent ; ignore_errors=no ; start_time=[Wed 2026-09-23 13:08:51 UTC] ; stop_time=[n/a] ; pid=18012 ; code=(null) ; status=0/0 }",
+        "KillMode": "control-group",
+        "KillSignal": "15",
+        "SendSIGKILL": "yes",
+        "ActiveState": "active"
+      },
+      "executable": "/opt/prpl-install-nl80211/bin/beerocks_agent",
+      "executable_sha256": "b00522358beef4c55c624e9a1924f17ce3c3bc8d4704801af175ab8566e5258b",
+      "libraries": {
+        "libnbapi.so.6.0.0": {
+          "path": "/opt/prpl-install-nl80211/lib/libnbapi.so.6.0.0",
+          "sha256": "46b27d77aea3a224a803e0edb7d0f09828e555afef3f917483944627a92ec793",
+          "inode": 1387210,
+          "device": "08:01"
+        },
+        "libbpl.so.6.0.0": {
+          "path": "/opt/prpl-install-nl80211/lib/libbpl.so.6.0.0",
+          "sha256": "f25812f74db0996ae8bfb15360a775d536aee9f3c2ff44f5264f4dafe301582f",
+          "inode": 1387195,
+          "device": "08:01"
+        },
+        "libamxrt.so.0.5.1": {
+          "path": "/usr/lib/x86_64-linux-gnu/libamxrt.so.0.5.1",
+          "sha256": "43096111e17c78d524ba1d62221be2610d3fd612bf6df8558edcc7aa4a4c0a2e",
+          "inode": 1387587,
+          "device": "08:01"
+        }
+      }
+    }
+  }
+}

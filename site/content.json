@@ -963,10 +963,22 @@
       "title": "Live disconnect joins and recovery evidence",
       "description": "A 15-minute owned workload, independent packet review, preserved clock and receipt failures, and exact baseline restoration.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/native-ap-esp.md",
+      "title": "Fix native reception of sparse AP service fields",
+      "description": "Learn why absent ESP entries change offsets, build the optional controller fix and reproduce native receipt and malformed-array checks.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/ap-esp/README.md",
+      "title": "Sparse ESP controller crash and corrected receipt",
+      "description": "Actual baseline SIGSEGV, 240 compiled cases and 16 live packet/inventory cases; measurement and complete reporting qualification remain pending.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "session-reasons/unit-results.xml",
+    "unit": "ap-esp/unit-results.xml",
     "ovsdb": "native-lifecycle/ovsdb-results.xml"
   }
 }

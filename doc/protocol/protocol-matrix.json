@@ -2364,8 +2364,27 @@
         "Acquire referenced Data Elements definitions and qualify radio/AP/STA conversions and counter epochs",
         "Connect native publisher and independently verify all received controller values",
         "Resolve unsolicited AP delivery/reliability interpretation; thresholds, multiple BSS/radios and MLD remain unsupported",
-        "Complete final-session publisher, native shutdown fix and integrated 15-minute acceptance"
-      ]
+        "Complete final-session publisher and integrated 15-minute acceptance with every required report enabled"
+      ],
+      "native_sparse_esp_parser": {
+        "status": "optional_candidate_valid_presence_and_malformed_rejection_independently_verified",
+        "guide": "doc/protocol/native-ap-esp.md",
+        "evidence": "doc/evidence/ap-esp/README.md",
+        "normative_rule": "EasyMesh 6.1 17.2.22 Table 45 pp.139–140; mandatory BE, optional BK/VO/VI packed only when present",
+        "patch": "deploy/peer-baseline/patches/0007-controller-ap-esp-presence.patch",
+        "patch_sha256": "021155b4127f604687ac17e04080c784163cee90921b5d9a13cef0b90251c737",
+        "native_regression": "deploy/peer-baseline/compatibility/ap-esp.cpp",
+        "native_probe": "deploy/peer-baseline/ap-esp-probe.py",
+        "independent_check": "scripts/check-native-ap-esp.py",
+        "compiled_valid_combinations": 8,
+        "compiled_malformed_cases": 232,
+        "live_valid_combinations": 8,
+        "live_malformed_cases": 8,
+        "baseline_failure": "actual SIGSEGV after sparse BE+VI input",
+        "measurement_source_qualified": false,
+        "complete_ap_report_delivery_proven": false,
+        "scope": "Synthetic single-AP-Metrics-TLV parser diagnostic after worker exit; cannot accompany sustained acceptance"
+      }
     },
     "native_lifecycle": {
       "status": "selected_linux_candidate_lifetime_and_901_second_operational_recovery_verified",

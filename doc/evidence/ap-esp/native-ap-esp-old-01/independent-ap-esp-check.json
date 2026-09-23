@@ -1,0 +1,24 @@
+{
+  "baseline_sparse_report_crash_observed": true,
+  "signal": 11,
+  "capture_health": {
+    "ethernet": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 23,
+      "captured": 23,
+      "received_by_filter": 23,
+      "dropped_by_kernel": 0
+    },
+    "radio": {
+      "passed": true,
+      "linktype": 127,
+      "pcap_records": 2088,
+      "captured": 2088,
+      "received_by_filter": 2088,
+      "dropped_by_kernel": 0
+    }
+  },
+  "baseline_restored": true,
+  "physical_pod_proven": false
+}

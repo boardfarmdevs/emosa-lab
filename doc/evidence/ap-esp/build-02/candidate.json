@@ -1,0 +1,142 @@
+{
+  "scope": "Native controller counter advertisement candidate; not admitted onboarding",
+  "input_archives": {
+    "prplmesh-patched-source.tar.gz": "ebc771d43279cdb6b1cf5e2c09eb51d66ef3a8afab6b97f4561439d2606ac549",
+    "prpl-install-nl80211-6.0.0.tar.gz": "a98a6903fb9db1494ece0c292dd85c7d4d8ff2f570b5b85768ed6f299f72fb1f",
+    "prpl-runtime-deps-6.0.0.tar.gz": "ad912dc63b7d2188096bd6c0a42978590c4a4b82b0590da1198514e122cec4d2"
+  },
+  "header_dependencies": {
+    "scope": "Header-only dependencies matching the pinned runtime library versions; no Ambiorix libraries rebuilt",
+    "libraries": [
+      {
+        "name": "libamxb",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxb.git",
+        "commit": "e918ad3db7dfc1bf30c35c2f41215234c1af878a"
+      },
+      {
+        "name": "libamxc",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxc.git",
+        "commit": "3cd324a664d2735eeec4ad4978eb040a851c6928"
+      },
+      {
+        "name": "libamxd",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxd.git",
+        "commit": "46c6d88064e38f261023d4015fb9ef4b49e04292"
+      },
+      {
+        "name": "libamxo",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxo.git",
+        "commit": "859db3fb1397215605db9050fedb86dfd0ba4788"
+      },
+      {
+        "name": "libamxp",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxp.git",
+        "commit": "873b53069855414d35b821fcb46ed0f8ae108b3e"
+      },
+      {
+        "name": "libamxrt",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxrt.git",
+        "commit": "8ac23096b0797a203c12425646c195600dd583ec"
+      },
+      {
+        "name": "libamxs",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxs.git",
+        "commit": "1caf2c44031711351b36033ad59ce73187b9c616"
+      }
+    ]
+  },
+  "patch_sha256": "d070bdf880224a6f702c5f951ebb8ad25f3a499871236bd30f41262dfdc73082",
+  "extra_patches": [
+    {
+      "name": "0005-controller-configuration-scope.patch",
+      "sha256": "9bcab5ce7b22b7d36bdb55b857eadfb0e75f71b03332e693f40226ba4ab31ddb"
+    },
+    {
+      "name": "0006-bpl-model-lifetime.patch",
+      "sha256": "fb9b3a45721952532b21592aafb2eba77e5795fd91543940e756510b60615785"
+    },
+    {
+      "name": "0007-controller-ap-esp-presence.patch",
+      "sha256": "021155b4127f604687ac17e04080c784163cee90921b5d9a13cef0b90251c737"
+    }
+  ],
+  "runtime_libraries": {
+    "libbpl.so.6.0.0": {
+      "baseline_sha256": "2e4d0b2ef7dc68e11ad8e6686418555100768634f7462a24f6bb454c77b42cf6",
+      "candidate_sha256": "f25812f74db0996ae8bfb15360a775d536aee9f3c2ff44f5264f4dafe301582f",
+      "unstripped_sha256": "c103f1e32d31142d774892a2ee073eca11ae3b2848ae93144fd14dfec92d0278"
+    }
+  },
+  "lifetime_regression": {
+    "baseline": {
+      "loaded_library_sha256": "2e4d0b2ef7dc68e11ad8e6686418555100768634f7462a24f6bb454c77b42cf6",
+      "observations": {
+        "implicit": [
+          "main_returning",
+          "runtime_destroyed",
+          "model_destroyed"
+        ],
+        "explicit_clear": [
+          "model_destroyed",
+          "main_returning",
+          "runtime_destroyed"
+        ]
+      }
+    },
+    "candidate": {
+      "loaded_library_sha256": "f25812f74db0996ae8bfb15360a775d536aee9f3c2ff44f5264f4dafe301582f",
+      "observations": {
+        "implicit": [
+          "main_returning",
+          "model_destroyed",
+          "runtime_destroyed"
+        ],
+        "explicit_clear": [
+          "model_destroyed",
+          "main_returning",
+          "runtime_destroyed"
+        ]
+      }
+    }
+  },
+  "ap_esp_regression": {
+    "passed": 240,
+    "valid_presence_combinations": 8,
+    "malformed_inputs_rejected": 232,
+    "baseline_fixed_vi_offset_returns_null": true,
+    "native_tlvf_used": true,
+    "measurement_semantics_qualified": false
+  },
+  "candidate_sha256": "cec287b95d588ca715c7384a8bd6985f9b492e192becdf69b6e708067afc2b9d",
+  "unstripped_candidate_sha256": "e1dec84fb5428ef9166aa8beff4cdb1f1c818e1181fddd09d70c492dcf6f6b47",
+  "source_sha256": {
+    "controller/src/beerocks/master/controller.cpp": "3d75987e997f46d02175432ae90c124f73694c7af6837668cb3539dd3df02b92",
+    "controller/src/beerocks/master/ap_metrics_esp.h": "1db4bc22d39fbbb28bb026a514b1fd366ce6d2a4d9d7117d1b2ab119eb5cdeeb",
+    "controller/src/beerocks/master/db/db.cpp": "67cfc5754e5f8b542ab6b8b2a46700838007931a5c9809f68903a6bed62458d7",
+    "controller/src/beerocks/master/tasks/agent_monitoring_task.cpp": "b8ef0826d72674a2df50b16b1f4f18cb0d99e8d95540248550a15131fa2642d4",
+    "framework/platform/bpl/cfg/dm/bpl_amx.cpp": "64ec758bddcda68f9f1ccfc054991d76ea7f3fb73d810e6427e82adc1a106257",
+    "framework/platform/bpl/cfg/dm/bpl_amb_ptr.h": "32b97b4d03efacd64947012d29582d3a67b9e79b64c0495c6e17a2ae11716631",
+    "framework/platform/bpl/cfg/dm/bpl_cfg_amx_helper.h": "858866e171cd602864705f8bc8e323d591cfe9465e3038af2ce5e6a5087aafe7",
+    "framework/platform/bpl/cfg/dm/bpl.cpp": "4b7d54e83e635a8ee04aaf9ff6098aeb149ec7185aada5bf829c7929d53c8ab5"
+  },
+  "recipe_sha256": {
+    "build-controller.py": "630983ac8073b99f00ef4df3eaa88ff0aba6e50045672ffff0071cde8efde5fa",
+    "counter-units.cpp": "43ee476d30737010b9f70691cb6c74cecc089652bab38122bc39cdeb1afdeb5a",
+    "controller-headers.json": "952ad9fa51452ad5f022dc6c2ae0ee6bac8799ed4e7afbb0086915ccddd4c0da",
+    "CMakeLists.txt": "57fbdf24d1df9733728347ab547454e23fbfb98db18ea508a85789df83298fc4",
+    "model-lifetime.cpp": "312817aafdd2b473b2b1d06695642fd361991f234bcafdaeec01dbdd0519aae5",
+    "ap-esp.cpp": "b0f477792b50843b92b3cec23c3c06284f598119169e0362b2ca36364106cce8"
+  },
+  "tools": {
+    "cmake": "cmake version 3.31.6",
+    "g++": "g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0",
+    "git": "git version 2.53.0",
+    "strip": "GNU strip (GNU Binutils for Ubuntu) 2.38"
+  },
+  "counter_regression": {
+    "passed": 12,
+    "implementation": "native db::recalculate_attr_to_byte_units",
+    "scope": "bytes/KiB/MiB; zero, one, typical and maximum 32-bit counter"
+  },
+  "installed_in_peer": false
+}

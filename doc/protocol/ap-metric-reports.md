@@ -96,6 +96,12 @@ The selected sender has no AP periodic receipt/Ack tracker. Review the applicabl
 complete unsolicited delivery. Threshold-triggered reports, multiple radios/BSSs,
 MLD companions and general QoS/steering actuation also remain outside this step.
 
+The [native sparse-ESP exercise](native-ap-esp.md) now fixes a controller
+receiver defect independently of measurement qualification. Its fixed offsets
+crashed on BE+VI; the optional candidate validates presence/length and receives
+all eight combinations. Its separate synthetic diagnostic cannot satisfy this
+guide's required measurement or complete-report acceptance.
+
 ## Step 1 — replay independently checked frame examples on HOST
 
 Install the basic development environment from [manual chapter 3](../guides/team-manual.md#3-set-up-a-developer-checkout)

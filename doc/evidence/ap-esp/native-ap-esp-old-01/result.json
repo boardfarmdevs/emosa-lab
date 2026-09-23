@@ -1,0 +1,177 @@
+{
+  "label": "native-ap-esp-old-01",
+  "status": "failed",
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "native_controller": true,
+  "semantic_submission": false,
+  "cases": {
+    "withheld": true,
+    "clients": {
+      "clients": "passed",
+      "nonce": "38c730ca7ca0a0359a839b08f70e9b2c"
+    }
+  },
+  "active_seconds_requested": 0,
+  "sustained_operation_proven": false,
+  "recovery_checks_requested": false,
+  "agent_counter_units": 0,
+  "station_removal_observation_requested": false,
+  "session_reason_observation_requested": false,
+  "capture_health_required": true,
+  "synthetic_ap_esp_probe_requested": true,
+  "capture_buffer_kib": 8192,
+  "reporting_policy_receipt_expected": false,
+  "medium_loss_requested": false,
+  "tx_status_observation_requested": false,
+  "telemetry_gap_check_requested": false,
+  "forwarding_observation_requested": true,
+  "neighbor_binding_requested": true,
+  "neighbor_gap_check_requested": false,
+  "virtual_link_requested": false,
+  "neighbor_metrics_requested": false,
+  "peer_path_gap_check_requested": false,
+  "netlink_capture_buffer_kib": null,
+  "previous_controller_collection": {
+    "em-baseline-controller": []
+  },
+  "controller_policy": {
+    "submitted": true,
+    "virtual_al_mac": "02:00:00:00:30:01",
+    "virtual_bss_count": 1,
+    "pod_application_proven": false
+  },
+  "initial_observed_neighbor": {
+    "available": true,
+    "reason": "observed_neighbor_bound",
+    "binding": {
+      "generation": 1,
+      "capture_epoch": "1cccb8fb-1716-42c7-8406-8d6ba2de8144",
+      "local_interface": "00:16:3e:b2:d2:c4",
+      "local_ifindex": 8,
+      "neighbor_al": "02:00:00:e0:00:01",
+      "neighbor_interface": "00:16:3e:b8:c4:a7",
+      "discovery_received_ns": 47880129747921,
+      "bridges_present": true,
+      "valid_until_ns": 47890379442023
+    },
+    "measurement_source_qualified": false,
+    "media_representation": "owned-simulator Ethernet fixture; physical PHY unqualified"
+  },
+  "controller_radio_bss": {
+    "Device.WiFi.DataElements.Network.Device.2.Radio.1.": {
+      "TrafficSeparationCombinedBackhaul": false,
+      "CurrentOperatingClassProfileNumberOfEntries": 0,
+      "TrafficSeparationCombinedFronthaul": false,
+      "BSSNumberOfEntries": 1,
+      "Noise": 0,
+      "ChannelUtilizationReportingThreshold": 0,
+      "APMetricsWiFi6": true,
+      "UnassociatedSTANumberOfEntries": 0,
+      "SteeringPolicy": 0,
+      "ScanResultNumberOfEntries": 0,
+      "AssociatedSTATrafficStatsInclusionPolicy": true,
+      "ReceiveSelf": 0,
+      "Enabled": true,
+      "ReceiveOther": 0,
+      "ChipsetVendor": "mac80211_hwsim",
+      "RCPISteeringThreshold": 0,
+      "ID": "02:00:00:ec:02:00",
+      "STAReportingRCPIThreshold": 0,
+      "ChannelUtilizationThreshold": 0,
+      "STAReportingRCPIHysteresisMarginOverride": 0,
+      "AssociatedSTALinkMetricsInclusionPolicy": true,
+      "Transmit": 0,
+      "X_PRPLWARE-COM_Name": "N/A",
+      "Utilization": 0
+    },
+    "Device.WiFi.DataElements.Network.Device.2.Radio.1.BSS.1.": {
+      "BackhaulUse": false,
+      "MulticastBytesReceived": 0,
+      "BroadcastBytesSent": 0,
+      "EstServiceParametersVI": 0,
+      "UnicastBytesSent": 0,
+      "BroadcastBytesReceived": 0,
+      "STANumberOfEntries": 0,
+      "EstServiceParametersVO": 0,
+      "Enabled": true,
+      "X_PRPLWARE-COM_VAPID": true,
+      "FronthaulUse": true,
+      "SSID": "emosa-controller-trial",
+      "EstServiceParametersBE": 0,
+      "BSSID": "02:00:00:ec:02:00",
+      "UnicastBytesReceived": 0,
+      "LastChange": 0,
+      "TimeStamp": "2026-09-23T13:06:29.676474904Z",
+      "EstServiceParametersBK": 0,
+      "ByteCounterUnits": 0,
+      "MulticastBytesSent": 0,
+      "IsVBSS": false
+    }
+  },
+  "error": "CalledProcessError",
+  "detail": "Command '('lxc', '--force-local', '--project', 'default', 'exec', 'em-baseline-controller', '--', 'ubus', 'call', 'Device.WiFi.DataElements.Network', '_get', '{\"rel_path\": \"\", \"depth\": 8}')' returned non-zero exit status 7.",
+  "command_stderr": "Command failed: Request timed out\n",
+  "native_shutdown": {
+    "em-baseline-controller": [
+      {
+        "unit": "agent",
+        "before": {
+          "MainPID": "17680",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "controller",
+        "before": {
+          "MainPID": "0",
+          "ActiveState": "failed"
+        },
+        "after": {
+          "Result": "core-dump",
+          "ExecMainStatus": "11"
+        }
+      },
+      {
+        "unit": "transport",
+        "before": {
+          "MainPID": "17669",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "bus",
+        "before": {
+          "MainPID": "17665",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "hostap",
+        "before": {
+          "MainPID": "17655",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      }
+    ]
+  },
+  "cleanup_errors": [
+    "native_process_observation:CalledProcessError"
+  ]
+}

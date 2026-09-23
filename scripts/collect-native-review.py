@@ -57,10 +57,12 @@ FIXED = (
     "session-reasons.jsonl",
     "reason-observer.json",
     "reason-observer.log",
+    "ap-esp-probe.json",
 )
 PATTERNS = (
     "clients-*.json",
     "active-inventory-*.json",
+    "ap-esp-inventory-*.json",
     "detached-inventory-*.json",
     "detached-session-*.json",
     "em-baseline-*-continuous-ping.log",

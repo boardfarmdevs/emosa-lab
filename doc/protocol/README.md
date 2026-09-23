@@ -4,6 +4,7 @@
 
 | Document | Scope |
 | --- | --- |
+| [Native sparse ESP reception](native-ap-esp.md) | Validate optional AP service fields and reproduce a controller parser fix |
 | [Specification inputs](protocol-inputs.md) | Authoritative sources, proposed editions and selected procedure scope |
 | [Acquisition checklist](specification-acquisition.md) | Required, obtained and pending external documents |
 | [IEEE 1905 envelope implementation](ieee1905-envelope.md) | Obtained base/amendment, audited frame/TLV rules, bounded reassembly, native vectors and isolated Ethernet checks |

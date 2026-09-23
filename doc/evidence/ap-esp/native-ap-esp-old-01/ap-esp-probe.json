@@ -1,0 +1,25 @@
+{
+  "scope": "synthetic native sparse-ESP parser diagnostic; not measured AP reporting",
+  "passed": false,
+  "cases": [
+    {
+      "index": 0,
+      "valid_presence_length": true,
+      "flags": 144,
+      "frame_hex": "020000e00001020000003001893a0000800cd0000080940010020000ec020028000090104080134083000000",
+      "expected": {
+        "EstServiceParametersBE": 8405008,
+        "EstServiceParametersBK": 0,
+        "EstServiceParametersVO": 0,
+        "EstServiceParametersVI": 8601619,
+        "Utilization": 40
+      },
+      "sent_at": 1790168792.7504315,
+      "observations": []
+    }
+  ],
+  "measurement_source_qualified": false,
+  "native_ap_report_delivery_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

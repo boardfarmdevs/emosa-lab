@@ -308,6 +308,12 @@ OpenSync-format telemetry. Work through these exercises in order:
     radio reason with the removal-time kernel sample for the same association,
     check the result independently, and distinguish this input from qualified
     EasyMesh counter conversion and acknowledged final-statistics delivery.
+22. **Verify native sparse AP service-field reception.** Follow the
+    [native ESP parser exercise](../protocol/native-ap-esp.md). Compare the real
+    baseline crash with the corrected candidate, then inspect all eight presence
+    combinations and malformed-array rejection. This prepares the controller to
+    receive later qualified AP reports; it does not supply their measurements.
+
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client
