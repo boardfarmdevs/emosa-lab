@@ -250,6 +250,11 @@ OpenSync-format telemetry. Work through these exercises in order:
     Pause the observer and explain why topology becomes unavailable while
     control authority, radio observations and traffic remain live. Review the
     retained failed attempts and distinguish media fixtures from measurements.
+13. Follow [backhaul counter accounting](../protocol/backhaul-counter-accounting.md).
+    Reconcile raw packet/byte intervals with independent capture, then inspect
+    the controlled egress-drop experiment. Explain why 17 lost packets can leave
+    interface error/drop counters at zero, and why a veth speed constant cannot
+    supply measured capacity. Reproduce the short loss probe only in the idle lab.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

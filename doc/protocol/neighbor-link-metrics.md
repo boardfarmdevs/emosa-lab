@@ -166,3 +166,9 @@ correctly, including transit client traffic. Feed those measurements through the
 implemented handoff, verify the controller's decoded values independently, and
 include this procedure in the complete 15-minute run alongside AP/STA reporting
 and final-session statistics. The physical-pod path remains unchanged.
+
+The [backhaul counter audit](backhaul-counter-accounting.md) now reconciles 325
+recorded packet/byte intervals. Its controlled loss probe shows that `tx_errors`
+and `tx_dropped` miss 17 egress action drops before veth transmission. The next
+publisher needs qualified software-path loss accounting; copying those two
+fields alone would produce a false zero-loss estimate in this experiment.

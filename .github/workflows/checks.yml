@@ -122,6 +122,12 @@ jobs:
           python3 scripts/check-neighbor-metrics.py --native-directory
           doc/evidence/neighbor-binding/native-link-binding-04
       - run: >-
+          python3 scripts/check-backhaul-accounting.py
+          doc/evidence/neighbor-binding/native-link-binding-04
+      - run: >-
+          python3 scripts/check-backhaul-accounting.py --loss-probe
+          doc/evidence/backhaul-accounting/backhaul-loss-02
+      - run: >-
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01
           --directory doc/evidence/discovery-session/run-02

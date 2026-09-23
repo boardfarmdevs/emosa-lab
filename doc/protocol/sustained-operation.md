@@ -49,9 +49,12 @@ measurement/reporting work and integrated acceptance remain pending.
 The [forwarding-observation step](forwarding-observations.md) adds the simulated
 pod's actual bridge-port identities and raw interface intervals through OVSDB.
 Its independent backhaul capture distinguishes client forwarding from the
-adapter's control link. Per-neighbor attribution, topology/media binding and
-capacity/availability estimation remain pending before these observations can
-satisfy a native metric query.
+adapter's control link. The [live binding](neighbor-discovery-binding.md) now ties
+topology identities to actual pod-side discovery. The
+[counter audit](backhaul-counter-accounting.md) reconciles packet/byte intervals
+but demonstrates losses before veth accounting that ordinary interface error
+counters miss. Complete loss accounting, media and capacity/availability
+qualification remain pending before these observations satisfy a native query.
 
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated

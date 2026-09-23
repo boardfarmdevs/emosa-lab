@@ -855,10 +855,22 @@
       "title": "Live neighbor identity and recovery evidence",
       "description": "321 bound samples, four independently matched discoveries and 28 native controller interface inventories; preserved failed attempts and remaining measurement limits.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/backhaul-counter-accounting.md",
+      "title": "Learn what backhaul counters really count",
+      "description": "Reconcile packet/byte intervals and reproduce a controlled egress-drop experiment; distinguish successful interface accounting from complete loss and capacity measurements.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/backhaul-accounting/README.md",
+      "title": "Backhaul counter reconciliation and loss evidence",
+      "description": "325 checked intervals, 17 independently observed drops absent from interface error counters, preserved capture failure and verified traffic-control restoration.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "neighbor-binding/unit-results.xml",
+    "unit": "backhaul-accounting/unit-results.xml",
     "ovsdb": "neighbor-binding/ovsdb-results.xml"
   }
 }

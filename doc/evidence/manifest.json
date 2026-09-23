@@ -10316,6 +10316,91 @@
       "path": "neighbor-binding/unit-results.xml",
       "sha256": "fb60638a8cef9c9c0dda646db67132a840d426fc9a717c1e374670edef0dab10",
       "size": 4438788
+    },
+    {
+      "path": "backhaul-accounting/README.md",
+      "sha256": "4668d5d074636a55c9c3825d1b1cc724ae30cadc5df1b5bdd79f4bf6eb499f78",
+      "size": 3127
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-01-limited/backhaul-capture.log",
+      "sha256": "1e07383711a4bfc04c7dddafdde1ba6ff3087f63b1a0e6ab6b588f7b4ceae934",
+      "size": 172
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-01-limited/backhaul.pcap",
+      "sha256": "e35508641a37c1a95ea8cb3ab07b517e3b3a2f591f292aa5715351ed7c72efa0",
+      "size": 4356
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-01-limited/failure-analysis.json",
+      "sha256": "066e212714ed8f22879ef4523c376659ca408de8ce3005d75a4c64239f852967",
+      "size": 580
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-01-limited/ingress-capture.log",
+      "sha256": "bbd058760d5635fb1c4a3b7b7477240a3d0a026e0cf25248675c84c59e56ad8e",
+      "size": 164
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-01-limited/ingress.pcap",
+      "sha256": "463bcf523253fa8275c15ff504820ef93a4f7730d8edf15011af30c3bd5f6a40",
+      "size": 6978
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-01-limited/result.json",
+      "sha256": "d13b84c5d408c6a95dc41af0fd3b2675f20cd75880acd20927beff67dfe0ba0a",
+      "size": 106709
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-02/backhaul-capture.log",
+      "sha256": "1781306a4d8b846e30e2cfb75710db04fd9d190bb5d9a1ff31ed65e2fe0cbd7f",
+      "size": 172
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-02/backhaul.pcap",
+      "sha256": "adc083a0afde8c9a531424ef163670666b0eb95d3ddafd66e55c1c1572fbffd5",
+      "size": 7776
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-02/independent-loss-check.json",
+      "sha256": "6d5a82f91315c57ecc88aaf5bbe553e1764997be9e8d32191d2934830d31d4ef",
+      "size": 1006
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-02/ingress-capture.log",
+      "sha256": "661d78b07431c0a10bed8afbe542d722495a28c317aa0ba9a66f293560fe83db",
+      "size": 164
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-02/ingress.pcap",
+      "sha256": "da6dd5b59abd4f5b9b42ebc4045595647808e594c69c835dd43ef2bc4507eaf3",
+      "size": 9714
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-02/provenance.json",
+      "sha256": "fc20b839ac32b1b73c1d3a4d4054c2c93c7b6a025a241e80e61948bbf9ebe5b1",
+      "size": 1600
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-02/restoration-check.json",
+      "sha256": "aa1a076ed7c88b5753d9aaba630b572f2f79e477b46880f37319b93e4c5bf6b3",
+      "size": 258
+    },
+    {
+      "path": "backhaul-accounting/backhaul-loss-02/result.json",
+      "sha256": "6dddabb2b40e1dcff1239eb5c97101f119138325ccfd3f3296e0915740501041",
+      "size": 106712
+    },
+    {
+      "path": "backhaul-accounting/independent-interval-check.json",
+      "sha256": "beec54921a6915b69476a5963b102215710bdc24058b9946e7cb89a7da337b2e",
+      "size": 176202
+    },
+    {
+      "path": "backhaul-accounting/unit-results.xml",
+      "sha256": "a0b4fb3ddf43a17902d468607430bd84e9c7e8ae6419b57786b425ce52d2f664",
+      "size": 4440213
     }
   ]
 }

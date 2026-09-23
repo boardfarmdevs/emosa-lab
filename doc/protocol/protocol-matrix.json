@@ -2015,6 +2015,45 @@
           "Verify native metric values and mandatory report delivery",
           "Complete full 15-minute sustained acceptance and separate unchanged physical-pod qualification"
         ]
+      },
+      "backhaul_counter_accounting": {
+        "status": "recorded_packet_byte_intervals_reconciled_software_loss_blind_spot_demonstrated",
+        "guide": "doc/protocol/backhaul-counter-accounting.md",
+        "helper": "deploy/radio-manager/backhaul-loss.py",
+        "independent_check": "scripts/check-backhaul-accounting.py",
+        "test_refs": [
+          "tests/test_backhaul_accounting.py"
+        ],
+        "source_references": [
+          "IEEE 1905.1-2013 Tables 6-18 and 6-20, section 11.1; IEEE 1905.1a-2014 amended PHY/RSSI rules",
+          "EasyMesh 6.1 section 10.1 p.82",
+          "https://www.kernel.org/doc/html/latest/networking/statistics.html",
+          "https://github.com/torvalds/linux/blob/v6.8/drivers/net/veth.c"
+        ],
+        "cross_check": "Pinned prplMesh ieee802_3_link_metrics_collector.cpp uses whole-interface stats and speed/overhead estimate; does not qualify those choices for veth",
+        "native_interval_input": "doc/evidence/neighbor-binding/native-link-binding-04",
+        "interval_evidence": "doc/evidence/backhaul-accounting/independent-interval-check.json",
+        "loss_evidence": "doc/evidence/backhaul-accounting/backhaul-loss-02/independent-loss-check.json",
+        "failed_capture_attempt": "doc/evidence/backhaul-accounting/backhaul-loss-01-limited/failure-analysis.json",
+        "counter_windows": 325,
+        "exact_direction_packet_windows": 602,
+        "direction_packet_windows": 650,
+        "timing_allowance_ns": 1000000,
+        "clock_offset_spread_ns": 3657,
+        "controlled_egress_drops": 17,
+        "rtnetlink_tx_errors_for_those_drops": 0,
+        "rtnetlink_tx_dropped_for_those_drops": 0,
+        "reported_veth_speed_mbps": 10000,
+        "reported_speed_is_measured_capacity": false,
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Observe relevant scheduler/action and driver losses over a bound common interval without double counting; refuse unsupported paths",
+          "Qualify capacity/availability without using veth hard-coded speed as measured capacity",
+          "Connect complete measurements to guarded publisher, verify native controller fields and complete 15-minute acceptance"
+        ]
       }
     }
   }

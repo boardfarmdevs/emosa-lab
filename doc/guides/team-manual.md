@@ -3862,6 +3862,41 @@ the identity prerequisite for those measurements.
 identity, a pod forwarding port, an observation deadline and configuration
 authority. Explain why pausing an observer must not look like the client leaving.
 
+### 13.23 Learn what a backhaul counter really counts
+
+A counter named `tx_packets` is not automatically the number of packets a client
+offered to the backhaul. Packets can be discarded before the driver counts a
+successful transmission. The [backhaul accounting guide](../protocol/backhaul-counter-accounting.md)
+explains this distinction using the actual owned pod forwarding path.
+
+1. On HOST, run the guide's read-only audit of the retained native capture. It
+   compares each packet/byte delta with a bounded time interval, including
+   forwarded client traffic. Find an exact count window and a window with
+   boundary uncertainty. The checker must not invent a precise timestamp.
+2. Read the diagram and locate the egress traffic-control action before veth
+   accounting. Predict whether a packet dropped there appears in a successful
+   transmit count or in the driver's error counter.
+3. Run the retained loss checker. It finds 17 requests entering the pod, 17
+   action drops, no corresponding frames on the backhaul and no replies. The
+   ordinary interface error/drop counters still read zero for that loss.
+4. Reproduce the guide's short VM experiment only while the native lab is idle.
+   It temporarily drops a selected wired ICMP flow, then removes its own rule.
+   Normal and restored phases must pass; both captures must be complete. Read
+   the cleanup result before any later native run.
+5. Inspect the reported veth speed and the cited driver implementation. Its
+   10-Gbit/s constant is not a measured maximum capacity. A publisher must not
+   turn that convenient number into an unqualified throughput claim.
+
+**Why do this before sending metrics?** Correct encoding can deliver incorrect
+measurements perfectly. This experiment identifies a concrete loss blind spot
+and establishes which recorded packet/byte values agree with independent
+capture. The next publisher needs software-path loss accounting and qualified
+capacity/availability, then native-controller verification.
+
+**Learning checkpoint:** explain how 17 packets can be lost while `tx_errors`
+and `tx_dropped` stay zero. Distinguish a packet-count audit from complete link
+metric qualification and from the full 15-minute sustained acceptance run.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

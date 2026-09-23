@@ -63,6 +63,11 @@ actual pod-side discovery to those observations and reports the pod's interface
 identities in topology replies. A passive-observer pause withdraws topology
 without restarting the healthy control session. Media codes remain simulator
 fixtures; per-link measurements and complete sustained acceptance are still open.
+The [backhaul counter audit](doc/protocol/backhaul-counter-accounting.md) reconciles
+325 packet/byte intervals and demonstrates a loss-accounting gap: 17 controlled
+egress drops do not increment the ordinary interface error/drop counters.
+Software-path loss and capacity/availability qualification remain prerequisites
+for native metric delivery.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 
