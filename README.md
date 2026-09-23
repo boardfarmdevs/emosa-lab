@@ -36,6 +36,10 @@ The [counter audit](doc/protocol/station-counter-accounting.md) reconciles six
 normal-traffic sessions against a loss-checked trace and the selected runtime
 kernel source. It identifies TX encryption-byte and RX management-packet
 accounting differences; these raw counters must not be forwarded unchanged.
+The optional [medium-loss experiment](doc/protocol/medium-loss-accounting.md)
+now reconciles transmit/failure bookkeeping under actual simulated loss and
+retains a significant retry-counter discrepancy. Airtime/rate and online
+measurement qualification remain pending.
 The [policy receiver](doc/protocol/reporting-policy.md) now persists the native
 controller's requested reporting policy and sends its receipt Ack. Its schedule
 survives reconnect/restart and explicitly counts due reports that cannot yet be

@@ -32,6 +32,11 @@ FIXED = (
     "station-events.jsonl",
     "radio-capture.log",
     "ethernet-capture.log",
+    "netlink.pcap",
+    "netlink-capture.log",
+    "medium.cfg",
+    "medium-build.json",
+    "medium.log",
 )
 PATTERNS = (
     "clients-*.json",

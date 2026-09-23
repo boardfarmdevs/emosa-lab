@@ -113,9 +113,11 @@ python3 scripts/review-station-kernel.py .lab/kernel-accounting-learning-01
 Choose a new output directory. This downloads about 239 MB into the reusable
 ignored `.cache/upstream/linux-6.8.0-139.139` cache; provide `--cache PATH` to reuse
 another copy. It requires the `patch` program, verifies pinned archive hashes,
-extracts only seven selected files, applies their patch without fuzz, and checks
-the resulting file hashes. It does not compile or install a kernel. The output
-`source-provenance.json` must match the retained provenance. Sources come from
+extracts ten selected files, applies their patch without fuzz, and checks
+the resulting file hashes. It does not compile or install a kernel. The original
+seven hashes match the retained normal-traffic provenance; the additional hwsim
+and mac80211 headers and `main.c` support the
+[medium-loss review](medium-loss-accounting.md). Sources come from
 the official [Ubuntu source package description](https://archive.ubuntu.com/ubuntu/pool/main/l/linux/linux_6.8.0-139.139.dsc).
 
 Read these locations in the reconstructed `source/` directory:

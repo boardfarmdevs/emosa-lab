@@ -60,7 +60,12 @@ def inventory_stations(objects):
 
 
 async def experiment(
-    label, *, active_seconds=0, recovery_checks=False, observe_station_removal=False
+    label,
+    *,
+    active_seconds=0,
+    recovery_checks=False,
+    observe_station_removal=False,
+    medium_loss=False,
 ):
     helpers = runpy.run_path(str(ROOT / "controller-trial.py"))
     helpers["idle"]()
@@ -86,6 +91,8 @@ async def experiment(
         "capture_health_required": True,
         "capture_buffer_kib": 8192,
         "reporting_policy_receipt_expected": active_seconds > 0,
+        "medium_loss_requested": medium_loss,
+        "netlink_capture_buffer_kib": 32768 if medium_loss else None,
     }
     write(directory / "result.json", report)
     write(
@@ -100,6 +107,7 @@ async def experiment(
                 RADIO_ROOT_DIR / "manager.py",
                 RADIO_ROOT_DIR / "node.py",
                 *([RADIO_ROOT_DIR / "station-events.py"] if observe_station_removal else []),
+                *([RADIO_ROOT_DIR / "medium.py"] if medium_loss else []),
                 *sorted((RADIO_ROOT_DIR / "source/emosa").rglob("*.py")),
             )
         },
@@ -113,6 +121,7 @@ async def experiment(
     namespace, link = "em-native-" + uuid.uuid4().hex[:8], "en" + uuid.uuid4().hex[:8]
     ns_created = link_created = False
     probe_units = []
+    medium = None
 
     async def start_worker():
         return await asyncio.create_subprocess_exec(
@@ -139,9 +148,13 @@ async def experiment(
         child = subprocess.Popen(
             [
                 "tcpdump",
-                "--immediate-mode",
+                *([] if name == "netlink" else ["--immediate-mode"]),
                 "-B",
-                str(report["capture_buffer_kib"]),
+                str(
+                    report["netlink_capture_buffer_kib"]
+                    if name == "netlink"
+                    else report["capture_buffer_kib"]
+                ),
                 "-i",
                 interface,
                 "-U",
@@ -175,6 +188,17 @@ async def experiment(
 
     try:
         write(directory / "topology.json", radio["setup"](directory))
+        if medium_loss:
+            module = runpy.run_path(str(RADIO_ROOT_DIR / "medium.py"))
+            medium = module["Medium"](directory, active_seconds)
+            packet_filter = medium.prepare()
+            capture(module["INTERFACE"], "netlink", packet_filter)
+            end = time.monotonic() + 5
+            while not (directory / "netlink.pcap").exists():
+                if captures[-1].poll() is not None or time.monotonic() >= end:
+                    raise RuntimeError("netlink capture did not start")
+                await asyncio.sleep(0.05)
+            medium.start()
         if observe_station_removal:
             collector = RADIO_ROOT_DIR / "station-events.py"
             radio["lxc"]("file", "push", "--quiet", str(collector), radio["AP"] + str(collector))
@@ -386,6 +410,8 @@ async def experiment(
             client_outages = []
             next_disconnect = 25
             while time.monotonic() - started < active_seconds:
+                if medium:
+                    medium.check()
                 if worker.returncode is not None:
                     raise RuntimeError("adapter exited during client activity")
                 index = len(samples)
@@ -561,6 +587,12 @@ async def experiment(
                 report["station_removal_observation"] = records[-1]
             except Exception as exc:
                 errors.append("station_observer:" + str(exc))
+        if medium:
+            try:
+                medium.stop()
+                await asyncio.sleep(2)
+            except Exception as exc:
+                errors.append("medium_stop:" + str(exc))
         for child in captures:
             if child.poll() is None:
                 child.send_signal(signal.SIGINT)
@@ -572,7 +604,12 @@ async def experiment(
                     errors.append("capture_timeout")
             if child.returncode != 0:
                 errors.append("capture_failed")
-        for name in ("radio", "ethernet"):
+        if medium:
+            try:
+                medium.remove()
+            except Exception as exc:
+                errors.append("medium_remove:" + str(exc))
+        for name in ("radio", "ethernet", *(["netlink"] if medium_loss else [])):
             path = directory / (name + "-capture.log")
             if path.exists():
                 drops = re.findall(r"^(\d+) packets dropped by kernel$", path.read_text(), re.M)
@@ -627,6 +664,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Read kernel final-station events for measurement qualification; no counter mapping",
     )
+    parser.add_argument(
+        "--medium-loss",
+        action="store_true",
+        help="Optional unqualified wmediumd counter experiment with 20%% AP-to-client loss",
+    )
     args = parser.parse_args()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", args.label):
         parser.error("use a new label of 1–24 lowercase letters, digits or hyphens")
@@ -638,6 +680,8 @@ if __name__ == "__main__":
         parser.error("recovery checks require at least 150 active seconds")
     if args.observe_station_removal and not args.active_seconds:
         parser.error("station-removal observation requires active client cycles")
+    if args.medium_loss and not args.observe_station_removal:
+        parser.error("medium loss requires station-removal observation")
     os.umask(0o077)
     wrapper = runpy.run_path(str(ROOT / "compatibility/controller-candidate.py"))
     with (RADIO_ROOT_DIR / "run.lock").open("a+") as lock:
@@ -653,6 +697,7 @@ if __name__ == "__main__":
                         active_seconds=args.active_seconds,
                         recovery_checks=args.recovery_checks,
                         observe_station_removal=args.observe_station_removal,
+                        medium_loss=args.medium_loss,
                     )
                 ),
             )

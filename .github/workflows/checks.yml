@@ -61,6 +61,12 @@ jobs:
           python3 scripts/check-native-policy.py
           doc/evidence/reporting-policy/native-policy-receipt-01
       - run: >-
+          python3 scripts/check-medium-accounting.py
+          doc/evidence/medium-loss/native-medium-loss-05
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/medium-loss/native-medium-loss-05
+      - run: >-
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01
           --directory doc/evidence/discovery-session/run-02

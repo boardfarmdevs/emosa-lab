@@ -54,7 +54,7 @@ def check(directory, tshark, *, recovery=False):
         probes = read(directory / f"clients-active-{index:04d}.json")
         for name, interface in (("em-baseline-wired", "eth1"), ("em-baseline-wifi", "wlan0")):
             value = probes["observations"][name]
-            assert value["interface"] == interface and "0% packet loss" in value["ping"]
+            assert value["interface"] == interface and REFERENCE["zero_packet_loss"](value["ping"])
             assert value["application"]["nonce"] == probes["nonce"]
             assert value["routes"] and all(r.get("dev") == interface for r in value["routes"])
         wifi = probes["observations"]["em-baseline-wifi"]["supplicant"]

@@ -71,6 +71,12 @@ def value(packet, kind):
     return values[0]
 
 
+def zero_packet_loss(text):
+    # A substring check for "0%" also accepts "50%" and "100%".
+    values = re.findall(r"(\d+(?:\.\d+)?)% packet loss", text)
+    return len(values) == 1 and float(values[0]) == 0
+
+
 def check(directory, tool, *, initial_only=False):
     result, operation = read(directory / "result.json"), read(directory / "native-operation.json")
     capture_health = None
@@ -184,7 +190,7 @@ def check(directory, tool, *, initial_only=False):
         obs = clients["observations"][name]
         assert obs["interface"] == interface and obs["application"]["nonce"] == clients["nonce"]
         assert all(r.get("dev") == interface for r in obs["routes"])
-        assert "0% packet loss" in obs["ping"]
+        assert zero_packet_loss(obs["ping"])
     wifi = clients["observations"]["em-baseline-wifi"]["supplicant"]
     assert wifi["wpa_state"] == "COMPLETED" and wifi["ssid"] == SSID
     assert wifi["bssid"] == "02:00:00:ec:02:00" and wifi["key_mgmt"] == "WPA2-PSK"

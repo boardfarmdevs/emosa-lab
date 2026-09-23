@@ -3633,6 +3633,25 @@ choosing a conversion: subtracting a constant learned from one session is not a
 general mapping. Failed/retried traffic and the selected counter definitions
 remain qualification work before an online producer can supply the sender.
 
+**What changes when frames fail?** Continue with the optional
+[medium-loss exercise](../protocol/medium-loss-accounting.md). It inserts a pinned
+wmediumd process between the owned hwsim radios, while keeping the controller,
+adapter, simulated pod manager and client containers. Some AP transmissions are
+deliberately lost. The client can remain associated, so the kernel retains a
+station record in which failures can accumulate. RF-kill is unsuitable for this
+exercise because it removes that association.
+
+First read the retained observations, then prepare the private VM build only if
+it is absent. Run the new experiment with `--medium-loss`, both recovery checks
+and the station-removal observer. Start interpretation with capture health. The
+extra netlink capture records frames submitted to the medium, simulated attempt
+counts and the kernel's replies. Those attempts are not separately transmitted
+RF frames. Compare submission/byte/failure accounting and inspect retry
+discrepancies separately; a usable Wi-Fi connection does not resolve them.
+The medium's legacy timing and fixed receive-rate representation cannot support
+the HT radio's EasyMesh airtime or link-rate reports. This is a measurement
+qualification exercise, not another completed sustained-acceptance result.
+
 **Why change the advertised byte unit?** The current virtual agent uses
 Profile-1, whose traffic counters are in bytes. Earlier experiments advertised
 KiB in an accompanying capability TLV but never sent traffic counters. The new

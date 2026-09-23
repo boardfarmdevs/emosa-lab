@@ -1825,7 +1825,25 @@
           "counter_reference": "EasyMesh 6.1 Table 58; selected Wi-Fi Data Elements 3.0 package still pending",
           "public_crosscheck": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.RetransCount",
           "raw_counter_passthrough_valid": false,
-          "final_counter_source_qualified": false
+          "final_counter_source_qualified": false,
+          "medium_loss": {
+            "status": "tx_submission_bytes_and_failures_reconciled_retry_counter_unreconciled",
+            "guide": "doc/protocol/medium-loss-accounting.md",
+            "evidence": "doc/evidence/medium-loss/native-medium-loss-05/independent-accounting-check.json",
+            "negative_attempts": "doc/evidence/medium-loss/failed-attempts.json",
+            "source_provenance": "doc/evidence/medium-loss/source-provenance.json",
+            "upstream": "https://github.com/bcopeland/wmediumd",
+            "commit": "717e5d7fcc23eecbc8e32bd897a8fd4b1e3ba640",
+            "patches": [],
+            "station_lifetimes": 8,
+            "tx_submissions": 983,
+            "failed_transmissions": 195,
+            "medium_status_retries": 2405,
+            "kernel_retries": 185,
+            "counter_source_qualified": false,
+            "medium_airtime_and_phy_qualified": false,
+            "remaining": "Resolve retry status/context discrepancy, qualify requested counter definitions and online source, acquire AP/ESP/radio/STA/neighbor measurements; complete mandatory reporting and sustained acceptance."
+          }
         }
       }
     },

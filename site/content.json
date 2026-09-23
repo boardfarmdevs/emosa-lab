@@ -783,10 +783,22 @@
       "title": "Native reporting-policy receipt evidence",
       "description": "Actual policy requests, timely Acks, unchanged reporting obligations and both recovery faults in a focused 210-second run. Metric report delivery remains pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/medium-loss-accounting.md",
+      "title": "Inspect counters under simulated frame loss",
+      "description": "Run pinned wmediumd with independent netlink and radio captures; separate transmission/failure accounting from retry, rate and airtime qualification.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/medium-loss/README.md",
+      "title": "Native medium-loss measurement evidence",
+      "description": "Retained failure attempts and the bounded native measurement experiment; no full sustained or physical-pod acceptance.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "reporting-policy/unit-results.xml",
+    "unit": "medium-loss/unit-results.xml",
     "ovsdb": "wsc-wire/ovsdb-results.xml"
   }
 }

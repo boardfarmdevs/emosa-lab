@@ -216,6 +216,10 @@ OpenSync-format telemetry. Work through these exercises in order:
    packets. Reproduce the first-session byte arithmetic and source provenance;
    explain the extra management-frame counts and why normal-traffic agreement
    leaves failure/retry semantics and online reporting unqualified.
+   Then use the optional [medium-loss experiment](../protocol/medium-loss-accounting.md)
+   to observe failed transmissions while association remains intact. Compare the
+   independent netlink status trace with kernel counters, and explain why modeled
+   attempts, reported retries and independently observed delivery can differ.
 8. Follow [reporting policy receipt](../protocol/reporting-policy.md). Decode the
    native controller's 60-second policy, correlate its receipt Ack, and inspect
    the persisted schedule through both faults. Find the explicitly missing

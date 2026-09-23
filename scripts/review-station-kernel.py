@@ -24,6 +24,11 @@ INPUTS = {
     ),
 }
 FILES = {
+    "drivers/net/wireless/virtual/mac80211_hwsim.h": (
+        "6c6d6b21e62670f575d46b572aae324fc186d2d7808e6c6cd313a97a7a170851"
+    ),
+    "include/net/mac80211.h": ("d6b9917f6f1b340b48e533ffdcaa585b1324098f390bfc3011788a29c4ac470a"),
+    "net/mac80211/main.c": "6f1811cd0352c56aee4babece8402adf79419e69298ccf4316eb707df480aca2",
     "drivers/net/wireless/virtual/mac80211_hwsim.c": (
         "901123c8e88d0e90881e4f56492c674ade65a5d976ad552318667acfc1d4ef81"
     ),

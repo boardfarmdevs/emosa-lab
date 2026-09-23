@@ -1,0 +1,4 @@
+tcpdump: listening on em-medium-nl, link-type NETLINK (Linux netlink), snapshot length 262144 bytes
+63975 packets captured
+63975 packets received by filter
+0 packets dropped by kernel

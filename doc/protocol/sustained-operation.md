@@ -31,6 +31,11 @@ Duration alone is insufficient. The evidence must establish all of the following
    exact source, native executable and runtime provenance, failures, cleanup and
    restoration of the original controller candidate inputs.
 
+The optional [medium-loss experiment](medium-loss-accounting.md) exercises
+failure bookkeeping with an independent kernel/medium capture. It keeps retry
+discrepancies and unqualified airtime explicit; it supplies no completed metrics
+reporting or replacement sustained-acceptance result.
+
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated
 acceptance remain outstanding. Policy receipt/Ack now persists the controller's
