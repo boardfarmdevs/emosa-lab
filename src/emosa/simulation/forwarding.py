@@ -156,7 +156,7 @@ def normalize(observation):
             "statistics": ["map", sorted(counters.items())],
             "external_ids": ["map", sorted((common | {"peer_ifindex": str(peer)}).items())],
         }
-        for key in ("neighbor_observation", "egress_observation"):
+        for key in ("neighbor_observation", "egress_observation", "peer_path_observation"):
             if name == "eth1" and observation.get(key) is not None:
                 payload = json.dumps(observation[key], separators=(",", ":"))
                 if len(payload) > 262144:
@@ -263,6 +263,7 @@ class Sample:
     interfaces: dict
     neighbor_observation: dict | None = None
     egress_observation: dict | None = None
+    peer_path_observation: dict | None = None
 
 
 class ForwardingSource:
@@ -349,6 +350,9 @@ class ForwardingSource:
             egress = interfaces["eth1"][1]["external_ids"].get("egress_observation")
             if egress is not None and len(egress) > 262144:
                 raise ValueError("egress observation exceeds the local budget")
+            path = interfaces["eth1"][1]["external_ids"].get("peer_path_observation")
+            if path is not None and len(path) > 262144:
+                raise ValueError("peer path observation exceeds the local budget")
             sample = Sample(
                 snapshot["generation"],
                 start,
@@ -357,6 +361,7 @@ class ForwardingSource:
                 result,
                 json.loads(payload) if payload is not None else None,
                 json.loads(egress) if egress is not None else None,
+                json.loads(path) if path is not None else None,
             )
             if self.sample == sample:
                 return

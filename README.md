@@ -25,7 +25,8 @@ client cycling, selected channel reporting, continuous traffic and fresh native
 onboarding after pod reconnect and adapter SIGKILL, with no duplicate Config
 writes. All 135 connected samples place the client under the virtual BSS.
 Complete [sustained acceptance](doc/protocol/sustained-operation.md) still requires
-policy/AP/STA/neighbor metrics and final disassociation statistics.
+fulfilled reporting policy, AP/STA metrics, integrated neighbor reporting and final
+disassociation statistics.
 The [final-session sender](doc/protocol/final-session-statistics.md) and guarded
 onboarding handoff are implemented and independently decoded. Its measurement
 source remains unqualified; the native lab does not invent missing counters.
@@ -49,41 +50,27 @@ The [policy receiver](doc/protocol/reporting-policy.md) now persists the native
 controller's requested reporting policy and sends its receipt Ack. Its schedule
 survives reconnect/restart and explicitly counts due reports that cannot yet be
 produced. Receipt confirmation does not establish fulfilled reporting.
-The [neighbor-link handler](doc/protocol/neighbor-link-metrics.md) now implements
-direction-specific IEEE 1905 responses and a guarded measurement handoff.
-The native lab explicitly withholds responses while per-link measurements
-remain unqualified; adapter control-veth counters
-cannot stand in for pod-backhaul traffic.
-The [forwarding observer](doc/protocol/forwarding-observations.md) now carries
-actual pod-port identities and raw counter intervals through OVSDB, with fresh
-baselines after recovery and a separate backhaul capture. Per-neighbor
-attribution and complete metric-source qualification still remain pending.
-The [live neighbor binding](doc/protocol/neighbor-discovery-binding.md) now joins
-actual pod-side discovery to those observations and reports the pod's interface
-identities in topology replies. A passive-observer pause withdraws topology
-without restarting the healthy control session. Media codes remain simulator
-fixtures; per-link measurements and complete sustained acceptance are still open.
-The [backhaul counter audit](doc/protocol/backhaul-counter-accounting.md) reconciles
-325 packet/byte intervals and demonstrates a loss-accounting gap: 17 controlled
-egress drops do not increment the ordinary interface error/drop counters.
-The [egress accounting source](doc/protocol/egress-accounting-source.md) now
-observes those action drops without double counting and carries bounded readings
-through OVSDB. Its independent checks account for all 17 injected losses and
-verify 292 live intervals across reconnect/restart. The follow-on
-[receive source](doc/protocol/receive-counter-accounting.md) joins both directions
-over common read bounds and accounts for 17 ingress drops after interface
-arrival. Complete per-neighbor loss, media and capacity/availability qualification
-remain prerequisites for native metric delivery.
-The optional [virtual-link exercise](doc/protocol/virtual-link-capacity.md)
-calibrates a declared 100 Mb/s software service against complete independent
-captures and carries its service-work estimate through OVSDB recovery. This
-diagnostic does not yet supply a complete neighbor metric or physical PHY profile.
-The [combined source](doc/protocol/shaped-backhaul-accounting.md) now accounts
-for selected action, queue and interface losses in the same service interval.
-Independent checks reconcile 19,124 queue drops and 17 losses in each selected
-action direction; a native recovery run checks 291 common intervals through
-OVSDB. Peer attribution and the media/availability contract remain the next
-boundary before actual native metric publication.
+The [native peer-metric exercise](doc/protocol/native-peer-metrics.md) now joins
+observed pod counters, discovery and an isolated software Ethernet path to real
+IEEE 1905 replies. Independent capture checks the reply fields; subsequent
+native controller inventory checks the received packet/error values. This
+opt-in profile uses a calibrated 100 Mb/s software service, disabled packet
+aggregation and fresh common measurement intervals. It withdraws measurements
+when the peer path or OVSDB authority is lost. It does not qualify a physical PHY
+or an arbitrary pod deployment.
+
+Its building blocks remain independently reproducible:
+[forwarding observations](doc/protocol/forwarding-observations.md),
+[live discovery binding](doc/protocol/neighbor-discovery-binding.md),
+[packet/byte accounting](doc/protocol/backhaul-counter-accounting.md),
+[egress](doc/protocol/egress-accounting-source.md) and
+[receive loss](doc/protocol/receive-counter-accounting.md),
+[software service calibration](doc/protocol/virtual-link-capacity.md), and
+[combined service/loss intervals](doc/protocol/shaped-backhaul-accounting.md).
+The combined audit reconciles 19,124 queue drops and 17 losses in each selected
+action direction. These scoped results support the selected lab publisher;
+complete AP/STA reporting, final-session reporting, native shutdown and a new
+integrated 15-minute acceptance run remain required.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 

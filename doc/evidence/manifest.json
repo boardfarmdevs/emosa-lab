@@ -13776,6 +13776,2306 @@
       "path": "shaped-backhaul/unit-results.xml",
       "sha256": "d3b444b763635632ec941db7a1067a00eaff1f4be7f8558e9f6150e19335d214",
       "size": 4450045
+    },
+    {
+      "path": "native-peer-metrics/README.md",
+      "sha256": "86622f131b99f197565cc64e879379cc8fde4f52e09665d3373fb12d3a8ca65d",
+      "size": 7433
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0000.json",
+      "sha256": "76a07eff39b7858cd43d7bffd967fd7b75dcc8cfbdd2c91dba33bbb4ded9a94d",
+      "size": 38144
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0001.json",
+      "sha256": "8d84e8da5d19651a3368690885703c0aa9bb2105fac4f7ab03dda0f08c87ba5d",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0002.json",
+      "sha256": "0eb5922a4344064cdf839451a25c02a8ab7dc37fafb791743d02d04d9a90c5df",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0003.json",
+      "sha256": "9975423d5964ba386c1919436e74aff0da8f6334337b4a3b11c1388cdc880ad2",
+      "size": 33984
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0004.json",
+      "sha256": "4042625801c4ea16fedc0077f67996d759d315459b1337aef48aaa5ebb8847eb",
+      "size": 33984
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0005.json",
+      "sha256": "71d7fc161b95aaa26b2c77a67f2aa0348dbae5f65cbb0d9723a78dbab825bd16",
+      "size": 33985
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0006.json",
+      "sha256": "b8ece8e21aa449a274721be614a5e39a49dea740991ce52cbfd383368809c01b",
+      "size": 33985
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0007.json",
+      "sha256": "7c9a1767c884556a012969363c7f0fee1427f80e782945fa88da02e25013a358",
+      "size": 33984
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0008.json",
+      "sha256": "9e246d9ab62f6d4359c4091adcc02d00c1936c69da37bcbc60d7f7520fc8b1c0",
+      "size": 33984
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0009.json",
+      "sha256": "b7b61b5a6884e006efbeb4be3437fac403588d6e6c7993cd321384cc150cfb54",
+      "size": 33985
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0010.json",
+      "sha256": "0ec50992ee164481b533e362a901002083be232c9040fa95d2eabb6134cf6db8",
+      "size": 33981
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0011.json",
+      "sha256": "ec2dd3853fc5328c8b2b59dd52dde6cd447ea186e4c0d42fadf259dc934d467a",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0012.json",
+      "sha256": "b1f944245e8266defb168a127e452c90c84bad07d965856f8b37ff5215682cce",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0013.json",
+      "sha256": "70703d9df3c32e2ecb8020ae33fe61107ce49a4187af067da3dcae130f35e294",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0014.json",
+      "sha256": "6b51684537cf65bb724a161026b10c9af95c917a333e7f2474bb0fb818c37c2d",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0015.json",
+      "sha256": "ecec72f188120f5ac18e4b5b16c7eabcf31a847cd412b508e38e1ebcfb062b3e",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0016.json",
+      "sha256": "6304c0d4e294b99e7bdc89c19debf2eb9d770c79f6b51f679a7ab2f7786f0a78",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0017.json",
+      "sha256": "602df737a10276734d37b231ab4146d9eed5c83cbaeb98f929f4d607eb2c7434",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0018.json",
+      "sha256": "c56096244da2dd4d5dfc837a8398f7d9c92ebbfdc86ab4bb10dc2bbe6850c980",
+      "size": 33981
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0019.json",
+      "sha256": "75ceb2f303432b89ed56065e8e77f634eedad8c5c2331ff62cf2b6b4c659f9fd",
+      "size": 33984
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0020.json",
+      "sha256": "ce8ba76e7ee511fdebfdbc0c9de42a33ec598506a4323351eafd2a5a3bfaf357",
+      "size": 33984
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0021.json",
+      "sha256": "bde6e7258f9ff757023dcf1ec0e9f33c873c8036c012b211957f61c87ac2a348",
+      "size": 33985
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0022.json",
+      "sha256": "31ede6a9af492341b43fe49719933515cb45f4d78819006d1aa732bf4a3b800a",
+      "size": 33985
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0023.json",
+      "sha256": "9526966c0443285b6163748c5d4f76b3804a53fa12c6b187b7411242e9c4c256",
+      "size": 33981
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0024.json",
+      "sha256": "a23989fbb3fec0a9312af13a323753b7e01e727c24e3c8e427b7c4dffcfa9915",
+      "size": 33981
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0025.json",
+      "sha256": "9866b460bf2ce92df641e427471840fe0cb8801341fc93efde4d09e5582069ef",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-inventory-0026.json",
+      "sha256": "ceb4eecd3d44fbd036285f2ae709753471a528632d7770f3237fc6a7d735c18b",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/active-samples.json",
+      "sha256": "2cccc111d547f8fd4bf30114d4ceb9470fb733e6fee45b8a4e4e243585bbf445",
+      "size": 2202526
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/candidate-trial.json",
+      "sha256": "c089a732f2c9f0a82b425e8d57215e486ad7dd9af2fe9a7fd28beba797bc5276",
+      "size": 68421
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/client-outages.json",
+      "sha256": "c636f79a79534a90cdce3de70e797cdfa7e00e7c80b62e0576b43f1477fae8a1",
+      "size": 678
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0000.json",
+      "sha256": "124b84dade704366396ccd35883b704f3bf92832ff0a5262824fb6c0cc388972",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0001.json",
+      "sha256": "ffcfaf2cda9c01107f68b1f1c818ed737a2b5914ecf9e431eac5ef871e2261e7",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0002.json",
+      "sha256": "55e38fa1fc4747a7c23a208a0b64ba4bd0f383c010686bf9f2a1ba581fe3db0b",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0003.json",
+      "sha256": "d14166e97ccad100070b0de00119bafbd2422126e285401733be1ee472140701",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0004.json",
+      "sha256": "3b5bd988fb4cb7753a213c79a3a8ac561f886c93797f49632e927d951533cdac",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0005.json",
+      "sha256": "27b9ae0e4e4fc6cc5329808ac0c394311546bcf89c9700000219b304931f8f94",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0006.json",
+      "sha256": "0a6ec6bc77077899c5de1212546260c4bba40dbede9bee039565aae0cac7064b",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0007.json",
+      "sha256": "f539ad2f45260778208f4bf39e8f758e913154ba2184dde6d6ef53908068bb26",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0008.json",
+      "sha256": "0deec01587f6df92a299a5020680254e70bc66350790c40b1cfb695bfbaecbb5",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0009.json",
+      "sha256": "45366c270a7e1e72e99acf3ce49778c2d0b4a3fd905c28cf05b228850012c382",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0010.json",
+      "sha256": "7dea5a92ae6aa33828a1491a0b438fb0167aadef3074ecc0c8ca870c49123977",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0011.json",
+      "sha256": "0c0b4e3915405347498df3be6b64ab1f75dac311e4f770bc001433bac72bbdcb",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0012.json",
+      "sha256": "292b4fb75c2812d443fa25b20b22264fee52e242957ec378f4b3b3287ad27233",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0013.json",
+      "sha256": "4c4bf2d55332d9e0ac38bef6325aa0facb8047a42fc80bd573018b715cfa7fa5",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0014.json",
+      "sha256": "23c46cb9eca74b238186d720f7343b9fcd33cddbd4cf5515c2b068fdf1d692c2",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0015.json",
+      "sha256": "99b9b957575a2593e18a0ccc75abbd59a631fa268c7e6799a6af372116d57615",
+      "size": 2633
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0016.json",
+      "sha256": "75fd04fcd7c1d234221894c2f546a2c758aa67699b5e1fea9821d61757dd7d5a",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0017.json",
+      "sha256": "43d9b8c8b180bb1fd5c8de26c02bc4300720a56e3950d1a89611afd40edd2a6a",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0018.json",
+      "sha256": "b629fd3d963299cfcef504dff72c498f02452523a65a33fb47a470f4874ac4b9",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0019.json",
+      "sha256": "31c8d542393dbf2f04e43bd3448290d9f626f3a804adc0670e30e9fbf8af8541",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0020.json",
+      "sha256": "a11f9c83568d998a844183438ae64f2ae3b89302479481f9f78ab29976015bdb",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0021.json",
+      "sha256": "c48458dbd3ec1b10cbf5bfd582c6d6419926aa38715c7daad99cfd3eda2790e2",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0022.json",
+      "sha256": "dc9c5ed19658ddc3a66b7fac0a72016f6650fdae0e5031494d6583f5bfbcc592",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0023.json",
+      "sha256": "9a3740e3c3a01bfb4f6109c699d7c9579550666f20b4feaed7f0e32f4f9dd18b",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0024.json",
+      "sha256": "70b4670e9c5a75dee40efb16fc01f593342e2fcf83587ca533409022609ba468",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0025.json",
+      "sha256": "f9a00e8399425faf8093bf4af477ea695eb446f5a744b0907eaeed25997d63e5",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-active-0026.json",
+      "sha256": "dc7c517fc46ace7181c92e96b5c25f8be7c40c12471b14f8de491308fd03759a",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-neighbor-withheld.json",
+      "sha256": "52f5675349d73513c5d75818adc4cd250c306e2d2b6cacb589a887c262d6c664",
+      "size": 2648
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-onboarded.json",
+      "sha256": "ca6e3f2c0d8512e95357b158b7cff7ed82cc7dba2184409c043fa1e39e6629f4",
+      "size": 2620
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-recovery-0.json",
+      "sha256": "cda75dc80aaacec44fae337d7aa39178da2cc2821897a2d6730b8a18d20afdc6",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-recovery-1.json",
+      "sha256": "a86963103f7a65033cef00ba500018857cd94621afceb322cc8edf6ccc5de467",
+      "size": 2631
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/clients-telemetry-withheld.json",
+      "sha256": "0c4bad0b15aa27afc2d10b5a1f48c28b8256dfc1b0568647f90adf16a4673624",
+      "size": 2648
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/controller-after.json",
+      "sha256": "3766efa82a7251877d86d9a40d709b36c7eb7456e4da8b5bb6b1ce339cd6af02",
+      "size": 32146
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/controller-before.json",
+      "sha256": "9f98e46c7b4b7478308260652b385c4e5a7f62ad7b778f79db300c0a778019a5",
+      "size": 10353
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-inventory-0002.json",
+      "sha256": "5cce5d8d54460400e55b42dd7e7c287c794e538cfef2573cdf5da0d8ef5190c9",
+      "size": 33194
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-inventory-0006.json",
+      "sha256": "31656be84010be46becad4333fd5cf20a8182838777c7feb80ae586bcd74a418",
+      "size": 33194
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-inventory-0009.json",
+      "sha256": "aaf1ff156f40ead3b21e7060d30243d1d59bb4e26a6e6e3e021d805db2494dcb",
+      "size": 33193
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-inventory-0012.json",
+      "sha256": "7c96d404e3e28f000b5434124e9c48996518de3d1d1a0153ad66e8e36a937a42",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-inventory-0015.json",
+      "sha256": "e7057bf38f96378f3f7ee0a82e2c1ec00f3bc268011e85ce7581ae367eb29a95",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-inventory-0018.json",
+      "sha256": "b24f6125f1bab99016c6b34a954a5cfa28cad3df28077b6c85eca4ca3a33830a",
+      "size": 33194
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-inventory-0022.json",
+      "sha256": "c33f4b00b7f886d25b11b82f8ac7dcdc0c7beb9c4ec5e3d37189e9359fc02a0d",
+      "size": 33194
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-inventory-0026.json",
+      "sha256": "1db2b6d78904c00f7969964fe2f6bf7302b72f4009c2273968cfac7c4740b5f4",
+      "size": 33194
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-session-0002.json",
+      "sha256": "b77e717b732c38f39c814ad9e9a3370a34b2b84eb6e02b00620c7495bee0d9f2",
+      "size": 68442
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-session-0006.json",
+      "sha256": "f7a8a5227fe7b074cec3e6bee6a9fe0a5e1373ccb2e13098ba9e03673a616771",
+      "size": 68877
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-session-0009.json",
+      "sha256": "a1571553f6e536d6574a3f59dd3f4af3b07a1640b34649a4ff4d20f6842fa9d4",
+      "size": 74977
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-session-0012.json",
+      "sha256": "c36b40368007273e55995e9f160384399a760b2db742609dff310eb47a8a8600",
+      "size": 75499
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-session-0015.json",
+      "sha256": "236fabcba632508c161ad1a09c7336395587d419859ee98000fd09051712ac3e",
+      "size": 75719
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-session-0018.json",
+      "sha256": "cadfd22f5e51852930554f724457ed5c2c052eb6988379e10939b764e76e86c3",
+      "size": 68570
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-session-0022.json",
+      "sha256": "fe95efeba51d1f9f2916cb114b2d342d7e2569642f7078775a8a75e1f1c1baa5",
+      "size": 68845
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/detached-session-0026.json",
+      "sha256": "3771451a4d76e3f35843aaa80daf63d4c83ed252a0d6556b19a4f1a5b94f7d59",
+      "size": 68999
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/egress-observations.jsonl",
+      "sha256": "d17748f6fd5efd55aff447d967ae2dd5b9d620d7fdf66ec1638643de81505be5",
+      "size": 4369932
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/egress-observer-final.json",
+      "sha256": "58e41e784f225657d9cdf0c8630b306566009068c893a939185a2213b4a3a120",
+      "size": 517
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/em-baseline-wifi-continuous-ping.log",
+      "sha256": "03353d02a44758a2a22884e98ff7b7058f5140290b9d83b7e3e79ec319bf9894",
+      "size": 55087
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/em-baseline-wired-continuous-ping.log",
+      "sha256": "38101a9f5d7ff241752f9d607c0178022cf36e7f2005a1060974314dede2cc3e",
+      "size": 65748
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/ethernet-capture.log",
+      "sha256": "7b4b09afe9a5252b458766e0a9a7031de55867fa04c81cce2bd0c2edf0a39b9c",
+      "size": 172
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/ethernet.pcap",
+      "sha256": "6039586ed10c6e8dbaaebea37646643c62baaff34afd32338ad5bbdd6c68e370",
+      "size": 11281
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/forwarding-capture.log",
+      "sha256": "a9a78b519074c496b089eef2cbb0695ec69b0feb0a7efaa8a30be33f46f53a0e",
+      "size": 176
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/forwarding-samples.jsonl",
+      "sha256": "b83d3fd79482ee4e632012498303628b411247a8c720676854312bb3e009813e",
+      "size": 10102788
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/forwarding.pcap",
+      "sha256": "2297652214020807d621f9321dfb5fa9589af47653678f584700d5af53b5b4e4",
+      "size": 464322
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/idle-check.txt",
+      "sha256": "ae43cca5eff8f3176bae0576cbb5cbbd553d5e9be010a3f9429f2d3322d694ce",
+      "size": 28
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/independent-policy-check.json",
+      "sha256": "4e32095a9157aebbbec8e260400ff2f57f83d9174c63945c6b3f0507d3eeac57",
+      "size": 1435
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/independent-recovery-check.json",
+      "sha256": "3f555cf0869c5164d0480258d2f26fe7489196b4a03a1e70947fee869fd85414",
+      "size": 3292
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/independent-telemetry-gap-check.json",
+      "sha256": "e298e5b1dba298606c5fc28414b21128d68bba2e2d4bd22b6351bbd50a02ff2a",
+      "size": 819
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/initial-audit-failure.json",
+      "sha256": "f7c7014b6424d581f62a75c878da13d918c48f6fdf0fc8205985e7371b1f0bc3",
+      "size": 537
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/manager.jsonl",
+      "sha256": "0d2b30c458d1de78806a6ce940cc5548f10708a308f7457857df77db3385f04b",
+      "size": 10112622
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/native-operation.json",
+      "sha256": "6436d65f227b48929eaf73310ed331ba218d80fa37be46a41cafe8116038c494",
+      "size": 4858
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/native-session.json",
+      "sha256": "8121238060a42131edbf77aa5f2a47bae0c5e49db057fb77b8bdd43d47b77df3",
+      "size": 69081
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/neighbor-gap-check.json",
+      "sha256": "3bb922d44ed4783c529d170988d1b6c27ad0060de8d8cf189f6883dd92cf3698",
+      "size": 221641
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/neighbor-link-observations.json",
+      "sha256": "4c928f6c7f4b9292520c048eb1d58316eda3b1e2933ec7a0c99740f3764f4699",
+      "size": 22615
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/neighbor-observer-final.json",
+      "sha256": "b9b4ba0c7f331f47fc673ac9dc261024c4f90cd6436f495742aa481985ed3809",
+      "size": 939
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/radio-capture.log",
+      "sha256": "011c74bc5988776794ac658a17e66986811729f9c9434827278db91fdbeac4d4",
+      "size": 201
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/radio.pcap",
+      "sha256": "b4c0fec92d5835cd5d2492703c4c92e9b32db69a1e6f5ba69846f7f2d8f05c9a",
+      "size": 2220241
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/recovery-checks.json",
+      "sha256": "76d3ab5cb0652ea370b1bbb0a1f520e1330b4ae78043b2368ce141a34958ec9f",
+      "size": 343030
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/reference-candidate.json",
+      "sha256": "98c8fa2133b3be1eb25f5a4cf65c73b6ca217ce65311f18d0813ade42710172b",
+      "size": 2193
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/result.json",
+      "sha256": "98eaddb75e68910fea09f3b598756d30a8d1524f2fc740e7f17db177a3057a2a",
+      "size": 63295
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/runner-source.py.txt",
+      "sha256": "440b956e59fa5ff7fc3bf002ef99ca33376dcc154694551cd315d013263ed9ce",
+      "size": 49583
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/source-hashes.json",
+      "sha256": "bbc7839de7cee264a6c42428abd5d4496454fd72f7a80983ce8954d142582a86",
+      "size": 13402
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/source-match.json",
+      "sha256": "424322243df868a255c123deee502e7224c57de7274b1420a3243acde6ba39cf",
+      "size": 4118
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/station-events.jsonl",
+      "sha256": "3f065bd73dbd051a5de6d958da319d82c78080cdf28678baffc9818a379ec2ec",
+      "size": 46903
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/telemetry-gap-check.json",
+      "sha256": "bf725c4bb1cce979927618abfe6c31915c744aec79d9582b3384e49a72c6b3ac",
+      "size": 222354
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-01-limited/withheld-operation.json",
+      "sha256": "4b6a1de33288d4bcbb3e5e01f799abf76bf9307d2425d85bd1e37fce09c32dc1",
+      "size": 1963
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0000.json",
+      "sha256": "7ccb53c082ebd1a320c0b7cb5bf55d2336bb9d6c7894fa9387c7cfba62048a1b",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0001.json",
+      "sha256": "b47d6e61c9281aab9bf1c627d9bd0fb654b9e9289f292713d7ba8909c3e0daf7",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0002.json",
+      "sha256": "8362e02ccb39e6223493be870622acd7a9a90f863f0ba162cc85e03466e5d949",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0003.json",
+      "sha256": "c361ce370f4c7a35ea332d22614d8558e3881d2244da689dd5df10a0a93cb1da",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0004.json",
+      "sha256": "57f7b26127e2a5097f0758a0d34fe928bff4de9156ac4c327cb3cea8ffc1c963",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0005.json",
+      "sha256": "2384afd0e22803752c39b38e3055e6d41282cd9ca63db88a7a6c06e2292bd5f1",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0006.json",
+      "sha256": "5581c5b4eec6b08d8b485dc43101ce4fd9f93e8093aed4049c5c6117943736d8",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0007.json",
+      "sha256": "efb7e578cd617140601cf85cde2edb7831d8249e0728266dc3c5d58a70673885",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0008.json",
+      "sha256": "8696ca983531465c32a33e558ee08f9fb5d1477cf50d64b813690816a58213d6",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0009.json",
+      "sha256": "973820940beb34e0950d07ef8bd8125cf238104365b4c6c3e752c8a972ae85e7",
+      "size": 33981
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0010.json",
+      "sha256": "2ae1411fe3f8b052e1dbca221e0016238e88ff2e4c4d0d34f09ab00371d74b8c",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0011.json",
+      "sha256": "b26d8b7e8679d631d52a3b0ff31952b5963589010445a6b0713c336814b9dc68",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0012.json",
+      "sha256": "fcb89488b5763c1c0dad0da43144a84c9de2523e4ee9f44163d1034f3a45e1a6",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0013.json",
+      "sha256": "7ce6e6b8146ed704803e4650ab1a77be2b9ed4c564733b694adc8679a1a2a45a",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0014.json",
+      "sha256": "a99fe5d7e34f514479cd47a2cdb804f5d438762a9cdd66d7bd7042690abe9c2f",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0015.json",
+      "sha256": "6c2ffea22e3a9fd1d9543233d7e31daec62a14a0ad1c5d42d322aa0774cc3ddc",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0016.json",
+      "sha256": "47465618025a554675ca3e8846a7206b2060422f404f4ae66180c5393dc8b6a0",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0017.json",
+      "sha256": "e2caab901d9f6015118242f39fe5d993421012af8e637c79dfec936c4b402e8e",
+      "size": 33981
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0018.json",
+      "sha256": "f721ab50838f7bfed0f8db75be6640b6a64803db389200edc7547c61b282f4a3",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0019.json",
+      "sha256": "5798cd7ce24568b68a598381f4ab6a2bfeb67e3b795c0a9064edad38dbfd3966",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0020.json",
+      "sha256": "31c19993069e188e4c225cf034e5af6b2197704e4234028480892483eef0fcdd",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0021.json",
+      "sha256": "259858e3d497ee95ef8f5b24ab158b5513349db0cdc5f89a28ab64c5aa840a6c",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0022.json",
+      "sha256": "2616f1756b3b020c8f395ddfaefa0e5210210d025c4e088d93d30f266f407541",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0023.json",
+      "sha256": "cc24ffa330f861014f2de164ce49d91882c50b7918aa14e3bceccc8e8f5e34ce",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0024.json",
+      "sha256": "7e06ff05615b14869596b0a6301500addf8d41216294fffb5be4f747f64ae08e",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-inventory-0025.json",
+      "sha256": "2411755568565020204a097f7764883c98e9bc968961edc4467620b73b7f41a1",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/active-samples.json",
+      "sha256": "3c63b214d9b8659b914a3ff42a61b73e1b4801219d8177e2d58d852680687896",
+      "size": 2128721
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/candidate-trial.json",
+      "sha256": "8482a6482fade394561d635924074072cd091e607b50f1dadfd49f3d7a8c8ff1",
+      "size": 68508
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/client-outages.json",
+      "sha256": "34903f8600717ac8f9272d017bbbfe0e1e10e0d89417a125f6124fee3333c0dc",
+      "size": 678
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0000.json",
+      "sha256": "07d2905f21693c7da438ec55ff0f0dfaeed218e83bb686afcb0838859a32a373",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0001.json",
+      "sha256": "8706b579213f84d09c059a65596c6dfd19978e6aab86af0f32211dd31ecc3541",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0002.json",
+      "sha256": "3d79de3fcbde8265f072dc21bf50e7a4f768bcda45f1ddd9341b62c99f864b38",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0003.json",
+      "sha256": "5a62aec1a51b0157e6054c10429468085fbc505b46c0b9342031fa1c9369c481",
+      "size": 2633
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0004.json",
+      "sha256": "ead9640199cda7855eb7759e7863080e031d795476276dd185215779b8a5af9f",
+      "size": 2633
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0005.json",
+      "sha256": "fd6dd64bfa1fb65cd05abde22dc841b898cd01ce357169d5463c68b2dd52a80d",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0006.json",
+      "sha256": "ad910de1812be97a4d9a891d9ba1688817d97e7c020d19497bac39cae7e1f315",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0007.json",
+      "sha256": "a61979830779e9369079b085b27a60f9b620f4166ca92b2733d37e0883f4af15",
+      "size": 2633
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0008.json",
+      "sha256": "aefa5c716b47c300061c32f14527f404883ae981520283fd4ee4c1a450a4e4e7",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0009.json",
+      "sha256": "50dbd6a920658735e0e9f23f008c50d9bde2c399074ccab5bf3f6901c4d85801",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0010.json",
+      "sha256": "cd5ae71264456a700fbcf5003b6f6257e86c23854dec9fb659befe396cd7c31f",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0011.json",
+      "sha256": "ee910fb6c8d104a6698c35a340737d337582e9bfe124c28f2d4ff44a8d653570",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0012.json",
+      "sha256": "c0c652812781bb26d1e926d6d316d9f8c2458844207a67ddf6eb8f127c961062",
+      "size": 2630
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0013.json",
+      "sha256": "c88090dfdb0a226544cd1240d2c5b977a0786447b632c0d099c5576f0cf7c7ce",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0014.json",
+      "sha256": "c24a5fe1c9cf4bd50eef99ea8fe98f7301bb174750e5e7c4c60f84b898ec7ab0",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0015.json",
+      "sha256": "fe43536b75ed11e5ccbe250b26c189ae111ff23db5a479f3c63f1a3f8c622cde",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0016.json",
+      "sha256": "09c2a8c10db16dc4e66af5885711d63fb290955ad35d4bdacf4d4da5d5c89ba2",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0017.json",
+      "sha256": "dbd4df126851987f7f2ba2e63840d0052209bb8c1627bed9a2bfd3a351cc7ee4",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0018.json",
+      "sha256": "5d83adef59e1fd6ba41ab342db51bff30395aed3f5498142c1e8d52c030f4b4b",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0019.json",
+      "sha256": "54f997b76deee298f8841c07334b168f218a13c0da23bf682078e03afc15bd5d",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0020.json",
+      "sha256": "771dd11f5dc1be7c0bb09f7ed0b879f2faf5ccba5e83d8ba2fd3a65a6347240e",
+      "size": 2633
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0021.json",
+      "sha256": "8c0743d075976d6681c45e289cb7e40a8ce6dd72a68e880cc2b134f3f22905c6",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0022.json",
+      "sha256": "6ef8b54f792752aa9a62a469740b310f6e15d4f96545567d6adf8caf61994bd7",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0023.json",
+      "sha256": "8f0cf5f38b94a1d6dac1757d08f665de37a2ae208cb6a4c2c529aea173e88d92",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0024.json",
+      "sha256": "339ffac60998731e4bf1fae124e00c7c1d7bd2e5f107102e52b471c2505d7a69",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-active-0025.json",
+      "sha256": "ad8d9fdc4b1ac764e9125d561019aab18b37573773a9ac3cdaeea677083d6f89",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-neighbor-withheld.json",
+      "sha256": "acf31cd9e7b5a84422b4abe0a8d000ee8bc043a7428145877c2a16247ce155a2",
+      "size": 2648
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-onboarded.json",
+      "sha256": "882062d650b8b0db872981df3e70c3ea6dabfc5f8583dc4e6295baa425f0364f",
+      "size": 2620
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-peer-path-gap.json",
+      "sha256": "aacf632f4064ffda8680ebfe18d1eab1334e04515b43c9a6361492ce108ca4eb",
+      "size": 2640
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-recovery-0.json",
+      "sha256": "86f3ffddffce5448af5adbd022e694ba33d46a8aaef9ec4cac34794bfeb41036",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-recovery-1.json",
+      "sha256": "93bd9742441beb0ab92059a0af42a16d06481f9fd0e1f8efd71a518f62d0190a",
+      "size": 2630
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/clients-telemetry-withheld.json",
+      "sha256": "48467c18910d021a7dde7236d2af8e36064e4bd0c0d7aee7fbda09dea26ba171",
+      "size": 2648
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/controller-after.json",
+      "sha256": "eff51574225ce0966d9ba309cff175f6b572239514673b93dd67ff5ae33eb7e3",
+      "size": 29142
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/controller-before.json",
+      "sha256": "9a22831249f3bd95911b11e5881d0c068fc1d11d8fa32173835e68900a369ba2",
+      "size": 10353
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-inventory-0001.json",
+      "sha256": "3b98f0388da309148aec824374c77554f03d1a928bc893c095e4446d991b0372",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-inventory-0005.json",
+      "sha256": "36399cd1d82673217ebfb11fc5b5ef48ce48ee849be821f7258224583365f3fb",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-inventory-0008.json",
+      "sha256": "c9e33d074509cc84d0066b94490b3711d7e265e1f88a366ca8234165dea4e298",
+      "size": 33191
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-inventory-0011.json",
+      "sha256": "30ce405802018f0998e4ae5cc206580ee07bbc873ca23ebb7912da53699ab910",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-inventory-0014.json",
+      "sha256": "987370bea603ecd1c3a5a07ade136019467bbb267779f21f7ea3cce14f2f7c98",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-inventory-0017.json",
+      "sha256": "81602feeea4268f57261d2f4ec65b093e182dcae065f025cb593de3c5ab9d9e9",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-inventory-0021.json",
+      "sha256": "f6652fd27ec1311c999bff9d94ba2862c94d6fc1f2679fc077a699661c9fdbc2",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-inventory-0025.json",
+      "sha256": "192aa81d2f1b750876a5affba7beace2c842dd3d3a7c0a1515b1b5372505ce49",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-session-0001.json",
+      "sha256": "321ca86a7e839944fca5bf5cd85f9eeeb8d692172a3be3cbb1c9c69a4c67f7fc",
+      "size": 68373
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-session-0005.json",
+      "sha256": "29ece8f5a88b8c2ca7bbbf4bcc5d3d3ee2a5b71438993e184ff369919a7e4055",
+      "size": 68807
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-session-0008.json",
+      "sha256": "c514c138e8f3ae3622a58039ab3e5ce7e1fa03dc18b9859ab8babe048724ccd9",
+      "size": 74896
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-session-0011.json",
+      "sha256": "cf78a8c3716865ff479ed9baaac4ddf502c0f42fd799d848ca8be001abf22a0b",
+      "size": 75356
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-session-0014.json",
+      "sha256": "bf9a3f53d3bd92c0c946f111876bbdf24a76b08c93d777ed5ce7856e1686956f",
+      "size": 75510
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-session-0017.json",
+      "sha256": "77e558ff6bc2e136bd45610252f3acfc1ded6ef7bd85a7a733b193d7f5ff641f",
+      "size": 68452
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-session-0021.json",
+      "sha256": "626b556e3b61e0d39493010936df48740939922b56f81c6c2156e6626c8f4118",
+      "size": 68730
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/detached-session-0025.json",
+      "sha256": "2c825839c1e766dc33378d7f12ac9fb657eedc2d72e80eedc6104cce66ef2077",
+      "size": 68995
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/egress-observations.jsonl",
+      "sha256": "473234a3141f8ea62037213e744c3ca46c204117aae8af4ed04d0c5e7f8199d9",
+      "size": 4549446
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/egress-observer-final.json",
+      "sha256": "6df830c61413a842811989c731e610bdd709e7aeca86cc5b928e2784ab5ec988",
+      "size": 517
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/em-baseline-wifi-continuous-ping.log",
+      "sha256": "a205e023d0d19cc8fd9bcaae2ecb57d63f6aac1fdad929581de0b8163e496562",
+      "size": 55144
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/em-baseline-wired-continuous-ping.log",
+      "sha256": "717354f6d496a38e1d11c2cb0682cce4c341a5f6fd268089df67abcf8a903472",
+      "size": 65511
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/ethernet-capture.log",
+      "sha256": "ceebb592b383c4bde5a57edecd58d9186cfc6c5b2ed56aa98801f2916e440907",
+      "size": 172
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/ethernet.pcap",
+      "sha256": "ae4db769261267f6e8191f99779dca89886dc1e72302d175053189dc18243a59",
+      "size": 10971
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/forwarding-capture.log",
+      "sha256": "0d5de608431793de944e030589db435ff0a48351c8d83dcab1d66872614626ae",
+      "size": 176
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/forwarding-samples.jsonl",
+      "sha256": "214df2bc7a40dc334f1971618ad016395cbc76c5c434101653139932011de31f",
+      "size": 10668677
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/forwarding.pcap",
+      "sha256": "6ad24e630d43e9fbf1d0914e581668e73e1f4ce8803c6cb9ce87bf1198771ba7",
+      "size": 463870
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/idle-check.txt",
+      "sha256": "ae43cca5eff8f3176bae0576cbb5cbbd553d5e9be010a3f9429f2d3322d694ce",
+      "size": 28
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/independent-policy-check.json",
+      "sha256": "185330dd3b3316c5bc03c41673e8d9ec6aa90fe9817ff5669591bfbab5d85f41",
+      "size": 1434
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/independent-recovery-check.json",
+      "sha256": "cea68adcc1eebf2b47bd024320ac7e5d824c14b5ac47b971d27732886d90430d",
+      "size": 3298
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/independent-telemetry-gap-check.json",
+      "sha256": "d6f8423eb12506e0f29a4d727968f604b4b91584b30f1257daf6b0a2c01769a2",
+      "size": 819
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/initial-audit-failure.json",
+      "sha256": "ea3d7dc12fd8c42a0998a4c92fc159355f5d349965e71f4d4e472b9f9feea930",
+      "size": 624
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/manager.jsonl",
+      "sha256": "356a2b76cf3d0473fb23d955678c1d32b3be2d7ceb9cbfd0de6682d6dfe12c21",
+      "size": 10618423
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/native-operation.json",
+      "sha256": "03e78ea466d3444f1b6d21db7e6ab8160b1ecb540cd0962f7d4c3e50b7b6685f",
+      "size": 4858
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/native-session.json",
+      "sha256": "7820daadaf26abfce4bd19fafd2d5beffad205998a3fb2f18f811d321c00412f",
+      "size": 69074
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/neighbor-gap-check.json",
+      "sha256": "a316ada517d2fd4769369191930fc23a3df9e2d9b2b67ff3b7ac1ac6795094a1",
+      "size": 221791
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/neighbor-link-observations.json",
+      "sha256": "b36c15b21e1c8739b30950c45e563d02d48e93f7bcca1fe8b5b5603f56762d09",
+      "size": 22614
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/neighbor-observer-final.json",
+      "sha256": "8a21b39f23b657c4104514e6ad4d28d8fc60256f20cbc9e85fdf5173c90eb524",
+      "size": 939
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/peer-path-gap-check.json",
+      "sha256": "9648a2b5591032310c103a39643845e62ec23dce9ab9787cb3de4fc65061d0ff",
+      "size": 222528
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/radio-capture.log",
+      "sha256": "2ee0e0e9a2f1b2ebe0d91660c850bf62f8b170904d1687b24cc934776073049d",
+      "size": 201
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/radio.pcap",
+      "sha256": "a78ef527f9a8a95bb19edcf85758d607fe98fe336f02cda1469777f55275a234",
+      "size": 2293472
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/recovery-checks.json",
+      "sha256": "9f8384a5b3d46979a94cb45d59a410c7e0e22a5dc872880750b48f6019ed9add",
+      "size": 342973
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/reference-candidate.json",
+      "sha256": "12e5b20d46449ac638944e2199bd09c4144742436826ccb29ae903192877e66f",
+      "size": 2193
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/result.json",
+      "sha256": "39e865e63a852015a14c1947d2ead029840643c8a803e436179a3bdacf1b7760",
+      "size": 63378
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/runner-source.py.txt",
+      "sha256": "7982bd4b8444ff563fce66b0173ef0a66144c46f4b89afef9ca4ef0b625c35b4",
+      "size": 53167
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/source-hashes.json",
+      "sha256": "b6298a26694ccb17a37055f6bdcf9178d6e4f2a5e9712f05e6e597b0ad23c60c",
+      "size": 13402
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/source-match.json",
+      "sha256": "2838155ca503da8ba85b00d87167270aeea9bfd5133567f2a129f10c8b6259d8",
+      "size": 4176
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/station-events.jsonl",
+      "sha256": "d291885102f514a07a311f13c7e5f7bec68b9f03457f53212d5d38d1d243f5ba",
+      "size": 46859
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/telemetry-gap-check.json",
+      "sha256": "95fa9ab1339456aa5568beec4bee9df81da6288ff911f3476c1de6362661c999",
+      "size": 220571
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/withheld-operation.json",
+      "sha256": "064d38d585fc87c0247b61f47a7b0ab1e658828d65dea26c3e13e062d5867f74",
+      "size": 1963
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-02-limited/worker-stop.json",
+      "sha256": "bf6a7452dba215be9fa184b60a0d600224b522c94f4b37509e18d0d4a230e94c",
+      "size": 177
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0000.json",
+      "sha256": "913df36af10222c68bfbc80009d222ccd84c0ab0712a9ec112bfc1b5af9cbddf",
+      "size": 34123
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0001.json",
+      "sha256": "9f77fa893ddabadd9712391a871e73b8685ffb563a56bfc6c1eca2e4bb3519ce",
+      "size": 34124
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0002.json",
+      "sha256": "6f06fa050a97a00a82fda3cf91adcc925fe4ee138eb75774533fbdbe4cc4ef12",
+      "size": 34123
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0003.json",
+      "sha256": "9af091a97de68db9e63a8a50f2aa68768412b759d9b58ce56b36bc8cb1889b96",
+      "size": 34123
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0004.json",
+      "sha256": "26364df3d98b2d4661c1109a5df36e4889167911cc022b097c5281cd1e55e0a8",
+      "size": 34124
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0005.json",
+      "sha256": "6f94b9f98c22c7ec01b4039506193c18528a213db3a8b4d5553d07f8d4fd8f1d",
+      "size": 34124
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0006.json",
+      "sha256": "156fc6dc84f26a1df8f43597e7b640d62b8633fe86bbbbbdbf754d960a9cd4fe",
+      "size": 34123
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0007.json",
+      "sha256": "75c5354cb71e787fc432c5148c9b5af26fa93ee9d12e4ef7610fd803eff4baf2",
+      "size": 34123
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0008.json",
+      "sha256": "2eeb3d45ef35e50f390dce42a4a22ee97bc63540a43fe4d8f42741aeb0782bb3",
+      "size": 34124
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0009.json",
+      "sha256": "c224fecc72e8196cf74c22856836271eef8316d715b620bf41d7fe6da23f2738",
+      "size": 34119
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0010.json",
+      "sha256": "5f66a6285a19379c93a786e05c24571b18580ded8a11a74cc1ab9e11f7c4c081",
+      "size": 34120
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0011.json",
+      "sha256": "3c334d69984e8b8b2a407e5433580ae123b7fb6231c7208aff47265a61e67956",
+      "size": 34121
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0012.json",
+      "sha256": "77babc7f0cb41e00f112abf4ff639a8a72e3bfdd53067ef9ca1ff06ab3759166",
+      "size": 34120
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0013.json",
+      "sha256": "43a9d549e9a83b839697cc68f68078a0a6e8d63ec66ead624eded160ab2bdbf2",
+      "size": 34120
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0014.json",
+      "sha256": "a599e4813240e573f994148a5429525338aa367fa7b0c2d2d4cfd72e531b578c",
+      "size": 34121
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0015.json",
+      "sha256": "9680874c74174bab556c17f5fac5a30c0c051b4a58d5d5d82310d466665ecc14",
+      "size": 34120
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0016.json",
+      "sha256": "d6811151d10811347d31a108b65895c1fa0b06375ed32fcefd34de7a07c25feb",
+      "size": 34120
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0017.json",
+      "sha256": "53674dc47e3b9d44c49673172be65bc1846e32c7d8569fe3702119e100556c49",
+      "size": 34122
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0018.json",
+      "sha256": "bcc3fed964047bfe3f1cfa7b68dbfb516fb12d40c89dcf06680ad9fe0e73b48e",
+      "size": 34124
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0019.json",
+      "sha256": "fe1c6fdca2db216b7a746104a605dced1ffa2584168500581e16c67337a1e25a",
+      "size": 34123
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0020.json",
+      "sha256": "95a6efa3603f58e30fc006a304a11e7b9843c64565ea3c86efbd7a44b3626068",
+      "size": 34123
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0021.json",
+      "sha256": "2dbd3dbcd81e36561829e6e706a054a5cd58dbaa67e1fd7ad1dfd3fa9fbb1971",
+      "size": 34124
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0022.json",
+      "sha256": "69ef2bb968939c25612795c6180f9af04bcf820dafba5a394f5e7415c10652ec",
+      "size": 34123
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0023.json",
+      "sha256": "3e5eedf0a2b1f574c82f9ec4a46b732c6cca88e5d270f9dc0464f5a2d1154881",
+      "size": 34123
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0024.json",
+      "sha256": "eda7340ec020c70aa39328ab22ef37027c12ab3aad3896093d35a7c35810e977",
+      "size": 34124
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0025.json",
+      "sha256": "88fa51283c2cfa9fd7da1f90d64208c26999666364773edda5072e26a55a2c8b",
+      "size": 34124
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-inventory-0026.json",
+      "sha256": "0be42d38ce03ab99afb123a6a1badfef2bf4e9cf78c70f93e31add51c69426d9",
+      "size": 34123
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/active-samples.json",
+      "sha256": "2ea75b24b644cd1782f62439690d004f5b2214077f50a28208743192e27b9f02",
+      "size": 2202466
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/candidate-trial.json",
+      "sha256": "1c154494b806dedb824c4f3d5d0aa11eaec821ea3ccc8ec4298dafe0ec596cea",
+      "size": 68507
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/channel-source.py.txt",
+      "sha256": "023700fa650946b16c97f2ac51e4e9ed697e1236b83735db1514ee5178911ee4",
+      "size": 13746
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/client-outages.json",
+      "sha256": "c62b5b23d4936d6a221bbe012d6903dc379dcf1481c16f39abdfb8b9fcd2dabb",
+      "size": 676
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0000.json",
+      "sha256": "ee8b782ab0a25c80d1c8840fd5e01614088f48beec02fd7452cbbe1b5ff2e073",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0001.json",
+      "sha256": "f9906686f7f1609cd58ea2d4728ac63386a0b968e412ec3e4af5d25731e820fc",
+      "size": 2633
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0002.json",
+      "sha256": "85935b16b2a362dcd8ec844105de5139c50b5a38e5f738e6599dcf50f320ff5e",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0003.json",
+      "sha256": "327ee48f08109b3d16097b9a3d5bafb2b5a124fb3a763a0492077467b5c51ef5",
+      "size": 2633
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0004.json",
+      "sha256": "4e77a9f08d616864ff2cce4130d904515b10abbd5cc6bb53f7e5f4d421b81d93",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0005.json",
+      "sha256": "8f468f3f0a995bfbe0519a7956c665d18889f464a643d43341f9d7993e8246cb",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0006.json",
+      "sha256": "8d6ce7daad557bc12dc4925dea4794a6b4b75ecb847ef1f73e4294827a661f82",
+      "size": 2631
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0007.json",
+      "sha256": "9ec40a24459d293265ad50d9bd145bd4664621344f2d7a5eb1c7df558a0d362b",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0008.json",
+      "sha256": "b559af8ecde1fb37121d90027857d74bb0ec4769fb5b9079df2eb7d1edda67e4",
+      "size": 2631
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0009.json",
+      "sha256": "13a36e927660b90251aca073c889d82d9ba7b37842b2f04593bf486ee3a7b1a7",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0010.json",
+      "sha256": "ee460ab81e456dd9be9ab9532cc2b1cf80f10f167c6fdd298b53cf1194cb6d3c",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0011.json",
+      "sha256": "167d909f0ecca33366b4d81a6ff2207d056540dd9c2707a5fa8e05595ad44b91",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0012.json",
+      "sha256": "ef65607115211600e178027ab4993eeb24ffda7c032c88fed3556f157c5070f3",
+      "size": 2630
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0013.json",
+      "sha256": "549c9f8bfe803aac28a2567b2bcc0cc02d668832372cc8d9d857e6d4645c65ea",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0014.json",
+      "sha256": "91b3c8ad29f01c4974ac8ebcfcf5b28cb673e31b27dc4bc06d2bac7f2cb81090",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0015.json",
+      "sha256": "fd76fb511023d7582c04c55d7ce7faebda483da0ab61e8eddb8a318131151898",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0016.json",
+      "sha256": "4e70562c6a2471c418202e973fa4cf0800eaf3878a6eff2ba6d81c64c50604fd",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0017.json",
+      "sha256": "79abf8eb286a8f30a759bb3cf907e8de6f08b6d1bfba801c3b544d7a1cd069c2",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0018.json",
+      "sha256": "293cb682834924e5553f7e3f6d715af9ae4b7164384d665c06a6b3c71841980a",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0019.json",
+      "sha256": "8119d234d873f3c55d19a52f6a21e8f0eea759f960cb424b377548b809e1c4fd",
+      "size": 2631
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0020.json",
+      "sha256": "ee440454d39a352cf79074394eefe52d5b699fd8b852cfe08c9a01fccbaa6d2f",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0021.json",
+      "sha256": "c96f341be0f4bc81e37a2813bbe86dfe404e0c58bb50f30c3a097c675bf00750",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0022.json",
+      "sha256": "7aded4da59db791e0704f74329d4dd1607b309bc0d5801d3ea5e164e07a401b0",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0023.json",
+      "sha256": "322a130b01d76baa7826227a4e0ee9c3c1cf9250bca969059e2759bd9c87143e",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0024.json",
+      "sha256": "5be1745159e7c1bea3cd278a25cb1c8870cc28b98592fe9465b3ca53fd6dfd4c",
+      "size": 2633
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0025.json",
+      "sha256": "fa8515cc8d24ba28a2bae4c7baec1e7756da0e68c4bc9ca2de9c17b4c6716892",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-active-0026.json",
+      "sha256": "d3b20e2200b853c1436adde59ca84b98ae6820f70d05038cabb5e75b86b59462",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-neighbor-withheld.json",
+      "sha256": "3b76ccb3a3898a9091445e889ed3878c9f8d4d2292048447bfcc7cd59fb61630",
+      "size": 2648
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-onboarded.json",
+      "sha256": "63150d208f777711fa5c005d17ce8cf3cfc7e998d1d014dcf372fcd22dc92767",
+      "size": 2620
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-peer-path-gap.json",
+      "sha256": "8d2c39a83a587c7d223fdd9e99d43ba4b15484d5b46169bd02b59651b709faab",
+      "size": 2639
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-recovery-0.json",
+      "sha256": "4a23d71329ad05306d305d18ba7d1d482283fa8869f30a6980cde853ceb5c731",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-recovery-1.json",
+      "sha256": "c9da7fd6d7dbef7b6ba84eb3f738bc8127004c2b8c405c137c04a3d2c051e768",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/clients-telemetry-withheld.json",
+      "sha256": "457cd364f55f063f8933143323898921b6fbae19fa0104411abff153b20c2965",
+      "size": 2648
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/controller-after.json",
+      "sha256": "3eab81e24309d68e169d2f2464b011e66bd9a2fe005d8cd77a1385aab89d90f3",
+      "size": 29283
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/controller-before.json",
+      "sha256": "ffb2f7a1ee47b25ee19904910fdf569e88400f220ac61446a939ab31ae858d76",
+      "size": 10353
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-inventory-0001.json",
+      "sha256": "209d687c6b2d85c9dceaecce981582051a1b33377257a3c98d40b920e66615f0",
+      "size": 33333
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-inventory-0005.json",
+      "sha256": "01231920229a00514e47daa8c61773799cfbed152f1bb1de413992dbfad3bade",
+      "size": 33333
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-inventory-0008.json",
+      "sha256": "9bfdcb0b2052cdd6d4c54f9ea36d0af85ed7d0a7d6b47429175dece0c8a9a3bf",
+      "size": 33329
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-inventory-0011.json",
+      "sha256": "5572a42573e513371ce6a7020b152803db607ebd962451f3c39893838a943c69",
+      "size": 33330
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-inventory-0014.json",
+      "sha256": "dde9f0c9497758767c34f151e736f5a4ebd2c0d03bb981aa82755604a0ef35d9",
+      "size": 33330
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-inventory-0018.json",
+      "sha256": "d67ba57f39b64b07189004e25464713a6dda730d52a785583ea5dd6f4ba74a60",
+      "size": 33333
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-inventory-0021.json",
+      "sha256": "ac359cb2ead7a543bd61c81886b2f571e51e929c631611bfbb75dc5dec41cd84",
+      "size": 33333
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-inventory-0025.json",
+      "sha256": "930816a1e862c0b361d9d6cc5a385470d30225973fb45799daf44b8f87f7e3c8",
+      "size": 33333
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-session-0001.json",
+      "sha256": "0a6a273c8d98b8d5365ec202e765159ab490c3c5eb4441dae7e8afde6cce38e0",
+      "size": 68211
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-session-0005.json",
+      "sha256": "699ab8564870300fe2cda65c007efd371ee28f09ce4ee65037639da6df6b02ea",
+      "size": 68654
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-session-0008.json",
+      "sha256": "7e3d16f923941bd96d431d2250f193aa9fe938ddf7f3a709770d8b0f1f67e249",
+      "size": 74696
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-session-0011.json",
+      "sha256": "919359e3b9ce24315b45caeffec13bae7c4e635cfb5028468b8d7d59249ebe52",
+      "size": 75153
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-session-0014.json",
+      "sha256": "43f3a8cfb762c435da467a390a7849ddde44c8bad5a49af82912491948e9f52d",
+      "size": 75310
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-session-0018.json",
+      "sha256": "9ce3967353e1b5d2c7b4ad73fbd6ec4d8a58084f99df677402a56c8383be53de",
+      "size": 68447
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-session-0021.json",
+      "sha256": "d14e75d4ef21b95de6f56deb0988dbfeee90db12a00061c714789cec5a872aca",
+      "size": 68663
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/detached-session-0025.json",
+      "sha256": "a6036d17814d8e79a0a8d20c4ee265a40b01303b10f7a57faf6221d4d0214a06",
+      "size": 68926
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/egress-observations.jsonl",
+      "sha256": "a2c924a1e34f05bae5dacbf56d6820d97494a45400ea18bd4a482f31611e7a54",
+      "size": 4637906
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/egress-observer-final.json",
+      "sha256": "540af234df6a5be008a12a5fb1341a6a3b89cd2d842f0dfa63324fcd10be1e72",
+      "size": 517
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/em-baseline-wifi-continuous-ping.log",
+      "sha256": "965d0d4799671001b0c534706e782764f3c22064b813c3c6d32d9bb6d76446e2",
+      "size": 56883
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/em-baseline-wired-continuous-ping.log",
+      "sha256": "d94d351fed6228375b55770c0f98bea75ede9360620f2a770620badf6e8783e1",
+      "size": 67171
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/ethernet-capture.log",
+      "sha256": "441cb0f08f554570c7d94bf9b81b9bbb82ce02db20b1f45c03eea2c1f6f57c7e",
+      "size": 172
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/ethernet.pcap",
+      "sha256": "b157531109f98125fa9708c0f6aeea39a8970e7138f98ff4fde6791359c60983",
+      "size": 10597
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/forwarding-capture.log",
+      "sha256": "9c1ae1b69ac6e2be516f1574b1571920f84966fcead207c3259686f30f7c408b",
+      "size": 176
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/forwarding-samples.jsonl",
+      "sha256": "d2aba0dbfebd55d0e1b99f0062147b7f3333eed0b16594fd22b69ddffa7d58c2",
+      "size": 10983274
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/forwarding.pcap",
+      "sha256": "317c5fc328f95b953e55db6fdbdebf1540b3f8b5828db667961bd60da662cc20",
+      "size": 477767
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/independent-peer-metric-check.json",
+      "sha256": "a6a83fa95b8485ba9b02a20f235b36454a5a29dbce8b4748100f5b020c9c2a7b",
+      "size": 2034
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/independent-policy-check.json",
+      "sha256": "99d4103e4bcc3e1aeeb2fa573384c629de34cf8b19b3791cdc4c243ec5c72810",
+      "size": 1432
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/independent-telemetry-gap-check.json",
+      "sha256": "07d22fcc1679cde99308535a45b333dd1c29d2641733c5527ed7f7b40b6dd049",
+      "size": 819
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/initial-audit-failure.json",
+      "sha256": "1709b5f7706909a32c470f6d9468ac39276e5b2440ce510e5e20e4d64462cdfc",
+      "size": 398
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/manager.jsonl",
+      "sha256": "00da5765ae84b468225bf75fa986a894a2db383601ec140417cf52bc0ffe17b1",
+      "size": 10898340
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/native-operation.json",
+      "sha256": "8576b2c9dcfa3c13045e9d86a748fdb28d10f02e7ddb6d5bd631d498b1b600fe",
+      "size": 4858
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/native-session.json",
+      "sha256": "291a8c8c94c55772f0475b1e254ad1ac53b3f3c10a3faacc882e319759122aab",
+      "size": 69008
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/neighbor-gap-check.json",
+      "sha256": "a74cecd18e64e8378425087c1adba2b39552be3356d49c581ae267754bef082c",
+      "size": 221288
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/neighbor-link-observations.json",
+      "sha256": "2be2e88cf2deaef1ba3ab2139adb344bf5371d622ad59603b4deafbf657a7b3a",
+      "size": 22612
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/neighbor-observer-final.json",
+      "sha256": "661bc46ab4c5af23c4aa6b0a5da596ae313b584fe88ae6c3f262b379a6fb7f5b",
+      "size": 939
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/peer-path-gap-check.json",
+      "sha256": "e38f7bb19e32d3d519d17eb571303e6d8673876d8b15eca6464a3f4c652ea365",
+      "size": 203182
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/radio-capture.log",
+      "sha256": "b853ab5b04d6a5ccff8fe29b1485cfb915fbaf25ebdb4ea29d81df99a5592dcb",
+      "size": 201
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/radio.pcap",
+      "sha256": "eefea98af48c5db2517f9a8559c0dad24aa003443647af60d46fb12e64a52a5d",
+      "size": 2346605
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/recovery-checks.json",
+      "sha256": "d10ee71f847092ae0142c724d9a9db5255a198538c3a8585b3256ee7c80d4446",
+      "size": 342224
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/reference-candidate.json",
+      "sha256": "f9619be976e16a1b4fb13eaa0140c386a91196edf7c1468c18b8c1fe299aaf09",
+      "size": 2193
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/restored-idle.txt",
+      "sha256": "ae43cca5eff8f3176bae0576cbb5cbbd553d5e9be010a3f9429f2d3322d694ce",
+      "size": 28
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/result.json",
+      "sha256": "f33e5388113120865c18250bd1d87579901f0c88252252dfa75a9fff6457a85b",
+      "size": 63377
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/source-hashes.json",
+      "sha256": "c48cf4e3a795fc194e3f3d86f04bac8e7ca0b819499223053527edcf1d8321d1",
+      "size": 13402
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/source-match.json",
+      "sha256": "e66d1550841b05a9920adf6ad686cb682ac436d08523de0cb38577e6ef904fdf",
+      "size": 24084
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/station-events.jsonl",
+      "sha256": "2932090c3368c04df41b5796ae309716d57c0554a84ce76017252442c53548fd",
+      "size": 46836
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/telemetry-gap-check.json",
+      "sha256": "1673003e746752ed16438a7d22166855486ab30d0a27d76742dea5597e1ef0c4",
+      "size": 222584
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/withheld-operation.json",
+      "sha256": "41a8ce46a817d81152a93013b5102213f18c64d50a754c08a9d2cd90369de716",
+      "size": 1963
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-03-limited/worker-stop.json",
+      "sha256": "9f4221bcc4e6dd05c309c81dbe04d40b2a5768e4d578a18fdfc36d7eed7c8ef7",
+      "size": 177
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0000.json",
+      "sha256": "2beb42e9d97a473bc6fc338cb6fb107467cad723570835736c792d7ff49d0673",
+      "size": 38144
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0001.json",
+      "sha256": "4711ad2a9b0c9f97a1da1b8959048e0a5f96154201fcc82c8e83412dd38ae7db",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0002.json",
+      "sha256": "eb3983825bb5cd9c47562e47f57d71c93ae33d16e19c43486b7fa05775f62279",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0003.json",
+      "sha256": "fd1fb41cdd4de794fc15b13666542821d436392b661f99ec6f0e1d1f907cdc1b",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0004.json",
+      "sha256": "d2badbd04e04d9ad182925d496379a98000425208c6e15dca99c8d3bf34b33ce",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0005.json",
+      "sha256": "ca0703978a08fb8b98d5e2bf332b039e1cfede063a470d86cbd2ad5a9e955390",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0006.json",
+      "sha256": "514282de87d246153e4a280bb8669b007e75fdf76aa9007983e8d43455e573be",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0007.json",
+      "sha256": "4ccaa8d5827e8b78386a2051238c6bb59b7f08482c26f54ef56917ce7b99f574",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0008.json",
+      "sha256": "0f4445af4fa12192c79eed51795e610a43323baa495cfa4ff9bff02d93ac25db",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0009.json",
+      "sha256": "471a9d4c651658db3c9708e34a3f477a512223682174d847a65fced17d5e3b5d",
+      "size": 33981
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0010.json",
+      "sha256": "8b86dfa0fdbfcc720606dfedee11359f3a18ca3c362756206f9c66518d3f53e1",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0011.json",
+      "sha256": "b217a82a221884e184314b29d32f43b59c29fe2feebeb6c812fbafd2e53bfb58",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0012.json",
+      "sha256": "06c720a7b93c0c3bbf5b88ec9c616ecfaa6068f3387534e53a65c5a0d93ce576",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0013.json",
+      "sha256": "4a28426b996e8963c33fbb1d6af85bf052213bcf2ddcdf8618921225fb62eea1",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0014.json",
+      "sha256": "77cbf4fb3b289d377e1ebfadb683ffc142eba4a9eefd48097e81532b3aff727c",
+      "size": 33983
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0015.json",
+      "sha256": "e2882b3db4c44f916b8a9ffa38900ee40066c6ab3d9999767f4871d091b0ac7f",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0016.json",
+      "sha256": "d4edd5ac5fa5db2d5d699f167174c3368f2656d8a1c34095561211007ad719d9",
+      "size": 33982
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0017.json",
+      "sha256": "1252e4e8394445e5c6f6f4e2df4c437f8a047dfee3d2bf43e124a8f6e058ced7",
+      "size": 33981
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0018.json",
+      "sha256": "a713ced08134fe0457edd8f8a900086d6bbf0d7fdddfd0fdfb7984c84ef8114f",
+      "size": 33984
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0019.json",
+      "sha256": "26f47b577722ae8ef38d2dffd2b7969fbfd71af0b59ea446804cd23e240b4b56",
+      "size": 33984
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0020.json",
+      "sha256": "c4c89fb1c94e82923f3e14d68a3d88778950132009b966722fadc004cf8164dd",
+      "size": 33985
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0021.json",
+      "sha256": "66b7523c30f3cea772ca405cc777e46dac14052318c84ff14d32431c31349816",
+      "size": 33985
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0022.json",
+      "sha256": "f362257a207b37517b7f09af7a16b6e242ecf0adc0060cf9d0f898bf6e026401",
+      "size": 33984
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0023.json",
+      "sha256": "f7a95a3a5d463f9b2ef43952f5e484dfed7918ea064a293c839b541c079d962c",
+      "size": 33984
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0024.json",
+      "sha256": "984a206c6e605b1d240e3e7aee6dccf4045187e44b76817938ade9b0560d5400",
+      "size": 33985
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-inventory-0025.json",
+      "sha256": "cc164dde7fda422869ea4e7ec7af5f047f6afe7c927676a7415f0653d38c298a",
+      "size": 33985
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/active-samples.json",
+      "sha256": "7dccf7d76e3b873c3a99f3e0542faa7588ff0b318cc182931db11b99a39b46ec",
+      "size": 2126740
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/candidate-trial.json",
+      "sha256": "5cc47075b11c2686d2e0afc8d36368ccb1ce42904d7175570c7831a4025cbc56",
+      "size": 68507
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/client-outages.json",
+      "sha256": "d66f1504403cb7737aa1cdb5c668efa066af789b366e3768074aa504c096247b",
+      "size": 680
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0000.json",
+      "sha256": "93958463b8c1384f843f63e0e7ba17d15779ffa1de59329e8fb205666fa078c9",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0001.json",
+      "sha256": "fe70db6f83caa5cb3901f57460855e83746023a8e1aee2cd88b24035be668cf8",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0002.json",
+      "sha256": "5eb04db09927123fffab2e5fb588b281703622753e6739fd9707b7f97474a829",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0003.json",
+      "sha256": "5817e24d2c12d5f132bf3321792a24484ce89267e2bcfb9a9f8e553882564a6d",
+      "size": 2633
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0004.json",
+      "sha256": "ef8f706be0ee3324f039e29a2d261c2f2aba2db99553064632bb44d44e0ec97e",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0005.json",
+      "sha256": "bdc8f9c5e78fe0c0b391120aba7c55a063a64425f7445d51c0b971c4ff71b754",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0006.json",
+      "sha256": "2e431ae70f4aabdc20c2295059aa6f4eaf49a1cf369ca87726bc86c54e68aaeb",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0007.json",
+      "sha256": "c39ff5008b6f58968c636140447c07e22b038fa6f29d15df5c03a947166a04b1",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0008.json",
+      "sha256": "1c5e029c4e15807b9a428b47ba6c7466ec5c6c785313163ac036c44bb46e8e0a",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0009.json",
+      "sha256": "72354c8f3e468a60d854711361aa7be31c71481cf1cc4d7f9aa8992f9a11131a",
+      "size": 2632
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0010.json",
+      "sha256": "f98d0d2d1b48118d359411ecff80e8c5868fc97ba0946601e92ad95fd9110c9b",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0011.json",
+      "sha256": "fc677f560fe85b7ada792e450cc7f0f19adad635638ff635121a04f1a900aed6",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0012.json",
+      "sha256": "14c7aa26fc54ece13d596173dc6a82faee04821224e622460f48f07769ea6b04",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0013.json",
+      "sha256": "9b6d001a8664b065e7230d2f06b6c05443856bc723754529d9fd087ea29ec750",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0014.json",
+      "sha256": "883f5590a78d0bff7e0569cdf2fa8deefacae65f5c95d00df0d054295b88af4b",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0015.json",
+      "sha256": "7cd3dae8c7fc3c8172006de0a70184960e87ba8c3bcd110f4a74b8d0724946c5",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0016.json",
+      "sha256": "9c6b2750f05b793b54412a486fb9b8ad5275309eeb649d6cd4387529181069f7",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0017.json",
+      "sha256": "324a45235a1227c5c0377f61bab17225b72369ceebe310fcb9d42682637157e5",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0018.json",
+      "sha256": "13519b1c61be0ed6dc961da2b4074e70800ee66a7e92b79deb80fd648012959a",
+      "size": 2635
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0019.json",
+      "sha256": "c65e9a560d1ff6f8b671957bc363bc98724928f098a66035989d4a787c184160",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0020.json",
+      "sha256": "ae79ba40e10830888fb5386db4386749e2551c87d0cdb463087ed249a8dfc3de",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0021.json",
+      "sha256": "17cd63868b376e45b2f5185948fe1f3d026198274162b2a0e4fe2c54366f4d9f",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0022.json",
+      "sha256": "fe0f9dee82ae642122a50c3e513853b9777ac2d46449a4151d76967917117e5f",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0023.json",
+      "sha256": "6c5e7246948f5e72f7c97031f6b315e785c6b67253061dd220f7f916e8eb0dc1",
+      "size": 2633
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0024.json",
+      "sha256": "d651b5fac419c67369d68ffc479612ab964872308e84da3fa94d1ea09c28b047",
+      "size": 2634
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-active-0025.json",
+      "sha256": "420037b9f6d7814ec0f73901f2fc75b8e84d0d59502aa2f001b0804aaa8c81a4",
+      "size": 2636
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-neighbor-withheld.json",
+      "sha256": "88491eb6cd09da9ef73efd07a34c11c8a962bb98922cdeb4be0a4335cc549ac4",
+      "size": 2648
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-onboarded.json",
+      "sha256": "da0efb1adbc62edacfdbd76ae5ec124d967d126c61d10964160840c3aa2aa97f",
+      "size": 2620
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-peer-path-gap.json",
+      "sha256": "3f2d5aa2e3fdc268ee649401e1dae0d8fc198554b65a3fc64158d2847a72055b",
+      "size": 2640
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-recovery-0.json",
+      "sha256": "f0e9d85f4b36ae4667dc1f68e24a1ab95fb3009dfe78fcc859f35cd37f319208",
+      "size": 2633
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-recovery-1.json",
+      "sha256": "a8d715b7130a910d0f431880cdc96db1af9abb7ddb935b2f6c156ed4dd62cb1b",
+      "size": 2631
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/clients-telemetry-withheld.json",
+      "sha256": "a58604630f1d11304cbbcd3c254d2623baf602d3ce19bd222451a3e1310da28d",
+      "size": 2647
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/controller-after.json",
+      "sha256": "1799b2f1ccdc72b652b79ae6d6ea7baa3d8052c348df9fe0097f632bbf8c942e",
+      "size": 32146
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/controller-before.json",
+      "sha256": "3decf3885194096cca88a5083026c3ace03c4cd66f1cb65c93abec9feae84444",
+      "size": 10353
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-inventory-0001.json",
+      "sha256": "f7d2b2472530cbc01520b7f88597596ba0e92d01420089b0d6f2fc0f218a6a9f",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-inventory-0005.json",
+      "sha256": "ebe2e3f1c6839479019c4dbbd3677f7ef969470d11826fde5ac07b201d5abc1d",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-inventory-0008.json",
+      "sha256": "8a501f49a9a9bf2f342d7ebe782144d1d1fcda762e06f4252287da4875eb1b7f",
+      "size": 33191
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-inventory-0011.json",
+      "sha256": "921ccfa18f864249a1dc087e699caf7f24afd69d18a0eb1c73ea5d65856bb513",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-inventory-0014.json",
+      "sha256": "dce0f83222dedd52819380c0d5a09d644e02d8d9b841662aa257e8e4dc2db255",
+      "size": 33192
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-inventory-0017.json",
+      "sha256": "ef47a80d2f7821a7c5586d92c2137ec06ba00c4313b2264847a4e3516c0dadbf",
+      "size": 33194
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-inventory-0021.json",
+      "sha256": "e78db516a61326ae011f92fcf1cc8de45a96a3615a8b4105f8dad4498a78ff02",
+      "size": 33194
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-inventory-0025.json",
+      "sha256": "154b283463418d901b56aeb163a7d187cda25644556ee27bc19ca799453fbb71",
+      "size": 33194
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-session-0001.json",
+      "sha256": "c7b9f96a671ad754d2d12940e5bf5f4f43e2f5923070f94470b25063a74d2848",
+      "size": 68372
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-session-0005.json",
+      "sha256": "e7c5bc1040a2e9b5eb480f8829e1549c4fb6588213e9371ec2e58dc8e791de70",
+      "size": 68808
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-session-0008.json",
+      "sha256": "76d4318cc26bfa674fffcac0c8433e359da2b920e7236d952c2d0a993546cf16",
+      "size": 74897
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-session-0011.json",
+      "sha256": "e1075f2fc30aff5fbcc5504b998fb054bc749b2847b080697aee4375ed6e9fed",
+      "size": 75423
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-session-0014.json",
+      "sha256": "8b85d940978321f9221327c29e06f6cbf1002c2691ac83fe65db11989b6f7dc2",
+      "size": 75627
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-session-0017.json",
+      "sha256": "b5bae24c0364cf473e8c0ac41ba74760a28536da8cb361ce6f5784f36605f1f6",
+      "size": 68572
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-session-0021.json",
+      "sha256": "13ff048e10909945a328f5f4ce9330bd97e5f9da8675ce5727baeb4d4e953c95",
+      "size": 68847
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/detached-session-0025.json",
+      "sha256": "3b8fd0991891d9a20a304463279bcd572b97352748a1eb5b7f0f8cbd063b9d4c",
+      "size": 68997
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/egress-observations.jsonl",
+      "sha256": "831204b597c91c1d9703f397cb363479721267895a7ca87180c2aa05a419affe",
+      "size": 4370863
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/egress-observer-final.json",
+      "sha256": "2083da34dba3181e5c1b5dd6f5598ca95e603742629baebd36354d94f512a060",
+      "size": 517
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/em-baseline-wifi-continuous-ping.log",
+      "sha256": "e5767885a0bea4f318fe63b39ee983d6601b8f39ddd1a2c3becfd24e2146e085",
+      "size": 54903
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/em-baseline-wired-continuous-ping.log",
+      "sha256": "9ad0799fe8d068a5ebf844e66bd6ffb6a3a4142071b8de4351f95d1c6524df3b",
+      "size": 65512
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/ethernet-capture.log",
+      "sha256": "44c4f70257af4d76fec8ef8a034943233f433c94af48167e8c6c0e3be7bc6c8a",
+      "size": 172
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/ethernet.pcap",
+      "sha256": "7ce44d533458e7e544df9cbc85fb5b8298d814ba209b82a094805e13196b4b59",
+      "size": 10965
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/forwarding-capture.log",
+      "sha256": "f559f5f42e34eddc3e7432a6114a893e42d178678f0cd1d7f5f801cf249a4898",
+      "size": 176
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/forwarding-samples.jsonl",
+      "sha256": "d8ba68ff8a514ae24a8100324d447902e72b53c8fc99d23694a62d3c941ea0a0",
+      "size": 10133365
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/forwarding.pcap",
+      "sha256": "1170bdcabc38d3e575972fc7ebd1b69dbcf0aeda051e40fb342fb7426c2fa370",
+      "size": 463268
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/independent-peer-metric-check.json",
+      "sha256": "ae6949a3ec917fa01e89a41967c503dd1bb2394259d84c1c08c1d720c80547a7",
+      "size": 2300
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/independent-policy-check.json",
+      "sha256": "0030f4dd89b4891f043b50cad177ff30fe647527b2bf1ba94d503771b4e69815",
+      "size": 1434
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/independent-recovery-check.json",
+      "sha256": "11e418b36f10470958f942449c8b7198f4197ce1aa6fb146ed6483df0140390a",
+      "size": 3303
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/independent-telemetry-gap-check.json",
+      "sha256": "aaf25526dc64353610f3844f1643bb169d4fb096f06dc4a745416d44f6945432",
+      "size": 819
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/initial-audit-failure.json",
+      "sha256": "da6a20cf7c627dd1679be30439528c632a9c1025dc5ee5c6bd15d8f9c0b0726c",
+      "size": 604
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/manager.jsonl",
+      "sha256": "6585531326e488a6b8f9a000e220b05432122b5d70d57a7b88f8b8ef5cb24a62",
+      "size": 10112527
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/native-operation.json",
+      "sha256": "267ff3d28bab0b5dd4241b6fc0500a2813f0401a150683073b2e84b666698ba7",
+      "size": 4858
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/native-session.json",
+      "sha256": "98aed33efae1099a4eb7cabd31aa267ff4ff15f72376354f8c22b8b95b861683",
+      "size": 69077
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/neighbor-gap-check.json",
+      "sha256": "1e3cfc10aaaeffb018cad7b4ae832cd9a204de77bbc4a86de369cfecb884207d",
+      "size": 221390
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/neighbor-link-observations.json",
+      "sha256": "b87e47abdd86c59b67183118a68eb1a48e641a118b57940aafc121aa2c94f347",
+      "size": 22617
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/neighbor-observer-final.json",
+      "sha256": "a57e9997d7507bfda7e7de5a4cabb5e374b5b1bf2b9aa1a84b9cac3338f18d57",
+      "size": 939
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/peer-path-gap-check.json",
+      "sha256": "831e82f44a1a5c7d6ffd47fcc984ff0a81ff773bf75c84450cc85d4babea77e5",
+      "size": 222402
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/radio-capture.log",
+      "sha256": "2ec53786082a09dfa19920e79303c14ad5c63d16106bde83b961c6e945e5e22e",
+      "size": 201
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/radio.pcap",
+      "sha256": "0532a6276a37651dc08e60e7f9bf4bcd867ed1a5612ec02a3d226682ed38bcb2",
+      "size": 2213452
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/recovery-checks.json",
+      "sha256": "bb719d83b29de10e7dbd8d584275d78b1e3b7b75dffeed63b17da74c8033471d",
+      "size": 342784
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/reference-candidate.json",
+      "sha256": "b85532fe94538e9a78c7b057359940c988f97d41750daa8b04ab5958a3296e73",
+      "size": 2193
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/restored-idle.txt",
+      "sha256": "ae43cca5eff8f3176bae0576cbb5cbbd553d5e9be010a3f9429f2d3322d694ce",
+      "size": 28
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/result.json",
+      "sha256": "435c58941472ae0e850e048df9a49e3905c75cf93b7b36c6deb03853c314dc77",
+      "size": 63377
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/source-hashes.json",
+      "sha256": "6a99ef05b9eb0962c3738b000d91d787416b123b4a8338d743faea878920467f",
+      "size": 13402
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/source-match.json",
+      "sha256": "96de36adcbfa65da27e5cb23d433a85a815958ba3e7b17ca180db660d889f3e7",
+      "size": 24084
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/station-events.jsonl",
+      "sha256": "6c9c5c07009f9a0ccfc1950573dd224052315aa26058fa07bdd173f3c95c6639",
+      "size": 46903
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/telemetry-gap-check.json",
+      "sha256": "f792b8966cb40b85c313b3f92d60ec2ab8cd92a01b332d2ca6f53216b9bbc06c",
+      "size": 222812
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/withheld-operation.json",
+      "sha256": "94db726088960b0d2f95ed064b618b94955b65dc16d8c04d0d3583a28ce03c4b",
+      "size": 1963
+    },
+    {
+      "path": "native-peer-metrics/native-peer-metrics-04/worker-stop.json",
+      "sha256": "a0ba92ad003663e0b786b9ef11690ae89c297ff0daf54f13b953b42afbc69b61",
+      "size": 177
+    },
+    {
+      "path": "native-peer-metrics/ovsdb-results.xml",
+      "sha256": "c4a5a87ced19e8888c6bd5bdb71b99cfec0db2456c0b381413e7184795d17fbb",
+      "size": 8071
+    },
+    {
+      "path": "native-peer-metrics/unit-results.xml",
+      "sha256": "c63c75e3b339f2c7de5e85685f94a96b4d049c2b2c51f419dacf5f09fb36214d",
+      "size": 4452736
     }
   ]
 }

@@ -97,6 +97,25 @@ jobs:
           python3 scripts/check-native-policy.py
           doc/evidence/telemetry-freshness/native-telemetry-gap-01
       - run: python3 scripts/check-neighbor-metrics.py
+      - run: python3 scripts/check-native-peer-metrics.py doc/evidence/native-peer-metrics/native-peer-metrics-04
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/native-peer-metrics/native-peer-metrics-04 --minimum-seconds 210
+      - run: python3 scripts/check-native-policy.py doc/evidence/native-peer-metrics/native-peer-metrics-04
+      - run: python3 scripts/check-telemetry-gap.py doc/evidence/native-peer-metrics/native-peer-metrics-04
+      - name: Preserve the observed startup-channel failure
+        run: |
+          python3 - <<'PY'
+          import runpy
+          from pathlib import Path
+          check = runpy.run_path("scripts/check-native-recovery.py")["check"]
+          try:
+              check(Path("doc/evidence/native-peer-metrics/native-peer-metrics-03-limited"), "tshark", minimum_seconds=210)
+          except AssertionError as error:
+              assert str(error) == "channel query/selection missing timely response", str(error)
+          else:
+              raise AssertionError("retained startup failure must not pass recovery acceptance")
+          PY
       - run: python3 scripts/check-shaped-backhaul.py doc/evidence/shaped-backhaul/shaped-queue-02
       - run: python3 scripts/check-shaped-backhaul.py doc/evidence/shaped-backhaul/shaped-ingress-01
       - run: python3 scripts/check-shaped-backhaul.py doc/evidence/shaped-backhaul/shaped-egress-02

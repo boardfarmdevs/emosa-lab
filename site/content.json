@@ -11,7 +11,7 @@
         "Exercise discovery, capabilities and selected provisioning procedures.",
         "Retain captures from an independent bridge observation point."
       ],
-      "next": "Complete qualified policy/metrics, neighbor-link metrics and final disassociation reporting; review the scoped operational recovery evidence and retain the physical acceptance boundary.",
+      "next": "Complete AP/STA and final-session reporting, resolve native shutdown and repeat integrated 15-minute acceptance. Review the optional owned neighbor-metric publisher and preserve the physical acceptance boundary.",
       "path": "doc/protocol/native-onboarding.md"
     },
     "agent": {
@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Complete counter semantic qualification and online final-session publisher integration, implement mandatory policy/AP/STA/neighbor metrics, then repeat full sustained acceptance. Raw kernel removal acquisition is now independently verified.",
+      "next": "Qualify AP/STA and final-session measurements and integrate required reporting. The optional owned Ethernet profile now feeds checked neighbor measurements to the native controller; physical and multi-neighbor profiles remain pending.",
       "path": "doc/protocol/native-onboarding.md"
     },
     "engine": {
@@ -915,10 +915,22 @@
       "title": "Combined service/loss and native recovery evidence",
       "description": "19,124 independently reconciled queue drops, 17 losses in each selected action direction and 291 native intervals across both recovery faults. Complete metric publication remains pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/native-peer-metrics.md",
+      "title": "Deliver measured neighbor metrics to the native controller",
+      "description": "Learn the isolated peer path, guarded OVSDB measurement mapping, query/response correlation and independently observed controller receipt.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/native-peer-metrics/README.md",
+      "title": "Native peer metrics and recovery evidence",
+      "description": "Actual path withdrawal, OVSDB reconnect and process restart, matching native interface statistics, and preserved startup-channel and audit failures.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "shaped-backhaul/unit-results.xml",
-    "ovsdb": "shaped-backhaul/ovsdb-results.xml"
+    "unit": "native-peer-metrics/unit-results.xml",
+    "ovsdb": "native-peer-metrics/ovsdb-results.xml"
   }
 }

@@ -57,9 +57,8 @@ counters miss. The [egress source](egress-accounting-source.md) now combines
 selected action and driver losses without double counting, with observed
 configuration epochs and live OVSDB recovery checks. The
 [receive source](receive-counter-accounting.md) now adds selected ingress loss
-and common transmit/receive read bounds. Complete neighbor/loss attribution,
-media and capacity/availability qualification remain pending before these
-observations satisfy a complete native query.
+and common transmit/receive read bounds. These inputs support the subsequent owned peer profile; they do not by
+themselves qualify a complete native query.
 
 The optional [virtual-link calibration](virtual-link-capacity.md) now tests a
 declared 100 Mb/s software service with explicit Ethernet overhead and an
@@ -67,8 +66,12 @@ observed unused-service estimate. Its independent packet audit and native
 OVSDB recovery regression are separate from complete per-neighbor publication.
 The [combined source](shaped-backhaul-accounting.md) now checks selected action,
 queue and driver loss components alongside service work through OVSDB recovery.
-Complete peer attribution and media qualification remain pending; this does not
-measure a physical PHY or change acceptance status.
+The optional [native peer publisher](native-peer-metrics.md) now adds observed
+port isolation, disabled aggregation and the declared software media/service
+contract. It answers native queries with independently checked values and
+verifies their receipt in controller interface statistics. This qualifies only
+that owned profile; it does not measure a physical PHY or change full acceptance
+status.
 
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated
@@ -133,7 +136,7 @@ TEL-01–04. Installing this simulation publisher on a physical pod is not allow
 | Client Capability Query | §9.2, §17.1.14–15, §17.2.18–19, §17.2.36 | Correlated failure report: reason 2 for an absent station, reason 3 for an associated station whose association frame is unavailable |
 | Disassociation statistics | §6.3, §17.1.41 | [Sender and guarded handoff implemented](final-session-statistics.md); actual final session counters/reason still unqualified, so native polling continues to record the gap |
 | Reporting policy and metrics | §7.3 and §10 | [Durable selected receipt/Ack and missing-report schedule](reporting-policy.md); measured field mappings and required report delivery remain pending |
-| Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1; amendment pp.10–12; EasyMesh §10.1 | [Query/response and guarded handoff implemented](neighbor-link-metrics.md); native queries record unavailable measurements. Qualified per-link publisher and native delivery remain pending |
+| Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1; amendment pp.10–12; EasyMesh §10.1 | [Query/response and guarded handoff implemented](neighbor-link-metrics.md); the optional [owned peer profile](native-peer-metrics.md) supplies measured native replies and controller receipt. Physical/multiple-peer qualification and integrated 15-minute acceptance remain pending |
 | Channel procedures | §8.1–2; §17.2.13–16/Tables 36, 38–40 | Sole advertised channel 6; durable preferences, acceptance of requests requiring no adjustment, measured operating power and correlated Ack/retry |
 
 ## Channel decisions in this bounded lab
@@ -155,6 +158,13 @@ wlan0 info` observation, published through `Wifi_Radio_State.tx_power`; it is
 never copied from the capability maximum or controller's requested limit.
 The owned HT20 hwsim profile explicitly assumes zero antenna/cable gain. This
 maps nominal reported power, and establishes no physical RF measurement.
+
+An early request can arrive before the first fresh radio sample. The coordinator
+retains at most four such requests under their original context and one-second
+response deadlines. Duplicates cannot extend the wait. A current observation
+allows validation and reply; expiration, disconnection or a changed context
+withdraws the request without accepting configuration. The retained peer-metric
+experiments include the startup race that required this behavior.
 
 The report needs a fresh manager telemetry sample, the matching database
 generation and the same measured operating parameters. Missing observations

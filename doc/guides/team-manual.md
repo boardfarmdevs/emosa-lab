@@ -4090,6 +4090,50 @@ need neighbor attribution and a media/availability contract before they can
 be sent as complete IEEE 1905 metrics. The adapter's own control multicast can
 also reach the pod-side capture in this lab topology.
 
+### 13.28 Deliver the measured peer report to the controller
+
+The previous exercises proved individual measurements. The
+[native peer-metric exercise](../protocol/native-peer-metrics.md) now connects
+them to an actual controller query and response. This is the missing distinction
+between a number in an adapter log and a number consumed by another system.
+
+1. Read the three-port diagram. Locate EMOSA's control port, the pod's backhaul
+   port and the controller port. The first two are isolated from each other;
+   each can reach the controller. This prevents the adapter's own multicast
+   from being counted as incoming traffic from the controller.
+2. Read the field-mapping table. Distinguish interval packet counts, estimated
+   service capacity and idle time. Explain why the PHY rate is unknown even
+   though the software service has a configured rate. These are declared lab
+   assumptions, not information learned about a physical pod.
+3. Replay the retained audit on HOST. Follow a query ID to its response, then
+   to the exact OVSDB-backed counter interval and the controller's interface
+   statistics. The source, packet capture and receiving controller are three
+   separate observations; a successful send call alone would be insufficient.
+4. Stage and run the guide's commands. `--neighbor-metrics` enables the owned
+   profile; `--peer-path-gap-check` deliberately breaks its isolation condition.
+   Watch metrics become unavailable while ordinary control and client traffic
+   continue. Restoration needs a new interval; old counters cannot carry across
+   the changed path.
+5. Examine query timing around each fault and shutdown. An unanswered query
+   during confirmed loss of the measurement source is recorded explicitly.
+   An unanswered healthy-path query fails the audit. Worker-exit timestamps
+   distinguish teardown traffic from active operation without guessing.
+6. Check all restoration records and the separate recovery audit. This short
+   experiment supplies peer-reporting evidence for the owned lab. AP/STA reports,
+   final-session statistics and complete 15-minute acceptance still need their
+   own implementation and evidence.
+
+**Learning checkpoint:** trace a measured fact through the separate manager,
+OpenSync-schema OVSDB, EMOSA's guarded publisher, real IEEE 1905 response and
+native controller inventory. Explain the scope of every claim along that path.
+
+Read the retained failed attempts too. One had correct peer reports but missed
+early channel queries while radio telemetry was still warming up. Its recovery
+audit therefore fails. The fix allows a short bounded wait for fresh radio
+measurements within the original response deadline; it cannot report old data
+or extend the deadline on a duplicate request. This illustrates why passing one
+reporting feature is insufficient to declare the whole system ready.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

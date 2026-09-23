@@ -119,7 +119,7 @@ and observation prerequisites **inside the VM**:
 
 ```sh
 apt-get update
-apt-get install -y python3 iw iproute2 kmod tcpdump tshark build-essential \
+apt-get install -y python3 iw iproute2 ethtool kmod tcpdump tshark build-essential \
   libssl-dev libnl-3-dev libnl-genl-3-dev libnl-route-3-dev pkg-config patch cmake
 # The running guest kernel also needs its matching mac80211_hwsim module.
 python3 /opt/emosa-baseline/setup.py

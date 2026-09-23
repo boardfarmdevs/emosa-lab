@@ -741,8 +741,8 @@
       "review_document": "doc/protocol/ieee-media-review.md",
       "reviewed_sections": [
         "Annex E.1 printed p.5648; Table E-4 starting p.5656; 2.4 GHz entries p.5658",
-        "9.4.2.52 printed pp.1120\u20131121",
-        "9.4.2.54.1\u20132 starting printed p.1122",
+        "9.4.2.52 printed pp.1120–1121",
+        "9.4.2.54.1–2 starting printed p.1122",
         "9.4.2.156.1 printed p.1292",
         "9.4.2.247.1 printed p.1437",
         "9.4.2.2 Figure 9-209 printed p.934 (SSID structure and encoding)"
@@ -850,7 +850,7 @@
     "status": "compatibility_findings_open",
     "normative_references": [
       "EasyMesh 6.1 section 6.1 p.63",
-      "EasyMesh 6.1 section 7.1 pp.67\u201369",
+      "EasyMesh 6.1 section 7.1 pp.67–69",
       "EasyMesh 6.1 section 17.1.3 p.111"
     ],
     "observations": [
@@ -882,8 +882,8 @@
       ],
       "specification_references": [
         "EasyMesh 6.1 section 6.1 p.63",
-        "EasyMesh 6.1 section 7.1 pp.67\u201369",
-        "EasyMesh 6.1 section 17.2.72 Table 95 pp.169\u2013170"
+        "EasyMesh 6.1 section 7.1 pp.67–69",
+        "EasyMesh 6.1 section 17.2.72 Table 95 pp.169–170"
       ]
     }
   },
@@ -913,9 +913,9 @@
       "pdf_pages": 7025,
       "review_document": "doc/protocol/ieee-media-review.md",
       "reviewed_sections": [
-        "3.1.1\u20132 printed pp.239\u2013240",
-        "3.2.3\u20136 printed pp.240\u2013242",
-        "3.2.7\u20139 printed pp.242\u2013243"
+        "3.1.1–2 printed pp.239–240",
+        "3.2.3–6 printed pp.240–242",
+        "3.2.7–9 printed pp.242–243"
       ],
       "corrections_check": {
         "date": "2026-09-21",
@@ -1782,13 +1782,13 @@
     "remaining": [
       "Qualify final-session publisher/counter/reason semantics and integrate measured records with implemented sender",
       "Reporting policy and qualified utilization/ESP/link/traffic metrics",
-      "Qualified IEEE 1905 neighbor measurements and actual interface mapping for the implemented query/response handler",
+      "Integrated acceptance of the optional owned peer-metric publisher; physical and multiple-peer qualification remain separate",
       "Complete 15-minute acceptance with independent capture review"
     ],
     "sustained_operation_proven": false,
     "physical_pod_proven": false,
     "evidence": "doc/evidence/native-soak/run-01/independent-check.json",
-    "channel_contract": "Only advertised class 81/channel 6; persist compatible controller preferences before same-MID acceptance; measured nominal HT20 power; operating report/Ack with bounded new-MID retries. No lower-power or other-channel actuation; no full channel compliance claim.",
+    "channel_contract": "Only advertised class 81/channel 6; persist compatible controller preferences before same-MID acceptance; measured nominal HT20 power; operating report/Ack with bounded new-MID retries. No lower-power or other-channel actuation; no full channel compliance claim. Up to four early requests may wait for a fresh operating sample within the original one-second response deadline and control context; duplicates cannot extend the wait and invalidation discards it.",
     "recovery_contract": "New discovery/Early/M1 after source loss or actual worker restart; fresh authenticated operation can complete as observed no-op. Retain NV channel policy across reconnect; explicitly reset at virtual-agent reboot as 8.2 permits.",
     "operational_recovery_checks_passed": true,
     "final_statistics": {
@@ -1904,14 +1904,15 @@
       "physical_pod_proven": false
     },
     "neighbor_link_metrics": {
-      "status": "query_response_and_guarded_handoff_implemented_native_measurements_pending",
+      "status": "owned_isolated_ethernet_peer_publisher_and_native_receipt_verified_physical_and_full_sustained_acceptance_pending",
       "guide": "doc/protocol/neighbor-link-metrics.md",
       "implementation": "src/emosa/wire/link_metrics.py",
       "integration": "src/emosa/wire/onboarding.py",
       "source_references": [
         "IEEE 1905.1-2013 6.3.5-6/Table 6-5 pp.31-32; 6.4.10-13/Tables 6-16 through 6-21 pp.38-41; 11.1 p.59",
         "IEEE 1905.1a-2014 amendment Tables 6-16/18/20/21 pp.10-12; printed p.11 visually reviewed",
-        "EasyMesh 6.1 10.1 p.82; 17.1.73-74 p.121"
+        "EasyMesh 6.1 10.1 p.82; 17.1.73-74 p.121",
+        "IEEE 1905.1-2013 Annex A link metric data model, p.69: linkAvailability estimated idle-time percentage; used with declared wired software service, distinct from EasyMesh Wi-Fi prediction"
       ],
       "interpretations": [
         "Table 6-16 conditional neighbor address determines 2-byte all-neighbor and 8-byte specified-neighbor query lengths despite fixed table heading. Native controller and pinned prplMesh/Wireshark cross-check this selection.",
@@ -1929,16 +1930,14 @@
         "scripts/check-neighbor-metrics.py"
       ],
       "encoding_evidence": "doc/evidence/neighbor-metrics/independent-vector-check.json",
-      "native_evidence": "doc/evidence/neighbor-metrics/native-neighbor-01/independent-neighbor-check.json",
+      "native_evidence": "doc/evidence/native-peer-metrics/native-peer-metrics-04/independent-peer-metric-check.json",
       "interface_observations": "doc/evidence/neighbor-metrics/native-neighbor-01/neighbor-link-observations.json",
       "native_queries_handled_without_measurement": 4,
-      "measurement_source_qualified": false,
-      "native_neighbor_metric_delivery_proven": false,
+      "measurement_source_qualified": true,
+      "native_neighbor_metric_delivery_proven": true,
       "remaining": [
-        "Qualify media/rate representation beyond the observed owned-lab interface/neighbor identities; expand to physical and multi-neighbor profiles",
-        "Acquire and qualify per-link TX/RX counters over a common measurement period with reset detection",
-        "Qualify capacity and availability estimates; do not attribute proxy control-veth counters to pod traffic",
-        "Supply live measurements, verify native controller values and include in full sustained acceptance"
+        "Qualify physical media/rate, pod measurement semantics and multiple-neighbor paths",
+        "Integrate the owned publisher with complete AP/STA and final-session reporting in a new 15-minute acceptance run"
       ],
       "raw_forwarding_observations": {
         "status": "owned_pod_raw_interface_observations_and_intervals_implemented_per_neighbor_qualification_pending",
@@ -2257,6 +2256,48 @@
           "Join qualified complete inputs to native LinkMetricSource and independently verify controller values",
           "Complete AP/STA and final-session reporting; investigate native shutdown; repeat integrated 15-minute acceptance"
         ]
+      },
+      "qualification_scope": "Optional owned-isolated-peer-path-v1 software Ethernet profile only; no physical pod or arbitrary forwarding path",
+      "owned_peer_publisher": {
+        "profile": "owned-isolated-peer-path-v1",
+        "guide": "doc/protocol/native-peer-metrics.md",
+        "implementation": [
+          "src/emosa/simulation/peer_metrics.py",
+          "deploy/radio-manager/peer-path.py"
+        ],
+        "source_path": "Independent manager observes pod counters and VM bridge path before/after read; actual OpenSync-schema Interface.external_ids carries observations through OVSDB",
+        "contract": "Exactly three owned bridge ports; pod and adapter isolated from each other, controller reachable; no bridge IP endpoint; untagged VLAN 1; pod/VM veth aggregation and VLAN offloads disabled; current discovered peer and control context; one whole fresh common loss/service interval inside the path epoch",
+        "wire_mapping": {
+          "media_type": "Declared simulated Ethernet 1000BASE-T type 1; no physical PHY assertion",
+          "mac_capacity_mbps": 97,
+          "link_availability": "Whole-percent floor of observed estimated unused service on calibrated 100 Mb/s software path",
+          "phy_rate_unknown": 65535,
+          "rssi_unspecified": 255,
+          "counters": "Common-interval actual pod TX/RX packets and disjoint selected action/scheduler/interface losses"
+        },
+        "native_receipt": "Wire values independently match source intervals; later controller Interface.Stats values match packet/error fields. No external capacity/availability API assertion",
+        "independent_check": "scripts/check-native-peer-metrics.py",
+        "evidence": "doc/evidence/native-peer-metrics/README.md",
+        "fault_checks": [
+          "actual pod-port isolation disabled/restored, withdrawal without control/client failure",
+          "OVSDB disconnect and authenticated recovery",
+          "actual SIGKILL and fresh worker/control context",
+          "station telemetry pause retains independent peer metrics",
+          "neighbor-discovery gap withdraws bound metrics"
+        ],
+        "local_limits": {
+          "source_freshness_seconds": 2,
+          "path_read_budget_ms": 250,
+          "retained_collector_epochs": 8
+        },
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "active_seconds": 210.12358113300434,
+        "published_observations_checked": 255,
+        "common_counter_windows": 278,
+        "native_queries_answered": 2,
+        "connection_generations": 3,
+        "worker_processes": 2
       }
     }
   }

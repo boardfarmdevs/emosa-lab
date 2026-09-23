@@ -88,6 +88,12 @@ def check_native(directory):
     assert len(wired) == 1
     wifi = probe["em-baseline-wifi"]["supplicant"]["address"]
     transmitters = {pod["address"], wifi, *wired}
+    # A bridge can originate IPv6 control traffic through this port. Admit only
+    # its independently inventoried local identity, and only if captured; an
+    # arbitrary additional source still fails direction classification.
+    bridge = next(v for v in links["containers"]["em-baseline-agent"] if v["ifname"] == "br-lan")
+    if any(frame[6:12].hex(":") == bridge["address"] for _, frame in captured):
+        transmitters.add(bridge["address"])
     receivers = {
         controller["address"],
         "02:00:00:e0:00:01",

@@ -48,6 +48,8 @@ FIXED = (
     "neighbor-gap-check.json",
     "egress-observer-final.json",
     "egress-observations.jsonl",
+    "worker-stop.json",
+    "peer-path-gap-check.json",
 )
 PATTERNS = (
     "clients-*.json",

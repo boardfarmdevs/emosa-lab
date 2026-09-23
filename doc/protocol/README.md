@@ -40,6 +40,7 @@
 | [Receive and common-window accounting](receive-counter-accounting.md) | Interface arrival versus client delivery, selected ingress losses, exact Ubuntu source review and common transmit/receive intervals |
 | [Virtual-link capacity](virtual-link-capacity.md) | Explicit software service, framing calibration, independently captured work and OVSDB recovery; full neighbor metrics pending |
 | [Combined shaped-backhaul accounting](shaped-backhaul-accounting.md) | Selected action, scheduler and interface losses with common service intervals; actual queue overflow and native OVSDB recovery |
+| [Native peer-metric delivery](native-peer-metrics.md) | Isolated owned peer profile, observed OVSDB inputs, real IEEE 1905 replies, controller statistics and fault withdrawal |
 
 Component checks retain their individual scope. The native onboarding guide
 establishes the bounded simulated-pod exchange; full-profile sustained reporting

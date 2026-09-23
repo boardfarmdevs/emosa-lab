@@ -128,6 +128,7 @@ def observe(label, seconds):
                         hook: json_command("tc", "-j", "-s", "filter", "show", "dev", "eth1", hook)
                         for hook in ("root", "ingress", "egress")
                     }
+                    features = json_command("ethtool", "--json", "--show-features", "eth1")
                     after = json_command("ip", "-j", "-d", "link", "show", "eth1")
                     end = time.monotonic_ns()
                     drain()
@@ -138,6 +139,7 @@ def observe(label, seconds):
                         "link_after": after,
                         "qdiscs": qdiscs,
                         "filters": filters,
+                        "features": features,
                     }
                     if epoch != before_epoch:
                         current = None

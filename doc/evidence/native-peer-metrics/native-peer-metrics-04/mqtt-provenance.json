@@ -1,0 +1,13 @@
+{
+  "binary_sha256": "22cb8f9dbfda6032e26d230295c89d1a65bd8c675de89f6c29095715a83e25eb",
+  "packages": {
+    "libcjson1_1.7.17-1_amd64.deb": "43d758e214612877ec9029f2384bdbb0a6eeba6e74bb2cd3e7a60f4108947c41",
+    "libdlt2_2.18.10-10_amd64.deb": "da16d7a384317340f3ebd3aaf0fb0c2b4f57d9678ce69a8096ee8bd6b6b3d20f",
+    "libmosquitto1_2.0.18-1build3_amd64.deb": "edba87d69caa06bf98dcc2d2d17d82ab8cfc0e50b0d472f2806e87c615dcdc6f",
+    "libwebsockets19t64_4.3.3-1.1build3_amd64.deb": "31a0ac48e4f81092c7272e8bc7e6ef38dd78daf403f96baa232667aa999c5eea",
+    "libwrap0_7.6.q-33_amd64.deb": "36118b862539868408ee056411d6e470068d14c46e5296b29bfb744770f5d2ce",
+    "mosquitto_2.0.18-1build3_amd64.deb": "aa0c041d847a20ba4bc15110e87e6c848a478856d8f6c6bb04610618cfa173ea"
+  },
+  "transport": "owned private Unix socket",
+  "physical_qualified": false
+}

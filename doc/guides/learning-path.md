@@ -279,6 +279,12 @@ OpenSync-format telemetry. Work through these exercises in order:
     sender may block without overflowing the queue. Verify one common set of
     service/loss intervals through real OVSDB recovery and identify the remaining
     peer/media inputs before native publication.
+18. Follow [native peer-metric delivery](../protocol/native-peer-metrics.md).
+    Explain the isolated three-port path, the declared wired service profile
+    and its unknown physical PHY. Trace an actual controller query through
+    measured OVSDB inputs to a matching reply and native interface statistics.
+    Reproduce the path fault, reconnect and restart; classify deliberately
+    unavailable and post-exit queries using evidence rather than assumptions.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

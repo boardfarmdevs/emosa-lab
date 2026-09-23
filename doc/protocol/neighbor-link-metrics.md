@@ -1,9 +1,12 @@
 # Answer IEEE 1905 neighbor-link queries from qualified observations
 
 The query/response component and guarded measurement handoff are implemented.
-The native simulator now recognizes these queries and explicitly records missing
-measurements. **A qualified native publisher and native metric delivery remain
-pending.** Synthetic encoding checks are separate from measured behavior.
+The default native experiment explicitly records missing measurements. The
+optional [owned peer profile](native-peer-metrics.md) now provides measured
+replies and independently checked controller receipt. That profile requires
+observed bridge isolation, disabled aggregation and the declared software
+service; it establishes no physical-pod qualification. Synthetic encoding
+checks remain separate from measured behavior.
 
 ## Understand which link the controller is asking about
 

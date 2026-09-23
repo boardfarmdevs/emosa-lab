@@ -6,17 +6,20 @@ procedures, and validate restart/reconnect recovery in a 15-minute acceptance
 run. Measured OVSDB/MQTT station reporting, selected channel procedures and a
 fresh-session recovery supervisor are implemented. The [908-second operational run](../evidence/native-soak/README.md) passes both
 recovery faults without another Config write. The full acceptance still
-requires qualified policy/AP/STA/neighbor metrics and final disassociation
+requires fulfilled policy/AP/STA reporting, integrated neighbor metrics and final disassociation
 statistics; duration and recovery are separately reviewed operational checks.
 
 The [virtual-link calibration](../protocol/virtual-link-capacity.md) provides an
 explicit software service and an independently checked work estimate. The
 [combined source](../protocol/shaped-backhaul-accounting.md) now reconciles
 selected action and actual queue losses over common service intervals, including
-291 live intervals through both recovery faults. Next, qualify complete per-peer
-attribution and media/availability
-interpretation, then connect a complete source to native neighbor reporting.
-AP/STA reports and final-session statistics remain separate required work.
+291 live intervals through both recovery faults. The optional
+[native peer publisher](../protocol/native-peer-metrics.md) now adds observed
+isolation and disabled aggregation, sends checked measurements to the native
+controller and verifies received interface statistics. Next complete AP/STA
+reports and final-session statistics, resolve native shutdown, and run the full
+integrated 15-minute acceptance with every required source enabled. Physical
+and multiple-peer qualification remain separate work.
 
 The critical milestone is **real EasyMesh messages → EMOSA adapter → unchanged
 physical pod → independently observed behavior**. Neither an OVSDB component pass
@@ -149,7 +152,8 @@ fresh authenticated operations without duplicate Config writes. This supersedes
 the earlier empty-inventory and integration milestones described above.
 
 Complete sustained acceptance still needs mandatory reporting policy, qualified
-AP/STA/neighbor measurements and final session reporting. The
+AP/STA measurements, integration of the optional owned neighbor publisher and
+final session reporting. The
 [final-session component](../protocol/final-session-statistics.md) now implements
 encoding, bounded delivery and a guarded lifecycle handoff. Its final-counter
 publisher is unqualified. The [150-second native regression](../evidence/final-statistics/README.md)
