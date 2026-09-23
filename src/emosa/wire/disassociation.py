@@ -30,8 +30,9 @@ def unicast(address):
 class TrafficCounters:
     """Unsigned raw counters with explicitly qualified AP-relative semantics.
 
-    tx_packets counts successful packets; tx_retries counts retry-flag packets,
-    not retry attempts. The seven fields have no defaults. These meanings are
+    tx_packets counts successful packets; tx_retries counts transmitted packets
+    carrying the retry flag, including repeated retransmissions of one packet.
+    The seven fields have no defaults. These meanings are
     prerequisites for a publisher mapping, not consequences of decoding bytes.
     """
 

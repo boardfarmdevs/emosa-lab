@@ -32,6 +32,10 @@ source remains unqualified; the native lab does not invent missing counters.
 The [read-only station-removal observer](doc/protocol/station-removal-observations.md)
 now acquires kernel records and independently correlates actual disconnect
 reasons and EasyMesh leaves. Counter conversion and online delivery remain next.
+The [counter audit](doc/protocol/station-counter-accounting.md) reconciles six
+normal-traffic sessions against a loss-checked trace and the selected runtime
+kernel source. It identifies TX encryption-byte and RX management-packet
+accounting differences; these raw counters must not be forwarded unchanged.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 

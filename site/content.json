@@ -759,10 +759,22 @@
       "title": "Native station-removal evidence",
       "description": "Seven station lifetimes and six removal/reason/leave correlations in a 158.51-second native recovery experiment. Full measurement semantics and sustained acceptance remain pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/station-counter-accounting.md",
+      "title": "Reconcile final counters with captured packets",
+      "description": "Check capture completeness, reconstruct selected Ubuntu kernel sources, and explain TX encryption bytes and duplicate RX management-frame counts before choosing a conversion.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/counter-accounting/README.md",
+      "title": "Native counter accounting evidence",
+      "description": "Six sessions reconcile with 8,921 radio packets and zero reported capture drops; both recovery faults pass. Normal-traffic accounting only; qualified online reporting remains pending.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "station-removal/unit-results.xml",
+    "unit": "counter-accounting/unit-results.xml",
     "ovsdb": "wsc-wire/ovsdb-results.xml"
   }
 }

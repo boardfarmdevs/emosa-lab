@@ -23,7 +23,13 @@
 | [WSC cryptographic component](wsc-component.md) | Bounded cryptography, independent vectors and validation limits |
 | [WSC M1/M2 payloads](wsc-messages.md) | Payload construction, authentication and required-field checks |
 | [WSC radio interpretation](wsc-radio.md) | Authenticated BSS roles, teardown and complete-radio admission |
+| [Native simulated-pod onboarding](native-onboarding.md) | Real controller discovery/WSC through EMOSA, independent radio manager and client traffic |
+| [Sustained operation](sustained-operation.md) | 15-minute operational recovery, reporting gaps and full acceptance criteria |
+| [Final session statistics](final-session-statistics.md) | Implemented sender, guarded handoff and remaining measurement qualification |
+| [Station-removal observation](station-removal-observations.md) | Raw final kernel records, radio reasons and EasyMesh leave correlation |
+| [Station counter accounting](station-counter-accounting.md) | Capture health, exact Ubuntu source reconstruction, measured byte/packet boundaries and reproduction |
 
-Component checks do not establish a complete IEEE 1905/EasyMesh exchange.
-Specification-dependent wire validation and controller onboarding remain gated.
-Open-source reference behavior supplements the normative specifications.
+Component checks retain their individual scope. The native onboarding guide
+establishes the bounded simulated-pod exchange; full-profile sustained reporting
+and physical-pod qualification remain incomplete. Open-source reference behavior
+supplements the normative specifications.

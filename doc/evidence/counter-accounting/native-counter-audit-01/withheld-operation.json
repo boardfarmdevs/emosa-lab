@@ -1,0 +1,60 @@
+{
+  "operation": {
+    "operation_id": "1e4cd78d-e471-4608-a5c0-e0bc813fe977",
+    "initiating_interface": "wsc-component",
+    "state": "CONFIG_COMMITTED",
+    "reason": null,
+    "attempts": 1,
+    "commit_attribution": "reply",
+    "application_evidence": null,
+    "receipt": {
+      "scope": "owned_simulation_wsc_component",
+      "m1_sha256": "3af402c5f7dd452921fe3960de68e15d5beb1d2ad9993e0ed0e2fb1bb46d514c",
+      "controller_al": "020000e00001",
+      "agent_al": "020000003001",
+      "ruid": "020000ec0200",
+      "bssid": "020000ec0200",
+      "ingress": "probe0",
+      "link_generation": 1,
+      "database_generation": 1,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "first_mid": 19,
+      "pod_id": "pod-1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1"
+    }
+  },
+  "operations": [
+    {
+      "operation_id": "1e4cd78d-e471-4608-a5c0-e0bc813fe977",
+      "initiating_interface": "wsc-component",
+      "state": "CONFIG_COMMITTED",
+      "reason": null,
+      "attempts": 1,
+      "commit_attribution": "reply",
+      "application_evidence": null,
+      "receipt": {
+        "scope": "owned_simulation_wsc_component",
+        "m1_sha256": "3af402c5f7dd452921fe3960de68e15d5beb1d2ad9993e0ed0e2fb1bb46d514c",
+        "controller_al": "020000e00001",
+        "agent_al": "020000003001",
+        "ruid": "020000ec0200",
+        "bssid": "020000ec0200",
+        "ingress": "probe0",
+        "link_generation": 1,
+        "database_generation": 1,
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "first_mid": 19,
+        "pod_id": "pod-1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1"
+      }
+    }
+  ],
+  "operation_count": 1,
+  "writes": 1,
+  "journal_write_attempts": 1,
+  "process_id": "06a96382-abef-4f36-a4f0-150bbe3f77f2",
+  "config_ssid": "emosa-controller-trial",
+  "observed_ssid": "emosa-radio-initial"
+}

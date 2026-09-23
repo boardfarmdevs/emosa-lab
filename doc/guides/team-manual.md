@@ -3616,6 +3616,23 @@ packet counter can include attempted transmissions, while the requested
 EasyMesh counter counts successful ones. Inspect the guide's mapping table
 before connecting this source to the sender.
 
+Then follow the [counter accounting exercise](../protocol/station-counter-accounting.md)
+on HOST. First check whether the capture itself is complete, then check recovery,
+event correlation and finally the arithmetic. The earlier event-observation run
+captured all required disconnects but dropped 120 other packets; it cannot count
+every packet. The new run's larger capture buffer and independent completeness
+checks close that particular evidence gap.
+
+**Why inspect kernel source?** A field called `TX_BYTES64` sounds unambiguous,
+but our exact kernel adds it before encryption. Its captured protected frame is
+16 bytes longer. Receive packet bookkeeping also counts each of four management
+frames twice in these sessions. The new guide walks through actual numbers and
+provides a command to reconstruct the selected Ubuntu source files with verified
+hashes, without changing the running kernel. Learn those boundaries before
+choosing a conversion: subtracting a constant learned from one session is not a
+general mapping. Failed/retried traffic and the selected counter definitions
+remain qualification work before an online producer can supply the sender.
+
 **Why change the advertised byte unit?** The current virtual agent uses
 Profile-1, whose traffic counters are in bytes. Earlier experiments advertised
 KiB in an accompanying capability TLV but never sent traffic counters. The new

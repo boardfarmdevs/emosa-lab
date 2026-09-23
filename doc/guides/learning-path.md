@@ -211,6 +211,11 @@ OpenSync-format telemetry. Work through these exercises in order:
    with the native controller and both recovery faults. Trace a removal-time
    counter record to the independent radio reason and EasyMesh leave. Distinguish
    verified acquisition from the remaining qualification of counter meanings.
+7. Follow the [counter accounting exercise](../protocol/station-counter-accounting.md)
+   on HOST. Check capture completeness before comparing final counters against
+   packets. Reproduce the first-session byte arithmetic and source provenance;
+   explain the extra management-frame counts and why normal-traffic agreement
+   leaves failure/retry semantics and online reporting unqualified.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

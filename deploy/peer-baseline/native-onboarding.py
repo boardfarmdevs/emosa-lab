@@ -83,6 +83,8 @@ async def experiment(
         "recovery_checks_requested": recovery_checks,
         "agent_counter_units": 0,
         "station_removal_observation_requested": observe_station_removal,
+        "capture_health_required": True,
+        "capture_buffer_kib": 8192,
     }
     write(directory / "result.json", report)
     write(
@@ -137,6 +139,8 @@ async def experiment(
             [
                 "tcpdump",
                 "--immediate-mode",
+                "-B",
+                str(report["capture_buffer_kib"]),
                 "-i",
                 interface,
                 "-U",
@@ -567,6 +571,12 @@ async def experiment(
                     errors.append("capture_timeout")
             if child.returncode != 0:
                 errors.append("capture_failed")
+        for name in ("radio", "ethernet"):
+            path = directory / (name + "-capture.log")
+            if path.exists():
+                drops = re.findall(r"^(\d+) packets dropped by kernel$", path.read_text(), re.M)
+                if drops != ["0"]:
+                    errors.append(name + "_capture_loss_or_missing_statistics")
         await admin.close()
         await db.stop()
         for container in radio["NODES"]:

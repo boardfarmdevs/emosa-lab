@@ -34,6 +34,12 @@ delivery follows the radio frame by 17.2–23.3 ms. No netlink loss or truncatio
 was reported. These bounds describe this run, not a general delivery guarantee.
 See the [retained evidence](../evidence/station-removal/README.md).
 
+That historical radio capture reports 120 dropped packets. All six required
+disconnect frames were captured, preserving this scoped event-correlation result;
+it cannot support complete packet accounting. Continue with the
+[loss-checked counter audit](station-counter-accounting.md), which repeats the
+experiment with larger capture buffers and reconciles all six final records.
+
 ## Why these are not yet EasyMesh counters
 
 **Final timing and counter meaning are separate requirements.** Obtaining a
@@ -46,7 +52,7 @@ required by EasyMesh 6.1 Table 58 and its Wi-Fi Data Elements reference.
 | `RX_PACKETS` / `TX_PACKETS` | Present kernel packet counts | Linux transmit bookkeeping increments before success is known; distinguish management/data packets and successful delivery |
 | `TX_FAILED` | Explicit kernel failure-status counter, including observed zero | Establish coverage of failed, filtered, queued and discarded packets relative to EasyMesh |
 | `RX_DROP_MISC` | Explicit miscellaneous receive-drop counter | Do not rename all drops as received-in-error packets without qualifying the causes |
-| `TX_RETRIES` | Explicit accumulated kernel retry count | Establish the relation to packets sent with the retry flag; attempts and distinct packets are different quantities |
+| `TX_RETRIES` | Explicit accumulated kernel retry count | Establish the relation to transmitted retry-flag packets, including repeated retransmissions of the same original packet; exercise nonzero retries/failures |
 | `ASSOC_AT_BOOTTIME` | Distinct association timestamp for each observed lifetime | Bind a production source to its clock, restart epoch and association identity |
 | Reason attribute absent | The removal event does not supply an 802.11 reason | The independent radio capture proves actual reasons in this experiment; an online publisher still needs a qualified reason join |
 
@@ -127,11 +133,12 @@ The Linux v6.8 primary sources identify the relevant behavior:
 - [`nl80211.c`](https://github.com/torvalds/linux/blob/v6.8/net/wireless/nl80211.c#L18761-L18789): station-removal multicast emission, including the empty-information fallback.
 - [`tx.c`](https://github.com/torvalds/linux/blob/v6.8/net/mac80211/tx.c#L1025-L1039) and [`status.c`](https://github.com/torvalds/linux/blob/v6.8/net/mac80211/status.c#L1151-L1163): transmit bookkeeping and subsequent status/retry accounting.
 
-The executed kernel is Ubuntu `6.8.0-139-generic`; the upstream review locates
-candidate mechanisms and does not qualify every distribution change. Next audit
-the exact runtime implementation and referenced counter definitions, use the
-retained per-TID information where appropriate, and exercise failed/retried/queued
-traffic before selecting conversions. Join a qualified online reason source to
+The executed kernel is Ubuntu `6.8.0-139-generic`. The subsequent
+[counter audit](station-counter-accounting.md) reconstructs and hashes the selected
+source files with Ubuntu's exact `6.8.0-139.139` patch. It explains normal-traffic
+accounting but does not qualify every path or the referenced counter definitions.
+Next exercise failed/retried/queued traffic before selecting conversions; per-TID
+fields also need semantic review. Join a qualified online reason source to
 the same association, then connect the complete record to the implemented sender
 and require live controller acknowledgments in full sustained acceptance.
 AP/STA policy metrics and IEEE 1905 neighbor measurements remain separate work.

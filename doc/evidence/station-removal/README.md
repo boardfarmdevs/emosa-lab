@@ -25,6 +25,11 @@ Results:
 The source **does not yet qualify EasyMesh counter semantics**. Linux's attempted
 transmit counts, byte accounting, miscellaneous drops and retry accumulation
 must not be renamed as EasyMesh's required quantities without further review.
+Subsequent review found **120 radio capture drops** in this trial. All six
+required disconnect frames remain present, so its event-correlation result holds;
+complete packet accounting cannot be inferred. The
+[new counter audit](../counter-accounting/README.md) retains that capture log and
+uses a fresh zero-drop run for quantitative packet/byte comparison.
 No measured final-statistics CMDU was sent; full sustained and physical-pod
 acceptance remain false. See the
 [observation guide](../../protocol/station-removal-observations.md) for the exact

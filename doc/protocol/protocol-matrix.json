@@ -1811,8 +1811,22 @@
         "new_station_events": 7,
         "removal_events": 6,
         "reason_source": "Independent radio capture, not a reason attribute in kernel removal events",
-        "remaining": "Qualify counter meanings, exact runtime accounting and online reason/session join before sender integration",
-        "measurement_semantics_qualified": false
+        "remaining": "Qualify EasyMesh conversion, nonzero failure/retry/queue paths and online reason/session join before sender integration",
+        "measurement_semantics_qualified": false,
+        "counter_accounting": {
+          "status": "six_normal_traffic_sessions_reconciled_with_loss_checked_capture",
+          "guide": "doc/protocol/station-counter-accounting.md",
+          "independent_check": "scripts/check-station-accounting.py",
+          "evidence": "doc/evidence/counter-accounting/native-counter-audit-01/independent-accounting-check.json",
+          "source_reproduction": "scripts/review-station-kernel.py",
+          "source_provenance": "doc/evidence/counter-accounting/source-provenance.json",
+          "runtime_provenance": "doc/evidence/counter-accounting/kernel-runtime.json",
+          "kernel_package_version": "6.8.0-139.139",
+          "counter_reference": "EasyMesh 6.1 Table 58; selected Wi-Fi Data Elements 3.0 package still pending",
+          "public_crosscheck": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.RetransCount",
+          "raw_counter_passthrough_valid": false,
+          "final_counter_source_qualified": false
+        }
       }
     }
   }

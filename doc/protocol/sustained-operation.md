@@ -266,6 +266,12 @@ It does not copy the private journal, secret store, native configurations or ful
 logs. Use `--candidate candidate-YOUR-BUILD` if your staged candidate has another
 name; the default matches the command above.
 
+New runs retain radio/Ethernet tcpdump statistics and require
+[capture-health checks](station-counter-accounting.md): zero reported drops,
+matching captured/filter/pcap totals, and complete packet records. Each capture
+uses an 8 MiB buffer. Historical runs retain their original scoped checks; a
+complete-counter claim cannot reuse a capture that dropped packets.
+
 ```bash
 python3 scripts/collect-native-review.py native-soak-learning-01 .lab/native-soak-learning-review
 python3 scripts/check-native-recovery.py .lab/native-soak-learning-review
@@ -326,6 +332,13 @@ present counters and association timestamps. Six records independently correlate
 with actual radio disconnect reasons and EasyMesh leaves. This narrows the gap to
 counter semantics and an online reason join; it does not enable final-statistics
 delivery or qualify an unchanged physical pod.
+
+The follow-on [counter accounting audit](station-counter-accounting.md) now
+reconciles six normal-traffic sessions against a loss-checked trace and the exact
+Ubuntu source subset. It finds different TX/RX byte boundaries and duplicate RX
+management-frame packet accounting. These explain why raw counters are not ready
+for forwarding; failed/retried traffic, selected definitions and an online
+conversion/reason source still need qualification.
 
 ## Upstream references and reproducibility
 

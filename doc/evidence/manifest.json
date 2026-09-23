@@ -5514,8 +5514,8 @@
     },
     {
       "path": "station-removal/README.md",
-      "sha256": "742c2cc5eaf27336958971608f8976941fd159073f3802233a2566d71821d65c",
-      "size": 2779
+      "sha256": "1f3bd80bd5c4e300189c4f743d81032ebe608a96e7d2a80f96975e841f56bbd7",
+      "size": 3137
     },
     {
       "path": "station-removal/native-final-source-01/active-inventory-0000.json",
@@ -5921,6 +5921,446 @@
       "path": "station-removal/unit-results.xml",
       "sha256": "68af399f5d025c1e47def2b5064aa37729913e59fd81b98f4c28bfbe79ead9f7",
       "size": 4406783
+    },
+    {
+      "path": "counter-accounting/kernel-runtime.json",
+      "sha256": "6d213d3e646078449374a0c020af83fefbb436f03515a6bb5028ac4f85a4dd99",
+      "size": 1289
+    },
+    {
+      "path": "counter-accounting/unit-results.xml",
+      "sha256": "754416d511ac625ccb78cd02bc3e172c0c3a57b3aa5c91fcbee3c2c3416aa96b",
+      "size": 4408350
+    },
+    {
+      "path": "counter-accounting/README.md",
+      "sha256": "a8de655da51717c9a1a2065447e2f336e8ff8697fca3610c07d6d744dda66564",
+      "size": 2853
+    },
+    {
+      "path": "counter-accounting/source-provenance.json",
+      "sha256": "cb7a7e4dcb52e367a0c09ed78476c4b9357447cebc4d86d3cf343dfff4254827",
+      "size": 1406
+    },
+    {
+      "path": "counter-accounting/native-final-source-01-radio-capture.log",
+      "sha256": "fa9a5e7bb55e0cc4e1e8066167d1cea2e73278c2edf2c6d295b22f2baee56065",
+      "size": 201
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0000.json",
+      "sha256": "b0b54987a12a7b2874c325a465c7776f6605374d86deceb48c97556c14d07d86",
+      "size": 2635
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0017.json",
+      "sha256": "68c6f58b9b9f2b7bb9579b4204afb06872846ee06aa9468d1aacce18ba0e06a3",
+      "size": 33154
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/ethernet-capture.log",
+      "sha256": "4f5790b4dbd62852c74855891c3a1d2b5c75cf7bfd29ad87d6b6af91b30853f3",
+      "size": 172
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/source-hashes.json",
+      "sha256": "1d9d7f8019681386ac74616d9b8ed7506883e52ebe7d72fe8e2933e393fddc1b",
+      "size": 11548
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/controller-before.json",
+      "sha256": "efe24c6ddb3954d4717111ef5e5db1b8cf192c0ecbd80abc44900bd3a382fff2",
+      "size": 10353
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0016.json",
+      "sha256": "a320c9d0fbfecb1d74627797308ec0d1d080f15b127e1c69c721064a53c8d8bf",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0015.json",
+      "sha256": "dbfc037b1bdbe6d0302063ba049e6bc5ff74dbb3eadcb66fe1b5c3ed657c7fca",
+      "size": 2635
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-session-0010.json",
+      "sha256": "50a113c2dc7c12a41a77f9756e8684f0384dc962ed636e8f3590bbe1281361d2",
+      "size": 6800
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-session-0008.json",
+      "sha256": "b159aea4c6345374f64b01360dbe2bd77ad97241fb974644875a686c7326a248",
+      "size": 6645
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/native-session.json",
+      "sha256": "075b7ea203415954759c956009991b7e7862703a91e8cfb2aafb872103e0675b",
+      "size": 3223
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0008.json",
+      "sha256": "7d780c14ae3c73ed03e7e09e5d035171e7995f2f2417e1cd6814315a7f040ca3",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0010.json",
+      "sha256": "0ded48530d61c5be46fb291671d0ff0b2cc89e94c3991008fd6e71bc0cc5ba1c",
+      "size": 33153
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-inventory-0014.json",
+      "sha256": "deb7bb7465b90036fee273a83c19eb84a3ea34984d4fc4e8615d4e68f8d1c0c2",
+      "size": 32362
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/independent-accounting-check.json",
+      "sha256": "f814df7ce768e97130b9d208b8bd8e61ee294d378b7483c35f7ef002e192f3a6",
+      "size": 3246
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0011.json",
+      "sha256": "8ee0dc9c83c08faca827dd25b4512bc11c0572565a6d2232316667c81d093a6d",
+      "size": 33153
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0018.json",
+      "sha256": "7e07a0fb0b08929ebb53508cd87d8dff66f3565458d0a9c0ab2a6c81a471140b",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0003.json",
+      "sha256": "e22ca24b606a3d4ea93ee64332713f05434cb81b68f6f39ba54642f901516dfa",
+      "size": 2636
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/em-baseline-wifi-continuous-ping.log",
+      "sha256": "23d0098ba718b71c41f9248992fb1d8a92462ce26587758e64348dcf8ed79cb0",
+      "size": 42135
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0011.json",
+      "sha256": "ab5aa671af5d83d9c9a7728e073fc456ff630fa619d4babca98c6aa209e74ca7",
+      "size": 2632
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0013.json",
+      "sha256": "37283023ac7303ab6862991d105524ef1c4e661fbb20e111d8eebbe79173af83",
+      "size": 2632
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/manager.jsonl",
+      "sha256": "27a92403b872817b61cc62e6db21b46bb4578fd2dc824c1a896952b79b435016",
+      "size": 139212
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/independent-observation-check.json",
+      "sha256": "a0c57cde3ea3633c1d906608436fc655bbfaaf5b170d60a1955da44b53ba7084",
+      "size": 4544
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0007.json",
+      "sha256": "b9b3d2f0a2b2978abf28b636036619c03327ca067178f62b98bb4646f9443f9f",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-inventory-0008.json",
+      "sha256": "d01ccf1cc6300e279559823edb64361afe724045b87e5883e93b19e44d069b01",
+      "size": 32362
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/station-events.jsonl",
+      "sha256": "880545ca6053fda79ca402201ea0a137e8ed39870c9cf15c2a697f7cd02f5c49",
+      "size": 35418
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0005.json",
+      "sha256": "52fbfb74fa935ae6102cad0064ef64f80acb4659a49515561b5366b5d5a21c6f",
+      "size": 2635
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-session-0014.json",
+      "sha256": "d108626ccc967e780ee272db1c644557f949e1277809d4d5a5a7ab4b0172f9f8",
+      "size": 2772
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0010.json",
+      "sha256": "1ba2f08bc5017cbe9794a92f4b9b41952503a4e59168a57bef51eb00f6634102",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0001.json",
+      "sha256": "9068ca09e972476984e6711bf60bfeb4e68e450c0bdfbf1f16696c449990f30e",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0002.json",
+      "sha256": "5483931caa8ddfbe0f431ae632fabe4d0d80b6036ccecad50ef8ed770b585f6c",
+      "size": 33154
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0017.json",
+      "sha256": "9b7a962d56cb27008e06f26d2c11f19f612ed8e4e56497ff8d152e342ae2be76",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-session-0021.json",
+      "sha256": "8c5b7bbae1211a0922a00489f61bd4c763e50caaa03a7a3ef90028a581ad784d",
+      "size": 3147
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-session-0017.json",
+      "sha256": "22fd01ae3e5758b1b891698c515820570f4db57c349201c527f0c1c65876c164",
+      "size": 2926
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0006.json",
+      "sha256": "6341dbea57f26fa94971b6712ebc2b6ba2ee061e0027c61f38abb714388389dd",
+      "size": 33153
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0015.json",
+      "sha256": "b39b0eba6b736fc3e2790bfef54dc1e063f90d0633b778cc9b0434e64ba12957",
+      "size": 33152
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/native-operation.json",
+      "sha256": "36ad824fbdb4c1035151a6d3e3ca329e123f2bec72bbce5947c3d14c6b00e765",
+      "size": 4856
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/withheld-operation.json",
+      "sha256": "9996176ee9358d78c57f40af0dd1ae1c0e3649b0f253eba0642c3f11cebbfb7f",
+      "size": 1963
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/independent-recovery-check.json",
+      "sha256": "89491f22f57f345438622652a2602469048d7c648eff0e9a0a18d2abe24229ac",
+      "size": 3382
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0020.json",
+      "sha256": "a29ad0333429b6c77174ddf5d96d564c2bac424096c6c3ebcca716a2832561b2",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0000.json",
+      "sha256": "d917a0455c6515d40881dbe56bcdb1913ebda6a1435788a07c78753ff4999382",
+      "size": 37313
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-inventory-0005.json",
+      "sha256": "96eaaddd55f8b2959ce9a2c53da3dfd79749023901f8ffccb0cf9ce3f6a04557",
+      "size": 32363
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-onboarded.json",
+      "sha256": "16b8d2f16bdb5e55841b6575601e6dd2be811a2b76739543d3a54a17f56b9fa7",
+      "size": 2621
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0008.json",
+      "sha256": "9f05d03c8b5d8d0a5fcdfed122b393adedd3b36b62c577bc00bcce3ca906ffbf",
+      "size": 33154
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/em-baseline-wired-continuous-ping.log",
+      "sha256": "85da43c8c538de378bc2bdcb45903159e841e49a88e12478267863f1acb5cf07",
+      "size": 49874
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-inventory-0010.json",
+      "sha256": "f441e1ffd814c01f82ab69cfad544f259764e5ce6c3586a71e2c7ee9a3d0805e",
+      "size": 32363
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/radio-capture.log",
+      "sha256": "d0c787e8a4cd9d68cb241336dbbec5d6f5c60f485b70b91c9c595faac4d5f221",
+      "size": 199
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0002.json",
+      "sha256": "3745ace35bbf7bdc9c0961426db959e4884d9b1ec43a3e61a16e0904271aa3d8",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/ethernet.pcap",
+      "sha256": "a570769f7db4f77fdf1a31953e1c140c7d1e3c3b00f6808f1cb730e48d104d9c",
+      "size": 10052
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0006.json",
+      "sha256": "fa7d11aa9b7d5093563c5452d538e0efc31dbd75a0ac1476e17e03a92b7b01f4",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0019.json",
+      "sha256": "efb43748df6093cd9518ba073eb29a9bee1aa78e036301493a0bb98c80709922",
+      "size": 33153
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-inventory-0017.json",
+      "sha256": "3d48d080df278a1aaa5c68846371b52aaad1d7940716d5f3f3cdacecaa80f187",
+      "size": 32363
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0005.json",
+      "sha256": "5a415af438429212ccb3dc801ea74903d7e2612c702e9feb2a2e231adc427f5c",
+      "size": 33154
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/controller-after.json",
+      "sha256": "8b691b2ac1c47707d788d75d6937c2df7f8e757b7074bfb6fca797b605837d16",
+      "size": 31317
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0020.json",
+      "sha256": "a2531103f9c851146af52268e7cd92590febe18f2689d366dbdc361c5df32109",
+      "size": 33154
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0012.json",
+      "sha256": "22e6cee56dfa2663502c8a60c5a7b621dfd951f996e7f62027f460e7cee8985b",
+      "size": 33153
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/recovery-checks.json",
+      "sha256": "1b0287c50ea89712a95492309899b733cbc2144e8c220b413c5e3aa659f80d64",
+      "size": 42118
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0004.json",
+      "sha256": "92b9fa502cf7dee1e7548bdeb3b37e857975995aa24c1cefd111aadc3afb2e77",
+      "size": 2636
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0014.json",
+      "sha256": "5629936c3408442032d05b5377bd689963c247c87d841060d2a2f77bd238a737",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0021.json",
+      "sha256": "b68f7c6f4396b065acbd37355122b86a1a73de630ddf0cf56c47ccd508cf2352",
+      "size": 33154
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0013.json",
+      "sha256": "65f60ab534046858b1095a1577c51351ef9e5b13375dee933486985699b687be",
+      "size": 33154
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0014.json",
+      "sha256": "d87e7e801ead61f23e890c16e2021aed7151059515388c3f479de334c5a2bf77",
+      "size": 33154
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-recovery-1.json",
+      "sha256": "f3f16835b83e504c4bd51ad6145627799321a48a62aecf072a20e8cacddd8968",
+      "size": 2632
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0009.json",
+      "sha256": "142ed8307bf6db50879ae4a350d7da1b87b7edd3ba79a1fb4f37dbf1526d9ab8",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0003.json",
+      "sha256": "1b72a07a3b45001932693d05c486723417d998d2f8ce284f7cdcc04afa338693",
+      "size": 33154
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0007.json",
+      "sha256": "9d2e572d6d1478e9e6da7973889dbebdec28f3562fcece6ea573356a3c0ebaad",
+      "size": 33153
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-samples.json",
+      "sha256": "d2f553041af1488359e68db0796f8fe30893d8618184f45f6ddf6d8a75a58da8",
+      "size": 143547
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/client-outages.json",
+      "sha256": "ac46c732c0e8fc112586632b9a50c585bcc37e9057818352734f91d470568744",
+      "size": 508
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/candidate-trial.json",
+      "sha256": "c3378716f494b729cc3e193e8c1f2d7ca17b4b5a70ddbad4e6711e849793b064",
+      "size": 13535
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0016.json",
+      "sha256": "a819dfb796f916beb5cb41052acffef382a9b1b025929a4f8eadbbc99cd1942a",
+      "size": 33153
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-recovery-0.json",
+      "sha256": "f5fa535189e11d6db056bc80fe1b298bb10f19eeecfab87c883d5212b00df72e",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/result.json",
+      "sha256": "e71a47b1456025c18e5da1329941ad851327c38439a62c67e9112e6bf45b4fed",
+      "size": 12162
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0012.json",
+      "sha256": "8c09d9d687917c40d0a5da21a92a4e93d8523a88b8dd830cccab584e10647c0b",
+      "size": 2632
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0019.json",
+      "sha256": "e82db0ec460fda0f9604725cbd3a5043f08890d67e4193ca311260fd1851afd7",
+      "size": 2634
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-inventory-0021.json",
+      "sha256": "aa7a08846eee08f64e47181d27c07482a1293743406a4110ad4c46b7c0487366",
+      "size": 32363
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0001.json",
+      "sha256": "199c4b9034805c0d9a6724032bcf2f17b20c580e503b8ff6a2ca019c6559392a",
+      "size": 37315
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/radio.pcap",
+      "sha256": "95ed0d8cf92371a3067f5b35b47e9a57ca3a656506f41519800592893efdeb50",
+      "size": 1728598
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0018.json",
+      "sha256": "c8dc0ba8d8a016d2ef9221b277b9ecf545474f05dd142ba65e337c4e5bf1b8e6",
+      "size": 33153
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0009.json",
+      "sha256": "be0205ac4e509ab73ec7ad60017a5e3a2451c954665ab3df071300c86c645fa4",
+      "size": 33152
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/active-inventory-0004.json",
+      "sha256": "540bfa258e7c6aabc7239ce3963f23dd84f293466ac7e2f2a10ca502d78e4338",
+      "size": 33154
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/clients-active-0021.json",
+      "sha256": "badaf192a458d81148b4c74b4307334d142a84f99f41f0e9caafd3c2af4bba7b",
+      "size": 2636
+    },
+    {
+      "path": "counter-accounting/native-counter-audit-01/detached-session-0005.json",
+      "sha256": "52b98d03e909bbdb8101ba6f4f854fe09ed219040b2a0394f1bd84843ed1d2f3",
+      "size": 3094
     }
   ]
 }

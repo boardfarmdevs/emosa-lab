@@ -8,6 +8,7 @@ import argparse
 import hashlib
 import json
 import re
+import runpy
 import struct
 import subprocess
 import xml.etree.ElementTree as ET
@@ -72,6 +73,11 @@ def value(packet, kind):
 
 def check(directory, tool, *, initial_only=False):
     result, operation = read(directory / "result.json"), read(directory / "native-operation.json")
+    capture_health = None
+    if result.get("capture_health_required"):
+        capture_health = runpy.run_path(str(Path(__file__).with_name("check-capture-health.py")))[
+            "check"
+        ](directory)
     if initial_only:
         initial = result.get("initial_operation", result["operation"])
         assert initial["operation"]["operation_id"] == operation["operations"][0]["operation_id"]
@@ -234,6 +240,7 @@ def check(directory, tool, *, initial_only=False):
         "operations": 1,
         "writes": 1,
         "advertised_byte_counter_units": counter_units,
+        "capture_health": capture_health,
         "frames": len(rows),
         "m1_sha256": receipt["m1_sha256"],
         "capability_report_frame": capability["frame"],

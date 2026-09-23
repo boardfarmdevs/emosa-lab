@@ -30,6 +30,8 @@ FIXED = (
     "recovery-checks.json",
     "client-outages.json",
     "station-events.jsonl",
+    "radio-capture.log",
+    "ethernet-capture.log",
 )
 PATTERNS = (
     "clients-*.json",

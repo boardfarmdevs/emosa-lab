@@ -1,0 +1,112 @@
+{
+  "kernel_accounting_checks_passed": true,
+  "scope": "exact captured normal-traffic counter accounting, not EasyMesh qualification",
+  "kernel": "6.8.0-139-generic",
+  "capture_health": {
+    "ethernet": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 101,
+      "captured": 101,
+      "received_by_filter": 101,
+      "dropped_by_kernel": 0
+    },
+    "radio": {
+      "passed": true,
+      "linktype": 127,
+      "pcap_records": 8921,
+      "captured": 8921,
+      "received_by_filter": 8921,
+      "dropped_by_kernel": 0
+    }
+  },
+  "sessions": [
+    {
+      "observed_lifetime": 1,
+      "tx_packets": 179,
+      "tx_acknowledgments": 179,
+      "tx_mpdu_bytes": 23839,
+      "kernel_tx_bytes": 21071,
+      "protected_tx_packets": 173,
+      "tx_ccmp_bytes_not_in_kernel_counter": 2768,
+      "rx_packets": 184,
+      "kernel_rx_packets": 188,
+      "rx_management_counted_twice": 4,
+      "rx_mpdu_bytes": 23342
+    },
+    {
+      "observed_lifetime": 2,
+      "tx_packets": 141,
+      "tx_acknowledgments": 141,
+      "tx_mpdu_bytes": 18662,
+      "kernel_tx_bytes": 16502,
+      "protected_tx_packets": 135,
+      "tx_ccmp_bytes_not_in_kernel_counter": 2160,
+      "rx_packets": 143,
+      "kernel_rx_packets": 147,
+      "rx_management_counted_twice": 4,
+      "rx_mpdu_bytes": 18305
+    },
+    {
+      "observed_lifetime": 3,
+      "tx_packets": 66,
+      "tx_acknowledgments": 66,
+      "tx_mpdu_bytes": 8577,
+      "kernel_tx_bytes": 7617,
+      "protected_tx_packets": 60,
+      "tx_ccmp_bytes_not_in_kernel_counter": 960,
+      "rx_packets": 68,
+      "kernel_rx_packets": 72,
+      "rx_management_counted_twice": 4,
+      "rx_mpdu_bytes": 8517
+    },
+    {
+      "observed_lifetime": 4,
+      "tx_packets": 147,
+      "tx_acknowledgments": 147,
+      "tx_mpdu_bytes": 19484,
+      "kernel_tx_bytes": 17228,
+      "protected_tx_packets": 141,
+      "tx_ccmp_bytes_not_in_kernel_counter": 2256,
+      "rx_packets": 149,
+      "kernel_rx_packets": 153,
+      "rx_management_counted_twice": 4,
+      "rx_mpdu_bytes": 18978
+    },
+    {
+      "observed_lifetime": 5,
+      "tx_packets": 96,
+      "tx_acknowledgments": 96,
+      "tx_mpdu_bytes": 12615,
+      "kernel_tx_bytes": 11175,
+      "protected_tx_packets": 90,
+      "tx_ccmp_bytes_not_in_kernel_counter": 1440,
+      "rx_packets": 99,
+      "kernel_rx_packets": 103,
+      "rx_management_counted_twice": 4,
+      "rx_mpdu_bytes": 12508
+    },
+    {
+      "observed_lifetime": 6,
+      "tx_packets": 125,
+      "tx_acknowledgments": 125,
+      "tx_mpdu_bytes": 16519,
+      "kernel_tx_bytes": 14615,
+      "protected_tx_packets": 119,
+      "tx_ccmp_bytes_not_in_kernel_counter": 1904,
+      "rx_packets": 127,
+      "kernel_rx_packets": 131,
+      "rx_management_counted_twice": 4,
+      "rx_mpdu_bytes": 16161
+    }
+  ],
+  "raw_counter_passthrough_valid": false,
+  "final_counter_source_qualified": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "remaining": [
+    "Selected Wi-Fi Data Elements definitions and qualified online conversion",
+    "Failed/retried/queued traffic, different frame forms and source-loss behavior",
+    "AP airtime/ESP and neighbor measurements; full reporting and 15-minute acceptance"
+  ]
+}
