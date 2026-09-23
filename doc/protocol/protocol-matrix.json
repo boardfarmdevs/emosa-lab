@@ -3,7 +3,7 @@
   "architecture_version": "3.6",
   "status": "blocked",
   "gate": "P0",
-  "reviewed_on": "2026-09-21",
+  "reviewed_on": "2026-09-22",
   "specifications": {
     "ieee1905": null,
     "easymesh": null,
@@ -21,20 +21,55 @@
       "base_doi": "10.1109/IEEESTD.2013.6502164",
       "amendment_edition": "IEEE Std 1905.1a-2014",
       "amendment_reference": "https://standards.ieee.org/ieee/1905.1a/5820/",
-      "access_status": "pending_external_inputs_operator_confirmed_no_local_copies_or_subscription",
+      "access_status": "operator_supplied_local_pdfs_verified_selected_clauses_reviewed",
       "publisher_status": "Inactive-Reserved; still explicitly referenced by EasyMesh 6.1 section 2",
-      "selection_status": "proposed",
-      "content_sha256": null,
-      "user_access_needed": "Lawfully accessible base and amendment PDFs, or an IEEE subscription-access route. Full clauses, amendments and applicable corrections must be reviewed before freezing P0.",
+      "selection_status": "selected_for_envelope_component_full_procedure_proposed",
+      "content_sha256": {
+        "base": "60c627535e51709ea0312f20764a029dad4805a4f5a193f7f471d5abf6e04378",
+        "amendment": "ca12c819be35f519ccd0fe073ea3c47ac7395797c7c063b099f1a12df3fba609"
+      },
+      "user_access_needed": null,
+      "operator_confirmation_history": [
+        {
+          "date": "2026-09-15",
+          "editions": [
+            "IEEE Std 1905.1-2013",
+            "IEEE Std 1905.1a-2014"
+          ],
+          "local_copies": "not_available",
+          "subscription_access_mechanism": "not_supplied",
+          "dependent_wire_validation": "pending"
+        }
+      ],
       "operator_confirmation": {
-        "date": "2026-09-15",
-        "editions": [
-          "IEEE Std 1905.1-2013",
-          "IEEE Std 1905.1a-2014"
+        "date": "2026-09-22",
+        "local_copies": "supplied_and_verified",
+        "base_path": "/home/rev/19051-2013.pdf",
+        "amendment_path": "/home/rev/19051a-2014.pdf",
+        "dependent_wire_validation": "envelope_implemented_complete_procedures_pending"
+      },
+      "artifacts": [
+        {
+          "edition": "IEEE Std 1905.1-2013",
+          "bytes": 1164726,
+          "pages": 93,
+          "sha256": "60c627535e51709ea0312f20764a029dad4805a4f5a193f7f471d5abf6e04378"
+        },
+        {
+          "edition": "IEEE Std 1905.1a-2014",
+          "bytes": 2725558,
+          "pages": 52,
+          "sha256": "ca12c819be35f519ccd0fe073ea3c47ac7395797c7c063b099f1a12df3fba609"
+        }
+      ],
+      "redistributed": false,
+      "corrections_check": {
+        "date": "2026-09-22",
+        "sources": [
+          "https://standards.ieee.org/ieee/1905.1/4995/",
+          "https://standards.ieee.org/ieee/1905.1a/5820/"
         ],
-        "local_copies": "not_available",
-        "subscription_access_mechanism": "not_supplied",
-        "dependent_wire_validation": "pending"
+        "finding": "No separate correction identified on inspected publisher records and targeted publisher search; not a comprehensive absence claim"
       }
     },
     "easymesh": {
@@ -121,31 +156,31 @@
       "specification": "ieee1905-2013-with-2014-amendment",
       "sections": [
         "6.2",
-        "7.1.1",
-        "7.1.2",
-        "7.2",
-        "7.3",
-        "7.4",
-        "7.6",
-        "7.7"
+        "6.2.1 Tables 6-2/6-3/6-4",
+        "6.3.1",
+        "6.3.7-6.3.9",
+        "6.4",
+        "7.1-7.9",
+        "8.2.1-8.2.2",
+        "10.1.1-10.1.2"
       ],
-      "verification": "section_pointers_only_from_EasyMesh_6.1_15_not_IEEE_full_text",
-      "purpose": "Retrieve and verify base CMDU framing, fragmentation, reassembly and transmission/reception rules, including amendment effects."
+      "verification": "local_base_and_amendment_selected_clauses_reviewed",
+      "purpose": "Frozen bounded envelope component and base discovery inspection; complete procedure applicability remains pending",
+      "guide": "doc/protocol/ieee1905-envelope.md"
     }
   ],
   "cross_cutting_gaps": [
-    "IEEE base and amendment full text, amendment effects and applicable corrections are unavailable.",
+    "IEEE base/amendment obtained on 2026-09-22; selected envelope/discovery/autoconfiguration clauses reviewed. Complete procedure/feature/dependency audit remains pending.",
     "A complete mandatory/optional/conditional field and profile-applicability audit is pending; current entries are partial source-backed research.",
-    "Byte-level lengths, ordering, duplicate detection, message-ID rollover, all timers/retries, reassembly limits and malformed/unknown-field behavior are not yet frozen.",
+    "Envelope lengths, TLV-boundary reassembly, reserved fields and MID rollover implemented; complete procedure timers, retries, relay/trust and malformed/unknown-field dispatch remain pending.",
     "IEEE 802.11-2024 is verified and selected definitions reviewed; full field mappings and actual target capability/regulatory evidence remain pending.",
-    "Independent full-message packet vectors and peer interpretation remain pending. Independent WSC crypto and M1/M2 payload vectors are retained separately; they contain no IEEE frames.",
+    "Independent native envelope/header/TLV-boundary vectors now retained. Full procedure/crypto/exchange/controller interpretation remains pending.",
     "No physical-pod mapping or independent-controller qualification has been completed.",
     "IEEE 802.3-2015 remains unavailable; supplied 802.3-2022 Clause 3 was reviewed without selecting a normative substitution. Actual link-state/frame-interface qualification remains pending.",
     "Wi-Fi Alliance Security Requirements referenced by EasyMesh section 13 have no obtained full text or resolved edition."
   ],
   "document_ambiguities": [
     "EasyMesh 6.1 section 2 reference [2] names the IEEE 1905.1-2013 base but links to an amendment URL; reference [11] separately names 1905.1a-2014. Preserve and review both documents.",
-    "EasyMesh 6.1 section 17.1.3 points to IEEE section 6.3.8 for WSC, while its section 6.1 uses that IEEE pointer for the autoconfiguration response. Verify the WSC base clause from IEEE rather than silently correcting the reference.",
     "EasyMesh 6.1 section 9.1, section 17.1.7 and section 18 must be read together to resolve feature-conditional reporting for the proposed Profile-1 subset.",
     "Section 6.2 Topology Query prose references Profile-2 AP Capability in a Search message; preserve the reference and resolve any needed interpretation before freezing the query contract.",
     "Section 6.1 requires Profile-2 AP Capability in the stated Profile-1 Search case although section 17.1.1 does not list it. See the available procedure audit.",
@@ -211,47 +246,60 @@
             "8",
             "6.3.3"
           ],
-          "verification": "section_pointers_from_EasyMesh_6.1_6.2_and_17.1.4_only"
+          "verification": "selected_base_and_amendment_clauses_reviewed_full_procedure_contract_pending"
         }
       ],
       "messages": [
         {
           "name": "Topology Discovery",
-          "message_type": null,
-          "source": null,
-          "status": "pending_IEEE_normative_verification"
+          "message_type": "0x0000",
+          "source": "IEEE 1905.1-2013 Table 6-4 and 6.3.1",
+          "status": "verified_identifier_and_base_message_contract"
         },
         {
           "name": "Topology Query",
           "message_type": "0x0002",
           "source": "wfa-easymesh-6.1 section 17.1 Table 22",
-          "status": "verified_identifier_only"
+          "status": "restricted_component_implemented_full_procedure_pending"
         },
         {
           "name": "Topology Response",
           "message_type": "0x0003",
           "source": "wfa-easymesh-6.1 section 17.1 Table 22",
-          "status": "verified_identifier_only"
+          "status": "restricted_component_implemented_full_procedure_pending"
         }
       ],
       "tlvs": [],
       "tlv_audit_status": "WFA_inclusion_reviewed_complete_base_and_feature_field_contract_pending",
-      "timers": [],
+      "timers": [
+        {
+          "event": "Send Topology Response with Query MID",
+          "maximum_seconds": 1,
+          "source": "IEEE 1905.1-2013 8.2.2.2 p.48",
+          "status": "restricted_builder_and_guarded_send_implemented_coordinator_pending"
+        }
+      ],
       "verified_findings": [
         "EasyMesh extends the IEEE topology response with service and BSS reporting; section 6.2 adds client reporting when clients are present.",
         "Current profile indications and profile-conditional extensions require a complete audit; the static message list alone is insufficient.",
         "Report virtual protocol adjacency separately from the physical pod backhaul; BSSID/radio/client facts need fresh qualified evidence."
       ],
-      "vectors": [],
+      "vectors": [
+        "tests/fixtures/protocol/reports/native-values.json"
+      ],
       "implementation_refs": [
-        "wireshark-4.4.0-ieee1905"
+        "wireshark-4.4.0-ieee1905",
+        "src/emosa/wire/reports.py",
+        "src/emosa/wire/topology_values.py"
       ],
       "remaining_gaps": [
-        "IEEE discovery format/timing and complete base response TLVs remain unverified.",
+        "Restricted read-only report coordinator with real database source and isolated Ethernet tested; full trusted-link/discovery lifecycle, paired LLDP and native controller integration remain pending.",
         "Real physical topology and mandatory supported-resource inventory are not yet qualified."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
-      "available_rule_audit": "doc/protocol/procedure-audit.md"
+      "reason": "Restricted builder and guarded delivery tested; qualified actual facts and complete native controller integration remain pending.",
+      "available_rule_audit": "doc/protocol/procedure-audit.md",
+      "component_status": "restricted_query_response_builder_and_packet_exercise_implemented_full_procedure_blocked",
+      "component_contract": "doc/protocol/reports.md"
     },
     {
       "name": "AP autoconfiguration search/response",
@@ -286,7 +334,7 @@
             "6.3.7",
             "6.3.8"
           ],
-          "verification": "section_pointers_from_EasyMesh_6.1_6.1_only"
+          "verification": "selected_base_and_amendment_clauses_reviewed_full_procedure_contract_pending"
         }
       ],
       "messages": [
@@ -294,13 +342,13 @@
           "name": "AP-Autoconfiguration Search",
           "message_type": "0x0007",
           "source": "wfa-easymesh-6.1 section 17.1 Table 22",
-          "status": "verified_identifier_only"
+          "status": "selected_fields_and_bounded_exchange_implemented_full_procedure_pending"
         },
         {
           "name": "AP-Autoconfiguration Response",
           "message_type": "0x0008",
           "source": "wfa-easymesh-6.1 section 17.1 Table 22",
-          "status": "verified_identifier_only"
+          "status": "selected_fields_and_bounded_exchange_implemented_full_procedure_pending"
         }
       ],
       "tlvs": [],
@@ -311,16 +359,22 @@
         "Section 6.1 contains current Profile-1 capability and controller-capability requirements that must be reconciled with the message definitions.",
         "This exchange alone causes no OVSDB configuration change."
       ],
-      "vectors": [],
+      "vectors": [
+        "tests/fixtures/protocol/wsc-messages/vectors.json",
+        "doc/evidence/peer-baseline/samples/wired/ethernet.pcap"
+      ],
       "implementation_refs": [
-        "wireshark-4.4.0-ieee1905"
+        "wireshark-4.4.0-ieee1905",
+        "src/emosa/wire/autoconfiguration.py"
       ],
       "remaining_gaps": [
-        "IEEE search cadence, response timers, relaying, retry and duplicate rules need the base and amendment.",
+        "Full live coordinator, scheduling/relay and trusted-link behavior; selected IEEE encoding, MID and exchange failure rules now implemented.",
         "Selected peer profile and all conditional security/capability TLVs remain unresolved."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
-      "available_rule_audit": "doc/protocol/procedure-audit.md"
+      "reason": "Bounded component implemented; complete profile, trusted-link coordinator and operation binding remain pending.",
+      "available_rule_audit": "doc/protocol/procedure-audit.md",
+      "component_status": "selected_exchange_component_implemented_full_procedure_blocked",
+      "component_contract": "doc/protocol/autoconfiguration.md"
     },
     {
       "name": "AP capability query/report",
@@ -395,7 +449,7 @@
         "Mandatory feature/field interpretation is pending complete profile audit.",
         "IEEE 802.11-2024 selected references are now inspected; complete field mapping and actual represented-pod capability evidence remain pending."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
+      "reason": "IEEE base/amendment obtained and envelope component implemented; complete normative procedure/profile contract and exchange validation remain pending.",
       "available_rule_audit": "doc/protocol/procedure-audit.md"
     },
     {
@@ -463,7 +517,7 @@
           "sections": [
             "10.1"
           ],
-          "verification": "section_pointer_from_EasyMesh_6.1_7.1_only"
+          "verification": "selected_base_and_amendment_clauses_reviewed_full_procedure_contract_pending"
         }
       ],
       "messages": [
@@ -471,7 +525,7 @@
           "name": "AP-Autoconfiguration WSC",
           "message_type": "0x0009",
           "source": "wfa-easymesh-6.1 section 17.1 Table 22",
-          "status": "verified_identifier_only"
+          "status": "selected_fields_and_bounded_exchange_implemented_full_procedure_pending"
         }
       ],
       "tlvs": [],
@@ -492,18 +546,24 @@
         "The candidate WPS edition explicitly reserves current EasyMesh extensions. It does not authorize substituting plaintext credentials or skipping authenticator verification.",
         "Reject an unsupported overall semantic request before any pod write; map its wire behavior only after the IEEE/EasyMesh failure rules are verified."
       ],
-      "vectors": [],
+      "vectors": [
+        "tests/fixtures/protocol/wsc-messages/vectors.json",
+        "doc/evidence/peer-baseline/samples/wired/ethernet.pcap"
+      ],
       "implementation_refs": [
-        "wireshark-4.4.0-ieee1905"
+        "wireshark-4.4.0-ieee1905",
+        "src/emosa/wire/autoconfiguration.py"
       ],
       "remaining_gaps": [
-        "IEEE WSC encapsulation, ordering, retry/duplicate and failure behavior require full normative review.",
-        "Independent full IEEE/EasyMesh message vectors remain pending; independent WSC crypto and M1/M2 payload vectors already exist (see component_selections).",
+        "Full live coordinator, scheduling/relay and trusted-link behavior; selected IEEE encoding, MID and exchange failure rules now implemented.",
+        "Independent native WSC payload and captured-envelope inputs tested together; independent live full-controller-to-operation proof pending.",
         "The one-BSS component patch has not been qualified as full-radio WSC semantics.",
         "Hardware must establish sole-BSS radio scope or a complete supported mapping; shared management/backhaul dependencies and recovery remain unverified."
       ],
-      "reason": "Proposal only. Full IEEE corpus, complete normative matrix and independent vectors remain missing.",
-      "available_rule_audit": "doc/protocol/procedure-audit.md"
+      "reason": "Bounded component implemented; complete profile, trusted-link coordinator and operation binding remain pending.",
+      "available_rule_audit": "doc/protocol/procedure-audit.md",
+      "component_status": "selected_exchange_component_implemented_full_procedure_blocked",
+      "component_contract": "doc/protocol/autoconfiguration.md"
     }
   ],
   "gate_completion_requirements": [
@@ -759,10 +819,21 @@
       "edition": "Wi-Fi Data Elements Specification 3.0 package including TR-181-2-17_DEr3.xlsx",
       "source_url": "https://www.wi-fi.org/file-member/wi-fi-data-elements-specification-package",
       "status": "pending_authorized_package_access",
-      "needed_for": "EasyMesh 6.1 reference 10 and section 17.2.59 Table 82 Device.CollectionInterval; required capability-report definition, not merely ODH transport",
+      "needed_for": "EasyMesh 6.1 reference 10 and section 17.2.59 Table 82 Device.CollectionInterval; required capability-report definition, not merely ODH transport; also section 17.2.35 Table 58 STA byte/packet/error/retry definitions for final and periodic reports",
       "access_checked_on": "2026-09-22",
       "access_result": "Publisher member route redirects to Wi-Fi Alliance login; no package or credentials supplied",
       "wire_value_implemented": false
+    },
+    {
+      "id": "ieee8021ab-2009",
+      "edition": "IEEE Std 802.1AB-2009",
+      "access_status": "not_supplied_dependency_identified",
+      "source_sections": [
+        "IEEE 1905.1-2013 section 6.1 printed p.27",
+        "IEEE 1905.1-2013 section 8.2.1.2 printed p.48"
+      ],
+      "affected_work": "LLDP bridge discovery accompanying a live Topology Discovery procedure; not required by the current unicast transport probe",
+      "content_sha256": null
     }
   ],
   "available_procedure_audit": {
@@ -857,16 +928,6 @@
       }
     }
   ],
-  "independent_work_while_ieee1905_pending": {
-    "available_authorities": [
-      "Wi-Fi EasyMesh 6.1 for its fully specified extensions and procedures",
-      "WPS 2.0.10 for selected WSC payload/authentication components",
-      "IEEE 802.11-2024 for referenced radio definitions"
-    ],
-    "permitted_scope": "Implement and independently test standalone components whose normative definitions are complete in the available sources; continue semantic service/radio tests and native peer observations.",
-    "boundary": "No guessed IEEE base rules, no P0 freeze, no complete wire onboarding or physical acceptance claim from component tests.",
-    "document": "doc/protocol/ieee-media-review.md"
-  },
   "synthetic_topology_projection": {
     "status": "implemented_simulation_diagnostic_only",
     "guide": "doc/guides/observed-topology.md",
@@ -1061,5 +1122,846 @@
       "Actual unchanged-pod capability evidence and independently observed behavior"
     ]
   },
-  "first_complete_experiment_contract": "doc/guides/first-wire-experiment.md"
+  "first_complete_experiment_contract": "doc/guides/first-wire-experiment.md",
+  "resolved_ambiguities": [
+    {
+      "question": "EasyMesh 6.1 section 17.1.3 points to IEEE section 6.3.8 for WSC, while its section 6.1 uses that IEEE pointer for the autoconfiguration response. Verify the WSC base clause from IEEE rather than silently correcting the reference.",
+      "resolution": "IEEE base WSC message is 6.3.9, WSC TLV 6.4.18; 6.3.8 is autoconfiguration response",
+      "source": "operator-supplied IEEE Std 1905.1-2013 printed pp.32,43; reviewed 2026-09-22"
+    }
+  ],
+  "independent_component_work": {
+    "available_authorities": [
+      "Wi-Fi EasyMesh 6.1 for its fully specified extensions and procedures",
+      "WPS 2.0.10 for selected WSC payload/authentication components",
+      "IEEE 802.11-2024 for referenced radio definitions",
+      "IEEE 1905.1-2013 and IEEE 1905.1a-2014 operator-supplied full texts"
+    ],
+    "permitted_scope": "Implement and independently test standalone components whose normative definitions are complete in the available sources; continue semantic service/radio tests and native peer observations.",
+    "boundary": "Envelope, restricted discovery/reports and owned WSC operation components implemented. Synthetic Ethernet WSC now drives OVSDB/hwsim/independent clients; no full P0 freeze, qualified profile, native controller inventory or physical acceptance.",
+    "document": "doc/protocol/ieee1905-envelope.md"
+  },
+  "ieee1905_envelope": {
+    "status": "selected_contract_implemented",
+    "guide": "doc/protocol/ieee1905-envelope.md",
+    "implementation": [
+      "src/emosa/wire/cmdu.py",
+      "src/emosa/wire/inspection.py",
+      "src/emosa/wire/ethernet.py"
+    ],
+    "tests": [
+      "tests/test_ieee1905.py"
+    ],
+    "independent_vectors": "tests/fixtures/protocol/ieee1905/native-envelope.json",
+    "independent_check": "scripts/check-ieee1905-reference.py",
+    "evidence": "doc/evidence/ieee1905/summary.json",
+    "ieee_access_gate_satisfied": true,
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "local_limits": {
+      "timeout_seconds": 5,
+      "contexts": 64,
+      "fragments": 64,
+      "message_bytes": 65536,
+      "total_buffer_bytes": 2097152,
+      "tlvs": 256
+    },
+    "not_implemented": [
+      "DPP octet-boundary fragmentation",
+      "VLAN encapsulation",
+      "reserved-message relay and interface authentication",
+      "live discovery/topology/capability state machine",
+      "Live coordinator and durable WSC-to-operation integration (bounded exchange component implemented separately)"
+    ]
+  },
+  "autoconfiguration_exchange": {
+    "status": "selected_bounded_components_implemented",
+    "guide": "doc/protocol/autoconfiguration.md",
+    "implementation": [
+      "src/emosa/wire/autoconfiguration.py",
+      "src/emosa/wire/inspection.py"
+    ],
+    "tests": [
+      "tests/test_autoconfiguration.py",
+      "tests/test_ieee1905.py"
+    ],
+    "evidence": "doc/evidence/autoconfiguration/summary.json",
+    "sources": [
+      {
+        "specification": "IEEE 1905.1-2013",
+        "sections": [
+          "6.2 Table 6-4 p.30",
+          "6.3.7-9 p.32",
+          "6.4.13-18 pp.42-43",
+          "7.8 p.46",
+          "10.1-10.1.2 pp.56-57"
+        ]
+      },
+      {
+        "specification": "IEEE 1905.1a-2014",
+        "sections": [
+          "7.9 p.18",
+          "10.1.4 p.24 (periodic scheduler still pending)"
+        ]
+      },
+      {
+        "specification": "EasyMesh 6.1",
+        "sections": [
+          "5.2.2 p.28",
+          "6.1 pp.62-63",
+          "7.1 pp.67-69",
+          "15.1 p.104",
+          "17.1.1-3 p.111",
+          "17.2.94 Table 117 p.182"
+        ]
+      },
+      {
+        "specification": "WPS 2.0.10",
+        "sections": [
+          "7.2-3",
+          "7.5",
+          "8.3.9 Table 20"
+        ]
+      }
+    ],
+    "scope": "Search/M1 encoding; selected Response correlation; complete M2 authentication bound to explicit peer/link generation and RUID; secret candidate only, no backend or operation calls",
+    "local_limits": {
+      "default_exchange_seconds": 5,
+      "default_transmissions": 3,
+      "maximum_exchange_seconds": 60,
+      "maximum_transmissions": 16,
+      "maximum_m2_payloads": 16,
+      "maximum_peer_source_macs": 16,
+      "offline_search_keys": 4096
+    },
+    "normative_rules": [
+      "Search uses multicast/relay=1; Response is unicast/relay=0 with the Search MID; WSC uses new MIDs.",
+      "Agent Search identifies Registrar/Controller services and highest fully implemented profile; narrow component emitter limited to Profile-1 2.4/5 GHz, without qualifying that profile.",
+      "M1 contains Basic, WSC, Profile-2 and Advanced capability TLVs; AL in WSC MAC; capability RUIDs agree.",
+      "M2 RUID identifies initiating radio; authenticate the complete received WSC set; no partial mapping of extra BSS/M8/teardown/configuration companions.",
+      "Retried requests may use new MID; original active M1 transcript remains the authenticator input; failed parameter configuration requires fresh discovery.",
+      "MAC binding and WSC transcript authentication do not establish the trusted link/controller authority required by IEEE 10.1."
+    ],
+    "local_policies": [
+      "Fixed deadline from creation; retries/duplicates do not extend it; close releases private material references without claiming memory erasure.",
+      "Identical accepted M2 bytes under a new MID return the same candidate; re-encrypted M2 is authenticated again and must match the entire decoded configuration to be duplicate; conflicting configurations are rejected.",
+      "Wrong peer/link generation/radio does not consume a valid pending exchange; coordinator must explicitly invalidate changed bindings.",
+      "Reject 0xB5/0xB6/0xE0/0xE1/0xEB/0xEC configuration companions and unsupported 0xAB/0xAC security processing; ignore unrelated unknown TLVs."
+    ],
+    "native_observation": {
+      "capture": "doc/evidence/peer-baseline/samples/wired/ethernet.pcap",
+      "search_frame": 1,
+      "response_frame": 2,
+      "search_profile": 2,
+      "response_profile": 1,
+      "controller_capability_hex": "40",
+      "kib_mib_bit7_present": false,
+      "security_capability_present": false,
+      "independent_check": "tshark frame 2 raw bytes dd000140; older labels do not replace EasyMesh 6.1 Table 117"
+    },
+    "pending": [
+      "Complete profile/feature qualification and native profile/capability reconciliation",
+      "Table 117 early capability bit-6/reserved overlap; restricted early report implemented, integrated procedure/admission pending",
+      "Security capability applicability and trusted-link lifecycle",
+      "Full topology, capability and scheduled controller-facing coordinator",
+      "Native lifecycle admission and physical scope qualification; owned durable handoff and recovery now tested separately",
+      "Controller-to-OVSDB/hwsim causal run and unchanged physical-pod qualification"
+    ],
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "operations_created": 0
+  },
+  "controller_reports": {
+    "status": "restricted_complete_message_builders_implemented_full_procedures_pending",
+    "guide": "doc/protocol/reports.md",
+    "implementation": [
+      "src/emosa/wire/reports.py",
+      "src/emosa/wire/topology_values.py",
+      "src/emosa/easymesh_payloads.py",
+      "src/emosa/simulation/wire_reports.py"
+    ],
+    "tests": [
+      "tests/test_wire_reports.py",
+      "scripts/check-report-reference.py",
+      "deploy/wire/check-endpoint.py"
+    ],
+    "evidence": "doc/evidence/reports/summary.json",
+    "sources": [
+      {
+        "specification": "IEEE 1905.1-2013",
+        "sections": [
+          "6.3.3 p.31",
+          "6.4.5-9 pp.35-38",
+          "8.2.2.2 p.48"
+        ]
+      },
+      {
+        "specification": "IEEE 1905.1a-2014",
+        "sections": [
+          "6.3.3 p.7",
+          "6.4.5 p.8",
+          "6.4.7 Tables 6-12/13 pp.9-10"
+        ]
+      },
+      {
+        "specification": "EasyMesh 6.1",
+        "sections": [
+          "5.2.2 p.28",
+          "6 Table 14 p.62",
+          "6.2 pp.63-64",
+          "17.1 Table 22 pp.107-110",
+          "17.1.4 pp.111-112",
+          "17.1.62 p.119",
+          "17.2.5 Table 28 pp.126-127",
+          "17.2.75 Table 98 pp.171-172",
+          "17.2.78 Table 101 pp.173-174",
+          "17.2.109 Table 132 pp.195-196"
+        ]
+      },
+      {
+        "specification": "IEEE 802.11-2024",
+        "sections": [
+          "9.4.2.23.2 Table 9-188 p.1048",
+          "9.4.2.23.3 Table 9-190 pp.1049-1050"
+        ]
+      }
+    ],
+    "scope": "Early Report 0x8043 for explicit non-DFS 2.4 GHz/optional HT/PSK/CCMP pure-fronthaul scope; Profile-1 Topology Response 0x0003 for complete restricted synthetic inventories. Not AP Capability Report 0x8002.",
+    "normative_rules": [
+      "Topology Response echoes Query MID and is sent within one second of complete Query receipt.",
+      "Device Information required; Bridging Capability required with more than one local interface; neighbor lists include known per-interface neighbors.",
+      "Selected EasyMesh Wi-Fi 6/7 media types 0x0108/0109 carry zero media-specific bytes; reserved IEEE media/role values require ignoring the whole TLV.",
+      "Report actual Operational BSS and BSS Configuration consistently; include clients when present with big-endian association age saturated at 65535.",
+      "Early Report includes AP/Radio Basic/AKM/Profile-2/Radio Advanced/Supported Cipher Suites and applicable technology companions before M1 when requested."
+    ],
+    "local_policies": [
+      "Coordinator-supplied complete facts and explicit conditional absence; no unknown-to-absent default.",
+      "Opaque source token covers adapter instance/pod/binding generation/database revision/input hashes; maximum two-second source window; original lease cannot be renewed by callback.",
+      "Synchronous source and clock rechecks before/after every fragment; late/partial transmissions fail without claiming emitted bytes were recalled.",
+      "32 radios, 64 local interfaces, 256 clients and 256 neighbors per interface maximum in this local report builder; generic TLV byte budget remains 16383."
+    ],
+    "native_findings": {
+      "capture": "doc/evidence/peer-baseline/samples/wired/ethernet.pcap",
+      "early_frame": 3,
+      "early_missing_cipher_tlv": "0xED",
+      "akm_backhaul_count": 0,
+      "akm_fronthaul_count": 0,
+      "topology_frame": 20,
+      "local_interface_count": 5,
+      "missing_bridging_tlv": "0x04",
+      "wifi6_media_length_observed": 10,
+      "wifi6_media_length_selected": 0,
+      "fixture": "tests/fixtures/protocol/reports/native-values.json",
+      "independent_dissectors": [
+        "tshark 3.6.2",
+        "tshark 4.2.2"
+      ]
+    },
+    "pod_qualification_gap": "Pinned Wifi_Associated_Clients schema has no association age; qualify an existing source or actual association episode. Adapter first-seen is not association time.",
+    "pending": [
+      "Read-only coordinator and owned database source tested; qualified actual facts and full trusted-link/discovery admission pending",
+      "Applicable ACK/retry scheduling and full AP Capability/Profile obligations",
+      "Native peer profile/security/media compatibility",
+      "Controller inventory visibility and durable WSC-to-operation binding",
+      "OVSDB/hwsim causal run then unchanged physical-pod proof"
+    ],
+    "new_isolated_af_packet_runs": 2,
+    "native_controller_used": false,
+    "operations_created": 0,
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "report_coordinator": {
+    "status": "read_only_runtime_component_tested_with_owned_ovsdb_fixture",
+    "guide": "doc/protocol/report-coordinator.md",
+    "implementation": [
+      "src/emosa/wire/coordinator.py",
+      "src/emosa/simulation/report_source.py",
+      "src/emosa/simulation/coordinator.py",
+      "src/emosa/simulation/coordinator_wire.py"
+    ],
+    "tests": [
+      "tests/test_report_coordinator.py",
+      "tests/test_report_coordinator_ovsdb.py",
+      "scripts/check-report-reference.py"
+    ],
+    "evidence": "doc/evidence/coordinator/summary.json",
+    "sources": [
+      {
+        "specification": "IEEE 1905.1-2013",
+        "sections": [
+          "7.7 p.45 (unseen unicast processing)",
+          "7.8 p.46 (sequential modulo-65536 new MIDs)",
+          "8.2.2.2 p.48 (Topology Response echo/deadline)"
+        ]
+      },
+      {
+        "specification": "IEEE 1905.1a-2014",
+        "sections": [
+          "7.9 p.18 (unknown/reserved TLV reception)"
+        ]
+      },
+      {
+        "specification": "EasyMesh 6.1",
+        "sections": [
+          "5.2.2 p.28 (Early Report before M1 when required)",
+          "15.1 p.104 (unicast notification Ack and new-MID retry)",
+          "17.1.32 pp.115-116 (Ack contents)",
+          "17.2.36 Table 59 p.148 (Error Code)"
+        ]
+      }
+    ],
+    "scope": "One explicitly bound peer/pod source, Topology Query/Response and Early Report/Ack. No Discovery admission, M1 trigger, full AP Capability handler or operation-engine callback.",
+    "source_contract": [
+      "Atomic immutable facts from one snapshot and explicit synthetic capability/virtual-adjacency inputs; only owned fixture source currently implemented.",
+      "Source instance and immutable pod/peer/input context plus invalidation epoch and monotonically ordered database generation/revision distinguish observations.",
+      "Changed facts under unchanged revision, backwards observation times and expired publication are rejected. Renewing the source cannot extend an already prepared message.",
+      "Read-only OVSDB session monitors selected noncredential columns. Complete schema selection and graph, role/security/band/channel and explicit client absence checked.",
+      "Config-only changes keep observed SSID; separate manager State updates change wire reports. Unknown client age and disconnect withdraw source. Reconnect requires fresh complete inventory."
+    ],
+    "local_limits": {
+      "pending_early_reports": 1,
+      "early_transmissions": 3,
+      "retry_interval_seconds": 0.25,
+      "ack_budget_seconds": 1,
+      "fixture_source_lease_seconds": 1,
+      "maximum_source_lease_seconds": 2,
+      "query_burst": 8,
+      "queries_per_second": 4,
+      "query_mid_retention_seconds": 5,
+      "query_mid_entries": 128,
+      "diagnostic_events": 64
+    },
+    "local_policies": [
+      "Ack accepted only for a completely sent still-live attempt from the bound peer/link generation; any live retry MID can correlate it.",
+      "Errors and unsupported security companions do not become successful receipts; unrelated unknown TLVs ignored.",
+      "Partial/late sends are failures; already emitted bytes cannot be recalled. No durable notification recovery or cryptographic Ethernet replay claim.",
+      "Unsupported WSC/AP Capability inputs produce diagnostic events and no operation. Source availability is not profile qualification."
+    ],
+    "new_af_packet_runs": 2,
+    "pending": [
+      "Actual pod fact/profile and trusted-link qualification",
+      "Discovery/profile admission and full AP Capability requirements",
+      "Native controller inventory and peer compatibility",
+      "Admitted lifecycle integration of the separately tested durable WSC handoff and real-message-driven OVSDB/hwsim/client experiment",
+      "Unchanged physical-pod acceptance"
+    ],
+    "adapter_config_writes": 0,
+    "fixture_admin_and_manager_writes": true,
+    "native_controller_used": false,
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "discovery_report_session": {
+    "implementation": [
+      "src/emosa/wire/discovery_session.py",
+      "src/emosa/simulation/discovery.py",
+      "src/emosa/simulation/discovery_wire.py"
+    ],
+    "tests": [
+      "tests/test_discovery_session.py",
+      "tests/test_discovery_session_ovsdb.py",
+      "scripts/check-discovery-reference.py"
+    ],
+    "guide": "doc/protocol/discovery-session.md",
+    "evidence": "doc/evidence/discovery-session/summary.json",
+    "sources": [
+      {
+        "specification": "IEEE 1905.1-2013",
+        "sections": [
+          "7.8 p.46 (new MID allocation)",
+          "8.2.2.2 p.48 (Topology Response echo and deadline)",
+          "10.1-10.1.2 pp.56-57 (trusted link and discovery correlation)"
+        ]
+      },
+      {
+        "specification": "EasyMesh 6.1",
+        "sections": [
+          "6.1 p.63 (Search/Response roles, services, profiles, KiBMiB and non-DPP Early indication)",
+          "6.2 pp.63-64 (topology service discovery)",
+          "17.1.2 p.111 (Security Capability inclusion)",
+          "17.2.67 Table 90 p.167 (three security capability octets)",
+          "17.2.94 Table 117 p.182 (named bits and unresolved reserved-range overlap)"
+        ]
+      }
+    ],
+    "scope": "Explicitly bound trusted-link simulation peer; selected Response checks precede read-only topology. No automatic Early Report, M1, operation callback or native controller admission.",
+    "rules": [
+      "Only fresh complete restricted 2.4 GHz capability/source facts permit Search.",
+      "Known Response capability gaps, invalid lengths and reserved algorithms are recorded without invented defaults.",
+      "Named Table117 bits inspected diagnostically; overlap unresolved and automatic Early Report blocked.",
+      "Source loss, new connection generation, lapsed lease even without polling, or changed capability facts discard correlation and require a fresh Search.",
+      "Ordinary timely database revisions retain controller correlation; topology uses current observed State.",
+      "Failed or late Search transmission discards the exchange; old MIDs cannot restore a new attempt.",
+      "ReportSource context is process instance, invalidation epoch and DB connection generation, separate from per-report revision stamp."
+    ],
+    "local_limits": {
+      "search_transmissions": 3,
+      "search_spacing_seconds": 1,
+      "attempt_budget_seconds": 5,
+      "event_history": 64
+    },
+    "pending": [
+      "Table117 clarification and automatic Early ordering",
+      "Complete profile/security applicability and AP Capability Report",
+      "LLDP and periodic registrar-detection lifecycle",
+      "Compatible native controller with its own inventory proof",
+      "Full discovery/profile admission into the owned WSC-to-operation component",
+      "Qualified unchanged physical pod and independent behavior"
+    ],
+    "full_procedure_gate_satisfied": false,
+    "native_controller_used": false,
+    "adapter_config_writes": 0,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "wsc_operation_handoff": {
+    "status": "owned_simulation_component_implemented",
+    "guide": "doc/protocol/wsc-provisioning.md",
+    "evidence": "doc/evidence/wsc-provisioning/summary.json",
+    "implementation": [
+      "src/emosa/wire/operation_bridge.py",
+      "src/emosa/reconcile.py",
+      "src/emosa/store.py",
+      "src/emosa/secrets.py",
+      "src/emosa/simulation/wsc_provisioning.py",
+      "schemas/wsc-receipt.schema.json"
+    ],
+    "tests": [
+      "tests/test_wsc_operation_bridge.py",
+      "tests/test_wsc_provisioning.py"
+    ],
+    "independent_peer": {
+      "source": "hostapd 2.11 unmodified WPS helpers and validators",
+      "harness": "deploy/wire/component-registrar.c",
+      "build": "scripts/build-wsc-registrar.py",
+      "scope": "synthetic payload exerciser, not a controller or normative substitute",
+      "fresh_entropy": true
+    },
+    "sources": [
+      {
+        "specification": "IEEE 1905.1-2013",
+        "sections": [
+          "10.1-10.1.2 pp.56-57 (trusted link, parameter-configuration phase, failure restarts discovery)"
+        ]
+      },
+      {
+        "specification": "EasyMesh 6.1",
+        "sections": [
+          "7.1 pp.67-69 (per-radio request and whole BSS scope)",
+          "17.1.3 p.111 (M2 and conditional configuration companions)",
+          "15.1 p.104 (retry with new MID)"
+        ]
+      },
+      {
+        "specification": "WPS 2.0.10",
+        "sections": [
+          "7.2-7.3, 7.5 and 8.3.9 Table 20 (M1/M2, authenticated settings)",
+          "Network Key Table 40 (selected printable PSK)"
+        ]
+      }
+    ],
+    "local_policies": [
+      "Only isolated owned simulation; public request/serve cannot choose wsc-component origin and full-wire gate stays closed.",
+      "One complete supported pure-fronthaul WPA2-PSK/CCMP M2 for one existing BSS. Unsupported companions/roles or multiple M2s reject the whole request.",
+      "Persist private credential before atomically journaling initial event, WSC receipt and operation; no second semantic request supplies configuration.",
+      "Bind exchange, peer/link generation, radio/BSSID, schema, database generation and graph; atomic Config/State/identity guards protect submission.",
+      "Same live complete configuration reuses operation across MIDs/re-encryption. Changed duplicates reject; no exactly-once claim across new enrolments.",
+      "Restart cancels unsent component work; submitted work becomes uncertain and is reconciled without resubmission. Old transcript authority is not restored.",
+      "Fresh observations after reconnect can resolve unknown application while commit attribution stays unknown.",
+      "30-second component lifetime/deadline is local. Orphan secrets before journal commit need production retention/GC; owned temporary vault is cleaned by fixture."
+    ],
+    "cases": [
+      "configure and duplicate",
+      "lost database reply",
+      "BSSID changes before atomic transaction",
+      "real SIGKILL after commit before journal reply"
+    ],
+    "origin": "wsc-component",
+    "ethernet_delivery": "serialized frames decoded in memory",
+    "real_ovsdb": true,
+    "adapter_config_writes": true,
+    "socket_io": false,
+    "automatic_discovery_early_m1_admission": false,
+    "regular_service_activation": false,
+    "native_controller_used": false,
+    "radio_or_client_observed": false,
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "pending": [
+      "Admitted native discovery/Early/capability/WSC lifecycle and controller inventory",
+      "Controller profile/capability compatibility and remaining normative dependencies",
+      "Production exchange/credential lifecycle and multi-agent wire demultiplexing",
+      "Qualified unchanged physical pod and independently observed behavior"
+    ],
+    "follow_on": "doc/protocol/wsc-wire-radio.md"
+  },
+  "wsc_packet_radio_component": {
+    "status": "owned_component_demonstrated",
+    "guide": "doc/protocol/wsc-wire-radio.md",
+    "evidence": "doc/evidence/wsc-wire/summary.json",
+    "implementation": [
+      "src/emosa/wire/provisioning_session.py",
+      "src/emosa/simulation/wsc_wire.py",
+      "deploy/wire/check-endpoint.py",
+      "deploy/radio-manager/run-wsc.py"
+    ],
+    "tests": [
+      "tests/test_provisioning_session.py",
+      "scripts/check-wsc-wire-reference.py"
+    ],
+    "authority": "Uses the reviewed wsc_operation_handoff and ieee1905_envelope rules; no additional specification requirement inferred from the fixture.",
+    "normative_sections": [
+      "IEEE 1905.1-2013 6.3.9, 6.4.18, 7.8 and 10.1-10.1.2",
+      "IEEE 1905.1a-2014 amended 6.4 and 7.8",
+      "EasyMesh 6.1 7.1, 15.1-15.2 and 17.1.3",
+      "WPS 2.0.10 7.2-7.3, 7.5 and 8.3.9 Table 20"
+    ],
+    "local_limits": {
+      "reassembly_contexts": 2,
+      "fragments_per_message": 8,
+      "message_bytes": 8192,
+      "aggregate_bytes": 16384,
+      "fragment_expiry_seconds": 5,
+      "token_burst": 32,
+      "tokens_per_second": 16,
+      "input_waiter_queue": 0,
+      "event_history": 32,
+      "exchange_seconds": 30,
+      "owned_operation_seconds": 120
+    },
+    "explicit_boundary": "Synthetic peer begins at an owned bound M1 exchange, without discovery/profile/service activation. AL/ingress checks are not link authentication.",
+    "ethernet_capture": "Received bytes/order with synthetic timestamps; no latency claim.",
+    "radio_contract": "One sole fronthaul BSS, WPA2-PSK/CCMP, 2.4 GHz channel 6, wired management. No OpenSync firmware.",
+    "cases": [
+      "Invalid authentication creates zero operations/credentials/writes",
+      "Wrong RUID rejects before allocation of an operation",
+      "Last fragment arrives first; no operation before whole message",
+      "Normal duplicate and re-encrypted retry share one operation/write",
+      "Changed configuration refuses another write",
+      "Config changes while manager withholds; old SSID and independent clients survive",
+      "Release applies configuration; hostapd/nl80211 State plus separate wired/wireless clients",
+      "Wrong key produces fresh authentication failure; correct key restores clients",
+      "Lost commit reply invalidates old exchange authority; fresh State resolves current condition without resend",
+      "Interrupted driver removes its owned namespaces and worker groups"
+    ],
+    "socket_io": true,
+    "radio_or_client_observed": true,
+    "semantic_submission": false,
+    "native_controller_used": false,
+    "regular_service_activation": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "pending": [
+      "Compatible native discovery/Early/profile/full-capability admission and native inventory",
+      "Remaining normative dependencies and full-radio qualification",
+      "Production exchange/secret retention and multi-agent wire demultiplexing",
+      "Qualified unchanged physical pod and independent physical client"
+    ]
+  },
+  "native_controller_discovery_probe": {
+    "guide": "doc/guides/native-discovery.md",
+    "evidence": "doc/evidence/native-discovery/summary.json",
+    "implementation": "src/emosa/wire/controller_probe.py",
+    "runner": "deploy/peer-baseline/discovery-trial.py",
+    "independent_check": "scripts/check-controller-probe.py",
+    "source_sections": [
+      "IEEE 1905.1-2013 10.1.1-10.1.2; 7.8",
+      "EasyMesh 6.1 6.1, 17.1.1-17.1.2, 17.2.94 Table 117"
+    ],
+    "observed_profile_pair": [
+      1,
+      1
+    ],
+    "initial_native_device_entry": true,
+    "native_radio_and_bss_onboarding": false,
+    "selected_response_gaps": [
+      "kib_mib_support_absent",
+      "security_capability_absent"
+    ],
+    "native_controller_used": true,
+    "operations_created": 0,
+    "full_procedure_gate_satisfied": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "native_controller_counter_candidate": {
+    "guide": "doc/guides/controller-counter-candidate.md",
+    "evidence": "doc/evidence/native-controller-counter/summary.json",
+    "patch": "deploy/peer-baseline/patches/0004-controller-counter-capability.patch",
+    "build": "deploy/peer-baseline/compatibility/build-controller.py",
+    "runner": "deploy/peer-baseline/compatibility/controller-candidate.py",
+    "independent_check": "scripts/check-controller-candidate.py",
+    "source_sections": [
+      "EasyMesh 6.1 6.1 p.63; 17.2.94 Table 117 p.182 (KiB/MiB bit 7)",
+      "EasyMesh 6.1 9.1 pp.79-80; 17.2.48 Table 71 pp.157-158 (counter units)",
+      "EasyMesh 6.1 13.1 p.97; 17.1.2 p.111; 17.2.67 Table 90 p.167; 18/Table 133 pp.197-198 (security feature applicability)"
+    ],
+    "scope": "Isolated native executable candidate; pinned libraries and EMOSA admission unchanged",
+    "candidate_flag_hex": "c0",
+    "baseline_flag_hex": "40",
+    "native_counter_regression_cases": 12,
+    "security_review": "Section 18 supplies an unsupported-feature omission rule; missing 0xA9 is not automatically a defect for every Profile-1 peer. Explicit non-DPP feature contract/admission decision pending; zero-filled 0xA9 would advertise real security algorithms.",
+    "baseline_promoted": false,
+    "operations_created": 0,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "next": [
+      "Validate and encode explicit non-DPP feature applicability",
+      "Resolve Early/AP capability admission and outstanding dependencies",
+      "Join native discovery and WSC to existing radio/client path",
+      "Require correct native radio/BSS inventory; qualify unchanged physical pod"
+    ]
+  },
+  "native_simulated_onboarding": {
+    "status": "bounded_native_simulation_verified",
+    "guide": "doc/protocol/native-onboarding.md",
+    "coordinator": "src/emosa/wire/onboarding.py",
+    "runner": "deploy/peer-baseline/native-onboarding.py",
+    "source_sections": [
+      "EasyMesh 6.1 5.2.2/17.1.62: complete Early Report before M1",
+      "EasyMesh 6.1 6.1: discovery Profile echo and Controller Capability",
+      "EasyMesh 6.1 6.2: Topology Query advertises sender highest profile; response remains agent profile",
+      "EasyMesh 6.1 9.1, 13.1, 18: capability feature applicability and non-DPP omission",
+      "EasyMesh 6.1 15.1: notification reliability; Early Ack tracked independently",
+      "EasyMesh 6.1 7.1/17.2.108: advanced BSS configuration must not be silently discarded"
+    ],
+    "interpretation": "Table 117 named Early bit 6 used in bounded lab; reserved-range overlap still requires conformance clarification",
+    "scope": "One simulated wired-management, HT20 channel 6, pure-fronthaul PSK/CCMP BSS; no clients during report phase",
+    "full_profile_qualified": false,
+    "physical_pod_proven": false,
+    "remaining": [
+      "Native-run reconnect/restart and lost-reply recovery",
+      "Continuous client inventory, policies, channel management, metrics",
+      "Full profile qualification and unchanged physical pod"
+    ],
+    "evidence": "doc/evidence/native-onboarding/run-05/independent-check.json",
+    "independent_check": "scripts/check-native-onboarding.py",
+    "controller_onboarding_proven": true
+  },
+  "sustained_operation": {
+    "status": "15_minute_operational_recovery_verified_full_sustained_acceptance_pending",
+    "guide": "doc/protocol/sustained-operation.md",
+    "source_sections": [
+      "EasyMesh 6.1 6.2; 17.2.5 Table 28 (associated clients and association seconds)",
+      "EasyMesh 6.1 6.3; 17.1.5; 17.2.20 Table 43 (client events and additional disassociation statistics obligation)",
+      "EasyMesh 6.1 9.2; 17.1.14-15; 17.2.18-19; 17.2.36 Table 59 (capability-unavailable errors)",
+      "EasyMesh 6.1 8.1-2; 15.1; 17.1.9-12; 17.2.13-16 Tables 36, 38-40; 18 (selected channel/power reports and feature conditions)",
+      "IEEE 1905.1-2013 6.3.5-6; 6.4.10-13; 11.1 (observed all-neighbor Tx/Rx queries; qualified responses pending)",
+      "EasyMesh 6.1 6.3; 15.1; 17.1.41; 17.2.23/35/64 Tables 46/58/87 (final-session message, actual reason, seven counters, byte units and rollover)",
+      "IEEE 802.11-2024 9.4.1.7 Table 9-79 pp.837-840 (reason-code assignments and reserved values)"
+    ],
+    "opensync_telemetry": {
+      "commit": "78d8a7194d5e77635877cc456231e7be5cf03d68",
+      "source": "src/lib/protobuf/opensync_stats.proto",
+      "proto_sha256": "0bf534da0d677d7bb41a4f591fcb1ad0b25a9f1c9eedf3abc5b69ed16ef9a6cd",
+      "semantics_crosscheck": "src/lib/datapipeline/src/dppline.c connect_offset_ms = report timestamp - connect timestamp",
+      "qualification": "owned sole-radio complete snapshots only; physical publisher/trust/timing unqualified"
+    },
+    "implementation_refs": [
+      "src/emosa/telemetry/stations.py",
+      "src/emosa/simulation/station_telemetry.py",
+      "src/emosa/wire/onboarding.py",
+      "src/emosa/wire/channel.py",
+      "src/emosa/wire/disassociation.py",
+      "src/emosa/simulation/disassociation.py"
+    ],
+    "test_refs": [
+      "tests/test_station_telemetry.py",
+      "tests/test_radio_manager.py",
+      "tests/test_native_onboarding.py",
+      "tests/test_channel_procedures.py",
+      "tests/test_disassociation.py",
+      "scripts/check-disassociation-reference.py"
+    ],
+    "remaining": [
+      "Qualify final-session publisher/counter/reason semantics and integrate measured records with implemented sender",
+      "Reporting policy and qualified utilization/ESP/link/traffic metrics",
+      "Qualified IEEE 1905 neighbor measurements and actual interface mapping for the implemented query/response handler",
+      "Complete 15-minute acceptance with independent capture review"
+    ],
+    "sustained_operation_proven": false,
+    "physical_pod_proven": false,
+    "evidence": "doc/evidence/native-soak/run-01/independent-check.json",
+    "channel_contract": "Only advertised class 81/channel 6; persist compatible controller preferences before same-MID acceptance; measured nominal HT20 power; operating report/Ack with bounded new-MID retries. No lower-power or other-channel actuation; no full channel compliance claim.",
+    "recovery_contract": "New discovery/Early/M1 after source loss or actual worker restart; fresh authenticated operation can complete as observed no-op. Retain NV channel policy across reconnect; explicitly reset at virtual-agent reboot as 8.2 permits.",
+    "operational_recovery_checks_passed": true,
+    "final_statistics": {
+      "status": "sender_and_guarded_handoff_implemented_measurement_source_unqualified",
+      "guide": "doc/protocol/final-session-statistics.md",
+      "encoding_evidence": "doc/evidence/final-statistics/independent-encoding-check.json",
+      "native_byte_unit_evidence": "doc/evidence/final-statistics/native-byte-counters-01/independent-check.json",
+      "counter_units": "Profile-1 now advertises bytes consistently. Historical KiB-advertising experiments contained no traffic statistics and retain their bounded original scope.",
+      "contract": "Explicit seven AP-relative counters and actual assigned 802.11 reason, unique association identity, same live source, complete absent membership, authenticated observed leave, two-second freshness and one-second bounded delivery; rejoin/context/unit changes withdraw pending reports.",
+      "measurement_qualified": false,
+      "native_final_statistics_delivery_proven": false,
+      "removal_observation": {
+        "status": "native_raw_acquisition_and_independent_reason_leave_correlation_verified",
+        "guide": "doc/protocol/station-removal-observations.md",
+        "observer": "deploy/radio-manager/station-events.py",
+        "tests": "tests/test_station_events.py",
+        "independent_check": "scripts/check-station-removal.py",
+        "evidence": "doc/evidence/station-removal/native-final-source-01/independent-observation-check.json",
+        "kernel": "6.8.0-139-generic",
+        "new_station_events": 7,
+        "removal_events": 6,
+        "reason_source": "Independent radio capture, not a reason attribute in kernel removal events",
+        "remaining": "Qualify EasyMesh conversion, nonzero failure/retry/queue paths and online reason/session join before sender integration",
+        "measurement_semantics_qualified": false,
+        "counter_accounting": {
+          "status": "six_normal_traffic_sessions_reconciled_with_loss_checked_capture",
+          "guide": "doc/protocol/station-counter-accounting.md",
+          "independent_check": "scripts/check-station-accounting.py",
+          "evidence": "doc/evidence/counter-accounting/native-counter-audit-01/independent-accounting-check.json",
+          "source_reproduction": "scripts/review-station-kernel.py",
+          "source_provenance": "doc/evidence/counter-accounting/source-provenance.json",
+          "runtime_provenance": "doc/evidence/counter-accounting/kernel-runtime.json",
+          "kernel_package_version": "6.8.0-139.139",
+          "counter_reference": "EasyMesh 6.1 Table 58; selected Wi-Fi Data Elements 3.0 package still pending",
+          "public_crosscheck": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.RetransCount",
+          "raw_counter_passthrough_valid": false,
+          "final_counter_source_qualified": false,
+          "medium_loss": {
+            "status": "tx_submission_bytes_and_failures_reconciled_retry_counter_unreconciled",
+            "guide": "doc/protocol/medium-loss-accounting.md",
+            "evidence": "doc/evidence/medium-loss/native-medium-loss-05/independent-accounting-check.json",
+            "negative_attempts": "doc/evidence/medium-loss/failed-attempts.json",
+            "source_provenance": "doc/evidence/medium-loss/source-provenance.json",
+            "upstream": "https://github.com/bcopeland/wmediumd",
+            "commit": "717e5d7fcc23eecbc8e32bd897a8fd4b1e3ba640",
+            "patches": [],
+            "station_lifetimes": 8,
+            "tx_submissions": 983,
+            "failed_transmissions": 195,
+            "medium_status_retries": 2405,
+            "kernel_retries": 185,
+            "counter_source_qualified": false,
+            "medium_airtime_and_phy_qualified": false,
+            "remaining": "Original corpus lacks completion flags. The separate traced corpus explains retry suppression; qualify requested counter definitions and online source, acquire AP/ESP/radio/STA/neighbor measurements, then complete mandatory reporting and sustained acceptance.",
+            "completion_flag_followup": {
+              "status": "kernel_retry_suppression_explained_online_mapping_unqualified",
+              "guide": "doc/protocol/tx-status-accounting.md",
+              "observer": "deploy/radio-manager/tx-status-trace.py",
+              "independent_check": "scripts/check-tx-status-accounting.py",
+              "evidence": "doc/evidence/tx-status/native-tx-status-01/independent-tx-status-check.json",
+              "limitations": "doc/evidence/tx-status/native-tx-status-01/acceptance-limitations.json",
+              "station_lifetimes": 10,
+              "traced_completions": 962,
+              "medium_retries": 2421,
+              "suppressed_retries": 2094,
+              "kernel_retries": 327,
+              "source_reference": "Ubuntu 6.8.0-139.139 net/mac80211/status.c ieee80211_tx_get_rates; exact runtime BTF/layout guarded",
+              "counter_source_qualified": false,
+              "full_recovery_acceptance": false
+            }
+          }
+        }
+      }
+    },
+    "reporting_policy_receipt": {
+      "status": "durable_receipt_and_ack_with_unfulfilled_reporting_explicit",
+      "guide": "doc/protocol/reporting-policy.md",
+      "implementation": "src/emosa/wire/reporting_policy.py",
+      "tests": "tests/test_reporting_policy.py",
+      "independent_check": "scripts/check-native-policy.py",
+      "evidence": "doc/evidence/reporting-policy/native-policy-receipt-01/independent-policy-check.json",
+      "references": [
+        "EasyMesh 6.1 7.3 p.71",
+        "10.2.1 pp.82-84",
+        "15.1 p.104",
+        "17.1.8 p.112",
+        "17.1.32 pp.115-116",
+        "17.2.11 Table 34 pp.131-132",
+        "17.2.12 Table 35 pp.132-133",
+        "17.2.92 Table 115 pp.181-182"
+      ],
+      "contract": "Selected 60-second policy, all three requested STA inclusion bits retained, complete decode before durable receipt, same-MID Ack within one second, identical re-delivery does not postpone reporting deadlines",
+      "recovery": "Intent and schedule survive reconnect and process restart on same boot; detected boot change explicitly rebases schedule (unit-tested only)",
+      "policy_application_proven": false,
+      "required_reporting_proven": false
+    },
+    "telemetry_freshness": {
+      "status": "control_and_telemetry_deadlines_separated_native_gap_and_real_fault_recovery_verified",
+      "guide": "doc/protocol/telemetry-freshness.md",
+      "implementation": [
+        "src/emosa/wire/coordinator.py",
+        "src/emosa/simulation/native_onboarding.py"
+      ],
+      "independent_check": "scripts/check-telemetry-gap.py",
+      "evidence": "doc/evidence/telemetry-freshness/native-telemetry-gap-01/independent-gap-check.json",
+      "recovery_evidence": "doc/evidence/telemetry-freshness/native-telemetry-gap-01/independent-recovery-check.json",
+      "active_seconds": 213.4180696780022,
+      "telemetry_gap_seconds": 6.3716607093811035,
+      "contract": "Stale telemetry withdraws dependent inventory/operating observations without changing current OVSDB control context; actual source loss still requires fresh discovery/authentication.",
+      "operations": 3,
+      "total_config_write_attempts": 1,
+      "sustained_operation_proven": false,
+      "physical_pod_proven": false
+    },
+    "neighbor_link_metrics": {
+      "status": "query_response_and_guarded_handoff_implemented_native_measurements_pending",
+      "guide": "doc/protocol/neighbor-link-metrics.md",
+      "implementation": "src/emosa/wire/link_metrics.py",
+      "integration": "src/emosa/wire/onboarding.py",
+      "source_references": [
+        "IEEE 1905.1-2013 6.3.5-6/Table 6-5 pp.31-32; 6.4.10-13/Tables 6-16 through 6-21 pp.38-41; 11.1 p.59",
+        "IEEE 1905.1a-2014 amendment Tables 6-16/18/20/21 pp.10-12; printed p.11 visually reviewed",
+        "EasyMesh 6.1 10.1 p.82; 17.1.73-74 p.121"
+      ],
+      "interpretations": [
+        "Table 6-16 conditional neighbor address determines 2-byte all-neighbor and 8-byte specified-neighbor query lengths despite fixed table heading. Native controller and pinned prplMesh/Wireshark cross-check this selection.",
+        "Amendment permits 0xffff PHY rate and 0xff RSSI as unavailable. No guessed capacity, availability or packet/error count.",
+        "Invalid-neighbor result requires a fresh complete inventory establishing absence; unavailable measurements for an existing neighbor produce an explicit gap."
+      ],
+      "local_limits": {
+        "interface_pairs": 32,
+        "source_freshness_seconds": 2,
+        "response_deadline_seconds": 1
+      },
+      "test_refs": [
+        "tests/test_link_metrics.py",
+        "tests/test_native_onboarding.py",
+        "scripts/check-neighbor-metrics.py"
+      ],
+      "encoding_evidence": "doc/evidence/neighbor-metrics/independent-vector-check.json",
+      "native_evidence": "doc/evidence/neighbor-metrics/native-neighbor-01/independent-neighbor-check.json",
+      "interface_observations": "doc/evidence/neighbor-metrics/native-neighbor-01/neighbor-link-observations.json",
+      "native_queries_handled_without_measurement": 4,
+      "measurement_source_qualified": false,
+      "native_neighbor_metric_delivery_proven": false,
+      "remaining": [
+        "Bind represented virtual interfaces to actual pod/peer forwarding interfaces and verified bridge state",
+        "Acquire and qualify per-link TX/RX counters over a common measurement period with reset detection",
+        "Qualify capacity and availability estimates; do not attribute proxy control-veth counters to pod traffic",
+        "Supply live measurements, verify native controller values and include in full sustained acceptance"
+      ],
+      "raw_forwarding_observations": {
+        "status": "owned_pod_raw_interface_observations_and_intervals_implemented_per_neighbor_qualification_pending",
+        "guide": "doc/protocol/forwarding-observations.md",
+        "implementation": "src/emosa/simulation/forwarding.py",
+        "sources": [
+          "IEEE 1905.1-2013 section 8.1 pp.46-47 (AL/interface identities and topology/LLDP bridge inference)",
+          "pinned OpenSync 78d8a7194d5e77635877cc456231e7be5cf03d68 interfaces/opensync.ovsschema: Open_vSwitch, Bridge, Port, Interface",
+          "https://www.kernel.org/doc/html/latest/networking/statistics.html"
+        ],
+        "evidence": "doc/evidence/forwarding/native-forwarding-01/independent-forwarding-check.json",
+        "profile": "owned-linux-bridge-observation-v1; shared VM monotonic clock and simulation-specific external_ids metadata; no physical publisher assumption",
+        "observed_controller_interface_mac": "00:16:3e:b8:c4:a7",
+        "observed_pod_backhaul_mac": "00:16:3e:b2:d2:c4",
+        "measurement_source_qualified": false,
+        "virtual_to_pod_interface_mapping_qualified": false,
+        "remaining": [
+          "Runtime peer discovery/expiry and represented topology/media mapping",
+          "Independent packet/error/drop attribution for every neighbor over a common window",
+          "Qualified capacity and availability estimates",
+          "Guarded native metric delivery and complete 15-minute acceptance"
+        ]
+      }
+    }
+  }
 }

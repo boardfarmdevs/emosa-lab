@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-22",
+  "base_revision": "5a8560ff5d800bef8956f051b1a49ac8627afc11",
+  "scope": "Owned Ethernet WSC component through durable operation, real OVSDB, hwsim and independent clients; synthetic hostap payload peer",
+  "source_hashes": {
+    "src/emosa/wire/provisioning_session.py": "0abff0b2c81f1bc36de45ef3af7313ad9feba29155fb89f9d93c2069b08e1808",
+    "src/emosa/simulation/wsc_wire.py": "502bf53d8ab34f29db315d1fb84d7d1d060be69173c78d118e637638391a56bc",
+    "src/emosa/simulation/wsc_provisioning.py": "5adb7d5b327cd23ea88ab9b2df2c06fa5ac66aeab668d2b2a544695263dc407c",
+    "deploy/wire/check-endpoint.py": "a08c78fbded4e612727706da9ef08ce543c3446963467d17c45272532606f38a",
+    "deploy/radio-manager/run-wsc.py": "269c6bcfa61fa598c8672dd78d9b97a74cada7a8868c9813513662dea90cda9c",
+    "deploy/radio-manager/stage.py": "8b52b809b8016d925900ed2de07bd61111d84cc0ca29dce521602b84e8a7514b",
+    "tests/test_provisioning_session.py": "27403a2e96016ae7a88d5a3560a64e22f7b9bc50c771dce47bc895d02daf967d",
+    "scripts/check-wsc-wire-reference.py": "f1210b4393ee32cba0913148f4bef680baca1d36350cbfa27825f1dcffd49923"
+  },
+  "suites": {
+    "unit": 928,
+    "ovsdb": 53,
+    "new_unit": 8
+  },
+  "retained_runs": {
+    "packet-normal": "/opt/emosa-radio-manager/runs/wsc-packet-01",
+    "packet-lost-reply": "/opt/emosa-radio-manager/runs/wsc-packet-02",
+    "radio-normal": "/opt/emosa-radio-manager/runs/wsc-wire-04",
+    "radio-lost-reply": "/opt/emosa-radio-manager/runs/wsc-wire-03"
+  },
+  "radio_passes_in_development": 3,
+  "radio_failures_in_development": 1,
+  "development_findings": [
+    "First development packet run restarted its MID allocator; corrected to share one allocator (M1 MIDs 101/102). This run is not part of the selected capture set.",
+    "First radio run reached changed-network client success but wrong-key control read a nonexistent supplicant.log. Corrected to inspect fresh bytes of client.log and require a non-completed association. Its overall result remained failed; selected runs passed the corrected control.",
+    "Driver cleanup now enters finally on SIGTERM and terminates only its owned worker groups. Selected radio runs predate the final contextlib cleanup refactor; packet-lost-reply and cancel-result exercise the final driver. Radio source-hashes.json preserves exact executed bytes.",
+    "Independent radio check handles Wireshark 3.x text / 4.x hexadecimal SSID display differences; retained captures are unchanged."
+  ],
+  "capture_timing": "Ethernet PCAP contains received bytes/order with synthetic timestamps; radio tcpdump capture has actual times. No packet latency claim.",
+  "provenance": "Exact radio source hashes in each selected run; pinned registrar source/binary provenance in every right.json; runtime tool hashes in runtime.json.",
+  "configuration_origin": "wsc-component",
+  "semantic_submission": false,
+  "socket_io": true,
+  "radio_and_independent_clients_observed": true,
+  "native_controller_used": false,
+  "opensync_firmware_used": false,
+  "regular_service_activation": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "full_wire_gate": "blocked_P0",
+  "upstream_schema": "plume-design/opensync@78d8a7194d5e77635877cc456231e7be5cf03d68 interfaces/opensync.ovsschema",
+  "remaining": [
+    "Compatible native discovery/Early/profile/AP-capability admission and controller-owned inventory",
+    "Remaining normative dependencies and complete radio-scope qualification",
+    "Production credential/exchange lifetime, multi-agent wire demultiplexing and service activation",
+    "Actual unchanged OpenSync pod profile, trusted endpoint, writer controls and independent physical client"
+  ]
+}

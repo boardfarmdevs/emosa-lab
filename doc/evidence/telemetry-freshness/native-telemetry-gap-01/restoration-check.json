@@ -1,0 +1,13 @@
+{
+  "owned_lab_idle": true,
+  "medium_process_absent": true,
+  "owned_netlink_monitor_absent": true,
+  "owned_trace_instances_and_probes_absent": true,
+  "executed_changed_source_hashes_verified": {
+    "/opt/emosa-baseline/native-onboarding.py": "666fabfc600bbc8a64d400c0b87f1963742da2d53a132173b35b2338b0daa739",
+    "/opt/emosa-radio-manager/manager.py": "4d8fccb16723009970c8f3e0c9c5e919ef7622dcfcbc5ad8fb1b882312e6a2c2",
+    "/opt/emosa-radio-manager/source/emosa/wire/coordinator.py": "762573030ba1e36fc6e011e4be2b3981ca97e4d7eca5960f8de2f9ca00604d5c",
+    "/opt/emosa-radio-manager/source/emosa/simulation/native_onboarding.py": "0c1cedee289c2d750eadd4da42ad878bb9a0151d901bb0c5a0653b8abf950603"
+  },
+  "physical_pod_changed": false
+}

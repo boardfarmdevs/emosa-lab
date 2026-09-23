@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-22",
+  "base_revision": "f329f8c3f13d388c84ffdb8af32458f3da5af29c",
+  "scope": "IEEE 1905 envelope component and isolated packet transport; full EasyMesh exchange remains pending",
+  "ieee_documents_obtained": true,
+  "source_hashes": {
+    "deploy/wire/check-endpoint.py": "779014d9af1e3ed446cef1f7b8dc67c5993afa12f93583e056ab9c54dcacb214",
+    "scripts/check-ieee1905-reference.py": "2316d27ddcdb89932942c7503b162cfcca8b6569449c146313b604110bb3a8f0",
+    "src/emosa/wire/__init__.py": "0dbbb2d04a7498457cbb69263c02d5cc174a85ad4f179eb5b3ac5fc19eb8df09",
+    "src/emosa/wire/cmdu.py": "720ff0d44d6cca4caad8c8eaae4170732366230f2b8873728ede0c5e02d0a119",
+    "src/emosa/wire/ethernet.py": "a65617a7e6f9978282f104aa52fbfe6581d76a5ceaabb09127d7631e670ec091",
+    "src/emosa/wire/inspection.py": "a49eeefbd2b1083efa6525401fa506ea6b444e6d0267c2806f93ca9fc17cfcb7",
+    "tests/test_ieee1905.py": "12597a3fb0ab2e324cbde81986653459a6b542bbeea0fab8f5b810061b6e9972"
+  },
+  "suites": {
+    "unit": 706,
+    "ovsdb": 46,
+    "new_envelope_unit": 32
+  },
+  "native_capture": {
+    "frames": 59,
+    "completed_messages": 58,
+    "fragmented_messages": 1,
+    "rejected_frames": 0,
+    "independent_dissectors": [
+      "3.6.2",
+      "4.2.2"
+    ]
+  },
+  "isolated_packet_runs": {
+    "runs": 2,
+    "queries_received_each_direction_each_run": 2,
+    "mids": [
+      65535,
+      0
+    ],
+    "AF_PACKET": true,
+    "physical_interfaces_used": false,
+    "namespace_cleanup_verified": true,
+    "runtime": "existing Ubuntu 24.04 emosa-lab VM; Python 3.13.7; staged source not new installed image",
+    "pcap_timestamps": "synthetic; PCAP contains bytes read from actual packet sockets, not independent sniffer timing"
+  },
+  "installed_wheel": {
+    "sha256": "0c2484151a3a217d9bbdc498e107593f25a04fe497dde90237bb8a078cf4c891",
+    "isolated_interpreter": true,
+    "editable_checkout_dependency": false,
+    "capture_messages": 58,
+    "dependencies": "Only standard library/error types used by this envelope smoke; no claim for complete installed service"
+  },
+  "retained_failures": [
+    {
+      "stage": "test development",
+      "finding": "Expected fixture AL was initially mistyped as 02:00:00:00:00:02",
+      "resolution": "Corrected against independent tshark observation to 02:00:00:e0:00:02; interface MAC separately asserted"
+    },
+    {
+      "stage": "VM source staging",
+      "finding": "Initial explicit tar omitted emosa/__init__.py; prior installed package shadowed staged wire namespace",
+      "resolution": "Staged package initializer; documented explicit tar recipe; then two clean namespace runs passed"
+    },
+    {
+      "stage": "Pages browser check",
+      "finding": "New wire guides were initially inserted into roadmap rather than reference catalogue",
+      "resolution": "Moved entries into references; desktop/mobile navigation rerun passed"
+    }
+  ],
+  "journal_operations_created": 0,
+  "full_procedure_gate_satisfied": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "remaining": [
+    "Complete selected procedure/profile and remaining LLDP/WFA dependency review",
+    "Controller discovery/topology/capability state machine",
+    "Authenticated WSC peer/radio exchange and durable operation binding",
+    "One correlated controller-to-simulated-pod/client run with negative controls and repeat",
+    "Physical qualification and unchanged-pod/client proof"
+  ],
+  "documentation": {
+    "links_checked": 830,
+    "historical_artifacts_preserved": 359,
+    "mermaid_diagrams_rendered": 18,
+    "desktop_and_mobile_browser_passed": true
+  }
+}

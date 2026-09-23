@@ -1,0 +1,17 @@
+{
+  "normative_sources": "doc/protocol/ieee1905-envelope.md",
+  "scope": "Complete native Ethernet/CMDU headers and TLV boundaries only; no full procedure conformance",
+  "capture": "doc/evidence/peer-baseline/samples/wired/ethernet.pcap",
+  "capture_sha256": "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964",
+  "extractor": "scripts/check-ieee1905-reference.py",
+  "extractor_sha256": "2316d27ddcdb89932942c7503b162cfcca8b6569449c146313b604110bb3a8f0",
+  "vectors_sha256": "a132fba6a3cdfdbd58ff7c9b00a146dcc60f159e518f0328201c86279154d503",
+  "dissectors": [
+    "TShark (Wireshark) 3.6.2 (Git v3.6.2 packaged as 3.6.2-2)",
+    "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3)."
+  ],
+  "frame_count": 59,
+  "message_count": 58,
+  "secrets": "No TLV values are projected; input is the already published synthetic capture",
+  "normative_substitute": false
+}

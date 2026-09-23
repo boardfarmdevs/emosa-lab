@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "isolated_python": true,
+  "working_directory": "/tmp",
+  "source_files_matched": 59,
+  "installed_wsc_class_available": true,
+  "native_messages": 58,
+  "profile_mismatch_observed": true,
+  "wheel_sha256": "4d4866b5251906397fd37b83ab063b1ea3a9137608499586747b5aca2b32fcde",
+  "operations_created": 0,
+  "controller_onboarding_proven": false
+}

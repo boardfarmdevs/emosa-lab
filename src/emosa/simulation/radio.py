@@ -9,9 +9,12 @@ import re
 from dataclasses import dataclass, field
 
 from emosa.opensync.schema import TABLES
+from emosa.simulation import forwarding
 
 MONITOR = copy.deepcopy(TABLES)
 MONITOR["Wifi_Radio_Config"] += ["channel"]
+MONITOR["Wifi_Radio_State"] += ["tx_power"]
+MONITOR.update(forwarding.TABLES)
 
 
 async def seed_radio_database(session):
@@ -61,17 +64,18 @@ async def seed_radio_database(session):
             },
         ),
     ]
+    entries += forwarding.seed_entries()
     ops = [
         {
             "op": "wait",
             "table": table,
             "where": [],
-            "columns": ["if_name"],
+            "columns": ["_uuid"],
             "until": "==",
             "rows": [],
             "timeout": 0,
         }
-        for table, _, _ in entries
+        for table in dict.fromkeys(t for t, _, _ in entries)
     ]
     ops += [
         {"op": "insert", "table": table, "uuid-name": name, "row": row}
@@ -168,14 +172,73 @@ def row_guard(table, row_id, row):
     }
 
 
+def station_updates(snap, station_read):
+    """One atomic membership snapshot, preserving existing station UUIDs."""
+    table = "Wifi_Associated_Clients"
+    previous = snap["tables"].get(table, {})
+    decoded = {u: snap["schema"].row(table, row) for u, row in previous.items()}
+    current = {row["mac"]: u for u, row in decoded.items()}
+    desired = {row["mac"] for row in station_read["clients"]}
+    if len(current) != len(decoded) or len(desired) != len(station_read["clients"]):
+        raise ValueError("duplicate station identity")
+    ops = [
+        {
+            "op": "wait",
+            "table": table,
+            "where": [],
+            "columns": ["_uuid", "mac", "state"],
+            "until": "==",
+            "timeout": 0,
+            "rows": [
+                {"_uuid": ["uuid", u], "mac": r["mac"], "state": r["state"]}
+                for u, r in decoded.items()
+            ],
+        }
+    ]
+    references = []
+    for index, mac in enumerate(sorted(desired)):
+        if mac in current:
+            u = current[mac]
+            if decoded[u]["state"] != "active":
+                ops.append(
+                    {
+                        "op": "update",
+                        "table": table,
+                        "where": [["_uuid", "==", ["uuid", u]]],
+                        "row": {"state": "active"},
+                    }
+                )
+            references.append(["uuid", u])
+        else:
+            name = f"station{index}"
+            ops.append(
+                {
+                    "op": "insert",
+                    "table": table,
+                    "uuid-name": name,
+                    "row": {"mac": mac, "state": "active"},
+                }
+            )
+            references.append(["named-uuid", name])
+    for mac in current.keys() - desired:
+        ops.append(
+            {"op": "delete", "table": table, "where": [["_uuid", "==", ["uuid", current[mac]]]]}
+        )
+    return ops, ["set", references]
+
+
 class RadioManager:
     def __init__(self, session, driver):
         self.session, self.driver = session, driver
         self.applied = None
+        self.forwarding_schema = None
 
     async def cycle(self, *, withhold=False):
         snap = await self.session.snapshot()
         tables, schema = snap["tables"], snap["schema"]
+        if self.forwarding_schema != schema.fingerprint:
+            schema.qualify_synthetic(tables=forwarding.TABLES)
+            self.forwarding_schema = schema.fingerprint
         # Dedicated disposable DB only. Extra radios or VIFs cannot be ignored.
         names = ("Wifi_Radio_Config", "Wifi_VIF_Config", "Wifi_Radio_State", "Wifi_VIF_State")
         if any(len(tables.get(t, {})) != 1 for t in names):
@@ -217,12 +280,22 @@ class RadioManager:
                 "bssid": state["mac"],
                 "channel": observed["interface"]["channel"],
                 "sources": ["hostapd STATUS", "hostapd GET_CONFIG", "nl80211 iw dev info"],
+                "tx_power_dbm": observed["interface"].get("tx_power_dbm"),
             }
         except (OSError, RuntimeError, TimeoutError, ValueError, KeyError):
             # Withdraw positive state when the AP cannot be independently read.
             state = {"enabled": False, "wpa_psks": ["map", []]}
             outcome["radio"] = "unavailable"
         ops = [row_guard(t, rows[t][0], rows[t][1]) for t in names]
+        forwarding_ops, outcome["forwarding"] = forwarding.updates(
+            snap, observed.get("forwarding", {}) if outcome["radio"] == "observed" else {}
+        )
+        ops += forwarding_ops
+        if outcome["radio"] == "observed" and observed.get("stations", {}).get("complete") is True:
+            station_ops, references = station_updates(snap, observed["stations"])
+            ops += station_ops
+            state["associated_clients"] = references
+            outcome["stations"] = observed["stations"]
         ops += [
             {
                 "op": "update",
@@ -234,6 +307,10 @@ class RadioManager:
         radio_state = {"enabled": False}
         if outcome["radio"] == "observed":
             radio_state = {"channel": 6, "freq_band": "2.4G", "mac": state["mac"], "enabled": True}
+        power = (
+            observed["interface"].get("tx_power_dbm") if outcome["radio"] == "observed" else None
+        )
+        radio_state["tx_power"] = power if type(power) is int and 1 <= power <= 20 else ["set", []]
         ops.append(
             {
                 "op": "update",
@@ -247,7 +324,11 @@ class RadioManager:
             not isinstance(r, dict) or "error" in r for r in results
         ):
             outcome["publication"] = "conflict"
-        elif any(r.get("count") != 1 for r in results[len(names) :]):
+        elif any(
+            r.get("count") != 1
+            for op, r in zip(ops, results, strict=True)
+            if op["op"] in ("update", "delete")
+        ):
             raise RuntimeError("unexpected State publication count")
         else:
             outcome["publication"] = "observed-state"

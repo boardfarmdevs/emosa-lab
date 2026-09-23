@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "python_files_matched": 66,
+  "installed_package_outside_checkout": true,
+  "database_exercise_passed": true,
+  "wheel_sha256": "50407bbf03fdf1a75da7112f49afea9b79e41cb8c6d828346aeedc9723de245b",
+  "dependencies": "uv export --frozen --no-dev --no-emit-project, then uv pip sync"
+}

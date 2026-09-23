@@ -3,6 +3,10 @@
 These exercises advance three different boundaries. Run them in order. The first
 needs only the development host; the others reuse the dedicated `emosa-lab` VM
 and the four containers prepared in chapter 10 of the [team manual](team-manual.md).
+After the first two-pod lesson, use [secure fleet and recovery](secure-fleet.md)
+for authenticated connections, 4/8/16/32-session measurements and clean runtime
+reproduction. The [learning sequence](learning-path.md) puts these steps before
+optional radio work; the historical two-pod report below keeps its original scope.
 
 | Exercise | What it establishes | What it does not establish |
 | --- | --- | --- |
@@ -11,9 +15,9 @@ and the four containers prepared in chapter 10 of the [team manual](team-manual.
 | Live controller preparation | Pinned native controller and its local agent run beside the adapter/connecting-pod exercise; native inventory and independent capture are retained | A ready entry in `emosa agents` does not become a native controller inventory entry |
 
 The final acceptance chain remains **real EasyMesh messages → EMOSA → unchanged
-physical OpenSync pod → independently observed behavior**. The missing IEEE
-1905.1-2013 and 1905.1a-2014 documents still block specification-dependent wire
-execution. Read the [available procedure audit](../protocol/procedure-audit.md)
+physical OpenSync pod → independently observed behavior**. Both IEEE 1905
+documents are now obtained and [envelope components](../protocol/ieee1905-envelope.md)
+are implemented. Full procedure validation and exchange integration remain pending. Read the [available procedure audit](../protocol/procedure-audit.md)
 and [acquisition checklist](../protocol/specification-acquisition.md) for exact
 remaining inputs.
 

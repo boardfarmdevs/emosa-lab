@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-22",
+  "base_revision": "71550c99215b441586b009fa7b1030607878130a",
+  "scope": "Bounded Search/Response and WSC exchange components; offline and installed-package validation only",
+  "source_hashes": {
+    "src/emosa/wire/autoconfiguration.py": "d277e75762375a4f7e50bc0fa3a8721a3380502d95ac55b3f70c3f080f1a1b3b",
+    "src/emosa/wire/inspection.py": "84ee73bf08ee97d6d6043e9b338ae94931fb0148b1166b727cf618ece2b8b5db",
+    "tests/test_autoconfiguration.py": "0d19daa0d6a5930c2275991ff173f8109b512455d0099f0274bc502aa78f7242"
+  },
+  "suites": {
+    "unit": 762,
+    "ovsdb": 46,
+    "new_exchange_unit": 56,
+    "focused_envelope_and_exchange": 88
+  },
+  "checks": [
+    "Complete Ethernet Search literal and independently captured native discovery",
+    "Exact hostap M1/M2 payload integration and authenticated whole-request interpretation",
+    "Peer/source/interface/generation/RUID rejection",
+    "Unsolicited, wrong MID/band/profile, missing and duplicate required fields",
+    "Complete fragmented request delivered only after reassembly",
+    "Unsupported configuration companions, M8/multiple BSS/teardown/DPP rejected",
+    "Exact duplicates and authenticated re-encryption deduplicate entire configuration",
+    "Changed or invalid M2 cannot replace accepted configuration",
+    "Fixed expiry, bounded retransmissions, fresh-transcript replay rejection",
+    "Installed wheel matches all 59 Python source files and inspects capture outside checkout"
+  ],
+  "independent_references": {
+    "ieee": "tshark 59-frame header/TLV projection passes",
+    "wsc": "hostap 2.11 M1/M2 reference checker passes",
+    "controller_capability_raw": "tshark -x frame 2 exposes dd000140"
+  },
+  "native_observation": {
+    "search_profile": 2,
+    "response_profile": 1,
+    "controller_capability_hex": "40",
+    "kib_mib_bit7_present": false,
+    "security_capability_present": false
+  },
+  "new_live_ethernet_run": false,
+  "hwsim_or_lxd_used": false,
+  "physical_pods_touched": false,
+  "operations_created": 0,
+  "full_procedure_gate_satisfied": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "junit_long_names_compacted": 5,
+  "retained_development_findings": [
+    {
+      "finding": "Initial native test assumed capability 0x80",
+      "resolution": "Independent tshark hex confirms 0x40; selected-edition KiB/MiB gap retained"
+    },
+    {
+      "finding": "Initial replay policy rejected all changed encrypted M2 bytes",
+      "resolution": "Now reauthenticates and compares full decoded configuration; fresh nonce/IV retry can deduplicate"
+    },
+    {
+      "finding": "New Mermaid sequence label contained a semicolon parsed as a new statement",
+      "resolution": "Changed label punctuation and reran all diagrams"
+    }
+  ],
+  "remaining": [
+    "Qualified native peer/profile and complete early/AP capabilities",
+    "Live trusted-link topology/discovery coordinator and schedules",
+    "Durable WSC-to-operation mapping and fresh complete-radio admission",
+    "Real controller-to-OVSDB/hwsim/client causal evidence",
+    "Read-only actual pod qualification and unchanged physical proof"
+  ],
+  "documentation": {
+    "mermaid_diagrams_rendered": 19,
+    "shell_blocks_syntax_checked": 174,
+    "desktop_mobile_browser_passed": true,
+    "source_link_targets_checked_in_browser": 102,
+    "existing_evidence_artifacts_unchanged": 380
+  }
+}

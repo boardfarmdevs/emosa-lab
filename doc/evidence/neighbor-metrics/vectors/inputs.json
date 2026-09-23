@@ -1,0 +1,45 @@
+{
+  "scope": "synthetic wire-layout vectors; no measured link or controller acceptance",
+  "cases": [
+    {
+      "mid": 400,
+      "query_value": "0000",
+      "response_kinds": [
+        9
+      ]
+    },
+    {
+      "mid": 401,
+      "query_value": "0001",
+      "response_kinds": [
+        10
+      ]
+    },
+    {
+      "mid": 402,
+      "query_value": "0002",
+      "response_kinds": [
+        9,
+        10
+      ]
+    },
+    {
+      "mid": 403,
+      "query_value": "0102000000400202",
+      "response_kinds": [
+        9,
+        10
+      ]
+    },
+    {
+      "mid": 404,
+      "query_value": "0102000000999902",
+      "response_kinds": [
+        12
+      ]
+    }
+  ],
+  "measurement_source_qualified": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

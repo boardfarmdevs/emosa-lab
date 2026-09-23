@@ -75,6 +75,31 @@ def test_agents_local_request_contract():
     )
 
 
+@pytest.mark.parametrize("fault", ["no-trust", "no-binding", "remote-write", "duplicate-pin"])
+def test_tls_service_requires_local_unique_explicit_trust(tmp_path, fault):
+    from emosa.simulation.tls import create_pki, trust_config
+
+    pki = create_pki(tmp_path / "secrets", 1)
+    config = configuration(tmp_path, "unix:/private/one.sock")
+    pod = config["pods"][0]
+    pod.update(endpoint="pssl:6640:127.0.0.1", tls=trust_config(pki, 0))
+    if fault == "no-trust":
+        pod.pop("tls")
+    elif fault == "no-binding":
+        pod.pop("virtual_agent")
+    elif fault == "remote-write":
+        pod["endpoint"] = "pssl:6640:192.0.2.1"
+    else:
+        other = copy.deepcopy(pod)
+        other.update(pod_id="pod-2", endpoint="pssl:6641:127.0.0.1")
+        other["virtual_agent"] = {"al_mac": "02:00:00:00:40:02", "expected_serial": "second"}
+        config["pods"].append(other)
+    path = tmp_path / "adapter.json"
+    path.write_text(json.dumps(config))
+    with pytest.raises(EmosaError):
+        load("config", path)
+
+
 @pytest.mark.parametrize("fault", ["missing-binding", "model-mode"])
 def test_sole_radio_scope_requires_bound_ovsdb_simulation(tmp_path, fault):
     config = configuration(tmp_path, "unix:/private/one.sock")

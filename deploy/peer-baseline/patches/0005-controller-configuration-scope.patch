@@ -1,0 +1,33 @@
+--- a/controller/src/beerocks/master/controller.cpp
++++ b/controller/src/beerocks/master/controller.cpp
+@@ -1291,6 +1291,16 @@
+     db &database, ieee1905_1::CmduMessageTx &cmdu_tx, const sMacAddr &agt_mac, const sMacAddr ruid,
+     const std::list<son::wireless_utils::sBssInfoConf> &bss_info_confs, beerocks::eFreqType band)
+ {
++    // Do not request an extended configuration procedure when no BSS has
++    // any advanced setting. In particular, an empty radio record is not a
++    // request to change the ordinary WSC configuration.
++    const bool has_settings = std::any_of(
++        bss_info_confs.begin(), bss_info_confs.end(), [](const auto &conf) {
++            return conf.hidden_ssid != WSC::eWscVendorExtHiddenSsid::UNSET;
++        });
++    if (!has_settings) {
++        return true;
++    }
+     auto bss_advanced_configuration = cmdu_tx.addClass<wfa_map::tlvBssAdvancedConfiguration>();
+     auto bss_advanced_configuration_radio = bss_advanced_configuration->create_radios();
+     if (!bss_advanced_configuration_radio) {
+--- a/controller/src/beerocks/master/tasks/agent_monitoring_task.cpp
++++ b/controller/src/beerocks/master/tasks/agent_monitoring_task.cpp
+@@ -831,6 +831,11 @@
+         return false;
+     }
+ 
++    // EasyMesh 6.1 sections 9.1/18: respect the agent's advertised feature
++    // support. A non-Traffic-Separation agent cannot apply VLAN settings.
++    if (!agent->traffic_separation_support) {
++        return true;
++    }
+     auto tlv_default_8021q_settings =
+         cmdu_tx.addClass<wfa_map::tlvProfile2Default802dotQSettings>();
+     if (!tlv_default_8021q_settings) {

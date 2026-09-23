@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "scope": "synthetic_report_exchange_over_AF_PACKET",
+  "messages_received": [
+    32835,
+    3
+  ],
+  "result": {
+    "source": "synthetic_receiver_decoded_topology_response",
+    "radios": [
+      {
+        "ruid": "02:00:00:00:40:10",
+        "bssids": [
+          "02:00:00:00:40:11"
+        ]
+      }
+    ],
+    "native_controller_inventory": false
+  },
+  "native_controller_used": false,
+  "radio_used": false,
+  "config_writes": 0,
+  "onboarding_proven": false,
+  "physical_pod_proven": false
+}

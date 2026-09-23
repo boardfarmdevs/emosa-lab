@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-23",
+  "base_revision": "93ab9e8eadfb516c891e4bab44f8923fa1eb3d91",
+  "retained_run": "native-radio-05",
+  "previous_protocol_failure": "native-radio-03",
+  "result": {
+    "passed": true,
+    "scope": "bounded_native_controller_to_simulated_OpenSync_onboarding",
+    "controller_onboarding_proven": true,
+    "physical_pod_proven": false,
+    "native_baseline_restored": true,
+    "operations": 1,
+    "writes": 1,
+    "frames": 22,
+    "m1_sha256": "4780425fcfc6f0d3e6d8f3a25ac526ae5dcab11483d5d2fc90269cedf3c53c8a",
+    "capability_report_frame": 20,
+    "provisioned_topology_frame": 12,
+    "independent_clients": [
+      "wired",
+      "wpa_supplicant"
+    ],
+    "continuous_management_proven": false,
+    "full_profile_qualified": false
+  },
+  "checks": {
+    "unit": 951,
+    "ovsdb": 53,
+    "native_counter": 12
+  },
+  "remaining": [
+    "Continuous agent/client reporting and station age",
+    "Channel/policy requests and measured telemetry",
+    "Native lifecycle failure/recovery and shutdown abort",
+    "Independent controller and unchanged physical pod"
+  ],
+  "source_sha256": {
+    "src/emosa/wire/onboarding.py": "778814d8cc75d33694231e2ee177b8b0277669fbbfd8864fd20d9a4e79915970",
+    "src/emosa/simulation/native_onboarding.py": "fb52a96b296b77da66251a3e15c3c3f71679239036a631387ca0a6e0878c477c",
+    "deploy/peer-baseline/native-onboarding.py": "7a23a96be997f4fc2b06d9e4e3561cf219b5bde9d8c985e89fdcbd25ec9b97b0",
+    "scripts/check-native-onboarding.py": "ae7082c46081e170199d4018f0742728c9e89de58ea39b292d764635893a1820"
+  }
+}

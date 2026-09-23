@@ -71,7 +71,7 @@ in EasyMesh frames or populate a real controller's agent inventory.
 | Building block | Responsibility | Current evidence |
 | --- | --- | --- |
 | Reference controller / independent peer | Originate actual protocol messages | Candidate discovery baseline captured; EMOSA exchanges and clean recovery pending |
-| Virtual agent | Terminate selected EasyMesh procedures and bind the complete request | Local diagnostic directory tested; wire endpoint pending |
+| Virtual agent | Terminate selected EasyMesh procedures and bind the complete request | Local directory and restricted packet components tested; synthetic Ethernet WSC drives hwsim clients; native discovery/profile admission pending |
 | Operation engine | Validate, guard, serialize, track deadlines and reconcile | Model and OVSDB component tests |
 | Journal / secret mechanism | Preserve operations and attribution through restart | SQLite and private-secret tests |
 | OVSDB mapper / session | Schema, resource bindings, guarded Config patches, fresh State | Real server and separate manager simulator |
@@ -109,6 +109,12 @@ clients independently check the data path. Three retained runs passed 13 cases
 each. EasyMesh initiation, native OpenSync firmware and physical RF remain outside
 that integration's evidence. See the [team manual](../guides/team-manual.md#11-run-emosa-through-ovsdb-to-hwsim-and-real-clients)
 for preparation, commands and demo interpretation.
+
+The later [Ethernet WSC exercise](../protocol/wsc-wire-radio.md) uses the same
+radio boundary with an authenticated packet-driven operation. Its synthetic
+hostap payload peer, receipt, Config/State separation and independent clients
+form one observed run. It runs no native controller or OpenSync firmware and
+does not establish complete onboarding.
 
 For physical pods, the station needs a real Wi-Fi NIC reachable through the
 dedicated VM/container (or a separate independent client). hwsim simulates

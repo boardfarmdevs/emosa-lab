@@ -237,7 +237,7 @@ and selected Table E-4 classes. Exact references and limitations accompany the
 
 Next, resolve the HE conversion using independently derived asymmetric examples,
 combine it with the selected Wi-Fi 6 companion mapping and continue the complete capability-report
-and profile procedure audit. Full wire processing still requires IEEE 1905.1-2013
-and IEEE 1905.1a-2014. Actual pod access and qualification remain pending.
+and profile procedure audit. The [IEEE envelope component](../protocol/ieee1905-envelope.md) now uses the obtained
+IEEE 1905.1-2013/1905.1a-2014 texts; full procedure integration remains unfinished. Actual pod access and qualification remain pending.
 The acceptance path remains **real EasyMesh messages → EMOSA adapter → unchanged
 physical OpenSync pod → independently observed behavior**.

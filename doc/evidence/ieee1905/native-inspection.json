@@ -1,0 +1,1379 @@
+{
+  "schema_version": 1,
+  "scope": "IEEE1905_envelope_and_base_discovery_inspection",
+  "packets": 59,
+  "ignored_non_1905": 0,
+  "unsupported_tagged_frames": 0,
+  "messages": [
+    {
+      "completed_at_frame": 1,
+      "source": "02:00:00:e0:00:02",
+      "destination": "01:80:c2:00:00:13",
+      "message_type": "0x0007",
+      "name": "AP Autoconfiguration Search",
+      "mid": 1,
+      "relay": true,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x01",
+          "length": 6
+        },
+        {
+          "type": "0x0d",
+          "length": 1
+        },
+        {
+          "type": "0x0e",
+          "length": 1
+        },
+        {
+          "type": "0x80",
+          "length": 3
+        },
+        {
+          "type": "0x81",
+          "length": 2
+        },
+        {
+          "type": "0x0b",
+          "length": 22
+        },
+        {
+          "type": "0xb3",
+          "length": 1
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 2,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0008",
+      "name": "AP Autoconfiguration Response",
+      "mid": 1,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0f",
+          "length": 1
+        },
+        {
+          "type": "0x10",
+          "length": 1
+        },
+        {
+          "type": "0x80",
+          "length": 2
+        },
+        {
+          "type": "0xb3",
+          "length": 1
+        },
+        {
+          "type": "0xb4",
+          "length": 4
+        },
+        {
+          "type": "0xdd",
+          "length": 1
+        },
+        {
+          "type": "0x0b",
+          "length": 22
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 3,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x8043",
+      "name": "uninterpreted message type",
+      "mid": 2,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0xa1",
+          "length": 1
+        },
+        {
+          "type": "0x85",
+          "length": 21
+        },
+        {
+          "type": "0x86",
+          "length": 7
+        },
+        {
+          "type": "0x88",
+          "length": 13
+        },
+        {
+          "type": "0xaa",
+          "length": 27
+        },
+        {
+          "type": "0xbe",
+          "length": 7
+        },
+        {
+          "type": "0xcc",
+          "length": 2
+        },
+        {
+          "type": "0xb4",
+          "length": 4
+        },
+        {
+          "type": "0xc5",
+          "length": 4
+        },
+        {
+          "type": "0xb2",
+          "length": 3
+        },
+        {
+          "type": "0xd4",
+          "length": 47
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 4,
+      "source": "02:00:00:e0:00:02",
+      "destination": "01:80:c2:00:00:13",
+      "message_type": "0x0000",
+      "name": "Topology Discovery",
+      "mid": 5,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x01",
+          "length": 6
+        },
+        {
+          "type": "0x02",
+          "length": 6
+        }
+      ],
+      "procedure_validation": "base_topology_discovery_only",
+      "operation_created": false,
+      "discovery": {
+        "al_mac": "02:00:00:e0:00:02",
+        "interface_mac": "00:16:3e:0d:9a:ca"
+      }
+    },
+    {
+      "completed_at_frame": 5,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0009",
+      "name": "AP Autoconfiguration WSC",
+      "mid": 7,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x85",
+          "length": 21
+        },
+        {
+          "type": "0x11",
+          "length": 391
+        },
+        {
+          "type": "0xb4",
+          "length": 4
+        },
+        {
+          "type": "0xbe",
+          "length": 7
+        },
+        {
+          "type": "0x0b",
+          "length": 229
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 7,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0009",
+      "name": "AP Autoconfiguration WSC",
+      "mid": 20,
+      "relay": false,
+      "fragments": 2,
+      "tlvs": [
+        {
+          "type": "0x82",
+          "length": 6
+        },
+        {
+          "type": "0x11",
+          "length": 577
+        },
+        {
+          "type": "0x11",
+          "length": 577
+        },
+        {
+          "type": "0x11",
+          "length": 400
+        },
+        {
+          "type": "0xb5",
+          "length": 3
+        },
+        {
+          "type": "0xec",
+          "length": 1
+        },
+        {
+          "type": "0x0b",
+          "length": 59
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 8,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 8,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 31
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 9,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x8008",
+      "name": "uninterpreted message type",
+      "mid": 9,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x8f",
+          "length": 10
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 10,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x8000",
+      "name": "1905 Ack",
+      "mid": 9,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 11,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0001",
+      "name": "Topology Notification",
+      "mid": 21,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x01",
+          "length": 6
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 12,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x8003",
+      "name": "uninterpreted message type",
+      "mid": 23,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0xb5",
+          "length": 3
+        },
+        {
+          "type": "0x8a",
+          "length": 12
+        },
+        {
+          "type": "0xc4",
+          "length": 5
+        },
+        {
+          "type": "0x89",
+          "length": 12
+        },
+        {
+          "type": "0xdb",
+          "length": 22
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 13,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x8006",
+      "name": "uninterpreted message type",
+      "mid": 24,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 14,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0002",
+      "name": "Topology Query",
+      "mid": 25,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0xb3",
+          "length": 1
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 15,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x8004",
+      "name": "uninterpreted message type",
+      "mid": 26,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 16,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x8001",
+      "name": "AP Capability Query",
+      "mid": 27,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 17,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x8027",
+      "name": "uninterpreted message type",
+      "mid": 28,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 18,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x8007",
+      "name": "uninterpreted message type",
+      "mid": 24,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x8e",
+          "length": 7
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 19,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x8008",
+      "name": "uninterpreted message type",
+      "mid": 10,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x8f",
+          "length": 10
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 20,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0003",
+      "name": "Topology Response",
+      "mid": 25,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x03",
+          "length": 72
+        },
+        {
+          "type": "0x06",
+          "length": 12
+        },
+        {
+          "type": "0x06",
+          "length": 12
+        },
+        {
+          "type": "0x80",
+          "length": 3
+        },
+        {
+          "type": "0x83",
+          "length": 73
+        },
+        {
+          "type": "0x0b",
+          "length": 37
+        },
+        {
+          "type": "0xcb",
+          "length": 7
+        },
+        {
+          "type": "0xb7",
+          "length": 77
+        },
+        {
+          "type": "0xb3",
+          "length": 1
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 21,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x8000",
+      "name": "1905 Ack",
+      "mid": 23,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 22,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x8002",
+      "name": "AP Capability Report",
+      "mid": 27,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0xa1",
+          "length": 1
+        },
+        {
+          "type": "0x85",
+          "length": 21
+        },
+        {
+          "type": "0x86",
+          "length": 7
+        },
+        {
+          "type": "0x88",
+          "length": 13
+        },
+        {
+          "type": "0xaa",
+          "length": 27
+        },
+        {
+          "type": "0xbe",
+          "length": 7
+        },
+        {
+          "type": "0xcc",
+          "length": 2
+        },
+        {
+          "type": "0xa5",
+          "length": 26
+        },
+        {
+          "type": "0xb4",
+          "length": 4
+        },
+        {
+          "type": "0xc5",
+          "length": 4
+        },
+        {
+          "type": "0xb2",
+          "length": 3
+        },
+        {
+          "type": "0xd4",
+          "length": 47
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 23,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x8028",
+      "name": "uninterpreted message type",
+      "mid": 28,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0xcb",
+          "length": 7
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 24,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x8000",
+      "name": "1905 Ack",
+      "mid": 10,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 25,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x8005",
+      "name": "uninterpreted message type",
+      "mid": 26,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x8b",
+          "length": 43
+        },
+        {
+          "type": "0xaf",
+          "length": 11
+        },
+        {
+          "type": "0xb1",
+          "length": 3
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 26,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x8000",
+      "name": "1905 Ack",
+      "mid": 26,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 27,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0005",
+      "name": "Link Metric Query",
+      "mid": 29,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x08",
+          "length": 2
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 28,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0006",
+      "name": "Link Metric Response",
+      "mid": 29,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 29,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 11,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 1446
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 30,
+      "source": "02:00:00:e0:00:02",
+      "destination": "01:80:c2:00:00:13",
+      "message_type": "0x0001",
+      "name": "Topology Notification",
+      "mid": 12,
+      "relay": true,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x01",
+          "length": 6
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 31,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0001",
+      "name": "Topology Notification",
+      "mid": 12,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x01",
+          "length": 6
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 32,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0002",
+      "name": "Topology Query",
+      "mid": 31,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0xb3",
+          "length": 1
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 33,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0003",
+      "name": "Topology Response",
+      "mid": 31,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x03",
+          "length": 72
+        },
+        {
+          "type": "0x06",
+          "length": 12
+        },
+        {
+          "type": "0x06",
+          "length": 12
+        },
+        {
+          "type": "0x80",
+          "length": 3
+        },
+        {
+          "type": "0x83",
+          "length": 71
+        },
+        {
+          "type": "0x0b",
+          "length": 37
+        },
+        {
+          "type": "0xcb",
+          "length": 7
+        },
+        {
+          "type": "0xb7",
+          "length": 75
+        },
+        {
+          "type": "0xb3",
+          "length": 1
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 34,
+      "source": "02:00:00:e0:00:02",
+      "destination": "01:80:c2:00:00:13",
+      "message_type": "0x0001",
+      "name": "Topology Notification",
+      "mid": 13,
+      "relay": true,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x01",
+          "length": 6
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 35,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0001",
+      "name": "Topology Notification",
+      "mid": 13,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x01",
+          "length": 6
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 36,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0002",
+      "name": "Topology Query",
+      "mid": 35,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0xb3",
+          "length": 1
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 37,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0003",
+      "name": "Topology Response",
+      "mid": 35,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x03",
+          "length": 72
+        },
+        {
+          "type": "0x06",
+          "length": 12
+        },
+        {
+          "type": "0x07",
+          "length": 13
+        },
+        {
+          "type": "0x80",
+          "length": 3
+        },
+        {
+          "type": "0x83",
+          "length": 71
+        },
+        {
+          "type": "0x0b",
+          "length": 37
+        },
+        {
+          "type": "0xcb",
+          "length": 7
+        },
+        {
+          "type": "0xb7",
+          "length": 75
+        },
+        {
+          "type": "0xb3",
+          "length": 1
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 38,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x8026",
+      "name": "uninterpreted message type",
+      "mid": 14,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0xc0",
+          "length": 6
+        },
+        {
+          "type": "0xc1",
+          "length": 1
+        },
+        {
+          "type": "0xc2",
+          "length": 143
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 39,
+      "source": "02:00:00:e0:00:02",
+      "destination": "01:80:c2:00:00:13",
+      "message_type": "0x0001",
+      "name": "Topology Notification",
+      "mid": 15,
+      "relay": true,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x01",
+          "length": 6
+        },
+        {
+          "type": "0x92",
+          "length": 13
+        },
+        {
+          "type": "0x0b",
+          "length": 94
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 40,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0001",
+      "name": "Topology Notification",
+      "mid": 15,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x01",
+          "length": 6
+        },
+        {
+          "type": "0x92",
+          "length": 13
+        },
+        {
+          "type": "0x0b",
+          "length": 94
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 41,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x8009",
+      "name": "uninterpreted message type",
+      "mid": 37,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x90",
+          "length": 12
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 42,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x800a",
+      "name": "uninterpreted message type",
+      "mid": 37,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x90",
+          "length": 12
+        },
+        {
+          "type": "0x91",
+          "length": 144
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 43,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 38,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 39
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 44,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 16,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 23
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 45,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 39,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 353
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 46,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 40,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 353
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 47,
+      "source": "02:00:00:e0:00:02",
+      "destination": "01:80:c2:00:00:13",
+      "message_type": "0x0000",
+      "name": "Topology Discovery",
+      "mid": 19,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x01",
+          "length": 6
+        },
+        {
+          "type": "0x02",
+          "length": 6
+        }
+      ],
+      "procedure_validation": "base_topology_discovery_only",
+      "operation_created": false,
+      "discovery": {
+        "al_mac": "02:00:00:e0:00:02",
+        "interface_mac": "00:16:3e:0d:9a:ca"
+      }
+    },
+    {
+      "completed_at_frame": 48,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 41,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 353
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 49,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x800c",
+      "name": "uninterpreted message type",
+      "mid": 21,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0xc7",
+          "length": 30
+        },
+        {
+          "type": "0xc7",
+          "length": 30
+        },
+        {
+          "type": "0xa2",
+          "length": 34
+        },
+        {
+          "type": "0xc8",
+          "length": 7
+        },
+        {
+          "type": "0x96",
+          "length": 26
+        },
+        {
+          "type": "0xb0",
+          "length": 23
+        },
+        {
+          "type": "0xc6",
+          "length": 10
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 50,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 42,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 39
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 51,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 43,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 39
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 52,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 44,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 39
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 53,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 45,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 39
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 54,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 46,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 39
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 55,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0005",
+      "name": "Link Metric Query",
+      "mid": 47,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x08",
+          "length": 2
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 56,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0006",
+      "name": "Link Metric Response",
+      "mid": 47,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x09",
+          "length": 41
+        },
+        {
+          "type": "0x0a",
+          "length": 35
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 57,
+      "source": "02:00:00:e0:00:01",
+      "destination": "02:00:00:e0:00:02",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 49,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 39
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 58,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 22,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 28
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    },
+    {
+      "completed_at_frame": 59,
+      "source": "02:00:00:e0:00:02",
+      "destination": "02:00:00:e0:00:01",
+      "message_type": "0x0004",
+      "name": "Vendor Specific",
+      "mid": 23,
+      "relay": false,
+      "fragments": 1,
+      "tlvs": [
+        {
+          "type": "0x0b",
+          "length": 39
+        }
+      ],
+      "procedure_validation": "not_performed",
+      "operation_created": false
+    }
+  ],
+  "rejected": [],
+  "expired_assemblies": 0,
+  "incomplete_or_quarantined": 0,
+  "buffered_bytes": 0,
+  "operations_created": 0,
+  "onboarding_proven": false,
+  "physical_pod_proven": false
+}

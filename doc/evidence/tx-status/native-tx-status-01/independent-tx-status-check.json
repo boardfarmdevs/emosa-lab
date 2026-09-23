@@ -1,0 +1,128 @@
+{
+  "kernel_retry_discrepancy_explained": true,
+  "scope": "kernel completion flags and retry bookkeeping; not an EasyMesh conversion",
+  "capture_health": {
+    "ethernet": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 136,
+      "captured": 136,
+      "received_by_filter": 136,
+      "dropped_by_kernel": 0
+    },
+    "radio": {
+      "passed": true,
+      "linktype": 127,
+      "pcap_records": 11574,
+      "captured": 11574,
+      "received_by_filter": 11574,
+      "dropped_by_kernel": 0
+    },
+    "netlink": {
+      "passed": true,
+      "linktype": 253,
+      "pcap_records": 62241,
+      "captured": 62241,
+      "received_by_filter": 62241,
+      "dropped_by_kernel": 0
+    }
+  },
+  "loss_checked_trace_records": 1029,
+  "sessions": [
+    {
+      "lifetime": 1,
+      "traced_completions": 168,
+      "ampdu_flag_without_aggregate_status": 161,
+      "medium_status_retries": 233,
+      "retries_suppressed_by_missing_aggregate_status": 227,
+      "predicted_and_observed_kernel_retries": 6,
+      "previous_lifetime_completions_in_pre_event_window": 0
+    },
+    {
+      "lifetime": 2,
+      "traced_completions": 117,
+      "ampdu_flag_without_aggregate_status": 109,
+      "medium_status_retries": 252,
+      "retries_suppressed_by_missing_aggregate_status": 242,
+      "predicted_and_observed_kernel_retries": 10,
+      "previous_lifetime_completions_in_pre_event_window": 0
+    },
+    {
+      "lifetime": 3,
+      "traced_completions": 142,
+      "ampdu_flag_without_aggregate_status": 105,
+      "medium_status_retries": 560,
+      "retries_suppressed_by_missing_aggregate_status": 410,
+      "predicted_and_observed_kernel_retries": 150,
+      "previous_lifetime_completions_in_pre_event_window": 0
+    },
+    {
+      "lifetime": 4,
+      "traced_completions": 62,
+      "ampdu_flag_without_aggregate_status": 42,
+      "medium_status_retries": 157,
+      "retries_suppressed_by_missing_aggregate_status": 81,
+      "predicted_and_observed_kernel_retries": 76,
+      "previous_lifetime_completions_in_pre_event_window": 0
+    },
+    {
+      "lifetime": 5,
+      "traced_completions": 2,
+      "ampdu_flag_without_aggregate_status": 0,
+      "medium_status_retries": 10,
+      "retries_suppressed_by_missing_aggregate_status": 0,
+      "predicted_and_observed_kernel_retries": 10,
+      "previous_lifetime_completions_in_pre_event_window": 0
+    },
+    {
+      "lifetime": 6,
+      "traced_completions": 106,
+      "ampdu_flag_without_aggregate_status": 100,
+      "medium_status_retries": 228,
+      "retries_suppressed_by_missing_aggregate_status": 228,
+      "predicted_and_observed_kernel_retries": 0,
+      "previous_lifetime_completions_in_pre_event_window": 1
+    },
+    {
+      "lifetime": 7,
+      "traced_completions": 145,
+      "ampdu_flag_without_aggregate_status": 125,
+      "medium_status_retries": 495,
+      "retries_suppressed_by_missing_aggregate_status": 475,
+      "predicted_and_observed_kernel_retries": 20,
+      "previous_lifetime_completions_in_pre_event_window": 0
+    },
+    {
+      "lifetime": 8,
+      "traced_completions": 114,
+      "ampdu_flag_without_aggregate_status": 106,
+      "medium_status_retries": 189,
+      "retries_suppressed_by_missing_aggregate_status": 173,
+      "predicted_and_observed_kernel_retries": 16,
+      "previous_lifetime_completions_in_pre_event_window": 0
+    },
+    {
+      "lifetime": 9,
+      "traced_completions": 2,
+      "ampdu_flag_without_aggregate_status": 0,
+      "medium_status_retries": 10,
+      "retries_suppressed_by_missing_aggregate_status": 0,
+      "predicted_and_observed_kernel_retries": 10,
+      "previous_lifetime_completions_in_pre_event_window": 0
+    },
+    {
+      "lifetime": 10,
+      "traced_completions": 104,
+      "ampdu_flag_without_aggregate_status": 85,
+      "medium_status_retries": 287,
+      "retries_suppressed_by_missing_aggregate_status": 258,
+      "predicted_and_observed_kernel_retries": 29,
+      "previous_lifetime_completions_in_pre_event_window": 1
+    }
+  ],
+  "raw_retry_counter_counts_all_medium_attempts": false,
+  "raw_counter_passthrough_valid": false,
+  "online_measurement_source_qualified": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

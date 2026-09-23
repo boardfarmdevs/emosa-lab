@@ -1,0 +1,150 @@
+{
+  "label": "emosa-search-p1-06",
+  "status": "response_observed_admission_pending",
+  "exchange_observed": true,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "operations_created": 0,
+  "wsc_started": false,
+  "namespace": "em-disc-780b4834",
+  "temporary_interface": "edace32011",
+  "source_sha256": {
+    "discovery-trial.py": "1f3dd6abf14607fa95f0ab9e1de0571cb667033eac06c1c95bdc1c916cdde1a8",
+    "controller-trial.py": "a16df8cab0cec57a42b8651ff7fbdaf61b5ee06bdf9042a51c34e40107d98ed2",
+    "node.py": "6fe151976ff335a425f3923735ed4544b0ca0bbf23562b5694a083d0636fe10b",
+    "reference.json": "08632d9791dbf622d814ad010b83e1c1981060efcf3f8b4280f03e2924c8093a",
+    "prplmesh.reference.json": "56a43853b8264ca48c6236fe9576bc66e490d8566f3bbe95ba24fc85b21f5121",
+    "run.py": "b1410bdf1c552cc989e93461085abf665b2e7dfb9530580610cc396ee1392ca3",
+    "setup.py": "94ca87f6efe76159008bcd2bde49951600238f2cf1b6e70f2a9441b3cbc06890",
+    "controller_probe.py": "3dcb67e8c37d11316ad7bcf71c4cd4639b9e6993ce005da1ef33b0c4b653ecec"
+  },
+  "previous_controller_collection": {
+    "em-baseline-controller": []
+  },
+  "transport_readiness": {
+    "pid": 9408,
+    "bound_interfaces": [
+      "br-lan",
+      "eth1"
+    ],
+    "ready": true
+  },
+  "inventory_before": {
+    "device_ids": [
+      "02:00:00:e0:00:01"
+    ],
+    "probe_entry": null
+  },
+  "capture_response_observed": true,
+  "probe": {
+    "scope": "native_controller_discovery_probe_only",
+    "state": "response_observed",
+    "search_profile": 1,
+    "sent_mids": [
+      65535
+    ],
+    "response_mid": 65535,
+    "response_profile": 1,
+    "profile_correlated": true,
+    "controller_flags_hex": "40",
+    "security_capability_hex": null,
+    "selected_response_issues": [
+      "kib_mib_support_absent",
+      "security_capability_absent"
+    ],
+    "pending_requirements": [
+      "profile_qualification",
+      "security_capability_applicability",
+      "security_capability_absent",
+      "kib_mib_support_absent",
+      "early_ap_capability_procedure_and_table117_review"
+    ],
+    "counts": {
+      "search_sent": 1,
+      "response_correlated": 1
+    },
+    "wsc_started": false,
+    "operations_created": 0,
+    "profile_qualified": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "frames_received": 1
+  },
+  "inventory_after": {
+    "device_ids": [
+      "02:00:00:00:30:01",
+      "02:00:00:e0:00:01"
+    ],
+    "probe_entry": {
+      "path": "Device.WiFi.DataElements.Network.Device.2.",
+      "profile": 1,
+      "reported_radio_count": 0,
+      "radio_ids": [],
+      "bss_count": 0,
+      "agent_mode": "Running",
+      "backhaul_link_type": "None"
+    }
+  },
+  "discovery_entry_observed": true,
+  "shutdown": {
+    "em-baseline-controller": [
+      {
+        "unit": "agent",
+        "before": {
+          "MainPID": "9419",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "core-dump",
+          "ExecMainStatus": "6"
+        }
+      },
+      {
+        "unit": "controller",
+        "before": {
+          "MainPID": "9412",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "core-dump",
+          "ExecMainStatus": "6"
+        }
+      },
+      {
+        "unit": "transport",
+        "before": {
+          "MainPID": "9408",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "bus",
+        "before": {
+          "MainPID": "9404",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "hostap",
+        "before": {
+          "MainPID": "9394",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      }
+    ]
+  },
+  "native_shutdown_abnormal": true,
+  "cleanup_errors": []
+}

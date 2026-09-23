@@ -22,7 +22,10 @@ The locally built `ovsdb-server` and `ovsdb-tool` are version 4.0.0. Source arch
 and binary digests are in `doc/evidence/bootstrap.json`. Building just these
 targets first requires the upstream `BUILT_SOURCES`; the supplied build script
 generates them before linking. There is no `make install`, system daemon or
-switching datapath. TLS is disabled in this **simulation-only** binary build.
+switching datapath. The original bootstrap binary had TLS disabled; those hashes
+remain historical evidence. The current build enables OpenSSL and requires
+`libssl-dev` for the [secure-fleet tests](../guides/secure-fleet.md). New host and
+clean-runtime binary hashes are retained with that experiment.
 
 The integration suite checks schema retrieval, initial monitor snapshots,
 incremental update/delete/reference handling, set/map/optional values, guarded
@@ -55,7 +58,14 @@ server build; snapshots depend on cardinality and enabled columns. The initial
 16 MiB parser admission/decoded-message budget and 10,000-row cache bound are
 engineering resource limits, **not** OpenSync or EasyMesh protocol limits.
 Exhaustion marks the observation cache unready and forces full resynchronization.
-Larger physical schemas/snapshots and authenticated TLS remain unqualified.
+Larger physical schemas/snapshots and actual pod trust remain unqualified.
+Authenticated pod-initiated TLS is now tested using the bounded accept boundary
+in `src/emosa/opensync/tls_listener.py`, followed by the upstream OVS stream/session.
+It rejects invalid clients before they can replace an active connection, bounds
+pending handshakes and avoids outgoing TLS's process-global certificate settings.
+The [secure-fleet guide](../guides/secure-fleet.md) describes its explicit bindings,
+resource limits and 4/8/16/32-session service workload. This adds a fourth narrow
+upstream compatibility boundary without modifying installed OVS package files.
 
 ## Provisioning crypto
 

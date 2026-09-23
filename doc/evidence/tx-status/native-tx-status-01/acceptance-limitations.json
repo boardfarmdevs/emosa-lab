@@ -1,0 +1,18 @@
+{
+  "onboarding": {
+    "passed": false,
+    "exception": "AssertionError",
+    "detail": ""
+  },
+  "policy": {
+    "passed": false,
+    "exception": "AssertionError",
+    "detail": ""
+  },
+  "explanation": {
+    "onboarding": "Initial Wi-Fi ping lost one of two packets under intentional 20% medium loss; the zero-loss check correctly rejects it.",
+    "policy": "Four policy receipts and onboarding operations, not the expected three: stale client telemetry caused an extra discovery while OVSDB remained connected."
+  },
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

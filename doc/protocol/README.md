@@ -6,6 +6,13 @@
 | --- | --- |
 | [Specification inputs](protocol-inputs.md) | Authoritative sources, proposed editions and selected procedure scope |
 | [Acquisition checklist](specification-acquisition.md) | Required, obtained and pending external documents |
+| [IEEE 1905 envelope implementation](ieee1905-envelope.md) | Obtained base/amendment, audited frame/TLV rules, bounded reassembly, native vectors and isolated Ethernet checks |
+| [Controller discovery and WSC exchanges](autoconfiguration.md) | Search/M1 construction, Response/M2 binding, lifetime/replay controls, native compatibility findings and beginner exercise |
+| [Capability and topology reports](reports.md) | Restricted Early Report and Topology Response, facts/freshness checks, offline and Ethernet exercises, native compatibility findings |
+| [Read-only report coordinator](report-coordinator.md) | Real database source, Topology Query loop, Early Report Ack/retry, source withdrawal and isolated Ethernet reproduction |
+| [Discovery before reporting](discovery-session.md) | Bounded Search/Response lifecycle, required-field diagnostics, reconnect invalidation and read-only topology |
+| [Authenticated WSC to durable operation](wsc-provisioning.md) | Independent hostap M2 drives real owned OVSDB; atomic receipt, duplicate, lost-reply, identity-race and process-crash cases |
+| [Ethernet WSC to observed Wi-Fi](wsc-wire-radio.md) | Actual packet receiver, authenticated operation, real OVSDB, separate hwsim manager and client evidence; synthetic peer, native admission pending |
 | [IEEE media input review](ieee-media-review.md) | Verified 802.11-2024 and 802.3-2022 PDFs, selected clauses, corrections and Ethernet edition gap |
 | [Protocol matrix](protocol-matrix.json) | Rules, sections, implementation evidence and unresolved procedure requirements |
 | [EasyMesh value components](easymesh-payloads.md) | Service, radio identity, Operational BSS and profile values; offline CLI, exact references and independent native-capture checks |
@@ -16,7 +23,18 @@
 | [WSC cryptographic component](wsc-component.md) | Bounded cryptography, independent vectors and validation limits |
 | [WSC M1/M2 payloads](wsc-messages.md) | Payload construction, authentication and required-field checks |
 | [WSC radio interpretation](wsc-radio.md) | Authenticated BSS roles, teardown and complete-radio admission |
+| [Native simulated-pod onboarding](native-onboarding.md) | Real controller discovery/WSC through EMOSA, independent radio manager and client traffic |
+| [Sustained operation](sustained-operation.md) | 15-minute operational recovery, reporting gaps and full acceptance criteria |
+| [Final session statistics](final-session-statistics.md) | Implemented sender, guarded handoff and remaining measurement qualification |
+| [Station-removal observation](station-removal-observations.md) | Raw final kernel records, radio reasons and EasyMesh leave correlation |
+| [Station counter accounting](station-counter-accounting.md) | Capture health, exact Ubuntu source reconstruction, measured byte/packet boundaries and reproduction |
+| [Counters under medium loss](medium-loss-accounting.md) | Optional pinned wmediumd, captured kernel status and failure accounting; retry and airtime qualification limits |
+| [Kernel completion flags](tx-status-accounting.md) | Explain retry suppression using a passive exact-kernel probe and independently correlated completions |
+| [Telemetry freshness](telemetry-freshness.md) | Withhold stale observations without restarting a healthy control session; reproduce the native gap and both recovery faults |
+| [Reporting policy receipt](reporting-policy.md) | Durable native policy, same-MID Ack, recovery-preserved schedule and explicit missing reports |
+| [Neighbor link metrics](neighbor-link-metrics.md) | Direction-specific IEEE 1905 responses, guarded measurement handoff and the remaining pod/peer interface qualification |
 
-Component checks do not establish a complete IEEE 1905/EasyMesh exchange.
-Specification-dependent wire validation and controller onboarding remain gated.
-Open-source reference behavior supplements the normative specifications.
+Component checks retain their individual scope. The native onboarding guide
+establishes the bounded simulated-pod exchange; full-profile sustained reporting
+and physical-pod qualification remain incomplete. Open-source reference behavior
+supplements the normative specifications.

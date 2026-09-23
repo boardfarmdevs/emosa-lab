@@ -17,9 +17,11 @@ from concurrent.futures import ThreadPoolExecutor
 import ovs.fatal_signal
 import ovs.jsonrpc
 import ovs.stream
+import ovs.timeval
 
 from emosa.errors import EmosaError, Reason
 from emosa.opensync.schema import TABLES, Schema
+from emosa.opensync.tls_listener import TlsListener, listener_address, server_context
 
 TLS_PROFILE_LOCK = threading.Lock()
 UNIX_SIGNAL_HOOK_READY = False
@@ -61,14 +63,23 @@ class OvsSession:
         local_endpoint = endpoint.startswith(("unix:", "punix:", "tcp:127.0.0.1:")) or re.fullmatch(
             r"ptcp:[0-9]+:127\.0\.0\.1", endpoint
         )
+        tls_listener = endpoint.startswith("pssl:") and tls_files and peer_certificate_sha256
         tls_endpoint = (
             endpoint.startswith("ssl:") and read_only and tls_files and peer_certificate_sha256
         )
-        if not local_endpoint and not tls_endpoint:
+        if not local_endpoint and not tls_endpoint and not tls_listener:
             raise EmosaError(
                 Reason.MISSING_PREREQUISITE,
                 "only isolated simulation transports qualified; TLS/pod trust pending",
             )
+        if (tls_listener or tls_endpoint) and not re.fullmatch(
+            r"[0-9a-f]{64}", peer_certificate_sha256
+        ):
+            raise EmosaError(Reason.INVALID_INPUT, "TLS requires an explicit SHA-256 peer pin")
+        self.listener_context = None
+        if tls_listener:
+            listener_address(endpoint)
+            self.listener_context = server_context(tls_files)
         if endpoint.startswith("punix:") and not UNIX_SIGNAL_HOOK_READY:
             # Upstream Unix listeners register unlink hooks on first use. Initialize
             # their signal machinery on the main thread before the bounded worker
@@ -130,6 +141,21 @@ class OvsSession:
         if self.rpc is None:
             self.thread_id = threading.get_ident()
             self.rpc = ovs.jsonrpc.Session.open(self.endpoint)
+            if self.listener_context is not None:
+                # pssl is deliberately not registered as a plaintext OVS method.
+                # A missing/failed custom listener therefore cannot fall back to TCP.
+                try:
+                    self.rpc.pstream = TlsListener(
+                        self.endpoint, self.listener_context, self.peer_certificate_sha256
+                    )
+                except BaseException:
+                    self.rpc.close()
+                    self.rpc = None
+                    raise
+                now = ovs.timeval.msec()
+                self.rpc.reconnect.set_passive(True, now)
+                self.rpc.reconnect.set_probe_interval(5000)
+                self.rpc.reconnect.listening(now)
             # Independent jitter per session; upstream reconnect supplies exponential backoff.
             self.rpc.reconnect.set_backoff(
                 1000 + random.randrange(250), 8000 + random.randrange(1000)

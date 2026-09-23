@@ -1,0 +1,12 @@
+Building wheel...
+Successfully built .cache/reliability/lxd/bundle/emosa-0.1.0-py3-none-any.whl
+Traceback (most recent call last):
+  File "/home/rev/git/emosa-lab/deploy/reliability/lab.py", line 328, in <module>
+    main()
+  File "/home/rev/git/emosa-lab/deploy/reliability/lab.py", line 172, in main
+    "".join(
+  File "/home/rev/git/emosa-lab/deploy/reliability/lab.py", line 173, in <genexpr>
+    f"{digest(p)}  {p.relative_to(bundle)}\n"
+  File "/home/rev/git/emosa-lab/deploy/reliability/lab.py", line 32, in digest
+    return hashlib.file_digest(stream, "sha256").hexdigest()
+AttributeError: module 'hashlib' has no attribute 'file_digest'

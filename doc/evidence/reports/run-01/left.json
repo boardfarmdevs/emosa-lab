@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "scope": "synthetic_report_exchange_over_AF_PACKET",
+  "messages_received": [
+    2
+  ],
+  "result": {
+    "query_mid": 65535,
+    "response_mid": 65535
+  },
+  "native_controller_used": false,
+  "radio_used": false,
+  "config_writes": 0,
+  "onboarding_proven": false,
+  "physical_pod_proven": false
+}

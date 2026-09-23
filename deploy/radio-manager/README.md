@@ -105,15 +105,21 @@ lxc file pull --recursive --quiet \
   emosa-lab/opt/emosa-radio-manager/runs .lab/radio-manager/
 ```
 
-## Next integration boundary
+## WSC packet-driven component and the next boundary
 
-The completed radio boundary can consume Config changes from a future genuine
-EMOSA onboarding exchange. The next path is the pinned EasyMesh controller →
-EMOSA virtual-agent discovery/WSC → this OVSDB/radio boundary. The packet endpoint,
-controller/exchange binding, full radio-wide request validation and normative
-vectors remain pending P0. Existing WSC payload components do not bypass that
-gate or authorize a write. The missing IEEE editions and related documents remain
-in the [acquisition checklist](../../doc/protocol/specification-acquisition.md).
+The separate [WSC radio walkthrough](../../doc/protocol/wsc-wire-radio.md) adds
+`stage.py --wsc` and `run-wsc.py --label LABEL [--lost-reply]`. It connects
+authenticated M2 over actual Ethernet to the operation engine and this manager,
+with independent clients, withholding and wrong-key rejection. It starts at the
+explicit owned WSC component boundary with a synthetic hostap payload peer; it
+does not activate native-controller discovery/profile admission. The semantic
+runner above retains its separate 13-case contract.
+
+Next join compatible native-controller discovery/Early/capability admission and
+controller-owned inventory to that packet-driven path. Both IEEE editions are
+now obtained; remaining normative dependencies and profile questions are in the
+[acquisition checklist](../../doc/protocol/specification-acquisition.md) and
+[protocol matrix](../../doc/protocol/protocol-matrix.json).
 
 Once a private pod connection path arrives, collect its read-only profile and
 qualify the physical mapping. The eventual acceptance path remains real EasyMesh

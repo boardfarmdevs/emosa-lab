@@ -7,11 +7,11 @@
     "I1": "implemented with model tests",
     "I2": "Real OVSDB and independent hostapd/hwsim clients tested through actual adapter service with pod-initiated connection and SIGKILL recovery; bounded two-pod test; semantic initiation only; see doc/guides/service-integration.md; strict sole-radio scope and atomic graph guards verified; see doc/guides/onboarding-readiness.md",
     "R0": "native apply/withhold experiment runs; database-restart recovery N03 fails and production backend remains disabled",
-    "I3": "blocked P0",
-    "I4": "WSC M1/M2 payload component independently tested; full procedure remains blocked P0/I3",
+    "I3": "Bounded native discovery, non-DPP admission, Early-before-M1, AP Capability and observed Topology reporting verified against a patched native controller candidate. Full profile and continuous management pending; see doc/protocol/native-onboarding.md Measured client reporting and active pilots are the current follow-on; see doc/protocol/sustained-operation.md. Selected channel procedures and 908-second operational recovery verified; policy/AP/STA/neighbor metrics and final disassociation statistics remain pending. See doc/evidence/native-soak/README.md. Final-statistics sender and authenticated observed-leave handoff tested, with independent synthetic packet decoding and a 150-second native byte-unit/recovery regression; measurement publisher remains unqualified. See doc/protocol/final-session-statistics.md. Read-only native station-removal acquisition verified with six independent radio-reason/leave correlations and both recovery faults; raw counter semantics and online publisher integration remain pending. See doc/protocol/station-removal-observations.md. Loss-checked capture and exact Ubuntu source subset now explain six normal-traffic counter records; nonzero error/retry semantics and online conversion remain unqualified. See doc/protocol/station-counter-accounting.md. Native reporting-policy receipt/Ack and durable schedule are now implemented; missing report periods survive reconnect/restart and cannot be counted as successful reports. See doc/protocol/reporting-policy.md.",
+    "I4": "Native-controller authenticated WSC now drives one durable operation through OVSDB into independent hostapd/hwsim State and wired/Wi-Fi clients. Captured M1 correlates to the receipt; Config withholding verified. Continuous management and physical acceptance remain pending.",
     "I5": "read-only draft collector implemented; physical qualification and writes blocked M0/P0",
     "I6": "incremental component runner/watch/inspect/report/compare; complete reference release pending",
-    "I7": "Native wired/wireless baseline and live controller preparation retained; diagnostic virtual AL is absent from native inventory; EMOSA wire exchanges, clean native shutdown and hardware interoperability remain pending; offline native capture review exposes discovery-profile and whole-request compatibility work"
+    "I7": "Native simulated onboarding, native STA/BSS inventory and 908-second operational recovery independently verified. Pod connection and SIGKILL recovery create fresh WSC operations without additional writes; candidate restored. Full mandatory reporting, native shutdown behavior, independent-controller and physical qualification remain pending. Final-statistics sender and authenticated observed-leave handoff tested, with independent synthetic packet decoding and a 150-second native byte-unit/recovery regression; measurement publisher remains unqualified. See doc/protocol/final-session-statistics.md. Read-only native station-removal acquisition verified with six independent radio-reason/leave correlations and both recovery faults; raw counter semantics and online publisher integration remain pending. See doc/protocol/station-removal-observations.md. Loss-checked capture and exact Ubuntu source subset now explain six normal-traffic counter records; nonzero error/retry semantics and online conversion remain unqualified. See doc/protocol/station-counter-accounting.md. Native reporting-policy receipt/Ack and durable schedule are now implemented; missing report periods survive reconnect/restart and cannot be counted as successful reports. See doc/protocol/reporting-policy.md."
   },
   "rows": [
     {
@@ -106,31 +106,47 @@
       "id": "LANG-02",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/opensync/session.py"
+        "src/emosa/opensync/session.py",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
       "test_refs": [
-        "tests/test_ovsdb.py"
+        "tests/test_ovsdb.py",
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
       ],
       "evidence_refs": [
-        "doc/evidence/ovsdb-results.xml"
+        "doc/evidence/ovsdb-results.xml",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": "ovsdb-sim",
-      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "LANG-03",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/opensync/session.py"
+        "src/emosa/opensync/session.py",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
       "test_refs": [
-        "tests/test_ovsdb.py"
+        "tests/test_ovsdb.py",
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
       ],
       "evidence_refs": [
-        "doc/evidence/ovsdb-results.xml"
+        "doc/evidence/ovsdb-results.xml",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": "ovsdb-sim",
-      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified."
+      "scope": "Verified only at the named component mode; any physical/protocol portions remain unqualified.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "LANG-04",
@@ -146,48 +162,72 @@
       "status": "blocked",
       "implementation_refs": [
         "deploy/README.md",
-        "deploy/images.lock.json"
+        "deploy/images.lock.json",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
-      "test_refs": [],
+      "test_refs": [
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
+      ],
       "evidence_refs": [
-        "doc/evidence/peer/qualification-summary.json"
+        "doc/evidence/peer/qualification-summary.json",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
-      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
-      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+      "blocker": "Actual M0 trust/topology and complete wire/physical procedure qualification remain pending.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "DEP-02",
       "status": "blocked",
       "implementation_refs": [
         "deploy/README.md",
-        "deploy/images.lock.json"
+        "deploy/images.lock.json",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
-      "test_refs": [],
+      "test_refs": [
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
+      ],
       "evidence_refs": [
-        "doc/evidence/peer/qualification-summary.json"
+        "doc/evidence/peer/qualification-summary.json",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
-      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
-      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+      "blocker": "Actual M0 trust/topology and complete wire/physical procedure qualification remain pending.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "DEP-03",
       "status": "blocked",
       "implementation_refs": [
         "deploy/README.md",
-        "deploy/images.lock.json"
+        "deploy/images.lock.json",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
-      "test_refs": [],
+      "test_refs": [
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
+      ],
       "evidence_refs": [
-        "doc/evidence/peer/qualification-summary.json"
+        "doc/evidence/peer/qualification-summary.json",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
-      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
-      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+      "blocker": "Actual M0 trust/topology and complete wire/physical procedure qualification remain pending.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "DEP-04",
@@ -290,32 +330,48 @@
       "status": "blocked",
       "implementation_refs": [
         "deploy/README.md",
-        "deploy/images.lock.json"
+        "deploy/images.lock.json",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
-      "test_refs": [],
+      "test_refs": [
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
+      ],
       "evidence_refs": [
-        "doc/evidence/peer/qualification-summary.json"
+        "doc/evidence/peer/qualification-summary.json",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
-      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
-      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+      "blocker": "Actual M0 trust/topology and complete wire/physical procedure qualification remain pending.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "DEP-11",
       "status": "blocked",
       "implementation_refs": [
         "deploy/README.md",
-        "deploy/images.lock.json"
+        "deploy/images.lock.json",
+        "src/emosa/opensync/tls_listener.py",
+        "src/emosa/simulation/reliability.py",
+        "deploy/reliability/lab.py"
       ],
-      "test_refs": [],
+      "test_refs": [
+        "tests/test_tls_listener.py",
+        "tests/test_reliability.py",
+        "tests/test_reliability_deployment.py"
+      ],
       "evidence_refs": [
-        "doc/evidence/peer/qualification-summary.json"
+        "doc/evidence/peer/qualification-summary.json",
+        "doc/evidence/reliability/summary.json"
       ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
-      "blocker": "Reference LXD runtime and/or actual M0 topology/trust qualification incomplete.",
-      "independent_work": "Ubuntu 24.04 component tests, VM-driven semantic scenarios, base image export and independent peer baseline verified; full procedure deployment remains pending."
+      "blocker": "Actual M0 trust/topology and complete wire/physical procedure qualification remain pending.",
+      "independent_work": "Synthetic pod-initiated TLS admission and 4/8/16/32-session service/fault workloads reproduced from an installed wheel in a retained nested-LXD image. Actual pod trust/topology and full wire procedure remain unqualified."
     },
     {
       "id": "DEP-12",
@@ -1452,14 +1508,19 @@
       "id": "WIRE-01",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_ieee1905.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/ieee1905/summary.json"
+      ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
     },
@@ -1475,7 +1536,9 @@
         "src/emosa/evaluation/profile_audit.py",
         "src/emosa/counter_units.py",
         "src/emosa/capability_extensions.py",
-        "src/emosa/he_mcs.py"
+        "src/emosa/he_mcs.py",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
         "tests/test_gated.py",
@@ -1488,7 +1551,8 @@
         "tests/test_technology_values.py",
         "tests/test_capability_extensions.py",
         "tests/test_he_wifi6.py",
-        "tests/test_wifi6_projection.py"
+        "tests/test_wifi6_projection.py",
+        "tests/test_ieee1905.py"
       ],
       "evidence_refs": [
         "doc/evidence/observed-topology/summary.json",
@@ -1496,10 +1560,11 @@
         "doc/evidence/profile-audit/summary.json",
         "doc/evidence/technology-inventory/summary.json",
         "doc/evidence/he-wifi6/summary.json",
-        "doc/evidence/wifi6-inputs/summary.json"
+        "doc/evidence/wifi6-inputs/summary.json",
+        "doc/evidence/ieee1905/summary.json"
       ],
       "mode": null,
-      "scope": "Selected standalone values and read-only synthetic mappings only. Wi-Fi 6 role inputs do not imply complete HE/report, profile, wire or physical qualification.",
+      "scope": "Selected standalone values and read-only synthetic mappings only. Wi-Fi 6 role inputs do not imply complete HE/report, profile, wire or physical qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Read-only topology, Basic/HT/VHT/Device Inventory and separate evidence-bound Wi-Fi 6 role mapping; 0x88 conversion, complete HE set, full procedures and physical qualification remain pending."
     },
@@ -1507,14 +1572,19 @@
       "id": "WIRE-03",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_ieee1905.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/ieee1905/summary.json"
+      ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
     },
@@ -1572,22 +1642,26 @@
         "doc/protocol/wsc-component.md",
         "src/emosa/wsc_messages.py",
         "src/emosa/wsc_radio.py",
-        "doc/protocol/wsc-radio.md"
+        "doc/protocol/wsc-radio.md",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
         "tests/test_gated.py",
         "tests/test_wsc.py",
         "tests/test_wsc_messages.py",
-        "tests/test_wsc_radio.py"
+        "tests/test_wsc_radio.py",
+        "tests/test_ieee1905.py"
       ],
       "evidence_refs": [
         "tests/fixtures/protocol/wsc/provenance.json",
         "doc/evidence/unit-results.xml",
         "doc/evidence/wsc-messages.json",
-        "doc/evidence/wsc-radio.json"
+        "doc/evidence/wsc-radio.json",
+        "doc/evidence/ieee1905/summary.json"
       ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "M1/M2 crypto, payload structure and encrypted radio role/teardown semantics have scoped component evidence; complete CMDU/profile rules, controller/radio binding, replay/state and pod writes remain gated."
     },
@@ -1598,19 +1672,23 @@
         "doc/protocol/protocol-matrix.json",
         "src/emosa/wsc_messages.py",
         "src/emosa/wsc_radio.py",
-        "doc/protocol/wsc-radio.md"
+        "doc/protocol/wsc-radio.md",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
         "tests/test_gated.py",
         "tests/test_wsc_messages.py",
-        "tests/test_wsc_radio.py"
+        "tests/test_wsc_radio.py",
+        "tests/test_ieee1905.py"
       ],
       "evidence_refs": [
         "doc/evidence/wsc-messages.json",
-        "doc/evidence/wsc-radio.json"
+        "doc/evidence/wsc-radio.json",
+        "doc/evidence/ieee1905/summary.json"
       ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "M1/M2 crypto, payload structure and encrypted radio role/teardown semantics have scoped component evidence; complete CMDU/profile rules, controller/radio binding, replay/state and pod writes remain gated."
     },
@@ -2487,14 +2565,19 @@
       "id": "W01",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_ieee1905.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/ieee1905/summary.json"
+      ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
     },
@@ -2502,14 +2585,19 @@
       "id": "W02",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_ieee1905.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/ieee1905/summary.json"
+      ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
     },
@@ -2517,14 +2605,19 @@
       "id": "W03",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_ieee1905.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/ieee1905/summary.json"
+      ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
     },
@@ -2532,16 +2625,23 @@
       "id": "W04",
       "status": "blocked",
       "implementation_refs": [
-        "doc/protocol/protocol-matrix.json"
+        "doc/protocol/protocol-matrix.json",
+        "src/emosa/wire/operation_bridge.py",
+        "src/emosa/wire/provisioning_session.py"
       ],
       "test_refs": [
-        "tests/test_gated.py"
+        "tests/test_gated.py",
+        "tests/test_wsc_operation_bridge.py",
+        "tests/test_provisioning_session.py",
+        "scripts/check-wsc-wire-reference.py"
       ],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "doc/evidence/wsc-wire/summary.json"
+      ],
       "mode": null,
       "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
-      "independent_work": "Model, OVSDB simulation, read-only qualification and reports."
+      "independent_work": "Owned synthetic Ethernet WSC drives durable operations, real OVSDB, hwsim and independent clients. This component does not satisfy full native admission or physical acceptance."
     },
     {
       "id": "W05",
@@ -2549,18 +2649,22 @@
       "implementation_refs": [
         "doc/protocol/protocol-matrix.json",
         "src/emosa/topology_bindings.py",
-        "src/emosa/opensync/topology.py"
+        "src/emosa/opensync/topology.py",
+        "src/emosa/wire/cmdu.py",
+        "src/emosa/wire/ethernet.py"
       ],
       "test_refs": [
         "tests/test_gated.py",
         "tests/test_topology.py",
-        "tests/test_topology_service.py"
+        "tests/test_topology_service.py",
+        "tests/test_ieee1905.py"
       ],
       "evidence_refs": [
-        "doc/evidence/observed-topology/summary.json"
+        "doc/evidence/observed-topology/summary.json",
+        "doc/evidence/ieee1905/summary.json"
       ],
       "mode": null,
-      "scope": "Architecture requirement; no implied hardware or interoperability qualification.",
+      "scope": "Architecture requirement; no implied hardware or interoperability qualification. IEEE envelope/transport component now tested; complete procedure requirement remains incomplete.",
       "blocker": "P0: selected complete normative corpus, independent vectors and wire procedures required.",
       "independent_work": "Explicit persisted synthetic topology bindings and complete graph projection tested with real OVSDB, two pods, UUID recreation and adapter restart; full wire/physical gate remains open."
     },

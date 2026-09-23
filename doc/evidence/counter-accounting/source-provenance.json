@@ -1,0 +1,23 @@
+{
+  "package": "linux",
+  "version": "6.8.0-139.139",
+  "runtime_kernel": "6.8.0-139-generic",
+  "source_base": "https://archive.ubuntu.com/ubuntu/pool/main/l/linux/",
+  "input_sha256": {
+    "linux_6.8.0-139.139.dsc": "40fb1a41e084f8f923cbea43fe2ffc491e7bd3c247672018f0aa97ef3e352558",
+    "linux_6.8.0.orig.tar.gz": "26512115972bdf017a4ac826cc7d3e9b0ba397d4f85cd330e4e4ff54c78061c8",
+    "linux_6.8.0-139.139.diff.gz": "c18cf1db6c7ed0ad5cf7d651de117b415f17e05baaeefb13a4a2306e94e9ae57"
+  },
+  "patched_source_sha256": {
+    "drivers/net/wireless/virtual/mac80211_hwsim.c": "901123c8e88d0e90881e4f56492c674ade65a5d976ad552318667acfc1d4ef81",
+    "include/uapi/linux/nl80211.h": "9535f7ae11376801e3586ac1c237e706e296bb8885568baca08c967cb024b7f7",
+    "net/mac80211/rx.c": "29d829200038202d4484f65895bb75938bbc49ea886f96f2942eb7ad52718a82",
+    "net/mac80211/sta_info.c": "047f3ef6aeae812e5748326bedc2120e24cd4a4b3bb4ef835aa0922b711bb866",
+    "net/mac80211/status.c": "5970acc09c31ccc47677ac68ac2616af3f662717346d6e7aad540d0d97a24cca",
+    "net/mac80211/tx.c": "9ae7f3ece76ab8c532f8b47251e119c727f1504ef8156a9c6ba8dac98afcb4a6",
+    "net/wireless/nl80211.c": "a03a4a81eefd24b6056a953a7975b7ce123af714885160a501e3002b7fa5a261"
+  },
+  "scope": "Selected source reconstruction and digest check; no kernel build or installation",
+  "source_revision_verified": true,
+  "final_counter_source_qualified": false
+}

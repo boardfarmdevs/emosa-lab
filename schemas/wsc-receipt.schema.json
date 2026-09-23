@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "scope": {"const": "owned_simulation_wsc_component"},
+    "process_id": {"type": "string", "minLength": 1, "maxLength": 64},
+    "exchange_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+    "m1_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "request_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "controller_al": {"type": "string", "pattern": "^[a-f0-9]{12}$"},
+    "agent_al": {"type": "string", "pattern": "^[a-f0-9]{12}$"},
+    "ruid": {"type": "string", "pattern": "^[a-f0-9]{12}$"},
+    "bssid": {"type": "string", "pattern": "^[a-f0-9]{12}$"},
+    "ingress": {"type": "string", "minLength": 1, "maxLength": 64},
+    "link_generation": {"type": "integer", "minimum": 0},
+    "database_generation": {"type": "integer", "minimum": 1},
+    "schema_fingerprint": {"type": "string", "minLength": 1, "maxLength": 128},
+    "first_mid": {"type": "integer", "minimum": 0, "maximum": 65535},
+    "pod_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "radio_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "bss_id": {"type": "string", "minLength": 1, "maxLength": 128}
+  },
+  "required": ["scope", "process_id", "exchange_id", "m1_sha256", "request_fingerprint", "controller_al", "agent_al", "ruid", "bssid", "ingress", "link_generation", "database_generation", "schema_fingerprint", "first_mid", "pod_id", "radio_id", "bss_id"],
+  "additionalProperties": false
+}

@@ -11,7 +11,84 @@ supported management procedures to its existing OVSDB interface.
 
 The goal is to demonstrate what works, expose compatibility gaps, and provide repeatable experiments with clear visibility into protocol exchanges, configuration changes, and actual device behavior.
 
+**Bounded native-controller onboarding now passes with the simulated OpenSync
+pod.** The real controller drives discovery and authenticated WSC through EMOSA,
+the separate manager applies the radio configuration, the controller learns the
+radio/BSS, and independent wired/Wi-Fi clients pass traffic checks. See the
+[walkthrough](doc/protocol/native-onboarding.md) and
+[independently checked evidence](doc/evidence/native-onboarding/README.md).
+Continuous management, full-profile qualification and an unchanged physical pod
+remain next; this result uses an explicitly patched native controller candidate.
+
+The [15-minute operational soak](doc/evidence/native-soak/README.md) now passes
+client cycling, selected channel reporting, continuous traffic and fresh native
+onboarding after pod reconnect and adapter SIGKILL, with no duplicate Config
+writes. All 135 connected samples place the client under the virtual BSS.
+Complete [sustained acceptance](doc/protocol/sustained-operation.md) still requires
+policy/AP/STA/neighbor metrics and final disassociation statistics.
+The [final-session sender](doc/protocol/final-session-statistics.md) and guarded
+onboarding handoff are implemented and independently decoded. Its measurement
+source remains unqualified; the native lab does not invent missing counters.
+The [read-only station-removal observer](doc/protocol/station-removal-observations.md)
+now acquires kernel records and independently correlates actual disconnect
+reasons and EasyMesh leaves. Counter conversion and online delivery remain next.
+The [counter audit](doc/protocol/station-counter-accounting.md) reconciles six
+normal-traffic sessions against a loss-checked trace and the selected runtime
+kernel source. It identifies TX encryption-byte and RX management-packet
+accounting differences; these raw counters must not be forwarded unchanged.
+The optional [medium-loss experiment](doc/protocol/medium-loss-accounting.md)
+now reconciles transmit/failure bookkeeping under actual simulated loss and
+retains a significant retry-counter discrepancy. The follow-on
+[kernel completion trace](doc/protocol/tx-status-accounting.md) explains it:
+aggregation control flags suppress some retries from the kernel counter.
+Raw counter passthrough, airtime/rate and online measurement qualification
+remain pending. A [telemetry-gap regression](doc/protocol/telemetry-freshness.md)
+now verifies that stale telemetry withdraws dependent observations while keeping
+the healthy control session; real disconnects still require fresh onboarding.
+The [policy receiver](doc/protocol/reporting-policy.md) now persists the native
+controller's requested reporting policy and sends its receipt Ack. Its schedule
+survives reconnect/restart and explicitly counts due reports that cannot yet be
+produced. Receipt confirmation does not establish fulfilled reporting.
+The [neighbor-link handler](doc/protocol/neighbor-link-metrics.md) now implements
+direction-specific IEEE 1905 responses and a guarded measurement handoff.
+The native lab explicitly withholds responses while pod/peer interface mapping
+and per-link measurements remain unqualified; adapter control-veth counters
+cannot stand in for pod-backhaul traffic.
+The [forwarding observer](doc/protocol/forwarding-observations.md) now carries
+actual pod-port identities and raw counter intervals through OVSDB, with fresh
+baselines after recovery and a separate backhaul capture. Per-neighbor
+attribution and complete metric-source qualification still remain pending.
+
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
+
+The IEEE 1905.1-2013 and 1905.1a-2014 PDFs are now obtained. Follow the
+[wire-envelope learning exercise](doc/protocol/ieee1905-envelope.md) to inspect
+native captures and test bounded reassembly and isolated Ethernet delivery.
+Continue with [controller discovery and WSC exchange handling](doc/protocol/autoconfiguration.md)
+for peer/radio binding, replay controls and the actual native compatibility findings.
+Then construct and inspect [capability and topology reports](doc/protocol/reports.md),
+including the offline and isolated Ethernet exercises. The
+[read-only report coordinator](doc/protocol/report-coordinator.md) now connects
+those reports to a real disposable database with Ack/retry and source-withdrawal
+checks. The [discovery-to-topology lifecycle](doc/protocol/discovery-session.md)
+adds bounded Search/Response handling, capability-gap diagnostics and fresh
+discovery after reconnect. That read-only component does not initiate M1; the
+new bounded native integration above supplies that lifecycle. The
+[authenticated WSC handoff](doc/protocol/wsc-provisioning.md) now drives durable
+operations and real owned OVSDB directly from independent hostap M2 payloads,
+including duplicate, lost-reply and real process-crash cases. This component
+uses in-memory Ethernet delivery. The next [Ethernet-to-radio exercise](doc/protocol/wsc-wire-radio.md)
+now carries the same handoff over actual packet sockets into hostapd/hwsim and
+separate wired/wpa_supplicant clients. Normal and lost-reply runs passed; the
+peer in that earlier component experiment is synthetic.
+The [native discovery probe](doc/guides/native-discovery.md) now sends EMOSA's
+Profile-1 Search to the real controller and observes its Response and newly
+created device entry. That entry has no radios/BSSs yet; the missing controller
+capability fields and full admission remain open.
+An [isolated native controller candidate](doc/guides/controller-counter-candidate.md)
+now corrects the KiB/MiB advertisement, checks the native conversion behavior and
+compares captured responses before restoring the baseline. The newer onboarding
+candidate also omits unsupported/empty configuration companions for this trial.
 
 ## Architecture
 
@@ -19,13 +96,18 @@ The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotiona
 
 [**New team members: step-by-step setup, operator and demo manual**](doc/guides/team-manual.md)
 
+[**Start here: the new learning sequence**](doc/guides/learning-path.md) ·
+[Secure fleet and recovery exercises](doc/guides/secure-fleet.md) ·
+[Clean runtime reproduction](deploy/reliability/README.md)
+
 [Interactive explorer & lab manual](https://boardfarmdevs.github.io/emosa-lab/) ·
 [Architecture diagram and boundaries](doc/architecture/overview.md) ·
 [Next viability experiments](doc/project/viability-roadmap.md)
 
 [Simulate an extender connecting to EMOSA](doc/guides/connecting-pod.md): pod-initiated
 OVSDB, a local northbound virtual-agent directory, semantic configuration and
-reconnect. Actual EasyMesh-controller discovery/onboarding remains pending.
+reconnect. For actual native-controller onboarding, continue to the new wire
+walkthrough above; the connecting-pod guide remains a semantic exercise.
 
 ```text
 EasyMesh controller
@@ -65,18 +147,19 @@ independently verifiable results on the unchanged extender.
 
 The Python foundation and direct semantic component evaluation are implemented.
 The real OVSDB simulator uses the pinned OpenSync schema and a separate manager
-process. Wire provisioning, physical-pod mapping and independent-controller
-acceptance remain gated; simulator passes do not establish interoperability.
+process. Bounded native wire provisioning now passes in the owned simulation;
+physical-pod mapping and broader independent-controller acceptance remain gated.
 
 The [WSC payload component](doc/protocol/wsc-messages.md) builds M1 and authenticates
 M2 AP settings against its exact bytes, with independent hostap fixtures. It
-checks complete sets of payloads before returning settings; controller trust,
-IEEE exchange state and approval of the complete radio configuration are still
-required before connecting those results to OVSDB.
+checks complete sets of payloads before returning settings. The bounded exchange
+component now adds peer/link, RUID and transcript-lifetime checks. Controller trust,
+complete profile/coordinator behavior and physical radio qualification remain
+requirements beyond the selected simulated integration.
 
 The [independent controller candidate](deploy/peer/README.md) now emits real
-discovery frames captured at the EMOSA container. Its agent inventory is empty:
-EMOSA has not answered or onboarded an extender. Ubuntu 24.04 nested-container
+discovery frames captured at the EMOSA container. That earlier preparation run
+retains an empty inventory as a negative control. Ubuntu 24.04 nested-container
 component tests and VM-driven semantic scenarios pass; the peer's shutdown
 aborts are recorded as an unresolved recovery issue.
 
@@ -93,6 +176,7 @@ uv run ruff check .
 uv run ruff format --check .
 uv run pytest -m unit
 bash scripts/build-ovsdb.sh
+python3 scripts/build-wsc-registrar.py
 uv run pytest -m ovsdb
 uv run emosa-lab run scenarios/component-bss-change.json --backend ovsdb-sim
 uv run emosa-lab run scenarios/component-lost-reply.json --backend ovsdb-sim
@@ -122,9 +206,10 @@ Prepare actual pod evidence without changing it using
 [dependency/R0 findings](doc/evaluation/dependency-qualification.md),
 [WSC component scope](doc/protocol/wsc-component.md),
 [open inputs](doc/project/open-inputs.md), and [traceability](doc/project/traceability.json).
-The Ubuntu 24.04 LXD layout has pinned candidate images. Its standalone radio
-smoke has passed; full application deployment and retained image exports remain
-pending.
+The Ubuntu 24.04 LXD layout has pinned base images. The separate
+[secure-fleet runtime](deploy/reliability/README.md) builds and retains an installed
+wheel/container image for TLS, fleet and recovery reproduction. This is a semantic
+component runtime; full wire/physical application deployment remains pending.
 
 The [service integration walkthrough](doc/guides/service-integration.md) adds two
 connecting pods through one adapter, actual service-process crash recovery with

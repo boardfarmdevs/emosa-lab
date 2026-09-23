@@ -1,0 +1,134 @@
+{
+  "tx_submission_and_failure_accounting_passed": true,
+  "retry_counter_reconciled": false,
+  "scope": "kernel TX submission/status bookkeeping, not actual RF retransmissions",
+  "capture_health": {
+    "ethernet": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 114,
+      "captured": 114,
+      "received_by_filter": 114,
+      "dropped_by_kernel": 0
+    },
+    "radio": {
+      "passed": true,
+      "linktype": 127,
+      "pcap_records": 11916,
+      "captured": 11916,
+      "received_by_filter": 11916,
+      "dropped_by_kernel": 0
+    },
+    "netlink": {
+      "passed": true,
+      "linktype": 253,
+      "pcap_records": 63975,
+      "captured": 63975,
+      "received_by_filter": 63975,
+      "dropped_by_kernel": 0
+    }
+  },
+  "sessions": [
+    {
+      "lifetime": 1,
+      "tx_submissions": 164,
+      "kernel_tx_bytes": 20124,
+      "protected_frames": 155,
+      "status_acked": 133,
+      "status_failed": 31,
+      "status_retries": 225,
+      "kernel_tx_retries": 36,
+      "retry_counter_matches_medium_attempts": false
+    },
+    {
+      "lifetime": 2,
+      "tx_submissions": 142,
+      "kernel_tx_bytes": 16617,
+      "protected_frames": 133,
+      "status_acked": 110,
+      "status_failed": 32,
+      "status_retries": 448,
+      "kernel_tx_retries": 47,
+      "retry_counter_matches_medium_attempts": false
+    },
+    {
+      "lifetime": 3,
+      "tx_submissions": 139,
+      "kernel_tx_bytes": 16062,
+      "protected_frames": 129,
+      "status_acked": 104,
+      "status_failed": 35,
+      "status_retries": 662,
+      "kernel_tx_retries": 42,
+      "retry_counter_matches_medium_attempts": false
+    },
+    {
+      "lifetime": 4,
+      "tx_submissions": 80,
+      "kernel_tx_bytes": 9222,
+      "protected_frames": 71,
+      "status_acked": 65,
+      "status_failed": 15,
+      "status_retries": 180,
+      "kernel_tx_retries": 30,
+      "retry_counter_matches_medium_attempts": false
+    },
+    {
+      "lifetime": 5,
+      "tx_submissions": 131,
+      "kernel_tx_bytes": 15791,
+      "protected_frames": 125,
+      "status_acked": 108,
+      "status_failed": 23,
+      "status_retries": 253,
+      "kernel_tx_retries": 0,
+      "retry_counter_matches_medium_attempts": false
+    },
+    {
+      "lifetime": 6,
+      "tx_submissions": 91,
+      "kernel_tx_bytes": 10592,
+      "protected_frames": 84,
+      "status_acked": 71,
+      "status_failed": 20,
+      "status_retries": 213,
+      "kernel_tx_retries": 10,
+      "retry_counter_matches_medium_attempts": false
+    },
+    {
+      "lifetime": 7,
+      "tx_submissions": 134,
+      "kernel_tx_bytes": 15607,
+      "protected_frames": 126,
+      "status_acked": 110,
+      "status_failed": 24,
+      "status_retries": 259,
+      "kernel_tx_retries": 20,
+      "retry_counter_matches_medium_attempts": false
+    },
+    {
+      "lifetime": 8,
+      "tx_submissions": 102,
+      "kernel_tx_bytes": 11979,
+      "protected_frames": 96,
+      "status_acked": 87,
+      "status_failed": 15,
+      "status_retries": 165,
+      "kernel_tx_retries": 0,
+      "retry_counter_matches_medium_attempts": false
+    }
+  ],
+  "kernel_rejected_rx_clones": {
+    "42:00:00:00:00:00": 58,
+    "02:00:00:00:02:00": 1202,
+    "42:00:00:00:02:00": 957
+  },
+  "all_radio_submissions": 9961,
+  "all_captured_statuses": 9961,
+  "uncompleted_submissions_outside_checked_sessions": 0,
+  "medium_airtime_and_rate_qualified": false,
+  "raw_counter_passthrough_valid": false,
+  "final_counter_source_qualified": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

@@ -2,10 +2,29 @@
 
 This is the acceptance contract for the next integration, and a checklist for
 handing it to another developer. **The complete experiment is not runnable yet.**
-The IEEE 1905 inputs, complete procedure/profile audit and wire endpoint remain
-pending. The existing native-peer and semantic-service exercises test the two
+The IEEE 1905 inputs are obtained and the [bounded envelope/packet components](../protocol/ieee1905-envelope.md)
+are implemented. Complete procedure/profile audit and exchange integration remain pending. The existing native-peer and semantic-service exercises test the two
 sides separately. Their successes must not be combined into a wire-onboarding
 verdict.
+
+The next [discovery/WSC component](../protocol/autoconfiguration.md) now checks
+selected complete messages, peer/link generation, radio binding, authenticated
+M2 scope and replay lifetime. It returns a secret candidate without creating an
+operation; full profile admission and the running coordinator remain pending.
+[Restricted Early/Topology reports](../protocol/reports.md) now add complete
+message construction and isolated Ethernet delivery. Their synthetic receiver
+inventory does not satisfy this experiment’s native-controller inventory step.
+The [read-only report coordinator](../protocol/report-coordinator.md) now handles
+Query/Ack/retry with a real database source in isolation. Discovery/profile
+admission into the complete lifecycle remain unfinished. The separate
+[WSC provisioning component](../protocol/wsc-provisioning.md) now turns
+authenticated M2 into a durable operation and real simulated Config change,
+with duplicate/uncertainty/crash tests. Its synthetic payload peer and in-memory
+Ethernet do not satisfy controller inventory or radio/client acceptance.
+The follow-on [Ethernet WSC/radio experiment](../protocol/wsc-wire-radio.md) now
+joins that handoff to actual packet sockets, hwsim and independent clients in one
+run. Normal and lost-reply cases pass with a synthetic hostap peer; compatible
+native admission and complete controller-owned radio/BSS inventory remain absent.
 
 EMOSA means **EasyMesh to OpenSync Adapter**. Its virtual agent is the EasyMesh
 representation it presents to the controller. The OpenSync extender connects to
@@ -25,8 +44,9 @@ flowchart LR
     W -->|Interface bound traffic| S[Independent data endpoint]
 ```
 
-Read the arrows as evidence obligations. A controller inventory entry establishes
-membership. A database reply establishes a transaction result. Fresh State and a
+Read the arrows as evidence obligations. Complete matching controller agent,
+radio and BSS inventory supports membership; a device placeholder alone can
+appear during Search before WSC. A database reply establishes a transaction result. Fresh State and a
 client observation establish different aspects of application. Neither a local
 API request nor a manually inserted controller entry is an acceptable substitute
 for the first arrow.
@@ -67,6 +87,17 @@ Native profile configuration and mandatory behavior must be reconciled before
 selecting an EMOSA-facing interoperable profile; simply echoing a profile number
 or stripping mandatory TLVs is not a resolution.
 
+The later [native discovery probe](native-discovery.md) tests EMOSA's actual
+Profile-1 Search: the pinned controller answers with Profile 1 and creates a
+device entry, with zero radios/BSSs. Thus the earlier Profile-2/1 mismatch is not
+reproduced by this particular Search. Missing KiB/MiB and security capability
+fields still prevent full admission; the new entry does not establish onboarding.
+The [isolated controller candidate](controller-counter-candidate.md) corrects
+the KiB/MiB advertisement and restores the pinned controller after measurement.
+It does not activate the complete procedure. Security-capability applicability
+must use §13.1 and §18's unsupported-feature omission rule in the selected
+non-DPP contract; the absence diagnostic alone is not a direction to add `0xA9`.
+
 ## 3. Complete the available preparation exercises
 
 Use separate, new result directories. Read the linked guide before running each
@@ -86,7 +117,10 @@ VM and its owned containers.
 4. Run the [isolated native compatibility trial](native-compatibility.md).
    Inspect the entire selected controller provisioning message and the observed
    agent/BSS inventory. This uses a standard native agent, without EMOSA.
-5. Review the [profile audit](../protocol/profile-readiness.md) and
+5. Run the [Ethernet WSC/radio component](../protocol/wsc-wire-radio.md) to connect
+   packet-driven operations to independent client evidence. Preserve its synthetic
+   peer scope; no semantic submission supplies the change.
+6. Review the [profile audit](../protocol/profile-readiness.md) and
    [single acquisition checklist](../protocol/specification-acquisition.md).
    Supply missing authorized document paths outside Git when available.
 
@@ -105,14 +139,17 @@ overwrite the first one.
 
 ## 4. Implement and run the missing wire boundary after P0
 
-This is the implementation sequence, not a set of commands that already exists:
+This is the implementation sequence. The envelope component has runnable commands
+in the linked guide; later complete procedures remain unfinished:
 
-1. Hash and review IEEE 1905.1-2013 plus 1905.1a-2014. Reconcile the selected
+1. Both IEEE PDFs are hashed and selected envelope/base-discovery clauses reviewed.
+   Continue reconciling the selected
    EasyMesh/WPS rules and dependencies, profile conditions, field lengths,
    addressing, reassembly, retransmission and timers in the protocol matrix.
-2. Implement bounded receive/transmit and discovery/topology/capability exchanges.
-   Use independently derived/captured vectors for the complete messages. Existing
-   standalone value codecs are reusable components, not a complete endpoint.
+2. Extend the tested read-only report coordinator with the implemented discovery
+   component and qualified trusted-link admission. Supply qualified fresh facts and
+   complete full AP Capability/profile/ACK/retry obligations. Independent vectors
+   and isolated Ethernet checks exist; native controller acceptance remains pending.
 3. Bind genuine WSC exchanges to the authenticated peer, exchange and represented
    radio. Validate the complete request, cryptographic authentication and supported
    scope before creating an operation. Preserve one operation across legitimate
@@ -136,7 +173,7 @@ before any independent interoperability claim.
 
 No private pod connection file or authentication material has been supplied.
 The [qualification guide](pod-qualification.md) describes the implemented loader
-and the three credentials-free examples: mutual TLS, an existing private Unix
+and the credentials-free examples: dialing/listening mutual TLS, an existing private Unix
 socket, or an independently established authenticated tunnel.
 
 On the machine running EMOSA, the operator places the populated file at an
@@ -165,7 +202,7 @@ because changing the serving BSS can interrupt the adapter's own connection.
 | Isolated peer compatibility | Candidate HAL length fix and live policy experiment; retained results and remaining native findings are in the [compatibility guide](native-compatibility.md) |
 | First complete experiment definition | This contract defines target, admission, causal evidence, negative controls and physical substitution |
 | Complete capability requirements | Selected value/mapping components tested; `0x88` ordering, mandatory report dependencies and full profile applicability remain pending |
-| Complete wire exchange | Pending IEEE inputs/review and I3/I4 implementation; the existing gate rejects execution |
+| Complete wire exchange | IEEE access complete; envelope/packet and bounded discovery/WSC components tested; owned Ethernet WSC-to-operation/hwsim/client integration tested with a synthetic peer; full I3/I4 coordinator and profile admission pending; the existing gate rejects execution |
 | Physical qualification and proof | Collector/examples available; actual private connection, qualification and physical run remain pending |
 
 The final acceptance path remains **real EasyMesh messages → EMOSA → unchanged

@@ -1,0 +1,3 @@
+/opt/emosa-radio-manager/source/emosa/wsc.py:106: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+  _private: dh.DHPrivateKey = field(repr=False)
+{"passed": true, "namespaces_removed": ["emosa-wire-977db6e2-a", "emosa-wire-977db6e2-b"], "physical_interfaces_used": false, "onboarding_proven": false}

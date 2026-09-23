@@ -1,0 +1,31 @@
+{
+  "operation": {
+    "operation_id": "946f9acb-106c-488a-8dad-14ba0d96b425",
+    "initiating_interface": "wsc-component",
+    "state": "CONFIG_COMMITTED",
+    "reason": null,
+    "attempts": 1,
+    "commit_attribution": "reply",
+    "application_evidence": null,
+    "receipt": {
+      "scope": "owned_simulation_wsc_component",
+      "m1_sha256": "4780425fcfc6f0d3e6d8f3a25ac526ae5dcab11483d5d2fc90269cedf3c53c8a",
+      "controller_al": "020000e00001",
+      "agent_al": "020000003001",
+      "ruid": "020000ec0200",
+      "bssid": "020000ec0200",
+      "ingress": "probe0",
+      "link_generation": 1,
+      "database_generation": 1,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "first_mid": 19,
+      "pod_id": "pod-1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1"
+    }
+  },
+  "operation_count": 1,
+  "writes": 1,
+  "config_ssid": "emosa-controller-trial",
+  "observed_ssid": "emosa-radio-initial"
+}

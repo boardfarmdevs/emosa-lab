@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "early_mids": [
+    1,
+    2
+  ],
+  "config_only_keeps_observed_ssid": true,
+  "independent_state_update_reported": true,
+  "disconnected_report_suppressed": true,
+  "post_disconnect_observation_seconds": 1.1107955990009941,
+  "query_mids": [
+    600,
+    601,
+    602,
+    603
+  ],
+  "response_mids": [
+    600,
+    601,
+    602
+  ],
+  "scope": "read_only_ovsdb_report_coordinator_over_AF_PACKET",
+  "native_controller_used": false,
+  "adapter_config_writes": 0,
+  "fixture_admin_and_manager_writes": true,
+  "radio_used": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

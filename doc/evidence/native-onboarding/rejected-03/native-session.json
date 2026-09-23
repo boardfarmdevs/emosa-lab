@@ -1,0 +1,85 @@
+{
+  "scope": "owned_non_dpp_sole_radio_onboarding",
+  "state": "awaiting_m2",
+  "counts": {
+    "search_sent": 1,
+    "early_then_m1_sent": 1,
+    "observed_topology_notification": 1,
+    "wsc_rejected": 1,
+    "unsupported_message_8003": 1,
+    "unsupported_message_8006": 1,
+    "unsupported_message_8004": 1,
+    "ap_capability_report_sent": 1,
+    "rejected_INVALID_INPUT": 1,
+    "unsupported_message_0001": 1,
+    "unsupported_message_0005": 1
+  },
+  "events": [
+    "search_sent",
+    "early_then_m1_sent",
+    "observed_topology_notification",
+    "wsc_rejected",
+    "unsupported_message_8003",
+    "unsupported_message_8006",
+    "unsupported_message_8004",
+    "ap_capability_report_sent",
+    "rejected_INVALID_INPUT",
+    "unsupported_message_0001",
+    "unsupported_message_0005"
+  ],
+  "admission_issues": [],
+  "reports": {
+    "scope": "read_only_report_coordinator",
+    "closed": false,
+    "source_available": true,
+    "early_pending": false,
+    "counts": {
+      "early_sent": 3,
+      "input_or_source_rejected": 2,
+      "early_ack_timeout": 1
+    },
+    "events": [
+      {
+        "event": "early_sent",
+        "mid": 102
+      },
+      {
+        "event": "input_or_source_rejected"
+      },
+      {
+        "event": "early_sent",
+        "mid": 105
+      },
+      {
+        "event": "early_sent",
+        "mid": 106
+      },
+      {
+        "event": "early_ack_timeout"
+      },
+      {
+        "event": "input_or_source_rejected"
+      }
+    ],
+    "operations_created": 0,
+    "wsc_admission": "blocked_full_profile_and_durable_operation_integration",
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "wsc": {
+    "counts": {
+      "rejected": 1
+    },
+    "events": [
+      {
+        "status": "rejected",
+        "reason": "UNSUPPORTED_OPERATION"
+      }
+    ],
+    "closed": false,
+    "scope": "owned_simulation_wsc_component",
+    "full_controller_onboarding": false
+  },
+  "full_profile_qualified": false,
+  "physical_pod_proven": false
+}

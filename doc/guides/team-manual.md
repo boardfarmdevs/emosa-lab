@@ -2,7 +2,7 @@
 
 **Audience:** new developers, test engineers, lab operators and demo presenters.
 
-**Reference date:** 2026-09-16. Commands describe the implementation in this checkout.
+**Reference date:** 2026-09-22. Commands describe the implementation in this checkout.
 
 **Start here:** complete chapters 1–6 before using a shared radio lab.
 
@@ -37,6 +37,13 @@ one deliberately unsuccessful change, and then repeat those ideas across a more
 realistic interface. For example, a timeout in a software model is easier to
 understand before diagnosing a timeout involving a database and wireless clients.
 Keep your own run IDs and notes; they are the basis for a useful team handover.
+
+The [new guided learning sequence](learning-path.md) turns this into explicit
+checkpoints: architecture → installation → model outcomes → real OVSDB → one
+persistent service → authenticated pod connections → 4/8/16/32-pod measurements
+→ repeated recovery → clean installed-runtime reproduction. It then branches
+into radio/client work, native peer baselines and the remaining wire/physical
+proof. Use it as your first-week checklist and return here for detailed commands.
 
 ## Contents
 
@@ -93,12 +100,16 @@ the experiment, runs its checks, collects evidence and cleans up owned processes
 | Deterministic model scenarios | Linux development checkout | Operation lifecycle, fault expectations, journal and evaluator behavior | Actual OVSDB, Wi-Fi, EasyMesh and pods |
 | Real OVSDB simulator | Same checkout; local C build | Real upstream database protocol, schema monitoring, guarded Config changes and separately simulated State | Radio actuation and EasyMesh |
 | Long-running adapter/local API | Same checkout plus teaching fixture | Inventory, planning, semantic submission, idempotency, waiting, quiescing and service restart | A live EasyMesh controller |
+| Secure TLS fleet and repeated recovery | HOST, TLS-enabled OVSDB build | Authenticated pod-initiated sessions, actual service with 4/8/16/32 pods, identity isolation, sampled resources and fault recovery | Production capacity, radio behavior or wire onboarding |
+| Clean installed-runtime reproduction | Separate owned VM and nested containers | Same TLS/fleet/fault behavior from an installed wheel and retained image outside a checkout | Full wire/physical application deployment |
 | Static explorer | Browser, or local HTTP server | Inspection of retained, reviewed evidence | Live execution; the website has no lab connection |
 | Standalone hwsim smoke | Dedicated VM and two nested containers | Linux WPA2 association and interface-bound traffic | EMOSA or OVSDB actuation |
 | Native controller–agent baseline | Dedicated VM and four nested containers | Wired/wireless onboarding and recovery for the named patched prplMesh tuple | EMOSA, OpenSync, universal onboarding or certification |
 | EMOSA/OVSDB/radio integration | Prepared four-container lab | Semantic changes cause independently observed hostapd/hwsim behavior and client outcomes | EasyMesh initiation, native OpenSync firmware or physical RF |
 | Controller discovery candidate | Separate prepared peer topology | Native controller discovery frames reach the EMOSA container | An EMOSA response or controller-visible virtual agent |
-| WSC crypto/M1/M2/radio admission components | Development checkout | Bounded authenticated payload processing and admission checks | Complete IEEE 1905 framing, exchange binding or write authorization |
+| WSC crypto/M1/M2 and exchange components | Development checkout | Bounded complete-message authentication, peer/radio binding and replay checks | Native controller admission or physical authorization |
+| Authenticated WSC-to-OVSDB component | HOST, local hostap helper and OVSDB builds | M2 creates a durable operation, guarded Config and separately observed State; duplicates, lost reply and real process crash | Ethernet socket delivery, full discovery/profile, native inventory, radio/client or physical acceptance |
+| Ethernet WSC-to-radio component | HOST commands, owned VM/containers from chapter 11 | Synthetic peer sends actual Ethernet M2; EMOSA drives OVSDB, hwsim and independent clients, with normal/lost-reply controls | Native discovery/profile admission, controller inventory, OpenSync firmware or physical acceptance |
 | Native OpenSync R0 investigation | Separate VM container | Native manager consumes Config and emits State with dummy-driver feedback | Qualified application backend; database-restart recovery currently fails |
 | Read-only pod collector | Machine with private authorized pod access | Actual schema and available identity/inventory facts in a draft profile | Permission to write, mapping qualification or physical acceptance |
 
@@ -114,6 +125,7 @@ pod profile or grant access.
 | --- | --- | --- |
 | First hour | Chapters 2–4 and browser tour in chapter 7 | Explain the architecture; produce and interpret a model run |
 | First half day | Chapters 5–6 | OVSDB baseline/fault results; show a planned and observed operation through the service |
+| Secure service and fleet | [§6.15](#615-authenticate-pods-measure-a-fleet-and-reproduce-recovery) and [learning steps 6–9](learning-path.md#6-authenticate-the-connecting-pod--host-priority-1) | Explain trust, run 4/8/16/32 pods, inspect repeated faults and reproduce the installed runtime |
 | Lab orientation | Chapter 8 and one of 9–11 with the lab owner | Draw the actual topology and locate independent client evidence |
 | Protocol/development orientation | Chapters 12–14 and 17 | Identify P0/M0/R0/X1 and trace one feature from contract to evidence |
 | Demo rehearsal | Chapter 15 | Deliver a scoped demo and explain one failure without concealing it |
@@ -264,6 +276,7 @@ For hands-on work:
 | `src/emosa/app.py`, `cli.py`, `local_api.py` | Adapter service and local Unix-socket commands |
 | `src/emosa/evaluation/` | Scenarios, gates, reports, comparisons and LXD routing |
 | `src/emosa/wsc*.py` | Bounded payload and radio-request components |
+| `src/emosa/wire/operation_bridge.py` | Authenticated WSC candidate to durable component operation; owned simulation only, explained in §13.12 |
 | `schemas/`, `scenarios/`, `tests/` | Versioned contracts, runnable experiments and checks |
 | `deploy/` | Dedicated VM, peer, radio, native-manager and qualification workflows |
 | `doc/evidence/`, `site/`, `scripts/build-site.py` | Reviewed evidence and static explorer |
@@ -294,6 +307,7 @@ radio/BSS resources, and selects journal, secret and local API locations.
 | OpenSync mapping | [opensync/mapping.py](../../src/emosa/opensync/mapping.py), `OpenSyncBackend` | Binds designated resources and translates supported intent into guarded Config updates and State predicates |
 | OVSDB communication | [opensync/session.py](../../src/emosa/opensync/session.py), `OvsSession` | Uses upstream OVS JSON-RPC/stream code for schema retrieval, monitoring, transactions and reconnect |
 | WSC components | [wsc.py](../../src/emosa/wsc.py), [wsc_messages.py](../../src/emosa/wsc_messages.py), [wsc_radio.py](../../src/emosa/wsc_radio.py) | Build/check bounded provisioning payloads; these components are not yet connected to a complete wire procedure or authorized pod-write path |
+| WSC operation handoff | [operation_bridge.py](../../src/emosa/wire/operation_bridge.py) | Connects authenticated whole M2 scope to one durable operation in owned simulation; regular service and physical writes remain gated |
 
 The OpenSync mapper is the **southbound part** of EMOSA. Calling that mapper the
 entire adapter would omit the controller-facing role, operation lifecycle,
@@ -414,7 +428,7 @@ also lab tooling rather than part of the long-running adapter service.
 | `ovsdb-server` and `ovsdb-tool` | C | Upstream Open vSwitch 4.0.0, built separately |
 | OpenSync OWM/OW/OSW native managers and dummy-driver facilities | C | Pinned upstream OpenSync, used only in the optional R0 experiment |
 | Native dummy-driver glue | C | Our `deploy/native/driver.c`, calling OpenSync's existing dummy-driver API |
-| Independent WSC reference harnesses | C | Our two `tests/fixtures/protocol/*/reference.c` harnesses call upstream hostap 2.11 functions; they do not link EMOSA |
+| Independent WSC reference harnesses | C | Two `tests/fixtures/protocol/*/reference.c` vector harnesses and the fresh-M2 `deploy/wire/component-registrar.c` payload peer call upstream hostap 2.11 functions; they do not link EMOSA |
 | hostapd / wpa_supplicant | C | Upstream hostap; native peer baseline uses the recorded 2.10 build and explicit lab patch, separately from the 2.11 vector reference |
 | Reference EasyMesh controller and native baseline agent | Primarily C++ | Pinned prplMesh 6.0.0/companion build, plus documented lab patches; separate executables |
 | mac80211_hwsim and Linux wireless stack | C | Existing Linux kernel code, configured by lab scripts |
@@ -462,6 +476,7 @@ Do not infer a required fresh native build from every use of EMOSA Lab:
 | --- | --- |
 | Model scenarios, evaluator and reports | No |
 | Ordinary OVSDB simulator and connecting-pod diagnostic demo | No; compatible Open vSwitch database tools are required separately |
+| TLS fleet/recovery and clean installed-runtime reproduction | No; TLS-enabled OVSDB tools are required; the clean runtime builds them |
 | Standalone two-container hwsim smoke | No; it uses the Linux wireless stack and hostap tools |
 | Native controller–agent baseline | Yes; reuse matching prebuilt artifacts or produce them with the companion build |
 | Current four-container EMOSA/OVSDB/radio integration | Uses the prepared native-baseline lab and retained runtime inputs; its run stops the native peer services and initiates EMOSA semantically |
@@ -527,11 +542,11 @@ The current code already has useful parts of this structure:
 
 | Item | Implemented behavior | Remaining production work |
 | --- | --- | --- |
-| `pods[]` configuration | Declares 1–32 pod entries; `Application` creates a backend and refresh task per pod | The limit is an input bound, not measured capacity or a production sizing claim |
+| `pods[]` configuration | Declares 1–32 pod entries; 4/8/16/32 real TLS database sessions are exercised through one service | The limit and bounded measurements do not establish production sizing |
 | Resource and request binding | Pod IDs select configured resources and scope idempotency/ownership; virtual-agent entries bind configured AL identities and expected serials | Authenticated physical identity, complete radio scope and multi-agent wire representation |
-| Concurrency | One modifying operation per pod; other pods can progress | Stress, fairness, memory/CPU limits and isolation under many slow/reconnecting pods |
-| Enrollment | Explicit configured pod entries and bounded simulation listeners | Automatic authenticated admission, device authorization, dynamic add/remove and lifecycle policy |
-| Recovery | Journaled operations and reconnect observations | Deployment-level failover, exclusive ownership transfer and multi-instance recovery |
+| Concurrency | One modifying operation per pod; concurrent fleet writes and peer progress during a selected pod's failure are measured, with sampled CPU/RSS/FDs | Fairness/SLOs, sustained load and production resource policies |
+| Enrollment | Explicit entries with per-listener CA, certificate pin and expected serial; bounded TLS admission and negative tests | Physical trust enrollment, shared-port routing, dynamic add/remove and lifecycle policy |
+| Recovery | Journaled operations and repeated service-kill/database-restart/reconnect/late-State/conflict checks | Long-duration qualification, deployment failover, exclusive ownership transfer and multi-instance recovery |
 
 A connection from an unknown device is therefore **not currently automatic
 onboarding**. Configuration is loaded when the service starts; there is no
@@ -540,6 +555,10 @@ The [two-pod service exercise](service-integration.md) now measures separate
 requests, histories, disconnects and crash recovery through two explicitly
 configured simulation listeners. It does not establish a shared network listener
 that authenticates and dispatches a fleet of physical devices.
+The [secure-fleet extension](secure-fleet.md) adds explicit TLS bindings, four
+measured fleet sizes, repeated faults and a clean installed-runtime reproduction.
+It retains the same distinction between configured synthetic admission and
+automatic onboarding of physical devices.
 
 Multiple adapter instances may become useful for fault isolation, separate
 sites or measured capacity limits. That is a deployment/scaling choice. It
@@ -1093,7 +1112,7 @@ prerequisites are:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y build-essential pkg-config curl
+sudo apt-get install -y build-essential pkg-config libssl-dev curl
 ```
 
 Skip package installation when these already exist. Run the actual repository
@@ -1101,6 +1120,7 @@ build as your normal user:
 
 ```bash
 bash scripts/build-ovsdb.sh
+python3 scripts/build-wsc-registrar.py
 uv run pytest -m ovsdb
 ```
 
@@ -1111,12 +1131,19 @@ binary hashes. It performs no system install and starts no switch datapath.
 directory explain failures. `EMOSA_BUILD_JOBS=2 bash scripts/build-ovsdb.sh`
 reduces concurrent compiler work on a small machine.
 
+The second build supplies a small synthetic WSC registrar using pinned hostap
+2.11 functions. The complete OVSDB test suite now includes the authenticated
+provisioning cases from §13.12 and needs that helper. It lives under
+`.cache/wsc-registrar/`, requires the same compiler/OpenSSL prerequisites, and
+does not install or start a native controller or radio daemon.
+
 If using separately retained tools, set `EMOSA_OVS_BIN` to the directory containing
 both executables and record their versions/hashes. The override is searched first;
 the source-tree build and PATH are fallbacks. Verify the chosen tools explicitly
-instead of assuming a system OVS package matches the reference. This build disables
-server TLS for local simulation; the separately installed Python OVS client handles
-the qualified collector's TLS connection path.
+instead of assuming a system OVS package matches the reference. The current build
+enables OpenSSL for authenticated connecting-pod simulation. Rebuild an older
+TLS-disabled local binary before starting §6.15. Historical reports retain their
+original binary hashes; they do not identify this new TLS-enabled build.
 
 ### 5.2 Run the normal and lost-reply experiments
 
@@ -1704,6 +1731,61 @@ no complete profile is advertised and no physical pod is qualified. Actual radio
 limits, other mandatory feature capabilities and the IEEE procedure layer remain
 required before a controller can rely on this representation.
 
+### 6.15 Authenticate pods, measure a fleet and reproduce recovery
+
+The earlier Unix-socket lessons teach direction and operation semantics. The
+next question is whether the service can admit the intended authenticated pod,
+isolate its work from other pods, and preserve correct outcomes through repeated
+faults. Follow the [secure fleet guide](secure-fleet.md) for the complete exercise
+and result field reference. These commands run on **HOST**, without a VM or radio:
+
+```sh
+uv run pytest tests/test_tls_listener.py -q
+uv run python -m emosa.simulation.reliability \
+  --directory .cache/reliability/manual-two --pods 2 --cycles 1
+```
+
+Each simulated pod initiates mutual TLS to its own explicitly configured listener.
+EMOSA validates its certificate chain and leaf pin before passing the connection
+to upstream OVS JSON-RPC, then checks the expected database serial before making
+the diagnostic identity ready. The CA, certificate pin and serial have different
+jobs; understanding those distinctions is part of the lesson. Invalid clients
+cannot replace an existing authenticated session. Four pending handshakes per
+listener expire after three seconds, bounding stalled clients.
+
+The command creates one actual adapter process plus a real database and independent
+simulated manager per pod. It first verifies concurrent configuration and
+idempotent replay. It then withholds State, kills/restarts the service, disconnects
+a pod, restarts its database, publishes late State and injects a competing writer.
+Pod 2 must keep progressing while pod 1 waits or is offline. A timeout remains a
+timeout after late application; an ownership conflict survives service restart.
+
+Inspect `report.json` in the selected directory. `passed` must be true,
+`cleanup_passed` must be true and the stated checks must be present. Read the
+`cycles`, operation latency distribution, sampled RSS/threads/file descriptors
+and service lifecycle. Resources cover the adapter process only; simulated pod
+processes also consume memory and CPU. Certificates, keys and journals in that
+private directory are not public evidence.
+
+Now run `--pods 4`, `8`, `16` and `32` sequentially using fresh directories, then
+run four pods with `--cycles 12 --interval 5`. The guide supplies complete command
+blocks. Counts and durations matter: a bounded 32-pod experiment is not a promise
+of production capacity, and a few minutes of recovery testing is not a long-term
+reliability qualification.
+
+Finally follow the [clean nested-LXD workflow](../../deploy/reliability/README.md).
+Its HOST driver preflights a separate owned VM, builds an installed wheel/runtime,
+publishes a private local image before test secrets exist, and repeats the same
+tests in a fresh unprivileged container. Retain image/export hashes and reports,
+then run its ownership-checked cleanup. This workflow is separate from the
+radio/native-peer containers in chapters 8–12.
+
+**What you have established:** authenticated simulation sessions and measured
+service behavior across named workloads and failures, reproduced outside a
+checkout. **What remains:** actual pod trust/schema qualification and real
+EasyMesh controller messages through EMOSA into unchanged pod/client behavior.
+The local `agents` view remains a diagnostic view, even after all these tests pass.
+
 ## 7. Explore evidence and the GitHub Pages manual
 
 The explorer is a **static publication of reviewed results and documentation**.
@@ -1969,7 +2051,7 @@ In that **CONTAINER** root shell:
 
 ```bash
 apt-get update
-apt-get install -y curl build-essential pkg-config
+apt-get install -y curl build-essential pkg-config libssl-dev
 curl --fail --location https://astral.sh/uv/0.11.17/install.sh -o /tmp/emosa-uv-install.sh
 sh /tmp/emosa-uv-install.sh
 export PATH="$HOME/.local/bin:$PATH"
@@ -1982,7 +2064,8 @@ exit
 ```
 
 Back in VM, enter `lxc exec emosa -- bash` and perform the same container setup.
-Also run `bash scripts/build-ovsdb.sh` and `uv run pytest -m ovsdb` in the `emosa`
+Also run `bash scripts/build-ovsdb.sh`, `python3 scripts/build-wsc-registrar.py`
+and `uv run pytest -m ovsdb` in the `emosa`
 container before exiting. These package commands resolve the available Ubuntu
 packages; capture `dpkg-query -W` and compiler/tool versions and repeat validation
 for the installed tuple. They are not an exact package-locked runtime image.
@@ -2797,11 +2880,12 @@ of the history; an old `protoc-c` bootstrap failure is not the current blocker.
 
 Discovery and topology messages carry small structured fields describing services,
 radios, BSSs, radio capabilities and profiles. EMOSA now has Python codecs for
-fourteen such **TLV values**.
+eighteen such **TLV values**, including BSS/client and security-suite fields.
 A TLV means type/length/value; this component handles the value inside that
 structure. It provides useful progress from EasyMesh's explicit field definitions
-while the IEEE 1905 base/amendment are pending. It does not enable the packet
-endpoint or cause the controller to discover an agent.
+alongside the [IEEE envelope implementation](../protocol/ieee1905-envelope.md)
+now based on the obtained IEEE texts. Value inspection does not cause the
+controller to discover an agent.
 
 On HOST, in the installed checkout, run:
 
@@ -2926,6 +3010,814 @@ The walkthrough explains all three results, the input fields and the local
 mapping limits. No full report, advertised profile or physical capability is
 qualified by this run. Native profile/length compatibility work remains separate.
 
+### 13.7 Read complete IEEE 1905 envelopes and test packet delivery
+
+The two IEEE 1905 PDFs were supplied on **2026-09-22** and now support an
+implemented envelope component. An Ethernet **frame** carries a CMDU header and
+TLVs; a large CMDU can occupy several frames. The receiver must wait for every
+fragment before interpreting the complete message. A valid envelope alone does
+not authenticate a controller, validate WSC settings or authorize a pod write.
+
+On **HOST**, from this checkout:
+
+```bash
+uv run emosa-lab wire-inspect \
+  --capture doc/evidence/peer-baseline/samples/wired/ethernet.pcap
+uv run pytest tests/test_ieee1905.py -q
+python3 scripts/check-ieee1905-reference.py
+```
+
+The first command needs no root or lab. It reads the reviewed native-peer
+capture and creates zero operations. Find frame 4's Discovery identity: AL MAC
+and interface MAC differ, so they cannot be treated interchangeably. Then find
+the WSC result completed at frame 7: two received frames formed that one message.
+Expect 59 frames and 58 completed messages, with no incomplete/rejected entries.
+Most results explicitly say procedure validation was not performed. Seeing a
+WSC TLV in this output is not a provisioning success.
+
+The tests include independent captured headers, malformed lengths, reserved
+fields, fragment conflicts/timeouts, limits and MID wraparound. The final command
+needs `tshark` and checks the same boundary using an independent implementation.
+Raw TLV values and decrypted settings are intentionally absent from the report.
+
+Read the [full envelope exercise](../protocol/ieee1905-envelope.md) for the exact
+source clauses, local budgets and remaining work. For actual Ethernet socket
+delivery, follow the [isolated VM runbook](../../deploy/wire/README.md). It needs
+root inside the dedicated VM, creates two private namespaces with only a veth
+connection, checks delivery in both directions and removes its own resources.
+It does not use radios, native peers or physical pods. This is a packet transport
+test; complete discovery/capability/WSC handlers must still connect these bytes
+to the adapter's guarded operation engine.
+
+### 13.8 Follow controller discovery into a radio-bound WSC exchange
+
+Continue with the [autoconfiguration walkthrough](../protocol/autoconfiguration.md).
+**Discovery** finds the controller for the requested band. **WSC configuration**
+carries its requested BSS settings for a specific radio. Those are separate
+conversations: a discovery Response echoes the Search MID, while WSC uses new
+MIDs and binds its authenticated settings to the original M1 transcript.
+
+On **HOST**, after the ordinary installation:
+
+```bash
+uv run pytest tests/test_autoconfiguration.py tests/test_ieee1905.py -q
+uv run emosa-lab wire-inspect \
+  --capture doc/evidence/peer-baseline/samples/wired/ethernet.pcap
+```
+
+The current focused suite contains 88 checks. These need no VM or radio. The
+tests construct/reassemble complete Ethernet messages and use independently
+built hostap M1/M2 payloads; they do not send test credentials to a network.
+In the inspector output, find `autoconfiguration_pairs`: frames 1 and 2 share
+MID 1 and a matching band, but Search Profile 2 and Response Profile 1 differ.
+The captured controller capability byte is `0x40`; the selected EasyMesh edition
+requires KiB/MiB support at bit 7, which is absent. Read `pending_requirements`
+as actual follow-up work, not optional warnings that an onboarding demo can omit.
+
+The new component requires an explicit controller AL, permitted source/interface
+MACs, ingress and binding generation. This distinguishes an old connection from
+the current one. It does not authenticate an Ethernet sender; the future endpoint
+must establish the trusted link and controller relationship separately. RUID
+matching selects the initiating radio, not a VIF chosen from an M2 MAC attribute.
+
+A valid complete M2 returns a secret candidate. Repeating it returns that same
+candidate marked as a duplicate. A re-encrypted M2 must authenticate again and
+match the entire decoded configuration; a changed request cannot overwrite it. Invalid authentication, teardown, multiple BSSs or unsupported
+configuration companions never yield a partial patch. Expiration drops the
+exchange's private-material references, and a new exchange uses fresh material
+so an old M2 cannot simply be replayed after restart.
+
+**Checkpoint:** explain why the candidate is not yet an operation. Full profile
+and early capability procedures, fresh qualified sole-radio admission, durable
+exchange/operation correlation and controller-visible topology are still needed.
+The full wire scenario remains blocked with zero operations. The next end-to-end
+experiment must use the real controller message to cause the guarded Config
+transaction, then observe State and the independent client without issuing a
+second semantic request to supply the change.
+
+### 13.9 Explain the agent with capability and topology reports
+
+A controller needs to know both **what the represented extender can do** and
+**what it is doing now**. An Early AP Capability Report answers the first
+question before configuration. A Topology Response describes current interfaces,
+neighbors, radios, BSSs and clients. It must not turn desired Config into a claim
+that a BSS is already operational.
+
+On **HOST**, run the new offline exercise after the normal installation:
+
+```bash
+uv run python -m emosa.simulation.wire_reports --output .lab/manual-reports-01
+uv run emosa-lab wire-inspect --capture .lab/manual-reports-01/synthetic-reports.pcap
+uv run pytest tests/test_wire_reports.py -q
+python3 scripts/check-report-reference.py
+```
+
+Use a new directory on every run. The final command requires `tshark`; the others
+need no VM, radio or pod. The exercise creates three complete synthetic frames:
+an Early Report, a Topology Query with MID 65535, and its Response with the same
+MID. Its receiver decodes one radio and BSS. Read `receiver_inventory.source` and
+`native_controller_inventory: false`: this is a fixture receiver, not an agent
+appearing in prplMesh's inventory. There are zero operations and no socket I/O.
+
+A valid report requires complete, matching facts. An unknown technology cannot
+be advertised as unsupported merely to omit its required TLVs. A missing client
+list cannot mean zero clients. In particular, the pinned OpenSync client table
+has no association-age field; we must qualify an existing source before emitting
+an actual client's age. Adapter first-seen time does not establish association.
+
+The response has **one second from complete Query receipt** to be sent. Its
+source snapshot also has a short freshness window. These are different from an
+operation's pod apply deadline: reporting a BSS does not configure one. The send
+component rechecks facts and time around every fragment, and reports a late or
+partial send as failure. It cannot recall bytes already transmitted.
+
+Read the [complete report walkthrough](../protocol/reports.md) for field examples,
+exact scope, selected specification sections and native compatibility findings.
+Then use the [VM packet runbook](../../deploy/wire/README.md) with `--reports` to
+cross the socket boundary. That creates only its owned private namespaces; it
+needs neither hwsim nor a physical pod. Keep worker JSON/PCAP files and confirm
+cleanup. Two retained runs passed, with received bytes inspected independently.
+
+**Checkpoint:** distinguish encoded facts, socket delivery, native controller
+inventory and physical behavior. The first two are established by this exercise.
+Full AP Capability Report support, profile/peer reconciliation, the trusted-link
+coordinator admission remain follow-on work. The separate WSC-to-operation
+component in §13.12 now tests the durable handoff within owned simulation.
+
+### 13.10 Keep reports current with the read-only coordinator
+
+The previous exercise used fixed facts. The next step is a **running report
+coordinator** that gets fresh facts from a real database, answers Topology Queries
+and handles an Early Report's acknowledgment and retries. This is still a
+restricted simulation component: its peer is a synthetic controller exerciser,
+and it has no path to create an operation or enable the regular service's wire gate.
+
+Run on **HOST** after building the OVSDB tools from chapter 5:
+
+```bash
+uv run python -m emosa.simulation.coordinator --output .lab/manual-coordinator-01
+uv run emosa-lab wire-inspect --capture .lab/manual-coordinator-01/messages.pcap
+uv run pytest tests/test_report_coordinator.py -q
+uv run pytest tests/test_report_coordinator_ovsdb.py -q
+```
+
+The database initiates a local JSON-RPC connection to a read-only monitor. The
+fixture administrator changes Config, and a separate manager later publishes
+State. The coordinator itself performs no Config writes. This separation lets
+us test the rule that an operational report must describe what is observed,
+rather than what was merely requested.
+
+Read the eight stages in `result.json`. A deliberately lost Ack produces a retry
+with a new MID. The first topology report describes the initial BSS. A Config-only
+change leaves the reported SSID unchanged. After the independent manager updates
+State, the report changes. An associated client without a qualified age source
+withdraws reporting; removing it restores a complete inventory. Database loss
+also withdraws reports, and reconnect requires fresh observations from the new
+connection generation.
+
+The in-memory Ethernet delivery has `socket_io: false`; the OVSDB socket is real.
+To cross the Ethernet boundary, follow the [VM endpoint runbook](../../deploy/wire/README.md)
+with `--coordinator`. That version uses actual AF_PACKET sockets and no radio.
+Its Queries 600/601/602 receive Responses, while Query 603 after disconnection
+does not. Its marker files coordinate fixture timing; they are not a new protocol.
+Both repeated VM runs passed, with independent packet-field checks.
+
+The [coordinator walkthrough](../protocol/report-coordinator.md) explains the
+source lease, fixed Ack budget, retry counts, duplicate/rate limits and exact
+normative references. A matching Ack confirms receipt of a report. It does not
+establish native controller inventory, full profile qualification or permission
+to start M1. The component exposes unsupported WSC/AP Capability inputs without
+creating operations; the selected full-procedure gate remains closed.
+
+**Checkpoint:** show the Config-only and State-updated reports, identify the
+separate fixture writers, and explain why stale or incomplete facts stop output.
+Continue with the discovery lifecycle below. Complete profile admission, full AP
+Capability and native controller visibility remain separate requirements.
+The owned WSC handoff in §13.12 tests the durable operation boundary separately.
+
+### 13.11 Discover the controller before reporting the simulated pod
+
+The last exercise was given its controller binding. A running adapter must also
+send a Search, correlate the Response and decide which subsequent messages it
+can process. **Correlation** matches a response to an active attempt; **admission**
+decides whether all requirements for a configuration procedure are satisfied.
+They are different decisions. Neither a matching MID nor a capability flag
+establishes trust in an arbitrary Ethernet sender.
+
+On **HOST**, after §13.10, run:
+
+```bash
+uv run python -m emosa.simulation.discovery --output .lab/manual-discovery-01
+uv run emosa-lab wire-inspect --capture .lab/manual-discovery-01/messages.pcap
+uv run pytest tests/test_discovery_session.py -q
+uv run pytest tests/test_discovery_session_ovsdb.py -q
+```
+
+This starts a real disposable database and a synthetic controller exerciser.
+The database connects to a read-only monitor; Ethernet frames are delivered in
+memory. There is no radio or native controller in this command. The first
+advertisement deliberately omits required capability information. The session
+records the gaps and withholds topology. After an explicit new attempt, matching
+selected fields permit read-only topology reporting. Config-only changes still
+report the old SSID; separately observed State changes alter the report.
+
+Stopping and restarting the database now requires another discovery exchange,
+even after fresh rows return. This prevents an old controller exchange from
+being reused across a changed pod connection. A lease that expired without
+being polled also loses its context. Ordinary timely database revisions can
+refresh topology without restarting discovery.
+
+Read all ten stages in `result.json` using the
+[discovery-session walkthrough](../protocol/discovery-session.md). Then follow
+the VM packet runbook with `--discovery` to reproduce dropped responses, missing
+capability rejection, old/old/new SSID reporting and disconnect suppression over
+actual Ethernet sockets. The peer waits at least 1.1 seconds for deliberately
+withheld responses; a single empty receive call would not establish that result.
+
+Automatic Early Report initiation stays blocked by the documented EasyMesh
+Table 117 bit-range ambiguity. The new lifecycle sends no M1 and creates no
+operations. Its `discovered_read_only` state describes this component's limited
+permission to report; it is not a native controller's managed-agent inventory
+or a qualified profile. The unchanged physical-pod proof remains pending.
+
+**Checkpoint:** explain why a complete database snapshot can still receive no
+topology reply, why reconnect requires discovery again, and why a successful
+read-only response does not authorize provisioning.
+
+### 13.12 Turn authenticated WSC input into a durable operation
+
+Earlier exercises stop at different boundaries: discovery correlates a controller,
+reports describe a simulated pod, and the WSC component returns authenticated
+configuration. The next exercise joins **that configuration to the operation
+engine**. It answers a specific implementation question: can a supported M2
+cause the intended Config change without a second request through the semantic
+API? The answer is now yes within this owned component experiment.
+
+An M2 is not simply JSON containing an SSID. It belongs to an active M1 exchange,
+contains encrypted settings and must pass authentication, peer, radio and complete
+request checks. The bridge accepts only the fixture's one existing fronthaul
+WPA2-PSK/CCMP BSS. A teardown or extra configuration cannot be silently ignored.
+The peer here is a synthetic C program built with independent hostap helpers,
+not prplMesh or another complete EasyMesh controller.
+
+Run on **HOST**, from the checkout. No VM, hwsim radio or physical pod is needed:
+
+```bash
+bash scripts/build-ovsdb.sh
+python3 scripts/build-wsc-registrar.py
+uv run python -m emosa.simulation.wsc_provisioning \
+  --registrar .cache/wsc-registrar/component-registrar \
+  --output .lab/manual-wsc-provisioning-01
+uv run pytest tests/test_wsc_operation_bridge.py tests/test_wsc_provisioning.py -q
+```
+
+The builds may be reused from chapter 5. Use a new result directory for each run.
+The runner owns disposable databases, manager processes and private journals;
+it cleans them after recording public results. It accepts no pod endpoint.
+Credentials and exchange private keys are not copied into the result directory.
+The fixture PSK in the C source is intentionally public and is used only in its
+owned simulation. An uncatchable kill of the parent runner may leave temporary
+resources for the operator to inspect; normal completion cleans its resources.
+
+Open `summary.json` and the four named case files:
+
+1. **`configure.json`:** read `operation.initiating_interface`. It must be
+   `wsc-component`. One authenticated request created the operation. Identical
+   and freshly re-encrypted retries reuse it, even with a changed MID. Invalid
+   authentication and unsupported complete requests created no operations.
+2. **`lost-reply.json`:** the database applied Config but EMOSA lost the reply.
+   The initial state is `INDETERMINATE`. The separate manager later publishes
+   matching State. Application becomes observed, while commitment attribution
+   remains `unknown`; current conditions cannot reconstruct a lost reply.
+3. **`identity-race.json`:** the fixture changes the target BSSID after planning.
+   Atomic transaction guards reject the request and leave the original Config
+   SSID. One transaction attempt does not mean one successful change.
+4. **`crash-after-commit.json`:** the runner kills a real adapter child after the
+   database commit, before the reply reaches the journal. The replacement
+   process recovers the submitted operation as uncertain and observes State
+   without resending Config. An old M2 fails against its fresh M1.
+
+Compare `checks.rows_before_manager_apply` with `checks.rows_at_end`. In a normal
+run, Config changes while State still names the initial network. Only the manager
+then publishes State. This demonstrates why EMOSA has separate committed and
+observed phases. No client has associated: the manager in this exercise is a
+separate simulation process, and Ethernet frame delivery is in memory.
+
+The credential is persisted privately before its operation reference. The
+operation, initial event and exchange receipt are inserted atomically into the
+journal. Restart cancels unsent component requests because their old exchange
+authority is gone. Submitted requests are reconciled without automatic replay.
+Read the [full walkthrough](../protocol/wsc-provisioning.md) for credential
+durability, source-generation checks, receipt fields and restart limitations.
+
+**Checkpoint:** explain why the four cases can pass while `full_wire_gate` stays
+`blocked_P0`. This bridge is separate from the discovery lifecycle in §13.11;
+it does not resolve automatic Early Report/profile admission or populate a
+native controller's inventory. Next we must join an admitted native-controller
+exchange to this handoff. The next section joins its synthetic packet peer to
+the hwsim manager and independent client. Physical acceptance still requires an unchanged,
+qualified OpenSync pod and independent observations.
+
+### 13.13 Drive Wi-Fi from an Ethernet WSC exchange
+
+The preceding exercise establishes the durable handoff without a radio. This
+one makes a stronger, bounded observation: **an authenticated request received
+through an actual Ethernet socket causes the database, radio and client changes
+in the same run**. The configuration comes from M2; a semantic API call does not
+supply it. The small hostap payload peer is still synthetic. A real controller
+has neither admitted this agent nor recorded it in its inventory.
+
+Read the [illustrated walkthrough](../protocol/wsc-wire-radio.md) before running.
+Use HOST for the commands below. `lxc exec` runs the process inside the dedicated
+VM. You need chapter 11's existing owned containers/radios and idle services,
+plus §13.12's built registrar. This does not establish a new VM:
+
+```bash
+python3 scripts/build-wsc-registrar.py
+python3 deploy/radio-manager/stage.py --wsc
+lxc exec emosa-lab -- env \
+  PYTHONPATH=/opt/emosa-radio-manager/source \
+  EMOSA_OVS_BIN=/opt/emosa-radio-manager/ovsdb \
+  /opt/emosa/.venv/bin/python /opt/emosa-radio-manager/run-wsc.py \
+  --label manual-wsc-radio-01
+```
+
+First-time operators should run the walkthrough's **packet-only** command before
+this radio command. That isolates frame receipt, authentication and operation
+creation from AP/client setup. A packet failure is then easier to distinguish
+from a radio failure. Each command requires a new output directory or label so
+that earlier evidence survives.
+
+The runner automatically performs this learning sequence:
+
+1. Start the initial AP and confirm both independent clients work. This proves
+   the observation path is usable before changing anything.
+2. Send invalid M2 authentication, close that exchange, and generate a fresh M1.
+   No operation or credential file may exist after the rejected exchange.
+3. Reject a wrong RUID, then receive the valid request's last fragment first.
+   There must be no operation until the whole message is available and checked.
+4. Create and execute one `wsc-component` operation. Same-content retries, even
+   with fresh encryption and a changed MID, reuse it. A changed configuration
+   cannot create another write in that exchange.
+5. Withhold manager application. Config names the new network while State and
+   client probes still identify the old network. This directly demonstrates
+   why Config commitment alone is insufficient.
+6. Release the manager. It applies Config through hostapd, reads back live
+   hostapd/nl80211 facts, and publishes State. Separate clients must authenticate
+   and carry fresh, interface-bound application traffic.
+7. Try a wrong client key. Require a new supplicant `WRONG_KEY` event and no
+   completed association. Restore the correct key and require traffic again.
+
+Read `/opt/emosa-radio-manager/runs/manual-wsc-radio-01/result.json` in the VM,
+then `ethernet/left.json` and the four `clients-*.json` files. Match the operation
+receipt's M1 digest to `ethernet/right.json` and the capture. The normal case has
+one transaction attempt, `CONFIG_COMMITTED` before application, then
+`OBSERVED_APPLIED`. The AP changes to `EMOSA-WSC-component`; client observations
+pin its BSSID and use different nonces for each check.
+
+Repeat the same command with a new label and `--lost-reply`. Now the pre-application
+state must be `INDETERMINATE`. The database reconnect invalidates the old exchange's
+write authority, so further retries are refused. Fresh State later establishes
+application without a second transaction. Commit attribution remains `unknown`,
+and application attribution is `current_condition_only`; current success does
+not reconstruct a missing historical reply.
+
+The runner stops its services and database, retains raw results, and removes its
+owned packet workers/namespaces. Containers and their radio assignments remain,
+with the lab in wired topology. Raw runs include private simulation credential
+files and journals; publish only reviewed results/captures. The
+[independent packet checker](../../scripts/check-wsc-wire-reference.py) uses
+external tshark headers and a separate TLV reader. Ethernet capture timestamps
+are synthetic; their received bytes/order and the receipt establish correlation,
+not measured packet latency. The radio capture retains actual observation times.
+
+**Checkpoint:** explain the five different observations: authenticated M2,
+durable operation, Config result, observed radio State and independent client
+traffic. Identify the remaining first arrow: compatible native-controller
+admission and its own inventory. This fixture does not run OpenSync firmware,
+qualify a physical pod, or open the complete wire gate. See the
+[retained normal and fault runs](../evidence/wsc-wire/README.md).
+
+### 13.14 Observe native discovery before claiming onboarding
+
+The previous WSC/radio exercise starts with a synthetic peer. The
+[native discovery walkthrough](native-discovery.md) now tests an earlier boundary
+with the actual prplMesh controller: EMOSA sends its own Profile-1 Search, receives
+a correlated native Response, and observes a new device entry in the controller's
+inventory. No pod connection or WSC exchange participates in this probe.
+
+Run it on the existing owned VM, following the guide's HOST staging commands and
+using a fresh run label. The native helper must finish binding its transport
+before the Search begins; an available controller API is not sufficient readiness.
+The runner waits for that condition and retains an independent capture before
+removing its temporary namespace and stopping its native services.
+
+Read the result in this order: matching Profile-1 Search/Response, remaining
+capability issues, device absence before Search, and device presence afterward.
+Then inspect the represented radio and BSS counts: both remain zero. The native
+controller may already label the agent mode `Running`, but that field alone does
+not prove successful onboarding or working Wi-Fi. No Config operation occurred.
+
+**Learning checkpoint:** explain three different outcomes: a controller answered
+Search; it created a discovered-device entry; it fully onboarded and configured a
+represented radio/BSS. This exercise establishes the first two. The next step
+must resolve capability admission and join the tested WSC/radio path, with the
+controller's complete inventory and independent client evidence in the same run.
+
+### 13.15 Fix and compare one native controller capability
+
+A **capability flag** is a promise about supported behavior. The baseline native
+controller omits the KiB/MiB flag although it implements the corresponding
+counter conversion. The [controller candidate guide](controller-counter-candidate.md)
+teaches how to fix that defect in C++, build only the controller against the
+pinned libraries, and compare the actual packets without changing EMOSA's checks.
+
+Build on HOST in a new private directory. The build runs 12 checks against the
+native counter-conversion function, including the maximum 32-bit input. Stage
+only the small executable and provenance in the VM. First inject a failure just
+after installation: that command is expected to fail, but its result must show
+`baseline_restored: true`. Then run a normal candidate trial with a fresh label.
+The runner saves the original executable, marks the temporary native reference,
+collects the discovery exchange and restores the baseline after stopping services.
+
+Compare baseline `controller_flags_hex: 40` with candidate `c0`. The added bit
+means the controller now advertises its counter support. Check the restored
+baseline too: it must return to `40`, which demonstrates that the change was
+isolated. The C++ conversion checks establish numerical behavior; the capture
+establishes the advertisement. Neither is a full traffic-metrics test.
+
+Security Capability remains absent. Do not add a zero-filled TLV to silence that
+diagnostic: its zero values mean specific DPP and cryptographic capabilities.
+The specification's unsupported-feature omission rule must be applied to an
+explicit non-DPP feature contract. The procedure review and automatic Early/AP
+capability sequence remain prerequisites to the admitted WSC integration.
+
+**Learning checkpoint:** explain why this patch belongs to the native test peer,
+why EMOSA must continue to check the received response, and why a corrected flag
+still leaves zero radio/BSS onboarding evidence. Follow the linked guide's build,
+failure, packet-comparison and restoration steps before claiming this result.
+
+### 13.16 Join the real controller to the simulated OpenSync extender
+
+The previous exercises prove individual boundaries. This experiment connects
+them: **native controller → EMOSA virtual agent → OpenSync-schema OVSDB → separate
+radio manager → hwsim AP → independent client**. The native controller must also
+learn the represented radio and BSS from EMOSA's reports.
+
+Start with the [native onboarding walkthrough](../protocol/native-onboarding.md).
+It explains the selected non-DPP contract, the controller candidate changes and
+the exact HOST/VM setup commands. Build the candidate on HOST with `--onboarding`;
+stage it in its own VM directory and use a new run label. The pinned baseline is
+backed up and restored, so the experiment remains reproducible.
+
+**Why withhold application?** A successful database transaction proves only that
+the requested configuration was stored. During this deliberate pause, Config
+contains the controller's new SSID while State still describes the old live AP.
+The operation must stay `CONFIG_COMMITTED`. After the separate radio manager is
+released, observed State can advance the operation to `OBSERVED_APPLIED`.
+
+**Why read the controller separately?** EMOSA's local virtual-agent directory is
+not the controller's database. Read `controller-before.json` and
+`controller-after.json`: the latter must contain the exact AL, radio, BSSID and
+controller-provisioned SSID. The radio capture and separate client traffic then
+establish behavior beyond both software inventories.
+
+The retained initial scope ends topology reporting before the independent Wi-Fi
+client joins. The follow-on exercise below keeps the adapter active and adds
+measured station reporting. Policy/metrics, channel management, full profile
+qualification and a physical unchanged extender remain further work. The run's
+`observed_pending_capture_review` status requires independent packet review
+before a bounded onboarding success can be declared.
+
+**Learning checkpoint:** trace the new SSID from native BML policy through the
+actual WSC M2, durable receipt, Config, independently observed State, native BSS
+inventory and client traffic. Identify which evidence would be missing if any
+one link in that chain failed. Do not substitute a semantic API request for M2.
+
+### 13.17 Keep the virtual agent active while clients use it
+
+An onboarded agent must continue participating in the network. A station can
+connect successfully even after the adapter has stopped, because hostapd keeps
+serving the last configuration. Therefore a traffic test alone does not prove
+that the controller still manages the represented OpenSync extender.
+
+Follow [the sustained-operation guide](../protocol/sustained-operation.md).
+The [retained 908-second operational run](../evidence/native-soak/README.md)
+passes client cycles and both recovery faults with one total Config write.
+Its mandatory metric and disassociation gaps remain explicit.
+It defines the complete 15-minute acceptance target and the current 90-second
+pilot. Establish the same owned VM first, stage the updated Python and helper
+files, add the pinned telemetry dependencies and private broker, then run the
+native onboarding command with `--active-seconds 90` and a new label. The helper
+keeps EMOSA running while clients pass traffic and reconnect; it records process
+samples and detailed controller inventory during these phases.
+
+**Why add telemetry?** OVSDB tells EMOSA which station belongs to the BSS, but the
+pinned table lacks association duration. The simulated pod's existing lab
+manager now reads that duration from hostapd and sends a separate OpenSync-format
+Protobuf message through a private MQTT broker. EMOSA joins the two observations
+only when identity, membership, SSID and freshness agree. It never treats first
+sighting after reconnect as the actual association time. This lab publisher does
+not qualify a physical pod's telemetry interface.
+
+**How do I interpret a result?** Check that the same adapter process was running
+when the independent clients passed traffic. Then inspect the STA object under
+the virtual agent's exact BSS in the controller's inventory, the captured client
+event and any capability response. A gateway neighbor entry containing the same
+MAC is insufficient. A capability-unavailable error is an explicit limitation;
+it is not a successful measurement. Check leaves and subsequent joins separately.
+
+**What does a channel exchange mean here?** The lab advertises only channel 6
+as operable. EMOSA stores compatible controller preferences, accepts a request
+that the existing radio configuration already satisfies, and reports the
+independently observed channel and nominal power. It does not need to rewrite
+Config for that request. Lower-power or other-channel requests need additional
+actuation support and remain unsupported. See the guide for exact specification
+sections, freshness checks and Ack handling.
+
+**How do I exercise recovery?** Use the guide's command with a new label,
+`--active-seconds 900 --recovery-checks`. After initial onboarding, the runner
+first interrupts the pod's outgoing OVSDB connection and later kills/restarts
+the actual adapter worker. Both clients continuously ping the gateway while
+independent HTTP probes continue between deliberate Wi-Fi join/leave cycles.
+The AP keeps its configuration during these management faults, so traffic should
+survive. The controller and adapter must separately complete fresh discovery,
+Early Report and authenticated WSC after each fault.
+
+Read `recovery-checks.json` next to the captures and all operation receipts.
+Three operations are expected: initial provisioning and two authenticated
+recovery operations. Only the first should write Config; the others should
+observe that the intended configuration is already applied. A new process PID
+alone proves a restart, not successful protocol recovery. An old receipt or
+an old M2 must not grant the new process write authority. The independent
+`scripts/check-native-recovery.py` checks the packet sequence, receipt hashes,
+traffic and resource samples; its default minimum is 900 seconds.
+
+The pilot is an implementation aid. Required policy/metrics, IEEE 1905
+neighbor-link metrics and measured final disassociation statistics remain gaps
+in complete sustained acceptance. The final-statistics sender is now implemented;
+the next section explains why its measurement source is a separate requirement.
+Read the difference between `operational_recovery_checks_passed` and
+`sustained_operation_proven` in the guide. Duration or uninterrupted traffic
+alone cannot satisfy every controller procedure, and simulation cannot
+establish physical-pod acceptance.
+
+**Learning checkpoint:** explain why fresh OVSDB membership, measured association
+age, native controller inventory, adapter liveness and independent traffic are
+five different observations. Locate each in the run artifacts. Then explain
+why recovery creates a new WSC operation but should not create another Config
+write when the pod is already in the requested state.
+
+### 13.18 Understand final session counters before reporting a client leave
+
+A client disappearing from OVSDB tells EMOSA that the client is no longer
+associated. It does not tell EMOSA how many packets the client exchanged before
+leaving, whether its last transmissions failed, or why it disconnected. EasyMesh
+requires this additional information in a Client Disassociation Stats message.
+This is why a successful join/leave exercise can still leave a reporting gap.
+
+**What is a final session?** One station can connect, disconnect and connect
+again with the same MAC address. Each association is a different session. The
+final record must identify that particular association and contain its actual
+disconnect reason and complete counters. The last periodic sample may have been
+taken before the last packets; an absent field must not become a made-up zero.
+AP transmit counters describe traffic sent toward the station; AP receive
+counters describe traffic received from it.
+
+The sender and its internal onboarding handoff are implemented. They require
+authenticated onboarding, a recently observed leave, fresh complete counters,
+and a matching source/session identity. If the station rejoins or the source
+changes, the old report is withdrawn. The current lab publisher cannot yet
+supply a qualified final record, so native experiments still report this gap.
+The regular physical-pod service also has no qualified final-record source yet.
+
+**Where do I run the exercise?** Use the checkout on HOST; this component exercise
+needs Python and tshark from chapter 3 and does not start containers. Follow
+the [final-session guide](../protocol/final-session-statistics.md) in this order:
+
+1. Read the retained evidence and distinguish the synthetic encoding check from
+   the native byte-unit regression. Only the latter uses the real controller.
+2. Run `python3 scripts/check-disassociation-reference.py` to check the three
+   retained messages with an independent dissector.
+3. Generate fresh fixtures using the guide's command and a new output directory.
+   Compare raw bytes, KiB and MiB at a counter rollover boundary.
+4. Run the focused lifecycle tests and examine the rejected stale, incomplete,
+   reassociated and conflicting records.
+5. Proceed to measurement-source qualification before attempting to claim live
+   final-statistics delivery in another 15-minute run.
+
+For that fifth step, follow the
+[station-removal observation exercise](../protocol/station-removal-observations.md).
+The new read-only observer captures the kernel's removal-time record before the
+station disappears. Its native run correlates six records with actual radio
+disconnect reasons and controller-facing leave notifications. This establishes
+where to acquire the data. It still requires semantic qualification: a Linux
+packet counter can include attempted transmissions, while the requested
+EasyMesh counter counts successful ones. Inspect the guide's mapping table
+before connecting this source to the sender.
+
+Then follow the [counter accounting exercise](../protocol/station-counter-accounting.md)
+on HOST. First check whether the capture itself is complete, then check recovery,
+event correlation and finally the arithmetic. The earlier event-observation run
+captured all required disconnects but dropped 120 other packets; it cannot count
+every packet. The new run's larger capture buffer and independent completeness
+checks close that particular evidence gap.
+
+**Why inspect kernel source?** A field called `TX_BYTES64` sounds unambiguous,
+but our exact kernel adds it before encryption. Its captured protected frame is
+16 bytes longer. Receive packet bookkeeping also counts each of four management
+frames twice in these sessions. The new guide walks through actual numbers and
+provides a command to reconstruct the selected Ubuntu source files with verified
+hashes, without changing the running kernel. Learn those boundaries before
+choosing a conversion: subtracting a constant learned from one session is not a
+general mapping. Failed/retried traffic and the selected counter definitions
+remain qualification work before an online producer can supply the sender.
+
+**What changes when frames fail?** Continue with the optional
+[medium-loss exercise](../protocol/medium-loss-accounting.md). It inserts a pinned
+wmediumd process between the owned hwsim radios, while keeping the controller,
+adapter, simulated pod manager and client containers. Some AP transmissions are
+deliberately lost. The client can remain associated, so the kernel retains a
+station record in which failures can accumulate. RF-kill is unsuitable for this
+exercise because it removes that association.
+
+First read the retained observations, then prepare the private VM build only if
+it is absent. Run the new experiment with `--medium-loss`, both recovery checks
+and the station-removal observer. Start interpretation with capture health. The
+extra netlink capture records frames submitted to the medium, simulated attempt
+counts and the kernel's replies. Those attempts are not separately transmitted
+RF frames. Compare submission/byte/failure accounting and inspect retry
+discrepancies separately; a usable Wi-Fi connection does not resolve them.
+The medium's legacy timing and fixed receive-rate representation cannot support
+the HT radio's EasyMesh airtime or link-rate reports. This is a measurement
+qualification exercise, not another completed sustained-acceptance result.
+
+**Where did the missing retries go?** The next
+[completion-flag exercise](../protocol/tx-status-accounting.md) observes the
+kernel when it receives transmit completion. The medium describes attempts,
+but mac80211 also uses the frame's original aggregation flag. With an A-MPDU
+control flag and no aggregate completion status, this kernel deliberately adds
+zero to the station's retry count. In the retained run, 2,421 medium retries
+minus 2,094 suppressed retries equals the observed 327. Correlate each lifetime,
+not just the grand total. The exact-kernel guard and trace-loss checks matter:
+wrong structure offsets or missing trace events could create plausible but
+incorrect arithmetic. The guide explains the passive probe, commands, private
+raw trace and cleanup. Explaining the difference still leaves the raw counter
+unsuitable as a complete retry measurement.
+
+**What if telemetry stops but the pod remains connected?** Follow the separate
+[freshness exercise](../protocol/telemetry-freshness.md). Configuration authority
+comes from current OVSDB observations; association duration and operating power
+also require fresh telemetry. Pausing MQTT publication should therefore make
+those dependent observations unavailable while retaining the healthy control
+session. It must not invent a client departure, repeat WSC or write Config again.
+The exercise deliberately pauses publication, probes both clients during the
+gap, then restores it and checks the wire and operation journal independently.
+Afterward it breaks the actual pod connection and kills the adapter process;
+those faults do require new discovery and authentication. Comparing all three
+faults teaches why one generic reconnect response is insufficient.
+
+**Why change the advertised byte unit?** The current virtual agent uses
+Profile-1, whose traffic counters are in bytes. Earlier experiments advertised
+KiB in an accompanying capability TLV but never sent traffic counters. The new
+native regression verifies a consistent byte declaration through onboarding and
+both recovery faults. Encoding tests for KiB/MiB support future codec work; they
+do not enable additional profiles in the running agent.
+
+**Learning checkpoint:** explain why a valid packet, a complete measured final
+record, and the controller acknowledging that record are three separate pieces
+of evidence. Locate which ones this component and the native regression provide,
+and identify the measurement work that remains before complete acceptance.
+
+### 13.19 Distinguish receiving a reporting policy from fulfilling it
+
+The controller can tell an agent which metrics to report and how often. Our
+native controller requests reports every 60 seconds, including STA traffic,
+link and Wi-Fi 6 status information. A zero threshold in the same request does
+not cancel that interval; it disables an additional threshold-based trigger.
+
+**What does an Ack prove?** The protocol requires an acknowledgment within one
+second, carrying the request's message identifier (MID). It confirms receipt.
+It is separate from the later reports containing measurements. EMOSA now stores
+the selected complete policy before sending this Ack, but still exposes the
+missing measurements and reports. This is why an empty list of unanswered policy
+requests is insufficient to claim that continuous reporting works.
+
+Follow the [policy receipt guide](../protocol/reporting-policy.md) on HOST:
+
+1. Run the independent retained-evidence checks. Find the 60-second interval and
+   all three enabled STA inclusion flags in both the capture and stored status.
+2. Match each controller request to an agent Ack with the same MID. Compare
+   their timestamps against the one-second requirement.
+3. Inspect `next_due` and `periods_due_without_report` across pod reconnect and
+   adapter process restart. Repeating the same policy must not keep postponing
+   the next report; due work survives recovery.
+4. Run the 210-second reproduction after completing chapter 13.17's VM setup.
+   It exercises both faults and at least three reporting deadlines. The
+   independent checker deliberately leaves required reporting unproven.
+
+The private SQLite file stores intent and schedule, not measured radio facts.
+The collector uses its sanitized status representation for review and leaves the
+database outside Git. An actual VM reboot is distinct from killing the adapter:
+the code preserves intent and explicitly rebases the monotonic schedule when
+the OS boot identity changes; only a component test covers that boot-change path.
+
+**Learning checkpoint:** distinguish policy receipt, Ack delivery, policy
+application and actual periodic reports. Locate the evidence for each one, and
+identify which remain incomplete before repeating full 15-minute acceptance.
+
+### 13.20 Understand neighbor links before reporting their metrics
+
+The controller asks two different traffic questions. AP/STA metrics describe a
+radio, BSS or associated client. IEEE 1905 neighbor metrics describe the link to
+another 1905 device, such as the gateway. The latter request can ask about one
+neighbor or all neighbors, and transmission, reception or both directions.
+One neighbor can connect over several interface pairs, all of which must be
+represented when that direction is reported.
+
+**Why is an interface pair important?** The AL MAC identifies the device. Its
+Ethernet or wireless interface has its own identity. In our VM, EMOSA emits
+control messages through a dedicated veth, while the simulated OpenSync pod
+forwards client traffic through a different interface. Counting the adapter's
+messages would not measure the pod's forwarding link. The read-only native
+inventory now records the two endpoints and their paths through the VM bridge
+so this mistake is visible before measurement integration.
+
+Follow the [neighbor-metric guide](../protocol/neighbor-link-metrics.md) on HOST:
+
+1. Run the retained wire-vector checker. Compare a two-byte all-neighbor query
+   with an eight-byte specified-neighbor query. Match each response's MID and
+   requested direction. The guide explains the source table's conditional length.
+2. Inspect the two interface pairs in each synthetic positive response. Compare
+   packet errors, packet counts, capacity and availability; PHY rate and RSSI
+   have explicit unavailable encodings in the IEEE amendment. Other fields
+   cannot silently use zero as an unavailable value.
+3. Run the source/coordinator tests. Observe rejection of stale, incomplete,
+   mismatched and pre-reconnect measurements. A correctly encoded message is
+   not evidence that its source measured the requested quantity.
+4. Review the native experiment's `neighbor-link-observations.json`, captured
+   queries and `neighbor_measurement_unavailable` status. Identify the pod's
+   forwarding interface separately from `probe0` and locate their bridge.
+5. Continue with the raw forwarding observations in chapter 13.21. Actual
+   interface mapping and measurement qualification still precede native metric
+   delivery. The native negative check deliberately does not claim reporting success.
+
+**Why not send an invalid-neighbor result?** That result means a specifically
+requested device is absent from a fresh complete neighbor inventory. Our
+controller is an existing neighbor. Missing counters or capacity estimates do
+not make it disappear. Until the publisher is qualified, the handler records
+the missing measurements and the sustained-acceptance gap remains open.
+
+**Learning checkpoint:** distinguish device identity, forwarding-interface
+identity, measurement period and source freshness. Explain which evidence
+would justify each field of a complete neighbor response after reconnect.
+
+### 13.21 Follow a forwarding counter from the pod to EMOSA
+
+An Ethernet **interface counter** accumulates packets or bytes over the lifetime
+of that interface. A **measurement interval** compares two readings from the same
+lifetime. If the interface is recreated or the counter resets, subtracting an old
+reading from the new one would produce a meaningless result. That is why the
+reader keeps interface identity, clock bounds and a counter baseline together.
+
+The [forwarding-observation guide](../protocol/forwarding-observations.md) takes
+the next step beyond chapter 13.20's single inventory snapshot:
+
+1. Inspect its diagram. Trace a Wi-Fi client through `wlan0`, `br-lan` and
+   `eth1`; trace the wired client through `eth2`. Locate EMOSA's separate
+   `probe0` control connection. These names belong to the documented owned lab.
+2. Run the retained forwarding checker on HOST. It needs no running VM. Open
+   `neighbor-link-observations.json` and identify the pod's `eth1` MAC/ifindex
+   and its matching VM veth peer. A veth is a virtual cable with two endpoints;
+   checking its peer index prevents capturing the wrong cable.
+3. Compare a successful `manager.jsonl` forwarding publication with the matching
+   timestamp in `forwarding-samples.jsonl`. The manager independently reads the
+   kernel, publishes existing OpenSync-schema rows, and EMOSA reads them over
+   OVSDB. The adapter does not manufacture its own source readings.
+4. Inspect a `window` and subtract its two cumulative readings. Then inspect
+   reconnect/restart boundaries: there must be a fresh baseline before another
+   interval. The two-second deadline prevents repeated reads of an old OVSDB
+   row from keeping a stopped publisher's observation alive.
+5. Inspect the backhaul capture. Client transit frames retain client addresses;
+   matching only the pod's own MAC would miss them. Locate a native controller
+   Topology Discovery and compare its AL-address and interface-address TLVs.
+   They describe different identities.
+6. Follow the guide's staging and reproduction commands on HOST to run the
+   210-second development check inside the VM. It includes the telemetry-only
+   pause, actual pod connection loss and actual adapter process restart. Run
+   the independent checks after collection and preserve unsuccessful attempts.
+
+**Why is `measurement_source_qualified` still false?** We now have the raw
+observations and a checked transport path. We must still establish which packets
+belong to each neighbor, what each error/drop counter means for the selected
+IEEE field, and how to estimate capacity and availability. The virtual agent's
+represented topology also needs a live binding to the observed interfaces.
+Publishing raw counters alone does not close those requirements.
+
+**Learning checkpoint:** explain the difference between a cumulative sample,
+a valid interval, a whole-interface count and a qualified per-neighbor report.
+Find the explicit unknown state and explain why it must not be displayed as zero.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and
@@ -2967,6 +3859,7 @@ example:
 | Actual existing access | Example |
 | --- | --- |
 | Mutual TLS | [qualification.example.json](../../deploy/qualification.example.json) |
+| Pod-initiated mutual TLS | [qualification-tls-listen.example.json](../../deploy/qualification-tls-listen.example.json) |
 | Authenticated SSH/VPN/etc. tunnel to loopback TCP | [qualification-tunnel.example.json](../../deploy/qualification-tunnel.example.json) |
 | Owned private local Unix socket | [qualification-unix.example.json](../../deploy/qualification-unix.example.json) |
 
@@ -3092,13 +3985,14 @@ or access arrangements together, then resolve the consolidated checklist instead
 of selecting incompatible editions independently for each new feature.
 
 [specification-acquisition.md](../protocol/specification-acquisition.md) is the single access
-checklist. Exact **IEEE 1905.1-2013** and **IEEE 1905.1a-2014** remain pending
-external inputs, with no authorized local copies or subscription mechanism.
+checklist. Exact **IEEE 1905.1-2013** and **IEEE 1905.1a-2014** were supplied on
+2026-09-22, verified and hashed. Section 13.7 explains their first implementation.
 IEEE 802.11-2024 is now obtained, verified and hashed. The supplied Ethernet
 document is IEEE 802.3-2022; equivalence to the cited IEEE 802.3-2015 remains
 unresolved. The [media input review](../protocol/ieee-media-review.md) identifies
 the selected radio and Ethernet clauses inspected so far. Wi-Fi Alliance Security
-Requirements with revision to identify and conditional references/corrections
+Requirements with revision to identify, Data Elements 3.0, the LLDP dependency
+IEEE 802.1AB-2009 and conditional references/corrections
 remain on the acquisition checklist.
 
 EasyMesh 6.1 and WPS 2.0.10 publisher PDFs were obtained and hashed outside Git.
@@ -3241,7 +4135,22 @@ Suggested wording: “This establishes onboarding for this named patched native
 peer tuple over both backhauls. It supplies a control experiment before EMOSA
 represents an OpenSync extender; it does not establish universal compatibility.”
 
-### 15.6 Questions a presenter must answer accurately
+### 15.6 Demo E: authenticated connecting pods and recovery
+
+Use [§6.15](#615-authenticate-pods-measure-a-fleet-and-reproduce-recovery) and
+[the secure fleet guide](secure-fleet.md). Before presenting, build TLS-enabled
+OVSDB, run the four transport tests and retain a clean-runtime report. During the
+demo, run two pods with one cycle in a fresh directory, explain the chain/pin/
+serial checks, and inspect `checks`, `cycles` and `service_lifecycle`. Show how
+one pod progresses while the other waits and why late evidence preserves a timeout.
+
+Then open the retained 32-pod report and image manifest to show how the same
+experiment was reproduced. State the workload, machine, observation interval and
+evidence boundary with any performance number. Do not build the VM in front of
+the audience or display the generated private trust directory. This is a secure
+management/service demonstration; actual controller onboarding remains pending.
+
+### 15.7 Questions a presenter must answer accurately
 
 | Audience question | Answer supported today |
 | --- | --- |
@@ -3252,6 +4161,21 @@ represents an OpenSync extender; it does not establish universal compatibility.�
 | Does this test RF performance, roaming, DHCP or every security mode? | No; those are outside the current bounded profiles |
 | Can every standard agent always onboard? | No universal claim; the recorded native baseline covers a finite selected tuple/case set with known shutdown defects |
 | What unlocks the next proof? | Complete normative/exchange binding work, then a qualified physical endpoint, mapping and independent physical client |
+
+### 15.8 Demo F: a packet-driven change reaches a wireless client
+
+Prepare §13.13's build/staging before the audience arrives. State the scope:
+“An owned synthetic WSC peer sends Ethernet provisioning to EMOSA. We will
+observe the resulting radio and client behavior. Native-controller onboarding
+and the unchanged physical pod remain the next boundaries.”
+
+Run a fresh normal label, then inspect its receipt, the before-application
+Config/State mismatch and the changed-client result. Show that the operation's
+origin is `wsc-component`, not a local semantic submission. Use the independent
+capture checker to correlate M1 and the accepted M2 with that receipt. Show the
+wrong-key control, then correct-key recovery. Repeat with `--lost-reply` or open
+a clearly labelled retained fault run to explain unknown commit attribution
+and one transaction attempt. Keep the native-controller inventory gap explicit.
 
 ## 16. Troubleshoot, recover and retain evidence
 
@@ -3610,6 +4534,8 @@ operator should additionally demonstrate setup ownership, collection and recover
 
 ### 18.2 What should happen next
 
+The [Ethernet WSC/radio component](../protocol/wsc-wire-radio.md) now joins
+authenticated packet input to observed clients with a synthetic peer.
 The next major integration boundary is **a real controller causing an admitted
 EMOSA operation through an actual EasyMesh exchange**. Today's native baseline
 and semantic adapter experiments give useful components on either side, but
@@ -3651,9 +4577,9 @@ path or a physical OpenSync pod.
 
 | Priority | Work | Evidence required before calling it complete |
 | --- | --- | --- |
-| 1 | Acquire pending IEEE/WFA inputs and complete the proposed procedure/profile audit | Exact editions, authorized provenance, applicable clauses/errata and independent vectors in the protocol matrix |
+| 1 | Use the obtained IEEE 1905 editions, resolve remaining LLDP/WFA inputs and complete the procedure/profile audit | Exact editions, authorized provenance, applicable clauses/errata and independent vectors in the protocol matrix |
 | 2 | Bind real controller discovery/topology/autoconfiguration/WSC to an EMOSA virtual agent | Independent captures, controller inventory, peer/exchange/radio binding, replay/retry/timer handling and complete request admission |
-| 3 | Connect that genuine wire path to the established OVSDB/radio boundary | A causal captured request → admitted operation → guarded Config → observed radio → independent clients, including failures/recovery |
+| 3 | Route admitted native input through the tested WSC/OVSDB/radio component | A causal captured request → admitted operation → guarded Config → observed radio → independent clients, including failures/recovery |
 | 4 | Collect and qualify the actual unchanged pod | Private connection path, read-only actual profile, verified writer controls, supported complete-radio mapping and physical recovery/client evidence |
 | 5 | Run the real acceptance path | Named controller → EMOSA → unchanged pod, independent wired/physical-Wi-Fi observations, negative controls and retained repeated wired/wireless-management outcomes |
 | 6 | Broaden confidence | Another independent peer/build, sustained/restart/reboot cases, supported capability combinations and documented remaining incompatibilities |

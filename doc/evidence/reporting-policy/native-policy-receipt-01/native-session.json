@@ -1,0 +1,205 @@
+{
+  "scope": "owned_non_dpp_sole_radio_onboarding",
+  "state": "provisioning",
+  "counts": {
+    "search_sent": 1,
+    "early_then_m1_sent": 1,
+    "observed_topology_notification": 1,
+    "wsc_operation": 1,
+    "client_join_notification": 4,
+    "client_capability_unavailable_report": 4,
+    "policy_receipt_ack_sent": 1,
+    "channel_selection_accepted": 1,
+    "channel_preference_report_sent": 1,
+    "ap_capability_report_sent": 1,
+    "operating_channel_acknowledged": 1,
+    "unsupported_message_0005": 1,
+    "client_leave_notification": 3,
+    "disassociation_statistics_unavailable": 3,
+    "rejected_INVALID_INPUT": 1
+  },
+  "events": [
+    "search_sent",
+    "early_then_m1_sent",
+    "observed_topology_notification",
+    "wsc_operation",
+    "client_join_notification",
+    "client_capability_unavailable_report",
+    "policy_receipt_ack_sent",
+    "channel_selection_accepted",
+    "channel_preference_report_sent",
+    "ap_capability_report_sent",
+    "operating_channel_acknowledged",
+    "unsupported_message_0005",
+    "client_leave_notification",
+    "disassociation_statistics_unavailable",
+    "client_join_notification",
+    "client_capability_unavailable_report",
+    "rejected_INVALID_INPUT",
+    "client_leave_notification",
+    "disassociation_statistics_unavailable",
+    "client_join_notification",
+    "client_capability_unavailable_report",
+    "client_leave_notification",
+    "disassociation_statistics_unavailable",
+    "client_join_notification",
+    "client_capability_unavailable_report"
+  ],
+  "admission_issues": [],
+  "reports": {
+    "counts": {
+      "early_sent": 2,
+      "input_or_source_rejected": 1,
+      "early_source_invalidated": 1,
+      "topology_response_sent": 1,
+      "unmatched_ack": 1
+    },
+    "events": [
+      {
+        "event": "early_sent",
+        "mid": 31140
+      },
+      {
+        "event": "input_or_source_rejected"
+      },
+      {
+        "event": "early_sent",
+        "mid": 31143
+      },
+      {
+        "event": "early_source_invalidated"
+      },
+      {
+        "event": "topology_response_sent",
+        "mid": 62
+      },
+      {
+        "event": "unmatched_ack",
+        "mid": 63
+      }
+    ],
+    "early_pending": false
+  },
+  "wsc": {
+    "counts": {
+      "operation": 1
+    },
+    "events": [
+      {
+        "status": "operation",
+        "mid": 57,
+        "operation_id": "7564b6e7-ee3a-4567-b3a4-595e951ceef6",
+        "state": "OBSERVED_APPLIED"
+      }
+    ],
+    "closed": false
+  },
+  "full_profile_qualified": false,
+  "physical_pod_proven": false,
+  "reporting_policy": {
+    "counts": {
+      "policy_receipt_ack_sent": 1,
+      "metric_reporting_due_without_qualified_source": 1
+    },
+    "received_policy": {
+      "boot_id": "ce35a9b0-e10d-4857-83cc-730ffd177a7d",
+      "identity": {
+        "controller": "020000e00001",
+        "local_al": "020000003001",
+        "ruid": "020000ec0200"
+      },
+      "last_unfulfilled_due": 14210.254496024,
+      "latest_mid": 60,
+      "latest_request": [
+        {
+          "kind": 138,
+          "value": "3c01020000ec0200000000e0"
+        },
+        {
+          "kind": 137,
+          "value": "000001020000ec0200000000"
+        },
+        {
+          "kind": 219,
+          "value": "00000000000000000000000000000000000000000000"
+        }
+      ],
+      "next_due": 14270.254496024,
+      "periods_due_without_report": 3,
+      "policy": {
+        "metrics": {
+          "interval_seconds": 60,
+          "radios": [
+            {
+              "ruid": "020000ec0200",
+              "rcpi_threshold": 0,
+              "rcpi_hysteresis_db": 0,
+              "utilization_threshold": 0,
+              "include_traffic": true,
+              "include_link": true,
+              "include_wifi6_status": true
+            }
+          ]
+        },
+        "qos": [
+          {
+            "mscs_disallowed": [],
+            "scs_disallowed": []
+          }
+        ],
+        "steering": {
+          "local_disallowed": [],
+          "btm_disallowed": [],
+          "radios": [
+            {
+              "ruid": "020000ec0200",
+              "policy": 0,
+              "utilization_threshold": 0,
+              "rcpi_threshold": 0
+            }
+          ]
+        }
+      },
+      "receipt_count": 3,
+      "schedule_rebases": 0
+    },
+    "policy_application_proven": false,
+    "required_reporting_proven": false,
+    "reporting_gap": "qualified_measurements_and_metric_report_delivery_not_implemented"
+  },
+  "channels": {
+    "counts": {
+      "channel_selection_accepted": 1,
+      "operating_channel_report_sent": 1,
+      "channel_preference_report_sent": 1,
+      "operating_channel_acknowledged": 1
+    },
+    "operating_ack_pending": false
+  },
+  "disassociations": {
+    "counts": {},
+    "pending": 0
+  },
+  "recovery": {
+    "attempts_started": 1,
+    "next_start": 0,
+    "history": [
+      {
+        "event": "attempt_started",
+        "attempt": 1,
+        "at": 14177.618460408
+      }
+    ]
+  },
+  "worker": {
+    "pid": 307971,
+    "process_id": "96e289e5-a230-4d54-aeff-42be76b5a914"
+  },
+  "telemetry": {
+    "accepted": 100,
+    "rejected": 0,
+    "generation": 0,
+    "timestamp_ms": 1790135143040,
+    "station_count": 1
+  }
+}

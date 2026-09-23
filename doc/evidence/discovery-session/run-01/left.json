@@ -1,0 +1,74 @@
+{
+  "passed": true,
+  "session": {
+    "scope": "restricted_discovery_to_read_only_topology",
+    "state": "waiting_source",
+    "source_available": false,
+    "selected_response_issues": [],
+    "response_observed": false,
+    "counts": {
+      "source_context_changed": 2,
+      "search_sent": 3,
+      "discovery_incompatible": 1,
+      "message_not_admitted": 2,
+      "restart_requested": 1,
+      "controller_correlated": 1
+    },
+    "events": [
+      "source_context_changed",
+      "search_sent",
+      "search_sent",
+      "discovery_incompatible",
+      "message_not_admitted",
+      "restart_requested",
+      "search_sent",
+      "controller_correlated",
+      "source_context_changed",
+      "message_not_admitted"
+    ],
+    "reports": null,
+    "automatic_early_report": "blocked_table117_review",
+    "wsc_admission": "blocked_full_profile_and_durable_operation_integration",
+    "operations_created": 0,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "incompatible_advertisement": {
+    "scope": "restricted_discovery_to_read_only_topology",
+    "state": "discovery_incompatible",
+    "source_available": true,
+    "selected_response_issues": [
+      "kib_mib_support_absent",
+      "security_capability_absent"
+    ],
+    "response_observed": true,
+    "counts": {
+      "source_context_changed": 1,
+      "search_sent": 2,
+      "discovery_incompatible": 1,
+      "message_not_admitted": 1
+    },
+    "events": [
+      "source_context_changed",
+      "search_sent",
+      "search_sent",
+      "discovery_incompatible",
+      "message_not_admitted"
+    ],
+    "reports": null,
+    "automatic_early_report": "blocked_table117_review",
+    "wsc_admission": "blocked_full_profile_and_durable_operation_integration",
+    "operations_created": 0,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "monitor_read_only": true,
+  "pod_initiated_connection": true,
+  "scope": "restricted_discovery_with_real_ovsdb_over_AF_PACKET",
+  "native_controller_used": false,
+  "adapter_config_writes": 0,
+  "fixture_admin_and_manager_writes": true,
+  "radio_used": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

@@ -1,0 +1,7 @@
+{
+  "owned_lab_idle_verified_before_next_native_experiment": true,
+  "owned_trace_instances_and_probes_absent_before_next_experiment": true,
+  "baseline_restored": true,
+  "executed_trace_helper_sha256_verified": "5c70d84409b8c938720148a00c0fc77b8204b20d761a0b155186995ba25d0155",
+  "physical_pod_changed": false
+}

@@ -1,0 +1,53 @@
+{
+  "pilot_checks_passed": true,
+  "scope": "native active-worker client-cycle pilot",
+  "bounded_onboarding": {
+    "passed": true,
+    "scope": "bounded_native_controller_to_simulated_OpenSync_onboarding",
+    "controller_onboarding_proven": true,
+    "physical_pod_proven": false,
+    "native_baseline_restored": true,
+    "operations": 1,
+    "writes": 1,
+    "frames": 37,
+    "m1_sha256": "83be414bfdeb3379e893bc338ff5901f069d9ceca54ee40772db364dd0256723",
+    "capability_report_frame": 19,
+    "provisioned_topology_frame": 10,
+    "independent_clients": [
+      "wired",
+      "wpa_supplicant"
+    ],
+    "continuous_management_proven": false,
+    "full_profile_qualified": false
+  },
+  "active_seconds_observed": 95.37443238800006,
+  "samples": 15,
+  "native_connected_observations": 15,
+  "native_disconnected_observations": 3,
+  "captured_joins": 4,
+  "captured_leaves": 3,
+  "capability_unavailable_reports": 4,
+  "rss_kib_range": [
+    54272,
+    54328
+  ],
+  "file_descriptor_range": [
+    17,
+    17
+  ],
+  "unimplemented_request_counts": {
+    "unsupported_message_8006": 3,
+    "unsupported_message_8003": 1,
+    "unsupported_message_8004": 1,
+    "unsupported_message_0001": 1,
+    "unsupported_message_0005": 2
+  },
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "remaining": [
+    "final disassociation statistics and reason",
+    "channel and policy/metrics procedures",
+    "native adapter and pod-connection recovery",
+    "15-minute complete acceptance run"
+  ]
+}

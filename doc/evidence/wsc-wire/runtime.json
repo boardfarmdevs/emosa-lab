@@ -1,0 +1,27 @@
+{
+  "kernel": "6.8.0-139-generic",
+  "python": "Python 3.13.7",
+  "lxd": "5.21.7 LTS",
+  "tshark": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+  "ovsdb": {
+    "ovsdb-server": {
+      "version": "native-ovsdb-server (Open vSwitch) 4.0.0",
+      "sha256": "93714d2adf2e847697807a77515d527ff7281c270170a01864e2f8194ac49b68"
+    },
+    "ovsdb-tool": {
+      "version": "native-ovsdb-tool (Open vSwitch) 4.0.0",
+      "sha256": "c664d4a282a3fe77356b02e025e3d419b7857bfdc92a289b23c81a030e3ec257"
+    }
+  },
+  "hostap": {
+    "hostapd": {
+      "version": "hostapd v2.10",
+      "sha256": "ee81759af7015707de822445b7955be17341a1d3f48d81837a20fd932cc8b05c"
+    },
+    "wpa_supplicant": {
+      "version": "wpa_supplicant v2.10",
+      "sha256": "3d148d1de82ca5d513b2d532f9d26b1ad5e7f2998dd1b86995d0088ec944bab4"
+    }
+  },
+  "remaining_packet_namespaces": ""
+}

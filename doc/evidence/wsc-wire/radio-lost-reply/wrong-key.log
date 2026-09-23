@@ -1,0 +1,20 @@
+p2p-dev-wlan0: CTRL-EVENT-DSCP-POLICY clear_all
+p2p-dev-wlan0: CTRL-EVENT-DSCP-POLICY clear_all
+nl80211: deinit ifname=p2p-dev-wlan0 disabled_11b_rates=0
+p2p-dev-wlan0: CTRL-EVENT-TERMINATING 
+wlan0: CTRL-EVENT-DISCONNECTED bssid=02:00:00:ec:02:00 reason=3 locally_generated=1
+wlan0: CTRL-EVENT-DSCP-POLICY clear_all
+wlan0: CTRL-EVENT-DSCP-POLICY clear_all
+nl80211: deinit ifname=wlan0 disabled_11b_rates=0
+wlan0: CTRL-EVENT-TERMINATING 
+Successfully initialized wpa_supplicant
+rfkill: Cannot open RFKILL control device
+rfkill: Cannot get wiphy information
+wlan0: SME: Trying to authenticate with 02:00:00:ec:02:00 (SSID='EMOSA-WSC-component' freq=2437 MHz)
+wlan0: Trying to associate with 02:00:00:ec:02:00 (SSID='EMOSA-WSC-component' freq=2437 MHz)
+wlan0: Associated with 02:00:00:ec:02:00
+wlan0: CTRL-EVENT-SUBNET-STATUS-UPDATE status=0
+wlan0: CTRL-EVENT-DISCONNECTED bssid=02:00:00:ec:02:00 reason=15
+wlan0: WPA: 4-Way Handshake failed - pre-shared key may be incorrect
+wlan0: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid="EMOSA-WSC-component" auth_failures=1 duration=10 reason=WRONG_KEY
+

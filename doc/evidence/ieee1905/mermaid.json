@@ -1,0 +1,95 @@
+{
+  "version": "11.12.0",
+  "diagrams": [
+    {
+      "path": "doc/protocol/ieee1905-envelope.md",
+      "index": 0,
+      "rendered": true
+    },
+    {
+      "path": "deploy/native/README.md",
+      "index": 0,
+      "rendered": true
+    },
+    {
+      "path": "deploy/peer-baseline/README.md",
+      "index": 0,
+      "rendered": true
+    },
+    {
+      "path": "deploy/radio-manager/README.md",
+      "index": 0,
+      "rendered": true
+    },
+    {
+      "path": "doc/architecture/overview.md",
+      "index": 0,
+      "rendered": true
+    },
+    {
+      "path": "doc/architecture/overview.md",
+      "index": 1,
+      "rendered": true
+    },
+    {
+      "path": "doc/evaluation/peer-baseline.md",
+      "index": 0,
+      "rendered": true
+    },
+    {
+      "path": "doc/guides/connecting-pod.md",
+      "index": 0,
+      "rendered": true
+    },
+    {
+      "path": "doc/guides/first-wire-experiment.md",
+      "index": 0,
+      "rendered": true
+    },
+    {
+      "path": "doc/guides/secure-fleet.md",
+      "index": 0,
+      "rendered": true
+    },
+    {
+      "path": "doc/guides/service-integration.md",
+      "index": 0,
+      "rendered": true
+    },
+    {
+      "path": "doc/guides/team-manual.md",
+      "index": 0,
+      "rendered": true
+    },
+    {
+      "path": "doc/guides/team-manual.md",
+      "index": 1,
+      "rendered": true
+    },
+    {
+      "path": "doc/guides/team-manual.md",
+      "index": 2,
+      "rendered": true
+    },
+    {
+      "path": "doc/guides/team-manual.md",
+      "index": 3,
+      "rendered": true
+    },
+    {
+      "path": "doc/guides/team-manual.md",
+      "index": 4,
+      "rendered": true
+    },
+    {
+      "path": "doc/guides/team-manual.md",
+      "index": 5,
+      "rendered": true
+    },
+    {
+      "path": "doc/guides/team-manual.md",
+      "index": 6,
+      "rendered": true
+    }
+  ]
+}

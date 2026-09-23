@@ -1,0 +1,99 @@
+{
+  "passed": true,
+  "native_counter_cases": 12,
+  "baseline_before": {
+    "directory": "run-07",
+    "passed": true,
+    "search_mids": [
+      65535
+    ],
+    "response_mids": [
+      65535
+    ],
+    "search_profile": 1,
+    "response_profile": 1,
+    "controller_flags_hex": "40",
+    "security_capability_hex": null,
+    "selected_response_issues": [
+      "kib_mib_support_absent",
+      "security_capability_absent"
+    ],
+    "discovery_entry_observed": true,
+    "represented_radio_count": 0,
+    "pcap_sha256": "cf50a23af1a4bac51fbdcd7a3020e71f5f4bf2869b83bc6bba6ddee2e78a2f34",
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "candidates": [
+    {
+      "directory": "candidate-01",
+      "passed": true,
+      "search_mids": [
+        65535
+      ],
+      "response_mids": [
+        65535
+      ],
+      "search_profile": 1,
+      "response_profile": 1,
+      "controller_flags_hex": "c0",
+      "security_capability_hex": null,
+      "selected_response_issues": [
+        "security_capability_absent"
+      ],
+      "discovery_entry_observed": true,
+      "represented_radio_count": 0,
+      "pcap_sha256": "3d18a384e47d57086b3b6f6c961d9e8e02da00801fd1cd331a28f3c3dbbf4620",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false
+    },
+    {
+      "directory": "candidate-02",
+      "passed": true,
+      "search_mids": [
+        65535
+      ],
+      "response_mids": [
+        65535
+      ],
+      "search_profile": 1,
+      "response_profile": 1,
+      "controller_flags_hex": "c0",
+      "security_capability_hex": null,
+      "selected_response_issues": [
+        "security_capability_absent"
+      ],
+      "discovery_entry_observed": true,
+      "represented_radio_count": 0,
+      "pcap_sha256": "ff5dc7cb8d11f460da5ef54f463091dd254d6932eae671790de972c650d20879",
+      "controller_onboarding_proven": false,
+      "physical_pod_proven": false
+    }
+  ],
+  "restored_baseline": {
+    "directory": "restored-baseline",
+    "passed": true,
+    "search_mids": [
+      65535
+    ],
+    "response_mids": [
+      65535
+    ],
+    "search_profile": 1,
+    "response_profile": 1,
+    "controller_flags_hex": "40",
+    "security_capability_hex": null,
+    "selected_response_issues": [
+      "kib_mib_support_absent",
+      "security_capability_absent"
+    ],
+    "discovery_entry_observed": true,
+    "represented_radio_count": 0,
+    "pcap_sha256": "75a02e1eb87455cf3e8baca437f071dfbad4dc123b5de22270d0bebc2cd8a46e",
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false
+  },
+  "post_install_failure_restored": true,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

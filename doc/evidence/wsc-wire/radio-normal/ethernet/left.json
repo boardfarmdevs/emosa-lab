@@ -1,0 +1,161 @@
+{
+  "passed": true,
+  "before_application": {
+    "operation": {
+      "operation_id": "98bff03a-788e-43f5-8e1f-928d7d36c3d8",
+      "initiating_interface": "wsc-component",
+      "state": "CONFIG_COMMITTED",
+      "reason": null,
+      "attempts": 1,
+      "commit_attribution": "reply",
+      "application_evidence": null,
+      "receipt": {
+        "scope": "owned_simulation_wsc_component",
+        "m1_sha256": "691f1e278286b667978a14d0a1e244c77fbccb5418b5edc316e61afcdd38cbb5",
+        "controller_al": "020000005002",
+        "agent_al": "020000005001",
+        "ruid": "020000005010",
+        "bssid": "020000ec0200",
+        "ingress": "emw553d7d2fa",
+        "link_generation": 1,
+        "database_generation": 1,
+        "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+        "first_mid": 503,
+        "pod_id": "pod-1",
+        "radio_id": "radio-1",
+        "bss_id": "bss-1"
+      }
+    },
+    "config_ssid": "EMOSA-WSC-component",
+    "observed_ssid": "emosa-radio-initial",
+    "packet_session": {
+      "counts": {
+        "rejected": 2,
+        "incomplete": 1,
+        "operation": 3
+      },
+      "events": [
+        {
+          "status": "rejected",
+          "reason": "INVALID_INPUT"
+        },
+        {
+          "status": "incomplete",
+          "mid": 503
+        },
+        {
+          "status": "operation",
+          "mid": 503,
+          "operation_id": "98bff03a-788e-43f5-8e1f-928d7d36c3d8",
+          "state": "CONFIG_COMMITTED"
+        },
+        {
+          "status": "operation",
+          "mid": 504,
+          "operation_id": "98bff03a-788e-43f5-8e1f-928d7d36c3d8",
+          "state": "CONFIG_COMMITTED"
+        },
+        {
+          "status": "operation",
+          "mid": 505,
+          "operation_id": "98bff03a-788e-43f5-8e1f-928d7d36c3d8",
+          "state": "CONFIG_COMMITTED"
+        },
+        {
+          "status": "rejected",
+          "reason": "INVALID_INPUT"
+        }
+      ],
+      "closed": false,
+      "scope": "owned_simulation_wsc_component",
+      "full_controller_onboarding": false
+    },
+    "transaction_attempts": 1
+  },
+  "operation": {
+    "operation_id": "98bff03a-788e-43f5-8e1f-928d7d36c3d8",
+    "initiating_interface": "wsc-component",
+    "state": "OBSERVED_APPLIED",
+    "reason": null,
+    "attempts": 1,
+    "commit_attribution": "reply",
+    "application_evidence": {
+      "fresh": true,
+      "predicate_satisfied": true,
+      "generation": 1,
+      "revision": 3,
+      "received_at": "2026-09-22T21:35:48.232Z",
+      "source": "ovsdb",
+      "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+    },
+    "receipt": {
+      "scope": "owned_simulation_wsc_component",
+      "m1_sha256": "691f1e278286b667978a14d0a1e244c77fbccb5418b5edc316e61afcdd38cbb5",
+      "controller_al": "020000005002",
+      "agent_al": "020000005001",
+      "ruid": "020000005010",
+      "bssid": "020000ec0200",
+      "ingress": "emw553d7d2fa",
+      "link_generation": 1,
+      "database_generation": 1,
+      "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+      "first_mid": 503,
+      "pod_id": "pod-1",
+      "radio_id": "radio-1",
+      "bss_id": "bss-1"
+    }
+  },
+  "packet_session": {
+    "counts": {
+      "rejected": 2,
+      "incomplete": 1,
+      "operation": 3
+    },
+    "events": [
+      {
+        "status": "rejected",
+        "reason": "INVALID_INPUT"
+      },
+      {
+        "status": "incomplete",
+        "mid": 503
+      },
+      {
+        "status": "operation",
+        "mid": 503,
+        "operation_id": "98bff03a-788e-43f5-8e1f-928d7d36c3d8",
+        "state": "CONFIG_COMMITTED"
+      },
+      {
+        "status": "operation",
+        "mid": 504,
+        "operation_id": "98bff03a-788e-43f5-8e1f-928d7d36c3d8",
+        "state": "CONFIG_COMMITTED"
+      },
+      {
+        "status": "operation",
+        "mid": 505,
+        "operation_id": "98bff03a-788e-43f5-8e1f-928d7d36c3d8",
+        "state": "CONFIG_COMMITTED"
+      },
+      {
+        "status": "rejected",
+        "reason": "INVALID_INPUT"
+      }
+    ],
+    "closed": false,
+    "scope": "owned_simulation_wsc_component",
+    "full_controller_onboarding": false
+  },
+  "invalid_authentication_operations": 0,
+  "incomplete_request_operations": 0,
+  "transaction_attempts": 1,
+  "scope": "owned_WSC_provisioning_over_AF_PACKET",
+  "socket_io": true,
+  "native_controller_used": false,
+  "full_controller_onboarding": false,
+  "physical_pod_proven": false,
+  "radio_used": true,
+  "lost_reply_injected": false,
+  "frames_received": 7
+}

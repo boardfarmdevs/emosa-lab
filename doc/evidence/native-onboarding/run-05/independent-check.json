@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "scope": "bounded_native_controller_to_simulated_OpenSync_onboarding",
+  "controller_onboarding_proven": true,
+  "physical_pod_proven": false,
+  "native_baseline_restored": true,
+  "operations": 1,
+  "writes": 1,
+  "frames": 22,
+  "m1_sha256": "4780425fcfc6f0d3e6d8f3a25ac526ae5dcab11483d5d2fc90269cedf3c53c8a",
+  "capability_report_frame": 20,
+  "provisioned_topology_frame": 12,
+  "independent_clients": [
+    "wired",
+    "wpa_supplicant"
+  ],
+  "continuous_management_proven": false,
+  "full_profile_qualified": false
+}

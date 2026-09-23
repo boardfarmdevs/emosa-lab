@@ -1,0 +1,29 @@
+{
+  "kernel": "6.8.0-139-generic",
+  "kernel_version": "#139-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 03:52:05 UTC 2026",
+  "modules": {
+    "mac80211": {
+      "file": "/lib/modules/6.8.0-139-generic/kernel/net/mac80211/mac80211.ko.zst",
+      "sha256": "90d96cc05be98d34cf1a47177957454def4ba71cf17916a7ebbdb28406b83736",
+      "srcversion": "99803F77E5CD0BBE2F5241A",
+      "vermagic": "6.8.0-139-generic SMP preempt mod_unload modversions"
+    },
+    "mac80211_hwsim": {
+      "file": "/lib/modules/6.8.0-139-generic/kernel/drivers/net/wireless/virtual/mac80211_hwsim.ko.zst",
+      "sha256": "0fdd83d8f5aceabb15ee7092a8c3e76044ea428cb1d4c639d37ca2572a9494ab",
+      "srcversion": "02366D45A08C9F3704951BA",
+      "vermagic": "6.8.0-139-generic SMP preempt mod_unload modversions"
+    },
+    "cfg80211": {
+      "file": "/lib/modules/6.8.0-139-generic/kernel/net/wireless/cfg80211.ko.zst",
+      "sha256": "d8a6c76339ae323c9f1a724465ffa01ff9be4130a21545c495b06cb8096ab5aa",
+      "srcversion": "26D7BA0A3DDD24A77FC52B2",
+      "vermagic": "6.8.0-139-generic SMP preempt mod_unload modversions"
+    }
+  },
+  "packages": [
+    "linux-image-6.8.0-139-generic 6.8.0-139.139",
+    "linux-modules-6.8.0-139-generic 6.8.0-139.139",
+    "linux-modules-extra-6.8.0-139-generic 6.8.0-139.139"
+  ]
+}

@@ -19,7 +19,105 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y tshark
       - run: python3 scripts/check-easymesh-reference.py
+      - run: python3 scripts/check-ieee1905-reference.py
+      - run: >-
+          python3 scripts/check-report-reference.py
+          --report-capture doc/evidence/reports/run-01/right.pcap
+          --report-capture doc/evidence/reports/run-02/right.pcap
+          --coordinator-directory doc/evidence/coordinator/run-01
+          --coordinator-directory doc/evidence/coordinator/run-02
       - run: python3 deploy/peer-baseline/compatibility/check-capture.py
+      - run: >-
+          python3 scripts/check-controller-probe.py
+          --directory doc/evidence/native-discovery/run-06
+          --directory doc/evidence/native-discovery/run-07
+      - run: python3 scripts/check-controller-candidate.py
+      - run: python3 scripts/check-native-onboarding.py doc/evidence/native-onboarding/run-05
+      - run: python3 scripts/check-native-active.py doc/evidence/native-active/run-03
+      - run: python3 scripts/check-native-recovery.py doc/evidence/native-soak/run-01
+      - run: python3 scripts/check-disassociation-reference.py
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/final-statistics/native-byte-counters-01 --minimum-seconds 150
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/station-removal/native-final-source-01 --minimum-seconds 150
+      - run: >-
+          python3 scripts/check-station-removal.py
+          doc/evidence/station-removal/native-final-source-01
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/counter-accounting/native-counter-audit-01 --minimum-seconds 150
+      - run: >-
+          python3 scripts/check-station-removal.py
+          doc/evidence/counter-accounting/native-counter-audit-01
+      - run: >-
+          python3 scripts/check-station-accounting.py
+          doc/evidence/counter-accounting/native-counter-audit-01
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/reporting-policy/native-policy-receipt-01 --minimum-seconds 210
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/reporting-policy/native-policy-receipt-01
+      - run: >-
+          python3 scripts/check-medium-accounting.py
+          doc/evidence/medium-loss/native-medium-loss-05
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/medium-loss/native-medium-loss-05
+      - run: >-
+          python3 scripts/check-tx-status-accounting.py
+          doc/evidence/tx-status/native-tx-status-01
+      - run: >-
+          python3 scripts/check-telemetry-gap.py
+          doc/evidence/telemetry-freshness/native-telemetry-gap-01
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/telemetry-freshness/native-telemetry-gap-01 --minimum-seconds 210
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/telemetry-freshness/native-telemetry-gap-01
+      - run: python3 scripts/check-neighbor-metrics.py
+      - run: >-
+          python3 scripts/check-neighbor-metrics.py --native-directory
+          doc/evidence/neighbor-metrics/native-neighbor-01
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/neighbor-metrics/native-neighbor-01 --minimum-seconds 210
+      - run: >-
+          python3 scripts/check-telemetry-gap.py
+          doc/evidence/neighbor-metrics/native-neighbor-01
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/neighbor-metrics/native-neighbor-01
+      - run: >-
+          python3 scripts/check-forwarding-observations.py
+          doc/evidence/forwarding/native-forwarding-01
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/forwarding/native-forwarding-01 --minimum-seconds 210
+      - run: >-
+          python3 scripts/check-telemetry-gap.py
+          doc/evidence/forwarding/native-forwarding-01
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/forwarding/native-forwarding-01
+      - run: >-
+          python3 scripts/check-neighbor-metrics.py --native-directory
+          doc/evidence/forwarding/native-forwarding-01
+      - run: >-
+          python3 scripts/check-discovery-reference.py
+          --directory doc/evidence/discovery-session/run-01
+          --directory doc/evidence/discovery-session/run-02
+      - run: >-
+          python3 scripts/check-wsc-wire-reference.py
+          --directory doc/evidence/wsc-wire/packet-normal
+          --directory doc/evidence/wsc-wire/packet-lost-reply
+          --directory doc/evidence/wsc-wire/radio-normal/ethernet
+          --directory doc/evidence/wsc-wire/radio-lost-reply/ethernet
+          --radio-directory doc/evidence/wsc-wire/radio-normal
+          --radio-directory doc/evidence/wsc-wire/radio-lost-reply
   wsc-reference:
     runs-on: ubuntu-24.04
     steps:
@@ -35,7 +133,9 @@ jobs:
           version: "0.11.17"
       - run: uv python install 3.13.7
       - run: uv sync --frozen
+      - run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libssl-dev
       - run: bash scripts/build-ovsdb.sh
+      - run: python3 scripts/build-wsc-registrar.py
       - run: uv run pytest -m ovsdb --junitxml=ovsdb-results.xml
       - uses: actions/upload-artifact@v4
         if: always()

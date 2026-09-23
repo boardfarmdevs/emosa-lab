@@ -6,6 +6,10 @@ its connection to an EMOSA listener. EMOSA reads the identity and radio/VIF
 inventory, checks the configured binding, and exposes a virtual-agent record
 through its local diagnostic northbound API: `emosa agents`.
 
+After this Unix-socket lesson, continue with [secure fleet and repeated recovery](secure-fleet.md)
+for explicit TLS authentication, several real sessions and an installed-runtime
+reproduction. The [learning sequence](learning-path.md) explains the checkpoints.
+
 This is a working local representation of a synthetic extender. A real EasyMesh
 controller cannot yet discover or onboard it: IEEE 1905/EasyMesh framing and
 exchange validation remain pending P0. `em-controller agents` remains gated.

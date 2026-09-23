@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "scope": "bounded_native_controller_to_simulated_OpenSync_onboarding",
+  "controller_onboarding_proven": true,
+  "physical_pod_proven": false,
+  "native_baseline_restored": true,
+  "operations": 1,
+  "writes": 1,
+  "advertised_byte_counter_units": 0,
+  "capture_health": {
+    "ethernet": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 114,
+      "captured": 114,
+      "received_by_filter": 114,
+      "dropped_by_kernel": 0
+    },
+    "radio": {
+      "passed": true,
+      "linktype": 127,
+      "pcap_records": 11916,
+      "captured": 11916,
+      "received_by_filter": 11916,
+      "dropped_by_kernel": 0
+    }
+  },
+  "frames": 114,
+  "m1_sha256": "78309562d9ba5d290e38bde4ffce2970921d0ed2abb60dec1ddb40f701287bec",
+  "capability_report_frame": 27,
+  "provisioned_topology_frame": 10,
+  "independent_clients": [
+    "wired",
+    "wpa_supplicant"
+  ],
+  "continuous_management_proven": false,
+  "full_profile_qualified": false
+}

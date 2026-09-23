@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "frames": 59,
+  "capture_sha256": "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964",
+  "dissector": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+  "dissector_sha256": "1be3296c467ba299c4e89b4d6a2dfb8d0985a8bba2a8af3fa2ac3f10c3062668",
+  "fixture_sha256": "a132fba6a3cdfdbd58ff7c9b00a146dcc60f159e518f0328201c86279154d503",
+  "scope": "native header and TLV boundary cross-check; no onboarding claim"
+}

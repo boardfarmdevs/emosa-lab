@@ -11,7 +11,8 @@ fi
 echo "6c94e1e019a7f36ef40a9ae34fb21ab2534dbb78e5bea83338452e07a11becf2  $archive" | sha256sum -c -
 tar -xf "$archive" -C .cache/upstream
 cd ".cache/upstream/openvswitch-$version"
-./configure --disable-ssl --without-libcapng > configure-emosa.log 2>&1
+pkg-config --exists openssl
+./configure --enable-ssl --without-libcapng > configure-emosa.log 2>&1
 cat > emosa-generated.mk <<'EOF'
 emosa-generated: $(BUILT_SOURCES)
 EOF

@@ -1,0 +1,48 @@
+{
+  "label": "counter-pass-02",
+  "candidate_sha256": "4ea936ede9a3d332923ec3ca6d714aee978b1f9208da7550bb48b536f0a23a9a",
+  "baseline_sha256": "737ab07f89fec1aabcc861bd90ddafda931be2e3e1a108cc7352ea2c3ecd994c",
+  "baseline_restored": true,
+  "status": "counter_flag_observed_admission_pending",
+  "operations_created": 0,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "failure_injection": false,
+  "runner_sha256": "bdf3c423943a4418e0d1c28b04635ce19e8fd130b60e0f5779453e8dd56279b1",
+  "candidate_installed": true,
+  "probe": {
+    "scope": "native_controller_discovery_probe_only",
+    "state": "response_observed",
+    "search_profile": 1,
+    "sent_mids": [
+      65535
+    ],
+    "response_mid": 65535,
+    "response_profile": 1,
+    "profile_correlated": true,
+    "controller_flags_hex": "c0",
+    "security_capability_hex": null,
+    "selected_response_issues": [
+      "security_capability_absent"
+    ],
+    "pending_requirements": [
+      "profile_qualification",
+      "security_capability_applicability",
+      "security_capability_absent",
+      "early_ap_capability_procedure_and_table117_review"
+    ],
+    "counts": {
+      "search_sent": 1,
+      "response_correlated": 1
+    },
+    "wsc_started": false,
+    "operations_created": 0,
+    "profile_qualified": false,
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "frames_received": 1
+  },
+  "restoration_shutdown": {
+    "em-baseline-controller": []
+  }
+}

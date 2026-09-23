@@ -1,0 +1,40 @@
+{
+  "scope": "Header-only dependencies matching the pinned runtime library versions; no Ambiorix libraries rebuilt",
+  "libraries": [
+    {
+      "name": "libamxb",
+      "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxb.git",
+      "commit": "e918ad3db7dfc1bf30c35c2f41215234c1af878a"
+    },
+    {
+      "name": "libamxc",
+      "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxc.git",
+      "commit": "3cd324a664d2735eeec4ad4978eb040a851c6928"
+    },
+    {
+      "name": "libamxd",
+      "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxd.git",
+      "commit": "46c6d88064e38f261023d4015fb9ef4b49e04292"
+    },
+    {
+      "name": "libamxo",
+      "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxo.git",
+      "commit": "859db3fb1397215605db9050fedb86dfd0ba4788"
+    },
+    {
+      "name": "libamxp",
+      "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxp.git",
+      "commit": "873b53069855414d35b821fcb46ed0f8ae108b3e"
+    },
+    {
+      "name": "libamxrt",
+      "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxrt.git",
+      "commit": "8ac23096b0797a203c12425646c195600dd583ec"
+    },
+    {
+      "name": "libamxs",
+      "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxs.git",
+      "commit": "1caf2c44031711351b36033ad59ce73187b9c616"
+    }
+  ]
+}

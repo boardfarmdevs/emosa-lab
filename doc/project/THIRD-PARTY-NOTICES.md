@@ -17,6 +17,13 @@ COPYING/NOTICE files remain in that archive/build tree. Retain them with any
 distributed binary bundle. Ruff/pytest/uv and the native experiment's
 kconfiglib/Jinja build tools retain their respective upstream licenses.
 
+The secure-fleet listener uses Python's standard `ssl` module and the runtime's
+OpenSSL; the current OVSDB tools are also built with OpenSSL enabled. Synthetic
+certificate generation uses the already locked `cryptography` dependency.
+The retained clean runtime includes the upstream OVS source/notice files and
+installed Debian/Python license metadata. Its exact package inventory and image
+digest are recorded in [reliability evidence](../evidence/reliability/README.md).
+
 No prplMesh dependency is linked, imported or fetched by the Python package build. Normative
 IEEE/Wi-Fi Alliance specification documents are referenced, not redistributed.
 
@@ -28,6 +35,14 @@ contains upstream context; its BSD license and copyright notice are retained in
 source URL are recorded in that directory's `reference.json`. Preserve the
 upstream license with any distributed source or binary bundle. These native
 artifacts are separate from EMOSA's Python package.
+
+The owned WSC provisioning experiment separately builds a small payload helper
+against unmodified hostapd 2.11 WPS source files. Its pinned archive and source
+hashes come from `tests/fixtures/protocol/wsc-messages/provenance.json`; the build
+retains the upstream archive and `COPYING` in `.cache/wsc-registrar/`. Preserve
+that BSD license and upstream notices with any redistributed helper binary.
+The helper uses OpenSSL and is not included in the EMOSA wheel. The experiment's
+C harness is EMOSA lab code, not a complete upstream controller implementation.
 
 The separate native peer experiment also rebuilds prplMesh's NL80211 `libbwl`
 with a recorded primary-BSS identity patch. It uses the pinned upstream source

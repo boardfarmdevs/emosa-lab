@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-22",
+  "base_revision": "ad1ff72705e136b2a91da5b6f5a16571118b09fc",
+  "scope": "Restricted Early AP Capability and Topology Response components; synthetic offline and isolated AF_PACKET exchanges",
+  "source_hashes": {
+    "src/emosa/wire/reports.py": "cc26caba3562ff29c39ce4b1e0f853e3bcc5a2569a97e43bf66302e876676ab7",
+    "src/emosa/wire/topology_values.py": "f1741babf3640604251ad79f0e5c6764d64c0ce6fdfd42f8b5f2e0df05eff981",
+    "src/emosa/wire/inspection.py": "054edb6f30f8f1d6c250bbab31f3e7ee5da315409b301bded61a50c77b58f58e",
+    "src/emosa/easymesh_payloads.py": "f7a5884ea01220e64bfbcbfac6dda46d36a13b130025fe5728cf22fb1ab87aca",
+    "src/emosa/evaluation/payloads.py": "27249ec5517103983cd41223aa769fe28c2b4147d6908a06cbe23d43f9e31b6a",
+    "src/emosa/simulation/wire_reports.py": "5b019936b63b3292e3978a683e1a22c25febbd7c38cb96e58658287ba5d1395e",
+    "deploy/wire/check-endpoint.py": "6db20d6a1c6c565d04f8ad7b3706fbd8462726e263f92792f074e0448ca47603",
+    "scripts/check-report-reference.py": "8d8a5425462c0852475c81f0243afa090f87d4a4882244c772a33df624d3643e",
+    "tests/test_wire_reports.py": "9f0c91ed8fc827a1de9e39e8329f502b3ed68dcc4b5eceaabef7da085610aec3",
+    "tests/test_easymesh_payloads.py": "44896eee82ca0014b8f4b5e5d5f6f725fcd0eb54b45f6aeb67780cf49159e5e8"
+  },
+  "staged_vm_source_hashes": {
+    "src/emosa/wire/reports.py": "cc26caba3562ff29c39ce4b1e0f853e3bcc5a2569a97e43bf66302e876676ab7",
+    "src/emosa/wire/topology_values.py": "f1741babf3640604251ad79f0e5c6764d64c0ce6fdfd42f8b5f2e0df05eff981",
+    "src/emosa/wire/inspection.py": "054edb6f30f8f1d6c250bbab31f3e7ee5da315409b301bded61a50c77b58f58e",
+    "src/emosa/easymesh_payloads.py": "f7a5884ea01220e64bfbcbfac6dda46d36a13b130025fe5728cf22fb1ab87aca",
+    "src/emosa/evaluation/payloads.py": "27249ec5517103983cd41223aa769fe28c2b4147d6908a06cbe23d43f9e31b6a",
+    "src/emosa/simulation/wire_reports.py": "5b019936b63b3292e3978a683e1a22c25febbd7c38cb96e58658287ba5d1395e",
+    "deploy/wire/check-endpoint.py": "cae60233b4f313652ffd9b11ec4dd3f90af8284ba48c148193cc999a5c4718e1"
+  },
+  "staging_note": "Runtime Python sources match; endpoint helper docstring clarified after runs, executable statements unchanged.",
+  "suites": {
+    "unit": 824,
+    "ovsdb": 46,
+    "new_report_unit": 62
+  },
+  "checks": [
+    "Required and conditional report fields; complete identity/BSS/client graph",
+    "Unknown technology/conditional inventory rejected instead of omitted",
+    "Client association age required, encoded big-endian and saturated",
+    "Source changes/expiry rechecked before and after each fragment",
+    "Slow source callback, late/partial transmission and one-second response deadline",
+    "Native field reference and both generated receiver traces checked with tshark 3.6.2 and 4.2.2",
+    "Installed wheel matches all 62 source files and executes offline outside checkout"
+  ],
+  "isolated_af_packet": {
+    "runs": 2,
+    "vm": "emosa-lab",
+    "staging": "/opt/emosa-reports-20260922",
+    "left_received": [
+      2
+    ],
+    "right_received": [
+      32835,
+      3
+    ],
+    "query_mid": 65535,
+    "response_mid": 65535,
+    "private_namespaces_cleaned": true,
+    "received_byte_pcaps": true,
+    "pcap_timestamps": "synthetic, not independent latency measurements"
+  },
+  "native_compatibility_findings": [
+    "Early Report missing Supported Cipher Suites TLV 0xED; AKM lists empty",
+    "Topology Response lacks Bridging Capability with five local interfaces",
+    "Wi-Fi 6 media-specific length is ten; selected EasyMesh 6.1 Table 14 requires zero"
+  ],
+  "junit_long_names_compacted": 5,
+  "retained_development_findings": [
+    {
+      "finding": "An existing unsupported-type test used Associated Clients 0x84, now implemented",
+      "resolution": "Changed negative test to still-unimplemented 0x89; all unit checks pass"
+    },
+    {
+      "finding": "A source-freshness provider can itself consume the remaining send budget",
+      "resolution": "Read the clock after source revalidation; regression proves no frame is sent after a slow callback expires the deadline"
+    }
+  ],
+  "qualification_gap": "Pinned Wifi_Associated_Clients has no association age; qualify actual age source instead of using adapter first-seen time.",
+  "remaining": [
+    "Qualified actual report sources and controller/link admission",
+    "Full AP Capability Report and profile/ACK/retry obligations",
+    "Native peer profile/capability/media reconciliation",
+    "Running coordinator and controller inventory visibility",
+    "Durable authenticated WSC-to-operation integration",
+    "Causal OVSDB/hwsim/client experiment then unchanged physical-pod proof"
+  ],
+  "operations_created": 0,
+  "native_controller_used": false,
+  "radio_used": false,
+  "physical_pods_touched": false,
+  "full_procedure_gate_satisfied": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "documentation": {
+    "mermaid_diagrams_rendered": 19,
+    "shell_blocks_syntax_checked": 179,
+    "existing_evidence_artifacts_unchanged": 392,
+    "desktop_mobile_browser_passed": true,
+    "source_link_targets_checked_in_browser": 104,
+    "checked_links_and_references": 924
+  }
+}

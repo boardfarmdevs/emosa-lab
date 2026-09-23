@@ -1,0 +1,52 @@
+{
+  "scope": "synthetic encoding vectors, not measured radio/session statistics",
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "vectors": [
+    {
+      "frame": 1,
+      "profile": 1,
+      "byte_units": 0,
+      "reason": 3,
+      "source_counters": [
+        4398046513153,
+        4294967297,
+        4294967299,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "frame": 2,
+      "profile": 2,
+      "byte_units": 1,
+      "reason": 8,
+      "source_counters": [
+        4398046513153,
+        4294967297,
+        4294967299,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "frame": 3,
+      "profile": 3,
+      "byte_units": 2,
+      "reason": 71,
+      "source_counters": [
+        4398046513153,
+        4294967297,
+        4294967299,
+        4,
+        5,
+        6,
+        7
+      ]
+    }
+  ]
+}

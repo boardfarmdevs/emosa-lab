@@ -26,5 +26,14 @@
   "qualification_scope": "Ubuntu 24.04 Python component tests and VM-driven semantic OVSDB scenarios only; peer baseline separate; no wire/hardware qualification",
   "runtime_evidence": "doc/evidence/peer/qualification-summary.json",
   "export_combined_sha256": "cc6b6e557372769f5b0d0945d61f200360818a408f9d0dddadbbab584d2fb414",
-  "runtime_image_exports": []
+  "runtime_image_exports": [
+    {
+      "kind": "secure_fleet_runtime_container",
+      "local_path": ".cache/reliability/final-runtime-r3/runtime-d3998c33a6c3580eb3227931e1130539e66caee391f9f4f4530b3d2ba88d9d87.tar.gz",
+      "sha256": "d3998c33a6c3580eb3227931e1130539e66caee391f9f4f4530b3d2ba88d9d87",
+      "size": 791499989,
+      "image_fingerprint": "d3998c33a6c3580eb3227931e1130539e66caee391f9f4f4530b3d2ba88d9d87",
+      "scope": "installed EMOSA wheel, synthetic TLS fleet/recovery; no wire or physical-pod qualification"
+    }
+  ]
 }

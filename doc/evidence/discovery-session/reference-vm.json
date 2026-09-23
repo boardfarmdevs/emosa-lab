@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "directory": "run-01",
+      "sha256": {
+        "left": "0faf2c02cfe8061f6b563ca3746b42ac0276415637ad3bc8d18b37e279d44abc",
+        "right": "38934dc237463688ca8be30e4ec0dc9938bf466f74e4cf5dbdce91cc6777b92d"
+      },
+      "received_frames": [
+        7,
+        6
+      ]
+    },
+    {
+      "directory": "run-02",
+      "sha256": {
+        "left": "0faf2c02cfe8061f6b563ca3746b42ac0276415637ad3bc8d18b37e279d44abc",
+        "right": "38934dc237463688ca8be30e4ec0dc9938bf466f74e4cf5dbdce91cc6777b92d"
+      },
+      "received_frames": [
+        7,
+        6
+      ]
+    }
+  ],
+  "dissector": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+  "scope": "synthetic received packet fields; no native onboarding claim"
+}

@@ -46,7 +46,7 @@ been performed and no normative substitution is selected.
 | --- | --- | --- |
 | §3.1.1–2, printed pp.239–240 | Packet/frame boundaries and MAC service-interface mappings. | Distinguish what the standard places on the medium from what the chosen capture/socket interface actually exposes. Qualify that interface before assuming preamble, padding or FCS handling. |
 | §3.2.3–6, printed pp.240–242 | Destination/source addressing and Length/Type interpretation and octet order. | These provide explicit 2022 definitions for a future Ethernet boundary review. They do not select IEEE 1905 addressing, EtherType use or CMDU rules. |
-| §3.2.7–9, printed pp.242–243 | MAC client-data sizes, padding and frame check sequence. | Ethernet frame limits and padding do not establish IEEE 1905 fragment sizes or message termination. Those require the missing base/amendment. |
+| §3.2.7–9, printed pp.242–243 | MAC client-data sizes, padding and frame check sequence. | Ethernet frame limits and padding do not establish IEEE 1905 fragment sizes or message termination. The later IEEE envelope review implements those rules from the acquired base/amendment. |
 | EasyMesh §5.2.6 and §14.1.3, printed pp.30 and 103 | Link-triggered onboarding/failover and the reference to Ethernet Clause 3. | Complete the media-specific link-state and actual platform-observation binding separately. A Config `enabled` value is insufficient evidence of an observed link transition. |
 
 The general frame definitions are available for implementation planning against
@@ -72,7 +72,9 @@ checked on the review date. Its main 2024 entry listed amendments but no separat
 2024 errata/corrigendum link. This is a dated publisher-page observation, not a
 claim that no correction or maintenance issue exists anywhere.
 
-**IEEE 1905.1-2013 and IEEE 1905.1a-2014 remain unavailable.** P0, complete wire
+**Update 2026-09-22: both IEEE 1905 PDFs are obtained.** The
+[envelope review and implementation](ieee1905-envelope.md) supersede that earlier
+access gap. P0, complete wire
 validation and controller onboarding remain blocked. WFA Security Requirements,
 the Ethernet edition decision, full feature applicability, independent complete
 message vectors and physical capabilities also remain unresolved. The
@@ -80,7 +82,7 @@ message vectors and physical capabilities also remain unresolved. The
 the [protocol matrix](protocol-matrix.json) distinguishes acquired references
 from a frozen protocol selection.
 
-## Continue from EasyMesh while IEEE 1905 is being procured
+## Use complementary specification sources
 
 Use EasyMesh 6.1 as the normative source for the extensions and procedures it
 defines, WPS 2.0.10 for the selected WSC payload/authentication rules, and the
@@ -92,7 +94,7 @@ independent expected values and explicit limits on what its tests establish.
 The existing service, scope guards, native peer captures and hwsim client
 observers can continue to be exercised alongside that work. Native peers and
 dissectors supply implementation cross-checks; they do not resolve missing
-normative IEEE rules. EasyMesh references the IEEE 1905 base rather than
+normative procedure questions. EasyMesh references the IEEE 1905 base rather than
 reproducing its complete framing, addressing, fragmentation, transmission,
 retry and duplicate-handling contract. Keep those implementation/validation
 dependencies open, with no complete wire-onboarding claim or semantic fallback.

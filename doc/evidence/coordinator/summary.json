@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-22",
+  "base_revision": "f327035f35ce67e8775c7c43f7e26a819f919b71",
+  "scope": "Read-only report coordinator, real owned pod-initiated OVSDB source, Early Report Ack/retry and Topology Query dispatch; no discovery/WSC admission",
+  "source_hashes": {
+    "src/emosa/wire/coordinator.py": "5703c1f3ed3e82a52bcacf4760c534ed602d5cdad5ce53f693488ee66a61572a",
+    "src/emosa/simulation/report_source.py": "f32b41de3146a7237131eb9498a75dd999b9b3fca1039b41527e083c274c55ab",
+    "src/emosa/simulation/coordinator.py": "a93d150270f95cdca97d458316e68ca584c5477bb7ca2c84dbb15f76a5309a3d",
+    "src/emosa/simulation/coordinator_wire.py": "5e435e4ccfe77095b32289f6a232cc6478b94c3d8003c3f4460ae250305b7214",
+    "deploy/wire/check-endpoint.py": "953200c2dd1ed7d61720cf03bb09a5650e090d8546a0d22dce7eba878132119d",
+    "scripts/check-report-reference.py": "8c4e2070b2596d235257159c946ede40dffd4cda2e1257fde502acb8094ce8a9",
+    "tests/test_report_coordinator.py": "ecb43b53042b804182b2ff326f5c98259d79fffd42010ea33929c94a7c0fc0ae",
+    "tests/test_report_coordinator_ovsdb.py": "5a08217a7091c732041e80193e4b75dcfb252ae9a5a60fc359bce40ee16d59a5"
+  },
+  "suites": {
+    "unit": 866,
+    "ovsdb": 48,
+    "new_coordinator_unit": 42,
+    "new_coordinator_ovsdb": 2
+  },
+  "source_tests": [
+    "Atomic generation/revision publication and bounded lease",
+    "Changed facts without revision and changed identity/input context withdraw source",
+    "Early Report new-MID retry, bounded attempts and delayed/live-attempt Ack correlation",
+    "No unnecessary retry on Ack arrival; fixed deadline despite source renewal",
+    "Peer/ingress/generation rejection before reassembly; duplicate/query-rate/event budgets",
+    "Partial send stops on source change; expired/failed sends cannot become success",
+    "Read-only noncredential monitor refuses writes",
+    "Config-only change keeps observed SSID; separate manager State changes response",
+    "Unknown client age, incompatible security and missing channel withdraw reports",
+    "Database disconnection withdrawal and fresh-generation reconnect"
+  ],
+  "database_exercise": "database/result.json",
+  "installed_wheel": "wheel-check.json",
+  "isolated_af_packet": {
+    "final_runs": 2,
+    "development_runs_total": 6,
+    "vm": "emosa-lab",
+    "staging": "/opt/emosa-coordinator-20260922",
+    "retained_mapping": {
+      "run-01": "run-05",
+      "run-02": "run-06"
+    },
+    "source_and_binary_provenance": "vm-provenance.json",
+    "early_mids": [
+      1,
+      2
+    ],
+    "ack_mid": 2,
+    "query_mids": [
+      600,
+      601,
+      602,
+      603
+    ],
+    "response_mids": [
+      600,
+      601,
+      602
+    ],
+    "minimum_disconnected_observation_seconds": 1.1,
+    "coordinator_active_during_observation": true,
+    "private_namespaces_cleaned": true,
+    "pcap_bytes": "actual socket receives",
+    "pcap_timestamps": "synthetic; not independent latency measurements"
+  },
+  "independent_references": [
+    "tshark 3.6.2 and 4.2.2 inspect both final receive traces",
+    "IEEE 1905.1-2013 7.7,7.8,8.2.2.2; amendment 7.9",
+    "EasyMesh 6.1 15.1,17.1.32,17.2.36"
+  ],
+  "junit_long_names_compacted": 5,
+  "retained_development_findings": [
+    {
+      "finding": "An empty monitored client table may be omitted from the initial OVSDB map",
+      "resolution": "Require complete schema/monitor selection, then interpret an omitted empty table correctly; missing client inventory is not silently defaulted"
+    },
+    {
+      "finding": "A valid optional channel field can be cleared",
+      "resolution": "Unknown channel withdraws the source instead of causing a comparison error; real-database regression added"
+    },
+    {
+      "finding": "The initial negative Ethernet observation was shorter than the topology response window",
+      "resolution": "Final two runs observe at least 1.1 seconds with the coordinator still running before fixture cleanup"
+    }
+  ],
+  "remaining": [
+    "Qualified actual pod facts and trusted link/controller identity",
+    "Native peer profile/security/media reconciliation and full AP Capability requirements",
+    "Discovery/report integration into application lifecycle and native controller inventory",
+    "Durable authenticated WSC-to-operation admission and controller-caused OVSDB/hwsim/client experiment",
+    "Read-only actual-pod qualification followed by unchanged physical-pod proof"
+  ],
+  "adapter_config_writes": 0,
+  "fixture_admin_and_manager_writes": true,
+  "native_controller_used": false,
+  "radio_used": false,
+  "physical_pods_touched": false,
+  "full_procedure_gate_satisfied": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "documentation": {
+    "mermaid_diagrams_rendered": 20,
+    "shell_blocks_syntax_checked": 183,
+    "existing_evidence_artifacts_unchanged": 415,
+    "desktop_mobile_browser_passed": true,
+    "source_link_targets_checked_in_browser": 106,
+    "checked_links_and_references": 970
+  }
+}

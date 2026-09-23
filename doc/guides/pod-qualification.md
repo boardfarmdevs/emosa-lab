@@ -31,6 +31,7 @@ the lab; the examples are not evidence that the pod supports it:
 | Existing authorized access | Example | Private references |
 | --- | --- | --- |
 | Mutual TLS | [qualification.example.json](../../deploy/qualification.example.json) | `certificate_ref`, `private_key_ref`, `ca_ref` resolve to files below `secret_directory`; replace the placeholder peer pin with a trusted certificate SHA-256 |
+| Pod-initiated mutual TLS | [qualification-tls-listen.example.json](../../deploy/qualification-tls-listen.example.json) | `direction: listen`, `pssl:PORT:IPv4`, existing adapter certificate/key, pod CA and trusted pod certificate pin; replace the example loopback address only with the authorized local listening interface |
 | Authenticated tunnel to local TCP | [qualification-tunnel.example.json](../../deploy/qualification-tunnel.example.json) | `evidence_ref` identifies a private description of the tunnel's authenticated endpoint binding; tunnel credentials stay with the tunnel tool |
 | Private local Unix socket | [qualification-unix.example.json](../../deploy/qualification-unix.example.json) | Existing socket in an owned private directory; no invented password field |
 
@@ -113,10 +114,16 @@ Supported connection preparation:
   explicitly leaves external tunnel verification pending. The collector creates
   no tunnel or pod endpoint setting.
 
-Native listening TLS is not qualified by the selected Python client. A remote
-plaintext TCP endpoint is rejected; supply the existing authenticated access path
-instead of weakening it for collection. Test certificates are generated only for
-local TLS regression tests, never for a physical pod.
+Listening TLS now uses a bounded EMOSA TLS accept boundary followed by the
+selected upstream OVS JSON-RPC implementation. Use the listening example for an
+already authorized pod-initiated connection. It requires mutual TLS and the
+expected leaf certificate pin before admitting a session. The collector does
+not redirect a cloud endpoint, change pod settings or enroll certificates.
+The four-pending-handshake/three-second limits and invalid-client checks are
+covered by [synthetic transport tests](secure-fleet.md); physical connection
+qualification remains pending until the operator supplies the private path.
+A remote plaintext TCP endpoint is rejected. Test certificates are generated
+only for local regression tests, never for a physical pod.
 
 The draft is always `writable=false`. Remaining M0 work includes physical
 identity/trust binding, specific managed resources, existing writer controls and
@@ -128,6 +135,23 @@ experiment needs a sole existing BSS on that radio or a complete-radio mapping.
 The eventual acceptance path remains **real EasyMesh messages → EMOSA → unchanged
 physical pod → independent observed behavior**. This collector and the simulator
 are preparation and component evidence, respectively.
+
+## Facts needed for controller-facing reports
+
+The [report components](../protocol/reports.md) require the complete actual
+interface/bridge/neighbor inventory, RUID/BSSID bindings, capability evidence,
+matching Config/State BSS facts and known client association ages. Qualification
+must distinguish the virtual agent's adjacency from the physical pod backhaul.
+Unknown powered-off, L2-neighbor, MLD/backhaul or other conditional features must
+remain pending rather than be recorded as absent.
+
+The pinned upstream `Wifi_Associated_Clients` table has client identities and
+security/state fields but no association age. EasyMesh requires seconds since
+association, saturated at 65535. Identify an existing authorized pod source or a
+qualified observation of the actual association episode and its restart rules.
+Time since EMOSA first saw a row cannot substitute. The current read-only draft
+collector does not qualify this source; record it among remaining checks. Do
+not install a pod agent, alter firmware or fabricate zero to fill the gap.
 
 ## Supplementary root-pod/cloud packet capture
 

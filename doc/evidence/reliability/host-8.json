@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "scope": "real adapter service, synthetic pod-initiated mutual TLS OVSDB fleet",
+  "pods": 8,
+  "cycles_requested": 1,
+  "interval_seconds": 0,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "radio_behavior_proven": false,
+  "production_capacity_proven": false,
+  "passed": true,
+  "checks": [
+    "all distinct TLS certificates and serial bindings admitted",
+    "concurrent per-pod writes, database keys and idempotent replay",
+    "trusted certificate with wrong database serial rejected; peer progresses",
+    "competing writer latches ownership across service restart; peer progresses",
+    "stable virtual AL identities and disjoint operation histories"
+  ],
+  "cycles": [
+    {
+      "cycle": 1,
+      "seconds": 8.008887914009392,
+      "crash_restart": true,
+      "disconnect_reconnect": true,
+      "database_restart": true,
+      "late_timeout_preserved": true
+    }
+  ],
+  "resource_samples": [
+    {
+      "elapsed_seconds": 2.0253578149713576,
+      "pid": 291483,
+      "rss_kib": 40432,
+      "threads": 9,
+      "file_descriptors": 27,
+      "cpu_seconds": 0.24
+    },
+    {
+      "elapsed_seconds": 2.5265355819719844,
+      "pid": 291483,
+      "rss_kib": 64808,
+      "threads": 9,
+      "file_descriptors": 28,
+      "cpu_seconds": 0.75
+    },
+    {
+      "elapsed_seconds": 3.0686084289918654,
+      "pid": 291483,
+      "rss_kib": 65804,
+      "threads": 9,
+      "file_descriptors": 27,
+      "cpu_seconds": 0.97
+    },
+    {
+      "elapsed_seconds": 3.6962177489767782,
+      "pid": 291483,
+      "rss_kib": 65876,
+      "threads": 9,
+      "file_descriptors": 27,
+      "cpu_seconds": 1.1
+    },
+    {
+      "elapsed_seconds": 4.196843023994006,
+      "pid": 291558,
+      "rss_kib": 35512,
+      "threads": 9,
+      "file_descriptors": 19,
+      "cpu_seconds": 0.11
+    },
+    {
+      "elapsed_seconds": 4.698241421021521,
+      "pid": 291558,
+      "rss_kib": 35700,
+      "threads": 9,
+      "file_descriptors": 19,
+      "cpu_seconds": 0.18
+    },
+    {
+      "elapsed_seconds": 5.1991485159960575,
+      "pid": 291558,
+      "rss_kib": 42508,
+      "threads": 9,
+      "file_descriptors": 28,
+      "cpu_seconds": 0.39
+    },
+    {
+      "elapsed_seconds": 5.700632011983544,
+      "pid": 291558,
+      "rss_kib": 68420,
+      "threads": 9,
+      "file_descriptors": 28,
+      "cpu_seconds": 0.88
+    },
+    {
+      "elapsed_seconds": 6.201738765987102,
+      "pid": 291558,
+      "rss_kib": 68508,
+      "threads": 9,
+      "file_descriptors": 26,
+      "cpu_seconds": 0.99
+    },
+    {
+      "elapsed_seconds": 6.7027742600184865,
+      "pid": 291558,
+      "rss_kib": 68616,
+      "threads": 9,
+      "file_descriptors": 26,
+      "cpu_seconds": 1.12
+    },
+    {
+      "elapsed_seconds": 7.203522106981836,
+      "pid": 291558,
+      "rss_kib": 68692,
+      "threads": 9,
+      "file_descriptors": 26,
+      "cpu_seconds": 1.22
+    },
+    {
+      "elapsed_seconds": 7.704761387023609,
+      "pid": 291558,
+      "rss_kib": 68724,
+      "threads": 9,
+      "file_descriptors": 26,
+      "cpu_seconds": 1.32
+    },
+    {
+      "elapsed_seconds": 8.205661344982218,
+      "pid": 291558,
+      "rss_kib": 69040,
+      "threads": 9,
+      "file_descriptors": 26,
+      "cpu_seconds": 1.52
+    },
+    {
+      "elapsed_seconds": 8.706492779019754,
+      "pid": 291558,
+      "rss_kib": 69040,
+      "threads": 9,
+      "file_descriptors": 26,
+      "cpu_seconds": 1.64
+    },
+    {
+      "elapsed_seconds": 9.20742897602031,
+      "pid": 291558,
+      "rss_kib": 69040,
+      "threads": 9,
+      "file_descriptors": 27,
+      "cpu_seconds": 1.77
+    },
+    {
+      "elapsed_seconds": 9.708255019970238,
+      "pid": 291558,
+      "rss_kib": 69064,
+      "threads": 9,
+      "file_descriptors": 26,
+      "cpu_seconds": 1.89
+    },
+    {
+      "elapsed_seconds": 10.208956337010022,
+      "pid": 291558,
+      "rss_kib": 69132,
+      "threads": 9,
+      "file_descriptors": 26,
+      "cpu_seconds": 2.01
+    },
+    {
+      "elapsed_seconds": 10.714912042021751,
+      "pid": 291558,
+      "rss_kib": 69132,
+      "threads": 9,
+      "file_descriptors": 27,
+      "cpu_seconds": 2.19
+    },
+    {
+      "elapsed_seconds": 11.218525492993649,
+      "pid": 291558,
+      "rss_kib": 69132,
+      "threads": 9,
+      "file_descriptors": 27,
+      "cpu_seconds": 2.31
+    },
+    {
+      "elapsed_seconds": 11.719684623996727,
+      "pid": 291558,
+      "rss_kib": 69132,
+      "threads": 9,
+      "file_descriptors": 27,
+      "cpu_seconds": 2.42
+    },
+    {
+      "elapsed_seconds": 12.220355478988495,
+      "pid": 291744,
+      "rss_kib": 35468,
+      "threads": 9,
+      "file_descriptors": 19,
+      "cpu_seconds": 0.1
+    },
+    {
+      "elapsed_seconds": 12.720818201021757,
+      "pid": 291744,
+      "rss_kib": 35784,
+      "threads": 9,
+      "file_descriptors": 19,
+      "cpu_seconds": 0.18
+    },
+    {
+      "elapsed_seconds": 13.221779772022273,
+      "pid": 291744,
+      "rss_kib": 40968,
+      "threads": 9,
+      "file_descriptors": 28,
+      "cpu_seconds": 0.36
+    },
+    {
+      "elapsed_seconds": 13.72293767501833,
+      "pid": 291744,
+      "rss_kib": 68248,
+      "threads": 9,
+      "file_descriptors": 28,
+      "cpu_seconds": 0.87
+    }
+  ],
+  "connection_seconds": 2.613992963975761,
+  "operation_latency_seconds": {
+    "samples": 14,
+    "p50": 0.29732918995432556,
+    "p95": 0.6066930790548213,
+    "max": 0.6066930790548213
+  },
+  "service_lifecycle": [
+    {
+      "event": "started",
+      "pid": 291483,
+      "adapter_instance_id": "039e04d4-917c-444b-9b81-0a069671ef8f"
+    },
+    {
+      "event": "stopped",
+      "pid": 291483,
+      "requested_crash": true,
+      "kill_escalation": false,
+      "returncode": -9
+    },
+    {
+      "event": "started",
+      "pid": 291558,
+      "adapter_instance_id": "1dd49e3d-5117-40eb-ad4f-1774c3b39fab"
+    },
+    {
+      "event": "stopped",
+      "pid": 291558,
+      "requested_crash": true,
+      "kill_escalation": false,
+      "returncode": -9
+    },
+    {
+      "event": "started",
+      "pid": 291744,
+      "adapter_instance_id": "4d736277-114c-4623-bed4-4349d89eec93"
+    },
+    {
+      "event": "stopped",
+      "pid": 291744,
+      "requested_crash": false,
+      "kill_escalation": false,
+      "returncode": 0
+    }
+  ],
+  "cleanup_passed": true,
+  "elapsed_seconds": 14.303358613979071,
+  "adapter_peaks": {
+    "rss_kib": 69132,
+    "threads": 9,
+    "file_descriptors": 28
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-22",
+  "base_revision": "e1698debe34f605944e6f9e380bf80e09d8777af",
+  "scope": "Restricted discovery-to-topology lifecycle; no automatic Early Report, M1 or operation admission",
+  "source_hashes": {
+    "src/emosa/wire/autoconfiguration.py": "2947a0a915302287b7dae40b1d6b7413f8f2a1c5421c50c89266564633828856",
+    "src/emosa/wire/coordinator.py": "e6046993e64bd606fc0089dfdd198ec71f6d99ead86c023b4517465af87e9d53",
+    "src/emosa/wire/discovery_session.py": "0517a2a522f74f37fc9be02b86ac7d534d3286c5018c8b2f7943827f8fe8c369",
+    "src/emosa/simulation/report_source.py": "f32b41de3146a7237131eb9498a75dd999b9b3fca1039b41527e083c274c55ab",
+    "src/emosa/simulation/discovery.py": "a590338f592035798644d2970f75b29a3959a6ba82bb5dca595a4550a3a6504f",
+    "src/emosa/simulation/discovery_wire.py": "2d7c965f2b3bfffa1bb20adf4cd2b302b25c37225dc43cf6107a10ef0fce246c",
+    "deploy/wire/check-endpoint.py": "33c229c20e36e2d48984cbf28f5c76d4ec12f741d75883e0926f6a533d750395"
+  },
+  "suites": {
+    "unit": 898,
+    "ovsdb": 49,
+    "new_unit": 32,
+    "new_ovsdb": 1
+  },
+  "database_stages": 10,
+  "database_exercise": "database/result.json",
+  "installed_wheel": "wheel-check.json",
+  "isolated_af_packet": {
+    "runs": 2,
+    "received_frames_per_run": {
+      "left": 7,
+      "right": 6
+    },
+    "independent_dissectors": [
+      "3.6.2",
+      "4.2.2"
+    ],
+    "development_runs_total": 4,
+    "retained_mapping": {
+      "run-01": "VM run-03",
+      "run-02": "VM run-04"
+    }
+  },
+  "native_capture": "../peer-baseline/samples/wired/ethernet.pcap",
+  "native_response_crosscheck": "Actual retained Response TLVs in a controlled matching Profile-1 unit exchange expose missing KiB/MiB and Security Capability; no new live native run",
+  "development_findings": [
+    "Source publication after an unpolled lease gap now invalidates discovery context",
+    "Initial unit fixture incorrectly passed capture bytes to a path-based reader; corrected before retained passing tests",
+    "Delayed publication whose observation began before old lease expiry also invalidates context; new regression test and final two packet reruns pass"
+  ],
+  "automatic_early_report": "blocked_table117_review",
+  "wsc_admission": "blocked_full_profile_and_durable_operation_integration",
+  "adapter_config_writes": 0,
+  "native_controller_used": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false
+}

@@ -1,0 +1,93 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "directory": "doc/evidence/wsc-wire/packet-normal",
+      "sha256": {
+        "left": "16ba0b526bcd6eda05365dce67c3e19538a1e73c48f526d5b9b53f367086be08",
+        "right": "f28f11730b1c30efddf743cba0d38e29045ba7aa33fa0f5edd2fe05b4ddeff24"
+      },
+      "received_frames": [
+        7,
+        2
+      ],
+      "m1_mids": [
+        101,
+        102
+      ],
+      "receipt_correlated": true
+    },
+    {
+      "directory": "doc/evidence/wsc-wire/packet-lost-reply",
+      "sha256": {
+        "left": "22163c8dc0d99a5385321a2f60903374a9396bcb0f3caeb51a52c6c45260248b",
+        "right": "a586571418d9add9467d12e03c7eed7e0fb7b00e528b22700142af5cef9b3a46"
+      },
+      "received_frames": [
+        7,
+        2
+      ],
+      "m1_mids": [
+        101,
+        102
+      ],
+      "receipt_correlated": true
+    },
+    {
+      "directory": "doc/evidence/wsc-wire/radio-normal/ethernet",
+      "sha256": {
+        "left": "c260099bf751e0b06d8d03bd1bf31bd06863561f65e83ea49ac1995f401bb487",
+        "right": "b76f779b1792f387468315aee159796e89c4b57520d9110604cfc720698edb43"
+      },
+      "received_frames": [
+        7,
+        2
+      ],
+      "m1_mids": [
+        101,
+        102
+      ],
+      "receipt_correlated": true
+    },
+    {
+      "directory": "doc/evidence/wsc-wire/radio-lost-reply/ethernet",
+      "sha256": {
+        "left": "ed88dc288d385d0928efe57661e7c1d7756863776b6a8628ee3eb923d22aec63",
+        "right": "5a8270bf565fe7729d7df446cd9ebbde685ee99f13b38cc03fb0b3d10e45f03f"
+      },
+      "received_frames": [
+        7,
+        2
+      ],
+      "m1_mids": [
+        101,
+        102
+      ],
+      "receipt_correlated": true
+    }
+  ],
+  "radio_checks": [
+    {
+      "directory": "doc/evidence/wsc-wire/radio-normal",
+      "capture_sha256": "456225b01e29867cae0e2120d8f6bf24960078d11db869c5df6883d122fd11a2",
+      "client_phases": 4,
+      "beacon_counts": {
+        "emosa-radio-initial": 74,
+        "EMOSA-WSC-component": 92
+      },
+      "eapol_frames": 20
+    },
+    {
+      "directory": "doc/evidence/wsc-wire/radio-lost-reply",
+      "capture_sha256": "b27ec8a5b30234dfb3800222d542d4e48e7d2306140695f326f530fdfff3b3b1",
+      "client_phases": 4,
+      "beacon_counts": {
+        "emosa-radio-initial": 93,
+        "EMOSA-WSC-component": 92
+      },
+      "eapol_frames": 20
+    }
+  ],
+  "dissector": "TShark (Wireshark) 3.6.2 (Git v3.6.2 packaged as 3.6.2-2)",
+  "scope": "Owned received Ethernet frames and receipt; no independent decryption or native admission claim"
+}

@@ -1,8 +1,26 @@
 # Next experiments toward a bounded viability result
 
+The current follow-on is [sustained operation](../protocol/sustained-operation.md):
+keep EMOSA active through client activity, handle recurring native-controller
+procedures, and validate restart/reconnect recovery in a 15-minute acceptance
+run. Measured OVSDB/MQTT station reporting, selected channel procedures and a
+fresh-session recovery supervisor are implemented. The [908-second operational run](../evidence/native-soak/README.md) passes both
+recovery faults without another Config write. The full acceptance still
+requires qualified policy/AP/STA/neighbor metrics and final disassociation
+statistics; duration and recovery are separately reviewed operational checks.
+
 The critical milestone is **real EasyMesh messages → EMOSA adapter → unchanged
 physical pod → independently observed behavior**. Neither an OVSDB component pass
 nor a successful hwsim association completes that objective.
+
+The next independent work package is now implemented as
+[authenticated TLS, real-service fleet measurements and repeated recovery](../guides/secure-fleet.md),
+followed by [clean nested-LXD reproduction](../../deploy/reliability/README.md).
+The [new learning sequence](../guides/learning-path.md) teaches those boundaries
+in order. See [retained evidence](../evidence/reliability/README.md) for the exact
+host/container workloads, resource samples, earlier failures and installed image.
+These results reduce southbound/service risk while full procedure validation and physical inputs remain
+pending; they do not populate an EasyMesh controller's inventory.
 
 The [service integration walkthrough](../guides/service-integration.md) now
 provides a two-pod service exercise, actual process-crash recovery with hwsim
@@ -10,7 +28,44 @@ clients, and live native-controller preparation. The
 [retained results](../evidence/service-integration/summary.json) keep semantic
 initiation separate from the absent EMOSA wire exchange. The
 [available WFA audit](../protocol/procedure-audit.md) advances the contract while
-the exact IEEE base/amendment inputs remain pending.
+the complete procedure audit remains unfinished. Both exact IEEE PDFs were
+obtained on 2026-09-22; the [envelope implementation](../protocol/ieee1905-envelope.md)
+now passes native-capture and isolated packet checks. The later
+[discovery-to-topology lifecycle](../protocol/discovery-session.md) joins selected
+Search/Response checks to the real database source, with reconnect invalidation
+and repeated socket tests. Automatic Early Report, complete profile admission,
+native controller visibility and admission into the complete lifecycle remain next.
+The [owned WSC provisioning experiment](../protocol/wsc-provisioning.md) now
+joins authenticated M2 input to durable operations, guarded OVSDB and separately
+observed State. Lost replies, duplicates, identity races and real process death
+are exercised. It uses a synthetic hostap payload peer and in-memory Ethernet;
+the subsequent [Ethernet WSC/radio experiment](../protocol/wsc-wire-radio.md)
+now connects the component over actual Ethernet to hwsim and independent clients.
+Normal and lost-reply runs pass, including withholding and wrong-key rejection.
+Native-controller admission, its own inventory and physical acceptance remain
+required; neither component opens the full-wire gate.
+
+The [native discovery probe](../guides/native-discovery.md) now confirms a matching
+Profile-1 Search/Response with EMOSA and a controller-created initial device
+entry. It has no represented radios or BSSs. Remaining capability omissions,
+complete admission and the causal WSC-to-radio integration are still required.
+The [native simulated-pod integration](../protocol/native-onboarding.md) now joins
+discovery, Early reporting, authenticated WSC and observed topology in an owned
+experimental coordinator. The first native attempt identified unsolicited
+configuration companions and an overly strict EMOSA query-profile check; the
+extended candidate now completes the bounded native run, independently checked
+against its receipt, radio/BSS inventory and clients. Next keep the adapter active
+through client association and complete required policy/metrics and final-session
+reporting. The selected channel exchange and native-run recovery now have their
+own implementation and independent-check path; they do not broaden the physical
+viability claim.
+
+The [native controller candidate](../guides/controller-counter-candidate.md)
+now fixes the missing KiB/MiB advertisement in an isolated C++ build. Its native
+counter regression and differential discovery experiment address one defect;
+the pinned baseline is restored afterward. Next apply the unsupported-feature
+rule to an explicit non-DPP contract, resolve Early/AP capability admission, then
+join the tested WSC path to complete native radio/BSS inventory and client proof.
 
 The [onboarding readiness checks](../guides/onboarding-readiness.md) now add
 strict synthetic sole-radio scope admission and offline review of native captures.
@@ -76,12 +131,39 @@ existing peer's behavior before inserting EMOSA. This is a separate experiment
 from the empty EMOSA-facing inventory above. Its observed native exchanges do
 not remove EMOSA's specification or physical-pod gates.
 
+## Current sustained-operation follow-on
+
+The [908-second operational run](../evidence/native-soak/README.md) now joins
+native discovery/WSC, observed BSS/STA inventory, repeated client cycles and
+continuous traffic with pod reconnect and adapter SIGKILL recovery. It creates
+fresh authenticated operations without duplicate Config writes. This supersedes
+the earlier empty-inventory and integration milestones described above.
+
+Complete sustained acceptance still needs mandatory reporting policy, qualified
+AP/STA/neighbor measurements and final session reporting. The
+[final-session component](../protocol/final-session-statistics.md) now implements
+encoding, bounded delivery and a guarded lifecycle handoff. Its final-counter
+publisher is unqualified. The [150-second native regression](../evidence/final-statistics/README.md)
+verifies corrected byte-unit advertisement through both recovery faults, without
+claiming that final session statistics were measured or delivered.
+
+The follow-on [kernel removal observation](../protocol/station-removal-observations.md)
+now captures raw counters at station removal. Its 158.51-second native run joins
+six removal records to actual radio reasons and EasyMesh leaves while preserving
+both recovery checks. Counter meanings and the online source-to-sender join still
+need qualification; acquisition alone does not establish final reporting.
+
+Next qualify measurement meanings, completeness and session finality, connect
+those records to the implemented handoff, then re-run complete 15-minute
+acceptance with independently decoded reports. The unchanged physical-pod path
+remains a separate pending input and acceptance boundary.
+
 ## Priority and exit evidence
 
 | Order | Work | Exit evidence / decision |
 | --- | --- | --- |
-| 1 — P0 | Freeze proposed editions and procedure subset; obtain missing lawful IEEE text; complete normative rules and independent packet/crypto vectors | Reproducible encodings, authentication rules, timers and radio-wide BSS semantics with exact references |
-| 2 — I3/I4 | Implement actual packet endpoints, discovery/capabilities and genuine WSC provisioning; bind to the operation engine | Wire-driven OVSDB simulation and captures; valid/invalid authentication, duplicate/retry and lost-reply cases; no semantic fallback |
+| 1 — P0 | Freeze proposed editions and procedure subset; use the acquired IEEE text; resolve remaining LLDP/WFA dependencies and complete normative rules and independent packet/crypto vectors | Reproducible encodings, authentication rules, timers and radio-wide BSS semantics with exact references |
+| 2 — I3/I4 | Join compatible native discovery/profile/capability admission to the tested Ethernet WSC/operation/hwsim path | Wire-driven OVSDB simulation and captures; valid/invalid authentication, duplicate/retry and lost-reply cases; no semantic fallback |
 | In parallel — M0 | Run read-only qualification when trusted local inputs arrive; inspect pod/build, schema, managed radio/VIF, writers, recovery and client | Reviewed profile; sole-BSS radio or full radio-scope mapping; actual wired management and independent observer |
 | 3 — I5 | Execute one SSID/PSK change over wired management on an unchanged physical pod | Correlated EasyMesh exchange, Config delta, fresh State, observed BSSID/SSID, station authentication and usable traffic |
 | 4 — recovery | Repeat with lost acknowledgement and adapter restart; then qualify wireless management independently | Truthful unknown attribution; bounded recovery; no duplicate effects or unsupported rollback; outage/intervention duration retained |
@@ -130,7 +212,7 @@ Config changes to a separate hostapd manager and derives State from
 hostapd/nl80211. Three selected runs passed 13 cases with independent clients,
 including wrong-key rejection, SSID/key change, lost reply, withholding, restart
 and data-path failures. The next integration is genuine controller discovery/WSC
-through EMOSA into this boundary, once the missing normative inputs are available.
+through EMOSA into this boundary, as the remaining procedure contract and inputs are resolved.
 
 For real pods use a physical Wi-Fi NIC in the observer, with an isolated client
 data path and a separately verified management/recovery path. Archive captures

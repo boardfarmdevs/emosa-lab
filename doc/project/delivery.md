@@ -7,6 +7,88 @@ evaluation tooling and a read-only physical-pod preparation command. It does
 Every architecture requirement and acceptance row is listed in
 `traceability.json`; verification is scoped to the recorded mode.
 
+## IEEE envelope and discovery/WSC increment
+
+Both IEEE 1905 PDFs are obtained. The [envelope component](../protocol/ieee1905-envelope.md)
+implements bounded Ethernet/CMDU transport and inspection. The
+[autoconfiguration component](../protocol/autoconfiguration.md) adds selected
+Search/Response and M1/M2 exchanges, explicit peer/radio generation binding,
+complete-request checks, duplicate handling and expiration. Retained native
+traffic exposes profile and capability gaps. No operation engine or pod writes
+are enabled by these components; full topology/capability/coordinator procedures
+and qualification remain incomplete. Current evidence is in the
+[exchange collection](../evidence/autoconfiguration/README.md).
+
+## Capability and topology report increment
+
+The [report components](../protocol/reports.md) add restricted complete Early AP
+Capability Report and Topology Response construction, IEEE device/bridge/neighbor
+values, security selectors, BSS configuration and associated-client values.
+Identity, complete-inventory, source-change and deadline checks guard delivery.
+An offline exercise and two isolated VM AF_PACKET runs decode the advertised
+radio/BSS at a synthetic receiver. The [new evidence](../evidence/reports/README.md)
+retains 824 unit and 46 OVSDB passes, native field comparisons and zero-operation
+wire gating. Native capture review identifies missing cipher/bridge fields and a
+Wi-Fi 6 media-length mismatch against the selected edition. A running controller
+coordinator, full AP Capability procedure and actual controller inventory remain
+pending; no physical pod was contacted or changed.
+
+## Read-only report coordinator increment
+
+The [coordinator](../protocol/report-coordinator.md) connects the report builders
+to an expiring, revision-bound source and handles Topology Query dispatch plus
+Early Report acknowledgment/retries. A real pod-initiated OVSDB fixture supplies
+observed facts through a noncredential read-only monitor. Config-only changes do
+not become operational SSID reports; manager State changes do. Missing client age
+and database loss withdraw reporting, while reconnect requires fresh inventory.
+Two isolated AF_PACKET runs and independent dissector checks pass. The new
+[evidence](../evidence/coordinator/README.md) includes 866 unit and 48 OVSDB passes.
+No actual-pod source, native controller onboarding, discovery/profile admission
+or operation integration is enabled by this component.
+
+## Discovery-to-topology lifecycle increment
+
+The [discovery session](../protocol/discovery-session.md) joins bounded
+Search/Response correlation to the read-only database/report source. Required
+controller-field gaps are explicit, and changed source generations, capabilities
+or lapsed leases require fresh discovery. Ordinary database revisions still
+produce current State-derived reports. Real-database and repeated isolated
+Ethernet exercises cover rejection, retry and withdrawal. The
+[evidence](../evidence/discovery-session/README.md) retains 898 unit and 49 OVSDB
+passes. Automatic Early Report and M1 remain blocked by the recorded normative
+and admission gaps; no native controller or physical pod was used in these runs.
+
+## Packet-driven WSC and radio increment
+
+The [WSC handoff](../protocol/wsc-provisioning.md) now creates durable operations
+from authenticated complete M2 input. The subsequent
+[Ethernet/radio experiment](../protocol/wsc-wire-radio.md) carries that input
+through actual AF_PACKET sockets into real OVSDB, a separate hostapd/hwsim manager
+and independent wired/wpa_supplicant clients. Normal and lost-reply runs preserve
+one operation/transaction; invalid input, fragments, retries, withheld application
+and wrong client keys have explicit checks. The
+[evidence](../evidence/wsc-wire/README.md) includes 928 unit / 53 OVSDB passes,
+independent packet correlation and interruption cleanup.
+
+The peer is a synthetic hostap payload exerciser. Native discovery/Early/profile/
+capability admission, controller-owned inventory, service integration of the full
+wire lifecycle and unchanged physical-pod acceptance remain pending. The full
+wire scenario still exits blocked with zero operations.
+
+## Secure fleet and clean reproduction increment
+
+The [secure-fleet workflow](../guides/secure-fleet.md) adds authenticated
+pod-initiated TLS, per-pod certificate/serial bindings, bounded handshake rejection,
+4/8/16/32 real database sessions through one service, resource/latency observations
+and repeated crash/reconnect/database/late-State/conflict checks. The
+[clean runtime workflow](../../deploy/reliability/README.md) repeats these from an
+installed wheel in a fresh nested-LXD container and retains a private image export.
+Current results and preserved earlier failures are in
+[reliability evidence](../evidence/reliability/README.md). The
+[learning sequence](../guides/learning-path.md) and manual explain each stage.
+Earlier delivery tables below remain historical; they are not the current suite
+counts or a statement that the new component runtime has not been exercised.
+
 ## Explorer and radio-lab increment
 
 The [interactive field guide](https://boardfarmdevs.github.io/emosa-lab/) adds a
@@ -109,8 +191,9 @@ fabricated.
 P0 research proposes **IEEE 1905.1-2013 + 1905.1a-2014, EasyMesh 6.1 and WPS
 2.0.10**, with a Profile-1 procedure subset. The WFA PDFs were obtained from the
 publisher and hashed; the proposal is not a frozen selection. IEEE base/amendment
-and applicable 802.11-2024 text still need lawful access. Complete the normative
-rule matrix and independent packet/crypto vectors before I3/I4. See
+and 802.11-2024 texts are now obtained and hashed; selected clauses and bounded
+components have been implemented. Complete the remaining normative procedure
+matrix, profile qualification and endpoint/operation integration for I3/I4. See
 `../protocol/protocol-inputs.md` for authoritative links, sections and document ambiguities.
 
 The WSC radio-wide BSS semantics are a concrete scope constraint. Qualify a radio

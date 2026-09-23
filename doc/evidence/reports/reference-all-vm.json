@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "cases": 5,
+  "capture_sha256": "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964",
+  "fixture_sha256": "a390028d7920a5835a1e9b71efcfc27ccd0bbb6128603d6b26620d324754db04",
+  "dissector": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+  "scope": "native fields and selected-edition negatives; not conformance",
+  "generated_report_checks": [
+    {
+      "capture": "right.pcap",
+      "sha256": "5661c37deeccd7f2baafdd70b820fcd5495416c98eb6470536a23051d2237e2d"
+    },
+    {
+      "capture": "right.pcap",
+      "sha256": "5661c37deeccd7f2baafdd70b820fcd5495416c98eb6470536a23051d2237e2d"
+    }
+  ]
+}

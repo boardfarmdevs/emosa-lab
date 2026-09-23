@@ -1,0 +1,34 @@
+{
+  "scope": "native_controller_discovery_probe_only",
+  "state": "response_observed",
+  "search_profile": 1,
+  "sent_mids": [
+    65535
+  ],
+  "response_mid": 65535,
+  "response_profile": 1,
+  "profile_correlated": true,
+  "controller_flags_hex": "40",
+  "security_capability_hex": null,
+  "selected_response_issues": [
+    "kib_mib_support_absent",
+    "security_capability_absent"
+  ],
+  "pending_requirements": [
+    "profile_qualification",
+    "security_capability_applicability",
+    "security_capability_absent",
+    "kib_mib_support_absent",
+    "early_ap_capability_procedure_and_table117_review"
+  ],
+  "counts": {
+    "search_sent": 1,
+    "response_correlated": 1
+  },
+  "wsc_started": false,
+  "operations_created": 0,
+  "profile_qualified": false,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "frames_received": 1
+}

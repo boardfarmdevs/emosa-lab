@@ -19,6 +19,7 @@ class Engine:
         self.quiesced = False
         self.starts = {}
         self.last_observations = {}
+        self.wsc_guards = {}  # Process-local authority; deliberately never recovered.
 
     def _save(self, op, payload=None):
         op.updated_at = self.clock.utc()
@@ -32,9 +33,30 @@ class Engine:
     def request(
         self, intent: Intent, *, source, key, run_id, deadline=30, initiating_interface="semantic"
     ):
-        intent.validate()
         if initiating_interface != "semantic":
             raise EmosaError(Reason.MISSING_PREREQUISITE, "P0 wire binding is not implemented")
+        return self._request(
+            intent,
+            source=source,
+            key=key,
+            run_id=run_id,
+            deadline=deadline,
+            initiating_interface=initiating_interface,
+        )
+
+    def _request(
+        self, intent, *, source, key, run_id, deadline=30, initiating_interface, wsc_receipt=None
+    ):
+        """Internal journal handoff, also used by the owned WSC component lab.
+
+        The public request/serve API cannot select that component path. A receipt
+        records authenticated input correlation; it is not full profile admission.
+        """
+        intent.validate()
+        if initiating_interface != "semantic" and (
+            initiating_interface != "wsc-component" or wsc_receipt is None
+        ):
+            raise EmosaError(Reason.MISSING_PREREQUISITE, "missing component WSC receipt")
         if not source or not key or len(key) > 128 or not 0 < deadline <= 3600:
             raise EmosaError(Reason.INVALID_INPUT, "invalid source, idempotency key or deadline")
         if intent.pod_id not in self.backends:
@@ -63,7 +85,7 @@ class Engine:
             now,
             deadline_at,
         )
-        self.store.add(op)
+        self.store.add(op, wsc_receipt=wsc_receipt)
         self.starts[op.operation_id] = self.clock.monotonic()
         self.deadlines[op.operation_id] = self.clock.monotonic() + deadline
         if (
@@ -103,10 +125,12 @@ class Engine:
             backend = self.backends[op.pod_id]
             intent = Intent(**op.intent)
             try:
+                await self._check_wsc(op)
                 op.plan = await self.plan(intent)
                 snap = await backend.snapshot()
                 if not snap.ready:
                     raise EmosaError(Reason.NOT_READY, "fresh complete snapshot required")
+                await self._check_wsc(op)
                 # A CLI cancellation may have happened while validation awaited I/O.
                 if self.store.get(operation_id).state != State.REQUESTED:
                     return self.store.get(operation_id)
@@ -160,6 +184,17 @@ class Engine:
             return op
         finally:
             self.busy.discard(op.pod_id)
+            if self.store.get(operation_id).state != State.REQUESTED:
+                self.wsc_guards.pop(operation_id, None)
+
+    async def _check_wsc(self, op):
+        if op.initiating_interface != "wsc-component":
+            return
+        receipt = self.store.wsc_receipt(op.operation_id)
+        guard = self.wsc_guards.get(op.operation_id)
+        if receipt is None or receipt["process_id"] != self.store.process_id or guard is None:
+            raise EmosaError(Reason.NOT_READY, "WSC exchange authority is no longer live")
+        await guard()
 
     @staticmethod
     def _matches(values, target):
@@ -298,7 +333,13 @@ class Engine:
 
     def recover(self):
         for op in self.store.operations():
-            if op.state == State.SUBMITTED:
+            if op.initiating_interface == "wsc-component" and op.state == State.REQUESTED:
+                # The WSC transcript and link authority do not survive restart.
+                # Never let the ordinary REQUESTED scheduler apply an unsent
+                # controller request from an earlier process's exchange.
+                transition(op, State.CANCELLED)
+                self._save(op, {"recovery": "unsent WSC component request; new exchange required"})
+            elif op.state == State.SUBMITTED:
                 transition(op, State.INDETERMINATE)
                 op.commit_evidence = {"attribution": "unknown"}
                 op.reason = Reason.OUTCOME_UNKNOWN

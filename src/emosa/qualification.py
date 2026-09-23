@@ -111,11 +111,10 @@ def qualification_session(config):
             raise EmosaError(
                 Reason.INVALID_INPUT, "mutual TLS requires CA, client certificate/key and peer pin"
             )
-        if not endpoint.startswith("ssl:"):
+        if not endpoint.startswith(("ssl:", "pssl:")):
             raise EmosaError(
-                Reason.MISSING_PREREQUISITE,
-                "upstream listening TLS is unqualified; "
-                "use an existing authenticated tunnel or dialing TLS",
+                Reason.INVALID_INPUT,
+                "mutual TLS requires ssl:HOST:PORT or pssl:PORT:IPv4",
             )
         kwargs["tls_files"] = {
             key: str(private_reference(config["secret_directory"], trust[ref]))

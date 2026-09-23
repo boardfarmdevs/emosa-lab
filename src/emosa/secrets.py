@@ -77,3 +77,32 @@ class SecretStore:
         fd = os.open(self.directory / ref, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(fd, "w") as f:
             f.write(value)
+
+    def persist_received(self, ref: str, value: str):
+        """Persist a received component credential before its journal reference.
+
+        No overwrite, private owned files, file and directory fsync. This is not
+        an authorization API; only the isolated WSC lab currently calls it.
+        """
+        if not re.fullmatch(r"wsc-[a-f0-9]{32}", ref) or (
+            not isinstance(value, str)
+            or not 8 <= len(value) <= 63
+            or not value.isascii()
+            or not value.isprintable()
+        ):
+            raise EmosaError(Reason.INVALID_INPUT, "invalid received credential reference/value")
+        path = self.directory / ref
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        try:
+            with os.fdopen(fd, "w") as stream:
+                stream.write(value)
+                stream.flush()
+                os.fsync(stream.fileno())
+            parent = os.open(self.directory, os.O_RDONLY | os.O_DIRECTORY)
+            try:
+                os.fsync(parent)
+            finally:
+                os.close(parent)
+        except BaseException:
+            path.unlink(missing_ok=True)
+            raise

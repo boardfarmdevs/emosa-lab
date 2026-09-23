@@ -46,14 +46,16 @@ def idle():
             raise RuntimeError("A lab service is still active; collect it before preparing")
 
 
-def inventory():
+def inventory(depth=6):
+    if type(depth) is not int or not 1 <= depth <= 8:
+        raise ValueError("inventory depth must be between one and eight")
     raw = inside(
         CONTROLLER,
         "ubus",
         "call",
         "Device.WiFi.DataElements.Network",
         "_get",
-        '{"rel_path":"","depth":6}',
+        json.dumps({"rel_path": "", "depth": depth}),
     )
     objects = []
     decoder = json.JSONDecoder()

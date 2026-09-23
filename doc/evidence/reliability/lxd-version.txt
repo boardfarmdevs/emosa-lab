@@ -1,0 +1,2 @@
+Name  Version         Rev    Tracking     Publisher    Notes
+lxd   5.21.7-1018661  40585  5.21/stable  canonical**  held
