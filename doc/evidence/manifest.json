@@ -9016,6 +9016,571 @@
       "path": "neighbor-metrics/vectors/synthetic-neighbor-metrics.pcap",
       "sha256": "f34b7b82005f49faca697a2bd859c390b7e1bf4aaac99755b41204d71d1d6976",
       "size": 877
+    },
+    {
+      "path": "forwarding/README.md",
+      "sha256": "95c4e7ccac2adf728f73deac6079611cf770a5e9cf3c87a36205c518b8ac7685",
+      "size": 3880
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0000.json",
+      "sha256": "595a6f8f2c183f709fe7031ec914e3d8fa44adbf2c451a2be26ad5a6a329f29a",
+      "size": 37315
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0001.json",
+      "sha256": "a16b88d72b24bb5c845f47da6078045f41fa510da55c1cd0c817ce20df4dfe3b",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0002.json",
+      "sha256": "43df5b18a021c7a27d622ac8303c2143a6dd0291f8b4c9ec90964cb35c8a4685",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0003.json",
+      "sha256": "b08119284c4c1c32454f5c35fa6dc138fe9c2f4abb95d9647d3c108d1fe676b3",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0004.json",
+      "sha256": "2316d41c502eff316e98b3aab5e2bc3beaf50ec68b644b5ab6653d01b6fae33a",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0005.json",
+      "sha256": "57e020ee184b2c94be5e8d13f4ebcb926dab70298dea4c2d60acb7e87a0868e0",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0006.json",
+      "sha256": "9bf64afe5c0790f126871fecb881478e4c2cec58d193bcbe4d81421b44d008c8",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0007.json",
+      "sha256": "12a66c60d53b57df87e50353362872b4faffd726caec2575e38dfdd53ebbec21",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0008.json",
+      "sha256": "25d691ad846dc1e0531b493c176d692a50b287c9687facdf7ec67c199e5980a6",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0009.json",
+      "sha256": "ec15afe3a4c1b8e44bf403f7cfb767de098a90c4b283583b1f612478f85560ce",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0010.json",
+      "sha256": "1b0cacb44d57ca43add4e7e8b3dcd472998782f64ca90832cfbdd482853f8693",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0011.json",
+      "sha256": "d36bac736293ff3d085606016002830dfb833eccf9b6f33c679f0432bea5f343",
+      "size": 33152
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0012.json",
+      "sha256": "67e1c1126cf2112039d8c485276ff2e7e38052557a31baad0634c3f4761bad89",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0013.json",
+      "sha256": "48e7fc359eaff3748ef0e55d4676ca350a1e95f791b234b871e42e98f09b5c56",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0014.json",
+      "sha256": "b1a6c46ea9691798b7e6656e37e0299980e514ff1603c85432e65ba8de2d4533",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0015.json",
+      "sha256": "63bf73c16495da5570595e96f4d750740acfcd72362fdf1fe5a4e565784ea743",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0016.json",
+      "sha256": "7ff95bff47c004ad614912540e311605b2e3e4d0e2195d7bbbde36b8f25b5e87",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0017.json",
+      "sha256": "c06a6ab300c7ffe4313296fdfc2adae55b42b8fa9aa6a91123ffefc9dc7c2a10",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0018.json",
+      "sha256": "70429f57ebaa537a201015fa3eeb022c48884f0e2647b278fed323b26268bd9b",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0019.json",
+      "sha256": "844b5b898edcdbc41b06f2bb1826d5d9db41d7f6564c03c5fb090d0d2f739cee",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0020.json",
+      "sha256": "652eafc71f25e7a00eec122b50c1420c9f5f1852e7c01627493e3e53c8c58119",
+      "size": 33152
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0021.json",
+      "sha256": "0826351eaebc2236baccd59193f45d471d59cecc09054f84f965b4b7afcfb728",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0022.json",
+      "sha256": "36dc9ca421531ca48ce272d6e8f0357de6e82d5492d716b610b0fa2ffa659153",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0023.json",
+      "sha256": "9bb56d9ed8dc2ab28e6043fbb5aaf64f44fc93f78af13496b3ff772129c7b148",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0024.json",
+      "sha256": "bd29c22c29834e1933f20f8316afd21fb47813b0316e2b44c22b743e7d9605e5",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0025.json",
+      "sha256": "8f3bf633af10bf8ccaa6ec0769ee2bf8cdf1bc6447413e902ef710dcdf87db1b",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0026.json",
+      "sha256": "a3025364512e0059048c222b6a5e2c157497b9bcfe5ede4ec86e39a207eeb668",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0027.json",
+      "sha256": "17ccb45423d177aa517b91cbc23dcd631f3e20b33423ece41fb4a035b1086e43",
+      "size": 33154
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-inventory-0028.json",
+      "sha256": "225d498049ea141e8aa527ac64b98ff6bb098b1722f1c1bf7d44e3212eea54ef",
+      "size": 33153
+    },
+    {
+      "path": "forwarding/native-forwarding-01/active-samples.json",
+      "sha256": "3c215d346fb316f90c4026684f43e530f0cd3706ab3d92a0d00838876538827e",
+      "size": 403669
+    },
+    {
+      "path": "forwarding/native-forwarding-01/candidate-trial.json",
+      "sha256": "c6dde762dfbaad056d4fd918a45feb6cd1af5999779e6c5bb47beb634f8fe394",
+      "size": 13832
+    },
+    {
+      "path": "forwarding/native-forwarding-01/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "forwarding/native-forwarding-01/client-outages.json",
+      "sha256": "9c1a5455dfad83ab620226eb346814c650156ff1bca413d1d7c73fdcbcbbc887",
+      "size": 679
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0000.json",
+      "sha256": "da3602784dbca99b44becb5c4d7d38077041a662644848f998d26a040698f03a",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0001.json",
+      "sha256": "a4730c3645a3b0acb2c3b18efa241201dbc43c9f41f1259181d2be05df07ae14",
+      "size": 2633
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0002.json",
+      "sha256": "a70dfa1e3568d6163c88f24ea9bc84294b5c5ab8c28595fbba79a623f70f296a",
+      "size": 2635
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0003.json",
+      "sha256": "091934b335e855f90e2759f4ce38f392fdd2663b5f653003deb1bd2c80b0abee",
+      "size": 2636
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0004.json",
+      "sha256": "f795b40a926525eafed3db563776b2d2da344f508994228d6a5066886c195870",
+      "size": 2632
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0005.json",
+      "sha256": "85e620c2f88c879c604ed85dd539f0dad6593274a56719447f972437195a3407",
+      "size": 2632
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0006.json",
+      "sha256": "174c3d91801d797e8834bb948d44ac048f6cec3ff22ff09ef8eb8194f4d44d4e",
+      "size": 2632
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0007.json",
+      "sha256": "1538365677b7fbece661b6ef51601dbd8bbda56bc64f83b5ba46627cbc47d2c8",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0008.json",
+      "sha256": "8919efb7fbae2d1c5220b89fe7aa6e2ebc2b86b5f4705907b2a05101f9c59572",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0009.json",
+      "sha256": "899184f3c143b6005e8ec7f444bc807f3bc976999133de22b8fd95e591031721",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0010.json",
+      "sha256": "129fbf1b6d58221e2b7773c1e8039fd6afd93fb329c38bcec31545eff51cf298",
+      "size": 2633
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0011.json",
+      "sha256": "b54131c3503229230d118a546c4fcb3dcdfbe7ebe8de35193d1d53af93f18d53",
+      "size": 2635
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0012.json",
+      "sha256": "b5d0a752358f95d05ad5e36d144dc87b1f10d6ce2492e316dab6c7d1350d6adb",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0013.json",
+      "sha256": "f924ce8f6625d69162c34d9c9abc273773e85dcd5960c00c9137eef3b13a80fa",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0014.json",
+      "sha256": "8c672300687e6df8afd1fad17ff67fd5809813ebd0455702d6c969a5a894fabc",
+      "size": 2635
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0015.json",
+      "sha256": "9f3dc5760a620ee96d35b37b16c8b8c3d92cc9b429af1faf518f64da9ed54e4f",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0016.json",
+      "sha256": "fc6a869cee361b82bdb48736116eeea99bf79071c728da32f784aba7e4ae75c3",
+      "size": 2633
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0017.json",
+      "sha256": "f78396add64c57ebceac060cf197727a1ea04998992109a4d3e226747f0bde03",
+      "size": 2636
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0018.json",
+      "sha256": "5fb973b52c71b5324b757efda135b284217a39bf824d84868ac3f712cc286634",
+      "size": 2635
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0019.json",
+      "sha256": "35f9c950a313c1aa56cb9d1797d52026f9dff9552bbe5e9dc02deae35373bf08",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0020.json",
+      "sha256": "daf053d8e2521e82e12f9b57304f5e61cacf988b4d4a82968d191352a6dd7971",
+      "size": 2636
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0021.json",
+      "sha256": "6204212f586aa5ad094abc7faf480498683f494314368c252b22c03c91f668a7",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0022.json",
+      "sha256": "aa07f3aa445d45057a5bf957cff5febefb16e635a0cbcd5a52593cfb9dafdb99",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0023.json",
+      "sha256": "12ecdd8cd71dcc39a69932de41101e56d912fa3083985c8cb982fa1bf159eb7d",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0024.json",
+      "sha256": "843b05aab134beb589c7cdc74666b991967384a5c927505f3756f93e56743aec",
+      "size": 2636
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0025.json",
+      "sha256": "44a385f1494e9af16ed0ef4ba94af25ebddbf63d47c150cba50d31aad3ae385a",
+      "size": 2633
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0026.json",
+      "sha256": "b2cf12f14819ddb3c0900a2dd7844c44bd6763ae918f201db0fae05d1ad9ec44",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0027.json",
+      "sha256": "d6bb65601a3574142ace7d8193aac7a8b943e91501c220ec9c703bc703f88aea",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-active-0028.json",
+      "sha256": "22aeb1ab48c5f199a6579dd391332caa5eaa598d336252672c24a09f7304b28f",
+      "size": 2632
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-onboarded.json",
+      "sha256": "cb2a19f90df7098a57d981e72e374b853da985a61ba5b038ee415ed5ee4a2690",
+      "size": 2620
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-recovery-0.json",
+      "sha256": "889dcc58e16a51620f1b1c5ee0d6707195d8eee2436481646dbcc9006f360a48",
+      "size": 2634
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-recovery-1.json",
+      "sha256": "bbfd71885b3a64d7edf0884c12a5dabbb679d013d4efa6ee1e2d32f715160230",
+      "size": 2632
+    },
+    {
+      "path": "forwarding/native-forwarding-01/clients-telemetry-withheld.json",
+      "sha256": "23c8789cf5a8ee2971785d2267bed1b9b3332dd8f5a0355a6fa7d96e45a4133a",
+      "size": 2648
+    },
+    {
+      "path": "forwarding/native-forwarding-01/controller-after.json",
+      "sha256": "9ee9a1d5239b5a57d962bd7193abd67d1c1f39b0cf4c105e6e9e165dbb01a7d7",
+      "size": 31317
+    },
+    {
+      "path": "forwarding/native-forwarding-01/controller-before.json",
+      "sha256": "ceb2d0fdb679e088cc83239c42cf289cf4285428e5ffb65324da66738cddfa6f",
+      "size": 10353
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-inventory-0003.json",
+      "sha256": "e5e27d58cf64f7a86f560867c16025ebd33011e102ede7142bb5784fe7c2caa4",
+      "size": 32363
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-inventory-0007.json",
+      "sha256": "2f97082192eebe1920ae89700c561e54e0604b62775f23de87b86ffc01c212ac",
+      "size": 32363
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-inventory-0010.json",
+      "sha256": "bbe91f8bed0f711c062ab601baa9409bf962c7d457e4ded3e92dc77815bc422a",
+      "size": 32362
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-inventory-0013.json",
+      "sha256": "a3bbf1aba73fa23eee41dd69027b11da0a40b4a08ebaafd8a86b53614b59ceac",
+      "size": 32363
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-inventory-0017.json",
+      "sha256": "d2b474f82f9e684f1c1d5dcd67548a9abcfc9b12ee4eca78c9ed3f9e31e1168d",
+      "size": 32363
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-inventory-0020.json",
+      "sha256": "4c364091820a98425d26a29cedc83a7abc8316373768218110e92031dbeb9f10",
+      "size": 32363
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-inventory-0024.json",
+      "sha256": "288ced727b883c99a6a196aebf42eec074c40e380874fbefb829a7e85ceaa663",
+      "size": 32363
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-inventory-0027.json",
+      "sha256": "f868ef48b20313d4e90c11fa2c8763571c318921122d72cef514c28b09879cdf",
+      "size": 32363
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-session-0003.json",
+      "sha256": "f88c9bbb93329de518c655935b1fb3454275782fc840f7582028cf492aa8e4cb",
+      "size": 8337
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-session-0007.json",
+      "sha256": "618e991aba4ce32ea0a4ea160139c374a49489952c09ae9604efb0b75f2ed371",
+      "size": 8521
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-session-0010.json",
+      "sha256": "6aa3f8c0dfa87ce291f27da96e2f2ff49289713224ddce79db293b3d48698848",
+      "size": 14695
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-session-0013.json",
+      "sha256": "f694757215b2cdafb6185e3903994d6a148c7346515156892dfc5b566a47d1e0",
+      "size": 14972
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-session-0017.json",
+      "sha256": "806ad16c4a06c4ef0ce695ad31af00907c7d99bf440a40bee00ec8d632c40ccd",
+      "size": 15247
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-session-0020.json",
+      "sha256": "816c1552ba626e40a35e02d3a11aa54e10162fcfd2a8e45d2423f6a4e1bc8dac",
+      "size": 8031
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-session-0024.json",
+      "sha256": "a0b0a9e14ddf9c20a932f4b5acf81af692b8e9928a13cb6d92f30a3929206939",
+      "size": 8306
+    },
+    {
+      "path": "forwarding/native-forwarding-01/detached-session-0027.json",
+      "sha256": "6d900e6a2051dcc68d8c064900bed682b376fb2010013eeafef9a7e5d036374c",
+      "size": 8460
+    },
+    {
+      "path": "forwarding/native-forwarding-01/em-baseline-wifi-continuous-ping.log",
+      "sha256": "c7f53efa52372a0fbb4e505aaf3895e9ad972565ff2e86d3ebf378933772acf6",
+      "size": 56092
+    },
+    {
+      "path": "forwarding/native-forwarding-01/em-baseline-wired-continuous-ping.log",
+      "sha256": "4deee096deb045f51a105d8e5c4b52a2f7a1fe05d1d62322b915fb4c582f3c8f",
+      "size": 66609
+    },
+    {
+      "path": "forwarding/native-forwarding-01/ethernet-capture.log",
+      "sha256": "bc2663a0985e52e1fb5ccfbb85fd54dbc9127c04f36bf5f9d017400d98eb21ad",
+      "size": 172
+    },
+    {
+      "path": "forwarding/native-forwarding-01/ethernet.pcap",
+      "sha256": "8889e1c2d9dbc46f53deebe4a289a535543f10e10c288fae4e0d686c439a1618",
+      "size": 10737
+    },
+    {
+      "path": "forwarding/native-forwarding-01/forwarding-capture.log",
+      "sha256": "1d19822aaf3a5ca8a315cac6d5af13c7ec3fb21474155aed77b63c7016173bfb",
+      "size": 176
+    },
+    {
+      "path": "forwarding/native-forwarding-01/forwarding-samples.jsonl",
+      "sha256": "574c573ca34cb1f18fe0857addf736c3109557b267cd194f9c9acad84f67f471",
+      "size": 580619
+    },
+    {
+      "path": "forwarding/native-forwarding-01/forwarding.pcap",
+      "sha256": "9e46de48376ee8fde0f8af7838149b25b9cfcfb647512605d9ca39be96d38735",
+      "size": 475242
+    },
+    {
+      "path": "forwarding/native-forwarding-01/independent-forwarding-check.json",
+      "sha256": "598c3e30d84f4dc2c999e29813a2912ae8a72bff1a27187065604177d550ef57",
+      "size": 1818
+    },
+    {
+      "path": "forwarding/native-forwarding-01/independent-neighbor-check.json",
+      "sha256": "d406789c861f98a0314d287cd9c65da040a71e28e6d18dd2d056376acc229fda",
+      "size": 927
+    },
+    {
+      "path": "forwarding/native-forwarding-01/independent-policy-check.json",
+      "sha256": "248db4c8c6f84bb62816a4435aaf1adbcb415131541570c2f011ca7adca25996",
+      "size": 1435
+    },
+    {
+      "path": "forwarding/native-forwarding-01/independent-recovery-check.json",
+      "sha256": "42e9b4d3d933b5782d55cbfb063584925580e00f1dac49d6ee8355f4cc925ad4",
+      "size": 3324
+    },
+    {
+      "path": "forwarding/native-forwarding-01/independent-telemetry-gap-check.json",
+      "sha256": "7afe1efebb4ab869ebccaf7056f971577263e889c43224c41efd3a6e29cf9af4",
+      "size": 819
+    },
+    {
+      "path": "forwarding/native-forwarding-01/manager.jsonl",
+      "sha256": "d0fd5d106123104eddd357cda821db5ec3dceda1e6d2e5039ad3ee43c2c9b71f",
+      "size": 967609
+    },
+    {
+      "path": "forwarding/native-forwarding-01/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "forwarding/native-forwarding-01/native-operation.json",
+      "sha256": "4f359481295173bb6e4dd6a1d78aeaf8de327023d35f168047e9e9fcf38da8a0",
+      "size": 4858
+    },
+    {
+      "path": "forwarding/native-forwarding-01/native-session.json",
+      "sha256": "723abb2fc5671aee12787671fa73d55a5600a6822d8f363893a3589c1fe307c9",
+      "size": 8581
+    },
+    {
+      "path": "forwarding/native-forwarding-01/neighbor-link-observations.json",
+      "sha256": "b7467cb0a73f4c8832fdc025593ed78e407449e40d13bc2ba3ef48e240d7ae2e",
+      "size": 22598
+    },
+    {
+      "path": "forwarding/native-forwarding-01/radio-capture.log",
+      "sha256": "14baa4ddf6be02745bac3b57d6c19d6489de8012db1e5a788db247e8163649d3",
+      "size": 201
+    },
+    {
+      "path": "forwarding/native-forwarding-01/radio.pcap",
+      "sha256": "7e9794d39abbe5e5826177d93492a13c9cbd627521aca03729cb4521f07f3584",
+      "size": 2239563
+    },
+    {
+      "path": "forwarding/native-forwarding-01/recovery-checks.json",
+      "sha256": "60a2d1ad39c512e15349e5e57c7dca8a250dc04039c4ad03f662ced99a2f421b",
+      "size": 75937
+    },
+    {
+      "path": "forwarding/native-forwarding-01/restoration-check.json",
+      "sha256": "de497fcac8e3d8e2992f601a2ba8ff443c1ccd998720b37c2199385c4de8f3df",
+      "size": 9520
+    },
+    {
+      "path": "forwarding/native-forwarding-01/result.json",
+      "sha256": "36865892ed467e9d6bfc664a945879b38487a48f31561d9e9e49b2dd546ab963",
+      "size": 12448
+    },
+    {
+      "path": "forwarding/native-forwarding-01/source-hashes.json",
+      "sha256": "ce51d67244c40f63858855a4031bfd194f7eee9cc148ceaf2e5669623d097ae4",
+      "size": 12090
+    },
+    {
+      "path": "forwarding/native-forwarding-01/station-events.jsonl",
+      "sha256": "b3c16355236806e0dd94a49d20820782a8f58acbc564862fd17b68ee5859f060",
+      "size": 46881
+    },
+    {
+      "path": "forwarding/native-forwarding-01/telemetry-gap-check.json",
+      "sha256": "055b6c0c2e0f3c5a3cbcecd6e24d9b06cedc56ba6b8c6bcd1d401b4e82839a9b",
+      "size": 31491
+    },
+    {
+      "path": "forwarding/native-forwarding-01/withheld-operation.json",
+      "sha256": "caf855c31aa1e4434faf558da03ff0cb2bcce482d523044af1718413c090ca53",
+      "size": 1963
+    },
+    {
+      "path": "forwarding/ovsdb-results.xml",
+      "sha256": "aaf5f5cacac5ff15726e65d563f3475e554d930796683326dc36851c29f8e1be",
+      "size": 7341
+    },
+    {
+      "path": "forwarding/unit-results.xml",
+      "sha256": "29eb9ad02e59b73d037f31163341927441ccdd2da577c07727c5960481b59f76",
+      "size": 4432445
     }
   ]
 }

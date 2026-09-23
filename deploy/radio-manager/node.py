@@ -129,9 +129,30 @@ def observe():
                 "interface": iface,
                 "observed_monotonic": time.monotonic(),
                 "stations": stations(),
+                "forwarding": forwarding(),
             }
         )
     )
+
+
+def forwarding():
+    """Read-only rtnetlink observation. Recheck membership/identities after the dump."""
+    try:
+        started = time.monotonic_ns()
+        links = json.loads(command("ip", "-j", "-d", "-s", "link", "show"))
+        after = json.loads(command("ip", "-j", "-d", "link", "show"))
+        ended = time.monotonic_ns()
+        return {
+            "complete": True,
+            "started_ns": started,
+            "ended_ns": ended,
+            "boot_id": Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
+            "netns_inode": Path("/proc/self/ns/net").stat().st_ino,
+            "links": links,
+            "links_after": after,
+        }
+    except (OSError, RuntimeError, ValueError):
+        return {"complete": False}
 
 
 def stations():

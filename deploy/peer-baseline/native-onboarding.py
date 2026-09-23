@@ -96,6 +96,7 @@ async def experiment(
         "medium_loss_requested": medium_loss,
         "tx_status_observation_requested": observe_tx_status,
         "telemetry_gap_check_requested": telemetry_gap_check,
+        "forwarding_observation_requested": True,
         "netlink_capture_buffer_kib": 32768 if medium_loss else None,
     }
     write(directory / "result.json", report)
@@ -354,6 +355,14 @@ async def experiment(
             node_links[name] = [r for r in rows if r["ifname"] in ("br-lan", "eth1")]
             peer_indices.update(r["link_index"] for r in node_links[name] if "link_index" in r)
         root_links = json.loads(run("ip", "-j", "-d", "-s", "link", "show"))
+        pod_backhaul = next(r for r in node_links[radio["AP"]] if r["ifname"] == "eth1")
+        pod_peer = next(r for r in root_links if r["ifindex"] == pod_backhaul["link_index"])
+        if (
+            pod_peer.get("master") != "em-base-bh"
+            or pod_peer.get("link_index") != pod_backhaul["ifindex"]
+        ):
+            raise RuntimeError("owned pod forwarding veth is not on the expected backhaul bridge")
+        capture(pod_peer["ifname"], "forwarding")
         write(
             directory / "neighbor-link-observations.json",
             {
@@ -727,7 +736,7 @@ async def experiment(
                 medium.remove()
             except Exception as exc:
                 errors.append("medium_remove:" + str(exc))
-        for name in ("radio", "ethernet", *(["netlink"] if medium_loss else [])):
+        for name in ("radio", "ethernet", "forwarding", *(["netlink"] if medium_loss else [])):
             path = directory / (name + "-capture.log")
             if path.exists():
                 drops = re.findall(r"^(\d+) packets dropped by kernel$", path.read_text(), re.M)

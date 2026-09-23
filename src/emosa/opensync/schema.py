@@ -82,13 +82,13 @@ class Schema:
         except (OvsError, TypeError, KeyError, ValueError) as exc:
             raise EmosaError(Reason.SCHEMA_MISMATCH, "invalid OVSDB schema") from exc
 
-    def qualify_synthetic(self):
+    def qualify_synthetic(self, *, tables=None):
         reference = reference_path().read_bytes()
         if hashlib.sha256(reference).hexdigest() != SCHEMA_SHA256:
             raise EmosaError(Reason.SCHEMA_MISMATCH, "pinned schema artifact hash mismatch")
         expected = DbSchema.from_json(json.loads(reference))
         # The server adds default isRoot fields and removes schema checksums.
-        for table, columns in TABLES.items():
+        for table, columns in (TABLES | (tables or {})).items():
             for column in columns:
                 try:
                     actual = self.db.tables[table].columns[column].type

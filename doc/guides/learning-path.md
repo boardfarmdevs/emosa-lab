@@ -238,6 +238,12 @@ OpenSync-format telemetry. Work through these exercises in order:
     explicit missing-source status. Trace the separate adapter and pod
     interfaces through the VM bridge. Explain why controller-facing packet
     counts cannot automatically measure traffic forwarded by the pod.
+11. Follow [forwarding observations](../protocol/forwarding-observations.md).
+    Trace independently read port identities/counters through the pinned OVSDB
+    graph into EMOSA. Recompute an interval, inspect fresh baselines after both
+    faults, and find client transit traffic plus the controller's interface
+    advertisement in the separate backhaul capture. Explain the remaining
+    difference between raw interface counts and qualified neighbor metrics.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

@@ -1,0 +1,69 @@
+{
+  "accepted_samples": 308,
+  "capture_health": {
+    "captured": 4241,
+    "dropped_by_kernel": 0,
+    "linktype": 1,
+    "passed": true,
+    "pcap_records": 4241,
+    "received_by_filter": 4241
+  },
+  "checked_counter_windows": 305,
+  "connection_generations": 3,
+  "controller_advertised_interface_mac": "00:16:3e:b8:c4:a7",
+  "controller_discovery_frames": [
+    1037,
+    2155,
+    3346
+  ],
+  "measurement_source_qualified": false,
+  "native_neighbor_metric_delivery_proven": false,
+  "nonoverlapping_raw_counter_deltas": {
+    "eth1": {
+      "rx_bytes": 199261,
+      "rx_dropped": 0,
+      "rx_errors": 0,
+      "rx_packets": 2035,
+      "tx_bytes": 192120,
+      "tx_dropped": 0,
+      "tx_errors": 0,
+      "tx_packets": 2043
+    },
+    "eth2": {
+      "rx_bytes": 101865,
+      "rx_dropped": 0,
+      "rx_errors": 0,
+      "rx_packets": 1074,
+      "tx_bytes": 110670,
+      "tx_dropped": 0,
+      "tx_errors": 0,
+      "tx_packets": 1147
+    },
+    "wlan0": {
+      "rx_bytes": 90923,
+      "rx_dropped": 0,
+      "rx_errors": 0,
+      "rx_packets": 974,
+      "tx_bytes": 121040,
+      "tx_dropped": 0,
+      "tx_errors": 0,
+      "tx_packets": 1026
+    }
+  },
+  "physical_pod_proven": false,
+  "pod_backhaul_mac": "00:16:3e:b2:d2:c4",
+  "raw_forwarding_available_during_telemetry_gap": true,
+  "raw_forwarding_observation_checks_passed": true,
+  "scope": "Observed interface identities and raw interval transport; counters not yet reconciled per neighbor",
+  "successful_manager_publications": 367,
+  "sustained_operation_proven": false,
+  "transit_icmp_frames": {
+    "client_20_to_gateway": 903,
+    "client_21_to_gateway": 770,
+    "gateway_to_client_20": 903,
+    "gateway_to_client_21": 770
+  },
+  "virtual_to_pod_interface_mapping_qualified": false,
+  "withdrawals": 1,
+  "worker_processes": 2
+}

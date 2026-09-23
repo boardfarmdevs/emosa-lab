@@ -41,6 +41,9 @@ FIXED = (
     "tx-status.jsonl",
     "telemetry-gap-check.json",
     "neighbor-link-observations.json",
+    "forwarding.pcap",
+    "forwarding-capture.log",
+    "forwarding-samples.jsonl",
 )
 PATTERNS = (
     "clients-*.json",

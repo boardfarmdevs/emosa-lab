@@ -46,6 +46,13 @@ recovery faults with three operations and one total Config-write attempt.
 This is regression evidence alongside the original 15-minute run; required
 measurement/reporting work and integrated acceptance remain pending.
 
+The [forwarding-observation step](forwarding-observations.md) adds the simulated
+pod's actual bridge-port identities and raw interface intervals through OVSDB.
+Its independent backhaul capture distinguishes client forwarding from the
+adapter's control link. Per-neighbor attribution, topology/media binding and
+capacity/availability estimation remain pending before these observations can
+satisfy a native metric query.
+
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated
 acceptance remain outstanding. Policy receipt/Ack now persists the controller's

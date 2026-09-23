@@ -831,10 +831,22 @@
       "title": "Neighbor-metric vectors and native source gap",
       "description": "Ten independently decoded synthetic frames and four real native queries; read-only interface evidence prevents confusing adapter control traffic with pod forwarding.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/forwarding-observations.md",
+      "title": "Trace the pod forwarding observations through OVSDB",
+      "description": "Learn raw samples, interval bounds and recovery baselines; distinguish actual client-forwarding interfaces from the adapter control connection.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/forwarding/README.md",
+      "title": "Native raw forwarding and recovery evidence",
+      "description": "308 received samples and 305 checked intervals, independent client-transit capture and actual controller interface discovery; per-neighbor measurement qualification remains pending.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "neighbor-metrics/unit-results.xml",
-    "ovsdb": "neighbor-metrics/ovsdb-results.xml"
+    "unit": "forwarding/unit-results.xml",
+    "ovsdb": "forwarding/ovsdb-results.xml"
   }
 }

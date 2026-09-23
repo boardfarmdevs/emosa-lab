@@ -51,7 +51,8 @@ lxc exec emosa-lab -- env PYTHONPATH=/opt/emosa-radio-manager/source \
   'import sys,runpy; sys.path.insert(0,"/opt/emosa-baseline"); runpy.run_path("/opt/emosa-baseline/controller-trial.py")["idle"]()'
 tar -C src -cf - emosa | \
   lxc exec emosa-lab -- tar -C /opt/emosa-radio-manager/source -xf -
-lxc file push deploy/radio-manager/manager.py emosa-lab/opt/emosa-radio-manager/
+lxc file push deploy/radio-manager/node.py deploy/radio-manager/manager.py \
+  emosa-lab/opt/emosa-radio-manager/
 lxc file push deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
 
 lxc exec emosa-lab -- env PYTHONPATH=/opt/emosa-radio-manager/source \

@@ -150,6 +150,12 @@ successful native metric reporting while there is no qualified publisher.
 
 ## Next measurement work
 
+The [forwarding-observation implementation](forwarding-observations.md) now
+acquires raw pod port identities/counters through the pinned OVSDB schema,
+checks intervals across reconnect/restart, and captures the actual backhaul
+path independently. These are whole-interface observations. The represented
+topology and per-neighbor metric source remain unqualified.
+
 First bind the represented virtual interface to the pod's observed forwarding
 interface and the controller's actual peer interface. Verify this through the
 bridged path instead of assigning the controller AL MAC to every peer field.

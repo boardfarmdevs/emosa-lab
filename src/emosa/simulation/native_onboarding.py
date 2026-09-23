@@ -36,6 +36,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
+from emosa.simulation.forwarding import ForwardingSource
 from emosa.simulation.radio import MONITOR
 from emosa.simulation.station_telemetry import NODE_ID, TOPIC, LabMqtt
 from emosa.simulation.wire_reports import fixtures
@@ -78,6 +79,7 @@ class RadioReportSource:
         self.stations = stations
         self.last_revision = None
         self.revision = 0
+        self.forwarding = ForwardingSource()
         _, caps, self.template = fixtures()
         radio = replace(
             caps.radios[0],
@@ -110,6 +112,7 @@ class RadioReportSource:
         started = time.monotonic()
         try:
             raw = await self.backend.session.snapshot()
+            self.forwarding.refresh(raw)
             self.backend._binding(raw)
             rows = {
                 t: {k: raw["schema"].row(t, v) for k, v in values.items()}
@@ -197,6 +200,7 @@ class RadioReportSource:
             )
             return True
         except (EmosaError, ConnectionError, TimeoutError):
+            self.forwarding.invalidate()
             self.source.invalidate()
             return False
 
@@ -250,6 +254,7 @@ async def worker(directory, *, duration=110, telemetry=False):
             "inventory_complete": snapshot.topology.inventory_complete if snapshot else False,
             "operating_radio_count": len(snapshot.operating_radios) if snapshot else 0,
         }
+        value["forwarding_observation"] = facts.forwarding.status()
         if stations:
             sample = stations.current()
             value["telemetry"] = {
@@ -262,6 +267,7 @@ async def worker(directory, *, duration=110, telemetry=False):
         return value
 
     try:
+        previous_forwarding = None
         with EthernetEndpoint("probe0", AGENT, timeout=0.03) as endpoint:
 
             def factory(snapshot, mids):
@@ -294,6 +300,20 @@ async def worker(directory, *, duration=110, telemetry=False):
                 if mqtt:
                     mqtt.poll()
                 ready = await facts.refresh()
+                forwarding = facts.forwarding.status()
+                if forwarding != previous_forwarding:
+                    with (directory / "forwarding-samples.jsonl").open("a") as observations:
+                        observations.write(
+                            json.dumps(
+                                {
+                                    "worker_pid": os.getpid(),
+                                    "observed_ns": time.monotonic_ns(),
+                                    **forwarding,
+                                }
+                            )
+                            + "\n"
+                        )
+                    previous_forwarding = forwarding
                 await lifecycle.tick()
                 try:
                     frame = await asyncio.to_thread(endpoint.receive)

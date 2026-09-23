@@ -9,10 +9,12 @@ import re
 from dataclasses import dataclass, field
 
 from emosa.opensync.schema import TABLES
+from emosa.simulation import forwarding
 
 MONITOR = copy.deepcopy(TABLES)
 MONITOR["Wifi_Radio_Config"] += ["channel"]
 MONITOR["Wifi_Radio_State"] += ["tx_power"]
+MONITOR.update(forwarding.TABLES)
 
 
 async def seed_radio_database(session):
@@ -62,17 +64,18 @@ async def seed_radio_database(session):
             },
         ),
     ]
+    entries += forwarding.seed_entries()
     ops = [
         {
             "op": "wait",
             "table": table,
             "where": [],
-            "columns": ["if_name"],
+            "columns": ["_uuid"],
             "until": "==",
             "rows": [],
             "timeout": 0,
         }
-        for table, _, _ in entries
+        for table in dict.fromkeys(t for t, _, _ in entries)
     ]
     ops += [
         {"op": "insert", "table": table, "uuid-name": name, "row": row}
@@ -228,10 +231,14 @@ class RadioManager:
     def __init__(self, session, driver):
         self.session, self.driver = session, driver
         self.applied = None
+        self.forwarding_schema = None
 
     async def cycle(self, *, withhold=False):
         snap = await self.session.snapshot()
         tables, schema = snap["tables"], snap["schema"]
+        if self.forwarding_schema != schema.fingerprint:
+            schema.qualify_synthetic(tables=forwarding.TABLES)
+            self.forwarding_schema = schema.fingerprint
         # Dedicated disposable DB only. Extra radios or VIFs cannot be ignored.
         names = ("Wifi_Radio_Config", "Wifi_VIF_Config", "Wifi_Radio_State", "Wifi_VIF_State")
         if any(len(tables.get(t, {})) != 1 for t in names):
@@ -280,6 +287,10 @@ class RadioManager:
             state = {"enabled": False, "wpa_psks": ["map", []]}
             outcome["radio"] = "unavailable"
         ops = [row_guard(t, rows[t][0], rows[t][1]) for t in names]
+        forwarding_ops, outcome["forwarding"] = forwarding.updates(
+            snap, observed.get("forwarding", {}) if outcome["radio"] == "observed" else {}
+        )
+        ops += forwarding_ops
         if outcome["radio"] == "observed" and observed.get("stations", {}).get("complete") is True:
             station_ops, references = station_updates(snap, observed["stations"])
             ops += station_ops

@@ -3758,9 +3758,9 @@ Follow the [neighbor-metric guide](../protocol/neighbor-link-metrics.md) on HOST
 4. Review the native experiment's `neighbor-link-observations.json`, captured
    queries and `neighbor_measurement_unavailable` status. Identify the pod's
    forwarding interface separately from `probe0` and locate their bridge.
-5. Continue with actual interface mapping and measurement qualification before
-   enabling native metric delivery. The native negative check requires absence
-   of invented responses; it deliberately does not claim reporting success.
+5. Continue with the raw forwarding observations in chapter 13.21. Actual
+   interface mapping and measurement qualification still precede native metric
+   delivery. The native negative check deliberately does not claim reporting success.
 
 **Why not send an invalid-neighbor result?** That result means a specifically
 requested device is absent from a fresh complete neighbor inventory. Our
@@ -3771,6 +3771,52 @@ the missing measurements and the sustained-acceptance gap remains open.
 **Learning checkpoint:** distinguish device identity, forwarding-interface
 identity, measurement period and source freshness. Explain which evidence
 would justify each field of a complete neighbor response after reconnect.
+
+### 13.21 Follow a forwarding counter from the pod to EMOSA
+
+An Ethernet **interface counter** accumulates packets or bytes over the lifetime
+of that interface. A **measurement interval** compares two readings from the same
+lifetime. If the interface is recreated or the counter resets, subtracting an old
+reading from the new one would produce a meaningless result. That is why the
+reader keeps interface identity, clock bounds and a counter baseline together.
+
+The [forwarding-observation guide](../protocol/forwarding-observations.md) takes
+the next step beyond chapter 13.20's single inventory snapshot:
+
+1. Inspect its diagram. Trace a Wi-Fi client through `wlan0`, `br-lan` and
+   `eth1`; trace the wired client through `eth2`. Locate EMOSA's separate
+   `probe0` control connection. These names belong to the documented owned lab.
+2. Run the retained forwarding checker on HOST. It needs no running VM. Open
+   `neighbor-link-observations.json` and identify the pod's `eth1` MAC/ifindex
+   and its matching VM veth peer. A veth is a virtual cable with two endpoints;
+   checking its peer index prevents capturing the wrong cable.
+3. Compare a successful `manager.jsonl` forwarding publication with the matching
+   timestamp in `forwarding-samples.jsonl`. The manager independently reads the
+   kernel, publishes existing OpenSync-schema rows, and EMOSA reads them over
+   OVSDB. The adapter does not manufacture its own source readings.
+4. Inspect a `window` and subtract its two cumulative readings. Then inspect
+   reconnect/restart boundaries: there must be a fresh baseline before another
+   interval. The two-second deadline prevents repeated reads of an old OVSDB
+   row from keeping a stopped publisher's observation alive.
+5. Inspect the backhaul capture. Client transit frames retain client addresses;
+   matching only the pod's own MAC would miss them. Locate a native controller
+   Topology Discovery and compare its AL-address and interface-address TLVs.
+   They describe different identities.
+6. Follow the guide's staging and reproduction commands on HOST to run the
+   210-second development check inside the VM. It includes the telemetry-only
+   pause, actual pod connection loss and actual adapter process restart. Run
+   the independent checks after collection and preserve unsuccessful attempts.
+
+**Why is `measurement_source_qualified` still false?** We now have the raw
+observations and a checked transport path. We must still establish which packets
+belong to each neighbor, what each error/drop counter means for the selected
+IEEE field, and how to estimate capacity and availability. The virtual agent's
+represented topology also needs a live binding to the observed interfaces.
+Publishing raw counters alone does not close those requirements.
+
+**Learning checkpoint:** explain the difference between a cumulative sample,
+a valid interval, a whole-interface count and a qualified per-neighbor report.
+Find the explicit unknown state and explain why it must not be displayed as zero.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

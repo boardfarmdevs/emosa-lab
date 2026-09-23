@@ -54,6 +54,10 @@ direction-specific IEEE 1905 responses and a guarded measurement handoff.
 The native lab explicitly withholds responses while pod/peer interface mapping
 and per-link measurements remain unqualified; adapter control-veth counters
 cannot stand in for pod-backhaul traffic.
+The [forwarding observer](doc/protocol/forwarding-observations.md) now carries
+actual pod-port identities and raw counter intervals through OVSDB, with fresh
+baselines after recovery and a separate backhaul capture. Per-neighbor
+attribution and complete metric-source qualification still remain pending.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 
