@@ -109,7 +109,7 @@ TEL-01–04. Installing this simulation publisher on a physical pod is not allow
 | Client Capability Query | §9.2, §17.1.14–15, §17.2.18–19, §17.2.36 | Correlated failure report: reason 2 for an absent station, reason 3 for an associated station whose association frame is unavailable |
 | Disassociation statistics | §6.3, §17.1.41 | [Sender and guarded handoff implemented](final-session-statistics.md); actual final session counters/reason still unqualified, so native polling continues to record the gap |
 | Reporting policy and metrics | §7.3 and §10 | [Durable selected receipt/Ack and missing-report schedule](reporting-policy.md); measured field mappings and required report delivery remain pending |
-| Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1 | Native all-neighbor Tx/Rx queries observed; response and qualified per-link measurements remain pending |
+| Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1; amendment pp.10–12; EasyMesh §10.1 | [Query/response and guarded handoff implemented](neighbor-link-metrics.md); native queries record unavailable measurements. Qualified per-link publisher and native delivery remain pending |
 | Channel procedures | §8.1–2; §17.2.13–16/Tables 36, 38–40 | Sole advertised channel 6; durable preferences, acceptance of requests requiring no adjustment, measured operating power and correlated Ack/retry |
 
 ## Channel decisions in this bounded lab
@@ -324,7 +324,7 @@ controller's requests are retained without disabling them to make the run pass.
 | AP channel utilization and ESP | Qualify the measurement period, busy/active counters or a suitable simulated medium, and the BE estimated service parameters; map EasyMesh §17.2.22/Table 45 to the referenced 802.11 definitions | The controller's zero defaults, a configured hostapd test value, or assuming that no survey output means no airtime was used |
 | STA link/traffic metrics | Qualify each requested source field, byte units, direction, success/error meaning, rollover, reset epoch and sample age | Interchanging link rates and application throughput, or treating absent errors/retries as zero |
 | Final disassociation report | Capture the actual reason and complete final session counters before the station is removed; correlate the session across join/leave and reconnect; connect qualified records to the [implemented §6.3/§17.1.41 sender and Ack handling](final-session-statistics.md) | The preceding polling sample or an invented reason based on a membership disappearance |
-| IEEE 1905 neighbor metrics | Bind the actual local/peer interface pair and bridge presence; qualify the common Tx/Rx measurement interval, capacity and availability; respond to §11.1 queries | Whole-interface counts attributed to an arbitrary neighbor, or an invalid-neighbor error for an existing neighbor |
+| IEEE 1905 neighbor metrics | Query/response component is implemented; bind represented topology to actual pod/peer interfaces and bridge presence, then qualify the common Tx/Rx period, capacity and availability before enabling native responses | Adapter control-veth counters attributed to the pod, whole-interface counts attributed to an arbitrary neighbor, or an invalid-neighbor error for an existing neighbor |
 
 The pinned hostap 2.10 source helps narrow the next implementation. In
 `src/ap/sta_info.c`, `ap_sta_set_authorized()` emits `AP-STA-DISCONNECTED` with the

@@ -104,6 +104,82 @@ def test_client_telemetry_gap_does_not_restart_provisioned_control_session_or_in
     asyncio.run(scenario())
 
 
+def test_neighbor_metrics_handoff_requires_authenticated_live_context_without_config_effect(rig):
+    from emosa.wire.link_metrics import LinkBinding, LinkMetrics, RxLink, TxLink
+
+    async def scenario():
+        _bridge, engine, backend, clock = rig
+        session, source, sent = lifecycle(rig)
+        await session.tick()
+        await receive(session, response())
+        query = fragment_message(
+            BINDING.local_al, BINDING.controller_al, 5, 701, (Tlv(8, b"\0\2"),)
+        )[0]
+        # Discovery admission alone does not activate this measurement handoff.
+        assert await receive(session, query) == "unsupported_message_0005"
+        await receive(session, frames()[0])
+        count = len(sent)
+        assert await receive(session, query) == "neighbor_measurement_unavailable"
+        assert len(sent) == count
+        clock.advance(0.1)
+        snapshot = source.current()
+        row = snapshot.topology.neighbors1905[0]
+        neighbor = row.neighbors[0]
+        peer_interface = bytes.fromhex("020000005002")
+        session.link_metric_source.publish(
+            context_token=snapshot.context_token,
+            counter_epoch="owned-test-epoch",
+            interval_started=clock.monotonic() - 0.1,
+            observed_at=clock.monotonic(),
+            inventory=(
+                LinkBinding(
+                    neighbor.al_mac,
+                    row.local_interface,
+                    peer_interface,
+                    1,
+                    neighbor.bridges_present,
+                ),
+            ),
+            metrics=(
+                LinkMetrics(
+                    BINDING.local_al,
+                    neighbor.al_mac,
+                    (
+                        TxLink(
+                            row.local_interface,
+                            peer_interface,
+                            1,
+                            neighbor.bridges_present,
+                            2,
+                            100,
+                            900,
+                            90,
+                            65535,
+                        ),
+                    ),
+                ),
+                LinkMetrics(
+                    BINDING.local_al,
+                    neighbor.al_mac,
+                    (RxLink(row.local_interface, peer_interface, 1, 1, 99, 255),),
+                ),
+            ),
+            inventory_complete=True,
+        )
+        assert await receive(session, query) == "neighbor_link_metric_response_sent"
+        packet = assemble((sent[-1],))
+        assert (packet.message_type, packet.mid) == (6, 701)
+        assert [t.kind for t in packet.tlvs] == [9, 10]
+        assert len(engine.store.operations()) == 1 and backend.writes == 1
+        source.invalidate()
+        before = len(sent)
+        assert await receive(session, query) == "source_unavailable"
+        assert len(sent) == before and session.link_metric_source.current() is None
+        session.close()
+
+    asyncio.run(scenario())
+
+
 def test_discovery_early_m1_authenticated_operation_without_semantic_input(rig):
     async def scenario():
         bridge, engine, backend, _ = rig

@@ -1,0 +1,12 @@
+{
+  "owned_lab_idle": true,
+  "baseline_restored": true,
+  "executed_harness_and_onboarding_hashes_verified": {
+    "/opt/emosa-baseline/native-onboarding.py": "fd460a7b1bc39249c2a1de632fc4f02799b48349ade833ccbb23578b8405b749",
+    "/opt/emosa-radio-manager/source/emosa/wire/onboarding.py": "6c49387ea8e7200bff2af1f962a7754b526ea4cc8ba74c3a795f98ec1176fa75"
+  },
+  "executed_link_component_sha256": "b8821f03d9f5bcf01e511db4b4ac5139876d95fd41db0eb5641c4b72ab16990f",
+  "final_link_component_sha256": "9e2f126938002678c486535dd01364cb00ee7269617485ef9f0a5d5e6a3caaee",
+  "post_run_change": "Validate encoded link rows before checking duplicate identities; positive-path final-source component and dissector tests cover this hardening. Native unavailable-source path unchanged.",
+  "physical_pod_changed": false
+}

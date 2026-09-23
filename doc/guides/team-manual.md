@@ -3726,6 +3726,52 @@ the OS boot identity changes; only a component test covers that boot-change path
 application and actual periodic reports. Locate the evidence for each one, and
 identify which remain incomplete before repeating full 15-minute acceptance.
 
+### 13.20 Understand neighbor links before reporting their metrics
+
+The controller asks two different traffic questions. AP/STA metrics describe a
+radio, BSS or associated client. IEEE 1905 neighbor metrics describe the link to
+another 1905 device, such as the gateway. The latter request can ask about one
+neighbor or all neighbors, and transmission, reception or both directions.
+One neighbor can connect over several interface pairs, all of which must be
+represented when that direction is reported.
+
+**Why is an interface pair important?** The AL MAC identifies the device. Its
+Ethernet or wireless interface has its own identity. In our VM, EMOSA emits
+control messages through a dedicated veth, while the simulated OpenSync pod
+forwards client traffic through a different interface. Counting the adapter's
+messages would not measure the pod's forwarding link. The read-only native
+inventory now records the two endpoints and their paths through the VM bridge
+so this mistake is visible before measurement integration.
+
+Follow the [neighbor-metric guide](../protocol/neighbor-link-metrics.md) on HOST:
+
+1. Run the retained wire-vector checker. Compare a two-byte all-neighbor query
+   with an eight-byte specified-neighbor query. Match each response's MID and
+   requested direction. The guide explains the source table's conditional length.
+2. Inspect the two interface pairs in each synthetic positive response. Compare
+   packet errors, packet counts, capacity and availability; PHY rate and RSSI
+   have explicit unavailable encodings in the IEEE amendment. Other fields
+   cannot silently use zero as an unavailable value.
+3. Run the source/coordinator tests. Observe rejection of stale, incomplete,
+   mismatched and pre-reconnect measurements. A correctly encoded message is
+   not evidence that its source measured the requested quantity.
+4. Review the native experiment's `neighbor-link-observations.json`, captured
+   queries and `neighbor_measurement_unavailable` status. Identify the pod's
+   forwarding interface separately from `probe0` and locate their bridge.
+5. Continue with actual interface mapping and measurement qualification before
+   enabling native metric delivery. The native negative check requires absence
+   of invented responses; it deliberately does not claim reporting success.
+
+**Why not send an invalid-neighbor result?** That result means a specifically
+requested device is absent from a fresh complete neighbor inventory. Our
+controller is an existing neighbor. Missing counters or capacity estimates do
+not make it disappear. Until the publisher is qualified, the handler records
+the missing measurements and the sustained-acceptance gap remains open.
+
+**Learning checkpoint:** distinguish device identity, forwarding-interface
+identity, measurement period and source freshness. Explain which evidence
+would justify each field of a complete neighbor response after reconnect.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

@@ -8456,6 +8456,566 @@
       "path": "telemetry-freshness/unit-results.xml",
       "sha256": "f065badaed7a75710765686beeee103599e8c680cd3190345d1c6c442e9a0271",
       "size": 4420164
+    },
+    {
+      "path": "neighbor-metrics/README.md",
+      "sha256": "5a63d3cb781907fa92a3233a8564b0d90e83f825a2113541b0228a974fef47a4",
+      "size": 3823
+    },
+    {
+      "path": "neighbor-metrics/independent-vector-check.json",
+      "sha256": "2f678b1417ba52af7718c43767c3c684306cd5789f3e6bfacc9c54d32f8399e4",
+      "size": 401
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0000.json",
+      "sha256": "98341b98d175d3c68c7eabfb91e6e27a94d55be0c19fc8847efaff33b51996ed",
+      "size": 37315
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0001.json",
+      "sha256": "89015456cd92cf9703daa670763d8b4e4b67579ce9633335fb507c3889ea551f",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0002.json",
+      "sha256": "4b30c209560be1e6f41d30d707204a9d214ef8d1ebc62452291c20d5f56407f0",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0003.json",
+      "sha256": "fe3f9e389b4f52d6d1bbbe6ff9efc18cad4db64c11829e9255a801c33ec012d4",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0004.json",
+      "sha256": "ed7e50c40ed8ef005b1cc4cfdc9afaf86df27f0d9f7585466649d68c50f67ae1",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0005.json",
+      "sha256": "da39470f3dda51888637d07cfc1723bf83613f11d461fefec585a020fec0b09f",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0006.json",
+      "sha256": "acc115c069bd74e32d7613812d7a1146798f4a14fa63a398b75c7fcca9a7671b",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0007.json",
+      "sha256": "d6f6c82073cdea81cd3cad40114529bcd44525cd6d8169def1aa53db18cfc744",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0008.json",
+      "sha256": "ab87ec96ce8656a2a7a31fd2c8f3ab5b6d0d021a87113e997936224f7c60ca3b",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0009.json",
+      "sha256": "e4b7db52a0932343cc103bb59df6f696eda6729d3f65e6e74f702a20bde3fe6b",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0010.json",
+      "sha256": "62c1ef99605c538ac179fa6d3e13660aade45f5451cd48b8b9836f8832bb446b",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0011.json",
+      "sha256": "63b9dc9cca11f6f9b86421ddac891fa2b70735ad17064f374bb14066fc114025",
+      "size": 33152
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0012.json",
+      "sha256": "1d8f4cfe8bafb238265bcdd8ca25213ab8e3683610d98f5fc0653d422882260f",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0013.json",
+      "sha256": "35608dbe491fb9c152b7cff2a60296304ea9ab7fef4ca8130f41895ca712d8a7",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0014.json",
+      "sha256": "d0d410fef3aff95b030b1152d71c8bcce7b4fa0a371ee8e989c142a6c1dd39ca",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0015.json",
+      "sha256": "1a1bb1bee9b90461ad0a442fe7fd9bb4d26cbc4dde33c4fc1dfb7075816853e6",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0016.json",
+      "sha256": "f8a2692f1d65f5c99f719ad6c07abd5888bdaf5933d5dbbefa1565dd0b62265a",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0017.json",
+      "sha256": "cb96176fc1cc5434c4425dbd9c76a5d4f51da1b6070d816bf377fc7fdc1b5194",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0018.json",
+      "sha256": "e082411018b67563a25af2c97218ec68068099dc803fe7671bd9412856019a36",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0019.json",
+      "sha256": "8a9a00e59c9ffe5277490a97d4a003b440717828f4d5e848b9acb5716a09b254",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0020.json",
+      "sha256": "4e1e9079eade42eb02b9434c92c63f5e1a321e6110da34f0c4493905d00f2119",
+      "size": 33152
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0021.json",
+      "sha256": "006509023c3abc198f01ef52bf3f107ea91df7dc5a817ab58d89354cd960e35a",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0022.json",
+      "sha256": "1792c530fc3c89fbab9a614831b62a4953c809f3790595dd40416ac334764d69",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0023.json",
+      "sha256": "1d64bbddd69d5080865ee58b00517e5cab903ddd2fcb27f2213505d181597dc9",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0024.json",
+      "sha256": "ee295a391979968e86d1e825a99af88385c7885b5ed5172ae597fed574e44fcc",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0025.json",
+      "sha256": "87b35905ba1a61c92590eabb67b80608c02878e063ab55b010de015b36d2dd55",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0026.json",
+      "sha256": "86b59d5e50e1078594faf7555604c7d87cbfdf0f22ebf165d39fd3d947a97026",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0027.json",
+      "sha256": "6f5a32ec4e71480ba005bcb73d01b4bb1de898d5454603d1f18368ffc836410b",
+      "size": 33154
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-inventory-0028.json",
+      "sha256": "43af20b76c3de1e5c414bd6f1d7039537a71e522ad1eea5f3455797846e7a01b",
+      "size": 33153
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/active-samples.json",
+      "sha256": "2a0c70343e8393497988fe4f2a6b660b66e64c7d9844f232ca0920b54b4800b3",
+      "size": 298614
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/candidate-trial.json",
+      "sha256": "b4ab38c45e701e698ce5ee43c67a805903c63bc86353a20be7638de6891e80b4",
+      "size": 13780
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/client-outages.json",
+      "sha256": "5f49362e53bc89d2b8e45ab676fe014e8032771d5922839b88f401d4060b78b4",
+      "size": 677
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0000.json",
+      "sha256": "00384760dfdfafba37cb7a9ae2213b15c31211967a389e995f1e44b726ce8965",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0001.json",
+      "sha256": "baac916d61100b58c7b94ca566e08dece2ccdfb209bf73c5463b83a95f1bca49",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0002.json",
+      "sha256": "a5d7f624c19b9d59c50a9b38e75a34d9624fcf48967db4c0187500814803fd22",
+      "size": 2635
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0003.json",
+      "sha256": "baa1ded52654d12ec77a7891ac62c64a512573638200458189195729f0925726",
+      "size": 2636
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0004.json",
+      "sha256": "f25253aad20674e55412cab65ed0de19e8c2c6ad2b79daffa3d1ba1a8ce6c346",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0005.json",
+      "sha256": "892786ec1a57d1da38efd7b7ccac0b986d4f6909fdee5d5b7681589b62b5bbc8",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0006.json",
+      "sha256": "838da43b355958f155debf44d4bd24efdfeeafde17f4ccb1e7243133c35b9f67",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0007.json",
+      "sha256": "7a12c846216b185726c6b374ac2e2d7922f4c5c0d3f39261f2942eda1f26a67a",
+      "size": 2636
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0008.json",
+      "sha256": "474d8575051b38006e1b87ef2da08485e90d33eacfca0b9a0872f30a4267ae9a",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0009.json",
+      "sha256": "3a515e6b2b44286df61b5c804a3b52608d3ba989c83451443f1bdfa2a0963341",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0010.json",
+      "sha256": "325d47ece257a67abad4fba062605b6b0ba8760ccea815007bd4a8a252d48d18",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0011.json",
+      "sha256": "202e19b5a70c3317a724cbd19834e7630d5d4acc344ff8014dc270cf715ff9c2",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0012.json",
+      "sha256": "e9242397ba9d455632133298f242dc834a84d81bc42659acce0022d56907c884",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0013.json",
+      "sha256": "249470719ad9adfb2c424b0b9c3df54abb229c1d8010c23a04810433bf164568",
+      "size": 2633
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0014.json",
+      "sha256": "141b8bcd060c6fc9ecba63e506fa107401489ebe3739b7be65684822a830893b",
+      "size": 2633
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0015.json",
+      "sha256": "b4ff7c6b00852e3e1039280f8cb5f56346449b76127d9ff5edbe17eba0650cb4",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0016.json",
+      "sha256": "ac0a81ac8a36d86e2a9145b3d3087247ad85b9007c25678e2a1d7b51fd0ab817",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0017.json",
+      "sha256": "262c54166cf960b02c0251f77aa3127fba9fa866a839ae97e61eebca19686321",
+      "size": 2636
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0018.json",
+      "sha256": "27808fa1c1608db72c642f7f10f694cf038634e6cdf49a5e0c3aedd8626833b6",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0019.json",
+      "sha256": "30d9d8e32bd84628d065b915c98a5176ed7766aa650b8a6a0ce9bd6ea2de6920",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0020.json",
+      "sha256": "7a1632e20470ff78515d684f188c5bc87a1f5c0c47c2d5a6eba4fff204ddfaab",
+      "size": 2636
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0021.json",
+      "sha256": "0e5781c3bb0e55248ab973565147ae3455e605661bbe2119228a4e388e534760",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0022.json",
+      "sha256": "9077540151946a304d02bff0eacbff03104cfd4a519231b12aecd3a161372e90",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0023.json",
+      "sha256": "df31b428c74605bda7dfaedbdc98cf14a43ffbed423dd5fc7a4919c40ab1782d",
+      "size": 2633
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0024.json",
+      "sha256": "95b4b5ecac3932327ea95385b998eb2f6d23693f56b967196a878c9a55f957fa",
+      "size": 2636
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0025.json",
+      "sha256": "051dc1e253c96f6a8393470558344ff0a6b600b406bede7ac70fa3597fd095ec",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0026.json",
+      "sha256": "6ea3ceb97751486a492f35e825ec3da0d208f2e50a8dc4ff897559e863f679d0",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0027.json",
+      "sha256": "9c547988a7bf62cf62885c21186eefd1a00555d3c665ec21f407226db595df80",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-active-0028.json",
+      "sha256": "7923d8edfea4172bbe3644b1583c3e45b8d107a5530d582305390359715eec07",
+      "size": 2633
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-onboarded.json",
+      "sha256": "d7be73545e3baf08c167c766168bcd2820c956208a3075a47e6367735570002d",
+      "size": 2621
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-recovery-0.json",
+      "sha256": "eda4a087f2a0989df6392966c91a764f78796d16717ee1fcd284f19ac56e4769",
+      "size": 2634
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-recovery-1.json",
+      "sha256": "420288bad77c8bc7b10b23f57490468b5018b294e2c54f763523641a504d5532",
+      "size": 2632
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/clients-telemetry-withheld.json",
+      "sha256": "2b76228f5d358d2f54ec24b99234e50f010deab484dc8832bf5a7915c06675fb",
+      "size": 2648
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/controller-after.json",
+      "sha256": "17ca6a9eaed5fdcb52c28dbc3324de0d2eec77085795f899baff2bde9b1b4035",
+      "size": 31317
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/controller-before.json",
+      "sha256": "26f8bb9ec38fbae891b20dd64073ccbc888f7358c41611b31d0732fb27dbd26c",
+      "size": 10353
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-inventory-0003.json",
+      "sha256": "651245c99d4965d5771f74fdce1f6ac2ad40a676cc1134e32087c3f9be56ee7e",
+      "size": 32363
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-inventory-0007.json",
+      "sha256": "43e4accf980e51c0b3a054506d48f92e7ce398085212da2c286c1106e6cb963c",
+      "size": 32363
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-inventory-0010.json",
+      "sha256": "82093063c90555ba209045fab28c3ad4bf6dd5b7a2f65064d3ee3ce7c8e2cecf",
+      "size": 32362
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-inventory-0013.json",
+      "sha256": "00bb0adbb59eeb9beee0a3fac9dfddd67967dcbbc97e9c4cb42db7e5e6955658",
+      "size": 32363
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-inventory-0017.json",
+      "sha256": "50edb78ca57e72c108901a8707edaf83e9a5b383c7a8570ab908e02697ffe404",
+      "size": 32363
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-inventory-0020.json",
+      "sha256": "0ad23730415774289e521a5af3110872ceada8da66bcd44c9e9225cba881b1cb",
+      "size": 32363
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-inventory-0024.json",
+      "sha256": "f3371e78aabbbb4b4ac6d464d9426cad3710aa50bdd258c67f0a73842ac2f90a",
+      "size": 32363
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-inventory-0027.json",
+      "sha256": "d53030a765d4aac793452d2b47a22789eb667d1f41cfcc23fb4743795eabe3a4",
+      "size": 32363
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-session-0003.json",
+      "sha256": "66a441a5a11dda77b281b1ed779450f3e8a1d80986e4906953484e7332e13e3c",
+      "size": 5247
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-session-0007.json",
+      "sha256": "abafea466f785662ef31742afe7803e48f403e870d7c05c08904ffc1707a7a00",
+      "size": 5431
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-session-0010.json",
+      "sha256": "ea9afa818abd8d22b79e5be4428501f8280d1a002b47130eb811aeac452b64c0",
+      "size": 11604
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-session-0013.json",
+      "sha256": "b6b4a9af1102ce8f6757939c760847bd4136058e9b63ae2667d1ddf603db66a9",
+      "size": 11881
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-session-0017.json",
+      "sha256": "660d555e685696858aa2b5719729d6bc5c3697c619a36f1c821b5ad799204dae",
+      "size": 12156
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-session-0020.json",
+      "sha256": "07d4ac6508f93ca838207225c54ba1850e70b623fd678aedf0374d2056d53c63",
+      "size": 4939
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-session-0024.json",
+      "sha256": "7f108c34e9b329f8fd4d5ff6778230168ec9d3c267faa8eb579b7ad93fe598a6",
+      "size": 5214
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/detached-session-0027.json",
+      "sha256": "3dc479a57f75ee6b50973435f6ef00330e19ae33c0362e2bbf084ea1c39f0114",
+      "size": 5368
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/em-baseline-wifi-continuous-ping.log",
+      "sha256": "9a336f94d5a92117e7fdab2ed70d4dc88375ef8565d88cc5f7723bad7b2f766a",
+      "size": 56167
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/em-baseline-wired-continuous-ping.log",
+      "sha256": "f9db21aa88e5a20261dd1ef137ddf83cac274a78c4fcb3185e24b52085a6a975",
+      "size": 66523
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/ethernet-capture.log",
+      "sha256": "d86bdf10e00803286fcc550bec2bf5847ce0fef8d3c2c73c356f1ab5fc21a943",
+      "size": 172
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/ethernet.pcap",
+      "sha256": "172e434ac6bb9bba8e4c5b92ab9bb0d6a400eda783ebccbdee78696abb337dc3",
+      "size": 10737
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/independent-gap-check.json",
+      "sha256": "3861bace56559abe0370179a9bbd88ad898921bf302fb08380e58dacf77b8b8d",
+      "size": 820
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/independent-neighbor-check.json",
+      "sha256": "8d2ccd16e7073c4a65a30ef51ac436e8f82d586e4036104a239217c12862c82c",
+      "size": 927
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/independent-policy-check.json",
+      "sha256": "1540a183375837534a96b0e375984867615f744dbceb14c507897ae2795d4262",
+      "size": 1435
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/independent-recovery-check.json",
+      "sha256": "1258b8eb561ce1a1533f4a870d0c967188f98e6bd759b8566070e2c84661a5f1",
+      "size": 3324
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/manager.jsonl",
+      "sha256": "160a5c27bde784dd170c0b611bffa398fc52448580442d9f5860cf68ee7b5330",
+      "size": 189864
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/native-operation.json",
+      "sha256": "18afa9d74a2643d11ecd27d79782f26fc37415282dc9ccfc9acb789d699472dc",
+      "size": 4856
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/native-session.json",
+      "sha256": "19ea172918225a8f7bc63034a56c3e4264defac22fd0629c42092ed4d7b71828",
+      "size": 5485
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/neighbor-link-observations.json",
+      "sha256": "07efb54c7da6271f898c2646f1573aeed4d62eed6cd0826fe071d0ee06e10499",
+      "size": 22604
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/radio-capture.log",
+      "sha256": "dda80a37716049ef8041657b95129c190b3804c811439a1ee6e3b3b17cf034b9",
+      "size": 201
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/radio.pcap",
+      "sha256": "7d620eb5634de28f5b970b26385a10623bfcc7edea6ea0184cc4c8f0ea161902",
+      "size": 2240422
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/recovery-checks.json",
+      "sha256": "24568a2f37cf87efe792fca3f7d094d7c9bb7460bdcd89ec2eb9f3012722a1da",
+      "size": 62087
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/restoration-check.json",
+      "sha256": "e1231a177ba3352da484a5be8699c95f9322b265081262faffed5bc3e444aa11",
+      "size": 813
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/result.json",
+      "sha256": "82bdf33d3ea8795a5bc8956d0f03e99805ec1f109c40639ac683d787cd0a8867",
+      "size": 12400
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/source-hashes.json",
+      "sha256": "85f120929298b4b0eba27f4b91d10cd779c45e264d8fc24b51e268c6f0e6839a",
+      "size": 11954
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/station-events.jsonl",
+      "sha256": "f77a9e6a6bd6de86d6d549fbd974d6b2a9346ff1fdbfcf30e1adeb3568618eca",
+      "size": 46903
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/telemetry-gap-check.json",
+      "sha256": "f8202b26afd967971bafa0978cf5ef5e6552778a5aeec27ac65e5cda876be305",
+      "size": 21404
+    },
+    {
+      "path": "neighbor-metrics/native-neighbor-01/withheld-operation.json",
+      "sha256": "90d53fabb71588a197a34f6a7f06480f6dfdf6d0c26c838a5dd411db5784b37d",
+      "size": 1963
+    },
+    {
+      "path": "neighbor-metrics/ovsdb-results.xml",
+      "sha256": "8dc064275083c67799a9d798a9b8505a56f5f20673a344769abb616b4b46eaf2",
+      "size": 7209
+    },
+    {
+      "path": "neighbor-metrics/unit-results.xml",
+      "sha256": "dfcee478515bd2a8164dce910002157df5a271761d369ac969060370bb391eac",
+      "size": 4428323
+    },
+    {
+      "path": "neighbor-metrics/vectors/inputs.json",
+      "sha256": "fe06425437c3af3ea28f9438973a7dd3bf77a7f715fafe1dd0aeb5601d74997c",
+      "size": 789
+    },
+    {
+      "path": "neighbor-metrics/vectors/synthetic-neighbor-metrics.pcap",
+      "sha256": "f34b7b82005f49faca697a2bd859c390b7e1bf4aaac99755b41204d71d1d6976",
+      "size": 877
     }
   ]
 }

@@ -819,10 +819,22 @@
       "title": "Native telemetry freshness and recovery evidence",
       "description": "A 213-second regression passes telemetry-gap and both management recovery checks, with three operations and one configuration-write attempt.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/neighbor-link-metrics.md",
+      "title": "Report IEEE 1905 neighbor-link metrics",
+      "description": "Learn requested directions, interface pairs, freshness and amended field rules; distinguish implemented responses from the still-unqualified native measurement source.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/neighbor-metrics/README.md",
+      "title": "Neighbor-metric vectors and native source gap",
+      "description": "Ten independently decoded synthetic frames and four real native queries; read-only interface evidence prevents confusing adapter control traffic with pod forwarding.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "telemetry-freshness/unit-results.xml",
-    "ovsdb": "telemetry-freshness/ovsdb-results.xml"
+    "unit": "neighbor-metrics/unit-results.xml",
+    "ovsdb": "neighbor-metrics/ovsdb-results.xml"
   }
 }

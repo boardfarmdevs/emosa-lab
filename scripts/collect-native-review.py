@@ -40,6 +40,7 @@ FIXED = (
     "tx-status-provenance.json",
     "tx-status.jsonl",
     "telemetry-gap-check.json",
+    "neighbor-link-observations.json",
 )
 PATTERNS = (
     "clients-*.json",

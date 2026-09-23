@@ -15,6 +15,7 @@ from emosa.wire.channel import ChannelCoordinator
 from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, decode_frame, fragment_message
 from emosa.wire.coordinator import ReportCoordinator
 from emosa.wire.disassociation import DisassociationCoordinator, FinalSession
+from emosa.wire.link_metrics import LinkMetricCoordinator, LinkMetricSource
 from emosa.wire.provisioning_session import ComponentProvisioningSession
 from emosa.wire.reporting_policy import ReportingPolicyCoordinator
 from emosa.wire.reports import PreparedReport, capability_tlvs
@@ -55,6 +56,7 @@ class OnboardingSession:
         clock=time.monotonic,
         channel_store=None,
         reporting_policy_store=None,
+        link_metric_source=None,
         reset_channel_policy=True,
     ):
         if type(inventory) is not DeviceInventory:
@@ -82,6 +84,14 @@ class OnboardingSession:
         self.channels = None
         self.disassociations = None
         self.departures = {}
+        if link_metric_source is not None and link_metric_source.reports is not source:
+            raise EmosaError(Reason.INVALID_INPUT, "link measurements use another control source")
+        self.link_metric_source = (
+            link_metric_source
+            if link_metric_source is not None
+            else LinkMetricSource(source, clock=clock)
+        )
+        self.link_metrics = None
 
     def _record(self, event):
         self.counts[event] = self.counts.get(event, 0) + 1
@@ -256,6 +266,9 @@ class OnboardingSession:
                 self.disassociations = DisassociationCoordinator(
                     self.source, self.send_frame, self.mids, profile=1, clock=self.clock
                 )
+                self.link_metrics = LinkMetricCoordinator(
+                    self.link_metric_source, self.send_frame, clock=self.clock
+                )
                 if self.channel_store is not None:
                     self.channels = ChannelCoordinator(
                         self.source,
@@ -307,6 +320,12 @@ class OnboardingSession:
                     return self._record(result)
             if self.reporting_policy:
                 result = self.reporting_policy.handle(message, now)
+                if result:
+                    return self._record(result)
+            if self.link_metrics and self.state == "provisioning":
+                result = self.link_metrics.handle(
+                    message, now, ingress=ingress, generation=generation
+                )
                 if result:
                     return self._record(result)
             if message.message_type == 0x8001 and self.provisioning:
@@ -383,6 +402,7 @@ class OnboardingSession:
             self.channels,
             self.reporting_policy,
             self.disassociations,
+            self.link_metrics,
         ):
             if component:
                 component.close()
@@ -407,6 +427,12 @@ class OnboardingSession:
             "full_profile_qualified": False,
             "physical_pod_proven": False,
             "reporting_policy": self.reporting_policy.status() if self.reporting_policy else None,
+            "neighbor_link_metrics": {
+                "counts": dict(self.link_metrics.counts),
+                "measurement_available": self.link_metric_source.current() is not None,
+            }
+            if self.link_metrics
+            else None,
             "channels": {
                 "counts": dict(self.channels.counts),
                 "operating_ack_pending": self.channels.pending is not None,

@@ -1782,7 +1782,7 @@
     "remaining": [
       "Qualify final-session publisher/counter/reason semantics and integrate measured records with implemented sender",
       "Reporting policy and qualified utilization/ESP/link/traffic metrics",
-      "IEEE 1905 neighbor link-metric queries and qualified per-link measurements",
+      "Qualified IEEE 1905 neighbor measurements and actual interface mapping for the implemented query/response handler",
       "Complete 15-minute acceptance with independent capture review"
     ],
     "sustained_operation_proven": false,
@@ -1902,6 +1902,44 @@
       "total_config_write_attempts": 1,
       "sustained_operation_proven": false,
       "physical_pod_proven": false
+    },
+    "neighbor_link_metrics": {
+      "status": "query_response_and_guarded_handoff_implemented_native_measurements_pending",
+      "guide": "doc/protocol/neighbor-link-metrics.md",
+      "implementation": "src/emosa/wire/link_metrics.py",
+      "integration": "src/emosa/wire/onboarding.py",
+      "source_references": [
+        "IEEE 1905.1-2013 6.3.5-6/Table 6-5 pp.31-32; 6.4.10-13/Tables 6-16 through 6-21 pp.38-41; 11.1 p.59",
+        "IEEE 1905.1a-2014 amendment Tables 6-16/18/20/21 pp.10-12; printed p.11 visually reviewed",
+        "EasyMesh 6.1 10.1 p.82; 17.1.73-74 p.121"
+      ],
+      "interpretations": [
+        "Table 6-16 conditional neighbor address determines 2-byte all-neighbor and 8-byte specified-neighbor query lengths despite fixed table heading. Native controller and pinned prplMesh/Wireshark cross-check this selection.",
+        "Amendment permits 0xffff PHY rate and 0xff RSSI as unavailable. No guessed capacity, availability or packet/error count.",
+        "Invalid-neighbor result requires a fresh complete inventory establishing absence; unavailable measurements for an existing neighbor produce an explicit gap."
+      ],
+      "local_limits": {
+        "interface_pairs": 32,
+        "source_freshness_seconds": 2,
+        "response_deadline_seconds": 1
+      },
+      "test_refs": [
+        "tests/test_link_metrics.py",
+        "tests/test_native_onboarding.py",
+        "scripts/check-neighbor-metrics.py"
+      ],
+      "encoding_evidence": "doc/evidence/neighbor-metrics/independent-vector-check.json",
+      "native_evidence": "doc/evidence/neighbor-metrics/native-neighbor-01/independent-neighbor-check.json",
+      "interface_observations": "doc/evidence/neighbor-metrics/native-neighbor-01/neighbor-link-observations.json",
+      "native_queries_handled_without_measurement": 4,
+      "measurement_source_qualified": false,
+      "native_neighbor_metric_delivery_proven": false,
+      "remaining": [
+        "Bind represented virtual interfaces to actual pod/peer forwarding interfaces and verified bridge state",
+        "Acquire and qualify per-link TX/RX counters over a common measurement period with reset detection",
+        "Qualify capacity and availability estimates; do not attribute proxy control-veth counters to pod traffic",
+        "Supply live measurements, verify native controller values and include in full sustained acceptance"
+      ]
     }
   }
 }

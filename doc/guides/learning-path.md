@@ -233,6 +233,11 @@ OpenSync-format telemetry. Work through these exercises in order:
    observations become unavailable without a false leave or another onboarding
    operation. Then compare actual pod disconnection and adapter restart, which
    must revoke the old authority and authenticate a fresh operation.
+10. Follow [neighbor link metrics](../protocol/neighbor-link-metrics.md). Decode
+    TX-only, RX-only and combined responses, then inspect the native query and
+    explicit missing-source status. Trace the separate adapter and pod
+    interfaces through the VM bridge. Explain why controller-facing packet
+    counts cannot automatically measure traffic forwarded by the pod.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

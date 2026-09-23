@@ -49,6 +49,11 @@ The [policy receiver](doc/protocol/reporting-policy.md) now persists the native
 controller's requested reporting policy and sends its receipt Ack. Its schedule
 survives reconnect/restart and explicitly counts due reports that cannot yet be
 produced. Receipt confirmation does not establish fulfilled reporting.
+The [neighbor-link handler](doc/protocol/neighbor-link-metrics.md) now implements
+direction-specific IEEE 1905 responses and a guarded measurement handoff.
+The native lab explicitly withholds responses while pod/peer interface mapping
+and per-link measurements remain unqualified; adapter control-veth counters
+cannot stand in for pod-backhaul traffic.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 

@@ -345,6 +345,45 @@ async def experiment(
             run("ip", "netns", "exec", namespace, "ip", "link", *args)
         run("ip", "link", "set", link, "master", "em-base-bh")
         run("ip", "link", "set", link, "up")
+        # Read-only provenance: the proxy's control veth is not the pod's
+        # forwarding interface. Whole-proxy counters cannot measure pod backhaul.
+        node_links = {}
+        peer_indices = set()
+        for name in (CONTROLLER, radio["AP"]):
+            rows = json.loads(radio["inside"](name, "ip", "-j", "-d", "-s", "link", "show"))
+            node_links[name] = [r for r in rows if r["ifname"] in ("br-lan", "eth1")]
+            peer_indices.update(r["link_index"] for r in node_links[name] if "link_index" in r)
+        root_links = json.loads(run("ip", "-j", "-d", "-s", "link", "show"))
+        write(
+            directory / "neighbor-link-observations.json",
+            {
+                "scope": "read-only owned lab link inventory; not qualified per-neighbor metrics",
+                "observed_at": time.time(),
+                "containers": node_links,
+                "vm_links": [
+                    r
+                    for r in root_links
+                    if r["ifindex"] in peer_indices or r["ifname"] in (link, "em-base-bh")
+                ],
+                "adapter_control_interface": json.loads(
+                    run(
+                        "ip",
+                        "netns",
+                        "exec",
+                        namespace,
+                        "ip",
+                        "-j",
+                        "-d",
+                        "-s",
+                        "link",
+                        "show",
+                        "probe0",
+                    )
+                ),
+                "measurement_source_qualified": False,
+                "physical_pod_changed": False,
+            },
+        )
         capture(
             link,
             "ethernet",

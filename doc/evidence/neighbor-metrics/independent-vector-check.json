@@ -1,0 +1,10 @@
+{
+  "wire_vector_checks_passed": true,
+  "frames": 10,
+  "scope": "synthetic query/response layout, not link measurements",
+  "capture_sha256": "f34b7b82005f49faca697a2bd859c390b7e1bf4aaac99755b41204d71d1d6976",
+  "dissector": "TShark (Wireshark) 3.6.2 (Git v3.6.2 packaged as 3.6.2-2)",
+  "measurement_source_qualified": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}
