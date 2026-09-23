@@ -1,0 +1,8 @@
+{
+  "traffic_control_restored": true,
+  "runner_exit_code": 0,
+  "physical_pod_changed": false,
+  "source_sha256": "bb72bcacbe6bb5c4a44a9624e740b5c5b857773bb4f4534a524b18afe6442a0b",
+  "source_matches_executed": true,
+  "owned_lab_idle_check_passed": true
+}

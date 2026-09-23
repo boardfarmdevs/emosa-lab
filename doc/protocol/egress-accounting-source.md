@@ -6,8 +6,10 @@ error/drop counters. The new source reads both relevant accounting stages and
 carries them through the simulated pod's existing OVSDB connection.
 
 It supplies successful TX packet/byte deltas and selected egress-loss deltas.
-It **does not yet supply complete IEEE 1905 link metrics**: receive-side loss,
-media/capacity/availability qualification and native metric delivery remain open.
+It **does not yet supply complete IEEE 1905 link metrics**. The follow-on
+[receive source](receive-counter-accounting.md) adds selected ingress-loss
+accounting and common Tx/Rx reads. Complete per-link loss, media/capacity/
+availability qualification and native metric delivery remain open.
 
 ## Follow the measurement path
 
@@ -156,7 +158,8 @@ recovery, and continued onboarding/client behavior. The separate controlled-loss
 experiment qualifies the selected loss case. Neither result alone proves an
 integrated 15-minute metric-reporting acceptance run.
 
-Read [the retained evidence](../evidence/egress-accounting/README.md). Next qualify
-the remaining measurement fields, join them to the observed neighbor binding,
+Read [the retained evidence](../evidence/egress-accounting/README.md), then follow
+the [receive-accounting exercise](receive-counter-accounting.md). Qualify the
+remaining measurement fields, join them to the observed neighbor binding,
 and verify the complete native response and controller values. AP/STA reporting
 and final-session statistics remain required for sustained acceptance.

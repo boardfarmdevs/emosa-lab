@@ -55,9 +55,11 @@ topology identities to actual pod-side discovery. The
 but demonstrates losses before veth accounting that ordinary interface error
 counters miss. The [egress source](egress-accounting-source.md) now combines
 selected action and driver losses without double counting, with observed
-configuration epochs and live OVSDB recovery checks. Receive-side loss, media and
-capacity/availability qualification remain pending before these observations
-satisfy a complete native query.
+configuration epochs and live OVSDB recovery checks. The
+[receive source](receive-counter-accounting.md) now adds selected ingress loss
+and common transmit/receive read bounds. Complete neighbor/loss attribution,
+media and capacity/availability qualification remain pending before these
+observations satisfy a complete native query.
 
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated
@@ -348,7 +350,7 @@ controller's requests are retained without disabling them to make the run pass.
 | AP channel utilization and ESP | Qualify the measurement period, busy/active counters or a suitable simulated medium, and the BE estimated service parameters; map EasyMesh §17.2.22/Table 45 to the referenced 802.11 definitions | The controller's zero defaults, a configured hostapd test value, or assuming that no survey output means no airtime was used |
 | STA link/traffic metrics | Qualify each requested source field, byte units, direction, success/error meaning, rollover, reset epoch and sample age | Interchanging link rates and application throughput, or treating absent errors/retries as zero |
 | Final disassociation report | Capture the actual reason and complete final session counters before the station is removed; correlate the session across join/leave and reconnect; connect qualified records to the [implemented §6.3/§17.1.41 sender and Ack handling](final-session-statistics.md) | The preceding polling sample or an invented reason based on a membership disappearance |
-| IEEE 1905 neighbor metrics | Query/response, actual pod/peer identity binding and selected egress-loss accounting are implemented; qualify receive-side loss, the common Tx/Rx period, media, capacity and availability before enabling native responses | Adapter control-veth counters attributed to the pod, whole-interface counts attributed to an arbitrary neighbor, or an invalid-neighbor error for an existing neighbor |
+| IEEE 1905 neighbor metrics | Query/response, actual pod/peer identity binding and common Tx/Rx accounting with selected ingress/egress losses are implemented; complete neighbor/loss attribution, media, capacity and availability qualification before enabling native responses | Adapter control-veth counters attributed to the pod, whole-interface counts attributed to an arbitrary neighbor, or an invalid-neighbor error for an existing neighbor |
 
 The pinned hostap 2.10 source helps narrow the next implementation. In
 `src/ap/sta_info.c`, `ap_sta_set_authorized()` emits `AP-STA-DISCONNECTED` with the

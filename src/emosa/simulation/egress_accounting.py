@@ -15,7 +15,7 @@ from emosa.simulation.forwarding import integer, mac
 PROFILE = "owned-veth-egress-observation-v1"
 
 
-def path_counters(observation, ifindex, address):
+def observed_path(observation, ifindex, address):
     (link,), (after,) = observation["link"], observation["link_after"]
     for row in (link, after):
         if (
@@ -44,13 +44,17 @@ def path_counters(observation, ifindex, address):
     ):
         raise ValueError("unexpected_noqueue_accounting")
     filters = observation["filters"]
-    if set(filters) != {"root", "ingress", "egress"} or filters["root"] or filters["ingress"]:
+    if set(filters) != {"root", "ingress", "egress"} or filters["root"]:
         raise ValueError("unsupported_filter_path")
+    return link, bool(extra), filters
+
+
+def action_drops(entries, clsact, direction):
     drops, action_identity = 0, None
-    if filters["egress"]:
-        if not extra or len(filters["egress"]) != 2:
+    if entries:
+        if not clsact or len(entries) != 2:
             raise ValueError("unsupported_egress_filter_set")
-        header, rule = filters["egress"]
+        header, rule = entries
         for entry in (header, rule):
             if (entry["protocol"], entry["pref"], entry["kind"], entry["chain"]) != (
                 "ip",
@@ -63,8 +67,8 @@ def path_counters(observation, ifindex, address):
         if config["keys"] != {
             "eth_type": "ipv4",
             "ip_proto": "icmp",
-            "src_ip": "192.0.2.20",
-            "dst_ip": "192.0.2.1",
+            "src_ip": "192.0.2.20" if direction == "egress" else "192.0.2.1",
+            "dst_ip": "192.0.2.1" if direction == "egress" else "192.0.2.20",
         }:
             raise ValueError("unsupported_drop_scope")
         if config["skip_hw"] is not True or config.get("in_hw") or config["handle"] != 1:
@@ -85,6 +89,14 @@ def path_counters(observation, ifindex, address):
         ):
             raise ValueError("inconsistent_drop_action_counters")
         action_identity = integer(action["index"], 1)
+    return drops, action_identity
+
+
+def path_counters(observation, ifindex, address):
+    link, clsact, filters = observed_path(observation, ifindex, address)
+    if filters["ingress"]:
+        raise ValueError("unsupported_ingress_filter_path")
+    drops, action_identity = action_drops(filters["egress"], clsact, "egress")
     tx = link["stats64"]["tx"]
     if integer(tx["errors"]) != 0:
         raise ValueError("unexpected_veth_tx_error_semantics")
@@ -94,7 +106,7 @@ def path_counters(observation, ifindex, address):
         "driver_drops": integer(tx["dropped"]),
         "action_drops": drops,
     }
-    return counters, (bool(extra), action_identity)
+    return counters, (clsact, action_identity)
 
 
 @dataclass(frozen=True)
@@ -108,10 +120,18 @@ class EgressSample:
 
 
 class EgressAccountingSource:
+    name = "egress"
+    scope = "owned eth1 egress; driver and selected disjoint TC drops"
+    read_counters = staticmethod(path_counters)
+
+    @staticmethod
+    def losses(delta):
+        return {"egress_losses": delta["driver_drops"] + delta["action_drops"]}
+
     def __init__(self, run_label, *, clock=time.monotonic_ns):
         self.run_label, self.clock = run_label, clock
         self.sample = self.window = None
-        self.reason = "awaiting_egress_observation"
+        self.reason = f"awaiting_{self.name}_observation"
         self.watermarks = {}
         self.observation_marks = {}
 
@@ -172,7 +192,7 @@ class EgressAccountingSource:
             ):
                 raise ValueError("replayed_or_changed_counter_dump")
             self.observation_marks[collector] = start, config_epoch, raw_digest
-            counters, path = path_counters(observation, integer(ifindex, 1), mac(address))
+            counters, path = self.read_counters(observation, integer(ifindex, 1), mac(address))
             epoch = (
                 integer(generation, 1),
                 collector,
@@ -187,35 +207,35 @@ class EgressAccountingSource:
             if new == self.sample:
                 return
             old, self.sample, self.window = self.sample, new, None
-            self.reason = "awaiting_egress_baseline"
+            self.reason = f"awaiting_{self.name}_baseline"
             if old is None or old.epoch != new.epoch:
                 return
             if start <= old.ended_ns or start - old.started_ns >= 2_000_000_000:
-                self.reason = "egress_sample_gap"
+                self.reason = f"{self.name}_sample_gap"
                 return
             delta = {k: v - old.counters[k] for k, v in counters.items()}
             if any(v < 0 for v in delta.values()):
-                self.reason = "egress_counter_reset"
+                self.reason = f"{self.name}_counter_reset"
                 return
             self.window = {
                 "first_read_ns": [old.started_ns, old.ended_ns],
                 "last_read_ns": [start, end],
                 "deltas": delta,
-                "egress_losses": delta["driver_drops"] + delta["action_drops"],
+                **self.losses(delta),
             }
-            self.reason = "observed_egress_window_available"
+            self.reason = f"observed_{self.name}_window_available"
         except (KeyError, TypeError, ValueError, OverflowError):
-            self.invalidate("unavailable_or_unsupported_egress_source")
+            self.invalidate(f"unavailable_or_unsupported_{self.name}_source")
 
     def status(self):
         if self.sample and self.clock() >= self.sample.started_ns + 2_000_000_000:
-            self.invalidate("egress_observation_expired")
+            self.invalidate(f"{self.name}_observation_expired")
         return {
             "available": self.window is not None,
             "reason": self.reason,
             "sample": asdict(self.sample) if self.sample else None,
             "window": self.window,
-            "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+            "scope": self.scope,
             "measurement_source_qualified": False,
             "capacity_qualified": False,
             "rx_loss_qualified": False,

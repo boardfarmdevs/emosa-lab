@@ -36,6 +36,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
+from emosa.simulation.backhaul_accounting import BackhaulAccountingSource
 from emosa.simulation.egress_accounting import EgressAccountingSource
 from emosa.simulation.forwarding import ForwardingSource
 from emosa.simulation.neighbor_binding import NeighborSource
@@ -83,6 +84,7 @@ class RadioReportSource:
         self.revision = 0
         self.forwarding = ForwardingSource()
         self.egress = EgressAccountingSource(forwarding_run) if forwarding_run else None
+        self.backhaul = BackhaulAccountingSource(forwarding_run) if forwarding_run else None
         self.neighbor = (
             NeighborSource(CONTROLLER, AGENT, forwarding_run) if forwarding_run else None
         )
@@ -122,11 +124,13 @@ class RadioReportSource:
         try:
             raw = await self.backend.session.snapshot()
             self.forwarding.refresh(raw)
-            if self.egress:
+            for accounting in (self.egress, self.backhaul):
+                if accounting is None:
+                    continue
                 sample = self.forwarding.sample
                 if sample:
                     port = sample.interfaces["eth1"]
-                    self.egress.refresh(
+                    accounting.refresh(
                         sample.egress_observation,
                         generation=sample.generation,
                         ifindex=port["ifindex"],
@@ -135,7 +139,7 @@ class RadioReportSource:
                         netns_inode=sample.epoch[2],
                     )
                 else:
-                    self.egress.invalidate()
+                    accounting.invalidate()
             if self.neighbor:
                 self.neighbor.refresh(self.forwarding.sample)
             self.backend._binding(raw)
@@ -263,6 +267,8 @@ class RadioReportSource:
             self.forwarding.invalidate()
             if self.egress:
                 self.egress.invalidate()
+            if self.backhaul:
+                self.backhaul.invalidate()
             if self.neighbor:
                 self.neighbor.invalidate()
             self.source.invalidate()
@@ -321,6 +327,7 @@ async def worker(directory, *, duration=110, telemetry=False):
         value["forwarding_observation"] = facts.forwarding.status()
         value["observed_neighbor"] = facts.neighbor.status()
         value["egress_accounting"] = facts.egress.status()
+        value["backhaul_accounting"] = facts.backhaul.status()
         if stations:
             sample = stations.current()
             value["telemetry"] = {
@@ -369,6 +376,7 @@ async def worker(directory, *, duration=110, telemetry=False):
                 forwarding = facts.forwarding.status()
                 forwarding["observed_neighbor"] = facts.neighbor.status()
                 forwarding["egress_accounting"] = facts.egress.status()
+                forwarding["backhaul_accounting"] = facts.backhaul.status()
                 if forwarding != previous_forwarding:
                     with (directory / "forwarding-samples.jsonl").open("a") as observations:
                         observations.write(

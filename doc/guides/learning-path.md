@@ -261,6 +261,11 @@ OpenSync-format telemetry. Work through these exercises in order:
     events reset the baseline. Compare retained loss replay with the actual
     native OVSDB recovery run. Identify the receive-loss and capacity inputs
     still required before a complete neighbor response can be sent.
+15. Follow [receive and common-window accounting](../protocol/receive-counter-accounting.md).
+    Distinguish interface arrival from client delivery, observe 17 ingress
+    losses that ordinary receive drop counters miss, and read a direction-bearing
+    capture. Reconcile both directions over common bounds and verify their live
+    OVSDB recovery. Explain the remaining complete-link qualification boundary.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

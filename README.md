@@ -69,9 +69,11 @@ egress drops do not increment the ordinary interface error/drop counters.
 The [egress accounting source](doc/protocol/egress-accounting-source.md) now
 observes those action drops without double counting and carries bounded readings
 through OVSDB. Its independent checks account for all 17 injected losses and
-verify 292 live intervals across reconnect/restart. Receive-side loss and
-media/capacity/availability qualification remain prerequisites for complete
-native metric delivery.
+verify 292 live intervals across reconnect/restart. The follow-on
+[receive source](doc/protocol/receive-counter-accounting.md) joins both directions
+over common read bounds and accounts for 17 ingress drops after interface
+arrival. Complete per-neighbor loss, media and capacity/availability qualification
+remain prerequisites for native metric delivery.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 

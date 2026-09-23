@@ -8,17 +8,18 @@ import argparse
 import json
 from pathlib import Path
 
+from emosa.simulation.backhaul_accounting import BackhaulAccountingSource
 from emosa.simulation.egress_accounting import EgressAccountingSource
 
 
-def replay(directory):
+def replay(directory, source_class=EgressAccountingSource):
     rows = [
         json.loads(line)
         for line in (directory / "egress-observations.jsonl").read_text().splitlines()
     ]
     first = rows[0]
     now = [first["heartbeat_ns"]]
-    source = EgressAccountingSource(first["run_label"], clock=lambda: now[0])
+    source = source_class(first["run_label"], clock=lambda: now[0])
     result = []
     for value in rows:
         now[0] = value["heartbeat_ns"]
@@ -41,5 +42,14 @@ def replay(directory):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
+    parser.add_argument("--bidirectional", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(replay(args.directory), indent=2))
+    print(
+        json.dumps(
+            replay(
+                args.directory,
+                BackhaulAccountingSource if args.bidirectional else EgressAccountingSource,
+            ),
+            indent=2,
+        )
+    )

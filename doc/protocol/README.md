@@ -37,6 +37,7 @@
 | [Live neighbor binding](neighbor-discovery-binding.md) | Pod-side discovery through OVSDB into represented topology, with observer pause checks |
 | [Backhaul counter audit](backhaul-counter-accounting.md) | Packet/byte reconciliation and the controlled loss absent from ordinary interface counters |
 | [Egress accounting source](egress-accounting-source.md) | Passive action/driver loss observations through OVSDB, configuration epochs, controlled loss and live recovery checks |
+| [Receive and common-window accounting](receive-counter-accounting.md) | Interface arrival versus client delivery, selected ingress losses, exact Ubuntu source review and common transmit/receive intervals |
 
 Component checks retain their individual scope. The native onboarding guide
 establishes the bounded simulated-pod exchange; full-profile sustained reporting

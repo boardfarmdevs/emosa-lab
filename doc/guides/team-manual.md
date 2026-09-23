@@ -3949,6 +3949,49 @@ session statistics must join the eventual 15-minute acceptance run.
 configuration epoch, component replay and a live OVSDB handoff. Explain why
 `measurement_source_qualified` remains false even when this source is available.
 
+### 13.25 Distinguish receiving a packet from delivering it
+
+An interface can receive a frame that never reaches the client. The
+[receive-accounting guide](../protocol/receive-counter-accounting.md) demonstrates
+this with the same wired ping, now dropping replies as they enter the pod's
+backhaul. It joins the transmit and receive observations from chapter 13.24 into
+one interval, so their timing can be compared meaningfully.
+
+1. Follow the guide's packet-path diagram. Locate the interface-arrival count,
+   ingress action and client delivery point. Predict which counts should change
+   when the action discards 17 replies. The packets have already reached the
+   interface; their later loss cannot erase that observation.
+2. On HOST, run the retained receive checker. Compare the 17 action drops with
+   unchanged ordinary receive error/drop fields. Find the extra ARP packets in
+   the whole-interface capture. Explain why a ping-only capture cannot account
+   for every interface packet or byte.
+3. Inspect the Linux SLL2 capture. It retains direction and interface index;
+   outgoing on the VM peer means incoming at the pod. Its capture header is six
+   bytes larger than Ethernet's header. The checker must account for that
+   difference, and must reject an unsupported media/header format.
+4. Review the first two limited attempts. Their direction-selected files do not
+   match filter totals, so they cannot establish complete packet accounting.
+   The final attempt retains both directions and classifies them explicitly.
+   Zero kernel drops alone never makes an incomplete capture sufficient.
+5. Inspect a `backhaul_accounting.window`. All eight counter deltas share the
+   same pair of bounded reads. A reset in either direction or a new connection
+   requires a fresh baseline. Read the source's unknown/expired states before
+   comparing any numbers with a controller report.
+6. Use the guide to reproduce the short idle-lab ingress experiment, then its
+   native recovery check. Check restoration between experiments. The existing
+   `egress-observer.py` already observes both directions; the historical helper
+   name does not mean a new pod API or second OVSDB connection is required.
+
+**Why isn't this complete neighbor reporting?** These are checked interface
+observations for selected paths. A complete link profile must also qualify peer
+attribution, remaining loss paths, media and capacity/availability. The adapter
+continues to withhold an incomplete native metric response. AP/STA reporting
+and final-session statistics remain necessary for full sustained acceptance.
+
+**Learning checkpoint:** explain how an interface-arrival count and a later
+ingress-loss count can both increase for the same packet without contradiction.
+Distinguish that from counting the same loss twice through parent/action counters.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

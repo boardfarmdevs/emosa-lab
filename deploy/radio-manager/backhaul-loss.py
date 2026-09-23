@@ -1,4 +1,4 @@
-"""Owned idle-lab counter qualification: selected wired ICMP loss before veth TX.
+"""Owned idle-lab counter qualification: selected wired ICMP egress/ingress loss.
 
 Adds one temporary clsact/filter only to the owned simulated pod, preserves each
 attempt and removes only that owned qdisc. No physical target is supported.
@@ -22,20 +22,35 @@ PREF = "49190"
 COUNT = 17
 
 
-def snapshot():
+def snapshot(direction="egress"):
     return {
         "monotonic_ns": time.monotonic_ns(),
         "wall_ns": time.time_ns(),
         "links": json.loads(inside(AP, "ip", "-j", "-d", "-s", "link", "show")),
         "qdiscs": json.loads(inside(AP, "tc", "-j", "-s", "qdisc", "show", "dev", "eth1")),
         "filters": json.loads(
-            inside(AP, "tc", "-j", "-s", "filter", "show", "dev", "eth1", "egress")
+            inside(AP, "tc", "-j", "-s", "filter", "show", "dev", "eth1", direction)
+        ),
+        "opposite_filters": json.loads(
+            inside(
+                AP,
+                "tc",
+                "-j",
+                "-s",
+                "filter",
+                "show",
+                "dev",
+                "eth1",
+                "ingress" if direction == "egress" else "egress",
+            )
         ),
     }
 
 
-def experiment(label, observe_egress=False):
+def experiment(label, observe_egress=False, direction="egress"):
     guard()
+    if direction not in ("egress", "ingress"):
+        raise ValueError("unsupported owned loss direction")
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", label):
         raise ValueError("use a new owned run label")
     os.umask(0o077)
@@ -53,6 +68,7 @@ def experiment(label, observe_egress=False):
         "measurement_source_qualified": False,
         "sustained_operation_proven": False,
         "egress_observation_requested": observe_egress,
+        "loss_direction": direction,
     }
     write(directory / "result.json", result)
     captures, handles, owned_qdisc = [], [], False
@@ -90,12 +106,13 @@ def experiment(label, observe_egress=False):
                     "emosa-native-*",
                 ).strip():
                     raise RuntimeError("owned lab must be idle")
-            before = snapshot()
+            before = snapshot(direction)
             result["before"] = before
             if (
                 len(before["qdiscs"]) != 1
                 or before["qdiscs"][0]["kind"] != "noqueue"
                 or before["filters"]
+                or before["opposite_filters"]
             ):
                 raise RuntimeError("preserve existing traffic-control configuration")
             links = {v["ifname"]: v for v in before["links"]}
@@ -147,7 +164,7 @@ def experiment(label, observe_egress=False):
                 wait_egress(time.monotonic_ns())
             # Warm ARP and independently establish the existing path. No address changes.
             inside(CLIENTS[0], "ping", "-n", "-I", "eth1", "-c", "2", "-W", "1", "192.0.2.1")
-            for name, command in (
+            capture_commands = [
                 (
                     "ingress",
                     [
@@ -191,7 +208,35 @@ def experiment(label, observe_egress=False):
                         "icmp and host 192.0.2.20 and host 192.0.2.1",
                     ],
                 ),
-            ):
+            ]
+            if direction == "ingress":
+                # VM peer transmit is pod receive, before the pod's ingress TC.
+                # SLL2 preserves ifindex/direction. Capture both directions;
+                # libpcap direction-only selection obscures filter totals.
+                capture_commands.append(
+                    (
+                        "receive",
+                        [
+                            "tcpdump",
+                            "--immediate-mode",
+                            "-n",
+                            "-U",
+                            "-B",
+                            "8192",
+                            "-s",
+                            "0",
+                            "-i",
+                            "any",
+                            "-y",
+                            "LINUX_SLL2",
+                            "-w",
+                            "-",
+                            "ifindex " + str(peer["ifindex"]),
+                        ],
+                    )
+                )
+            result["capture_commands"] = dict(capture_commands)
+            for name, command in capture_commands:
                 out = (directory / (name + ".pcap")).open("xb")
                 err = (directory / (name + "-capture.log")).open("x")
                 handles.extend((out, err))
@@ -210,7 +255,7 @@ def experiment(label, observe_egress=False):
                         "add",
                         "dev",
                         "eth1",
-                        "egress",
+                        direction,
                         "protocol",
                         "ip",
                         "pref",
@@ -222,16 +267,16 @@ def experiment(label, observe_egress=False):
                         "ip_proto",
                         "icmp",
                         "src_ip",
-                        "192.0.2.20",
+                        "192.0.2.20" if direction == "egress" else "192.0.2.1",
                         "dst_ip",
-                        "192.0.2.1",
+                        "192.0.2.1" if direction == "egress" else "192.0.2.20",
                         "action",
                         "drop",
                     )
                 elif phase == "restored":
                     inside(AP, "tc", "qdisc", "del", "dev", "eth1", "clsact")
                     owned_qdisc = False
-                value = {"phase": phase, "icmp_id": identifier, "before": snapshot()}
+                value = {"phase": phase, "icmp_id": identifier, "before": snapshot(direction)}
                 if observe_egress:
                     value["egress_before"] = wait_egress(time.monotonic_ns())
                 result["phases"].append(value)
@@ -267,7 +312,7 @@ def experiment(label, observe_egress=False):
                     returncode=completed.returncode,
                     stdout=completed.stdout,
                     stderr=completed.stderr,
-                    after=snapshot(),
+                    after=snapshot(direction),
                 )
                 if observe_egress:
                     value["egress_after"] = wait_egress(time.monotonic_ns())
@@ -310,10 +355,11 @@ def experiment(label, observe_egress=False):
             for handle in handles:
                 handle.close()
             try:
-                result["after"] = snapshot()
+                result["after"] = snapshot(direction)
                 result["traffic_control_restored"] = (
                     result["after"]["qdiscs"] == result["before"]["qdiscs"]
                     and result["after"]["filters"] == result["before"]["filters"]
+                    and result["after"]["opposite_filters"] == result["before"]["opposite_filters"]
                 )
                 if not result["traffic_control_restored"]:
                     result["cleanup_errors"].append("traffic_control_not_restored")
@@ -329,5 +375,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("label")
     parser.add_argument("--observe-egress", action="store_true")
+    parser.add_argument("--direction", choices=("egress", "ingress"), default="egress")
     args = parser.parse_args()
-    experiment(args.label, args.observe_egress)
+    experiment(args.label, args.observe_egress, args.direction)

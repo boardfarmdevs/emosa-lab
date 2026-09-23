@@ -145,8 +145,9 @@ The live packet/byte observations have passed a concrete independent interval
 audit. The follow-on [egress source](egress-accounting-source.md) now observes the
 selected action/driver loss path, rejects unsupported paths, and resets baselines
 on configuration or connection changes. It accounts for all 17 controlled drops
-and verifies the live OVSDB handoff. Receive-side loss and complete per-link
-qualification remain open; adding every drop field together without checking
+and verifies the live OVSDB handoff. The [receive source](receive-counter-accounting.md)
+adds selected ingress loss and common Tx/Rx read bounds. Complete per-link loss
+qualification remains open; adding every drop field together without checking
 overlap would still be wrong.
 
 Capacity and availability still need an explicit measured/estimated virtual-link

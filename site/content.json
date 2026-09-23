@@ -879,10 +879,22 @@
       "title": "Controlled egress loss and live OVSDB recovery evidence",
       "description": "17 injected losses accounted for without parent duplication; 292 live intervals across three connection generations. Complete native metrics and sustained acceptance remain pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/receive-counter-accounting.md",
+      "title": "Understand receive loss and common backhaul intervals",
+      "description": "Distinguish interface arrival from client delivery, read SLL2 direction, and carry selected receive/transmit accounting through OVSDB with fresh recovery baselines.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/receive-accounting/README.md",
+      "title": "Ingress loss and common-window native recovery evidence",
+      "description": "17 ingress drops, 12 capture-reconciled common windows, 293 live intervals and 295 independently audited forwarding windows; two failed capture audits preserved.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "egress-accounting/unit-results.xml",
-    "ovsdb": "egress-accounting/ovsdb-results.xml"
+    "unit": "receive-accounting/unit-results.xml",
+    "ovsdb": "receive-accounting/ovsdb-results.xml"
   }
 }

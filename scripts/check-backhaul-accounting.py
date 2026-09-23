@@ -23,10 +23,10 @@ def lines(path):
     return [json.loads(line) for line in path.read_text().splitlines()]
 
 
-def packets(path):
+def packets(path, linktype=1):
     data = path.read_bytes()
     assert len(data) >= 24 and data[:4] == b"\xd4\xc3\xb2\xa1"
-    assert struct.unpack_from("<I", data, 20)[0] == 1
+    assert struct.unpack_from("<I", data, 20)[0] == linktype
     result, pos = [], 24
     while pos < len(data):
         assert pos + 16 <= len(data)

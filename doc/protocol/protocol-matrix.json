@@ -2050,7 +2050,7 @@
         "sustained_operation_proven": false,
         "physical_pod_proven": false,
         "remaining": [
-          "Selected egress accounting is implemented in egress_accounting_source; receive-side loss and complete common-window per-link qualification remain pending",
+          "Selected ingress/egress accounting and common read bounds are implemented in receive_accounting_source; complete per-link qualification remains pending",
           "Qualify capacity/availability without using veth hard-coded speed as measured capacity",
           "Connect complete measurements to guarded publisher, verify native controller fields and complete 15-minute acceptance"
         ]
@@ -2096,10 +2096,61 @@
         "sustained_operation_proven": false,
         "physical_pod_proven": false,
         "remaining": [
-          "Qualify receive-side loss and a common per-neighbor Tx/Rx measurement period",
+          "Selected receive loss and common Tx/Rx reads are implemented in receive_accounting_source; complete per-neighbor loss attribution remains pending",
           "Qualify media, capacity and availability estimates",
           "Join complete measurements to native publisher and independently verify controller fields",
           "Complete AP/STA and final-session reporting plus full integrated 15-minute acceptance"
+        ]
+      },
+      "receive_accounting_source": {
+        "status": "selected_ingress_loss_and_common_tx_rx_accounting_live_ovsdb_recovery_verified_complete_metrics_pending",
+        "guide": "doc/protocol/receive-counter-accounting.md",
+        "implementation": [
+          "src/emosa/simulation/backhaul_accounting.py",
+          "src/emosa/simulation/egress_accounting.py",
+          "src/emosa/simulation/native_onboarding.py"
+        ],
+        "helper": "deploy/radio-manager/backhaul-loss.py --direction ingress --observe-egress",
+        "source_references": [
+          "IEEE 1905.1-2013 sections 6.4.11-12, Tables 6-18 and 6-20, section 11.1; amended PHY/RSSI values from IEEE 1905.1a-2014",
+          "EasyMesh 6.1 section 10.1 p.82",
+          "Ubuntu Linux 6.8.0-139.139 drivers/net/veth.c veth_xmit/veth_get_stats64, net/core/dev.c tc_run/sch_handle_ingress/dev_get_stats, net/sched/act_gact.c tcf_gact_act",
+          "https://www.kernel.org/doc/html/v6.8/networking/statistics.html"
+        ],
+        "source_review_helper": "scripts/review-backhaul-kernel.py",
+        "source_provenance": "doc/evidence/receive-accounting/source-provenance.json",
+        "runtime_provenance": "doc/evidence/receive-accounting/runtime-provenance.json",
+        "contract": "Common bounded reads and lifetimes for both directions; RX packet count is interface arrival, not successful client delivery. Preserve raw interface/action loss components; never add parent qdisc drops. Reject observed unsupported/shared paths and inconsistent counters.",
+        "controlled_ingress_losses": 17,
+        "ordinary_rx_errors_for_selected_loss": 0,
+        "ordinary_rx_dropped_for_selected_loss": 0,
+        "loss_replay_common_windows": 17,
+        "independently_reconciled_probe_windows": 12,
+        "native_common_windows": 293,
+        "native_raw_forwarding_windows": 295,
+        "native_connection_generations": 3,
+        "native_active_seconds": 210.4867326019994,
+        "independent_check": "scripts/check-receive-accounting.py",
+        "test_refs": [
+          "tests/test_receive_accounting.py",
+          "tests/test_egress_accounting.py"
+        ],
+        "controlled_loss_evidence": "doc/evidence/receive-accounting/ingress-loss-03/independent-receive-check.json",
+        "native_evidence": "doc/evidence/receive-accounting/native-receive-01/independent-receive-check.json",
+        "recovery_evidence": "doc/evidence/receive-accounting/native-receive-01/independent-recovery-check.json",
+        "retained_capture_failures": [
+          "doc/evidence/receive-accounting/ingress-loss-01-limited/failure-analysis.json",
+          "doc/evidence/receive-accounting/ingress-loss-02-limited/failure-analysis.json"
+        ],
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Qualify complete per-neighbor attribution and relevant loss paths beyond the selected TC action cases; peer-side XDP/GRO, BPF/TCX and other paths are outside this measurement claim",
+          "Qualify media and capacity/availability estimates for the bounded virtual link",
+          "Connect complete inputs to the guarded publisher and verify actual native controller values",
+          "Complete AP/STA and final-session reporting and repeat integrated 15-minute acceptance"
         ]
       }
     }

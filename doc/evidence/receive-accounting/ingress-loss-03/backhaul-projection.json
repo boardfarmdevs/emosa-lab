@@ -1,0 +1,1280 @@
+{
+  "scope": "component replay of retained observations; not a live OVSDB result",
+  "observations": [
+    {
+      "heartbeat_ns": 29452618822680,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29452630435095,
+      "available": false,
+      "reason": "awaiting_backhaul_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29452619046992,
+        "ended_ns": 29452630426969,
+        "counters": {
+          "tx_packets": 38580,
+          "tx_bytes": 3817491,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38619,
+          "rx_bytes": 3871067,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29453148048791,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29453132875835,
+        "ended_ns": 29453148036419,
+        "counters": {
+          "tx_packets": 38581,
+          "tx_bytes": 3817589,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38620,
+          "rx_bytes": 3871165,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29452619046992,
+          29452630426969
+        ],
+        "last_read_ns": [
+          29453132875835,
+          29453148036419
+        ],
+        "deltas": {
+          "tx_packets": 1,
+          "tx_bytes": 98,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 1,
+          "rx_bytes": 98,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29453666196631,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29453650357639,
+        "ended_ns": 29453666184448,
+        "counters": {
+          "tx_packets": 38581,
+          "tx_bytes": 3817589,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38620,
+          "rx_bytes": 3871165,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29453132875835,
+          29453148036419
+        ],
+        "last_read_ns": [
+          29453650357639,
+          29453666184448
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29454051933958,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29454219918192,
+      "available": false,
+      "reason": "awaiting_backhaul_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29454202904728,
+        "ended_ns": 29454219911119,
+        "counters": {
+          "tx_packets": 38582,
+          "tx_bytes": 3817687,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38621,
+          "rx_bytes": 3871263,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29454733677807,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29454723765550,
+        "ended_ns": 29454733664452,
+        "counters": {
+          "tx_packets": 38582,
+          "tx_bytes": 3817687,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38621,
+          "rx_bytes": 3871263,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29454202904728,
+          29454219911119
+        ],
+        "last_read_ns": [
+          29454723765550,
+          29454733664452
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29455249926552,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29455237422185,
+        "ended_ns": 29455249910372,
+        "counters": {
+          "tx_packets": 38582,
+          "tx_bytes": 3817687,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38621,
+          "rx_bytes": 3871263,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29454723765550,
+          29454733664452
+        ],
+        "last_read_ns": [
+          29455237422185,
+          29455249910372
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29455765992141,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29455751989908,
+        "ended_ns": 29455765978676,
+        "counters": {
+          "tx_packets": 38590,
+          "tx_bytes": 3818471,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38629,
+          "rx_bytes": 3872047,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29455237422185,
+          29455249910372
+        ],
+        "last_read_ns": [
+          29455751989908,
+          29455765978676
+        ],
+        "deltas": {
+          "tx_packets": 8,
+          "tx_bytes": 784,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 8,
+          "rx_bytes": 784,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29456277560253,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29456268048593,
+        "ended_ns": 29456277520840,
+        "counters": {
+          "tx_packets": 38599,
+          "tx_bytes": 3819353,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38638,
+          "rx_bytes": 3872929,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29455751989908,
+          29455765978676
+        ],
+        "last_read_ns": [
+          29456268048593,
+          29456277520840
+        ],
+        "deltas": {
+          "tx_packets": 9,
+          "tx_bytes": 882,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 9,
+          "rx_bytes": 882,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29456792636982,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29456780655516,
+        "ended_ns": 29456792622294,
+        "counters": {
+          "tx_packets": 38599,
+          "tx_bytes": 3819353,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38638,
+          "rx_bytes": 3872929,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29456268048593,
+          29456277520840
+        ],
+        "last_read_ns": [
+          29456780655516,
+          29456792622294
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29456913728206,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29457003421423,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29457319764372,
+      "available": false,
+      "reason": "awaiting_backhaul_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 29457307064816,
+        "ended_ns": 29457319756878,
+        "counters": {
+          "tx_packets": 38599,
+          "tx_bytes": 3819353,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38638,
+          "rx_bytes": 3872929,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29457832526651,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 29457821453658,
+        "ended_ns": 29457832511013,
+        "counters": {
+          "tx_packets": 38600,
+          "tx_bytes": 3819699,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38638,
+          "rx_bytes": 3872929,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29457307064816,
+          29457319756878
+        ],
+        "last_read_ns": [
+          29457821453658,
+          29457832511013
+        ],
+        "deltas": {
+          "tx_packets": 1,
+          "tx_bytes": 346,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29458355505379,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 29458336513456,
+        "ended_ns": 29458355489480,
+        "counters": {
+          "tx_packets": 38607,
+          "tx_bytes": 3820273,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38645,
+          "rx_bytes": 3873503,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 6
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29457821453658,
+          29457832511013
+        ],
+        "last_read_ns": [
+          29458336513456,
+          29458355489480
+        ],
+        "deltas": {
+          "tx_packets": 7,
+          "tx_bytes": 574,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 7,
+          "rx_bytes": 574,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 6
+        },
+        "transmit_losses": 0,
+        "receive_losses": 6
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29458873580844,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 29458858034941,
+        "ended_ns": 29458873563351,
+        "counters": {
+          "tx_packets": 38618,
+          "tx_bytes": 3821351,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38656,
+          "rx_bytes": 3874581,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 16
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29458336513456,
+          29458355489480
+        ],
+        "last_read_ns": [
+          29458858034941,
+          29458873563351
+        ],
+        "deltas": {
+          "tx_packets": 11,
+          "tx_bytes": 1078,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 11,
+          "rx_bytes": 1078,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 10
+        },
+        "transmit_losses": 0,
+        "receive_losses": 10
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29459391918762,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 29459376150410,
+        "ended_ns": 29459391900799,
+        "counters": {
+          "tx_packets": 38619,
+          "tx_bytes": 3821449,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38657,
+          "rx_bytes": 3874679,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 17
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29458858034941,
+          29458873563351
+        ],
+        "last_read_ns": [
+          29459376150410,
+          29459391900799
+        ],
+        "deltas": {
+          "tx_packets": 1,
+          "tx_bytes": 98,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 1,
+          "rx_bytes": 98,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 1
+        },
+        "transmit_losses": 0,
+        "receive_losses": 1
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29459915335725,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 29459894535655,
+        "ended_ns": 29459915316059,
+        "counters": {
+          "tx_packets": 38619,
+          "tx_bytes": 3821449,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38657,
+          "rx_bytes": 3874679,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 17
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29459376150410,
+          29459391900799
+        ],
+        "last_read_ns": [
+          29459894535655,
+          29459915316059
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29460435550527,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 29460418628211,
+        "ended_ns": 29460435535960,
+        "counters": {
+          "tx_packets": 38619,
+          "tx_bytes": 3821449,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38657,
+          "rx_bytes": 3874679,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 17
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29459894535655,
+          29459915316059
+        ],
+        "last_read_ns": [
+          29460418628211,
+          29460435535960
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29460615654990,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29460616166100,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29460981626830,
+      "available": false,
+      "reason": "awaiting_backhaul_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29460968872233,
+        "ended_ns": 29460981618405,
+        "counters": {
+          "tx_packets": 38619,
+          "tx_bytes": 3821449,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38657,
+          "rx_bytes": 3874679,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29461497242199,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29461483232934,
+        "ended_ns": 29461497231980,
+        "counters": {
+          "tx_packets": 38619,
+          "tx_bytes": 3821449,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38657,
+          "rx_bytes": 3874679,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29460968872233,
+          29460981618405
+        ],
+        "last_read_ns": [
+          29461483232934,
+          29461497231980
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29462017154874,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29461999035356,
+        "ended_ns": 29462017140388,
+        "counters": {
+          "tx_packets": 38625,
+          "tx_bytes": 3822037,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38663,
+          "rx_bytes": 3875267,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29461483232934,
+          29461497231980
+        ],
+        "last_read_ns": [
+          29461999035356,
+          29462017140388
+        ],
+        "deltas": {
+          "tx_packets": 6,
+          "tx_bytes": 588,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 6,
+          "rx_bytes": 588,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29462536633881,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29462519076698,
+        "ended_ns": 29462536618083,
+        "counters": {
+          "tx_packets": 38636,
+          "tx_bytes": 3823115,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38674,
+          "rx_bytes": 3876345,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29461999035356,
+          29462017140388
+        ],
+        "last_read_ns": [
+          29462519076698,
+          29462536618083
+        ],
+        "deltas": {
+          "tx_packets": 11,
+          "tx_bytes": 1078,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 11,
+          "rx_bytes": 1078,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29463055758657,
+      "available": true,
+      "reason": "observed_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "005e9bbb-7d71-4aeb-b7a9-c10fb15cbb0e",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 29463039492038,
+        "ended_ns": 29463055743188,
+        "counters": {
+          "tx_packets": 38636,
+          "tx_bytes": 3823115,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 38674,
+          "rx_bytes": 3876345,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          29462519076698,
+          29462536618083
+        ],
+        "last_read_ns": [
+          29463039492038,
+          29463055743188
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 29463258136972,
+      "available": false,
+      "reason": "unavailable_or_unsupported_backhaul_source",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 common TX/RX reads; selected driver, stack and disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    }
+  ],
+  "sustained_operation_proven": false
+}
