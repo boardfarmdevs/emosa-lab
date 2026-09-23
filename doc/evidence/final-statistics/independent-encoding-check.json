@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "vectors": 3,
+  "scope": "synthetic final-statistics encoding only",
+  "capture_sha256": "c647efb3823fe9951853afa5916a5abaaf79fab91a7eca6603d74c10a7edba92",
+  "dissector": "TShark (Wireshark) 3.6.2 (Git v3.6.2 packaged as 3.6.2-2)",
+  "physical_pod_proven": false,
+  "final_counter_source_qualified": false
+}

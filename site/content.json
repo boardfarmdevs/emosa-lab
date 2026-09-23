@@ -5,7 +5,7 @@
       "title": "An actual protocol peer",
       "status": "Bounded simulated onboarding verified",
       "state": "pending",
-      "description": "The native controller now discovers EMOSA and supplies an authenticated WSC configuration to the simulated OpenSync pod. Its own inventory contains the observed radio and BSS; independent wired and Wi-Fi clients pass. This uses an isolated patched controller candidate; continuous management and physical qualification remain pending.",
+      "description": "The native controller discovers EMOSA and supplies authenticated WSC configuration to the simulated OpenSync pod. Its inventory contains the observed radio, BSS and client. A 908-second run verifies continuous traffic and recovery from pod reconnect and adapter SIGKILL. The isolated patched controller candidate still needs mandatory metrics and physical qualification.",
       "responsibilities": [
         "Use the isolated em-protocol bridge, separate from pod management.",
         "Exercise discovery, capabilities and selected provisioning procedures.",
@@ -19,14 +19,14 @@
       "title": "The extender’s EasyMesh representation",
       "status": "Bounded virtual-agent onboarding verified",
       "state": "pending",
-      "description": "EMOSA represents the simulated OpenSync extender through native discovery, authenticated WSC and observed topology. A separate active-worker pilot now verifies measured client reporting, repeated joins/leaves and native STA inventory. Complete 15-minute operation with recovery, recurring policy/channel handling and physical acceptance remain pending.",
+      "description": "EMOSA represents the simulated OpenSync extender through native discovery, authenticated WSC and observed topology. The 908-second operational run verifies client reporting, repeated joins/leaves, native STA inventory and both recovery faults. Final-statistics encoding and delivery guards are implemented; qualified measurements and complete sustained acceptance remain pending.",
       "responsibilities": [
         "Map stable agent/radio/BSS identities and advertised capabilities to a qualified actual pod.",
         "Bound framing, TLVs, reassembly, retries and timers using the selected specifications.",
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Add continuous station reporting and native lifecycle recovery, then qualify the unchanged physical pod.",
+      "next": "Qualify final-session measurements and mandatory policy/AP/STA/neighbor metrics, then repeat complete sustained acceptance and qualify the unchanged physical pod.",
       "path": "doc/protocol/native-onboarding.md"
     },
     "engine": {
@@ -40,7 +40,7 @@
         "Guard existing resource references and preserve unrelated configuration.",
         "Reconcile lost outcomes, restart, ownership conflicts and deadlines."
       ],
-      "next": "Authenticated Ethernet M2 now drives one operation through hwsim and independent clients, including uncertain-commit recovery without resend. Native admission and physical qualification remain pending.",
+      "next": "Native-controller authenticated M2 drives the durable operation through hwsim and independent clients; reconnect and restart complete fresh no-op operations without duplicate writes. Physical qualification remains pending.",
       "path": "src/emosa/reconcile.py"
     },
     "journal": {
@@ -727,13 +727,25 @@
     {
       "path": "doc/evidence/native-active/README.md",
       "title": "Active client pilot evidence",
-      "description": "Independently checked 95-second native-worker pilot with four joins, three leaves, controller STA inventory and traffic. Fifteen-minute recovery acceptance remains pending.",
+      "description": "Independently checked 95-second active-worker pilot with joins/leaves, controller STA inventory and traffic. The later 908-second operational recovery run extends this historical evidence; complete mandatory reporting remains pending.",
       "category": "Wire implementation"
     },
     {
       "path": "doc/evidence/native-soak/README.md",
       "title": "Fifteen-minute operational recovery evidence",
       "description": "908-second native-controller run: continuous traffic, 36 client outages, fresh onboarding after pod reconnect and SIGKILL, no duplicate writes. Mandatory metrics and full sustained acceptance remain pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/final-session-statistics.md",
+      "title": "Final client-session reporting",
+      "description": "Learn why a measured final association record differs from polling membership. Implemented sender, guarded handoff, counter units and rollover; publisher qualification remains pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/final-statistics/README.md",
+      "title": "Final-statistics component and byte-unit evidence",
+      "description": "Three independently decoded synthetic vectors, 1,081 passing tests, and a 150-second native byte-declaration regression with both recovery faults. No measured final-session delivery claim.",
       "category": "Wire implementation"
     }
   ],

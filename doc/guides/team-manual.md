@@ -3553,8 +3553,10 @@ an old M2 must not grant the new process write authority. The independent
 `scripts/check-native-recovery.py` checks the packet sequence, receipt hashes,
 traffic and resource samples; its default minimum is 900 seconds.
 
-The pilot is an implementation aid. Required policy/metrics, IEEE 1905 neighbor-link metrics and final
-disassociation statistics remain gaps in complete sustained acceptance.
+The pilot is an implementation aid. Required policy/metrics, IEEE 1905
+neighbor-link metrics and measured final disassociation statistics remain gaps
+in complete sustained acceptance. The final-statistics sender is now implemented;
+the next section explains why its measurement source is a separate requirement.
 Read the difference between `operational_recovery_checks_passed` and
 `sustained_operation_proven` in the guide. Duration or uninterrupted traffic
 alone cannot satisfy every controller procedure, and simulation cannot
@@ -3565,6 +3567,56 @@ age, native controller inventory, adapter liveness and independent traffic are
 five different observations. Locate each in the run artifacts. Then explain
 why recovery creates a new WSC operation but should not create another Config
 write when the pod is already in the requested state.
+
+### 13.18 Understand final session counters before reporting a client leave
+
+A client disappearing from OVSDB tells EMOSA that the client is no longer
+associated. It does not tell EMOSA how many packets the client exchanged before
+leaving, whether its last transmissions failed, or why it disconnected. EasyMesh
+requires this additional information in a Client Disassociation Stats message.
+This is why a successful join/leave exercise can still leave a reporting gap.
+
+**What is a final session?** One station can connect, disconnect and connect
+again with the same MAC address. Each association is a different session. The
+final record must identify that particular association and contain its actual
+disconnect reason and complete counters. The last periodic sample may have been
+taken before the last packets; an absent field must not become a made-up zero.
+AP transmit counters describe traffic sent toward the station; AP receive
+counters describe traffic received from it.
+
+The sender and its internal onboarding handoff are implemented. They require
+authenticated onboarding, a recently observed leave, fresh complete counters,
+and a matching source/session identity. If the station rejoins or the source
+changes, the old report is withdrawn. The current lab publisher cannot yet
+supply a qualified final record, so native experiments still report this gap.
+The regular physical-pod service also has no qualified final-record source yet.
+
+**Where do I run the exercise?** Use the checkout on HOST; this component exercise
+needs Python and tshark from chapter 3 and does not start containers. Follow
+the [final-session guide](../protocol/final-session-statistics.md) in this order:
+
+1. Read the retained evidence and distinguish the synthetic encoding check from
+   the native byte-unit regression. Only the latter uses the real controller.
+2. Run `python3 scripts/check-disassociation-reference.py` to check the three
+   retained messages with an independent dissector.
+3. Generate fresh fixtures using the guide's command and a new output directory.
+   Compare raw bytes, KiB and MiB at a counter rollover boundary.
+4. Run the focused lifecycle tests and examine the rejected stale, incomplete,
+   reassociated and conflicting records.
+5. Proceed to measurement-source qualification before attempting to claim live
+   final-statistics delivery in another 15-minute run.
+
+**Why change the advertised byte unit?** The current virtual agent uses
+Profile-1, whose traffic counters are in bytes. Earlier experiments advertised
+KiB in an accompanying capability TLV but never sent traffic counters. The new
+native regression verifies a consistent byte declaration through onboarding and
+both recovery faults. Encoding tests for KiB/MiB support future codec work; they
+do not enable additional profiles in the running agent.
+
+**Learning checkpoint:** explain why a valid packet, a complete measured final
+record, and the controller acknowledging that record are three separate pieces
+of evidence. Locate which ones this component and the native regression provide,
+and identify the measurement work that remains before complete acceptance.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

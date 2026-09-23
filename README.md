@@ -26,6 +26,9 @@ onboarding after pod reconnect and adapter SIGKILL, with no duplicate Config
 writes. All 135 connected samples place the client under the virtual BSS.
 Complete [sustained acceptance](doc/protocol/sustained-operation.md) still requires
 policy/AP/STA/neighbor metrics and final disassociation statistics.
+The [final-session sender](doc/protocol/final-session-statistics.md) and guarded
+onboarding handoff are implemented and independently decoded. Its measurement
+source remains unqualified; the native lab does not invent missing counters.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 

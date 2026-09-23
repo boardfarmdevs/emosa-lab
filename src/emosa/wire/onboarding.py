@@ -14,6 +14,7 @@ from emosa.wire.autoconfiguration import SECURITY_ENVELOPES, DiscoveryExchange
 from emosa.wire.channel import ChannelCoordinator
 from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, decode_frame, fragment_message
 from emosa.wire.coordinator import ReportCoordinator
+from emosa.wire.disassociation import DisassociationCoordinator, FinalSession
 from emosa.wire.provisioning_session import ComponentProvisioningSession
 from emosa.wire.reports import PreparedReport, capability_tlvs
 
@@ -75,6 +76,8 @@ class OnboardingSession:
         self.channel_store = channel_store
         self.reset_channel_policy = reset_channel_policy
         self.channels = None
+        self.disassociations = None
+        self.departures = {}
 
     def _record(self, event):
         self.counts[event] = self.counts.get(event, 0) + 1
@@ -139,6 +142,9 @@ class OnboardingSession:
             self.reports.tick()
         if self.channels:
             self.channels.tick()
+        if self.disassociations:
+            self.disassociations.tick()
+        self.departures = {key: at for key, at in self.departures.items() if self.clock() < at + 2}
         if self.provisioning:
             self.provisioning.tick()
             # Notify only observed topology changes, never desired Config changes.
@@ -182,7 +188,10 @@ class OnboardingSession:
                         # EasyMesh 6.1 §6.3 also requires final statistics/reason.
                         # Membership alone cannot supply these. Retain the gap.
                         self._record("disassociation_statistics_unavailable")
+                        if len(self.departures) < 64:
+                            self.departures[(bssid, mac)] = self.clock()
                     if joined:
+                        self.departures.pop((bssid, mac), None)
                         self.last_clients.add((bssid, mac))
                     else:
                         self.last_clients.discard((bssid, mac))
@@ -212,6 +221,10 @@ class OnboardingSession:
                     self.state = "provisioning"
                 return self._record("wsc_" + result["status"])
             if fragment.message_type in (2, 0x8000) and self.reports:
+                if fragment.message_type == 0x8000 and self.disassociations:
+                    result = self.disassociations.ack(frame, ingress=ingress, generation=generation)
+                    if result:
+                        return self._record(result)
                 if fragment.message_type == 0x8000 and self.channels:
                     result = self.channels.ack(frame, ingress=ingress, generation=generation)
                     if result:
@@ -233,6 +246,9 @@ class OnboardingSession:
                 self.state = "admitting"
                 self.reports = ReportCoordinator(
                     self.source, self.send_frame, mids=self.mids, clock=self.clock
+                )
+                self.disassociations = DisassociationCoordinator(
+                    self.source, self.send_frame, self.mids, profile=1, clock=self.clock
                 )
                 if self.channel_store is not None:
                     self.channels = ChannelCoordinator(
@@ -322,10 +338,37 @@ class OnboardingSession:
                 self.state = "failed"
             return self._record("rejected_" + getattr(exc, "code", "send"))
 
+    def report_final_session(self, event):
+        """Internal qualified-publisher handoff, never a substitute polling sample.
+
+        A caller must bind the publisher's association identifier and finality;
+        this lifecycle additionally requires a recently observed actual leave.
+        The owned hwsim publisher does not yet provide these final records.
+        """
+        if type(event) is not FinalSession:
+            raise EmosaError(Reason.INVALID_INPUT, "qualified final-session record required")
+        departed = self.departures.get((event.bssid, event.station))
+        if (
+            self.state != "provisioning"
+            or self._snapshot() is None
+            or departed is None
+            or not 0 <= self.clock() - departed < 2
+            or event.observed_at < departed - 2
+        ):
+            raise EmosaError(Reason.NOT_READY, "no fresh admitted client departure")
+        return self._record(self.disassociations.submit(event))
+
     def close(self):
-        for component in (self.discovery, self.reports, self.provisioning, self.channels):
+        for component in (
+            self.discovery,
+            self.reports,
+            self.provisioning,
+            self.channels,
+            self.disassociations,
+        ):
             if component:
                 component.close()
+        self.departures.clear()
         self.state = "closed"
 
     def status(self):
@@ -350,6 +393,12 @@ class OnboardingSession:
                 "operating_ack_pending": self.channels.pending is not None,
             }
             if self.channels
+            else None,
+            "disassociations": {
+                "counts": dict(self.disassociations.counts),
+                "pending": len(self.disassociations.pending),
+            }
+            if self.disassociations
             else None,
         }
 

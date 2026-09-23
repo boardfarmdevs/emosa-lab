@@ -79,6 +79,7 @@ async def experiment(label, *, active_seconds=0, recovery_checks=False):
         "active_seconds_requested": active_seconds,
         "sustained_operation_proven": False,
         "recovery_checks_requested": recovery_checks,
+        "agent_counter_units": 0,
     }
     write(directory / "result.json", report)
     write(

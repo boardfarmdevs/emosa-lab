@@ -133,7 +133,20 @@ def check(directory, tool, *, initial_only=False):
     assert search["frame"] < response["frame"] < early["frame"] < m1["frame"] < m2["frame"]
     assert hashlib.sha256(value(m1, 0x11)).hexdigest() == receipt["m1_sha256"]
     assert value(m1, 0x85)[:7] == bytes.fromhex(RADIO) + b"\1"
-    assert value(m1, 0xB4)[2] == 0x40
+    # Earlier bounded runs advertised KiB but sent no traffic-statistic TLVs.
+    # New Profile-1 runs explicitly declare bytes to match EasyMesh Table 58.
+    counter_units = result.get("agent_counter_units", 1)
+    assert counter_units in (0, 1)
+    assert value(m1, 0xB4)[2] == counter_units << 6
+    assert all(
+        len(data) == 4 and data[2] >> 6 == counter_units
+        for packet in rows
+        if packet["source"] == AGENT
+        for kind, data in packet["tlvs"]
+        if kind == 0xB4
+    )
+    if any(kind == 0xA2 for p in rows for kind, _ in p["tlvs"]):
+        assert counter_units == 0
     assert value(m2, 0x82).hex() == RADIO and m2["mid"] == receipt["first_mid"]
     assert {k for k, _ in m2["tlvs"]} == {0x82, 0x11}
     expected_bss = bytes((1,)) + bytes.fromhex(RADIO) + b"\1" + bytes.fromhex(RADIO)
@@ -220,6 +233,7 @@ def check(directory, tool, *, initial_only=False):
         "native_baseline_restored": True,
         "operations": 1,
         "writes": 1,
+        "advertised_byte_counter_units": counter_units,
         "frames": len(rows),
         "m1_sha256": receipt["m1_sha256"],
         "capability_report_frame": capability["frame"],

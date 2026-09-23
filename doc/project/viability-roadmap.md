@@ -131,6 +131,27 @@ existing peer's behavior before inserting EMOSA. This is a separate experiment
 from the empty EMOSA-facing inventory above. Its observed native exchanges do
 not remove EMOSA's specification or physical-pod gates.
 
+## Current sustained-operation follow-on
+
+The [908-second operational run](../evidence/native-soak/README.md) now joins
+native discovery/WSC, observed BSS/STA inventory, repeated client cycles and
+continuous traffic with pod reconnect and adapter SIGKILL recovery. It creates
+fresh authenticated operations without duplicate Config writes. This supersedes
+the earlier empty-inventory and integration milestones described above.
+
+Complete sustained acceptance still needs mandatory reporting policy, qualified
+AP/STA/neighbor measurements and final session reporting. The
+[final-session component](../protocol/final-session-statistics.md) now implements
+encoding, bounded delivery and a guarded lifecycle handoff. Its final-counter
+publisher is unqualified. The [150-second native regression](../evidence/final-statistics/README.md)
+verifies corrected byte-unit advertisement through both recovery faults, without
+claiming that final session statistics were measured or delivered.
+
+Next qualify measurement meanings, completeness and session finality, connect
+those records to the implemented handoff, then re-run complete 15-minute
+acceptance with independently decoded reports. The unchanged physical-pod path
+remains a separate pending input and acceptance boundary.
+
 ## Priority and exit evidence
 
 | Order | Work | Exit evidence / decision |

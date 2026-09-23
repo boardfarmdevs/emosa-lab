@@ -87,7 +87,11 @@ class RadioReportSource:
             advanced=APRadioAdvancedCapabilities(RADIO, 0),
         )
         self.capabilities = replace(
-            caps, radios=(radio,), profile2=Profile2APCapability(0, 0, 0x40, 0)
+            # Profile-1 traffic counters are bytes (EasyMesh 6.1 Table 58).
+            # Keep the accompanying Profile-2 counter declaration consistent.
+            caps,
+            radios=(radio,),
+            profile2=Profile2APCapability(0, 0, 0, 0),
         )
         self.source = ReportSource(
             binding,

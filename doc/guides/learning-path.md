@@ -201,6 +201,12 @@ OpenSync-format telemetry. Work through these exercises in order:
    outage windows, process samples and the independent check. Explain why a
    scoped recovery pass still leaves mandatory policy/metrics and final
    disassociation reporting as gaps in complete sustained acceptance.
+5. Follow [final-session statistics](../protocol/final-session-statistics.md) and
+   [manual §13.18](team-manual.md#1318-understand-final-session-counters-before-reporting-a-client-leave).
+   Decode the synthetic messages, check rollover and byte units, and exercise
+   the authenticated observed-leave handoff. Then identify why the lab still
+   needs a qualified source for the actual final counters and disconnect reason.
+   A passing codec test does not fill in missing measurements.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

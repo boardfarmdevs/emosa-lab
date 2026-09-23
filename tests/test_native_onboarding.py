@@ -132,6 +132,60 @@ def test_wrong_mid_then_source_loss_does_not_revive_write_authority(rig):
     asyncio.run(scenario())
 
 
+def test_final_stats_require_provisioning_and_an_observed_departure(rig):
+    from emosa.easymesh_payloads import AssociatedClient, AssociatedClients, BssClients
+    from emosa.errors import EmosaError
+    from emosa.wire.disassociation import FinalSession, TrafficCounters
+
+    async def scenario():
+        _, _, _, clock = rig
+        session, source, sent = lifecycle(rig)
+        original = source.current()
+        bssid = original.topology.operational.radios[0].bsses[0].ap_mac
+        station = bytes.fromhex("020000009988")
+        event = FinalSession(
+            original.context_token,
+            "measured-session-1",
+            bssid,
+            station,
+            clock.monotonic(),
+            3,
+            TrafficCounters(100, 200, 3, 4, 0, 0, 1),
+        )
+        with pytest.raises(EmosaError):
+            session.report_final_session(event)
+        await session.tick()
+        await receive(session, response())
+        with pytest.raises(EmosaError):
+            session.report_final_session(event)
+        await receive(session, frames()[0])
+        with pytest.raises(EmosaError):
+            session.report_final_session(event)
+        joined = replace(
+            original.topology,
+            clients=AssociatedClients((BssClients(bssid, (AssociatedClient(station, 20),)),)),
+            inventory_complete=True,
+        )
+        source.publish((1, 2), original.capabilities, joined, observed_at=clock.monotonic())
+        await session.tick()
+        left = replace(joined, clients=AssociatedClients((BssClients(bssid, ()),)))
+        source.publish((1, 3), original.capabilities, left, observed_at=clock.monotonic())
+        await session.tick()
+        assert session.report_final_session(event) == "final_session_report_sent"
+        report = assemble((sent[-1],))
+        assert report.message_type == 0x8022
+        ack = fragment_message(BINDING.local_al, BINDING.controller_al, 0x8000, report.mid, ())[0]
+        assert await receive(session, ack) == "final_session_acknowledged"
+        source.publish((1, 4), original.capabilities, joined, observed_at=clock.monotonic())
+        await session.tick()
+        with pytest.raises(EmosaError):
+            session.report_final_session(event)
+        session.close()
+        assert not session.departures and not session.disassociations.pending
+
+    asyncio.run(scenario())
+
+
 def test_recovery_requires_fresh_discovery_and_rejects_previous_m2(rig, monkeypatch):
     from test_autoconfiguration import exchange
 
