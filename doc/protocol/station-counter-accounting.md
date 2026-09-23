@@ -62,6 +62,8 @@ No raw-counter passthrough or measured final-statistics message is enabled.
 Start in the checkout with Python and tshark installed as in manual chapter 3.
 No containers, radio changes or privileged access are needed to inspect retained
 evidence. Run each command; a failed assertion means that scoped check failed.
+The checker has been exercised with tshark 3.6.2 and 4.2.2; their numeric versus
+`True/False` boolean field formats are both recognized and regression-tested.
 
 ```bash
 python3 scripts/check-capture-health.py \

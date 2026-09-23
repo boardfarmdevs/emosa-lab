@@ -1,0 +1,10 @@
+{
+  "scope": "Independent retained counter audit across actual tshark versions",
+  "host_tshark": "3.6.2",
+  "vm_tshark": "4.2.2",
+  "results_identical": true,
+  "result_sha256": "f814df7ce768e97130b9d208b8bd8e61ee294d378b7483c35f7ef002e192f3a6",
+  "checker_sha256": "419d87d57f7eba03a2e8c16da5b5b5f789b1b6e92fa5b6b6a90984ca10469e04",
+  "first_ci_failure": "https://github.com/boardfarmdevs/emosa-lab/actions/runs/35814172693",
+  "correction": "Accept numeric and True/False boolean fields; reject unknown values rather than silently disabling guards"
+}

@@ -16,6 +16,15 @@ HEALTH = runpy.run_path(str(SCRIPTS / "check-capture-health.py"))["check"]
 STA, AP = "02:00:00:00:02:00", "02:00:00:ec:02:00"
 
 
+def flag(value, *, optional=False):
+    # tshark 3.6 prints numeric booleans; 4.2 prints True/False. Reject
+    # unfamiliar values rather than silently treating protection/retries as off.
+    if optional and value == "":
+        return False
+    assert value in ("1", "0", "True", "False"), "unexpected tshark boolean"
+    return value in ("1", "True")
+
+
 def frames(directory, tshark):
     fields = (
         "frame.number",
@@ -62,11 +71,11 @@ def frames(directory, tshark):
                 "ta": ta,
                 "ra": ra,
                 "kind": int(kind, 0),
-                "protected": protected == "1",
-                "retry": retry == "1",
+                "protected": flag(protected),
+                "retry": flag(retry),
                 "fragment": int(fragment or "0"),
-                "more_fragments": more == "1",
-                "amsdu": amsdu == "1",
+                "more_fragments": flag(more),
+                "amsdu": flag(amsdu, optional=True),
             }
         )
     return output

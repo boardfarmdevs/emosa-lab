@@ -17,8 +17,10 @@ soak or establish complete sustained acceptance.
   one total Config write, and traffic surviving both management faults.
 - Cleanup has no errors and the baseline controller is restored. The existing
   native-controller shutdown SIGABRT remains recorded, not silently corrected.
-- [Unit suite](unit-results.xml): **1,058 passed**, including 12 capture health
-  cases. The independent scripts also pass against these retained artifacts.
+- [Unit suite](unit-results.xml): **1,061 passed**, including 12 capture health
+  cases and three tshark-format checks. The accounting checker produces identical
+  results with host tshark 3.6.2 and Ubuntu 24.04 VM tshark 4.2.2; CI exposed their
+  different boolean output formats, now handled explicitly.
 
 The [accounting guide](../../protocol/station-counter-accounting.md) gives the
 commands, source references, arithmetic, learning sequence and remaining work.

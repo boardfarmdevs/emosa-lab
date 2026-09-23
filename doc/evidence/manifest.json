@@ -5929,13 +5929,13 @@
     },
     {
       "path": "counter-accounting/unit-results.xml",
-      "sha256": "754416d511ac625ccb78cd02bc3e172c0c3a57b3aa5c91fcbee3c2c3416aa96b",
-      "size": 4408350
+      "sha256": "362a4904e645db4e4e346b61471923a1e0dadf4c0be6b6d9566fca0c5426204c",
+      "size": 4408783
     },
     {
       "path": "counter-accounting/README.md",
-      "sha256": "a8de655da51717c9a1a2065447e2f336e8ff8697fca3610c07d6d744dda66564",
-      "size": 2853
+      "sha256": "ba1ec5323467c639ce937b83bcab2cf02de9ceecdaafbe0dfa4f19f73687d0dd",
+      "size": 3002
     },
     {
       "path": "counter-accounting/source-provenance.json",
@@ -6361,6 +6361,11 @@
       "path": "counter-accounting/native-counter-audit-01/detached-session-0005.json",
       "sha256": "52b98d03e909bbdb8101ba6f4f854fe09ed219040b2a0394f1bd84843ed1d2f3",
       "size": 3094
+    },
+    {
+      "path": "counter-accounting/tool-compatibility.json",
+      "sha256": "66d7e35ee60339c64c322dc8ab960960712aa0250435ea9b1084d5b0575f58de",
+      "size": 554
     }
   ]
 }
