@@ -4,6 +4,7 @@
 
 | Document | Scope |
 | --- | --- |
+| [OpenSync lab integration plan](opensync-lab-integration-plan.md) | Read-only evaluation of rev140's actual OpenSync pod, source/patch provenance, deployment choices and staged implementation/acceptance plan; not executed |
 | [Coding handoff](EMOSA-CODING-HANDOFF.md) | Implementation stages, constraints and acceptance obligations |
 | [Viability roadmap](viability-roadmap.md) | Prioritized experiments and the evidence required to assess EMOSA |
 | [Delivery record](delivery.md) | Foundation delivery, later increments and remaining gates |
