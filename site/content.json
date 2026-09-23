@@ -771,10 +771,22 @@
       "title": "Native counter accounting evidence",
       "description": "Six sessions reconcile with 8,921 radio packets and zero reported capture drops; both recovery faults pass. Normal-traffic accounting only; qualified online reporting remains pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/reporting-policy.md",
+      "title": "Receive and acknowledge the reporting policy",
+      "description": "Follow the native 60-second reporting request into a durable receipt and same-MID Ack. Recover the schedule and inspect explicitly missing reports; receipt is not fulfillment.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/reporting-policy/README.md",
+      "title": "Native reporting-policy receipt evidence",
+      "description": "Actual policy requests, timely Acks, unchanged reporting obligations and both recovery faults in a focused 210-second run. Metric report delivery remains pending.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "counter-accounting/unit-results.xml",
+    "unit": "reporting-policy/unit-results.xml",
     "ovsdb": "wsc-wire/ovsdb-results.xml"
   }
 }

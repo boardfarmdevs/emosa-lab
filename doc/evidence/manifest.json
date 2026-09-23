@@ -6366,6 +6366,521 @@
       "path": "counter-accounting/tool-compatibility.json",
       "sha256": "66d7e35ee60339c64c322dc8ab960960712aa0250435ea9b1084d5b0575f58de",
       "size": 554
+    },
+    {
+      "path": "reporting-policy/unit-results.xml",
+      "sha256": "245eb470ff0100b3d2c23ff3101a019b85c32e4ef03bf1c348fd99813709e8b6",
+      "size": 4412552
+    },
+    {
+      "path": "reporting-policy/README.md",
+      "sha256": "04bcfe6339c68476ce9d4a72a450a59af43fe5dea9f013a7e87e85d0f74d997b",
+      "size": 3380
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0000.json",
+      "sha256": "ba682250606920610518216e130e3e81d12042069266d0953604649ff479d2d4",
+      "size": 2635
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0017.json",
+      "sha256": "6ab7db0adadef854990ac15081d2ae22144807613b6a52d6dff0fd671703d9a5",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/ethernet-capture.log",
+      "sha256": "79e78e82e48fbc04c1b9e64ffad98059c0d83caf7af1d78e2697d9b8d791a129",
+      "size": 172
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0026.json",
+      "sha256": "286a10e63eb61e83c13e2f6bfb1ade2b5cb3562df70a7afe435259ca397c314c",
+      "size": 2635
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/source-hashes.json",
+      "sha256": "ae9d0195162be3a6b91671d8db720ca35324446baa614bfe4257a3991a6928e4",
+      "size": 11568
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0027.json",
+      "sha256": "b05ff882bf67315b5f2f995c75a754a44cd6774e5274ffaaa059310fa3e08f70",
+      "size": 2634
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/controller-before.json",
+      "sha256": "8bc66d970d7b6685939503083719f211d8f6c6efc355e5c499c7b9ba44f94782",
+      "size": 10353
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0016.json",
+      "sha256": "77740ade8b5560553ab5e62e8195a34987aac2dfd349d87ac58586ca832d229f",
+      "size": 2634
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0015.json",
+      "sha256": "3e27ec6b6c7a9877c297f74d6fe693a3a056c432bd1ac5ea0d66c58f4a6e38e4",
+      "size": 2634
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-session-0008.json",
+      "sha256": "a5bcac0ad297e49d741e2b9966ddbc9d9f061fe517403fb77a63c304bad2372c",
+      "size": 5115
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0028.json",
+      "sha256": "831c73bd516719dbcc38fe67e6e29c2b85878371e02a699b0d76d76295fa2c2b",
+      "size": 2634
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/native-session.json",
+      "sha256": "79774ad6e25ab8b930e438168fe980940063c4a0e7c6bde3ac96529e9508c027",
+      "size": 5199
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0023.json",
+      "sha256": "cfb4c9a0c36ba6a919602c6c68092f55bec9b28bd413562388d2410e17568a52",
+      "size": 2634
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0008.json",
+      "sha256": "a3fd00e1b1cb7c6305daa30c4b7b06c9e29a172b4d3c73694cfc5f88c0678403",
+      "size": 2632
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0010.json",
+      "sha256": "f93e1f35decf6a81d95fe570af3a5a9b55634a2a2d86d621ea0b88a7ee748126",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-inventory-0014.json",
+      "sha256": "ec2685e9d34ba00ee7f3c92c9c7f29d67d997a8faf2548e8e9a6fcef19258ef4",
+      "size": 32363
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0011.json",
+      "sha256": "67015d16ecc3d4cdcfdcb8f1ababa5e94c9a008fab7bc675705f3f43360071aa",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0018.json",
+      "sha256": "44248bcdaccf957684f197ffa8dc2611dd57c6756dbc1e05836d390065e1c381",
+      "size": 2636
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0003.json",
+      "sha256": "591eadc79a760a4e7b977d199c6287961f60b19c67cf79b9d0ca08091f164dd1",
+      "size": 2636
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/em-baseline-wifi-continuous-ping.log",
+      "sha256": "fc45f20c12dd489e2e559576a3eaad77650108f91b0003cab04dd9dca12c6d23",
+      "size": 55544
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0024.json",
+      "sha256": "1aeaec5bdaa42addec4b823f9ed0e2f07ad11f7b4eb4d75334195982b32e9511",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0023.json",
+      "sha256": "886a1f9929b84811b1ea1f0e5d9c5bbbbcadec3a32eecfd4e1440df3db0d2bc2",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0022.json",
+      "sha256": "a9bb47df89243754e187ba016cc1c9701c5a22165ee923bcce90aec5b5569f9c",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0011.json",
+      "sha256": "a210dcd40df763819e25b7a421880a1a72405bad0dc3b51954c7a287e9dc0163",
+      "size": 2627
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0013.json",
+      "sha256": "bad68e49f93519d1cb142c7fe2c5c76d31463ae938467cecce13ec16c63c7eec",
+      "size": 2633
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0022.json",
+      "sha256": "0df86d1c2a49c00e7d83b642f4b2a27be9caa109c77ddcab33fac66c2231edf7",
+      "size": 2636
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0026.json",
+      "sha256": "ed9a2efa7ad32920499edf8d9fe5fcab58e937e5077576c8f2fa53c2519ed139",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/manager.jsonl",
+      "sha256": "5d85c267f39e7ebd4bd29e343221cf3d03adcc13170b9fb5862422e45a3c4086",
+      "size": 176938
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0007.json",
+      "sha256": "a864ff6210ca47a76ff3c35bbe734353f0d26fb0dc94a376330a5a0fe89ca6be",
+      "size": 2632
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-inventory-0008.json",
+      "sha256": "46f981e88549e6259664377371860b73bc581714128e701fdd9bf276e116bf98",
+      "size": 32363
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0025.json",
+      "sha256": "1e4b635bed22333c3de89e0c95771ea7b3095e246e18372e3b925de905ef07e3",
+      "size": 2636
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0005.json",
+      "sha256": "3df7d9007a80520bf63d1c1c554f99e052a64809657d4639e70173470d35583b",
+      "size": 2636
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-session-0014.json",
+      "sha256": "233149f6a8ce3ba49a72bcb61a6c26140750dc975b058537479fe4fed8fe0e47",
+      "size": 11375
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0010.json",
+      "sha256": "d727ea50e90e3274dcf20d8c3b1ebb47a0181d7a1c95a786cacf153e7cb1ff40",
+      "size": 2627
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0001.json",
+      "sha256": "ede7d66b204c2a49645df5bdabc6ea96e3428d10ddd7bfd75e32553ebd975cfd",
+      "size": 2634
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-session-0011.json",
+      "sha256": "2a3e4eac3872b0b37c4258c15d1743e1f0cc1314cd8ce0f827fdad8a63bc7061",
+      "size": 11154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0002.json",
+      "sha256": "01cee7c16608ac5df36cfcfb60b186c76553fe1d7651c817e680446d5419196d",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0017.json",
+      "sha256": "d6e05cc2bcbb43cf1f4bc875c738fd1e17f1fb8e3112ed14f1cd35d77033561b",
+      "size": 2634
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-session-0021.json",
+      "sha256": "05303e1dcb01f480ca9dd79cb062f3e1cd5492341b60f9dde2ff50f3b345b544",
+      "size": 4693
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-inventory-0025.json",
+      "sha256": "d97072429af03c3360924d3fa9a527e285caeb9a5880bbbd9e0359306cc1a15a",
+      "size": 32363
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0006.json",
+      "sha256": "23f15238ef80c6697c0f73a5406a40b2716bae0615a057bb94f5865d8803aaf4",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0015.json",
+      "sha256": "a4b58523fe0a9c144e5e6ef91b7ebfafb18685e29973586d273924194595c524",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-session-0025.json",
+      "sha256": "4ca18769e299a30e2623caf7ce20196ad10366254d2d8293eb0238c4628a036a",
+      "size": 4968
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/native-operation.json",
+      "sha256": "6b3d2f4b75c4db475fc1de8e6fb3ffb2d31dba8b3cdc7b3f4d807756144d20c9",
+      "size": 4856
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/withheld-operation.json",
+      "sha256": "eee9cd6db03899fa39f3c8b0360b825d2b906d89c81e03300b32e88ec3f9e15c",
+      "size": 1963
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/independent-recovery-check.json",
+      "sha256": "172942353d5cbf8277c604819e0dbcfa2e72b05086c9f42deaa9825d37990b01",
+      "size": 3352
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0020.json",
+      "sha256": "75cbe544b86bb7c1eb70e1d5a3d617872cba1dd90bc41eb071ffee4dc454f06e",
+      "size": 2632
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0000.json",
+      "sha256": "d75be645977eed1c5496e94cfba379859303871b833548f2829819df3ac3fbcb",
+      "size": 37313
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-inventory-0005.json",
+      "sha256": "9c2505370456959594813d4d8a49a65a42157a2f70ef675002347c3ac072d9f3",
+      "size": 32363
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-onboarded.json",
+      "sha256": "efcb90c022ffcf41ea1457103f9d5516d72b253bca06b171d474e33ba45bcb27",
+      "size": 2621
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-inventory-0011.json",
+      "sha256": "8915e6bea22a74999d020c4c3d71ce0f34a083e199262e07361ebcb03e05d7a2",
+      "size": 32362
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0008.json",
+      "sha256": "8e8fe79d5fd8dff81313f6b17c78fb8b72f429636be082c3e1fcc6a9657c84cf",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/em-baseline-wired-continuous-ping.log",
+      "sha256": "fc7dfded620fcaf29b5e5eff52b4c675031d46a3ad8bddf09a23908b1868a4c1",
+      "size": 66073
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0029.json",
+      "sha256": "f7fc4fdfef14a1fdf450117d8c756faec67b6e6dabe3974f8c0a345fb8368c79",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/radio-capture.log",
+      "sha256": "8b976a1718fb4be05340baca0a2f68c7579525f5cb7886392476173f1583313e",
+      "size": 201
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0002.json",
+      "sha256": "dbc2247ea87b8e7dfec0b504f5251c9f91123b66e793acfd94daf2b2c4a22d6c",
+      "size": 2634
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/ethernet.pcap",
+      "sha256": "d663f09c188cedcdebc21e5045e379486a9ced76d2cf89d7b7deadce97d97205",
+      "size": 10806
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0027.json",
+      "sha256": "2b0547c8f2da2c45f7988955bb6843124ec86afbfa3307159d0c981715f4b2e1",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0006.json",
+      "sha256": "c8c81205969d3efd7d2d330c8d9ca080d7537cbab692ca6d0a41a7ff0b98ebc4",
+      "size": 2632
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0019.json",
+      "sha256": "1d975fda47700b1641250c2792e1734acf5cf2d20bbf3f71c396c2735a6e0a14",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0024.json",
+      "sha256": "a09d70bee84e43b018d5cac8a2186188a6711f982f35bb8cc43f0f6ce0df25e4",
+      "size": 2634
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0005.json",
+      "sha256": "5e6ef27f1dbb43706e819322a14d3cff1ae859b0e01c0451d588b6dc55108811",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/controller-after.json",
+      "sha256": "0b7d5f3751a5379d20a25408174945d8e230f499c5c040dba2c98b30638cdcd0",
+      "size": 31317
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0020.json",
+      "sha256": "867a06ac2127dcc7e7ff91923d14c4a6c7f327b1d4a4a0d771ab3e83171192df",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0012.json",
+      "sha256": "34f4dd9eab3f6310f2db8652d9e0088938c70d43971fbe9f6ac24223ec4fe2ec",
+      "size": 33152
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/recovery-checks.json",
+      "sha256": "4c7581289084c2e5d6d59f09778fde65eb78f78a53656caefa7f9970453bf3fe",
+      "size": 59947
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0004.json",
+      "sha256": "819f88398e54b129fb4a0888e0eec6e211c52dab8e2eba06ab4965507bc3bf9a",
+      "size": 2636
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0014.json",
+      "sha256": "913c2b11f44c8a1bca2cf8fcfa8ae535537a1f4bd4c5986e83ee09b3f2f0b113",
+      "size": 2634
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/independent-policy-check.json",
+      "sha256": "514c16dd8f3749f87489d399a7fad7415f89dde864d7dbb61252becd83e37557",
+      "size": 1434
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-session-0029.json",
+      "sha256": "4600c6552adfa03769ef00d06d55c887c92c385dfac755d347fad56971deeee2",
+      "size": 5122
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0021.json",
+      "sha256": "82ac453d2def507dd94306e22b1068b315f5e14b9bca6d6d6af6f81860c6156b",
+      "size": 33152
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0013.json",
+      "sha256": "30095cc2f4886e5dee465189954b1d8d0b36dab650ecb31f0ba8e613264bd088",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0014.json",
+      "sha256": "b135a87daf5d6039daf498c8b6bbcc7fe92b3328d08aad20589cb0b601e143ac",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-recovery-1.json",
+      "sha256": "3304c1529b268099ce3cbf661b566848c751536301276a72a7811abfc2f2b67f",
+      "size": 2629
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0009.json",
+      "sha256": "4022b59e418be23e8a3d8424a5daecbf9eb2c5d45b056e2cea5771a243e83ec2",
+      "size": 2635
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0003.json",
+      "sha256": "fb5258b286a0d74205d575813bc5d76fd521dc39e05455cbf84273a33d584575",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0007.json",
+      "sha256": "a02014176a12fbb9b2d5d2f90ec200c5fe248233a2595a63882dd576a90632f2",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-samples.json",
+      "sha256": "1c4e9f5fd07fd5c9717ea4cd3ca9f4fd884a56165473f825bccaae7af98c8eb8",
+      "size": 293566
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/client-outages.json",
+      "sha256": "1dafdac848c3e82d9b8bf98185beef2ee3337530bbe1e7d8646ef6a0c4e80aa1",
+      "size": 682
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0029.json",
+      "sha256": "1d40149647df6ca78f5162c436963098a90794450874e50691712a22be31a987",
+      "size": 2636
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/candidate-trial.json",
+      "sha256": "2e936f399cde2333f53a76c0ab357843b0e7a690b2fb5b30f0b26e06dc22caae",
+      "size": 13199
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0016.json",
+      "sha256": "68c7bbc07d4ae37ffcad4ff9f718495167e557f256a02da95159d0f575a85f27",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-recovery-0.json",
+      "sha256": "f3615b9c0c04376bbed6966716feaa45bc9157033f9f30dbf9c52399797e387e",
+      "size": 2627
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/result.json",
+      "sha256": "0b27c869104c80c6e023c1f3f9bb9a922441e2e11973830f379c270827b5522a",
+      "size": 11851
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0012.json",
+      "sha256": "5de01fcd8e0135ab0886b478060294b119b5ae33bb7d770a96392983f5d2f581",
+      "size": 2635
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0028.json",
+      "sha256": "46f6ddd70c8d2761d18dbe5b7d6995bf5acf92c733e5bc3b1aa0f57138c91497",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-inventory-0018.json",
+      "sha256": "8ffb1b8648cbaedc40b80286bee6d6edc95c7e4ea2972e3efbd4e2fbf3051416",
+      "size": 32363
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0025.json",
+      "sha256": "d74278e78c20ea9bea69859c78e576baa6c477834e4b2d93dc37267431e89919",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-inventory-0029.json",
+      "sha256": "bcd4e1a21222e4e9d41a63b4f30f5df5e62f7a979df707be6192af3052c83a07",
+      "size": 32363
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-session-0018.json",
+      "sha256": "882fdb5d5b74267d7e0091bfc5e07b2ec271a839c057ac9d429afc206fd734a7",
+      "size": 11650
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0019.json",
+      "sha256": "d505171d09798c62fca3f52886c0f5ed83f957908282e514c4657f8bac28b08a",
+      "size": 2632
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-inventory-0021.json",
+      "sha256": "1dd0e167935f31e581f05e5e43ed406afbe47c791d3783426a29dcf0f391733b",
+      "size": 32363
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0001.json",
+      "sha256": "74d4cb2f7d12f8ac614059ac6972af84c5be4ad01699d9d516afd7b78daaaaf3",
+      "size": 37315
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/radio.pcap",
+      "sha256": "ad65a11b45f65bf05b065f49417b6ce83e1c6f49534abead9774cd3b1c2e1efe",
+      "size": 2213443
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0018.json",
+      "sha256": "5b76ab9603ecb2990494769d14d305962680dbb5402b9e1404346cfe7446a35c",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0009.json",
+      "sha256": "b69b50d8fa2febeb7ba93f5bbef7a257424fe99985a12db1b8c18d914a532936",
+      "size": 33153
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/active-inventory-0004.json",
+      "sha256": "8251a6d47b8304fed06fe9910baf557d07195ff737aeea0ce8e380bf831efa95",
+      "size": 33154
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/clients-active-0021.json",
+      "sha256": "94858fbd310b5535a14635ba8995a847c922fd0e5cfdff128f9e3db895d84700",
+      "size": 2634
+    },
+    {
+      "path": "reporting-policy/native-policy-receipt-01/detached-session-0005.json",
+      "sha256": "2a34dba32a8a23ed9eafeb57aed859c2353eec42a728065278734f456195738d",
+      "size": 4931
     }
   ]
 }

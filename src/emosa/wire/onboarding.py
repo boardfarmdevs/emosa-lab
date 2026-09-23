@@ -16,6 +16,7 @@ from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, decode_fra
 from emosa.wire.coordinator import ReportCoordinator
 from emosa.wire.disassociation import DisassociationCoordinator, FinalSession
 from emosa.wire.provisioning_session import ComponentProvisioningSession
+from emosa.wire.reporting_policy import ReportingPolicyCoordinator
 from emosa.wire.reports import PreparedReport, capability_tlvs
 
 
@@ -53,6 +54,7 @@ class OnboardingSession:
         mids=None,
         clock=time.monotonic,
         channel_store=None,
+        reporting_policy_store=None,
         reset_channel_policy=True,
     ):
         if type(inventory) is not DeviceInventory:
@@ -74,6 +76,8 @@ class OnboardingSession:
         self.tokens, self.token_time = 32.0, clock()
         self.issues = ()
         self.channel_store = channel_store
+        self.reporting_policy_store = reporting_policy_store
+        self.reporting_policy = None
         self.reset_channel_policy = reset_channel_policy
         self.channels = None
         self.disassociations = None
@@ -142,6 +146,8 @@ class OnboardingSession:
             self.reports.tick()
         if self.channels:
             self.channels.tick()
+        if self.reporting_policy:
+            self.reporting_policy.tick()
         if self.disassociations:
             self.disassociations.tick()
         self.departures = {key: at for key, at in self.departures.items() if self.clock() < at + 2}
@@ -259,6 +265,13 @@ class OnboardingSession:
                         clock=self.clock,
                         reset_policy=self.reset_channel_policy,
                     )
+                if self.reporting_policy_store is not None:
+                    self.reporting_policy = ReportingPolicyCoordinator(
+                        self.source,
+                        self.send_frame,
+                        self.reporting_policy_store,
+                        clock=self.clock,
+                    )
                 self.reports.notify_early()
                 bridge = self.factory(snapshot, self.mids)
                 radio = self.capabilities.radios[0]
@@ -290,6 +303,10 @@ class OnboardingSession:
                 return self._record("early_then_m1_sent")
             if self.channels:
                 result = self.channels.handle(message, now)
+                if result:
+                    return self._record(result)
+            if self.reporting_policy:
+                result = self.reporting_policy.handle(message, now)
                 if result:
                     return self._record(result)
             if message.message_type == 0x8001 and self.provisioning:
@@ -364,6 +381,7 @@ class OnboardingSession:
             self.reports,
             self.provisioning,
             self.channels,
+            self.reporting_policy,
             self.disassociations,
         ):
             if component:
@@ -388,6 +406,7 @@ class OnboardingSession:
             "wsc": {k: wsc[k] for k in ("counts", "events", "closed")} if wsc else None,
             "full_profile_qualified": False,
             "physical_pod_proven": False,
+            "reporting_policy": self.reporting_policy.status() if self.reporting_policy else None,
             "channels": {
                 "counts": dict(self.channels.counts),
                 "operating_ack_pending": self.channels.pending is not None,

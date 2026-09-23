@@ -434,3 +434,39 @@ def test_client_capability_unavailable_is_explicit_specification_error(rig, asso
         session.close()
 
     asyncio.run(scenario())
+
+
+def test_bound_policy_receipt_does_not_claim_reporting_or_create_config_operation(rig, tmp_path):
+    from emosa.wire.reporting_policy import ReportingPolicyStore
+
+    async def scenario():
+        bridge, engine, backend, _ = rig
+        session, source, sent = lifecycle(rig)
+        store = ReportingPolicyStore(tmp_path / "policy.sqlite", boot_id="boot-1")
+        session.reporting_policy_store = store
+        try:
+            await session.tick()
+            await receive(session, response())
+            query = fragment_message(
+                BINDING.local_al,
+                BINDING.controller_al,
+                0x8003,
+                77,
+                (Tlv(0x8A, b"\x3c\x01" + bridge.target.ruid + b"\0\0\0\xe0"),),
+            )[0]
+            assert await receive(session, query) == "policy_receipt_ack_sent"
+            ack = assemble((sent[-1],))
+            assert (ack.message_type, ack.mid) == (0x8000, 77)
+            assert not session.status()["reporting_policy"]["required_reporting_proven"]
+            assert not engine.store.operations() and backend.writes == 0
+            source.invalidate()
+            await session.tick()
+            assert session.reporting_policy.closed
+            before = len(sent)
+            await receive(session, query)
+            assert len(sent) == before
+        finally:
+            session.close()
+            store.close()
+
+    asyncio.run(scenario())

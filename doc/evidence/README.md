@@ -33,6 +33,7 @@ for navigation and commands.
 | HE/Wi-Fi 6 components and native source review | [Value checks, compatibility findings and limits](he-wifi6/summary.json) |
 | Complete synthetic observed topology | [Stable bindings, full graph checks and two-pod service recovery](observed-topology/summary.json) |
 | Native counter accounting | [Loss-checked six-session accounting, runtime source provenance and both recovery checks](counter-accounting/README.md) |
+| Native reporting-policy receipt | [Same-MID Acks, durable policy and schedule recovery, with missing reports kept explicit](reporting-policy/README.md) |
 
 These collections have different scopes and include failures. They do not
 establish EMOSA wire onboarding, physical-pod qualification or universal peer

@@ -216,6 +216,10 @@ OpenSync-format telemetry. Work through these exercises in order:
    packets. Reproduce the first-session byte arithmetic and source provenance;
    explain the extra management-frame counts and why normal-traffic agreement
    leaves failure/retry semantics and online reporting unqualified.
+8. Follow [reporting policy receipt](../protocol/reporting-policy.md). Decode the
+   native controller's 60-second policy, correlate its receipt Ack, and inspect
+   the persisted schedule through both faults. Find the explicitly missing
+   reports; explain why a timely Ack does not fulfill the reporting obligation.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

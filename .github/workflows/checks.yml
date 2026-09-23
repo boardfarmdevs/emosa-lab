@@ -55,6 +55,12 @@ jobs:
           python3 scripts/check-station-accounting.py
           doc/evidence/counter-accounting/native-counter-audit-01
       - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/reporting-policy/native-policy-receipt-01 --minimum-seconds 210
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/reporting-policy/native-policy-receipt-01
+      - run: >-
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01
           --directory doc/evidence/discovery-session/run-02

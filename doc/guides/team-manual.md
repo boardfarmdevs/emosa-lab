@@ -3645,6 +3645,43 @@ record, and the controller acknowledging that record are three separate pieces
 of evidence. Locate which ones this component and the native regression provide,
 and identify the measurement work that remains before complete acceptance.
 
+### 13.19 Distinguish receiving a reporting policy from fulfilling it
+
+The controller can tell an agent which metrics to report and how often. Our
+native controller requests reports every 60 seconds, including STA traffic,
+link and Wi-Fi 6 status information. A zero threshold in the same request does
+not cancel that interval; it disables an additional threshold-based trigger.
+
+**What does an Ack prove?** The protocol requires an acknowledgment within one
+second, carrying the request's message identifier (MID). It confirms receipt.
+It is separate from the later reports containing measurements. EMOSA now stores
+the selected complete policy before sending this Ack, but still exposes the
+missing measurements and reports. This is why an empty list of unanswered policy
+requests is insufficient to claim that continuous reporting works.
+
+Follow the [policy receipt guide](../protocol/reporting-policy.md) on HOST:
+
+1. Run the independent retained-evidence checks. Find the 60-second interval and
+   all three enabled STA inclusion flags in both the capture and stored status.
+2. Match each controller request to an agent Ack with the same MID. Compare
+   their timestamps against the one-second requirement.
+3. Inspect `next_due` and `periods_due_without_report` across pod reconnect and
+   adapter process restart. Repeating the same policy must not keep postponing
+   the next report; due work survives recovery.
+4. Run the 210-second reproduction after completing chapter 13.17's VM setup.
+   It exercises both faults and at least three reporting deadlines. The
+   independent checker deliberately leaves required reporting unproven.
+
+The private SQLite file stores intent and schedule, not measured radio facts.
+The collector uses its sanitized status representation for review and leaves the
+database outside Git. An actual VM reboot is distinct from killing the adapter:
+the code preserves intent and explicitly rebases the monotonic schedule when
+the OS boot identity changes; only a component test covers that boot-change path.
+
+**Learning checkpoint:** distinguish policy receipt, Ack delivery, policy
+application and actual periodic reports. Locate the evidence for each one, and
+identify which remain incomplete before repeating full 15-minute acceptance.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

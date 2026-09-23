@@ -55,6 +55,7 @@ from emosa.wire.cmdu import MidSequence
 from emosa.wire.coordinator import ReportSource
 from emosa.wire.ethernet import EthernetEndpoint
 from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession
+from emosa.wire.reporting_policy import ReportingPolicyStore
 from emosa.wire.topology_values import (
     BridgingCapability,
     DeviceInformation,
@@ -228,6 +229,14 @@ async def worker(directory, *, duration=110, telemetry=False):
     facts = RadioReportSource(backend, binding, stations)
     lifecycle = None
     channel_store = ChannelPolicyStore(directory / "channel-policy.sqlite") if telemetry else None
+    reporting_policy_store = (
+        ReportingPolicyStore(
+            directory / "reporting-policy.sqlite",
+            boot_id=Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
+        )
+        if telemetry
+        else None
+    )
     mids = MidSequence(secrets.randbelow(65536))
 
     def status():
@@ -267,6 +276,7 @@ async def worker(directory, *, duration=110, telemetry=False):
                     factory,
                     facts.inventory,
                     channel_store=channel_store,
+                    reporting_policy_store=reporting_policy_store,
                     mids=mids,
                     reset_channel_policy=lifecycle.starts == 0,
                 ),
@@ -318,6 +328,8 @@ async def worker(directory, *, duration=110, telemetry=False):
         store.close()
         if channel_store:
             channel_store.close()
+        if reporting_policy_store:
+            reporting_policy_store.close()
         if mqtt:
             mqtt.close()
         await session.close()

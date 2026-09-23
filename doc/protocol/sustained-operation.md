@@ -33,7 +33,9 @@ Duration alone is insufficient. The evidence must establish all of the following
 
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated
-acceptance remain outstanding. Selected channel procedures and the recovery
+acceptance remain outstanding. Policy receipt/Ack now persists the controller's
+intent and records unfulfilled reporting deadlines; it does not supply metrics.
+Selected channel procedures and the recovery
 supervisor are implemented; their limits and reproduction steps follow below.
 Physical-pod acceptance remains
 **real EasyMesh messages → EMOSA → unchanged physical OpenSync pod → independently
@@ -91,7 +93,7 @@ TEL-01–04. Installing this simulation publisher on a physical pod is not allow
 | Client join/leave notification | §6.3, §17.1.5, §17.2.20/Table 43 | Send AL MAC and Client Association Event with observed STA/BSSID and join/leave bit; age updates alone are not joins |
 | Client Capability Query | §9.2, §17.1.14–15, §17.2.18–19, §17.2.36 | Correlated failure report: reason 2 for an absent station, reason 3 for an associated station whose association frame is unavailable |
 | Disassociation statistics | §6.3, §17.1.41 | [Sender and guarded handoff implemented](final-session-statistics.md); actual final session counters/reason still unqualified, so native polling continues to record the gap |
-| Reporting policy and metrics | §7.3 and §10 | Pending measured field mappings and procedure implementation |
+| Reporting policy and metrics | §7.3 and §10 | [Durable selected receipt/Ack and missing-report schedule](reporting-policy.md); measured field mappings and required report delivery remain pending |
 | Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1 | Native all-neighbor Tx/Rx queries observed; response and qualified per-link measurements remain pending |
 | Channel procedures | §8.1–2; §17.2.13–16/Tables 36, 38–40 | Sole advertised channel 6; durable preferences, acceptance of requests requiring no adjustment, measured operating power and correlated Ack/retry |
 
@@ -303,7 +305,7 @@ controller's requests are retained without disabling them to make the run pass.
 
 | Input/procedure | Required next work | Evidence that cannot substitute for it |
 | --- | --- | --- |
-| Multi-AP reporting policy | Validate and persist the complete supported policy, send the required Ack, schedule measured reports and retain/recover policy according to its specified lifetime | Silently accepting a policy whose requested reports will never be sent |
+| Multi-AP reporting policy | Selected native request decoding, durable receipt, timely Ack and schedule recovery are implemented; qualify inputs and deliver every requested report | A receipt Ack or an empty unanswered-request list presented as fulfilled reporting |
 | AP channel utilization and ESP | Qualify the measurement period, busy/active counters or a suitable simulated medium, and the BE estimated service parameters; map EasyMesh §17.2.22/Table 45 to the referenced 802.11 definitions | The controller's zero defaults, a configured hostapd test value, or assuming that no survey output means no airtime was used |
 | STA link/traffic metrics | Qualify each requested source field, byte units, direction, success/error meaning, rollover, reset epoch and sample age | Interchanging link rates and application throughput, or treating absent errors/retries as zero |
 | Final disassociation report | Capture the actual reason and complete final session counters before the station is removed; correlate the session across join/leave and reconnect; connect qualified records to the [implemented §6.3/§17.1.41 sender and Ack handling](final-session-statistics.md) | The preceding polling sample or an invented reason based on a membership disappearance |

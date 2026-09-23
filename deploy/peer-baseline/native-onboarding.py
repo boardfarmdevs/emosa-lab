@@ -85,6 +85,7 @@ async def experiment(
         "station_removal_observation_requested": observe_station_removal,
         "capture_health_required": True,
         "capture_buffer_kib": 8192,
+        "reporting_policy_receipt_expected": active_seconds > 0,
     }
     write(directory / "result.json", report)
     write(
