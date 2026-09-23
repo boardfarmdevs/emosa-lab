@@ -59,7 +59,9 @@ def inventory_stations(objects):
     }
 
 
-async def experiment(label, *, active_seconds=0, recovery_checks=False):
+async def experiment(
+    label, *, active_seconds=0, recovery_checks=False, observe_station_removal=False
+):
     helpers = runpy.run_path(str(ROOT / "controller-trial.py"))
     helpers["idle"]()
     sys.path.insert(0, str(RADIO_ROOT_DIR))
@@ -80,6 +82,7 @@ async def experiment(label, *, active_seconds=0, recovery_checks=False):
         "sustained_operation_proven": False,
         "recovery_checks_requested": recovery_checks,
         "agent_counter_units": 0,
+        "station_removal_observation_requested": observe_station_removal,
     }
     write(directory / "result.json", report)
     write(
@@ -93,6 +96,7 @@ async def experiment(label, *, active_seconds=0, recovery_checks=False):
                 ROOT / "prplmesh.reference.json",
                 RADIO_ROOT_DIR / "manager.py",
                 RADIO_ROOT_DIR / "node.py",
+                *([RADIO_ROOT_DIR / "station-events.py"] if observe_station_removal else []),
                 *sorted((RADIO_ROOT_DIR / "source/emosa").rglob("*.py")),
             )
         },
@@ -100,6 +104,8 @@ async def experiment(label, *, active_seconds=0, recovery_checks=False):
     db = SimDatabase(directory / "database")
     admin = OvsSession(db.endpoint, monitor_columns=MONITOR)
     manager = worker = broker = None
+    station_unit = None
+    station_path = RADIO_ROOT_DIR / "station-events" / (label + ".jsonl")
     captures, logs = [], []
     namespace, link = "em-native-" + uuid.uuid4().hex[:8], "en" + uuid.uuid4().hex[:8]
     ns_created = link_created = False
@@ -164,6 +170,41 @@ async def experiment(label, *, active_seconds=0, recovery_checks=False):
 
     try:
         write(directory / "topology.json", radio["setup"](directory))
+        if observe_station_removal:
+            collector = RADIO_ROOT_DIR / "station-events.py"
+            radio["lxc"]("file", "push", "--quiet", str(collector), radio["AP"] + str(collector))
+            radio["inside"](
+                radio["AP"],
+                "python3",
+                "-c",
+                "import sys; from pathlib import Path; p=Path(sys.argv[1]); "
+                "p.parent.mkdir(mode=0o700,exist_ok=True); p.open('x').close()",
+                str(station_path),
+            )
+            station_unit = "emosa-native-events-" + label + ".service"
+            radio["inside"](
+                radio["AP"],
+                "systemd-run",
+                "--quiet",
+                "--property=Type=exec",
+                "--property=RemainAfterExit=yes",
+                "--property=TimeoutStopSec=5",
+                "--property=StandardOutput=append:" + str(station_path),
+                "--unit",
+                station_unit,
+                "python3",
+                str(collector),
+                "--seconds",
+                str(active_seconds + 180),
+            )
+            end = time.monotonic() + 8
+            while True:
+                lines = radio["inside"](radio["AP"], "cat", str(station_path)).splitlines()
+                if lines and json.loads(lines[0]).get("event") == "ready":
+                    break
+                if time.monotonic() >= end:
+                    raise RuntimeError("station-removal observer did not become ready")
+                await asyncio.sleep(0.1)
         if active_seconds:
             mqtt_root = RADIO_ROOT_DIR / "mqtt-inputs/stage"
             executable = mqtt_root / "usr/sbin/mosquitto"
@@ -504,6 +545,17 @@ async def experiment(label, *, active_seconds=0, recovery_checks=False):
                     child.kill()
                     await child.wait()
                     errors.append(type(exc).__name__)
+        if station_unit:
+            try:
+                radio["inside"](radio["AP"], "systemctl", "stop", station_unit)
+                observed = radio["inside"](radio["AP"], "cat", str(station_path))
+                (directory / "station-events.jsonl").write_text(observed)
+                records = [json.loads(line) for line in observed.splitlines()]
+                if not records or records[-1].get("event") != "finished" or records[-1]["errors"]:
+                    raise RuntimeError("station observation did not complete cleanly")
+                report["station_removal_observation"] = records[-1]
+            except Exception as exc:
+                errors.append("station_observer:" + str(exc))
         for child in captures:
             if child.poll() is None:
                 child.send_signal(signal.SIGINT)
@@ -559,6 +611,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Interrupt pod connection and SIGKILL/restart adapter",
     )
+    parser.add_argument(
+        "--observe-station-removal",
+        action="store_true",
+        help="Read kernel final-station events for measurement qualification; no counter mapping",
+    )
     args = parser.parse_args()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", args.label):
         parser.error("use a new label of 1–24 lowercase letters, digits or hyphens")
@@ -568,6 +625,8 @@ if __name__ == "__main__":
         parser.error("active-seconds must be zero or 30–3600")
     if args.recovery_checks and args.active_seconds < 150:
         parser.error("recovery checks require at least 150 active seconds")
+    if args.observe_station_removal and not args.active_seconds:
+        parser.error("station-removal observation requires active client cycles")
     os.umask(0o077)
     wrapper = runpy.run_path(str(ROOT / "compatibility/controller-candidate.py"))
     with (RADIO_ROOT_DIR / "run.lock").open("a+") as lock:
@@ -582,6 +641,7 @@ if __name__ == "__main__":
                         label,
                         active_seconds=args.active_seconds,
                         recovery_checks=args.recovery_checks,
+                        observe_station_removal=args.observe_station_removal,
                     )
                 ),
             )

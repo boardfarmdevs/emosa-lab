@@ -3606,6 +3606,16 @@ the [final-session guide](../protocol/final-session-statistics.md) in this order
 5. Proceed to measurement-source qualification before attempting to claim live
    final-statistics delivery in another 15-minute run.
 
+For that fifth step, follow the
+[station-removal observation exercise](../protocol/station-removal-observations.md).
+The new read-only observer captures the kernel's removal-time record before the
+station disappears. Its native run correlates six records with actual radio
+disconnect reasons and controller-facing leave notifications. This establishes
+where to acquire the data. It still requires semantic qualification: a Linux
+packet counter can include attempted transmissions, while the requested
+EasyMesh counter counts successful ones. Inspect the guide's mapping table
+before connecting this source to the sender.
+
 **Why change the advertised byte unit?** The current virtual agent uses
 Profile-1, whose traffic counters are in bytes. Earlier experiments advertised
 KiB in an accompanying capability TLV but never sent traffic counters. The new

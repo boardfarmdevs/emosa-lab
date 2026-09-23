@@ -207,6 +207,10 @@ OpenSync-format telemetry. Work through these exercises in order:
    the authenticated observed-leave handoff. Then identify why the lab still
    needs a qualified source for the actual final counters and disconnect reason.
    A passing codec test does not fill in missing measurements.
+6. Run the [kernel station-removal observation](../protocol/station-removal-observations.md)
+   with the native controller and both recovery faults. Trace a removal-time
+   counter record to the independent radio reason and EasyMesh leave. Distinguish
+   verified acquisition from the remaining qualification of counter meanings.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

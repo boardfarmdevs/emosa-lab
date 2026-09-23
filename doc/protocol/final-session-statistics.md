@@ -19,6 +19,12 @@ It does **not** call the new final-session handoff. Required measurement work
 remains listed in [sustained operation](sustained-operation.md#measurement-work-still-needed-before-complete-acceptance).
 This component does not close that acceptance gap or qualify an unchanged pod.
 
+The next [native station-removal observation](station-removal-observations.md)
+now obtains removal-time kernel counters and correlates actual reasons from an
+independent radio capture. Acquisition is verified; counter semantics and an
+online reason join remain unqualified. Those raw records are not yet passed to
+the sender.
+
 ## Implemented handoff and wire behavior
 
 `TrafficCounters` requires seven explicit AP-relative counters: bytes sent and

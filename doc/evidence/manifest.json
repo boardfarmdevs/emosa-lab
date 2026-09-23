@@ -5511,6 +5511,416 @@
       "path": "final-statistics/native-byte-counters-01/withheld-operation.json",
       "sha256": "a3a30ddae13123d17dc217641184275c540ae551aaa2cde6ae22da0246501d97",
       "size": 1963
+    },
+    {
+      "path": "station-removal/README.md",
+      "sha256": "742c2cc5eaf27336958971608f8976941fd159073f3802233a2566d71821d65c",
+      "size": 2779
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0000.json",
+      "sha256": "fb8eb5be274fe1c22151ff53687d098aa383b31e9c4de0093ed16c6c5ecb6ce3",
+      "size": 37315
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0001.json",
+      "sha256": "e1e3dd5beeed446c66b1d18a955660fd4fc5b4379497e34b23558d48c8716cb2",
+      "size": 37315
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0002.json",
+      "sha256": "782b0d9c9b0e875a507f64150351cfc1a44b5980a5f3ed34fc614032c2eb73ec",
+      "size": 33154
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0003.json",
+      "sha256": "8d751cac4e331f0aadb72d6365cc34c7d8f07b618e8b4cb3ccc681fda62a4c63",
+      "size": 33154
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0004.json",
+      "sha256": "45f8bff52c5a3a3c4123a2078923d613671b7b7b9a6e316e36d8b200aa42c695",
+      "size": 33154
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0005.json",
+      "sha256": "969d776498b6a0368483889cbf9eeb6ef7e72fa27d75194216a80d10a1d73313",
+      "size": 33154
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0006.json",
+      "sha256": "c2792e538b590f0a32a554e92d4eb685be94d7a9e3c6fd5154555d0acdfc0fde",
+      "size": 33153
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0007.json",
+      "sha256": "0cc4823b286fca1fbb6738a72dbe4b7891f966474d84d77202c4bf7cf6b57ce4",
+      "size": 33153
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0008.json",
+      "sha256": "e924e13208b9afb9c52281dce6c9ee8bf3551ed791519006a3d02a375a5692d1",
+      "size": 33154
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0009.json",
+      "sha256": "cf2c1634d192d292cf6585c24bfc6a56deba33d58d8d73c19e4e997fa3c35602",
+      "size": 33152
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0010.json",
+      "sha256": "180f051443459cd668df32f825c401f901d7ae74e85eed96697cacad138017d4",
+      "size": 33153
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0011.json",
+      "sha256": "19007215affefb942ac5e62883898fd521512895854df7690fb135c91e523f69",
+      "size": 33154
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0012.json",
+      "sha256": "1ed942b0275c0e6ebbc12315a8c5cc0d03d87703d90058f01099b972b6b81814",
+      "size": 33153
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0013.json",
+      "sha256": "e4e863e90d4ce632e04d9b5ff39e131c976faf0519e3f26b7cff97fdf9098123",
+      "size": 33153
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0014.json",
+      "sha256": "85e04be22a71b53369c6298d7190275fe11b380f0621e13cfb7f96414a387eb0",
+      "size": 33154
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0015.json",
+      "sha256": "969703d44ef756732a1056af94ff0a62271fe046f0252bdfbc6e02e7cd8a1542",
+      "size": 33152
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0016.json",
+      "sha256": "ddb58d855841a0f0c344d0a2ff0fe91c36366824d7a22aeb3e3a3126816d4304",
+      "size": 33153
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0017.json",
+      "sha256": "cd1d4595f2ff7c2fdb8e7da7cd8812789d00e1d4e9eb266a29cde1f30d8f80eb",
+      "size": 33154
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0018.json",
+      "sha256": "7cf86c49cffc41cb0cd12a16c5b419fbb8b231a5ffc4239218b433378504dd0d",
+      "size": 33154
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0019.json",
+      "sha256": "5f06b0a9e1b6c2435cfcfd2d54d40a5eeb5dbc2a0568c12fed05ccbe2a619709",
+      "size": 33153
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0020.json",
+      "sha256": "bc8bdb29570d9ff48a3ca1a25d0b66ef7f39609ff59f24d633bfd2421aab922d",
+      "size": 33153
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-inventory-0021.json",
+      "sha256": "88dcd2aafbf8a1d8b0492a08756e882e8fbadce79a6656029a2052714bcf754e",
+      "size": 33154
+    },
+    {
+      "path": "station-removal/native-final-source-01/active-samples.json",
+      "sha256": "929b8c392d04db87036aa894f0676605c3e7218d5af23c5ecfe7af3678ddba45",
+      "size": 144508
+    },
+    {
+      "path": "station-removal/native-final-source-01/candidate-trial.json",
+      "sha256": "4055bbfc2b03f101864d11e6aaee0289a71f3474923f700d24a51a83fb0d2308",
+      "size": 13464
+    },
+    {
+      "path": "station-removal/native-final-source-01/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "station-removal/native-final-source-01/client-outages.json",
+      "sha256": "b6cd60e6e3f97e4c0ce37f5b8f9b9bd21f404e4b1bb56e71737e28cf1b25fe6e",
+      "size": 512
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0000.json",
+      "sha256": "ccdb7f9cb5003a6e524d3cc795547ae68f416c81dcb90d6060049eed6ccf9876",
+      "size": 2635
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0001.json",
+      "sha256": "783c706fd28793aeb8325f677afb7685345c59f22c773b2908bd9b18469ed8f3",
+      "size": 2633
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0002.json",
+      "sha256": "d8e3b52cf9289b6dfbd9cd96669acd95ac4b5b96aded8a6ce5d8c2a2e1f357cf",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0003.json",
+      "sha256": "be8f60c03b7ce6dfb9da64a26df93cae6d4992ed693c203762385ffe97b99590",
+      "size": 2636
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0004.json",
+      "sha256": "dfaabc08a63bffbc93f24db892f7eda5e154b58084b4b08c60d1231297e70c4f",
+      "size": 2636
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0005.json",
+      "sha256": "8e3b77e280e4f7cb794601f00fb58d63e57eaa00764bc61dfe2ba3d7c45d4a36",
+      "size": 2636
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0006.json",
+      "sha256": "bae47af3fde1908ce0483a0c749c7815d1c2ce23036dd89a840525098ed0b75b",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0007.json",
+      "sha256": "81508d5eb79a046af6370980fe2b947399322c520b1df723a150ef62bc40df55",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0008.json",
+      "sha256": "0cd9d5cae8828ff67a2ef94cc83be76c9babd49c2f2c0bea28234534ef0f3072",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0009.json",
+      "sha256": "e88f0231d55d9c6bd9f9e7f86982fdd3cce0f57264aab7f4591754df4c0d22e2",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0010.json",
+      "sha256": "09dfcaef68744566852aa22a003a34a130aedfe97e48c9b7a7fcc64495323c0b",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0011.json",
+      "sha256": "4033ec566be9c4e98fe8bae66a93e8b7895fb3439089bb38870183c61e9a0e8f",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0012.json",
+      "sha256": "73da754edae6444f1e839a3faa68e245be2e321e41dc9710e69a490e84875f4f",
+      "size": 2635
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0013.json",
+      "sha256": "0a21d41b763a6a5a255d2d930260ccc058b40a77d20c1d52c02c6897767b28b9",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0014.json",
+      "sha256": "8ab7dc25baadf32984515299b1b3e1e68be6f91b9c979204611a538c0ee42241",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0015.json",
+      "sha256": "74be1bade69067fbe288d7aa4b0c9cf6a3556c35aed49f8864a6daf10ceabea6",
+      "size": 2632
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0016.json",
+      "sha256": "a39188e3a08ca30d14e93d5b9083650c65fedb567cd705149489e5dca37db559",
+      "size": 2631
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0017.json",
+      "sha256": "517a43b7161c18716e1b349ed4f4e928cdc4fec47e7bff26485028238d43cdfa",
+      "size": 2632
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0018.json",
+      "sha256": "d96ef033d850dd3a9f7b2cfd02d3a135082091beed884439b3e87efb9d256f1f",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0019.json",
+      "sha256": "0ff1122dd30d487d4e246de341d131e741c5c6dcb342e4b4e9faefaca8560a6f",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0020.json",
+      "sha256": "b1b6f5e690f6f683ea1df54e1bf60b33ed72b3c4d04b9d8d6f923524eaa40223",
+      "size": 2633
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-active-0021.json",
+      "sha256": "72b89021afffea2ba699f68083be36a13bb5fc8589a0238a7794db057dd1e7a2",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-onboarded.json",
+      "sha256": "c5b2462dbffc190149f91851d359b2e14b8bcc0dfa39d1d2b7d7c36ffb99dff7",
+      "size": 2621
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-recovery-0.json",
+      "sha256": "165994b6530cfe85d0d7e3ee094943077139a7c9b20eda0542e8d7afb3b54e0c",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/clients-recovery-1.json",
+      "sha256": "425da691182f0351e5934f998429a7887cdd79621ea236735c8492861d600339",
+      "size": 2634
+    },
+    {
+      "path": "station-removal/native-final-source-01/controller-after.json",
+      "sha256": "db0960f2246d55b0563dbb9af41b55835de00c7de901f1b3776e241adff3a1e5",
+      "size": 31317
+    },
+    {
+      "path": "station-removal/native-final-source-01/controller-before.json",
+      "sha256": "e557e33a9c05f7f6738d213a3fba875c70f7cf559bd95478fcda6dd0286d5421",
+      "size": 10353
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-inventory-0005.json",
+      "sha256": "35f43de4a579b0f5dc45c22a22b2b289faae28c4dc6f55a0d9ac027d6c7ba184",
+      "size": 32363
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-inventory-0008.json",
+      "sha256": "195a2be742da12a221ce3f86195550b032d90aae65074e30eddc48b2338ee68e",
+      "size": 32362
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-inventory-0011.json",
+      "sha256": "3f4d01cf1f6f8610aed8fec874a17a14b248140fed419ab8f783c80de5bb9c01",
+      "size": 32363
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-inventory-0014.json",
+      "sha256": "dcdfe49f1b9432e7967799fd52f2de98aa0c271d0bdb856162f286391efaf4e9",
+      "size": 32362
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-inventory-0018.json",
+      "sha256": "9211d22d692356639742f3f5e441968bc6c56371f02d427c4f4255f6900a509c",
+      "size": 32363
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-inventory-0021.json",
+      "sha256": "368d6313e000c832927b62436b0b7c441845612b3ba6e38fb7627833a390ecec",
+      "size": 32363
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-session-0005.json",
+      "sha256": "628a2e3a379e2c770f04258fb85b37174f17fe0f5d71d89895a2a177f86fde61",
+      "size": 3128
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-session-0008.json",
+      "sha256": "587cf332898ce434d42d467c5562cb3793b63d142fbbdf6c63f094a1241cb9d7",
+      "size": 6683
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-session-0011.json",
+      "sha256": "e97c8a7baccf233502fed40bc643bf429b995af9c0b81fc915f03871b6d6578a",
+      "size": 6838
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-session-0014.json",
+      "sha256": "3086a973d765d2dda8c7613ee98c9443023e0b00a35b18b63c041ca5d44dbb65",
+      "size": 2777
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-session-0018.json",
+      "sha256": "67d918c41e09261e5398dbb56597a686947b3bf929ac18031a874b32a4b55846",
+      "size": 2994
+    },
+    {
+      "path": "station-removal/native-final-source-01/detached-session-0021.json",
+      "sha256": "669dbad8ecd6eaaffaa8e75e6b7857177a4728d2324893e8b28e774dc73eab07",
+      "size": 3215
+    },
+    {
+      "path": "station-removal/native-final-source-01/em-baseline-wifi-continuous-ping.log",
+      "sha256": "4e14552de904effdd7b92219899f0276fe5c3f854d1c22f5e47f32d157a868b0",
+      "size": 41587
+    },
+    {
+      "path": "station-removal/native-final-source-01/em-baseline-wired-continuous-ping.log",
+      "sha256": "213b7f4b0798123c6bc1e1224cc93f8c4dd2a64ada4cfc5c2ce66dd4f5a1f274",
+      "size": 49554
+    },
+    {
+      "path": "station-removal/native-final-source-01/ethernet.pcap",
+      "sha256": "cbcb1b691aa766e2cd9fc536ed50dea3ac591362acaec237d0a79cc68ba61e92",
+      "size": 10390
+    },
+    {
+      "path": "station-removal/native-final-source-01/independent-observation-check.json",
+      "sha256": "c4126c6ca0d4500a8d668dba4d4917e59526405474cbbd36fd9114ceaedf7ece",
+      "size": 4548
+    },
+    {
+      "path": "station-removal/native-final-source-01/independent-recovery-check.json",
+      "sha256": "436b686cce972e139df609108e7dddecfdf56d71bdd8d3272220bfa585f4f5bb",
+      "size": 2923
+    },
+    {
+      "path": "station-removal/native-final-source-01/manager.jsonl",
+      "sha256": "4c250d11db8304e5b2251661629ce9454fd7cf2ca493d06d97b30294ca0d83ba",
+      "size": 139259
+    },
+    {
+      "path": "station-removal/native-final-source-01/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "station-removal/native-final-source-01/native-operation.json",
+      "sha256": "a6dde8c636db062cf4a7277ffe003bc99562f51b793b9e10d64f7bc0a57a7762",
+      "size": 4856
+    },
+    {
+      "path": "station-removal/native-final-source-01/native-session.json",
+      "sha256": "d3dd7216edd1989851a2b83be2d089a792a4562b8a308ef2b3c4fecd06e283f8",
+      "size": 3291
+    },
+    {
+      "path": "station-removal/native-final-source-01/radio.pcap",
+      "sha256": "448913a19bb5a3b9797a288d2e655e6fe4d90decc66999bb8de3b41539bc6ac7",
+      "size": 1714024
+    },
+    {
+      "path": "station-removal/native-final-source-01/recovery-checks.json",
+      "sha256": "a5eadf44de6944959fc0d5988664e2c28d4e1b5de0531109c266374fdba64fa0",
+      "size": 42670
+    },
+    {
+      "path": "station-removal/native-final-source-01/result.json",
+      "sha256": "3b9a658e666d49767ac94b2194bb2139884247576b165bfb1bb0f597718d4a16",
+      "size": 12096
+    },
+    {
+      "path": "station-removal/native-final-source-01/source-hashes.json",
+      "sha256": "a1ebf51a07141d05cd7ff51dd9deb00a9238964e48f9b196a270a183ae886b53",
+      "size": 11408
+    },
+    {
+      "path": "station-removal/native-final-source-01/station-events.jsonl",
+      "sha256": "229f6c8d2a783b3ddcb66e75cdf3107f082ba5d42a34bc3e0b1e4d979af51a19",
+      "size": 35421
+    },
+    {
+      "path": "station-removal/native-final-source-01/withheld-operation.json",
+      "sha256": "fe906fbe7889be60cf46cf4904fe970b4973fa8264c9d5d36cc4a8ecc96cc360",
+      "size": 1963
+    },
+    {
+      "path": "station-removal/unit-results.xml",
+      "sha256": "68af399f5d025c1e47def2b5064aa37729913e59fd81b98f4c28bfbe79ead9f7",
+      "size": 4406783
     }
   ]
 }

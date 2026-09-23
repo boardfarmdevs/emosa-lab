@@ -1,0 +1,3748 @@
+[
+  {
+    "elapsed": 2.41347006199976,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 2,
+        "wsc_operation": 1,
+        "channel_selection_accepted": 2,
+        "unsupported_message_8003": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_join_notification": 1,
+        "client_capability_unavailable_report": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "observed_topology_notification",
+        "channel_selection_accepted",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "input_or_source_rejected": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 2
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 21
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 25
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 47675
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 26
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 19,
+            "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+            "state": "CONFIG_COMMITTED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 2,
+          "operating_channel_report_sent": 2,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 5,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131205001,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "7e5f45a48b449e17ff588280bb886f86"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  228180 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54768 kB\nVmRSS:\t   54768 kB\nRssAnon:\t   31244 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   48748 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t837\nnonvoluntary_ctxt_switches:\t572\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 7.878097943999819,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 2,
+        "wsc_operation": 1,
+        "channel_selection_accepted": 2,
+        "unsupported_message_8003": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_join_notification": 1,
+        "client_capability_unavailable_report": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "observed_topology_notification",
+        "channel_selection_accepted",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "input_or_source_rejected": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 2
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 21
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 25
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 47675
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 26
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 19,
+            "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+            "state": "CONFIG_COMMITTED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 2,
+          "operating_channel_report_sent": 2,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 13,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131210407,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "6968ec2e4513252144538b92de43c087"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  228180 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54772 kB\nVmRSS:\t   54772 kB\nRssAnon:\t   31248 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   48748 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t1473\nnonvoluntary_ctxt_switches:\t871\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 13.333115911000277,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 2,
+        "wsc_operation": 1,
+        "channel_selection_accepted": 2,
+        "unsupported_message_8003": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_join_notification": 1,
+        "client_capability_unavailable_report": 1,
+        "rejected_INVALID_INPUT": 1,
+        "unsupported_message_0001": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "observed_topology_notification",
+        "channel_selection_accepted",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "rejected_INVALID_INPUT",
+        "unsupported_message_0001"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "input_or_source_rejected": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 2
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 21
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 25
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 47675
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 26
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 19,
+            "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+            "state": "CONFIG_COMMITTED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 2,
+          "operating_channel_report_sent": 2,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 21,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131215807,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "8c07c894cf31855d5c41944a035378b1"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  228180 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54780 kB\nVmRSS:\t   54780 kB\nRssAnon:\t   31256 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   48748 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t2131\nnonvoluntary_ctxt_switches:\t1072\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 18.77602880499944,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 2,
+        "wsc_operation": 1,
+        "channel_selection_accepted": 2,
+        "unsupported_message_8003": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_join_notification": 1,
+        "client_capability_unavailable_report": 1,
+        "rejected_INVALID_INPUT": 1,
+        "unsupported_message_0001": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "observed_topology_notification",
+        "channel_selection_accepted",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "rejected_INVALID_INPUT",
+        "unsupported_message_0001"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "input_or_source_rejected": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 2
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 21
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 25
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 47675
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 26
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 19,
+            "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+            "state": "CONFIG_COMMITTED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 2,
+          "operating_channel_report_sent": 2,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 29,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131221261,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "2f33a0f5d7605c04366ea62ca26419a0"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  228180 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54780 kB\nVmRSS:\t   54780 kB\nRssAnon:\t   31256 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   48748 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t2745\nnonvoluntary_ctxt_switches:\t1413\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 24.23999581499993,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 2,
+        "wsc_operation": 1,
+        "channel_selection_accepted": 2,
+        "unsupported_message_8003": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_join_notification": 1,
+        "client_capability_unavailable_report": 1,
+        "rejected_INVALID_INPUT": 1,
+        "unsupported_message_0001": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "observed_topology_notification",
+        "channel_selection_accepted",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "rejected_INVALID_INPUT",
+        "unsupported_message_0001"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "input_or_source_rejected": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 2
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 21
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 25
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 47675
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 26
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 19,
+            "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+            "state": "CONFIG_COMMITTED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 2,
+          "operating_channel_report_sent": 2,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 37,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131226700,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "a1ab72d0c9e5da8f760e6e5d1b8332f3"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  228180 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54780 kB\nVmRSS:\t   54780 kB\nRssAnon:\t   31256 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   48748 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t3356\nnonvoluntary_ctxt_switches:\t1801\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 29.68259770199984,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 2,
+        "wsc_operation": 1,
+        "channel_selection_accepted": 2,
+        "unsupported_message_8003": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_join_notification": 1,
+        "client_capability_unavailable_report": 1,
+        "rejected_INVALID_INPUT": 1,
+        "unsupported_message_0001": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "observed_topology_notification",
+        "channel_selection_accepted",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "rejected_INVALID_INPUT",
+        "unsupported_message_0001"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "input_or_source_rejected": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 2
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 21
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 25
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 47675
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 26
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 19,
+            "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+            "state": "CONFIG_COMMITTED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 2,
+          "operating_channel_report_sent": 2,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 45,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131232177,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "cecb028c048873c6fbcf520956ae51b7"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  228180 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54780 kB\nVmRSS:\t   54780 kB\nRssAnon:\t   31256 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   48748 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t3962\nnonvoluntary_ctxt_switches:\t2161\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 39.50761553099983,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 2,
+        "wsc_operation": 1,
+        "channel_selection_accepted": 2,
+        "unsupported_message_8003": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_join_notification": 2,
+        "client_capability_unavailable_report": 2,
+        "rejected_INVALID_INPUT": 1,
+        "unsupported_message_0001": 1,
+        "unsupported_message_0005": 1,
+        "client_leave_notification": 1,
+        "disassociation_statistics_unavailable": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "observed_topology_notification",
+        "channel_selection_accepted",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "rejected_INVALID_INPUT",
+        "unsupported_message_0001",
+        "unsupported_message_0005",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "input_or_source_rejected": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 2
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 21
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 25
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 47675
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 26
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 19,
+            "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+            "state": "CONFIG_COMMITTED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 2,
+          "operating_channel_report_sent": 2,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 59,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131241679,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "96d7cf2ebf6c6f7d4956d01d577b6728"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  228180 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54784 kB\nVmRSS:\t   54784 kB\nRssAnon:\t   31260 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   48748 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t5084\nnonvoluntary_ctxt_switches:\t2733\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 44.97167651599921,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 2,
+        "wsc_operation": 1,
+        "channel_selection_accepted": 2,
+        "unsupported_message_8003": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_join_notification": 2,
+        "client_capability_unavailable_report": 2,
+        "rejected_INVALID_INPUT": 1,
+        "unsupported_message_0001": 1,
+        "unsupported_message_0005": 1,
+        "client_leave_notification": 1,
+        "disassociation_statistics_unavailable": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "observed_topology_notification",
+        "channel_selection_accepted",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "rejected_INVALID_INPUT",
+        "unsupported_message_0001",
+        "unsupported_message_0005",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "input_or_source_rejected": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 2
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 21
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 25
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 47675
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 26
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 19,
+            "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+            "state": "CONFIG_COMMITTED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 2,
+          "operating_channel_report_sent": 2,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 67,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131247094,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "28ffcd6af21b324839bad57e5eb73da0"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  228180 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54796 kB\nVmRSS:\t   54796 kB\nRssAnon:\t   31272 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   48748 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t5726\nnonvoluntary_ctxt_switches:\t2995\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 50.41018998199979,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 2,
+        "wsc_operation": 1,
+        "channel_selection_accepted": 2,
+        "unsupported_message_8003": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_join_notification": 2,
+        "client_capability_unavailable_report": 2,
+        "rejected_INVALID_INPUT": 1,
+        "unsupported_message_0001": 1,
+        "unsupported_message_0005": 1,
+        "client_leave_notification": 1,
+        "disassociation_statistics_unavailable": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "observed_topology_notification",
+        "channel_selection_accepted",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "rejected_INVALID_INPUT",
+        "unsupported_message_0001",
+        "unsupported_message_0005",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "input_or_source_rejected": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 2
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 21
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 25
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 47675
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 26
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 19,
+            "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+            "state": "CONFIG_COMMITTED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 2,
+          "operating_channel_report_sent": 2,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 75,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131252536,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "b2d2f8ec4ce2fe8c9b86187d09b6ac34"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  228180 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54796 kB\nVmRSS:\t   54796 kB\nRssAnon:\t   31272 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   48748 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t6383\nnonvoluntary_ctxt_switches:\t3167\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 68.9527263660002,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 2,
+        "client_capability_unavailable_report": 2,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 1,
+        "disassociation_statistics_unavailable": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47681
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 40
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 44
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 45
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 39,
+            "operation_id": "536ea454-201b-4e93-896d-3311e1a85a04",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 2,
+        "next_start": 10360.750406756,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          },
+          {
+            "event": "source_lost",
+            "attempt": 1,
+            "at": 10359.750381599,
+            "session": {
+              "scope": "owned_non_dpp_sole_radio_onboarding",
+              "state": "source_lost",
+              "counts": {
+                "search_sent": 1,
+                "early_then_m1_sent": 1,
+                "observed_topology_notification": 2,
+                "wsc_operation": 1,
+                "channel_selection_accepted": 2,
+                "unsupported_message_8003": 1,
+                "channel_preference_report_sent": 1,
+                "ap_capability_report_sent": 1,
+                "operating_channel_acknowledged": 1,
+                "client_join_notification": 2,
+                "client_capability_unavailable_report": 2,
+                "rejected_INVALID_INPUT": 2,
+                "unsupported_message_0001": 1,
+                "unsupported_message_0005": 1,
+                "client_leave_notification": 1,
+                "disassociation_statistics_unavailable": 1,
+                "source_lost": 1
+              },
+              "events": [
+                "search_sent",
+                "early_then_m1_sent",
+                "observed_topology_notification",
+                "wsc_operation",
+                "observed_topology_notification",
+                "channel_selection_accepted",
+                "unsupported_message_8003",
+                "channel_selection_accepted",
+                "channel_preference_report_sent",
+                "ap_capability_report_sent",
+                "operating_channel_acknowledged",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "unsupported_message_0001",
+                "unsupported_message_0005",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "source_lost"
+              ],
+              "admission_issues": [],
+              "reports": {
+                "counts": {
+                  "early_sent": 1,
+                  "early_source_invalidated": 1,
+                  "input_or_source_rejected": 1,
+                  "topology_response_sent": 2,
+                  "unmatched_ack": 2
+                },
+                "events": [
+                  {
+                    "event": "early_sent",
+                    "mid": 47671
+                  },
+                  {
+                    "event": "early_source_invalidated"
+                  },
+                  {
+                    "event": "input_or_source_rejected"
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 21
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 25
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 47675
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 26
+                  }
+                ],
+                "early_pending": false
+              },
+              "wsc": {
+                "counts": {
+                  "operation": 1
+                },
+                "events": [
+                  {
+                    "status": "operation",
+                    "mid": 19,
+                    "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+                    "state": "CONFIG_COMMITTED"
+                  }
+                ],
+                "closed": true
+              },
+              "full_profile_qualified": false,
+              "physical_pod_proven": false,
+              "channels": {
+                "counts": {
+                  "channel_selection_accepted": 2,
+                  "operating_channel_report_sent": 2,
+                  "channel_preference_report_sent": 1,
+                  "operating_channel_acknowledged": 1
+                },
+                "operating_ack_pending": false
+              },
+              "disassociations": {
+                "counts": {},
+                "pending": 0
+              }
+            }
+          },
+          {
+            "event": "attempt_started",
+            "attempt": 2,
+            "at": 10363.939296898
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 101,
+        "rejected": 2,
+        "generation": 0,
+        "timestamp_ms": 1790131271449,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "a2d90c21d94cd23acdba30613218dbad"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  230228 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   57584 kB\nVmRSS:\t   57584 kB\nRssAnon:\t   34060 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   51120 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     212 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t7826\nnonvoluntary_ctxt_switches:\t3996\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 74.41737828799887,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 2,
+        "client_capability_unavailable_report": 2,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 1,
+        "disassociation_statistics_unavailable": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47681
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 40
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 44
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 45
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 39,
+            "operation_id": "536ea454-201b-4e93-896d-3311e1a85a04",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 2,
+        "next_start": 10360.750406756,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          },
+          {
+            "event": "source_lost",
+            "attempt": 1,
+            "at": 10359.750381599,
+            "session": {
+              "scope": "owned_non_dpp_sole_radio_onboarding",
+              "state": "source_lost",
+              "counts": {
+                "search_sent": 1,
+                "early_then_m1_sent": 1,
+                "observed_topology_notification": 2,
+                "wsc_operation": 1,
+                "channel_selection_accepted": 2,
+                "unsupported_message_8003": 1,
+                "channel_preference_report_sent": 1,
+                "ap_capability_report_sent": 1,
+                "operating_channel_acknowledged": 1,
+                "client_join_notification": 2,
+                "client_capability_unavailable_report": 2,
+                "rejected_INVALID_INPUT": 2,
+                "unsupported_message_0001": 1,
+                "unsupported_message_0005": 1,
+                "client_leave_notification": 1,
+                "disassociation_statistics_unavailable": 1,
+                "source_lost": 1
+              },
+              "events": [
+                "search_sent",
+                "early_then_m1_sent",
+                "observed_topology_notification",
+                "wsc_operation",
+                "observed_topology_notification",
+                "channel_selection_accepted",
+                "unsupported_message_8003",
+                "channel_selection_accepted",
+                "channel_preference_report_sent",
+                "ap_capability_report_sent",
+                "operating_channel_acknowledged",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "unsupported_message_0001",
+                "unsupported_message_0005",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "source_lost"
+              ],
+              "admission_issues": [],
+              "reports": {
+                "counts": {
+                  "early_sent": 1,
+                  "early_source_invalidated": 1,
+                  "input_or_source_rejected": 1,
+                  "topology_response_sent": 2,
+                  "unmatched_ack": 2
+                },
+                "events": [
+                  {
+                    "event": "early_sent",
+                    "mid": 47671
+                  },
+                  {
+                    "event": "early_source_invalidated"
+                  },
+                  {
+                    "event": "input_or_source_rejected"
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 21
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 25
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 47675
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 26
+                  }
+                ],
+                "early_pending": false
+              },
+              "wsc": {
+                "counts": {
+                  "operation": 1
+                },
+                "events": [
+                  {
+                    "status": "operation",
+                    "mid": 19,
+                    "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+                    "state": "CONFIG_COMMITTED"
+                  }
+                ],
+                "closed": true
+              },
+              "full_profile_qualified": false,
+              "physical_pod_proven": false,
+              "channels": {
+                "counts": {
+                  "channel_selection_accepted": 2,
+                  "operating_channel_report_sent": 2,
+                  "channel_preference_report_sent": 1,
+                  "operating_channel_acknowledged": 1
+                },
+                "operating_ack_pending": false
+              },
+              "disassociations": {
+                "counts": {},
+                "pending": 0
+              }
+            }
+          },
+          {
+            "event": "attempt_started",
+            "attempt": 2,
+            "at": 10363.939296898
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 109,
+        "rejected": 2,
+        "generation": 0,
+        "timestamp_ms": 1790131276859,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "9c9da68982d0d7952c40a372cf32d1f6"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  230228 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   57584 kB\nVmRSS:\t   57584 kB\nRssAnon:\t   34060 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   51120 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     212 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t8471\nnonvoluntary_ctxt_switches:\t4156\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 79.86757754199971,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 2,
+        "client_capability_unavailable_report": 2,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 1,
+        "disassociation_statistics_unavailable": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47681
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 40
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 44
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 45
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 39,
+            "operation_id": "536ea454-201b-4e93-896d-3311e1a85a04",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 2,
+        "next_start": 10360.750406756,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          },
+          {
+            "event": "source_lost",
+            "attempt": 1,
+            "at": 10359.750381599,
+            "session": {
+              "scope": "owned_non_dpp_sole_radio_onboarding",
+              "state": "source_lost",
+              "counts": {
+                "search_sent": 1,
+                "early_then_m1_sent": 1,
+                "observed_topology_notification": 2,
+                "wsc_operation": 1,
+                "channel_selection_accepted": 2,
+                "unsupported_message_8003": 1,
+                "channel_preference_report_sent": 1,
+                "ap_capability_report_sent": 1,
+                "operating_channel_acknowledged": 1,
+                "client_join_notification": 2,
+                "client_capability_unavailable_report": 2,
+                "rejected_INVALID_INPUT": 2,
+                "unsupported_message_0001": 1,
+                "unsupported_message_0005": 1,
+                "client_leave_notification": 1,
+                "disassociation_statistics_unavailable": 1,
+                "source_lost": 1
+              },
+              "events": [
+                "search_sent",
+                "early_then_m1_sent",
+                "observed_topology_notification",
+                "wsc_operation",
+                "observed_topology_notification",
+                "channel_selection_accepted",
+                "unsupported_message_8003",
+                "channel_selection_accepted",
+                "channel_preference_report_sent",
+                "ap_capability_report_sent",
+                "operating_channel_acknowledged",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "unsupported_message_0001",
+                "unsupported_message_0005",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "source_lost"
+              ],
+              "admission_issues": [],
+              "reports": {
+                "counts": {
+                  "early_sent": 1,
+                  "early_source_invalidated": 1,
+                  "input_or_source_rejected": 1,
+                  "topology_response_sent": 2,
+                  "unmatched_ack": 2
+                },
+                "events": [
+                  {
+                    "event": "early_sent",
+                    "mid": 47671
+                  },
+                  {
+                    "event": "early_source_invalidated"
+                  },
+                  {
+                    "event": "input_or_source_rejected"
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 21
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 25
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 47675
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 26
+                  }
+                ],
+                "early_pending": false
+              },
+              "wsc": {
+                "counts": {
+                  "operation": 1
+                },
+                "events": [
+                  {
+                    "status": "operation",
+                    "mid": 19,
+                    "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+                    "state": "CONFIG_COMMITTED"
+                  }
+                ],
+                "closed": true
+              },
+              "full_profile_qualified": false,
+              "physical_pod_proven": false,
+              "channels": {
+                "counts": {
+                  "channel_selection_accepted": 2,
+                  "operating_channel_report_sent": 2,
+                  "channel_preference_report_sent": 1,
+                  "operating_channel_acknowledged": 1
+                },
+                "operating_ack_pending": false
+              },
+              "disassociations": {
+                "counts": {},
+                "pending": 0
+              }
+            }
+          },
+          {
+            "event": "attempt_started",
+            "attempt": 2,
+            "at": 10363.939296898
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 117,
+        "rejected": 2,
+        "generation": 0,
+        "timestamp_ms": 1790131282286,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "9793d03e312b0341c6579f611340bf2d"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  230228 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   57584 kB\nVmRSS:\t   57584 kB\nRssAnon:\t   34060 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   51120 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     212 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t9100\nnonvoluntary_ctxt_switches:\t4393\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 89.70641172099931,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 3,
+        "client_capability_unavailable_report": 3,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 2,
+        "disassociation_statistics_unavailable": 2
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47681
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 40
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 44
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 45
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 39,
+            "operation_id": "536ea454-201b-4e93-896d-3311e1a85a04",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 2,
+        "next_start": 10360.750406756,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          },
+          {
+            "event": "source_lost",
+            "attempt": 1,
+            "at": 10359.750381599,
+            "session": {
+              "scope": "owned_non_dpp_sole_radio_onboarding",
+              "state": "source_lost",
+              "counts": {
+                "search_sent": 1,
+                "early_then_m1_sent": 1,
+                "observed_topology_notification": 2,
+                "wsc_operation": 1,
+                "channel_selection_accepted": 2,
+                "unsupported_message_8003": 1,
+                "channel_preference_report_sent": 1,
+                "ap_capability_report_sent": 1,
+                "operating_channel_acknowledged": 1,
+                "client_join_notification": 2,
+                "client_capability_unavailable_report": 2,
+                "rejected_INVALID_INPUT": 2,
+                "unsupported_message_0001": 1,
+                "unsupported_message_0005": 1,
+                "client_leave_notification": 1,
+                "disassociation_statistics_unavailable": 1,
+                "source_lost": 1
+              },
+              "events": [
+                "search_sent",
+                "early_then_m1_sent",
+                "observed_topology_notification",
+                "wsc_operation",
+                "observed_topology_notification",
+                "channel_selection_accepted",
+                "unsupported_message_8003",
+                "channel_selection_accepted",
+                "channel_preference_report_sent",
+                "ap_capability_report_sent",
+                "operating_channel_acknowledged",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "unsupported_message_0001",
+                "unsupported_message_0005",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "source_lost"
+              ],
+              "admission_issues": [],
+              "reports": {
+                "counts": {
+                  "early_sent": 1,
+                  "early_source_invalidated": 1,
+                  "input_or_source_rejected": 1,
+                  "topology_response_sent": 2,
+                  "unmatched_ack": 2
+                },
+                "events": [
+                  {
+                    "event": "early_sent",
+                    "mid": 47671
+                  },
+                  {
+                    "event": "early_source_invalidated"
+                  },
+                  {
+                    "event": "input_or_source_rejected"
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 21
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 25
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 47675
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 26
+                  }
+                ],
+                "early_pending": false
+              },
+              "wsc": {
+                "counts": {
+                  "operation": 1
+                },
+                "events": [
+                  {
+                    "status": "operation",
+                    "mid": 19,
+                    "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+                    "state": "CONFIG_COMMITTED"
+                  }
+                ],
+                "closed": true
+              },
+              "full_profile_qualified": false,
+              "physical_pod_proven": false,
+              "channels": {
+                "counts": {
+                  "channel_selection_accepted": 2,
+                  "operating_channel_report_sent": 2,
+                  "channel_preference_report_sent": 1,
+                  "operating_channel_acknowledged": 1
+                },
+                "operating_ack_pending": false
+              },
+              "disassociations": {
+                "counts": {},
+                "pending": 0
+              }
+            }
+          },
+          {
+            "event": "attempt_started",
+            "attempt": 2,
+            "at": 10363.939296898
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 132,
+        "rejected": 2,
+        "generation": 0,
+        "timestamp_ms": 1790131292474,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "643f81691c6a2cb342185e30268dcc2c"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  230228 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   57584 kB\nVmRSS:\t   57584 kB\nRssAnon:\t   34060 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   51120 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     212 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t10272\nnonvoluntary_ctxt_switches:\t4879\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 95.14825700199981,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 3,
+        "client_capability_unavailable_report": 3,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 2,
+        "disassociation_statistics_unavailable": 2,
+        "unsupported_message_0005": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_0005"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47681
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 40
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 44
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 45
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 39,
+            "operation_id": "536ea454-201b-4e93-896d-3311e1a85a04",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 2,
+        "next_start": 10360.750406756,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          },
+          {
+            "event": "source_lost",
+            "attempt": 1,
+            "at": 10359.750381599,
+            "session": {
+              "scope": "owned_non_dpp_sole_radio_onboarding",
+              "state": "source_lost",
+              "counts": {
+                "search_sent": 1,
+                "early_then_m1_sent": 1,
+                "observed_topology_notification": 2,
+                "wsc_operation": 1,
+                "channel_selection_accepted": 2,
+                "unsupported_message_8003": 1,
+                "channel_preference_report_sent": 1,
+                "ap_capability_report_sent": 1,
+                "operating_channel_acknowledged": 1,
+                "client_join_notification": 2,
+                "client_capability_unavailable_report": 2,
+                "rejected_INVALID_INPUT": 2,
+                "unsupported_message_0001": 1,
+                "unsupported_message_0005": 1,
+                "client_leave_notification": 1,
+                "disassociation_statistics_unavailable": 1,
+                "source_lost": 1
+              },
+              "events": [
+                "search_sent",
+                "early_then_m1_sent",
+                "observed_topology_notification",
+                "wsc_operation",
+                "observed_topology_notification",
+                "channel_selection_accepted",
+                "unsupported_message_8003",
+                "channel_selection_accepted",
+                "channel_preference_report_sent",
+                "ap_capability_report_sent",
+                "operating_channel_acknowledged",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "unsupported_message_0001",
+                "unsupported_message_0005",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "source_lost"
+              ],
+              "admission_issues": [],
+              "reports": {
+                "counts": {
+                  "early_sent": 1,
+                  "early_source_invalidated": 1,
+                  "input_or_source_rejected": 1,
+                  "topology_response_sent": 2,
+                  "unmatched_ack": 2
+                },
+                "events": [
+                  {
+                    "event": "early_sent",
+                    "mid": 47671
+                  },
+                  {
+                    "event": "early_source_invalidated"
+                  },
+                  {
+                    "event": "input_or_source_rejected"
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 21
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 25
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 47675
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 26
+                  }
+                ],
+                "early_pending": false
+              },
+              "wsc": {
+                "counts": {
+                  "operation": 1
+                },
+                "events": [
+                  {
+                    "status": "operation",
+                    "mid": 19,
+                    "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+                    "state": "CONFIG_COMMITTED"
+                  }
+                ],
+                "closed": true
+              },
+              "full_profile_qualified": false,
+              "physical_pod_proven": false,
+              "channels": {
+                "counts": {
+                  "channel_selection_accepted": 2,
+                  "operating_channel_report_sent": 2,
+                  "channel_preference_report_sent": 1,
+                  "operating_channel_acknowledged": 1
+                },
+                "operating_ack_pending": false
+              },
+              "disassociations": {
+                "counts": {},
+                "pending": 0
+              }
+            }
+          },
+          {
+            "event": "attempt_started",
+            "attempt": 2,
+            "at": 10363.939296898
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 140,
+        "rejected": 2,
+        "generation": 0,
+        "timestamp_ms": 1790131297893,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "c9b98e2aa2568639f6638142b7e7280d"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  230228 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   57604 kB\nVmRSS:\t   57604 kB\nRssAnon:\t   34080 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   51120 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     212 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t10922\nnonvoluntary_ctxt_switches:\t5142\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 100.56424729900027,
+    "adapter_pid": 250758,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 3,
+        "client_capability_unavailable_report": 3,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 2,
+        "disassociation_statistics_unavailable": 2,
+        "unsupported_message_0005": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_0005"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 2,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 47681
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 40
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 44
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 45
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 39,
+            "operation_id": "536ea454-201b-4e93-896d-3311e1a85a04",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 2,
+        "next_start": 10360.750406756,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10303.307988388
+          },
+          {
+            "event": "source_lost",
+            "attempt": 1,
+            "at": 10359.750381599,
+            "session": {
+              "scope": "owned_non_dpp_sole_radio_onboarding",
+              "state": "source_lost",
+              "counts": {
+                "search_sent": 1,
+                "early_then_m1_sent": 1,
+                "observed_topology_notification": 2,
+                "wsc_operation": 1,
+                "channel_selection_accepted": 2,
+                "unsupported_message_8003": 1,
+                "channel_preference_report_sent": 1,
+                "ap_capability_report_sent": 1,
+                "operating_channel_acknowledged": 1,
+                "client_join_notification": 2,
+                "client_capability_unavailable_report": 2,
+                "rejected_INVALID_INPUT": 2,
+                "unsupported_message_0001": 1,
+                "unsupported_message_0005": 1,
+                "client_leave_notification": 1,
+                "disassociation_statistics_unavailable": 1,
+                "source_lost": 1
+              },
+              "events": [
+                "search_sent",
+                "early_then_m1_sent",
+                "observed_topology_notification",
+                "wsc_operation",
+                "observed_topology_notification",
+                "channel_selection_accepted",
+                "unsupported_message_8003",
+                "channel_selection_accepted",
+                "channel_preference_report_sent",
+                "ap_capability_report_sent",
+                "operating_channel_acknowledged",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "unsupported_message_0001",
+                "unsupported_message_0005",
+                "client_leave_notification",
+                "disassociation_statistics_unavailable",
+                "client_join_notification",
+                "client_capability_unavailable_report",
+                "rejected_INVALID_INPUT",
+                "source_lost"
+              ],
+              "admission_issues": [],
+              "reports": {
+                "counts": {
+                  "early_sent": 1,
+                  "early_source_invalidated": 1,
+                  "input_or_source_rejected": 1,
+                  "topology_response_sent": 2,
+                  "unmatched_ack": 2
+                },
+                "events": [
+                  {
+                    "event": "early_sent",
+                    "mid": 47671
+                  },
+                  {
+                    "event": "early_source_invalidated"
+                  },
+                  {
+                    "event": "input_or_source_rejected"
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 21
+                  },
+                  {
+                    "event": "topology_response_sent",
+                    "mid": 25
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 47675
+                  },
+                  {
+                    "event": "unmatched_ack",
+                    "mid": 26
+                  }
+                ],
+                "early_pending": false
+              },
+              "wsc": {
+                "counts": {
+                  "operation": 1
+                },
+                "events": [
+                  {
+                    "status": "operation",
+                    "mid": 19,
+                    "operation_id": "8f77a68b-5354-4a3e-af53-9fe475f4a758",
+                    "state": "CONFIG_COMMITTED"
+                  }
+                ],
+                "closed": true
+              },
+              "full_profile_qualified": false,
+              "physical_pod_proven": false,
+              "channels": {
+                "counts": {
+                  "channel_selection_accepted": 2,
+                  "operating_channel_report_sent": 2,
+                  "channel_preference_report_sent": 1,
+                  "operating_channel_acknowledged": 1
+                },
+                "operating_ack_pending": false
+              },
+              "disassociations": {
+                "counts": {},
+                "pending": 0
+              }
+            }
+          },
+          {
+            "event": "attempt_started",
+            "attempt": 2,
+            "at": 10363.939296898
+          }
+        ]
+      },
+      "worker": {
+        "pid": 250758,
+        "process_id": "91eb2781-b409-4ed6-a978-6395bd199b97"
+      },
+      "telemetry": {
+        "accepted": 148,
+        "rejected": 2,
+        "generation": 0,
+        "timestamp_ms": 1790131303314,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "0f050255d427a435d61698341e3fff1f"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t250758\nNgid:\t0\nPid:\t250758\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t250758\nNSpid:\t250758\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293300 kB\nVmSize:\t  230228 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   57604 kB\nVmRSS:\t   57604 kB\nRssAnon:\t   34080 kB\nRssFile:\t   23524 kB\nRssShmem:\t       0 kB\nVmData:\t   51120 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     212 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t11563\nnonvoluntary_ctxt_switches:\t5341\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 114.026996356999,
+    "adapter_pid": 258827,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 2,
+        "client_capability_unavailable_report": 2,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 1,
+        "disassociation_statistics_unavailable": 1,
+        "rejected_INVALID_INPUT": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "rejected_INVALID_INPUT",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 2,
+          "input_or_source_rejected": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 1,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 56668
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "early_sent",
+            "mid": 56671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 56
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 57
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 51,
+            "operation_id": "ad31d75c-8af5-44dd-9b6f-0dc8046b36c5",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10408.97466994
+          }
+        ]
+      },
+      "worker": {
+        "pid": 258827,
+        "process_id": "f7568d06-dbbf-4d4f-921c-ed6565c1ef6b"
+      },
+      "telemetry": {
+        "accepted": 14,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131316222,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "1ff23a5e2719c4fba554606afa3bdf24"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t258827\nNgid:\t0\nPid:\t258827\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t258827\nNSpid:\t258827\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293264 kB\nVmSize:\t  228140 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54788 kB\nVmRSS:\t   54788 kB\nRssAnon:\t   31272 kB\nRssFile:\t   23516 kB\nRssShmem:\t       0 kB\nVmData:\t   48708 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t1448\nnonvoluntary_ctxt_switches:\t985\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 119.471486860999,
+    "adapter_pid": 258827,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 2,
+        "client_capability_unavailable_report": 2,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 1,
+        "disassociation_statistics_unavailable": 1,
+        "rejected_INVALID_INPUT": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "rejected_INVALID_INPUT",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 2,
+          "input_or_source_rejected": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 1,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 56668
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "early_sent",
+            "mid": 56671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 56
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 57
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 51,
+            "operation_id": "ad31d75c-8af5-44dd-9b6f-0dc8046b36c5",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10408.97466994
+          }
+        ]
+      },
+      "worker": {
+        "pid": 258827,
+        "process_id": "f7568d06-dbbf-4d4f-921c-ed6565c1ef6b"
+      },
+      "telemetry": {
+        "accepted": 22,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131321692,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "d78d6accce2a12c9db71a2e3338d9516"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t258827\nNgid:\t0\nPid:\t258827\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t258827\nNSpid:\t258827\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293264 kB\nVmSize:\t  228140 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54788 kB\nVmRSS:\t   54788 kB\nRssAnon:\t   31272 kB\nRssFile:\t   23516 kB\nRssShmem:\t       0 kB\nVmData:\t   48708 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t2081\nnonvoluntary_ctxt_switches:\t1251\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 124.91572340499988,
+    "adapter_pid": 258827,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 2,
+        "client_capability_unavailable_report": 2,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 1,
+        "disassociation_statistics_unavailable": 1,
+        "rejected_INVALID_INPUT": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "rejected_INVALID_INPUT",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 2,
+          "input_or_source_rejected": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 1,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 56668
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "early_sent",
+            "mid": 56671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 56
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 57
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 51,
+            "operation_id": "ad31d75c-8af5-44dd-9b6f-0dc8046b36c5",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10408.97466994
+          }
+        ]
+      },
+      "worker": {
+        "pid": 258827,
+        "process_id": "f7568d06-dbbf-4d4f-921c-ed6565c1ef6b"
+      },
+      "telemetry": {
+        "accepted": 30,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131327127,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "d0af70231a9d239bcb90fe38893cf825"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t258827\nNgid:\t0\nPid:\t258827\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t258827\nNSpid:\t258827\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293264 kB\nVmSize:\t  228140 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54788 kB\nVmRSS:\t   54788 kB\nRssAnon:\t   31272 kB\nRssFile:\t   23516 kB\nRssShmem:\t       0 kB\nVmData:\t   48708 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t2691\nnonvoluntary_ctxt_switches:\t1556\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 130.38120212899958,
+    "adapter_pid": 258827,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 2,
+        "client_capability_unavailable_report": 2,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 1,
+        "disassociation_statistics_unavailable": 1,
+        "rejected_INVALID_INPUT": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "rejected_INVALID_INPUT",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 2,
+          "input_or_source_rejected": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 1,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 56668
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "early_sent",
+            "mid": 56671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 56
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 57
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 51,
+            "operation_id": "ad31d75c-8af5-44dd-9b6f-0dc8046b36c5",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10408.97466994
+          }
+        ]
+      },
+      "worker": {
+        "pid": 258827,
+        "process_id": "f7568d06-dbbf-4d4f-921c-ed6565c1ef6b"
+      },
+      "telemetry": {
+        "accepted": 38,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131332567,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "17f776f6b9d602e2da124ef481927e09"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t258827\nNgid:\t0\nPid:\t258827\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t258827\nNSpid:\t258827\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293264 kB\nVmSize:\t  228140 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54788 kB\nVmRSS:\t   54788 kB\nRssAnon:\t   31272 kB\nRssFile:\t   23516 kB\nRssShmem:\t       0 kB\nVmData:\t   48708 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t3307\nnonvoluntary_ctxt_switches:\t1878\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 140.23353804699946,
+    "adapter_pid": 258827,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 3,
+        "client_capability_unavailable_report": 3,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 2,
+        "disassociation_statistics_unavailable": 2,
+        "rejected_INVALID_INPUT": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "rejected_INVALID_INPUT",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 2,
+          "input_or_source_rejected": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 1,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 56668
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "early_sent",
+            "mid": 56671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 56
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 57
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 51,
+            "operation_id": "ad31d75c-8af5-44dd-9b6f-0dc8046b36c5",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10408.97466994
+          }
+        ]
+      },
+      "worker": {
+        "pid": 258827,
+        "process_id": "f7568d06-dbbf-4d4f-921c-ed6565c1ef6b"
+      },
+      "telemetry": {
+        "accepted": 53,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131342805,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "a4449b8a1395aab04a5cee82c5751084"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t258827\nNgid:\t0\nPid:\t258827\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t258827\nNSpid:\t258827\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293264 kB\nVmSize:\t  228140 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54804 kB\nVmRSS:\t   54804 kB\nRssAnon:\t   31288 kB\nRssFile:\t   23516 kB\nRssShmem:\t       0 kB\nVmData:\t   48708 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t4446\nnonvoluntary_ctxt_switches:\t2390\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 145.65606847900017,
+    "adapter_pid": 258827,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 3,
+        "client_capability_unavailable_report": 3,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 2,
+        "disassociation_statistics_unavailable": 2,
+        "rejected_INVALID_INPUT": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "rejected_INVALID_INPUT",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 2,
+          "input_or_source_rejected": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 1,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 56668
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "early_sent",
+            "mid": 56671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 56
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 57
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 51,
+            "operation_id": "ad31d75c-8af5-44dd-9b6f-0dc8046b36c5",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10408.97466994
+          }
+        ]
+      },
+      "worker": {
+        "pid": 258827,
+        "process_id": "f7568d06-dbbf-4d4f-921c-ed6565c1ef6b"
+      },
+      "telemetry": {
+        "accepted": 61,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131348199,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "7ce6aa5b04c3ca7e6631639ae65debc3"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t258827\nNgid:\t0\nPid:\t258827\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t258827\nNSpid:\t258827\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293264 kB\nVmSize:\t  228140 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54804 kB\nVmRSS:\t   54804 kB\nRssAnon:\t   31288 kB\nRssFile:\t   23516 kB\nRssShmem:\t       0 kB\nVmData:\t   48708 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t5065\nnonvoluntary_ctxt_switches:\t2695\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  },
+  {
+    "elapsed": 151.10463675999927,
+    "adapter_pid": 258827,
+    "session": {
+      "scope": "owned_non_dpp_sole_radio_onboarding",
+      "state": "provisioning",
+      "counts": {
+        "search_sent": 1,
+        "early_then_m1_sent": 1,
+        "observed_topology_notification": 1,
+        "wsc_operation": 1,
+        "client_join_notification": 3,
+        "client_capability_unavailable_report": 3,
+        "unsupported_message_8003": 1,
+        "channel_selection_accepted": 1,
+        "channel_preference_report_sent": 1,
+        "ap_capability_report_sent": 1,
+        "operating_channel_acknowledged": 1,
+        "client_leave_notification": 2,
+        "disassociation_statistics_unavailable": 2,
+        "rejected_INVALID_INPUT": 1
+      },
+      "events": [
+        "search_sent",
+        "early_then_m1_sent",
+        "observed_topology_notification",
+        "wsc_operation",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "unsupported_message_8003",
+        "channel_selection_accepted",
+        "channel_preference_report_sent",
+        "ap_capability_report_sent",
+        "operating_channel_acknowledged",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "rejected_INVALID_INPUT",
+        "client_join_notification",
+        "client_capability_unavailable_report",
+        "client_leave_notification",
+        "disassociation_statistics_unavailable",
+        "client_join_notification",
+        "client_capability_unavailable_report"
+      ],
+      "admission_issues": [],
+      "reports": {
+        "counts": {
+          "early_sent": 2,
+          "input_or_source_rejected": 1,
+          "early_source_invalidated": 1,
+          "topology_response_sent": 1,
+          "unmatched_ack": 1
+        },
+        "events": [
+          {
+            "event": "early_sent",
+            "mid": 56668
+          },
+          {
+            "event": "input_or_source_rejected"
+          },
+          {
+            "event": "early_sent",
+            "mid": 56671
+          },
+          {
+            "event": "early_source_invalidated"
+          },
+          {
+            "event": "topology_response_sent",
+            "mid": 56
+          },
+          {
+            "event": "unmatched_ack",
+            "mid": 57
+          }
+        ],
+        "early_pending": false
+      },
+      "wsc": {
+        "counts": {
+          "operation": 1
+        },
+        "events": [
+          {
+            "status": "operation",
+            "mid": 51,
+            "operation_id": "ad31d75c-8af5-44dd-9b6f-0dc8046b36c5",
+            "state": "OBSERVED_APPLIED"
+          }
+        ],
+        "closed": false
+      },
+      "full_profile_qualified": false,
+      "physical_pod_proven": false,
+      "channels": {
+        "counts": {
+          "channel_selection_accepted": 1,
+          "operating_channel_report_sent": 1,
+          "channel_preference_report_sent": 1,
+          "operating_channel_acknowledged": 1
+        },
+        "operating_ack_pending": false
+      },
+      "disassociations": {
+        "counts": {},
+        "pending": 0
+      },
+      "recovery": {
+        "attempts_started": 1,
+        "next_start": 0,
+        "history": [
+          {
+            "event": "attempt_started",
+            "attempt": 1,
+            "at": 10408.97466994
+          }
+        ]
+      },
+      "worker": {
+        "pid": 258827,
+        "process_id": "f7568d06-dbbf-4d4f-921c-ed6565c1ef6b"
+      },
+      "telemetry": {
+        "accepted": 69,
+        "rejected": 0,
+        "generation": 0,
+        "timestamp_ms": 1790131353601,
+        "station_count": 1
+      }
+    },
+    "clients": {
+      "clients": "passed",
+      "nonce": "b887587d80af010d453367743ca2ec62"
+    },
+    "controller_station_present": true,
+    "process_status": "Name:\tpython\nUmask:\t0077\nState:\tS (sleeping)\nTgid:\t258827\nNgid:\t0\nPid:\t258827\nPPid:\t243449\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t \nNStgid:\t258827\nNSpid:\t258827\nNSpgid:\t243449\nNSsid:\t243449\nKthread:\t0\nVmPeak:\t  293264 kB\nVmSize:\t  228140 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   54804 kB\nVmRSS:\t   54804 kB\nRssAnon:\t   31288 kB\nRssFile:\t   23516 kB\nRssShmem:\t       0 kB\nVmData:\t   48708 kB\nVmStk:\t     132 kB\nVmExe:\t   28588 kB\nVmLib:\t    4436 kB\nVmPTE:\t     208 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t3\nSigQ:\t5/7203\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000100006003\nCapInh:\t0000000000000000\nCapPrm:\t000001ffffffffff\nCapEff:\t000001ffffffffff\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-15\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t5696\nnonvoluntary_ctxt_switches:\t2944\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "open_descriptors": 20
+  }
+]

@@ -320,6 +320,13 @@ The publisher's actual units, reset/session semantics, missing-value behavior,
 ordering and trust still need qualification under TEL-01–04. This source review
 does not establish a measurement or authorize a guessed wire value.
 
+The [station-removal observer](station-removal-observations.md) now verifies a
+second acquisition path in the owned simulator: raw kernel removal records with
+present counters and association timestamps. Six records independently correlate
+with actual radio disconnect reasons and EasyMesh leaves. This narrows the gap to
+counter semantics and an online reason join; it does not enable final-statistics
+delivery or qualify an unchanged physical pod.
+
 ## Upstream references and reproducibility
 
 The vendored `.proto` retains its upstream license. Its generated descriptor is

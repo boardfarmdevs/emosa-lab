@@ -29,6 +29,9 @@ policy/AP/STA/neighbor metrics and final disassociation statistics.
 The [final-session sender](doc/protocol/final-session-statistics.md) and guarded
 onboarding handoff are implemented and independently decoded. Its measurement
 source remains unqualified; the native lab does not invent missing counters.
+The [read-only station-removal observer](doc/protocol/station-removal-observations.md)
+now acquires kernel records and independently correlates actual disconnect
+reasons and EasyMesh leaves. Counter conversion and online delivery remain next.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 

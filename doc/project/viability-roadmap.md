@@ -147,6 +147,12 @@ publisher is unqualified. The [150-second native regression](../evidence/final-s
 verifies corrected byte-unit advertisement through both recovery faults, without
 claiming that final session statistics were measured or delivered.
 
+The follow-on [kernel removal observation](../protocol/station-removal-observations.md)
+now captures raw counters at station removal. Its 158.51-second native run joins
+six removal records to actual radio reasons and EasyMesh leaves while preserving
+both recovery checks. Counter meanings and the online source-to-sender join still
+need qualification; acquisition alone does not establish final reporting.
+
 Next qualify measurement meanings, completeness and session finality, connect
 those records to the implemented handoff, then re-run complete 15-minute
 acceptance with independently decoded reports. The unchanged physical-pod path

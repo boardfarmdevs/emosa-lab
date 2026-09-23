@@ -819,7 +819,7 @@
       "edition": "Wi-Fi Data Elements Specification 3.0 package including TR-181-2-17_DEr3.xlsx",
       "source_url": "https://www.wi-fi.org/file-member/wi-fi-data-elements-specification-package",
       "status": "pending_authorized_package_access",
-      "needed_for": "EasyMesh 6.1 reference 10 and section 17.2.59 Table 82 Device.CollectionInterval; required capability-report definition, not merely ODH transport",
+      "needed_for": "EasyMesh 6.1 reference 10 and section 17.2.59 Table 82 Device.CollectionInterval; required capability-report definition, not merely ODH transport; also section 17.2.35 Table 58 STA byte/packet/error/retry definitions for final and periodic reports",
       "access_checked_on": "2026-09-22",
       "access_result": "Publisher member route redirects to Wi-Fi Alliance login; no package or credentials supplied",
       "wire_value_implemented": false
@@ -1799,7 +1799,21 @@
       "counter_units": "Profile-1 now advertises bytes consistently. Historical KiB-advertising experiments contained no traffic statistics and retain their bounded original scope.",
       "contract": "Explicit seven AP-relative counters and actual assigned 802.11 reason, unique association identity, same live source, complete absent membership, authenticated observed leave, two-second freshness and one-second bounded delivery; rejoin/context/unit changes withdraw pending reports.",
       "measurement_qualified": false,
-      "native_final_statistics_delivery_proven": false
+      "native_final_statistics_delivery_proven": false,
+      "removal_observation": {
+        "status": "native_raw_acquisition_and_independent_reason_leave_correlation_verified",
+        "guide": "doc/protocol/station-removal-observations.md",
+        "observer": "deploy/radio-manager/station-events.py",
+        "tests": "tests/test_station_events.py",
+        "independent_check": "scripts/check-station-removal.py",
+        "evidence": "doc/evidence/station-removal/native-final-source-01/independent-observation-check.json",
+        "kernel": "6.8.0-139-generic",
+        "new_station_events": 7,
+        "removal_events": 6,
+        "reason_source": "Independent radio capture, not a reason attribute in kernel removal events",
+        "remaining": "Qualify counter meanings, exact runtime accounting and online reason/session join before sender integration",
+        "measurement_semantics_qualified": false
+      }
     }
   }
 }

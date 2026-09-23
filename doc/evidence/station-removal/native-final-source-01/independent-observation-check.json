@@ -1,0 +1,159 @@
+{
+  "observation_checks_passed": true,
+  "scope": "kernel final-station event acquisition and independent leave/reason correlation",
+  "kernel": "6.8.0-139-generic",
+  "counts": {
+    "new_station": 7,
+    "del_station": 6
+  },
+  "correlations": [
+    {
+      "observed_lifetime": 1,
+      "radio_frame": 2581,
+      "actual_reason": 3,
+      "kernel_delivery_delay_ms": 21.332,
+      "leave_notification_frame": 32,
+      "raw_observed_fields": {
+        "assoc_at_boottime_ns": 10304820115576,
+        "connected_seconds": 33,
+        "inactive_ms": 21,
+        "rx_bytes64": 23240,
+        "rx_drop_misc": 0,
+        "rx_duration_us": 0,
+        "rx_packets": 187,
+        "signal_avg_dbm": -30,
+        "signal_dbm": -30,
+        "tx_bytes64": 21071,
+        "tx_duration_us": 0,
+        "tx_failed": 0,
+        "tx_packets": 179,
+        "tx_retries": 0
+      }
+    },
+    {
+      "observed_lifetime": 2,
+      "radio_frame": 4005,
+      "actual_reason": 3,
+      "kernel_delivery_delay_ms": 22.381,
+      "leave_notification_frame": 59,
+      "raw_observed_fields": {
+        "assoc_at_boottime_ns": 10341534438171,
+        "connected_seconds": 25,
+        "inactive_ms": 22,
+        "rx_bytes64": 17769,
+        "rx_drop_misc": 0,
+        "rx_duration_us": 0,
+        "rx_packets": 143,
+        "signal_avg_dbm": -30,
+        "signal_dbm": -30,
+        "tx_bytes64": 16030,
+        "tx_duration_us": 0,
+        "tx_failed": 0,
+        "tx_packets": 137,
+        "tx_retries": 0
+      }
+    },
+    {
+      "observed_lifetime": 3,
+      "radio_frame": 5006,
+      "actual_reason": 3,
+      "kernel_delivery_delay_ms": 18.269,
+      "leave_notification_frame": 63,
+      "raw_observed_fields": {
+        "assoc_at_boottime_ns": 10370974277136,
+        "connected_seconds": 17,
+        "inactive_ms": 18,
+        "rx_bytes64": 12272,
+        "rx_drop_misc": 0,
+        "rx_duration_us": 0,
+        "rx_packets": 101,
+        "signal_avg_dbm": -30,
+        "signal_dbm": -30,
+        "tx_bytes64": 11057,
+        "tx_duration_us": 0,
+        "tx_failed": 0,
+        "tx_packets": 95,
+        "tx_retries": 0
+      }
+    },
+    {
+      "observed_lifetime": 4,
+      "radio_frame": 6184,
+      "actual_reason": 3,
+      "kernel_delivery_delay_ms": 17.225,
+      "leave_notification_frame": 91,
+      "raw_observed_fields": {
+        "assoc_at_boottime_ns": 10391747554226,
+        "connected_seconds": 20,
+        "inactive_ms": 17,
+        "rx_bytes64": 15089,
+        "rx_drop_misc": 0,
+        "rx_duration_us": 0,
+        "rx_packets": 123,
+        "signal_avg_dbm": -30,
+        "signal_dbm": -30,
+        "tx_bytes64": 13670,
+        "tx_duration_us": 0,
+        "tx_failed": 0,
+        "tx_packets": 117,
+        "tx_retries": 0
+      }
+    },
+    {
+      "observed_lifetime": 5,
+      "radio_frame": 7447,
+      "actual_reason": 3,
+      "kernel_delivery_delay_ms": 23.288,
+      "leave_notification_frame": 95,
+      "raw_observed_fields": {
+        "assoc_at_boottime_ns": 10416015948914,
+        "connected_seconds": 21,
+        "inactive_ms": 23,
+        "rx_bytes64": 16161,
+        "rx_drop_misc": 0,
+        "rx_duration_us": 0,
+        "rx_packets": 131,
+        "signal_avg_dbm": -30,
+        "signal_dbm": -30,
+        "tx_bytes64": 14615,
+        "tx_duration_us": 0,
+        "tx_failed": 0,
+        "tx_packets": 125,
+        "tx_retries": 0
+      }
+    },
+    {
+      "observed_lifetime": 6,
+      "radio_frame": 8432,
+      "actual_reason": 3,
+      "kernel_delivery_delay_ms": 20.405,
+      "leave_notification_frame": 99,
+      "raw_observed_fields": {
+        "assoc_at_boottime_ns": 10442257553594,
+        "connected_seconds": 16,
+        "inactive_ms": 20,
+        "rx_bytes64": 12272,
+        "rx_drop_misc": 0,
+        "rx_duration_us": 0,
+        "rx_packets": 101,
+        "signal_avg_dbm": -30,
+        "signal_dbm": -30,
+        "tx_bytes64": 11057,
+        "tx_duration_us": 0,
+        "tx_failed": 0,
+        "tx_packets": 95,
+        "tx_retries": 0
+      }
+    }
+  ],
+  "event_stream_sha256": "229f6c8d2a783b3ddcb66e75cdf3107f082ba5d42a34bc3e0b1e4d979af51a19",
+  "final_counter_source_qualified": false,
+  "native_final_statistics_delivery_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "remaining": [
+    "Qualify successful-packet, byte, receive-error and retry-flag-packet semantics",
+    "Integrate a qualified reason source and complete final counters with the sender",
+    "Implement mandatory policy/AP/STA/neighbor metrics and full 15-minute acceptance"
+  ]
+}

@@ -40,6 +40,12 @@ jobs:
           python3 scripts/check-native-recovery.py
           doc/evidence/final-statistics/native-byte-counters-01 --minimum-seconds 150
       - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/station-removal/native-final-source-01 --minimum-seconds 150
+      - run: >-
+          python3 scripts/check-station-removal.py
+          doc/evidence/station-removal/native-final-source-01
+      - run: >-
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01
           --directory doc/evidence/discovery-session/run-02

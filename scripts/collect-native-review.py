@@ -29,6 +29,7 @@ FIXED = (
     "active-samples.json",
     "recovery-checks.json",
     "client-outages.json",
+    "station-events.jsonl",
 )
 PATTERNS = (
     "clients-*.json",

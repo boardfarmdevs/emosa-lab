@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Qualify final-session measurements and mandatory policy/AP/STA/neighbor metrics, then repeat complete sustained acceptance and qualify the unchanged physical pod.",
+      "next": "Complete counter semantic qualification and online final-session publisher integration, implement mandatory policy/AP/STA/neighbor metrics, then repeat full sustained acceptance. Raw kernel removal acquisition is now independently verified.",
       "path": "doc/protocol/native-onboarding.md"
     },
     "engine": {
@@ -747,10 +747,22 @@
       "title": "Final-statistics component and byte-unit evidence",
       "description": "Three independently decoded synthetic vectors, 1,081 passing tests, and a 150-second native byte-declaration regression with both recovery faults. No measured final-session delivery claim.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/station-removal-observations.md",
+      "title": "Observe removal-time station statistics",
+      "description": "Run the read-only kernel observer, correlate actual radio reasons with EasyMesh leaves, and distinguish raw acquisition from qualified counter conversion.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/station-removal/README.md",
+      "title": "Native station-removal evidence",
+      "description": "Seven station lifetimes and six removal/reason/leave correlations in a 158.51-second native recovery experiment. Full measurement semantics and sustained acceptance remain pending.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "native-soak/unit-results.xml",
+    "unit": "station-removal/unit-results.xml",
     "ovsdb": "wsc-wire/ovsdb-results.xml"
   }
 }
