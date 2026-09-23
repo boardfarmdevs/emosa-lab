@@ -124,7 +124,17 @@ def registrar_reply(executable, m1, mode="configure"):
     return result.stdout
 
 
-def make_bridge(engine, backend, run_id, *, binding=BINDING, target=TARGET, deadline=30, mids=None):
+def make_bridge(
+    engine,
+    backend,
+    run_id,
+    *,
+    binding=BINDING,
+    target=TARGET,
+    deadline=30,
+    mids=None,
+    capabilities=None,
+):
     device = M1Device(
         uuid=bytes.fromhex("02000000500140008000000000000001"),
         al_mac=binding.local_al,
@@ -148,9 +158,13 @@ def make_bridge(engine, backend, run_id, *, binding=BINDING, target=TARGET, dead
     exchange = WscExchange(
         binding,
         device,
-        APRadioBasicCapabilities(target.ruid, 1, (BasicOperatingClass(81, 20, ()),)),
-        Profile2APCapability(0, 0, 0, 0),
-        APRadioAdvancedCapabilities(target.ruid, 0),
+        capabilities.radios[0].basic
+        if capabilities
+        else APRadioBasicCapabilities(target.ruid, 1, (BasicOperatingClass(81, 20, ()),)),
+        capabilities.profile2 if capabilities else Profile2APCapability(0, 0, 0, 0),
+        capabilities.radios[0].advanced
+        if capabilities
+        else APRadioAdvancedCapabilities(target.ruid, 0),
         mids=MidSequence(100) if mids is None else mids,
         timeout=30,
     )

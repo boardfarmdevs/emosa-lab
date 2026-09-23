@@ -182,6 +182,12 @@ post-install failure recovery, and compare baseline/candidate/restored packets.
 Explain why `40 → c0 → 40` establishes a corrected flag and successful restoration,
 while zero represented radios/BSSs still leave the onboarding objective open.
 
+Next join those boundaries in [native simulated-pod onboarding](../protocol/native-onboarding.md)
+and [manual §13.16](team-manual.md#1316-join-the-real-controller-to-the-simulated-opensync-extender).
+The real controller must supply WSC configuration, the independent manager must
+apply it, and the controller must report the observed radio/BSS before client
+traffic is checked. Read the retained negative trials and the bounded scope first.
+
 **Checkpoint:** distinguish a reassembled message, a correlated discovery response,
 an authenticated WSC candidate and a durable component operation. Explain why
 `wsc-component` does not mean the regular service has admitted a real controller.

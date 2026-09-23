@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scope": "Component, native baseline, semantic service and owned synthetic Ethernet WSC/OVSDB/hwsim/client evidence; no native-controller EMOSA onboarding or physical qualification",
+  "scope": "Component, native baseline, semantic service and bounded native-controller EMOSA onboarding through owned OpenSync-schema OVSDB/hwsim/clients; no full-profile or physical qualification",
   "artifacts": [
     {
       "path": "api-results.xml",
@@ -2926,6 +2926,106 @@
       "path": "native-controller-counter/wire-gate.json",
       "sha256": "4ed20447a56153fd009bf24523586f873f3c0591da8ededa6319c015163a88c6",
       "size": 4944
+    },
+    {
+      "path": "native-onboarding/README.md",
+      "sha256": "18a85986685da54082f71c034495ad02a3fe07c3b9701ce29ccef5565acd775d",
+      "size": 3596
+    },
+    {
+      "path": "native-onboarding/rejected-03/ethernet.pcap",
+      "sha256": "432fb8503ab921fc39eb17a0709d844cc8a66019e817d4dcfe2aa12e688a7c39",
+      "size": 2339
+    },
+    {
+      "path": "native-onboarding/rejected-03/native-session.json",
+      "sha256": "b8cd4583fba8ff0d1eb7041ba0dd2ac5b0e3457663e5cede441e1456dc5805a6",
+      "size": 2010
+    },
+    {
+      "path": "native-onboarding/rejected-03/result.json",
+      "sha256": "d04722b67909e30f5def917ff417a8788bc150169b7eaf0da151d6f3c76188de",
+      "size": 1752
+    },
+    {
+      "path": "native-onboarding/run-05/candidate-trial.json",
+      "sha256": "9d323d43f07d8b7840c4a23a591b6bae2964a1434831dda8d1e445911a10c762",
+      "size": 5852
+    },
+    {
+      "path": "native-onboarding/run-05/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "native-onboarding/run-05/clients-onboarded.json",
+      "sha256": "ad642763f399741bea244f845db5389bb105706cb1e47bf1d29a7bac7fa8f4ab",
+      "size": 2620
+    },
+    {
+      "path": "native-onboarding/run-05/controller-after.json",
+      "sha256": "8d1b16b5bd79b8605761a9624d971c91d08dc09e3cc0e4ac5e1c5600b09a614a",
+      "size": 26347
+    },
+    {
+      "path": "native-onboarding/run-05/controller-before.json",
+      "sha256": "db5f9f853f80b1149c9b3a788fd4ac1fe29139115e176eafefd07438ffbfc635",
+      "size": 10353
+    },
+    {
+      "path": "native-onboarding/run-05/ethernet.pcap",
+      "sha256": "ecb1ff4e65be8d68354b94cddb86ec8e2df132e57376b755891b6b8bc541397e",
+      "size": 2861
+    },
+    {
+      "path": "native-onboarding/run-05/independent-check.json",
+      "sha256": "a15aecd81119319f6c8bee3d52f54722bcbf78838e3453a6d1a8ac6337cc11d6",
+      "size": 546
+    },
+    {
+      "path": "native-onboarding/run-05/native-operation.json",
+      "sha256": "3a6b286559f5137e3e5d56f66f4a04aa5d39605f0dba29b91b48708e1fe4f0fa",
+      "size": 1225
+    },
+    {
+      "path": "native-onboarding/run-05/native-session.json",
+      "sha256": "4ee9e7f95f8cadf19372b40a6f82e377c9a942cc64eac5db29c0819eda115d69",
+      "size": 1780
+    },
+    {
+      "path": "native-onboarding/run-05/radio.pcap",
+      "sha256": "1be5a16edf13bb032a2d0d56a3c66f0ccd1c068189f1f76a7b76f092157d8a53",
+      "size": 350566
+    },
+    {
+      "path": "native-onboarding/run-05/reference-candidate.json",
+      "sha256": "04a6b8a4757d7c74604943f7e6b56b3404f27edf4426c11c1d6f4d97f30d6e38",
+      "size": 2186
+    },
+    {
+      "path": "native-onboarding/run-05/result.json",
+      "sha256": "fcb894ef603e9b3e7495a51926f75bdd284ed2e7529fc582363dbf30c7d02c74",
+      "size": 4899
+    },
+    {
+      "path": "native-onboarding/run-05/source-hashes.json",
+      "sha256": "602e456c80102a684337e50a11dc8732e94c71ec9cb55f9361d1fd60df752a61",
+      "size": 10622
+    },
+    {
+      "path": "native-onboarding/run-05/withheld-operation.json",
+      "sha256": "9cdc8d385ed0d914e9deee9299bf92ed87fe3de23a4295e0abe2860f57495edc",
+      "size": 972
+    },
+    {
+      "path": "native-onboarding/summary.json",
+      "sha256": "cf692c5142330cb1778544e1e79ef91b0a37e8a87b91a43ee005070955caac7d",
+      "size": 1595
+    },
+    {
+      "path": "native-onboarding/unit-results.xml",
+      "sha256": "e168f412c3c9e82407ce53a32532e64b7d1e76485d52d317d1f3371a3ddcaefe",
+      "size": 4393670
     }
   ]
 }

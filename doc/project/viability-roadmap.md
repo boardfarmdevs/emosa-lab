@@ -40,6 +40,15 @@ The [native discovery probe](../guides/native-discovery.md) now confirms a match
 Profile-1 Search/Response with EMOSA and a controller-created initial device
 entry. It has no represented radios or BSSs. Remaining capability omissions,
 complete admission and the causal WSC-to-radio integration are still required.
+The [native simulated-pod integration](../protocol/native-onboarding.md) now joins
+discovery, Early reporting, authenticated WSC and observed topology in an owned
+experimental coordinator. The first native attempt identified unsolicited
+configuration companions and an overly strict EMOSA query-profile check; the
+extended candidate now completes the bounded native run, independently checked
+against its receipt, radio/BSS inventory and clients. Next keep the adapter active
+through client association and implement continuous reporting, required channel/
+policy handling and native-run recovery before broadening the viability claim.
+
 The [native controller candidate](../guides/controller-counter-candidate.md)
 now fixes the missing KiB/MiB advertisement in an isolated C++ build. Its native
 counter regression and differential discovery experiment address one defect;

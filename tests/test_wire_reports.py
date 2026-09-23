@@ -335,13 +335,20 @@ def test_nonempty_clients_require_ages_and_are_reported_on_the_correct_bss():
         {"destination": BSSID},
         {"message_type": 0x8001},
         {"tlvs": ()},
-        {"tlvs": (Tlv(0xB3, b"\2"),)},
+        {"tlvs": (Tlv(0xB3, b""),)},
         {"tlvs": (Tlv(0xB3, b"\1"), Tlv(0xAB, b""))},
     ],
 )
 def test_wrong_or_unprocessable_query_never_gets_a_report(change):
     with pytest.raises(EmosaError):
         reply(query=replace(assemble(query_frames()), **change))
+
+
+@pytest.mark.parametrize("profile", [1, 2, 3, 255])
+def test_topology_query_sender_profile_does_not_upgrade_our_response(profile):
+    report = reply(query=replace(assemble(query_frames()), tlvs=(Tlv(0xB3, bytes([profile])),)))
+    message = assemble(report.frames)
+    assert next(t.value for t in message.tlvs if t.kind == 0xB3) == b"\1"
 
 
 def test_response_budget_is_one_second_not_the_pod_apply_deadline():

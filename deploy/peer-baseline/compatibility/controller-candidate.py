@@ -28,7 +28,7 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def trial(build, label, *, fail_after_install=False):
+def trial(build, label, *, fail_after_install=False, experiment=None):
     helpers = runpy.run_path(str(ROOT / "controller-trial.py"))
     helpers["idle"]()
     candidate = build / "stage/bin/beerocks_controller"
@@ -39,6 +39,12 @@ def trial(build, label, *, fail_after_install=False):
         raise RuntimeError("Candidate/patch differs from the recorded build")
     if provenance["counter_regression"]["passed"] != 12:
         raise RuntimeError("Native counter conversion regression is incomplete")
+    for extra in provenance.get("extra_patches", []):
+        if (
+            extra["name"] != "0005-controller-configuration-scope.patch"
+            or digest(ROOT / extra["name"]) != extra["sha256"]
+        ):
+            raise RuntimeError("Unknown or mismatched additional candidate patch")
     reference = ROOT / "prplmesh.reference.json"
     original = reference.read_bytes()
     baseline = json.loads(original)
@@ -70,7 +76,7 @@ def trial(build, label, *, fail_after_install=False):
     baseline["candidate_experiment"] = {
         "label": label,
         "baseline_controller_sha256": original_sha,
-        "scope": "KiB/MiB advertisement only; admission remains pending",
+        "scope": "Isolated controller experiment; see candidate patch provenance",
     }
     write(state / "reference-candidate.json", baseline)
     report = {
@@ -96,13 +102,19 @@ def trial(build, label, *, fail_after_install=False):
         report["candidate_installed"] = True
         if fail_after_install:
             raise RuntimeError("Deliberate post-install failure to test restoration")
-        runpy.run_path(str(ROOT / "discovery-trial.py"))["trial"](label)
-        probe = json.loads((ROOT / "discovery-trials" / label / "probe.json").read_text())
-        if probe["controller_flags_hex"] != "c0" or probe["selected_response_issues"] != [
-            "security_capability_absent"
-        ]:
-            raise RuntimeError("Unexpected candidate response; inspect discovery evidence")
-        report.update(status="counter_flag_observed_admission_pending", probe=probe)
+        if experiment is not None:
+            result = experiment(label)
+            report.update(status="experiment_finished", experiment=result)
+            report["operations_created"] = result.get("operation", {}).get("operation_count", 0)
+            report["controller_onboarding_proven"] = result["controller_onboarding_proven"]
+        else:
+            runpy.run_path(str(ROOT / "discovery-trial.py"))["trial"](label)
+            probe = json.loads((ROOT / "discovery-trials" / label / "probe.json").read_text())
+            if probe["controller_flags_hex"] != "c0" or probe["selected_response_issues"] != [
+                "security_capability_absent"
+            ]:
+                raise RuntimeError("Unexpected candidate response; inspect discovery evidence")
+            report.update(status="counter_flag_observed_admission_pending", probe=probe)
     except BaseException as exc:
         report.update(status="failed", error=type(exc).__name__)
         raise

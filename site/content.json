@@ -3,31 +3,31 @@
     "controller": {
       "label": "01",
       "title": "An actual protocol peer",
-      "status": "Independent peer baseline captured",
+      "status": "Bounded simulated onboarding verified",
       "state": "pending",
-      "description": "The native discovery probe now sends EMOSA's Profile-1 Search to the pinned prplMesh controller and observes its Response and an initial device entry. That entry has zero radios/BSSs; capability admission and full onboarding remain pending. A separate native-agent baseline exercises wired and wireless provisioning and independent clients.",
+      "description": "The native controller now discovers EMOSA and supplies an authenticated WSC configuration to the simulated OpenSync pod. Its own inventory contains the observed radio and BSS; independent wired and Wi-Fi clients pass. This uses an isolated patched controller candidate; continuous management and physical qualification remain pending.",
       "responsibilities": [
         "Use the isolated em-protocol bridge, separate from pod management.",
         "Exercise discovery, capabilities and selected provisioning procedures.",
         "Retain captures from an independent bridge observation point."
       ],
-      "next": "Two isolated native wired trials passed with one agent BSS, one M2 and no M8; original runtime restored. Resolve the retained profile mismatch, capability ordering and shutdown abort before qualification.",
-      "path": "deploy/peer/README.md"
+      "next": "Implement sustained client/channel/policy reporting and native-run recovery; retain the physical acceptance boundary.",
+      "path": "doc/protocol/native-onboarding.md"
     },
     "agent": {
       "label": "02",
       "title": "The extender’s EasyMesh representation",
-      "status": "Local diagnostic representation tested · wire P0 blocked",
+      "status": "Bounded virtual-agent onboarding verified",
       "state": "pending",
-      "description": "EMOSA represents an unchanged OpenSync extender as an agent that a real EasyMesh controller can discover and onboard. The agent endpoint runs around the controller; the extender keeps OpenSync. The connecting-pod demonstration now exposes a stable, freshness-bounded local diagnostic agent after an observed pod-initiated OVSDB connection; this does not populate a real controller inventory.",
+      "description": "EMOSA represents the simulated OpenSync extender to the real controller through discovery, Early/AP capabilities, authenticated WSC and observed topology. OVSDB connects to the simulated pod; a separate manager applies the radio settings. The report worker stops before the independent client joins; continuous management is not yet proven.",
       "responsibilities": [
         "Map stable agent/radio/BSS identities and advertised capabilities to a qualified actual pod.",
         "Bound framing, TLVs, reassembly, retries and timers using the selected specifications.",
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Native Profile-1 discovery and an initial device entry are observed. Resolve controller capability admission, join the WSC/radio path, and require complete controller radio/BSS inventory.",
-      "path": "doc/protocol/protocol-inputs.md"
+      "next": "Add continuous station reporting and native lifecycle recovery, then qualify the unchanged physical pod.",
+      "path": "doc/protocol/native-onboarding.md"
     },
     "engine": {
       "label": "03",
@@ -705,10 +705,22 @@
       "title": "Controller candidate comparison evidence",
       "description": "Two corrected-flag captures, restored-baseline capture, post-install failure recovery and recorded build provenance; no radio/BSS onboarding.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/native-onboarding.md",
+      "title": "Native controller to simulated OpenSync pod",
+      "description": "Follow discovery, Early capabilities, authenticated WSC, observed radio/BSS and client evidence through the bounded integration experiment.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/native-onboarding/README.md",
+      "title": "Native simulated onboarding evidence",
+      "description": "Correlated packet capture, durable receipt, native radio/BSS inventory, independent client traffic and baseline restoration, with retained failure and explicit limits.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "native-discovery/unit-results.xml",
+    "unit": "native-onboarding/unit-results.xml",
     "ovsdb": "wsc-wire/ovsdb-results.xml"
   }
 }

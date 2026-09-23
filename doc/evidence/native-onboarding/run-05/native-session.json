@@ -1,0 +1,78 @@
+{
+  "scope": "owned_non_dpp_sole_radio_onboarding",
+  "state": "provisioning",
+  "counts": {
+    "search_sent": 1,
+    "early_then_m1_sent": 1,
+    "observed_topology_notification": 2,
+    "wsc_operation": 1,
+    "unsupported_message_8006": 4,
+    "unsupported_message_8003": 1,
+    "unsupported_message_8004": 1,
+    "ap_capability_report_sent": 1,
+    "rejected_INVALID_INPUT": 1,
+    "unsupported_message_0001": 1
+  },
+  "events": [
+    "search_sent",
+    "early_then_m1_sent",
+    "observed_topology_notification",
+    "wsc_operation",
+    "unsupported_message_8006",
+    "observed_topology_notification",
+    "unsupported_message_8006",
+    "unsupported_message_8003",
+    "unsupported_message_8006",
+    "unsupported_message_8004",
+    "ap_capability_report_sent",
+    "unsupported_message_8006",
+    "rejected_INVALID_INPUT",
+    "unsupported_message_0001"
+  ],
+  "admission_issues": [],
+  "reports": {
+    "counts": {
+      "early_sent": 1,
+      "early_source_invalidated": 1,
+      "topology_response_sent": 3
+    },
+    "events": [
+      {
+        "event": "early_sent",
+        "mid": 102
+      },
+      {
+        "event": "early_source_invalidated"
+      },
+      {
+        "event": "topology_response_sent",
+        "mid": 20
+      },
+      {
+        "event": "topology_response_sent",
+        "mid": 22
+      },
+      {
+        "event": "topology_response_sent",
+        "mid": 26
+      }
+    ],
+    "early_pending": false
+  },
+  "wsc": {
+    "counts": {
+      "operation": 1
+    },
+    "events": [
+      {
+        "status": "operation",
+        "mid": 19,
+        "operation_id": "946f9acb-106c-488a-8dad-14ba0d96b425",
+        "state": "CONFIG_COMMITTED"
+      }
+    ],
+    "closed": false
+  },
+  "full_profile_qualified": false,
+  "physical_pod_proven": false
+}

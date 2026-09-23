@@ -353,6 +353,7 @@ class WscExchange(_Lifetime):
         if device.rf_band not in (1, 2):
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "WSC exchange supports 2.4 or 5 GHz")
         self.binding, self.basic, self.mids = binding, basic, mids
+        self.profile2, self.advanced = profile2, advanced
         self.capabilities = (_tlv(basic), _tlv(profile2), _tlv(advanced))
         self._transcript = M1Transcript.create(device)
         self.exchange_id = uuid.uuid4().hex

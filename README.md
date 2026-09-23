@@ -11,6 +11,15 @@ supported management procedures to its existing OVSDB interface.
 
 The goal is to demonstrate what works, expose compatibility gaps, and provide repeatable experiments with clear visibility into protocol exchanges, configuration changes, and actual device behavior.
 
+**Bounded native-controller onboarding now passes with the simulated OpenSync
+pod.** The real controller drives discovery and authenticated WSC through EMOSA,
+the separate manager applies the radio configuration, the controller learns the
+radio/BSS, and independent wired/Wi-Fi clients pass traffic checks. See the
+[walkthrough](doc/protocol/native-onboarding.md) and
+[independently checked evidence](doc/evidence/native-onboarding/README.md).
+Continuous management, full-profile qualification and an unchanged physical pod
+remain next; this result uses an explicitly patched native controller candidate.
+
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 
 The IEEE 1905.1-2013 and 1905.1a-2014 PDFs are now obtained. Follow the
@@ -24,23 +33,23 @@ including the offline and isolated Ethernet exercises. The
 those reports to a real disposable database with Ack/retry and source-withdrawal
 checks. The [discovery-to-topology lifecycle](doc/protocol/discovery-session.md)
 adds bounded Search/Response handling, capability-gap diagnostics and fresh
-discovery after reconnect. Automatic Early Report/M1 admission, complete
-controller onboarding and physical acceptance remain pending. The
+discovery after reconnect. That read-only component does not initiate M1; the
+new bounded native integration above supplies that lifecycle. The
 [authenticated WSC handoff](doc/protocol/wsc-provisioning.md) now drives durable
 operations and real owned OVSDB directly from independent hostap M2 payloads,
 including duplicate, lost-reply and real process-crash cases. This component
 uses in-memory Ethernet delivery. The next [Ethernet-to-radio exercise](doc/protocol/wsc-wire-radio.md)
 now carries the same handoff over actual packet sockets into hostapd/hwsim and
 separate wired/wpa_supplicant clients. Normal and lost-reply runs passed; the
-peer is still synthetic, so native-controller onboarding remains pending.
+peer in that earlier component experiment is synthetic.
 The [native discovery probe](doc/guides/native-discovery.md) now sends EMOSA's
 Profile-1 Search to the real controller and observes its Response and newly
 created device entry. That entry has no radios/BSSs yet; the missing controller
 capability fields and full admission remain open.
 An [isolated native controller candidate](doc/guides/controller-counter-candidate.md)
 now corrects the KiB/MiB advertisement, checks the native conversion behavior and
-compares captured responses before restoring the baseline. Full controller-to-pod
-onboarding remains the next integration boundary.
+compares captured responses before restoring the baseline. The newer onboarding
+candidate also omits unsupported/empty configuration companions for this trial.
 
 ## Architecture
 
@@ -58,7 +67,8 @@ onboarding remains the next integration boundary.
 
 [Simulate an extender connecting to EMOSA](doc/guides/connecting-pod.md): pod-initiated
 OVSDB, a local northbound virtual-agent directory, semantic configuration and
-reconnect. Actual EasyMesh-controller discovery/onboarding remains pending.
+reconnect. For actual native-controller onboarding, continue to the new wire
+walkthrough above; the connecting-pod guide remains a semantic exercise.
 
 ```text
 EasyMesh controller
@@ -98,19 +108,19 @@ independently verifiable results on the unchanged extender.
 
 The Python foundation and direct semantic component evaluation are implemented.
 The real OVSDB simulator uses the pinned OpenSync schema and a separate manager
-process. Wire provisioning, physical-pod mapping and independent-controller
-acceptance remain gated; simulator passes do not establish interoperability.
+process. Bounded native wire provisioning now passes in the owned simulation;
+physical-pod mapping and broader independent-controller acceptance remain gated.
 
 The [WSC payload component](doc/protocol/wsc-messages.md) builds M1 and authenticates
 M2 AP settings against its exact bytes, with independent hostap fixtures. It
 checks complete sets of payloads before returning settings. The bounded exchange
 component now adds peer/link, RUID and transcript-lifetime checks. Controller trust,
-complete profile/coordinator behavior and qualified radio admission still precede
-connecting those results to OVSDB.
+complete profile/coordinator behavior and physical radio qualification remain
+requirements beyond the selected simulated integration.
 
 The [independent controller candidate](deploy/peer/README.md) now emits real
-discovery frames captured at the EMOSA container. Its agent inventory is empty:
-EMOSA has not answered or onboarded an extender. Ubuntu 24.04 nested-container
+discovery frames captured at the EMOSA container. That earlier preparation run
+retains an empty inventory as a negative control. Ubuntu 24.04 nested-container
 component tests and VM-driven semantic scenarios pass; the peer's shutdown
 aborts are recorded as an unresolved recovery issue.
 

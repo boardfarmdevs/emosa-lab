@@ -1,0 +1,80 @@
+{
+  "label": "native-radio-03",
+  "status": "failed",
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "native_controller": true,
+  "semantic_submission": false,
+  "cases": {},
+  "previous_controller_collection": {
+    "em-baseline-controller": []
+  },
+  "controller_policy": {
+    "submitted": true,
+    "virtual_al_mac": "02:00:00:00:30:01",
+    "virtual_bss_count": 1,
+    "pod_application_proven": false
+  },
+  "error": "TimeoutError",
+  "detail": "waiting for native-operation.json",
+  "native_shutdown": {
+    "em-baseline-controller": [
+      {
+        "unit": "agent",
+        "before": {
+          "MainPID": "588",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "core-dump",
+          "ExecMainStatus": "6"
+        }
+      },
+      {
+        "unit": "controller",
+        "before": {
+          "MainPID": "581",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "core-dump",
+          "ExecMainStatus": "6"
+        }
+      },
+      {
+        "unit": "transport",
+        "before": {
+          "MainPID": "577",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "bus",
+        "before": {
+          "MainPID": "573",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "hostap",
+        "before": {
+          "MainPID": "563",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      }
+    ]
+  },
+  "cleanup_errors": []
+}

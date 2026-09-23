@@ -1717,5 +1717,31 @@
       "Join native discovery and WSC to existing radio/client path",
       "Require correct native radio/BSS inventory; qualify unchanged physical pod"
     ]
+  },
+  "native_simulated_onboarding": {
+    "status": "bounded_native_simulation_verified",
+    "guide": "doc/protocol/native-onboarding.md",
+    "coordinator": "src/emosa/wire/onboarding.py",
+    "runner": "deploy/peer-baseline/native-onboarding.py",
+    "source_sections": [
+      "EasyMesh 6.1 5.2.2/17.1.62: complete Early Report before M1",
+      "EasyMesh 6.1 6.1: discovery Profile echo and Controller Capability",
+      "EasyMesh 6.1 6.2: Topology Query advertises sender highest profile; response remains agent profile",
+      "EasyMesh 6.1 9.1, 13.1, 18: capability feature applicability and non-DPP omission",
+      "EasyMesh 6.1 15.1: notification reliability; Early Ack tracked independently",
+      "EasyMesh 6.1 7.1/17.2.108: advanced BSS configuration must not be silently discarded"
+    ],
+    "interpretation": "Table 117 named Early bit 6 used in bounded lab; reserved-range overlap still requires conformance clarification",
+    "scope": "One simulated wired-management, HT20 channel 6, pure-fronthaul PSK/CCMP BSS; no clients during report phase",
+    "full_profile_qualified": false,
+    "physical_pod_proven": false,
+    "remaining": [
+      "Native-run reconnect/restart and lost-reply recovery",
+      "Continuous client inventory, policies, channel management, metrics",
+      "Full profile qualification and unchanged physical pod"
+    ],
+    "evidence": "doc/evidence/native-onboarding/run-05/independent-check.json",
+    "independent_check": "scripts/check-native-onboarding.py",
+    "controller_onboarding_proven": true
   }
 }

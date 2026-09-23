@@ -7,11 +7,11 @@
     "I1": "implemented with model tests",
     "I2": "Real OVSDB and independent hostapd/hwsim clients tested through actual adapter service with pod-initiated connection and SIGKILL recovery; bounded two-pod test; semantic initiation only; see doc/guides/service-integration.md; strict sole-radio scope and atomic graph guards verified; see doc/guides/onboarding-readiness.md",
     "R0": "native apply/withhold experiment runs; database-restart recovery N03 fails and production backend remains disabled",
-    "I3": "IEEE envelope, discovery/WSC, restricted reports and Query/Ack coordinator tested. Restricted discovery-to-topology lifecycle now adds required-field diagnostics and reconnect invalidation through real OVSDB and isolated AF_PACKET. Automatic Early/M1, complete profile, full AP Capability and native inventory pending; see doc/protocol/discovery-session.md",
-    "I4": "Owned authenticated WSC now drives a durable operation over actual Ethernet into real OVSDB, hostapd/hwsim and independent clients, with normal/lost-reply, duplicate, fragment, withholding and wrong-key controls. Earlier identity-race/process-crash handoff tests remain. Synthetic hostap payload peer; no semantic fallback. Native lifecycle/profile admission, controller inventory and physical acceptance remain pending; see doc/protocol/wsc-wire-radio.md",
+    "I3": "Bounded native discovery, non-DPP admission, Early-before-M1, AP Capability and observed Topology reporting verified against a patched native controller candidate. Full profile and continuous management pending; see doc/protocol/native-onboarding.md",
+    "I4": "Native-controller authenticated WSC now drives one durable operation through OVSDB into independent hostapd/hwsim State and wired/Wi-Fi clients. Captured M1 correlates to the receipt; Config withholding verified. Continuous management and physical acceptance remain pending.",
     "I5": "read-only draft collector implemented; physical qualification and writes blocked M0/P0",
     "I6": "incremental component runner/watch/inspect/report/compare; complete reference release pending",
-    "I7": "Native wired/wireless baseline and live controller preparation retained; diagnostic virtual AL is absent from native inventory; EMOSA wire exchanges, clean native shutdown and hardware interoperability remain pending; offline native capture review exposes discovery-profile and whole-request compatibility work"
+    "I7": "Native simulated onboarding and controller radio/BSS inventory independently verified; candidate restored. Native shutdown aborts, sustained client reporting, recovery and independent-controller/physical interoperability remain pending."
   },
   "rows": [
     {

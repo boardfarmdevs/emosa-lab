@@ -38,6 +38,11 @@ def main():
     parser.add_argument("--build", type=Path, required=True, help="New private absolute directory")
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--jobs", type=int, choices=range(1, 9), default=3)
+    parser.add_argument(
+        "--onboarding",
+        action="store_true",
+        help="Also omit unsupported/empty configuration companions",
+    )
     args = parser.parse_args()
     if not args.build.is_absolute() or args.build.exists():
         parser.error("Build directory must be new and absolute")
@@ -101,6 +106,12 @@ def main():
         patch = HERE.parent / "patches/0004-controller-counter-capability.patch"
         with patch.open() as content:
             run("patch", "--batch", "--fuzz=0", "-p1", "-d", str(source), stdin=content)
+        extra_patches = []
+        if args.onboarding:
+            extra = HERE.parent / "patches/0005-controller-configuration-scope.patch"
+            with extra.open() as content:
+                run("patch", "--batch", "--fuzz=0", "-p1", "-d", str(source), stdin=content)
+            extra_patches.append({"name": extra.name, "sha256": digest(extra)})
         run(
             "cmake",
             "-S",
@@ -142,6 +153,7 @@ def main():
         "input_archives": ARCHIVES,
         "header_dependencies": lock,
         "patch_sha256": digest(patch),
+        "extra_patches": extra_patches,
         "candidate_sha256": digest(candidate),
         "unstripped_candidate_sha256": unstripped_sha,
         "source_sha256": {
@@ -149,6 +161,7 @@ def main():
             for p in (
                 "controller/src/beerocks/master/controller.cpp",
                 "controller/src/beerocks/master/db/db.cpp",
+                "controller/src/beerocks/master/tasks/agent_monitoring_task.cpp",
             )
         },
         "recipe_sha256": {

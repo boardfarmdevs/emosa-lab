@@ -144,20 +144,8 @@ def _em(value):
     return Tlv(value.kind, encode_value(value))
 
 
-def early_report(
-    binding: PeerBinding,
-    facts: EarlyCapabilities,
-    stamp,
-    mids: MidSequence,
-    *,
-    clock=time.monotonic,
-):
-    """Initial non-DFS 2.4 GHz, non-HE/EHT, pure-fronthaul PSK/CCMP scope.
-
-    This is the complete Early report for the declared restricted conditions,
-    not an AP Capability Report (0x8002) or a complete Profile-1 implementation.
-    """
-    stamp.check(stamp, clock())
+def capability_tlvs(facts: EarlyCapabilities):
+    """Validate the complete restricted capability inventory before encoding."""
     _require(facts.inventory_complete is True, "complete capability inventory is required")
     _require(
         type(facts.radios) is tuple and 1 <= len(facts.radios) <= 32, "invalid radio inventory"
@@ -196,6 +184,24 @@ def early_report(
             tlvs.append(_em(radio.ht))
         tlvs.append(_em(radio.advanced))
     tlvs.extend((_em(facts.akm), _em(facts.profile2), _em(facts.ciphers)))
+    return tuple(tlvs)
+
+
+def early_report(
+    binding: PeerBinding,
+    facts: EarlyCapabilities,
+    stamp,
+    mids: MidSequence,
+    *,
+    clock=time.monotonic,
+):
+    """Initial non-DFS 2.4 GHz, non-HE/EHT, pure-fronthaul PSK/CCMP scope.
+
+    This is the complete Early report for the declared restricted conditions,
+    not an AP Capability Report (0x8002) or a complete Profile-1 implementation.
+    """
+    stamp.check(stamp, clock())
+    tlvs = capability_tlvs(facts)
     mid = mids.next()
     frames = fragment_message(binding.controller_al, binding.local_al, EARLY_AP_REPORT, mid, tlvs)
     return PreparedReport(EARLY_AP_REPORT, mid, stamp, stamp.valid_until, frames)
@@ -318,10 +324,10 @@ def topology_response(
     _require(query.message_type == 2 and not query.relay, "expected a unicast Topology Query")
     profiles = [t.value for t in query.tlvs if t.kind == 0xB3]
     _require(len(profiles) == 1, "Topology Query requires one Multi-AP Profile")
-    _require(
-        decode_value(0xB3, profiles[0]).effective_profile(1) == 1,
-        "Topology Query exceeds the selected report profile",
-    )
+    # EasyMesh 6.1 §6.2: Query advertises the sender's highest profile,
+    # unlike discovery Response, which echoes the searching agent's profile.
+    # Decode it without upgrading our own Profile-1 response or capabilities.
+    decode_value(0xB3, profiles[0]).effective_profile(1)
     _require(
         not any(t.kind in (0xAB, 0xAC) for t in query.tlvs),
         "DPP security processing is required before query dispatch",

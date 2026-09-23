@@ -3457,6 +3457,43 @@ why EMOSA must continue to check the received response, and why a corrected flag
 still leaves zero radio/BSS onboarding evidence. Follow the linked guide's build,
 failure, packet-comparison and restoration steps before claiming this result.
 
+### 13.16 Join the real controller to the simulated OpenSync extender
+
+The previous exercises prove individual boundaries. This experiment connects
+them: **native controller → EMOSA virtual agent → OpenSync-schema OVSDB → separate
+radio manager → hwsim AP → independent client**. The native controller must also
+learn the represented radio and BSS from EMOSA's reports.
+
+Start with the [native onboarding walkthrough](../protocol/native-onboarding.md).
+It explains the selected non-DPP contract, the controller candidate changes and
+the exact HOST/VM setup commands. Build the candidate on HOST with `--onboarding`;
+stage it in its own VM directory and use a new run label. The pinned baseline is
+backed up and restored, so the experiment remains reproducible.
+
+**Why withhold application?** A successful database transaction proves only that
+the requested configuration was stored. During this deliberate pause, Config
+contains the controller's new SSID while State still describes the old live AP.
+The operation must stay `CONFIG_COMMITTED`. After the separate radio manager is
+released, observed State can advance the operation to `OBSERVED_APPLIED`.
+
+**Why read the controller separately?** EMOSA's local virtual-agent directory is
+not the controller's database. Read `controller-before.json` and
+`controller-after.json`: the latter must contain the exact AL, radio, BSSID and
+controller-provisioned SSID. The radio capture and separate client traffic then
+establish behavior beyond both software inventories.
+
+The initial scope ends topology reporting before the independent Wi-Fi client
+joins, because continuous station reporting is not implemented in this radio
+fixture. Policy/metrics, channel management, full profile qualification and a
+physical unchanged extender remain further work. The run's
+`observed_pending_capture_review` status requires independent packet review
+before a bounded onboarding success can be declared.
+
+**Learning checkpoint:** trace the new SSID from native BML policy through the
+actual WSC M2, durable receipt, Config, independently observed State, native BSS
+inventory and client traffic. Identify which evidence would be missing if any
+one link in that chain failed. Do not substitute a semantic API request for M2.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and
