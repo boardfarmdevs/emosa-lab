@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/rev/git/emosa-lab/deploy/peer-baseline/compatibility/build-controller.py", line 287, in <module>
+    main()
+    ~~~~^^
+  File "/home/rev/git/emosa-lab/deploy/peer-baseline/compatibility/build-controller.py", line 178, in main
+    ap_esp = json.loads(raw)
+  File "/usr/lib/python3.13/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/lib/python3.13/json/decoder.py", line 348, in decode
+    raise JSONDecodeError("Extra data", s, end)
+json.decoder.JSONDecodeError: Extra data: line 1 column 5 (char 4)

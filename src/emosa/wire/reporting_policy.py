@@ -1,4 +1,4 @@
-"""Durable selected Multi-AP policy receipt, with explicit unfulfilled reports.
+"""Durable selected policy receipt and conservative periodic report accounting.
 
 EasyMesh 6.1 §§7.3, 10.2.1, 15.1, 17.1.8/32 and Tables 34, 35, 115.
 An Ack confirms receipt. No measurement, policy application or reporting success
@@ -142,19 +142,20 @@ class ReportingPolicyStore:
 
 
 class ReportingPolicyCoordinator:
-    """Receipt/Ack only until qualified reporting sources are integrated.
+    """Persist receipt and reserve due work before optional guarded transmission.
 
     Due intervals become persistent missing-report counts, never fake telemetry
     or a retry flood. This intentionally does not claim §10 reporting compliance.
     """
 
-    def __init__(self, source, send_frame, store, *, clock=time.monotonic):
+    def __init__(self, source, send_frame, store, *, reporter=None, clock=time.monotonic):
         self.source, self.binding, self.send_frame = source, source.binding, send_frame
         self.store, self.clock = store, clock
         self.closed = False
         self.recent = {}
         self.counts = {}
         self.value = store.read()
+        self.reporter = reporter
 
     def record(self, key):
         self.counts[key] = self.counts.get(key, 0) + 1
@@ -203,10 +204,48 @@ class ReportingPolicyCoordinator:
         due = value["next_due"]
         if due is not None and now >= due:
             periods = int((now - due) // interval) + 1
+            prior_unfulfilled = value["last_unfulfilled_due"]
             value["periods_due_without_report"] += periods
             value["next_due"] = due + periods * interval
             value["last_unfulfilled_due"] = due + (periods - 1) * interval
+            if self.reporter is not None:
+                value["latest_report_attempt"] = {
+                    "due": value["last_unfulfilled_due"],
+                    "status": "reserved_outcome_unknown",
+                }
+            # Reserve before I/O. A crash can overcount one missing report, but
+            # cannot postpone the deadline, falsely prove a send, or replay a
+            # burst of old reports. A send is not independent controller receipt.
             self.persist(value)
+            if self.reporter is not None:
+                try:
+                    self.reporter.periodic(value["policy"], value["last_unfulfilled_due"])
+                except (EmosaError, OSError) as exc:
+                    value = {
+                        **value,
+                        "latest_report_attempt": {
+                            "due": value["last_unfulfilled_due"],
+                            "status": "unavailable_or_send_incomplete",
+                            "reason": exc.code.value if isinstance(exc, EmosaError) else "IO_ERROR",
+                        },
+                    }
+                    self.persist(value)
+                else:
+                    value = {
+                        **value,
+                        "periods_due_without_report": value["periods_due_without_report"] - 1,
+                        "reports_transmitted": value.get("reports_transmitted", 0) + 1,
+                        "last_unfulfilled_due": (
+                            due + (periods - 2) * interval if periods > 1 else prior_unfulfilled
+                        ),
+                        "latest_report_attempt": {
+                            "due": value["last_unfulfilled_due"],
+                            "status": "transmitted_controller_receipt_unverified",
+                        },
+                    }
+                    self.persist(value)
+                    self.record("periodic_metric_report_transmitted")
+                    return
             self.record("metric_reporting_due_without_qualified_source")
 
     def handle(self, message, received_at):
@@ -281,7 +320,7 @@ class ReportingPolicyCoordinator:
             "received_policy": self.value,
             "policy_application_proven": False,
             "required_reporting_proven": False,
-            "reporting_gap": "qualified_measurements_and_metric_report_delivery_not_implemented",
+            "reporting_gap": "qualified_measurements_and_fulfilled_reporting_pending",
         }
 
     def close(self):

@@ -1,0 +1,44 @@
+{
+  "checked_common_windows": 293,
+  "baseline_samples": 5,
+  "connection_generations": 3,
+  "worker_processes": 2,
+  "duplicate_observations": 1,
+  "summed_nonoverlapping_transmit_losses": 0,
+  "summed_nonoverlapping_receive_losses": 0,
+  "native_ovsdb_handoff_checks_passed": true,
+  "raw_forwarding_packet_reconciliation": {
+    "packet_byte_reconciliation_passed": true,
+    "scope": "owned veth interface packet/byte deltas, including transit and multicast",
+    "counter_windows": 295,
+    "exact_direction_packet_windows": 546,
+    "clock_offset_spread_ns": 1803,
+    "fixed_timing_allowance_ns": 1000000,
+    "classified_capture_totals": {
+      "tx_packets": 2082,
+      "tx_bytes": 195942,
+      "rx_packets": 2090,
+      "rx_bytes": 204355
+    },
+    "tx_source_macs": [
+      "00:16:3e:79:0a:a8",
+      "00:16:3e:b2:d2:c4",
+      "02:00:00:00:02:00"
+    ],
+    "rx_source_macs": [
+      "00:16:3e:b8:c4:a7",
+      "02:00:00:00:30:01",
+      "02:00:00:e0:00:01"
+    ],
+    "loss_counters_qualified": false,
+    "capacity_qualified": false,
+    "measurement_source_qualified": false,
+    "sustained_operation_proven": false,
+    "physical_pod_proven": false
+  },
+  "configuration_epochs": 15,
+  "measurement_source_qualified": false,
+  "native_neighbor_metric_delivery_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

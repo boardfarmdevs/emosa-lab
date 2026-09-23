@@ -1,0 +1,95 @@
+--- a/framework/platform/bpl/cfg/dm/bpl_amb_ptr.h
++++ b/framework/platform/bpl/cfg/dm/bpl_amb_ptr.h
+@@ -16,7 +16,7 @@
+ namespace beerocks {
+ namespace bpl {
+ 
+-extern std::shared_ptr<beerocks::nbapi::Ambiorix> amb_ptr;
++std::shared_ptr<beerocks::nbapi::Ambiorix> &ambiorix_impl_owner();
+ 
+ } // namespace bpl
+ } // namespace beerocks
+--- a/framework/platform/bpl/cfg/dm/bpl_amx.cpp
++++ b/framework/platform/bpl/cfg/dm/bpl_amx.cpp
+@@ -15,9 +15,17 @@
+ namespace beerocks {
+ namespace bpl {
+ 
+-std::shared_ptr<beerocks::nbapi::Ambiorix> amb_ptr = nullptr;
++std::shared_ptr<beerocks::nbapi::Ambiorix> &ambiorix_impl_owner()
++{
++    // Construct the owner on first use from the application, after its static
++    // Amxrt lifetime guarantee. Reverse destruction order then releases this
++    // model before Amxrt deletes the connection list. A DSO-global owner is
++    // initialized earlier and survives Amxrt, causing a second amxb_free().
++    static std::shared_ptr<beerocks::nbapi::Ambiorix> owner;
++    return owner;
++}
+ 
+-void set_ambiorix_impl_ptr(const std::shared_ptr<beerocks::nbapi::Ambiorix> &ptr) { amb_ptr = ptr; }
++void set_ambiorix_impl_ptr(const std::shared_ptr<beerocks::nbapi::Ambiorix> &ptr) { ambiorix_impl_owner() = ptr; }
+ 
+ } // namespace bpl
+ } // namespace beerocks
+--- a/framework/platform/bpl/cfg/dm/bpl_cfg_amx_helper.h
++++ b/framework/platform/bpl/cfg/dm/bpl_cfg_amx_helper.h
+@@ -23,38 +23,38 @@
+ 
+ template <typename T> bool set_controller_config_param(const std::string &name, const T &value)
+ {
+-    if (!amb_ptr) {
++    if (!ambiorix_impl_owner()) {
+         MAPF_ERR("set_controller_config_param: " + name + " | controller DM does not exist");
+         return false;
+     }
+-    return amb_ptr->set(CONTROLLER_CONFIG_PATH, name, value);
++    return ambiorix_impl_owner()->set(CONTROLLER_CONFIG_PATH, name, value);
+ }
+ 
+ template <typename T> bool set_agent_config_param(const std::string &name, const T &value)
+ {
+-    if (!amb_ptr) {
++    if (!ambiorix_impl_owner()) {
+         MAPF_ERR("set_agent_config_param: " + name + " | controller DM does not exist");
+         return false;
+     }
+-    return amb_ptr->set(AGENT_CONFIG_PATH, name, value);
++    return ambiorix_impl_owner()->set(AGENT_CONFIG_PATH, name, value);
+ }
+ 
+ template <typename T> bool read_controller_config_param(const std::string &name, T &value)
+ {
+-    if (!amb_ptr) {
++    if (!ambiorix_impl_owner()) {
+         MAPF_ERR("read_controller_config_param: " + name + " | agent DM does not exist");
+         return false;
+     }
+-    return amb_ptr->read_param(CONTROLLER_CONFIG_PATH, name, &value);
++    return ambiorix_impl_owner()->read_param(CONTROLLER_CONFIG_PATH, name, &value);
+ }
+ 
+ template <typename T> bool read_agent_config_param(const std::string &name, T &value)
+ {
+-    if (!amb_ptr) {
++    if (!ambiorix_impl_owner()) {
+         MAPF_ERR("read_agent_config_param: " + name + " | agent DM does not exist");
+         return false;
+     }
+-    return amb_ptr->read_param(AGENT_CONFIG_PATH, name, &value);
++    return ambiorix_impl_owner()->read_param(AGENT_CONFIG_PATH, name, &value);
+ }
+ 
+ } // namespace bpl
+--- a/framework/platform/bpl/cfg/dm/bpl.cpp
++++ b/framework/platform/bpl/cfg/dm/bpl.cpp
+@@ -44,8 +44,8 @@
+ 
+ void bpl_close()
+ {
+-    if (amb_ptr) {
+-        amb_ptr.reset();
++    if (ambiorix_impl_owner()) {
++        ambiorix_impl_owner().reset();
+     }
+ }
+ 

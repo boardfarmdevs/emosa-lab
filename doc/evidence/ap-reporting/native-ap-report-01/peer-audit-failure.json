@@ -1,0 +1,10 @@
+{
+  "peer_acceptance_passed": false,
+  "failure": "Unanswered healthy-path peer query outside independently classified fault/baseline windows",
+  "request_frame": 29,
+  "mid": 31,
+  "first_qualified_publication_seconds_after_query": 0.14061,
+  "fix": "Retain at most four queries under original one-second deadline and control/topology authority; never extend on duplicate",
+  "operational_recovery_checks_passed": true,
+  "sustained_operation_proven": false
+}

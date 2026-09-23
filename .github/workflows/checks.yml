@@ -13,6 +13,28 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -m unit --junitxml=unit-results.xml
+      - name: Replay observed egress losses through the production source
+        run: |
+          uv run python scripts/replay-egress-accounting.py doc/evidence/egress-accounting/egress-loss-01 > /tmp/emosa-egress-replay.json
+          cmp /tmp/emosa-egress-replay.json doc/evidence/egress-accounting/egress-loss-01/egress-projection.json
+      - name: Replay common transmit/receive accounting through the production source
+        run: |
+          uv run python scripts/replay-egress-accounting.py --bidirectional doc/evidence/receive-accounting/ingress-loss-03 > /tmp/emosa-receive-replay.json
+          cmp /tmp/emosa-receive-replay.json doc/evidence/receive-accounting/ingress-loss-03/backhaul-projection.json
+      - name: Replay calibrated virtual service through the production source
+        run: |
+          uv run python scripts/replay-egress-accounting.py --virtual-service doc/evidence/virtual-capacity/virtual-link-03 > /tmp/emosa-capacity-replay.json
+          cmp /tmp/emosa-capacity-replay.json doc/evidence/virtual-capacity/virtual-link-03/virtual-capacity-projection.json
+      - name: Replay combined shaped-backhaul losses and service
+        run: |
+          for label in shaped-ingress-01 shaped-egress-02 shaped-queue-02; do
+            uv run python scripts/replay-egress-accounting.py --shaped-backhaul doc/evidence/shaped-backhaul/$label > /tmp/emosa-shaped-replay.json
+            cmp /tmp/emosa-shaped-replay.json doc/evidence/shaped-backhaul/$label/shaped-projection.json
+          done
+      - name: Reproduce selected synthetic AP reports
+        run: |
+          uv run python -m emosa.simulation.ap_metrics /tmp/emosa-ap-vectors
+          cmp /tmp/emosa-ap-vectors/synthetic-ap-metrics.pcap doc/evidence/ap-reporting/vectors/synthetic-ap-metrics.pcap
   easymesh-reference:
     runs-on: ubuntu-24.04
     steps:
@@ -78,7 +100,114 @@ jobs:
       - run: >-
           python3 scripts/check-native-policy.py
           doc/evidence/telemetry-freshness/native-telemetry-gap-01
+      - run: python3 scripts/check-ap-metrics-reference.py doc/evidence/ap-reporting/vectors
+      - run: python3 scripts/check-native-ap-withholding.py doc/evidence/ap-reporting/native-ap-report-02
+      - run: python3 scripts/check-native-peer-metrics.py doc/evidence/ap-reporting/native-ap-report-02
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/ap-reporting/native-ap-report-02 --minimum-seconds 210
+      - run: python3 scripts/check-telemetry-gap.py doc/evidence/ap-reporting/native-ap-report-02
+      - name: Verify the 15-minute lifecycle and recovery evidence
+        run: |
+          python3 scripts/check-native-lifecycle.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
+          python3 scripts/check-native-recovery.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
+          python3 scripts/check-native-peer-metrics.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
+          python3 scripts/check-native-ap-withholding.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
+          python3 scripts/check-telemetry-gap.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
+      - name: Verify native sparse ESP failure and corrected receipt
+        run: |
+          python3 scripts/check-native-ap-esp.py --baseline-failure doc/evidence/ap-esp/native-ap-esp-old-01
+          python3 scripts/check-native-ap-esp.py doc/evidence/ap-esp/native-ap-esp-new-01
+      - name: Verify live disconnect joins and 15-minute recovery
+        run: |
+          python3 scripts/check-session-reasons.py doc/evidence/session-reasons/native-reason-04
+          python3 scripts/check-native-lifecycle.py doc/evidence/session-reasons/native-reason-04
+          python3 scripts/check-native-recovery.py doc/evidence/session-reasons/native-reason-04
+          python3 scripts/check-native-peer-metrics.py doc/evidence/session-reasons/native-reason-04
+          python3 scripts/check-native-ap-withholding.py doc/evidence/session-reasons/native-reason-04
+          python3 scripts/check-telemetry-gap.py doc/evidence/session-reasons/native-reason-04
+      - name: Preserve early observer and controller-receipt failures
+        run: |
+          python3 - <<'PY'
+          import runpy
+          from pathlib import Path
+          root = Path("doc/evidence/session-reasons")
+          cases = [
+              ("check-session-reasons.py", "native-reason-02", "live reason observer unhealthy"),
+              ("check-native-peer-metrics.py", "native-reason-01", "native controller interface statistics never reflect this response"),
+              ("check-native-peer-metrics.py", "native-reason-03", "native controller interface statistics never reflect this response"),
+          ]
+          for script, label, expected in cases:
+              check = runpy.run_path(str(Path("scripts") / script))["check"]
+              try:
+                  check(root / label)
+              except AssertionError as error:
+                  assert str(error) == expected, (label, str(error))
+              else:
+                  raise AssertionError(f"Retained failure must not pass: {label}")
+          PY
+      - name: Preserve the observed early peer-query failure
+        run: |
+          python3 - <<'PY'
+          import runpy
+          from pathlib import Path
+          check = runpy.run_path("scripts/check-native-peer-metrics.py")["check"]
+          try:
+              check(Path("doc/evidence/ap-reporting/native-ap-report-01"))
+          except AssertionError as error:
+              assert str(error) == "unanswered live peer query or unexpected reply count", str(error)
+          else:
+              raise AssertionError("retained early peer-query failure must not pass")
+          PY
       - run: python3 scripts/check-neighbor-metrics.py
+      - run: python3 scripts/check-native-peer-metrics.py doc/evidence/native-peer-metrics/native-peer-metrics-04
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/native-peer-metrics/native-peer-metrics-04 --minimum-seconds 210
+      - run: python3 scripts/check-native-policy.py doc/evidence/native-peer-metrics/native-peer-metrics-04
+      - run: python3 scripts/check-telemetry-gap.py doc/evidence/native-peer-metrics/native-peer-metrics-04
+      - name: Preserve the observed startup-channel failure
+        run: |
+          python3 - <<'PY'
+          import runpy
+          from pathlib import Path
+          check = runpy.run_path("scripts/check-native-recovery.py")["check"]
+          try:
+              check(Path("doc/evidence/native-peer-metrics/native-peer-metrics-03-limited"), "tshark", minimum_seconds=210)
+          except AssertionError as error:
+              assert str(error) == "channel query/selection missing timely response", str(error)
+          else:
+              raise AssertionError("retained startup failure must not pass recovery acceptance")
+          PY
+      - run: python3 scripts/check-shaped-backhaul.py doc/evidence/shaped-backhaul/shaped-queue-02
+      - run: python3 scripts/check-shaped-backhaul.py doc/evidence/shaped-backhaul/shaped-ingress-01
+      - run: python3 scripts/check-shaped-backhaul.py doc/evidence/shaped-backhaul/shaped-egress-02
+      - run: python3 scripts/check-shaped-backhaul.py --native doc/evidence/shaped-backhaul/native-shaped-01
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/shaped-backhaul/native-shaped-01 --minimum-seconds 210
+      - run: python3 scripts/check-native-policy.py doc/evidence/shaped-backhaul/native-shaped-01
+      - run: python3 scripts/check-telemetry-gap.py doc/evidence/shaped-backhaul/native-shaped-01
+      - run: python3 scripts/check-virtual-capacity.py doc/evidence/virtual-capacity/virtual-link-03
+      - run: python3 scripts/check-virtual-capacity.py --native doc/evidence/virtual-capacity/native-capacity-02
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/virtual-capacity/native-capacity-02 --minimum-seconds 210
+      - run: python3 scripts/check-native-policy.py doc/evidence/virtual-capacity/native-capacity-02
+      - run: python3 scripts/check-telemetry-gap.py doc/evidence/virtual-capacity/native-capacity-02
+      - name: Missing framing attempt must not qualify a service source
+        run: |
+          python3 - <<'PY'
+          import runpy
+          from pathlib import Path
+          check = runpy.run_path("scripts/check-virtual-capacity.py")["check"]
+          try:
+              check(Path("doc/evidence/virtual-capacity/native-capacity-01-limited"), True)
+          except AssertionError as error:
+              assert "no service windows" in str(error)
+          else:
+              raise AssertionError("missing framing unexpectedly accepted")
+          PY
       - run: >-
           python3 scripts/check-neighbor-metrics.py --native-directory
           doc/evidence/neighbor-metrics/native-neighbor-01
@@ -106,6 +235,63 @@ jobs:
       - run: >-
           python3 scripts/check-neighbor-metrics.py --native-directory
           doc/evidence/forwarding/native-forwarding-01
+      - run: >-
+          python3 scripts/check-neighbor-binding.py
+          doc/evidence/neighbor-binding/native-link-binding-04
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/neighbor-binding/native-link-binding-04 --minimum-seconds 210
+      - run: >-
+          python3 scripts/check-telemetry-gap.py
+          doc/evidence/neighbor-binding/native-link-binding-04
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/neighbor-binding/native-link-binding-04
+      - run: >-
+          python3 scripts/check-neighbor-metrics.py --native-directory
+          doc/evidence/neighbor-binding/native-link-binding-04
+      - run: >-
+          python3 scripts/check-backhaul-accounting.py
+          doc/evidence/neighbor-binding/native-link-binding-04
+      - run: >-
+          python3 scripts/check-backhaul-accounting.py --loss-probe
+          doc/evidence/backhaul-accounting/backhaul-loss-02
+      - run: >-
+          python3 scripts/check-egress-accounting.py
+          doc/evidence/egress-accounting/egress-loss-01
+      - run: >-
+          python3 scripts/check-egress-accounting.py --native
+          doc/evidence/egress-accounting/native-egress-01
+      - run: >-
+          python3 scripts/check-receive-accounting.py
+          doc/evidence/receive-accounting/ingress-loss-03
+      - run: >-
+          python3 scripts/check-receive-accounting.py --native
+          doc/evidence/receive-accounting/native-receive-01
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/receive-accounting/native-receive-01 --minimum-seconds 210
+      - run: >-
+          python3 scripts/check-telemetry-gap.py
+          doc/evidence/receive-accounting/native-receive-01
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/receive-accounting/native-receive-01
+      - run: >-
+          python3 scripts/check-neighbor-metrics.py --native-directory
+          doc/evidence/receive-accounting/native-receive-01
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/egress-accounting/native-egress-01 --minimum-seconds 210
+      - run: >-
+          python3 scripts/check-telemetry-gap.py
+          doc/evidence/egress-accounting/native-egress-01
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/egress-accounting/native-egress-01
+      - run: >-
+          python3 scripts/check-neighbor-metrics.py --native-directory
+          doc/evidence/egress-accounting/native-egress-01
       - run: >-
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01

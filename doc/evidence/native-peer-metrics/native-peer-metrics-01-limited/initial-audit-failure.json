@@ -1,0 +1,21 @@
+{
+  "failed_assertion": "all captured queries have timely replies",
+  "answered_frames": [
+    [
+      33,
+      34
+    ],
+    [
+      66,
+      67
+    ],
+    [
+      103,
+      104
+    ]
+  ],
+  "unanswered_frame": 117,
+  "query_time": 1790157167.570049,
+  "last_forwarding_sample_time": 1790157166.4032762,
+  "conclusion": "Three measured responses observed. Teardown query suspected; no explicit worker-exit timestamp retained, so full active-query acceptance withheld. Next run records actual exit times and inventory-read bounds."
+}

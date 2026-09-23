@@ -51,7 +51,8 @@ def digest(path):
     return result.hexdigest()
 
 
-def review(cache, output):
+def review(cache, output, files=None):
+    files = FILES if files is None else files
     if output.exists() or output.is_symlink():
         raise ValueError("choose a new source-review directory")
     cache.mkdir(parents=True, exist_ok=True)
@@ -71,7 +72,7 @@ def review(cache, output):
             if not member.name.startswith("linux-6.8/"):
                 continue
             relative = member.name.removeprefix("linux-6.8/")
-            if relative not in FILES:
+            if relative not in files:
                 continue
             if not member.isfile() or relative in found:
                 raise ValueError("unexpected selected archive member")
@@ -79,7 +80,7 @@ def review(cache, output):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(archive.extractfile(member).read())
             found.add(relative)
-    if found != set(FILES):
+    if found != set(files):
         raise ValueError("incomplete source archive")
     with gzip.open(cache / "linux_6.8.0-139.139.diff.gz", "rt") as stream:
         blocks = re.split(r"(?m)(?=^--- linux-6\.8\.0\.orig/)", stream.read())
@@ -87,7 +88,7 @@ def review(cache, output):
     for block in blocks:
         if block.startswith("--- linux-6.8.0.orig/"):
             name = block.splitlines()[0].split("orig/", 1)[1].split("\t")[0]
-            if name in FILES:
+            if name in files:
                 changes.append(block)
     patch = output / "selected.patch"
     patch.write_text("".join(changes))
@@ -98,7 +99,7 @@ def review(cache, output):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
-    for name, expected in FILES.items():
+    for name, expected in files.items():
         if digest(selected / name) != expected:
             raise ValueError("patched source differs from reviewed source: " + name)
     result = {
@@ -107,7 +108,7 @@ def review(cache, output):
         "runtime_kernel": "6.8.0-139-generic",
         "source_base": BASE,
         "input_sha256": INPUTS,
-        "patched_source_sha256": FILES,
+        "patched_source_sha256": files,
         "scope": "Selected source reconstruction and digest check; no kernel build or installation",
         "source_revision_verified": True,
         "final_counter_source_qualified": False,

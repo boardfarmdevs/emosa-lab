@@ -1,0 +1,15 @@
+{
+  "interface": "eth1",
+  "ifindex": 8,
+  "mac": "00:16:3e:b2:d2:c4",
+  "boot_id": "4646cf49-821c-4068-9b73-60e29bc0924d",
+  "netns_inode": 4026532652,
+  "capture_epoch": "8b66dde2-e471-47d5-89c4-c6f529229ae0",
+  "run_label": "native-link-binding-02",
+  "collector_sha256": "88e102d77a47ddbc844ec5d65a30ad8604c0653a3d6e434a1da1e72563cdb003",
+  "heartbeat_ns": 24619837618410,
+  "running": false,
+  "errors": [],
+  "frames": [],
+  "physical_pod_changed": false
+}

@@ -6,6 +6,17 @@ keeps the virtual agent active through client activity, channel exchanges,
 pod-connection loss and an actual adapter process restart. It also records the
 mandatory controller procedures that remain unanswered.
 
+The later [901-second lifecycle run](native-lifecycle.md) adds all 15 measured
+native neighbor replies, the same real recovery faults and normal native
+controller/helper shutdown under an unchanged SIGTERM policy. The optional BPL
+candidate fixes the selected Linux lifetime defect; original baseline files are
+restored after the trial. Fifteen AP reporting periods remain explicitly
+unfulfilled. This closes the candidate lifecycle gap, not complete reporting.
+
+The [BBF metric review](bbf-data-elements.md) now supplies public definitions and
+bounded representation conversions. It narrows the document-access gap without
+qualifying live AP/STA measurements or completing the WFA DEr3 comparison.
+
 ## What must be demonstrated
 
 The first sustained acceptance run is a 15-minute owned-lab experiment with the
@@ -49,14 +60,37 @@ measurement/reporting work and integrated acceptance remain pending.
 The [forwarding-observation step](forwarding-observations.md) adds the simulated
 pod's actual bridge-port identities and raw interface intervals through OVSDB.
 Its independent backhaul capture distinguishes client forwarding from the
-adapter's control link. Per-neighbor attribution, topology/media binding and
-capacity/availability estimation remain pending before these observations can
-satisfy a native metric query.
+adapter's control link. The [live binding](neighbor-discovery-binding.md) now ties
+topology identities to actual pod-side discovery. The
+[counter audit](backhaul-counter-accounting.md) reconciles packet/byte intervals
+but demonstrates losses before veth accounting that ordinary interface error
+counters miss. The [egress source](egress-accounting-source.md) now combines
+selected action and driver losses without double counting, with observed
+configuration epochs and live OVSDB recovery checks. The
+[receive source](receive-counter-accounting.md) now adds selected ingress loss
+and common transmit/receive read bounds. These inputs support the subsequent owned peer profile; they do not by
+themselves qualify a complete native query.
+
+The optional [virtual-link calibration](virtual-link-capacity.md) now tests a
+declared 100 Mb/s software service with explicit Ethernet overhead and an
+observed unused-service estimate. Its independent packet audit and native
+OVSDB recovery regression are separate from complete per-neighbor publication.
+The [combined source](shaped-backhaul-accounting.md) now checks selected action,
+queue and driver loss components alongside service work through OVSDB recovery.
+The optional [native peer publisher](native-peer-metrics.md) now adds observed
+port isolation, disabled aggregation and the declared software media/service
+contract. It answers native queries with independently checked values and
+verifies their receipt in controller interface statistics. This qualifies only
+that owned profile; it does not measure a physical PHY or change full acceptance
+status.
 
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated
-acceptance remain outstanding. Policy receipt/Ack now persists the controller's
-intent and records unfulfilled reporting deadlines; it does not supply metrics.
+acceptance remain outstanding. Policy receipt/Ack persists the controller's intent. The
+[AP report builder and periodic dispatcher](ap-metric-reports.md) now assemble
+the required companions from an explicit internal handoff and preserve deadlines
+through recovery. Its native measurement source is still unqualified, so the lab
+withholds AP reports and records the missing periods.
 Selected channel procedures and the recovery
 supervisor are implemented; their limits and reproduction steps follow below.
 Physical-pod acceptance remains
@@ -114,9 +148,9 @@ TEL-01–04. Installing this simulation publisher on a physical pod is not allow
 | Associated Clients | EasyMesh 6.1 §6.2, §17.2.5/Table 28 | Join complete OVSDB membership with measured telemetry age; refuse incomplete inventory |
 | Client join/leave notification | §6.3, §17.1.5, §17.2.20/Table 43 | Send AL MAC and Client Association Event with observed STA/BSSID and join/leave bit; age updates alone are not joins |
 | Client Capability Query | §9.2, §17.1.14–15, §17.2.18–19, §17.2.36 | Correlated failure report: reason 2 for an absent station, reason 3 for an associated station whose association frame is unavailable |
-| Disassociation statistics | §6.3, §17.1.41 | [Sender and guarded handoff implemented](final-session-statistics.md); actual final session counters/reason still unqualified, so native polling continues to record the gap |
-| Reporting policy and metrics | §7.3 and §10 | [Durable selected receipt/Ack and missing-report schedule](reporting-policy.md); measured field mappings and required report delivery remain pending |
-| Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1; amendment pp.10–12; EasyMesh §10.1 | [Query/response and guarded handoff implemented](neighbor-link-metrics.md); native queries record unavailable measurements. Qualified per-link publisher and native delivery remain pending |
+| Disassociation statistics | §6.3, §17.1.41 | [Sender and guarded handoff implemented](final-session-statistics.md); [live reason/removal join](live-session-reasons.md) implemented; counter conversion and online delivery still unqualified, so native polling records the gap |
+| Reporting policy and metrics | §7.3 and §10 | [Durable selected receipt/Ack](reporting-policy.md) and [AP report assembly/periodic dispatch](ap-metric-reports.md); measured field mappings and native AP delivery remain pending |
+| Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1; amendment pp.10–12; EasyMesh §10.1 | [Query/response and guarded handoff implemented](neighbor-link-metrics.md); the optional [owned peer profile](native-peer-metrics.md) supplies measured native replies and controller receipt. The owned publisher also passes the 901-second recovery run; physical/multiple-peer qualification and complete reporting acceptance remain pending |
 | Channel procedures | §8.1–2; §17.2.13–16/Tables 36, 38–40 | Sole advertised channel 6; durable preferences, acceptance of requests requiring no adjustment, measured operating power and correlated Ack/retry |
 
 ## Channel decisions in this bounded lab
@@ -138,6 +172,13 @@ wlan0 info` observation, published through `Wifi_Radio_State.tx_power`; it is
 never copied from the capability maximum or controller's requested limit.
 The owned HT20 hwsim profile explicitly assumes zero antenna/cable gain. This
 maps nominal reported power, and establishes no physical RF measurement.
+
+An early request can arrive before the first fresh radio sample. The coordinator
+retains at most four such requests under their original context and one-second
+response deadlines. Duplicates cannot extend the wait. A current observation
+allows validation and reply; expiration, disconnection or a changed context
+withdraws the request without accepting configuration. The retained peer-metric
+experiments include the startup race that required this behavior.
 
 The report needs a fresh manager telemetry sample, the matching database
 generation and the same measured operating parameters. Missing observations
@@ -207,8 +248,13 @@ Use a fresh label for every attempt. Preserve failed attempts.
    uv sync --locked
    tar -C src -cf - emosa | lxc exec emosa-lab -- tar -C /opt/emosa-radio-manager/source -xf -
    lxc file push deploy/radio-manager/node.py deploy/radio-manager/manager.py \
+     deploy/radio-manager/neighbor-observer.py deploy/radio-manager/egress-observer.py \
      emosa-lab/opt/emosa-radio-manager/
    lxc file push deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
+   lxc file push deploy/peer-baseline/node.py emosa-lab/opt/emosa-baseline/
+   lxc file push deploy/peer-baseline/compatibility/controller-candidate.py \
+     deploy/peer-baseline/compatibility/lifecycle-observer.py \
+     emosa-lab/opt/emosa-baseline/compatibility/
    ```
 
 2. Install the pinned Python observation dependencies in the VM's EMOSA virtual
@@ -263,6 +309,16 @@ Use a fresh label for every attempt. Preserve failed attempts.
 
 The runner leaves `sustained_operation_proven` false. Independent capture review
 and the full acceptance criteria above must establish that result.
+
+Current native runs also start the read-only pod-side discovery and egress
+observers and
+wait for an actual controller/interface binding before onboarding. Allow about
+one extra minute at startup for the candidate's periodic discovery; this is not
+part of active duration. The [binding guide](neighbor-discovery-binding.md)
+explains the observed topology identities and optional `--neighbor-gap-check`
+fault. The [egress guide](egress-accounting-source.md) explains supported loss
+paths and counter baselines. Complete per-link metric-source qualification
+remains pending.
 
 ## Run the 15-minute operational soak with recovery
 
@@ -331,7 +387,7 @@ controller's requests are retained without disabling them to make the run pass.
 | AP channel utilization and ESP | Qualify the measurement period, busy/active counters or a suitable simulated medium, and the BE estimated service parameters; map EasyMesh §17.2.22/Table 45 to the referenced 802.11 definitions | The controller's zero defaults, a configured hostapd test value, or assuming that no survey output means no airtime was used |
 | STA link/traffic metrics | Qualify each requested source field, byte units, direction, success/error meaning, rollover, reset epoch and sample age | Interchanging link rates and application throughput, or treating absent errors/retries as zero |
 | Final disassociation report | Capture the actual reason and complete final session counters before the station is removed; correlate the session across join/leave and reconnect; connect qualified records to the [implemented §6.3/§17.1.41 sender and Ack handling](final-session-statistics.md) | The preceding polling sample or an invented reason based on a membership disappearance |
-| IEEE 1905 neighbor metrics | Query/response component is implemented; bind represented topology to actual pod/peer interfaces and bridge presence, then qualify the common Tx/Rx period, capacity and availability before enabling native responses | Adapter control-veth counters attributed to the pod, whole-interface counts attributed to an arbitrary neighbor, or an invalid-neighbor error for an existing neighbor |
+| IEEE 1905 neighbor metrics | Query/response, actual pod/peer identity binding and common Tx/Rx accounting with selected ingress/egress losses are implemented; complete neighbor/loss attribution, media, capacity and availability qualification before enabling native responses | Adapter control-veth counters attributed to the pod, whole-interface counts attributed to an arbitrary neighbor, or an invalid-neighbor error for an existing neighbor |
 
 The pinned hostap 2.10 source helps narrow the next implementation. In
 `src/ap/sta_info.c`, `ap_sta_set_authorized()` emits `AP-STA-DISCONNECTED` with the
@@ -342,6 +398,13 @@ hook to investigate in the owned simulator; the RADIUS termination cause is not
 automatically the IEEE 802.11 reason code, and that code path does not supply all
 EasyMesh traffic-error/retry fields. Do not change the physical pod to install
 such an observation hook. Qualify its existing OpenSync telemetry instead.
+
+The [live reason join](live-session-reasons.md) now removes one acquisition gap:
+it correlates actual unprotected disconnect frames with the kernel's final
+station sample during the run. It uses the existing hwsim monitor, preserves
+association/collector identities and rejects ambiguous, stale or incomplete
+inputs. The raw counters still require normative definitions and conversion;
+this observation does not by itself enable final-statistics delivery.
 
 Useful upstream OpenSync fields include `Survey` busy/duration values, `Client`
 traffic counters, and band-steering event `disconnect_reason`/association IEs in

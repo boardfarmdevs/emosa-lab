@@ -1,0 +1,40 @@
+{
+  "controlled_loss_accounting_checks_passed": true,
+  "capture_health": {
+    "ingress": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 85,
+      "captured": 85,
+      "received_by_filter": 85,
+      "dropped_by_kernel": 0
+    },
+    "backhaul": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 68,
+      "captured": 68,
+      "received_by_filter": 68,
+      "dropped_by_kernel": 0
+    }
+  },
+  "intentionally_dropped_echo_requests": 17,
+  "tc_action_drops": 17,
+  "rtnetlink_backhaul_deltas_during_drop": {
+    "rx_packets": 2,
+    "rx_bytes": 84,
+    "rx_errors": 0,
+    "rx_dropped": 0,
+    "tx_packets": 2,
+    "tx_bytes": 84,
+    "tx_errors": 0,
+    "tx_dropped": 0
+  },
+  "rtnetlink_tx_errors_and_drops_miss_this_loss": true,
+  "traffic_control_restored": true,
+  "reported_veth_speed_mbps": 10000,
+  "reported_speed_is_measured_capacity": false,
+  "measurement_source_qualified": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

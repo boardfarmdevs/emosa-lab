@@ -1,0 +1,15 @@
+{
+  "checked_windows": 292,
+  "baseline_samples": 5,
+  "connection_generations": 3,
+  "worker_processes": 2,
+  "duplicate_observations": 0,
+  "summed_nonoverlapping_egress_losses": 0,
+  "native_ovsdb_handoff_checks_passed": true,
+  "independent_binding_checks_passed": true,
+  "configuration_epochs": 13,
+  "measurement_source_qualified": false,
+  "native_neighbor_metric_delivery_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

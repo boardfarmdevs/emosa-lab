@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "scope": "synthetic composition and scheduler output audit",
+  "decoded_reports": 3,
+  "unanswered_incomplete_measurement_queries": [
+    72
+  ],
+  "sparse_esp_order_checked": true,
+  "empty_known_queue_inventory_checked": true,
+  "capture_sha256": "fad04b6f85ceb3862cb95d570ee6ffb473dfa70a4e466165908a1aeda429ac2c",
+  "dissector": "TShark (Wireshark) 3.6.2 (Git v3.6.2 packaged as 3.6.2-2)",
+  "field_conversion_qualified": false,
+  "native_ap_reporting_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

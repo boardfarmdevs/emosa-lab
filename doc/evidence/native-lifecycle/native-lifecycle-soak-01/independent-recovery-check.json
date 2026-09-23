@@ -1,0 +1,116 @@
+{
+  "operational_recovery_checks_passed": true,
+  "active_seconds": 901.4729816190011,
+  "active_client_pilot": {
+    "pilot_checks_passed": true,
+    "scope": "native active-worker client-cycle pilot",
+    "bounded_onboarding": {
+      "passed": true,
+      "scope": "bounded_native_controller_to_simulated_OpenSync_onboarding",
+      "controller_onboarding_proven": true,
+      "physical_pod_proven": false,
+      "native_baseline_restored": true,
+      "operations": 1,
+      "writes": 1,
+      "advertised_byte_counter_units": 0,
+      "capture_health": {
+        "ethernet": {
+          "passed": true,
+          "linktype": 1,
+          "pcap_records": 243,
+          "captured": 243,
+          "received_by_filter": 243,
+          "dropped_by_kernel": 0
+        },
+        "radio": {
+          "passed": true,
+          "linktype": 127,
+          "pcap_records": 45267,
+          "captured": 45267,
+          "received_by_filter": 45267,
+          "dropped_by_kernel": 0
+        }
+      },
+      "frames": 243,
+      "m1_sha256": "ad523499e2fe8703dd8b3dd5796c4c524f277a621855aad88f0649c57884c511",
+      "capability_report_frame": 22,
+      "provisioned_topology_frame": 19,
+      "independent_clients": [
+        "wired",
+        "wpa_supplicant"
+      ],
+      "continuous_management_proven": false,
+      "full_profile_qualified": false
+    },
+    "active_seconds_observed": 901.4729816190011,
+    "samples": 130,
+    "native_connected_observations": 130,
+    "native_disconnected_observations": 35,
+    "captured_joins": 38,
+    "captured_leaves": 35,
+    "capability_unavailable_reports": 38,
+    "rss_kib_range": [
+      56108,
+      60660
+    ],
+    "file_descriptor_range": [
+      23,
+      24
+    ],
+    "unimplemented_request_counts": {},
+    "sustained_operation_proven": false,
+    "physical_pod_proven": false,
+    "remaining": [
+      "independent channel and recovery review",
+      "reporting policy/metrics, link metrics and final disassociation statistics",
+      "complete sustained-operation acceptance"
+    ]
+  },
+  "recoveries": [
+    {
+      "kind": "pod_connection_loss",
+      "seconds_until_recovered": 7.332162141799927,
+      "m1_frame": 85,
+      "m2_frame": 86,
+      "new_config_writes": 0
+    },
+    {
+      "kind": "adapter_sigkill",
+      "seconds_until_recovered": 1.2166757583618164,
+      "m1_frame": 166,
+      "m2_frame": 167,
+      "new_config_writes": 0
+    }
+  ],
+  "channels": {
+    "preference_queries": 3,
+    "accepted_selections": 3,
+    "acknowledged_measured_operating_reports": 3
+  },
+  "continuous_traffic": {
+    "em-baseline-wired": {
+      "transmitted": 3525,
+      "received": 3525,
+      "span_seconds": 901.4803159236908,
+      "gaps_over_1_5_seconds": 0
+    },
+    "em-baseline-wifi": {
+      "transmitted": 3426,
+      "received": 2940,
+      "span_seconds": 901.8269379138947,
+      "gaps_over_1_5_seconds": 35
+    }
+  },
+  "unanswered_controller_requests": {
+    "0x8003": [],
+    "0x0005": []
+  },
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "remaining": [
+    "reporting policy and qualified metrics measurements",
+    "IEEE 1905 neighbor link metrics",
+    "final disassociation statistics and reason",
+    "complete acceptance criteria in doc/protocol/sustained-operation.md"
+  ]
+}

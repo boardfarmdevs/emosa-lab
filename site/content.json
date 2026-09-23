@@ -5,13 +5,13 @@
       "title": "An actual protocol peer",
       "status": "Bounded simulated onboarding verified",
       "state": "pending",
-      "description": "The native controller discovers EMOSA and supplies authenticated WSC configuration to the simulated OpenSync pod. Its inventory contains the observed radio, BSS and client. A 908-second run verifies continuous traffic and recovery from pod reconnect and adapter SIGKILL. The isolated patched controller candidate still needs mandatory metrics and physical qualification.",
+      "description": "The native controller discovers EMOSA and supplies authenticated WSC configuration to the simulated OpenSync pod. The latest 901-second run verifies repeated client activity, continuous traffic, measured neighbor replies, pod reconnect and adapter SIGKILL recovery. The optional native BPL candidate also exits cleanly. Complete reporting and physical qualification remain pending.",
       "responsibilities": [
         "Use the isolated em-protocol bridge, separate from pod management.",
         "Exercise discovery, capabilities and selected provisioning procedures.",
         "Retain captures from an independent bridge observation point."
       ],
-      "next": "Complete qualified policy/metrics, neighbor-link metrics and final disassociation reporting; review the scoped operational recovery evidence and retain the physical acceptance boundary.",
+      "next": "Qualify AP/STA and final-session measurements, verify native delivery and repeat complete 15-minute acceptance with all required reporting enabled.",
       "path": "doc/protocol/native-onboarding.md"
     },
     "agent": {
@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Complete counter semantic qualification and online final-session publisher integration, implement mandatory policy/AP/STA/neighbor metrics, then repeat full sustained acceptance. Raw kernel removal acquisition is now independently verified.",
+      "next": "Qualify AP/STA and final-session measurements and integrate required reporting. The optional owned Ethernet profile now feeds checked neighbor measurements to the native controller; physical and multi-neighbor profiles remain pending.",
       "path": "doc/protocol/native-onboarding.md"
     },
     "engine": {
@@ -843,10 +843,148 @@
       "title": "Native raw forwarding and recovery evidence",
       "description": "308 received samples and 305 checked intervals, independent client-transit capture and actual controller interface discovery; per-neighbor measurement qualification remains pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/neighbor-discovery-binding.md",
+      "title": "Bind the virtual agent to observed pod interfaces",
+      "description": "Trace pod-side discovery through OVSDB into native topology; learn independent identity leases and the passive-observer recovery check.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/neighbor-binding/README.md",
+      "title": "Live neighbor identity and recovery evidence",
+      "description": "321 bound samples, four independently matched discoveries and 28 native controller interface inventories; preserved failed attempts and remaining measurement limits.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/backhaul-counter-accounting.md",
+      "title": "Learn what backhaul counters really count",
+      "description": "Reconcile packet/byte intervals and reproduce a controlled egress-drop experiment; distinguish successful interface accounting from complete loss and capacity measurements.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/backhaul-accounting/README.md",
+      "title": "Backhaul counter reconciliation and loss evidence",
+      "description": "325 checked intervals, 17 independently observed drops absent from interface error counters, preserved capture failure and verified traffic-control restoration.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/egress-accounting-source.md",
+      "title": "Carry observed egress losses through OVSDB",
+      "description": "Follow passive kernel counters and configuration events through the simulated pod manager to EMOSA; learn disjoint loss accounting, freshness and recovery baselines.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/egress-accounting/README.md",
+      "title": "Controlled egress loss and live OVSDB recovery evidence",
+      "description": "17 injected losses accounted for without parent duplication; 292 live intervals across three connection generations. Complete native metrics and sustained acceptance remain pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/receive-counter-accounting.md",
+      "title": "Understand receive loss and common backhaul intervals",
+      "description": "Distinguish interface arrival from client delivery, read SLL2 direction, and carry selected receive/transmit accounting through OVSDB with fresh recovery baselines.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/receive-accounting/README.md",
+      "title": "Ingress loss and common-window native recovery evidence",
+      "description": "17 ingress drops, 12 capture-reconciled common windows, 293 live intervals and 295 independently audited forwarding windows; two failed capture audits preserved.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/virtual-link-capacity.md",
+      "title": "Calibrate an explicit virtual-link service",
+      "description": "Learn framing overhead, declared rate, observed service work and recovery baselines; distinguish this diagnostic from a complete neighbor metric.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/virtual-capacity/README.md",
+      "title": "Virtual-link calibration and native recovery evidence",
+      "description": "Complete independent packet sequences, bounded service windows, missing-framing attempts and live OVSDB recovery. Full metric publication remains pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/shaped-backhaul-accounting.md",
+      "title": "Combine shaped-link service and actual packet loss",
+      "description": "Trace action, scheduler and driver losses; reproduce queue overflow and both action directions, then verify common intervals through OVSDB recovery.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/shaped-backhaul/README.md",
+      "title": "Combined service/loss and native recovery evidence",
+      "description": "19,124 independently reconciled queue drops, 17 losses in each selected action direction and 291 native intervals across both recovery faults. Complete metric publication remains pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/native-peer-metrics.md",
+      "title": "Deliver measured neighbor metrics to the native controller",
+      "description": "Learn the isolated peer path, guarded OVSDB measurement mapping, query/response correlation and independently observed controller receipt.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/native-peer-metrics/README.md",
+      "title": "Native peer metrics and recovery evidence",
+      "description": "Actual path withdrawal, OVSDB reconnect and process restart, matching native interface statistics, and preserved startup-channel and audit failures.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/ap-metric-reports.md",
+      "title": "Assemble complete AP, radio and client reports",
+      "description": "Learn measurement guards, required companions, durable periodic reservation, synthetic frame checks and the remaining live-source boundary.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/ap-reporting/README.md",
+      "title": "AP reporting component and native recovery evidence",
+      "description": "Independently decoded synthetic reports, native withholding/deadlines, actual recovery faults and the retained peer-query timing failure.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/native-lifecycle.md",
+      "title": "Native shutdown and the full recovery workload",
+      "description": "Compare real C++ library lifetimes, test interrupted-install restoration, and observe loaded libraries and normal process exits after 15 minutes.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/native-lifecycle/README.md",
+      "title": "901-second lifecycle and recovery evidence",
+      "description": "All 15 measured native neighbor replies, continuous traffic, real recovery faults, exact restoration and clean exits; AP/STA reporting remains pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/live-session-reasons.md",
+      "title": "Join live disconnect reasons to final raw samples",
+      "description": "Learn the passive hwsim observer, association identity, bounded clocks and fail-closed join. Counter conversion and wire delivery remain pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/session-reasons/README.md",
+      "title": "Live disconnect joins and recovery evidence",
+      "description": "A 15-minute owned workload, independent packet review, preserved clock and receipt failures, and exact baseline restoration.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/native-ap-esp.md",
+      "title": "Fix native reception of sparse AP service fields",
+      "description": "Learn why absent ESP entries change offsets, build the optional controller fix and reproduce native receipt and malformed-array checks.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/ap-esp/README.md",
+      "title": "Sparse ESP controller crash and corrected receipt",
+      "description": "Actual baseline SIGSEGV, 240 compiled cases and 16 live packet/inventory cases; measurement and complete reporting qualification remain pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/bbf-data-elements.md",
+      "title": "Use public BBF metric definitions",
+      "description": "Compare 33 pinned USP/CWMP definitions, learn millisecond and rate units, reject unknown counters and width overflow, and separate representation from source qualification.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "forwarding/unit-results.xml",
-    "ovsdb": "forwarding/ovsdb-results.xml"
+    "unit": "bbf-data-elements/unit-results.xml",
+    "ovsdb": "native-lifecycle/ovsdb-results.xml"
   }
 }

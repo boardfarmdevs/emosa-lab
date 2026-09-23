@@ -3810,13 +3810,568 @@ the next step beyond chapter 13.20's single inventory snapshot:
 **Why is `measurement_source_qualified` still false?** We now have the raw
 observations and a checked transport path. We must still establish which packets
 belong to each neighbor, what each error/drop counter means for the selected
-IEEE field, and how to estimate capacity and availability. The virtual agent's
-represented topology also needs a live binding to the observed interfaces.
+IEEE field, and how to estimate capacity and availability. Chapter 13.22 explains
+the new live binding between the virtual agent's topology and observed interfaces.
 Publishing raw counters alone does not close those requirements.
 
 **Learning checkpoint:** explain the difference between a cumulative sample,
 a valid interval, a whole-interface count and a qualified per-neighbor report.
 Find the explicit unknown state and explain why it must not be displayed as zero.
+
+### 13.22 Learn how the controller becomes an observed neighbor
+
+Knowing a controller's address is different from observing its connection to a
+particular pod interface. The [neighbor-discovery guide](../protocol/neighbor-discovery-binding.md)
+connects chapter 13.21's port inventory to real discovery packets received at the
+simulated pod's `eth1` backhaul. A separate passive observer is necessary because
+the adapter's `probe0` interface is a different endpoint on the VM bridge.
+
+1. Read the guide's diagram. Follow one controller Topology Discovery into the
+   pod observer, the independent manager, OVSDB and the adapter's binding. The
+   observer records packet facts; it does not configure the pod or authenticate
+   the controller. The owned lab supplies the trusted endpoint scope.
+2. Compare the AL-address and interface-address TLVs in a captured discovery.
+   The controller AL identifies a device; its interface MAC identifies one end
+   of a link. Compare the latter with the independently observed controller
+   `eth1` MAC. Do not substitute the known AL address for an unknown interface.
+3. Run the retained binding checker on HOST. It compares actual packet bytes
+   and timing at two observation points, then checks the interfaces and bridge
+   tuple in every emitted topology response. The virtual agent keeps its AL
+   address while reporting the pod's three actual interface identities.
+4. Inspect `neighbor-gap-check.json`. The harness pauses the passive observer,
+   not the AP. Its heartbeat becomes stale, so topology reporting becomes
+   unavailable. Fresh OVSDB authority, radio observations and traffic survive.
+   Resume must restore the binding without another onboarding or Config write.
+5. Run the guide's focused VM experiment. Include the new observer helper in
+   staging and allow roughly one minute for the controller's first periodic
+   discovery. The harness waits for an observation; it does not invent one to
+   shorten startup. This preparation is outside the active test duration.
+6. Compare all three limited attempts with the fourth run. The first two exposed
+   missing discovery at the packet receive point on a Linux bridge port. The
+   third fixed reception but missed the initial discovery in the independent
+   capture. The fourth starts capture before controller startup. Retained
+   evidence explains both the working receive path and its independent audit.
+
+**Why are metrics still pending?** A valid link identity tells us which endpoints
+a report would describe. It does not establish per-neighbor packet attribution,
+error accounting, throughput or availability. Ethernet media codes are still
+explicit simulator fixtures, not a measured physical PHY. This step establishes
+the identity prerequisite for those measurements.
+
+**Learning checkpoint:** distinguish controller identity, sending-interface
+identity, a pod forwarding port, an observation deadline and configuration
+authority. Explain why pausing an observer must not look like the client leaving.
+
+### 13.23 Learn what a backhaul counter really counts
+
+A counter named `tx_packets` is not automatically the number of packets a client
+offered to the backhaul. Packets can be discarded before the driver counts a
+successful transmission. The [backhaul accounting guide](../protocol/backhaul-counter-accounting.md)
+explains this distinction using the actual owned pod forwarding path.
+
+1. On HOST, run the guide's read-only audit of the retained native capture. It
+   compares each packet/byte delta with a bounded time interval, including
+   forwarded client traffic. Find an exact count window and a window with
+   boundary uncertainty. The checker must not invent a precise timestamp.
+2. Read the diagram and locate the egress traffic-control action before veth
+   accounting. Predict whether a packet dropped there appears in a successful
+   transmit count or in the driver's error counter.
+3. Run the retained loss checker. It finds 17 requests entering the pod, 17
+   action drops, no corresponding frames on the backhaul and no replies. The
+   ordinary interface error/drop counters still read zero for that loss.
+4. Reproduce the guide's short VM experiment only while the native lab is idle.
+   It temporarily drops a selected wired ICMP flow, then removes its own rule.
+   Normal and restored phases must pass; both captures must be complete. Read
+   the cleanup result before any later native run.
+5. Inspect the reported veth speed and the cited driver implementation. Its
+   10-Gbit/s constant is not a measured maximum capacity. A publisher must not
+   turn that convenient number into an unqualified throughput claim.
+
+**Why do this before sending metrics?** Correct encoding can deliver incorrect
+measurements perfectly. This experiment identifies a concrete loss blind spot
+and establishes which recorded packet/byte values agree with independent
+capture. The next publisher needs software-path loss accounting and qualified
+capacity/availability, then native-controller verification.
+
+**Learning checkpoint:** explain how 17 packets can be lost while `tx_errors`
+and `tx_dropped` stay zero. Distinguish a packet-count audit from complete link
+metric qualification and from the full 15-minute sustained acceptance run.
+
+### 13.24 Follow measured egress losses into EMOSA
+
+Chapter 13.23 identified a missing measurement. This chapter follows its new
+source from the simulated pod into the adapter. **Egress** means traffic leaving
+an interface. A Linux traffic-control action can drop a packet on that path
+before the interface driver records a successful transmission.
+
+The [egress accounting guide](../protocol/egress-accounting-source.md) includes
+the architecture diagram, complete staging commands and both experiments.
+
+1. Start with the diagram. The passive collector reads kernel statistics;
+   the independent pod manager publishes those facts through OVSDB; EMOSA
+   validates them and computes deltas. These are observations of the owned
+   simulator, not Config requests or a new physical-pod API. The collector
+   itself changes no network settings.
+2. Read the four output counters. Successful packets and bytes describe veth
+   transmissions. Driver drops and the selected action drops occur at distinct
+   accounting stages. Their deltas can be added for this qualified path. The
+   parent qdisc counts the same action drops, so adding it would count one loss
+   twice. Unsupported rules make the source unavailable instead.
+3. Inspect `configuration_epoch` in the retained observer log. An **epoch** marks
+   one possible counter lifetime. Deleting and recreating a rule can reset its
+   counters while preserving its name. Kernel notifications therefore invalidate
+   the current baseline. New collector, connection and adapter lifetimes also
+   require a baseline before subtraction is meaningful.
+4. On HOST, run the guide's retained-loss replay and independent checker. The
+   replay exercises production accounting against recorded observations. The
+   checker separately compares raw differences and packet captures. Expect
+   17 losses without duplicate parent counts. Explain why replay alone does not
+   demonstrate that a live pod connected to the adapter.
+5. Run the retained native checker. It follows collector records through actual
+   manager publications and OVSDB to 292 adapter intervals. Inspect all three
+   connection generations. The telemetry-only pause keeps this separate source
+   valid; pod connection loss withdraws it. Recovery must not subtract counters
+   across a lost connection or create another Config effect.
+6. Reproduce the short loss experiment in the idle owned lab, then the native
+   210-second recovery experiment with a different label. The loss probe alone
+   installs its temporary selected rule. Check cleanup before starting the next
+   experiment. Follow the staging commands exactly: the current native harness
+   needs both passive observer helpers.
+
+**Why are full link metrics still unavailable?** This source establishes selected
+transmit accounting. It supplies no receive-loss qualification, physical media,
+capacity or availability estimate. The native handler must keep those gaps
+explicit. Sending correct packet counts alongside invented capacity would still
+be an incorrect report. Complete neighbor metrics, AP/STA reporting and final
+session statistics must join the eventual 15-minute acceptance run.
+
+**Learning checkpoint:** distinguish a counter baseline, a valid interval, a
+configuration epoch, component replay and a live OVSDB handoff. Explain why
+`measurement_source_qualified` remains false even when this source is available.
+
+### 13.25 Distinguish receiving a packet from delivering it
+
+An interface can receive a frame that never reaches the client. The
+[receive-accounting guide](../protocol/receive-counter-accounting.md) demonstrates
+this with the same wired ping, now dropping replies as they enter the pod's
+backhaul. It joins the transmit and receive observations from chapter 13.24 into
+one interval, so their timing can be compared meaningfully.
+
+1. Follow the guide's packet-path diagram. Locate the interface-arrival count,
+   ingress action and client delivery point. Predict which counts should change
+   when the action discards 17 replies. The packets have already reached the
+   interface; their later loss cannot erase that observation.
+2. On HOST, run the retained receive checker. Compare the 17 action drops with
+   unchanged ordinary receive error/drop fields. Find the extra ARP packets in
+   the whole-interface capture. Explain why a ping-only capture cannot account
+   for every interface packet or byte.
+3. Inspect the Linux SLL2 capture. It retains direction and interface index;
+   outgoing on the VM peer means incoming at the pod. Its capture header is six
+   bytes larger than Ethernet's header. The checker must account for that
+   difference, and must reject an unsupported media/header format.
+4. Review the first two limited attempts. Their direction-selected files do not
+   match filter totals, so they cannot establish complete packet accounting.
+   The final attempt retains both directions and classifies them explicitly.
+   Zero kernel drops alone never makes an incomplete capture sufficient.
+5. Inspect a `backhaul_accounting.window`. All eight counter deltas share the
+   same pair of bounded reads. A reset in either direction or a new connection
+   requires a fresh baseline. Read the source's unknown/expired states before
+   comparing any numbers with a controller report.
+6. Use the guide to reproduce the short idle-lab ingress experiment, then its
+   native recovery check. Check restoration between experiments. The existing
+   `egress-observer.py` already observes both directions; the historical helper
+   name does not mean a new pod API or second OVSDB connection is required.
+
+**Why isn't this complete neighbor reporting?** These are checked interface
+observations for selected paths. A complete link profile must also qualify peer
+attribution, remaining loss paths, media and capacity/availability. The adapter
+continues to withhold an incomplete native metric response. AP/STA reporting
+and final-session statistics remain necessary for full sustained acceptance.
+
+**Learning checkpoint:** explain how an interface-arrival count and a later
+ingress-loss count can both increase for the same packet without contradiction.
+Distinguish that from counting the same loss twice through parent/action counters.
+
+### 13.26 Measure a declared virtual-link service
+
+**Capacity** asks how much traffic a link could carry. **Utilization** asks how
+much of that service is currently used. A packet counter alone answers neither
+question: ten packets could be large or small, and could arrive over a
+millisecond or an hour. The software veth's fixed speed value is also not a
+measurement of the lab's usable service.
+
+The [virtual-link exercise](../protocol/virtual-link-capacity.md) adds an optional
+100 Mb/s software shaper to the simulated pod's outgoing backhaul. A **shaper**
+queues packets and releases them according to a declared rate. It gives us a
+service model whose behavior we can test with independent traffic and capture.
+It runs only in the owned lab; it never installs anything on a physical pod.
+
+1. Read the guide's packet-path diagram. Locate the sender, pod input, temporary
+   shaper, independent output capture and receiver. These observations have
+   different roles: the sender records attempted work, the output capture sees
+   forwarded frames, and the receiver establishes application delivery.
+2. Work through the framing example. A 1,500-byte payload occupies more than
+   1,500 bytes of Ethernet service because framing and inter-frame spacing also
+   consume time. Tiny frames need padding. The model charges these costs to
+   the shaper even though capture files do not contain the modeled extra bytes.
+   Its configured size table also rounds odd adjusted lengths upward to two
+   bytes; the guide explains the independently observed one-byte discrepancy.
+3. On HOST, replay the retained calibration and run its independent checker.
+   Compare half load, saturation and small-packet load. Read actual packet
+   counts and observed rates rather than treating the requested 160 Mb/s send
+   target as a measured offered load. The checker also accounts for unrelated
+   local traffic in the whole-interface intervals.
+4. Inspect `virtual_capacity.service_estimate`. At approximately half of the
+   declared rate, about half of the modeled service remains available. Read the
+   interval bounds before interpreting its precision. A brief burst may exceed
+   the average rate because the shaper has token credit; token waits are not
+   packet losses.
+5. Inspect the retained missing-framing attempt. The original collector read
+   basic queue statistics without the detailed size table. EMOSA withheld the
+   estimate because the service contract was incomplete. Explain why remembering
+   the setup command cannot substitute for observing current configuration.
+6. Follow the guide's staging and calibration commands in the idle owned VM.
+   Use new labels and confirm restoration before running its native recovery
+   command. `--virtual-link` opts into the temporary shaper; ordinary native
+   experiments keep the existing unshaped path.
+7. Run the native checker. Trace the observation through the manager and OVSDB,
+   then inspect new baselines after connection loss and adapter restart. A pause
+   in station telemetry must not erase this independent service observation;
+   losing the actual pod connection must withdraw it.
+
+**Why aren't these numbers already in native neighbor replies?** The optional
+estimate covers declared software service. It does not establish a physical
+PHY, a complete media profile, all losses or which neighbor owns every packet.
+The native publisher needs those inputs together. The unshaped loss source
+rejects the optional shaper; the combined source in §13.27 checks selected
+losses and service work together. Keep its
+scope separate from AP/STA reporting and final disassociation statistics.
+
+**Learning checkpoint:** distinguish configured rate, observed output rate,
+application throughput, modeled occupied service and unused modeled service.
+Explain why a short calibrated recovery regression does not replace the full
+15-minute integrated acceptance run.
+
+### 13.27 Account for loss while the virtual link is shaped
+
+A full queue and a busy queue are different conditions. A busy queue delays
+packets; a full queue may discard them. In the previous exercise the sender can
+wait for room in its own socket buffer before it manages to fill the pod queue.
+Asking for 160 Mb/s therefore does not by itself demonstrate a loss test.
+
+Follow the [combined accounting guide](../protocol/shaped-backhaul-accounting.md):
+
+1. Draw the outgoing path: action filter → scheduler → veth → independent
+   capture → receiver. Mark where a dropped packet stops. The losses at these
+   separate stages can be added for this bounded experiment, while the
+   scheduler's root and child counts can describe the same dropped packet.
+2. Replay the retained queue-loss result on HOST. It uses eight sender sockets
+   so the sender actually offers more traffic than the service can carry.
+   Match the missing sequence numbers to queue drops and delivered sequences
+   to the receiver. Read actual counts, not the configured target rate.
+3. Compare incoming and outgoing action-loss results. Incoming packets can
+   appear in the interface counters and still be discarded before reaching
+   the client. This explains why an arrival count is not a delivery count.
+4. Read `shaped_backhaul.window` and `service_estimate`. The 12 raw deltas share
+   one pair of read bounds and one counter lifetime. Locate root queue drops,
+   selected action drops, interface drops and token waits. Explain why token
+   waits are excluded from `transmit_losses`.
+5. Follow the guide's exact staging, run, collection and independent-check
+   commands in the idle owned VM. Check restoration after each probe. A loss
+   test with no observed loss is an incomplete test, not proof of loss handling.
+6. Inspect the native run and its two recovery faults. Locate the withdrawn
+   source during OVSDB loss, then the new baselines after reconnection and
+   process restart. Confirm three authenticated operations and one total
+   Config-write attempt. Keep this short regression separate from the full
+   15-minute acceptance run.
+
+**Learning checkpoint:** explain why accurate whole-interface counts still
+need neighbor attribution and a media/availability contract before they can
+be sent as complete IEEE 1905 metrics. The adapter's own control multicast can
+also reach the pod-side capture in this lab topology.
+
+### 13.28 Deliver the measured peer report to the controller
+
+The previous exercises proved individual measurements. The
+[native peer-metric exercise](../protocol/native-peer-metrics.md) now connects
+them to an actual controller query and response. This is the missing distinction
+between a number in an adapter log and a number consumed by another system.
+
+1. Read the three-port diagram. Locate EMOSA's control port, the pod's backhaul
+   port and the controller port. The first two are isolated from each other;
+   each can reach the controller. This prevents the adapter's own multicast
+   from being counted as incoming traffic from the controller.
+2. Read the field-mapping table. Distinguish interval packet counts, estimated
+   service capacity and idle time. Explain why the PHY rate is unknown even
+   though the software service has a configured rate. These are declared lab
+   assumptions, not information learned about a physical pod.
+3. Replay the retained audit on HOST. Follow a query ID to its response, then
+   to the exact OVSDB-backed counter interval and the controller's interface
+   statistics. The source, packet capture and receiving controller are three
+   separate observations; a successful send call alone would be insufficient.
+4. Stage and run the guide's commands. `--neighbor-metrics` enables the owned
+   profile; `--peer-path-gap-check` deliberately breaks its isolation condition.
+   Watch metrics become unavailable while ordinary control and client traffic
+   continue. Restoration needs a new interval; old counters cannot carry across
+   the changed path.
+5. Examine query timing around each fault and shutdown. An unanswered query
+   during confirmed loss of the measurement source is recorded explicitly.
+   An unanswered healthy-path query fails the audit. Worker-exit timestamps
+   distinguish teardown traffic from active operation without guessing.
+6. Check all restoration records and the separate recovery audit. This short
+   experiment supplies peer-reporting evidence for the owned lab. AP/STA reports,
+   final-session statistics and complete 15-minute acceptance still need their
+   own implementation and evidence.
+
+**Learning checkpoint:** trace a measured fact through the separate manager,
+OpenSync-schema OVSDB, EMOSA's guarded publisher, real IEEE 1905 response and
+native controller inventory. Explain the scope of every claim along that path.
+
+Read the retained failed attempts too. One had correct peer reports but missed
+early channel queries while radio telemetry was still warming up. Its recovery
+audit therefore fails. The fix allows a short bounded wait for fresh radio
+measurements within the original response deadline; it cannot report old data
+or extend the deadline on a duplicate request. This illustrates why passing one
+reporting feature is insufficient to declare the whole system ready.
+
+### 13.29 Build complete AP reports and preserve reporting deadlines
+
+A reporting policy is a list of obligations. An AP Metrics Response is the
+message that fulfils a particular reporting obligation. Measurements are the
+facts that justify its contents. These are three different things: receiving a
+policy does not create measurements, and generating valid bytes does not prove
+that they describe the pod.
+
+The new [AP report guide](../protocol/ap-metric-reports.md) takes you through all
+three boundaries. Work on HOST first; its synthetic exercise needs no VM.
+
+1. Read the content table. Locate AP Metrics, AP Extended and Radio Metrics,
+   then the four client companion types. The link inclusion flag requires both
+   basic and extended link information. Our native controller enables all three
+   client inclusion flags, so EMOSA cannot silently omit a difficult companion.
+2. Replay the retained independent checker. Trace the controller query MID to
+   the response. Compare the periodic response, which has no preceding query,
+   and the query intentionally left unanswered because its required link data
+   is missing. All example values are invented and clearly labeled synthetic.
+3. Generate a fresh capture using the guide's command. Read the fake-clock
+   schedule at times 70 and 130: the first due report is sent, the second is
+   withheld. A fast fixture run does not represent two minutes of real operation.
+4. Explain why the schedule is saved before network I/O. A restart after sending
+   but before saving its outcome leaves a conservative unknown outcome. EMOSA
+   must preserve the next deadline and must not turn uncertainty into proof of
+   controller receipt. Reopening the fixture store is not an actual process kill.
+5. Distinguish `None`, a known empty queue inventory and a numeric zero. Missing
+   radio noise is not zero noise; no known TID queue sizes does not mean all
+   queues are empty. These distinctions stop plausible but false telemetry.
+6. Run the native withholding and recovery audits on the retained 210-second
+   experiment. Here the real controller keeps requesting reports, while the
+   missing qualified AP source prevents transmission. The audit expects three
+   missing periods and no AP reports. Actual OVSDB loss and SIGKILL must preserve
+   those deadlines without duplicate Config writes or loss of client traffic.
+7. Read the retained peer-query failure too. A query arrived before a fresh
+   neighbor interval was published, although the interval became available
+   within its one-second response deadline. The bounded waiting fix retains
+   that deadline and authority. The combined regression must still pass its
+   independent peer audit before being described as successful.
+
+**Learning checkpoint:** explain separately what a validated observation, a
+complete message, a successful send and an independently observed controller
+update prove. Native AP measurements, final-session reporting and the full
+integrated 15-minute acceptance remain required. ESP conversions and referenced
+Data Elements definitions cannot be replaced by invented fixture values.
+
+### 13.30 Prove clean native shutdown after the full workload
+
+A native process can successfully onboard a virtual agent, exchange traffic and
+then crash during cleanup. Earlier evidence records exactly that outcome. The
+workload's functional pass and the shutdown failure both matter when deciding
+whether an operator can rely on the system.
+
+Follow the [native lifecycle guide](../protocol/native-lifecycle.md). This work
+changes the selected C++ controller container's BPL library. EMOSA remains the
+Python EasyMesh-to-OpenSync adapter; the simulated OpenSync pod still has its
+separate manager. No native component is installed on a physical OpenSync pod.
+
+1. Read the ownership diagram. Ambiorix owns the runtime connection list, while
+   individual model objects free their own connections. Explain why the runtime
+   must survive those models. The old shared-library global owner caused the
+   model to survive too long; the patch corrects construction/destruction order.
+2. Build the optional `--lifecycle` candidate in a new HOST directory. Read the
+   C++ probe's baseline and candidate event sequences. This uses the actual BPL
+   libraries but a dummy model; it establishes ownership order, not live radio
+   behavior. The ordinary native counter regression must still pass too.
+3. Stage the candidate and its full provenance. The candidate directory is
+   separate from the container's installed runtime. The wrapper installs the
+   experimental executable/library only after ownership, idleness, hash and
+   backup checks. Do not copy a candidate directly over a running installation.
+4. Run the intentional post-install failure first. Expect a nonzero command
+   exit and a result showing restored original hashes. Check the actual restored
+   files. This demonstrates that the additional library participates in recovery,
+   rather than trusting a generic `baseline_restored` flag.
+5. Run 900 active seconds with client cycles, continuous independent traffic,
+   measured peer replies, actual OVSDB interruption and adapter SIGKILL. Startup
+   and cleanup add time. Poll the same live process if a console wait expires;
+   a timeout in an observer does not mean the experiment failed or stopped.
+6. Compare `native-processes-start.json` and `native-processes-stop.json`. Both
+   native PIDs should remain the same and map the recorded candidate BPL library.
+   Their stop policy must still use SIGTERM with no special success-exit codes.
+   In `result.json`, controller and helper must exit normally with status zero.
+7. Run every independent audit in the guide. A clean main-process exit, restored
+   baseline, successful reconnect and correctly received metrics each need their
+   own evidence. AP reports remain withheld while their sources are unqualified;
+   the resulting missing reporting periods must stay visible throughout the run.
+
+**Learning checkpoint:** explain why marking SIGABRT as a successful exit would
+hide a defect, why a library lifetime probe needs a live follow-up, and why a
+15-minute operational pass still cannot establish complete reporting or physical
+OpenSync-pod viability by itself.
+
+### 13.31 Capture the actual disconnect reason while the system runs
+
+A client-leave notification tells the controller that a station departed. The
+additional final-statistics message must explain why and carry final counters
+for that exact association. A polled row disappearing from OVSDB cannot provide
+either the reason or the last packets. Even a correct reason found afterward in
+a capture is too late to drive the live sender.
+
+Follow [live final-session reasons](../protocol/live-session-reasons.md). The
+owned observer reads the existing hwsim monitor and the AP's kernel event log;
+it changes no radio configuration. The two streams can arrive in different
+orders, so the join uses the association lifetime, kernel timestamp, interface
+and BSSID rather than assuming adjacent records belong together.
+
+1. Run the focused tests and inspect the retained independent audit on HOST.
+   Identify the exact radio frame and kernel removal event for one joined record.
+   Its counters still have Linux raw field names; they are not yet the required
+   EasyMesh quantities.
+2. Stage the current observer, simulation module and native harness while VM is
+   idle. Use the existing optional lifecycle candidate so normal shutdown remains
+   part of the experiment. Preserve the original controller/library for restoration.
+3. Run the 900-second workload with client cycles, real OVSDB interruption and
+   adapter SIGKILL. The earlier 210-second pilots remain separate, including the
+   failed clock guard and missing final receipt observations. Watch the
+   collector's health and join count.
+4. Read `session-reasons.jsonl`. Each joined record must contain the actual frame,
+   association identity and final kernel event. No reason may be inferred from a
+   timeout. Missing, ambiguous, late or interrupted observations must fail.
+5. Run the independent checker. It matches the online result to a separate radio
+   pcap, tshark's reason decode and the EasyMesh leave notification, and checks
+   capture loss and measured delivery time. Both management recoveries must still
+   preserve traffic and avoid additional Config writes.
+6. Keep the remaining boundary explicit. The collector does not call the wire
+   sender because kernel byte, packet, error and retry semantics still need
+   qualification against the selected Data Elements definitions. A physical pod
+   must supply its existing qualified telemetry; this lab observer is not a
+   proposed installation on the pod.
+
+**Learning checkpoint:** distinguish an actual reason, an association-bound raw
+final sample, a qualified counter conversion and a report acknowledged by the
+controller. Each is necessary evidence for a different part of the same path.
+
+### 13.32 Verify that the native controller can receive sparse AP service fields
+
+An optional field does not reserve space when absent. EasyMesh's AP Metrics TLV
+always carries BE service information, while BK, VO and VI can be omitted. The
+old native controller assumed all four entries occupied fixed positions. A
+BE+VI report therefore caused an out-of-bounds lookup and a real SIGSEGV.
+This defect belongs to the evaluation controller, not to the OpenSync pod.
+
+Follow [native AP service-field reception](../protocol/native-ap-esp.md):
+
+1. On HOST, inspect the retained baseline failure and corrected packet/inventory
+   audit. Read a six-octet BE+VI array and locate VI at offset three, not nine.
+2. Build the optional controller with `--onboarding --lifecycle --ap-esp` in a
+   new directory. The compiled test uses the real TLVF library and the same
+   decoding helper as the controller. Confirm eight valid and 232 invalid cases.
+3. While VM is idle, stage the new controller, BPL library, provenance and current
+   wrapper/probe files. Existing backup, ownership and restoration checks apply.
+4. Run `--ap-esp-probe` with a fresh label. EMOSA first onboards the simulated
+   OpenSync pod. Its worker then stops, and a separate diagnostic sends explicit
+   synthetic AP TLVs to test the controller's parser. This mode cannot accompany
+   an active soak and does not publish qualified telemetry.
+5. Collect the capture, per-case controller inventory, exact candidate reference
+   and restoration observation. Verify all present categories, unchanged values
+   after malformed inputs, clean native shutdown and restored baseline bytes.
+6. Keep parser acceptance separate from measurement correctness. The fix handles
+   presence and length; the ESP estimator, subfield conversion, complete AP/STA
+   source and final-session reporting still require qualification.
+
+**Learning checkpoint:** explain why receiving a correctly sized TLV, assigning
+its bytes to the right controller field and establishing the meaning of those
+bytes are three separate checks.
+
+### 13.33 Learn metric meanings from the public BBF data model
+
+A **data model** defines named quantities: their meaning, direction, type and
+units. An **encoding** puts a value into a message. A **measurement source**
+establishes that the value actually describes a specific radio, BSS or client at
+a known time. We need all three. A field can be encoded perfectly and still
+report the wrong thing if its source counts a different layer or time interval.
+
+For example, the BBF station field `UtilizationReceive` measures accumulated
+milliseconds spent receiving from that station. The similarly named radio
+`ReceiveSelf` is a time fraction on a 0–255 scale. Copying one into the other
+would not be a harmless naming choice: it would change the reported quantity.
+Likewise, the last-used data rate is in kbps, while estimated achievable MAC
+throughput is in Mbps and requires a separate estimate.
+
+The official public **BBF TR-181 2.17** USP and CWMP models now provide selected
+definitions for independent implementation. Those are two management-protocol
+views of the model; using their definitions does not add a USP or CWMP transport
+to this lab. The exact WFA `TR-181-2-17_DEr3.xlsx` package remains pending for
+comparison. BBF's 2.17 release notes identify R2.1 additions, so we do not assume
+the spreadsheet and public XML are identical from their filenames.
+
+Run this exercise on **HOST**, in the checkout with its installed `uv` environment.
+It needs no running lab VM, radio or pod connection.
+
+1. Read the [BBF metric guide](../protocol/bbf-data-elements.md), especially its
+   units table and counter limitations. Learn the difference between an
+   `unsignedLong` value and a `StatsCounter64` value. The latter reserves its
+   maximum value to mean unavailable; converting it blindly would create a
+   very large false statistic.
+2. Reproduce the pinned source comparison:
+
+   ```bash
+   python3 scripts/review-bbf-data-elements.py .lab/bbf-manual-01.json
+   ```
+
+   Use a new output filename. On the first run the script downloads public XML
+   into your home directory's `.local/share/emosa/specifications/bbf-tr181-2.17.0/`,
+   outside Git. It checks full-file hashes and compares 33 selected definitions
+   from both publisher views. It refuses changed inputs rather than silently
+   switching editions. `--offline` reuses the exact cached files without network
+   access. The output contains references and hashes, not a redistributed copy
+   of the specifications.
+3. Inspect `selected_parameters: 33` and
+   `usp_cwmp_selected_definitions_equal: true`. Follow a parameter's publisher
+   link and compare its units with the guide. The result deliberately retains
+   `wfa_der3_equivalence_verified: false` and
+   `measurement_source_qualified: false`.
+4. Run the conversion and reporting checks:
+
+   ```bash
+   uv run pytest -q tests/test_bbf_metrics.py tests/test_ap_metrics.py tests/test_disassociation.py
+   ```
+
+   These exercise actual wire-value builders in memory. A 1000 ms interval
+   becomes `c50004000003e8`; no packet is transmitted. Tests also reject missing
+   counters and unreviewed width overflow. Passing proves the bounded
+   conversion behavior, not that a pod measures anything every second.
+5. Trace the output of `src/emosa/wire/bbf_metrics.py` into the existing typed
+   radio/AP/link report objects. The module consumes already qualified BBF
+   representations. It does not replace the live publisher or relax membership,
+   identity, freshness or complete-report checks. In particular, it does not
+   treat hwsim's dummy radio survey as a measurement.
+6. Return to sections 13.31 and 13.32. We now have a live reason join, a corrected
+   controller parser and selected public metric definitions. The connected next
+   step is to qualify the actual AP/STA and final-counter sources, connect their
+   complete observations, verify received values, and repeat the 15-minute
+   recovery run with all required reports enabled.
+
+**Learning checkpoint:** explain why receiving an integer from a pod does not
+establish its units, direction, counter epoch or availability. Identify which
+check establishes each fact before the controller sees that integer.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
@@ -3991,9 +4546,13 @@ IEEE 802.11-2024 is now obtained, verified and hashed. The supplied Ethernet
 document is IEEE 802.3-2022; equivalence to the cited IEEE 802.3-2015 remains
 unresolved. The [media input review](../protocol/ieee-media-review.md) identifies
 the selected radio and Ethernet clauses inspected so far. Wi-Fi Alliance Security
-Requirements with revision to identify, Data Elements 3.0, the LLDP dependency
+Requirements with revision to identify, the exact WFA Data Elements 3.0 package, the LLDP dependency
 IEEE 802.1AB-2009 and conditional references/corrections
 remain on the acquisition checklist.
+
+The public BBF 2.17 metric definitions are now obtained, pinned and compared;
+section 13.33 explains the selected encoding work they enable. Exact WFA package
+equivalence and actual measurement-source qualification remain separate checks.
 
 EasyMesh 6.1 and WPS 2.0.10 publisher PDFs were obtained and hashed outside Git.
 Selected WSC payload rules use them; the complete Profile-1 procedure proposal

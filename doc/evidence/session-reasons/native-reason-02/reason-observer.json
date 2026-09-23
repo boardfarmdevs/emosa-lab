@@ -1,0 +1,37 @@
+{
+  "profile": "owned-hwsim-reason-join-v1",
+  "collector_epoch": "468a58c5-be4e-4aa1-bcfb-68f022009124",
+  "run_label": "native-reason-02",
+  "interface": "hwsim0",
+  "ifindex": 19,
+  "collector_sha256": "1bfd4380b21fb3a74d040facb90f7c75ed6f5e4538dd0f79969eae766c3e17dc",
+  "boot_id": "ce35a9b0-e10d-4857-83cc-730ffd177a7d",
+  "running": false,
+  "ready": true,
+  "errors": [
+    "ValueError:clock_domain_changed_or_uncertain"
+  ],
+  "joined": 0,
+  "socket_packets": 1496,
+  "socket_drops": 0,
+  "final_counter_source_qualified": false,
+  "physical_pod_changed": false,
+  "heartbeat_monotonic_ns": 45118014110007,
+  "kernel_collector": {
+    "boot_id": "4646cf49-821c-4068-9b73-60e29bc0924d",
+    "bssid": "02:00:00:ec:02:00",
+    "byteorder": "little",
+    "collector_sha256": "4db459782c15c637a82fe6c414c2ce0370dd01df8c5d884d042b75ce401321c4",
+    "event": "ready",
+    "family": 38,
+    "final_counter_source_qualified": false,
+    "ifindex": 17,
+    "interface": "wlan0",
+    "kernel": "6.8.0-139-generic",
+    "machine": "x86_64",
+    "mlme_group": 22,
+    "network_namespace": "net:[4026532652]",
+    "received_monotonic_ns": 45063017060271,
+    "received_wall_ns": 1790165960945555760
+  }
+}

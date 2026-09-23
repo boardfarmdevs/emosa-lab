@@ -65,7 +65,9 @@ The pending **Wi-Fi Data Elements 3.0 package, including
 TR-181-2-17_DEr3.xlsx**, is already in the
 [single acquisition checklist](specification-acquisition.md). Its station-counter
 definitions are relevant here as well as its collection-interval definition.
-An open-source implementation is a cross-check, not a substitute for that input.
+The [public BBF review](bbf-data-elements.md) now supplies selected parameter
+definitions and representation conversions without waiting for the spreadsheet;
+WFA equivalence, counter-source semantics and finality still need review.
 
 ## Run it step by step
 
@@ -78,6 +80,10 @@ An open-source implementation is a cross-check, not a substitute for that input.
    ```bash
    lxc file push deploy/radio-manager/station-events.py emosa-lab/opt/emosa-radio-manager/
    lxc file push deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
+   lxc file push deploy/peer-baseline/node.py emosa-lab/opt/emosa-baseline/
+   lxc file push deploy/peer-baseline/compatibility/controller-candidate.py \
+     deploy/peer-baseline/compatibility/lifecycle-observer.py \
+     emosa-lab/opt/emosa-baseline/compatibility/
    ```
 
    The runner copies the observer into the owned AP container. Its guard checks

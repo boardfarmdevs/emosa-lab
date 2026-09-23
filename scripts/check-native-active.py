@@ -21,7 +21,13 @@ def read(path):
 
 def stations(path):
     rows = {k: v for obj in read(path) for k, v in obj.items()}
-    device = [k for k, v in rows.items() if isinstance(v, dict) and v.get("ID") == AL]
+    device = [
+        k
+        for k, v in rows.items()
+        if re.fullmatch(r"Device\.WiFi\.DataElements\.Network\.Device\.\d+\.", k)
+        and isinstance(v, dict)
+        and v.get("ID") == AL
+    ]
     assert len(device) == 1
     bss = [k for k, v in rows.items() if k.startswith(device[0]) and v.get("BSSID") == BSSID]
     assert len(bss) == 1

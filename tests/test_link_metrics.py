@@ -384,3 +384,75 @@ def test_response_requires_live_timely_bound_unicast_request(rig, change):
             message, received_at, ingress=rig.binding.ingress, generation=rig.binding.generation
         )
     assert not rig.sent
+
+
+def test_early_query_waits_for_observed_interval_with_original_mid(rig):
+    assert rig.handle() == "neighbor_measurement_unavailable"
+    rig.now += 0.141  # Native failure: complete interval published 140 ms after query.
+    rig.publish()
+    rig.coordinator.tick()
+    reply = Reassembler().feed(rig.sent[0])
+    assert reply.message_type == 6 and reply.mid == 345
+    assert not rig.coordinator.waiting
+    rig.coordinator.tick()
+    assert len(rig.sent) == 1
+
+
+@pytest.mark.parametrize(
+    "loss", ["deadline", "duplicate_deadline", "context", "topology", "close", "source"]
+)
+def test_early_query_cannot_cross_deadline_or_authority(rig, loss):
+    rig.handle()
+    rig.now += 0.5
+    if loss == "duplicate_deadline":
+        rig.handle()  # Must not move the deadline to 11.5.
+    if loss in ("deadline", "duplicate_deadline"):
+        rig.now = 11
+    elif loss == "context":
+        rig.refresh((2, 1))
+    elif loss == "topology":
+        rig.topology = replace(rig.topology, neighbors1905=())
+        rig.refresh((1, 2))
+    elif loss == "close":
+        rig.coordinator.close()
+    elif loss == "source":
+        rig.reports.invalidate()
+    if loss not in ("source", "topology"):
+        rig.publish()
+    rig.coordinator.tick()
+    assert not rig.sent and not rig.coordinator.waiting
+
+
+def test_waiting_queries_have_bounded_storage_and_partial_send_is_not_retried(rig):
+    for mid in range(10):
+        rig.handle(rig.query(mid=mid))
+    assert len(rig.coordinator.waiting) == 4
+    rig.now += 0.1
+    rig.publish()
+
+    def fail(frame):
+        rig.sent.append(frame)
+        raise OSError("uncertain send")
+
+    rig.coordinator.send_frame = fail
+    rig.coordinator.tick()
+    assert len(rig.sent) == 4 and not rig.coordinator.waiting
+    rig.coordinator.tick()
+    assert len(rig.sent) == 4
+
+
+def test_duplicate_pending_query_with_uncertain_send_is_not_retried(rig):
+    rig.handle()
+    rig.now += 0.1
+    rig.publish()
+
+    def fail(frame):
+        rig.sent.append(frame)
+        raise OSError("uncertain duplicate-triggered send")
+
+    rig.coordinator.send_frame = fail
+    with pytest.raises(OSError):
+        rig.handle()
+    assert len(rig.sent) == 1 and not rig.coordinator.waiting
+    rig.coordinator.tick()
+    assert len(rig.sent) == 1

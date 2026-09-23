@@ -1,0 +1,20 @@
+{
+  "runtime_kernel": "6.8.0-139-generic",
+  "module_sha256": {
+    "/lib/modules/6.8.0-139-generic/kernel/drivers/net/veth.ko.zst": "554af4611ce9110d91cfa1f2ebbe837311be648428c8e3ad47ae9841e4c32e88",
+    "/lib/modules/6.8.0-139-generic/kernel/net/sched/sch_tbf.ko.zst": "20892514408b5d5065287967841d76e69adc593ab3937c145803765d03134b72"
+  },
+  "packages": [
+    "iproute2 6.1.0-1ubuntu6.4",
+    "libpcap0.8t64 1.10.4-4.1ubuntu3",
+    "linux-image-6.8.0-139-generic 6.8.0-139.139",
+    "linux-modules-6.8.0-139-generic 6.8.0-139.139",
+    "tcpdump 4.99.4-3ubuntu4.24.04.1"
+  ],
+  "tool_sha256": {
+    "/usr/sbin/ip": "ea200fcc3a7bf723a8e0e2a21ceb3805324812fef36f6ba0552362a9a9e65f92",
+    "/usr/sbin/tc": "28a8a72f5012c82095eb57bff8c0d3fc45e288c8c1c82ea26b6c26222451956a",
+    "/usr/bin/tcpdump": "0d28d014ffd7839852a426cfde6448bda549aef90a4937f787673a6ca3152cf0"
+  },
+  "scope": "Read-only owned VM provenance; no physical device"
+}

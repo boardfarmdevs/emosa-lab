@@ -1,0 +1,12 @@
+{
+  "label": "native-link-binding-01",
+  "native_trial_status": "failed",
+  "baseline_restored": true,
+  "cleanup_errors": [],
+  "captured_topology_discoveries": [],
+  "final_collector_frames": 0,
+  "native_neighbor_binding_checks_passed": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "finding": "No usable pod-side binding; the BSS inventory deadline expired. The later attempt identifies the slave-interface receive hook issue."
+}

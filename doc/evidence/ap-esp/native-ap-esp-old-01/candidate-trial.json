@@ -1,0 +1,30 @@
+{
+  "label": "native-ap-esp-old-01",
+  "candidate_sha256": "dd5784852f384069d40274a322b6a7530931bb8b3760d40085a3e02f7db2d55e",
+  "baseline_sha256": "737ab07f89fec1aabcc861bd90ddafda931be2e3e1a108cc7352ea2c3ecd994c",
+  "baseline_restored": true,
+  "status": "failed",
+  "operations_created": 0,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "failure_injection": false,
+  "runner_sha256": "870de7e5ac9bfdbb6c42d93b6db6be5206b6fa6cc3d3871348da57eeed8d0d59",
+  "runtime_libraries": {
+    "libbpl.so.6.0.0": {
+      "baseline_sha256": "2e4d0b2ef7dc68e11ad8e6686418555100768634f7462a24f6bb454c77b42cf6",
+      "candidate_sha256": "7bc9b040738b30759c73da2a9b3907328e1c468141a332a55e56fd71adf68a0d",
+      "unstripped_sha256": "c38342f3274f70f47d65a4b82f23e62c2358f87ef7222e0348a3ad26c421c183"
+    }
+  },
+  "runtime_library_restoration": {
+    "libbpl.so.6.0.0": {
+      "restored_sha256": "2e4d0b2ef7dc68e11ad8e6686418555100768634f7462a24f6bb454c77b42cf6",
+      "restored": true
+    }
+  },
+  "candidate_installed": true,
+  "error": "CalledProcessError",
+  "restoration_shutdown": {
+    "em-baseline-controller": []
+  }
+}

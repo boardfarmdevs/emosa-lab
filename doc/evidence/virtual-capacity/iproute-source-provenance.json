@@ -1,0 +1,32 @@
+{
+  "source_package": "iproute2",
+  "version": "6.1.0-1ubuntu6.4",
+  "source_base": "https://archive.ubuntu.com/ubuntu/pool/main/i/iproute2/",
+  "inputs": {
+    "iproute2_6.1.0-1ubuntu6.4.debian.tar.xz": {
+      "sha256": "d127ad985c91e0cc4192876721e533efc893deed08e256b3662205d8401552cd",
+      "size": 47000
+    },
+    "iproute2_6.1.0-1ubuntu6.4.dsc": {
+      "sha256": "e1a68d3819d17295c958922bc5a4bd8a0df951d183e4414f9661a75a1e6e8ced",
+      "size": 2402
+    },
+    "iproute2_6.1.0.orig.tar.xz": {
+      "sha256": "5ce12a0fec6b212725ef218735941b2dab76244db7e72646a76021b0537b43ab",
+      "size": 905512
+    }
+  },
+  "reviewed_file": "tc/tc_core.c",
+  "patched_file_sha256": "3e05f644e98dd269b4f4070753c19ce24d6dc62ca7baf967828c9c57d979ac5e",
+  "distribution_patches_applied": [
+    "2003-tc-Expand-tc_calc_xmittime-tc_calc_xmitsize-to-u64.patch"
+  ],
+  "function": "tc_calc_size_table",
+  "configured_mtu": 2048,
+  "configured_tsize": 2048,
+  "derived_cell_log": 1,
+  "derived_cell_align": -1,
+  "derived_size_log": 0,
+  "table_charge": "max(84, 2 * ceil((Ethernet frame bytes + 24) / 2))",
+  "scope": "Exact package source reconstruction and table-construction review; not a rebuilt binary or physical PHY measurement"
+}

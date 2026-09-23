@@ -1,0 +1,75 @@
+{
+  "owned_native_peer_metric_checks_passed": true,
+  "qualified_profile": "owned-isolated-peer-path-v1",
+  "published_observations_checked": 255,
+  "counter_windows": 278,
+  "control_contexts": 3,
+  "connection_generations": 3,
+  "worker_processes": 2,
+  "proxy_reflected_frames_in_published_intervals": 0,
+  "peer_path_fault_withdrawal_checked": true,
+  "queries_after_confirmed_worker_exit": [
+    112
+  ],
+  "queries_withheld_during_observed_invalid_path": [],
+  "queries_during_confirmed_pod_connection_loss": [],
+  "queries_before_post_discovery_baseline_complete": [
+    29
+  ],
+  "post_discovery_baseline_unavailable_bounds": [
+    1790158775.836812,
+    1790158776.9895806
+  ],
+  "native_queries_answered": 2,
+  "responses": [
+    {
+      "query_frame": 64,
+      "response_frame": 65,
+      "mid": 48,
+      "latency_seconds": 0.0003609657287597656,
+      "controller_statistics": {
+        "PacketsSent": 9,
+        "PacketsReceived": 7,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0009.json",
+        "active-inventory-0010.json",
+        "active-inventory-0011.json",
+        "active-inventory-0012.json",
+        "active-inventory-0013.json",
+        "active-inventory-0014.json",
+        "active-inventory-0015.json",
+        "active-inventory-0016.json",
+        "active-inventory-0017.json"
+      ],
+      "counter_epoch": "1b4203886ff20f2f2119ba1999455f57ba80c67d5c5819147564b286fab331fc"
+    },
+    {
+      "query_frame": 98,
+      "response_frame": 99,
+      "mid": 64,
+      "latency_seconds": 0.006685018539428711,
+      "controller_statistics": {
+        "PacketsSent": 16,
+        "PacketsReceived": 16,
+        "ErrorsSent": 0,
+        "ErrorsReceived": 0
+      },
+      "matching_inventory_files": [
+        "active-inventory-0018.json",
+        "active-inventory-0019.json",
+        "active-inventory-0020.json",
+        "active-inventory-0021.json",
+        "active-inventory-0022.json",
+        "active-inventory-0023.json",
+        "active-inventory-0024.json",
+        "active-inventory-0025.json"
+      ],
+      "counter_epoch": "b161f9e1a0afa9da157239784decd7e87e46004a0b6b28d9547489a51913b8a1"
+    }
+  ],
+  "complete_sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

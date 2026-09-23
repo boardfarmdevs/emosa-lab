@@ -24,7 +24,9 @@ from setup import ROOT, run
 
 from emosa.opensync.session import OvsSession
 from emosa.simulation.database import SimDatabase
+from emosa.simulation.forwarding import ForwardingSource
 from emosa.simulation.native_onboarding import OWNER, RADIO_ROOT
+from emosa.simulation.neighbor_binding import NeighborSource
 from emosa.simulation.radio import MONITOR, seed_radio_database
 from emosa.simulation.wsc_provisioning import SERIAL
 from emosa.simulation.wsc_wire import RADIO_BSSID, write
@@ -63,11 +65,17 @@ async def experiment(
     label,
     *,
     active_seconds=0,
+    ap_esp_probe=False,
     recovery_checks=False,
     observe_station_removal=False,
+    observe_session_reasons=False,
     medium_loss=False,
     observe_tx_status=False,
     telemetry_gap_check=False,
+    neighbor_gap_check=False,
+    virtual_link=False,
+    neighbor_metrics=False,
+    peer_path_gap_check=False,
 ):
     helpers = runpy.run_path(str(ROOT / "controller-trial.py"))
     helpers["idle"]()
@@ -90,13 +98,20 @@ async def experiment(
         "recovery_checks_requested": recovery_checks,
         "agent_counter_units": 0,
         "station_removal_observation_requested": observe_station_removal,
+        "session_reason_observation_requested": observe_session_reasons,
         "capture_health_required": True,
+        "synthetic_ap_esp_probe_requested": ap_esp_probe,
         "capture_buffer_kib": 8192,
         "reporting_policy_receipt_expected": active_seconds > 0,
         "medium_loss_requested": medium_loss,
         "tx_status_observation_requested": observe_tx_status,
         "telemetry_gap_check_requested": telemetry_gap_check,
         "forwarding_observation_requested": True,
+        "neighbor_binding_requested": True,
+        "neighbor_gap_check_requested": neighbor_gap_check,
+        "virtual_link_requested": virtual_link,
+        "neighbor_metrics_requested": neighbor_metrics,
+        "peer_path_gap_check_requested": peer_path_gap_check,
         "netlink_capture_buffer_kib": 32768 if medium_loss else None,
     }
     write(directory / "result.json", report)
@@ -108,10 +123,20 @@ async def experiment(
                 Path(__file__),
                 ROOT / "controller-trial.py",
                 ROOT / "node.py",
+                ROOT / "run.py",
+                ROOT / "setup.py",
+                ROOT / "compatibility/controller-candidate.py",
+                ROOT / "compatibility/lifecycle-observer.py",
                 ROOT / "prplmesh.reference.json",
                 RADIO_ROOT_DIR / "manager.py",
                 RADIO_ROOT_DIR / "node.py",
+                RADIO_ROOT_DIR / "neighbor-observer.py",
+                RADIO_ROOT_DIR / "egress-observer.py",
+                *([RADIO_ROOT_DIR / "virtual-link.py"] if virtual_link else []),
+                *([RADIO_ROOT_DIR / "peer-path.py"] if neighbor_metrics else []),
                 *([RADIO_ROOT_DIR / "station-events.py"] if observe_station_removal else []),
+                *([ROOT / "ap-esp-probe.py"] if ap_esp_probe else []),
+                *([RADIO_ROOT_DIR / "session-reasons.py"] if observe_session_reasons else []),
                 *([RADIO_ROOT_DIR / "medium.py"] if medium_loss else []),
                 *([RADIO_ROOT_DIR / "tx-status-trace.py"] if observe_tx_status else []),
                 *sorted((RADIO_ROOT_DIR / "source/emosa").rglob("*.py")),
@@ -122,6 +147,10 @@ async def experiment(
     admin = OvsSession(db.endpoint, monitor_columns=MONITOR)
     manager = worker = broker = None
     station_unit = None
+    neighbor_unit = None
+    egress_unit = None
+    egress_path = RADIO_ROOT_DIR / "egress-observations" / (label + ".json")
+    neighbor_path = RADIO_ROOT_DIR / "neighbor-observations" / (label + ".json")
     station_path = RADIO_ROOT_DIR / "station-events" / (label + ".jsonl")
     captures, logs = [], []
     namespace, link = "em-native-" + uuid.uuid4().hex[:8], "en" + uuid.uuid4().hex[:8]
@@ -129,7 +158,10 @@ async def experiment(
     probe_units = []
     medium = None
     tx_trace = None
+    reason_observer = None
     telemetry_policy_restore = None
+    shaping = None
+    peer_path = None
 
     async def start_worker():
         return await asyncio.create_subprocess_exec(
@@ -196,6 +228,73 @@ async def experiment(
 
     try:
         write(directory / "topology.json", radio["setup"](directory))
+        if virtual_link:
+            shaping = runpy.run_path(str(RADIO_ROOT_DIR / "virtual-link.py"))["VirtualLink"]()
+            report["virtual_link_configuration"] = shaping.start()
+            write(directory / "result.json", report)
+        if neighbor_metrics:
+            peer_path = runpy.run_path(str(RADIO_ROOT_DIR / "peer-path.py"))["PeerPath"](directory)
+            (directory / "peer-metrics-requested").touch(exist_ok=False)
+        collector = RADIO_ROOT_DIR / "neighbor-observer.py"
+        radio["lxc"]("file", "push", "--quiet", str(collector), radio["AP"] + str(collector))
+        neighbor_unit = "emosa-native-neighbor-" + label + ".service"
+        radio["inside"](
+            radio["AP"],
+            "systemd-run",
+            "--quiet",
+            "--property=Type=exec",
+            "--property=RemainAfterExit=yes",
+            "--property=TimeoutStopSec=5",
+            "--unit",
+            neighbor_unit,
+            "python3",
+            str(collector),
+            label,
+            "--seconds",
+            str(active_seconds + 180),
+        )
+        end = time.monotonic() + 8
+        while True:
+            try:
+                value = json.loads(radio["inside"](radio["AP"], "cat", str(neighbor_path)))
+                if value.get("running") and not value["errors"]:
+                    break
+            except (ValueError, subprocess.CalledProcessError):
+                pass
+            if time.monotonic() >= end:
+                raise RuntimeError("pod backhaul discovery observer did not become ready")
+            await asyncio.sleep(0.1)
+        egress_collector = RADIO_ROOT_DIR / "egress-observer.py"
+        radio["lxc"](
+            "file", "push", "--quiet", str(egress_collector), radio["AP"] + str(egress_collector)
+        )
+        egress_unit = "emosa-native-egress-" + label + ".service"
+        radio["inside"](
+            radio["AP"],
+            "systemd-run",
+            "--quiet",
+            "--property=Type=exec",
+            "--property=RemainAfterExit=yes",
+            "--property=TimeoutStopSec=5",
+            "--unit",
+            egress_unit,
+            "python3",
+            str(egress_collector),
+            label,
+            "--seconds",
+            str(active_seconds + 180),
+        )
+        end = time.monotonic() + 8
+        while True:
+            try:
+                value = json.loads(radio["inside"](radio["AP"], "cat", str(egress_path)))
+                if value.get("running") and not value["errors"] and value["observation"]:
+                    break
+            except (ValueError, subprocess.CalledProcessError):
+                pass
+            if time.monotonic() >= end:
+                raise RuntimeError("pod egress observer did not become ready")
+            await asyncio.sleep(0.1)
         if medium_loss:
             module = runpy.run_path(str(RADIO_ROOT_DIR / "medium.py"))
             medium = module["Medium"](directory, active_seconds)
@@ -246,6 +345,10 @@ async def experiment(
                 if time.monotonic() >= end:
                     raise RuntimeError("station-removal observer did not become ready")
                 await asyncio.sleep(0.1)
+        if observe_session_reasons:
+            module = runpy.run_path(str(RADIO_ROOT_DIR / "session-reasons.py"))
+            reason_observer = module["ReasonObserver"](directory, active_seconds + 180)
+            await reason_observer.start()
         if active_seconds:
             mqtt_root = RADIO_ROOT_DIR / "mqtt-inputs/stage"
             executable = mqtt_root / "usr/sbin/mosquitto"
@@ -312,6 +415,25 @@ async def experiment(
         report["previous_controller_collection"] = stop_collect(
             directory / "previous-controller", names=(CONTROLLER,)
         )
+        # Capture before native startup: the passive pod listener can receive
+        # the initial Discovery before the controller's inventory is ready.
+        pod_link = next(
+            r
+            for r in json.loads(radio["inside"](radio["AP"], "ip", "-j", "-d", "link", "show"))
+            if r["ifname"] == "eth1"
+        )
+        forwarding_peer = next(
+            r
+            for r in json.loads(run("ip", "-j", "-d", "link", "show"))
+            if r["ifindex"] == pod_link["link_index"]
+        )
+        if (
+            forwarding_peer.get("master") != "em-base-bh"
+            or forwarding_peer.get("link_index") != pod_link["ifindex"]
+        ):
+            raise RuntimeError("unexpected initial pod backhaul veth path")
+        capture(forwarding_peer["ifname"], "forwarding")
+        await asyncio.sleep(0.2)
         node(CONTROLLER, "prepare", "--backhaul", "wired")
         node(CONTROLLER, "hostap")
         node(CONTROLLER, "services")
@@ -330,6 +452,11 @@ async def experiment(
                     raise
                 await asyncio.sleep(0.25)
         write(directory / "controller-before.json", before)
+        lifecycle_observer = (ROOT / "compatibility/lifecycle-observer.py").read_text()
+        write(
+            directory / "native-processes-start.json",
+            json.loads(radio["inside"](CONTROLLER, "python3", "-c", lifecycle_observer)),
+        )
         assert not inventory_bss(before)
         report["controller_policy"] = helpers["bml_policy"]()
         run("ip", "netns", "add", namespace)
@@ -345,6 +472,8 @@ async def experiment(
         ):
             run("ip", "netns", "exec", namespace, "ip", "link", *args)
         run("ip", "link", "set", link, "master", "em-base-bh")
+        if peer_path:
+            report["peer_path_configuration"] = peer_path.start(link)
         run("ip", "link", "set", link, "up")
         # Read-only provenance: the proxy's control veth is not the pod's
         # forwarding interface. Whole-proxy counters cannot measure pod backhaul.
@@ -362,7 +491,11 @@ async def experiment(
             or pod_peer.get("link_index") != pod_backhaul["ifindex"]
         ):
             raise RuntimeError("owned pod forwarding veth is not on the expected backhaul bridge")
-        capture(pod_peer["ifname"], "forwarding")
+        if (pod_peer["ifindex"], pod_peer["ifname"]) != (
+            forwarding_peer["ifindex"],
+            forwarding_peer["ifname"],
+        ):
+            raise RuntimeError("pod backhaul veth changed during controller startup")
         write(
             directory / "neighbor-link-observations.json",
             {
@@ -405,6 +538,23 @@ async def experiment(
             "02:00:00:00:30:01",
         )
         await asyncio.sleep(0.2)
+        # The native candidate first advertises topology on its periodic timer.
+        # Wait for the observed pod-side binding instead of racing the shorter
+        # controller BSS-inventory deadline or seeding a fabricated neighbor.
+        forwarding_source = ForwardingSource()
+        neighbor_source = NeighborSource(
+            bytes.fromhex("020000e00001"), bytes.fromhex("020000003001"), label
+        )
+        end = time.monotonic() + 70
+        while True:
+            forwarding_source.refresh(await admin.snapshot())
+            neighbor_source.refresh(forwarding_source.sample)
+            if neighbor_source.current() is not None:
+                report["initial_observed_neighbor"] = neighbor_source.status()
+                break
+            if time.monotonic() >= end:
+                raise TimeoutError("pod-side controller discovery did not establish a live binding")
+            await asyncio.sleep(0.1)
         await db.manager_remote("unix:" + str(db.directory / "native-pod.sock"))
         worker = await start_worker()
         withheld = await wait_json("native-operation.json", lambda v: v["writes"] == 1)
@@ -445,6 +595,11 @@ async def experiment(
         report["cases"]["clients"] = await radio["clients"](
             directory, "onboarded", "emosa-controller-trial"
         )
+        if ap_esp_probe:
+            module = runpy.run_path(str(ROOT / "ap-esp-probe.py"))
+            report["synthetic_ap_esp_probe"] = await module["probe"](
+                directory, namespace, helpers["inventory"], write
+            )
         if active_seconds:
             for client, interface in zip(radio["CLIENTS"], ("eth1", "wlan0"), strict=True):
                 unit = "emosa-soak-" + label
@@ -471,11 +626,20 @@ async def experiment(
             while time.monotonic() - started < active_seconds:
                 if medium:
                     medium.check()
+                if reason_observer:
+                    reason_observer.check()
                 if worker.returncode is not None:
                     raise RuntimeError("adapter exited during client activity")
                 index = len(samples)
                 current = json.loads((directory / "native-session.json").read_text())
+                inventory_observation = {
+                    "started_ns": time.monotonic_ns(),
+                    "wall_started_ns": time.time_ns(),
+                }
                 native = helpers["inventory"](depth=8)
+                inventory_observation.update(
+                    ended_ns=time.monotonic_ns(), wall_ended_ns=time.time_ns()
+                )
                 write(directory / f"active-inventory-{index:04d}.json", native)
                 probes = await radio["clients"](
                     directory, f"active-{index:04d}", "emosa-controller-trial"
@@ -486,17 +650,62 @@ async def experiment(
                     "session": current,
                     "clients": probes,
                     "controller_station_present": bool(inventory_stations(native)),
+                    "inventory_observation": inventory_observation,
                     "process_status": Path(f"/proc/{worker.pid}/status").read_text(),
                     "open_descriptors": len(list(Path(f"/proc/{worker.pid}/fd").iterdir())),
                 }
                 samples.append(sample)
                 write(directory / "active-samples.json", samples)
+                if peer_path_gap_check and index == 1:
+                    gap = {
+                        "started_at": time.time(),
+                        "operation_before": json.loads(
+                            (directory / "native-operation.json").read_text()
+                        ),
+                    }
+                    gap["session_before"] = await wait_json(
+                        "native-session.json",
+                        lambda v: (v.get("peer_link_metrics") or {}).get("available"),
+                    )
+                    port = peer_path.pod_peer["ifname"]
+                    try:
+                        run("bridge", "link", "set", "dev", port, "isolated", "off")
+                        gap["session_withheld"] = await wait_json(
+                            "native-session.json",
+                            lambda v: (
+                                v.get("state") == "provisioning"
+                                and not (v.get("peer_link_metrics") or {}).get("available")
+                                and v.get("report_source", {}).get("available")
+                            ),
+                        )
+                        gap["clients_withheld"] = await radio["clients"](
+                            directory, "peer-path-gap", "emosa-controller-trial"
+                        )
+                    finally:
+                        run("bridge", "link", "set", "dev", port, "isolated", "on")
+                        gap["restored_at"] = time.time()
+                    gap["session_after"] = await wait_json(
+                        "native-session.json",
+                        lambda v: (
+                            (v.get("peer_link_metrics") or {}).get("available")
+                            and (v.get("peer_link_metrics") or {}).get("path_epoch")
+                            != gap["session_before"]["peer_link_metrics"]["path_epoch"]  # noqa: B023 - awaited in this iteration
+                        ),
+                    )
+                    gap["operation_after"] = json.loads(
+                        (directory / "native-operation.json").read_text()
+                    )
+                    gap["completed_at"] = time.time()
+                    write(directory / "peer-path-gap-check.json", gap)
+                    report["peer_path_gap_check_completed"] = True
                 if telemetry_gap_check and index == 0:
                     fresh = await wait_json(
                         "native-session.json",
                         lambda v: (
                             v["report_source"]["inventory_complete"]
                             and v["telemetry"]["station_count"] == 1
+                            and (not virtual_link or v["shaped_backhaul"]["available"])
+                            and (not neighbor_metrics or v["peer_link_metrics"]["available"])
                         ),
                     )
                     gap = {
@@ -547,6 +756,62 @@ async def experiment(
                     assert gap["session_withheld"]["report_source"]["operating_radio_count"] == 0
                     assert gap["operation_after"] == gap["operation_before"]
                     report["telemetry_gap_check_completed"] = True
+                if neighbor_gap_check and index == 1:
+                    fresh = await wait_json(
+                        "native-session.json",
+                        lambda v: (
+                            v["observed_neighbor"]["available"]
+                            and v["report_source"]["inventory_complete"]
+                        ),
+                    )
+                    gap = {
+                        "started_at": time.time(),
+                        "session_before": fresh,
+                        "operation_before": json.loads(
+                            (directory / "native-operation.json").read_text()
+                        ),
+                    }
+                    radio["inside"](
+                        radio["AP"], "systemctl", "kill", "--signal=SIGSTOP", neighbor_unit
+                    )
+                    try:
+                        await asyncio.sleep(4)
+                        gap["session_withheld"] = await wait_json(
+                            "native-session.json", lambda v: not v["observed_neighbor"]["available"]
+                        )
+                        gap["clients_withheld"] = await radio["clients"](
+                            directory, "neighbor-withheld", "emosa-controller-trial"
+                        )
+                    finally:
+                        radio["inside"](
+                            radio["AP"], "systemctl", "kill", "--signal=SIGCONT", neighbor_unit
+                        )
+                    gap["restored_at"] = time.time()
+                    gap["session_after"] = await wait_json(
+                        "native-session.json",
+                        lambda v: (
+                            v["observed_neighbor"]["available"]
+                            and v["report_source"]["inventory_complete"]
+                        ),
+                    )
+                    gap["operation_after"] = json.loads(
+                        (directory / "native-operation.json").read_text()
+                    )
+                    gap["completed_at"] = time.time()
+                    write(directory / "neighbor-gap-check.json", gap)
+                    for key in ("session_withheld", "session_after"):
+                        value = gap[key]
+                        assert value["report_source"]["available"]
+                        assert (
+                            value["report_source"]["context_token"]
+                            == fresh["report_source"]["context_token"]
+                        )
+                        assert value["counts"].get("search_sent") == 1
+                        assert value["counts"].get("client_leave_notification", 0) == 0
+                    assert not gap["session_withheld"]["report_source"]["inventory_complete"]
+                    assert gap["session_withheld"]["report_source"]["operating_radio_count"] == 1
+                    assert gap["operation_after"] == gap["operation_before"]
+                    report["neighbor_gap_check_completed"] = True
                 if (
                     recovery_checks
                     and len(recoveries) < 2
@@ -640,8 +905,29 @@ async def experiment(
             )
             # This is a pilot, not the full soak/recovery acceptance verdict.
             (directory / "stop-worker").touch()
+            stopped = {
+                "pid": worker.pid,
+                "requested_at": time.time(),
+                "requested_ns": time.monotonic_ns(),
+            }
             await asyncio.wait_for(worker.wait(), 10)
+            stopped.update(
+                exited_at=time.time(), exited_ns=time.monotonic_ns(), returncode=worker.returncode
+            )
+            write(directory / "worker-stop.json", stopped)
             assert worker.returncode == 0
+            # No more adapter replies can now replace the last controller value.
+            # Retain a timed receipt observation for replies after the last
+            # periodic inventory sample, before stopping the native controller.
+            await asyncio.sleep(0.1)
+            final_observation = {
+                "started_ns": time.monotonic_ns(),
+                "wall_started_ns": time.time_ns(),
+            }
+            final_inventory = helpers["inventory"](depth=8)
+            final_observation.update(ended_ns=time.monotonic_ns(), wall_ended_ns=time.time_ns())
+            write(directory / "controller-final.json", final_inventory)
+            write(directory / "controller-final-observation.json", final_observation)
         report.update(
             status="observed_pending_capture_review",
             initial_operation=applied,
@@ -704,6 +990,37 @@ async def experiment(
                 report["station_removal_observation"] = records[-1]
             except Exception as exc:
                 errors.append("station_observer:" + str(exc))
+        if reason_observer:
+            try:
+                await reason_observer.stop()
+                report["session_reason_observation"] = json.loads(
+                    (directory / "reason-observer.json").read_text()
+                )
+                if report["session_reason_observation"]["errors"]:
+                    raise RuntimeError("live reason observation incomplete")
+            except Exception as exc:
+                errors.append("reason_observer:" + str(exc))
+        if egress_unit:
+            try:
+                radio["inside"](radio["AP"], "systemctl", "stop", egress_unit)
+                observed = json.loads(radio["inside"](radio["AP"], "cat", str(egress_path)))
+                write(directory / "egress-observer-final.json", observed)
+                (directory / "egress-observations.jsonl").write_text(
+                    radio["inside"](radio["AP"], "cat", str(egress_path.with_suffix(".jsonl")))
+                )
+                if observed["running"] or observed["errors"]:
+                    raise RuntimeError("egress observer did not complete cleanly")
+            except Exception as exc:
+                errors.append("egress_observer:" + str(exc))
+        if neighbor_unit:
+            try:
+                radio["inside"](radio["AP"], "systemctl", "stop", neighbor_unit)
+                observed = json.loads(radio["inside"](radio["AP"], "cat", str(neighbor_path)))
+                write(directory / "neighbor-observer-final.json", observed)
+                if observed["running"] or observed["errors"]:
+                    raise RuntimeError("neighbor observer did not complete cleanly")
+            except Exception as exc:
+                errors.append("neighbor_observer:" + str(exc))
         if medium:
             try:
                 medium.stop()
@@ -736,6 +1053,16 @@ async def experiment(
                 medium.remove()
             except Exception as exc:
                 errors.append("medium_remove:" + str(exc))
+        if shaping:
+            try:
+                shaping.close()
+            except Exception as exc:
+                errors.append("virtual_link_cleanup:" + str(exc))
+            report["virtual_link_restoration"] = {
+                "before": shaping.before,
+                "after": shaping.after,
+                "restored": shaping.before is not None and shaping.before == shaping.after,
+            }
         for name in ("radio", "ethernet", "forwarding", *(["netlink"] if medium_loss else [])):
             path = directory / (name + "-capture.log")
             if path.exists():
@@ -754,12 +1081,30 @@ async def experiment(
                     check=False,
                 )
         try:
+            if (directory / "native-processes-start.json").exists():
+                write(
+                    directory / "native-processes-stop.json",
+                    json.loads(radio["inside"](CONTROLLER, "python3", "-c", lifecycle_observer)),
+                )
+        except Exception as exc:
+            errors.append("native_process_observation:" + type(exc).__name__)
+        try:
             report["native_shutdown"] = stop_collect(
                 directory / "native-shutdown", names=(CONTROLLER,)
             )
         except Exception as exc:
             errors.append("native_shutdown:" + type(exc).__name__)
         if ns_created:
+            if peer_path:
+                try:
+                    peer_path.close()
+                    report["peer_path_restoration"] = {
+                        "restored": True,
+                        "after": peer_path.after,
+                        "offloads": peer_path.offloads,
+                    }
+                except Exception as exc:
+                    errors.append("peer_path_cleanup:" + str(exc))
             run("ip", "netns", "del", namespace)
         if link_created:
             subprocess.run(["ip", "link", "del", link], capture_output=True, check=False)
@@ -792,6 +1137,11 @@ if __name__ == "__main__":
         help="Read kernel final-station events for measurement qualification; no counter mapping",
     )
     parser.add_argument(
+        "--observe-session-reasons",
+        action="store_true",
+        help="Join actual radio disconnect reasons to raw station-removal counters live",
+    )
+    parser.add_argument(
         "--medium-loss",
         action="store_true",
         help="Optional unqualified wmediumd counter experiment with 20%% AP-to-client loss",
@@ -806,23 +1156,58 @@ if __name__ == "__main__":
         action="store_true",
         help="Withhold station telemetry while OVSDB and client traffic stay active",
     )
+    parser.add_argument(
+        "--neighbor-gap-check",
+        action="store_true",
+        help="Pause passive neighbor observation while OVSDB and traffic stay active",
+    )
+    parser.add_argument(
+        "--virtual-link",
+        action="store_true",
+        help="Temporarily shape owned pod egress for simulated service-work observation",
+    )
+    parser.add_argument(
+        "--neighbor-metrics",
+        action="store_true",
+        help="Isolate the owned peer path and publish bounded simulated link metrics",
+    )
+    parser.add_argument(
+        "--peer-path-gap-check",
+        action="store_true",
+        help="Temporarily break owned peer isolation and verify metric withdrawal/recovery",
+    )
+    parser.add_argument(
+        "--ap-esp-probe",
+        action="store_true",
+        help="Synthetic native parser diagnostic; not sustained acceptance",
+    )
     args = parser.parse_args()
+    if args.peer_path_gap_check and (not args.neighbor_metrics or args.active_seconds < 150):
+        parser.error("peer path gap requires neighbor metrics and at least 150 active seconds")
+    if args.neighbor_metrics and not args.virtual_link:
+        parser.error("neighbor metrics require the declared virtual-link service")
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", args.label):
         parser.error("use a new label of 1–24 lowercase letters, digits or hyphens")
     if args.build.resolve().parent != ROOT or not args.build.name.startswith("candidate-"):
         parser.error("stage a separate candidate directory directly under /opt/emosa-baseline")
     if args.active_seconds and not 30 <= args.active_seconds <= 3600:
         parser.error("active-seconds must be zero or 30–3600")
+    if args.ap_esp_probe and args.active_seconds:
+        parser.error("synthetic AP parser probe must be separate from sustained acceptance")
     if args.recovery_checks and args.active_seconds < 150:
         parser.error("recovery checks require at least 150 active seconds")
     if args.observe_station_removal and not args.active_seconds:
         parser.error("station-removal observation requires active client cycles")
+    if args.observe_session_reasons and not args.observe_station_removal:
+        parser.error("live reasons require station-removal observation")
     if args.medium_loss and not args.observe_station_removal:
         parser.error("medium loss requires station-removal observation")
     if args.observe_tx_status and not args.medium_loss:
         parser.error("TX-status observation requires the medium-loss experiment")
     if args.telemetry_gap_check and args.active_seconds < 150:
         parser.error("telemetry gap check requires at least 150 active seconds")
+    if args.neighbor_gap_check and args.active_seconds < 150:
+        parser.error("neighbor gap check requires at least 150 active seconds")
     os.umask(0o077)
     wrapper = runpy.run_path(str(ROOT / "compatibility/controller-candidate.py"))
     with (RADIO_ROOT_DIR / "run.lock").open("a+") as lock:
@@ -836,11 +1221,17 @@ if __name__ == "__main__":
                     experiment(
                         label,
                         active_seconds=args.active_seconds,
+                        ap_esp_probe=args.ap_esp_probe,
                         recovery_checks=args.recovery_checks,
                         observe_station_removal=args.observe_station_removal,
+                        observe_session_reasons=args.observe_session_reasons,
                         medium_loss=args.medium_loss,
                         observe_tx_status=args.observe_tx_status,
                         telemetry_gap_check=args.telemetry_gap_check,
+                        neighbor_gap_check=args.neighbor_gap_check,
+                        virtual_link=args.virtual_link,
+                        neighbor_metrics=args.neighbor_metrics,
+                        peer_path_gap_check=args.peer_path_gap_check,
                     )
                 ),
             )

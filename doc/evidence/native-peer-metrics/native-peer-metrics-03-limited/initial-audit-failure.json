@@ -1,0 +1,10 @@
+{
+  "peer_audit_initial_failure": "raw packet auditor omitted the independently inventoried pod bridge MAC; native inventory container includes a scalar status member",
+  "channel_recovery_audit_failure": "channel query/selection missing timely response",
+  "unanswered_live_channel_frames": [
+    9,
+    11
+  ],
+  "startup_race_pending_fix": true,
+  "complete_sustained_operation_proven": false
+}

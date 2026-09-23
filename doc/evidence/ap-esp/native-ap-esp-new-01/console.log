@@ -1,0 +1,798 @@
+/opt/emosa-radio-manager/source/emosa/wsc.py:106: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+  _private: dh.DHPrivateKey = field(repr=False)
+{
+  "label": "native-ap-esp-new-01",
+  "candidate_sha256": "cec287b95d588ca715c7384a8bd6985f9b492e192becdf69b6e708067afc2b9d",
+  "baseline_sha256": "737ab07f89fec1aabcc861bd90ddafda931be2e3e1a108cc7352ea2c3ecd994c",
+  "baseline_restored": true,
+  "status": "experiment_finished",
+  "operations_created": 1,
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "failure_injection": false,
+  "runner_sha256": "870de7e5ac9bfdbb6c42d93b6db6be5206b6fa6cc3d3871348da57eeed8d0d59",
+  "runtime_libraries": {
+    "libbpl.so.6.0.0": {
+      "baseline_sha256": "2e4d0b2ef7dc68e11ad8e6686418555100768634f7462a24f6bb454c77b42cf6",
+      "candidate_sha256": "f25812f74db0996ae8bfb15360a775d536aee9f3c2ff44f5264f4dafe301582f",
+      "unstripped_sha256": "c103f1e32d31142d774892a2ee073eca11ae3b2848ae93144fd14dfec92d0278"
+    }
+  },
+  "runtime_library_restoration": {
+    "libbpl.so.6.0.0": {
+      "restored_sha256": "2e4d0b2ef7dc68e11ad8e6686418555100768634f7462a24f6bb454c77b42cf6",
+      "restored": true
+    }
+  },
+  "candidate_installed": true,
+  "experiment": {
+    "label": "native-ap-esp-new-01",
+    "status": "observed_pending_capture_review",
+    "controller_onboarding_proven": false,
+    "physical_pod_proven": false,
+    "native_controller": true,
+    "semantic_submission": false,
+    "cases": {
+      "withheld": true,
+      "clients": {
+        "clients": "passed",
+        "nonce": "1caa42e846e2451e17aec48cd4c26d2e"
+      }
+    },
+    "active_seconds_requested": 0,
+    "sustained_operation_proven": false,
+    "recovery_checks_requested": false,
+    "agent_counter_units": 0,
+    "station_removal_observation_requested": false,
+    "session_reason_observation_requested": false,
+    "capture_health_required": true,
+    "synthetic_ap_esp_probe_requested": true,
+    "capture_buffer_kib": 8192,
+    "reporting_policy_receipt_expected": false,
+    "medium_loss_requested": false,
+    "tx_status_observation_requested": false,
+    "telemetry_gap_check_requested": false,
+    "forwarding_observation_requested": true,
+    "neighbor_binding_requested": true,
+    "neighbor_gap_check_requested": false,
+    "virtual_link_requested": false,
+    "neighbor_metrics_requested": false,
+    "peer_path_gap_check_requested": false,
+    "netlink_capture_buffer_kib": null,
+    "previous_controller_collection": {
+      "em-baseline-controller": []
+    },
+    "controller_policy": {
+      "submitted": true,
+      "virtual_al_mac": "02:00:00:00:30:01",
+      "virtual_bss_count": 1,
+      "pod_application_proven": false
+    },
+    "initial_observed_neighbor": {
+      "available": true,
+      "reason": "observed_neighbor_bound",
+      "binding": {
+        "generation": 1,
+        "capture_epoch": "764754ac-82ab-4bc8-a43f-474c100e6f0a",
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "local_ifindex": 8,
+        "neighbor_al": "02:00:00:e0:00:01",
+        "neighbor_interface": "00:16:3e:b8:c4:a7",
+        "discovery_received_ns": 48052795601515,
+        "bridges_present": true,
+        "valid_until_ns": 48063235446826
+      },
+      "measurement_source_qualified": false,
+      "media_representation": "owned-simulator Ethernet fixture; physical PHY unqualified"
+    },
+    "controller_radio_bss": {
+      "Device.WiFi.DataElements.Network.Device.2.Radio.1.": {
+        "TrafficSeparationCombinedBackhaul": false,
+        "CurrentOperatingClassProfileNumberOfEntries": 0,
+        "TrafficSeparationCombinedFronthaul": false,
+        "BSSNumberOfEntries": 1,
+        "Noise": 0,
+        "ChannelUtilizationReportingThreshold": 0,
+        "APMetricsWiFi6": true,
+        "UnassociatedSTANumberOfEntries": 0,
+        "SteeringPolicy": 0,
+        "ScanResultNumberOfEntries": 0,
+        "AssociatedSTATrafficStatsInclusionPolicy": true,
+        "ReceiveSelf": 0,
+        "Enabled": true,
+        "ReceiveOther": 0,
+        "ChipsetVendor": "mac80211_hwsim",
+        "RCPISteeringThreshold": 0,
+        "ID": "02:00:00:ec:02:00",
+        "STAReportingRCPIThreshold": 0,
+        "ChannelUtilizationThreshold": 0,
+        "STAReportingRCPIHysteresisMarginOverride": 0,
+        "AssociatedSTALinkMetricsInclusionPolicy": true,
+        "Transmit": 0,
+        "X_PRPLWARE-COM_Name": "N/A",
+        "Utilization": 0
+      },
+      "Device.WiFi.DataElements.Network.Device.2.Radio.1.BSS.1.": {
+        "BackhaulUse": false,
+        "MulticastBytesReceived": 0,
+        "BroadcastBytesSent": 0,
+        "EstServiceParametersVI": 0,
+        "UnicastBytesSent": 0,
+        "BroadcastBytesReceived": 0,
+        "STANumberOfEntries": 0,
+        "EstServiceParametersVO": 0,
+        "Enabled": true,
+        "X_PRPLWARE-COM_VAPID": true,
+        "FronthaulUse": true,
+        "SSID": "emosa-controller-trial",
+        "EstServiceParametersBE": 0,
+        "BSSID": "02:00:00:ec:02:00",
+        "UnicastBytesReceived": 0,
+        "LastChange": 11,
+        "TimeStamp": "2026-09-23T13:09:21.650203981Z",
+        "EstServiceParametersBK": 0,
+        "ByteCounterUnits": 0,
+        "MulticastBytesSent": 0,
+        "IsVBSS": false
+      }
+    },
+    "synthetic_ap_esp_probe": {
+      "scope": "synthetic native sparse-ESP parser diagnostic; not measured AP reporting",
+      "passed": true,
+      "cases": [
+        {
+          "index": 0,
+          "valid_presence_length": true,
+          "flags": 144,
+          "frame_hex": "020000e00001020000003001893a0000800cd0000080940010020000ec020028000090104080134083000000",
+          "expected": {
+            "EstServiceParametersBE": 8405008,
+            "EstServiceParametersBK": 0,
+            "EstServiceParametersVO": 0,
+            "EstServiceParametersVI": 8601619,
+            "Utilization": 40
+          },
+          "sent_at": 1790168975.2017143,
+          "observations": [
+            {
+              "wall_started_ns": 1790168975380225370,
+              "wall_ended_ns": 1790168975473989137,
+              "actual": {
+                "EstServiceParametersBE": 8405008,
+                "EstServiceParametersBK": 0,
+                "EstServiceParametersVO": 0,
+                "EstServiceParametersVI": 8601619,
+                "Utilization": 40
+              }
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "valid_presence_length": true,
+          "flags": 240,
+          "frame_hex": "020000e00001020000003001893a0000800cd0010080940016020000ec0200290000f0104180114181124182134183000000",
+          "expected": {
+            "EstServiceParametersBE": 8405264,
+            "EstServiceParametersBK": 8470801,
+            "EstServiceParametersVO": 8536338,
+            "EstServiceParametersVI": 8601875,
+            "Utilization": 41
+          },
+          "sent_at": 1790168975.4743981,
+          "observations": [
+            {
+              "wall_started_ns": 1790168975653222421,
+              "wall_ended_ns": 1790168975738210714,
+              "actual": {
+                "EstServiceParametersBE": 8405264,
+                "EstServiceParametersBK": 8470801,
+                "EstServiceParametersVO": 8536338,
+                "EstServiceParametersVI": 8601875,
+                "Utilization": 41
+              }
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "valid_presence_length": true,
+          "flags": 128,
+          "frame_hex": "020000e00001020000003001893a0000800cd002008094000d020000ec02002a000080104280000000",
+          "expected": {
+            "EstServiceParametersBE": 8405520,
+            "EstServiceParametersBK": 8470801,
+            "EstServiceParametersVO": 8536338,
+            "EstServiceParametersVI": 8601875,
+            "Utilization": 42
+          },
+          "sent_at": 1790168975.7387376,
+          "observations": [
+            {
+              "wall_started_ns": 1790168975916263216,
+              "wall_ended_ns": 1790168976006086151,
+              "actual": {
+                "EstServiceParametersBE": 8405520,
+                "EstServiceParametersBK": 8470801,
+                "EstServiceParametersVO": 8536338,
+                "EstServiceParametersVI": 8601875,
+                "Utilization": 42
+              }
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "valid_presence_length": true,
+          "flags": 192,
+          "frame_hex": "020000e00001020000003001893a0000800cd0030080940010020000ec02002b0000c0104380114381000000",
+          "expected": {
+            "EstServiceParametersBE": 8405776,
+            "EstServiceParametersBK": 8471313,
+            "EstServiceParametersVO": 8536338,
+            "EstServiceParametersVI": 8601875,
+            "Utilization": 43
+          },
+          "sent_at": 1790168976.0066972,
+          "observations": [
+            {
+              "wall_started_ns": 1790168976185938926,
+              "wall_ended_ns": 1790168976271873389,
+              "actual": {
+                "EstServiceParametersBE": 8405776,
+                "EstServiceParametersBK": 8471313,
+                "EstServiceParametersVO": 8536338,
+                "EstServiceParametersVI": 8601875,
+                "Utilization": 43
+              }
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "valid_presence_length": true,
+          "flags": 160,
+          "frame_hex": "020000e00001020000003001893a0000800cd0040080940010020000ec02002c0000a0104480124482000000",
+          "expected": {
+            "EstServiceParametersBE": 8406032,
+            "EstServiceParametersBK": 8471313,
+            "EstServiceParametersVO": 8537106,
+            "EstServiceParametersVI": 8601875,
+            "Utilization": 44
+          },
+          "sent_at": 1790168976.2723339,
+          "observations": [
+            {
+              "wall_started_ns": 1790168976448330856,
+              "wall_ended_ns": 1790168976534269587,
+              "actual": {
+                "EstServiceParametersBE": 8406032,
+                "EstServiceParametersBK": 8471313,
+                "EstServiceParametersVO": 8537106,
+                "EstServiceParametersVI": 8601875,
+                "Utilization": 44
+              }
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "valid_presence_length": true,
+          "flags": 176,
+          "frame_hex": "020000e00001020000003001893a0000800cd0050080940013020000ec02002d0000b0104580124582134583000000",
+          "expected": {
+            "EstServiceParametersBE": 8406288,
+            "EstServiceParametersBK": 8471313,
+            "EstServiceParametersVO": 8537362,
+            "EstServiceParametersVI": 8602899,
+            "Utilization": 45
+          },
+          "sent_at": 1790168976.5353024,
+          "observations": [
+            {
+              "wall_started_ns": 1790168976711594159,
+              "wall_ended_ns": 1790168976804939547,
+              "actual": {
+                "EstServiceParametersBE": 8406288,
+                "EstServiceParametersBK": 8471313,
+                "EstServiceParametersVO": 8537362,
+                "EstServiceParametersVI": 8602899,
+                "Utilization": 45
+              }
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "valid_presence_length": true,
+          "flags": 208,
+          "frame_hex": "020000e00001020000003001893a0000800cd0060080940013020000ec02002e0000d0104680114681134683000000",
+          "expected": {
+            "EstServiceParametersBE": 8406544,
+            "EstServiceParametersBK": 8472081,
+            "EstServiceParametersVO": 8537362,
+            "EstServiceParametersVI": 8603155,
+            "Utilization": 46
+          },
+          "sent_at": 1790168976.805486,
+          "observations": [
+            {
+              "wall_started_ns": 1790168976980876056,
+              "wall_ended_ns": 1790168977075925809,
+              "actual": {
+                "EstServiceParametersBE": 8406544,
+                "EstServiceParametersBK": 8472081,
+                "EstServiceParametersVO": 8537362,
+                "EstServiceParametersVI": 8603155,
+                "Utilization": 46
+              }
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "valid_presence_length": true,
+          "flags": 224,
+          "frame_hex": "020000e00001020000003001893a0000800cd0070080940013020000ec02002f0000e0104780114781124782000000",
+          "expected": {
+            "EstServiceParametersBE": 8406800,
+            "EstServiceParametersBK": 8472337,
+            "EstServiceParametersVO": 8537874,
+            "EstServiceParametersVI": 8603155,
+            "Utilization": 47
+          },
+          "sent_at": 1790168977.076483,
+          "observations": [
+            {
+              "wall_started_ns": 1790168977254651820,
+              "wall_ended_ns": 1790168977334918334,
+              "actual": {
+                "EstServiceParametersBE": 8406800,
+                "EstServiceParametersBK": 8472337,
+                "EstServiceParametersVO": 8537874,
+                "EstServiceParametersVI": 8603155,
+                "Utilization": 47
+              }
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "valid_presence_length": false,
+          "flags": 16,
+          "frame_hex": "020000e00001020000003001893a0000800cd008008094000d020000ec020030000010134883000000",
+          "expected": {
+            "EstServiceParametersBE": 8406800,
+            "EstServiceParametersBK": 8472337,
+            "EstServiceParametersVO": 8537874,
+            "EstServiceParametersVI": 8603155,
+            "Utilization": 47
+          },
+          "sent_at": 1790168977.3354049,
+          "observations": [
+            {
+              "wall_started_ns": 1790168977860601239,
+              "wall_ended_ns": 1790168977939209112,
+              "actual": {
+                "EstServiceParametersBE": 8406800,
+                "EstServiceParametersBK": 8472337,
+                "EstServiceParametersVO": 8537874,
+                "EstServiceParametersVI": 8603155,
+                "Utilization": 47
+              }
+            }
+          ]
+        },
+        {
+          "index": 9,
+          "valid_presence_length": false,
+          "flags": 144,
+          "frame_hex": "020000e00001020000003001893a0000800cd009008094000f020000ec0200310000901049801349000000",
+          "expected": {
+            "EstServiceParametersBE": 8406800,
+            "EstServiceParametersBK": 8472337,
+            "EstServiceParametersVO": 8537874,
+            "EstServiceParametersVI": 8603155,
+            "Utilization": 47
+          },
+          "sent_at": 1790168977.9397888,
+          "observations": [
+            {
+              "wall_started_ns": 1790168978467394793,
+              "wall_ended_ns": 1790168978547001031,
+              "actual": {
+                "EstServiceParametersBE": 8406800,
+                "EstServiceParametersBK": 8472337,
+                "EstServiceParametersVO": 8537874,
+                "EstServiceParametersVI": 8603155,
+                "Utilization": 47
+              }
+            }
+          ]
+        },
+        {
+          "index": 10,
+          "valid_presence_length": false,
+          "flags": 144,
+          "frame_hex": "020000e00001020000003001893a0000800cd00a0080940011020000ec020032000090104a80134a8300000000",
+          "expected": {
+            "EstServiceParametersBE": 8406800,
+            "EstServiceParametersBK": 8472337,
+            "EstServiceParametersVO": 8537874,
+            "EstServiceParametersVI": 8603155,
+            "Utilization": 47
+          },
+          "sent_at": 1790168978.5475984,
+          "observations": [
+            {
+              "wall_started_ns": 1790168979074347305,
+              "wall_ended_ns": 1790168979163427004,
+              "actual": {
+                "EstServiceParametersBE": 8406800,
+                "EstServiceParametersBK": 8472337,
+                "EstServiceParametersVO": 8537874,
+                "EstServiceParametersVI": 8603155,
+                "Utilization": 47
+              }
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "valid_presence_length": false,
+          "flags": 144,
+          "frame_hex": "020000e00001020000003001893a0000800cd00b008094000a020000ec020033000090000000",
+          "expected": {
+            "EstServiceParametersBE": 8406800,
+            "EstServiceParametersBK": 8472337,
+            "EstServiceParametersVO": 8537874,
+            "EstServiceParametersVI": 8603155,
+            "Utilization": 47
+          },
+          "sent_at": 1790168979.1645544,
+          "observations": [
+            {
+              "wall_started_ns": 1790168979695579771,
+              "wall_ended_ns": 1790168979776833512,
+              "actual": {
+                "EstServiceParametersBE": 8406800,
+                "EstServiceParametersBK": 8472337,
+                "EstServiceParametersVO": 8537874,
+                "EstServiceParametersVI": 8603155,
+                "Utilization": 47
+              }
+            }
+          ]
+        },
+        {
+          "index": 12,
+          "valid_presence_length": false,
+          "flags": 240,
+          "frame_hex": "020000e00001020000003001893a0000800cd00c0080940015020000ec0200340000f0104c80114c81124c82134c000000",
+          "expected": {
+            "EstServiceParametersBE": 8406800,
+            "EstServiceParametersBK": 8472337,
+            "EstServiceParametersVO": 8537874,
+            "EstServiceParametersVI": 8603155,
+            "Utilization": 47
+          },
+          "sent_at": 1790168979.7781768,
+          "observations": [
+            {
+              "wall_started_ns": 1790168980304483856,
+              "wall_ended_ns": 1790168980400159139,
+              "actual": {
+                "EstServiceParametersBE": 8406800,
+                "EstServiceParametersBK": 8472337,
+                "EstServiceParametersVO": 8537874,
+                "EstServiceParametersVI": 8603155,
+                "Utilization": 47
+              }
+            }
+          ]
+        },
+        {
+          "index": 13,
+          "valid_presence_length": false,
+          "flags": 240,
+          "frame_hex": "020000e00001020000003001893a0000800cd00d0080940017020000ec0200350000f0104d80114d81124d82134d8300000000",
+          "expected": {
+            "EstServiceParametersBE": 8406800,
+            "EstServiceParametersBK": 8472337,
+            "EstServiceParametersVO": 8537874,
+            "EstServiceParametersVI": 8603155,
+            "Utilization": 47
+          },
+          "sent_at": 1790168980.4009442,
+          "observations": [
+            {
+              "wall_started_ns": 1790168980928602081,
+              "wall_ended_ns": 1790168981041641572,
+              "actual": {
+                "EstServiceParametersBE": 8406800,
+                "EstServiceParametersBK": 8472337,
+                "EstServiceParametersVO": 8537874,
+                "EstServiceParametersVI": 8603155,
+                "Utilization": 47
+              }
+            }
+          ]
+        },
+        {
+          "index": 14,
+          "valid_presence_length": false,
+          "flags": 0,
+          "frame_hex": "020000e00001020000003001893a0000800cd00e008094000a020000ec020036000000000000",
+          "expected": {
+            "EstServiceParametersBE": 8406800,
+            "EstServiceParametersBK": 8472337,
+            "EstServiceParametersVO": 8537874,
+            "EstServiceParametersVI": 8603155,
+            "Utilization": 47
+          },
+          "sent_at": 1790168981.042239,
+          "observations": [
+            {
+              "wall_started_ns": 1790168981574585303,
+              "wall_ended_ns": 1790168981669588952,
+              "actual": {
+                "EstServiceParametersBE": 8406800,
+                "EstServiceParametersBK": 8472337,
+                "EstServiceParametersVO": 8537874,
+                "EstServiceParametersVI": 8603155,
+                "Utilization": 47
+              }
+            }
+          ]
+        },
+        {
+          "index": 15,
+          "valid_presence_length": false,
+          "flags": 128,
+          "frame_hex": "020000e00001020000003001893a0000800cd00f008094000e020000ec020037000080104f8000000000",
+          "expected": {
+            "EstServiceParametersBE": 8406800,
+            "EstServiceParametersBK": 8472337,
+            "EstServiceParametersVO": 8537874,
+            "EstServiceParametersVI": 8603155,
+            "Utilization": 47
+          },
+          "sent_at": 1790168981.670082,
+          "observations": [
+            {
+              "wall_started_ns": 1790168982201134240,
+              "wall_ended_ns": 1790168982300129923,
+              "actual": {
+                "EstServiceParametersBE": 8406800,
+                "EstServiceParametersBK": 8472337,
+                "EstServiceParametersVO": 8537874,
+                "EstServiceParametersVI": 8603155,
+                "Utilization": 47
+              }
+            }
+          ]
+        }
+      ],
+      "measurement_source_qualified": false,
+      "native_ap_report_delivery_proven": false,
+      "sustained_operation_proven": false,
+      "physical_pod_proven": false,
+      "finished_at": 1790168982.3008623
+    },
+    "initial_operation": {
+      "operation": {
+        "operation_id": "6bfe30fb-2995-4dba-9845-042f9100e8ab",
+        "initiating_interface": "wsc-component",
+        "state": "OBSERVED_APPLIED",
+        "reason": null,
+        "attempts": 1,
+        "commit_attribution": "reply",
+        "application_evidence": {
+          "fresh": true,
+          "predicate_satisfied": true,
+          "generation": 1,
+          "revision": 4,
+          "received_at": "2026-09-23T13:09:21.574Z",
+          "source": "ovsdb",
+          "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+        },
+        "receipt": {
+          "scope": "owned_simulation_wsc_component",
+          "m1_sha256": "09bf6a6216c7b2a8da1b1089180593c8522587261da9a9e5d26605fdbd694f81",
+          "controller_al": "020000e00001",
+          "agent_al": "020000003001",
+          "ruid": "020000ec0200",
+          "bssid": "020000ec0200",
+          "ingress": "probe0",
+          "link_generation": 1,
+          "database_generation": 1,
+          "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+          "first_mid": 19,
+          "pod_id": "pod-1",
+          "radio_id": "radio-1",
+          "bss_id": "bss-1"
+        }
+      },
+      "operations": [
+        {
+          "operation_id": "6bfe30fb-2995-4dba-9845-042f9100e8ab",
+          "initiating_interface": "wsc-component",
+          "state": "OBSERVED_APPLIED",
+          "reason": null,
+          "attempts": 1,
+          "commit_attribution": "reply",
+          "application_evidence": {
+            "fresh": true,
+            "predicate_satisfied": true,
+            "generation": 1,
+            "revision": 4,
+            "received_at": "2026-09-23T13:09:21.574Z",
+            "source": "ovsdb",
+            "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+          },
+          "receipt": {
+            "scope": "owned_simulation_wsc_component",
+            "m1_sha256": "09bf6a6216c7b2a8da1b1089180593c8522587261da9a9e5d26605fdbd694f81",
+            "controller_al": "020000e00001",
+            "agent_al": "020000003001",
+            "ruid": "020000ec0200",
+            "bssid": "020000ec0200",
+            "ingress": "probe0",
+            "link_generation": 1,
+            "database_generation": 1,
+            "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+            "first_mid": 19,
+            "pod_id": "pod-1",
+            "radio_id": "radio-1",
+            "bss_id": "bss-1"
+          }
+        }
+      ],
+      "operation_count": 1,
+      "writes": 1,
+      "journal_write_attempts": 1,
+      "process_id": "615d1ccf-70a2-4952-849b-840dcdd374da",
+      "config_ssid": "emosa-controller-trial",
+      "observed_ssid": "emosa-controller-trial"
+    },
+    "operation": {
+      "operation": {
+        "operation_id": "6bfe30fb-2995-4dba-9845-042f9100e8ab",
+        "initiating_interface": "wsc-component",
+        "state": "OBSERVED_APPLIED",
+        "reason": null,
+        "attempts": 1,
+        "commit_attribution": "reply",
+        "application_evidence": {
+          "fresh": true,
+          "predicate_satisfied": true,
+          "generation": 1,
+          "revision": 4,
+          "received_at": "2026-09-23T13:09:21.574Z",
+          "source": "ovsdb",
+          "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+        },
+        "receipt": {
+          "scope": "owned_simulation_wsc_component",
+          "m1_sha256": "09bf6a6216c7b2a8da1b1089180593c8522587261da9a9e5d26605fdbd694f81",
+          "controller_al": "020000e00001",
+          "agent_al": "020000003001",
+          "ruid": "020000ec0200",
+          "bssid": "020000ec0200",
+          "ingress": "probe0",
+          "link_generation": 1,
+          "database_generation": 1,
+          "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+          "first_mid": 19,
+          "pod_id": "pod-1",
+          "radio_id": "radio-1",
+          "bss_id": "bss-1"
+        }
+      },
+      "operations": [
+        {
+          "operation_id": "6bfe30fb-2995-4dba-9845-042f9100e8ab",
+          "initiating_interface": "wsc-component",
+          "state": "OBSERVED_APPLIED",
+          "reason": null,
+          "attempts": 1,
+          "commit_attribution": "reply",
+          "application_evidence": {
+            "fresh": true,
+            "predicate_satisfied": true,
+            "generation": 1,
+            "revision": 4,
+            "received_at": "2026-09-23T13:09:21.574Z",
+            "source": "ovsdb",
+            "provenance": "independent-hostapd-nl80211-manager:Wifi_VIF_State"
+          },
+          "receipt": {
+            "scope": "owned_simulation_wsc_component",
+            "m1_sha256": "09bf6a6216c7b2a8da1b1089180593c8522587261da9a9e5d26605fdbd694f81",
+            "controller_al": "020000e00001",
+            "agent_al": "020000003001",
+            "ruid": "020000ec0200",
+            "bssid": "020000ec0200",
+            "ingress": "probe0",
+            "link_generation": 1,
+            "database_generation": 1,
+            "schema_fingerprint": "b270004824e71adb122131b9cce7fe5b4c828e353ae3b1eef796f2eb32d20a16",
+            "first_mid": 19,
+            "pod_id": "pod-1",
+            "radio_id": "radio-1",
+            "bss_id": "bss-1"
+          }
+        }
+      ],
+      "operation_count": 1,
+      "writes": 1,
+      "journal_write_attempts": 1,
+      "process_id": "615d1ccf-70a2-4952-849b-840dcdd374da",
+      "config_ssid": "emosa-controller-trial",
+      "observed_ssid": "emosa-controller-trial"
+    },
+    "native_shutdown": {
+      "em-baseline-controller": [
+        {
+          "unit": "agent",
+          "before": {
+            "MainPID": "18012",
+            "ActiveState": "active"
+          },
+          "after": {
+            "Result": "success",
+            "ExecMainStatus": "0"
+          }
+        },
+        {
+          "unit": "controller",
+          "before": {
+            "MainPID": "18005",
+            "ActiveState": "active"
+          },
+          "after": {
+            "Result": "success",
+            "ExecMainStatus": "0"
+          }
+        },
+        {
+          "unit": "transport",
+          "before": {
+            "MainPID": "18001",
+            "ActiveState": "active"
+          },
+          "after": {
+            "Result": "success",
+            "ExecMainStatus": "0"
+          }
+        },
+        {
+          "unit": "bus",
+          "before": {
+            "MainPID": "17997",
+            "ActiveState": "active"
+          },
+          "after": {
+            "Result": "success",
+            "ExecMainStatus": "0"
+          }
+        },
+        {
+          "unit": "hostap",
+          "before": {
+            "MainPID": "17987",
+            "ActiveState": "active"
+          },
+          "after": {
+            "Result": "success",
+            "ExecMainStatus": "0"
+          }
+        }
+      ]
+    },
+    "cleanup_errors": []
+  },
+  "restoration_shutdown": {
+    "em-baseline-controller": []
+  }
+}

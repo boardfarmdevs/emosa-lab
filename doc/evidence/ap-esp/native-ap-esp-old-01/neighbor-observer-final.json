@@ -1,0 +1,20 @@
+{
+  "interface": "eth1",
+  "ifindex": 8,
+  "mac": "00:16:3e:b2:d2:c4",
+  "boot_id": "4646cf49-821c-4068-9b73-60e29bc0924d",
+  "netns_inode": 4026532652,
+  "capture_epoch": "1cccb8fb-1716-42c7-8406-8d6ba2de8144",
+  "run_label": "native-ap-esp-old-01",
+  "collector_sha256": "594a33f222f2845a43bdc91d8faa6e6fef728aad1de37e758afdd1ad0c61bcb6",
+  "heartbeat_ns": 47925514286857,
+  "running": false,
+  "errors": [],
+  "frames": [
+    {
+      "received_ns": 47880129747921,
+      "frame_hex": "0180c2000013020000e00001893a0000000000060080010006020000e0000102000600163eb8c4a7000000"
+    }
+  ],
+  "physical_pod_changed": false
+}

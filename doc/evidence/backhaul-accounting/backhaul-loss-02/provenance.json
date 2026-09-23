@@ -1,0 +1,46 @@
+{
+  "kernel": "6.8.0-139-generic",
+  "veth_module_path": "/lib/modules/6.8.0-139-generic/kernel/drivers/net/veth.ko.zst",
+  "veth_module_sha256": "554af4611ce9110d91cfa1f2ebbe837311be648428c8e3ad47ae9841e4c32e88",
+  "source_matches_executed": true,
+  "source_sha256": "fc8c5419f20ec72dea1ca8419312208df0a62313c1f211d86dbf29f5efc9fe91",
+  "binaries": {
+    "em-baseline-agent": {
+      "tc": {
+        "path": "/usr/sbin/tc",
+        "sha256": "28a8a72f5012c82095eb57bff8c0d3fc45e288c8c1c82ea26b6c26222451956a"
+      },
+      "ip": {
+        "path": "/usr/sbin/ip",
+        "sha256": "ea200fcc3a7bf723a8e0e2a21ceb3805324812fef36f6ba0552362a9a9e65f92"
+      },
+      "ping": {
+        "path": "/usr/bin/ping",
+        "sha256": "2369424506d87f336f41e6df9ebb07cee14e93dfff9b526f04c55bd1aebc937f"
+      },
+      "tcpdump": {
+        "path": "/usr/bin/tcpdump",
+        "sha256": "0d28d014ffd7839852a426cfde6448bda549aef90a4937f787673a6ca3152cf0"
+      }
+    },
+    "em-baseline-wired": {
+      "tc": {
+        "path": "/usr/sbin/tc",
+        "sha256": "28a8a72f5012c82095eb57bff8c0d3fc45e288c8c1c82ea26b6c26222451956a"
+      },
+      "ip": {
+        "path": "/usr/sbin/ip",
+        "sha256": "ea200fcc3a7bf723a8e0e2a21ceb3805324812fef36f6ba0552362a9a9e65f92"
+      },
+      "ping": {
+        "path": "/usr/bin/ping",
+        "sha256": "2369424506d87f336f41e6df9ebb07cee14e93dfff9b526f04c55bd1aebc937f"
+      },
+      "tcpdump": {
+        "path": "/usr/bin/tcpdump",
+        "sha256": "0d28d014ffd7839852a426cfde6448bda549aef90a4937f787673a6ca3152cf0"
+      }
+    }
+  },
+  "physical_pod_changed": false
+}

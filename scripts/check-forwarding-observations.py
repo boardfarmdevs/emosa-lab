@@ -51,7 +51,8 @@ def check(directory):
         published[start] = value
     assert len(published) >= 100
 
-    previous, workers, generations = {}, set(), set()
+    previous, previous_windows, workers, generations = {}, {}, set(), set()
+    status_only_events = 0
     accepted = windows = withdrawn = 0
     total = {name: {key: 0 for key in COUNTERS} for name in NAMES}
     for event in read_lines(directory / "forwarding-samples.jsonl"):
@@ -72,6 +73,10 @@ def check(directory):
         metadata = dict(value["bridge_external_ids"][1])
         assert end == int(metadata["ended_ns"])
         assert set(sample["interfaces"]) == set(value["interfaces"]) == NAMES
+        if sample.get("neighbor_observation") is not None:
+            assert sample["neighbor_observation"] == json.loads(
+                dict(value["interfaces"]["eth1"]["external_ids"][1])["neighbor_observation"]
+            )
         for name in NAMES:
             actual, origin = sample["interfaces"][name], value["interfaces"][name]
             assert actual["mac"] == origin["mac_in_use"]
@@ -87,6 +92,10 @@ def check(directory):
         generations.add((worker, sample["generation"]))
         old = previous.get(worker)
         window = event["window"]
+        if sample == old:
+            assert window == previous_windows[worker]
+            status_only_events += 1
+            continue
         if window is not None:
             assert old is not None and old["epoch"] == sample["epoch"]
             assert old["generation"] == sample["generation"]
@@ -106,6 +115,7 @@ def check(directory):
         elif old and old["epoch"] == sample["epoch"]:
             assert event["reason"] in {"measurement_gap", "counter_reset"}
         previous[worker] = sample
+        previous_windows[worker] = window
         accepted += 1
     assert accepted >= 100 and windows >= 90 and len(workers) == 2 and len(generations) == 3
     assert withdrawn >= 1  # Actual OVSDB interruption must revoke observations.
@@ -160,6 +170,7 @@ def check(directory):
         "capture_health": health,
         "successful_manager_publications": len(published),
         "accepted_samples": accepted,
+        "status_only_events": status_only_events,
         "checked_counter_windows": windows,
         "worker_processes": len(workers),
         "connection_generations": len(generations),

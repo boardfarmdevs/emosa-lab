@@ -369,3 +369,46 @@ def test_invalid_telemetry_deadline_cannot_preserve_source_authority(expiry):
     with pytest.raises(EmosaError):
         rig.publish((1, 2), telemetry_valid_until=expiry)
     assert rig.source.current() is None
+
+
+def test_topology_deadline_withdraws_topology_without_expiring_radio_or_control_context():
+    from emosa.wire.channel import OperatingRadio
+    from emosa.wire.reports import topology_response
+
+    rig = Rig()
+    radio = rig.caps.radios[0].basic.ruid
+    live = rig.publish(
+        (1, 2),
+        lifetime=2,
+        topology_valid_until=0.2,
+        telemetry_valid_until=1,
+        operating_radios=(OperatingRadio(radio, 81, 6, 20),),
+    )
+    prepared = topology_response(
+        Reassembler().feed(query_frames(1)[0]),
+        rig.binding,
+        live.topology,
+        live.stamp,
+        ingress="fixture",
+        generation=1,
+        received_at=0,
+        clock=lambda: rig.now,
+    )
+    rig.now = 0.3
+    withdrawn = rig.source.current()
+    assert withdrawn.context_token == live.context_token
+    assert not withdrawn.topology.inventory_complete
+    assert withdrawn.operating_radios == live.operating_radios
+    with pytest.raises(EmosaError):
+        prepared.send(rig.sent.append, rig.coordinator._stamp, clock=lambda: rig.now)
+    assert not rig.sent
+    renewed = rig.publish((1, 3), lifetime=2, topology_valid_until=0.2, telemetry_valid_until=1)
+    assert renewed.context_token == live.context_token and not renewed.topology.inventory_complete
+
+
+@pytest.mark.parametrize("expiry", [True, "1", float("nan"), float("inf")])
+def test_invalid_topology_deadline_revokes_authority(expiry):
+    rig = Rig()
+    with pytest.raises(EmosaError):
+        rig.publish((1, 2), topology_valid_until=expiry)
+    assert rig.source.current() is None

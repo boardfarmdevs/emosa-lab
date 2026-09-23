@@ -1,8 +1,10 @@
 # Receive the controller's reporting policy without hiding missing reports
 
 EMOSA now decodes and durably records the selected native controller's Multi-AP
-Policy Config Request and sends its receipt Ack. **Required metric reports are
-still missing.** Receiving a request, acknowledging receipt, applying a policy
+Policy Config Request and sends its receipt Ack. **Live required metric reports are
+still missing.** The [AP report builder](ap-metric-reports.md) now implements
+selected message assembly and guarded periodic dispatch; its native measurement
+source remains unqualified. Receiving a request, acknowledging receipt, applying a policy
 and fulfilling its recurring reporting obligations are separate observations.
 
 ## What the controller asks for
@@ -81,8 +83,12 @@ restart, not an actual VM reboot. Rebase behavior has a component test.
 If the source disappears, the old coordinator stops active work. On recovery,
 elapsed due periods are recorded without generating a burst of made-up reports.
 `periods_due_without_report` is evidence of missing work, not a successful report
-counter. RCPI/utilization threshold reporting, QoS/steering actuation and metric
-message generation are still unimplemented here.
+counter. RCPI/utilization threshold reporting and general QoS/steering actuation
+remain unimplemented. Selected metric assembly and periodic dispatch
+are now implemented in the [AP report guide](ap-metric-reports.md). The dispatcher
+reserves each due period durably before sending, attempts one current report,
+and keeps unavailable or crash-uncertain outcomes explicit. A successful send
+still requires independent controller receipt evidence.
 
 ## Learn from retained evidence — HOST
 
@@ -146,11 +152,11 @@ The selected rules come from the obtained EasyMesh 6.1 specification:
 | §17.2.12/Table 35, pp.132–133 | Interval, thresholds and inclusion flags |
 | §17.2.92/Table 115, pp.181–182 | MSCS/SCS policy lists and reserved bytes |
 
-Next connect qualified AP airtime/ESP, radio and STA measurements to complete
-report construction and scheduling. The [counter accounting findings](station-counter-accounting.md)
-already rule out simple raw-counter passthrough. AP Extended Metrics, Radio
-Metrics and the requested STA companion TLVs must be assessed against the
-selected profile/feature rules; historical Profile-1 TLV lists cannot replace
-that review. Neighbor link metrics and final-session reporting remain separate
+Next connect qualified AP airtime/ESP, radio and STA measurements to the
+implemented report construction and scheduling. The [counter accounting findings](station-counter-accounting.md)
+already rule out simple raw-counter passthrough. The selected AP Extended, Radio and requested STA companion composition is
+recorded in the AP guide and protocol matrix. Their actual field conversions
+still need qualification; historical Profile-1 TLV lists cannot replace the
+selected EasyMesh 6.1 composition rules. Neighbor link metrics and final-session reporting remain separate
 requirements. Only then repeat the full 15-minute acceptance with independent
 capture and controller observations.

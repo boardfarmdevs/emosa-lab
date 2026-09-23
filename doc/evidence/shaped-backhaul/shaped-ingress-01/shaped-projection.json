@@ -1,0 +1,1764 @@
+{
+  "scope": "component replay of retained observations; not a live OVSDB result",
+  "observations": [
+    {
+      "heartbeat_ns": 33867056604529,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33867067985253,
+      "available": false,
+      "reason": "awaiting_shaped_backhaul_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33867056876699,
+        "ended_ns": 33867067977880,
+        "counters": {
+          "tx_packets": 280977,
+          "tx_bytes": 231640669,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45056,
+          "rx_bytes": 4514488,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33867589826344,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33867571916484,
+        "ended_ns": 33867589810845,
+        "counters": {
+          "tx_packets": 280978,
+          "tx_bytes": 231640767,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45057,
+          "rx_bytes": 4514586,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 122,
+          "service_packets": 1,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33867056876699,
+          33867067977880
+        ],
+        "last_read_ns": [
+          33867571916484,
+          33867589810845
+        ],
+        "deltas": {
+          "tx_packets": 1,
+          "tx_bytes": 98,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 1,
+          "rx_bytes": 98,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 122,
+          "service_packets": 1,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 9760.0,
+        "interval_ns_bounds": [
+          503938604,
+          532934146
+        ],
+        "available_percent": 99.99811741604744,
+        "available_percent_bounds": [
+          99.99806325613427,
+          99.9981686292625
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33868106914076,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33868091987246,
+        "ended_ns": 33868106899019,
+        "counters": {
+          "tx_packets": 280978,
+          "tx_bytes": 231640767,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45057,
+          "rx_bytes": 4514586,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 122,
+          "service_packets": 1,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33867571916484,
+          33867589810845
+        ],
+        "last_read_ns": [
+          33868091987246,
+          33868106899019
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          502176401,
+          534982535
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33868433084402,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33868650905459,
+      "available": false,
+      "reason": "awaiting_shaped_backhaul_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33868634226795,
+        "ended_ns": 33868650899028,
+        "counters": {
+          "tx_packets": 280979,
+          "tx_bytes": 231640865,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45058,
+          "rx_bytes": 4514684,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 244,
+          "service_packets": 2,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33869168317800,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33869154182157,
+        "ended_ns": 33869168302633,
+        "counters": {
+          "tx_packets": 280979,
+          "tx_bytes": 231640865,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45058,
+          "rx_bytes": 4514684,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 244,
+          "service_packets": 2,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33868634226795,
+          33868650899028
+        ],
+        "last_read_ns": [
+          33869154182157,
+          33869168302633
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          503283129,
+          534075838
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33869683644722,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33869671974525,
+        "ended_ns": 33869683631028,
+        "counters": {
+          "tx_packets": 280979,
+          "tx_bytes": 231640865,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45058,
+          "rx_bytes": 4514684,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 244,
+          "service_packets": 2,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33869154182157,
+          33869168302633
+        ],
+        "last_read_ns": [
+          33869671974525,
+          33869683631028
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          503671892,
+          529448871
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33870204061822,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33870187977292,
+        "ended_ns": 33870204048228,
+        "counters": {
+          "tx_packets": 280984,
+          "tx_bytes": 231641355,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45063,
+          "rx_bytes": 4515174,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 854,
+          "service_packets": 7,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33869671974525,
+          33869683631028
+        ],
+        "last_read_ns": [
+          33870187977292,
+          33870204048228
+        ],
+        "deltas": {
+          "tx_packets": 5,
+          "tx_bytes": 490,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 5,
+          "rx_bytes": 490,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 610,
+          "service_packets": 5,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 48800.0,
+        "interval_ns_bounds": [
+          504346264,
+          532073703
+        ],
+        "available_percent": 99.99058296799487,
+        "available_percent_bounds": [
+          99.99032410796246,
+          99.99082833830636
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33870721038320,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33870706323090,
+        "ended_ns": 33870720990122,
+        "counters": {
+          "tx_packets": 280994,
+          "tx_bytes": 231642335,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45073,
+          "rx_bytes": 4516154,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 2074,
+          "service_packets": 17,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33870187977292,
+          33870204048228
+        ],
+        "last_read_ns": [
+          33870706323090,
+          33870720990122
+        ],
+        "deltas": {
+          "tx_packets": 10,
+          "tx_bytes": 980,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 10,
+          "rx_bytes": 980,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 1220,
+          "service_packets": 10,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 97600.0,
+        "interval_ns_bounds": [
+          502274862,
+          533012830
+        ],
+        "available_percent": 99.98114533752228,
+        "available_percent_bounds": [
+          99.98056840837876,
+          99.98168899611666
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33871240949679,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33871223157566,
+        "ended_ns": 33871240934682,
+        "counters": {
+          "tx_packets": 280996,
+          "tx_bytes": 231642531,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45075,
+          "rx_bytes": 4516350,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 2318,
+          "service_packets": 19,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33870706323090,
+          33870720990122
+        ],
+        "last_read_ns": [
+          33871223157566,
+          33871240934682
+        ],
+        "deltas": {
+          "tx_packets": 2,
+          "tx_bytes": 196,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 2,
+          "rx_bytes": 196,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 244,
+          "service_packets": 2,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 19520.0,
+        "interval_ns_bounds": [
+          502167444,
+          534611592
+        ],
+        "available_percent": 99.996234491763,
+        "available_percent_bounds": [
+          99.99611285035833,
+          99.9963487510761
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33871528949189,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33871620216860,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33871786310263,
+      "available": false,
+      "reason": "awaiting_shaped_backhaul_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 33871772500609,
+        "ended_ns": 33871786302499,
+        "counters": {
+          "tx_packets": 280997,
+          "tx_bytes": 231642877,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45075,
+          "rx_bytes": 4516350,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 2688,
+          "service_packets": 20,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33872307078409,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 33872290286266,
+        "ended_ns": 33872307054154,
+        "counters": {
+          "tx_packets": 280997,
+          "tx_bytes": 231642877,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45075,
+          "rx_bytes": 4516350,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 2688,
+          "service_packets": 20,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33871772500609,
+          33871786302499
+        ],
+        "last_read_ns": [
+          33872290286266,
+          33872307054154
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          503983767,
+          534553545
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33872826993264,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 33872809189258,
+        "ended_ns": 33872826976393,
+        "counters": {
+          "tx_packets": 281005,
+          "tx_bytes": 231643549,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45083,
+          "rx_bytes": 4517022,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 6,
+          "service_bytes": 3588,
+          "service_packets": 28,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33872290286266,
+          33872307054154
+        ],
+        "last_read_ns": [
+          33872809189258,
+          33872826976393
+        ],
+        "deltas": {
+          "tx_packets": 8,
+          "tx_bytes": 672,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 8,
+          "rx_bytes": 672,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 6,
+          "service_bytes": 900,
+          "service_packets": 8,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 6
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 72000.0,
+        "interval_ns_bounds": [
+          502135104,
+          536690127
+        ],
+        "available_percent": 99.986138188051,
+        "available_percent_bounds": [
+          99.98566122953237,
+          99.98658443739174
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33873346822933,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 33873329581483,
+        "ended_ns": 33873346805261,
+        "counters": {
+          "tx_packets": 281015,
+          "tx_bytes": 231644529,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45093,
+          "rx_bytes": 4518002,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 16,
+          "service_bytes": 4808,
+          "service_packets": 38,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33872809189258,
+          33872826976393
+        ],
+        "last_read_ns": [
+          33873329581483,
+          33873346805261
+        ],
+        "deltas": {
+          "tx_packets": 10,
+          "tx_bytes": 980,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 10,
+          "rx_bytes": 980,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 10,
+          "service_bytes": 1220,
+          "service_packets": 10,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 10
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 97600.0,
+        "interval_ns_bounds": [
+          502605090,
+          537616003
+        ],
+        "available_percent": 99.98123475852263,
+        "available_percent_bounds": [
+          99.98058117557066,
+          99.98184577850076
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33873868487769,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 33873849911033,
+        "ended_ns": 33873868466269,
+        "counters": {
+          "tx_packets": 281016,
+          "tx_bytes": 231644627,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45094,
+          "rx_bytes": 4518100,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 17,
+          "service_bytes": 4930,
+          "service_packets": 39,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33873329581483,
+          33873346805261
+        ],
+        "last_read_ns": [
+          33873849911033,
+          33873868466269
+        ],
+        "deltas": {
+          "tx_packets": 1,
+          "tx_bytes": 98,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 1,
+          "rx_bytes": 98,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 1,
+          "service_bytes": 122,
+          "service_packets": 1,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 1
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 9760.0,
+        "interval_ns_bounds": [
+          503105772,
+          538884786
+        ],
+        "available_percent": 99.99812666248748,
+        "available_percent_bounds": [
+          99.99806005008426,
+          99.99818885219001
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33874389181718,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 33874370610851,
+        "ended_ns": 33874389163775,
+        "counters": {
+          "tx_packets": 281016,
+          "tx_bytes": 231644627,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45094,
+          "rx_bytes": 4518100,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 17,
+          "service_bytes": 4930,
+          "service_packets": 39,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33873849911033,
+          33873868466269
+        ],
+        "last_read_ns": [
+          33874370610851,
+          33874389163775
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          502144582,
+          539252742
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33874905740218,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            true,
+            null,
+            1
+          ]
+        ],
+        "started_ns": 33874892423480,
+        "ended_ns": 33874905722155,
+        "counters": {
+          "tx_packets": 281016,
+          "tx_bytes": 231644627,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45094,
+          "rx_bytes": 4518100,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 17,
+          "service_bytes": 4930,
+          "service_packets": 39,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33874370610851,
+          33874389163775
+        ],
+        "last_read_ns": [
+          33874892423480,
+          33874905722155
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          503259705,
+          535111304
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33875086580751,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33875087385331,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33875454086325,
+      "available": false,
+      "reason": "awaiting_shaped_backhaul_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33875439038112,
+        "ended_ns": 33875454078671,
+        "counters": {
+          "tx_packets": 281016,
+          "tx_bytes": 231644627,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45094,
+          "rx_bytes": 4518100,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 4930,
+          "service_packets": 39,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33875973760788,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33875957916850,
+        "ended_ns": 33875973748335,
+        "counters": {
+          "tx_packets": 281016,
+          "tx_bytes": 231644627,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45094,
+          "rx_bytes": 4518100,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 4930,
+          "service_packets": 39,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33875439038112,
+          33875454078671
+        ],
+        "last_read_ns": [
+          33875957916850,
+          33875973748335
+        ],
+        "deltas": {
+          "tx_packets": 0,
+          "tx_bytes": 0,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 0,
+          "rx_bytes": 0,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          503838179,
+          534710223
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33876493282561,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33876477563473,
+        "ended_ns": 33876493269115,
+        "counters": {
+          "tx_packets": 281021,
+          "tx_bytes": 231645117,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45099,
+          "rx_bytes": 4518590,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 5662,
+          "service_packets": 45,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33875957916850,
+          33875973748335
+        ],
+        "last_read_ns": [
+          33876477563473,
+          33876493269115
+        ],
+        "deltas": {
+          "tx_packets": 5,
+          "tx_bytes": 490,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 5,
+          "rx_bytes": 490,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 732,
+          "service_packets": 6,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 58560.0,
+        "interval_ns_bounds": [
+          503815138,
+          535352265
+        ],
+        "available_percent": 99.98872943861961,
+        "available_percent_bounds": [
+          99.98837668907042,
+          99.98906140800581
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33877008569018,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33876995488275,
+        "ended_ns": 33877008556645,
+        "counters": {
+          "tx_packets": 281032,
+          "tx_bytes": 231646195,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45110,
+          "rx_bytes": 4519668,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 6882,
+          "service_packets": 55,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33876477563473,
+          33876493269115
+        ],
+        "last_read_ns": [
+          33876995488275,
+          33877008556645
+        ],
+        "deltas": {
+          "tx_packets": 11,
+          "tx_bytes": 1078,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 11,
+          "rx_bytes": 1078,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 1220,
+          "service_packets": 10,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 97600.0,
+        "interval_ns_bounds": [
+          502219160,
+          530993172
+        ],
+        "available_percent": 99.98110746514008,
+        "available_percent_bounds": [
+          99.98056625318715,
+          99.98161934933506
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33877527619233,
+      "available": true,
+      "reason": "observed_shaped_backhaul_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "b2f6f255-d42b-41dd-ace0-9340f2056ecc",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1",
+            false,
+            null,
+            null
+          ]
+        ],
+        "started_ns": 33877512610340,
+        "ended_ns": 33877527602641,
+        "counters": {
+          "tx_packets": 281033,
+          "tx_bytes": 231646293,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 45111,
+          "rx_bytes": 4519766,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 7004,
+          "service_packets": 56,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          33876995488275,
+          33877008556645
+        ],
+        "last_read_ns": [
+          33877512610340,
+          33877527602641
+        ],
+        "deltas": {
+          "tx_packets": 1,
+          "tx_bytes": 98,
+          "tx_driver_drops": 0,
+          "tx_action_drops": 0,
+          "rx_packets": 1,
+          "rx_bytes": 98,
+          "rx_interface_drops": 0,
+          "rx_action_drops": 0,
+          "service_bytes": 122,
+          "service_packets": 1,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "transmit_losses": 0,
+        "receive_losses": 0
+      },
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 9760.0,
+        "interval_ns_bounds": [
+          504053695,
+          532114366
+        ],
+        "available_percent": 99.99811613571826,
+        "available_percent_bounds": [
+          99.99806369835261,
+          99.99816580783688
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 33877778503769,
+      "available": false,
+      "reason": "unavailable_or_unsupported_shaped_backhaul_source",
+      "sample": null,
+      "window": null,
+      "scope": "owned shaped eth1 TX/RX, disjoint action/scheduler/driver losses and service work",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    }
+  ],
+  "sustained_operation_proven": false
+}

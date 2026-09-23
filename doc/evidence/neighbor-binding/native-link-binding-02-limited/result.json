@@ -1,0 +1,107 @@
+{
+  "label": "native-link-binding-02",
+  "status": "failed",
+  "controller_onboarding_proven": false,
+  "physical_pod_proven": false,
+  "native_controller": true,
+  "semantic_submission": false,
+  "cases": {},
+  "active_seconds_requested": 210,
+  "sustained_operation_proven": false,
+  "recovery_checks_requested": true,
+  "agent_counter_units": 0,
+  "station_removal_observation_requested": true,
+  "capture_health_required": true,
+  "capture_buffer_kib": 8192,
+  "reporting_policy_receipt_expected": true,
+  "medium_loss_requested": false,
+  "tx_status_observation_requested": false,
+  "telemetry_gap_check_requested": true,
+  "forwarding_observation_requested": true,
+  "neighbor_binding_requested": true,
+  "neighbor_gap_check_requested": true,
+  "netlink_capture_buffer_kib": null,
+  "previous_controller_collection": {
+    "em-baseline-controller": []
+  },
+  "controller_policy": {
+    "submitted": true,
+    "virtual_al_mac": "02:00:00:00:30:01",
+    "virtual_bss_count": 1,
+    "pod_application_proven": false
+  },
+  "error": "TimeoutError",
+  "detail": "pod-side controller discovery did not establish a live binding",
+  "station_removal_observation": {
+    "counts": {
+      "del_station": 0,
+      "new_station": 0
+    },
+    "errors": [],
+    "event": "finished",
+    "final_counter_source_qualified": false,
+    "received_monotonic_ns": 24619610139464,
+    "received_wall_ns": 1790145517538638359,
+    "remaining_observed_stations": []
+  },
+  "native_shutdown": {
+    "em-baseline-controller": [
+      {
+        "unit": "agent",
+        "before": {
+          "MainPID": "9949",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "core-dump",
+          "ExecMainStatus": "6"
+        }
+      },
+      {
+        "unit": "controller",
+        "before": {
+          "MainPID": "9942",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "core-dump",
+          "ExecMainStatus": "6"
+        }
+      },
+      {
+        "unit": "transport",
+        "before": {
+          "MainPID": "9938",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "bus",
+        "before": {
+          "MainPID": "9934",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      },
+      {
+        "unit": "hostap",
+        "before": {
+          "MainPID": "9924",
+          "ActiveState": "active"
+        },
+        "after": {
+          "Result": "success",
+          "ExecMainStatus": "0"
+        }
+      }
+    ]
+  },
+  "cleanup_errors": []
+}

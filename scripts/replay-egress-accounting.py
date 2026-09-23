@@ -1,0 +1,66 @@
+"""Replay retained collector observations through the production accounting source.
+
+This is component replay, not evidence of a live OVSDB/native-controller session.
+The independent checker must also compare the original counters and captures.
+"""
+
+import argparse
+import json
+from pathlib import Path
+
+from emosa.simulation.backhaul_accounting import BackhaulAccountingSource
+from emosa.simulation.egress_accounting import EgressAccountingSource
+from emosa.simulation.shaped_backhaul import ShapedBackhaulSource
+from emosa.simulation.virtual_capacity import VirtualCapacitySource
+
+
+def replay(directory, source_class=EgressAccountingSource):
+    rows = [
+        json.loads(line)
+        for line in (directory / "egress-observations.jsonl").read_text().splitlines()
+    ]
+    first = rows[0]
+    now = [first["heartbeat_ns"]]
+    source = source_class(first["run_label"], clock=lambda: now[0])
+    result = []
+    for value in rows:
+        now[0] = value["heartbeat_ns"]
+        source.refresh(
+            value,
+            generation=1,
+            ifindex=first["ifindex"],
+            address=first["mac"],
+            boot_id=first["boot_id"],
+            netns_inode=first["netns_inode"],
+        )
+        result.append({"heartbeat_ns": now[0], **source.status()})
+    return {
+        "scope": "component replay of retained observations; not a live OVSDB result",
+        "observations": result,
+        "sustained_operation_proven": False,
+    }
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("directory", type=Path)
+    choice = parser.add_mutually_exclusive_group()
+    choice.add_argument("--bidirectional", action="store_true")
+    choice.add_argument("--virtual-service", action="store_true")
+    choice.add_argument("--shaped-backhaul", action="store_true")
+    args = parser.parse_args()
+    print(
+        json.dumps(
+            replay(
+                args.directory,
+                ShapedBackhaulSource
+                if args.shaped_backhaul
+                else VirtualCapacitySource
+                if args.virtual_service
+                else BackhaulAccountingSource
+                if args.bidirectional
+                else EgressAccountingSource,
+            ),
+            indent=2,
+        )
+    )

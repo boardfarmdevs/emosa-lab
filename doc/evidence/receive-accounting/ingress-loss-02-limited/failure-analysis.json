@@ -1,0 +1,25 @@
+{
+  "independent_capture_audit_passed": false,
+  "reason": "direction-selected Ethernet pcap does not reconcile with filter total",
+  "captured": 53,
+  "received_by_filter": 54,
+  "dropped_by_kernel": 0,
+  "capture_command": [
+    "tcpdump",
+    "--immediate-mode",
+    "-n",
+    "-U",
+    "-B",
+    "8192",
+    "-s",
+    "0",
+    "-i",
+    "veth582e8e51",
+    "-w",
+    "-",
+    "outbound"
+  ],
+  "traffic_control_restored": true,
+  "full_private_evidence_retained": true,
+  "complete_measurements_proven": false
+}

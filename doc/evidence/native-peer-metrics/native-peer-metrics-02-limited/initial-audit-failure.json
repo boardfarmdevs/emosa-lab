@@ -1,0 +1,10 @@
+{
+  "failed_assertion": "service observations available before/during/after telemetry pause",
+  "observed_before": {
+    "virtual_capacity": "awaiting_virtual_capacity_baseline",
+    "shaped_backhaul": "awaiting_shaped_backhaul_baseline",
+    "peer_link_metrics": "awaiting_interval_inside_qualified_path"
+  },
+  "during_and_after": "all three sources available",
+  "conclusion": "The harness started the telemetry fault before service/path warmup completed. Preserve this incomplete qualification attempt; require all requested sources to be available before the fault in a new run. Packet/counter bounds are unchanged."
+}

@@ -244,6 +244,82 @@ OpenSync-format telemetry. Work through these exercises in order:
     faults, and find client transit traffic plus the controller's interface
     advertisement in the separate backhaul capture. Explain the remaining
     difference between raw interface counts and qualified neighbor metrics.
+12. Follow [live neighbor discovery binding](../protocol/neighbor-discovery-binding.md).
+    Match discovery received on the pod's actual backhaul to the independent
+    capture, then inspect the observed interface identities in topology replies.
+    Pause the observer and explain why topology becomes unavailable while
+    control authority, radio observations and traffic remain live. Review the
+    retained failed attempts and distinguish media fixtures from measurements.
+13. Follow [backhaul counter accounting](../protocol/backhaul-counter-accounting.md).
+    Reconcile raw packet/byte intervals with independent capture, then inspect
+    the controlled egress-drop experiment. Explain why 17 lost packets can leave
+    interface error/drop counters at zero, and why a veth speed constant cannot
+    supply measured capacity. Reproduce the short loss probe only in the idle lab.
+14. Follow [egress accounting through OVSDB](../protocol/egress-accounting-source.md).
+    Trace passive interface/action observations to the adapter, distinguish
+    disjoint losses from duplicate parent counts, and explain why configuration
+    events reset the baseline. Compare retained loss replay with the actual
+    native OVSDB recovery run. Identify the receive-loss and capacity inputs
+    still required before a complete neighbor response can be sent.
+15. Follow [receive and common-window accounting](../protocol/receive-counter-accounting.md).
+    Distinguish interface arrival from client delivery, observe 17 ingress
+    losses that ordinary receive drop counters miss, and read a direction-bearing
+    capture. Reconcile both directions over common bounds and verify their live
+    OVSDB recovery. Explain the remaining complete-link qualification boundary.
+16. Follow [virtual-link service calibration](../protocol/virtual-link-capacity.md).
+    Distinguish configured rate, application throughput and modeled wire work.
+    Reconcile independent packet captures at half load, saturation and small
+    frame load. Trace the estimate through OVSDB and recovery, and explain why
+    a missing framing table must withhold the result. Identify the remaining
+    media, peer and loss inputs before native neighbor metric publication.
+17. Follow [combined shaped-backhaul accounting](../protocol/shaped-backhaul-accounting.md).
+    Trace the separate action, scheduler and driver loss points. Reconcile
+    actual queue overflow against packet sequences and application delivery,
+    then compare incoming and outgoing action drops. Explain why a saturated
+    sender may block without overflowing the queue. Verify one common set of
+    service/loss intervals through real OVSDB recovery and identify the remaining
+    peer/media inputs before native publication.
+18. Follow [native peer-metric delivery](../protocol/native-peer-metrics.md).
+    Explain the isolated three-port path, the declared wired service profile
+    and its unknown physical PHY. Trace an actual controller query through
+    measured OVSDB inputs to a matching reply and native interface statistics.
+    Reproduce the path fault, reconnect and restart; classify deliberately
+    unavailable and post-exit queries using evidence rather than assumptions.
+
+19. Follow [AP/radio/client report assembly](../protocol/ap-metric-reports.md).
+    Decode the seven selected TLV types and distinguish missing observations,
+    known empty inventories and measured zeros. Generate a synthetic capture,
+    check it with the independent decoder, and explain durable reservation before
+    transmission. Compare this with the native run's deliberately withheld AP
+    reports and preserved deadlines through real recovery faults. Identify the
+    qualified measurement inputs needed before native AP delivery can be tested.
+
+20. Follow [native lifecycle and the 15-minute workload](../protocol/native-lifecycle.md).
+    Explain how shared ownership can preserve an object past its runtime, compare
+    baseline/candidate C++ destruction events, and verify restoration after an
+    interrupted candidate install. Run the full workload with both real recovery
+    faults. Inspect loaded-library hashes, unchanged stop policy and actual
+    controller/helper exit results. Keep clean shutdown separate from the still
+    missing AP/STA and final-session reporting inputs.
+
+21. Follow [live final-session reasons](../protocol/live-session-reasons.md).
+    Explain why a membership disappearance is not a disconnect reason and why
+    a completed packet capture cannot feed a live deadline. Join the observed
+    radio reason with the removal-time kernel sample for the same association,
+    check the result independently, and distinguish this input from qualified
+    EasyMesh counter conversion and acknowledged final-statistics delivery.
+22. **Verify native sparse AP service-field reception.** Follow the
+    [native ESP parser exercise](../protocol/native-ap-esp.md). Compare the real
+    baseline crash with the corrected candidate, then inspect all eight presence
+    combinations and malformed-array rejection. This prepares the controller to
+    receive later qualified AP reports; it does not supply their measurements.
+23. **Use public metric definitions without confusing encoding with measurement.**
+    Follow the [BBF definition exercise](../protocol/bbf-data-elements.md) and
+    manual section 13.33 on HOST. Reproduce the 33-field USP/CWMP comparison,
+    explain radio fractions versus STA millisecond durations, and test unavailable
+    counters and width overflow. Use these definitions for source qualification;
+    retain the exact WFA package comparison and live reporting gaps explicitly.
+
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

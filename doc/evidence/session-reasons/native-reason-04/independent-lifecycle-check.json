@@ -1,0 +1,33 @@
+{
+  "selected_native_lifecycle_checks_passed": true,
+  "scope": "controller/helper main processes using the candidate Linux BPL library",
+  "baseline_lifetime_failure_reproduced": true,
+  "candidate_lifetime_order_verified": true,
+  "stop_policy_unchanged": true,
+  "native_exits": {
+    "controller": {
+      "pid": 17127,
+      "exit_status": 0,
+      "result": "success"
+    },
+    "agent": {
+      "pid": 17134,
+      "exit_status": 0,
+      "result": "success"
+    }
+  },
+  "runtime_libraries_restored": {
+    "libbpl.so.6.0.0": {
+      "restored_sha256": "2e4d0b2ef7dc68e11ad8e6686418555100768634f7462a24f6bb454c77b42cf6",
+      "restored": true
+    }
+  },
+  "active_seconds": 901.5653266309964,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "remaining": [
+    "Qualified AP/STA reports",
+    "Final disassociation statistics",
+    "Complete integrated acceptance"
+  ]
+}

@@ -741,8 +741,8 @@
       "review_document": "doc/protocol/ieee-media-review.md",
       "reviewed_sections": [
         "Annex E.1 printed p.5648; Table E-4 starting p.5656; 2.4 GHz entries p.5658",
-        "9.4.2.52 printed pp.1120\u20131121",
-        "9.4.2.54.1\u20132 starting printed p.1122",
+        "9.4.2.52 printed pp.1120–1121",
+        "9.4.2.54.1–2 starting printed p.1122",
         "9.4.2.156.1 printed p.1292",
         "9.4.2.247.1 printed p.1437",
         "9.4.2.2 Figure 9-209 printed p.934 (SSID structure and encoding)"
@@ -822,7 +822,10 @@
       "needed_for": "EasyMesh 6.1 reference 10 and section 17.2.59 Table 82 Device.CollectionInterval; required capability-report definition, not merely ODH transport; also section 17.2.35 Table 58 STA byte/packet/error/retry definitions for final and periodic reports",
       "access_checked_on": "2026-09-22",
       "access_result": "Publisher member route redirects to Wi-Fi Alliance login; no package or credentials supplied",
-      "wire_value_implemented": false
+      "wire_value_implemented": true,
+      "public_definition_review": "doc/protocol/bbf-data-elements.md",
+      "public_definition_status": "BBF_2.17_sources_verified_selected_representation_bridge_implemented_exact_WFA_equivalence_pending",
+      "wire_value_scope": "Table 82 C5 millisecond value using explicitly selected BBF 2.17 Device.CollectionInterval; not live cadence advertisement or WFA package validation"
     },
     {
       "id": "ieee8021ab-2009",
@@ -834,6 +837,31 @@
       ],
       "affected_work": "LLDP bridge discovery accompanying a live Topology Discovery procedure; not required by the current unicast transport probe",
       "content_sha256": null
+    },
+    {
+      "id": "bbf-tr181-2.17.0-selected-data-elements",
+      "edition": "TR-181 Issue 2 Amendment 17, Device:2.17 USP and CWMP full XML as served 2026-09-23",
+      "access_status": "public_publisher_files_obtained_verified_and_hashed",
+      "reviewed_on": "2026-09-23",
+      "sources": {
+        "usp": {
+          "url": "https://usp-data-models.broadband-forum.org/tr-181-2-17-0-usp-full.xml",
+          "sha256": "4907bdbd5802a40b9d0e493d9c5c1884a25ab3b0437f725f71a39604eaefb5f7",
+          "bytes": 4446760
+        },
+        "cwmp": {
+          "url": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp-full.xml",
+          "sha256": "5c0f218337ec4831b3583c1ec7ed7b974dd5e57ef3281d01052f84337538a303",
+          "bytes": 4138455
+        }
+      },
+      "selected_parameters": 33,
+      "selected_definitions_usp_cwmp_equal": true,
+      "guide": "doc/protocol/bbf-data-elements.md",
+      "evidence": "doc/evidence/bbf-data-elements/source-review.json",
+      "scope": "Explicit BBF definitions for bounded independent encoding; no silent substitution for exact WFA DEr3 package",
+      "wfa_der3_equivalence_verified": false,
+      "measurement_source_qualified": false
     }
   ],
   "available_procedure_audit": {
@@ -850,7 +878,7 @@
     "status": "compatibility_findings_open",
     "normative_references": [
       "EasyMesh 6.1 section 6.1 p.63",
-      "EasyMesh 6.1 section 7.1 pp.67\u201369",
+      "EasyMesh 6.1 section 7.1 pp.67–69",
       "EasyMesh 6.1 section 17.1.3 p.111"
     ],
     "observations": [
@@ -882,8 +910,8 @@
       ],
       "specification_references": [
         "EasyMesh 6.1 section 6.1 p.63",
-        "EasyMesh 6.1 section 7.1 pp.67\u201369",
-        "EasyMesh 6.1 section 17.2.72 Table 95 pp.169\u2013170"
+        "EasyMesh 6.1 section 7.1 pp.67–69",
+        "EasyMesh 6.1 section 17.2.72 Table 95 pp.169–170"
       ]
     }
   },
@@ -913,9 +941,9 @@
       "pdf_pages": 7025,
       "review_document": "doc/protocol/ieee-media-review.md",
       "reviewed_sections": [
-        "3.1.1\u20132 printed pp.239\u2013240",
-        "3.2.3\u20136 printed pp.240\u2013242",
-        "3.2.7\u20139 printed pp.242\u2013243"
+        "3.1.1–2 printed pp.239–240",
+        "3.2.3–6 printed pp.240–242",
+        "3.2.7–9 printed pp.242–243"
       ],
       "corrections_check": {
         "date": "2026-09-21",
@@ -1782,13 +1810,13 @@
     "remaining": [
       "Qualify final-session publisher/counter/reason semantics and integrate measured records with implemented sender",
       "Reporting policy and qualified utilization/ESP/link/traffic metrics",
-      "Qualified IEEE 1905 neighbor measurements and actual interface mapping for the implemented query/response handler",
-      "Complete 15-minute acceptance with independent capture review"
+      "Complete 15-minute acceptance with independent capture review",
+      "Physical and multiple-peer qualification of neighbor metrics; the owned sole-peer profile passes the 901-second operational run"
     ],
     "sustained_operation_proven": false,
     "physical_pod_proven": false,
     "evidence": "doc/evidence/native-soak/run-01/independent-check.json",
-    "channel_contract": "Only advertised class 81/channel 6; persist compatible controller preferences before same-MID acceptance; measured nominal HT20 power; operating report/Ack with bounded new-MID retries. No lower-power or other-channel actuation; no full channel compliance claim.",
+    "channel_contract": "Only advertised class 81/channel 6; persist compatible controller preferences before same-MID acceptance; measured nominal HT20 power; operating report/Ack with bounded new-MID retries. No lower-power or other-channel actuation; no full channel compliance claim. Up to four early requests may wait for a fresh operating sample within the original one-second response deadline and control context; duplicates cannot extend the wait and invalidation discards it.",
     "recovery_contract": "New discovery/Early/M1 after source loss or actual worker restart; fresh authenticated operation can complete as observed no-op. Retain NV channel policy across reconnect; explicitly reset at virtual-agent reboot as 8.2 permits.",
     "operational_recovery_checks_passed": true,
     "final_statistics": {
@@ -1811,7 +1839,7 @@
         "new_station_events": 7,
         "removal_events": 6,
         "reason_source": "Independent radio capture, not a reason attribute in kernel removal events",
-        "remaining": "Qualify EasyMesh conversion, nonzero failure/retry/queue paths and online reason/session join before sender integration",
+        "remaining": "Qualify EasyMesh counter conversion and integrate the live reason/session source with the sender",
         "measurement_semantics_qualified": false,
         "counter_accounting": {
           "status": "six_normal_traffic_sessions_reconciled_with_loss_checked_capture",
@@ -1822,7 +1850,7 @@
           "source_provenance": "doc/evidence/counter-accounting/source-provenance.json",
           "runtime_provenance": "doc/evidence/counter-accounting/kernel-runtime.json",
           "kernel_package_version": "6.8.0-139.139",
-          "counter_reference": "EasyMesh 6.1 Table 58; selected Wi-Fi Data Elements 3.0 package still pending",
+          "counter_reference": "EasyMesh 6.1 Table 58 plus pinned BBF TR-181 2.17 selected definitions; exact WFA DEr3 equivalence and measurement-source semantics pending",
           "public_crosscheck": "https://cwmp-data-models.broadband-forum.org/tr-181-2-17-0-cwmp.html#D.Device:2.Device.WiFi.DataElements.Network.Device.Radio.BSS.STA.RetransCount",
           "raw_counter_passthrough_valid": false,
           "final_counter_source_qualified": false,
@@ -1861,6 +1889,40 @@
             }
           }
         }
+      },
+      "live_reason_observation": {
+        "status": "owned_15_minute_raw_reason_join_and_recovery_independently_verified",
+        "guide": "doc/protocol/live-session-reasons.md",
+        "evidence": "doc/evidence/session-reasons/README.md",
+        "observer": "deploy/radio-manager/session-reasons.py",
+        "join": "src/emosa/simulation/session_reasons.py",
+        "independent_check": "scripts/check-session-reasons.py",
+        "tests": "tests/test_session_reasons.py",
+        "source_sections": [
+          "IEEE 802.11-2024 9.3.3.4 and 9.3.3.12 (disassociation/deauthentication frame bodies)",
+          "IEEE 802.11-2024 9.4.1.7 Table 9-79 (assigned disconnect reasons)",
+          "EasyMesh 6.1 6.3; 17.1.41; 17.2.35/64 (final-session reporting and counter definitions)"
+        ],
+        "profile": "Owned sole-client hwsim, unprotected station-initiated disconnects; AP direction independently unit-tested only",
+        "clock_read_uncertainty_max_ns": 100000,
+        "clock_offset_discrepancy_max_ns": 1000000,
+        "join_after_removal_ns": [
+          250000000,
+          1000000000
+        ],
+        "final_counter_source_qualified": false,
+        "native_final_statistics_delivery_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Use pinned BBF definitions for counter-source qualification; resolve remaining boundaries and compare exact WFA DEr3 package when acquired",
+          "Qualify complete counter conversion and online source handoff",
+          "Observe required AP/STA and final-statistics reports in native controller",
+          "Repeat complete sustained acceptance; physical pod remains separate"
+        ],
+        "active_seconds": 901.5653266309964,
+        "joined_removals": 35,
+        "bracketed_clock_checks_passed": true,
+        "independent_evidence": "doc/evidence/session-reasons/native-reason-04/independent-reason-check.json"
       }
     },
     "reporting_policy_receipt": {
@@ -1883,7 +1945,8 @@
       "contract": "Selected 60-second policy, all three requested STA inclusion bits retained, complete decode before durable receipt, same-MID Ack within one second, identical re-delivery does not postpone reporting deadlines",
       "recovery": "Intent and schedule survive reconnect and process restart on same boot; detected boot change explicitly rebases schedule (unit-tested only)",
       "policy_application_proven": false,
-      "required_reporting_proven": false
+      "required_reporting_proven": false,
+      "periodic_dispatch": "Selected guarded AP dispatcher implemented; complete native measurements and report fulfillment pending"
     },
     "telemetry_freshness": {
       "status": "control_and_telemetry_deadlines_separated_native_gap_and_real_fault_recovery_verified",
@@ -1904,14 +1967,15 @@
       "physical_pod_proven": false
     },
     "neighbor_link_metrics": {
-      "status": "query_response_and_guarded_handoff_implemented_native_measurements_pending",
+      "status": "owned_isolated_ethernet_peer_publisher_and_native_receipt_verified_physical_and_full_sustained_acceptance_pending",
       "guide": "doc/protocol/neighbor-link-metrics.md",
       "implementation": "src/emosa/wire/link_metrics.py",
       "integration": "src/emosa/wire/onboarding.py",
       "source_references": [
         "IEEE 1905.1-2013 6.3.5-6/Table 6-5 pp.31-32; 6.4.10-13/Tables 6-16 through 6-21 pp.38-41; 11.1 p.59",
         "IEEE 1905.1a-2014 amendment Tables 6-16/18/20/21 pp.10-12; printed p.11 visually reviewed",
-        "EasyMesh 6.1 10.1 p.82; 17.1.73-74 p.121"
+        "EasyMesh 6.1 10.1 p.82; 17.1.73-74 p.121",
+        "IEEE 1905.1-2013 Annex A link metric data model, p.69: linkAvailability estimated idle-time percentage; used with declared wired software service, distinct from EasyMesh Wi-Fi prediction"
       ],
       "interpretations": [
         "Table 6-16 conditional neighbor address determines 2-byte all-neighbor and 8-byte specified-neighbor query lengths despite fixed table heading. Native controller and pinned prplMesh/Wireshark cross-check this selection.",
@@ -1929,16 +1993,14 @@
         "scripts/check-neighbor-metrics.py"
       ],
       "encoding_evidence": "doc/evidence/neighbor-metrics/independent-vector-check.json",
-      "native_evidence": "doc/evidence/neighbor-metrics/native-neighbor-01/independent-neighbor-check.json",
+      "native_evidence": "doc/evidence/native-peer-metrics/native-peer-metrics-04/independent-peer-metric-check.json",
       "interface_observations": "doc/evidence/neighbor-metrics/native-neighbor-01/neighbor-link-observations.json",
       "native_queries_handled_without_measurement": 4,
-      "measurement_source_qualified": false,
-      "native_neighbor_metric_delivery_proven": false,
+      "measurement_source_qualified": true,
+      "native_neighbor_metric_delivery_proven": true,
       "remaining": [
-        "Bind represented virtual interfaces to actual pod/peer forwarding interfaces and verified bridge state",
-        "Acquire and qualify per-link TX/RX counters over a common measurement period with reset detection",
-        "Qualify capacity and availability estimates; do not attribute proxy control-veth counters to pod traffic",
-        "Supply live measurements, verify native controller values and include in full sustained acceptance"
+        "Qualify physical media/rate, pod measurement semantics and multiple-neighbor paths",
+        "Integrate the owned publisher with complete AP/STA and final-session reporting in a new 15-minute acceptance run"
       ],
       "raw_forwarding_observations": {
         "status": "owned_pod_raw_interface_observations_and_intervals_implemented_per_neighbor_qualification_pending",
@@ -1956,12 +2018,472 @@
         "measurement_source_qualified": false,
         "virtual_to_pod_interface_mapping_qualified": false,
         "remaining": [
-          "Runtime peer discovery/expiry and represented topology/media mapping",
+          "Follow live_identity_binding for implemented discovery/expiry and topology identities; physical media qualification remains pending",
           "Independent packet/error/drop attribution for every neighbor over a common window",
           "Qualified capacity and availability estimates",
           "Guarded native metric delivery and complete 15-minute acceptance"
         ]
+      },
+      "live_identity_binding": {
+        "status": "owned_pod_discovery_topology_identity_and_observation_recovery_verified_measurements_pending",
+        "guide": "doc/protocol/neighbor-discovery-binding.md",
+        "implementation": [
+          "deploy/radio-manager/neighbor-observer.py",
+          "src/emosa/simulation/neighbor_binding.py",
+          "src/emosa/simulation/native_onboarding.py",
+          "src/emosa/wire/coordinator.py"
+        ],
+        "source_references": [
+          "IEEE 1905.1-2013 6.1 (LLDP shape and TTL), 6.3.1 (Topology Discovery), 8.1 and 8.2.1 (AL/interface identities, bridge inference and discovery period)",
+          "IEEE 1905.1a-2014 amended reserved-field receive rules",
+          "https://man7.org/linux/man-pages/man7/packet.7.html"
+        ],
+        "profile": "owned sole eth1 backhaul, one controller/interface pair, shared VM monotonic clock; passive pod observer through pinned OpenSync Interface.external_ids",
+        "local_limits": {
+          "discovery_lease_seconds": 65,
+          "observation_freshness_seconds": 2,
+          "initial_lldp_settle_seconds": 1,
+          "retained_frames": 64,
+          "capture_epochs": 8
+        },
+        "test_refs": [
+          "tests/test_neighbor_binding.py",
+          "tests/test_report_coordinator.py",
+          "tests/test_native_inventory.py",
+          "tests/test_neighbor_metric_audit.py"
+        ],
+        "independent_check": "scripts/check-neighbor-binding.py",
+        "evidence": "doc/evidence/neighbor-binding/native-link-binding-04/independent-binding-check.json",
+        "recovery_evidence": "doc/evidence/neighbor-binding/native-link-binding-04/independent-recovery-check.json",
+        "retained_attempts": "doc/evidence/neighbor-binding/README.md",
+        "active_seconds": 214.5637938280015,
+        "bound_samples": 321,
+        "native_controller_interface_inventories_checked": 28,
+        "observer_pause_seconds": 6.567177057266235,
+        "observed_interfaces": [
+          "eth1",
+          "eth2",
+          "wlan0"
+        ],
+        "owned_interface_identity_mapping_observed": true,
+        "media_values_are_simulation_fixtures": true,
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Qualify per-neighbor counters and common measurement windows",
+          "Qualify media, capacity and availability estimates",
+          "Verify native metric values and mandatory report delivery",
+          "Complete full 15-minute sustained acceptance and separate unchanged physical-pod qualification"
+        ]
+      },
+      "backhaul_counter_accounting": {
+        "status": "recorded_packet_byte_intervals_reconciled_software_loss_blind_spot_demonstrated",
+        "guide": "doc/protocol/backhaul-counter-accounting.md",
+        "helper": "deploy/radio-manager/backhaul-loss.py",
+        "independent_check": "scripts/check-backhaul-accounting.py",
+        "test_refs": [
+          "tests/test_backhaul_accounting.py"
+        ],
+        "source_references": [
+          "IEEE 1905.1-2013 Tables 6-18 and 6-20, section 11.1; IEEE 1905.1a-2014 amended PHY/RSSI rules",
+          "EasyMesh 6.1 section 10.1 p.82",
+          "https://www.kernel.org/doc/html/latest/networking/statistics.html",
+          "https://github.com/torvalds/linux/blob/v6.8/drivers/net/veth.c"
+        ],
+        "cross_check": "Pinned prplMesh ieee802_3_link_metrics_collector.cpp uses whole-interface stats and speed/overhead estimate; does not qualify those choices for veth",
+        "native_interval_input": "doc/evidence/neighbor-binding/native-link-binding-04",
+        "interval_evidence": "doc/evidence/backhaul-accounting/independent-interval-check.json",
+        "loss_evidence": "doc/evidence/backhaul-accounting/backhaul-loss-02/independent-loss-check.json",
+        "failed_capture_attempt": "doc/evidence/backhaul-accounting/backhaul-loss-01-limited/failure-analysis.json",
+        "counter_windows": 325,
+        "exact_direction_packet_windows": 602,
+        "direction_packet_windows": 650,
+        "timing_allowance_ns": 1000000,
+        "clock_offset_spread_ns": 3657,
+        "controlled_egress_drops": 17,
+        "rtnetlink_tx_errors_for_those_drops": 0,
+        "rtnetlink_tx_dropped_for_those_drops": 0,
+        "reported_veth_speed_mbps": 10000,
+        "reported_speed_is_measured_capacity": false,
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Selected ingress/egress accounting and common read bounds are implemented in receive_accounting_source; complete per-link qualification remains pending",
+          "Qualify capacity/availability without using veth hard-coded speed as measured capacity",
+          "Connect complete measurements to guarded publisher, verify native controller fields and complete 15-minute acceptance"
+        ]
+      },
+      "egress_accounting_source": {
+        "status": "selected_veth_action_and_driver_loss_source_live_ovsdb_and_recovery_verified_complete_metrics_pending",
+        "guide": "doc/protocol/egress-accounting-source.md",
+        "implementation": [
+          "deploy/radio-manager/egress-observer.py",
+          "src/emosa/simulation/egress_accounting.py",
+          "src/emosa/simulation/forwarding.py",
+          "src/emosa/simulation/native_onboarding.py"
+        ],
+        "source_references": [
+          "IEEE 1905.1-2013 Tables 6-18 and 6-20, section 11.1; IEEE 1905.1a-2014 amended PHY/RSSI rules",
+          "EasyMesh 6.1 section 10.1 p.82",
+          "pinned OpenSync 78d8a7194d5e77635877cc456231e7be5cf03d68 interfaces/opensync.ovsschema Interface.external_ids",
+          "https://github.com/torvalds/linux/blob/v6.8/net/sched/sch_api.c",
+          "https://github.com/torvalds/linux/blob/v6.8/net/sched/cls_api.c"
+        ],
+        "profile": "owned-veth-egress-observation-v1; actual eth1 identity, noqueue root, no XDP, optional exact software-only unshared flower/gact drop; shared VM clock; simulation-specific metadata",
+        "contract": "Separate successful packet/byte, driver-drop and action-drop deltas; do not add parent qdisc drops; invalidate on unsupported path, loss of observer events, identity/configuration/collector/connection change, replay or stale source",
+        "local_limits": {
+          "source_freshness_seconds": 2,
+          "counter_dump_budget_ms": 250,
+          "interval_gap_seconds": 2,
+          "collector_epochs": 8
+        },
+        "test_refs": [
+          "tests/test_egress_accounting.py"
+        ],
+        "independent_check": "scripts/check-egress-accounting.py",
+        "component_replay": "scripts/replay-egress-accounting.py",
+        "controlled_loss_evidence": "doc/evidence/egress-accounting/egress-loss-01/independent-egress-check.json",
+        "live_ovsdb_evidence": "doc/evidence/egress-accounting/native-egress-01/independent-egress-check.json",
+        "recovery_evidence": "doc/evidence/egress-accounting/native-egress-01/independent-recovery-check.json",
+        "controlled_action_drops": 17,
+        "native_counter_intervals": 292,
+        "native_connection_generations": 3,
+        "native_active_seconds": 210.48399379900002,
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Selected receive loss and common Tx/Rx reads are implemented in receive_accounting_source; complete per-neighbor loss attribution remains pending",
+          "Qualify media, capacity and availability estimates",
+          "Join complete measurements to native publisher and independently verify controller fields",
+          "Complete AP/STA and final-session reporting plus full integrated 15-minute acceptance"
+        ]
+      },
+      "receive_accounting_source": {
+        "status": "selected_ingress_loss_and_common_tx_rx_accounting_live_ovsdb_recovery_verified_complete_metrics_pending",
+        "guide": "doc/protocol/receive-counter-accounting.md",
+        "implementation": [
+          "src/emosa/simulation/backhaul_accounting.py",
+          "src/emosa/simulation/egress_accounting.py",
+          "src/emosa/simulation/native_onboarding.py"
+        ],
+        "helper": "deploy/radio-manager/backhaul-loss.py --direction ingress --observe-egress",
+        "source_references": [
+          "IEEE 1905.1-2013 sections 6.4.11-12, Tables 6-18 and 6-20, section 11.1; amended PHY/RSSI values from IEEE 1905.1a-2014",
+          "EasyMesh 6.1 section 10.1 p.82",
+          "Ubuntu Linux 6.8.0-139.139 drivers/net/veth.c veth_xmit/veth_get_stats64, net/core/dev.c tc_run/sch_handle_ingress/dev_get_stats, net/sched/act_gact.c tcf_gact_act",
+          "https://www.kernel.org/doc/html/v6.8/networking/statistics.html"
+        ],
+        "source_review_helper": "scripts/review-backhaul-kernel.py",
+        "source_provenance": "doc/evidence/receive-accounting/source-provenance.json",
+        "runtime_provenance": "doc/evidence/receive-accounting/runtime-provenance.json",
+        "contract": "Common bounded reads and lifetimes for both directions; RX packet count is interface arrival, not successful client delivery. Preserve raw interface/action loss components; never add parent qdisc drops. Reject observed unsupported/shared paths and inconsistent counters.",
+        "controlled_ingress_losses": 17,
+        "ordinary_rx_errors_for_selected_loss": 0,
+        "ordinary_rx_dropped_for_selected_loss": 0,
+        "loss_replay_common_windows": 17,
+        "independently_reconciled_probe_windows": 12,
+        "native_common_windows": 293,
+        "native_raw_forwarding_windows": 295,
+        "native_connection_generations": 3,
+        "native_active_seconds": 210.4867326019994,
+        "independent_check": "scripts/check-receive-accounting.py",
+        "test_refs": [
+          "tests/test_receive_accounting.py",
+          "tests/test_egress_accounting.py"
+        ],
+        "controlled_loss_evidence": "doc/evidence/receive-accounting/ingress-loss-03/independent-receive-check.json",
+        "native_evidence": "doc/evidence/receive-accounting/native-receive-01/independent-receive-check.json",
+        "recovery_evidence": "doc/evidence/receive-accounting/native-receive-01/independent-recovery-check.json",
+        "retained_capture_failures": [
+          "doc/evidence/receive-accounting/ingress-loss-01-limited/failure-analysis.json",
+          "doc/evidence/receive-accounting/ingress-loss-02-limited/failure-analysis.json"
+        ],
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Qualify complete per-neighbor attribution and relevant loss paths beyond the selected TC action cases; peer-side XDP/GRO, BPF/TCX and other paths are outside this measurement claim",
+          "Qualify media and capacity/availability estimates for the bounded virtual link",
+          "Connect complete inputs to the guarded publisher and verify actual native controller values",
+          "Complete AP/STA and final-session reporting and repeat integrated 15-minute acceptance"
+        ]
+      },
+      "virtual_service_estimate": {
+        "status": "packet_calibrated_software_service_and_native_ovsdb_recovery_verified_full_link_source_pending",
+        "guide": "doc/protocol/virtual-link-capacity.md",
+        "implementation": [
+          "src/emosa/simulation/virtual_capacity.py",
+          "src/emosa/simulation/native_onboarding.py",
+          "deploy/radio-manager/egress-observer.py"
+        ],
+        "calibration_runner": "deploy/radio-manager/calibrate-link.py",
+        "native_option": "--virtual-link",
+        "source_references": [
+          "IEEE 1905.1-2013 section 6.4.11 Table 6-18 and section 11.1; amended unavailable PHY sentinel is distinct from capacity",
+          "EasyMesh 6.1 section 10.1: predicted Wi-Fi airtime is distinct from unused Ethernet service",
+          "Ubuntu Linux 6.8.0-139.139 net/sched/sch_tbf.c, net/sched/sch_api.c and include/net/sch_generic.h",
+          "Ubuntu iproute2 6.1.0-1ubuntu6.4 tc/tc_core.c tc_calc_size_table",
+          "https://man7.org/linux/man-pages/man8/tc-tbf.8.html",
+          "https://man7.org/linux/man-pages/man8/tc-stab.8.html"
+        ],
+        "source_provenance": "doc/evidence/virtual-capacity/source-provenance.json",
+        "iproute_source_provenance": "doc/evidence/virtual-capacity/iproute-source-provenance.json",
+        "runtime_provenance": "doc/evidence/virtual-capacity/runtime-provenance.json",
+        "contract": "Optional owned 100 Mb/s TBF egress service; observed charged bytes include overhead, minimum frame and two-octet table rounding. Bounded work/unused-service estimates require exact observed shape and fresh counter lifetimes. No physical PHY or native linkAvailability mapping is asserted.",
+        "declared_service_mbps": 100,
+        "burst_bytes": 65536,
+        "queue_limit_bytes": 524288,
+        "framing_overhead_bytes": 24,
+        "minimum_charged_bytes": 84,
+        "table_resolution_octets": 2,
+        "calibration_packets_reconciled": 78617,
+        "calibration_service_windows": 33,
+        "native_service_windows": 321,
+        "native_active_seconds": 214.46843538100075,
+        "native_connection_generations": 3,
+        "native_worker_processes": 2,
+        "independent_check": "scripts/check-virtual-capacity.py",
+        "test_refs": [
+          "tests/test_virtual_capacity.py"
+        ],
+        "calibration_evidence": "doc/evidence/virtual-capacity/virtual-link-03/independent-capacity-check.json",
+        "native_evidence": "doc/evidence/virtual-capacity/native-capacity-02/independent-capacity-check.json",
+        "recovery_evidence": "doc/evidence/virtual-capacity/native-capacity-02/independent-recovery-check.json",
+        "retained_incomplete_attempts": [
+          "doc/evidence/virtual-capacity/virtual-link-01-limited/failure-analysis.json",
+          "doc/evidence/virtual-capacity/virtual-link-02-limited/failure-analysis.json",
+          "doc/evidence/virtual-capacity/native-capacity-01-limited/failure-analysis.json"
+        ],
+        "audit_refinement": "doc/evidence/virtual-capacity/native-capacity-02/initial-audit-failure.json",
+        "service_estimate_checked": true,
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Selected combined shaped-link losses are checked in shaped_backhaul_accounting; complete per-peer attribution remains pending",
+          "Qualify selected media and normative availability estimator; do not map unused Ethernet service to Wi-Fi predicted airtime",
+          "Bind complete metrics to current native session and independently verify controller values",
+          "Complete AP/STA and final-session reporting then repeat full integrated 15-minute acceptance"
+        ]
+      },
+      "shaped_backhaul_accounting": {
+        "status": "selected_action_queue_interface_loss_and_service_intervals_verified_through_ovsdb_recovery_complete_neighbor_publication_pending",
+        "guide": "doc/protocol/shaped-backhaul-accounting.md",
+        "implementation": [
+          "src/emosa/simulation/shaped_backhaul.py",
+          "src/emosa/simulation/backhaul_accounting.py",
+          "src/emosa/simulation/virtual_capacity.py",
+          "src/emosa/simulation/native_onboarding.py"
+        ],
+        "independent_check": "scripts/check-shaped-backhaul.py",
+        "test_refs": [
+          "tests/test_shaped_backhaul.py"
+        ],
+        "source_references": [
+          "IEEE 1905.1-2013 sections 6.4.11-12, Tables 6-18 and 6-20, section 11.1; amendment PHY/RSSI values",
+          "EasyMesh 6.1 section 10.1; per-neighbor metrics are not arbitrary whole-interface counters",
+          "Ubuntu Linux 6.8.0-139.139 net/sched/sch_tbf.c tbf_enqueue and net/core/dev.c __dev_queue_xmit; reviewed root/child and driver drop boundaries"
+        ],
+        "source_provenance": [
+          "doc/evidence/virtual-capacity/source-provenance.json",
+          "doc/evidence/receive-accounting/source-provenance.json",
+          "doc/evidence/virtual-capacity/iproute-source-provenance.json"
+        ],
+        "contract": "One bounded lifetime/read interval for eight interface/action and four service counters. TX losses add distinct action, root scheduler and driver losses; never add child drops or token waits. RX arrivals remain distinct from client delivery. Unsupported paths withdraw observations.",
+        "controlled_queue_drops": 19124,
+        "controlled_ingress_action_drops": 17,
+        "controlled_egress_action_drops": 17,
+        "queue_loss_common_windows": 33,
+        "native_common_windows": 291,
+        "native_active_seconds": 210.0154239350013,
+        "native_connection_generations": 3,
+        "native_worker_processes": 2,
+        "evidence": "doc/evidence/shaped-backhaul/README.md",
+        "native_evidence": "doc/evidence/shaped-backhaul/native-shaped-01/independent-shaped-check.json",
+        "recovery_evidence": "doc/evidence/shaped-backhaul/native-shaped-01/independent-recovery-check.json",
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Resolve complete per-neighbor attribution including adapter multicast reflection on the VM bridge",
+          "Qualify selected media and normative availability semantics before wire mapping",
+          "Join qualified complete inputs to native LinkMetricSource and independently verify controller values",
+          "Complete AP/STA and final-session reporting; investigate native shutdown; repeat integrated 15-minute acceptance"
+        ]
+      },
+      "qualification_scope": "Optional owned-isolated-peer-path-v1 software Ethernet profile only; no physical pod or arbitrary forwarding path",
+      "owned_peer_publisher": {
+        "profile": "owned-isolated-peer-path-v1",
+        "guide": "doc/protocol/native-peer-metrics.md",
+        "implementation": [
+          "src/emosa/simulation/peer_metrics.py",
+          "deploy/radio-manager/peer-path.py"
+        ],
+        "source_path": "Independent manager observes pod counters and VM bridge path before/after read; actual OpenSync-schema Interface.external_ids carries observations through OVSDB",
+        "contract": "Exactly three owned bridge ports; pod and adapter isolated from each other, controller reachable; no bridge IP endpoint; untagged VLAN 1; pod/VM veth aggregation and VLAN offloads disabled; current discovered peer and control context; one whole fresh common loss/service interval inside the path epoch",
+        "wire_mapping": {
+          "media_type": "Declared simulated Ethernet 1000BASE-T type 1; no physical PHY assertion",
+          "mac_capacity_mbps": 97,
+          "link_availability": "Whole-percent floor of observed estimated unused service on calibrated 100 Mb/s software path",
+          "phy_rate_unknown": 65535,
+          "rssi_unspecified": 255,
+          "counters": "Common-interval actual pod TX/RX packets and disjoint selected action/scheduler/interface losses"
+        },
+        "native_receipt": "Wire values independently match source intervals; later controller Interface.Stats values match packet/error fields. No external capacity/availability API assertion",
+        "independent_check": "scripts/check-native-peer-metrics.py",
+        "evidence": "doc/evidence/native-peer-metrics/README.md",
+        "fault_checks": [
+          "actual pod-port isolation disabled/restored, withdrawal without control/client failure",
+          "OVSDB disconnect and authenticated recovery",
+          "actual SIGKILL and fresh worker/control context",
+          "station telemetry pause retains independent peer metrics",
+          "neighbor-discovery gap withdraws bound metrics"
+        ],
+        "local_limits": {
+          "source_freshness_seconds": 2,
+          "path_read_budget_ms": 250,
+          "retained_collector_epochs": 8
+        },
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "active_seconds": 210.12358113300434,
+        "published_observations_checked": 255,
+        "common_counter_windows": 278,
+        "native_queries_answered": 2,
+        "connection_generations": 3,
+        "worker_processes": 2
       }
+    },
+    "ap_metric_reports": {
+      "status": "selected_composition_and_guarded_periodic_dispatch_implemented_live_measurements_pending",
+      "guide": "doc/protocol/ap-metric-reports.md",
+      "implementation": "src/emosa/wire/ap_metrics.py",
+      "schedule": "src/emosa/wire/reporting_policy.py",
+      "tests": "tests/test_ap_metrics.py",
+      "references": [
+        "EasyMesh 6.1 10.2.1 pp.82-84",
+        "17.1.16-17 pp.113-114",
+        "Tables 44/45 pp.138-140; 47 pp.140-141; 58 p.147",
+        "Tables 83/84 p.164; 85 p.165; 96 pp.170-171",
+        "IEEE 802.11-2024 9.4.2.172 Figure 9-740 Tables 9-332-334; source conversion pending",
+        "Wi-Fi Data Elements 3.0 package including TR-181-2-17_DEr3.xlsx: authorized access pending",
+        "BBF TR-181 2.17.0 public USP/CWMP full XML: 33 selected definitions and statistics types reviewed; doc/protocol/bbf-data-elements.md"
+      ],
+      "contract": "One non-MLD radio/BSS, Profile-1 byte units, <=32 stations. Mandatory AP94/C7, C6 for periodic or requested radio; policy flags require A2, both96/C8 and B0. Complete membership and current source revision, <=2s lease, no inferred missing values.",
+      "scheduling": "Reserve due period durably before I/O, preserve origin across reconnect/restart, attempt at most one current report, retain uncertain or unavailable periods without replay. Successful send is not controller receipt.",
+      "evidence": "doc/evidence/ap-reporting/README.md",
+      "independent_checks": [
+        "scripts/check-ap-metrics-reference.py",
+        "scripts/check-native-ap-withholding.py"
+      ],
+      "measurement_source_qualified": false,
+      "native_ap_report_delivery_proven": false,
+      "required_reporting_proven": false,
+      "remaining": [
+        "Qualify AP utilization and mandatory BE ESP estimator; review IEEE/EasyMesh subfield reordering",
+        "Qualify radio/AP/STA sources and epochs against pinned BBF definitions; resolve width and representation ambiguities and compare exact WFA DEr3 package",
+        "Connect native publisher and independently verify all received controller values",
+        "Resolve unsolicited AP delivery/reliability interpretation; thresholds, multiple BSS/radios and MLD remain unsupported",
+        "Complete final-session publisher and integrated 15-minute acceptance with every required report enabled"
+      ],
+      "native_sparse_esp_parser": {
+        "status": "optional_candidate_valid_presence_and_malformed_rejection_independently_verified",
+        "guide": "doc/protocol/native-ap-esp.md",
+        "evidence": "doc/evidence/ap-esp/README.md",
+        "normative_rule": "EasyMesh 6.1 17.2.22 Table 45 pp.139–140; mandatory BE, optional BK/VO/VI packed only when present",
+        "patch": "deploy/peer-baseline/patches/0007-controller-ap-esp-presence.patch",
+        "patch_sha256": "021155b4127f604687ac17e04080c784163cee90921b5d9a13cef0b90251c737",
+        "native_regression": "deploy/peer-baseline/compatibility/ap-esp.cpp",
+        "native_probe": "deploy/peer-baseline/ap-esp-probe.py",
+        "independent_check": "scripts/check-native-ap-esp.py",
+        "compiled_valid_combinations": 8,
+        "compiled_malformed_cases": 232,
+        "live_valid_combinations": 8,
+        "live_malformed_cases": 8,
+        "baseline_failure": "actual SIGSEGV after sparse BE+VI input",
+        "measurement_source_qualified": false,
+        "complete_ap_report_delivery_proven": false,
+        "scope": "Synthetic single-AP-Metrics-TLV parser diagnostic after worker exit; cannot accompany sustained acceptance"
+      },
+      "bbf_representation_bridge": {
+        "status": "public_definition_review_and_bounded_value_bridge_implemented",
+        "reviewed_on": "2026-09-23",
+        "implementation": "src/emosa/wire/bbf_metrics.py",
+        "tests": "tests/test_bbf_metrics.py",
+        "source_review": "scripts/review-bbf-data-elements.py",
+        "evidence": "doc/evidence/bbf-data-elements/source-review.json",
+        "guide": "doc/protocol/bbf-data-elements.md",
+        "field_paths_in_evidence": true,
+        "implemented": [
+          "0xC5 unsigned 32-bit millisecond collection interval value",
+          "0xC6 already encoded ANPI and 0..255 primary-channel utilization inputs",
+          "0xC7 six StatsCounter64 byte values, unavailable detection before unit scaling and width guard",
+          "0xC8 last rates in kbps and duration in milliseconds, explicit 64-to-32-bit overflow rejection"
+        ],
+        "not_inferred": [
+          "Live measurement qualification and collection cadence",
+          "ESP estimation or subfield conversion",
+          "STA PacketsSent successful-transmission semantics from a generic BBF or kernel field",
+          "Noise dBm-to-ANPI conversion or inconsistent BBF SignalStrength units",
+          "Unspecified rollover for Tables 84/85"
+        ],
+        "runtime_publisher_enabled": false,
+        "wfa_der3_equivalence_verified": false,
+        "measurement_source_qualified": false,
+        "native_delivery_proven": false
+      }
+    },
+    "native_lifecycle": {
+      "status": "selected_linux_candidate_lifetime_and_901_second_operational_recovery_verified",
+      "guide": "doc/protocol/native-lifecycle.md",
+      "evidence": "doc/evidence/native-lifecycle/README.md",
+      "implementation_refs": [
+        "deploy/peer-baseline/patches/0006-bpl-model-lifetime.patch",
+        "deploy/peer-baseline/compatibility/model-lifetime.cpp",
+        "deploy/peer-baseline/compatibility/build-controller.py",
+        "deploy/peer-baseline/compatibility/controller-candidate.py",
+        "deploy/peer-baseline/compatibility/lifecycle-observer.py"
+      ],
+      "audit_refs": [
+        "scripts/check-native-lifecycle.py",
+        "scripts/observe-native-restoration.py",
+        "tests/test_native_lifecycle_audit.py"
+      ],
+      "candidate_controller_sha256": "dd5784852f384069d40274a322b6a7530931bb8b3760d40085a3e02f7db2d55e",
+      "runtime_libraries": {
+        "libbpl.so.6.0.0": {
+          "baseline_sha256": "2e4d0b2ef7dc68e11ad8e6686418555100768634f7462a24f6bb454c77b42cf6",
+          "candidate_sha256": "7bc9b040738b30759c73da2a9b3907328e1c468141a332a55e56fd71adf68a0d",
+          "unstripped_sha256": "c38342f3274f70f47d65a4b82f23e62c2358f87ef7222e0348a3ad26c421c183"
+        }
+      },
+      "native_counter_regression_passed": 12,
+      "baseline_bad_lifetime_order_reproduced": true,
+      "candidate_lifetime_order_verified": true,
+      "active_seconds": 901.4729816190011,
+      "native_queries_answered": 15,
+      "native_controller_and_helper_exit_status": 0,
+      "stop_policy_unchanged": true,
+      "interrupted_install_restoration_verified": true,
+      "baseline_restored": true,
+      "original_baseline_retains_shutdown_defect": true,
+      "unfulfilled_ap_reporting_periods": 15,
+      "complete_sustained_operation_proven": false,
+      "physical_pod_proven": false,
+      "limits": [
+        "Selected Linux/no-WHM native evaluation profile only",
+        "Other platform builds and arbitrary external consumers unqualified",
+        "Qualified AP/STA and final-session reporting still absent"
+      ]
     }
   }
 }

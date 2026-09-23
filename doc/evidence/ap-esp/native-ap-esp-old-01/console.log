@@ -1,0 +1,64 @@
+/opt/emosa-radio-manager/source/emosa/wsc.py:106: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+  _private: dh.DHPrivateKey = field(repr=False)
+Traceback (most recent call last):
+  File "/opt/emosa-baseline/native-onboarding.py", line 1217, in <module>
+    wrapper["trial"](
+    ~~~~~~~~~~~~~~~~^
+        args.build,
+        ^^^^^^^^^^^
+    ...<17 lines>...
+        ),
+        ^^
+    )
+    ^
+  File "/opt/emosa-baseline/compatibility/controller-candidate.py", line 179, in trial
+    result = experiment(label)
+  File "/opt/emosa-baseline/native-onboarding.py", line 1220, in <lambda>
+    experiment=lambda label: asyncio.run(
+                             ~~~~~~~~~~~^
+        experiment(
+        ^^^^^^^^^^^
+    ...<13 lines>...
+        )
+        ^
+    ),
+    ^
+  File "/root/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/root/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/root/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/asyncio/base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/opt/emosa-baseline/native-onboarding.py", line 600, in experiment
+    report["synthetic_ap_esp_probe"] = await module["probe"](
+                                       ^^^^^^^^^^^^^^^^^^^^^^
+        directory, namespace, helpers["inventory"], write
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/emosa-baseline/ap-esp-probe.py", line 91, in probe
+    objects = inventory(depth=8)
+  File "/opt/emosa-baseline/controller-trial.py", line 52, in inventory
+    raw = inside(
+        CONTROLLER,
+    ...<4 lines>...
+        json.dumps({"rel_path": "", "depth": depth}),
+    )
+  File "/opt/emosa-baseline/setup.py", line 29, in inside
+    return lxc("exec", node, "--", *args, **kwargs)
+  File "/opt/emosa-baseline/setup.py", line 25, in lxc
+    return run("lxc", "--force-local", "--project", "default", *args, **kwargs)
+  File "/opt/emosa-baseline/setup.py", line 19, in run
+    return subprocess.run(
+           ~~~~~~~~~~~~~~^
+        args, input=input, text=True, capture_output=True, check=True, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ).stdout
+    ^
+  File "/root/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '('lxc', '--force-local', '--project', 'default', 'exec', 'em-baseline-controller', '--', 'ubus', 'call', 'Device.WiFi.DataElements.Network', '_get', '{"rel_path": "", "depth": 8}')' returned non-zero exit status 7.

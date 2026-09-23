@@ -1,0 +1,222 @@
+"""Live reason/removal join for the owned sole-client hwsim observation profile.
+
+These are raw kernel counters, NOT qualified EasyMesh TrafficCounters. No wire
+report or operation is produced here. Physical pods need their existing telemetry.
+"""
+
+import struct
+import time
+from collections import deque
+
+BSSID = bytes.fromhex("020000ec0200")
+STATION = bytes.fromhex("020000000200")
+RAW_FIELDS = (
+    "tx_bytes64",
+    "rx_bytes64",
+    "tx_packets",
+    "rx_packets",
+    "tx_failed",
+    "rx_drop_misc",
+    "tx_retries",
+    "assoc_at_boottime_ns",
+)
+
+
+class ClockBounds:
+    """Bracket wall-clock reads; scheduling delay is not a measured clock step."""
+
+    def __init__(self, *, monotonic=time.monotonic_ns, wall=time.time_ns):
+        self.monotonic, self.wall = monotonic, wall
+        self.initial = self.sample()
+        self.lower = self.initial["wall_ns"] - self.initial["monotonic_after_ns"]
+        self.upper = self.initial["wall_ns"] - self.initial["monotonic_ns"]
+
+    def sample(self):
+        for _ in range(3):
+            before, wall, after = self.monotonic(), self.wall(), self.monotonic()
+            if 0 <= after - before <= 100_000:
+                return {"monotonic_ns": before, "wall_ns": wall, "monotonic_after_ns": after}
+        raise ValueError("clock_read_uncertainty_exceeds_budget")
+
+    def check(self, value):
+        before, wall, after = (value[k] for k in ("monotonic_ns", "wall_ns", "monotonic_after_ns"))
+        if not 0 <= after - before <= 100_000:
+            raise ValueError("clock_read_uncertainty_exceeds_budget")
+        lower, upper = wall - after, wall - before
+        if max(upper, self.upper) - min(lower, self.lower) > 1_000_000:
+            raise ValueError("clock_domain_changed_or_uncertain")
+        return {"lower_offset_ns": lower, "upper_offset_ns": upper}
+
+
+def reason_frame(packet, wall_ns):
+    """Decode only the observed hwsim radiotap layout and unprotected management.
+
+    IEEE 802.11-2024 9.3.3.4/12: the reason is the first little-endian body
+    field of disassociation/deauthentication. No reason is inferred from silence.
+    """
+    layouts = {
+        bytes.fromhex("000016000f000000"): (22, 16),
+        bytes.fromhex("00000e000a000000"): (14, 8),
+    }
+    if packet[:8] not in layouts:
+        raise ValueError("unsupported_hwsim_radiotap")
+    length, flags_offset = layouts[packet[:8]]
+    if len(packet) < length + 2:
+        raise ValueError("truncated_monitor_packet")
+    frame = packet[length:]
+    fc = struct.unpack_from("<H", frame)[0]
+    if fc & 0xFC not in (0xA0, 0xC0):
+        return None
+    if len(frame) < 24:
+        raise ValueError("truncated_disconnect_header")
+    dst, src, bss = frame[4:10], frame[10:16], frame[16:22]
+    if bss != BSSID or (src, dst) not in ((STATION, BSSID), (BSSID, STATION)):
+        return None
+    # This collector's selected profile is non-PMF and unfragmented. Protected
+    # bodies, bad FCS flags, alternate headers and missing body bytes are unknown.
+    if packet[flags_offset] != 0 or fc & ~0x08FC or len(frame) != 26:
+        raise ValueError("unsupported_disconnect_frame")
+    sequence = struct.unpack_from("<H", frame, 22)[0]
+    if sequence & 15:
+        raise ValueError("fragmented_disconnect_frame")
+    reason = struct.unpack_from("<H", frame, 24)[0]
+    if reason not in (set(range(1, 40)) | set(range(46, 70)) | {71}):
+        raise ValueError("reserved_disconnect_reason")
+    return {
+        "wall_ns": wall_ns,
+        "frame_hex": frame.hex(),
+        "reason": reason,
+        "sequence_control": sequence,
+        "subtype": fc & 0xFC,
+        "transmitter": src.hex(":"),
+        "receiver": dst.hex(":"),
+        "retry": bool(fc & 0x800),
+    }
+
+
+class ReasonJoin:
+    """Bounded two-stream association join; conflicts invalidate the source.
+
+    Clock domains are the same owned VM kernel. The caller must reject capture
+    loss, clock steps, changed identities and collector interruption before use.
+    All records remain unqualified for EasyMesh counter semantics.
+    """
+
+    def __init__(self, epoch):
+        self.epoch = epoch
+        self.active = None
+        self.pending = None
+        self.frames = deque(maxlen=64)
+        self.last_lifetime = 0
+        self.last_kernel_ns = 0
+        self.joined = 0
+        self.recent = deque(maxlen=64)
+
+    @staticmethod
+    def identity(frame):
+        return tuple(
+            frame[k] for k in ("sequence_control", "subtype", "transmitter", "receiver", "reason")
+        )
+
+    def radio(self, frame, now_ns):
+        if frame is None:
+            return
+        self.frames = deque(
+            (f for f in self.frames if now_ns - f["wall_ns"] <= 2_000_000_000), maxlen=64
+        )
+        if not 0 <= now_ns - frame["wall_ns"] < 1_000_000_000:
+            raise ValueError("late_or_future_disconnect_frame")
+        while self.recent and now_ns - self.recent[0][1] > 2_000_000_000:
+            self.recent.popleft()
+        for start, end, identity in self.recent:
+            if start <= frame["wall_ns"] <= end:
+                if self.identity(frame) != identity:
+                    raise ValueError("late_conflicting_disconnect_reason")
+                return  # A delayed copy of an already joined frame is not new.
+        if len(self.frames) == self.frames.maxlen:
+            raise ValueError("reason_frame_budget_exhausted")
+        self.frames.append(frame)
+
+    def kernel(self, event):
+        if event["station"] != STATION.hex(":"):
+            raise ValueError("unsupported_station")
+        at = event["received_monotonic_ns"]
+        if at <= self.last_kernel_ns:
+            raise ValueError("out_of_order_kernel_event")
+        self.last_kernel_ns = at
+        lifetime = event["observed_lifetime"]
+        if event["event"] == "new_station":
+            if self.active is not None or self.pending is not None:
+                raise ValueError("reassociation_before_final_join")
+            if type(lifetime) is not int or lifetime != self.last_lifetime + 1:
+                raise ValueError("missing_or_replayed_station_lifetime")
+            self.last_lifetime = lifetime
+            self.active = event
+        elif event["event"] == "del_station":
+            if self.active is None or lifetime != self.active["observed_lifetime"]:
+                raise ValueError("unbound_station_removal")
+            if event["ifindex"] != self.active["ifindex"]:
+                raise ValueError("station_interface_changed")
+            fields = event["observed_fields"]
+            if any(name not in fields for name in RAW_FIELDS):
+                raise ValueError("incomplete_raw_final_counters")
+            if any(type(fields[name]) is not int or fields[name] < 0 for name in RAW_FIELDS):
+                raise ValueError("invalid_raw_final_counters")
+            if fields["assoc_at_boottime_ns"] <= 0:
+                raise ValueError("missing_association_epoch")
+            self.pending = (self.active, event)
+            self.active = None
+        else:
+            raise ValueError("unexpected_kernel_event")
+
+    def poll(self, now_ns, monotonic_ns):
+        if self.pending is None:
+            return None
+        start, end = self.pending
+        age = monotonic_ns - end["received_monotonic_ns"]
+        # Allow both independently delivered streams to arrive; do not turn an
+        # earlier periodic counter sample or a later association into this final.
+        if age < 250_000_000:
+            return None
+        if age >= 1_000_000_000:
+            raise ValueError("final_join_deadline_expired")
+        candidates = [
+            f
+            for f in self.frames
+            if start["received_wall_ns"] <= f["wall_ns"] <= end["received_wall_ns"]
+            and end["received_wall_ns"] - f["wall_ns"] < 1_000_000_000
+        ]
+        distinct = {}
+        for frame in candidates:
+            # Identical retries may repeat the same actual event; different
+            # sequence/subtype/direction/reason is ambiguous, even for reason 3.
+            key = self.identity(frame)
+            distinct.setdefault(key, frame)
+        if not distinct:
+            return None
+        if len(distinct) != 1:
+            raise ValueError("ambiguous_disconnect_reason")
+        reason = next(iter(distinct.values()))
+        self.recent.append(
+            (start["received_wall_ns"], end["received_wall_ns"], self.identity(reason))
+        )
+        self.pending = None
+        self.joined += 1
+        self.frames.clear()
+        return {
+            "event": "joined_raw_final",
+            "collector_epoch": self.epoch,
+            "observed_lifetime": end["observed_lifetime"],
+            "association_at_boottime_ns": end["observed_fields"]["assoc_at_boottime_ns"],
+            "ifindex": end["ifindex"],
+            "bssid": BSSID.hex(":"),
+            "station": STATION.hex(":"),
+            "kernel_new": start,
+            "kernel_final": end,
+            "disconnect_frame": reason,
+            "joined_wall_ns": now_ns,
+            "joined_monotonic_ns": monotonic_ns,
+            "raw_counters": {name: end["observed_fields"][name] for name in RAW_FIELDS},
+            "final_counter_source_qualified": False,
+            "native_final_statistics_delivery_proven": False,
+        }

@@ -149,7 +149,7 @@ def main():
     lxc("config", "device", "add", NODES[1], "lan", "nic", "network=em-base-lan", "name=eth2")
     lxc("config", "device", "add", NODES[2], "lan", "nic", "network=em-base-lan", "name=eth1")
     packages = (
-        "iproute2 iputils-ping iw tcpdump ebtables libcap-ng0 libevent-2.1-7 "
+        "iproute2 iputils-ping iw tcpdump ebtables ethtool libcap-ng0 libevent-2.1-7 "
         "libjson-c5 libnl-3-200 libnl-genl-3-200 libnl-route-3-200 "
         "libssl3 liburiparser1 libyajl2 psmisc"
     )

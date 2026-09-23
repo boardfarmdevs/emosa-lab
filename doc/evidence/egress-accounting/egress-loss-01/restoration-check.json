@@ -1,0 +1,8 @@
+{
+  "owned_lab_idle_check_passed": true,
+  "traffic_control_restored": true,
+  "source_matches_executed": true,
+  "source_sha256": "354b42672da60000d9f026b918df1fb230f9d77fd3a0da8bd0c548198566b8e4",
+  "runner_exit_code": 0,
+  "physical_pod_changed": false
+}

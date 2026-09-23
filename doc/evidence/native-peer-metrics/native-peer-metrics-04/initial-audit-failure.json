@@ -1,0 +1,10 @@
+{
+  "initial_peer_audit": "query accounting did not classify post-discovery counter baseline warmup",
+  "query_frame": 29,
+  "query_time": 1790158776.757842,
+  "new_path_baseline_time": 1790158775.8358095,
+  "first_complete_interval_last_read_started_at": 1790158776.990581,
+  "finding": "Source correctly withheld the query before a whole post-recovery counter interval was available. Auditor now derives this strict interval from raw reads, retaining the 1 ms allowance; no runtime change or timeout widening.",
+  "channel_recovery_audit_passed": true,
+  "complete_sustained_operation_proven": false
+}

@@ -1,0 +1,67 @@
+{
+  "native_sparse_esp_parser_checks_passed": true,
+  "valid_presence_combinations": 8,
+  "malformed_inputs_rejected_without_esp_or_utilization_change": 8,
+  "bounded_onboarding": {
+    "passed": true,
+    "scope": "bounded_native_controller_to_simulated_OpenSync_onboarding",
+    "controller_onboarding_proven": true,
+    "physical_pod_proven": false,
+    "native_baseline_restored": true,
+    "operations": 1,
+    "writes": 1,
+    "advertised_byte_counter_units": 0,
+    "capture_health": {
+      "ethernet": {
+        "passed": true,
+        "linktype": 1,
+        "pcap_records": 38,
+        "captured": 38,
+        "received_by_filter": 38,
+        "dropped_by_kernel": 0
+      },
+      "radio": {
+        "passed": true,
+        "linktype": 127,
+        "pcap_records": 1666,
+        "captured": 1666,
+        "received_by_filter": 1666,
+        "dropped_by_kernel": 0
+      }
+    },
+    "frames": 38,
+    "m1_sha256": "09bf6a6216c7b2a8da1b1089180593c8522587261da9a9e5d26605fdbd694f81",
+    "capability_report_frame": 21,
+    "provisioned_topology_frame": 12,
+    "independent_clients": [
+      "wired",
+      "wpa_supplicant"
+    ],
+    "continuous_management_proven": false,
+    "full_profile_qualified": false
+  },
+  "capture_health": {
+    "ethernet": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 38,
+      "captured": 38,
+      "received_by_filter": 38,
+      "dropped_by_kernel": 0
+    },
+    "radio": {
+      "passed": true,
+      "linktype": 127,
+      "pcap_records": 1666,
+      "captured": 1666,
+      "received_by_filter": 1666,
+      "dropped_by_kernel": 0
+    }
+  },
+  "clean_native_shutdown": true,
+  "baseline_restored": true,
+  "measurement_source_qualified": false,
+  "native_ap_report_delivery_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

@@ -1,0 +1,28 @@
+{
+  "interface": "eth1",
+  "ifindex": 8,
+  "mac": "00:16:3e:b2:d2:c4",
+  "boot_id": "4646cf49-821c-4068-9b73-60e29bc0924d",
+  "netns_inode": 4026532652,
+  "capture_epoch": "fdf20275-a29a-4ffc-a92e-fe584a880ea9",
+  "run_label": "native-reason-04",
+  "collector_sha256": "594a33f222f2845a43bdc91d8faa6e6fef728aad1de37e758afdd1ad0c61bcb6",
+  "heartbeat_ns": 46758983595636,
+  "running": false,
+  "errors": [],
+  "frames": [
+    {
+      "received_ns": 46610555900004,
+      "frame_hex": "0180c2000013020000e00001893a0000000000980080010006020000e0000102000600163eb8c4a7000000"
+    },
+    {
+      "received_ns": 46670584468720,
+      "frame_hex": "0180c2000013020000e00001893a0000000000a10080010006020000e0000102000600163eb8c4a7000000"
+    },
+    {
+      "received_ns": 46730614353096,
+      "frame_hex": "0180c2000013020000e00001893a0000000000a90080010006020000e0000102000600163eb8c4a7000000"
+    }
+  ],
+  "physical_pod_changed": false
+}

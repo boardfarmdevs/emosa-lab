@@ -1,0 +1,9930 @@
+{
+  "service_windows": 291,
+  "baseline_samples": 5,
+  "worker_processes": 2,
+  "connection_generations": 3,
+  "duplicate_observations": 1,
+  "configuration_epochs": 14,
+  "loss_components": {
+    "tx_driver_drops": 0,
+    "tx_action_drops": 0,
+    "queue_drops": 0,
+    "rx_interface_drops": 0,
+    "rx_action_drops": 0
+  },
+  "native_ovsdb_handoff_checks_passed": true,
+  "capture_health": {
+    "forwarding": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 4163,
+      "captured": 4163,
+      "received_by_filter": 4163,
+      "dropped_by_kernel": 0
+    }
+  },
+  "packet_byte_window_bounds": [
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 250,
+        "observed": 250,
+        "maximum": 250
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "rx_bytes": {
+        "minimum": 190,
+        "observed": 190,
+        "maximum": 190
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 645,
+        "observed": 645,
+        "maximum": 645
+      },
+      "rx_packets": {
+        "minimum": 7,
+        "observed": 7,
+        "maximum": 7
+      },
+      "rx_bytes": {
+        "minimum": 702,
+        "observed": 702,
+        "maximum": 702
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 140,
+        "observed": 140,
+        "maximum": 140
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 140,
+        "observed": 140,
+        "maximum": 140
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 1097,
+        "observed": 1097,
+        "maximum": 1097
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 898,
+        "observed": 898,
+        "maximum": 898
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 6
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 588
+      },
+      "rx_packets": {
+        "minimum": 6,
+        "observed": 6,
+        "maximum": 7
+      },
+      "rx_bytes": {
+        "minimum": 560,
+        "observed": 560,
+        "maximum": 658
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 17,
+        "maximum": 17
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1535,
+        "maximum": 1535
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 17,
+        "maximum": 17
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1684,
+        "maximum": 1684
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1593,
+        "observed": 1593,
+        "maximum": 1593
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 1045
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 12
+      },
+      "rx_bytes": {
+        "minimum": 1103,
+        "observed": 1103,
+        "maximum": 1201
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 6,
+        "maximum": 7
+      },
+      "rx_bytes": {
+        "minimum": 398,
+        "observed": 496,
+        "maximum": 594
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 9,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 882,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 882,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 294,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 6
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 588
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 6
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 588
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1592,
+        "observed": 1592,
+        "maximum": 1592
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1102,
+        "observed": 1102,
+        "maximum": 1102
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 6
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 588
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 6,
+        "maximum": 7
+      },
+      "rx_bytes": {
+        "minimum": 462,
+        "observed": 560,
+        "maximum": 658
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 17,
+        "maximum": 17
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1535,
+        "maximum": 1535
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 17,
+        "maximum": 17
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1684,
+        "maximum": 1684
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 849,
+        "observed": 849,
+        "maximum": 849
+      },
+      "rx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 998,
+        "observed": 998,
+        "maximum": 998
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 442,
+        "observed": 442,
+        "maximum": 442
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 7,
+        "observed": 7,
+        "maximum": 7
+      },
+      "tx_bytes": {
+        "minimum": 592,
+        "observed": 592,
+        "maximum": 592
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 442,
+        "observed": 442,
+        "maximum": 442
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 826,
+        "observed": 826,
+        "maximum": 826
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 826,
+        "observed": 826,
+        "maximum": 826
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 294,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 1130,
+        "observed": 1130,
+        "maximum": 1228
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 13
+      },
+      "tx_bytes": {
+        "minimum": 1013,
+        "observed": 1013,
+        "maximum": 1111
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 12
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1194
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 9,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 882,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 882,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 1045,
+        "observed": 1045,
+        "maximum": 1045
+      },
+      "rx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "rx_bytes": {
+        "minimum": 1194,
+        "observed": 1194,
+        "maximum": 1194
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 435,
+        "observed": 435,
+        "maximum": 435
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "tx_bytes": {
+        "minimum": 1339,
+        "observed": 1339,
+        "maximum": 1339
+      },
+      "rx_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "rx_bytes": {
+        "minimum": 1488,
+        "observed": 1488,
+        "maximum": 1488
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 849,
+        "observed": 849,
+        "maximum": 849
+      },
+      "rx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 998,
+        "observed": 998,
+        "maximum": 998
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 6
+      },
+      "rx_bytes": {
+        "minimum": 442,
+        "observed": 442,
+        "maximum": 540
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 1,
+        "observed": 2,
+        "maximum": 3
+      },
+      "tx_bytes": {
+        "minimum": 98,
+        "observed": 196,
+        "maximum": 294
+      },
+      "rx_packets": {
+        "minimum": 1,
+        "observed": 2,
+        "maximum": 3
+      },
+      "rx_bytes": {
+        "minimum": 98,
+        "observed": 196,
+        "maximum": 294
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 3,
+        "maximum": 3
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 294,
+        "maximum": 294
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 3,
+        "maximum": 3
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 294,
+        "maximum": 294
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 462,
+        "observed": 462,
+        "maximum": 462
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 306
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 6,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 524,
+        "observed": 634,
+        "maximum": 634
+      },
+      "rx_packets": {
+        "minimum": 6,
+        "observed": 6,
+        "maximum": 6
+      },
+      "rx_bytes": {
+        "minimum": 484,
+        "observed": 484,
+        "maximum": 484
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 6
+      },
+      "rx_bytes": {
+        "minimum": 645,
+        "observed": 743,
+        "maximum": 841
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 7,
+        "observed": 9,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 686,
+        "observed": 882,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 7,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 686,
+        "observed": 882,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 6
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 588
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 6
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 588
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 17,
+        "observed": 17,
+        "maximum": 17
+      },
+      "tx_bytes": {
+        "minimum": 1783,
+        "observed": 1783,
+        "maximum": 1783
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 1045,
+        "observed": 1045,
+        "maximum": 1045
+      },
+      "rx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "rx_bytes": {
+        "minimum": 1194,
+        "observed": 1194,
+        "maximum": 1194
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "tx_bytes": {
+        "minimum": 1339,
+        "observed": 1339,
+        "maximum": 1339
+      },
+      "rx_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "rx_bytes": {
+        "minimum": 1488,
+        "observed": 1488,
+        "maximum": 1488
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 10,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 882,
+        "observed": 980,
+        "maximum": 980
+      },
+      "rx_packets": {
+        "minimum": 12,
+        "observed": 13,
+        "maximum": 13
+      },
+      "rx_bytes": {
+        "minimum": 1029,
+        "observed": 1127,
+        "maximum": 1127
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1095,
+        "observed": 1095,
+        "maximum": 1095
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 13,
+        "observed": 13,
+        "maximum": 13
+      },
+      "tx_bytes": {
+        "minimum": 1143,
+        "observed": 1143,
+        "maximum": 1143
+      },
+      "rx_packets": {
+        "minimum": 13,
+        "observed": 13,
+        "maximum": 13
+      },
+      "rx_bytes": {
+        "minimum": 1291,
+        "observed": 1291,
+        "maximum": 1291
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "rx_bytes": {
+        "minimum": 246,
+        "observed": 246,
+        "maximum": 246
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 306,
+        "observed": 306,
+        "maximum": 306
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "rx_bytes": {
+        "minimum": 246,
+        "observed": 246,
+        "maximum": 246
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 13,
+        "observed": 13,
+        "maximum": 13
+      },
+      "tx_bytes": {
+        "minimum": 1210,
+        "observed": 1210,
+        "maximum": 1210
+      },
+      "rx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "rx_bytes": {
+        "minimum": 1120,
+        "observed": 1120,
+        "maximum": 1120
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 12,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 1045,
+        "maximum": 1045
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 12,
+        "maximum": 12
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 1194,
+        "maximum": 1194
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "tx_bytes": {
+        "minimum": 1339,
+        "observed": 1339,
+        "maximum": 1339
+      },
+      "rx_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "rx_bytes": {
+        "minimum": 1488,
+        "observed": 1488,
+        "maximum": 1488
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 7,
+        "observed": 8,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 686,
+        "observed": 784,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 7,
+        "observed": 8,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 686,
+        "observed": 784,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 17,
+        "observed": 17,
+        "maximum": 17
+      },
+      "tx_bytes": {
+        "minimum": 1783,
+        "observed": 1783,
+        "maximum": 1783
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 849,
+        "observed": 849,
+        "maximum": 849
+      },
+      "rx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 998,
+        "observed": 998,
+        "maximum": 998
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "rx_bytes": {
+        "minimum": 246,
+        "observed": 246,
+        "maximum": 246
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "rx_bytes": {
+        "minimum": 239,
+        "observed": 239,
+        "maximum": 239
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 1026,
+        "observed": 1026,
+        "maximum": 1026
+      },
+      "rx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 876,
+        "observed": 876,
+        "maximum": 876
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 10,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 882,
+        "observed": 980,
+        "maximum": 980
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 10,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 882,
+        "observed": 980,
+        "maximum": 980
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 1045,
+        "observed": 1045,
+        "maximum": 1045
+      },
+      "rx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "rx_bytes": {
+        "minimum": 1194,
+        "observed": 1194,
+        "maximum": 1194
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 15,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1339,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 15,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1488,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 743,
+        "observed": 743,
+        "maximum": 743
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 17,
+        "observed": 17,
+        "maximum": 17
+      },
+      "tx_bytes": {
+        "minimum": 1503,
+        "observed": 1503,
+        "maximum": 1503
+      },
+      "rx_packets": {
+        "minimum": 17,
+        "observed": 17,
+        "maximum": 17
+      },
+      "rx_bytes": {
+        "minimum": 1656,
+        "observed": 1656,
+        "maximum": 1656
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 849,
+        "observed": 849,
+        "maximum": 849
+      },
+      "rx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 998,
+        "observed": 998,
+        "maximum": 998
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 442,
+        "observed": 442,
+        "maximum": 442
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "tx_bytes": {
+        "minimum": 542,
+        "observed": 542,
+        "maximum": 542
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 1026,
+        "observed": 1026,
+        "maximum": 1026
+      },
+      "rx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 876,
+        "observed": 876,
+        "maximum": 876
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 6
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 490,
+        "maximum": 588
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 6
+      },
+      "rx_bytes": {
+        "minimum": 294,
+        "observed": 490,
+        "maximum": 588
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 10,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 882,
+        "observed": 980,
+        "maximum": 1078
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 10,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 882,
+        "observed": 980,
+        "maximum": 1078
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 1045,
+        "observed": 1045,
+        "maximum": 1045
+      },
+      "rx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "rx_bytes": {
+        "minimum": 1194,
+        "observed": 1194,
+        "maximum": 1194
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 455
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 7,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 574,
+        "observed": 637,
+        "maximum": 637
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1585,
+        "observed": 1585,
+        "maximum": 1585
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 1013,
+        "observed": 1013,
+        "maximum": 1013
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1095,
+        "observed": 1095,
+        "maximum": 1095
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 17,
+        "observed": 17,
+        "maximum": 17
+      },
+      "tx_bytes": {
+        "minimum": 1503,
+        "observed": 1503,
+        "maximum": 1503
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 915,
+        "observed": 915,
+        "maximum": 915
+      },
+      "rx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 998,
+        "observed": 998,
+        "maximum": 998
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "rx_bytes": {
+        "minimum": 246,
+        "observed": 246,
+        "maximum": 246
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 306,
+        "observed": 306,
+        "maximum": 306
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 6,
+        "observed": 6,
+        "maximum": 6
+      },
+      "tx_bytes": {
+        "minimum": 524,
+        "observed": 524,
+        "maximum": 524
+      },
+      "rx_packets": {
+        "minimum": 6,
+        "observed": 6,
+        "maximum": 6
+      },
+      "rx_bytes": {
+        "minimum": 484,
+        "observed": 484,
+        "maximum": 484
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 6
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 588
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 6
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 588
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 294,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 10,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 882,
+        "observed": 980,
+        "maximum": 980
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 10,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 882,
+        "observed": 980,
+        "maximum": 980
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 12,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 1045,
+        "maximum": 1045
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 12,
+        "maximum": 12
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1194,
+        "maximum": 1194
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "tx_bytes": {
+        "minimum": 1339,
+        "observed": 1339,
+        "maximum": 1339
+      },
+      "rx_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "rx_bytes": {
+        "minimum": 1488,
+        "observed": 1488,
+        "maximum": 1488
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 1013,
+        "observed": 1013,
+        "maximum": 1013
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 738,
+        "observed": 738,
+        "maximum": 738
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 827,
+        "observed": 827,
+        "maximum": 827
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 1013,
+        "observed": 1013,
+        "maximum": 1013
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 882
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 980
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 980
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 12,
+        "observed": 13,
+        "maximum": 13
+      },
+      "tx_bytes": {
+        "minimum": 1045,
+        "observed": 1143,
+        "maximum": 1143
+      },
+      "rx_packets": {
+        "minimum": 12,
+        "observed": 13,
+        "maximum": 13
+      },
+      "rx_bytes": {
+        "minimum": 1194,
+        "observed": 1292,
+        "maximum": 1292
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 13,
+        "observed": 13,
+        "maximum": 13
+      },
+      "tx_bytes": {
+        "minimum": 1143,
+        "observed": 1143,
+        "maximum": 1143
+      },
+      "rx_packets": {
+        "minimum": 13,
+        "observed": 13,
+        "maximum": 13
+      },
+      "rx_bytes": {
+        "minimum": 1292,
+        "observed": 1292,
+        "maximum": 1292
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "rx_bytes": {
+        "minimum": 246,
+        "observed": 246,
+        "maximum": 246
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 6,
+        "observed": 6,
+        "maximum": 6
+      },
+      "tx_bytes": {
+        "minimum": 502,
+        "observed": 502,
+        "maximum": 502
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "tx_bytes": {
+        "minimum": 286,
+        "observed": 286,
+        "maximum": 286
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "rx_bytes": {
+        "minimum": 246,
+        "observed": 246,
+        "maximum": 246
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "tx_bytes": {
+        "minimum": 826,
+        "observed": 826,
+        "maximum": 826
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 826,
+        "observed": 826,
+        "maximum": 826
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "tx_bytes": {
+        "minimum": 1437,
+        "observed": 1437,
+        "maximum": 1437
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 947
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1096
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "rx_bytes": {
+        "minimum": 1135,
+        "observed": 1135,
+        "maximum": 1135
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 15,
+        "observed": 17,
+        "maximum": 17
+      },
+      "tx_bytes": {
+        "minimum": 1339,
+        "observed": 1535,
+        "maximum": 1535
+      },
+      "rx_packets": {
+        "minimum": 15,
+        "observed": 17,
+        "maximum": 17
+      },
+      "rx_bytes": {
+        "minimum": 1488,
+        "observed": 1684,
+        "maximum": 1684
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 12
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 947,
+        "maximum": 1045
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 12
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1096,
+        "maximum": 1194
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 738,
+        "observed": 738,
+        "maximum": 738
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 980
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 882,
+        "observed": 882,
+        "maximum": 980
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 11,
+        "observed": 12,
+        "maximum": 13
+      },
+      "tx_bytes": {
+        "minimum": 947,
+        "observed": 1045,
+        "maximum": 1143
+      },
+      "rx_packets": {
+        "minimum": 11,
+        "observed": 12,
+        "maximum": 13
+      },
+      "rx_bytes": {
+        "minimum": 1096,
+        "observed": 1194,
+        "maximum": 1292
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "tx_bytes": {
+        "minimum": 1339,
+        "observed": 1339,
+        "maximum": 1339
+      },
+      "rx_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "rx_bytes": {
+        "minimum": 1488,
+        "observed": 1488,
+        "maximum": 1488
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "tx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      },
+      "rx_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "rx_bytes": {
+        "minimum": 784,
+        "observed": 784,
+        "maximum": 784
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "tx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 490,
+        "observed": 490,
+        "maximum": 490
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 17,
+        "observed": 17,
+        "maximum": 17
+      },
+      "tx_bytes": {
+        "minimum": 1503,
+        "observed": 1503,
+        "maximum": 1503
+      },
+      "rx_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "rx_bytes": {
+        "minimum": 1586,
+        "observed": 1586,
+        "maximum": 1586
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "tx_bytes": {
+        "minimum": 849,
+        "observed": 849,
+        "maximum": 849
+      },
+      "rx_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "rx_bytes": {
+        "minimum": 998,
+        "observed": 998,
+        "maximum": 998
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 442,
+        "observed": 442,
+        "maximum": 442
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "tx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      },
+      "rx_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "rx_bytes": {
+        "minimum": 392,
+        "observed": 392,
+        "maximum": 392
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "tx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      },
+      "rx_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "rx_bytes": {
+        "minimum": 196,
+        "observed": 196,
+        "maximum": 196
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 7,
+        "observed": 7,
+        "maximum": 7
+      },
+      "tx_bytes": {
+        "minimum": 592,
+        "observed": 592,
+        "maximum": 592
+      },
+      "rx_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "rx_bytes": {
+        "minimum": 442,
+        "observed": 442,
+        "maximum": 442
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 11
+      },
+      "tx_bytes": {
+        "minimum": 826,
+        "observed": 826,
+        "maximum": 1022
+      },
+      "rx_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 11
+      },
+      "rx_bytes": {
+        "minimum": 826,
+        "observed": 826,
+        "maximum": 1022
+      }
+    },
+    {
+      "tx_packets": {
+        "minimum": 3,
+        "observed": 6,
+        "maximum": 6
+      },
+      "tx_bytes": {
+        "minimum": 294,
+        "observed": 588,
+        "maximum": 588
+      },
+      "rx_packets": {
+        "minimum": 3,
+        "observed": 6,
+        "maximum": 6
+      },
+      "rx_bytes": {
+        "minimum": 294,
+        "observed": 588,
+        "maximum": 588
+      }
+    }
+  ],
+  "service_window_bounds": [
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 404,
+        "observed": 404,
+        "maximum": 404
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 838,
+        "observed": 838,
+        "maximum": 838
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 206,
+        "observed": 206,
+        "maximum": 206
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1338,
+        "observed": 1338,
+        "maximum": 1338
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 6
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 732
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 17
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1944
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1334
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 9,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 1098,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 6
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 732
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 6,
+        "maximum": 6
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 732,
+        "maximum": 732
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 17
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1944
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1090,
+        "observed": 1090,
+        "maximum": 1090
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 7,
+        "observed": 7,
+        "maximum": 7
+      },
+      "service_bytes": {
+        "minimum": 800,
+        "observed": 800,
+        "maximum": 800
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 1060,
+        "observed": 1060,
+        "maximum": 1060
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1346,
+        "observed": 1346,
+        "maximum": 1468
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 1098,
+        "observed": 1098,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 13
+      },
+      "service_bytes": {
+        "minimum": 1302,
+        "observed": 1302,
+        "maximum": 1424
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 9,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 1098,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 1098,
+        "observed": 1098,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1334,
+        "observed": 1334,
+        "maximum": 1334
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "service_bytes": {
+        "minimum": 1700,
+        "observed": 1700,
+        "maximum": 1700
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1090,
+        "observed": 1090,
+        "maximum": 1090
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 1,
+        "observed": 2,
+        "maximum": 3
+      },
+      "service_bytes": {
+        "minimum": 122,
+        "observed": 244,
+        "maximum": 366
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 3,
+        "maximum": 3
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 366,
+        "maximum": 366
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 3,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 328,
+        "maximum": 442
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 6,
+        "observed": 7,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 686,
+        "observed": 800,
+        "maximum": 884
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 7,
+        "observed": 9,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 854,
+        "observed": 1098,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 6
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 732
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 17,
+        "observed": 17,
+        "maximum": 17
+      },
+      "service_bytes": {
+        "minimum": 2192,
+        "observed": 2192,
+        "maximum": 2192
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 1098,
+        "observed": 1098,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1334,
+        "observed": 1334,
+        "maximum": 1334
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "service_bytes": {
+        "minimum": 1700,
+        "observed": 1700,
+        "maximum": 1700
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1098,
+        "observed": 1098,
+        "maximum": 1220
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 13,
+        "observed": 13,
+        "maximum": 13
+      },
+      "service_bytes": {
+        "minimum": 1456,
+        "observed": 1456,
+        "maximum": 1456
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 442,
+        "observed": 442,
+        "maximum": 442
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 13,
+        "observed": 13,
+        "maximum": 13
+      },
+      "service_bytes": {
+        "minimum": 1540,
+        "observed": 1540,
+        "maximum": 1540
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 1098,
+        "observed": 1098,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 12,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 1334,
+        "maximum": 1334
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "service_bytes": {
+        "minimum": 1700,
+        "observed": 1700,
+        "maximum": 1700
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 7,
+        "observed": 9,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 854,
+        "observed": 1098,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 17,
+        "observed": 17,
+        "maximum": 17
+      },
+      "service_bytes": {
+        "minimum": 2192,
+        "observed": 2192,
+        "maximum": 2192
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1090,
+        "observed": 1090,
+        "maximum": 1090
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1372,
+        "observed": 1372,
+        "maximum": 1372
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1098,
+        "observed": 1098,
+        "maximum": 1220
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1334,
+        "observed": 1334,
+        "maximum": 1334
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 15,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1700,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 17,
+        "observed": 17,
+        "maximum": 17
+      },
+      "service_bytes": {
+        "minimum": 1912,
+        "observed": 1912,
+        "maximum": 1912
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1090,
+        "observed": 1090,
+        "maximum": 1090
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "service_bytes": {
+        "minimum": 614,
+        "observed": 614,
+        "maximum": 614
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1372,
+        "observed": 1372,
+        "maximum": 1372
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 6
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 610,
+        "maximum": 732
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 10,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1098,
+        "observed": 1220,
+        "maximum": 1342
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1334,
+        "observed": 1334,
+        "maximum": 1334
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1302,
+        "observed": 1302,
+        "maximum": 1302
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 17,
+        "observed": 17,
+        "maximum": 17
+      },
+      "service_bytes": {
+        "minimum": 1912,
+        "observed": 1912,
+        "maximum": 1912
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1180,
+        "observed": 1180,
+        "maximum": 1180
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 442,
+        "observed": 442,
+        "maximum": 442
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 6,
+        "observed": 6,
+        "maximum": 6
+      },
+      "service_bytes": {
+        "minimum": 686,
+        "observed": 686,
+        "maximum": 686
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 9,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 1098,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 6
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 732
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 10,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1098,
+        "observed": 1220,
+        "maximum": 1220
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 12,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1334,
+        "maximum": 1334
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "service_bytes": {
+        "minimum": 1700,
+        "observed": 1700,
+        "maximum": 1700
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1302,
+        "observed": 1302,
+        "maximum": 1302
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 858,
+        "observed": 858,
+        "maximum": 858
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1302,
+        "observed": 1302,
+        "maximum": 1302
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 1098
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 10,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1098,
+        "observed": 1220,
+        "maximum": 1220
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 12,
+        "observed": 12,
+        "maximum": 13
+      },
+      "service_bytes": {
+        "minimum": 1334,
+        "observed": 1334,
+        "maximum": 1456
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 13,
+        "observed": 13,
+        "maximum": 13
+      },
+      "service_bytes": {
+        "minimum": 1456,
+        "observed": 1456,
+        "maximum": 1456
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 6,
+        "observed": 6,
+        "maximum": 6
+      },
+      "service_bytes": {
+        "minimum": 686,
+        "observed": 686,
+        "maximum": 686
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 3,
+        "maximum": 3
+      },
+      "service_bytes": {
+        "minimum": 358,
+        "observed": 358,
+        "maximum": 358
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 9
+      },
+      "service_bytes": {
+        "minimum": 1060,
+        "observed": 1060,
+        "maximum": 1060
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 16,
+        "observed": 16,
+        "maximum": 16
+      },
+      "service_bytes": {
+        "minimum": 1822,
+        "observed": 1822,
+        "maximum": 1822
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1212
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 15,
+        "observed": 17,
+        "maximum": 17
+      },
+      "service_bytes": {
+        "minimum": 1700,
+        "observed": 1944,
+        "maximum": 1944
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 11,
+        "maximum": 12
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1212,
+        "maximum": 1334
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 858,
+        "observed": 858,
+        "maximum": 858
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 9,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1098,
+        "observed": 1098,
+        "maximum": 1220
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 11,
+        "observed": 13,
+        "maximum": 13
+      },
+      "service_bytes": {
+        "minimum": 1212,
+        "observed": 1456,
+        "maximum": 1456
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 15,
+        "observed": 15,
+        "maximum": 15
+      },
+      "service_bytes": {
+        "minimum": 1700,
+        "observed": 1700,
+        "maximum": 1700
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 8,
+        "observed": 8,
+        "maximum": 8
+      },
+      "service_bytes": {
+        "minimum": 976,
+        "observed": 976,
+        "maximum": 976
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 5,
+        "observed": 5,
+        "maximum": 5
+      },
+      "service_bytes": {
+        "minimum": 610,
+        "observed": 610,
+        "maximum": 610
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 17,
+        "observed": 17,
+        "maximum": 17
+      },
+      "service_bytes": {
+        "minimum": 1912,
+        "observed": 1912,
+        "maximum": 1912
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 10,
+        "observed": 10,
+        "maximum": 10
+      },
+      "service_bytes": {
+        "minimum": 1090,
+        "observed": 1090,
+        "maximum": 1090
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 4,
+        "observed": 4,
+        "maximum": 4
+      },
+      "service_bytes": {
+        "minimum": 488,
+        "observed": 488,
+        "maximum": 488
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 2,
+        "observed": 2,
+        "maximum": 2
+      },
+      "service_bytes": {
+        "minimum": 244,
+        "observed": 244,
+        "maximum": 244
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 7,
+        "observed": 7,
+        "maximum": 7
+      },
+      "service_bytes": {
+        "minimum": 800,
+        "observed": 800,
+        "maximum": 800
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 9,
+        "observed": 10,
+        "maximum": 11
+      },
+      "service_bytes": {
+        "minimum": 1060,
+        "observed": 1182,
+        "maximum": 1304
+      }
+    },
+    {
+      "service_packets": {
+        "minimum": 3,
+        "observed": 5,
+        "maximum": 6
+      },
+      "service_bytes": {
+        "minimum": 366,
+        "observed": 610,
+        "maximum": 732
+      }
+    }
+  ],
+  "clock_offset_spread_ns": 3737,
+  "fixed_timing_allowance_ns": 1000000,
+  "measurement_source_qualified": false,
+  "native_neighbor_metric_delivery_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

@@ -5,6 +5,7 @@ The external_ids clock/epoch convention belongs only to this simulation profile.
 Nothing here installs a manager on, or qualifies, a physical pod.
 """
 
+import json
 import re
 import time
 import uuid
@@ -155,6 +156,12 @@ def normalize(observation):
             "statistics": ["map", sorted(counters.items())],
             "external_ids": ["map", sorted((common | {"peer_ifindex": str(peer)}).items())],
         }
+        for key in ("neighbor_observation", "egress_observation", "peer_path_observation"):
+            if name == "eth1" and observation.get(key) is not None:
+                payload = json.dumps(observation[key], separators=(",", ":"))
+                if len(payload) > 262144:
+                    raise ValueError("observation exceeds the local budget")
+                interfaces[name]["external_ids"][1].append((key, payload))
     return interfaces, [
         "map",
         sorted((common | {"bridge_ifindex": str(identity[0]), "bridge_mac": identity[1]}).items()),
@@ -254,6 +261,9 @@ class Sample:
     ended_ns: int
     epoch: tuple
     interfaces: dict
+    neighbor_observation: dict | None = None
+    egress_observation: dict | None = None
+    peer_path_observation: dict | None = None
 
 
 class ForwardingSource:
@@ -334,7 +344,25 @@ class ForwardingSource:
                 or len({r["ifindex"] for r in result.values()}) != 3
             ):
                 raise ValueError("duplicate interface identity")
-            sample = Sample(snapshot["generation"], start, end, tuple(epoch), result)
+            payload = interfaces["eth1"][1]["external_ids"].get("neighbor_observation")
+            if payload is not None and len(payload) > 262144:
+                raise ValueError("neighbor observation exceeds the local budget")
+            egress = interfaces["eth1"][1]["external_ids"].get("egress_observation")
+            if egress is not None and len(egress) > 262144:
+                raise ValueError("egress observation exceeds the local budget")
+            path = interfaces["eth1"][1]["external_ids"].get("peer_path_observation")
+            if path is not None and len(path) > 262144:
+                raise ValueError("peer path observation exceeds the local budget")
+            sample = Sample(
+                snapshot["generation"],
+                start,
+                end,
+                tuple(epoch),
+                result,
+                json.loads(payload) if payload is not None else None,
+                json.loads(egress) if egress is not None else None,
+                json.loads(path) if path is not None else None,
+            )
             if self.sample == sample:
                 return
             if start <= self.watermark:

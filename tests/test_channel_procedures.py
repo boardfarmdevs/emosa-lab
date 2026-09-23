@@ -190,8 +190,10 @@ def test_complete_scope_validation_before_any_acceptance_or_persistence(rig):
 def test_no_measured_radio_no_late_reply_no_disk_no_success(rig, monkeypatch):
     before = rig.store.read()
     rig.publish((1, 2), ())
-    with pytest.raises(EmosaError):
-        rig.request()
+    assert rig.request() == "channel_waiting_for_observation"
+    rig.now = 1
+    rig.coordinator.tick()
+    assert not rig.coordinator.waiting
     rig.publish((1, 3))
     with pytest.raises(EmosaError):
         rig.request(received_at=-2)
@@ -204,6 +206,62 @@ def test_no_measured_radio_no_late_reply_no_disk_no_success(rig, monkeypatch):
     with pytest.raises(EmosaError):
         rig.request()
     assert rig.sent == []
+
+
+def test_startup_requests_wait_for_fresh_observation_with_original_mids(rig):
+    rig.publish((1, 2), ())
+    before = rig.store.read()
+    assert rig.request(0x8006, 41) == "channel_waiting_for_observation"
+    assert rig.request(0x8004, 42) == "channel_waiting_for_observation"
+    assert not rig.sent and rig.store.read() == before
+    rig.now = 0.2
+    rig.publish((1, 3))
+    rig.coordinator.tick()
+    replies = [Reassembler().feed(f) for f in rig.sent]
+    assert [(p.message_type, p.mid) for p in replies] == [
+        (0x8007, 41),
+        (0x8008, 65535),
+        (0x8005, 42),
+    ]
+    assert replies[1].tlvs == (rig.radio.tlv(),)
+    assert rig.store.read()["status"] == "accepted_no_adjustment"
+    assert not rig.coordinator.waiting
+
+
+@pytest.mark.parametrize("fault", ["generation", "invalidate", "close", "deadline"])
+def test_waiting_channel_request_cannot_outlive_authority_or_deadline(rig, fault):
+    rig.publish((1, 2), ())
+    before = rig.store.read()
+    rig.request()
+    rig.now = 0.99
+    assert rig.request() == "duplicate_channel_request"
+    if fault == "generation":
+        rig.publish((2, 1))
+    elif fault == "invalidate":
+        rig.source.invalidate()
+    elif fault == "close":
+        rig.coordinator.close()
+    else:
+        rig.now = 1
+        rig.publish((1, 3))
+    rig.coordinator.tick()
+    assert not rig.coordinator.waiting and not rig.sent
+    assert rig.store.read() == before
+
+
+def test_channel_observation_wait_has_fixed_budget_and_validates_before_effect(rig):
+    rig.publish((1, 2), ())
+    before = rig.store.read()
+    for mid in range(4):
+        assert rig.request(mid=mid, tlvs=(Tlv(0xEB, b"unknown"),)) == (
+            "channel_waiting_for_observation"
+        )
+    assert rig.request(mid=5) == "channel_observation_wait_budget_exhausted"
+    rig.now = 0.5
+    rig.publish((1, 3))
+    rig.coordinator.tick()
+    assert not rig.sent and not rig.coordinator.waiting and rig.store.read() == before
+    assert rig.coordinator.counts["queued_channel_rejected_UNSUPPORTED_OPERATION"] == 4
 
 
 def test_observed_power_change_notifies_and_reboot_explicitly_resets_policy(rig):

@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import fcntl
 import json
+import runpy
 import signal
 import time
 from contextlib import suppress
@@ -18,6 +19,10 @@ from emosa.simulation.station_telemetry import LabMqtt
 
 
 class Driver:
+    def __init__(self, neighbor_label=None, path_observer=None):
+        self.neighbor_label = neighbor_label
+        self.path_observer = path_observer
+
     async def request(self, action, payload=None):
         process = await asyncio.create_subprocess_exec(
             "lxc",
@@ -30,6 +35,11 @@ class Driver:
             "python3",
             str(ROOT / "node.py"),
             action,
+            *(
+                ["--neighbor-label", self.neighbor_label]
+                if action == "observe" and self.neighbor_label
+                else []
+            ),
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -50,14 +60,25 @@ class Driver:
         await self.request("apply", asdict(config))
 
     async def observe(self):
-        return await self.request("observe")
+        before = await asyncio.to_thread(self.path_observer.observe) if self.path_observer else None
+        value = await self.request("observe")
+        if self.path_observer:
+            after = await asyncio.to_thread(self.path_observer.observe)
+            value["forwarding"]["peer_path_observation"] = {"before": before, "after": after}
+        return value
 
 
 async def serve(directory):
     guard()
     endpoint = "unix:" + str(directory / "database/db.sock")
     session = OvsSession(endpoint, monitor_columns=MONITOR)
-    manager = RadioManager(session, Driver())
+    native = (directory / "native-owner.json").exists()
+    path_observer = (
+        runpy.run_path(str(ROOT / "peer-path.py"))["PathObserver"](directory)
+        if (native and (directory / "peer-metrics-requested").exists())
+        else None
+    )
+    manager = RadioManager(session, Driver(directory.name if native else None, path_observer))
     mqtt = LabMqtt(directory) if (directory / "native-owner.json").exists() else None
     stopped = asyncio.Event()
     for sig in (signal.SIGINT, signal.SIGTERM):
@@ -87,6 +108,8 @@ async def serve(directory):
                 with suppress(TimeoutError):
                     await asyncio.wait_for(stopped.wait(), 0.5)
         finally:
+            if path_observer:
+                path_observer.close()
             if mqtt:
                 mqtt.close()
             await session.close()

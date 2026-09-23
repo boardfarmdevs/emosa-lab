@@ -1,0 +1,8481 @@
+{
+  "packet_byte_reconciliation_passed": true,
+  "scope": "owned veth interface packet/byte deltas, including transit and multicast",
+  "counter_windows": 325,
+  "exact_direction_packet_windows": 602,
+  "clock_offset_spread_ns": 3657,
+  "fixed_timing_allowance_ns": 1000000,
+  "classified_capture_totals": {
+    "rx_packets": 2136,
+    "rx_bytes": 208908,
+    "tx_packets": 2130,
+    "tx_bytes": 200352
+  },
+  "tx_source_macs": [
+    "00:16:3e:79:0a:a8",
+    "00:16:3e:b2:d2:c4",
+    "02:00:00:00:02:00"
+  ],
+  "rx_source_macs": [
+    "00:16:3e:b8:c4:a7",
+    "02:00:00:00:30:01",
+    "02:00:00:e0:00:01"
+  ],
+  "window_bounds": [
+    {
+      "worker_pid": 596781,
+      "started_ns": 25160159226247,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 347,
+          "observed": 347,
+          "maximum": 347
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25160877211452,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 1,
+          "observed": 1,
+          "maximum": 1
+        },
+        "rx_bytes": {
+          "minimum": 34,
+          "observed": 34,
+          "maximum": 34
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25161569949983,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25162275475202,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25163007528993,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25163717555552,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 1,
+          "observed": 1,
+          "maximum": 1
+        },
+        "rx_bytes": {
+          "minimum": 70,
+          "observed": 70,
+          "maximum": 70
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25164412565723,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25165096089558,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25165796055796,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25166494964368,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25167189252442,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25167876790593,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25168556627830,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25169249736807,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25169949487842,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25170626680676,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25171330433180,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 1,
+          "observed": 1,
+          "maximum": 1
+        },
+        "rx_bytes": {
+          "minimum": 70,
+          "observed": 70,
+          "maximum": 70
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25172015553166,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25172725325012,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 1,
+          "observed": 1,
+          "maximum": 1
+        },
+        "rx_bytes": {
+          "minimum": 34,
+          "observed": 34,
+          "maximum": 34
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25173402399140,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 340,
+          "observed": 340,
+          "maximum": 340
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 140,
+          "observed": 140,
+          "maximum": 140
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25174081485479,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "tx_bytes": {
+          "minimum": 0,
+          "observed": 0,
+          "maximum": 0
+        },
+        "rx_packets": {
+          "minimum": 1,
+          "observed": 1,
+          "maximum": 1
+        },
+        "rx_bytes": {
+          "minimum": 50,
+          "observed": 50,
+          "maximum": 50
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25174767603412,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 10,
+          "observed": 10,
+          "maximum": 10
+        },
+        "tx_bytes": {
+          "minimum": 1041,
+          "observed": 1041,
+          "maximum": 1041
+        },
+        "rx_packets": {
+          "minimum": 9,
+          "observed": 9,
+          "maximum": 9
+        },
+        "rx_bytes": {
+          "minimum": 842,
+          "observed": 842,
+          "maximum": 842
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25175457714631,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 555,
+          "observed": 555,
+          "maximum": 555
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 702,
+          "observed": 702,
+          "maximum": 702
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25176131936374,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25176837949580,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25177522297680,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25178208814248,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25178893668548,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25179585663994,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25180274594523,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25180952333559,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25181633577041,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25182344823606,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25183029121465,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25183726753238,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1241,
+          "observed": 1241,
+          "maximum": 1241
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1397,
+          "observed": 1397,
+          "maximum": 1397
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25184416790796,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 836,
+          "observed": 836,
+          "maximum": 836
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25185095436972,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1299,
+          "observed": 1299,
+          "maximum": 1299
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25185795937013,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25186486252963,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25187172588234,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 658,
+          "observed": 658,
+          "maximum": 658
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25187864806122,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25188549105368,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25189249019344,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 939,
+          "observed": 939,
+          "maximum": 939
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25189940652668,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1241,
+          "observed": 1241,
+          "maximum": 1241
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1390,
+          "observed": 1390,
+          "maximum": 1390
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25190637263419,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25191334123289,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25192025801468,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25192705585922,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25193390431997,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25194078743695,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25194794837844,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25195491371716,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25196185488493,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1298,
+          "observed": 1298,
+          "maximum": 1298
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25196865899120,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25197565326256,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1111,
+          "observed": 1111,
+          "maximum": 1111
+        },
+        "rx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "rx_bytes": {
+          "minimum": 1134,
+          "observed": 1134,
+          "maximum": 1134
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25198260512700,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25198955433157,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25199637863031,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25200328719584,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25201026435894,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25201722207848,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25202400731649,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25203087915658,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25203759373684,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "tx_bytes": {
+          "minimum": 947,
+          "observed": 947,
+          "maximum": 947
+        },
+        "rx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "rx_bytes": {
+          "minimum": 1096,
+          "observed": 1096,
+          "maximum": 1096
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25204443885781,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 246,
+          "observed": 246,
+          "maximum": 246
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25205127973486,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25205818946958,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25206500961131,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25207188936129,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25207880932322,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 544,
+          "observed": 544,
+          "maximum": 544
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 434,
+          "observed": 434,
+          "maximum": 434
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25208566573406,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 580,
+          "observed": 580,
+          "maximum": 580
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 540,
+          "observed": 540,
+          "maximum": 540
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25209245965298,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25209940783242,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25210632147194,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25211327873570,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 533,
+          "observed": 533,
+          "maximum": 533
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25212011979754,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25212702770172,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25213378125552,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1013,
+          "observed": 1013,
+          "maximum": 1013
+        },
+        "rx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "rx_bytes": {
+          "minimum": 1096,
+          "observed": 1096,
+          "maximum": 1096
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25214058631164,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25214744463153,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25215436131087,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25216130549961,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25216816186192,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25217509832455,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1264,
+          "observed": 1264,
+          "maximum": 1264
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25218201685270,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25218874897882,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1209,
+          "observed": 1209,
+          "maximum": 1209
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1226,
+          "observed": 1226,
+          "maximum": 1226
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25219570993641,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25220251774083,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25220935789966,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25221622031963,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25222320252984,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25223013323871,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 15,
+          "observed": 15,
+          "maximum": 15
+        },
+        "tx_bytes": {
+          "minimum": 1307,
+          "observed": 1307,
+          "maximum": 1307
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1390,
+          "observed": 1390,
+          "maximum": 1390
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25223700291304,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25224389117206,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "tx_bytes": {
+          "minimum": 947,
+          "observed": 947,
+          "maximum": 947
+        },
+        "rx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "rx_bytes": {
+          "minimum": 1096,
+          "observed": 1096,
+          "maximum": 1096
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25225075910078,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25225761532809,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25226451116284,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25227137741991,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25227835803903,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25228518724014,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25229212711422,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25229891104067,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25230579163883,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 344,
+          "observed": 344,
+          "maximum": 344
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25231263541908,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25231950147379,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25232639062038,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25233317217959,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25234005554466,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25234692644220,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 494,
+          "observed": 494,
+          "maximum": 494
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25235368744601,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 9,
+          "observed": 9,
+          "maximum": 9
+        },
+        "tx_bytes": {
+          "minimum": 826,
+          "observed": 826,
+          "maximum": 826
+        },
+        "rx_packets": {
+          "minimum": 10,
+          "observed": 10,
+          "maximum": 10
+        },
+        "rx_bytes": {
+          "minimum": 876,
+          "observed": 876,
+          "maximum": 876
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25236058334014,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25236734891377,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25237435758191,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25238118466418,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25238809103288,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 15,
+          "maximum": 15
+        },
+        "tx_bytes": {
+          "minimum": 1241,
+          "observed": 1587,
+          "maximum": 1587
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1390,
+          "observed": 1390,
+          "maximum": 1390
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25239494795403,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 947,
+          "observed": 947,
+          "maximum": 1293
+        },
+        "rx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "rx_bytes": {
+          "minimum": 1096,
+          "observed": 1096,
+          "maximum": 1096
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25240187173927,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25240867542091,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25241549417538,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25242231885004,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25242927786599,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25243614404209,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25244305076156,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25244989255131,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1209,
+          "observed": 1209,
+          "maximum": 1209
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25245678539248,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25246372162614,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25247061988737,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25247751600506,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25248434678388,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 836,
+          "observed": 836,
+          "maximum": 836
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25249112702004,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25249808718564,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25256629593364,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 539,
+          "observed": 539,
+          "maximum": 539
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25257303797218,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25257998443382,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1241,
+          "observed": 1241,
+          "maximum": 1241
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1389,
+          "observed": 1389,
+          "maximum": 1389
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25258676751907,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25259366254021,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1193,
+          "observed": 1193,
+          "maximum": 1193
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25260060923990,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 344,
+          "observed": 344,
+          "maximum": 344
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25260759676889,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25261448038826,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25262134147209,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25262817026403,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25263509168974,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 306,
+          "observed": 306,
+          "maximum": 306
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25264191312626,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 630,
+          "observed": 630,
+          "maximum": 630
+        },
+        "rx_packets": {
+          "minimum": 8,
+          "observed": 8,
+          "maximum": 8
+        },
+        "rx_bytes": {
+          "minimum": 680,
+          "observed": 680,
+          "maximum": 680
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25264885353110,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 678,
+          "observed": 678,
+          "maximum": 678
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25265554172594,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25266250155431,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25266926320899,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25267616620253,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25268297658483,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1241,
+          "observed": 1241,
+          "maximum": 1241
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1390,
+          "observed": 1390,
+          "maximum": 1390
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25268976062719,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1209,
+          "observed": 1209,
+          "maximum": 1209
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25269647295453,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25270336079543,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25271018454423,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25271702770304,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 435,
+          "observed": 435,
+          "maximum": 435
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25272377831263,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25273064720376,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25273744500275,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25274438949967,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25275114948641,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25275793681385,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25276472186179,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25277161781122,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25277836650060,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25278512685444,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25279187275309,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1241,
+          "observed": 1241,
+          "maximum": 1241
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1390,
+          "observed": 1390,
+          "maximum": 1390
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25279879930172,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "tx_bytes": {
+          "minimum": 947,
+          "observed": 947,
+          "maximum": 947
+        },
+        "rx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "rx_bytes": {
+          "minimum": 1096,
+          "observed": 1096,
+          "maximum": 1096
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25280547688953,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 344,
+          "observed": 344,
+          "maximum": 344
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25281235586226,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25281920957572,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 266,
+          "observed": 266,
+          "maximum": 266
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25282605407244,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25283284085522,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25283989252239,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25284677068013,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 8,
+          "observed": 8,
+          "maximum": 8
+        },
+        "tx_bytes": {
+          "minimum": 642,
+          "observed": 642,
+          "maximum": 642
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 532,
+          "observed": 532,
+          "maximum": 532
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25285371037527,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 678,
+          "observed": 678,
+          "maximum": 678
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 638,
+          "observed": 638,
+          "maximum": 638
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25286047656367,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25286738672800,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25287427596233,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25288120839943,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25288796565551,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25289479784593,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25290153879403,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 11,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 947,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 11,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1096,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25290856327113,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25291540310913,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25292236984232,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25292923318175,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25293606917499,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25294286585421,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1241,
+          "observed": 1241,
+          "maximum": 1241
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1390,
+          "observed": 1390,
+          "maximum": 1390
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25294967312502,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "tx_bytes": {
+          "minimum": 947,
+          "observed": 947,
+          "maximum": 947
+        },
+        "rx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "rx_bytes": {
+          "minimum": 1096,
+          "observed": 1096,
+          "maximum": 1096
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25295643995585,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25296335897410,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25297011904921,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25297693106996,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25298382586897,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25299068483168,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25299751466050,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1241,
+          "observed": 1241,
+          "maximum": 1241
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1390,
+          "observed": 1390,
+          "maximum": 1390
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25300445265077,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25301127808722,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25301811735561,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25302511306225,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 934,
+          "observed": 934,
+          "maximum": 934
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25303194589241,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 392,
+          "maximum": 392
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25303874469708,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25304553226309,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25305227721562,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25305918118535,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25306603886562,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25307292812179,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 246,
+          "observed": 246,
+          "maximum": 246
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25307970903369,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25308663189837,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25309339159474,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25310020838714,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25310707561770,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 404,
+          "observed": 404,
+          "maximum": 404
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25311397298221,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 9,
+          "observed": 9,
+          "maximum": 9
+        },
+        "tx_bytes": {
+          "minimum": 818,
+          "observed": 818,
+          "maximum": 818
+        },
+        "rx_packets": {
+          "minimum": 9,
+          "observed": 9,
+          "maximum": 9
+        },
+        "rx_bytes": {
+          "minimum": 778,
+          "observed": 778,
+          "maximum": 778
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25312076085611,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 836,
+          "observed": 836,
+          "maximum": 836
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25312761298992,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25313471184744,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25314155067929,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25314841527713,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1241,
+          "observed": 1241,
+          "maximum": 1241
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1390,
+          "observed": 1390,
+          "maximum": 1390
+        }
+      }
+    },
+    {
+      "worker_pid": 596781,
+      "started_ns": 25315529573455,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25316885339274,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25317566790157,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 9,
+          "observed": 9,
+          "maximum": 10
+        },
+        "rx_bytes": {
+          "minimum": 1036,
+          "observed": 1036,
+          "maximum": 1134
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25318262749276,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1243,
+          "observed": 1341,
+          "maximum": 1341
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25318944574317,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25319633964092,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1291,
+          "observed": 1291,
+          "maximum": 1291
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25320313537843,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25321006662449,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25321685800669,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25322379385091,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25323060070909,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25323756321786,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25324430561007,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25325120898138,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25325813104137,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25326515389695,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25327194717126,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25327893181587,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25328597837998,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25329325958216,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25330026337720,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25330707524201,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1013,
+          "observed": 1111,
+          "maximum": 1111
+        },
+        "rx_packets": {
+          "minimum": 11,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1096,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25331418232034,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 387,
+          "observed": 387,
+          "maximum": 387
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25332127908459,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25332821468101,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25333505459844,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25334194605798,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25334882188728,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 314,
+          "observed": 314,
+          "maximum": 404
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25335572211255,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 384,
+          "observed": 474,
+          "maximum": 474
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 344,
+          "observed": 344,
+          "maximum": 344
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25336256868443,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 10,
+          "observed": 10,
+          "maximum": 10
+        },
+        "tx_bytes": {
+          "minimum": 924,
+          "observed": 924,
+          "maximum": 924
+        },
+        "rx_packets": {
+          "minimum": 10,
+          "observed": 10,
+          "maximum": 10
+        },
+        "rx_bytes": {
+          "minimum": 924,
+          "observed": 924,
+          "maximum": 924
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25336936959312,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25337616864861,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25338307097767,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25338996315485,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25339689563275,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25340376370920,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1209,
+          "observed": 1209,
+          "maximum": 1209
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1226,
+          "observed": 1226,
+          "maximum": 1226
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25341066649790,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25341739707145,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25342420972928,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25343103648253,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25343790363370,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25344463903224,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25345158994527,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25345848367003,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25346537257192,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25347214492322,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25347899238038,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25348577443625,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25349271960835,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25349959432746,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25350651883676,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25351353663786,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 11,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 947,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 11,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1096,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25352043515495,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 4
+        },
+        "rx_bytes": {
+          "minimum": 246,
+          "observed": 246,
+          "maximum": 344
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25352723551711,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25353429602487,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25354112815577,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25354806876440,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25355514749919,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25356197474461,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 4,
+          "maximum": 4
+        },
+        "tx_bytes": {
+          "minimum": 306,
+          "observed": 306,
+          "maximum": 306
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25356875372295,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "tx_bytes": {
+          "minimum": 1014,
+          "observed": 1014,
+          "maximum": 1014
+        },
+        "rx_packets": {
+          "minimum": 11,
+          "observed": 11,
+          "maximum": 11
+        },
+        "rx_bytes": {
+          "minimum": 974,
+          "observed": 974,
+          "maximum": 974
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25357581404027,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25358264567247,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25358957060718,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25359644284789,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25360337733177,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1241,
+          "observed": 1241,
+          "maximum": 1241
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1390,
+          "observed": 1390,
+          "maximum": 1390
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25361031684370,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25361714056537,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25362396146594,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25363076328822,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25363758173348,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25364446504506,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25365134977746,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25365823880516,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1241,
+          "observed": 1241,
+          "maximum": 1241
+        },
+        "rx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 1390,
+          "observed": 1390,
+          "maximum": 1390
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25366505475064,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "tx_bytes": {
+          "minimum": 1045,
+          "observed": 1045,
+          "maximum": 1045
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25367198395334,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 836,
+          "observed": 836,
+          "maximum": 836
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25367875037563,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25368564091683,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25369249036564,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25369932347971,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 686,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25370613408147,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25371318131349,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25372012954672,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 14,
+          "observed": 14,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 1209,
+          "observed": 1209,
+          "maximum": 1209
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25372700972406,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25373382698719,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25374082949095,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25374765754172,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25375448649356,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25376125494271,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 7,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 836,
+          "observed": 934,
+          "maximum": 1391
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 6,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 588,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25376814469699,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 13,
+          "maximum": 14
+        },
+        "tx_bytes": {
+          "minimum": 686,
+          "observed": 1143,
+          "maximum": 1241
+        },
+        "rx_packets": {
+          "minimum": 7,
+          "observed": 13,
+          "maximum": 14
+        },
+        "rx_bytes": {
+          "minimum": 686,
+          "observed": 1292,
+          "maximum": 1390
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25377494194332,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1111,
+          "observed": 1111,
+          "maximum": 1111
+        },
+        "rx_packets": {
+          "minimum": 12,
+          "observed": 12,
+          "maximum": 12
+        },
+        "rx_bytes": {
+          "minimum": 1194,
+          "observed": 1194,
+          "maximum": 1194
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25378186151173,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 246,
+          "observed": 246,
+          "maximum": 246
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25378872143435,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25379564115808,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25380243252249,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "tx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        },
+        "rx_packets": {
+          "minimum": 2,
+          "observed": 2,
+          "maximum": 2
+        },
+        "rx_bytes": {
+          "minimum": 196,
+          "observed": 196,
+          "maximum": 196
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25380932269495,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25381629691382,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "tx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        },
+        "rx_packets": {
+          "minimum": 3,
+          "observed": 3,
+          "maximum": 3
+        },
+        "rx_bytes": {
+          "minimum": 294,
+          "observed": 294,
+          "maximum": 294
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25382326644566,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 7,
+          "observed": 7,
+          "maximum": 8
+        },
+        "tx_bytes": {
+          "minimum": 544,
+          "observed": 544,
+          "maximum": 642
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 785,
+          "observed": 785,
+          "maximum": 883
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25383008344974,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 7,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 580,
+          "observed": 678,
+          "maximum": 678
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 7,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 540,
+          "observed": 638,
+          "maximum": 638
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25383694427564,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25384377208501,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 4,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 392,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 4,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 392,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25385100344345,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 7
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 686
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 7
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 686
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25385777071517,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25386468410466,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25387158686560,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25387846966054,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "tx_bytes": {
+          "minimum": 1143,
+          "observed": 1143,
+          "maximum": 1143
+        },
+        "rx_packets": {
+          "minimum": 13,
+          "observed": 13,
+          "maximum": 13
+        },
+        "rx_bytes": {
+          "minimum": 1292,
+          "observed": 1292,
+          "maximum": 1292
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25388519803142,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25389200331588,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "tx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        },
+        "rx_packets": {
+          "minimum": 5,
+          "observed": 5,
+          "maximum": 5
+        },
+        "rx_bytes": {
+          "minimum": 490,
+          "observed": 490,
+          "maximum": 490
+        }
+      }
+    },
+    {
+      "worker_pid": 609613,
+      "started_ns": 25389891838016,
+      "bounds": {
+        "tx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "tx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        },
+        "rx_packets": {
+          "minimum": 6,
+          "observed": 6,
+          "maximum": 6
+        },
+        "rx_bytes": {
+          "minimum": 588,
+          "observed": 588,
+          "maximum": 588
+        }
+      }
+    }
+  ],
+  "loss_counters_qualified": false,
+  "capacity_qualified": false,
+  "measurement_source_qualified": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

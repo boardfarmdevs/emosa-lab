@@ -4,6 +4,8 @@
 
 | Document | Scope |
 | --- | --- |
+| [Public BBF metric definitions](bbf-data-elements.md) | Pin USP/CWMP definitions, encode explicit units, reject unavailable/overflowing values and identify remaining source gaps |
+| [Native sparse ESP reception](native-ap-esp.md) | Validate optional AP service fields and reproduce a controller parser fix |
 | [Specification inputs](protocol-inputs.md) | Authoritative sources, proposed editions and selected procedure scope |
 | [Acquisition checklist](specification-acquisition.md) | Required, obtained and pending external documents |
 | [IEEE 1905 envelope implementation](ieee1905-envelope.md) | Obtained base/amendment, audited frame/TLV rules, bounded reassembly, native vectors and isolated Ethernet checks |
@@ -32,7 +34,18 @@
 | [Kernel completion flags](tx-status-accounting.md) | Explain retry suppression using a passive exact-kernel probe and independently correlated completions |
 | [Telemetry freshness](telemetry-freshness.md) | Withhold stale observations without restarting a healthy control session; reproduce the native gap and both recovery faults |
 | [Reporting policy receipt](reporting-policy.md) | Durable native policy, same-MID Ack, recovery-preserved schedule and explicit missing reports |
+| [AP/radio/client report assembly](ap-metric-reports.md) | Complete selected companions, guarded measurement handoff and durable periodic dispatch; native AP measurements pending |
 | [Neighbor link metrics](neighbor-link-metrics.md) | Direction-specific IEEE 1905 responses, guarded measurement handoff and the remaining pod/peer interface qualification |
+| [Forwarding observations](forwarding-observations.md) | Actual pod interfaces, raw counter windows, independent backhaul capture and recovery baselines |
+| [Live neighbor binding](neighbor-discovery-binding.md) | Pod-side discovery through OVSDB into represented topology, with observer pause checks |
+| [Backhaul counter audit](backhaul-counter-accounting.md) | Packet/byte reconciliation and the controlled loss absent from ordinary interface counters |
+| [Egress accounting source](egress-accounting-source.md) | Passive action/driver loss observations through OVSDB, configuration epochs, controlled loss and live recovery checks |
+| [Receive and common-window accounting](receive-counter-accounting.md) | Interface arrival versus client delivery, selected ingress losses, exact Ubuntu source review and common transmit/receive intervals |
+| [Virtual-link capacity](virtual-link-capacity.md) | Explicit software service, framing calibration, independently captured work and OVSDB recovery; full neighbor metrics pending |
+| [Combined shaped-backhaul accounting](shaped-backhaul-accounting.md) | Selected action, scheduler and interface losses with common service intervals; actual queue overflow and native OVSDB recovery |
+| [Native peer-metric delivery](native-peer-metrics.md) | Isolated owned peer profile, observed OVSDB inputs, real IEEE 1905 replies, controller statistics and fault withdrawal |
+| [Native lifecycle and 15-minute workload](native-lifecycle.md) | BPL ownership, actual loaded libraries, graceful main-process exits and candidate restoration |
+| [Live final-session reason join](live-session-reasons.md) | Actual radio reasons and removal-time raw counters joined by association, with independent capture checks |
 
 Component checks retain their individual scope. The native onboarding guide
 establishes the bounded simulated-pod exchange; full-profile sustained reporting

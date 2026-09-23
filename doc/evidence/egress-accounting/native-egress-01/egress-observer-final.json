@@ -1,0 +1,16 @@
+{
+  "profile": "owned-veth-egress-observation-v1",
+  "run_label": "native-egress-01",
+  "collector_epoch": "1ef54dea-1c40-4c45-84b2-7a84fbb35cee",
+  "boot_id": "4646cf49-821c-4068-9b73-60e29bc0924d",
+  "netns_inode": 4026532652,
+  "collector_sha256": "667f2f90e67aca00aa0c87b61b305aab71323bd93ea50b5c2e032015d3101ff7",
+  "interface": "eth1",
+  "ifindex": 8,
+  "mac": "00:16:3e:b2:d2:c4",
+  "configuration_epoch": 24,
+  "heartbeat_ns": 28155450335361,
+  "running": false,
+  "errors": [],
+  "observation": null
+}

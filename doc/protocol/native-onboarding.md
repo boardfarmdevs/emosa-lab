@@ -95,13 +95,24 @@ lxc file push deploy/peer-baseline/patches/0004-controller-counter-capability.pa
   deploy/peer-baseline/patches/0005-controller-configuration-scope.patch \
   deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
 lxc file push deploy/peer-baseline/compatibility/controller-candidate.py \
+  deploy/peer-baseline/compatibility/lifecycle-observer.py \
   emosa-lab/opt/emosa-baseline/compatibility/
-lxc file push src/emosa/wire/onboarding.py src/emosa/wire/autoconfiguration.py \
-  src/emosa/wire/reports.py emosa-lab/opt/emosa-radio-manager/source/emosa/wire/
-lxc file push src/emosa/simulation/native_onboarding.py \
-  src/emosa/simulation/wsc_provisioning.py \
-  emosa-lab/opt/emosa-radio-manager/source/emosa/simulation/
+python3 deploy/radio-manager/stage.py
 ```
+
+Stage the complete current source and radio helpers together. The native runner
+now requires both passive helpers, `neighbor-observer.py` and
+`egress-observer.py`, plus live pod-side discovery before it starts the adapter.
+Copying only the older onboarding modules can leave missing dependencies. See the
+[neighbor-binding guide](neighbor-discovery-binding.md) for the observation flow
+and focused recovery experiment, and the
+[egress guide](egress-accounting-source.md) for the selected loss-accounting path.
+
+For a new full-duration recovery experiment, build and stage the optional
+[native lifecycle candidate](native-lifecycle.md) as well. It adds the selected
+Linux BPL cleanup fix while retaining the original baseline for comparison and
+restoration. The basic `--onboarding` candidate above keeps the historical shared
+libraries and their recorded shutdown defect.
 
 ## Run and read the boundaries
 

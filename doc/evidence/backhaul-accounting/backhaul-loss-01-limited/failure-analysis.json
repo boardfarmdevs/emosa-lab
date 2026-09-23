@@ -1,0 +1,13 @@
+{
+  "status": "capture_completeness_failed",
+  "ingress_captured": 61,
+  "ingress_filter_received": 85,
+  "backhaul_captured": 38,
+  "backhaul_filter_received": 68,
+  "kernel_drops": 0,
+  "cause": "Default packet-socket buffer was not drained before capture shutdown; -U flushes userspace output but is insufficient for pending kernel capture data.",
+  "resolution": "Enable immediate mode and allow two seconds for drain before SIGINT; rerun with a new label.",
+  "traffic_control_restored": true,
+  "measurement_source_qualified": false,
+  "sustained_operation_proven": false
+}

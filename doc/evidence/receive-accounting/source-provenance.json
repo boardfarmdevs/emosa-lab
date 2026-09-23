@@ -1,0 +1,23 @@
+{
+  "package": "linux",
+  "version": "6.8.0-139.139",
+  "runtime_kernel": "6.8.0-139-generic",
+  "source_base": "https://archive.ubuntu.com/ubuntu/pool/main/l/linux/",
+  "input_sha256": {
+    "linux_6.8.0-139.139.dsc": "40fb1a41e084f8f923cbea43fe2ffc491e7bd3c247672018f0aa97ef3e352558",
+    "linux_6.8.0.orig.tar.gz": "26512115972bdf017a4ac826cc7d3e9b0ba397d4f85cd330e4e4ff54c78061c8",
+    "linux_6.8.0-139.139.diff.gz": "c18cf1db6c7ed0ad5cf7d651de117b415f17e05baaeefb13a4a2306e94e9ae57"
+  },
+  "patched_source_sha256": {
+    "drivers/net/veth.c": "77c6e3e963a1b504c3d328e4dba0a4b72006b2225348dfd76e56213734d096ac",
+    "include/linux/netdevice.h": "995a40b4d3ac4de8234cc7017660ecd6287cd0ef2e637a30cbbef34e20b1a96c",
+    "net/core/dev.c": "bc604c4b51b4283ff327f00c4284617c7a598ebceb4243c558d0e0f0f62f4c2e",
+    "net/sched/act_gact.c": "dd7d856da94e90e74330f91ca939fc02b9a4bd2b9f8a4fe1b28f2111094f15a5",
+    "net/sched/cls_api.c": "d924d2e016e797982bc1ec1e16a5404bdc086e4e9dbb572b0a9c5b401d7f42cf",
+    "net/sched/sch_api.c": "a66256b92f3edc3a447f2cd4497d16a7e84637625ab9b6fbb09b24996928e5ac",
+    "net/sched/sch_ingress.c": "54a58937e85f34f829056efabf72007278295c7986e8093a67aa9260672a7e57"
+  },
+  "scope": "Selected source reconstruction and digest check; no kernel build or installation",
+  "source_revision_verified": true,
+  "final_counter_source_qualified": false
+}

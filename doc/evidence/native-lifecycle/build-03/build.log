@@ -1,0 +1,61 @@
+patching file controller/src/beerocks/master/controller.cpp
+patching file controller/src/beerocks/master/controller.cpp
+patching file controller/src/beerocks/master/tasks/agent_monitoring_task.cpp
+patching file framework/platform/bpl/cfg/dm/bpl_amb_ptr.h
+patching file framework/platform/bpl/cfg/dm/bpl_amx.cpp
+patching file framework/platform/bpl/cfg/dm/bpl_cfg_amx_helper.h
+patching file framework/platform/bpl/cfg/dm/bpl.cpp
+-- The C compiler identification is GNU 11.4.0
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+Preparing bpl for the linux platform
+CMake Warning (dev) at /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/CMakeLists.txt:16 (set):
+  implicitly converting 'INT' to 'STRING' type.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/CMakeLists.txt:17 (set):
+  implicitly converting 'INT' to 'STRING' type.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Found amxb: /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/usr/lib/x86_64-linux-gnu/libamxb.so
+-- Found amxc: /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/usr/lib/x86_64-linux-gnu/libamxc.so
+-- Found amxd: /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/usr/lib/x86_64-linux-gnu/libamxd.so
+-- Found amxp: /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/usr/lib/x86_64-linux-gnu/libamxp.so
+bpl_platform_sources: /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/arp/linux/bpl_arp.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/board/linux/bpl_board.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/cfg/dummy/bpl_cfg_dummy.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/cfg/linux/bpl.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/cfg/linux/bpl_cfg.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/cfg/linux/bpl_cfg_ifaces.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/cfg/linux/bpl_cfg_ifaces.cpp.in;/home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/cfg/linux/bpl_cfg_wifi.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/db/linux/bpl_db.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/dhcp/linux/bpl_dhcp.cpp;/home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/service_prioritization/dummy/service_prio_utils_dummy.cpp
+APPEND bpl_platform_sources with /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/cfg/dm/bpl_amx.cpp
+Preparing beerocks_controller for the linux platform
+-- Found amxo: /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/usr/lib/x86_64-linux-gnu/libamxo.so
+-- Found libamxrt: /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/usr/lib/x86_64-linux-gnu/libamxrt.so
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/build
+[  1%] Building CXX object bpl/CMakeFiles/bpl.dir/common/utils/utils_net.cpp.o
+[  3%] Building CXX object bpl/CMakeFiles/bpl.dir/common/utils/utils.cpp.o
+[  5%] Building CXX object bpl/CMakeFiles/bpl.dir/arp/linux/bpl_arp.cpp.o
+[  7%] Building CXX object bpl/CMakeFiles/bpl.dir/board/linux/bpl_board.cpp.o
+[  8%] Building CXX object bpl/CMakeFiles/bpl.dir/cfg/dummy/bpl_cfg_dummy.cpp.o
+[ 10%] Building CXX object bpl/CMakeFiles/bpl.dir/cfg/linux/bpl.cpp.o
+[ 12%] Building CXX object bpl/CMakeFiles/bpl.dir/cfg/linux/bpl_cfg.cpp.o
+[ 14%] Building CXX object bpl/CMakeFiles/bpl.dir/cfg/linux/bpl_cfg_ifaces.cpp.o
+[ 15%] Building CXX object bpl/CMakeFiles/bpl.dir/cfg/linux/bpl_cfg_wifi.cpp.o
+[ 17%] Building CXX object bpl/CMakeFiles/bpl.dir/db/linux/bpl_db.cpp.o
+[ 19%] Building CXX object bpl/CMakeFiles/bpl.dir/dhcp/linux/bpl_dhcp.cpp.o
+[ 21%] Building CXX object bpl/CMakeFiles/bpl.dir/service_prioritization/dummy/service_prio_utils_dummy.cpp.o
+[ 22%] Building CXX object bpl/CMakeFiles/bpl.dir/cfg/dm/bpl_amx.cpp.o
+[ 24%] Linking CXX shared library libbpl.so
+/usr/bin/ld: CMakeFiles/bpl.dir/dhcp/linux/bpl_dhcp.cpp.o: in function `beerocks::bpl::dhcp_get_leases(std::pair<std::unordered_map<sMacAddr, beerocks::bpl::sIPv4Lease, std::hash<sMacAddr>, std::equal_to<sMacAddr>, std::allocator<std::pair<sMacAddr const, beerocks::bpl::sIPv4Lease> > >, std::unordered_map<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, beerocks::bpl::sIPv6Lease, std::hash<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::equal_to<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::allocator<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, beerocks::bpl::sIPv6Lease> > > >&)':
+/home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/dhcp/linux/bpl_dhcp.cpp:48: undefined reference to `tlvf::mac_from_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)'
+/usr/bin/ld: /home/rev/git/emosa-lab/.lab/controller-lifecycle-03/source/framework/platform/bpl/dhcp/linux/bpl_dhcp.cpp:51: undefined reference to `tlvf::mac_from_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)'
+collect2: error: ld returned 1 exit status
+gmake[2]: *** [bpl/CMakeFiles/bpl.dir/build.make:300: bpl/libbpl.so.6.0.0] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:243: bpl/CMakeFiles/bpl.dir/all] Error 2
+gmake: *** [Makefile:136: all] Error 2

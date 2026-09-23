@@ -157,7 +157,10 @@ policy intersection: changing a profile number alone does not implement its
 mandatory features, and the retained two-M2-plus-M8 request exceeds the current
 narrow projection. The [acquisition checklist](../protocol/specification-acquisition.md)
 also now identifies Data Elements 3.0 for the required Metric Collection Interval
-definition; the ODH transport remains a separate design input.
+definition; the ODH transport remains a separate design input. The later
+[BBF review](../protocol/bbf-data-elements.md) supplies public millisecond units
+and a bounded `0xC5` codec. It does not advertise an unmeasured collection cadence
+or establish equivalence to the exact WFA package.
 
 After the exact IEEE 1905 base/amendment review, bind the components into complete
 exchanges and run a controller-to-simulated-pod onboarding trial. Then qualify

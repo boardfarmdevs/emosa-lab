@@ -1,0 +1,28 @@
+{
+  "scope": "Explicit synthetic AP wire values and deterministic clock; no sensor, native controller, VM or physical pod",
+  "sources": [
+    {
+      "path": "src/emosa/simulation/ap_metrics.py",
+      "sha256": "89d5910cd0bc23939074e68f4b933faa61dc531f07dafc9028f00bd6cb9fd8b2"
+    },
+    {
+      "path": "src/emosa/wire/ap_metrics.py",
+      "sha256": "631086d0db19f5f85f88673ff98f1ddbc48b648a67d3330f55cf9926e2577e47"
+    },
+    {
+      "path": "src/emosa/wire/reporting_policy.py",
+      "sha256": "48b22e774959c1006991a750c816c2f3e2f39011a0e3814643531f231bb4f0da"
+    },
+    {
+      "path": "scripts/check-ap-metrics-reference.py",
+      "sha256": "63df99a641ff6d7dbef4bd74262644e4e699b4bd0e9b6cf9cf250b107ebe34e2"
+    }
+  ],
+  "independent_dissector_review": {
+    "url": "https://raw.githubusercontent.com/wireshark/wireshark/wireshark-4.2.2/epan/dissectors/packet-ieee1905.c",
+    "sha256": "5b49fe2cd8ed0adc1a4346a5bc50787656bde0d84ff98b66ebc45fd0f3bee344",
+    "limitation": "ESP contents are opaque; this cross-check does not qualify subfield conversions"
+  },
+  "command": "uv run python -m emosa.simulation.ap_metrics NEW_DIRECTORY",
+  "specification_references": "doc/protocol/protocol-matrix.json"
+}

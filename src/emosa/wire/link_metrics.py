@@ -357,6 +357,7 @@ class LinkMetricCoordinator:
         self.binding = measurements.reports.binding
         self.counts = {}
         self.closed = False
+        self.waiting = {}
 
     def _stamp(self):
         sample = None if self.closed else self.measurements.current()
@@ -375,12 +376,39 @@ class LinkMetricCoordinator:
         if not received_at <= self.clock() < received_at + 1:
             unavailable("link metric query response deadline expired")
         query = decode_query(message.tlvs)
+        key = (message.mid, query)
+        pending = self.waiting.get(key)
+        if pending is not None:
+            snapshot = self.measurements.reports.current()
+            if (
+                snapshot is None
+                or snapshot.context_token != pending[2]
+                or topology_key(snapshot) != pending[3]
+                or self.clock() >= pending[1] + 1
+            ):
+                del self.waiting[key]
+                unavailable("queued link query context or deadline expired")
+            received_at = pending[1]  # Duplicates cannot extend the first deadline.
+        # Remove before I/O, including a duplicate that now has measurements.
+        # An uncertain partial send must not remain queued for tick() to retry.
+        self.waiting.pop(key, None)
+        if self._answer(message, query, received_at):
+            return "neighbor_link_metric_response_sent"
+        snapshot = self.measurements.reports.current()
+        if snapshot is not None and key not in self.waiting and len(self.waiting) < 4:
+            self.waiting[key] = (
+                message,
+                received_at,
+                snapshot.context_token,
+                topology_key(snapshot),
+            )
+        self.counts["measurement_unavailable"] = self.counts.get("measurement_unavailable", 0) + 1
+        return "neighbor_measurement_unavailable"
+
+    def _answer(self, message, query, received_at):
         sample = self.measurements.current()
         if sample is None:
-            self.counts["measurement_unavailable"] = (
-                self.counts.get("measurement_unavailable", 0) + 1
-            )
-            return "neighbor_measurement_unavailable"
+            return False
         neighbors = {row.neighbor_al for row in sample.inventory}
         selected = neighbors if query.neighbor is None else {query.neighbor}
         if query.neighbor is not None and query.neighbor not in neighbors:
@@ -390,10 +418,7 @@ class LinkMetricCoordinator:
             available = {(r.neighbor_al, r.tlv().kind): r.tlv() for r in sample.metrics}
             wanted = {(neighbor, kind) for neighbor in selected for kind in kinds}
             if not wanted <= available.keys():
-                self.counts["measurement_unavailable"] = (
-                    self.counts.get("measurement_unavailable", 0) + 1
-                )
-                return "neighbor_measurement_unavailable"
+                return False
             tlvs = tuple(available[key] for key in sorted(wanted))
         response = PreparedReport(
             6,
@@ -406,7 +431,33 @@ class LinkMetricCoordinator:
         )
         response.send(self.send_frame, self._stamp, clock=self.clock)
         self.counts["response_sent"] = self.counts.get("response_sent", 0) + 1
-        return "neighbor_link_metric_response_sent"
+        return True
+
+    def tick(self):
+        snapshot = self.measurements.reports.current()
+        for key, (message, received_at, context, topology) in tuple(self.waiting.items()):
+            if (
+                self.closed
+                or snapshot is None
+                or snapshot.context_token != context
+                or topology_key(snapshot) != topology
+                or self.clock() >= received_at + 1
+            ):
+                del self.waiting[key]
+                self.counts["waiting_query_withdrawn"] = (
+                    self.counts.get("waiting_query_withdrawn", 0) + 1
+                )
+                continue
+            try:
+                if self._answer(message, key[1], received_at):
+                    del self.waiting[key]
+            except (EmosaError, OSError):
+                # A partial send cannot be retried as an unrelated fresh reply.
+                del self.waiting[key]
+                self.counts["waiting_query_send_failed"] = (
+                    self.counts.get("waiting_query_send_failed", 0) + 1
+                )
 
     def close(self):
         self.closed = True
+        self.waiting.clear()

@@ -10,6 +10,9 @@ for navigation and commands.
 
 | Collection | Entry point |
 | --- | --- |
+| Native sparse ESP parser | [Baseline SIGSEGV, 240 compiled cases and 16 live packet/inventory cases](ap-esp/README.md) |
+| Live disconnect reasons and recovery | [Online raw session joins, bounded clocks, native receipt and preserved failures](session-reasons/README.md) |
+| Native lifecycle and 15-minute recovery | [Actual C++ library comparison, restoration fault, measured neighbor replies and clean main-process exits](native-lifecycle/README.md) |
 | Ethernet WSC to OVSDB, hwsim and independent clients | [Normal/fault runs, received captures and cleanup](wsc-wire/README.md) |
 | Read-only database-backed report coordinator | [Ack/retry, State-derived reports, withdrawal and real Ethernet runs](coordinator/README.md) |
 | Capability and topology report components | [Offline, isolated Ethernet and independent field checks](reports/README.md) |
@@ -34,6 +37,9 @@ for navigation and commands.
 | Complete synthetic observed topology | [Stable bindings, full graph checks and two-pod service recovery](observed-topology/summary.json) |
 | Native counter accounting | [Loss-checked six-session accounting, runtime source provenance and both recovery checks](counter-accounting/README.md) |
 | Native reporting-policy receipt | [Same-MID Acks, durable policy and schedule recovery, with missing reports kept explicit](reporting-policy/README.md) |
+| Selected egress accounting through OVSDB | [17 controlled losses, 292 live intervals and real recovery checks; complete metrics remain pending](egress-accounting/README.md) |
+| Receive and common-window accounting | [Selected ingress losses, direction-bearing captures, retained failures and native recovery](receive-accounting/README.md) |
+| Virtual-link service estimate | [Framing/rate calibration, preserved missing-input attempts and native OVSDB recovery](virtual-capacity/README.md) |
 
 These collections have different scopes and include failures. They do not
 establish EMOSA wire onboarding, physical-pod qualification or universal peer

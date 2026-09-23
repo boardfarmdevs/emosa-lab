@@ -180,6 +180,49 @@ def test_neighbor_metrics_handoff_requires_authenticated_live_context_without_co
     asyncio.run(scenario())
 
 
+def test_ap_metric_handoff_requires_authentication_and_live_membership(rig):
+    from test_ap_metrics import bundle
+
+    async def scenario():
+        bridge, engine, backend, clock = rig
+        session, source, sent = lifecycle(rig)
+        await session.tick()
+        await receive(session, response())
+        current = source.current()
+        measured = bundle(clock.monotonic(), stations=())
+        measured = replace(measured, radio=replace(measured.radio, ruid=bridge.target.ruid))
+        session.ap_metric_source.publish(
+            context=current.context_token,
+            counter_epoch="measured-epoch-1",
+            observed_at=clock.monotonic(),
+            bundle=measured,
+            inventory_complete=True,
+        )
+        query = fragment_message(
+            BINDING.local_al,
+            BINDING.controller_al,
+            0x800B,
+            711,
+            (Tlv(0x93, b"\1" + measured.ap.bssid), Tlv(0x82, measured.radio.ruid)),
+        )[0]
+        before = len(sent)
+        await receive(session, query)
+        assert len(sent) == before and not engine.store.operations()
+        await receive(session, frames()[0])
+        assert await receive(session, query) == "ap_metric_query_answered"
+        packet = assemble((sent[-1],))
+        assert (packet.message_type, packet.mid) == (0x800C, 711)
+        assert [t.kind for t in packet.tlvs] == [0x94, 0xC7, 0xC6]
+        assert len(engine.store.operations()) == backend.writes == 1
+        source.invalidate()
+        before = len(sent)
+        assert await receive(session, query) == "source_unavailable"
+        assert len(sent) == before and session.ap_metric_source.current() is None
+        session.close()
+
+    asyncio.run(scenario())
+
+
 def test_discovery_early_m1_authenticated_operation_without_semantic_input(rig):
     async def scenario():
         bridge, engine, backend, _ = rig

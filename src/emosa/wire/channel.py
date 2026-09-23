@@ -164,6 +164,7 @@ class ChannelCoordinator:
         self.pending = None
         self.last_operating = None
         self.queries = {}
+        self.waiting = {}
         self.counts = {}
         self.closed = False
         self.assembly = Reassembler(
@@ -228,12 +229,26 @@ class ChannelCoordinator:
             return None
         self.tick()
         snapshot = self.snapshot()
+        key = (message.message_type, message.mid)
+        if key in self.queries or key in self.waiting:
+            return self.record("duplicate_channel_request")
+        if len(self.queries) + len(self.waiting) >= 64:
+            return self.record("channel_request_budget_exhausted")
+        if self.clock() >= received_at + 1:
+            raise EmosaError(Reason.NOT_READY, "channel response deadline expired")
+        if not snapshot.operating_radios:
+            # A controller can send these immediately after M2, before the
+            # first fresh manager sample. Wait only within the original wire
+            # deadline and control context; duplicates cannot extend either.
+            if len(self.waiting) >= 4:
+                return self.record("channel_observation_wait_budget_exhausted")
+            self.waiting[key] = (message, received_at, snapshot.context_token)
+            return self.record("channel_waiting_for_observation")
+        return self.answer(message, received_at, snapshot)
+
+    def answer(self, message, received_at, snapshot):
         radio = self.radio(snapshot)
         key = (message.message_type, message.mid)
-        if key in self.queries:
-            return self.record("duplicate_channel_request")
-        if len(self.queries) >= 64:
-            return self.record("channel_request_budget_exhausted")
         if message.message_type == 0x8004:
             if message.tlvs:
                 invalid("channel preference query must not carry configuration")
@@ -285,6 +300,22 @@ class ChannelCoordinator:
         now = self.clock()
         self.queries = {k: v for k, v in self.queries.items() if v > now}
         self.assembly.expire()
+        for key, (message, received_at, context) in tuple(self.waiting.items()):
+            if now >= received_at + 1:
+                del self.waiting[key]
+                self.record("channel_observation_wait_expired")
+                continue
+            try:
+                snapshot = self.snapshot()
+                if snapshot.context_token != context:
+                    raise EmosaError(Reason.NOT_READY, "queued channel context changed")
+                if not snapshot.operating_radios:
+                    continue
+                del self.waiting[key]
+                self.answer(message, received_at, snapshot)
+            except EmosaError as exc:
+                self.waiting.pop(key, None)
+                self.record("queued_channel_rejected_" + exc.code.value)
         pending = self.pending
         if pending is None:
             if self.last_operating is not None and not self.closed:
@@ -339,3 +370,4 @@ class ChannelCoordinator:
     def close(self):
         self.closed = True
         self.pending = None
+        self.waiting.clear()
