@@ -21,6 +21,10 @@ jobs:
         run: |
           uv run python scripts/replay-egress-accounting.py --bidirectional doc/evidence/receive-accounting/ingress-loss-03 > /tmp/emosa-receive-replay.json
           cmp /tmp/emosa-receive-replay.json doc/evidence/receive-accounting/ingress-loss-03/backhaul-projection.json
+      - name: Replay calibrated virtual service through the production source
+        run: |
+          uv run python scripts/replay-egress-accounting.py --virtual-service doc/evidence/virtual-capacity/virtual-link-03 > /tmp/emosa-capacity-replay.json
+          cmp /tmp/emosa-capacity-replay.json doc/evidence/virtual-capacity/virtual-link-03/virtual-capacity-projection.json
   easymesh-reference:
     runs-on: ubuntu-24.04
     steps:
@@ -87,6 +91,26 @@ jobs:
           python3 scripts/check-native-policy.py
           doc/evidence/telemetry-freshness/native-telemetry-gap-01
       - run: python3 scripts/check-neighbor-metrics.py
+      - run: python3 scripts/check-virtual-capacity.py doc/evidence/virtual-capacity/virtual-link-03
+      - run: python3 scripts/check-virtual-capacity.py --native doc/evidence/virtual-capacity/native-capacity-02
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/virtual-capacity/native-capacity-02 --minimum-seconds 210
+      - run: python3 scripts/check-native-policy.py doc/evidence/virtual-capacity/native-capacity-02
+      - run: python3 scripts/check-telemetry-gap.py doc/evidence/virtual-capacity/native-capacity-02
+      - name: Missing framing attempt must not qualify a service source
+        run: |
+          python3 - <<'PY'
+          import runpy
+          from pathlib import Path
+          check = runpy.run_path("scripts/check-virtual-capacity.py")["check"]
+          try:
+              check(Path("doc/evidence/virtual-capacity/native-capacity-01-limited"), True)
+          except AssertionError as error:
+              assert "no service windows" in str(error)
+          else:
+              raise AssertionError("missing framing unexpectedly accepted")
+          PY
       - run: >-
           python3 scripts/check-neighbor-metrics.py --native-directory
           doc/evidence/neighbor-metrics/native-neighbor-01

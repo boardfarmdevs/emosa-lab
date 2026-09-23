@@ -9,6 +9,12 @@ recovery faults without another Config write. The full acceptance still
 requires qualified policy/AP/STA/neighbor metrics and final disassociation
 statistics; duration and recovery are separately reviewed operational checks.
 
+The latest [virtual-link calibration](../protocol/virtual-link-capacity.md)
+provides an explicit software service and an independently checked work estimate.
+Next, qualify its combined loss path, per-peer attribution and media/availability
+interpretation, then connect a complete source to native neighbor reporting.
+AP/STA reports and final-session statistics remain separate required work.
+
 The critical milestone is **real EasyMesh messages → EMOSA adapter → unchanged
 physical pod → independently observed behavior**. Neither an OVSDB component pass
 nor a successful hwsim association completes that objective.

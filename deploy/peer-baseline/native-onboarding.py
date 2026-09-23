@@ -71,6 +71,7 @@ async def experiment(
     observe_tx_status=False,
     telemetry_gap_check=False,
     neighbor_gap_check=False,
+    virtual_link=False,
 ):
     helpers = runpy.run_path(str(ROOT / "controller-trial.py"))
     helpers["idle"]()
@@ -102,6 +103,7 @@ async def experiment(
         "forwarding_observation_requested": True,
         "neighbor_binding_requested": True,
         "neighbor_gap_check_requested": neighbor_gap_check,
+        "virtual_link_requested": virtual_link,
         "netlink_capture_buffer_kib": 32768 if medium_loss else None,
     }
     write(directory / "result.json", report)
@@ -118,6 +120,7 @@ async def experiment(
                 RADIO_ROOT_DIR / "node.py",
                 RADIO_ROOT_DIR / "neighbor-observer.py",
                 RADIO_ROOT_DIR / "egress-observer.py",
+                *([RADIO_ROOT_DIR / "virtual-link.py"] if virtual_link else []),
                 *([RADIO_ROOT_DIR / "station-events.py"] if observe_station_removal else []),
                 *([RADIO_ROOT_DIR / "medium.py"] if medium_loss else []),
                 *([RADIO_ROOT_DIR / "tx-status-trace.py"] if observe_tx_status else []),
@@ -141,6 +144,7 @@ async def experiment(
     medium = None
     tx_trace = None
     telemetry_policy_restore = None
+    shaping = None
 
     async def start_worker():
         return await asyncio.create_subprocess_exec(
@@ -207,6 +211,10 @@ async def experiment(
 
     try:
         write(directory / "topology.json", radio["setup"](directory))
+        if virtual_link:
+            shaping = runpy.run_path(str(RADIO_ROOT_DIR / "virtual-link.py"))["VirtualLink"]()
+            report["virtual_link_configuration"] = shaping.start()
+            write(directory / "result.json", report)
         collector = RADIO_ROOT_DIR / "neighbor-observer.py"
         radio["lxc"]("file", "push", "--quiet", str(collector), radio["AP"] + str(collector))
         neighbor_unit = "emosa-native-neighbor-" + label + ".service"
@@ -924,6 +932,16 @@ async def experiment(
                 medium.remove()
             except Exception as exc:
                 errors.append("medium_remove:" + str(exc))
+        if shaping:
+            try:
+                shaping.close()
+            except Exception as exc:
+                errors.append("virtual_link_cleanup:" + str(exc))
+            report["virtual_link_restoration"] = {
+                "before": shaping.before,
+                "after": shaping.after,
+                "restored": shaping.before is not None and shaping.before == shaping.after,
+            }
         for name in ("radio", "ethernet", "forwarding", *(["netlink"] if medium_loss else [])):
             path = directory / (name + "-capture.log")
             if path.exists():
@@ -999,6 +1017,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Pause passive neighbor observation while OVSDB and traffic stay active",
     )
+    parser.add_argument(
+        "--virtual-link",
+        action="store_true",
+        help="Temporarily shape owned pod egress for simulated service-work observation",
+    )
     args = parser.parse_args()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", args.label):
         parser.error("use a new label of 1–24 lowercase letters, digits or hyphens")
@@ -1037,6 +1060,7 @@ if __name__ == "__main__":
                         observe_tx_status=args.observe_tx_status,
                         telemetry_gap_check=args.telemetry_gap_check,
                         neighbor_gap_check=args.neighbor_gap_check,
+                        virtual_link=args.virtual_link,
                     )
                 ),
             )

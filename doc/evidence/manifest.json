@@ -11771,6 +11771,1236 @@
       "path": "receive-accounting/unit-results.xml",
       "sha256": "42cec7bb0f3490fbdb465cbe0ef001b02aee960160bfbecdd863fce61575be70",
       "size": 4446481
+    },
+    {
+      "path": "virtual-capacity/README.md",
+      "sha256": "fbc57542708896376f59ce708558721a18f79686e4ef15e8d5af0c44ae49e782",
+      "size": 6958
+    },
+    {
+      "path": "virtual-capacity/iproute-source-provenance.json",
+      "sha256": "46e79ff9ae74182775e710544bfc11a269f71c6f8de08579ae99ac6209b5a485",
+      "size": 1226
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0000.json",
+      "sha256": "fc4e759c7cc9ad4884715d22a43050ae44c64e549fa428c881142b05a7c20e54",
+      "size": 38144
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0001.json",
+      "sha256": "a7cb49c3b2e12422c56303feae983fe64b06f633fe2505bd1a32a7885005ae06",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0002.json",
+      "sha256": "75d7cf24cab81ac19ea1f93b536d20627826411c45cfaafd08321da61135397c",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0003.json",
+      "sha256": "d03b287c23ba3bb5ca27c16ca28f9dd2093e0c105fc34cd417d32ca482f3d194",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0004.json",
+      "sha256": "c321e41cba583e440f53321e3c78887e7418f2f348fb831af2d4731b057cc1f4",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0005.json",
+      "sha256": "d974726559028e732df76c52b2f0a5fb8a43d3fb32c11efca842c48b51c987c9",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0006.json",
+      "sha256": "2e4e730439714ee441c5c7d5a78fdd8ab016e074ce5dac1d0404a2000081b7c9",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0007.json",
+      "sha256": "3b7d4fe45fbd73677c50d3f13e78606272d81452eca1c9c93b1ca0d9bff1e8a5",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0008.json",
+      "sha256": "4e14a256dbdf9bad5fde20307dbdc4861a596bd22d55091b7765b16a05e02854",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0009.json",
+      "sha256": "d4b6d9b3ac8b7bd48eb7a968a86f1948da735b7b67b0177214f83a617da1f463",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0010.json",
+      "sha256": "48fcbff825caec94e6d28c4a2a583a2fb28454df8f5336764b5bef0579d46965",
+      "size": 33981
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0011.json",
+      "sha256": "fbf02861400e2c6f34322f73c894fd28312d6aab474202a9fdd208e6993d6dbc",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0012.json",
+      "sha256": "b999d0867a8a809e855c14191b3768909a8dda20b88961f18c928f63347ec26b",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0013.json",
+      "sha256": "60b11bdf341031bcb27a13989dc98904fb0e83c4daebd5ecb3947760bc24229a",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0014.json",
+      "sha256": "1f2bd5a4b584f266735bd3c22c6180ed806613985aa2e47da10105ecee06022e",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0015.json",
+      "sha256": "940c83e847e7100440e1106bca7a5468e1b4d58bb774d14466802ba6da69e298",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0016.json",
+      "sha256": "edc73421bbce1e8f65feea4819b6f7da2b59f0aaf633e317a7ff08c65649f935",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0017.json",
+      "sha256": "a74ffdc871d02215cd466c24466f3d29d207219a69b45b7e9cc048dd7cb96773",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0018.json",
+      "sha256": "aad2fd596d1a1f87e5f50cc44c95f2f906a7a4873d8ea55210fc89e8ae20331c",
+      "size": 33981
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0019.json",
+      "sha256": "41059b78b296dda8948a6f3dde7724ddfb33f71f2be9893b4f59b9dfd1ad7fd7",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0020.json",
+      "sha256": "7d2d685ae25b01c6ca207817affe7328b79b02e1f41609a3fb2fe921164600e9",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0021.json",
+      "sha256": "f3ea8f4a17417bbf54bbd2c016161f783b1de06858794bf8894b38e373fcd708",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0022.json",
+      "sha256": "a0fce9b897b0cff2e41322d6678ef46c3b7d56152edd2d8125010c3bac2c7983",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0023.json",
+      "sha256": "49c7710fa6a60ce577e19ac507be66651f2e52101a038cffe9c041b8751851d3",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0024.json",
+      "sha256": "bf931dc6aa628edbefbbe4651f32a14ecf86d1d17a9a4a873c0e23291b9f7e5e",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0025.json",
+      "sha256": "3b036d1aa08dd055ff9086eafab79ef8693161eed9d6b65e406db59354109da3",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-inventory-0026.json",
+      "sha256": "848101c7bf04cc77204da54c154f36b944c1a6d99545ef0003d484f2a775e3da",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/active-samples.json",
+      "sha256": "4662e159c0d569b2fb4f09a484f3eeedebe735cf57e293b432851172e70f022a",
+      "size": 668826
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/candidate-trial.json",
+      "sha256": "baffddc396bd43310f014d9432230b7ed243039ac076fa3c10f7c71c6bb93ef8",
+      "size": 16018
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/client-outages.json",
+      "sha256": "ff22aa154972304c9159349623bc4dd2fad44dda32a718969dd0c89cad9c02ca",
+      "size": 678
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0000.json",
+      "sha256": "f76f811ba7a03ef682a7b9c2036729a555c3f2a71354a917393a4410fda8deb6",
+      "size": 2635
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0001.json",
+      "sha256": "73580bae2d73dc5a444edb0a4530138bbfe63c57481e00e68c65414353ce97a1",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0002.json",
+      "sha256": "3955a1e07d370b23194bcb849819b82b84dbd9a65ae4b56a9f9def85b02d4e8b",
+      "size": 2636
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0003.json",
+      "sha256": "728dd361d6402fc02c1d2c4645f96084e3b73a6306b82c024d55f371d6b3b491",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0004.json",
+      "sha256": "2885e1aa9c8f4747ad4fa661680358e1443283e615701a4074810002de789e27",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0005.json",
+      "sha256": "3e6adaaef1134fddf792ee922b918c5e06e8ed10998503e06b0433610b72c820",
+      "size": 2633
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0006.json",
+      "sha256": "1a40fccc828d1894d59e6c67891628251a294b3f355391d3512519df118e49ab",
+      "size": 2636
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0007.json",
+      "sha256": "acfc832e27d8535f07a8da8ea16aa770b28dc0f077ae70dee1bc8e0be4665a07",
+      "size": 2635
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0008.json",
+      "sha256": "a5a1378816b43919a3c46316cb19a5703c267440048ac36785a5b0e1c654c243",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0009.json",
+      "sha256": "3d65976b2a94682be83d2e686faac5312b21ab84f54eb7af1ad6eee09625fb49",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0010.json",
+      "sha256": "d7b8f6d6a6001d34d478faa167f2cd33569066d6f48312cf0eefe60b849a8d0d",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0011.json",
+      "sha256": "400e8abdec3c64eb28826a66028fde9eec2a38f3913b99d20adf20966e2e9439",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0012.json",
+      "sha256": "0cf9a4e644837849e4602076808e0c5f697f6a30598027625096a9b985cb61de",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0013.json",
+      "sha256": "382b5b72d7674f33d335ef0f4955250e4e30ad0989be07532b632f1fef5b1c4a",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0014.json",
+      "sha256": "5557a7209efb3a33aa76d49caea49b511272a8c5412be15c429d8804a40186f5",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0015.json",
+      "sha256": "41f6487751391778803e0457f9282a2c6bb811f2a582b1c81357e06a499d9133",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0016.json",
+      "sha256": "3c36d7e0a876e11fc811f1297d9a18a1c589c4a9d25e18add554205d3ecac40d",
+      "size": 2635
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0017.json",
+      "sha256": "66d5b18524ba0666df89f762c32bf8305b2ca13e3ca4681f7c18d9379a1fb47b",
+      "size": 2633
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0018.json",
+      "sha256": "63b92ce3a5c952ede2538e8e4c952c88f6308df4a9ce05bea552c1474be8e525",
+      "size": 2635
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0019.json",
+      "sha256": "8bc1a561359393c76e9c2dcbf2af252c81e6973091e6eebbb6fb5439f9d4663d",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0020.json",
+      "sha256": "24563c57b4f029abc7c4f18acd8d9a2b06361db81d3035393c299c4a4c87a794",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0021.json",
+      "sha256": "de15f231d45fe44b511a714fee6b30d35391df9bb23cd5340fe59a98de0b97bd",
+      "size": 2633
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0022.json",
+      "sha256": "1c373953884c05eea45ccea08247d8de6ce5deaadd797b15e94eb38ed087b309",
+      "size": 2636
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0023.json",
+      "sha256": "b6212825204c9a74312480870991ea565e2e5f2664b934916a6dfb71269f8022",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0024.json",
+      "sha256": "1c5fe2b36fc98d64e514d7cc7eeadfcd7702025379753799dbe2749c1936965c",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0025.json",
+      "sha256": "4b3ab20a999d06b0544670ac74488c6e50da80a70184fd3bf860d924fc2e2f68",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-active-0026.json",
+      "sha256": "dc27e7f1fb639d99c7561c23927bde04e9276df5f84a8906b1a58a800a8a1ac2",
+      "size": 2635
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-neighbor-withheld.json",
+      "sha256": "8b8010863ab878f01818885c349f8a85674af3ebfd263ed9f5d907b1686ebc67",
+      "size": 2647
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-onboarded.json",
+      "sha256": "b162886e00a40fee56196aeb781b7f1871de79d11542dce3f7c311eff61b6899",
+      "size": 2620
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-recovery-0.json",
+      "sha256": "0c6a1b81d6b72b790afc5a3a6fea0f45515e2d6d944af69d4f9c1056c6641371",
+      "size": 2633
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-recovery-1.json",
+      "sha256": "bb53c63ff68231959225242413173270956861b1338cbad691e98ea1e557904b",
+      "size": 2632
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/clients-telemetry-withheld.json",
+      "sha256": "e4c28151654b8a0f910d7b20d696840a17c7ef43b79a41c8c9799c53fe19149d",
+      "size": 2648
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/controller-after.json",
+      "sha256": "2a49123da7c1985618b066ba17331f4d430c476bb9045dfcc12c8129c38e8ddc",
+      "size": 32146
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/controller-before.json",
+      "sha256": "1ba371a1b37f6c5efdae4cc74a9542d4b10143f2d0ec3605d39dae9369368165",
+      "size": 10353
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-inventory-0002.json",
+      "sha256": "3c5005f35aac71c2249467bb2082dc2bfe4feeddca3c7fe9de361a0fa5d3fc25",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-inventory-0006.json",
+      "sha256": "39b80e37a203909a515055ff7fc6d5f885ba988951f562a7abe94a339de1750e",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-inventory-0009.json",
+      "sha256": "b5f8507f063f65de854454d8f9509fe8fb9a2abcb8683f723b8229ad23f4a4eb",
+      "size": 33191
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-inventory-0012.json",
+      "sha256": "8ea463b2afe84184746de7e85a854520fc61b887a0f462827c6b64dfc8af8936",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-inventory-0015.json",
+      "sha256": "095d15221a11c9d5d7173462b0ffd1ca0ade29be3305a2eab699333982afbacc",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-inventory-0018.json",
+      "sha256": "89d1637146c46dda4865d3b3e3c759ab532669be6cc0a3c0d68e01398ce1c622",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-inventory-0022.json",
+      "sha256": "133b5ab7db9c22526d7a52ec6b520e8824a1534dbdf62409ddd6a88fe1da4c36",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-inventory-0026.json",
+      "sha256": "76c77a50adfa0958ad103f0083b474c85793f302df7872c407a1b20b547ed231",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-session-0002.json",
+      "sha256": "df7ebfdbbbe21509b434e54140af6178b7e37a4b7c3dcca4ddda453a52488eff",
+      "size": 17898
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-session-0006.json",
+      "sha256": "2d6b0994eda202f771ef88f4e3bd1ec3b2e2c01f4428d1b0e7478707f8ea6f71",
+      "size": 18333
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-session-0009.json",
+      "sha256": "3c4ac43f050abb33660f515fbf0f7abafeedcbfbccc06c410555f3abea611b77",
+      "size": 24439
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-session-0012.json",
+      "sha256": "97363f8809487f6ac210fdc42e20b58ee650be26f24bddf21be5889ba9d49bad",
+      "size": 24962
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-session-0015.json",
+      "sha256": "27f0b72fa90e4819c388eab0a73baac8845387a80438e729f15a30efce6437ed",
+      "size": 25174
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-session-0018.json",
+      "sha256": "4f3b97dbaafb95b1b24a31c1d5300b1d58aa63729d336dcee9b4ff69620088bb",
+      "size": 18026
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-session-0022.json",
+      "sha256": "1db32d66835f953bc0071620c746a98a9f155184a98bbfaa89a231bc9207c1db",
+      "size": 18301
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/detached-session-0026.json",
+      "sha256": "90cfc48bb63adc2b72406555338df62d9563978f19a00692d6b4c447115bbac4",
+      "size": 18455
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/egress-observations.jsonl",
+      "sha256": "92299df00d400b0bb879c18921a2b00848364d2e3169b67d2e61af71db496bb2",
+      "size": 1893704
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/egress-observer-final.json",
+      "sha256": "c650a927f38563bc6ad17374faf8a844a9defebd60341b2efc3b7fa716a2a2bf",
+      "size": 513
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/em-baseline-wifi-continuous-ping.log",
+      "sha256": "73d3f53aeeb0c8a6cffa8ca71ae9197c8663de542896e6935170fa0da39520d7",
+      "size": 54958
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/em-baseline-wired-continuous-ping.log",
+      "sha256": "bf949be0e342d792787d439cf8a01a5778b08a1e4107997d8faeef138c70ee0c",
+      "size": 65416
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/ethernet-capture.log",
+      "sha256": "d5880280f63615ca2a095aff6a6aff48d3ebda612a4851ba7147e0a901f8e449",
+      "size": 172
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/ethernet.pcap",
+      "sha256": "6adb60eefaa087c3c5bc274808ddc8cb06f13a2aa0aafa33e5c32db6029514e6",
+      "size": 10912
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/failure-analysis.json",
+      "sha256": "48863e969a7a5c42fb68d1cf393833cb7609265cedd89abca84701bb80c3cf6a",
+      "size": 425
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/forwarding-capture.log",
+      "sha256": "0bc8f49f16ab916165ea2d8b4e8d8c002bdb4f2e7c2e864ff3534ded7cbf3229",
+      "size": 176
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/forwarding-samples.jsonl",
+      "sha256": "070c17a694060c08f29e1891e001d4f24bf65bc224ea3588e2589177efb523f7",
+      "size": 2415790
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/forwarding.pcap",
+      "sha256": "0baff0ee24c140a1fa6b501905b2f3f2ad8424a71f75b461dec4b8b6bea8ba26",
+      "size": 465881
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/independent-recovery-check.json",
+      "sha256": "06d2855a4472d4605ea046a3aa15a4625ed968187ad75259665ad9187cacb713",
+      "size": 3324
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/manager.jsonl",
+      "sha256": "9c2440ec3e638203aa6ab9b9278878def13d2dee212f118fdfa2dc1471e3f658",
+      "size": 2657518
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/native-operation.json",
+      "sha256": "37959dcc29b37ec5599a0d8420481fdb8673378773459dc0c7353c26783571ef",
+      "size": 4858
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/native-session.json",
+      "sha256": "e0bd526f06c9a198f1e56427408314a3e3a1581912fd2881cf67094c0be7b3ad",
+      "size": 18535
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/neighbor-gap-check.json",
+      "sha256": "f3f0b0600ef0db1b1ce60c8b7d02cd40f228474effda3a791c53c0588d92cd08",
+      "size": 61753
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/neighbor-link-observations.json",
+      "sha256": "8da4414c608872a316b73361d09e1c405710dbb01c1ecc361d1486aefd1bf505",
+      "size": 22613
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/neighbor-observer-final.json",
+      "sha256": "c8cccc3ad7d54543a1692a8c3e32a411fcf711b64b0be8a3fa9c5c6faec69a24",
+      "size": 935
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/radio-capture.log",
+      "sha256": "9af42f8754a840252a38b46fdd45d208b9268cdc0dc5d2da73b81d96e733665b",
+      "size": 201
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/radio.pcap",
+      "sha256": "912cb4a4df3fb2ced570acaadf85a949cbc7af695b1e2b19da3e9a6e2da8fcbc",
+      "size": 2219046
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/recovery-checks.json",
+      "sha256": "3310ca538d05dbdea8b72118c3d5b7057493940a6aaddcdbe258569c7f9805af",
+      "size": 120102
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/result.json",
+      "sha256": "5d3a8594693507ba22c55d3865324e14755fd922b8a2ace1371ae43dbe5a1df2",
+      "size": 14466
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/source-hashes.json",
+      "sha256": "0d75d39ef712ba9101fae88c1fcd45126e766e3079ca5839452829f3d9badacb",
+      "size": 13012
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/station-events.jsonl",
+      "sha256": "a3cd9986a76a101d802d6a0171386d30f8b4958aa249a8ed00b3ce208f442edd",
+      "size": 46903
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/telemetry-gap-check.json",
+      "sha256": "a82048257b7066021b0a10afc53b6dfcc9281d059d436554f9bc2f6a7d653e67",
+      "size": 61839
+    },
+    {
+      "path": "virtual-capacity/native-capacity-01-limited/withheld-operation.json",
+      "sha256": "eb84e993c09361801b1b7d8d9b2341fb27dbd89256696143c9417201dbf1e9cb",
+      "size": 1963
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0000.json",
+      "sha256": "c54daaa00c906d1b57399d3c48688589f2768b0561fb9630e17ede4181217189",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0001.json",
+      "sha256": "90328c86dcfa44d7338c1b8da59075cf192977bbba07776529353b249e972c18",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0002.json",
+      "sha256": "bbba3b9e37d0efe80cb0c03bc229e95a0b0e8d5e1716dfebbb61b306dec40cff",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0003.json",
+      "sha256": "fd08f30d380134fb6975a48322ad3db5750d58f892c0a44e09cfaa930c2320f8",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0004.json",
+      "sha256": "73a6ed1570e21762b7482cccf6f264f2216f402b56952cb986231dd18941d326",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0005.json",
+      "sha256": "29d2b72b7747b45d9890778e4a6322bc1cd9daecbc7be375c2b9f5417caa468a",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0006.json",
+      "sha256": "dda27bb41c6735305f4667746f6fce1e2dec3e6c6a49e47e813b90e1ff2a745a",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0007.json",
+      "sha256": "5d9d31a90358896a7b86ef7bad0d0654ac507874bc87d8eeb3098fcb32cdd49c",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0008.json",
+      "sha256": "ce254744c62559c15436a6230e1e37174faf06771c50cf2e5c921e6cc81c63c3",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0009.json",
+      "sha256": "76a5d447335dc329d4ce06dbd6b4517d7ef593cf0af1e51e2a9f7439c233797e",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0010.json",
+      "sha256": "34d6830ea0660793a9f9880eb1bfa71963fc46649162edfb2623a1b2ea7480de",
+      "size": 33981
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0011.json",
+      "sha256": "ff341c2229ddbba7aa6ca0aff882bfdf401daee1c8e5b59d52d75bc1cbd46da5",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0012.json",
+      "sha256": "5047e158d3ddae08c16ec166661f2b198a958d38f9d2743bed9cbd811b672c65",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0013.json",
+      "sha256": "b309317116666d355153e59e2176f2feba751cf28533cb381d812137cb09098b",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0014.json",
+      "sha256": "be85be3b8316f6aadd794f30f1e4c4a5509f6e6df7aa6fc6f771b8293733c8b5",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0015.json",
+      "sha256": "ce4dbbedb00901e7274cb06d982d0d513d43aae04be187cc193c779d52ade226",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0016.json",
+      "sha256": "d176f221dd3693f6a0cc71e7a8aec57b05ecf1ab247c31c829759870a8d6328e",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0017.json",
+      "sha256": "4df1a2183b75b61a7b374535999d58448e7fbd430520a411f5449d1b35aed7b8",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0018.json",
+      "sha256": "b597b4211fdd72b9747296d4a75fa1def80cb95eef4767e4611061811071ff17",
+      "size": 33981
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0019.json",
+      "sha256": "e1848322a10f5920664715d2ebc3c7eb7da7fc6c6f1915f49be32368952f7efe",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0020.json",
+      "sha256": "592b190f334c63dffb5d8e14100f511a6bc4846163087864c64b56011c45de1d",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0021.json",
+      "sha256": "fa22bad0fcd2adc621f00791b8b61c89912f1f4b784eeab27e317c3d22f86234",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0022.json",
+      "sha256": "ba64f7809c48a6e756955d7848ea98827beb29fa3f82f32a38f5683358bb0fb0",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0023.json",
+      "sha256": "e5ca69e917ea86cae8b4086d3637b13fff0d979e7c70c87e51ecc2e9f6d48f29",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0024.json",
+      "sha256": "6a2d72eea63a6c9f3679448870e66a44c328d84f247969f5f968bd6f9db2267c",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0025.json",
+      "sha256": "60c4216a0f30607f62c99bbec45098fd2d9df5216638a4bef6a3a2ef26d026f2",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0026.json",
+      "sha256": "7d743680af669a3729872a5efb62a287016fe8658315c56d0e04a330739ba96a",
+      "size": 33983
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-inventory-0027.json",
+      "sha256": "89ce5e473d742e68a6d65ca8cb15f26354d74548d21659e452f9e16d9cca3795",
+      "size": 33982
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/active-samples.json",
+      "sha256": "13feb07b3859c9a18f7e6c3538ca09ba8ccd62998f555c1fd02169c1694cbc22",
+      "size": 740867
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/candidate-trial.json",
+      "sha256": "bdfb2f2d4c64cbc9c4722f06e7d1cf4d290308c913b74869198f69ca0a817a39",
+      "size": 16019
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/client-outages.json",
+      "sha256": "e1f6dfb135519ddef45cedfaeac040e680da33fd2fa934776873260c8140ba08",
+      "size": 681
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0000.json",
+      "sha256": "4cfac1f5c629bca8548c1c09c1a71ee1bf5d7c735c0d286db7051d68590b92b4",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0001.json",
+      "sha256": "a2b50006c11d1519f2e9217b1816b6cd7fe3273d02dd3a1b5cf80b693234f379",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0002.json",
+      "sha256": "71d57b1cf691adfbb464c0a10c07e32ab7fa5ffe1edc7cfc78fe86651350ed85",
+      "size": 2636
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0003.json",
+      "sha256": "61c5f769501d0d9c7a46b83ae455cd79704808d5ffaea9c2eee1ca59692314a3",
+      "size": 2635
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0004.json",
+      "sha256": "87aa5a3ec4e6a6f05698b69a8346bfa8eea034d934e54c9132f56c0fa6303e21",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0005.json",
+      "sha256": "550ad6aad562cc359f8138391891f607dd1fbb7291ca7d9245074fa0be606cde",
+      "size": 2633
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0006.json",
+      "sha256": "0f08f4ab84ac2a5e6e809ad2987edeb4416f102d41ca501afda173ee2687d93d",
+      "size": 2636
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0007.json",
+      "sha256": "0a0348baf2b652faae42cb2a3cf6ded8ae199a909f5974e20144c3edb720be32",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0008.json",
+      "sha256": "955cf78d5ac58e754b312739abdf1a5a3f3627792f33e1b45a48e4b1c23f5d4d",
+      "size": 2633
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0009.json",
+      "sha256": "44152c07f82f381296b7026f5bd86bfca1313e55ccabaa3b01c873db13fb62c8",
+      "size": 2633
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0010.json",
+      "sha256": "913cd1957f5fbfd0df17b8dcc299f94044655502691791dec4ff59210230af0d",
+      "size": 2633
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0011.json",
+      "sha256": "9165a0af3ceb3e4efd64f5ceca6185a2904a8210016eba02d1ef3b7ed4a70c49",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0012.json",
+      "sha256": "8ea12130d9aad33f32794225d6b4203ef611128493ca92d6a182ad59ff7ef01f",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0013.json",
+      "sha256": "3e83a8d0c5796e3fdc9c6d9fb6f661663e2e868585f9302dba1fb25c09f57436",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0014.json",
+      "sha256": "099ad000e8667d1c354600fc042f21109fbd8a9c21580ea9d5226324d2d7c5e4",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0015.json",
+      "sha256": "6f9f9a8529a9def49dd3bf7c21eb8388de90acae4b9fed17bb3dbb208219af0c",
+      "size": 2633
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0016.json",
+      "sha256": "04098f7172f2ef45f1029373d2ae554de1ffd8064148f70335bdfa411c2264e2",
+      "size": 2636
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0017.json",
+      "sha256": "dc093bebd30197ef7ee8cfcd731913d9a443499a365e19cc8186380546387ad9",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0018.json",
+      "sha256": "e11e5e625054eeec0fb242ed0db1adb9fd800947845caab91dd043679a0c8706",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0019.json",
+      "sha256": "a608ce43f79525267bef3fb297a99a6aeda6fa8900aff66643da16864b777b26",
+      "size": 2635
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0020.json",
+      "sha256": "69fadf4656e5b1d181a4f9108a56609ce844e45149675cc3ebd4edc766ebee13",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0021.json",
+      "sha256": "d94b20ad2396f1d290a1b574a297641478fe6a08d33d1923115c2c960b63aacd",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0022.json",
+      "sha256": "c19d50b403e213498e30f5edcb162888e5754f8692a0a7bf5618b3e1f170bcd9",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0023.json",
+      "sha256": "3f7c74c865ae324e2039ed1d6658b4af14d11d42285e07a15d2b86767b99b564",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0024.json",
+      "sha256": "7d3557e3daad1c12c0460b32378642743641c586aeafe3f268711f04c1e46d80",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0025.json",
+      "sha256": "7a6905d14021bf969bc5fba5d61b919c3f8cd2156c3034bd765b638967a59923",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0026.json",
+      "sha256": "45cd73f5704fe312c5ea5ac3911e98a0adb4afd111fcd9a84efacbd2f40c2515",
+      "size": 2636
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-active-0027.json",
+      "sha256": "b4579c7feef17014c609cf9b57feeb951b3528279dd40cd3bcf5cd881f2f03c1",
+      "size": 2635
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-neighbor-withheld.json",
+      "sha256": "d02d730037c03fb181dba69a3d7fbf67396131986c36b7847a53e3fad4f8ee56",
+      "size": 2647
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-onboarded.json",
+      "sha256": "8fd7c275dcb7ab80bd0bc76ddbc79e8ca8011853a7ed1e72750b7fded5323d4d",
+      "size": 2620
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-recovery-0.json",
+      "sha256": "eec1913980f04657091da53eedea4ce732282c0aea65efba8bda4f57daa3087d",
+      "size": 2634
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-recovery-1.json",
+      "sha256": "0426b5c1c8b8e6b74f05e86e1edb3212144e08111a8578c910308bd0a4d76a64",
+      "size": 2632
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/clients-telemetry-withheld.json",
+      "sha256": "3c0a0c798d5e424f28804f383db8fad3a2fe6e9320ae62a241fbfabe42eb3ec3",
+      "size": 2648
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/controller-after.json",
+      "sha256": "78c3e1cffa2c24a8bf3b6f7f3baa568a47bdc77f88d66aa77cae395389d096ed",
+      "size": 29142
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/controller-before.json",
+      "sha256": "49ace4c4ad587b43868650b3bbbafa43788e55fe5ef5ac5941d3ff1cce35f82c",
+      "size": 10353
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-inventory-0002.json",
+      "sha256": "3a40e433a5894e1fd8441973b79e59e3867258db0acf794d5eba0416258ccd9c",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-inventory-0006.json",
+      "sha256": "d5bf8982c49b519fe6e505d24679d68b83696a2ce6bfe36514dcd665d5c51da0",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-inventory-0009.json",
+      "sha256": "afd54add9a615aa6699669ab577ef95ef3b5baa66d65400fa7721db1eaa88d56",
+      "size": 33191
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-inventory-0012.json",
+      "sha256": "6654183034dc623132645ae9219aed33819a48d5593b18c8b89593f571d4e19f",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-inventory-0016.json",
+      "sha256": "bb484a32581b6d284046e251ec1c8298dfd4822406597e85bf6bf1cf824ac930",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-inventory-0019.json",
+      "sha256": "bc6aae0515ec6703089c8120d3b0b67a5df5b11cedd21449c971b6034f2f2aec",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-inventory-0022.json",
+      "sha256": "127aaf551b7e796bc4a8269b9b57fccac8a30598a6c1d3280ecf1afa02a2a9f9",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-inventory-0026.json",
+      "sha256": "fc6cf03140d1813684543c3e30ae2d8a62e8947d95b27eb9c4e982f3536996af",
+      "size": 33192
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-session-0002.json",
+      "sha256": "2dbfe7900f9ee00491fc30df9b85c748bdff6e132b4e6523d0104a3868a0b0cb",
+      "size": 19441
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-session-0006.json",
+      "sha256": "193a37f4ac6dafd4a5e00a0cd88d2477be7e3d22d6758ffcdc5dcdd513ca3beb",
+      "size": 19876
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-session-0009.json",
+      "sha256": "1a29ccdbb7b38f32a81a19491d547fe3b438d32086dc3fac8ca1d0114e30f57e",
+      "size": 25962
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-session-0012.json",
+      "sha256": "da292af2d462a3f535d86f75619a458141239ac0488fc5d5439e6b1889ffc1a4",
+      "size": 26422
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-session-0016.json",
+      "sha256": "8ee915fbb64e665049e2af11be269630bf4bc0cafc63e963289d152ee1e7a023",
+      "size": 26577
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-session-0019.json",
+      "sha256": "61484ab4aa3009919bc2fe4dc62aece063e9e36db2391e2577e9cd015db124ea",
+      "size": 19510
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-session-0022.json",
+      "sha256": "c534f4235a23710d5d6f7600d3c6b1e902803cef99f73919d60d612bf1b75d90",
+      "size": 19723
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/detached-session-0026.json",
+      "sha256": "422cbdbe166b9a00ba67398cc3b9f5f3e8c2889cfa8ab75a1699d7afc1f2b0cc",
+      "size": 20000
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/egress-observations.jsonl",
+      "sha256": "14a89dc8c3838335aa5ad85ab9b519aaebe0b8950370f1ef46c11e0ce31dfcb7",
+      "size": 2073302
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/egress-observer-final.json",
+      "sha256": "5b0711ba8d8eb9ad997aab30679ba2f2f0f2224586de4a3dd57675a02420e7ba",
+      "size": 513
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/em-baseline-wifi-continuous-ping.log",
+      "sha256": "631fd36ca01c7e7b81790f1c13dee4fe6cfb2441226cb58b7740376b2f5e4673",
+      "size": 56314
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/em-baseline-wired-continuous-ping.log",
+      "sha256": "416b8af4f4b2301c628a6d4358630dea51e5ea92226068e5184de836346dfb6d",
+      "size": 66839
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/ethernet-capture.log",
+      "sha256": "4f41d522b2cd927bab6367e4232440a3084667658f7ee3aa7a4e522929e24bcf",
+      "size": 172
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/ethernet.pcap",
+      "sha256": "b1fdd56f12cf223a2db2b98e3b997be65e3ddeff5c1ae9cc7cc625ba4eb243e5",
+      "size": 11150
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/forwarding-capture.log",
+      "sha256": "462a6c0482988a05ec9b0d6948860aac13f13debacb3379e4c5331c7e88452b9",
+      "size": 176
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/forwarding-samples.jsonl",
+      "sha256": "768ff7ae9eb5fe0d48f75fb02b6b1d38631c74acac32e908d6afc52f68698618",
+      "size": 2972219
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/forwarding.pcap",
+      "sha256": "0cc8ff02205b47fc0b9ae6186fc2fbb48d8cf661443bf9ffbd9337f1e4227369",
+      "size": 477544
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/idle-check.json",
+      "sha256": "99bf45713ebfed48ffb632487363782941e0f940bb7606d63edb4f51e882025e",
+      "size": 106
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/independent-capacity-check.json",
+      "sha256": "5a9f01323b90e470bb4024a5e75ab460b9e34cbf85fdba7abc9b6eaaf4310923",
+      "size": 71724
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/independent-policy-check.json",
+      "sha256": "261cfe4374e3eec2500e62bacbd6385883707f1418e88b902daea06c7c5596f1",
+      "size": 1436
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/independent-recovery-check.json",
+      "sha256": "46fc0bd6a92c44554219d82526c736d32c4176a8289acc8b3c72c2a4cb0449b2",
+      "size": 3321
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/independent-telemetry-check.json",
+      "sha256": "56de71444639ae8e1efc9cc8d56aebc098c1f1357073f636a3947ebfabed6ea1",
+      "size": 818
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/initial-audit-failure.json",
+      "sha256": "aee19c2da9df8c1784e88cf7d2068dde35fd739e999e7432b0b32d502d3a4cea",
+      "size": 868
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/manager.jsonl",
+      "sha256": "50d176aee9a790892ce1402ea86907001af0bcf04f554b495789872617d54dc8",
+      "size": 2881890
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/native-operation.json",
+      "sha256": "505661225475384e318cf144c02a1c5d82d650937ae95cb111ad072b16f71d92",
+      "size": 4858
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/native-session.json",
+      "sha256": "7e56003b3eaf25dfb2eb5b9ede06c5a53fcdac098d10b762be17492f34ec7b57",
+      "size": 20081
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/neighbor-gap-check.json",
+      "sha256": "33240ebf2105c147694361d4ad6242e95f4476235e628c7fdd07ec2fbfd5df96",
+      "size": 67014
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/neighbor-link-observations.json",
+      "sha256": "85086df230ad9513d96da0e0291441b7e866ec4807c9788dc51aca1b7fcd9e83",
+      "size": 22616
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/neighbor-observer-final.json",
+      "sha256": "1fe2c2972c37272ac0f31402d8e314d4720f0e295d1e4cf053d47b2533e7dcbe",
+      "size": 935
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/radio-capture.log",
+      "sha256": "84a9a255de958e22207e84b8fe3bd7be46ba32299c59583556955c85ed31297f",
+      "size": 201
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/radio.pcap",
+      "sha256": "3233be4c7614c331c7b6d54896f106178cc6501adfbe325cf3b0c1254df00798",
+      "size": 2337141
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/recovery-checks.json",
+      "sha256": "6ec7fd3b342cec80045ddbd3764c3f03366cedc60e299307d1f6f6df571d3118",
+      "size": 127805
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/reference-candidate.json",
+      "sha256": "f363171b14b21c254002f2124370033a41371beb1fdb71b7bec2538b9060ce9c",
+      "size": 2189
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/result.json",
+      "sha256": "08324133e2240acea198273b04692dcd2a51da1d62f152e1e5502f542c00ac60",
+      "size": 14467
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/source-hashes.json",
+      "sha256": "c9cb77368e8ac4409f388938603a714aa7f1efb4e6d0adea181e026467ec2506",
+      "size": 13012
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/source-match.json",
+      "sha256": "59327b2b8ba41da449b6b1372d9f589f6c508139ecede7427d12811ba7dfec20",
+      "size": 4133
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/station-events.jsonl",
+      "sha256": "6893748f493977df9e5b228461c37e4766f0b11c7c052507532181792aa604c3",
+      "size": 46903
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/telemetry-gap-check.json",
+      "sha256": "76ded19ba4d02c141f2028fd918fdb346f180490926bced1a30718a03d7a6cb5",
+      "size": 67127
+    },
+    {
+      "path": "virtual-capacity/native-capacity-02/withheld-operation.json",
+      "sha256": "7b300c74db6f07fc198411a8a725330b89ec90eda73502c8f3c49c4e9a8bc04e",
+      "size": 1963
+    },
+    {
+      "path": "virtual-capacity/ovsdb-results.xml",
+      "sha256": "e0d42638a7f9757ccbb5c06ab8da9d5d2f0e3851a185161c99a702582c79fc51",
+      "size": 7929
+    },
+    {
+      "path": "virtual-capacity/runtime-provenance.json",
+      "sha256": "6e9e303c1e16e5c8a61a5acae1ff68d8d25759157f3a9ab059e05f4a750f54ba",
+      "size": 934
+    },
+    {
+      "path": "virtual-capacity/source-provenance.json",
+      "sha256": "11cabbafb95e82fc332259a64e8b0f61daf338c57b5954f2d0ab34645a124122",
+      "size": 1187
+    },
+    {
+      "path": "virtual-capacity/unit-results.xml",
+      "sha256": "4226610ac2fd149282932c5b72b77a2ea9eebca3e9a466755a9316ca60ff8e72",
+      "size": 4448907
+    },
+    {
+      "path": "virtual-capacity/virtual-link-01-limited/egress-observations.jsonl",
+      "sha256": "e9a4408d3efa4671295a80ae49d4f7b5bdcba1a0993349429793580b8308c38f",
+      "size": 131987
+    },
+    {
+      "path": "virtual-capacity/virtual-link-01-limited/egress-observer-final.json",
+      "sha256": "60062c151b4487bf35d21e7db0b83e33541446ce77866302f6d5b299c564dc6a",
+      "size": 509
+    },
+    {
+      "path": "virtual-capacity/virtual-link-01-limited/failure-analysis.json",
+      "sha256": "8f220c6d3fe8edbae09fe90e2715c27f429e4b879670e5d275f7dcdb361279ae",
+      "size": 796
+    },
+    {
+      "path": "virtual-capacity/virtual-link-01-limited/result.json",
+      "sha256": "5b1af83f6260f9a9025da1332860dd9fd9d60a09b2420b289d1e51c0e8c3759b",
+      "size": 11986
+    },
+    {
+      "path": "virtual-capacity/virtual-link-02-limited/egress-observations.jsonl",
+      "sha256": "602884dab79fb18c3251b1cdf0d0fd31ea868dc8d4eacb4a49a20813ee657c85",
+      "size": 132044
+    },
+    {
+      "path": "virtual-capacity/virtual-link-02-limited/egress-observer-final.json",
+      "sha256": "e74a53ad1f8ff945b2e23833dc7f68398707fb90bde022458f3186603046ccc4",
+      "size": 509
+    },
+    {
+      "path": "virtual-capacity/virtual-link-02-limited/failure-analysis.json",
+      "sha256": "7061695aac0094c420734cbd211140621833634ca22ce0507ec5aece07b3100c",
+      "size": 796
+    },
+    {
+      "path": "virtual-capacity/virtual-link-02-limited/result.json",
+      "sha256": "389ffd2122f54b5b1d0e40d588e8e3d62311148737b49008c2c51a8a13eca937",
+      "size": 11986
+    },
+    {
+      "path": "virtual-capacity/virtual-link-03/backhaul-capture.log",
+      "sha256": "fe63c445488d31250bedfd27893d6540935704bf6eeba9f100c8859cb6bc6a57",
+      "size": 178
+    },
+    {
+      "path": "virtual-capacity/virtual-link-03/backhaul.pcap.gz",
+      "sha256": "a6e65437f1aa21659316874c6e0a0e24a3eb0f40dddc033f77d6b81c0d2d9cea",
+      "size": 1154290
+    },
+    {
+      "path": "virtual-capacity/virtual-link-03/egress-observations.jsonl",
+      "sha256": "822cf52675859f3a2aa06e105cea746c4b407fbcbf47fe43291930820785a472",
+      "size": 136406
+    },
+    {
+      "path": "virtual-capacity/virtual-link-03/egress-observer-final.json",
+      "sha256": "d6c30aeb64ff3dd24b98f490567eae5f326748e447a3f463d2df0cd7dcaf1bf7",
+      "size": 509
+    },
+    {
+      "path": "virtual-capacity/virtual-link-03/independent-capacity-check.json",
+      "sha256": "170f3ed2c44a712b63cc4a7d5e034188bb48ac9905045b7c4d23f238dc075951",
+      "size": 9498
+    },
+    {
+      "path": "virtual-capacity/virtual-link-03/offered-capture.log",
+      "sha256": "7822e45b72df66bb1a15fd02800408c2e1df9e2e93bdddf6adcd9264f5e1c434",
+      "size": 170
+    },
+    {
+      "path": "virtual-capacity/virtual-link-03/offered.pcap.gz",
+      "sha256": "d8cb704fe97a096091925b6ce29914c3d66ec65badfaa99ca24d2ff7b4b41758",
+      "size": 1135816
+    },
+    {
+      "path": "virtual-capacity/virtual-link-03/receiver.json",
+      "sha256": "b3b61d568d5c61e1449b36056762e52b27401c7d8efdb499cc77cee05bec1dd1",
+      "size": 7376009
+    },
+    {
+      "path": "virtual-capacity/virtual-link-03/result.json",
+      "sha256": "2a16e5fd7c0913c20149e0a47c1441d0fdf9d518882dc4ce89046712ed78f0b6",
+      "size": 11986
+    },
+    {
+      "path": "virtual-capacity/virtual-link-03/virtual-capacity-projection.json",
+      "sha256": "0313185eb723593a209bab5f6e4a575b5b5cf23f4fcb23b7a92702d19f98726b",
+      "size": 63939
     }
   ]
 }

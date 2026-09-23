@@ -61,6 +61,13 @@ and common transmit/receive read bounds. Complete neighbor/loss attribution,
 media and capacity/availability qualification remain pending before these
 observations satisfy a complete native query.
 
+The optional [virtual-link calibration](virtual-link-capacity.md) now tests a
+declared 100 Mb/s software service with explicit Ethernet overhead and an
+observed unused-service estimate. Its independent packet audit and native
+OVSDB recovery regression are separate from complete per-neighbor publication.
+The combined loss path, peer attribution and media profile still need
+qualification; this does not measure a physical PHY or change acceptance status.
+
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated
 acceptance remain outstanding. Policy receipt/Ack now persists the controller's

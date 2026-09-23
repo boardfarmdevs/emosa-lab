@@ -1,0 +1,13 @@
+{
+  "scope": "Initial independent-review formula error, same retained native experiment",
+  "initial_failure": {
+    "field": "service_bytes",
+    "packet_based_minimum": 929,
+    "observed_counter_delta": 930,
+    "packet_based_maximum": 929
+  },
+  "cause": "The initial packet auditor assumed byte-granular STAB. Exact iproute2 package source selects cell_log=1 for mtu=2048,tsize=2048; odd adjusted frame sizes are rounded upward to two octets. Native counter source already used actual qdisc charged bytes.",
+  "correction": "Independent auditor applies the actual two-octet size-table charge; declared service model documents that quantization. No runtime source, packet capture, counter value, read interval or 1 ms timing allowance was changed.",
+  "source_reference": "../iproute-source-provenance.json",
+  "superseded_by": "independent-capacity-check.json"
+}

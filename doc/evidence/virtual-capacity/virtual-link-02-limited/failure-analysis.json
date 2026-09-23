@@ -1,0 +1,13 @@
+{
+  "status": "service_source_withheld_missing_detailed_framing",
+  "scope": "Preliminary calibration; not a service-source qualification pass",
+  "reason": "Collector used tc -j -s and omitted STAB; strict source rejects missing framing. Corrected collector uses -d. Captures and UDP endpoint records retained privately; no public packet reconciliation claimed for this attempt.",
+  "traffic_control_restored": true,
+  "private_artifact_sha256": {
+    "offered.pcap": "5cf0c87db0d505e2f3249db30ea58aa3c0ee5e067b133b25f509077167da2aab",
+    "backhaul.pcap": "57199d2f4415504165898d5df34a4572dcd3f69b09f9c7b6af7badc5c5f76a4d",
+    "receiver.json": "f86b24b407ae67f3ad4bc8a0d25eef5d025c447cee6f32625a3bc2141afa4a27"
+  },
+  "service_source_qualified": false,
+  "sustained_operation_proven": false
+}

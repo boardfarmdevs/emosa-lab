@@ -15,7 +15,7 @@ from emosa.simulation.forwarding import integer, mac
 PROFILE = "owned-veth-egress-observation-v1"
 
 
-def observed_path(observation, ifindex, address):
+def observed_interface(observation, ifindex, address):
     (link,), (after,) = observation["link"], observation["link_after"]
     for row in (link, after):
         if (
@@ -29,6 +29,11 @@ def observed_path(observation, ifindex, address):
             or row["linkinfo"]["info_slave_data"]["state"] != "forwarding"
         ):
             raise ValueError("unsupported_or_changed_egress_interface")
+    return link
+
+
+def observed_path(observation, ifindex, address):
+    link = observed_interface(observation, ifindex, address)
     # Only noqueue, optionally with one software-only drop action in clsact.
     qdiscs = observation["qdiscs"]
     roots = [q for q in qdiscs if q.get("root")]

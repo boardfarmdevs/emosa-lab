@@ -10,6 +10,7 @@ from pathlib import Path
 
 from emosa.simulation.backhaul_accounting import BackhaulAccountingSource
 from emosa.simulation.egress_accounting import EgressAccountingSource
+from emosa.simulation.virtual_capacity import VirtualCapacitySource
 
 
 def replay(directory, source_class=EgressAccountingSource):
@@ -42,13 +43,19 @@ def replay(directory, source_class=EgressAccountingSource):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
-    parser.add_argument("--bidirectional", action="store_true")
+    choice = parser.add_mutually_exclusive_group()
+    choice.add_argument("--bidirectional", action="store_true")
+    choice.add_argument("--virtual-service", action="store_true")
     args = parser.parse_args()
     print(
         json.dumps(
             replay(
                 args.directory,
-                BackhaulAccountingSource if args.bidirectional else EgressAccountingSource,
+                VirtualCapacitySource
+                if args.virtual_service
+                else BackhaulAccountingSource
+                if args.bidirectional
+                else EgressAccountingSource,
             ),
             indent=2,
         )

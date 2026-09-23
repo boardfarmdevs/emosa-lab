@@ -42,6 +42,7 @@ from emosa.simulation.forwarding import ForwardingSource
 from emosa.simulation.neighbor_binding import NeighborSource
 from emosa.simulation.radio import MONITOR
 from emosa.simulation.station_telemetry import NODE_ID, TOPIC, LabMqtt
+from emosa.simulation.virtual_capacity import VirtualCapacitySource
 from emosa.simulation.wire_reports import fixtures
 from emosa.simulation.wsc_provisioning import (
     SERIAL,
@@ -85,6 +86,7 @@ class RadioReportSource:
         self.forwarding = ForwardingSource()
         self.egress = EgressAccountingSource(forwarding_run) if forwarding_run else None
         self.backhaul = BackhaulAccountingSource(forwarding_run) if forwarding_run else None
+        self.virtual_capacity = VirtualCapacitySource(forwarding_run) if forwarding_run else None
         self.neighbor = (
             NeighborSource(CONTROLLER, AGENT, forwarding_run) if forwarding_run else None
         )
@@ -124,7 +126,7 @@ class RadioReportSource:
         try:
             raw = await self.backend.session.snapshot()
             self.forwarding.refresh(raw)
-            for accounting in (self.egress, self.backhaul):
+            for accounting in (self.egress, self.backhaul, self.virtual_capacity):
                 if accounting is None:
                     continue
                 sample = self.forwarding.sample
@@ -269,6 +271,8 @@ class RadioReportSource:
                 self.egress.invalidate()
             if self.backhaul:
                 self.backhaul.invalidate()
+            if self.virtual_capacity:
+                self.virtual_capacity.invalidate()
             if self.neighbor:
                 self.neighbor.invalidate()
             self.source.invalidate()
@@ -328,6 +332,7 @@ async def worker(directory, *, duration=110, telemetry=False):
         value["observed_neighbor"] = facts.neighbor.status()
         value["egress_accounting"] = facts.egress.status()
         value["backhaul_accounting"] = facts.backhaul.status()
+        value["virtual_capacity"] = facts.virtual_capacity.status()
         if stations:
             sample = stations.current()
             value["telemetry"] = {
@@ -377,6 +382,7 @@ async def worker(directory, *, duration=110, telemetry=False):
                 forwarding["observed_neighbor"] = facts.neighbor.status()
                 forwarding["egress_accounting"] = facts.egress.status()
                 forwarding["backhaul_accounting"] = facts.backhaul.status()
+                forwarding["virtual_capacity"] = facts.virtual_capacity.status()
                 if forwarding != previous_forwarding:
                     with (directory / "forwarding-samples.jsonl").open("a") as observations:
                         observations.write(

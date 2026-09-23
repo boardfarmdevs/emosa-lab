@@ -266,6 +266,12 @@ OpenSync-format telemetry. Work through these exercises in order:
     losses that ordinary receive drop counters miss, and read a direction-bearing
     capture. Reconcile both directions over common bounds and verify their live
     OVSDB recovery. Explain the remaining complete-link qualification boundary.
+16. Follow [virtual-link service calibration](../protocol/virtual-link-capacity.md).
+    Distinguish configured rate, application throughput and modeled wire work.
+    Reconcile independent packet captures at half load, saturation and small
+    frame load. Trace the estimate through OVSDB and recovery, and explain why
+    a missing framing table must withhold the result. Identify the remaining
+    media, peer and loss inputs before native neighbor metric publication.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

@@ -1,0 +1,6 @@
+{
+  "status": "native_service_source_withheld",
+  "reason": "Basic tc queue dump omitted framing options. All service observations correctly remain unavailable. Recovery and cleanup checks pass, but service-source validation fails. The collector is corrected to retain detailed queue/STAB configuration; native-capacity-02 is a separate new run.",
+  "service_source_qualified": false,
+  "sustained_operation_proven": false
+}

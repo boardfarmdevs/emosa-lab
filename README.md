@@ -74,6 +74,10 @@ verify 292 live intervals across reconnect/restart. The follow-on
 over common read bounds and accounts for 17 ingress drops after interface
 arrival. Complete per-neighbor loss, media and capacity/availability qualification
 remain prerequisites for native metric delivery.
+The optional [virtual-link exercise](doc/protocol/virtual-link-capacity.md)
+calibrates a declared 100 Mb/s software service against complete independent
+captures and carries its service-work estimate through OVSDB recovery. This
+diagnostic does not yet supply a complete neighbor metric or physical PHY profile.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 

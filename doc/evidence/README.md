@@ -36,6 +36,7 @@ for navigation and commands.
 | Native reporting-policy receipt | [Same-MID Acks, durable policy and schedule recovery, with missing reports kept explicit](reporting-policy/README.md) |
 | Selected egress accounting through OVSDB | [17 controlled losses, 292 live intervals and real recovery checks; complete metrics remain pending](egress-accounting/README.md) |
 | Receive and common-window accounting | [Selected ingress losses, direction-bearing captures, retained failures and native recovery](receive-accounting/README.md) |
+| Virtual-link service estimate | [Framing/rate calibration, preserved missing-input attempts and native OVSDB recovery](virtual-capacity/README.md) |
 
 These collections have different scopes and include failures. They do not
 establish EMOSA wire onboarding, physical-pod qualification or universal peer

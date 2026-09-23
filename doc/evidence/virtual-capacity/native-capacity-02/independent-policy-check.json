@@ -1,0 +1,55 @@
+{
+  "policy_receipt_checks_passed": true,
+  "scope": "durable native policy receipt/Ack and recovery, not fulfilled reporting",
+  "capture_health": {
+    "ethernet": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 115,
+      "captured": 115,
+      "received_by_filter": 115,
+      "dropped_by_kernel": 0
+    },
+    "radio": {
+      "passed": true,
+      "linktype": 127,
+      "pcap_records": 12032,
+      "captured": 12032,
+      "received_by_filter": 12032,
+      "dropped_by_kernel": 0
+    }
+  },
+  "requests": [
+    {
+      "request_frame": 15,
+      "ack_frame": 20,
+      "mid": 23,
+      "ack_delay_ms": 11.301040649414062
+    },
+    {
+      "request_frame": 53,
+      "ack_frame": 58,
+      "mid": 45,
+      "ack_delay_ms": 7.083892822265625
+    },
+    {
+      "request_frame": 90,
+      "ack_frame": 95,
+      "mid": 62,
+      "ack_delay_ms": 12.505054473876953
+    }
+  ],
+  "interval_seconds": 60,
+  "all_requested_sta_inclusions_preserved": true,
+  "schedule_preserved_across_both_faults": true,
+  "periods_due_without_report": 3,
+  "policy_application_proven": false,
+  "required_reporting_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "remaining": [
+    "Qualified AP/STA measurements and required report delivery",
+    "IEEE 1905 neighbor measurements and final disassociation records",
+    "Complete 15-minute acceptance after reporting is implemented"
+  ]
+}

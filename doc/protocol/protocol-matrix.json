@@ -2152,6 +2152,65 @@
           "Connect complete inputs to the guarded publisher and verify actual native controller values",
           "Complete AP/STA and final-session reporting and repeat integrated 15-minute acceptance"
         ]
+      },
+      "virtual_service_estimate": {
+        "status": "packet_calibrated_software_service_and_native_ovsdb_recovery_verified_full_link_source_pending",
+        "guide": "doc/protocol/virtual-link-capacity.md",
+        "implementation": [
+          "src/emosa/simulation/virtual_capacity.py",
+          "src/emosa/simulation/native_onboarding.py",
+          "deploy/radio-manager/egress-observer.py"
+        ],
+        "calibration_runner": "deploy/radio-manager/calibrate-link.py",
+        "native_option": "--virtual-link",
+        "source_references": [
+          "IEEE 1905.1-2013 section 6.4.11 Table 6-18 and section 11.1; amended unavailable PHY sentinel is distinct from capacity",
+          "EasyMesh 6.1 section 10.1: predicted Wi-Fi airtime is distinct from unused Ethernet service",
+          "Ubuntu Linux 6.8.0-139.139 net/sched/sch_tbf.c, net/sched/sch_api.c and include/net/sch_generic.h",
+          "Ubuntu iproute2 6.1.0-1ubuntu6.4 tc/tc_core.c tc_calc_size_table",
+          "https://man7.org/linux/man-pages/man8/tc-tbf.8.html",
+          "https://man7.org/linux/man-pages/man8/tc-stab.8.html"
+        ],
+        "source_provenance": "doc/evidence/virtual-capacity/source-provenance.json",
+        "iproute_source_provenance": "doc/evidence/virtual-capacity/iproute-source-provenance.json",
+        "runtime_provenance": "doc/evidence/virtual-capacity/runtime-provenance.json",
+        "contract": "Optional owned 100 Mb/s TBF egress service; observed charged bytes include overhead, minimum frame and two-octet table rounding. Bounded work/unused-service estimates require exact observed shape and fresh counter lifetimes. No physical PHY or native linkAvailability mapping is asserted.",
+        "declared_service_mbps": 100,
+        "burst_bytes": 65536,
+        "queue_limit_bytes": 524288,
+        "framing_overhead_bytes": 24,
+        "minimum_charged_bytes": 84,
+        "table_resolution_octets": 2,
+        "calibration_packets_reconciled": 78617,
+        "calibration_service_windows": 33,
+        "native_service_windows": 321,
+        "native_active_seconds": 214.46843538100075,
+        "native_connection_generations": 3,
+        "native_worker_processes": 2,
+        "independent_check": "scripts/check-virtual-capacity.py",
+        "test_refs": [
+          "tests/test_virtual_capacity.py"
+        ],
+        "calibration_evidence": "doc/evidence/virtual-capacity/virtual-link-03/independent-capacity-check.json",
+        "native_evidence": "doc/evidence/virtual-capacity/native-capacity-02/independent-capacity-check.json",
+        "recovery_evidence": "doc/evidence/virtual-capacity/native-capacity-02/independent-recovery-check.json",
+        "retained_incomplete_attempts": [
+          "doc/evidence/virtual-capacity/virtual-link-01-limited/failure-analysis.json",
+          "doc/evidence/virtual-capacity/virtual-link-02-limited/failure-analysis.json",
+          "doc/evidence/virtual-capacity/native-capacity-01-limited/failure-analysis.json"
+        ],
+        "audit_refinement": "doc/evidence/virtual-capacity/native-capacity-02/initial-audit-failure.json",
+        "service_estimate_checked": true,
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Qualify combined shaped-link loss accounting and complete per-peer attribution",
+          "Qualify selected media and normative availability estimator; do not map unused Ethernet service to Wi-Fi predicted airtime",
+          "Bind complete metrics to current native session and independently verify controller values",
+          "Complete AP/STA and final-session reporting then repeat full integrated 15-minute acceptance"
+        ]
       }
     }
   }

@@ -5,6 +5,12 @@ OVSDB Config, a separate hostapd/nl80211 manager, and independent wired and
 wpa_supplicant client containers. It does not send EasyMesh messages or run
 OpenSync firmware. The upstream OpenSync schema remains a simulation reference.
 
+For the separate native-controller experiment's optional service calibration,
+see [virtual-link capacity](../../doc/protocol/virtual-link-capacity.md).
+`calibrate-link.py`, `link-traffic.py` and `virtual-link.py` operate only in the
+idle owned lab; the native harness can opt into the same temporary shaper with
+`--virtual-link`. Neither path targets physical pods.
+
 ```mermaid
 flowchart LR
     E[EMOSA operation engine] -->|Guarded Config transaction| D[Disposable OVSDB]

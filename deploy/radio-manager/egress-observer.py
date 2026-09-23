@@ -121,7 +121,9 @@ def observe(label, seconds):
                     before_epoch = epoch
                     start = time.monotonic_ns()
                     link = json_command("ip", "-j", "-d", "-s", "link", "show", "eth1")
-                    qdiscs = json_command("tc", "-j", "-s", "qdisc", "show", "dev", "eth1")
+                    # Detailed output retains the STAB framing table and rate
+                    # options needed to distinguish a shaped service contract.
+                    qdiscs = json_command("tc", "-j", "-d", "-s", "qdisc", "show", "dev", "eth1")
                     filters = {
                         hook: json_command("tc", "-j", "-s", "filter", "show", "dev", "eth1", hook)
                         for hook in ("root", "ingress", "egress")

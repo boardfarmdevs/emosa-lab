@@ -1,0 +1,31 @@
+{
+  "telemetry_gap_checks_passed": true,
+  "capture_health": {
+    "ethernet": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 115,
+      "captured": 115,
+      "received_by_filter": 115,
+      "dropped_by_kernel": 0
+    },
+    "radio": {
+      "passed": true,
+      "linktype": 127,
+      "pcap_records": 12032,
+      "captured": 12032,
+      "received_by_filter": 12032,
+      "dropped_by_kernel": 0
+    }
+  },
+  "withheld_seconds": 6.37622857093811,
+  "observed_manager_cycles_without_telemetry": 9,
+  "control_context_preserved": true,
+  "stale_inventory_and_operating_radio_withdrawn": true,
+  "false_departures": 0,
+  "new_onboarding_operations": 0,
+  "new_config_writes": 0,
+  "wired_and_wifi_traffic_during_gap": true,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

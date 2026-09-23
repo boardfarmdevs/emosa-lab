@@ -1,0 +1,493 @@
+{
+  "label": "virtual-link-02",
+  "status": "observed_pending_independent_review",
+  "nonce": "b19f54df552742f8",
+  "scope": "owned 100-Mbit simulated Ethernet service calibration",
+  "phases": [
+    {
+      "phase": 1,
+      "before": [
+        {
+          "kind": "tbf",
+          "handle": "4e00:",
+          "root": true,
+          "refcnt": 17,
+          "options": {
+            "rate": 12500000,
+            "burst": "64Kb/1",
+            "mpu": 0,
+            "lat": 36700,
+            "linklayer": "ethernet"
+          },
+          "stab": {
+            "linklayer": "ethernet",
+            "overhead": 24,
+            "mpu": 84,
+            "mtu": 2048,
+            "tsize": 2048
+          },
+          "bytes": 244,
+          "packets": 2,
+          "drops": 0,
+          "overlimits": 0,
+          "requeues": 0,
+          "backlog": 0,
+          "qlen": 0
+        }
+      ],
+      "started_ns": 31711905668507,
+      "wall_ns": 1790152609834163836,
+      "sender": {
+        "label": "virtual-link-02",
+        "nonce": "b19f54df552742f8",
+        "source_sha256": "c1e93546cab6a96f745b3493a6b662e777924e482916cc3059c990c31f71eb9d",
+        "errors": [],
+        "phase": 1,
+        "udp_payload_size": 1472,
+        "target_wire_bps": 50000000,
+        "started_ns": 31712027523983,
+        "ended_ns": 31716027612753,
+        "packets_sent": 16255,
+        "charged_octets_per_packet": 1538
+      },
+      "after": [
+        {
+          "kind": "tbf",
+          "handle": "4e00:",
+          "root": true,
+          "refcnt": 17,
+          "options": {
+            "rate": 12500000,
+            "burst": "64Kb/1",
+            "mpu": 0,
+            "lat": 36700,
+            "linklayer": "ethernet"
+          },
+          "stab": {
+            "linklayer": "ethernet",
+            "overhead": 24,
+            "mpu": 84,
+            "mtu": 2048,
+            "tsize": 2048
+          },
+          "bytes": 25000972,
+          "packets": 16260,
+          "drops": 0,
+          "overlimits": 0,
+          "requeues": 0,
+          "backlog": 0,
+          "qlen": 0
+        }
+      ],
+      "finished_ns": 31717132824168
+    },
+    {
+      "phase": 2,
+      "before": [
+        {
+          "kind": "tbf",
+          "handle": "4e00:",
+          "root": true,
+          "refcnt": 17,
+          "options": {
+            "rate": 12500000,
+            "burst": "64Kb/1",
+            "mpu": 0,
+            "lat": 36700,
+            "linklayer": "ethernet"
+          },
+          "stab": {
+            "linklayer": "ethernet",
+            "overhead": 24,
+            "mpu": 84,
+            "mtu": 2048,
+            "tsize": 2048
+          },
+          "bytes": 25000972,
+          "packets": 16260,
+          "drops": 0,
+          "overlimits": 0,
+          "requeues": 0,
+          "backlog": 0,
+          "qlen": 0
+        }
+      ],
+      "started_ns": 31717217854742,
+      "wall_ns": 1790152615146349970,
+      "sender": {
+        "label": "virtual-link-02",
+        "nonce": "b19f54df552742f8",
+        "source_sha256": "c1e93546cab6a96f745b3493a6b662e777924e482916cc3059c990c31f71eb9d",
+        "errors": [],
+        "phase": 2,
+        "udp_payload_size": 1472,
+        "target_wire_bps": 160000000,
+        "started_ns": 31717327625881,
+        "ended_ns": 31721331786221,
+        "packets_sent": 32630,
+        "charged_octets_per_packet": 1538
+      },
+      "after": [
+        {
+          "kind": "tbf",
+          "handle": "4e00:",
+          "root": true,
+          "refcnt": 17,
+          "options": {
+            "rate": 12500000,
+            "burst": "64Kb/1",
+            "mpu": 0,
+            "lat": 36700,
+            "linklayer": "ethernet"
+          },
+          "stab": {
+            "linklayer": "ethernet",
+            "overhead": 24,
+            "mpu": 84,
+            "mtu": 2048,
+            "tsize": 2048
+          },
+          "bytes": 75185912,
+          "packets": 48890,
+          "drops": 0,
+          "overlimits": 97381,
+          "requeues": 0,
+          "backlog": 0,
+          "qlen": 0
+        }
+      ],
+      "finished_ns": 31722435251946
+    },
+    {
+      "phase": 3,
+      "before": [
+        {
+          "kind": "tbf",
+          "handle": "4e00:",
+          "root": true,
+          "refcnt": 17,
+          "options": {
+            "rate": 12500000,
+            "burst": "64Kb/1",
+            "mpu": 0,
+            "lat": 36700,
+            "linklayer": "ethernet"
+          },
+          "stab": {
+            "linklayer": "ethernet",
+            "overhead": 24,
+            "mpu": 84,
+            "mtu": 2048,
+            "tsize": 2048
+          },
+          "bytes": 75185912,
+          "packets": 48890,
+          "drops": 0,
+          "overlimits": 97381,
+          "requeues": 0,
+          "backlog": 0,
+          "qlen": 0
+        }
+      ],
+      "started_ns": 31722578395389,
+      "wall_ns": 1790152620506890818,
+      "sender": {
+        "label": "virtual-link-02",
+        "nonce": "b19f54df552742f8",
+        "source_sha256": "c1e93546cab6a96f745b3493a6b662e777924e482916cc3059c990c31f71eb9d",
+        "errors": [],
+        "phase": 3,
+        "udp_payload_size": 16,
+        "target_wire_bps": 5000000,
+        "started_ns": 31722689534145,
+        "ended_ns": 31726689559627,
+        "packets_sent": 29762,
+        "charged_octets_per_packet": 84
+      },
+      "after": [
+        {
+          "kind": "tbf",
+          "handle": "4e00:",
+          "root": true,
+          "refcnt": 17,
+          "options": {
+            "rate": 12500000,
+            "burst": "64Kb/1",
+            "mpu": 0,
+            "lat": 36700,
+            "linklayer": "ethernet"
+          },
+          "stab": {
+            "linklayer": "ethernet",
+            "overhead": 24,
+            "mpu": 84,
+            "mtu": 2048,
+            "tsize": 2048
+          },
+          "bytes": 77685920,
+          "packets": 78652,
+          "drops": 0,
+          "overlimits": 97381,
+          "requeues": 0,
+          "backlog": 0,
+          "qlen": 0
+        }
+      ],
+      "finished_ns": 31727783701131
+    }
+  ],
+  "cleanup_errors": [],
+  "physical_pod_changed": false,
+  "measurement_source_qualified": false,
+  "sustained_operation_proven": false,
+  "source_hashes": {
+    "calibrate-link.py": "b567c90fbbc90747f688107a8d92a341bc3f6e63fccd4243506322a60d68cde3",
+    "virtual-link.py": "0699dedf5e4651c0e872cb12a0523533d43b00f1afee54ec3f2f6a938816cd59",
+    "link-traffic.py": "c1e93546cab6a96f745b3493a6b662e777924e482916cc3059c990c31f71eb9d",
+    "egress-observer.py": "667f2f90e67aca00aa0c87b61b305aab71323bd93ea50b5c2e032015d3101ff7"
+  },
+  "configured_qdisc": [
+    {
+      "kind": "tbf",
+      "handle": "4e00:",
+      "root": true,
+      "refcnt": 17,
+      "options": {
+        "rate": 12500000,
+        "burst": "64Kb/1",
+        "mpu": 0,
+        "lat": 36700,
+        "linklayer": "ethernet"
+      },
+      "stab": {
+        "linklayer": "ethernet",
+        "overhead": 24,
+        "mpu": 84,
+        "mtu": 2048,
+        "tsize": 2048
+      },
+      "bytes": 0,
+      "packets": 0,
+      "drops": 0,
+      "overlimits": 0,
+      "requeues": 0,
+      "backlog": 0,
+      "qlen": 0
+    }
+  ],
+  "pod_backhaul": {
+    "ifindex": 8,
+    "link_index": 9,
+    "ifname": "eth1",
+    "flags": [
+      "BROADCAST",
+      "MULTICAST",
+      "UP",
+      "LOWER_UP"
+    ],
+    "mtu": 1500,
+    "qdisc": "tbf",
+    "master": "br-lan",
+    "operstate": "UP",
+    "linkmode": "DEFAULT",
+    "group": "default",
+    "txqlen": 1000,
+    "link_type": "ether",
+    "address": "00:16:3e:b2:d2:c4",
+    "broadcast": "ff:ff:ff:ff:ff:ff",
+    "link_netnsid": 0,
+    "promiscuity": 1,
+    "allmulti": 1,
+    "min_mtu": 68,
+    "max_mtu": 65535,
+    "linkinfo": {
+      "info_kind": "veth",
+      "info_slave_kind": "bridge",
+      "info_slave_data": {
+        "state": "forwarding",
+        "priority": 32,
+        "cost": 2,
+        "hairpin": false,
+        "guard": false,
+        "root_block": false,
+        "fastleave": false,
+        "learning": true,
+        "flood": true,
+        "id": "0x8001",
+        "no": "0x1",
+        "designated_port": 32769,
+        "designated_cost": 0,
+        "bridge_id": "8000.6e:ba:cb:f7:58:7b",
+        "root_id": "8000.6e:ba:cb:f7:58:7b",
+        "hold_timer": 0.0,
+        "message_age_timer": 0.0,
+        "forward_delay_timer": 0.0,
+        "topology_change_ack": 0,
+        "config_pending": 0,
+        "proxy_arp": false,
+        "proxy_arp_wifi": false,
+        "multicast_router": 1,
+        "mcast_flood": true,
+        "bcast_flood": true,
+        "mcast_to_unicast": false,
+        "neigh_suppress": false,
+        "group_fwd_mask": "0",
+        "group_fwd_mask_str": "0x0",
+        "vlan_tunnel": false,
+        "isolated": false,
+        "locked": false
+      }
+    },
+    "inet6_addr_gen_mode": "eui64",
+    "num_tx_queues": 16,
+    "num_rx_queues": 16,
+    "gso_max_size": 65536,
+    "gso_max_segs": 65535,
+    "tso_max_size": 524280,
+    "tso_max_segs": 65535,
+    "gro_max_size": 65536
+  },
+  "vm_peer": {
+    "ifindex": 9,
+    "link_index": 8,
+    "ifname": "veth582e8e51",
+    "flags": [
+      "BROADCAST",
+      "MULTICAST",
+      "UP",
+      "LOWER_UP"
+    ],
+    "mtu": 1500,
+    "qdisc": "noqueue",
+    "master": "em-base-bh",
+    "operstate": "UP",
+    "linkmode": "DEFAULT",
+    "group": "default",
+    "txqlen": 1000,
+    "link_type": "ether",
+    "address": "32:1e:e6:27:84:40",
+    "broadcast": "ff:ff:ff:ff:ff:ff",
+    "link_netnsid": 0,
+    "promiscuity": 1,
+    "allmulti": 1,
+    "min_mtu": 68,
+    "max_mtu": 65535,
+    "linkinfo": {
+      "info_kind": "veth",
+      "info_slave_kind": "bridge",
+      "info_slave_data": {
+        "state": "forwarding",
+        "priority": 32,
+        "cost": 2,
+        "hairpin": false,
+        "guard": false,
+        "root_block": false,
+        "fastleave": false,
+        "learning": true,
+        "flood": true,
+        "id": "0x8001",
+        "no": "0x1",
+        "designated_port": 32769,
+        "designated_cost": 0,
+        "bridge_id": "8000.0:16:3e:1a:a6:6c",
+        "root_id": "8000.0:16:3e:1a:a6:6c",
+        "hold_timer": 0.0,
+        "message_age_timer": 0.0,
+        "forward_delay_timer": 0.0,
+        "topology_change_ack": 0,
+        "config_pending": 0,
+        "proxy_arp": false,
+        "proxy_arp_wifi": false,
+        "multicast_router": 1,
+        "mcast_flood": true,
+        "bcast_flood": true,
+        "mcast_to_unicast": false,
+        "neigh_suppress": false,
+        "group_fwd_mask": "0",
+        "group_fwd_mask_str": "0x0",
+        "vlan_tunnel": false,
+        "isolated": false,
+        "locked": false
+      }
+    },
+    "inet6_addr_gen_mode": "eui64",
+    "num_tx_queues": 16,
+    "num_rx_queues": 16,
+    "gso_max_size": 65536,
+    "gso_max_segs": 65535,
+    "tso_max_size": 524280,
+    "tso_max_segs": 65535,
+    "gro_max_size": 65536
+  },
+  "kernel": "6.8.0-139-generic",
+  "capture_commands": {
+    "offered": [
+      "lxc",
+      "--force-local",
+      "--project",
+      "default",
+      "exec",
+      "em-baseline-agent",
+      "--",
+      "tcpdump",
+      "--immediate-mode",
+      "-n",
+      "-U",
+      "-B",
+      "32768",
+      "-s",
+      "0",
+      "-i",
+      "eth2",
+      "-w",
+      "-"
+    ],
+    "backhaul": [
+      "tcpdump",
+      "--immediate-mode",
+      "-n",
+      "-U",
+      "-B",
+      "32768",
+      "-s",
+      "0",
+      "-i",
+      "veth582e8e51",
+      "-w",
+      "-"
+    ]
+  },
+  "original_qdisc": [
+    {
+      "kind": "noqueue",
+      "handle": "0:",
+      "root": true,
+      "refcnt": 2,
+      "options": {},
+      "bytes": 0,
+      "packets": 0,
+      "drops": 0,
+      "overlimits": 0,
+      "requeues": 0,
+      "backlog": 0,
+      "qlen": 0
+    }
+  ],
+  "restored_qdisc": [
+    {
+      "kind": "noqueue",
+      "handle": "0:",
+      "root": true,
+      "refcnt": 2,
+      "options": {},
+      "bytes": 0,
+      "packets": 0,
+      "drops": 0,
+      "overlimits": 0,
+      "requeues": 0,
+      "backlog": 0,
+      "qlen": 0
+    }
+  ],
+  "traffic_control_restored": true
+}

@@ -891,10 +891,22 @@
       "title": "Ingress loss and common-window native recovery evidence",
       "description": "17 ingress drops, 12 capture-reconciled common windows, 293 live intervals and 295 independently audited forwarding windows; two failed capture audits preserved.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/virtual-link-capacity.md",
+      "title": "Calibrate an explicit virtual-link service",
+      "description": "Learn framing overhead, declared rate, observed service work and recovery baselines; distinguish this diagnostic from a complete neighbor metric.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/virtual-capacity/README.md",
+      "title": "Virtual-link calibration and native recovery evidence",
+      "description": "Complete independent packet sequences, bounded service windows, missing-framing attempts and live OVSDB recovery. Full metric publication remains pending.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "receive-accounting/unit-results.xml",
-    "ovsdb": "receive-accounting/ovsdb-results.xml"
+    "unit": "virtual-capacity/unit-results.xml",
+    "ovsdb": "virtual-capacity/ovsdb-results.xml"
   }
 }

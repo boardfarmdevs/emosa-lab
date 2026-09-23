@@ -1,0 +1,2246 @@
+{
+  "scope": "component replay of retained observations; not a live OVSDB result",
+  "observations": [
+    {
+      "heartbeat_ns": 32184217227403,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32184227375942,
+      "available": false,
+      "reason": "awaiting_virtual_capacity_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32184217433933,
+        "ended_ns": 32184227366655,
+        "counters": {
+          "service_bytes": 244,
+          "service_packets": 2,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32184743031821,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32184729843787,
+        "ended_ns": 32184742987780,
+        "counters": {
+          "service_bytes": 244,
+          "service_packets": 2,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32184217433933,
+          32184227366655
+        ],
+        "last_read_ns": [
+          32184729843787,
+          32184742987780
+        ],
+        "deltas": {
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          502477132,
+          525553847
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32185256526932,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32185245146957,
+        "ended_ns": 32185256511684,
+        "counters": {
+          "service_bytes": 244,
+          "service_packets": 2,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32184729843787,
+          32184742987780
+        ],
+        "last_read_ns": [
+          32185245146957,
+          32185256511684
+        ],
+        "deltas": {
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          502159177,
+          526667897
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32185771848356,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32185757745037,
+        "ended_ns": 32185771773808,
+        "counters": {
+          "service_bytes": 2684054,
+          "service_packets": 1747,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32185245146957,
+          32185256511684
+        ],
+        "last_read_ns": [
+          32185757745037,
+          32185771773808
+        ],
+        "deltas": {
+          "service_bytes": 2683810,
+          "service_packets": 1745,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 214704800.0,
+        "interval_ns_bounds": [
+          501233353,
+          526626851
+        ],
+        "available_percent": 58.22295694210962,
+        "available_percent_bounds": [
+          57.16470208637532,
+          59.23018365047247
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32186290678957,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32186273212549,
+        "ended_ns": 32186290660052,
+        "counters": {
+          "service_bytes": 5910778,
+          "service_packets": 3845,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32185757745037,
+          32185771773808
+        ],
+        "last_read_ns": [
+          32186273212549,
+          32186290660052
+        ],
+        "deltas": {
+          "service_bytes": 3226724,
+          "service_packets": 2098,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 258137920.0,
+        "interval_ns_bounds": [
+          501438741,
+          532915015
+        ],
+        "available_percent": 50.0871112029877,
+        "available_percent_bounds": [
+          48.52054719880529,
+          51.56114713712843
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32186806812514,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32186792153954,
+        "ended_ns": 32186806794150,
+        "counters": {
+          "service_bytes": 9145192,
+          "service_packets": 5948,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32186273212549,
+          32186290660052
+        ],
+        "last_read_ns": [
+          32186792153954,
+          32186806794150
+        ],
+        "deltas": {
+          "service_bytes": 3234414,
+          "service_packets": 2103,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 258753120.0,
+        "interval_ns_bounds": [
+          501493902,
+          533581601
+        ],
+        "available_percent": 50.00304436728612,
+        "available_percent_bounds": [
+          48.40353612116305,
+          51.50636387854011
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32187323160135,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32187307965739,
+        "ended_ns": 32187323146220,
+        "counters": {
+          "service_bytes": 12378068,
+          "service_packets": 8050,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32186792153954,
+          32186806794150
+        ],
+        "last_read_ns": [
+          32187307965739,
+          32187323146220
+        ],
+        "deltas": {
+          "service_bytes": 3232876,
+          "service_packets": 2102,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 258630080.0,
+        "interval_ns_bounds": [
+          501171589,
+          530992266
+        ],
+        "available_percent": 49.88584830845486,
+        "available_percent_bounds": [
+          48.39490392580893,
+          51.293060829627976
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32187839675244,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32187825137888,
+        "ended_ns": 32187839597070,
+        "counters": {
+          "service_bytes": 15604792,
+          "service_packets": 10148,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32187307965739,
+          32187323146220
+        ],
+        "last_read_ns": [
+          32187825137888,
+          32187839597070
+        ],
+        "deltas": {
+          "service_bytes": 3226724,
+          "service_packets": 2098,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 258137920.0,
+        "interval_ns_bounds": [
+          501991668,
+          531631331
+        ],
+        "available_percent": 50.05182348888504,
+        "available_percent_bounds": [
+          48.57725009093179,
+          51.44418604628853
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32188353865524,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32188340858164,
+        "ended_ns": 32188353853422,
+        "counters": {
+          "service_bytes": 18828608,
+          "service_packets": 12246,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32187825137888,
+          32187839597070
+        ],
+        "last_read_ns": [
+          32188340858164,
+          32188353853422
+        ],
+        "deltas": {
+          "service_bytes": 3223816,
+          "service_packets": 2098,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 257905280.0,
+        "interval_ns_bounds": [
+          501261094,
+          528715534
+        ],
+        "available_percent": 49.92016847978419,
+        "available_percent_bounds": [
+          48.54871381659635,
+          51.220408061625065
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32188877013592,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32188855112702,
+        "ended_ns": 32188876988626,
+        "counters": {
+          "service_bytes": 22072250,
+          "service_packets": 14355,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32188340858164,
+          32188353853422
+        ],
+        "last_read_ns": [
+          32188855112702,
+          32188876988626
+        ],
+        "deltas": {
+          "service_bytes": 3243642,
+          "service_packets": 2109,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 259491360.0,
+        "interval_ns_bounds": [
+          501259280,
+          536130462
+        ],
+        "available_percent": 49.97225256927593,
+        "available_percent_bounds": [
+          48.2321085407137,
+          51.59921355112256
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32189392577590,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32189378680232,
+        "ended_ns": 32189392563525,
+        "counters": {
+          "service_bytes": 25000602,
+          "service_packets": 16259,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32188855112702,
+          32188876988626
+        ],
+        "last_read_ns": [
+          32189378680232,
+          32189392563525
+        ],
+        "deltas": {
+          "service_bytes": 2928352,
+          "service_packets": 1904,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 234268160.0,
+        "interval_ns_bounds": [
+          501691606,
+          537450823
+        ],
+        "available_percent": 54.91125115053887,
+        "available_percent_bounds": [
+          53.30434928584394,
+          56.41123801944574
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32189906779832,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32189895483460,
+        "ended_ns": 32189906764754,
+        "counters": {
+          "service_bytes": 25000602,
+          "service_packets": 16259,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32189378680232,
+          32189392563525
+        ],
+        "last_read_ns": [
+          32189895483460,
+          32189906764754
+        ],
+        "deltas": {
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          502919935,
+          528084522
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32190423286104,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32190409054311,
+        "ended_ns": 32190423271027,
+        "counters": {
+          "service_bytes": 25000602,
+          "service_packets": 16259,
+          "queue_drops": 0,
+          "token_waits": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32189895483460,
+          32189906764754
+        ],
+        "last_read_ns": [
+          32190409054311,
+          32190423271027
+        ],
+        "deltas": {
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          502289557,
+          527787567
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32190938585896,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32190925913312,
+        "ended_ns": 32190938565589,
+        "counters": {
+          "service_bytes": 28808690,
+          "service_packets": 18735,
+          "queue_drops": 0,
+          "token_waits": 7152
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32190409054311,
+          32190423271027
+        ],
+        "last_read_ns": [
+          32190925913312,
+          32190938565589
+        ],
+        "deltas": {
+          "service_bytes": 3808088,
+          "service_packets": 2476,
+          "queue_drops": 0,
+          "token_waits": 7152
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 304647040.0,
+        "interval_ns_bounds": [
+          502642285,
+          529511278
+        ],
+        "available_percent": 40.96865991247854,
+        "available_percent_bounds": [
+          39.39088511027281,
+          42.46637368127975
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32191454295382,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32191440231326,
+        "ended_ns": 32191454282328,
+        "counters": {
+          "service_bytes": 35257524,
+          "service_packets": 22928,
+          "queue_drops": 0,
+          "token_waits": 19745
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32190925913312,
+          32190938565589
+        ],
+        "last_read_ns": [
+          32191440231326,
+          32191454282328
+        ],
+        "deltas": {
+          "service_bytes": 6448834,
+          "service_packets": 4193,
+          "queue_drops": 0,
+          "token_waits": 12593
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 515906720.0,
+        "interval_ns_bounds": [
+          501665737,
+          528369016
+        ],
+        "available_percent": 0.0,
+        "available_percent_bounds": [
+          0.0,
+          2.3586348976980864
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32191972086479,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32191955502505,
+        "ended_ns": 32191972069217,
+        "counters": {
+          "service_bytes": 41718662,
+          "service_packets": 27129,
+          "queue_drops": 0,
+          "token_waits": 32274
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32191440231326,
+          32191454282328
+        ],
+        "last_read_ns": [
+          32191955502505,
+          32191972069217
+        ],
+        "deltas": {
+          "service_bytes": 6461138,
+          "service_packets": 4201,
+          "queue_drops": 0,
+          "token_waits": 12529
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 516891040.0,
+        "interval_ns_bounds": [
+          501220177,
+          531837891
+        ],
+        "available_percent": 0.0,
+        "available_percent_bounds": [
+          0.0,
+          2.810414837479114
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32192486443204,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32192473195912,
+        "ended_ns": 32192486427105,
+        "counters": {
+          "service_bytes": 48149040,
+          "service_packets": 31310,
+          "queue_drops": 0,
+          "token_waits": 44775
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32191955502505,
+          32191972069217
+        ],
+        "last_read_ns": [
+          32192473195912,
+          32192486427105
+        ],
+        "deltas": {
+          "service_bytes": 6430378,
+          "service_packets": 4181,
+          "queue_drops": 0,
+          "token_waits": 12501
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 514430240.0,
+        "interval_ns_bounds": [
+          501126695,
+          530924600
+        ],
+        "available_percent": 0.3091721327669106,
+        "available_percent_bounds": [
+          0.0,
+          3.1067236289296085
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32193000217517,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32192987624280,
+        "ended_ns": 32193000201087,
+        "counters": {
+          "service_bytes": 54582494,
+          "service_packets": 35493,
+          "queue_drops": 0,
+          "token_waits": 57355
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32192473195912,
+          32192486427105
+        ],
+        "last_read_ns": [
+          32192987624280,
+          32193000201087
+        ],
+        "deltas": {
+          "service_bytes": 6433454,
+          "service_packets": 4183,
+          "queue_drops": 0,
+          "token_waits": 12580
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 514676320.0,
+        "interval_ns_bounds": [
+          501197175,
+          527005175
+        ],
+        "available_percent": 0.0,
+        "available_percent_bounds": [
+          0.0,
+          2.3394182040053058
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32193514718198,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32193501893975,
+        "ended_ns": 32193514703772,
+        "counters": {
+          "service_bytes": 61014410,
+          "service_packets": 39675,
+          "queue_drops": 0,
+          "token_waits": 69871
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32192987624280,
+          32193000201087
+        ],
+        "last_read_ns": [
+          32193501893975,
+          32193514703772
+        ],
+        "deltas": {
+          "service_bytes": 6431916,
+          "service_packets": 4182,
+          "queue_drops": 0,
+          "token_waits": 12516
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 514553280.0,
+        "interval_ns_bounds": [
+          501692888,
+          527079492
+        ],
+        "available_percent": 0.0,
+        "available_percent_bounds": [
+          0.0,
+          2.3765318495829413
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32194028112102,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32194016127063,
+        "ended_ns": 32194028095591,
+        "counters": {
+          "service_bytes": 67435560,
+          "service_packets": 43850,
+          "queue_drops": 0,
+          "token_waits": 82332
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32193501893975,
+          32193514703772
+        ],
+        "last_read_ns": [
+          32194016127063,
+          32194028095591
+        ],
+        "deltas": {
+          "service_bytes": 6421150,
+          "service_packets": 4175,
+          "queue_drops": 0,
+          "token_waits": 12461
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 513692000.0,
+        "interval_ns_bounds": [
+          501423291,
+          526201616
+        ],
+        "available_percent": 0.023443086904473276,
+        "available_percent_bounds": [
+          0.0,
+          2.3773427560131233
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32194543931979,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32194529320437,
+        "ended_ns": 32194543916812,
+        "counters": {
+          "service_bytes": 73858248,
+          "service_packets": 48026,
+          "queue_drops": 0,
+          "token_waits": 94876
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32194016127063,
+          32194028095591
+        ],
+        "last_read_ns": [
+          32194529320437,
+          32194543916812
+        ],
+        "deltas": {
+          "service_bytes": 6422688,
+          "service_packets": 4176,
+          "queue_drops": 0,
+          "token_waits": 12544
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 513815040.0,
+        "interval_ns_bounds": [
+          501224846,
+          527789749
+        ],
+        "available_percent": 0.1345476543022195,
+        "available_percent_bounds": [
+          0.0,
+          2.647779542228279
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32195058348554,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32195045535892,
+        "ended_ns": 32195058337414,
+        "counters": {
+          "service_bytes": 75139402,
+          "service_packets": 48859,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32194529320437,
+          32194543916812
+        ],
+        "last_read_ns": [
+          32195045535892,
+          32195058337414
+        ],
+        "deltas": {
+          "service_bytes": 1281154,
+          "service_packets": 833,
+          "queue_drops": 0,
+          "token_waits": 2419
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 102492320.0,
+        "interval_ns_bounds": [
+          501619080,
+          529016977
+        ],
+        "available_percent": 80.11086080214638,
+        "available_percent_bounds": [
+          79.56769905961312,
+          80.62589208739138
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32195571728782,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32195559844298,
+        "ended_ns": 32195571710589,
+        "counters": {
+          "service_bytes": 75139402,
+          "service_packets": 48859,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32195045535892,
+          32195058337414
+        ],
+        "last_read_ns": [
+          32195559844298,
+          32195571710589
+        ],
+        "deltas": {
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          501506884,
+          526174697
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32196090206782,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32196074351561,
+        "ended_ns": 32196090190372,
+        "counters": {
+          "service_bytes": 75166954,
+          "service_packets": 49187,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32195559844298,
+          32195571710589
+        ],
+        "last_read_ns": [
+          32196074351561,
+          32196090190372
+        ],
+        "deltas": {
+          "service_bytes": 27552,
+          "service_packets": 328,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 2204160.0,
+        "interval_ns_bounds": [
+          502640972,
+          530346074
+        ],
+        "available_percent": 99.5732453744633,
+        "available_percent_bounds": [
+          99.56148421581517,
+          99.58439213410676
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32196608590018,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32196591211401,
+        "ended_ns": 32196608570742,
+        "counters": {
+          "service_bytes": 75490186,
+          "service_packets": 53035,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32196074351561,
+          32196090190372
+        ],
+        "last_read_ns": [
+          32196591211401,
+          32196608570742
+        ],
+        "deltas": {
+          "service_bytes": 323232,
+          "service_packets": 3848,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 25858560.0,
+        "interval_ns_bounds": [
+          501021029,
+          534219181
+        ],
+        "available_percent": 95.00433623999207,
+        "available_percent_bounds": [
+          94.8388274137691,
+          95.15955979873361
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32197124884980,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32197109638188,
+        "ended_ns": 32197124862940,
+        "counters": {
+          "service_bytes": 75814930,
+          "service_packets": 56901,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32196591211401,
+          32196608570742
+        ],
+        "last_read_ns": [
+          32197109638188,
+          32197124862940
+        ],
+        "deltas": {
+          "service_bytes": 324744,
+          "service_packets": 3866,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 25979520.0,
+        "interval_ns_bounds": [
+          501067446,
+          533651539
+        ],
+        "available_percent": 94.97843948422383,
+        "available_percent_bounds": [
+          94.81516506262912,
+          95.13174457461838
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32197642249039,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32197626139459,
+        "ended_ns": 32197642200460,
+        "counters": {
+          "service_bytes": 76137406,
+          "service_packets": 60740,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32197109638188,
+          32197124862940
+        ],
+        "last_read_ns": [
+          32197626139459,
+          32197642200460
+        ],
+        "deltas": {
+          "service_bytes": 322476,
+          "service_packets": 3839,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 25798080.0,
+        "interval_ns_bounds": [
+          501276519,
+          532562272
+        ],
+        "available_percent": 95.00926445697664,
+        "available_percent_bounds": [
+          94.85352315096172,
+          95.1558566281616
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32198157173899,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32198143512404,
+        "ended_ns": 32198157159011,
+        "counters": {
+          "service_bytes": 76460134,
+          "service_packets": 64582,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32197626139459,
+          32197642200460
+        ],
+        "last_read_ns": [
+          32198143512404,
+          32198157159011
+        ],
+        "deltas": {
+          "service_bytes": 322728,
+          "service_packets": 3842,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 25818240.0,
+        "interval_ns_bounds": [
+          501311944,
+          531019552
+        ],
+        "available_percent": 94.9980718209144,
+        "available_percent_bounds": [
+          94.84986537643715,
+          95.13798693423627
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32198672375268,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32198658210487,
+        "ended_ns": 32198672361834,
+        "counters": {
+          "service_bytes": 76781770,
+          "service_packets": 68411,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32198143512404,
+          32198157159011
+        ],
+        "last_read_ns": [
+          32198658210487,
+          32198672361834
+        ],
+        "deltas": {
+          "service_bytes": 321636,
+          "service_packets": 3829,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 25730880.0,
+        "interval_ns_bounds": [
+          501051476,
+          528849430
+        ],
+        "available_percent": 95.00323189345752,
+        "available_percent_bounds": [
+          94.86462345038576,
+          95.13455465008253
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32199191635167,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32199173559978,
+        "ended_ns": 32199191601314,
+        "counters": {
+          "service_bytes": 77105002,
+          "service_packets": 72259,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32198658210487,
+          32198672361834
+        ],
+        "last_read_ns": [
+          32199173559978,
+          32199191601314
+        ],
+        "deltas": {
+          "service_bytes": 323232,
+          "service_packets": 3848,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 25858560.0,
+        "interval_ns_bounds": [
+          501198144,
+          533390827
+        ],
+        "available_percent": 95.00119163748558,
+        "available_percent_bounds": [
+          94.84065128541258,
+          95.15204261283631
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32199709431993,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32199692745660,
+        "ended_ns": 32199709387681,
+        "counters": {
+          "service_bytes": 77429410,
+          "service_packets": 76121,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32199173559978,
+          32199191601314
+        ],
+        "last_read_ns": [
+          32199692745660,
+          32199709387681
+        ],
+        "deltas": {
+          "service_bytes": 324408,
+          "service_packets": 3862,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 25952640.0,
+        "interval_ns_bounds": [
+          501144346,
+          535827703
+        ],
+        "available_percent": 94.99453432230361,
+        "available_percent_bounds": [
+          94.82132439343135,
+          95.15653262145723
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32200228404322,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32200210920471,
+        "ended_ns": 32200228386228,
+        "counters": {
+          "service_bytes": 77639410,
+          "service_packets": 78621,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32199692745660,
+          32199709387681
+        ],
+        "last_read_ns": [
+          32200210920471,
+          32200228386228
+        ],
+        "deltas": {
+          "service_bytes": 210000,
+          "service_packets": 2500,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 16800000.0,
+        "interval_ns_bounds": [
+          501532790,
+          535640568
+        ],
+        "available_percent": 96.7604258496582,
+        "available_percent_bounds": [
+          96.6502688687613,
+          96.86356840693963
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32200744783126,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32200730660182,
+        "ended_ns": 32200744766095,
+        "counters": {
+          "service_bytes": 77639410,
+          "service_packets": 78621,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32200210920471,
+          32200228386228
+        ],
+        "last_read_ns": [
+          32200730660182,
+          32200744766095
+        ],
+        "deltas": {
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          502273954,
+          533845624
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32201267622583,
+      "available": true,
+      "reason": "observed_virtual_capacity_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "514ea86b-39be-4550-a77a-9dcfe4c90512",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            "owned-tbf-100m-stab24-min84-v1"
+          ]
+        ],
+        "started_ns": 32201248346596,
+        "ended_ns": 32201267606083,
+        "counters": {
+          "service_bytes": 77639410,
+          "service_packets": 78621,
+          "queue_drops": 0,
+          "token_waits": 97295
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          32200730660182,
+          32200744766095
+        ],
+        "last_read_ns": [
+          32201248346596,
+          32201267606083
+        ],
+        "deltas": {
+          "service_bytes": 0,
+          "service_packets": 0,
+          "queue_drops": 0,
+          "token_waits": 0
+        }
+      },
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": {
+        "profile": "owned-tbf-100m-stab24-min84-v1",
+        "nominal_service_mbps": 100,
+        "mtu_payload_capacity_mbps": 97.52925877763329,
+        "service_work_ns": 0.0,
+        "interval_ns_bounds": [
+          503580501,
+          536945901
+        ],
+        "available_percent": 100.0,
+        "available_percent_bounds": [
+          100.0,
+          100.0
+        ],
+        "burst_credit_bytes": 65536
+      },
+      "native_neighbor_metric_delivery_proven": false
+    },
+    {
+      "heartbeat_ns": 32201418321100,
+      "available": false,
+      "reason": "unavailable_or_unsupported_virtual_capacity_source",
+      "sample": null,
+      "window": null,
+      "scope": "owned 100-Mbit egress service-work estimate; not physical PHY or neighbor metrics",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false,
+      "service_estimate": null,
+      "native_neighbor_metric_delivery_proven": false
+    }
+  ],
+  "sustained_operation_proven": false
+}

@@ -3992,6 +3992,65 @@ and final-session statistics remain necessary for full sustained acceptance.
 ingress-loss count can both increase for the same packet without contradiction.
 Distinguish that from counting the same loss twice through parent/action counters.
 
+### 13.26 Measure a declared virtual-link service
+
+**Capacity** asks how much traffic a link could carry. **Utilization** asks how
+much of that service is currently used. A packet counter alone answers neither
+question: ten packets could be large or small, and could arrive over a
+millisecond or an hour. The software veth's fixed speed value is also not a
+measurement of the lab's usable service.
+
+The [virtual-link exercise](../protocol/virtual-link-capacity.md) adds an optional
+100 Mb/s software shaper to the simulated pod's outgoing backhaul. A **shaper**
+queues packets and releases them according to a declared rate. It gives us a
+service model whose behavior we can test with independent traffic and capture.
+It runs only in the owned lab; it never installs anything on a physical pod.
+
+1. Read the guide's packet-path diagram. Locate the sender, pod input, temporary
+   shaper, independent output capture and receiver. These observations have
+   different roles: the sender records attempted work, the output capture sees
+   forwarded frames, and the receiver establishes application delivery.
+2. Work through the framing example. A 1,500-byte payload occupies more than
+   1,500 bytes of Ethernet service because framing and inter-frame spacing also
+   consume time. Tiny frames need padding. The model charges these costs to
+   the shaper even though capture files do not contain the modeled extra bytes.
+   Its configured size table also rounds odd adjusted lengths upward to two
+   bytes; the guide explains the independently observed one-byte discrepancy.
+3. On HOST, replay the retained calibration and run its independent checker.
+   Compare half load, saturation and small-packet load. Read actual packet
+   counts and observed rates rather than treating the requested 160 Mb/s send
+   target as a measured offered load. The checker also accounts for unrelated
+   local traffic in the whole-interface intervals.
+4. Inspect `virtual_capacity.service_estimate`. At approximately half of the
+   declared rate, about half of the modeled service remains available. Read the
+   interval bounds before interpreting its precision. A brief burst may exceed
+   the average rate because the shaper has token credit; token waits are not
+   packet losses.
+5. Inspect the retained missing-framing attempt. The original collector read
+   basic queue statistics without the detailed size table. EMOSA withheld the
+   estimate because the service contract was incomplete. Explain why remembering
+   the setup command cannot substitute for observing current configuration.
+6. Follow the guide's staging and calibration commands in the idle owned VM.
+   Use new labels and confirm restoration before running its native recovery
+   command. `--virtual-link` opts into the temporary shaper; ordinary native
+   experiments keep the existing unshaped path.
+7. Run the native checker. Trace the observation through the manager and OVSDB,
+   then inspect new baselines after connection loss and adapter restart. A pause
+   in station telemetry must not erase this independent service observation;
+   losing the actual pod connection must withdraw it.
+
+**Why aren't these numbers already in native neighbor replies?** The optional
+estimate covers declared software service. It does not establish a physical
+PHY, a complete media profile, all losses or which neighbor owns every packet.
+The native publisher needs those inputs together. The unshaped loss source
+rejects the optional shaper until the combined path is qualified. Keep its
+scope separate from AP/STA reporting and final disassociation statistics.
+
+**Learning checkpoint:** distinguish configured rate, observed output rate,
+application throughput, modeled occupied service and unused modeled service.
+Explain why a short calibrated recovery regression does not replace the full
+15-minute integrated acceptance run.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

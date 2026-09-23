@@ -1,0 +1,21 @@
+{
+  "package": "linux",
+  "version": "6.8.0-139.139",
+  "runtime_kernel": "6.8.0-139-generic",
+  "source_base": "https://archive.ubuntu.com/ubuntu/pool/main/l/linux/",
+  "input_sha256": {
+    "linux_6.8.0-139.139.dsc": "40fb1a41e084f8f923cbea43fe2ffc491e7bd3c247672018f0aa97ef3e352558",
+    "linux_6.8.0.orig.tar.gz": "26512115972bdf017a4ac826cc7d3e9b0ba397d4f85cd330e4e4ff54c78061c8",
+    "linux_6.8.0-139.139.diff.gz": "c18cf1db6c7ed0ad5cf7d651de117b415f17e05baaeefb13a4a2306e94e9ae57"
+  },
+  "patched_source_sha256": {
+    "include/net/sch_generic.h": "53d8058fc31483d15b07178f647cd15a417ccc763f64e271e7f0dec479631d55",
+    "net/sched/sch_api.c": "a66256b92f3edc3a447f2cd4497d16a7e84637625ab9b6fbb09b24996928e5ac",
+    "net/sched/sch_fifo.c": "48347b4fc78321796f9d4493b3c9e1d02bcf36e0396cf215f6e8cb28ca90106c",
+    "net/sched/sch_generic.c": "8435004271d4e1bcdaad66093a8c6301c14d44141cff7e9e4fd5fc6e54d97451",
+    "net/sched/sch_tbf.c": "23e0a1830d6d547e2613a953b9bb1f9c630118caad19e7cbdefae8162b612793"
+  },
+  "scope": "Selected source reconstruction and digest check; no kernel build or installation",
+  "source_revision_verified": true,
+  "final_counter_source_qualified": false
+}
