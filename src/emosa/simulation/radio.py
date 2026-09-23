@@ -12,6 +12,7 @@ from emosa.opensync.schema import TABLES
 
 MONITOR = copy.deepcopy(TABLES)
 MONITOR["Wifi_Radio_Config"] += ["channel"]
+MONITOR["Wifi_Radio_State"] += ["tx_power"]
 
 
 async def seed_radio_database(session):
@@ -272,6 +273,7 @@ class RadioManager:
                 "bssid": state["mac"],
                 "channel": observed["interface"]["channel"],
                 "sources": ["hostapd STATUS", "hostapd GET_CONFIG", "nl80211 iw dev info"],
+                "tx_power_dbm": observed["interface"].get("tx_power_dbm"),
             }
         except (OSError, RuntimeError, TimeoutError, ValueError, KeyError):
             # Withdraw positive state when the AP cannot be independently read.
@@ -294,6 +296,10 @@ class RadioManager:
         radio_state = {"enabled": False}
         if outcome["radio"] == "observed":
             radio_state = {"channel": 6, "freq_band": "2.4G", "mac": state["mac"], "enabled": True}
+        power = (
+            observed["interface"].get("tx_power_dbm") if outcome["radio"] == "observed" else None
+        )
+        radio_state["tx_power"] = power if type(power) is int and 1 <= power <= 20 else ["set", []]
         ops.append(
             {
                 "op": "update",

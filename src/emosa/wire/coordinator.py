@@ -14,6 +14,7 @@ from dataclasses import dataclass, field, replace
 
 from emosa.errors import EmosaError, Reason
 from emosa.wire.autoconfiguration import SECURITY_ENVELOPES, PeerBinding
+from emosa.wire.channel import OperatingRadio
 from emosa.wire.cmdu import MidSequence, Reassembler, decode_frame, invalid
 from emosa.wire.reports import (
     EarlyCapabilities,
@@ -30,6 +31,7 @@ class ReportSnapshot:
     capabilities: EarlyCapabilities
     topology: TopologyFacts = field(repr=False)
     context_token: str
+    operating_radios: tuple[OperatingRadio, ...] = ()
 
 
 class ReportSource:
@@ -62,7 +64,9 @@ class ReportSource:
         self._snapshot = None
         self.epoch += 1
 
-    def publish(self, revision, capabilities, topology, *, observed_at, lifetime=1.0):
+    def publish(
+        self, revision, capabilities, topology, *, observed_at, lifetime=1.0, operating_radios=()
+    ):
         try:
             if (
                 (self.binding, self.pod_id, self.inputs_digest) != self._identity
@@ -79,10 +83,16 @@ class ReportSource:
                 or type(capabilities) is not EarlyCapabilities
                 or type(topology) is not TopologyFacts
                 or topology.device.al_mac != self.binding.local_al
+                or type(operating_radios) is not tuple
+                or any(type(r) is not OperatingRadio for r in operating_radios)
             ):
                 invalid("invalid or out-of-order report publication")
-            facts = (capabilities, topology)
+            facts = (capabilities, topology, operating_radios)
             capacities = {r.basic.ruid: r.basic.max_bss for r in capabilities.radios}
+            if len({r.ruid for r in operating_radios}) != len(operating_radios) or any(
+                r.ruid not in capacities for r in operating_radios
+            ):
+                invalid("operating radio inventory does not match capabilities")
             radios = topology.operational.radios
             if set(capacities) != {r.ruid for r in radios} or any(
                 len(r.bsses) > capacities[r.ruid] for r in radios
@@ -104,7 +114,7 @@ class ReportSource:
         # Ordinary database revisions may change operational facts. Disconnect,
         # invalidation or a new database generation requires discovery again.
         context = f"{self.instance}/{self.epoch}/{revision[0]}"
-        self._snapshot = ReportSnapshot(stamp, capabilities, topology, context)
+        self._snapshot = ReportSnapshot(stamp, capabilities, topology, context, operating_radios)
         return self._snapshot
 
     def current(self):

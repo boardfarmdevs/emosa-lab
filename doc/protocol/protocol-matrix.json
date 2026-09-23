@@ -1745,12 +1745,14 @@
     "controller_onboarding_proven": true
   },
   "sustained_operation": {
-    "status": "active_client_pilot_verified_full_sustained_acceptance_pending",
+    "status": "15_minute_operational_recovery_verified_full_sustained_acceptance_pending",
     "guide": "doc/protocol/sustained-operation.md",
     "source_sections": [
       "EasyMesh 6.1 6.2; 17.2.5 Table 28 (associated clients and association seconds)",
       "EasyMesh 6.1 6.3; 17.1.5; 17.2.20 Table 43 (client events and additional disassociation statistics obligation)",
-      "EasyMesh 6.1 9.2; 17.1.14-15; 17.2.18-19; 17.2.36 Table 59 (capability-unavailable errors)"
+      "EasyMesh 6.1 9.2; 17.1.14-15; 17.2.18-19; 17.2.36 Table 59 (capability-unavailable errors)",
+      "EasyMesh 6.1 8.1-2; 15.1; 17.1.9-12; 17.2.13-16 Tables 36, 38-40; 18 (selected channel/power reports and feature conditions)",
+      "IEEE 1905.1-2013 6.3.5-6; 6.4.10-13; 11.1 (observed all-neighbor Tx/Rx queries; qualified responses pending)"
     ],
     "opensync_telemetry": {
       "commit": "78d8a7194d5e77635877cc456231e7be5cf03d68",
@@ -1762,21 +1764,26 @@
     "implementation_refs": [
       "src/emosa/telemetry/stations.py",
       "src/emosa/simulation/station_telemetry.py",
-      "src/emosa/wire/onboarding.py"
+      "src/emosa/wire/onboarding.py",
+      "src/emosa/wire/channel.py"
     ],
     "test_refs": [
       "tests/test_station_telemetry.py",
       "tests/test_radio_manager.py",
-      "tests/test_native_onboarding.py"
+      "tests/test_native_onboarding.py",
+      "tests/test_channel_procedures.py"
     ],
     "remaining": [
       "Final disassociation counters and actual reason",
-      "Recurring policy/metrics and channel procedures",
-      "Native-run pod reconnection and adapter restart",
-      "15-minute acceptance with independent capture review"
+      "Reporting policy and qualified utilization/ESP/link/traffic metrics",
+      "IEEE 1905 neighbor link-metric queries and qualified per-link measurements",
+      "Complete 15-minute acceptance with independent capture review"
     ],
     "sustained_operation_proven": false,
     "physical_pod_proven": false,
-    "evidence": "doc/evidence/native-active/run-03/independent-check.json"
+    "evidence": "doc/evidence/native-soak/run-01/independent-check.json",
+    "channel_contract": "Only advertised class 81/channel 6; persist compatible controller preferences before same-MID acceptance; measured nominal HT20 power; operating report/Ack with bounded new-MID retries. No lower-power or other-channel actuation; no full channel compliance claim.",
+    "recovery_contract": "New discovery/Early/M1 after source loss or actual worker restart; fresh authenticated operation can complete as observed no-op. Retain NV channel policy across reconnect; explicitly reset at virtual-agent reboot as 8.2 permits.",
+    "operational_recovery_checks_passed": true
   }
 }

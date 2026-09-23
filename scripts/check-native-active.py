@@ -30,13 +30,13 @@ def stations(path):
     ]
 
 
-def check(directory, tshark):
-    onboarding = REFERENCE["check"](directory, tshark)
+def check(directory, tshark, *, recovery=False):
+    onboarding = REFERENCE["check"](directory, tshark, initial_only=recovery)
     result = read(directory / "result.json")
     assert result["active_seconds_requested"] >= 90
     samples = read(directory / "active-samples.json")
     assert len(samples) >= 5 and samples[-1]["elapsed"] >= 90
-    assert len({s["adapter_pid"] for s in samples}) == 1
+    assert len({s["adapter_pid"] for s in samples}) == (2 if recovery else 1)
     assert all(s["session"]["state"] == "provisioning" for s in samples)
     assert all(s["session"]["telemetry"]["accepted"] > 0 for s in samples)
     rss, descriptors = [], []
@@ -79,7 +79,8 @@ def check(directory, tshark):
     joined = [p for p, v in events if v[12] == 128]
     left = [p for p, v in events if v[12] == 0]
     assert len(joined) >= 3 and len(left) >= 2
-    assert [v[12] for _, v in events][:5] == [128, 0, 128, 0, 128]
+    if not recovery:
+        assert [v[12] for _, v in events][:5] == [128, 0, 128, 0, 128]
     capabilities = [p for p in rows if p["kind"] == 0x800A and p["source"] == AL.replace(":", "")]
     assert capabilities
     for reply in capabilities:
@@ -107,6 +108,12 @@ def check(directory, tshark):
         "sustained_operation_proven": False,
         "physical_pod_proven": False,
         "remaining": [
+            "independent channel and recovery review",
+            "reporting policy/metrics, link metrics and final disassociation statistics",
+            "complete sustained-operation acceptance",
+        ]
+        if recovery
+        else [
             "final disassociation statistics and reason",
             "channel and policy/metrics procedures",
             "native adapter and pod-connection recovery",

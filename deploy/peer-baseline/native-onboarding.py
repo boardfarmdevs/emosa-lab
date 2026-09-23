@@ -59,7 +59,7 @@ def inventory_stations(objects):
     }
 
 
-async def experiment(label, *, active_seconds=0):
+async def experiment(label, *, active_seconds=0, recovery_checks=False):
     helpers = runpy.run_path(str(ROOT / "controller-trial.py"))
     helpers["idle"]()
     sys.path.insert(0, str(RADIO_ROOT_DIR))
@@ -78,6 +78,7 @@ async def experiment(label, *, active_seconds=0):
         "cases": {},
         "active_seconds_requested": active_seconds,
         "sustained_operation_proven": False,
+        "recovery_checks_requested": recovery_checks,
     }
     write(directory / "result.json", report)
     write(
@@ -101,6 +102,22 @@ async def experiment(label, *, active_seconds=0):
     captures, logs = [], []
     namespace, link = "em-native-" + uuid.uuid4().hex[:8], "en" + uuid.uuid4().hex[:8]
     ns_created = link_created = False
+    probe_units = []
+
+    async def start_worker():
+        return await asyncio.create_subprocess_exec(
+            "ip",
+            "netns",
+            "exec",
+            namespace,
+            sys.executable,
+            "-m",
+            "emosa.simulation.native_onboarding",
+            str(directory),
+            *(["--telemetry", "--duration", str(active_seconds + 180)] if active_seconds else []),
+            stdout=log("native-worker"),
+            stderr=asyncio.subprocess.STDOUT,
+        )
 
     def log(name):
         stream = (directory / (name + ".log")).open("ab")
@@ -259,19 +276,7 @@ async def experiment(label, *, active_seconds=0):
         )
         await asyncio.sleep(0.2)
         await db.manager_remote("unix:" + str(db.directory / "native-pod.sock"))
-        worker = await asyncio.create_subprocess_exec(
-            "ip",
-            "netns",
-            "exec",
-            namespace,
-            sys.executable,
-            "-m",
-            "emosa.simulation.native_onboarding",
-            str(directory),
-            *(["--telemetry", "--duration", str(active_seconds + 180)] if active_seconds else []),
-            stdout=log("native-worker"),
-            stderr=asyncio.subprocess.STDOUT,
-        )
+        worker = await start_worker()
         withheld = await wait_json("native-operation.json", lambda v: v["writes"] == 1)
         assert withheld["config_ssid"] == "emosa-controller-trial"
         assert withheld["observed_ssid"] == "emosa-radio-initial"
@@ -311,8 +316,27 @@ async def experiment(label, *, active_seconds=0):
             directory, "onboarded", "emosa-controller-trial"
         )
         if active_seconds:
+            for client, interface in zip(radio["CLIENTS"], ("eth1", "wlan0"), strict=True):
+                unit = "emosa-soak-" + label
+                radio["inside"](
+                    client,
+                    "systemd-run",
+                    "--unit=" + unit,
+                    "--property=Type=exec",
+                    "/usr/bin/ping",
+                    "-D",
+                    "-n",
+                    "-i",
+                    "0.25",
+                    "-I",
+                    interface,
+                    "192.0.2.1",
+                )
+                probe_units.append((client, unit))
             started = time.monotonic()
             samples = []
+            recoveries = []
+            client_outages = []
             next_disconnect = 25
             while time.monotonic() - started < active_seconds:
                 if worker.returncode is not None:
@@ -335,8 +359,74 @@ async def experiment(label, *, active_seconds=0):
                 }
                 samples.append(sample)
                 write(directory / "active-samples.json", samples)
+                if (
+                    recovery_checks
+                    and len(recoveries) < 2
+                    and (time.monotonic() - started >= active_seconds * (len(recoveries) + 1) / 3)
+                ):
+                    fault_index = len(recoveries)
+                    before = json.loads((directory / "native-operation.json").read_text())
+                    previous = json.loads((directory / "native-session.json").read_text())
+                    fault = {
+                        "kind": "pod_connection_loss" if fault_index == 0 else "adapter_sigkill",
+                        "elapsed_start": time.monotonic() - started,
+                        "started_at": time.time(),
+                        "old_pid": worker.pid,
+                        "before": before,
+                        "session_before": previous,
+                        "manual_intervention": False,
+                    }
+                    recoveries.append(fault)
+                    write(directory / "recovery-checks.json", recoveries)
+                    if fault_index == 0:
+                        await db.manager_remote(
+                            "unix:" + str(db.directory / "native-pod.sock"), connect=False
+                        )
+                        lost = await wait_json(
+                            "native-session.json", lambda v: v["state"] == "recovering"
+                        )
+                        fault["session_unavailable"] = lost
+                        await asyncio.sleep(4)
+                        await db.manager_remote("unix:" + str(db.directory / "native-pod.sock"))
+                    else:
+                        worker.kill()
+                        await asyncio.wait_for(worker.wait(), 10)
+                        fault["exit_code"] = worker.returncode
+                        assert worker.returncode == -signal.SIGKILL
+                        worker = await start_worker()
+                    fault["restored_at"] = time.time()
+                    recovered = await wait_json(
+                        "native-operation.json",
+                        lambda v, before=before: (
+                            v["operation_count"] > before["operation_count"]
+                            and v["operations"][-1]["state"] == "OBSERVED_APPLIED"
+                        ),
+                        timeout=60,
+                    )
+                    assert (
+                        recovered["journal_write_attempts"] == before["journal_write_attempts"] == 1
+                    )
+                    assert recovered["operations"][-1]["attempts"] == 0
+                    assert recovered["operations"][-1]["application_evidence"]["observed_noop"]
+                    assert recovered["operations"][-1]["receipt"]["m1_sha256"] not in {
+                        op["receipt"]["m1_sha256"] for op in before["operations"]
+                    }
+                    fault.update(
+                        new_pid=worker.pid,
+                        after=recovered,
+                        session_after=json.loads((directory / "native-session.json").read_text()),
+                        recovered_at=time.time(),
+                        elapsed_end=time.monotonic() - started,
+                        clients=await radio["clients"](
+                            directory, f"recovery-{fault_index}", "emosa-controller-trial"
+                        ),
+                    )
+                    write(directory / "recovery-checks.json", recoveries)
                 if time.monotonic() - started >= next_disconnect:
                     next_disconnect += 25
+                    client_outage = {"started_at": time.time()}
+                    client_outages.append(client_outage)
+                    write(directory / "client-outages.json", client_outages)
                     radio["inside"](
                         radio["CLIENTS"][1],
                         "systemctl",
@@ -351,9 +441,12 @@ async def experiment(label, *, active_seconds=0):
                         json.loads((directory / "native-session.json").read_text()),
                     )
                     radio["connect"]("emosa-controller-trial", helpers["KEY"])
+                    client_outage["restored_at"] = time.time()
+                    write(directory / "client-outages.json", client_outages)
                 await asyncio.sleep(3)
             report["active_observed_seconds"] = time.monotonic() - started
             report["active_samples"] = len(samples)
+            report["recovery_checks_completed"] = len(recoveries)
             report["active_controller_station_seen"] = any(
                 s["controller_station_present"] for s in samples
             )
@@ -363,14 +456,44 @@ async def experiment(label, *, active_seconds=0):
             assert worker.returncode == 0
         report.update(
             status="observed_pending_capture_review",
-            operation=applied,
+            initial_operation=applied,
+            operation=json.loads((directory / "native-operation.json").read_text()),
             controller_onboarding_proven=False,
         )
     except BaseException as exc:
         report.update(status="failed", error=type(exc).__name__, detail=str(exc))
+        if isinstance(exc, subprocess.CalledProcessError):
+            report["command_stderr"] = exc.stderr
         raise
     finally:
         errors = []
+        for client, unit in probe_units:
+            try:
+                radio["inside"](
+                    client, "systemctl", "kill", "--signal=SIGINT", "--kill-whom=main", unit
+                )
+                # A successful transient unit can be garbage-collected as soon
+                # as ping exits. A subsequent stop then returns "not loaded".
+                # Check that the process is gone rather than treating that race
+                # as a cleanup failure or suppressing all stop errors.
+                for _ in range(20):
+                    state = radio["inside"](
+                        client, "systemctl", "show", unit, "-p", "MainPID", "-p", "ActiveState"
+                    ).splitlines()
+                    if "MainPID=0" in state and "ActiveState=inactive" in state:
+                        break
+                    await asyncio.sleep(0.1)
+                else:
+                    radio["inside"](client, "systemctl", "stop", unit)
+                    raise RuntimeError("continuous probe did not terminate after SIGINT")
+            except Exception as exc:
+                errors.append("continuous_probe_cleanup:" + str(exc))
+            try:
+                (directory / (client + "-continuous-ping.log")).write_text(
+                    radio["inside"](client, "journalctl", "--no-pager", "-o", "cat", "-u", unit)
+                )
+            except Exception as exc:
+                errors.append("continuous_probe_collection:" + str(exc))
         for child in (worker, manager, broker):
             if child and child.returncode is None:
                 try:
@@ -430,6 +553,11 @@ if __name__ == "__main__":
         default=0,
         help="Keep adapter active for a measured client-traffic pilot",
     )
+    parser.add_argument(
+        "--recovery-checks",
+        action="store_true",
+        help="Interrupt pod connection and SIGKILL/restart adapter",
+    )
     args = parser.parse_args()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", args.label):
         parser.error("use a new label of 1–24 lowercase letters, digits or hyphens")
@@ -437,6 +565,8 @@ if __name__ == "__main__":
         parser.error("stage a separate candidate directory directly under /opt/emosa-baseline")
     if args.active_seconds and not 30 <= args.active_seconds <= 3600:
         parser.error("active-seconds must be zero or 30–3600")
+    if args.recovery_checks and args.active_seconds < 150:
+        parser.error("recovery checks require at least 150 active seconds")
     os.umask(0o077)
     wrapper = runpy.run_path(str(ROOT / "compatibility/controller-candidate.py"))
     with (RADIO_ROOT_DIR / "run.lock").open("a+") as lock:
@@ -447,7 +577,11 @@ if __name__ == "__main__":
                 args.build,
                 args.label,
                 experiment=lambda label: asyncio.run(
-                    experiment(label, active_seconds=args.active_seconds)
+                    experiment(
+                        label,
+                        active_seconds=args.active_seconds,
+                        recovery_checks=args.recovery_checks,
+                    )
                 ),
             )
         finally:

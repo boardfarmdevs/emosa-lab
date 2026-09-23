@@ -34,6 +34,7 @@ jobs:
       - run: python3 scripts/check-controller-candidate.py
       - run: python3 scripts/check-native-onboarding.py doc/evidence/native-onboarding/run-05
       - run: python3 scripts/check-native-active.py doc/evidence/native-active/run-03
+      - run: python3 scripts/check-native-recovery.py doc/evidence/native-soak/run-01
       - run: >-
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01

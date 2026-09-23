@@ -109,8 +109,17 @@ def observe():
     iface = {}
     for line in raw.splitlines():
         parts = line.lstrip().split(maxsplit=1)
-        if len(parts) == 2 and parts[0] in {"addr", "type", "ssid", "channel"}:
-            iface[parts[0]] = int(parts[1].split()[0]) if parts[0] == "channel" else parts[1]
+        if len(parts) == 2 and parts[0] in {"addr", "type", "ssid", "channel", "txpower"}:
+            if parts[0] == "channel":
+                iface[parts[0]] = int(parts[1].split()[0])
+            elif parts[0] == "txpower":
+                # The hwsim profile has zero antenna/cable gain. Whole measured
+                # dBm maps directly to its nominal per-20-MHz EIRP on HT20.
+                power = float(parts[1].split()[0])
+                if power.is_integer() and 1 <= power <= 20:
+                    iface["tx_power_dbm"] = int(power)
+            else:
+                iface[parts[0]] = parts[1]
     # Private pipe to the independent manager; never printed to the public journal.
     print(
         json.dumps(

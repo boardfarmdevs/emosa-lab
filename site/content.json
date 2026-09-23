@@ -11,7 +11,7 @@
         "Exercise discovery, capabilities and selected provisioning procedures.",
         "Retain captures from an independent bridge observation point."
       ],
-      "next": "Implement sustained client/channel/policy reporting and native-run recovery; retain the physical acceptance boundary.",
+      "next": "Complete qualified policy/metrics, neighbor-link metrics and final disassociation reporting; review the scoped operational recovery evidence and retain the physical acceptance boundary.",
       "path": "doc/protocol/native-onboarding.md"
     },
     "agent": {
@@ -720,8 +720,8 @@
     },
     {
       "path": "doc/protocol/sustained-operation.md",
-      "title": "Keep EMOSA active through client activity",
-      "description": "Measured OVSDB/MQTT station reporting, native client events and active pilot; full sustained-operation acceptance and recovery remain pending.",
+      "title": "Sustained operation, channels and recovery",
+      "description": "Measured station/channel reporting, continuous probes, pod reconnect and process-crash recovery; separates the 15-minute operational check from complete policy/metrics acceptance.",
       "category": "Wire implementation"
     },
     {
@@ -729,10 +729,16 @@
       "title": "Active client pilot evidence",
       "description": "Independently checked 95-second native-worker pilot with four joins, three leaves, controller STA inventory and traffic. Fifteen-minute recovery acceptance remains pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/native-soak/README.md",
+      "title": "Fifteen-minute operational recovery evidence",
+      "description": "908-second native-controller run: continuous traffic, 36 client outages, fresh onboarding after pod reconnect and SIGKILL, no duplicate writes. Mandatory metrics and full sustained acceptance remain pending.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "native-onboarding/unit-results.xml",
+    "unit": "native-soak/unit-results.xml",
     "ovsdb": "wsc-wire/ovsdb-results.xml"
   }
 }

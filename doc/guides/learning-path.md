@@ -189,7 +189,19 @@ Continue with [sustained operation](../protocol/sustained-operation.md) and
 [manual §13.17](team-manual.md#1317-keep-the-virtual-agent-active-while-clients-use-it).
 Learn to distinguish an AP that retains its configuration from an adapter that
 continues reporting clients to its controller. The active pilot adds measured
-OpenSync-format telemetry; the full soak and recovery acceptance remain pending.
+OpenSync-format telemetry. Work through these exercises in order:
+
+1. Run the 90-second active-client pilot and locate each join/leave in the packet
+   capture and the controller's exact virtual BSS inventory.
+2. Follow a channel preference/selection exchange. Compare measured operating
+   power with the advertised maximum; explain why they are separate inputs.
+3. Run a 150-second pilot with `--recovery-checks`. Correlate the connection loss
+   and SIGKILL with fresh M1 hashes and new no-op operation receipts.
+4. Reproduce for 900 seconds, retaining continuous probes, intentional client
+   outage windows, process samples and the independent check. Explain why a
+   scoped recovery pass still leaves mandatory policy/metrics and final
+   disassociation reporting as gaps in complete sustained acceptance.
+
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client
 traffic is checked. Read the retained negative trials and the bounded scope first.

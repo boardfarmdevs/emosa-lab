@@ -8,6 +8,8 @@ import argparse
 import asyncio
 import hashlib
 import json
+import os
+import secrets
 import time
 from dataclasses import replace
 from pathlib import Path
@@ -34,6 +36,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
+from emosa.simulation.radio import MONITOR
 from emosa.simulation.station_telemetry import NODE_ID, TOPIC, LabMqtt
 from emosa.simulation.wire_reports import fixtures
 from emosa.simulation.wsc_provisioning import (
@@ -47,9 +50,11 @@ from emosa.simulation.wsc_wire import RADIO_BSSID, RADIO_ROOT, write
 from emosa.store import Store
 from emosa.telemetry.stations import StationSource
 from emosa.wire.autoconfiguration import PeerBinding
+from emosa.wire.channel import ChannelPolicyStore, OperatingRadio
+from emosa.wire.cmdu import MidSequence
 from emosa.wire.coordinator import ReportSource
 from emosa.wire.ethernet import EthernetEndpoint
-from emosa.wire.onboarding import OnboardingSession
+from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession
 from emosa.wire.topology_values import (
     BridgingCapability,
     DeviceInformation,
@@ -179,7 +184,10 @@ class RadioReportSource:
                 self.capabilities,
                 topology,
                 observed_at=started,
-                lifetime=min(2, sample.valid_until - started) if complete and sample else 2,
+                lifetime=min(2, sample.valid_until - started) if sample else 2,
+                operating_radios=(OperatingRadio(RADIO, 81, radio["channel"], radio["tx_power"]),)
+                if sample is not None and type(radio.get("tx_power")) is int
+                else (),
             )
             return True
         except (EmosaError, ConnectionError, TimeoutError):
@@ -194,7 +202,9 @@ async def worker(directory, *, duration=110, telemetry=False):
         or json.loads((directory / "native-owner.json").read_text()) != OWNER
     ):
         raise ValueError("expected an owned native onboarding run")
-    session = OvsSession("punix:" + str(directory / "database/native-pod.sock"))
+    session = OvsSession(
+        "punix:" + str(directory / "database/native-pod.sock"), monitor_columns=MONITOR, timeout=1
+    )
     vault, store = SecretStore(directory / "native-secrets"), Store(directory / "native-journal")
     backend = BoundBackend(
         session,
@@ -208,10 +218,28 @@ async def worker(directory, *, duration=110, telemetry=False):
     binding = PeerBinding("probe0", 1, AGENT, CONTROLLER, (CONTROLLER,))
     target = replace(TARGET, ruid=RADIO, bssid=RADIO)
     engine = Engine(store, vault, {"pod-1": backend})
+    engine.recover()
     stations = StationSource(NODE_ID, TOPIC) if telemetry else None
     mqtt = LabMqtt(directory, stations) if telemetry else None
     facts = RadioReportSource(backend, binding, stations)
     lifecycle = None
+    channel_store = ChannelPolicyStore(directory / "channel-policy.sqlite") if telemetry else None
+    mids = MidSequence(secrets.randbelow(65536))
+
+    def status():
+        value = lifecycle.status()
+        value["worker"] = {"pid": os.getpid(), "process_id": store.process_id}
+        if stations:
+            sample = stations.current()
+            value["telemetry"] = {
+                "accepted": stations.accepted,
+                "rejected": stations.rejected,
+                "generation": stations.generation,
+                "timestamp_ms": sample.timestamp_ms if sample else None,
+                "station_count": len(sample.clients) if sample else None,
+            }
+        return value
+
     try:
         with EthernetEndpoint("probe0", AGENT, timeout=0.03) as endpoint:
 
@@ -227,12 +255,23 @@ async def worker(directory, *, duration=110, telemetry=False):
                     capabilities=snapshot.capabilities,
                 )
 
-            lifecycle = OnboardingSession(facts.source, endpoint.send, factory, facts.inventory)
+            lifecycle = OnboardingRecovery(
+                facts.source,
+                lambda: OnboardingSession(
+                    facts.source,
+                    endpoint.send,
+                    factory,
+                    facts.inventory,
+                    channel_store=channel_store,
+                    mids=mids,
+                    reset_channel_policy=lifecycle.starts == 0,
+                ),
+            )
             end = time.monotonic() + duration
             while time.monotonic() < end and not (directory / "stop-worker").exists():
                 if mqtt:
                     mqtt.poll()
-                await facts.refresh()
+                ready = await facts.refresh()
                 await lifecycle.tick()
                 try:
                     frame = await asyncio.to_thread(endpoint.receive)
@@ -240,39 +279,41 @@ async def worker(directory, *, duration=110, telemetry=False):
                         await lifecycle.receive(frame, ingress="probe0", generation=1)
                 except EmosaError:
                     pass
-                if store.operations():
-                    await engine.reconcile("pod-1")
-                    snapshot = await backend.snapshot()
+                if ready and store.operations():
+                    try:
+                        await engine.reconcile("pod-1")
+                        snapshot = await backend.snapshot()
+                    except (EmosaError, ConnectionError, TimeoutError):
+                        facts.source.invalidate()
+                        await lifecycle.tick()
+                        write(directory / "native-session.json", status())
+                        continue
+                    operations = [
+                        public_operation(engine, op.operation_id) for op in store.operations()
+                    ]
                     write(
                         directory / "native-operation.json",
                         {
-                            "operation": public_operation(
-                                engine, store.operations()[0].operation_id
-                            ),
-                            "operation_count": len(store.operations()),
+                            "operation": operations[0],
+                            "operations": operations,
+                            "operation_count": len(operations),
                             "writes": backend.write_count,
+                            "journal_write_attempts": sum(op["attempts"] for op in operations),
+                            "process_id": store.process_id,
                             "config_ssid": snapshot.config["ssid"],
                             "observed_ssid": snapshot.observed.values.get("ssid"),
                         },
                     )
-                status = lifecycle.status()
-                if stations:
-                    sample = stations.current()
-                    status["telemetry"] = {
-                        "accepted": stations.accepted,
-                        "rejected": stations.rejected,
-                        "generation": stations.generation,
-                        "timestamp_ms": sample.timestamp_ms if sample else None,
-                        "station_count": len(sample.clients) if sample else None,
-                    }
-                write(directory / "native-session.json", status)
-                if lifecycle.state in ("failed", "source_lost", "incompatible"):
+                write(directory / "native-session.json", status())
+                if lifecycle.state == "incompatible":
                     raise RuntimeError("onboarding lifecycle stopped; inspect native-session.json")
     finally:
         if lifecycle:
-            write(directory / "native-session.json", lifecycle.status())
+            write(directory / "native-session.json", status())
             lifecycle.close()
         store.close()
+        if channel_store:
+            channel_store.close()
         if mqtt:
             mqtt.close()
         await session.close()

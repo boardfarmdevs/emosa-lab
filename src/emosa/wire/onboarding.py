@@ -11,6 +11,7 @@ from collections import deque
 from emosa.easymesh_payloads import DeviceInventory, encode_value
 from emosa.errors import EmosaError, Reason
 from emosa.wire.autoconfiguration import SECURITY_ENVELOPES, DiscoveryExchange
+from emosa.wire.channel import ChannelCoordinator
 from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, decode_frame, fragment_message
 from emosa.wire.coordinator import ReportCoordinator
 from emosa.wire.provisioning_session import ComponentProvisioningSession
@@ -42,7 +43,16 @@ class OnboardingSession:
     """
 
     def __init__(
-        self, source, send_frame, bridge_factory, inventory, *, mids=None, clock=time.monotonic
+        self,
+        source,
+        send_frame,
+        bridge_factory,
+        inventory,
+        *,
+        mids=None,
+        clock=time.monotonic,
+        channel_store=None,
+        reset_channel_policy=True,
     ):
         if type(inventory) is not DeviceInventory:
             raise EmosaError(Reason.INVALID_INPUT, "explicit device inventory required")
@@ -62,6 +72,9 @@ class OnboardingSession:
         self.counts, self.events = {}, deque(maxlen=64)
         self.tokens, self.token_time = 32.0, clock()
         self.issues = ()
+        self.channel_store = channel_store
+        self.reset_channel_policy = reset_channel_policy
+        self.channels = None
 
     def _record(self, event):
         self.counts[event] = self.counts.get(event, 0) + 1
@@ -124,6 +137,8 @@ class OnboardingSession:
                     self._record("search_send_failed")
         if self.reports:
             self.reports.tick()
+        if self.channels:
+            self.channels.tick()
         if self.provisioning:
             self.provisioning.tick()
             # Notify only observed topology changes, never desired Config changes.
@@ -197,6 +212,10 @@ class OnboardingSession:
                     self.state = "provisioning"
                 return self._record("wsc_" + result["status"])
             if fragment.message_type in (2, 0x8000) and self.reports:
+                if fragment.message_type == 0x8000 and self.channels:
+                    result = self.channels.ack(frame, ingress=ingress, generation=generation)
+                    if result:
+                        return self._record(result)
                 return self.reports.receive(frame, ingress=ingress, generation=generation)
             message = self.assembly.feed(frame, ingress=ingress)
             if message is None:
@@ -215,6 +234,15 @@ class OnboardingSession:
                 self.reports = ReportCoordinator(
                     self.source, self.send_frame, mids=self.mids, clock=self.clock
                 )
+                if self.channel_store is not None:
+                    self.channels = ChannelCoordinator(
+                        self.source,
+                        self.send_frame,
+                        self.channel_store,
+                        self.mids,
+                        clock=self.clock,
+                        reset_policy=self.reset_channel_policy,
+                    )
                 self.reports.notify_early()
                 bridge = self.factory(snapshot, self.mids)
                 radio = self.capabilities.radios[0]
@@ -244,6 +272,10 @@ class OnboardingSession:
                 await self.provisioning.start()
                 self.state = "awaiting_m2"
                 return self._record("early_then_m1_sent")
+            if self.channels:
+                result = self.channels.handle(message, now)
+                if result:
+                    return self._record(result)
             if message.message_type == 0x8001 and self.provisioning:
                 tlvs = [t for t in capability_tlvs(snapshot.capabilities) if t.kind != 0xED]
                 tlvs.append(Tlv(self.inventory.kind, encode_value(self.inventory)))
@@ -291,7 +323,7 @@ class OnboardingSession:
             return self._record("rejected_" + getattr(exc, "code", "send"))
 
     def close(self):
-        for component in (self.discovery, self.reports, self.provisioning):
+        for component in (self.discovery, self.reports, self.provisioning, self.channels):
             if component:
                 component.close()
         self.state = "closed"
@@ -313,4 +345,96 @@ class OnboardingSession:
             "wsc": {k: wsc[k] for k in ("counts", "events", "closed")} if wsc else None,
             "full_profile_qualified": False,
             "physical_pod_proven": False,
+            "channels": {
+                "counts": dict(self.channels.counts),
+                "operating_ack_pending": self.channels.pending is not None,
+            }
+            if self.channels
+            else None,
+        }
+
+
+class OnboardingRecovery:
+    """Fresh protocol attempts after source loss; never restore a WSC transcript.
+
+    The factory must create a new OnboardingSession on the same qualified source.
+    Link/pod binding is still checked by that source. Incompatible admission is
+    terminal; repeated transient failures back off with bounded retained state.
+    """
+
+    def __init__(self, source, factory, *, clock=time.monotonic):
+        self.source, self.factory, self.clock = source, factory, clock
+        self.session = None
+        self.starts = self.failures = 0
+        self.next_start = 0
+        self.closed = False
+        self.history = deque(maxlen=32)
+
+    @property
+    def state(self):
+        if self.closed:
+            return "closed"
+        return (
+            self.session.state
+            if self.session
+            else "recovering"
+            if self.starts
+            else "waiting_source"
+        )
+
+    async def tick(self):
+        if self.closed:
+            return
+        if self.session is None:
+            if self.clock() < self.next_start or self.source.current() is None:
+                return
+            session = self.factory()
+            if session.source is not self.source:
+                session.close()
+                raise EmosaError(Reason.INVALID_INPUT, "recovery factory changed source")
+            self.session = session
+            self.starts += 1
+            self.history.append(
+                {"event": "attempt_started", "attempt": self.starts, "at": self.clock()}
+            )
+        await self.session.tick()
+        if self.session.state == "provisioning":
+            self.failures = 0
+        if self.session.state in ("source_lost", "failed"):
+            self.history.append(
+                {
+                    "event": self.session.state,
+                    "attempt": self.starts,
+                    "at": self.clock(),
+                    "session": self.session.status(),
+                }
+            )
+            self.session.close()
+            self.session = None
+            self.next_start = self.clock() + min(30, 2 ** min(self.failures, 5))
+            self.failures += 1
+
+    async def receive(self, frame, *, ingress, generation):
+        if self.session is None or self.closed:
+            return "recovery_waiting_for_fresh_source"
+        return await self.session.receive(frame, ingress=ingress, generation=generation)
+
+    def close(self):
+        if self.session:
+            self.session.close()
+        self.closed = True
+
+    def status(self):
+        value = (
+            self.session.status()
+            if self.session
+            else {"state": self.state, "counts": {}, "events": []}
+        )
+        return {
+            **value,
+            "recovery": {
+                "attempts_started": self.starts,
+                "next_start": self.next_start,
+                "history": list(self.history),
+            },
         }

@@ -1,5 +1,10 @@
 # Native active-worker client pilot
 
+This is the earlier 95-second pilot. Continue with the
+[908-second operational recovery evidence](../native-soak/README.md) for the
+later channel, pod-reconnect and adapter-SIGKILL checks. Complete mandatory
+policy/metrics and disassociation reporting remain pending in that later run.
+
 Run `native-active-03` extends the bounded native onboarding path with actual
 client association telemetry and an EMOSA worker that remains active during
 traffic and deliberate client reconnections. Recheck its retained inputs with:

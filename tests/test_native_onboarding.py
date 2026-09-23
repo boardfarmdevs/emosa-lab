@@ -11,7 +11,7 @@ from emosa.easymesh_payloads import DeviceInventory, InventoryRadio, encode_valu
 from emosa.simulation.wire_reports import fixtures
 from emosa.wire.cmdu import MidSequence, Tlv, fragment_message
 from emosa.wire.coordinator import ReportSource
-from emosa.wire.onboarding import OnboardingSession, non_dpp_admission
+from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession, non_dpp_admission
 
 pytestmark = pytest.mark.unit
 
@@ -128,6 +128,137 @@ def test_wrong_mid_then_source_loss_does_not_revive_write_authority(rig):
         assert session.state == "source_lost"
         assert await receive(session, frames()[0]) == "inactive_input"
         assert not engine.store.operations() and backend.writes == 0
+
+    asyncio.run(scenario())
+
+
+def test_recovery_requires_fresh_discovery_and_rejects_previous_m2(rig, monkeypatch):
+    from test_autoconfiguration import exchange
+
+    from emosa import wsc_messages
+    from emosa.wire.operation_bridge import WscComponentBridge
+
+    async def scenario():
+        old_bridge, engine, backend, clock = rig
+        template, source, sent = lifecycle(rig)
+        initial = source.current()
+        mids = MidSequence(500)
+        bridges = [old_bridge]
+
+        def bridge_factory(*_):
+            if len(bridges) == 1 and old_bridge.exchange.state != "closed":
+                return old_bridge
+            fresh = exchange(clock=clock.monotonic)
+            fresh.basic = old_bridge.exchange.basic
+            fresh.capabilities = old_bridge.exchange.capabilities
+            bridge = WscComponentBridge(
+                engine, fresh, old_bridge.target, old_bridge.current_context, run_id="recovery"
+            )
+            # The old bridge context was wrapped by its admitted session. A new
+            # bridge must use an independent, current backend context instead.
+            from emosa.wire.operation_bridge import ScopeContext
+
+            async def context():
+                return ScopeContext(backend.generation, "synthetic-model-v1", "bound-fixture")
+
+            bridge.current_context = context
+            bridges.append(bridge)
+            return bridge
+
+        recovery = OnboardingRecovery(
+            source,
+            lambda: OnboardingSession(
+                source,
+                sent.append,
+                bridge_factory,
+                template.inventory,
+                mids=mids,
+                clock=clock.monotonic,
+            ),
+            clock=clock.monotonic,
+        )
+        await recovery.tick()
+        await receive(recovery, response())
+        old_hash = old_bridge.exchange.m1_sha256
+        source.invalidate()
+        await recovery.tick()
+        assert old_bridge.exchange.state == "closed" and recovery.state == "recovering"
+        assert await receive(recovery, frames()[0]) == "recovery_waiting_for_fresh_source"
+        clock.advance(1)
+        await recovery.tick()
+        assert recovery.starts == 1  # Time alone cannot restore the source.
+        backend.reconnect()
+        source.publish(
+            (2, 1), initial.capabilities, initial.topology, observed_at=clock.monotonic()
+        )
+        monkeypatch.setattr(wsc_messages.secrets, "token_bytes", lambda n: b"\x55" * n)
+        await recovery.tick()
+        new_mid = assemble((sent[-1],)).mid
+        assert recovery.starts == 2 and new_mid != 501
+        await receive(recovery, response())  # Delayed old discovery response.
+        assert recovery.state == "discovering"
+        assert await receive(recovery, frames()[0]) == "wsc_before_admission"
+        assert await receive(recovery, response(mid=new_mid)) == "early_then_m1_sent"
+        assert bridges[-1].exchange.m1_sha256 != old_hash
+        await receive(recovery, frames()[0])  # Valid only for the old M1.
+        assert not engine.store.operations() and backend.writes == 0
+        recovery.close()
+        assert bridges[-1].exchange.state == "closed"
+
+    asyncio.run(scenario())
+
+
+def test_recovery_backoff_and_incompatible_admission_are_bounded(rig):
+    async def scenario():
+        _, _, _, clock = rig
+        template, source, sent = lifecycle(rig)
+        initial = source.current()
+        recovery = OnboardingRecovery(
+            source,
+            lambda: OnboardingSession(
+                source,
+                sent.append,
+                template.factory,
+                template.inventory,
+                mids=MidSequence(500),
+                clock=clock.monotonic,
+            ),
+            clock=clock.monotonic,
+        )
+        for attempt in range(40):
+            source.publish(
+                (1, attempt * 2 + 2),
+                initial.capabilities,
+                initial.topology,
+                observed_at=clock.monotonic(),
+                lifetime=2,
+            )
+            await recovery.tick()
+            clock.advance(6)  # No controller response before discovery deadline.
+            source.publish(
+                (1, attempt * 2 + 3),
+                initial.capabilities,
+                initial.topology,
+                observed_at=clock.monotonic(),
+            )
+            now = clock.monotonic()
+            await recovery.tick()
+            delay = recovery.next_start - now
+            assert 1 <= delay <= 30 and len(recovery.history) <= 32
+            await recovery.tick()
+            assert recovery.session is None
+            clock.advance(delay)
+        source.publish(
+            (1, 100), initial.capabilities, initial.topology, observed_at=clock.monotonic()
+        )
+        await recovery.tick()
+        await receive(recovery, response(flags=b"\x40"))
+        assert recovery.state == "incompatible"
+        starts = recovery.starts
+        clock.advance(1)
+        await recovery.tick()
+        assert recovery.starts == starts
+        recovery.close()
 
     asyncio.run(scenario())
 

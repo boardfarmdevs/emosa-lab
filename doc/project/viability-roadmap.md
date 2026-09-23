@@ -3,8 +3,11 @@
 The current follow-on is [sustained operation](../protocol/sustained-operation.md):
 keep EMOSA active through client activity, handle recurring native-controller
 procedures, and validate restart/reconnect recovery in a 15-minute acceptance
-run. Measured OVSDB/MQTT station reporting and an active pilot are implemented;
-the complete sustained acceptance result remains pending.
+run. Measured OVSDB/MQTT station reporting, selected channel procedures and a
+fresh-session recovery supervisor are implemented. The [908-second operational run](../evidence/native-soak/README.md) passes both
+recovery faults without another Config write. The full acceptance still
+requires qualified policy/AP/STA/neighbor metrics and final disassociation
+statistics; duration and recovery are separately reviewed operational checks.
 
 The critical milestone is **real EasyMesh messages → EMOSA adapter → unchanged
 physical pod → independently observed behavior**. Neither an OVSDB component pass
@@ -52,8 +55,10 @@ experimental coordinator. The first native attempt identified unsolicited
 configuration companions and an overly strict EMOSA query-profile check; the
 extended candidate now completes the bounded native run, independently checked
 against its receipt, radio/BSS inventory and clients. Next keep the adapter active
-through client association and implement continuous reporting, required channel/
-policy handling and native-run recovery before broadening the viability claim.
+through client association and complete required policy/metrics and final-session
+reporting. The selected channel exchange and native-run recovery now have their
+own implementation and independent-check path; they do not broaden the physical
+viability claim.
 
 The [native controller candidate](../guides/controller-counter-candidate.md)
 now fixes the missing KiB/MiB advertisement in an isolated C++ build. Its native

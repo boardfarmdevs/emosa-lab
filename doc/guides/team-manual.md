@@ -3502,6 +3502,9 @@ serving the last configuration. Therefore a traffic test alone does not prove
 that the controller still manages the represented OpenSync extender.
 
 Follow [the sustained-operation guide](../protocol/sustained-operation.md).
+The [retained 908-second operational run](../evidence/native-soak/README.md)
+passes client cycles and both recovery faults with one total Config write.
+Its mandatory metric and disassociation gaps remain explicit.
 It defines the complete 15-minute acceptance target and the current 90-second
 pilot. Establish the same owned VM first, stage the updated Python and helper
 files, add the pinned telemetry dependencies and private broker, then run the
@@ -3524,14 +3527,44 @@ event and any capability response. A gateway neighbor entry containing the same
 MAC is insufficient. A capability-unavailable error is an explicit limitation;
 it is not a successful measurement. Check leaves and subsequent joins separately.
 
-The pilot is an implementation aid. The guide's remaining policy/channel,
-disassociation-statistics and recovery checks must pass before sustained
-operation is established. Increasing the duration parameter alone cannot satisfy
-those requirements, and simulation cannot establish physical-pod acceptance.
+**What does a channel exchange mean here?** The lab advertises only channel 6
+as operable. EMOSA stores compatible controller preferences, accepts a request
+that the existing radio configuration already satisfies, and reports the
+independently observed channel and nominal power. It does not need to rewrite
+Config for that request. Lower-power or other-channel requests need additional
+actuation support and remain unsupported. See the guide for exact specification
+sections, freshness checks and Ack handling.
+
+**How do I exercise recovery?** Use the guide's command with a new label,
+`--active-seconds 900 --recovery-checks`. After initial onboarding, the runner
+first interrupts the pod's outgoing OVSDB connection and later kills/restarts
+the actual adapter worker. Both clients continuously ping the gateway while
+independent HTTP probes continue between deliberate Wi-Fi join/leave cycles.
+The AP keeps its configuration during these management faults, so traffic should
+survive. The controller and adapter must separately complete fresh discovery,
+Early Report and authenticated WSC after each fault.
+
+Read `recovery-checks.json` next to the captures and all operation receipts.
+Three operations are expected: initial provisioning and two authenticated
+recovery operations. Only the first should write Config; the others should
+observe that the intended configuration is already applied. A new process PID
+alone proves a restart, not successful protocol recovery. An old receipt or
+an old M2 must not grant the new process write authority. The independent
+`scripts/check-native-recovery.py` checks the packet sequence, receipt hashes,
+traffic and resource samples; its default minimum is 900 seconds.
+
+The pilot is an implementation aid. Required policy/metrics, IEEE 1905 neighbor-link metrics and final
+disassociation statistics remain gaps in complete sustained acceptance.
+Read the difference between `operational_recovery_checks_passed` and
+`sustained_operation_proven` in the guide. Duration or uninterrupted traffic
+alone cannot satisfy every controller procedure, and simulation cannot
+establish physical-pod acceptance.
 
 **Learning checkpoint:** explain why fresh OVSDB membership, measured association
 age, native controller inventory, adapter liveness and independent traffic are
-five different observations. Locate each in the run artifacts.
+five different observations. Locate each in the run artifacts. Then explain
+why recovery creates a new WSC operation but should not create another Config
+write when the pod is already in the requested state.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

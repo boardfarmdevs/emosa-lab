@@ -28,7 +28,13 @@ def observation(ssid="driver-ssid", key="driver-observed-key"):
             "rsn_pairwise_cipher": "CCMP ",
             "group_cipher": "CCMP",
         },
-        "interface": {"ssid": ssid, "addr": "02:00:00:ec:02:00", "type": "AP", "channel": 6},
+        "interface": {
+            "ssid": ssid,
+            "addr": "02:00:00:ec:02:00",
+            "type": "AP",
+            "channel": 6,
+            "tx_power_dbm": 17,
+        },
     }
 
 
@@ -268,6 +274,7 @@ def test_station_membership_age_and_binding_with_real_ovsdb(tmp_path):
 
             _, initial = await cycle()
             assert initial.topology.inventory_complete
+            assert initial.operating_radios[0].tx_power_dbm == 17
             anchor = backend.anchor.binding_token
             driver.clients = [{"mac": "02:00:00:00:02:00", "connected_seconds": 37}]
             raw, current = await cycle()
@@ -284,6 +291,7 @@ def test_station_membership_age_and_binding_with_real_ovsdb(tmp_path):
             telemetry.disconnect()
             assert await source.refresh()
             assert not source.source.current().topology.inventory_complete
+            assert source.source.current().operating_radios == ()
             # OVSDB membership alone does not establish association time.
             assert (
                 next(iter(raw["tables"]["Wifi_Associated_Clients"].values()))["mac"]

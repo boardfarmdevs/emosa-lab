@@ -70,12 +70,20 @@ def value(packet, kind):
     return values[0]
 
 
-def check(directory, tool):
+def check(directory, tool, *, initial_only=False):
     result, operation = read(directory / "result.json"), read(directory / "native-operation.json")
+    if initial_only:
+        initial = result.get("initial_operation", result["operation"])
+        assert initial["operation"]["operation_id"] == operation["operations"][0]["operation_id"]
+        assert initial["operation"]["receipt"] == operation["operations"][0]["receipt"]
+        operation = initial
     assert result["status"] == "observed_pending_capture_review" and not result["cleanup_errors"]
     assert result["native_controller"] and not result["semantic_submission"]
     trial = read(directory / "candidate-trial.json")
-    assert trial["baseline_restored"] and trial["operations_created"] == 1
+    assert trial["baseline_restored"]
+    assert trial["operations_created"] == (
+        result["operation"]["operation_count"] if initial_only else 1
+    )
     build = read(directory / "candidate.json")
     assert trial["candidate_sha256"] == build["candidate_sha256"]
     assert build["counter_regression"]["passed"] == 12 and len(build["extra_patches"]) == 1

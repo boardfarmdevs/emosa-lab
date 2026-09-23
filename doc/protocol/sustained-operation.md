@@ -1,9 +1,10 @@
 # Sustained operation after native onboarding
 
-**Status: implementation and pilot validation in progress.** The retained bounded
-onboarding result does not establish that EMOSA can maintain a virtual agent while
-clients use its represented OpenSync pod. This work keeps the packet worker alive
-through client activity and records the controller's subsequent requests.
+**Status: 15-minute operational recovery checks pass; complete sustained
+acceptance remains pending.** The [retained 908-second run](../evidence/native-soak/README.md)
+keeps the virtual agent active through client activity, channel exchanges,
+pod-connection loss and an actual adapter process restart. It also records the
+mandatory controller procedures that remain unanswered.
 
 ## What must be demonstrated
 
@@ -31,8 +32,10 @@ Duration alone is insufficient. The evidence must establish all of the following
    restoration of the original controller candidate inputs.
 
 No current pilot is a substitute for this complete acceptance run. Final client
-disassociation statistics, reporting policy, channel procedures and integrated
-restart/reconnect recovery remain outstanding. Physical-pod acceptance remains
+disassociation statistics, reporting policy/metrics and complete integrated
+acceptance remain outstanding. Selected channel procedures and the recovery
+supervisor are implemented; their limits and reproduction steps follow below.
+Physical-pod acceptance remains
 **real EasyMesh messages → EMOSA → unchanged physical OpenSync pod → independently
 observed behavior**.
 
@@ -89,7 +92,84 @@ TEL-01–04. Installing this simulation publisher on a physical pod is not allow
 | Client Capability Query | §9.2, §17.1.14–15, §17.2.18–19, §17.2.36 | Correlated failure report: reason 2 for an absent station, reason 3 for an associated station whose association frame is unavailable |
 | Disassociation statistics | §6.3, §17.1.41 | Pending actual final session counters and reason; record `disassociation_statistics_unavailable`, never guessed values |
 | Reporting policy and metrics | §7.3 and §10 | Pending measured field mappings and procedure implementation |
-| Channel procedures | §8.1–2 | Pending preference, selection and measured operating-channel reporting |
+| Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1 | Native all-neighbor Tx/Rx queries observed; response and qualified per-link measurements remain pending |
+| Channel procedures | §8.1–2; §17.2.13–16/Tables 36, 38–40 | Sole advertised channel 6; durable preferences, acceptance of requests requiring no adjustment, measured operating power and correlated Ack/retry |
+
+## Channel decisions in this bounded lab
+
+The radio capability deliberately advertises class 81 with only channel 6
+operable. This matches the sole-channel hwsim manager's actual contract. It is
+not a claim that a real radio supports just one channel. A Channel Preference
+Report can omit all preference TLVs: §8.1 assigns implicit preference 15 to the
+advertised operable channels. The literal value 15 in a wire preference nibble
+is reserved by Table 36; omission and a literal 15 have different meanings.
+Non-DFS features omitted by this experiment follow the §18 feature conditions.
+
+For a compatible Channel Selection Request, EMOSA validates every field,
+persists the accepted preferences in its private `channel-policy.sqlite`, then
+sends a correlated response within one second. If the radio already satisfies
+the request, no Config write is necessary. An Operating Channel Report still
+follows. Its signed power value comes from the independent manager's `iw dev
+wlan0 info` observation, published through `Wifi_Radio_State.tx_power`; it is
+never copied from the capability maximum or controller's requested limit.
+The owned HT20 hwsim profile explicitly assumes zero antenna/cable gain. This
+maps nominal reported power, and establishes no physical RF measurement.
+
+The report needs a fresh manager telemetry sample, the matching database
+generation and the same measured operating parameters. Missing observations
+withdraw report authority. Retries share a fixed one-second deadline, have new
+message IDs and stop after three transmissions. A matching controller Ack ends
+the pending report. The native channel pilot has exercised this exchange.
+
+Requests that exclude the only operable channel, require lower transmit power,
+refer to another radio or require unimplemented companions remain unsupported.
+EMOSA does not acknowledge them as implemented or pretend to actuate the radio.
+This restricted implementation therefore cannot satisfy arbitrary channel or
+power policies. A physical profile requires actual supported actuation and its
+independent observations. On virtual-agent reboot the stored preferences reset
+explicitly, as §8.2 permits; a mere OVSDB reconnect retains the accepted policy.
+
+## What the recovery checks prove
+
+The recovery runner injects two faults, at roughly one-third and two-thirds of
+the requested active duration:
+
+1. It removes only the disposable pod's outgoing EMOSA OVSDB connection. The
+   separate radio manager and AP continue running. EMOSA must close its previous
+   protocol session, report that its source is unavailable and stop using that
+   session's write authority. After four seconds without that authority, the
+   runner restores the connection.
+2. It kills the actual adapter worker with SIGKILL and starts a new process in
+   the same owned packet namespace, retaining the private operation journal.
+   The AP and native controller keep running. This is an adapter process fault,
+   not a simulated exception or a physical pod reboot.
+
+In each case the new live context must discover the controller again and send
+a new Early Report and M1. An old M2 cannot authorize the recovered session.
+The controller supplies a fresh authenticated M2, creating a new operation.
+Because Config and independently observed State already match, that new
+operation must complete as an observed no-op, with zero additional writes.
+Expect **three operations but only one write attempt** after both faults.
+The process-local `writes` field becomes zero after restart; use the durable
+`journal_write_attempts` field and all operation receipts to assess the full run.
+
+Bounded recovery history, source gating and retry backoff prevent a tight
+reconnect loop. Unsupported/incompatible admission remains terminal. Recovery
+does not make an unqualified endpoint usable or restore a saved WSC transcript.
+
+The runner keeps timestamped continuous ICMP probes in both client containers,
+in addition to the per-sample nonce/HTTP and route checks. Those probes must
+continue through management faults. Intentional Wi-Fi client disconnections
+are recorded separately in `client-outages.json`; they are expected traffic
+outages, not adapter failures. `recovery-checks.json` records the actual PIDs,
+fault times, before/after journals and fresh protocol receipts. The independent
+checker also checks captured messages and native controller STA placement.
+Every connected-phase sample must contain the STA under the represented BSS.
+The initial operational checker limits sampled RSS spread to less than 32 MiB
+and file descriptors to 32, across the two worker processes. It reports actual
+ranges; a finite 15-minute result does not establish indefinite leak freedom or
+production capacity. Recovery may take at most 60 seconds after management is
+restored, and independent traffic must remain continuous during that recovery.
 
 ## Establish and run the active pilot
 
@@ -148,8 +228,7 @@ Use a fresh label for every attempt. Preserve failed attempts.
    Omitting `--active-seconds` reproduces the original bounded experiment.
    The pilot disconnects and reconnects the client about every 25 seconds,
    retaining a separate inventory and session snapshot after each deliberate
-   four-second disconnection. Recovery of EMOSA and its pod connection remains
-   separate work before the complete acceptance sequence.
+   four-second disconnection. Add recovery checks as described below.
 
 5. Read `active-samples.json`, per-sample controller inventories, client probe
    files, `manager.jsonl`, `native-session.json`, `mqtt-provenance.json` and the
@@ -160,6 +239,86 @@ Use a fresh label for every attempt. Preserve failed attempts.
 
 The runner leaves `sustained_operation_proven` false. Independent capture review
 and the full acceptance criteria above must establish that result.
+
+## Run the 15-minute operational soak with recovery
+
+After staging the same files and establishing the dependencies above, run this
+from HOST. Allocate additional time for native startup and cleanup; the 900
+seconds measure the active client phase, not the entire command:
+
+```bash
+lxc exec emosa-lab -- env \
+  PYTHONPATH=/opt/emosa-radio-manager/source \
+  EMOSA_OVS_BIN=/opt/emosa-radio-manager/ovsdb \
+  /opt/emosa/.venv/bin/python /opt/emosa-baseline/native-onboarding.py \
+  --build /opt/emosa-baseline/candidate-onboarding-01 \
+  --label native-soak-learning-01 --active-seconds 900 --recovery-checks
+```
+
+For a development check of the two recovery transitions, use a different label
+and `--active-seconds 150`. That short run cannot meet the duration requirement.
+Do not reuse a label, and preserve the failed run if any step fails.
+
+Collect an explicitly selected, credentials-free copy for review on HOST. The
+collector reads only its named synthetic evidence allowlist from the owned VM,
+creates a new private local directory and refuses to overwrite an existing one.
+It does not copy the private journal, secret store, native configurations or full
+logs. Use `--candidate candidate-YOUR-BUILD` if your staged candidate has another
+name; the default matches the command above.
+
+```bash
+python3 scripts/collect-native-review.py native-soak-learning-01 .lab/native-soak-learning-review
+python3 scripts/check-native-recovery.py .lab/native-soak-learning-review
+```
+
+The checker defaults to at least 900 seconds. For a short pilot only, pass
+`--minimum-seconds 150`. Keep the three checker scripts together; the recovery
+checker reuses the bounded onboarding and client checks. All use standard
+Python and tshark, without importing the adapter implementation. Never publish
+the private journal, secret store or native controller configuration/logs by
+copying the entire run directory into Git.
+
+`operational_recovery_checks_passed` means the scoped timing, traffic, channel,
+fresh-onboarding and no-duplicate-write checks passed. It deliberately leaves
+`sustained_operation_proven` false while required policy/metrics and final
+disassociation statistics remain incomplete. Its `unanswered_controller_requests`
+also records native policy and IEEE 1905 neighbor link-metric queries by capture
+frame. A generic invalid-neighbor response cannot stand in for unavailable
+measurements when the controller asks about valid neighbors. In this hwsim setup, an active
+`iw dev wlan0 survey dump` produces no channel survey. Channel utilization and
+estimated service parameters require qualified measurements/estimators; zero
+values in native inventory are not measurements. Likewise a final polled station
+counter is not automatically the final disassociation counter or reason.
+
+## Measurement work still needed before complete acceptance
+
+Keep the following work separate from duration and reconnect testing. The native
+controller's requests are retained without disabling them to make the run pass.
+
+| Input/procedure | Required next work | Evidence that cannot substitute for it |
+| --- | --- | --- |
+| Multi-AP reporting policy | Validate and persist the complete supported policy, send the required Ack, schedule measured reports and retain/recover policy according to its specified lifetime | Silently accepting a policy whose requested reports will never be sent |
+| AP channel utilization and ESP | Qualify the measurement period, busy/active counters or a suitable simulated medium, and the BE estimated service parameters; map EasyMesh §17.2.22/Table 45 to the referenced 802.11 definitions | The controller's zero defaults, a configured hostapd test value, or assuming that no survey output means no airtime was used |
+| STA link/traffic metrics | Qualify each requested source field, byte units, direction, success/error meaning, rollover, reset epoch and sample age | Interchanging link rates and application throughput, or treating absent errors/retries as zero |
+| Final disassociation report | Capture the actual reason and complete final session counters before the station is removed; correlate the session across join/leave and reconnect; implement §6.3/§17.1.41 with Ack handling | The preceding polling sample or an invented reason based on a membership disappearance |
+| IEEE 1905 neighbor metrics | Bind the actual local/peer interface pair and bridge presence; qualify the common Tx/Rx measurement interval, capacity and availability; respond to §11.1 queries | Whole-interface counts attributed to an arbitrary neighbor, or an invalid-neighbor error for an existing neighbor |
+
+The pinned hostap 2.10 source helps narrow the next implementation. In
+`src/ap/sta_info.c`, `ap_sta_set_authorized()` emits `AP-STA-DISCONNECTED` with the
+station identity but without final counters or the reason. In
+`src/ap/accounting.c`, accounting-stop handling can read driver byte/packet
+counters and encode RADIUS accounting attributes. That is a possible observation
+hook to investigate in the owned simulator; the RADIUS termination cause is not
+automatically the IEEE 802.11 reason code, and that code path does not supply all
+EasyMesh traffic-error/retry fields. Do not change the physical pod to install
+such an observation hook. Qualify its existing OpenSync telemetry instead.
+
+Useful upstream OpenSync fields include `Survey` busy/duration values, `Client`
+traffic counters, and band-steering event `disconnect_reason`/association IEs in
+the pinned Protobuf schema. Their existence only identifies candidate inputs.
+The publisher's actual units, reset/session semantics, missing-value behavior,
+ordering and trust still need qualification under TEL-01–04. This source review
+does not establish a measurement or authorize a guessed wire value.
 
 ## Upstream references and reproducibility
 

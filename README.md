@@ -20,12 +20,12 @@ radio/BSS, and independent wired/Wi-Fi clients pass traffic checks. See the
 Continuous management, full-profile qualification and an unchanged physical pod
 remain next; this result uses an explicitly patched native controller candidate.
 
-The follow-on [active-client pilot](doc/protocol/sustained-operation.md) now keeps
-EMOSA running through measured station reports, four joins, three leaves and
-independent traffic. Its [95-second evidence](doc/evidence/native-active/README.md)
-includes the native controller's STA inventory. The agreed **15-minute sustained
-run with recovery checks remains pending**, including policy/channel handling and
-final disassociation statistics.
+The [15-minute operational soak](doc/evidence/native-soak/README.md) now passes
+client cycling, selected channel reporting, continuous traffic and fresh native
+onboarding after pod reconnect and adapter SIGKILL, with no duplicate Config
+writes. All 135 connected samples place the client under the virtual BSS.
+Complete [sustained acceptance](doc/protocol/sustained-operation.md) still requires
+policy/AP/STA/neighbor metrics and final disassociation statistics.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 

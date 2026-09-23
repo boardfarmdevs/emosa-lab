@@ -1,0 +1,17 @@
+{
+  "scope": "operation and traffic guards; unchanged positive capture/inventory checks reused",
+  "cases": [
+    {
+      "case": "duplicate_write",
+      "rejected": true
+    },
+    {
+      "case": "replayed_m1",
+      "rejected": true
+    },
+    {
+      "case": "wired_traffic_gap",
+      "rejected": true
+    }
+  ]
+}
