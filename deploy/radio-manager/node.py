@@ -154,13 +154,14 @@ def forwarding(neighbor_label=None):
         if neighbor_label is not None:
             if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", neighbor_label):
                 raise ValueError("invalid owned neighbor observation label")
-            path = ROOT / "neighbor-observations" / (neighbor_label + ".json")
-            try:
-                if path.stat().st_size > 262144:
-                    raise ValueError("neighbor observation exceeds the local budget")
-                result["neighbor_observation"] = json.loads(path.read_text())
-            except (OSError, ValueError):
-                result["neighbor_observation"] = None
+            for kind in ("neighbor", "egress"):
+                path = ROOT / (kind + "-observations") / (neighbor_label + ".json")
+                try:
+                    if path.stat().st_size > 262144:
+                        raise ValueError("observation exceeds the local budget")
+                    result[kind + "_observation"] = json.loads(path.read_text())
+                except (OSError, ValueError):
+                    result[kind + "_observation"] = None
         return result
     except (OSError, RuntimeError, ValueError):
         return {"complete": False}

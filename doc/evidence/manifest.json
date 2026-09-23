@@ -10401,6 +10401,626 @@
       "path": "backhaul-accounting/unit-results.xml",
       "sha256": "a0b4fb3ddf43a17902d468607430bd84e9c7e8ae6419b57786b425ce52d2f664",
       "size": 4440213
+    },
+    {
+      "path": "egress-accounting/README.md",
+      "sha256": "ef71fc5ecb5b83472baa2ff13a9f70605b845a0a8abf82ac9df415729f74bd81",
+      "size": 4894
+    },
+    {
+      "path": "egress-accounting/egress-loss-01/backhaul-capture.log",
+      "sha256": "1781306a4d8b846e30e2cfb75710db04fd9d190bb5d9a1ff31ed65e2fe0cbd7f",
+      "size": 172
+    },
+    {
+      "path": "egress-accounting/egress-loss-01/backhaul.pcap",
+      "sha256": "798532bb8378880d7880cbca3cd00d6f819c904f23a115c668682a8e7709ba86",
+      "size": 7776
+    },
+    {
+      "path": "egress-accounting/egress-loss-01/egress-observations.jsonl",
+      "sha256": "a51a34454203af6eed5bc2c6762feb82a4d3c42e658aa7fca0c196bc61d8e967",
+      "size": 77058
+    },
+    {
+      "path": "egress-accounting/egress-loss-01/egress-observer-final.json",
+      "sha256": "f8e13f3deaa8ce071c4e1b0394e0fe7110f4d3f4456de26ae474d897a967d283",
+      "size": 508
+    },
+    {
+      "path": "egress-accounting/egress-loss-01/egress-projection.json",
+      "sha256": "2e352ab148ca95f772069013554fb45bf62c9eda1d774a0349186e54c41ff07c",
+      "size": 25420
+    },
+    {
+      "path": "egress-accounting/egress-loss-01/independent-egress-check.json",
+      "sha256": "8b97730511d6563def8994d28a988311d2f0c7136b9cc780439b48fe78fd4075",
+      "size": 804
+    },
+    {
+      "path": "egress-accounting/egress-loss-01/ingress-capture.log",
+      "sha256": "661d78b07431c0a10bed8afbe542d722495a28c317aa0ba9a66f293560fe83db",
+      "size": 164
+    },
+    {
+      "path": "egress-accounting/egress-loss-01/ingress.pcap",
+      "sha256": "4dba40d64ec4444aa7938bea128d206e86e8f195516e1e958f67981bbcbc12ef",
+      "size": 9714
+    },
+    {
+      "path": "egress-accounting/egress-loss-01/restoration-check.json",
+      "sha256": "1432dc55c5ea9f54b4e2bfe9f7129337bec20cd02e1e98878eddf42e6014016a",
+      "size": 258
+    },
+    {
+      "path": "egress-accounting/egress-loss-01/result.json",
+      "sha256": "777b6599923c6167eb7c50da441a7da7f7cce9b2453d715a6960bb27923f2f95",
+      "size": 152527
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0000.json",
+      "sha256": "5817c06e0488c89b754dd4a84ce2dbd82972029e959a30c6326512464fff4c3e",
+      "size": 38142
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0001.json",
+      "sha256": "105f9ee5a7c7f3c23515af5f5c6f5a5718a08a4c9c651cff22d12084c64614b2",
+      "size": 33983
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0002.json",
+      "sha256": "dbfa0d5e5b3ab2b6f5d8ce0f535e5b821abc7875d1e4a1bff020794fe89ff80e",
+      "size": 33983
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0003.json",
+      "sha256": "a95632e81adf4b128d0db54f2d6120e6fe9608234996a1123f8c770e29c7cd6e",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0004.json",
+      "sha256": "a830d09ee8ded55c02d8d6a9b48046fb4107ab32a1a36943d06c289b05f6ce43",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0005.json",
+      "sha256": "6013990adf0c5ddc9f9dbb74902d12e511b55e6a8496d465ff36f77f6f8f4dc3",
+      "size": 33983
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0006.json",
+      "sha256": "79091bea62d86455372c58f047894dd26cad2b80b4cec350331b075cfc9fca7f",
+      "size": 33983
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0007.json",
+      "sha256": "e4115b104ee56f6c379e8831db996ca96960f3a37326b6c0ab206688e5c6c0ff",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0008.json",
+      "sha256": "9abe5182ef2584502542f9a5468864c985c8f1c54b6ac20666fa33c0edcff234",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0009.json",
+      "sha256": "5a9923bbc22ec768698a78a4cef5711ae5d08fa77ad91cc30da41112aa857816",
+      "size": 33983
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0010.json",
+      "sha256": "28e02e9533af4bc71ebf722b7958d920c5f199e8b4cdb361b7975fde1b969223",
+      "size": 33981
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0011.json",
+      "sha256": "4be82d64d2f15494173550bd42df13068a2c4c6f89a394a17bf486c54020e22f",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0012.json",
+      "sha256": "501192bf67c3baaeee7224d5995ac2fab0ea959d11a7c0febacace8e43db835c",
+      "size": 33983
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0013.json",
+      "sha256": "99b7e819b2d23d126a92698e14611d9d8c532710e0b827d319f2e9ea1f265cb7",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0014.json",
+      "sha256": "bafdd575dc51b8724f905bd4a8149040328d05bc01a7ee79a9c5ad5712d3ec21",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0015.json",
+      "sha256": "0b39edff3416a513efa8916ab1005987843720a889750cf3be586cd3d1b53c92",
+      "size": 33983
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0016.json",
+      "sha256": "ddd48cee55982b99ae965ec9e0d27a6f7b233ef81316ccf69f5673984cbcfe22",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0017.json",
+      "sha256": "15f2aefb32f16678364532d5bd27ac439a1016cf7904b1eabc46a0cd2e64f246",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0018.json",
+      "sha256": "9a059d3173068ec702a3aafb14dfe810532cf1fc3c29d976201babe718807398",
+      "size": 33981
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0019.json",
+      "sha256": "d754371761a12b26aa5a38daf72544611d97a034e9bb3a4b2dc7eed140ede24c",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0020.json",
+      "sha256": "a462239808cf5770daace0f8da8073e182c6f25fca9c7e0d39ebd9adf3a17130",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0021.json",
+      "sha256": "9d7fadb28e12c9d4618143dbf4d465d870c14b599c83098c6db289b958959682",
+      "size": 33983
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0022.json",
+      "sha256": "e4a6227e3aff09f69b0b64f94c555299f62f2ac86a65f6068ec48cce46f24754",
+      "size": 33983
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0023.json",
+      "sha256": "0f8011cf2f4675e607d308c36be75b6911351f2b63f885e1801781026a29aa5b",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0024.json",
+      "sha256": "bfb5243b75ab2525052268520b6084fc70d9b423d6efc10dfc674f12c213bb65",
+      "size": 33982
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0025.json",
+      "sha256": "75efb609280ef6001a87b496d98241b91fe06f69637d16df439cf5fbd170d91a",
+      "size": 33983
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-inventory-0026.json",
+      "sha256": "df398b6de8d2912deaa9138970f693da4d124e22584ce4fdabeb895943709905",
+      "size": 33983
+    },
+    {
+      "path": "egress-accounting/native-egress-01/active-samples.json",
+      "sha256": "3e1e0b13454d2ab805c0f1734eab31813b3af01f8fda7d1e787e8dce1a1c10c0",
+      "size": 669292
+    },
+    {
+      "path": "egress-accounting/native-egress-01/candidate-trial.json",
+      "sha256": "9e3e9c21a9272d2dd3ac6eaf819d322ac57fb3ba97fb124c79a72c9a81fe16c9",
+      "size": 14611
+    },
+    {
+      "path": "egress-accounting/native-egress-01/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "egress-accounting/native-egress-01/client-outages.json",
+      "sha256": "e5630d2dbeac46d284caefc7cf8b3abcb4e747e9ac3a49d3c71a61db6ade6012",
+      "size": 679
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0000.json",
+      "sha256": "09a0970c1867d9da4469728352630a941871aac9d5fe8af5b3d6c085e59b1cf8",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0001.json",
+      "sha256": "32bc5d18677d487cc7c54f48231d7117a099d3fde618b38d13831bd86a409914",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0002.json",
+      "sha256": "70897e9919e39793f8b14edf7e684f1bc6abb13cccffbd1b63bd99c9ece79d51",
+      "size": 2636
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0003.json",
+      "sha256": "7d0f465c93771d994cbc7b0b5871d1850f4cb51dd2d4c9d9185bd21d4c2fb52f",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0004.json",
+      "sha256": "a41c1403e2d670936f8379073dd1c7804f9393620263e9d9adeefb5d6844a044",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0005.json",
+      "sha256": "10c4de20c733e64147a62f580152cada5dc661b7d1c0244128f65df3ac2fc318",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0006.json",
+      "sha256": "c3d8416ef1bf6c8d6a6c64047af7b893ce6ef55af6193988242dbf5b868af4d4",
+      "size": 2636
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0007.json",
+      "sha256": "f50fb2a15258a9744ba7a139161b6f7dafb52edf4f496bfdf0f8e1dfa3030bba",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0008.json",
+      "sha256": "ff7725ea477cf4a46bef04449f778fe9d5307362a15c45659f0fece2b95a8203",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0009.json",
+      "sha256": "02f4c001e82fa0a46b4c66f87265d707b56cda496f68159d18f0353409bec1ed",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0010.json",
+      "sha256": "5c38144eb8de21eb24dc5a201ac9abc478d30d08b26d87b17664da932fa89793",
+      "size": 2635
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0011.json",
+      "sha256": "fd2332f0e4336c6351bb5fe9a9d9b67f45d2cbfeb1ca6a9946fc669993f3da2e",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0012.json",
+      "sha256": "1b4e8b2ab08580ed0fc4a9dc3f9ad8d5e973e330675debc36c2f6fc6570b3e64",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0013.json",
+      "sha256": "1068b4853ceca6c24cc4116b894df64c0d1d532e05f6eb47debcf01da11be45c",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0014.json",
+      "sha256": "8ed20751b9df553959b3e3f5294cc34f51b17e70b3095edfe7a7fd2980ab609a",
+      "size": 2633
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0015.json",
+      "sha256": "3384d8b05fee3fe96557f5f6107e726ae986eac10e75502f6003ad17f61b45a5",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0016.json",
+      "sha256": "14039396bf5d0e40563c38155735e3e7d94fa0cad6e0f26ef122f40f7ab6d8d1",
+      "size": 2635
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0017.json",
+      "sha256": "0295cfc5ef16b7c723f821455752c035f534006395ee4a9b71f89444d83f65c5",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0018.json",
+      "sha256": "5853b645bc97436f1f4f31b494e59bc1faf2bccdd577837878f1b64fb7031905",
+      "size": 2635
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0019.json",
+      "sha256": "8b6eba7753800bb67991dbc68102dea7d7fee4f43b0c110cf4c64b237b1d1cf5",
+      "size": 2635
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0020.json",
+      "sha256": "5497bd3c81979f8561bc2f463ca70015ddcf862bce30aaed24dcd6503e2f6886",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0021.json",
+      "sha256": "a803cf6ec8990564a12646c83230345580b91f648d613e371dff2418a3667d0f",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0022.json",
+      "sha256": "780bec790db0565d1ccdc60bd26400e5138f66e9a722e5fcb210581ea476fa78",
+      "size": 2636
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0023.json",
+      "sha256": "e2ebe3aa4b54ea5c9a4062833a7277324fba2c033042b7d932069d6e4818b39f",
+      "size": 2633
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0024.json",
+      "sha256": "0d3cc5198a3b75849a67f8f5429cea0db5793d3436559555d4e5a674fa69f136",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0025.json",
+      "sha256": "6abe5d267397fd154bebacbe671047389ac4711fcb044651060778a598a1ff10",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-active-0026.json",
+      "sha256": "18460d791c7b45d231c4ad1c85ec1d6510c7c12c4b74c7decf73e2f788a62f93",
+      "size": 2635
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-neighbor-withheld.json",
+      "sha256": "8e249313269aaa391bf207967be66569b1328e6f73d8632ce9c3abfda6469dd2",
+      "size": 2648
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-onboarded.json",
+      "sha256": "10b07e59d6471aa1f794bd8813fa8f34513b201a7c13775adf8871d6645186dd",
+      "size": 2620
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-recovery-0.json",
+      "sha256": "213e23bbaebcb51c1226aab7c5010803f3532fedeadfdb2434d2ff51f5b978a0",
+      "size": 2634
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-recovery-1.json",
+      "sha256": "d170180428cf561703e2a004ed81d37102b8544d5e7aed446a6f67430a631b6b",
+      "size": 2632
+    },
+    {
+      "path": "egress-accounting/native-egress-01/clients-telemetry-withheld.json",
+      "sha256": "a970e8bdacb8ff02afc302134f92611d644de5a156f9265cc41d604996c7ae9c",
+      "size": 2648
+    },
+    {
+      "path": "egress-accounting/native-egress-01/controller-after.json",
+      "sha256": "758c699c8732aa903b0c02cc6027913bdab8ffc445c6e6acc5f1878823583f3c",
+      "size": 32146
+    },
+    {
+      "path": "egress-accounting/native-egress-01/controller-before.json",
+      "sha256": "55b97c8bb11d9ff0666ab65abf2e53d4e389b896f2aecaf03d4d0663ec3ac0f7",
+      "size": 10353
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-inventory-0002.json",
+      "sha256": "a7576ed13532462f2ecc0376ab10ce684a648f5d1f3ba84867cac01917d37d39",
+      "size": 33192
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-inventory-0006.json",
+      "sha256": "a4780039a9c933d890162eed44b227826973875e51a81bfcd545e2a06fd19ae9",
+      "size": 33192
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-inventory-0009.json",
+      "sha256": "9a729b20df85165f0b4e59803ba005444e5eef47385494f6e73c139bb5097359",
+      "size": 33191
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-inventory-0012.json",
+      "sha256": "4cb222f57c842228c0613a61ff794c191ffd0313a39ba6e7cef4ca4e3c5e6de4",
+      "size": 33192
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-inventory-0015.json",
+      "sha256": "bdfbb0af2bb738fd8848fa57492fbcd8213dd4ea45222d6e11e44e4b006704f9",
+      "size": 33192
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-inventory-0018.json",
+      "sha256": "d62fefb3b514419d744330e7fb2eecf1d633dd527d5f4435c08c77c5b03b000b",
+      "size": 33192
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-inventory-0022.json",
+      "sha256": "1ee395e25c715b3eed611589221a078d4c91ad277ace97512e016db50a65b4c0",
+      "size": 33192
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-inventory-0026.json",
+      "sha256": "bcaa4ee75680f081043d5c6e6c05e8fb9a2c5e767c029ce25babeb441036ce36",
+      "size": 33192
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-session-0002.json",
+      "sha256": "1438f88eacf882442302446d2c277d91a2ab7da6dd4ab874c368c9b201126211",
+      "size": 17850
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-session-0006.json",
+      "sha256": "760e129adac62818a8baffa60299641a02b163b49cf62c4ea1e60c3b4f9d4f3b",
+      "size": 18285
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-session-0009.json",
+      "sha256": "00563f2f834c563b2d1c4b7e8c0cc5fb99b9401a8ed16741152ac0d2172b2fd8",
+      "size": 24390
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-session-0012.json",
+      "sha256": "542df90357aa62db7e685d613021e5206e2ef341fad7ca252a60e1ca07f4c681",
+      "size": 24730
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-session-0015.json",
+      "sha256": "ebef74977435579f6092172df50652e0accc7ad032924ff8e73a78cd8d9539e3",
+      "size": 25124
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-session-0018.json",
+      "sha256": "e92d72bce20dfbbf88a0ac67b14b6d76046b777525b14dab4fbbb425f20487cd",
+      "size": 18045
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-session-0022.json",
+      "sha256": "35978b24314f3ec5be7e5c5f75c9183822b8517dd8112fc53d97fca781859d66",
+      "size": 18320
+    },
+    {
+      "path": "egress-accounting/native-egress-01/detached-session-0026.json",
+      "sha256": "5e25eea1d9f1f57bba5ca39212a4ba504e92975bc34e2afe07cd4a067ef0f0d2",
+      "size": 18474
+    },
+    {
+      "path": "egress-accounting/native-egress-01/egress-observations.jsonl",
+      "sha256": "f68d30987722d67e5a20cd99fdc355ad7c645ba60695beb68f5b110141716a6e",
+      "size": 1851102
+    },
+    {
+      "path": "egress-accounting/native-egress-01/egress-observer-final.json",
+      "sha256": "c67594bc9c60fca89cb6f843c64691811be94be58bc41d5e482c7a553b0aa12b",
+      "size": 511
+    },
+    {
+      "path": "egress-accounting/native-egress-01/em-baseline-wifi-continuous-ping.log",
+      "sha256": "e9c58d9a68195bb60f0a9a8a4ddbdb8b16ac8ab4f4c23eab74b9fe18f82cb09b",
+      "size": 54967
+    },
+    {
+      "path": "egress-accounting/native-egress-01/em-baseline-wired-continuous-ping.log",
+      "sha256": "e496db60b721d62a83a272ac7f4313b07f75bee70d5cb32eac6e2e7a52d65457",
+      "size": 65566
+    },
+    {
+      "path": "egress-accounting/native-egress-01/ethernet-capture.log",
+      "sha256": "f592e0f09b6d74f40395bb47436de90d822c48ed955b2a82c7e1a1683f716f80",
+      "size": 172
+    },
+    {
+      "path": "egress-accounting/native-egress-01/ethernet.pcap",
+      "sha256": "1b95970a2cf801611ce41e50f8cb62e730325e2060dcc14160e314f5f8ac4ce4",
+      "size": 10981
+    },
+    {
+      "path": "egress-accounting/native-egress-01/forwarding-capture.log",
+      "sha256": "6395b6fe4c99eb78e68f405060a40aa27dd5567d0237dec4188ffe2cdcc52b15",
+      "size": 176
+    },
+    {
+      "path": "egress-accounting/native-egress-01/forwarding-samples.jsonl",
+      "sha256": "a405ca7fd03922ec5e53048d6042ea16502f45c84fa2e02e22a230b21d3ec109",
+      "size": 2336687
+    },
+    {
+      "path": "egress-accounting/native-egress-01/forwarding.pcap",
+      "sha256": "9d58ef1c60c78026ad20b44efb16b070613aaab9a457bbbb8238f98cf8881e1c",
+      "size": 466457
+    },
+    {
+      "path": "egress-accounting/native-egress-01/independent-egress-check.json",
+      "sha256": "8d2c66267e2bec710b5cb87b9dc1c4da23f69ebf1e4e995b93c27eb285daed1d",
+      "size": 469
+    },
+    {
+      "path": "egress-accounting/native-egress-01/independent-freshness-check.json",
+      "sha256": "e7ef97aab4b428490d2d01c42f97e7d982b1475c3a6959cfae930e4df76e7202",
+      "size": 820
+    },
+    {
+      "path": "egress-accounting/native-egress-01/independent-metrics-check.json",
+      "sha256": "5cdc3fd8d8a27b920c0a3582b9de43ede8761f5590a43e460c76680f525b2704",
+      "size": 963
+    },
+    {
+      "path": "egress-accounting/native-egress-01/independent-policy-check.json",
+      "sha256": "628fe224cd954969f0d2e52e61ef6f0775f52fb4b808bdb8350ec99c2a9b158f",
+      "size": 1434
+    },
+    {
+      "path": "egress-accounting/native-egress-01/independent-recovery-check.json",
+      "sha256": "a19a046738b318770f67f990ea7669b7b966360cf84ca7e87c3a9b8e007d8d69",
+      "size": 3312
+    },
+    {
+      "path": "egress-accounting/native-egress-01/manager.jsonl",
+      "sha256": "af11ec2fff20149ca1a9bc512a33021a00875cdb481ab4d33a480857dfc53a59",
+      "size": 2606882
+    },
+    {
+      "path": "egress-accounting/native-egress-01/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "egress-accounting/native-egress-01/native-operation.json",
+      "sha256": "6ec99b172ce4da3dd09bed4aa3d3448e8882ba8e6e653bc2bec9899093299986",
+      "size": 4858
+    },
+    {
+      "path": "egress-accounting/native-egress-01/native-session.json",
+      "sha256": "19560a4c4cc4bf105ad02df055949c1ea3ecd8ea6a74e30e4709f1219ada8064",
+      "size": 18554
+    },
+    {
+      "path": "egress-accounting/native-egress-01/neighbor-gap-check.json",
+      "sha256": "ac814676d4876278a12c367095f0870ba441a75dfba2172f4b66d10e01185310",
+      "size": 61690
+    },
+    {
+      "path": "egress-accounting/native-egress-01/neighbor-link-observations.json",
+      "sha256": "7c57e8849b993585e1d643506c543e8fe84907314cd1db937426f679366ed095",
+      "size": 22605
+    },
+    {
+      "path": "egress-accounting/native-egress-01/neighbor-observer-final.json",
+      "sha256": "1ebd7e87d467d15d06f6cf822a5f583e7c9aa78e579c15c2804c874cb56324a2",
+      "size": 933
+    },
+    {
+      "path": "egress-accounting/native-egress-01/radio-capture.log",
+      "sha256": "8519a0858a55e35cea99d3f32a1ba5380ea6f5f47876dd88014b3b0d0278ef4d",
+      "size": 201
+    },
+    {
+      "path": "egress-accounting/native-egress-01/radio.pcap",
+      "sha256": "117ebf215ead3b8a727e3855eb9f6c50d68c5353376f565f147fc6accd167fb9",
+      "size": 2203685
+    },
+    {
+      "path": "egress-accounting/native-egress-01/recovery-checks.json",
+      "sha256": "663eccc360cd41e37920a9ada45118ecc9d08ec7281f0fbec1100781984e66a4",
+      "size": 118473
+    },
+    {
+      "path": "egress-accounting/native-egress-01/restoration-check.json",
+      "sha256": "998c68c165bf6b0da7d779d7d041b87d5300830897d3c863cf38c8082cc55eca",
+      "size": 10538
+    },
+    {
+      "path": "egress-accounting/native-egress-01/result.json",
+      "sha256": "a472d3c057ae0d59a34b567acb752c973d8f7e5e84b93af80fc857e64f2950c2",
+      "size": 13191
+    },
+    {
+      "path": "egress-accounting/native-egress-01/source-hashes.json",
+      "sha256": "4ade318b28711bc2f6534c0add02e2693f11ab9fa9ba95e9ce74bdfb95c2f417",
+      "size": 12611
+    },
+    {
+      "path": "egress-accounting/native-egress-01/station-events.jsonl",
+      "sha256": "b2d877f0da3275ebdf661643b3ed2d0a4084d8ed47a283002f09cc6558ec99e9",
+      "size": 46903
+    },
+    {
+      "path": "egress-accounting/native-egress-01/telemetry-gap-check.json",
+      "sha256": "5c6a6c228c8648a48c43a3e16d87a1bf1043662d075ab32bd80cf8eeb86525e0",
+      "size": 61651
+    },
+    {
+      "path": "egress-accounting/native-egress-01/withheld-operation.json",
+      "sha256": "a8ba4973844317b0d674cb553b0a4c6ea3f337a002d39275efc21ec2ebc46931",
+      "size": 1963
+    },
+    {
+      "path": "egress-accounting/ovsdb-results.xml",
+      "sha256": "082f99cf94ffc3cbc1bb44d47fddf96e9e25efd06136196d68c0785d664ea73e",
+      "size": 7635
+    },
+    {
+      "path": "egress-accounting/unit-results.xml",
+      "sha256": "b3e231a61853d52043297fe29f84a2fb4c5dfbfa80b01bea033b677c79b6e929",
+      "size": 4444267
     }
   ]
 }

@@ -156,11 +156,12 @@ def normalize(observation):
             "statistics": ["map", sorted(counters.items())],
             "external_ids": ["map", sorted((common | {"peer_ifindex": str(peer)}).items())],
         }
-        if name == "eth1" and observation.get("neighbor_observation") is not None:
-            payload = json.dumps(observation["neighbor_observation"], separators=(",", ":"))
-            if len(payload) > 262144:
-                raise ValueError("neighbor observation exceeds the local budget")
-            interfaces[name]["external_ids"][1].append(("neighbor_observation", payload))
+        for key in ("neighbor_observation", "egress_observation"):
+            if name == "eth1" and observation.get(key) is not None:
+                payload = json.dumps(observation[key], separators=(",", ":"))
+                if len(payload) > 262144:
+                    raise ValueError("observation exceeds the local budget")
+                interfaces[name]["external_ids"][1].append((key, payload))
     return interfaces, [
         "map",
         sorted((common | {"bridge_ifindex": str(identity[0]), "bridge_mac": identity[1]}).items()),
@@ -261,6 +262,7 @@ class Sample:
     epoch: tuple
     interfaces: dict
     neighbor_observation: dict | None = None
+    egress_observation: dict | None = None
 
 
 class ForwardingSource:
@@ -344,6 +346,9 @@ class ForwardingSource:
             payload = interfaces["eth1"][1]["external_ids"].get("neighbor_observation")
             if payload is not None and len(payload) > 262144:
                 raise ValueError("neighbor observation exceeds the local budget")
+            egress = interfaces["eth1"][1]["external_ids"].get("egress_observation")
+            if egress is not None and len(egress) > 262144:
+                raise ValueError("egress observation exceeds the local budget")
             sample = Sample(
                 snapshot["generation"],
                 start,
@@ -351,6 +356,7 @@ class ForwardingSource:
                 tuple(epoch),
                 result,
                 json.loads(payload) if payload is not None else None,
+                json.loads(egress) if egress is not None else None,
             )
             if self.sample == sample:
                 return

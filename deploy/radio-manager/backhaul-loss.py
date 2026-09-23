@@ -34,7 +34,7 @@ def snapshot():
     }
 
 
-def experiment(label):
+def experiment(label, observe_egress=False):
     guard()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", label):
         raise ValueError("use a new owned run label")
@@ -52,9 +52,26 @@ def experiment(label):
         "physical_pod_changed": False,
         "measurement_source_qualified": False,
         "sustained_operation_proven": False,
+        "egress_observation_requested": observe_egress,
     }
     write(directory / "result.json", result)
     captures, handles, owned_qdisc = [], [], False
+    egress_unit = None
+    egress_path = ROOT / "egress-observations" / (label + ".json")
+
+    def wait_egress(after):
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            try:
+                value = json.loads(inside(AP, "cat", str(egress_path)))
+                obs = value["observation"]
+                if value["running"] and not value["errors"] and obs and obs["started_ns"] > after:
+                    return value
+            except (ValueError, subprocess.SubprocessError):
+                pass
+            time.sleep(0.1)
+        raise RuntimeError("egress observer did not provide a fresh sample")
+
     with ExitStack() as stack:
         for name in ("run.lock", "manager.lock"):
             lock = stack.enter_context((ROOT / name).open("a+"))
@@ -95,6 +112,39 @@ def experiment(label):
             result["backhaul_peer"] = peer
             result["reported_veth_speed_mbps"] = int(inside(AP, "cat", "/sys/class/net/eth1/speed"))
             result["reported_speed_is_measured_capacity"] = False
+            if observe_egress:
+                collector = ROOT / "egress-observer.py"
+                run(
+                    "lxc",
+                    "--force-local",
+                    "--project",
+                    "default",
+                    "file",
+                    "push",
+                    "--quiet",
+                    str(collector),
+                    AP + str(collector),
+                )
+                result["egress_collector_sha256"] = hashlib.sha256(
+                    collector.read_bytes()
+                ).hexdigest()
+                egress_unit = "emosa-native-egress-" + label + ".service"
+                inside(
+                    AP,
+                    "systemd-run",
+                    "--quiet",
+                    "--property=Type=exec",
+                    "--property=RemainAfterExit=yes",
+                    "--property=TimeoutStopSec=5",
+                    "--unit",
+                    egress_unit,
+                    "python3",
+                    str(collector),
+                    label,
+                    "--seconds",
+                    "90",
+                )
+                wait_egress(time.monotonic_ns())
             # Warm ARP and independently establish the existing path. No address changes.
             inside(CLIENTS[0], "ping", "-n", "-I", "eth1", "-c", "2", "-W", "1", "192.0.2.1")
             for name, command in (
@@ -182,6 +232,8 @@ def experiment(label):
                     inside(AP, "tc", "qdisc", "del", "dev", "eth1", "clsact")
                     owned_qdisc = False
                 value = {"phase": phase, "icmp_id": identifier, "before": snapshot()}
+                if observe_egress:
+                    value["egress_before"] = wait_egress(time.monotonic_ns())
                 result["phases"].append(value)
                 write(directory / "result.json", result)
                 completed = subprocess.run(
@@ -217,6 +269,8 @@ def experiment(label):
                     stderr=completed.stderr,
                     after=snapshot(),
                 )
+                if observe_egress:
+                    value["egress_after"] = wait_egress(time.monotonic_ns())
                 write(directory / "result.json", result)
                 if completed.returncode != (1 if phase == "drop" else 0):
                     raise RuntimeError("unexpected probe result; preserve capture")
@@ -230,6 +284,18 @@ def experiment(label):
                     inside(AP, "tc", "qdisc", "del", "dev", "eth1", "clsact")
                 except Exception as error:
                     result["cleanup_errors"].append("owned_qdisc:" + str(error))
+            if egress_unit:
+                try:
+                    inside(AP, "systemctl", "stop", egress_unit)
+                    final = json.loads(inside(AP, "cat", str(egress_path)))
+                    write(directory / "egress-observer-final.json", final)
+                    (directory / "egress-observations.jsonl").write_text(
+                        inside(AP, "cat", str(egress_path.with_suffix(".jsonl")))
+                    )
+                    if final["running"] or final["errors"]:
+                        raise RuntimeError("egress observer did not complete cleanly")
+                except Exception as error:
+                    result["cleanup_errors"].append("egress_observer:" + str(error))
             # Let the final received frame reach the capture reader before
             # requesting shutdown; -U alone only flushes userspace file buffers.
             time.sleep(2)
@@ -262,4 +328,6 @@ def experiment(label):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("label")
-    experiment(parser.parse_args().label)
+    parser.add_argument("--observe-egress", action="store_true")
+    args = parser.parse_args()
+    experiment(args.label, args.observe_egress)

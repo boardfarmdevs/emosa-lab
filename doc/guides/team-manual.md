@@ -3897,6 +3897,58 @@ capacity/availability, then native-controller verification.
 and `tx_dropped` stay zero. Distinguish a packet-count audit from complete link
 metric qualification and from the full 15-minute sustained acceptance run.
 
+### 13.24 Follow measured egress losses into EMOSA
+
+Chapter 13.23 identified a missing measurement. This chapter follows its new
+source from the simulated pod into the adapter. **Egress** means traffic leaving
+an interface. A Linux traffic-control action can drop a packet on that path
+before the interface driver records a successful transmission.
+
+The [egress accounting guide](../protocol/egress-accounting-source.md) includes
+the architecture diagram, complete staging commands and both experiments.
+
+1. Start with the diagram. The passive collector reads kernel statistics;
+   the independent pod manager publishes those facts through OVSDB; EMOSA
+   validates them and computes deltas. These are observations of the owned
+   simulator, not Config requests or a new physical-pod API. The collector
+   itself changes no network settings.
+2. Read the four output counters. Successful packets and bytes describe veth
+   transmissions. Driver drops and the selected action drops occur at distinct
+   accounting stages. Their deltas can be added for this qualified path. The
+   parent qdisc counts the same action drops, so adding it would count one loss
+   twice. Unsupported rules make the source unavailable instead.
+3. Inspect `configuration_epoch` in the retained observer log. An **epoch** marks
+   one possible counter lifetime. Deleting and recreating a rule can reset its
+   counters while preserving its name. Kernel notifications therefore invalidate
+   the current baseline. New collector, connection and adapter lifetimes also
+   require a baseline before subtraction is meaningful.
+4. On HOST, run the guide's retained-loss replay and independent checker. The
+   replay exercises production accounting against recorded observations. The
+   checker separately compares raw differences and packet captures. Expect
+   17 losses without duplicate parent counts. Explain why replay alone does not
+   demonstrate that a live pod connected to the adapter.
+5. Run the retained native checker. It follows collector records through actual
+   manager publications and OVSDB to 292 adapter intervals. Inspect all three
+   connection generations. The telemetry-only pause keeps this separate source
+   valid; pod connection loss withdraws it. Recovery must not subtract counters
+   across a lost connection or create another Config effect.
+6. Reproduce the short loss experiment in the idle owned lab, then the native
+   210-second recovery experiment with a different label. The loss probe alone
+   installs its temporary selected rule. Check cleanup before starting the next
+   experiment. Follow the staging commands exactly: the current native harness
+   needs both passive observer helpers.
+
+**Why are full link metrics still unavailable?** This source establishes selected
+transmit accounting. It supplies no receive-loss qualification, physical media,
+capacity or availability estimate. The native handler must keep those gaps
+explicit. Sending correct packet counts alongside invented capacity would still
+be an incorrect report. Complete neighbor metrics, AP/STA reporting and final
+session statistics must join the eventual 15-minute acceptance run.
+
+**Learning checkpoint:** distinguish a counter baseline, a valid interval, a
+configuration epoch, component replay and a live OVSDB handoff. Explain why
+`measurement_source_qualified` remains false even when this source is available.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

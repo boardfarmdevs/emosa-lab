@@ -255,6 +255,12 @@ OpenSync-format telemetry. Work through these exercises in order:
     the controlled egress-drop experiment. Explain why 17 lost packets can leave
     interface error/drop counters at zero, and why a veth speed constant cannot
     supply measured capacity. Reproduce the short loss probe only in the idle lab.
+14. Follow [egress accounting through OVSDB](../protocol/egress-accounting-source.md).
+    Trace passive interface/action observations to the adapter, distinguish
+    disjoint losses from duplicate parent counts, and explain why configuration
+    events reset the baseline. Compare retained loss replay with the actual
+    native OVSDB recovery run. Identify the receive-loss and capacity inputs
+    still required before a complete neighbor response can be sent.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

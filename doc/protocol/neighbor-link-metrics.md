@@ -169,6 +169,8 @@ and final-session statistics. The physical-pod path remains unchanged.
 
 The [backhaul counter audit](backhaul-counter-accounting.md) now reconciles 325
 recorded packet/byte intervals. Its controlled loss probe shows that `tx_errors`
-and `tx_dropped` miss 17 egress action drops before veth transmission. The next
-publisher needs qualified software-path loss accounting; copying those two
-fields alone would produce a false zero-loss estimate in this experiment.
+and `tx_dropped` miss 17 egress action drops before veth transmission. The
+[egress accounting source](egress-accounting-source.md) now observes that selected
+path and carries action/driver counters through OVSDB, with independently checked
+intervals across recovery. Receive-side loss and complete media/capacity/
+availability inputs are still needed before enabling the native publisher.

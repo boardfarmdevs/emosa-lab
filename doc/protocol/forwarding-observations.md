@@ -147,7 +147,8 @@ per-neighbor packets or validate a throughput estimator.
 ## Reproduce with real recovery faults — HOST starts the VM experiment
 
 Complete the [sustained-operation prerequisites](sustained-operation.md) first.
-Stage the updated source, `deploy/radio-manager/node.py`, `manager.py`, `neighbor-observer.py`, and
+Stage the updated source, `deploy/radio-manager/node.py`, `manager.py`,
+`neighbor-observer.py`, `egress-observer.py`, and
 `deploy/peer-baseline/native-onboarding.py` using that guide's commands. The
 harness copies the guarded node helper into the owned AP container itself.
 

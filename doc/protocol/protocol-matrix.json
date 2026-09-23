@@ -2050,9 +2050,56 @@
         "sustained_operation_proven": false,
         "physical_pod_proven": false,
         "remaining": [
-          "Observe relevant scheduler/action and driver losses over a bound common interval without double counting; refuse unsupported paths",
+          "Selected egress accounting is implemented in egress_accounting_source; receive-side loss and complete common-window per-link qualification remain pending",
           "Qualify capacity/availability without using veth hard-coded speed as measured capacity",
           "Connect complete measurements to guarded publisher, verify native controller fields and complete 15-minute acceptance"
+        ]
+      },
+      "egress_accounting_source": {
+        "status": "selected_veth_action_and_driver_loss_source_live_ovsdb_and_recovery_verified_complete_metrics_pending",
+        "guide": "doc/protocol/egress-accounting-source.md",
+        "implementation": [
+          "deploy/radio-manager/egress-observer.py",
+          "src/emosa/simulation/egress_accounting.py",
+          "src/emosa/simulation/forwarding.py",
+          "src/emosa/simulation/native_onboarding.py"
+        ],
+        "source_references": [
+          "IEEE 1905.1-2013 Tables 6-18 and 6-20, section 11.1; IEEE 1905.1a-2014 amended PHY/RSSI rules",
+          "EasyMesh 6.1 section 10.1 p.82",
+          "pinned OpenSync 78d8a7194d5e77635877cc456231e7be5cf03d68 interfaces/opensync.ovsschema Interface.external_ids",
+          "https://github.com/torvalds/linux/blob/v6.8/net/sched/sch_api.c",
+          "https://github.com/torvalds/linux/blob/v6.8/net/sched/cls_api.c"
+        ],
+        "profile": "owned-veth-egress-observation-v1; actual eth1 identity, noqueue root, no XDP, optional exact software-only unshared flower/gact drop; shared VM clock; simulation-specific metadata",
+        "contract": "Separate successful packet/byte, driver-drop and action-drop deltas; do not add parent qdisc drops; invalidate on unsupported path, loss of observer events, identity/configuration/collector/connection change, replay or stale source",
+        "local_limits": {
+          "source_freshness_seconds": 2,
+          "counter_dump_budget_ms": 250,
+          "interval_gap_seconds": 2,
+          "collector_epochs": 8
+        },
+        "test_refs": [
+          "tests/test_egress_accounting.py"
+        ],
+        "independent_check": "scripts/check-egress-accounting.py",
+        "component_replay": "scripts/replay-egress-accounting.py",
+        "controlled_loss_evidence": "doc/evidence/egress-accounting/egress-loss-01/independent-egress-check.json",
+        "live_ovsdb_evidence": "doc/evidence/egress-accounting/native-egress-01/independent-egress-check.json",
+        "recovery_evidence": "doc/evidence/egress-accounting/native-egress-01/independent-recovery-check.json",
+        "controlled_action_drops": 17,
+        "native_counter_intervals": 292,
+        "native_connection_generations": 3,
+        "native_active_seconds": 210.48399379900002,
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Qualify receive-side loss and a common per-neighbor Tx/Rx measurement period",
+          "Qualify media, capacity and availability estimates",
+          "Join complete measurements to native publisher and independently verify controller fields",
+          "Complete AP/STA and final-session reporting plus full integrated 15-minute acceptance"
         ]
       }
     }

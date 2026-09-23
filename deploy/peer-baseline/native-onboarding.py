@@ -117,6 +117,7 @@ async def experiment(
                 RADIO_ROOT_DIR / "manager.py",
                 RADIO_ROOT_DIR / "node.py",
                 RADIO_ROOT_DIR / "neighbor-observer.py",
+                RADIO_ROOT_DIR / "egress-observer.py",
                 *([RADIO_ROOT_DIR / "station-events.py"] if observe_station_removal else []),
                 *([RADIO_ROOT_DIR / "medium.py"] if medium_loss else []),
                 *([RADIO_ROOT_DIR / "tx-status-trace.py"] if observe_tx_status else []),
@@ -129,6 +130,8 @@ async def experiment(
     manager = worker = broker = None
     station_unit = None
     neighbor_unit = None
+    egress_unit = None
+    egress_path = RADIO_ROOT_DIR / "egress-observations" / (label + ".json")
     neighbor_path = RADIO_ROOT_DIR / "neighbor-observations" / (label + ".json")
     station_path = RADIO_ROOT_DIR / "station-events" / (label + ".jsonl")
     captures, logs = [], []
@@ -232,6 +235,37 @@ async def experiment(
                 pass
             if time.monotonic() >= end:
                 raise RuntimeError("pod backhaul discovery observer did not become ready")
+            await asyncio.sleep(0.1)
+        egress_collector = RADIO_ROOT_DIR / "egress-observer.py"
+        radio["lxc"](
+            "file", "push", "--quiet", str(egress_collector), radio["AP"] + str(egress_collector)
+        )
+        egress_unit = "emosa-native-egress-" + label + ".service"
+        radio["inside"](
+            radio["AP"],
+            "systemd-run",
+            "--quiet",
+            "--property=Type=exec",
+            "--property=RemainAfterExit=yes",
+            "--property=TimeoutStopSec=5",
+            "--unit",
+            egress_unit,
+            "python3",
+            str(egress_collector),
+            label,
+            "--seconds",
+            str(active_seconds + 180),
+        )
+        end = time.monotonic() + 8
+        while True:
+            try:
+                value = json.loads(radio["inside"](radio["AP"], "cat", str(egress_path)))
+                if value.get("running") and not value["errors"] and value["observation"]:
+                    break
+            except (ValueError, subprocess.CalledProcessError):
+                pass
+            if time.monotonic() >= end:
+                raise RuntimeError("pod egress observer did not become ready")
             await asyncio.sleep(0.1)
         if medium_loss:
             module = runpy.run_path(str(RADIO_ROOT_DIR / "medium.py"))
@@ -837,6 +871,18 @@ async def experiment(
                 report["station_removal_observation"] = records[-1]
             except Exception as exc:
                 errors.append("station_observer:" + str(exc))
+        if egress_unit:
+            try:
+                radio["inside"](radio["AP"], "systemctl", "stop", egress_unit)
+                observed = json.loads(radio["inside"](radio["AP"], "cat", str(egress_path)))
+                write(directory / "egress-observer-final.json", observed)
+                (directory / "egress-observations.jsonl").write_text(
+                    radio["inside"](radio["AP"], "cat", str(egress_path.with_suffix(".jsonl")))
+                )
+                if observed["running"] or observed["errors"]:
+                    raise RuntimeError("egress observer did not complete cleanly")
+            except Exception as exc:
+                errors.append("egress_observer:" + str(exc))
         if neighbor_unit:
             try:
                 radio["inside"](radio["AP"], "systemctl", "stop", neighbor_unit)

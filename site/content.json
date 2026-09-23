@@ -867,10 +867,22 @@
       "title": "Backhaul counter reconciliation and loss evidence",
       "description": "325 checked intervals, 17 independently observed drops absent from interface error counters, preserved capture failure and verified traffic-control restoration.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/egress-accounting-source.md",
+      "title": "Carry observed egress losses through OVSDB",
+      "description": "Follow passive kernel counters and configuration events through the simulated pod manager to EMOSA; learn disjoint loss accounting, freshness and recovery baselines.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/egress-accounting/README.md",
+      "title": "Controlled egress loss and live OVSDB recovery evidence",
+      "description": "17 injected losses accounted for without parent duplication; 292 live intervals across three connection generations. Complete native metrics and sustained acceptance remain pending.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "backhaul-accounting/unit-results.xml",
-    "ovsdb": "neighbor-binding/ovsdb-results.xml"
+    "unit": "egress-accounting/unit-results.xml",
+    "ovsdb": "egress-accounting/ovsdb-results.xml"
   }
 }

@@ -33,6 +33,10 @@
 | [Telemetry freshness](telemetry-freshness.md) | Withhold stale observations without restarting a healthy control session; reproduce the native gap and both recovery faults |
 | [Reporting policy receipt](reporting-policy.md) | Durable native policy, same-MID Ack, recovery-preserved schedule and explicit missing reports |
 | [Neighbor link metrics](neighbor-link-metrics.md) | Direction-specific IEEE 1905 responses, guarded measurement handoff and the remaining pod/peer interface qualification |
+| [Forwarding observations](forwarding-observations.md) | Actual pod interfaces, raw counter windows, independent backhaul capture and recovery baselines |
+| [Live neighbor binding](neighbor-discovery-binding.md) | Pod-side discovery through OVSDB into represented topology, with observer pause checks |
+| [Backhaul counter audit](backhaul-counter-accounting.md) | Packet/byte reconciliation and the controlled loss absent from ordinary interface counters |
+| [Egress accounting source](egress-accounting-source.md) | Passive action/driver loss observations through OVSDB, configuration epochs, controlled loss and live recovery checks |
 
 Component checks retain their individual scope. The native onboarding guide
 establishes the bounded simulated-pod exchange; full-profile sustained reporting

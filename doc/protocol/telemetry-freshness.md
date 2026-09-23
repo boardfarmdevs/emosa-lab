@@ -52,7 +52,8 @@ lxc exec emosa-lab -- env PYTHONPATH=/opt/emosa-radio-manager/source \
 tar -C src -cf - emosa | \
   lxc exec emosa-lab -- tar -C /opt/emosa-radio-manager/source -xf -
 lxc file push deploy/radio-manager/node.py deploy/radio-manager/manager.py \
-  deploy/radio-manager/neighbor-observer.py emosa-lab/opt/emosa-radio-manager/
+  deploy/radio-manager/neighbor-observer.py deploy/radio-manager/egress-observer.py \
+  emosa-lab/opt/emosa-radio-manager/
 lxc file push deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
 
 lxc exec emosa-lab -- env PYTHONPATH=/opt/emosa-radio-manager/source \

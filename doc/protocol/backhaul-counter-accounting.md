@@ -142,10 +142,12 @@ an override of IEEE field meanings or a substitute for this experiment.
 ## What this changes in the remaining work
 
 The live packet/byte observations have passed a concrete independent interval
-audit. Loss must now include qualified relevant software-path counters or reject
-paths whose loss cannot be observed. A future publisher must bind that accounting
-to the same interface lifetime, topology and measurement interval; adding every
-drop field together without checking overlap would also be wrong.
+audit. The follow-on [egress source](egress-accounting-source.md) now observes the
+selected action/driver loss path, rejects unsupported paths, and resets baselines
+on configuration or connection changes. It accounts for all 17 controlled drops
+and verifies the live OVSDB handoff. Receive-side loss and complete per-link
+qualification remain open; adding every drop field together without checking
+overlap would still be wrong.
 
 Capacity and availability still need an explicit measured/estimated virtual-link
 profile with calibration, freshness and stated limitations. Do not copy the

@@ -1,0 +1,948 @@
+{
+  "scope": "component replay of retained observations; not a live OVSDB result",
+  "observations": [
+    {
+      "heartbeat_ns": 27836363832290,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27836376743402,
+      "available": false,
+      "reason": "awaiting_egress_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27836364035804,
+        "ended_ns": 27836376735288,
+        "counters": {
+          "successful_packets": 36307,
+          "successful_bytes": 3592835,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27836894360625,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27836878756207,
+        "ended_ns": 27836894344675,
+        "counters": {
+          "successful_packets": 36308,
+          "successful_bytes": 3592933,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27836364035804,
+          27836376735288
+        ],
+        "last_read_ns": [
+          27836878756207,
+          27836894344675
+        ],
+        "deltas": {
+          "successful_packets": 1,
+          "successful_bytes": 98,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "egress_losses": 0
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27837415393882,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          0,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27837397157493,
+        "ended_ns": 27837415380007,
+        "counters": {
+          "successful_packets": 36308,
+          "successful_bytes": 3592933,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27836878756207,
+          27836894344675
+        ],
+        "last_read_ns": [
+          27837397157493,
+          27837415380007
+        ],
+        "deltas": {
+          "successful_packets": 0,
+          "successful_bytes": 0,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "egress_losses": 0
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27837793374958,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27837961472788,
+      "available": false,
+      "reason": "awaiting_egress_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27837945188601,
+        "ended_ns": 27837961465725,
+        "counters": {
+          "successful_packets": 36309,
+          "successful_bytes": 3593031,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27838480441484,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27838467136467,
+        "ended_ns": 27838480428049,
+        "counters": {
+          "successful_packets": 36309,
+          "successful_bytes": 3593031,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27837945188601,
+          27837961465725
+        ],
+        "last_read_ns": [
+          27838467136467,
+          27838480428049
+        ],
+        "deltas": {
+          "successful_packets": 0,
+          "successful_bytes": 0,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "egress_losses": 0
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27838998892681,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27838981947918,
+        "ended_ns": 27838998877192,
+        "counters": {
+          "successful_packets": 36316,
+          "successful_bytes": 3593717,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27838467136467,
+          27838480428049
+        ],
+        "last_read_ns": [
+          27838981947918,
+          27838998877192
+        ],
+        "deltas": {
+          "successful_packets": 7,
+          "successful_bytes": 686,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "egress_losses": 0
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27839515505407,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27839501614101,
+        "ended_ns": 27839515492963,
+        "counters": {
+          "successful_packets": 36326,
+          "successful_bytes": 3594697,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27838981947918,
+          27838998877192
+        ],
+        "last_read_ns": [
+          27839501614101,
+          27839515492963
+        ],
+        "deltas": {
+          "successful_packets": 10,
+          "successful_bytes": 980,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "egress_losses": 0
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27840025108143,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          1,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27840017285402,
+        "ended_ns": 27840025093757,
+        "counters": {
+          "successful_packets": 36326,
+          "successful_bytes": 3594697,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27839501614101,
+          27839515492963
+        ],
+        "last_read_ns": [
+          27840017285402,
+          27840025093757
+        ],
+        "deltas": {
+          "successful_packets": 0,
+          "successful_bytes": 0,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "egress_losses": 0
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27840134046837,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27840217788135,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27840218559674,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27840583600013,
+      "available": false,
+      "reason": "awaiting_egress_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            1
+          ]
+        ],
+        "started_ns": 27840573428721,
+        "ended_ns": 27840583592599,
+        "counters": {
+          "successful_packets": 36326,
+          "successful_bytes": 3594697,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27841102957296,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            1
+          ]
+        ],
+        "started_ns": 27841085715247,
+        "ended_ns": 27841102938372,
+        "counters": {
+          "successful_packets": 36326,
+          "successful_bytes": 3594697,
+          "driver_drops": 0,
+          "action_drops": 5
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27840573428721,
+          27840583592599
+        ],
+        "last_read_ns": [
+          27841085715247,
+          27841102938372
+        ],
+        "deltas": {
+          "successful_packets": 0,
+          "successful_bytes": 0,
+          "driver_drops": 0,
+          "action_drops": 5
+        },
+        "egress_losses": 5
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27841623506043,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            1
+          ]
+        ],
+        "started_ns": 27841605278360,
+        "ended_ns": 27841623487408,
+        "counters": {
+          "successful_packets": 36326,
+          "successful_bytes": 3594697,
+          "driver_drops": 0,
+          "action_drops": 16
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27841085715247,
+          27841102938372
+        ],
+        "last_read_ns": [
+          27841605278360,
+          27841623487408
+        ],
+        "deltas": {
+          "successful_packets": 0,
+          "successful_bytes": 0,
+          "driver_drops": 0,
+          "action_drops": 11
+        },
+        "egress_losses": 11
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27842141162597,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            1
+          ]
+        ],
+        "started_ns": 27842126210881,
+        "ended_ns": 27842141148440,
+        "counters": {
+          "successful_packets": 36328,
+          "successful_bytes": 3594781,
+          "driver_drops": 0,
+          "action_drops": 17
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27841605278360,
+          27841623487408
+        ],
+        "last_read_ns": [
+          27842126210881,
+          27842141148440
+        ],
+        "deltas": {
+          "successful_packets": 2,
+          "successful_bytes": 84,
+          "driver_drops": 0,
+          "action_drops": 1
+        },
+        "egress_losses": 1
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27842660792956,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            1
+          ]
+        ],
+        "started_ns": 27842643502938,
+        "ended_ns": 27842660777027,
+        "counters": {
+          "successful_packets": 36328,
+          "successful_bytes": 3594781,
+          "driver_drops": 0,
+          "action_drops": 17
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27842126210881,
+          27842141148440
+        ],
+        "last_read_ns": [
+          27842643502938,
+          27842660777027
+        ],
+        "deltas": {
+          "successful_packets": 0,
+          "successful_bytes": 0,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "egress_losses": 0
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27843175841630,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          4,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            true,
+            1
+          ]
+        ],
+        "started_ns": 27843165040250,
+        "ended_ns": 27843175822986,
+        "counters": {
+          "successful_packets": 36328,
+          "successful_bytes": 3594781,
+          "driver_drops": 0,
+          "action_drops": 17
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27842643502938,
+          27842660777027
+        ],
+        "last_read_ns": [
+          27843165040250,
+          27843175822986
+        ],
+        "deltas": {
+          "successful_packets": 0,
+          "successful_bytes": 0,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "egress_losses": 0
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27843306686123,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27843307243679,
+      "available": false,
+      "reason": "configuration_changed_or_incomplete_dump",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27843728606345,
+      "available": false,
+      "reason": "awaiting_egress_baseline",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27843710762188,
+        "ended_ns": 27843728597499,
+        "counters": {
+          "successful_packets": 36328,
+          "successful_bytes": 3594781,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27844249776763,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27844233105744,
+        "ended_ns": 27844249761635,
+        "counters": {
+          "successful_packets": 36334,
+          "successful_bytes": 3595369,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27843710762188,
+          27843728597499
+        ],
+        "last_read_ns": [
+          27844233105744,
+          27844249761635
+        ],
+        "deltas": {
+          "successful_packets": 6,
+          "successful_bytes": 588,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "egress_losses": 0
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27844768058137,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27844752569202,
+        "ended_ns": 27844768043280,
+        "counters": {
+          "successful_packets": 36344,
+          "successful_bytes": 3596349,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27844233105744,
+          27844249761635
+        ],
+        "last_read_ns": [
+          27844752569202,
+          27844768043280
+        ],
+        "deltas": {
+          "successful_packets": 10,
+          "successful_bytes": 980,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "egress_losses": 0
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27845287061921,
+      "available": true,
+      "reason": "observed_egress_window_available",
+      "sample": {
+        "epoch": [
+          1,
+          "f130554e-d74e-4297-ac3e-d9e7e5d3fbf3",
+          6,
+          "4646cf49-821c-4068-9b73-60e29bc0924d",
+          4026532652,
+          8,
+          "00:16:3e:b2:d2:c4",
+          [
+            false,
+            null
+          ]
+        ],
+        "started_ns": 27845271535738,
+        "ended_ns": 27845287050550,
+        "counters": {
+          "successful_packets": 36345,
+          "successful_bytes": 3596447,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "local_interface": "00:16:3e:b2:d2:c4",
+        "ifindex": 8
+      },
+      "window": {
+        "first_read_ns": [
+          27844752569202,
+          27844768043280
+        ],
+        "last_read_ns": [
+          27845271535738,
+          27845287050550
+        ],
+        "deltas": {
+          "successful_packets": 1,
+          "successful_bytes": 98,
+          "driver_drops": 0,
+          "action_drops": 0
+        },
+        "egress_losses": 0
+      },
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    },
+    {
+      "heartbeat_ns": 27845438365162,
+      "available": false,
+      "reason": "unavailable_or_unsupported_egress_source",
+      "sample": null,
+      "window": null,
+      "scope": "owned eth1 egress; driver and selected disjoint TC drops",
+      "measurement_source_qualified": false,
+      "capacity_qualified": false,
+      "rx_loss_qualified": false
+    }
+  ],
+  "sustained_operation_proven": false
+}

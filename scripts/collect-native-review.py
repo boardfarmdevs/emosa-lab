@@ -46,6 +46,8 @@ FIXED = (
     "forwarding-samples.jsonl",
     "neighbor-observer-final.json",
     "neighbor-gap-check.json",
+    "egress-observer-final.json",
+    "egress-observations.jsonl",
 )
 PATTERNS = (
     "clients-*.json",

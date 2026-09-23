@@ -53,8 +53,11 @@ adapter's control link. The [live binding](neighbor-discovery-binding.md) now ti
 topology identities to actual pod-side discovery. The
 [counter audit](backhaul-counter-accounting.md) reconciles packet/byte intervals
 but demonstrates losses before veth accounting that ordinary interface error
-counters miss. Complete loss accounting, media and capacity/availability
-qualification remain pending before these observations satisfy a native query.
+counters miss. The [egress source](egress-accounting-source.md) now combines
+selected action and driver losses without double counting, with observed
+configuration epochs and live OVSDB recovery checks. Receive-side loss, media and
+capacity/availability qualification remain pending before these observations
+satisfy a complete native query.
 
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated
@@ -210,7 +213,8 @@ Use a fresh label for every attempt. Preserve failed attempts.
    uv sync --locked
    tar -C src -cf - emosa | lxc exec emosa-lab -- tar -C /opt/emosa-radio-manager/source -xf -
    lxc file push deploy/radio-manager/node.py deploy/radio-manager/manager.py \
-     deploy/radio-manager/neighbor-observer.py emosa-lab/opt/emosa-radio-manager/
+     deploy/radio-manager/neighbor-observer.py deploy/radio-manager/egress-observer.py \
+     emosa-lab/opt/emosa-radio-manager/
    lxc file push deploy/peer-baseline/native-onboarding.py emosa-lab/opt/emosa-baseline/
    ```
 
@@ -267,12 +271,15 @@ Use a fresh label for every attempt. Preserve failed attempts.
 The runner leaves `sustained_operation_proven` false. Independent capture review
 and the full acceptance criteria above must establish that result.
 
-Current native runs also start the read-only pod-side discovery observer and
+Current native runs also start the read-only pod-side discovery and egress
+observers and
 wait for an actual controller/interface binding before onboarding. Allow about
 one extra minute at startup for the candidate's periodic discovery; this is not
 part of active duration. The [binding guide](neighbor-discovery-binding.md)
 explains the observed topology identities and optional `--neighbor-gap-check`
-fault. Per-link metric-source qualification remains pending.
+fault. The [egress guide](egress-accounting-source.md) explains supported loss
+paths and counter baselines. Complete per-link metric-source qualification
+remains pending.
 
 ## Run the 15-minute operational soak with recovery
 
@@ -341,7 +348,7 @@ controller's requests are retained without disabling them to make the run pass.
 | AP channel utilization and ESP | Qualify the measurement period, busy/active counters or a suitable simulated medium, and the BE estimated service parameters; map EasyMesh §17.2.22/Table 45 to the referenced 802.11 definitions | The controller's zero defaults, a configured hostapd test value, or assuming that no survey output means no airtime was used |
 | STA link/traffic metrics | Qualify each requested source field, byte units, direction, success/error meaning, rollover, reset epoch and sample age | Interchanging link rates and application throughput, or treating absent errors/retries as zero |
 | Final disassociation report | Capture the actual reason and complete final session counters before the station is removed; correlate the session across join/leave and reconnect; connect qualified records to the [implemented §6.3/§17.1.41 sender and Ack handling](final-session-statistics.md) | The preceding polling sample or an invented reason based on a membership disappearance |
-| IEEE 1905 neighbor metrics | Query/response component is implemented; bind represented topology to actual pod/peer interfaces and bridge presence, then qualify the common Tx/Rx period, capacity and availability before enabling native responses | Adapter control-veth counters attributed to the pod, whole-interface counts attributed to an arbitrary neighbor, or an invalid-neighbor error for an existing neighbor |
+| IEEE 1905 neighbor metrics | Query/response, actual pod/peer identity binding and selected egress-loss accounting are implemented; qualify receive-side loss, the common Tx/Rx period, media, capacity and availability before enabling native responses | Adapter control-veth counters attributed to the pod, whole-interface counts attributed to an arbitrary neighbor, or an invalid-neighbor error for an existing neighbor |
 
 The pinned hostap 2.10 source helps narrow the next implementation. In
 `src/ap/sta_info.c`, `ap_sta_set_authorized()` emits `AP-STA-DISCONNECTED` with the

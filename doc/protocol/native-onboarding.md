@@ -100,11 +100,12 @@ python3 deploy/radio-manager/stage.py
 ```
 
 Stage the complete current source and radio helpers together. The native runner
-now requires the passive `neighbor-observer.py` helper and live pod-side
-discovery before it starts the adapter. Copying only the older onboarding modules
-can leave missing dependencies. See the
+now requires both passive helpers, `neighbor-observer.py` and
+`egress-observer.py`, plus live pod-side discovery before it starts the adapter.
+Copying only the older onboarding modules can leave missing dependencies. See the
 [neighbor-binding guide](neighbor-discovery-binding.md) for the observation flow
-and focused recovery experiment.
+and focused recovery experiment, and the
+[egress guide](egress-accounting-source.md) for the selected loss-accounting path.
 
 ## Run and read the boundaries
 

@@ -13,6 +13,10 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -m unit --junitxml=unit-results.xml
+      - name: Replay observed egress losses through the production source
+        run: |
+          uv run python scripts/replay-egress-accounting.py doc/evidence/egress-accounting/egress-loss-01 > /tmp/emosa-egress-replay.json
+          cmp /tmp/emosa-egress-replay.json doc/evidence/egress-accounting/egress-loss-01/egress-projection.json
   easymesh-reference:
     runs-on: ubuntu-24.04
     steps:
@@ -127,6 +131,24 @@ jobs:
       - run: >-
           python3 scripts/check-backhaul-accounting.py --loss-probe
           doc/evidence/backhaul-accounting/backhaul-loss-02
+      - run: >-
+          python3 scripts/check-egress-accounting.py
+          doc/evidence/egress-accounting/egress-loss-01
+      - run: >-
+          python3 scripts/check-egress-accounting.py --native
+          doc/evidence/egress-accounting/native-egress-01
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/egress-accounting/native-egress-01 --minimum-seconds 210
+      - run: >-
+          python3 scripts/check-telemetry-gap.py
+          doc/evidence/egress-accounting/native-egress-01
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/egress-accounting/native-egress-01
+      - run: >-
+          python3 scripts/check-neighbor-metrics.py --native-directory
+          doc/evidence/egress-accounting/native-egress-01
       - run: >-
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01
