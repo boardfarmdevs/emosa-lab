@@ -1,0 +1,72 @@
+{
+  "record_version": 1,
+  "record_kind": "documentary_acceptance_register_not_runtime_configuration",
+  "contract": "doc/project/integration-acceptance.md",
+  "baseline_id": "opensync-integration-20260923-01",
+  "target": "opensync-lab HWSIM_POD in rev140/mvx-opensync-0922",
+  "preparation_status": "preserved_hash_verified",
+  "integration_executed": false,
+  "levels": {
+    "Q": {
+      "name": "Read-only qualification",
+      "verdict": "not_evaluated",
+      "reason": "Formal collector and trust/resource review not executed against this target.",
+      "run_id": null,
+      "evidence_refs": []
+    },
+    "A": {
+      "name": "Semantic native OpenSync application",
+      "verdict": "not_evaluated",
+      "reason": "Container admission/mapping and writer exclusion not implemented.",
+      "run_id": null,
+      "evidence_refs": []
+    },
+    "W": {
+      "name": "Warm native-controller onboarding",
+      "verdict": "not_evaluated",
+      "reason": "No EMOSA handover or real-controller-to-native-OpenSync run.",
+      "run_id": null,
+      "evidence_refs": []
+    },
+    "C": {
+      "name": "Cold-start onboarding",
+      "verdict": "not_evaluated",
+      "reason": "Bootstrap/persistence/resource-creation behavior not qualified through EMOSA.",
+      "run_id": null,
+      "evidence_refs": []
+    },
+    "R": {
+      "name": "900-second operational recovery",
+      "verdict": "not_evaluated",
+      "reason": "No active EMOSA workload or recovery tests against this target.",
+      "run_id": null,
+      "evidence_refs": []
+    },
+    "S": {
+      "name": "Complete sustained operation",
+      "verdict": "not_evaluated",
+      "reason": "No complete qualified reporting/recovery acceptance against this target.",
+      "run_id": null,
+      "evidence_refs": []
+    }
+  },
+  "historical_simulator_evidence": [
+    {
+      "scope": "bounded native onboarding using an independent simulated manager",
+      "evidence_ref": "doc/evidence/native-onboarding/README.md",
+      "new_acceptance_levels_reaudited": false
+    },
+    {
+      "scope": "901.473-second operational recovery with qualified software-Ethernet neighbor replies; complete sustained reporting absent",
+      "evidence_ref": "doc/evidence/native-lifecycle/README.md",
+      "new_acceptance_levels_reaudited": false
+    },
+    {
+      "scope": "newer candidate: bounded onboarding, synthetic sparse-ESP parser checks and clean native shutdown; not a complete sustained run",
+      "evidence_ref": "doc/evidence/ap-esp/README.md",
+      "new_acceptance_levels_reaudited": false
+    }
+  ],
+  "complete_sustained_operation": false,
+  "physical_pod_proven": false
+}

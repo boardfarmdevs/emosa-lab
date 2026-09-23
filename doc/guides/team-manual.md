@@ -2,7 +2,12 @@
 
 **Audience:** new developers, test engineers, lab operators and demo presenters.
 
-**Reference date:** 2026-09-22. Commands describe the implementation in this checkout.
+**Status review:** 2026-09-23. Commands describe their named component/experiment.
+Use [current status](../project/current-status.md) to distinguish today's result
+from historical milestones, and [acceptance levels](../project/integration-acceptance.md)
+to distinguish warm onboarding, cold start and complete sustained service.
+The [OpenSync integration baseline](../project/integration-baseline.md) is preserved;
+that actual-container integration has not been executed.
 
 **Start here:** complete chapters 1–6 before using a shared radio lab.
 
@@ -184,7 +189,7 @@ The labels and accompanying limitations tell you which parts are implemented.
 flowchart LR
     C[EasyMesh controller]
     subgraph E[EMOSA around the controller]
-        V[Virtual-agent packet endpoint<br/>discovery and onboarding: pending P0]
+        V[Virtual-agent packet endpoint<br/>bounded lab onboarding implemented]
         W[WSC payload and radio-scope validation]
         O[Operation engine<br/>ownership, journal, deadlines, reconciliation]
         M[OpenSync mapping and OVSDB session]
@@ -242,7 +247,7 @@ then interprets those database settings and applies them to its platform.
 | EMOSA adapter | The complete Python service: agent representation, operation engine, journal and OpenSync mapping/communication |
 | Reference controller | The native prplMesh controller used as an independent lab peer; separate from the Python `em-controller` scaffold |
 | Native baseline agent | The prplMesh agent used to test that controller without EMOSA or OpenSync in the protocol path |
-| Virtual agent | One OpenSync pod's representation inside EMOSA; the local diagnostic directory works, while its full EasyMesh wire endpoint remains pending |
+| Virtual agent | One OpenSync pod's controller-facing representation; bounded real-wire onboarding works in the native simulation runner, while the service diagnostic directory is a separate interface |
 | AL MAC | IEEE 1905 abstraction-layer identity; distinct from individual interface/BSSID identities |
 | Radio / PHY | Wireless hardware or a kernel hwsim radio; may host several interfaces |
 | VIF / BSS / BSSID | Virtual interface / wireless network instance / its MAC identity; an SSID is its network name |
@@ -345,15 +350,15 @@ That capability does not establish multiple on-wire EasyMesh agents.
 flowchart TB
     C[Native prplMesh controller<br/>separate C++ process]
     subgraph E[EMOSA - Python]
-        V[Virtual-agent wire endpoint<br/>pending]
+        V[Virtual-agent wire endpoint<br/>bounded native simulation runner]
         O[Operation engine and journal<br/>implemented]
         M[OpenSync mapper and OVSDB session<br/>implemented for qualified simulation]
         D[Diagnostic agent directory<br/>implemented]
-        V -.->|Wire-to-operation binding pending| O
+        V -->|Authenticated WSC operation binding| O
         O <--> M
         M -->|Observed inventory| D
     end
-    C -.->|EasyMesh discovery and onboarding pending| V
+    C <-->|Selected real EasyMesh onboarding| V
     L[Operator CLI] -->|Local Unix API| D
     L -->|Semantic request| O
     M <-->|OVSDB JSON-RPC| P[Simulated OpenSync pod<br/>physical target qualification pending]
@@ -364,7 +369,12 @@ The two northbound interfaces in this diagram have different meanings:
 | Interface | Consumer | Current behavior |
 | --- | --- | --- |
 | Local diagnostic/semantic API | Operator CLI and component test tooling | Works through a private Unix socket; exposes inventory, operations and `emosa agents` |
-| IEEE 1905/EasyMesh wire endpoint | A real EasyMesh controller | Complete discovery/onboarding, procedure state and binding to operations remain pending |
+| IEEE 1905/EasyMesh wire endpoint | A real EasyMesh controller | Bounded discovery/WSC/operation binding and radio/BSS inventory pass in the dedicated native runner; complete profile and actual OpenSync mapping remain pending |
+
+The diagram groups shared Python responsibilities, not one launch command.
+`emosa serve` runs the component service and its local API. The dedicated native
+onboarding runner separately connects the packet endpoint to the operation engine;
+starting the component service does not activate that wire experiment.
 
 `agents.py` implements the first interface's directory, **not a complete
 IEEE 1905/EasyMesh agent stack**. The filename does not imply that a native
@@ -424,7 +434,7 @@ also lab tooling rather than part of the long-running adapter service.
 | Evaluation runner, reports, scenarios and read-only qualification command | Python | Implemented here as lab/operator tools; distinct from the adapter's runtime responsibilities |
 | OVSDB session wrapper | Python | Our bounded wrapper around upstream Open vSwitch `ovs==4.0.0`; JSON-RPC/stream/reconnect/schema primitives are reused |
 | Regular simulated manager, connecting-pod fixture and hwsim manager/observers | Python | Our test infrastructure; not full OpenSync firmware |
-| WSC payload construction, validation and radio-scope admission | Python | Implemented here using `cryptography` and standard-library primitives; complete wire onboarding remains pending |
+| WSC payload construction, validation and radio-scope admission | Python | Implemented here using `cryptography` and standard-library primitives; bounded native simulated-pod onboarding passes; full profile and physical qualification remain pending |
 | `ovsdb-server` and `ovsdb-tool` | C | Upstream Open vSwitch 4.0.0, built separately |
 | OpenSync OWM/OW/OSW native managers and dummy-driver facilities | C | Pinned upstream OpenSync, used only in the optional R0 experiment |
 | Native dummy-driver glue | C | Our `deploy/native/driver.c`, calling OpenSync's existing dummy-driver API |
@@ -497,7 +507,7 @@ baseline. Chapter 11 explains the prepared-lab dependency of the radio integrati
 | `em-baseline-controller` / `em-baseline-agent` | LXD container names in the native baseline, not Python entry points |
 | Simulated pod manager | A separate test process that applies Config to synthetic State; it is not a native EasyMesh agent |
 
-There are three paths to keep distinct when demonstrating the system:
+There are four paths to keep distinct when demonstrating the system:
 
 1. **Native baseline:** prplMesh controller ↔ native prplMesh agent. This checks
    the named reference peers, their wired/wireless bootstrap and client behavior.
@@ -505,14 +515,17 @@ There are three paths to keep distinct when demonstrating the system:
 2. **Working adapter component demo:** local semantic client ↔ EMOSA ↔ simulated
    OpenSync pod. This checks our adapter logic, OVSDB boundary, identity directory
    and recovery. No real controller onboards the diagnostic agent.
-3. **Target acceptance:** real EasyMesh controller ↔ EMOSA virtual-agent endpoint
-   and adaptation engine ↔ unchanged OpenSync pod, with independent observations.
-   This remains pending full wire implementation and physical qualification.
+3. **Bounded native wire demo:** real prplMesh controller ↔ EMOSA packet endpoint
+   and operation engine ↔ simulated OpenSync manager ↔ hwsim/independent clients.
+   This causal onboarding path passes; use the [native guide](../protocol/native-onboarding.md).
+4. **Target acceptance:** real controller ↔ EMOSA ↔ unchanged physical OpenSync
+   pod, with independent observations. Actual OpenSync-container integration is
+   the next intermediate step; neither it nor physical acceptance has passed.
 
 To present the working component accurately, say: “This is the EMOSA adapter
 managing a simulated OpenSync pod. Its local virtual-agent record is ready.
-Discovery and onboarding by a real EasyMesh controller are the next protocol
-boundary to complete.” Use the [connecting-pod guide](connecting-pod.md) for the
+This component demo does not exercise the separate native-controller onboarding
+runner.” Use the [connecting-pod guide](connecting-pod.md) for the
 runnable demonstration and [viability roadmap](../project/viability-roadmap.md)
 for the remaining proof steps.
 
@@ -677,7 +690,7 @@ flowchart TB
     R[OpenSync root on gateway<br/>ownership and scope to qualify]
     Q[Telemetry collector and exporter<br/>integration pending]
     O[ODH data lake in network center<br/>ingestion contract pending]
-    C <-.->|EasyMesh virtual-agent exchanges pending| E
+    C <-.->|Qualified physical and fleet exchanges pending| E
     A <-.->|Existing OVSDB management interface| E
     B <-.->|Existing OVSDB management interface| E
     R <-.->|Root management decision pending| E
@@ -690,8 +703,8 @@ flowchart TB
 
 This is a **target integration diagram**: the dashed connections require further
 implementation or qualification. The OVSDB interface has already been exercised
-in simulation, but controller-facing wire behavior, physical endpoint use and
-telemetry export remain pending. The telemetry collector/exporter may ultimately be a component
+in simulation, including bounded native-controller wire onboarding. Actual
+OpenSync/physical mapping, multi-pod wire operation and ODH export remain pending. The telemetry collector/exporter may ultimately be a component
 of EMOSA or a cooperating service; the functional responsibility exists either
 way and is not implemented by the current OVSDB session wrapper.
 
@@ -2686,14 +2699,14 @@ authenticated provisioning exchange or a controller-visible managed extender.
 This chapter is therefore an interface-development exercise, not the next step
 required for every new user's demo.
 
-Use it when working on the missing northbound packet endpoint and when its
-separate lab topology is available. For already demonstrated native onboarding,
-use chapter 10; for already demonstrated adapter radio changes, use chapter 11.
+Use it when reproducing the historical discovery prerequisite in its separate
+lab topology. Chapter 10 covers controller-to-standard-agent onboarding; chapter
+11 covers semantic adapter radio changes. For the implemented real-controller
+→ EMOSA → simulated-pod path, use [native onboarding](../protocol/native-onboarding.md).
 Do not dismantle a prepared four-container radio lab merely to complete this
 optional chapter in numerical order.
 
-This older, separate topology is useful when working on EMOSA's future packet
-endpoint. It is not needed for chapter 11 or the native-agent suite. It uses
+This older, separate topology is useful for isolated packet-endpoint diagnostics. It is not needed for chapter 11 or the native-agent suite. It uses
 `em-controller` and `emosa` on `em-protocol`, with an otherwise down hwsim radio
 to satisfy this particular native helper's startup check. No AP/client is started.
 

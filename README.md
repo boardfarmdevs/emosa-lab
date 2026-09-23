@@ -11,118 +11,20 @@ supported management procedures to its existing OVSDB interface.
 
 The goal is to demonstrate what works, expose compatibility gaps, and provide repeatable experiments with clear visibility into protocol exchanges, configuration changes, and actual device behavior.
 
-**Bounded native-controller onboarding now passes with the simulated OpenSync
-pod.** The real controller drives discovery and authenticated WSC through EMOSA,
-the separate manager applies the radio configuration, the controller learns the
-radio/BSS, and independent wired/Wi-Fi clients pass traffic checks. See the
-[walkthrough](doc/protocol/native-onboarding.md) and
-[independently checked evidence](doc/evidence/native-onboarding/README.md).
-Continuous management, full-profile qualification and an unchanged physical pod
-remain next; this result uses an explicitly patched native controller candidate.
+**Current status:** bounded native-controller onboarding passes against the
+simulated OpenSync pod. The 15-minute operational recovery workload also passes;
+complete sustained reporting and unchanged physical-pod acceptance remain pending.
+Read the [current status and evidence boundaries](doc/project/current-status.md)
+for the consolidated result, including resolved historical limitations.
 
-The [15-minute operational soak](doc/evidence/native-soak/README.md) now passes
-client cycling, selected channel reporting, continuous traffic and fresh native
-onboarding after pod reconnect and adapter SIGKILL, with no duplicate Config
-writes. All 135 connected samples place the client under the virtual BSS.
-Complete [sustained acceptance](doc/protocol/sustained-operation.md) still requires
-fulfilled reporting policy, AP/STA metrics, integrated neighbor reporting and final
-disassociation statistics.
-The [final-session sender](doc/protocol/final-session-statistics.md) and guarded
-onboarding handoff are implemented and independently decoded. Its measurement
-source remains unqualified; the native lab does not invent missing counters.
-The [read-only station-removal observer](doc/protocol/station-removal-observations.md)
-now acquires kernel records and independently correlates actual disconnect
-reasons and EasyMesh leaves. The [live reason join](doc/protocol/live-session-reasons.md)
-now correlates those streams during the owned workload, with bounded timestamps
-and explicit rejection of missing or conflicting reasons. The raw counters
-remain unqualified; counter conversion and online reporting delivery are next.
-The [counter audit](doc/protocol/station-counter-accounting.md) reconciles six
-normal-traffic sessions against a loss-checked trace and the selected runtime
-kernel source. It identifies TX encryption-byte and RX management-packet
-accounting differences; these raw counters must not be forwarded unchanged.
-The optional [medium-loss experiment](doc/protocol/medium-loss-accounting.md)
-now reconciles transmit/failure bookkeeping under actual simulated loss and
-retains a significant retry-counter discrepancy. The follow-on
-[kernel completion trace](doc/protocol/tx-status-accounting.md) explains it:
-aggregation control flags suppress some retries from the kernel counter.
-Raw counter passthrough, airtime/rate and online measurement qualification
-remain pending. A [telemetry-gap regression](doc/protocol/telemetry-freshness.md)
-now verifies that stale telemetry withdraws dependent observations while keeping
-the healthy control session; real disconnects still require fresh onboarding.
-The [policy receiver](doc/protocol/reporting-policy.md) now persists the native
-controller's requested reporting policy and sends its receipt Ack. Its schedule
-survives reconnect/restart and explicitly counts due reports that cannot yet be
-produced. Receipt confirmation does not establish fulfilled reporting.
-The [AP/radio/client report builder](doc/protocol/ap-metric-reports.md) now
-assembles the selected complete response and dispatches periodic reports under a
-durable schedule. Independent synthetic byte checks pass; the native lab still
-withholds AP reports until their measurement sources are qualified.
-
-The [public BBF metric review](doc/protocol/bbf-data-elements.md) now pins and
-compares 33 USP/CWMP definitions and supplies bounded representation conversions.
-It enables independent metric encoding work while the exact WFA package
-comparison and actual measurement-source qualification remain pending.
-
-The optional [native sparse-ESP parser fix](doc/protocol/native-ap-esp.md) now
-prevents a controller crash on valid reports that omit intermediate service
-categories. Native packet/inventory checks verify the fix; ESP measurement
-semantics and complete AP delivery remain pending.
-
-The [native peer-metric exercise](doc/protocol/native-peer-metrics.md) now joins
-observed pod counters, discovery and an isolated software Ethernet path to real
-IEEE 1905 replies. Independent capture checks the reply fields; subsequent
-native controller inventory checks the received packet/error values. This
-opt-in profile uses a calibrated 100 Mb/s software service, disabled packet
-aggregation and fresh common measurement intervals. It withdraws measurements
-when the peer path or OVSDB authority is lost. It does not qualify a physical PHY
-or an arbitrary pod deployment.
-
-Its building blocks remain independently reproducible:
-[forwarding observations](doc/protocol/forwarding-observations.md),
-[live discovery binding](doc/protocol/neighbor-discovery-binding.md),
-[packet/byte accounting](doc/protocol/backhaul-counter-accounting.md),
-[egress](doc/protocol/egress-accounting-source.md) and
-[receive loss](doc/protocol/receive-counter-accounting.md),
-[software service calibration](doc/protocol/virtual-link-capacity.md), and
-[combined service/loss intervals](doc/protocol/shaped-backhaul-accounting.md).
-The combined audit reconciles 19,124 queue drops and 17 losses in each selected
-action direction. These scoped results support the selected lab publisher;
-the [901-second lifecycle run](doc/protocol/native-lifecycle.md) now verifies the
-publisher throughout both recovery faults and resolves the selected native
-candidate's shutdown defect. Controller/helper processes exit normally, and the
-baseline is restored. Complete AP/STA reporting, final-session reporting and a
-new integrated acceptance run with those reports enabled remain required.
+The next proposed integration uses opensync-lab's actual OpenSync 6.6.1 pod.
+Its [source/image baseline is preserved](doc/project/integration-baseline.md),
+and the [integration plan](doc/project/opensync-lab-integration-plan.md) defines
+the work. No integration has been executed. Separate
+[acceptance levels](doc/project/integration-acceptance.md) cover warm onboarding,
+cold start, operational recovery and complete sustained service.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
-
-The IEEE 1905.1-2013 and 1905.1a-2014 PDFs are now obtained. Follow the
-[wire-envelope learning exercise](doc/protocol/ieee1905-envelope.md) to inspect
-native captures and test bounded reassembly and isolated Ethernet delivery.
-Continue with [controller discovery and WSC exchange handling](doc/protocol/autoconfiguration.md)
-for peer/radio binding, replay controls and the actual native compatibility findings.
-Then construct and inspect [capability and topology reports](doc/protocol/reports.md),
-including the offline and isolated Ethernet exercises. The
-[read-only report coordinator](doc/protocol/report-coordinator.md) now connects
-those reports to a real disposable database with Ack/retry and source-withdrawal
-checks. The [discovery-to-topology lifecycle](doc/protocol/discovery-session.md)
-adds bounded Search/Response handling, capability-gap diagnostics and fresh
-discovery after reconnect. That read-only component does not initiate M1; the
-new bounded native integration above supplies that lifecycle. The
-[authenticated WSC handoff](doc/protocol/wsc-provisioning.md) now drives durable
-operations and real owned OVSDB directly from independent hostap M2 payloads,
-including duplicate, lost-reply and real process-crash cases. This component
-uses in-memory Ethernet delivery. The next [Ethernet-to-radio exercise](doc/protocol/wsc-wire-radio.md)
-now carries the same handoff over actual packet sockets into hostapd/hwsim and
-separate wired/wpa_supplicant clients. Normal and lost-reply runs passed; the
-peer in that earlier component experiment is synthetic.
-The [native discovery probe](doc/guides/native-discovery.md) now sends EMOSA's
-Profile-1 Search to the real controller and observes its Response and newly
-created device entry. That entry has no radios/BSSs yet; the missing controller
-capability fields and full admission remain open.
-An [isolated native controller candidate](doc/guides/controller-counter-candidate.md)
-now corrects the KiB/MiB advertisement, checks the native conversion behavior and
-compares captured responses before restoring the baseline. The newer onboarding
-candidate also omits unsupported/empty configuration companions for this trial.
 
 ## Architecture
 
@@ -141,7 +43,8 @@ candidate also omits unsupported/empty configuration companions for this trial.
 [Simulate an extender connecting to EMOSA](doc/guides/connecting-pod.md): pod-initiated
 OVSDB, a local northbound virtual-agent directory, semantic configuration and
 reconnect. For actual native-controller onboarding, continue to the new wire
-walkthrough above; the connecting-pod guide remains a semantic exercise.
+[walkthrough](doc/protocol/native-onboarding.md); the connecting-pod guide remains
+a semantic exercise.
 
 ```text
 EasyMesh controller

@@ -41,7 +41,7 @@ publishes State independently. Config alone cannot make the operation applied.
 | DPP | Unsupported. Apply §13.1 and §18's unsupported-feature omission rule to absent Security Capability; do not invent a zero-valued DPP capability. Malformed or reserved advertised algorithms remain rejected |
 | Early reporting | Send the complete selected Early Report before M1, §5.2.2 and §17.1.62. Interpret the named Early bit as bit 6 in Table 117 for this lab; retain the overlapping reserved-range editorial ambiguity for full conformance review |
 | Acknowledgement | Track Early acknowledgements/retries under §15.1. §5.2.2 requires Early transmission before M1, not waiting for an Ack. The native handler's missing Ack remains an explicit limitation |
-| Counters | Advertise KiB after the corrected controller indication, §9.1/Table 71. This does not implement traffic telemetry |
+| Counters | Current Profile-1 runs advertise bytes (`agent_counter_units: 0`) under Table 58; see the [byte-unit regression](../evidence/final-statistics/README.md). Earlier KiB captures retain their historical scope. The controller KiB/MiB support flag is separate from the agent's selected units |
 | Topology Query | The query carries the **sender's highest profile**, §6.2. A Profile-2 query can receive our Profile-1 response. Discovery echo rules do not apply to this field |
 | AP Capability | Report only supported features, §9.1 and §18; include Device Inventory. Do not fabricate scan, CAC, DPP or metric-collection capability |
 | Provisioning | Authenticate/decrypt the complete sole-M2 request under IEEE §10 and WSC; reject additional BSSs, teardown, backhaul or unsupported configuration companions |

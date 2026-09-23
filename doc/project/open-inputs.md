@@ -1,83 +1,52 @@
-# Open input gates
+# Open inputs and qualification gates
 
-| Gate | Missing input | Affected work | Independent work |
-| --- | --- | --- | --- |
-| P0 | [Specification acquisition checklist](../protocol/specification-acquisition.md): IEEE 1905.1-2013 and 1905.1a-2014 are obtained and selected envelope rules implemented. Cited 802.3-2015, LLDP 802.1AB-2009, Data Elements package and WFA Security Requirements remain missing. Operator supplied 802.11-2024 and 802.3-2022; editions/hashes and selected clauses reviewed, with complete feature audit and Ethernet edition comparison unresolved. EasyMesh 6.1 and WPS 2.0.10 are obtained and inspected. Full rule/vector review remains pending. | I3, I4, wire tests/provisioning | I0–I2, selected WSC crypto component, component evaluation |
-| M0 | Named pod/build, actual schema, endpoint direction/trust, managed radio/VIF, writer evidence, management/recovery and client profile | I5 and hardware writes | Simulators, package, reports |
-| X1 | The prplMesh candidate now starts and sends discovery to the EMOSA container; actual EMOSA exchanges, profile/BSS policy and shutdown/recovery remain unqualified | I7 | [Peer baseline and startup commands](../../deploy/peer/README.md) |
-| LXD | Ubuntu 24.04 component tests and VM-driven scenarios passed; base image export retained. A private TLS/fleet runtime image and clean component reruns are retained; full wire/physical-procedure reruns remain pending | Full reference deployment acceptance | Component and peer baselines now exercised in the dedicated VM |
+**Current review: 2026-09-23.** See [current status](current-status.md) for proven
+scope and [the roadmap](viability-roadmap.md) for implementation work. This page
+lists outstanding inputs; it does not reopen completed acquisition requests or
+turn implementation gaps into requests for credentials.
 
-`qualified` requires referenced evidence and compatible current configuration.
-No boolean in an input manifest enables hardware writes. The upstream schema is
-a simulation reference. Selected complete frame/exchange/report components now
-exist; full qualified procedures and their running coordinator remain pending; the separately
-selected [WSC cryptographic component](../protocol/wsc-component.md) has synthetic payload
-vectors independently checked with hostap 2.11.
-The [M1/M2 payload component](../protocol/wsc-messages.md) also has independent required-field
-and cryptographic checks; selected IEEE message/exchange components exist, while full procedure admission
-and complete qualified radio mapping remain gated. The [radio payload interpreter](../protocol/wsc-radio.md)
-now checks encrypted roles and whole-set candidate scope, without a write path.
+| Gate | Available now | Still needed / affected work |
+| --- | --- | --- |
+| Protocol references | IEEE 1905.1-2013 and 1905.1a-2014 obtained; EasyMesh 6.1, WPS 2.0.10, IEEE 802.11-2024 and 802.3-2022 inspected; selected public BBF TR-181 2.17 definitions pinned | Remaining exact-edition references and WFA documents/clarifications in the [single acquisition checklist](../protocol/specification-acquisition.md); full normative/profile audit, ESP and width/source review remain unfinished |
+| OpenSync container | rev140 opensync-lab source, working pod and retained image; read-only evaluation and [frozen baseline](integration-baseline.md) | Formal qualified transport/profile, resource/security semantics, per-node routing and writer exclusion, native runner/bootstrap and telemetry qualification. These are planned integration tasks, not missing physical-pod credentials |
+| Physical pod M0 | Read-only collector and credentials-free TLS/tunnel/Unix examples; operator previously confirmed OVSDB access is possible | Populated private connection file's absolute path, endpoint/authentication trust, named firmware/schema/resource scope, writer controls, management/recovery and independent physical client. No private physical connection file has been supplied |
+| Native peer X1 | Patched prplMesh candidate completes bounded simulated-pod discovery/WSC/radio/client proof; lifetime fix and sparse-ESP receipt independently checked | Full selected procedure/reporting acceptance, other platform/controller qualification. Older baseline shutdown defects remain historical, not a blanket blocker on the fixed candidate |
+| Deployment/reproduction | Nested-LXD component and secure-service reproductions; selected source/image copies now preserved | Actual OpenSync integrated rerun and complete environment reconstruction; no complete VM snapshot or general release image is claimed |
+| ODH | Network-center data lake identified as destination | Ingestion/trust/schema/retention contract; not required for initial warm onboarding |
 
-The [native compatibility candidate](../guides/native-compatibility.md) now has a
-tested HE-length fix and two wired sole-fronthaul runs. One M2/no M8 narrows the
-observed policy; profile 2/1 mismatch, MCS ordering and shutdown abort remain.
-The [first complete wire experiment contract](../guides/first-wire-experiment.md)
-records the five-step status and the required physical evidence. Data Elements
-3.0 and the WFA table clarification questions are consolidated in the acquisition
-checklist, alongside the two exact IEEE 1905 editions.
+`qualified` requires current evidence for the declared target and scope. No input
+manifest boolean, schema match, image hash or baseline archive enables writes.
+The OpenSync simulation schema remains pinned to
+`78d8a7194d5e77635877cc456231e7be5cf03d68`; the actual container's newer schema is
+a separate prospective profile.
 
-The initial user input supplied no selected specification editions or actual pod
-profile. See [the proposed corpus and access details](../protocol/protocol-inputs.md).
-The operator supplied **IEEE Std 1905.1-2013** and **IEEE Std 1905.1a-2014** on
-2026-09-22. Both exact editions are verified and used by the
-[envelope implementation](../protocol/ieee1905-envelope.md). Full profile/procedure
-validation and exchange integration remain unfinished; the acquisition request
-for those two documents is closed. Remaining requests are in the checklist above.
+## Specification acquisition versus implementation
 
-The operator supplied local paths on `rev150` for `80211-2024.pdf`
-(**IEEE Std 802.11-2024**) and `IEEE_Standard_for_Ethernet.pdf`
-(**IEEE Std 802.3-2022**). Both PDFs are verified and hashed; the
-[media review](../protocol/ieee-media-review.md) records selected radio definitions,
-Ethernet Clause 3 and correction checks. The 2015 Ethernet text remains unavailable,
-so no normative substitution is selected. The IEEE 1905 base/amendment gate is
-unchanged.
+The two exact IEEE 1905 documents supplied on 2026-09-22 close their acquisition
+request. Their presence does not establish full protocol conformance. Selected
+envelope, discovery/WSC and report procedures are implemented and a bounded
+native integration passes; complete procedure admission/reporting remains open.
 
-The read-only collector in [pod-qualification.md](../guides/pod-qualification.md) can produce
-a draft once real connection inputs arrive. Existing direct access and the ability
-to disable/redirect cloud writers are confirmed intentions, not verified lab setup.
-The operator explicitly confirmed that **no private connection configuration has
-been provided or created**. Credentials-free TLS, tunnel and Unix examples are
-available; populate the selected copy outside this repository on the EMOSA
-machine, then provide only its absolute path. Physical connection stays pending.
+Public BBF definitions permit selected metric conversions while the WFA Data
+Elements package remains pending for exact comparison. Do not claim BBF 2.17 is
+the acquired DEr3 spreadsheet. Missing telemetry values, actual counter meaning,
+association age and final-session completeness require source qualification,
+not simply another document download.
 
-The [OVSDB/hwsim boundary](../evaluation/radio-manager.md) now passes semantic EMOSA changes
-with live radio reads and independent clients. This advances I2/evaluation; it
-does not satisfy P0, I3/I4 or M0. No new external inputs are needed for that
-completed component experiment.
+The older optional [native R0](../../deploy/native/README.md) experiment retains
+its N03 database-restart failure and disabled backend. That result concerns its
+own build/profile; it neither qualifies nor disqualifies opensync-lab's different
+OpenSync 6.6.1 pod without an experiment.
 
-The bounded [native OpenSync R0 experiment](../../deploy/native/README.md) now
-builds and runs, with 39 upstream units and the native apply/withhold path checked.
-N03 recovery fails after database restart, so the backend remains disabled.
-This is an implementation/qualification gap, not another external specification
-or pod credential request.
+## Supplying physical connection details
 
-The [read-only coordinator](../protocol/report-coordinator.md) now consumes a real
-simulation database, with Query/Ack/retry and source withdrawal tested. Actual-pod
-report integration still needs qualified interface/bridge/neighbor inventories and
-an actual client association-age source. The pinned OpenSync client schema has
-no such age field. See the [report fact contract](../protocol/reports.md#5-supply-facts-not-guesses)
-and [read-only qualification guide](../guides/pod-qualification.md). These are
-pod/profile inputs, not a renewed request for the already obtained IEEE PDFs.
+Follow [read-only pod qualification](../guides/pod-qualification.md). Populate a
+credentials-free example outside the repository on the machine running EMOSA,
+use local secret-file references supported by the loader, and supply only the
+populated file's absolute path. Keep credentials out of chat and Git. The formal
+collector always produces a draft; writer/resource qualification is a later gate.
 
-The [discovery-session lifecycle](../protocol/discovery-session.md) now checks
-selected required Response fields before read-only reporting. It identifies
-the retained native response's missing KiB/MiB support and Security Capability.
-Table 117's Early bit/reserved-range conflict remains a consolidated acquisition
-clarification; automatic Early Report and M1 initiation stay blocked. This work
-adds no new document request and does not establish a qualified native profile.
-
-The [Ethernet WSC/radio component](../protocol/wsc-wire-radio.md) now joins a
-synthetic authenticated packet exchange to real OVSDB, hwsim and independent
-clients, with normal and lost-reply evidence. It adds no external input request.
-Native controller compatibility/admission and the actual physical profile remain
-required before the complete viability claim.
+For the container integration, SSH/LXD access on rev140 was sufficient for
+read-only evaluation and preservation. A dedicated EMOSA transport and trust
+binding still need to be designed and tested; shared NAT IP or self-reported pod
+serial alone does not authenticate the device.
