@@ -12,6 +12,7 @@ import uuid
 from collections import deque
 from dataclasses import dataclass, field, replace
 
+from emosa.easymesh_payloads import AssociatedClients, BssClients
 from emosa.errors import EmosaError, Reason
 from emosa.wire.autoconfiguration import SECURITY_ENVELOPES, PeerBinding
 from emosa.wire.channel import OperatingRadio
@@ -32,6 +33,7 @@ class ReportSnapshot:
     topology: TopologyFacts = field(repr=False)
     context_token: str
     operating_radios: tuple[OperatingRadio, ...] = ()
+    telemetry_valid_until: float | None = None
 
 
 class ReportSource:
@@ -65,7 +67,15 @@ class ReportSource:
         self.epoch += 1
 
     def publish(
-        self, revision, capabilities, topology, *, observed_at, lifetime=1.0, operating_radios=()
+        self,
+        revision,
+        capabilities,
+        topology,
+        *,
+        observed_at,
+        lifetime=1.0,
+        operating_radios=(),
+        telemetry_valid_until=None,
     ):
         try:
             if (
@@ -85,9 +95,16 @@ class ReportSource:
                 or topology.device.al_mac != self.binding.local_al
                 or type(operating_radios) is not tuple
                 or any(type(r) is not OperatingRadio for r in operating_radios)
+                or (
+                    telemetry_valid_until is not None
+                    and (
+                        type(telemetry_valid_until) not in (int, float)
+                        or not math.isfinite(telemetry_valid_until)
+                    )
+                )
             ):
                 invalid("invalid or out-of-order report publication")
-            facts = (capabilities, topology, operating_radios)
+            facts = (capabilities, topology, operating_radios, telemetry_valid_until)
             capacities = {r.basic.ruid: r.basic.max_bss for r in capabilities.radios}
             if len({r.ruid for r in operating_radios}) != len(operating_radios) or any(
                 r.ruid not in capacities for r in operating_radios
@@ -114,8 +131,10 @@ class ReportSource:
         # Ordinary database revisions may change operational facts. Disconnect,
         # invalidation or a new database generation requires discovery again.
         context = f"{self.instance}/{self.epoch}/{revision[0]}"
-        self._snapshot = ReportSnapshot(stamp, capabilities, topology, context, operating_radios)
-        return self._snapshot
+        self._snapshot = ReportSnapshot(
+            stamp, capabilities, topology, context, operating_radios, telemetry_valid_until
+        )
+        return self.current() if telemetry_valid_until is not None else self._snapshot
 
     def current(self):
         if (self.binding, self.pod_id, self.inputs_digest) != self._identity:
@@ -128,6 +147,35 @@ class ReportSource:
             except EmosaError:
                 self.invalidate()
                 return None
+            if snapshot.telemetry_valid_until is not None:
+                if self.clock() >= snapshot.telemetry_valid_until:
+                    # Telemetry expiry withdraws the dependent observations,
+                    # not still-fresh OVSDB identity/configuration authority.
+                    # A different stamp also rejects previously prepared data.
+                    return replace(
+                        snapshot,
+                        stamp=replace(
+                            snapshot.stamp, token=snapshot.stamp.token + "/telemetry-expired"
+                        ),
+                        topology=replace(
+                            snapshot.topology,
+                            inventory_complete=False,
+                            clients=AssociatedClients(
+                                tuple(
+                                    BssClients(b.bssid, ()) for b in snapshot.topology.clients.bsses
+                                )
+                            ),
+                        ),
+                        operating_radios=(),
+                        telemetry_valid_until=None,
+                    )
+                return replace(
+                    snapshot,
+                    stamp=replace(
+                        snapshot.stamp,
+                        valid_until=min(snapshot.stamp.valid_until, snapshot.telemetry_valid_until),
+                    ),
+                )
         return snapshot
 
 

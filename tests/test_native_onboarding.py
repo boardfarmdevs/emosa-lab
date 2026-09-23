@@ -68,6 +68,42 @@ def response(mid=501, flags=b"\xc0", extra=()):
     )[0]
 
 
+def test_client_telemetry_gap_does_not_restart_provisioned_control_session_or_invent_leaves(rig):
+    async def scenario():
+        _bridge, engine, backend, clock = rig
+        session, source, _sent = lifecycle(rig)
+        original = source.current()
+        source.publish(
+            (1, 2),
+            original.capabilities,
+            original.topology,
+            observed_at=clock.monotonic(),
+            lifetime=2,
+            telemetry_valid_until=clock.monotonic() + 0.5,
+        )
+        await session.tick()
+        assert await receive(session, response()) == "early_then_m1_sent"
+        await receive(session, frames()[0])
+        assert len(engine.store.operations()) == 1 and backend.writes == 1
+        context = source.current().context_token
+        before = dict(session.counts)
+        clock.advance(0.6)
+        await session.tick()
+        assert session.state == "provisioning" and source.current().context_token == context
+        assert not source.current().topology.inventory_complete
+        assert session.counts.get("client_leave_notification", 0) == before.get(
+            "client_leave_notification", 0
+        )
+        assert session.counts["search_sent"] == 1 and backend.writes == 1
+        # This distinction must never hide an actual connection/source loss.
+        source.invalidate()
+        await session.tick()
+        assert session.state == "source_lost"
+        session.close()
+
+    asyncio.run(scenario())
+
+
 def test_discovery_early_m1_authenticated_operation_without_semantic_input(rig):
     async def scenario():
         bridge, engine, backend, _ = rig

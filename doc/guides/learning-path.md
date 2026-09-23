@@ -220,10 +220,19 @@ OpenSync-format telemetry. Work through these exercises in order:
    to observe failed transmissions while association remains intact. Compare the
    independent netlink status trace with kernel counters, and explain why modeled
    attempts, reported retries and independently observed delivery can differ.
+   Continue with [kernel completion flags](../protocol/tx-status-accounting.md):
+   correlate original aggregation flags and rate chains with the final retry
+   count. Explain why accounting for suppressed retries still does not qualify
+   the raw counter for EasyMesh.
 8. Follow [reporting policy receipt](../protocol/reporting-policy.md). Decode the
    native controller's 60-second policy, correlate its receipt Ack, and inspect
    the persisted schedule through both faults. Find the explicitly missing
    reports; explain why a timely Ack does not fulfill the reporting obligation.
+9. Reproduce [telemetry freshness and recovery](../protocol/telemetry-freshness.md).
+   Pause telemetry while OVSDB and client traffic remain healthy. Verify that
+   observations become unavailable without a false leave or another onboarding
+   operation. Then compare actual pod disconnection and adapter restart, which
+   must revoke the old authority and authenticate a fresh operation.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

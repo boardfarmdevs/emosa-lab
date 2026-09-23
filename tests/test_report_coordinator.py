@@ -308,3 +308,64 @@ def test_source_identity_or_inputs_change_requires_new_source_context(field, val
     assert rig.ack(65535) == "unmatched_ack"
     with pytest.raises(EmosaError):
         rig.publish((1, 2))
+
+
+def test_telemetry_expiry_withdraws_clients_and_operating_data_without_losing_control_context():
+    from emosa.wire.channel import OperatingRadio
+
+    rig = Rig()
+    radio = rig.caps.radios[0].basic.ruid
+    live = rig.publish(
+        (1, 2),
+        lifetime=2,
+        telemetry_valid_until=0.5,
+        operating_radios=(OperatingRadio(radio, 81, 6, 20),),
+    )
+    assert live.stamp.valid_until == 0.5 and live.topology.inventory_complete
+    rig.now = 0.5
+    withdrawn = rig.source.current()
+    assert withdrawn.context_token == live.context_token
+    assert withdrawn.capabilities == live.capabilities
+    assert not withdrawn.topology.inventory_complete and not withdrawn.operating_radios
+    assert all(not b.clients for b in withdrawn.topology.clients.bsses)
+    assert withdrawn.stamp.token != live.stamp.token
+    with pytest.raises(EmosaError):
+        live.stamp.check(withdrawn.stamp, rig.now)
+    # Refreshing an independently current OVSDB snapshot does not resurrect
+    # telemetry and does not require rediscovery. Its own lapse still does.
+    renewed = rig.publish((1, 3), lifetime=2, telemetry_valid_until=0.5)
+    assert renewed.context_token == live.context_token and not renewed.topology.inventory_complete
+    rig.now = 2.5
+    assert rig.source.current() is None
+    recovered = rig.publish((1, 4), lifetime=2, telemetry_valid_until=3)
+    assert recovered.context_token != live.context_token
+
+
+def test_lapsed_telemetry_cannot_send_a_prepared_topology_or_fabricate_an_empty_inventory():
+    from emosa.wire.reports import topology_response
+
+    rig = Rig()
+    snapshot = rig.publish((1, 2), lifetime=2, telemetry_valid_until=0.2)
+    prepared = topology_response(
+        Reassembler().feed(query_frames(1)[0]),
+        rig.binding,
+        snapshot.topology,
+        snapshot.stamp,
+        ingress="fixture",
+        generation=1,
+        received_at=0,
+        clock=lambda: rig.now,
+    )
+    rig.now = 0.3
+    with pytest.raises(EmosaError):
+        prepared.send(rig.sent.append, rig.coordinator._stamp, clock=lambda: rig.now)
+    rig.receive(query_frames(2)[0])
+    assert not rig.sent and not rig.source.current().topology.inventory_complete
+
+
+@pytest.mark.parametrize("expiry", [True, "1", float("nan"), float("inf")])
+def test_invalid_telemetry_deadline_cannot_preserve_source_authority(expiry):
+    rig = Rig()
+    with pytest.raises(EmosaError):
+        rig.publish((1, 2), telemetry_valid_until=expiry)
+    assert rig.source.current() is None

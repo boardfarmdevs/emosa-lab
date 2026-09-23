@@ -74,9 +74,11 @@ async def serve(directory):
                         and event.get("publication") == "observed-state"
                         and "stations" in event
                     ):
-                        event["telemetry_published"] = mqtt.publish(
-                            event["stations"], event["observation"]["ssid"]
-                        )
+                        event["telemetry_withheld"] = policy.get("telemetry_withheld", False)
+                        if not event["telemetry_withheld"]:
+                            event["telemetry_published"] = mqtt.publish(
+                                event["stations"], event["observation"]["ssid"]
+                            )
                 except Exception as error:
                     event = {"error": type(error).__name__}
                 event["monotonic"] = time.monotonic()

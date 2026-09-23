@@ -37,6 +37,9 @@ FIXED = (
     "medium.cfg",
     "medium-build.json",
     "medium.log",
+    "tx-status-provenance.json",
+    "tx-status.jsonl",
+    "telemetry-gap-check.json",
 )
 PATTERNS = (
     "clients-*.json",

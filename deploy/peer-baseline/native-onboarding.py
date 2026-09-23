@@ -66,6 +66,8 @@ async def experiment(
     recovery_checks=False,
     observe_station_removal=False,
     medium_loss=False,
+    observe_tx_status=False,
+    telemetry_gap_check=False,
 ):
     helpers = runpy.run_path(str(ROOT / "controller-trial.py"))
     helpers["idle"]()
@@ -92,6 +94,8 @@ async def experiment(
         "capture_buffer_kib": 8192,
         "reporting_policy_receipt_expected": active_seconds > 0,
         "medium_loss_requested": medium_loss,
+        "tx_status_observation_requested": observe_tx_status,
+        "telemetry_gap_check_requested": telemetry_gap_check,
         "netlink_capture_buffer_kib": 32768 if medium_loss else None,
     }
     write(directory / "result.json", report)
@@ -108,6 +112,7 @@ async def experiment(
                 RADIO_ROOT_DIR / "node.py",
                 *([RADIO_ROOT_DIR / "station-events.py"] if observe_station_removal else []),
                 *([RADIO_ROOT_DIR / "medium.py"] if medium_loss else []),
+                *([RADIO_ROOT_DIR / "tx-status-trace.py"] if observe_tx_status else []),
                 *sorted((RADIO_ROOT_DIR / "source/emosa").rglob("*.py")),
             )
         },
@@ -122,6 +127,8 @@ async def experiment(
     ns_created = link_created = False
     probe_units = []
     medium = None
+    tx_trace = None
+    telemetry_policy_restore = None
 
     async def start_worker():
         return await asyncio.create_subprocess_exec(
@@ -199,6 +206,10 @@ async def experiment(
                     raise RuntimeError("netlink capture did not start")
                 await asyncio.sleep(0.05)
             medium.start()
+        if observe_tx_status:
+            module = runpy.run_path(str(RADIO_ROOT_DIR / "tx-status-trace.py"))
+            tx_trace = module["TxStatusTrace"](directory)
+            tx_trace.start()
         if observe_station_removal:
             collector = RADIO_ROOT_DIR / "station-events.py"
             radio["lxc"]("file", "push", "--quiet", str(collector), radio["AP"] + str(collector))
@@ -432,6 +443,62 @@ async def experiment(
                 }
                 samples.append(sample)
                 write(directory / "active-samples.json", samples)
+                if telemetry_gap_check and index == 0:
+                    fresh = await wait_json(
+                        "native-session.json",
+                        lambda v: (
+                            v["report_source"]["inventory_complete"]
+                            and v["telemetry"]["station_count"] == 1
+                        ),
+                    )
+                    gap = {
+                        "started_at": time.time(),
+                        "session_before": fresh,
+                        "operation_before": json.loads(
+                            (directory / "native-operation.json").read_text()
+                        ),
+                    }
+                    telemetry_policy_restore = json.loads((directory / "policy.json").read_text())
+                    write(
+                        directory / "policy.json",
+                        {**telemetry_policy_restore, "telemetry_withheld": True},
+                    )
+                    write(directory / "telemetry-gap-check.json", gap)
+                    await asyncio.sleep(4)
+                    gap["session_withheld"] = await wait_json(
+                        "native-session.json",
+                        lambda v: v["telemetry"]["timestamp_ms"] is None,
+                    )
+                    gap["clients_withheld"] = await radio["clients"](
+                        directory, "telemetry-withheld", "emosa-controller-trial"
+                    )
+                    write(directory / "policy.json", telemetry_policy_restore)
+                    telemetry_policy_restore = None
+                    gap["restored_at"] = time.time()
+                    gap["session_after"] = await wait_json(
+                        "native-session.json",
+                        lambda v: (
+                            v["report_source"]["inventory_complete"]
+                            and v["telemetry"]["station_count"] == 1
+                        ),
+                    )
+                    gap["operation_after"] = json.loads(
+                        (directory / "native-operation.json").read_text()
+                    )
+                    gap["completed_at"] = time.time()
+                    write(directory / "telemetry-gap-check.json", gap)
+                    for session in (gap["session_withheld"], gap["session_after"]):
+                        assert session["report_source"]["available"]
+                        assert (
+                            session["report_source"]["context_token"]
+                            == fresh["report_source"]["context_token"]
+                        )
+                        assert session["counts"].get("search_sent") == 1
+                        assert session["counts"].get("client_leave_notification", 0) == 0
+                    assert not gap["session_withheld"]["report_source"]["inventory_complete"]
+                    assert gap["session_withheld"]["report_source"]["operating_radio_count"] == 0
+                    assert gap["operation_after"] == gap["operation_before"]
+                    report["telemetry_gap_check_completed"] = True
                 if (
                     recovery_checks
                     and len(recoveries) < 2
@@ -540,6 +607,8 @@ async def experiment(
         raise
     finally:
         errors = []
+        if telemetry_policy_restore is not None:
+            write(directory / "policy.json", telemetry_policy_restore)
         for client, unit in probe_units:
             try:
                 radio["inside"](
@@ -593,6 +662,16 @@ async def experiment(
                 await asyncio.sleep(2)
             except Exception as exc:
                 errors.append("medium_stop:" + str(exc))
+        if tx_trace:
+            try:
+                tx_trace.stop()
+            except Exception as exc:
+                errors.append("tx_status_collection:" + str(exc))
+            finally:
+                try:
+                    tx_trace.remove()
+                except Exception as exc:
+                    errors.append("tx_status_cleanup:" + str(exc))
         for child in captures:
             if child.poll() is None:
                 child.send_signal(signal.SIGINT)
@@ -669,6 +748,16 @@ if __name__ == "__main__":
         action="store_true",
         help="Optional unqualified wmediumd counter experiment with 20%% AP-to-client loss",
     )
+    parser.add_argument(
+        "--observe-tx-status",
+        action="store_true",
+        help="Passively trace exact-kernel TX-status flags during the owned medium-loss experiment",
+    )
+    parser.add_argument(
+        "--telemetry-gap-check",
+        action="store_true",
+        help="Withhold station telemetry while OVSDB and client traffic stay active",
+    )
     args = parser.parse_args()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", args.label):
         parser.error("use a new label of 1–24 lowercase letters, digits or hyphens")
@@ -682,6 +771,10 @@ if __name__ == "__main__":
         parser.error("station-removal observation requires active client cycles")
     if args.medium_loss and not args.observe_station_removal:
         parser.error("medium loss requires station-removal observation")
+    if args.observe_tx_status and not args.medium_loss:
+        parser.error("TX-status observation requires the medium-loss experiment")
+    if args.telemetry_gap_check and args.active_seconds < 150:
+        parser.error("telemetry gap check requires at least 150 active seconds")
     os.umask(0o077)
     wrapper = runpy.run_path(str(ROOT / "compatibility/controller-candidate.py"))
     with (RADIO_ROOT_DIR / "run.lock").open("a+") as lock:
@@ -698,6 +791,8 @@ if __name__ == "__main__":
                         recovery_checks=args.recovery_checks,
                         observe_station_removal=args.observe_station_removal,
                         medium_loss=args.medium_loss,
+                        observe_tx_status=args.observe_tx_status,
+                        telemetry_gap_check=args.telemetry_gap_check,
                     )
                 ),
             )

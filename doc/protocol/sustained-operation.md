@@ -36,6 +36,16 @@ failure bookkeeping with an independent kernel/medium capture. It keeps retry
 discrepancies and unqualified airtime explicit; it supplies no completed metrics
 reporting or replacement sustained-acceptance result.
 
+The [completion-flag trace](tx-status-accounting.md) now explains the kernel's
+retry suppression in a separate loss experiment. That run also exposed an
+unwanted onboarding restart during a telemetry gap. The
+[freshness regression](telemetry-freshness.md) fixes and verifies this boundary:
+stale telemetry withdraws dependent observations while current OVSDB authority
+survives. A 213-second native run passes the explicit telemetry gap and both real
+recovery faults with three operations and one total Config-write attempt.
+This is regression evidence alongside the original 15-minute run; required
+measurement/reporting work and integrated acceptance remain pending.
+
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated
 acceptance remain outstanding. Policy receipt/Ack now persists the controller's

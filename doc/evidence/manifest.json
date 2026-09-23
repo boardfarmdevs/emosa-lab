@@ -7406,6 +7406,1056 @@
       "path": "medium-loss/unit-results.xml",
       "sha256": "dc9ce968dd4eaf27a7acf8e4a946f8156c32bc292b4b18587af81330e7a5c931",
       "size": 4416292
+    },
+    {
+      "path": "tx-status/README.md",
+      "sha256": "e96482fbbdaab2f1e2a297c03de37250f9e353584164ddacb63d6e210dcbb78a",
+      "size": 2952
+    },
+    {
+      "path": "tx-status/native-tx-status-01/acceptance-limitations.json",
+      "sha256": "fb2118880fd05ce9d36b78a100104e70993c62d9dba10dcf81cb1b1adef8148d",
+      "size": 596
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0000.json",
+      "sha256": "031b6e54df839ff1739c64d9f0ce0907bffb6a55eb1caea18a96696adf66f9bf",
+      "size": 37315
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0001.json",
+      "sha256": "4b7509adccc9c3cbc4982106dde7069eb52a9887d36565cfd80386af00b91bde",
+      "size": 33154
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0002.json",
+      "sha256": "47e3ea2a47f845886dde8f9dab0f89d0a736bddb44ea7c8b869424f37316ebf4",
+      "size": 33154
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0003.json",
+      "sha256": "1f0a361f1aba120656eb59d744d35c945d1b19f4101ea7791a7db7a5b8f89326",
+      "size": 33154
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0004.json",
+      "sha256": "42cde28eadbd2f3571b068e4f6a35ee3d0f72c3ec94d5ba22b48b58f11f954eb",
+      "size": 33154
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0005.json",
+      "sha256": "f5ae6da7eb24cf15dfa513d2e071963df757b59e7559a7c5d90a14d9d761daa5",
+      "size": 32363
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0006.json",
+      "sha256": "e460092f72353bb663fb2a99f2d375cda00b686fcf0182889b5ae335587f0cda",
+      "size": 33153
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0007.json",
+      "sha256": "fc7b48b89bfec217367276f517c0649d1a693b1346eb1af4297b6268d701fd82",
+      "size": 33154
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0008.json",
+      "sha256": "319b56b68bfae2efd84300472f3c01880e9dac13de517352b2a3083e9a66e713",
+      "size": 33154
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0009.json",
+      "sha256": "a8ed96309a56b831a9c57f84a107ac4b163419363368096f92d031ba0087dbd5",
+      "size": 33153
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0010.json",
+      "sha256": "d7d276085dab1165a366b4c05e6df6cdb6f023d06980dc5a3e6a9cedf2f5e8fe",
+      "size": 33153
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0011.json",
+      "sha256": "3540e74b5683e90baed8719ef945715d835ddb23e995f9a686eb5f48911aab2e",
+      "size": 33157
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0012.json",
+      "sha256": "5c96aa00bf5d28c54789f319c69aab5fbb273b19003a7fe7f04545dd5adc91c6",
+      "size": 33152
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0013.json",
+      "sha256": "c817ec08373fb71532e3dd4a85673ce7ab38a8f070d1f0e707616839a02266ae",
+      "size": 33153
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0014.json",
+      "sha256": "f806ea2ce2c0c83f67f7fa034cda9a2588047cf20c42688d632f72420721855c",
+      "size": 33154
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0015.json",
+      "sha256": "ec42197cce4246f411b9c16c0397883d4c764517179397a453434df8979b88e5",
+      "size": 33154
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0016.json",
+      "sha256": "18e86d72079bf3dd701d44273800ba4dffa82f43131acfdff7cee18827830bdd",
+      "size": 33153
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0017.json",
+      "sha256": "321a3c8d6fe7b0433fa1e74f882360041cc464d2471608bf7f69d43bf7784899",
+      "size": 33153
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0018.json",
+      "sha256": "c151ae984aa12f26b89e179a49b035249b2c90dc5a7263eff0bb85f929299c38",
+      "size": 33154
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0019.json",
+      "sha256": "4fe66685528497e0635d01cf7b640072c5f8e4f88c185fdba6764abd521ea011",
+      "size": 33155
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0020.json",
+      "sha256": "9c303c9c2cdbfb595820c1bbbc6eb98f717a3f57b1920a5ad75e9e3131a1aa26",
+      "size": 33155
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0021.json",
+      "sha256": "e4642b895729c0870950205b9fb2d11878aa9d14b3dc9e06868a3499284b9fc7",
+      "size": 33156
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0022.json",
+      "sha256": "843066dd588212951c98fe5cf0c25f7184d09968d7ad1353eeef9cf4b5b8df8d",
+      "size": 33155
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0023.json",
+      "sha256": "f118c5356e434f3350b64c224ade8312406d8c0021df34bc546bb47a00171c75",
+      "size": 33155
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0024.json",
+      "sha256": "fa828975411aed3ded6e1008425cbe5b53a36383baf0c7640699f982e80a33c7",
+      "size": 33156
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-inventory-0025.json",
+      "sha256": "aa8f9aa87286ade8ee66f877c0cdc0fa9c91bea37b4007f90fd1395682849502",
+      "size": 33155
+    },
+    {
+      "path": "tx-status/native-tx-status-01/active-samples.json",
+      "sha256": "9337d030d90e0392416dced498a490455bb963a83cf7050accf8110733f85794",
+      "size": 291961
+    },
+    {
+      "path": "tx-status/native-tx-status-01/candidate-trial.json",
+      "sha256": "e32c29d9b04006dfb2d8d2bfa988c75d7e871649d24921b2452f3f53d3f64b2a",
+      "size": 15021
+    },
+    {
+      "path": "tx-status/native-tx-status-01/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "tx-status/native-tx-status-01/client-outages.json",
+      "sha256": "3954bcc750740fb6202bafdbd1c7d5dc262b648ae4cb4dd7d9a1baee48d2a726",
+      "size": 679
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0000.json",
+      "sha256": "d8e92e37499dee2e910909ad663bf7e1f4b20ae9d80c24afc00f189c91ffb0a1",
+      "size": 2625
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0001.json",
+      "sha256": "b3a9d09ef8d0e4ba105fc65592055d4bfddab0a43207c2f810abf0027b543439",
+      "size": 2625
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0002.json",
+      "sha256": "be05c632eef9ceb03e85d44ad68b193f2ec5aef291360eec6770f524392928fa",
+      "size": 2628
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0003.json",
+      "sha256": "5ee88935971655374a8186edfde40fdb91b64fd78143e81c7b1cc4897ec2dc0c",
+      "size": 2630
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0004.json",
+      "sha256": "5382e46baa3a27e45b51c32fd803eed41573915d28e6bb40aadb80f75218a92c",
+      "size": 2576
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0005.json",
+      "sha256": "6043df7edffce7e14478d250bbcae0038a4884c960ee31b6f323f22c3111ad3c",
+      "size": 2565
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0006.json",
+      "sha256": "728f9b800b3cbcc6fef3dffb8efd4d56617889f999c0aada268bae40cbff6576",
+      "size": 2628
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0007.json",
+      "sha256": "aea8544b45f7079013a82153cde919ba18750e45d0e019b167b383602ac1e010",
+      "size": 2631
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0008.json",
+      "sha256": "40723b64d1d9acb8bb419728901d0690272b54041198eda476206e6832ca44ff",
+      "size": 2577
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0009.json",
+      "sha256": "ed4bcb220bce21aa5738b7a632cf7a8c493b7abc7e2f06bcb77250770dd987db",
+      "size": 2623
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0010.json",
+      "sha256": "41c8d4d9e525e27084b1df68fd673c8ad44c6de2c72358d961ce5fd7b1c1f5bc",
+      "size": 2566
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0011.json",
+      "sha256": "b6f46a7f249ee32ee034438d7f1ce626e77de56affb5370a44de498dac659f0e",
+      "size": 2617
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0012.json",
+      "sha256": "66aa5e988e4c627defbb832a922f07e1beaec11aaed11ddd37ca25cd1b986d56",
+      "size": 2627
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0013.json",
+      "sha256": "a44d5c81fec579ecb7811c2709a266b1f66d32ad3caedf328bae54073fa68347",
+      "size": 2570
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0014.json",
+      "sha256": "685c348f841a4c503afce622b30d68e354a700d50ea692b6d7f4424e124a2f33",
+      "size": 2626
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0015.json",
+      "sha256": "4cbc111c68ed34f30d34e646d4528f3fc868945a8ee64d89e17e202d11c46cc2",
+      "size": 2571
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0016.json",
+      "sha256": "d31e217f78168a4bee2c267909201306f1151016005661da8eb9895092d28935",
+      "size": 2618
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0017.json",
+      "sha256": "7fa079be89dcf110f32d431b524ec2d1fc49268e6db0750ea6ad3b2aefd8bccb",
+      "size": 2616
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0018.json",
+      "sha256": "c33419e6f084fe261b888e70dd6a7dd98fbd82992649e4f0f2da2d4513263b31",
+      "size": 2623
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0019.json",
+      "sha256": "d4b5e5e4bc08b4809c375a5d6e379ae462e1d168469f0caec9c51444c8324e95",
+      "size": 2567
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0020.json",
+      "sha256": "93a5728b5ce6b8ee0760d7f34642341ddb4e22c6e4121709e636b0032fc6832d",
+      "size": 2563
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0021.json",
+      "sha256": "aa05413f3d2b8647068b7ec70854ed69e62252f5e227e5955c0234e224f07006",
+      "size": 2622
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0022.json",
+      "sha256": "60118710132889a1b4d031728aa6b8ef8a04ab56e6f88366490243b61e86ec73",
+      "size": 2619
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0023.json",
+      "sha256": "d13ae04a3b839cad37efbc9d8b980db4bf75bfa593e0d31512e689c18eed5afc",
+      "size": 2562
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0024.json",
+      "sha256": "28554ca6aaf366d549748905a48cffe61913dcfa43eb210a63ba8ad156509b22",
+      "size": 2623
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-active-0025.json",
+      "sha256": "43b94c81ae5d283c54abfe3cfde6af4d3f12113b10c0611ceccfbe0a907453c2",
+      "size": 2624
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-onboarded.json",
+      "sha256": "eebe0143219e0939be6a2bfe9709a870139739db08f2e051538a12c1ac28b33a",
+      "size": 2563
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-recovery-0.json",
+      "sha256": "5d0e2a3979949699e362bab910592bcdc393e8cd776ec7ae787ea082f2d0620d",
+      "size": 2621
+    },
+    {
+      "path": "tx-status/native-tx-status-01/clients-recovery-1.json",
+      "sha256": "ba75b8586a109939928fdb03d7cebe2bc8c799405cc83b3e3e6017604f6b484a",
+      "size": 2560
+    },
+    {
+      "path": "tx-status/native-tx-status-01/controller-after.json",
+      "sha256": "3532cbf551dedef5756c9087f91325d1b53218bb22b51c7fd9b56535644780ca",
+      "size": 31319
+    },
+    {
+      "path": "tx-status/native-tx-status-01/controller-before.json",
+      "sha256": "d0bb6fef760a956b696fc951abd589d1d6ef4be7fa90fe5c22a68fe4a74cbac3",
+      "size": 10353
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-inventory-0004.json",
+      "sha256": "1fbce91d16f4e97e66c98967c4f32be65e3f4bd8c6949c675b31d40ab2561fcd",
+      "size": 32363
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-inventory-0008.json",
+      "sha256": "77ea7d7200d62ddd79e4665c51902862b6fe371bda57cf60f0eb1c16e3287ddc",
+      "size": 32363
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-inventory-0010.json",
+      "sha256": "22aa67c97056a8fea5d41dd0376729ca0b72fb4afda1a2b31316d405d23a2cbf",
+      "size": 32362
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-inventory-0012.json",
+      "sha256": "a6a9c5b386df97af66d33afab7b5c166d005d6ed270ddb3df37248476e0eb29d",
+      "size": 32363
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-inventory-0015.json",
+      "sha256": "ecc8e56775fe47e4f3f739d41db71cb8a346d819a7c5ef9c3d102950ace41199",
+      "size": 32363
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-inventory-0018.json",
+      "sha256": "d3504040229e9f629245d54c531f7acfe329949248aa47bbcdcd31a110117175",
+      "size": 32365
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-inventory-0021.json",
+      "sha256": "91e2cb912fb53467955d92f6bf10c449f6650ef50b2157572b54dc51d2a0531e",
+      "size": 32365
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-inventory-0024.json",
+      "sha256": "1077b68936eb66fc1134045ad3bd1e6f1c796188ac45edcf9160e6e14b82b789",
+      "size": 32365
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-session-0004.json",
+      "sha256": "dfc56f39b1cd4e1abc6d65e6b3143489bb9beed8990458415afd6b0fb4d293a7",
+      "size": 4930
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-session-0008.json",
+      "sha256": "432af3c0e8755f012a261386c87c13d3e535fdcbca200c13b8381b9b876100c1",
+      "size": 5184
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-session-0010.json",
+      "sha256": "596733e0d138dc4e7c2592683fcceb5bb882c040d2aa9837dd495af786010225",
+      "size": 11220
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-session-0012.json",
+      "sha256": "a5f90f737c862c152203ec7a7f613d69b26fe2f69dd7a2b883ad931abc04d39e",
+      "size": 17059
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-session-0015.json",
+      "sha256": "d6ba0b5f16e1d8788b20922e3889958af46a5dd812847bb7d2eb90a515589638",
+      "size": 17271
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-session-0018.json",
+      "sha256": "c803f2c795d824a61b1fde3909c2384666357818a2abe8a76286071101a2bec0",
+      "size": 4691
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-session-0021.json",
+      "sha256": "6ad667974351befb2bda33b70d0147407fdfb6bd848db8f059e88d0ca15b28f3",
+      "size": 4966
+    },
+    {
+      "path": "tx-status/native-tx-status-01/detached-session-0024.json",
+      "sha256": "92d560332c9ff4af83b6393e7d6e0f4445f7b994829eea24df99cb3feb38e84d",
+      "size": 5152
+    },
+    {
+      "path": "tx-status/native-tx-status-01/em-baseline-wifi-continuous-ping.log",
+      "sha256": "b0c7471348f91c94ce327d8bb564bc045c3eaa6cceb0b78ef60ce1b0787962c7",
+      "size": 42382
+    },
+    {
+      "path": "tx-status/native-tx-status-01/em-baseline-wired-continuous-ping.log",
+      "sha256": "2f72548185bacfa3179de924140ea907e178c959dc52b049dbf6a0d622cd8428",
+      "size": 66922
+    },
+    {
+      "path": "tx-status/native-tx-status-01/ethernet-capture.log",
+      "sha256": "6cc879426f560e2503adc31a7a8290417922a15e7781937da0918e2f82119ec2",
+      "size": 172
+    },
+    {
+      "path": "tx-status/native-tx-status-01/ethernet.pcap",
+      "sha256": "577c22e3a5976a8d8ef931da9a808289f44c4eca01ad7de4e16770b16dcc4bb4",
+      "size": 13648
+    },
+    {
+      "path": "tx-status/native-tx-status-01/independent-tx-status-check.json",
+      "sha256": "55ef6608abe2d6b242f921c2b2b323e863a4c63e8577a9a47b37bafaf6d2376b",
+      "size": 4233
+    },
+    {
+      "path": "tx-status/native-tx-status-01/manager.jsonl",
+      "sha256": "f4d4da5c2e0b08b7cb69d4355f2cace73e392b025d91858eebea03ca4c6f2e1a",
+      "size": 183793
+    },
+    {
+      "path": "tx-status/native-tx-status-01/medium-build.json",
+      "sha256": "fd2255fd756ca3677a7db5c7363bcc926aa758d59479554f21028a1f17b9b867",
+      "size": 4691
+    },
+    {
+      "path": "tx-status/native-tx-status-01/medium.cfg",
+      "sha256": "57b5ce917c442330148ba123c5289a3399b746c0155ca62ef9bfd599a2c0381b",
+      "size": 184
+    },
+    {
+      "path": "tx-status/native-tx-status-01/medium.log",
+      "sha256": "6e3661c3f0d469a3f6f44794f3704e40871332bb94e7803e5b396a3c3e8c54b6",
+      "size": 1271128
+    },
+    {
+      "path": "tx-status/native-tx-status-01/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "tx-status/native-tx-status-01/native-operation.json",
+      "sha256": "0cb366779d049d195f88adf5df90d5119affe3a9fc69cd13af9b1056a8fc8d9b",
+      "size": 6044
+    },
+    {
+      "path": "tx-status/native-tx-status-01/native-session.json",
+      "sha256": "8d314af21ee8ddbc187e4a7a3a1c179a3810eb20b16e2051dbf19cabc6cb766f",
+      "size": 5229
+    },
+    {
+      "path": "tx-status/native-tx-status-01/netlink-capture.log",
+      "sha256": "ed8725335a945ea8610fcd4bfe0b1b6372a941eb98f32585d05332a9022b3db4",
+      "size": 184
+    },
+    {
+      "path": "tx-status/native-tx-status-01/netlink.pcap",
+      "sha256": "da06b4633b99eab0023b90cf186298453285c6820af4be9d0a1f27b1363c1888",
+      "size": 11159512
+    },
+    {
+      "path": "tx-status/native-tx-status-01/radio-capture.log",
+      "sha256": "b48f2c27ade8191ba47a9dfd6ac687f2dee10bb49463c1c68095e1ba004cd997",
+      "size": 201
+    },
+    {
+      "path": "tx-status/native-tx-status-01/radio.pcap",
+      "sha256": "77210bf69717976ff8c91b2cead726b065732eab6730210da13b5ece330e9046",
+      "size": 2288134
+    },
+    {
+      "path": "tx-status/native-tx-status-01/recovery-checks.json",
+      "sha256": "782bc6613e11327055a8cfdb89b4bedba043eba063aa4e78c8741bbd9a95da5a",
+      "size": 68919
+    },
+    {
+      "path": "tx-status/native-tx-status-01/restoration-check.json",
+      "sha256": "92f234e6e032e317fc4c48e86e618fbc34fe74da1a9c0d189d8cc023df208f11",
+      "size": 315
+    },
+    {
+      "path": "tx-status/native-tx-status-01/result.json",
+      "sha256": "988d9db4b4268080644f03a0b56b356d0b47f82507941ac839c50d294a750a97",
+      "size": 13576
+    },
+    {
+      "path": "tx-status/native-tx-status-01/source-hashes.json",
+      "sha256": "7a8366018977565f391e0c677ec94b32c96a68a9105cdba4bf1ddc9a0fe65f19",
+      "size": 11909
+    },
+    {
+      "path": "tx-status/native-tx-status-01/station-events.jsonl",
+      "sha256": "1e9aaa0fd75ca3b80a23a170203f8b33c566b667c74b0ab0c13393deef4c4a2a",
+      "size": 57901
+    },
+    {
+      "path": "tx-status/native-tx-status-01/tx-status-provenance.json",
+      "sha256": "0efda7e5a0f3029f6177ff929f05fa07e25e3ed96d8cb40d6707b1330e7e10b5",
+      "size": 5688
+    },
+    {
+      "path": "tx-status/native-tx-status-01/tx-status.jsonl",
+      "sha256": "98d531f52d29abd8fa1b926773677f612f67ae5d843775d9bfb10df01d04e512",
+      "size": 238559
+    },
+    {
+      "path": "tx-status/native-tx-status-01/withheld-operation.json",
+      "sha256": "1e34c0ea2515dc1ec56f3550ff43bd3401bf7500cb5a9cba3cb791f6fb38e3e1",
+      "size": 1963
+    },
+    {
+      "path": "telemetry-freshness/README.md",
+      "sha256": "2d112e7c5b14f0464e5a53780e73c4f4d5d76f0be6fb1b221639b2a4a86bd7a8",
+      "size": 2838
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0000.json",
+      "sha256": "0b0fb356868e340c5e1c984831c646a85174c90bfbaceb0459a85befcc5aaa8d",
+      "size": 37315
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0001.json",
+      "sha256": "effca048e309da6a23d1c0974140055f043cd6eb027059cb8e6f4a15bff7d7c3",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0002.json",
+      "sha256": "a72cabd961dd2bc319551ca19f75b79642c32209913594544b5dfa666cade339",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0003.json",
+      "sha256": "471d67c4ebbd5836c1ad5f28e159a46411306bd0f2c91bfe8b226b753775b925",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0004.json",
+      "sha256": "a4d72f123fecc5f62a25889712076abdf4cef40f6e44a836ec57804a2f1cad7e",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0005.json",
+      "sha256": "2de0dc600f416495e3fd468e84b93a47394b05260a78e68a148461b5db6e387a",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0006.json",
+      "sha256": "babb54f4fc46e66abc72c6febcbf45d766cb545bca8b250baab3b65d0181217f",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0007.json",
+      "sha256": "3d3a8747f5b98a0b666b833e7d0a584769bd033c477e19596bb0aa4f5727c558",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0008.json",
+      "sha256": "e55304ad491a8b8393db8c348ed49120508f14361f88276abd87b3f1bf7d0893",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0009.json",
+      "sha256": "b615defbefa67be273a08d75ac2346b96c61067f46d76e464bf941dd5d1cd0e6",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0010.json",
+      "sha256": "63f8f2ed7a3af648c7dbc44516d770ffdef12735af38d8b016341276865a4ccb",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0011.json",
+      "sha256": "c6b201b9ba5b60c5b46e2a3f1bfb2461f6c8ae1925a2e8bef9e8c346efbb6b5a",
+      "size": 33152
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0012.json",
+      "sha256": "cd334a1e1b59af525844484632e203def2df25be615061ad3dcfa64a5ca11c8b",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0013.json",
+      "sha256": "827d6b6d4bb3aa57c80abbeb370b1d1151c0ebb2fdddc875398517ae2b11d322",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0014.json",
+      "sha256": "0d030ddef0096f0d6134f94708e113b1b269e9485a7171d3fc60064dc962e682",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0015.json",
+      "sha256": "88d266155dd57f1a2bfa1b63afdd9b2d0a1d887010d9f9884b2f9485e8c47305",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0016.json",
+      "sha256": "4c183498d28f6a1705cb81bc90b285f8671e56957f7d13ad1af6afe5f2562cb5",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0017.json",
+      "sha256": "15e1453606fc00038ce82c6d5f5416c35a4f245430052159fe989ed884235203",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0018.json",
+      "sha256": "6f1b2467dec90cac3a14ac719c79d899ccb7db7a4306b0ba60803fe2f49a067d",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0019.json",
+      "sha256": "7a7edb82221dcf20836b266003824cc810223d28c4a12ded8584ff9faebf64ce",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0020.json",
+      "sha256": "20fb7fc2f4178b7222b6001002087c576c9cc592ba082a2e9ae6da72b739ee90",
+      "size": 33152
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0021.json",
+      "sha256": "4b10f4d07eeadbe66ca8cac4a502b65a8fb411558ca90c487deb2749c341a69b",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0022.json",
+      "sha256": "5a44842c576bd7f26c8d63bff49e41484e55a4c11190a4b05f84e8ca8c322354",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0023.json",
+      "sha256": "674e8047ee52e0eacbc1d2461437d832673decd51de601c645169508a67941a0",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0024.json",
+      "sha256": "eed9f2b1c369a78195fafb9fc2e13607c988f479584e164d8a23484caee671a6",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0025.json",
+      "sha256": "d78477f1d7a7b107b765585cf0f2c17b04ccefb9029d699547f8a25b5f95bb22",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0026.json",
+      "sha256": "e747a627f605c7868bc80e37d280ed439243adab980cd87fac706a4a228c3544",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0027.json",
+      "sha256": "61eebf13cc602fe47e40faa08f1954b39214d14afcace4020a0a39874e25fac0",
+      "size": 33154
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-inventory-0028.json",
+      "sha256": "362355f9a52806b465de70e5903aaeb61b3c51d11abd40f95248a61c857494a1",
+      "size": 33153
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/active-samples.json",
+      "sha256": "66afb62897c1c7d7860544e3bfc799e89882cdf38a90ffc39a29e43517b72f6d",
+      "size": 292723
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/candidate-trial.json",
+      "sha256": "4a91f4591e4ad82adda7f7ef9dcd5deccbd9db7b03a44abd7f25030feb23ee3d",
+      "size": 13789
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/client-outages.json",
+      "sha256": "fdd6d97214460a5eaf3d8ce1d4389c2d73fe5fdfc7bf08cfc65b5998d01a555a",
+      "size": 679
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0000.json",
+      "sha256": "c4199a1ad34b6422d8b16cbcb3de45923dde52001f1828c5d60d6356221d3c5d",
+      "size": 2635
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0001.json",
+      "sha256": "f308fecdf928605c1ec5a06a7cb4c2786de66a38e93a57e697ae54ec214a5d5a",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0002.json",
+      "sha256": "3b45d1831b4f2cc633a7ffde240a8ad1f3b79f8896f0caf84dc4a2ed60a82f9f",
+      "size": 2636
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0003.json",
+      "sha256": "83a09d36106c53fa5b911b443240ab469fd7addde5d7ff8185c021201f3278cd",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0004.json",
+      "sha256": "46de90c594b4135086567f8005f6df9ac83fa31bef380c3f4e5b93a030674e6d",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0005.json",
+      "sha256": "ec7baae17502a0f6c2d0c56a823e136066f481b29ad6d951a1d90e572e9fa340",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0006.json",
+      "sha256": "8e187a3dca38fb2d51afab94d8e834b07acf24a6c6179d96da25ee9da9b59953",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0007.json",
+      "sha256": "a9e1b2b55ec2c141b9923946d1aca3b5305a4687d1c2976e1f2f741b8cce81b7",
+      "size": 2636
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0008.json",
+      "sha256": "6063cd19d8585bf50c3644064661237b4155d83b6dc4c38bad820df2712195c7",
+      "size": 2633
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0009.json",
+      "sha256": "456e82abb4f123cd19c5f13a64457690a35293e4fc878a87e9bd4b5a7c9dce65",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0010.json",
+      "sha256": "448457d42d28aa170f57a746475934a33c96e751b68fe1eb36cc2fcef02ade88",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0011.json",
+      "sha256": "eddef7447fd7925d5870cc24754ad8b877a8c9f1cc09bf88de05e158d0640956",
+      "size": 2628
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0012.json",
+      "sha256": "3b02fba81fcb1283b30c7e053ae743edd1d7e47047c203d57d6a9c4837bf7aa5",
+      "size": 2626
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0013.json",
+      "sha256": "227e483c2ad3adc974e9ac2df40b0aba5f5769fd1fe190da820e18cfd1f81a81",
+      "size": 2627
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0014.json",
+      "sha256": "83056399268a8c0b38ee8458a18ef254503c24200393661dca8b960979d9a9d5",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0015.json",
+      "sha256": "9da325a4b19486b30752528ae2b1871c028191105fde214445a06f3771fd4ab4",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0016.json",
+      "sha256": "34f683ac14fbdada782852f99ad62ba068f31e127831eaa77aff6841c6af4202",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0017.json",
+      "sha256": "c23c3d1c15fde97ee79183ba6d14e7786c6e08f19885ff1c3eab300af046e242",
+      "size": 2635
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0018.json",
+      "sha256": "63eebb0e6fdb9ce7cca073f3a52e0062d9fe13b346b4a693c4dc5671b453d9d9",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0019.json",
+      "sha256": "e786a536763ddd0b248815cfd6012b4a1c363c72279a490d89ff8a91b7abae8c",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0020.json",
+      "sha256": "2c092d4c585943da622a96bc2ccd22ec3494fcc7b3710f31559c538a5f548b79",
+      "size": 2636
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0021.json",
+      "sha256": "5f944279953b3a71e30d2b79f4991da2047fd77e80b74c1fd84ba904a271c71c",
+      "size": 2633
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0022.json",
+      "sha256": "fd9079196c4267fd566dccd16fb9bbbca62afb6e02362e791f6bbe9dce2b1638",
+      "size": 2633
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0023.json",
+      "sha256": "2b44c079d5f871330b5bf32b32591fae10c459ca425df977bf42813bb220aa0a",
+      "size": 2634
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0024.json",
+      "sha256": "39e78ac1cda92293d34d95b6cbb3adc7a2dc43564494d74d3e889259d87dbfcd",
+      "size": 2636
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0025.json",
+      "sha256": "5a2846bf58509e711b474026d99b0edb2e61b070e8a0ed7b9ea81ef7dc9a3c23",
+      "size": 2628
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0026.json",
+      "sha256": "ba12950c372edece670fb9eff3c23be6ea98841cd8e11fc9da64b356f8aced3d",
+      "size": 2627
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0027.json",
+      "sha256": "9e9f66e9e289f6da817d591c747a2116020b91dbba62aa18b82eee1b7ccf20d5",
+      "size": 2627
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-active-0028.json",
+      "sha256": "e20d3c6673e97737b38be517aa41659657fd58b88fb1fb364dd992867104641d",
+      "size": 2633
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-onboarded.json",
+      "sha256": "10911d6ccc2b61f758d143122a44cc897cacb0fd44fce5a201d7b196479d68c8",
+      "size": 2620
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-recovery-0.json",
+      "sha256": "da616a374be1040fbeda56c569c6778ceb0141e813bd267a9d3e75de6b7b1b58",
+      "size": 2633
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-recovery-1.json",
+      "sha256": "437dc3947be8f44a64f08ca209e68b95663cd0eb7201c0bb0e01914b6f477abc",
+      "size": 2632
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/clients-telemetry-withheld.json",
+      "sha256": "63806f7c59f65e696ceab8e1af85734bd4fe8059ccd49eb81e721b5929a86186",
+      "size": 2648
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/controller-after.json",
+      "sha256": "c6b5f8bd21994f46a5009b9efdbe994d8512b5096e210af4e5219f3d8790302c",
+      "size": 31317
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/controller-before.json",
+      "sha256": "a0dd5e6bb382f307ba53b28a326315f71c6b755662d8dbfce131fbd07bf9b819",
+      "size": 10353
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-inventory-0003.json",
+      "sha256": "0393a783acccbc50f1cdb10b2fe78e37ae3e147fd40cf309e1fb84a44fe8b21c",
+      "size": 32363
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-inventory-0007.json",
+      "sha256": "7ab976992b56d954a5297495f45be575f6f22140e7837b2d564a6b44d3297a48",
+      "size": 32363
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-inventory-0010.json",
+      "sha256": "653d8bf2b7af83ece888d2c263b8205721208922088067d4d52780853398664a",
+      "size": 32362
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-inventory-0013.json",
+      "sha256": "e851b8c6f1392ad4e319a5de608ad791bd6adbbdebd450533653222f36fdce23",
+      "size": 32363
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-inventory-0017.json",
+      "sha256": "fd52b630440000b3123ab1873ce439d77a58db73adda589c9a5fb668e1c1ce18",
+      "size": 32363
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-inventory-0020.json",
+      "sha256": "c946a6107c9b347d08c1876ddcc851c4be09f40bec68e16c98738cf60f5bd1e4",
+      "size": 32363
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-inventory-0024.json",
+      "sha256": "d9f0f804fcd1c98a2b8e0ae342979008b45b4a1713fcacd645568cd332d894ae",
+      "size": 32363
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-inventory-0027.json",
+      "sha256": "5e9bc88720f9cf537484c2f185899f2d62bb10a6ca9e1da6ec290a809e954ab2",
+      "size": 32363
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-session-0003.json",
+      "sha256": "22d4325503d346d9eb78626581cccabe8cc4c9001fce8f3753cc6b5a9931aeaf",
+      "size": 5104
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-session-0007.json",
+      "sha256": "9483230bd564f166764cd1064c0a15da4c8aa137a01277ed9bc74be74c49e059",
+      "size": 5288
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-session-0010.json",
+      "sha256": "733a9e5dc3c46719f110a92c28d2fd885a56619aad5f099b89e0c53733441a31",
+      "size": 11326
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-session-0013.json",
+      "sha256": "2f3eaee4826842ee392cd4dd689edeacf6b72dad84daaf420258e66df215adf3",
+      "size": 11547
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-session-0017.json",
+      "sha256": "358a19c27c92e867a63baf4f9226be432f0edaa7496e89cbf7b32c439166b202",
+      "size": 11822
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-session-0020.json",
+      "sha256": "121c326c061eeae33f12e8e6ce38d3d5b6dba220f6e89a2ad5fdb86e5063dcd2",
+      "size": 4866
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-session-0024.json",
+      "sha256": "b453c2cc753839dc4fc4943c730811c6cf8b12f6e2b4434b4e94376f015b78cd",
+      "size": 5141
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/detached-session-0027.json",
+      "sha256": "304c5dbec5135b61836a65cd1f36bf8a5df132a4ce219bb4f62629baa0282381",
+      "size": 5295
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/em-baseline-wifi-continuous-ping.log",
+      "sha256": "16dfd48f906c0950bca0484af4402cec9888d1a33383674351f645ace740e104",
+      "size": 56014
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/em-baseline-wired-continuous-ping.log",
+      "sha256": "988b30e088c1cc658d37854a770ad9cb42a3a0f6eb20cc816b72b29eb5140ba9",
+      "size": 66464
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/ethernet-capture.log",
+      "sha256": "8696bcf7be47784a17f93a164a635717f66438ea5e2b5a865c24623c33fa96b4",
+      "size": 172
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/ethernet.pcap",
+      "sha256": "d532bd83b496ec16db90c2b7ec36bb611f96a6d112715374faa26835638eb9c2",
+      "size": 10852
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/independent-gap-check.json",
+      "sha256": "af644ce9e15ce8fc15fb414f0aff7e4a0c03646d5b8eeb217d4b8296dbd741d7",
+      "size": 820
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/independent-policy-check.json",
+      "sha256": "4fb186a3345e07b70f75c7d5b2e019e8f7f0a313d1bef79837f1d6f75ebb3f72",
+      "size": 1434
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/independent-recovery-check.json",
+      "sha256": "26079c89bf08ec7229ab7c1937a1d24303e7b4a8399df2a2da72d2b2b9d13333",
+      "size": 3363
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/manager.jsonl",
+      "sha256": "48da74a2693ce389bd3dddd91f6f12fc72b5096b53bc03296265173709dfab9b",
+      "size": 189455
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/native-operation.json",
+      "sha256": "43d2240e953e856885862b86797e2f3584c9de5b3815342487ae80dacbb01d06",
+      "size": 4856
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/native-session.json",
+      "sha256": "6704af558246349a9074fa382d9ce44f3774b2459b95606b739455948124a338",
+      "size": 5404
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/radio-capture.log",
+      "sha256": "c5dd834ebac17fa9f048429ca35d1e024172790c23fd702bbc6c4bbebc623c9c",
+      "size": 201
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/radio.pcap",
+      "sha256": "72ae3ea393ceb54af1d5831a9a28780aa8e08e16b6675d183a8516e0d6312a69",
+      "size": 2230463
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/recovery-checks.json",
+      "sha256": "5f182e0d5d6cd753a847fea774fc04958df9ce67a258082e70f324ec7408844f",
+      "size": 60906
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/restoration-check.json",
+      "sha256": "becf47e37071c15e5020b3e4cdde9eb08a7c8d4f57cf9d0db9f84cd134f50790",
+      "size": 742
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/result.json",
+      "sha256": "ea921c707addcb8755037609d171c455934df6ff0557629a967c904c61310279",
+      "size": 12404
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/source-hashes.json",
+      "sha256": "caf20b55caf9e9cac88067a647e3c3e548daa3c4c0d711c1225341823dccfe01",
+      "size": 11684
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/station-events.jsonl",
+      "sha256": "272d35e749fb2dbda618ee72a38b3e0c93ca836000ddf1d5ce29f9900208a6b1",
+      "size": 46870
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/telemetry-gap-check.json",
+      "sha256": "d8e67a4e226aaba840dc8fb9d3cfd4ac9449316adc692af26762136fbbd705c7",
+      "size": 20980
+    },
+    {
+      "path": "telemetry-freshness/native-telemetry-gap-01/withheld-operation.json",
+      "sha256": "a1b12cb8647960dc6f697ff8f7a0d7dcb2a58b46c13b798a008cc800a8e9fff6",
+      "size": 1963
+    },
+    {
+      "path": "telemetry-freshness/ovsdb-results.xml",
+      "sha256": "0e58c9e5ed3dd2cbd379cab6f936adea79ba49440a983e63f0d61f0e7dcb4aed",
+      "size": 7209
+    },
+    {
+      "path": "telemetry-freshness/unit-results.xml",
+      "sha256": "f065badaed7a75710765686beeee103599e8c680cd3190345d1c6c442e9a0271",
+      "size": 4420164
     }
   ]
 }

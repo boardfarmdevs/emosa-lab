@@ -1,0 +1,80 @@
+{
+  "scope": "Native controller counter advertisement candidate; not admitted onboarding",
+  "input_archives": {
+    "prplmesh-patched-source.tar.gz": "ebc771d43279cdb6b1cf5e2c09eb51d66ef3a8afab6b97f4561439d2606ac549",
+    "prpl-install-nl80211-6.0.0.tar.gz": "a98a6903fb9db1494ece0c292dd85c7d4d8ff2f570b5b85768ed6f299f72fb1f",
+    "prpl-runtime-deps-6.0.0.tar.gz": "ad912dc63b7d2188096bd6c0a42978590c4a4b82b0590da1198514e122cec4d2"
+  },
+  "header_dependencies": {
+    "scope": "Header-only dependencies matching the pinned runtime library versions; no Ambiorix libraries rebuilt",
+    "libraries": [
+      {
+        "name": "libamxb",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxb.git",
+        "commit": "e918ad3db7dfc1bf30c35c2f41215234c1af878a"
+      },
+      {
+        "name": "libamxc",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxc.git",
+        "commit": "3cd324a664d2735eeec4ad4978eb040a851c6928"
+      },
+      {
+        "name": "libamxd",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxd.git",
+        "commit": "46c6d88064e38f261023d4015fb9ef4b49e04292"
+      },
+      {
+        "name": "libamxo",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxo.git",
+        "commit": "859db3fb1397215605db9050fedb86dfd0ba4788"
+      },
+      {
+        "name": "libamxp",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxp.git",
+        "commit": "873b53069855414d35b821fcb46ed0f8ae108b3e"
+      },
+      {
+        "name": "libamxrt",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxrt.git",
+        "commit": "8ac23096b0797a203c12425646c195600dd583ec"
+      },
+      {
+        "name": "libamxs",
+        "repository": "https://gitlab.com/prpl-foundation/components/ambiorix/libraries/libamxs.git",
+        "commit": "1caf2c44031711351b36033ad59ce73187b9c616"
+      }
+    ]
+  },
+  "patch_sha256": "d070bdf880224a6f702c5f951ebb8ad25f3a499871236bd30f41262dfdc73082",
+  "extra_patches": [
+    {
+      "name": "0005-controller-configuration-scope.patch",
+      "sha256": "9bcab5ce7b22b7d36bdb55b857eadfb0e75f71b03332e693f40226ba4ab31ddb"
+    }
+  ],
+  "candidate_sha256": "d6db692f97b5b1dd2bb20c7810bbe0a775351d6f5fd8e3c7e21310a230bf5436",
+  "unstripped_candidate_sha256": "c0823b54792c99fa6dfaaccc65ef59478b34544722a4edb75cc54037359e9685",
+  "source_sha256": {
+    "controller/src/beerocks/master/controller.cpp": "a3135e14748b51f282405e3c418c2968f4426929e2829bd5c3cbf4738715628f",
+    "controller/src/beerocks/master/db/db.cpp": "67cfc5754e5f8b542ab6b8b2a46700838007931a5c9809f68903a6bed62458d7",
+    "controller/src/beerocks/master/tasks/agent_monitoring_task.cpp": "b8ef0826d72674a2df50b16b1f4f18cb0d99e8d95540248550a15131fa2642d4"
+  },
+  "recipe_sha256": {
+    "build-controller.py": "a33ecaca3e805a0149c6e74260c4b610d670e2cdb8c8bbbde466c3f35d447e42",
+    "counter-units.cpp": "43ee476d30737010b9f70691cb6c74cecc089652bab38122bc39cdeb1afdeb5a",
+    "controller-headers.json": "952ad9fa51452ad5f022dc6c2ae0ee6bac8799ed4e7afbb0086915ccddd4c0da",
+    "CMakeLists.txt": "12d9be4bc31f0aea8ff0555437b4e8505e399d78bae299847af0e28a3a308dcf"
+  },
+  "tools": {
+    "cmake": "cmake version 3.31.6",
+    "g++": "g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0",
+    "git": "git version 2.53.0",
+    "strip": "GNU strip (GNU Binutils for Ubuntu) 2.38"
+  },
+  "counter_regression": {
+    "passed": 12,
+    "implementation": "native db::recalculate_attr_to_byte_units",
+    "scope": "bytes/KiB/MiB; zero, one, typical and maximum 32-bit counter"
+  },
+  "installed_in_peer": false
+}

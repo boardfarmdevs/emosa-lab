@@ -3652,6 +3652,31 @@ The medium's legacy timing and fixed receive-rate representation cannot support
 the HT radio's EasyMesh airtime or link-rate reports. This is a measurement
 qualification exercise, not another completed sustained-acceptance result.
 
+**Where did the missing retries go?** The next
+[completion-flag exercise](../protocol/tx-status-accounting.md) observes the
+kernel when it receives transmit completion. The medium describes attempts,
+but mac80211 also uses the frame's original aggregation flag. With an A-MPDU
+control flag and no aggregate completion status, this kernel deliberately adds
+zero to the station's retry count. In the retained run, 2,421 medium retries
+minus 2,094 suppressed retries equals the observed 327. Correlate each lifetime,
+not just the grand total. The exact-kernel guard and trace-loss checks matter:
+wrong structure offsets or missing trace events could create plausible but
+incorrect arithmetic. The guide explains the passive probe, commands, private
+raw trace and cleanup. Explaining the difference still leaves the raw counter
+unsuitable as a complete retry measurement.
+
+**What if telemetry stops but the pod remains connected?** Follow the separate
+[freshness exercise](../protocol/telemetry-freshness.md). Configuration authority
+comes from current OVSDB observations; association duration and operating power
+also require fresh telemetry. Pausing MQTT publication should therefore make
+those dependent observations unavailable while retaining the healthy control
+session. It must not invent a client departure, repeat WSC or write Config again.
+The exercise deliberately pauses publication, probes both clients during the
+gap, then restores it and checks the wire and operation journal independently.
+Afterward it breaks the actual pod connection and kills the adapter process;
+those faults do require new discovery and authentication. Comparing all three
+faults teaches why one generic reconnect response is insufficient.
+
 **Why change the advertised byte unit?** The current virtual agent uses
 Profile-1, whose traffic counters are in bytes. Earlier experiments advertised
 KiB in an accompanying capability TLV but never sent traffic counters. The new

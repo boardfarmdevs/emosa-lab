@@ -189,7 +189,8 @@ class RadioReportSource:
                 self.capabilities,
                 topology,
                 observed_at=started,
-                lifetime=min(2, sample.valid_until - started) if sample else 2,
+                lifetime=2,
+                telemetry_valid_until=sample.valid_until if sample else None,
                 operating_radios=(OperatingRadio(RADIO, 81, radio["channel"], radio["tx_power"]),)
                 if sample is not None and type(radio.get("tx_power")) is int
                 else (),
@@ -242,6 +243,13 @@ async def worker(directory, *, duration=110, telemetry=False):
     def status():
         value = lifecycle.status()
         value["worker"] = {"pid": os.getpid(), "process_id": store.process_id}
+        snapshot = facts.source.current()
+        value["report_source"] = {
+            "available": snapshot is not None,
+            "context_token": snapshot.context_token if snapshot else None,
+            "inventory_complete": snapshot.topology.inventory_complete if snapshot else False,
+            "operating_radio_count": len(snapshot.operating_radios) if snapshot else 0,
+        }
         if stations:
             sample = stations.current()
             value["telemetry"] = {

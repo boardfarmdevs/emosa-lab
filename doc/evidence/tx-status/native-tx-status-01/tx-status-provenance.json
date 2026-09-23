@@ -1,0 +1,38 @@
+{
+  "kernel": "6.8.0-139-generic",
+  "architecture": "x86_64",
+  "btf_sha256": {
+    "/sys/kernel/btf/vmlinux": "6b316ce238ad8dc2686af1a0a7fd5e0d8f454e74ec82e6422194971e03aa2ea7",
+    "/sys/kernel/btf/mac80211": "6731e6b80c80a9a5832e131c619d1c45e88495ff4d4673277bdba8a98067ebbe"
+  },
+  "probe": "p:emosa/tx_native_tx_status_01 ieee80211_tx_status_ext station=+0($arg2):x64 flags=+0(+8($arg2)):x32 mpdu_len=+112(+16($arg2)):u32 header=+0(+208(+16($arg2))):x8[24] rates=+8(+8($arg2)):x8[12] max_rates=+126($arg1):u8 ra_lo=+4(+208(+16($arg2))):x32 ra_hi=+8(+208(+16($arg2))):x16 ta_lo=+10(+208(+16($arg2))):x32 ta_hi=+14(+208(+16($arg2))):x16",
+  "filter": "mpdu_len >= 24 && ra_lo == 0x00000002 && ra_hi == 0x0002 && ta_lo == 0xec000002 && ta_hi == 0x0002",
+  "clock": "mono",
+  "buffer_kib_per_cpu": 8192,
+  "lockdown": "none [integrity] confidentiality",
+  "wall_ns_before_start": 1790139157813551915,
+  "monotonic_ns_before_start": 18259885058370,
+  "counter_conversion_qualified": false,
+  "event_format": "name: tx_native_tx_status_01\nID: 2239\nformat:\n\tfield:unsigned short common_type;\toffset:0;\tsize:2;\tsigned:0;\n\tfield:unsigned char common_flags;\toffset:2;\tsize:1;\tsigned:0;\n\tfield:unsigned char common_preempt_count;\toffset:3;\tsize:1;\tsigned:0;\n\tfield:int common_pid;\toffset:4;\tsize:4;\tsigned:1;\n\n\tfield:unsigned long __probe_ip;\toffset:8;\tsize:8;\tsigned:0;\n\tfield:u64 station;\toffset:16;\tsize:8;\tsigned:0;\n\tfield:u32 flags;\toffset:24;\tsize:4;\tsigned:0;\n\tfield:u32 mpdu_len;\toffset:28;\tsize:4;\tsigned:0;\n\tfield:u8 header[];\toffset:32;\tsize:24;\tsigned:0;\n\tfield:u8 rates[];\toffset:56;\tsize:12;\tsigned:0;\n\tfield:u8 max_rates;\toffset:68;\tsize:1;\tsigned:0;\n\tfield:u32 ra_lo;\toffset:69;\tsize:4;\tsigned:0;\n\tfield:u16 ra_hi;\toffset:73;\tsize:2;\tsigned:0;\n\tfield:u32 ta_lo;\toffset:75;\tsize:4;\tsigned:0;\n\tfield:u16 ta_hi;\toffset:79;\tsize:2;\tsigned:0;\n\nprint fmt: \"(%lx) station=0x%Lx flags=0x%x mpdu_len=%u header={0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x} rates={0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x} max_rates=%u ra_lo=0x%x ra_hi=0x%x ta_lo=0x%x ta_hi=0x%x\", REC->__probe_ip, REC->station, REC->flags, REC->mpdu_len, REC->header[0], REC->header[1], REC->header[2], REC->header[3], REC->header[4], REC->header[5], REC->header[6], REC->header[7], REC->header[8], REC->header[9], REC->header[10], REC->header[11], REC->header[12], REC->header[13], REC->header[14], REC->header[15], REC->header[16], REC->header[17], REC->header[18], REC->header[19], REC->header[20], REC->header[21], REC->header[22], REC->header[23], REC->rates[0], REC->rates[1], REC->rates[2], REC->rates[3], REC->rates[4], REC->rates[5], REC->rates[6], REC->rates[7], REC->rates[8], REC->rates[9], REC->rates[10], REC->rates[11], REC->max_rates, REC->ra_lo, REC->ra_hi, REC->ta_lo, REC->ta_hi\n",
+  "wall_ns_after_stop": 1790139423038451914,
+  "monotonic_ns_after_stop": 18525109958489,
+  "per_cpu_statistics": {
+    "cpu0": "entries: 684\noverrun: 0\ncommit overrun: 0\nbytes: 64448\noldest event ts: 18302.209608\nnow ts: 18525.092367\ndropped events: 0\nread events: 0\n",
+    "cpu1": "entries: 345\noverrun: 0\ncommit overrun: 0\nbytes: 32448\noldest event ts: 18299.884964\nnow ts: 18525.092409\ndropped events: 0\nread events: 0\n",
+    "cpu10": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092437\ndropped events: 0\nread events: 0\n",
+    "cpu11": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092463\ndropped events: 0\nread events: 0\n",
+    "cpu12": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092498\ndropped events: 0\nread events: 0\n",
+    "cpu13": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092522\ndropped events: 0\nread events: 0\n",
+    "cpu14": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092547\ndropped events: 0\nread events: 0\n",
+    "cpu15": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092570\ndropped events: 0\nread events: 0\n",
+    "cpu2": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092593\ndropped events: 0\nread events: 0\n",
+    "cpu3": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092631\ndropped events: 0\nread events: 0\n",
+    "cpu4": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092653\ndropped events: 0\nread events: 0\n",
+    "cpu5": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092676\ndropped events: 0\nread events: 0\n",
+    "cpu6": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092699\ndropped events: 0\nread events: 0\n",
+    "cpu7": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092722\ndropped events: 0\nread events: 0\n",
+    "cpu8": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092745\ndropped events: 0\nread events: 0\n",
+    "cpu9": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 18525.092767\ndropped events: 0\nread events: 0\n"
+  },
+  "raw_trace_sha256": "9948749033f4c83fe4e6ffefe322eea77d370ff757566914478a39ddc9733a60"
+}

@@ -38,8 +38,13 @@ kernel source. It identifies TX encryption-byte and RX management-packet
 accounting differences; these raw counters must not be forwarded unchanged.
 The optional [medium-loss experiment](doc/protocol/medium-loss-accounting.md)
 now reconciles transmit/failure bookkeeping under actual simulated loss and
-retains a significant retry-counter discrepancy. Airtime/rate and online
-measurement qualification remain pending.
+retains a significant retry-counter discrepancy. The follow-on
+[kernel completion trace](doc/protocol/tx-status-accounting.md) explains it:
+aggregation control flags suppress some retries from the kernel counter.
+Raw counter passthrough, airtime/rate and online measurement qualification
+remain pending. A [telemetry-gap regression](doc/protocol/telemetry-freshness.md)
+now verifies that stale telemetry withdraws dependent observations while keeping
+the healthy control session; real disconnects still require fresh onboarding.
 The [policy receiver](doc/protocol/reporting-policy.md) now persists the native
 controller's requested reporting policy and sends its receipt Ack. Its schedule
 survives reconnect/restart and explicitly counts due reports that cannot yet be

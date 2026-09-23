@@ -795,10 +795,34 @@
       "title": "Native medium-loss measurement evidence",
       "description": "Retained failure attempts and the bounded native measurement experiment; no full sustained or physical-pod acceptance.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/tx-status-accounting.md",
+      "title": "Explain the kernel retry counter",
+      "description": "Passively trace exact-kernel completion flags, correlate captured attempts and inspect aggregation-related retry suppression.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/tx-status/README.md",
+      "title": "Kernel retry explanation and retained failures",
+      "description": "Ten station lifetimes reconcile retries; the same run retains failed onboarding/policy gates rather than claiming full acceptance.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/telemetry-freshness.md",
+      "title": "Recover from a telemetry-only gap",
+      "description": "Learn why stale measurements withdraw observations without restarting a healthy control session, then compare actual disconnect and restart.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/telemetry-freshness/README.md",
+      "title": "Native telemetry freshness and recovery evidence",
+      "description": "A 213-second regression passes telemetry-gap and both management recovery checks, with three operations and one configuration-write attempt.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "medium-loss/unit-results.xml",
-    "ovsdb": "wsc-wire/ovsdb-results.xml"
+    "unit": "telemetry-freshness/unit-results.xml",
+    "ovsdb": "telemetry-freshness/ovsdb-results.xml"
   }
 }

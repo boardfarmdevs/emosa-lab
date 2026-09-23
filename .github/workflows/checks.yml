@@ -67,6 +67,18 @@ jobs:
           python3 scripts/check-native-policy.py
           doc/evidence/medium-loss/native-medium-loss-05
       - run: >-
+          python3 scripts/check-tx-status-accounting.py
+          doc/evidence/tx-status/native-tx-status-01
+      - run: >-
+          python3 scripts/check-telemetry-gap.py
+          doc/evidence/telemetry-freshness/native-telemetry-gap-01
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/telemetry-freshness/native-telemetry-gap-01 --minimum-seconds 210
+      - run: >-
+          python3 scripts/check-native-policy.py
+          doc/evidence/telemetry-freshness/native-telemetry-gap-01
+      - run: >-
           python3 scripts/check-discovery-reference.py
           --directory doc/evidence/discovery-session/run-01
           --directory doc/evidence/discovery-session/run-02

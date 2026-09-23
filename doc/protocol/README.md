@@ -29,6 +29,8 @@
 | [Station-removal observation](station-removal-observations.md) | Raw final kernel records, radio reasons and EasyMesh leave correlation |
 | [Station counter accounting](station-counter-accounting.md) | Capture health, exact Ubuntu source reconstruction, measured byte/packet boundaries and reproduction |
 | [Counters under medium loss](medium-loss-accounting.md) | Optional pinned wmediumd, captured kernel status and failure accounting; retry and airtime qualification limits |
+| [Kernel completion flags](tx-status-accounting.md) | Explain retry suppression using a passive exact-kernel probe and independently correlated completions |
+| [Telemetry freshness](telemetry-freshness.md) | Withhold stale observations without restarting a healthy control session; reproduce the native gap and both recovery faults |
 | [Reporting policy receipt](reporting-policy.md) | Durable native policy, same-MID Ack, recovery-preserved schedule and explicit missing reports |
 
 Component checks retain their individual scope. The native onboarding guide
