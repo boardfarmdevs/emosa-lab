@@ -32,6 +32,7 @@
 | [Kernel completion flags](tx-status-accounting.md) | Explain retry suppression using a passive exact-kernel probe and independently correlated completions |
 | [Telemetry freshness](telemetry-freshness.md) | Withhold stale observations without restarting a healthy control session; reproduce the native gap and both recovery faults |
 | [Reporting policy receipt](reporting-policy.md) | Durable native policy, same-MID Ack, recovery-preserved schedule and explicit missing reports |
+| [AP/radio/client report assembly](ap-metric-reports.md) | Complete selected companions, guarded measurement handoff and durable periodic dispatch; native AP measurements pending |
 | [Neighbor link metrics](neighbor-link-metrics.md) | Direction-specific IEEE 1905 responses, guarded measurement handoff and the remaining pod/peer interface qualification |
 | [Forwarding observations](forwarding-observations.md) | Actual pod interfaces, raw counter windows, independent backhaul capture and recovery baselines |
 | [Live neighbor binding](neighbor-discovery-binding.md) | Pod-side discovery through OVSDB into represented topology, with observer pause checks |

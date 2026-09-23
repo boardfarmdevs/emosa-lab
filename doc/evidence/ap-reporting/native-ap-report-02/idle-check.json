@@ -1,0 +1,5 @@
+{
+  "owned_lab_idle_check_passed": true,
+  "command": "controller-trial.py idle() after native-ap-report-02 terminal completion",
+  "physical_pod_contacted": false
+}

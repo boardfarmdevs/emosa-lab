@@ -197,7 +197,9 @@ def check(directory):
         if q["frame"] in excluded
         for r in responses
     )
-    assert len(queries) >= 3 and len(queries) - len(excluded) == len(responses) >= 2
+    assert len(queries) >= 3 and len(queries) - len(excluded) == len(responses) >= 2, (
+        "unanswered live peer query or unexpected reply count"
+    )
     queries = [q for q in queries if q["frame"] not in excluded]
     records = []
     for query in queries:

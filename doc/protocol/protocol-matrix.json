@@ -1883,7 +1883,8 @@
       "contract": "Selected 60-second policy, all three requested STA inclusion bits retained, complete decode before durable receipt, same-MID Ack within one second, identical re-delivery does not postpone reporting deadlines",
       "recovery": "Intent and schedule survive reconnect and process restart on same boot; detected boot change explicitly rebases schedule (unit-tested only)",
       "policy_application_proven": false,
-      "required_reporting_proven": false
+      "required_reporting_proven": false,
+      "periodic_dispatch": "Selected guarded AP dispatcher implemented; complete native measurements and report fulfillment pending"
     },
     "telemetry_freshness": {
       "status": "control_and_telemetry_deadlines_separated_native_gap_and_real_fault_recovery_verified",
@@ -2299,6 +2300,38 @@
         "connection_generations": 3,
         "worker_processes": 2
       }
+    },
+    "ap_metric_reports": {
+      "status": "selected_composition_and_guarded_periodic_dispatch_implemented_live_measurements_pending",
+      "guide": "doc/protocol/ap-metric-reports.md",
+      "implementation": "src/emosa/wire/ap_metrics.py",
+      "schedule": "src/emosa/wire/reporting_policy.py",
+      "tests": "tests/test_ap_metrics.py",
+      "references": [
+        "EasyMesh 6.1 10.2.1 pp.82-84",
+        "17.1.16-17 pp.113-114",
+        "Tables 44/45 pp.138-140; 47 pp.140-141; 58 p.147",
+        "Tables 83/84 p.164; 85 p.165; 96 pp.170-171",
+        "IEEE 802.11-2024 9.4.2.172 Figure 9-740 Tables 9-332-334; source conversion pending",
+        "Wi-Fi Data Elements 3.0 package including TR-181-2-17_DEr3.xlsx: authorized access pending"
+      ],
+      "contract": "One non-MLD radio/BSS, Profile-1 byte units, <=32 stations. Mandatory AP94/C7, C6 for periodic or requested radio; policy flags require A2, both96/C8 and B0. Complete membership and current source revision, <=2s lease, no inferred missing values.",
+      "scheduling": "Reserve due period durably before I/O, preserve origin across reconnect/restart, attempt at most one current report, retain uncertain or unavailable periods without replay. Successful send is not controller receipt.",
+      "evidence": "doc/evidence/ap-reporting/README.md",
+      "independent_checks": [
+        "scripts/check-ap-metrics-reference.py",
+        "scripts/check-native-ap-withholding.py"
+      ],
+      "measurement_source_qualified": false,
+      "native_ap_report_delivery_proven": false,
+      "required_reporting_proven": false,
+      "remaining": [
+        "Qualify AP utilization and mandatory BE ESP estimator; review IEEE/EasyMesh subfield reordering",
+        "Acquire referenced Data Elements definitions and qualify radio/AP/STA conversions and counter epochs",
+        "Connect native publisher and independently verify all received controller values",
+        "Resolve unsolicited AP delivery/reliability interpretation; thresholds, multiple BSS/radios and MLD remain unsupported",
+        "Complete final-session publisher, native shutdown fix and integrated 15-minute acceptance"
+      ]
     }
   }
 }

@@ -4134,6 +4134,52 @@ measurements within the original response deadline; it cannot report old data
 or extend the deadline on a duplicate request. This illustrates why passing one
 reporting feature is insufficient to declare the whole system ready.
 
+### 13.29 Build complete AP reports and preserve reporting deadlines
+
+A reporting policy is a list of obligations. An AP Metrics Response is the
+message that fulfils a particular reporting obligation. Measurements are the
+facts that justify its contents. These are three different things: receiving a
+policy does not create measurements, and generating valid bytes does not prove
+that they describe the pod.
+
+The new [AP report guide](../protocol/ap-metric-reports.md) takes you through all
+three boundaries. Work on HOST first; its synthetic exercise needs no VM.
+
+1. Read the content table. Locate AP Metrics, AP Extended and Radio Metrics,
+   then the four client companion types. The link inclusion flag requires both
+   basic and extended link information. Our native controller enables all three
+   client inclusion flags, so EMOSA cannot silently omit a difficult companion.
+2. Replay the retained independent checker. Trace the controller query MID to
+   the response. Compare the periodic response, which has no preceding query,
+   and the query intentionally left unanswered because its required link data
+   is missing. All example values are invented and clearly labeled synthetic.
+3. Generate a fresh capture using the guide's command. Read the fake-clock
+   schedule at times 70 and 130: the first due report is sent, the second is
+   withheld. A fast fixture run does not represent two minutes of real operation.
+4. Explain why the schedule is saved before network I/O. A restart after sending
+   but before saving its outcome leaves a conservative unknown outcome. EMOSA
+   must preserve the next deadline and must not turn uncertainty into proof of
+   controller receipt. Reopening the fixture store is not an actual process kill.
+5. Distinguish `None`, a known empty queue inventory and a numeric zero. Missing
+   radio noise is not zero noise; no known TID queue sizes does not mean all
+   queues are empty. These distinctions stop plausible but false telemetry.
+6. Run the native withholding and recovery audits on the retained 210-second
+   experiment. Here the real controller keeps requesting reports, while the
+   missing qualified AP source prevents transmission. The audit expects three
+   missing periods and no AP reports. Actual OVSDB loss and SIGKILL must preserve
+   those deadlines without duplicate Config writes or loss of client traffic.
+7. Read the retained peer-query failure too. A query arrived before a fresh
+   neighbor interval was published, although the interval became available
+   within its one-second response deadline. The bounded waiting fix retains
+   that deadline and authority. The combined regression must still pass its
+   independent peer audit before being described as successful.
+
+**Learning checkpoint:** explain separately what a validated observation, a
+complete message, a successful send and an independently observed controller
+update prove. Native AP measurements, final-session reporting and the full
+integrated 15-minute acceptance remain required. ESP conversions and referenced
+Data Elements definitions cannot be replaced by invented fixture values.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

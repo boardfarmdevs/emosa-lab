@@ -75,8 +75,11 @@ status.
 
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated
-acceptance remain outstanding. Policy receipt/Ack now persists the controller's
-intent and records unfulfilled reporting deadlines; it does not supply metrics.
+acceptance remain outstanding. Policy receipt/Ack persists the controller's intent. The
+[AP report builder and periodic dispatcher](ap-metric-reports.md) now assemble
+the required companions from an explicit internal handoff and preserve deadlines
+through recovery. Its native measurement source is still unqualified, so the lab
+withholds AP reports and records the missing periods.
 Selected channel procedures and the recovery
 supervisor are implemented; their limits and reproduction steps follow below.
 Physical-pod acceptance remains
@@ -135,7 +138,7 @@ TEL-01–04. Installing this simulation publisher on a physical pod is not allow
 | Client join/leave notification | §6.3, §17.1.5, §17.2.20/Table 43 | Send AL MAC and Client Association Event with observed STA/BSSID and join/leave bit; age updates alone are not joins |
 | Client Capability Query | §9.2, §17.1.14–15, §17.2.18–19, §17.2.36 | Correlated failure report: reason 2 for an absent station, reason 3 for an associated station whose association frame is unavailable |
 | Disassociation statistics | §6.3, §17.1.41 | [Sender and guarded handoff implemented](final-session-statistics.md); actual final session counters/reason still unqualified, so native polling continues to record the gap |
-| Reporting policy and metrics | §7.3 and §10 | [Durable selected receipt/Ack and missing-report schedule](reporting-policy.md); measured field mappings and required report delivery remain pending |
+| Reporting policy and metrics | §7.3 and §10 | [Durable selected receipt/Ack](reporting-policy.md) and [AP report assembly/periodic dispatch](ap-metric-reports.md); measured field mappings and native AP delivery remain pending |
 | Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1; amendment pp.10–12; EasyMesh §10.1 | [Query/response and guarded handoff implemented](neighbor-link-metrics.md); the optional [owned peer profile](native-peer-metrics.md) supplies measured native replies and controller receipt. Physical/multiple-peer qualification and integrated 15-minute acceptance remain pending |
 | Channel procedures | §8.1–2; §17.2.13–16/Tables 36, 38–40 | Sole advertised channel 6; durable preferences, acceptance of requests requiring no adjustment, measured operating power and correlated Ack/retry |
 

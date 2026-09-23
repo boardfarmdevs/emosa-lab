@@ -10,6 +10,7 @@ from collections import deque
 
 from emosa.easymesh_payloads import DeviceInventory, encode_value
 from emosa.errors import EmosaError, Reason
+from emosa.wire.ap_metrics import APMetricCoordinator, APMetricSource
 from emosa.wire.autoconfiguration import SECURITY_ENVELOPES, DiscoveryExchange
 from emosa.wire.channel import ChannelCoordinator
 from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, decode_frame, fragment_message
@@ -57,6 +58,7 @@ class OnboardingSession:
         channel_store=None,
         reporting_policy_store=None,
         link_metric_source=None,
+        ap_metric_source=None,
         reset_channel_policy=True,
     ):
         if type(inventory) is not DeviceInventory:
@@ -92,6 +94,14 @@ class OnboardingSession:
             else LinkMetricSource(source, clock=clock)
         )
         self.link_metrics = None
+        if ap_metric_source is not None and ap_metric_source.reports is not source:
+            raise EmosaError(Reason.INVALID_INPUT, "AP measurements use another control source")
+        self.ap_metric_source = (
+            ap_metric_source
+            if ap_metric_source is not None
+            else APMetricSource(source, clock=clock)
+        )
+        self.ap_metrics = None
 
     def _record(self, event):
         self.counts[event] = self.counts.get(event, 0) + 1
@@ -158,6 +168,8 @@ class OnboardingSession:
             self.channels.tick()
         if self.reporting_policy:
             self.reporting_policy.tick()
+        if self.link_metrics and self.state == "provisioning":
+            self.link_metrics.tick()
         if self.disassociations:
             self.disassociations.tick()
         self.departures = {key: at for key, at in self.departures.items() if self.clock() < at + 2}
@@ -269,6 +281,18 @@ class OnboardingSession:
                 self.link_metrics = LinkMetricCoordinator(
                     self.link_metric_source, self.send_frame, clock=self.clock
                 )
+                self.ap_metrics = APMetricCoordinator(
+                    self.ap_metric_source,
+                    self.send_frame,
+                    self.mids,
+                    admitted=lambda: self.state == "provisioning",
+                    policy=lambda: (
+                        self.reporting_policy.value["policy"]
+                        if self.reporting_policy and self.reporting_policy.value
+                        else {}
+                    ),
+                    clock=self.clock,
+                )
                 if self.channel_store is not None:
                     self.channels = ChannelCoordinator(
                         self.source,
@@ -283,6 +307,7 @@ class OnboardingSession:
                         self.source,
                         self.send_frame,
                         self.reporting_policy_store,
+                        reporter=self.ap_metrics,
                         clock=self.clock,
                     )
                 self.reports.notify_early()
@@ -324,6 +349,12 @@ class OnboardingSession:
                     return self._record(result)
             if self.link_metrics and self.state == "provisioning":
                 result = self.link_metrics.handle(
+                    message, now, ingress=ingress, generation=generation
+                )
+                if result:
+                    return self._record(result)
+            if self.ap_metrics and self.state == "provisioning":
+                result = self.ap_metrics.handle(
                     message, now, ingress=ingress, generation=generation
                 )
                 if result:
@@ -403,6 +434,7 @@ class OnboardingSession:
             self.reporting_policy,
             self.disassociations,
             self.link_metrics,
+            self.ap_metrics,
         ):
             if component:
                 component.close()
@@ -427,6 +459,12 @@ class OnboardingSession:
             "full_profile_qualified": False,
             "physical_pod_proven": False,
             "reporting_policy": self.reporting_policy.status() if self.reporting_policy else None,
+            "ap_metrics": {
+                "counts": dict(self.ap_metrics.counts),
+                "measurement_available": self.ap_metric_source.current() is not None,
+            }
+            if self.ap_metrics
+            else None,
             "neighbor_link_metrics": {
                 "counts": dict(self.link_metrics.counts),
                 "measurement_available": self.link_metric_source.current() is not None,

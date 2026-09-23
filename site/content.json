@@ -927,10 +927,22 @@
       "title": "Native peer metrics and recovery evidence",
       "description": "Actual path withdrawal, OVSDB reconnect and process restart, matching native interface statistics, and preserved startup-channel and audit failures.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/ap-metric-reports.md",
+      "title": "Assemble complete AP, radio and client reports",
+      "description": "Learn measurement guards, required companions, durable periodic reservation, synthetic frame checks and the remaining live-source boundary.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/ap-reporting/README.md",
+      "title": "AP reporting component and native recovery evidence",
+      "description": "Independently decoded synthetic reports, native withholding/deadlines, actual recovery faults and the retained peer-query timing failure.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "native-peer-metrics/unit-results.xml",
-    "ovsdb": "native-peer-metrics/ovsdb-results.xml"
+    "unit": "ap-reporting/unit-results.xml",
+    "ovsdb": "ap-reporting/ovsdb-results.xml"
   }
 }

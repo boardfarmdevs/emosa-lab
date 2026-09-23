@@ -16,8 +16,10 @@ selected action and actual queue losses over common service intervals, including
 291 live intervals through both recovery faults. The optional
 [native peer publisher](../protocol/native-peer-metrics.md) now adds observed
 isolation and disabled aggregation, sends checked measurements to the native
-controller and verifies received interface statistics. Next complete AP/STA
-reports and final-session statistics, resolve native shutdown, and run the full
+controller and verifies received interface statistics. The [AP report builder](../protocol/ap-metric-reports.md) now implements complete
+selected companions and durable periodic dispatch with independently decoded
+synthetic evidence. Next qualify and connect actual AP/STA measurements, complete
+final-session statistics, resolve native shutdown, and run the full
 integrated 15-minute acceptance with every required source enabled. Physical
 and multiple-peer qualification remain separate work.
 

@@ -10,6 +10,15 @@ Start with [combined service/loss accounting](shaped-backhaul-accounting.md).
 The [retained experiments](../evidence/native-peer-metrics/README.md) explain
 both the successful audit and earlier incomplete attempts.
 
+The follow-on [AP reporting regression](ap-metric-reports.md) exposed a query
+arriving shortly before a fresh peer interval was published. The coordinator now
+retains at most four pending queries under their original one-second deadlines
+and control/topology binding. Duplicates do not extend the wait; source or binding
+loss, expiry and partial transmission withdraw pending work. Its retained repeat
+answers three actual native queries, including one after a 337 ms bounded wait.
+The original failed query and source files remain available in the
+[AP reporting evidence](../evidence/ap-reporting/README.md).
+
 ## Why isolation is required
 
 The controller-facing EMOSA interface and the pod's traffic-forwarding interface

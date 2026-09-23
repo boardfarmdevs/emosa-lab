@@ -1,0 +1,70 @@
+{
+  "native_ap_withholding_checks_passed": true,
+  "policy_receipt": {
+    "policy_receipt_checks_passed": true,
+    "scope": "durable native policy receipt/Ack and recovery, not fulfilled reporting",
+    "capture_health": {
+      "ethernet": {
+        "passed": true,
+        "linktype": 1,
+        "pcap_records": 112,
+        "captured": 112,
+        "received_by_filter": 112,
+        "dropped_by_kernel": 0
+      },
+      "radio": {
+        "passed": true,
+        "linktype": 127,
+        "pcap_records": 11451,
+        "captured": 11451,
+        "received_by_filter": 11451,
+        "dropped_by_kernel": 0
+      }
+    },
+    "requests": [
+      {
+        "request_frame": 8,
+        "ack_frame": 15,
+        "mid": 21,
+        "ack_delay_ms": 30.313968658447266
+      },
+      {
+        "request_frame": 47,
+        "ack_frame": 52,
+        "mid": 42,
+        "ack_delay_ms": 20.498991012573242
+      },
+      {
+        "request_frame": 85,
+        "ack_frame": 90,
+        "mid": 59,
+        "ack_delay_ms": 16.23082160949707
+      }
+    ],
+    "interval_seconds": 60,
+    "all_requested_sta_inclusions_preserved": true,
+    "schedule_preserved_across_both_faults": true,
+    "periods_due_without_report": 3,
+    "policy_application_proven": false,
+    "required_reporting_proven": false,
+    "sustained_operation_proven": false,
+    "physical_pod_proven": false,
+    "remaining": [
+      "Qualified AP/STA measurements and required report delivery",
+      "IEEE 1905 neighbor measurements and final disassociation records",
+      "Complete 15-minute acceptance after reporting is implemented"
+    ]
+  },
+  "checked_session_snapshots": 31,
+  "observed_unfulfilled_period_counts": [
+    1,
+    2,
+    3
+  ],
+  "original_schedule_preserved": true,
+  "all_requested_inclusion_flags_retained": true,
+  "qualified_ap_measurements": false,
+  "native_ap_report_delivery_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false
+}

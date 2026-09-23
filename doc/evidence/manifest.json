@@ -16076,6 +16076,1186 @@
       "path": "native-peer-metrics/unit-results.xml",
       "sha256": "c63c75e3b339f2c7de5e85685f94a96b4d049c2b2c51f419dacf5f09fb36214d",
       "size": 4452736
+    },
+    {
+      "path": "ap-reporting/README.md",
+      "sha256": "40bfef1016ecad9210d81ddbfd065d8eaab0670673070049b42e1a29915da7c7",
+      "size": 6812
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0000.json",
+      "sha256": "17fb6add3f15af2de9cfb405afe54f09bbfbaea34608ef1648ed98259a341289",
+      "size": 38144
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0001.json",
+      "sha256": "1286ccd65e2ee45a962967e32e1f37564452508affc87ebd0f3c7ff79ac013b2",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0002.json",
+      "sha256": "467ca3a0308d70d46349afba2cca5fa96706926c6b71be6d29effc2e0f565e68",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0003.json",
+      "sha256": "9b544504a7d547f93b0e2f0546284cffc0bec46be71438ec9028ed6da1acbfa0",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0004.json",
+      "sha256": "bb43e7fff25230e06546a75a4375767b6b0246703df7e8712d8abf24c4f4cc0f",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0005.json",
+      "sha256": "e44756570e0bc2271bb0b87bbc474f6097fd96bc9b992009241dab0404a1b89b",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0006.json",
+      "sha256": "f32138139a0cf49726655424dde456a049b035d4cc7c8b960b95398c2d26bb18",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0007.json",
+      "sha256": "4d5d182ce56966e31c90db3a7e78b83c18481bd9e3b58c46e53d7c31246bd043",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0008.json",
+      "sha256": "0ee7cc0429f5cf82261b69a6b545a951cb0f6433c635e2a878cc4b2cac45f6fb",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0009.json",
+      "sha256": "c3846b7dcca7e79caba78be088b01054904c47d3928062e60b86a1d29fddba67",
+      "size": 33981
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0010.json",
+      "sha256": "40888e788642afb66b08483cd6a10f7c4d06f4943e45208172623383810f64c4",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0011.json",
+      "sha256": "714c1512756e5841e8827e527e33508bffe47d279f40a42e80675999f1e915cc",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0012.json",
+      "sha256": "03de0422b293c5625a72c44a4d0537582509a27215c04c2671d979d17e381379",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0013.json",
+      "sha256": "7096d37e879369ee19f5323736233f7535f5134b3a5da92128311136ae71dc3e",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0014.json",
+      "sha256": "675fe3fa8135744720d43926fa10e3b9f2dce1f2b9b0bac0f65b186f5e66dbe6",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0015.json",
+      "sha256": "9b1d7c56a3dacf57b0f3338a6d6a4c984159bca73e46e8fc43e9ce824581a116",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0016.json",
+      "sha256": "d3f4b4cc93d28cf17f553d65d07366caa1457701bcb13ce978a6f194b15636bc",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0017.json",
+      "sha256": "60c53b2e1265e9da001eaba99546953ee90857560e4173bc56182415369242a5",
+      "size": 33981
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0018.json",
+      "sha256": "6cb5a767b88b654b424f3c88acc254d2806b6eb540be2f634223b84e273f786f",
+      "size": 33984
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0019.json",
+      "sha256": "01c0dfdcdce315f52b50f6988d60111122bffd25e5b3c63a3b9b9850743acb58",
+      "size": 33984
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0020.json",
+      "sha256": "c7d21fd85e0223f3af8cb5dab2d90e8c62b04a50b40ca343e351470220e310bc",
+      "size": 33985
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0021.json",
+      "sha256": "46260cb197f825ae37fb63ef0210116beb4a055e14bcaf31f5a5944fb3ed53c2",
+      "size": 33985
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0022.json",
+      "sha256": "3d2ce67884164e8f6aa4eb3b1596e722f335e366f9de9db4e66498a0602719c7",
+      "size": 33984
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0023.json",
+      "sha256": "3ba81d0505336a82b47267d1e1153cecd2f76ca91a96c97e065d28ad7b921399",
+      "size": 33984
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0024.json",
+      "sha256": "efb1408996d259e528390777fa95525190a54779a305507b054e1e023e07ad03",
+      "size": 33985
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-inventory-0025.json",
+      "sha256": "605e0c23cb329c1689dc117cf747c9f1e209948eeab1c15ee79682a1be13946e",
+      "size": 33985
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/active-samples.json",
+      "sha256": "ea3ba4e24be3a9094ad54ec5a77911c8b919f015fac319522b0afbf35e7f8645",
+      "size": 2135409
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/candidate-trial.json",
+      "sha256": "76cb5f195a49c770694ba966d6c0f21fe7d9ded560eb42ff02efe5a39f2da10f",
+      "size": 68503
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/client-outages.json",
+      "sha256": "f109897930e88d7396edd59e3d9a869e24624bfbaa94517c25de4ef1aa9f0085",
+      "size": 677
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0000.json",
+      "sha256": "8fd758f34385ce391b9dad5091a42bfd8cd9e8985a141ec8eefea6785270d8bc",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0001.json",
+      "sha256": "c9435fee41b4f633e385d5a9772ebda56acbec7f990af3ec8416c5f629479cbe",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0002.json",
+      "sha256": "58205b9696c0da8042bda6bf1a60c57cb38ddec22a64afebe53bc642e277e7d9",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0003.json",
+      "sha256": "0d11e23b91bfc3adec3d942f3fc87eebb0a416a650461d3439c8548aec980476",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0004.json",
+      "sha256": "dba6e41d05c584218ec6fe93a7b261fb1c4ef02330443625c118b745ae6d11db",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0005.json",
+      "sha256": "d312fb6c24b37ce1287b642cd39fa2bb0a4478fa2eec7b3bfc54abff1b7b894c",
+      "size": 2636
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0006.json",
+      "sha256": "cd835b3fa25d7d8488649059b251d77071ca238cf712e5b1f5c2b61bcd5269e4",
+      "size": 2632
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0007.json",
+      "sha256": "79727c126a1db71925fae810d5eb10c5e831c94cc4e90d0525e2899493c80791",
+      "size": 2632
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0008.json",
+      "sha256": "01667c9bdd3788c4339d0b4e1db475f0f3611440a5d463d59128ea18b36f48c8",
+      "size": 2632
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0009.json",
+      "sha256": "9f3472ae57e59b6828632b66859684e52717987e45f85c83411a41b14522fcdd",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0010.json",
+      "sha256": "02a823e7b749b11819911a58ac8719f3a19d5cf25d6cf858d536537716c5bcec",
+      "size": 2633
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0011.json",
+      "sha256": "2c58085d344cb4345e421f5a28c5cd89841d911bfc942ad4d0c49e0ea2b5c276",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0012.json",
+      "sha256": "c57983f40d34f13d009818ec5ce08b87d69f027723bfae0ff93c454298ec194f",
+      "size": 2631
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0013.json",
+      "sha256": "aaa1064be70d59cb695b67fe9929216be907b6661de9d6d7e156e50ba4f45199",
+      "size": 2631
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0014.json",
+      "sha256": "de7f4ce736e1d5e9b7a7800c590430ece9c6998ae683e551f2b4323721c8d649",
+      "size": 2632
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0015.json",
+      "sha256": "fc176854f5620f99c4fa3177d709a3ffd5d6efd3265e89d76f0bd73468b66cac",
+      "size": 2633
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0016.json",
+      "sha256": "53b383c6a2eb245b83ed01681483290f912edd4160547f0fe2c203fbdf8eb84d",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0017.json",
+      "sha256": "a68992e6a4058ed9e6e539762d3186651ad8357d92f30eb88b78b003bbd47db3",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0018.json",
+      "sha256": "63e8e637608dc149fd110c2ff15c5862235bf9f9364f90b229c33c62e7f3db79",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0019.json",
+      "sha256": "a577c2d103778c10735f5ea7e2dda70b9592611adeb784d1c49ed4b847d4caca",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0020.json",
+      "sha256": "b5096f66a5a15aa1cd438e5b957bbfbe110a5351e2497a7c7400dfc4cd459033",
+      "size": 2633
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0021.json",
+      "sha256": "3d44a5315b878416dfcdafd983212a30a6e1b652f0ebd9f80f664df2d16a12b0",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0022.json",
+      "sha256": "6d9f9777b25a6d18dd316313fd4877f27724e8a5b1f5218edb0201d6d6b9cd58",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0023.json",
+      "sha256": "b4f0adaa70e94f4f44ab1f819fddf38049e98c2d0197b3150c7123be70c57e8b",
+      "size": 2633
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0024.json",
+      "sha256": "9d30276c82b401a52bd0629a92eaf0d3c57681114f4a07d00805fd98878c4b8f",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-active-0025.json",
+      "sha256": "337e079cdad23ec3d6fdc02af7ee76996a9b5ffbe97474db7ac21e4cbe9b9025",
+      "size": 2636
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-neighbor-withheld.json",
+      "sha256": "682760f410b342f944b7da3aa76661f1b62d41175592287d2e5cdd4bf909d8c9",
+      "size": 2648
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-onboarded.json",
+      "sha256": "f43402f935ac6d48eaae498afb1ffca07b6efeaf44896d3b24c6e5bde8cc696b",
+      "size": 2621
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-peer-path-gap.json",
+      "sha256": "5a1d330e0aa6a1fe2a962915a6cf6e9e847e254f02bedbe5aed1b30288e1b803",
+      "size": 2640
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-recovery-0.json",
+      "sha256": "02d9ef51c2f6cff91b8964cc7839aafb57419bf3ee3b2e58b7859724cb105fe1",
+      "size": 2632
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-recovery-1.json",
+      "sha256": "efbd9e882a6d609dd4a6d8f920a03aeef149abb1787408034b1d08c0ecb9bb26",
+      "size": 2632
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/clients-telemetry-withheld.json",
+      "sha256": "d50a4eb5ff299b8c6ae82a5d50d24a13b19cd49b7bbf6e42c6950214a971044a",
+      "size": 2648
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/controller-after.json",
+      "sha256": "511d513573a60401d6245fb40af04067d96e321e0b791846f20d9cb8bdaf1c6f",
+      "size": 32146
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/controller-before.json",
+      "sha256": "834a49a473c85e43a4073585b6bb97e178b3e7fa4f98d99a67a0001a98298ab3",
+      "size": 10353
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-inventory-0001.json",
+      "sha256": "d025a5beed1267ad842cc44521a5afab308e58d26c2b52dd5f27994ebf945d3c",
+      "size": 33192
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-inventory-0005.json",
+      "sha256": "9c8cb03e306128a25d44f08d15854262e5c2a15d632a290e3d80e92f73f6cc74",
+      "size": 33192
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-inventory-0008.json",
+      "sha256": "bdfea78c8818ea62c7f1c0ff0506529227f9b2cf31e38674436c60a94dbc8ec0",
+      "size": 33191
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-inventory-0011.json",
+      "sha256": "41dca3e65af952681fb2f55c755c3e3887d0baf7606cfbe1eafdffc7cb13b0cf",
+      "size": 33192
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-inventory-0014.json",
+      "sha256": "d074648442be40e4342572cca6c109c4c057239846ab0460e4dc299a4b3aa254",
+      "size": 33192
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-inventory-0017.json",
+      "sha256": "10aea277716dd2857c071d2e2b709a2df2b048f08128bbf688625c484cf66468",
+      "size": 33194
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-inventory-0021.json",
+      "sha256": "fb7a42fd18a5023cf1ddfeebc511b9ffc69b5498bca1e3dc95eec6c2091c4279",
+      "size": 33194
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-inventory-0025.json",
+      "sha256": "85f347270143bd704ac81dbf5bbb2427127f5837e76de6134b364d4f478eb0c5",
+      "size": 33194
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-session-0001.json",
+      "sha256": "5ef0c8a3eff390cb00489c1d31df2b90b1172242378994b704c637202da7a41a",
+      "size": 68428
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-session-0005.json",
+      "sha256": "612aa74c4fc3293f03ed465a5f79f59b2aeaad361abe4ddf7283e7eb714210fd",
+      "size": 69019
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-session-0008.json",
+      "sha256": "9c63e9a0f7637835d209ae245bad369d5ed8537817f3878b80c575eb39a5c501",
+      "size": 75408
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-session-0011.json",
+      "sha256": "a3e5366cf4544294a84b30e149deef383e7b2e965911a6ccdab5034fb6395d59",
+      "size": 75928
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-session-0014.json",
+      "sha256": "fdb4541697b43bacee6aa032ea9d786e5238efcac505e78918433f9b0017331b",
+      "size": 76139
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-session-0017.json",
+      "sha256": "1757e2a0754da5eb950b4b5175cb5dd5102f555f27fdd08b7f51a91444a2cfb1",
+      "size": 68788
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-session-0021.json",
+      "sha256": "a57700040437b55960b3b26dcb236347fc6125c9f5cf5cee2c141f374b11b63c",
+      "size": 69067
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/detached-session-0025.json",
+      "sha256": "e68441b02d214339ec43cca956a30a7f44172e33c98ba71c9932ce34c42dd4e1",
+      "size": 69217
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/egress-observations.jsonl",
+      "sha256": "c2e05f665c2610e7ad74a229737417cd78c9c7e3e11033522a5ea376b712e8f8",
+      "size": 4341362
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/egress-observer-final.json",
+      "sha256": "5457438fc8c5257d1938f0760aa74b1dc456f9f72290b61271d149adf7824ed2",
+      "size": 514
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/em-baseline-wifi-continuous-ping.log",
+      "sha256": "7d817288b913a9ae164cb5ebc3e7a3ff1c70f56480b17ce51f89f2ae23e3a3e0",
+      "size": 54974
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/em-baseline-wired-continuous-ping.log",
+      "sha256": "c98ac0db18f44d059b0fb7b382dd678a5fae31ff132c28a95fd8586090e01d29",
+      "size": 65579
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/ethernet-capture.log",
+      "sha256": "c7980636b852c87e94911727b2c6f35a8f0753c354d8fa8042453598c7157cd4",
+      "size": 172
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/ethernet.pcap",
+      "sha256": "96a3edc9a9a30eedf1179c84214d6c9f02b2d5821c9d27afbe0ff0397d8a7b2c",
+      "size": 10971
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/executed-source/link_metrics.py.txt",
+      "sha256": "9e2f126938002678c486535dd01364cb00ee7269617485ef9f0a5d5e6a3caaee",
+      "size": 16472
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/executed-source/onboarding.py.txt",
+      "sha256": "f4e4560329159b709f59071b5021f79e4c0424cf35faeebbf5507bfb9090bc7a",
+      "size": 25405
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/forwarding-capture.log",
+      "sha256": "0d5de608431793de944e030589db435ff0a48351c8d83dcab1d66872614626ae",
+      "size": 176
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/forwarding-samples.jsonl",
+      "sha256": "dbc1c83cf34e766da8328f5f1ecfbee56e12d38eb922d3957fac272cffeb2ea6",
+      "size": 10165448
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/forwarding.pcap",
+      "sha256": "cba4e481186681245104279334aeadb37fb29be089179c6ef4dd757450ab9a8c",
+      "size": 463530
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/independent-ap-withholding-check.json",
+      "sha256": "28f015db05991c36606dcd6487fe77c416bfcbef5d3b507a402e4de3998c6b57",
+      "size": 1959
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/independent-policy-check.json",
+      "sha256": "f58c9155fd6794ca5feec88335039a94796b57b69ec289662988242bc65a5ca0",
+      "size": 1435
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/independent-recovery-check.json",
+      "sha256": "9b09c1d243d2a59c2f7630fbfc3b8f31ba3980ad820126df8860d62da3870989",
+      "size": 3300
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/independent-telemetry-check.json",
+      "sha256": "a4ae1e99ed36710a50946c63691143d2f3b6fd56d7f54c64aa6fc24d42f74ba2",
+      "size": 819
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/manager.jsonl",
+      "sha256": "255972638b0da7fdca63237ea714f236c06e435556df244de1e4d609bea47762",
+      "size": 10130778
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/native-operation.json",
+      "sha256": "30deb26aae578ecf36c10d0d6bd79d974ebaf1fda48dc891e3608ecd92ec914c",
+      "size": 4858
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/native-session.json",
+      "sha256": "92cbcb8094e163a98e47cb637bcd5cd34d1503b7ccf5189610521aeee61a7640",
+      "size": 69300
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/neighbor-gap-check.json",
+      "sha256": "6834a3caac00a72103e40281e41511fe11cafa0f3d93ae9b5c97d759a946d2e2",
+      "size": 221597
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/neighbor-link-observations.json",
+      "sha256": "286544f498c24965620de4ce1c932d387f39a612c2f546bee95bf680b2a9d393",
+      "size": 22619
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/neighbor-observer-final.json",
+      "sha256": "81b5bdd734ec18db3429a5916fdb3c3b8009c21407c5ed88233afd302a917fe4",
+      "size": 936
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/peer-audit-failure.json",
+      "sha256": "9f001151438c964c6939e3c69de1f84c283b78a69d0cd0c454140be350c5ea45",
+      "size": 461
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/peer-path-gap-check.json",
+      "sha256": "bf02526c950092e2635d41155846f25a71711409c886de969aad74fff271f8ff",
+      "size": 222620
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/radio-capture.log",
+      "sha256": "806453fbc17ebe5ce8edd8f2ace735400c858bf373acf569567f6f690950b8f1",
+      "size": 201
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/radio.pcap",
+      "sha256": "ddadd6e9cd58da549cb3ab3eadab64e5d520d649da159698055f0eb86176b5c1",
+      "size": 2211772
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/recovery-checks.json",
+      "sha256": "0df9bfcb6dc1d31710e5bb2836cd1314df801c6b9ba1bfd14a6435e57267b4a9",
+      "size": 344787
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/reference-candidate.json",
+      "sha256": "9fab7ce59c050236f1159550a5f2aff698efa8331b0a05e6ea98d10426d233f2",
+      "size": 2190
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/result.json",
+      "sha256": "bf6b148943a38d57da3aedf06eeb9fbbcc02545f67b8deb65bcdba0f5d8f8deb",
+      "size": 63376
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/source-hashes.json",
+      "sha256": "6434100834b831a979f7133a38d65539f2e013fcf1b096df25fadd3b992d7df2",
+      "size": 13668
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/source-match.json",
+      "sha256": "0f7c9c4de71d1df8a86f0f87a0af03697e5e97b45b92d65839e9844f04687f25",
+      "size": 24669
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/station-events.jsonl",
+      "sha256": "643fe96cb093c7b4f594ba1a6e712243dc395eb7bddda9c17e1eaf2feef30b04",
+      "size": 46859
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/telemetry-gap-check.json",
+      "sha256": "479474535174a078dd4a6c62356e484bb20ca3c24a3d6b90dbe8ef83fa049e68",
+      "size": 222333
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/withheld-operation.json",
+      "sha256": "b3dad2ed63c9663bffd4a0507a54c28d59f5b6eaddcb866d9feb88ac90bf2416",
+      "size": 1963
+    },
+    {
+      "path": "ap-reporting/native-ap-report-01/worker-stop.json",
+      "sha256": "a2a570fb9f66698fe0bc434d0a337515fbc091d3a0dee279ccec30fe6a3ab97b",
+      "size": 176
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0000.json",
+      "sha256": "b5e3b6dc17fc4eb7f49db03cb5d7edf3fe5babbbeaefb62d61a48472a3b860d3",
+      "size": 38144
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0001.json",
+      "sha256": "79f4fd2d30ec121416bdbbc03fab005e9f2c247daa1537a9b2c9193956389977",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0002.json",
+      "sha256": "f12b61ef3eed94c32d85aa36c39e6921d99e215684e5c6a6b3dcaa755206d64c",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0003.json",
+      "sha256": "8067594a36e4672773b987b4086702854f908f125cc6c53a653c217798c3a5f2",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0004.json",
+      "sha256": "bcf987d97a922d8849d51d9867682e264026f564d5d047c4e4a2fc90488995e8",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0005.json",
+      "sha256": "558edcbb2553486fc2000a5fae9a73dab6b5e41954ada35d3edfefdb94f97b04",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0006.json",
+      "sha256": "5084289d89959b290a27ddbff34c8ecbc2fb0f0f0233277cc6dafb9f654c3d48",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0007.json",
+      "sha256": "d8f1a7948e8b771c8449e6d11c9317d8ed4b78b008b98e4f4988ec21875e6e4c",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0008.json",
+      "sha256": "cedb37dcee23207e80b650ec57239f1ce9ae29c5b5d97f9c3120f5808c2148a7",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0009.json",
+      "sha256": "48929c5e07f5fde31a10df37efa402718096d4b40e119dca2045b919a84c3a55",
+      "size": 33981
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0010.json",
+      "sha256": "486668b32fb342398a3242362931af38fe6b8041c7b339f0bab35f0fbf92ea84",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0011.json",
+      "sha256": "21bf0f43c32b7b96397a0013cb9ecc341eaf809c9bb58d07bfe03da8f3569905",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0012.json",
+      "sha256": "257f551bc3fd2fbcbfa24be1499e27f21d4329578807dbf9eb09956103abf8c2",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0013.json",
+      "sha256": "ee296e7ef644b2bf0d4893af47f2faec1d77f7145a0bbd93863c6755db49930e",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0014.json",
+      "sha256": "d2587c4dac1e97b471b9ec51541c242d3adeddcbc8136460993d845429b12b0a",
+      "size": 33983
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0015.json",
+      "sha256": "7953669355589540276926216fd4c40c6472e650b8bc3139423d20bf98b0fbdf",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0016.json",
+      "sha256": "095541a9e224b46c3776d3a90115eddab51aee9646aca0c7ac1f392893732316",
+      "size": 33982
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0017.json",
+      "sha256": "f761f3cdd3f41a1a181d10670b2f6f7c23d020eec5125b9d9499c1ce1beca9a9",
+      "size": 33981
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0018.json",
+      "sha256": "efc0ac39833f98ef218aa81c69e3ea350a5d34a9d89fbc1a57fccbf2f8ecfd20",
+      "size": 33984
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0019.json",
+      "sha256": "2e1d0c6c0a745b8285cc40b9743d5ccdd123c3408adc82b35c9393c181eaee77",
+      "size": 33984
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0020.json",
+      "sha256": "8f30111455ba82ce5bda1411bb214b852fc026c868774de9bc4cace3b69c4f47",
+      "size": 33985
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0021.json",
+      "sha256": "9977a6d36f25e6c066dd7bf5daaa69e27eda4e73b1269d167c7c8f61e7a86bac",
+      "size": 33985
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0022.json",
+      "sha256": "554b9d449ced486f2152c4043e3e2ed32cf7081662cd4e88274c9cb5eee204ae",
+      "size": 33984
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0023.json",
+      "sha256": "f5f596cc446dd920a5d3358cdfde032d395a093b6e2c74649850395f511bda5d",
+      "size": 33984
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0024.json",
+      "sha256": "fc3acbaabaa69924b6a0a577ffe1f5c163d8dba026f96aeddf387daa52f3e9c6",
+      "size": 33985
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-inventory-0025.json",
+      "sha256": "495f84ddce291464e6a5f0069f1909d133217fe46eb301011be85aa7d4d2bed4",
+      "size": 33985
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/active-samples.json",
+      "sha256": "f0b10d7e3e5d43474043fabd8a56c6bb6fb6192679b6030269cf1d2ecea63a07",
+      "size": 2136162
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/candidate-trial.json",
+      "sha256": "6339d245013a69993c1a79a4c8c64b2ea2f6ab5c388bddb3a26d0673199e2916",
+      "size": 68504
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/candidate.json",
+      "sha256": "ab8bdad7a21233103f241cff9507810ef9a0ce33c71221320a0248b5257348bf",
+      "size": 3746
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/client-outages.json",
+      "sha256": "26c53da7a8ac71aabd22116baa93be97e45461904078c8e074d9b6a66a101e69",
+      "size": 677
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0000.json",
+      "sha256": "c74e9a5adb93327d65571d1df5ce96a36bc234796b6e4b90ad1c0ff0be48dea4",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0001.json",
+      "sha256": "ed795da1a4970c87a18ccf67ff404cc90be0ee116d57aca47b1c0fc076075726",
+      "size": 2633
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0002.json",
+      "sha256": "1203160f4c20f6884e371e73d829fbcba987b9633dad00324d930e7884da7e7f",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0003.json",
+      "sha256": "187db8f1a8d8d37566270ad3ea101d35dd6ab9609b3a9f624a7269c0b38ec4ac",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0004.json",
+      "sha256": "7a8fd9e0fce71b660353589638fa2dc252205852df6512353358ac57f04b6d83",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0005.json",
+      "sha256": "25b52028557f46f028b9f6549516214211f45dcc4ae80e7a492ed4f9555e4c8b",
+      "size": 2636
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0006.json",
+      "sha256": "90279aa8e4e82e46099816b5cd87c7fdcd8b0a27ece577a54ccab92aa733656a",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0007.json",
+      "sha256": "adc1bb49625b9436a1fe12ae4f88e7812cc7fdcfcc229c27b09b636af7e070e2",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0008.json",
+      "sha256": "f56ffe00ae8b4edfdb2d2c42a9ba7ff37f980a5e0b1b3140389b9efa7b896e40",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0009.json",
+      "sha256": "b153a0ec9d74eff149e7991d7dea759ca99d7620f89dbe0e3b4f30c219596815",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0010.json",
+      "sha256": "78adbfe50ee78be6c37e4377f4810799f3c370b163810bf56134233197c01c8a",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0011.json",
+      "sha256": "f70ab8cbfbb8efe65944a6607c62a69c4028c9c434c0467d5f793ace4583a280",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0012.json",
+      "sha256": "8937de5f39a74541f1bcb4ca7b4f7ed318384ca4b6a8d40a6c326524d45b7a2d",
+      "size": 2632
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0013.json",
+      "sha256": "da09044f849843abbd425da136873276959903a6eeb7ef87b3d0f2e09db8c0f5",
+      "size": 2632
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0014.json",
+      "sha256": "a7751b3b5293f385e6436cc3fd57fdde1a4dba6e4b857b0e8427ed1e8c24bc73",
+      "size": 2632
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0015.json",
+      "sha256": "742bfa831be6f42ba6896dc4f96ba775436fc3c996c7356e752c4bca9396b335",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0016.json",
+      "sha256": "e51b24ad30d36b1f1ba5deb66f83ef9a976e302050235268b18a3af6f09ee043",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0017.json",
+      "sha256": "ecf6ff4af8b40da94f308940e9983db551351df1cf785a9a62ec9d8870019e51",
+      "size": 2636
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0018.json",
+      "sha256": "86d4dd78774da4e6089b1f01fddaa5ce99fcdb7a3640025b768cb84713cab87c",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0019.json",
+      "sha256": "4814cc78c99771beeb0832ec9c6a83b3ede0c218101d86df3e8b63472eb7c3a4",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0020.json",
+      "sha256": "2e650b3ada398a8a5fd6d427319ccebaf3620ff5bd9656a816e66c54bfa9713f",
+      "size": 2633
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0021.json",
+      "sha256": "7ab5c2171ea3d254349e4053c300b981210a90c481ffd2cbb7bd3e56a85a9273",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0022.json",
+      "sha256": "3f2be1a3bf87541d9049abe2d1c759b57f9e15a3dc2f93582f13b6b0ea5f0e70",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0023.json",
+      "sha256": "8a96632f01522c3cdabbbe95914677041f73c45964a308d26e9c030765c61fee",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0024.json",
+      "sha256": "f0ef96d00cf3ebc108334fe21be7cb1de7795b3ee08fe41317e5e53d689c58fc",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-active-0025.json",
+      "sha256": "381f8ee01f8a774d72933ac6856519ecbbdcbc69a96de0d40f012132d94ed6b4",
+      "size": 2635
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-neighbor-withheld.json",
+      "sha256": "376406d3a3d368e390f57d085351234e66ad879344075a72302641b641e3a168",
+      "size": 2648
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-onboarded.json",
+      "sha256": "a26f818e9824cad7cb0f77010df791bf709b2f711647aae0c2478228db94b687",
+      "size": 2621
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-peer-path-gap.json",
+      "sha256": "6d2412a771a24adf899149a9335ffa0a194511f6b97af01c227f7aa7be91f72f",
+      "size": 2640
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-recovery-0.json",
+      "sha256": "d57f36679494517f4e46f6697d7869c5d0c6c4bf2660e77c778cacb61a40fbdf",
+      "size": 2634
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-recovery-1.json",
+      "sha256": "5f813833a9f35d2849c0d96a1743b894e720908059303c852875284fcb1c963d",
+      "size": 2632
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/clients-telemetry-withheld.json",
+      "sha256": "8479e9b169fcc4a9bf78939f2b29d0514adda1fb01726699db0eded5e6d39e37",
+      "size": 2647
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/controller-after.json",
+      "sha256": "c0280b75533c282e10d82e402391a2fbb50f49d1112490ca107c5e19cf44b7ee",
+      "size": 32146
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/controller-before.json",
+      "sha256": "0fccec8edef9a0a4ec493bfe1b01816dcab854dfea1a49fab5f7979efe1bf9df",
+      "size": 10353
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-inventory-0001.json",
+      "sha256": "43eb88130d749f1aaa7aab3aeb7ead9ff016a07d76cbf6c44106b48cb258f831",
+      "size": 33192
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-inventory-0005.json",
+      "sha256": "31be8f687c450b7ae9eb21854383fd768c148e2a4ced6a0c2842543f58d6076b",
+      "size": 33192
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-inventory-0008.json",
+      "sha256": "a987330fc163c6a0433f6e53fbd56801a6e980f2894975ec9f56c16b3ed602b2",
+      "size": 33191
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-inventory-0011.json",
+      "sha256": "5901e30637b83c1128d96fd362272542800af2ef2a90bcf6970552928898ff40",
+      "size": 33192
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-inventory-0014.json",
+      "sha256": "033b2298e33b09029c2261f95486985881663fcc1af3d8a8e14b55af9c9e6adf",
+      "size": 33192
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-inventory-0017.json",
+      "sha256": "eef84fe0d546e0fdb2d51310a7e584d4d5db6d6593bc43d9f2e8867d9ad0a782",
+      "size": 33194
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-inventory-0021.json",
+      "sha256": "4a42d9b01c8484e6be315164a632457651c8bbaca18fd1b30d06c5047265abad",
+      "size": 33194
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-inventory-0025.json",
+      "sha256": "128f40b53dd684187b9e376449686c3c970c33c2fbec5d0a56f42a765201c0b3",
+      "size": 33194
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-session-0001.json",
+      "sha256": "3102666b503d44ec3e7afbf19cdbb23a330434bf0e7d02e89d196839e2c54553",
+      "size": 68537
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-session-0005.json",
+      "sha256": "70944d1cb39637d6752ef12b3a34bb225f2fe41bf55e48388fc892cb4eeaee01",
+      "size": 69124
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-session-0008.json",
+      "sha256": "20f06e4647cf3172db739d7d2f70339e175f3be8bd4f80dacf16418aafecf6af",
+      "size": 75534
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-session-0011.json",
+      "sha256": "b0c75b6f99206ab6c7090adaa959a945d5b8bb33c63cdf30aa833f248a28880d",
+      "size": 76048
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-session-0014.json",
+      "sha256": "6433c0dc8e83eddf389b18e32c5134512e9d112127bed5d632384607b09af3e3",
+      "size": 76264
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-session-0017.json",
+      "sha256": "91604c0ed37114644b14f38a98ffbcb7b0a11d5fd342869ecbf0cda561cf858a",
+      "size": 68720
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-session-0021.json",
+      "sha256": "38d0e025f5413433ae4d2c108d6a582fc1d1f5e3a39bcfcfd640dcf9884ef5fc",
+      "size": 68992
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/detached-session-0025.json",
+      "sha256": "8f041f84f42dcb6a3935a3ba3b2e152fa1b42b29b56971fb1ed82e728569e48d",
+      "size": 69151
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/egress-observations.jsonl",
+      "sha256": "76b988ee1c0425dce736a77ce9c3a664049512fd793a67d2c6f490cf7697390a",
+      "size": 4351150
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/egress-observer-final.json",
+      "sha256": "742259fe931e3c814c2bc0091bad93c82f598661d7b829c89c1cd6d12698dbf9",
+      "size": 514
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/em-baseline-wifi-continuous-ping.log",
+      "sha256": "ac27e76051fa1cd556c037e2c19bfb277487b78b626ca08503538b52700fcd20",
+      "size": 55048
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/em-baseline-wired-continuous-ping.log",
+      "sha256": "86a673d8dba30ce798ef207d7389897bdceb9b07b21a1616c19f916e9d292aea",
+      "size": 65497
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/ethernet-capture.log",
+      "sha256": "e03201e543d5edcfba809bdedc820fc4b6d92dcdea3a09a564df5ce3e57859e1",
+      "size": 172
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/ethernet.pcap",
+      "sha256": "2f4f72780122967dd050deffe8d2ced865c1f47f6328325b58af9ab22f533b94",
+      "size": 11120
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/executed-source/link_metrics.py.txt",
+      "sha256": "9e0f4794fb81669f9eae3382220ecc12738a41d0d25083ded24f8e2d608619ab",
+      "size": 18488
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/forwarding-capture.log",
+      "sha256": "29d9ec14df98be42265bd38d4441468840b87aa70f7d109d8889118f41e8ab88",
+      "size": 176
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/forwarding-samples.jsonl",
+      "sha256": "5251f844a8aafc8e659bf3866312bfca3c7b59a0bfffed717f0130fc37a85da6",
+      "size": 10167806
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/forwarding.pcap",
+      "sha256": "8e4b80e767d5c3235b254e29d345f85b61a8ca628f60d1c948f0bd290bf8c13b",
+      "size": 463888
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/idle-check.json",
+      "sha256": "a90c2897f96a6da4182e4fad17b1f68e76135fa7d1a098eccac5391d249d7962",
+      "size": 166
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/independent-ap-withholding-check.json",
+      "sha256": "db0edce6a038f941c90a2c3a6a42d809d04ad1178cbaadc70a55aca07c9da100",
+      "size": 1960
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/independent-peer-check.json",
+      "sha256": "afcb636cade66c0686abaedf2eaf540d5b887030cb7f8ebf7fea6f40eb301d21",
+      "size": 2959
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/independent-recovery-check.json",
+      "sha256": "6229f1ca0696fdd95f47687d215d58f6a3461c9b20f9d42d0bef7241b466ebe5",
+      "size": 3276
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/independent-telemetry-check.json",
+      "sha256": "4498e2ec0b65f96c092859592bacdaca92c43cee63e94ad7944180449b1d4fef",
+      "size": 820
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/manager.jsonl",
+      "sha256": "f6ef7ab0d72f5090241eb92955b08e5c60d73e42a93cc4b1d9428ec1ff50d17e",
+      "size": 10119506
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/mqtt-provenance.json",
+      "sha256": "514fa045d5c04b244be4bb9911582d95624df1d355d200e87ea1ffb38ecd87d2",
+      "size": 840
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/native-operation.json",
+      "sha256": "01e90abf24c3bf45c2f4de6b87a5abf36d8fdf0270be9d9d1ced976dbbfa74a1",
+      "size": 4858
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/native-session.json",
+      "sha256": "56f34ba7a92a86fd1cbe7a94bd20eec102069360490f87d1a6563c39c8ab0426",
+      "size": 69228
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/neighbor-gap-check.json",
+      "sha256": "3c2a46e1284b09436b7d12b31b551298ef438805c6db605b0077f5487fc6401e",
+      "size": 221853
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/neighbor-link-observations.json",
+      "sha256": "b2d51d47cbdcd04e2b568f5056a02e67a71e4d256ce593158b8e5aa85e550c96",
+      "size": 22621
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/neighbor-observer-final.json",
+      "sha256": "39025bb5a2275e320e973fdd95cd2b88be13a2cb09d3a6923bbef360a8610102",
+      "size": 936
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/peer-path-gap-check.json",
+      "sha256": "b85dc8a629af2404445310fcf3a0b7caa1f2546c611347aae2abde5fbbd68d79",
+      "size": 222849
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/radio-capture.log",
+      "sha256": "2ec53786082a09dfa19920e79303c14ad5c63d16106bde83b961c6e945e5e22e",
+      "size": 201
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/radio.pcap",
+      "sha256": "d553786c74ac63faf8cd80efe51735da28f3ee53d238fa97ae4fd1dcf6905916",
+      "size": 2211798
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/recovery-checks.json",
+      "sha256": "71fa2a5a8a581b3dbd592810a1355a5503769faa6cf351b046d8ac928eb4eab6",
+      "size": 345285
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/reference-candidate.json",
+      "sha256": "a5df0358f763a7df71a2fdba6b64b145861d8208285ae296bd12f99bd16c4791",
+      "size": 2190
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/result.json",
+      "sha256": "68a9200f902c074754ad4313832f5d1d465c5ca708acd936a4cfee21932eccb4",
+      "size": 63377
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/source-hashes.json",
+      "sha256": "eea261ce733a6d63021b25e2bce4e8e952d6e3f402cd897763b4e1dca2704744",
+      "size": 13668
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/source-match.json",
+      "sha256": "0d5a141e6793d4565585b52a68ea2f084c8120612ede1aa5bb93724051b73940",
+      "size": 24618
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/station-events.jsonl",
+      "sha256": "d1651ed48c0380b1a7e549abc554893c615f17c862822f58f96803af337337e5",
+      "size": 46881
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/telemetry-gap-check.json",
+      "sha256": "144ceb41cc9e846d792e6cd54812a22b91a147928e4f8608ba692437c52acfb3",
+      "size": 223208
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/withheld-operation.json",
+      "sha256": "9fc741f10ccd77e12cd701283ecaa1f4e233e42469b77fe948017d05f2db9e99",
+      "size": 1963
+    },
+    {
+      "path": "ap-reporting/native-ap-report-02/worker-stop.json",
+      "sha256": "d0574901aa5183589483a1882d900e86d2d78188d3f0bf4048c969df47e6e350",
+      "size": 178
+    },
+    {
+      "path": "ap-reporting/ovsdb-results.xml",
+      "sha256": "257a5bce2bbc8aded71465bd176213795de1750bcf9f23962594d7c8c5153bac",
+      "size": 8071
+    },
+    {
+      "path": "ap-reporting/unit-results.xml",
+      "sha256": "6f2869f03a480af958c784118885092913864a482656b50e5abb471ad9e18d2b",
+      "size": 4458348
+    },
+    {
+      "path": "ap-reporting/vectors/independent-check.json",
+      "sha256": "ba7266dba2142147b04f6955d4d54f1af7a0b8dcc1bee473413011097b30996e",
+      "size": 565
+    },
+    {
+      "path": "ap-reporting/vectors/provenance.json",
+      "sha256": "965075153e68c01714f6592d6602cb0a97f8acb8b6c62e3c68fa75fb73d2e449",
+      "size": 1216
+    },
+    {
+      "path": "ap-reporting/vectors/result.json",
+      "sha256": "2ad60af92670c482fdfa95abaa6d132753676325345ffa567f8ecf56c5723294",
+      "size": 1584
+    },
+    {
+      "path": "ap-reporting/vectors/synthetic-ap-metrics.pcap",
+      "sha256": "fad04b6f85ceb3862cb95d570ee6ffb473dfa70a4e466165908a1aeda429ac2c",
+      "size": 929
     }
   ]
 }

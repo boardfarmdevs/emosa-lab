@@ -1,0 +1,56 @@
+{
+  "scope": "synthetic report composition and scheduling; no measured/native AP source",
+  "passed": true,
+  "frames": 8,
+  "query_reports_transmitted": 2,
+  "periodic_reports_transmitted": 1,
+  "missing_companion_query_mid": 72,
+  "restart_extra_frames": 0,
+  "schedule": {
+    "boot_id": "synthetic-boot",
+    "identity": {
+      "controller": "020000004002",
+      "local_al": "020000004001",
+      "ruid": "020000004010"
+    },
+    "last_unfulfilled_due": 130.0,
+    "latest_mid": 11,
+    "latest_report_attempt": {
+      "due": 130.0,
+      "reason": "NOT_READY",
+      "status": "unavailable_or_send_incomplete"
+    },
+    "latest_request": [
+      {
+        "kind": 138,
+        "value": "3c01020000004010000000e0"
+      }
+    ],
+    "next_due": 190.0,
+    "periods_due_without_report": 1,
+    "policy": {
+      "metrics": {
+        "interval_seconds": 60,
+        "radios": [
+          {
+            "include_link": true,
+            "include_traffic": true,
+            "include_wifi6_status": true,
+            "rcpi_hysteresis_db": 0,
+            "rcpi_threshold": 0,
+            "ruid": "020000004010",
+            "utilization_threshold": 0
+          }
+        ]
+      }
+    },
+    "receipt_count": 1,
+    "reports_transmitted": 1,
+    "schedule_rebases": 0
+  },
+  "measurement_source_qualified": false,
+  "native_ap_reporting_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "opaque_fields": "ESP bytes and Data Elements-derived integers are explicit synthetic wire values; subfield/measurement conversions remain unqualified"
+}

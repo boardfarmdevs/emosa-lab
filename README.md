@@ -50,6 +50,11 @@ The [policy receiver](doc/protocol/reporting-policy.md) now persists the native
 controller's requested reporting policy and sends its receipt Ack. Its schedule
 survives reconnect/restart and explicitly counts due reports that cannot yet be
 produced. Receipt confirmation does not establish fulfilled reporting.
+The [AP/radio/client report builder](doc/protocol/ap-metric-reports.md) now
+assembles the selected complete response and dispatches periodic reports under a
+durable schedule. Independent synthetic byte checks pass; the native lab still
+withholds AP reports until their measurement sources are qualified.
+
 The [native peer-metric exercise](doc/protocol/native-peer-metrics.md) now joins
 observed pod counters, discovery and an isolated software Ethernet path to real
 IEEE 1905 replies. Independent capture checks the reply fields; subsequent

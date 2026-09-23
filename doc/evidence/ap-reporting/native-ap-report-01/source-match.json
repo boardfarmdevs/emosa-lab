@@ -1,0 +1,531 @@
+{
+  "all_runtime_sources_match": true,
+  "checked": 105,
+  "sources": [
+    {
+      "runtime_path": "/opt/emosa-baseline/native-onboarding.py",
+      "local_path": "deploy/peer-baseline/native-onboarding.py",
+      "sha256": "82d8b7a6bb6a751aad987a9abe3fdae2e458123933c72533b9eb9ce34a0122f7"
+    },
+    {
+      "runtime_path": "/opt/emosa-baseline/controller-trial.py",
+      "local_path": "deploy/peer-baseline/controller-trial.py",
+      "sha256": "f338e5745d6283510ad3a6a09661ccab24b90e617bfa2789e1d766ba48f6d73c"
+    },
+    {
+      "runtime_path": "/opt/emosa-baseline/node.py",
+      "local_path": "deploy/peer-baseline/node.py",
+      "sha256": "6fe151976ff335a425f3923735ed4544b0ca0bbf23562b5694a083d0636fe10b"
+    },
+    {
+      "runtime_path": "/opt/emosa-baseline/prplmesh.reference.json",
+      "local_path": "doc/evidence/ap-reporting/native-ap-report-01/reference-candidate.json",
+      "sha256": "9fab7ce59c050236f1159550a5f2aff698efa8331b0a05e6ea98d10426d233f2"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/manager.py",
+      "local_path": "deploy/radio-manager/manager.py",
+      "sha256": "ff0268edfccc2c4ad825ee1d988bb3cfd2dca56c84da8dda643a4a34fd5574ca"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/node.py",
+      "local_path": "deploy/radio-manager/node.py",
+      "sha256": "05d95319a07ec66b7a12b4f77542b9bc6138710aa38fd2191fe779688d56b717"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/neighbor-observer.py",
+      "local_path": "deploy/radio-manager/neighbor-observer.py",
+      "sha256": "594a33f222f2845a43bdc91d8faa6e6fef728aad1de37e758afdd1ad0c61bcb6"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/egress-observer.py",
+      "local_path": "deploy/radio-manager/egress-observer.py",
+      "sha256": "7c3cf927f0aefe709b27597bd7115ec721b2e13301fd0a9238e21f468cf7a78d"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/virtual-link.py",
+      "local_path": "deploy/radio-manager/virtual-link.py",
+      "sha256": "0699dedf5e4651c0e872cb12a0523533d43b00f1afee54ec3f2f6a938816cd59"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/peer-path.py",
+      "local_path": "deploy/radio-manager/peer-path.py",
+      "sha256": "574039701aeb711cd86dda46a9e9e048429487ebe2cb89d0ccdfd63f8eb0cfde"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/station-events.py",
+      "local_path": "deploy/radio-manager/station-events.py",
+      "sha256": "4db459782c15c637a82fe6c414c2ce0370dd01df8c5d884d042b75ce401321c4"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/__init__.py",
+      "local_path": "src/emosa/__init__.py",
+      "sha256": "c030ae7eef7f1025dab638a930f2956378dc4eb38dd81323867b3b09ab4ee886"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/agents.py",
+      "local_path": "src/emosa/agents.py",
+      "sha256": "bbe5099cfd9cc23b623094a280119b18ba088d72ba02947c3aa08093c3dcea87"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/app.py",
+      "local_path": "src/emosa/app.py",
+      "sha256": "9a4ea7bd56cdf20b68139ad062c7018235d7de8c21c9c9f20be6569fefc7e5a8"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/backends/__init__.py",
+      "local_path": "src/emosa/backends/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/backends/base.py",
+      "local_path": "src/emosa/backends/base.py",
+      "sha256": "67379fe53d41d5042465d84ef6589d274e3604fdaec0af92f71d3a3de4d7bfe3"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/backends/mock.py",
+      "local_path": "src/emosa/backends/mock.py",
+      "sha256": "8f521f2dd6fbd31b1a88ef954973a2406ad606778f342fce01d22f362c2c6ac4"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/capabilities.py",
+      "local_path": "src/emosa/capabilities.py",
+      "sha256": "aeb35487468bff43bfc9d963effb527a0eb36c555fb9f2651c6e977a2a949fad"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/capability_extensions.py",
+      "local_path": "src/emosa/capability_extensions.py",
+      "sha256": "8bf59c818aa5716f3f72bf7feda4b7d69e9ea8c6f208c04a108d0649957631c6"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/cli.py",
+      "local_path": "src/emosa/cli.py",
+      "sha256": "6012eadd766c55e1e1cafd7ce0e505e0c8de1b9a9932a98cf5813e25933a9e09"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/clock.py",
+      "local_path": "src/emosa/clock.py",
+      "sha256": "3438a5c3931086fa29b7cc1f0beb69f1831ac3016337def36883d68ceba1efd8"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/config.py",
+      "local_path": "src/emosa/config.py",
+      "sha256": "b3a23eb83acc30a348b8f3918fad4a7ce1d4d9186a7da4f57b62a541caddc835"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/counter_units.py",
+      "local_path": "src/emosa/counter_units.py",
+      "sha256": "b0fde4e053e498a442dd08f9e60563c158363a0141d016006cafb034cec84ce7"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/easymesh_payloads.py",
+      "local_path": "src/emosa/easymesh_payloads.py",
+      "sha256": "f7a5884ea01220e64bfbcbfac6dda46d36a13b130025fe5728cf22fb1ab87aca"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/errors.py",
+      "local_path": "src/emosa/errors.py",
+      "sha256": "18202efebe9c8853826867ebf012c93db853fc934a23a66be0c1dfff586c4f09"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/evaluation/__init__.py",
+      "local_path": "src/emosa/evaluation/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/evaluation/cli.py",
+      "local_path": "src/emosa/evaluation/cli.py",
+      "sha256": "d7917d56a5e63673f1d66f6dbf4fe0850ce54ffafa31ab70f51bde9c4bcb0146"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/evaluation/evidence.py",
+      "local_path": "src/emosa/evaluation/evidence.py",
+      "sha256": "fdf1bf27619d7bb30e7c9f022d1f46ebee80501866f7e494549aa502c20f90b5"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/evaluation/lxd.py",
+      "local_path": "src/emosa/evaluation/lxd.py",
+      "sha256": "9763bf2ee703d051449678f1de416f3e8ff3c910c2bcdcfcdad9a678d2b0a41e"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/evaluation/payloads.py",
+      "local_path": "src/emosa/evaluation/payloads.py",
+      "sha256": "27249ec5517103983cd41223aa769fe28c2b4147d6908a06cbe23d43f9e31b6a"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/evaluation/peer_capture.py",
+      "local_path": "src/emosa/evaluation/peer_capture.py",
+      "sha256": "e3b2db6d0f9978d3433af30bbfc4017aa95b35de5e99cdce5851488054548cb5"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/evaluation/profile_audit.py",
+      "local_path": "src/emosa/evaluation/profile_audit.py",
+      "sha256": "27e8ef33d797a94d99a963fbbd0e2318c1e02074857be513720b50acb39acedd"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/evaluation/runner.py",
+      "local_path": "src/emosa/evaluation/runner.py",
+      "sha256": "87e927221f6b97ce56303b84dab0391f3a46f6122216ca6b33b7e4ff9aabe1d2"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/evaluation/service.py",
+      "local_path": "src/emosa/evaluation/service.py",
+      "sha256": "b2da5791bb8591eb1c0608e48c3f5da4edaabe405a6a80515d265e292e847474"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/he_mcs.py",
+      "local_path": "src/emosa/he_mcs.py",
+      "sha256": "afa90c1e9fb45803e31ed8ae963d555d0ed2590bc0be99fab06ffe48ba08d53c"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/local_api.py",
+      "local_path": "src/emosa/local_api.py",
+      "sha256": "f83fe146843c6d60fe08ef9776713aa4f8cd951103d188a7d4e27525a5be333a"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/model.py",
+      "local_path": "src/emosa/model.py",
+      "sha256": "0e51efda5dcef130031c012a5fa6467373eb109f044f51190478df68752f3308"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/opensync/__init__.py",
+      "local_path": "src/emosa/opensync/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/opensync/mapping.py",
+      "local_path": "src/emosa/opensync/mapping.py",
+      "sha256": "0daaf9766c6c2cca3dc0a57f2bcd4c21292c9fa1709233285e85756a6f8f49e1"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/opensync/radio_scope.py",
+      "local_path": "src/emosa/opensync/radio_scope.py",
+      "sha256": "a98bd567a10f4d243088b941c369a057f44c6c0da3273ecad9dec24d170725ba"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/opensync/schema.py",
+      "local_path": "src/emosa/opensync/schema.py",
+      "sha256": "d7f371a78ce4112e263fea564fafd6854f11f9d4d753ff95f9addc1b2bec13e4"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/opensync/session.py",
+      "local_path": "src/emosa/opensync/session.py",
+      "sha256": "4cdd6f631f7f7f1ed33c11a281d1ce7527fff1f15a5c2ab9c0c092731b1a6f18"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/opensync/tls_listener.py",
+      "local_path": "src/emosa/opensync/tls_listener.py",
+      "sha256": "fe840cf445a9e0b5744622d71187675efa27118d8174dfb4a59245ebbc6e641f"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/opensync/topology.py",
+      "local_path": "src/emosa/opensync/topology.py",
+      "sha256": "c7715579c934ef1d443ef83587a9e030952701523d49d654fccf5b61fc42fac4"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/operating_classes.py",
+      "local_path": "src/emosa/operating_classes.py",
+      "sha256": "83f00162a2e5d4ac2f728cd14e626de9af5a4c4d5b829902a75293b48f575c1a"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/operations.py",
+      "local_path": "src/emosa/operations.py",
+      "sha256": "54d9737d6c9884e0b49282dc9bc749152d42b00a85946d5d76d91d4db834938e"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/qualification.py",
+      "local_path": "src/emosa/qualification.py",
+      "sha256": "52a3539170ba9d2c7d3cf59667874ee1d38f1847bf7abd0cca2eca6013280e15"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/radio_capabilities.py",
+      "local_path": "src/emosa/radio_capabilities.py",
+      "sha256": "15d5a988fd196713cbaee635f1828f420b9f6af968bf2dbd3475d202b0d2dd09"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/reconcile.py",
+      "local_path": "src/emosa/reconcile.py",
+      "sha256": "e24c1d9bbd785a1b184e141fd46369065c7f166ab53752cf58eae3f80d16d848"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/secrets.py",
+      "local_path": "src/emosa/secrets.py",
+      "sha256": "acec208d14d946348451cd7c551a21ee267cd37de13651fd4b2a682dcce1d5ee"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/__init__.py",
+      "local_path": "src/emosa/simulation/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/ap_metrics.py",
+      "local_path": "src/emosa/simulation/ap_metrics.py",
+      "sha256": "89d5910cd0bc23939074e68f4b933faa61dc531f07dafc9028f00bd6cb9fd8b2"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/backhaul_accounting.py",
+      "local_path": "src/emosa/simulation/backhaul_accounting.py",
+      "sha256": "dc899e0cef21a8cf032f2a7414edce62d0fa88f9fefb35920c1040875392b3cf"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/connecting_fleet.py",
+      "local_path": "src/emosa/simulation/connecting_fleet.py",
+      "sha256": "72cbb4b76a9e795fe9f916ab01d47b0d23db427c035710423e34f8f9df0cf3fd"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/connecting_pod.py",
+      "local_path": "src/emosa/simulation/connecting_pod.py",
+      "sha256": "d2e2d19029fa1216f77903d100ddd6566007c311999b057e8afc04bf434de871"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/coordinator.py",
+      "local_path": "src/emosa/simulation/coordinator.py",
+      "sha256": "a93d150270f95cdca97d458316e68ca584c5477bb7ca2c84dbb15f76a5309a3d"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/coordinator_wire.py",
+      "local_path": "src/emosa/simulation/coordinator_wire.py",
+      "sha256": "5e435e4ccfe77095b32289f6a232cc6478b94c3d8003c3f4460ae250305b7214"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/database.py",
+      "local_path": "src/emosa/simulation/database.py",
+      "sha256": "19c0541c238e91b9fc18589d0e75a94a9efd1c96ead7f3b329d2e8a34e0b673e"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/disassociation.py",
+      "local_path": "src/emosa/simulation/disassociation.py",
+      "sha256": "ac6a7d42ccb7edab402eeb61c486c31baca2c80ae4043ffea2304465a86a3976"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/discovery.py",
+      "local_path": "src/emosa/simulation/discovery.py",
+      "sha256": "a590338f592035798644d2970f75b29a3959a6ba82bb5dca595a4550a3a6504f"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/discovery_wire.py",
+      "local_path": "src/emosa/simulation/discovery_wire.py",
+      "sha256": "2d7c965f2b3bfffa1bb20adf4cd2b302b25c37225dc43cf6107a10ef0fce246c"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/egress_accounting.py",
+      "local_path": "src/emosa/simulation/egress_accounting.py",
+      "sha256": "5672db659822acb371f79cc954846c4f9e2ca25b0998d0af65d67e25671ff7d0"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/forwarding.py",
+      "local_path": "src/emosa/simulation/forwarding.py",
+      "sha256": "4feaa1bd3fbd19358945d9250378278a90363b7fa1f0648b45bf383bd652c98f"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/link_metrics.py",
+      "local_path": "src/emosa/simulation/link_metrics.py",
+      "sha256": "115094061429db4556ac782c3605d3c365a93b9e6253ef9dbf97374b8375cee0"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/manager.py",
+      "local_path": "src/emosa/simulation/manager.py",
+      "sha256": "b6febaa881c1bec580359eba9b6cdb5bdba16c4e4ca6d0f89b754ef0caa58036"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/native_onboarding.py",
+      "local_path": "src/emosa/simulation/native_onboarding.py",
+      "sha256": "a15849c32a00fe836599ddea378a722a7017c5c5dd8017405df5c269096554d9"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/neighbor_binding.py",
+      "local_path": "src/emosa/simulation/neighbor_binding.py",
+      "sha256": "6052c43b00e96b3149a3aaa5a678389b62cffad1e9cf702c471f803979e2a406"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/peer_metrics.py",
+      "local_path": "src/emosa/simulation/peer_metrics.py",
+      "sha256": "acf3b087857bb2cea9aef0c54427fa36dd3ae375de2067d5269ef10a42cd5ae3"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/radio.py",
+      "local_path": "src/emosa/simulation/radio.py",
+      "sha256": "99e5dd161845dc5bb76abf22f88f900d99f5b220c65b196eee2a014dd6c36ea1"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/radio_capabilities.py",
+      "local_path": "src/emosa/simulation/radio_capabilities.py",
+      "sha256": "c4305d7cbe67ee39d69a418463d135e30f1013a141b5d4e16b107185d3d7777a"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/reliability.py",
+      "local_path": "src/emosa/simulation/reliability.py",
+      "sha256": "45edb810647991d5c7774f88f3d4b91ba9a34669b63ecd244239c7e57b742a9d"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/report_source.py",
+      "local_path": "src/emosa/simulation/report_source.py",
+      "sha256": "f32b41de3146a7237131eb9498a75dd999b9b3fca1039b41527e083c274c55ab"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/shaped_backhaul.py",
+      "local_path": "src/emosa/simulation/shaped_backhaul.py",
+      "sha256": "37e6d25d3ec8869b4ca4a21f300618997729fd264589a1f32de8136b13e61c26"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/station_telemetry.py",
+      "local_path": "src/emosa/simulation/station_telemetry.py",
+      "sha256": "8c6da87d9ebe0009575c05cac91c7ded0d1d0cad686e9a819e6dbbc22e7605c7"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/tls.py",
+      "local_path": "src/emosa/simulation/tls.py",
+      "sha256": "17a234a2ef3b490a841f5e77e4cdd3ae204d381cf4874cd04ae974f2171b4d30"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/topology.py",
+      "local_path": "src/emosa/simulation/topology.py",
+      "sha256": "aba6a379095db7bc3759924752a65e9de1c143a2ab5a4ca74e08a0c8c6344d88"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/virtual_capacity.py",
+      "local_path": "src/emosa/simulation/virtual_capacity.py",
+      "sha256": "856f014745f1934a6e50b69386c81c822c4665e0e5fd26b1d61dd32d50b6698b"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/wire_reports.py",
+      "local_path": "src/emosa/simulation/wire_reports.py",
+      "sha256": "5b019936b63b3292e3978a683e1a22c25febbd7c38cb96e58658287ba5d1395e"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/wsc_provisioning.py",
+      "local_path": "src/emosa/simulation/wsc_provisioning.py",
+      "sha256": "75a0fbc3940fcf4ed2862cbc33b846e4d641a47b80e31c4f5a387e54bce9f5e3"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/simulation/wsc_wire.py",
+      "local_path": "src/emosa/simulation/wsc_wire.py",
+      "sha256": "502bf53d8ab34f29db315d1fb84d7d1d060be69173c78d118e637638391a56bc"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/store.py",
+      "local_path": "src/emosa/store.py",
+      "sha256": "cca0bcc46558b8f26b84b6b6c6ae8077c95e87241cf54e8743f71729302c2326"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/telemetry/__init__.py",
+      "local_path": "src/emosa/telemetry/__init__.py",
+      "sha256": "36b5398d0f7f26a2151826e4854e9089f277505ce25468b55263447e0deda8ad"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/telemetry/stations.py",
+      "local_path": "src/emosa/telemetry/stations.py",
+      "sha256": "1121ad9ce656c728d0c0d01e4fa8b2b14c7eb799f9a7f87007b2e534f3dca85d"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/topology_bindings.py",
+      "local_path": "src/emosa/topology_bindings.py",
+      "sha256": "82174d78632a9275fd95b76b57c21ef5aee7e0195a35cb79b12e04d27a1cf839"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/__init__.py",
+      "local_path": "src/emosa/wire/__init__.py",
+      "sha256": "0dbbb2d04a7498457cbb69263c02d5cc174a85ad4f179eb5b3ac5fc19eb8df09"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/ap_metrics.py",
+      "local_path": "src/emosa/wire/ap_metrics.py",
+      "sha256": "631086d0db19f5f85f88673ff98f1ddbc48b648a67d3330f55cf9926e2577e47"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/autoconfiguration.py",
+      "local_path": "src/emosa/wire/autoconfiguration.py",
+      "sha256": "8c45344a25c8018c670b8ec560ac9588e72574bce2d34c08ccd5acca42edb025"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/channel.py",
+      "local_path": "src/emosa/wire/channel.py",
+      "sha256": "48e84a1ab52ca45ae73fd86b9da9d23d1120ff2dfd428a0feaa6363aec27e762"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/cmdu.py",
+      "local_path": "src/emosa/wire/cmdu.py",
+      "sha256": "720ff0d44d6cca4caad8c8eaae4170732366230f2b8873728ede0c5e02d0a119"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/controller_probe.py",
+      "local_path": "src/emosa/wire/controller_probe.py",
+      "sha256": "3dcb67e8c37d11316ad7bcf71c4cd4639b9e6993ce005da1ef33b0c4b653ecec"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/coordinator.py",
+      "local_path": "src/emosa/wire/coordinator.py",
+      "sha256": "cb95595105c6946f6a461d15b8c0e5d47e56584576a1c5551d6c031b08cc937a"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/disassociation.py",
+      "local_path": "src/emosa/wire/disassociation.py",
+      "sha256": "e135d80f33d613f19dee1e284ebcfda526189358aaae06091879e81606d836cb"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/discovery_session.py",
+      "local_path": "src/emosa/wire/discovery_session.py",
+      "sha256": "0517a2a522f74f37fc9be02b86ac7d534d3286c5018c8b2f7943827f8fe8c369"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/ethernet.py",
+      "local_path": "src/emosa/wire/ethernet.py",
+      "sha256": "a65617a7e6f9978282f104aa52fbfe6581d76a5ceaabb09127d7631e670ec091"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/inspection.py",
+      "local_path": "src/emosa/wire/inspection.py",
+      "sha256": "84cde9551e28f831a15c69b9fe6272acf95479c41bd2eb6660a38e64d7f901e1"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/link_metrics.py",
+      "local_path": "doc/evidence/ap-reporting/native-ap-report-01/executed-source/link_metrics.py.txt",
+      "sha256": "9e2f126938002678c486535dd01364cb00ee7269617485ef9f0a5d5e6a3caaee"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/onboarding.py",
+      "local_path": "doc/evidence/ap-reporting/native-ap-report-01/executed-source/onboarding.py.txt",
+      "sha256": "f4e4560329159b709f59071b5021f79e4c0424cf35faeebbf5507bfb9090bc7a"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/operation_bridge.py",
+      "local_path": "src/emosa/wire/operation_bridge.py",
+      "sha256": "6997767700cadf6d60cc0651cb2cb209be2c3e3217c0f1906d2fc9cb9adc50e0"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/provisioning_session.py",
+      "local_path": "src/emosa/wire/provisioning_session.py",
+      "sha256": "0abff0b2c81f1bc36de45ef3af7313ad9feba29155fb89f9d93c2069b08e1808"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/reporting_policy.py",
+      "local_path": "src/emosa/wire/reporting_policy.py",
+      "sha256": "48b22e774959c1006991a750c816c2f3e2f39011a0e3814643531f231bb4f0da"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/reports.py",
+      "local_path": "src/emosa/wire/reports.py",
+      "sha256": "94d83934d6ddae23500144526f3b30575453411eb5ef0bad0a395aecde8eb285"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wire/topology_values.py",
+      "local_path": "src/emosa/wire/topology_values.py",
+      "sha256": "f1741babf3640604251ad79f0e5c6764d64c0ce6fdfd42f8b5f2e0df05eff981"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wsc.py",
+      "local_path": "src/emosa/wsc.py",
+      "sha256": "91b6e830aa24e841d828f37c23dd1d878e5a418ba6d9dea78c2c9d464e93da46"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wsc_messages.py",
+      "local_path": "src/emosa/wsc_messages.py",
+      "sha256": "8f4beaacbc32278e043d75aacc44c4aa1dcfe0ebcbc23dff33af150c2c363551"
+    },
+    {
+      "runtime_path": "/opt/emosa-radio-manager/source/emosa/wsc_radio.py",
+      "local_path": "src/emosa/wsc_radio.py",
+      "sha256": "9c0139b3fb386d315b2bbd91f45f0df8b8f4690c937861ac513c07de96f3d073"
+    }
+  ]
+}

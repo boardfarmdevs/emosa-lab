@@ -286,6 +286,14 @@ OpenSync-format telemetry. Work through these exercises in order:
     Reproduce the path fault, reconnect and restart; classify deliberately
     unavailable and post-exit queries using evidence rather than assumptions.
 
+19. Follow [AP/radio/client report assembly](../protocol/ap-metric-reports.md).
+    Decode the seven selected TLV types and distinguish missing observations,
+    known empty inventories and measured zeros. Generate a synthetic capture,
+    check it with the independent decoder, and explain durable reservation before
+    transmission. Compare this with the native run's deliberately withheld AP
+    reports and preserved deadlines through real recovery faults. Identify the
+    qualified measurement inputs needed before native AP delivery can be tested.
+
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client
 traffic is checked. Read the retained negative trials and the bounded scope first.

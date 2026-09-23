@@ -31,6 +31,10 @@ jobs:
             uv run python scripts/replay-egress-accounting.py --shaped-backhaul doc/evidence/shaped-backhaul/$label > /tmp/emosa-shaped-replay.json
             cmp /tmp/emosa-shaped-replay.json doc/evidence/shaped-backhaul/$label/shaped-projection.json
           done
+      - name: Reproduce selected synthetic AP reports
+        run: |
+          uv run python -m emosa.simulation.ap_metrics /tmp/emosa-ap-vectors
+          cmp /tmp/emosa-ap-vectors/synthetic-ap-metrics.pcap doc/evidence/ap-reporting/vectors/synthetic-ap-metrics.pcap
   easymesh-reference:
     runs-on: ubuntu-24.04
     steps:
@@ -96,6 +100,26 @@ jobs:
       - run: >-
           python3 scripts/check-native-policy.py
           doc/evidence/telemetry-freshness/native-telemetry-gap-01
+      - run: python3 scripts/check-ap-metrics-reference.py doc/evidence/ap-reporting/vectors
+      - run: python3 scripts/check-native-ap-withholding.py doc/evidence/ap-reporting/native-ap-report-02
+      - run: python3 scripts/check-native-peer-metrics.py doc/evidence/ap-reporting/native-ap-report-02
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/ap-reporting/native-ap-report-02 --minimum-seconds 210
+      - run: python3 scripts/check-telemetry-gap.py doc/evidence/ap-reporting/native-ap-report-02
+      - name: Preserve the observed early peer-query failure
+        run: |
+          python3 - <<'PY'
+          import runpy
+          from pathlib import Path
+          check = runpy.run_path("scripts/check-native-peer-metrics.py")["check"]
+          try:
+              check(Path("doc/evidence/ap-reporting/native-ap-report-01"))
+          except AssertionError as error:
+              assert str(error) == "unanswered live peer query or unexpected reply count", str(error)
+          else:
+              raise AssertionError("retained early peer-query failure must not pass")
+          PY
       - run: python3 scripts/check-neighbor-metrics.py
       - run: python3 scripts/check-native-peer-metrics.py doc/evidence/native-peer-metrics/native-peer-metrics-04
       - run: >-
