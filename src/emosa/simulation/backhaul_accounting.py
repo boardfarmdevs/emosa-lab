@@ -13,8 +13,7 @@ from emosa.simulation.egress_accounting import (
 from emosa.simulation.forwarding import integer
 
 
-def path_counters(observation, ifindex, address):
-    link, clsact, filters = observed_path(observation, ifindex, address)
+def interface_counters(link, clsact, filters):
     transmit, tx_action = action_drops(filters["egress"], clsact, "egress")
     receive, rx_action = action_drops(filters["ingress"], clsact, "ingress")
     if tx_action is not None and tx_action == rx_action:
@@ -32,6 +31,10 @@ def path_counters(observation, ifindex, address):
         "rx_interface_drops": integer(rx["dropped"]),
         "rx_action_drops": receive,
     }, (clsact, tx_action, rx_action)
+
+
+def path_counters(observation, ifindex, address):
+    return interface_counters(*observed_path(observation, ifindex, address))
 
 
 class BackhaulAccountingSource(EgressAccountingSource):

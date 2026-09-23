@@ -903,10 +903,22 @@
       "title": "Virtual-link calibration and native recovery evidence",
       "description": "Complete independent packet sequences, bounded service windows, missing-framing attempts and live OVSDB recovery. Full metric publication remains pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/shaped-backhaul-accounting.md",
+      "title": "Combine shaped-link service and actual packet loss",
+      "description": "Trace action, scheduler and driver losses; reproduce queue overflow and both action directions, then verify common intervals through OVSDB recovery.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/shaped-backhaul/README.md",
+      "title": "Combined service/loss and native recovery evidence",
+      "description": "19,124 independently reconciled queue drops, 17 losses in each selected action direction and 291 native intervals across both recovery faults. Complete metric publication remains pending.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "virtual-capacity/unit-results.xml",
-    "ovsdb": "virtual-capacity/ovsdb-results.xml"
+    "unit": "shaped-backhaul/unit-results.xml",
+    "ovsdb": "shaped-backhaul/ovsdb-results.xml"
   }
 }

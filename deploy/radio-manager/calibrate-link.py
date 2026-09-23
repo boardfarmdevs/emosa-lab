@@ -20,7 +20,7 @@ from contextlib import ExitStack
 from common import AP, CLIENTS, NODES, ROOT, SERVER, guard, inside, lxc, run, write
 
 
-def experiment(label):
+def experiment(label, queue_loss=False):
     guard()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,23}", label):
         raise ValueError("use a new owned run label")
@@ -34,7 +34,10 @@ def experiment(label):
         "label": label,
         "status": "started",
         "nonce": nonce,
-        "scope": "owned 100-Mbit simulated Ethernet service calibration",
+        "scope": "owned 100-Mbit TBF queue-loss probe with eight sender sockets"
+        if queue_loss
+        else "owned 100-Mbit simulated Ethernet service calibration",
+        "queue_loss_requested": queue_loss,
         "phases": [],
         "cleanup_errors": [],
         "physical_pod_changed": False,
@@ -210,6 +213,7 @@ def experiment(label):
                         str(size),
                         "--rate",
                         str(rate),
+                        *(["--queue-loss"] if queue_loss else []),
                     )
                 )
                 time.sleep(1)
@@ -283,9 +287,11 @@ def experiment(label):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("label")
+    parser.add_argument("--queue-loss", action="store_true")
 
     def terminated(_signal, _frame):
         raise SystemExit(143)
 
     signal.signal(signal.SIGTERM, terminated)
-    experiment(parser.parse_args().label)
+    args = parser.parse_args()
+    experiment(args.label, args.queue_loss)

@@ -25,6 +25,12 @@ jobs:
         run: |
           uv run python scripts/replay-egress-accounting.py --virtual-service doc/evidence/virtual-capacity/virtual-link-03 > /tmp/emosa-capacity-replay.json
           cmp /tmp/emosa-capacity-replay.json doc/evidence/virtual-capacity/virtual-link-03/virtual-capacity-projection.json
+      - name: Replay combined shaped-backhaul losses and service
+        run: |
+          for label in shaped-ingress-01 shaped-egress-02 shaped-queue-02; do
+            uv run python scripts/replay-egress-accounting.py --shaped-backhaul doc/evidence/shaped-backhaul/$label > /tmp/emosa-shaped-replay.json
+            cmp /tmp/emosa-shaped-replay.json doc/evidence/shaped-backhaul/$label/shaped-projection.json
+          done
   easymesh-reference:
     runs-on: ubuntu-24.04
     steps:
@@ -91,6 +97,15 @@ jobs:
           python3 scripts/check-native-policy.py
           doc/evidence/telemetry-freshness/native-telemetry-gap-01
       - run: python3 scripts/check-neighbor-metrics.py
+      - run: python3 scripts/check-shaped-backhaul.py doc/evidence/shaped-backhaul/shaped-queue-02
+      - run: python3 scripts/check-shaped-backhaul.py doc/evidence/shaped-backhaul/shaped-ingress-01
+      - run: python3 scripts/check-shaped-backhaul.py doc/evidence/shaped-backhaul/shaped-egress-02
+      - run: python3 scripts/check-shaped-backhaul.py --native doc/evidence/shaped-backhaul/native-shaped-01
+      - run: >-
+          python3 scripts/check-native-recovery.py
+          doc/evidence/shaped-backhaul/native-shaped-01 --minimum-seconds 210
+      - run: python3 scripts/check-native-policy.py doc/evidence/shaped-backhaul/native-shaped-01
+      - run: python3 scripts/check-telemetry-gap.py doc/evidence/shaped-backhaul/native-shaped-01
       - run: python3 scripts/check-virtual-capacity.py doc/evidence/virtual-capacity/virtual-link-03
       - run: python3 scripts/check-virtual-capacity.py --native doc/evidence/virtual-capacity/native-capacity-02
       - run: >-

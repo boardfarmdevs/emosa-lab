@@ -207,6 +207,8 @@ selected protocol meaning before publication. In particular, EasyMesh 6.1
 §10.1's Wi-Fi prediction under sufficient traffic is not the idle fraction of
 this Ethernet shaper. No code maps this diagnostic percentage to that field.
 
+Continue with [combined shaped-backhaul accounting](shaped-backhaul-accounting.md)
+to exercise actual queue overflow and selected action losses in a common interval.
 Ordinary unshaped runs continue to use their existing common loss source.
 That source deliberately rejects TBF; the optional shaped run instead records
 the separate service estimate. Combining those two paths requires explicit

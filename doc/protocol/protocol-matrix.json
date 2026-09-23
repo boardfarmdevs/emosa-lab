@@ -2206,10 +2206,56 @@
         "sustained_operation_proven": false,
         "physical_pod_proven": false,
         "remaining": [
-          "Qualify combined shaped-link loss accounting and complete per-peer attribution",
+          "Selected combined shaped-link losses are checked in shaped_backhaul_accounting; complete per-peer attribution remains pending",
           "Qualify selected media and normative availability estimator; do not map unused Ethernet service to Wi-Fi predicted airtime",
           "Bind complete metrics to current native session and independently verify controller values",
           "Complete AP/STA and final-session reporting then repeat full integrated 15-minute acceptance"
+        ]
+      },
+      "shaped_backhaul_accounting": {
+        "status": "selected_action_queue_interface_loss_and_service_intervals_verified_through_ovsdb_recovery_complete_neighbor_publication_pending",
+        "guide": "doc/protocol/shaped-backhaul-accounting.md",
+        "implementation": [
+          "src/emosa/simulation/shaped_backhaul.py",
+          "src/emosa/simulation/backhaul_accounting.py",
+          "src/emosa/simulation/virtual_capacity.py",
+          "src/emosa/simulation/native_onboarding.py"
+        ],
+        "independent_check": "scripts/check-shaped-backhaul.py",
+        "test_refs": [
+          "tests/test_shaped_backhaul.py"
+        ],
+        "source_references": [
+          "IEEE 1905.1-2013 sections 6.4.11-12, Tables 6-18 and 6-20, section 11.1; amendment PHY/RSSI values",
+          "EasyMesh 6.1 section 10.1; per-neighbor metrics are not arbitrary whole-interface counters",
+          "Ubuntu Linux 6.8.0-139.139 net/sched/sch_tbf.c tbf_enqueue and net/core/dev.c __dev_queue_xmit; reviewed root/child and driver drop boundaries"
+        ],
+        "source_provenance": [
+          "doc/evidence/virtual-capacity/source-provenance.json",
+          "doc/evidence/receive-accounting/source-provenance.json",
+          "doc/evidence/virtual-capacity/iproute-source-provenance.json"
+        ],
+        "contract": "One bounded lifetime/read interval for eight interface/action and four service counters. TX losses add distinct action, root scheduler and driver losses; never add child drops or token waits. RX arrivals remain distinct from client delivery. Unsupported paths withdraw observations.",
+        "controlled_queue_drops": 19124,
+        "controlled_ingress_action_drops": 17,
+        "controlled_egress_action_drops": 17,
+        "queue_loss_common_windows": 33,
+        "native_common_windows": 291,
+        "native_active_seconds": 210.0154239350013,
+        "native_connection_generations": 3,
+        "native_worker_processes": 2,
+        "evidence": "doc/evidence/shaped-backhaul/README.md",
+        "native_evidence": "doc/evidence/shaped-backhaul/native-shaped-01/independent-shaped-check.json",
+        "recovery_evidence": "doc/evidence/shaped-backhaul/native-shaped-01/independent-recovery-check.json",
+        "measurement_source_qualified": false,
+        "native_neighbor_metric_delivery_proven": false,
+        "sustained_operation_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Resolve complete per-neighbor attribution including adapter multicast reflection on the VM bridge",
+          "Qualify selected media and normative availability semantics before wire mapping",
+          "Join qualified complete inputs to native LinkMetricSource and independently verify controller values",
+          "Complete AP/STA and final-session reporting; investigate native shutdown; repeat integrated 15-minute acceptance"
         ]
       }
     }

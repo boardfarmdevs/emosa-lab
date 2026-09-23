@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import re
+import runpy
 import signal
 import subprocess
 import time
@@ -47,7 +48,7 @@ def snapshot(direction="egress"):
     }
 
 
-def experiment(label, observe_egress=False, direction="egress"):
+def experiment(label, observe_egress=False, direction="egress", virtual_link=False):
     guard()
     if direction not in ("egress", "ingress"):
         raise ValueError("unsupported owned loss direction")
@@ -69,10 +70,12 @@ def experiment(label, observe_egress=False, direction="egress"):
         "sustained_operation_proven": False,
         "egress_observation_requested": observe_egress,
         "loss_direction": direction,
+        "virtual_link_requested": virtual_link,
     }
     write(directory / "result.json", result)
     captures, handles, owned_qdisc = [], [], False
     egress_unit = None
+    shaping = None
     egress_path = ROOT / "egress-observations" / (label + ".json")
 
     def wait_egress(after):
@@ -129,6 +132,12 @@ def experiment(label, observe_egress=False, direction="egress"):
             result["backhaul_peer"] = peer
             result["reported_veth_speed_mbps"] = int(inside(AP, "cat", "/sys/class/net/eth1/speed"))
             result["reported_speed_is_measured_capacity"] = False
+            if virtual_link:
+                result["virtual_link_sha256"] = hashlib.sha256(
+                    (ROOT / "virtual-link.py").read_bytes()
+                ).hexdigest()
+                shaping = runpy.run_path(str(ROOT / "virtual-link.py"))["VirtualLink"]()
+                result["virtual_link_configuration"] = shaping.start()
             if observe_egress:
                 collector = ROOT / "egress-observer.py"
                 run(
@@ -209,7 +218,7 @@ def experiment(label, observe_egress=False, direction="egress"):
                     ],
                 ),
             ]
-            if direction == "ingress":
+            if direction == "ingress" or virtual_link:
                 # VM peer transmit is pod receive, before the pod's ingress TC.
                 # SLL2 preserves ifindex/direction. Capture both directions;
                 # libpcap direction-only selection obscures filter totals.
@@ -354,6 +363,11 @@ def experiment(label, observe_egress=False, direction="egress"):
                     result["cleanup_errors"].append("capture:" + str(error))
             for handle in handles:
                 handle.close()
+            if shaping:
+                try:
+                    shaping.close()
+                except Exception as error:
+                    result["cleanup_errors"].append("virtual_link:" + str(error))
             try:
                 result["after"] = snapshot(direction)
                 result["traffic_control_restored"] = (
@@ -376,5 +390,6 @@ if __name__ == "__main__":
     parser.add_argument("label")
     parser.add_argument("--observe-egress", action="store_true")
     parser.add_argument("--direction", choices=("egress", "ingress"), default="egress")
+    parser.add_argument("--virtual-link", action="store_true")
     args = parser.parse_args()
-    experiment(args.label, args.observe_egress, args.direction)
+    experiment(args.label, args.observe_egress, args.direction, args.virtual_link)

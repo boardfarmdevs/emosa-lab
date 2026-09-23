@@ -272,6 +272,13 @@ OpenSync-format telemetry. Work through these exercises in order:
     frame load. Trace the estimate through OVSDB and recovery, and explain why
     a missing framing table must withhold the result. Identify the remaining
     media, peer and loss inputs before native neighbor metric publication.
+17. Follow [combined shaped-backhaul accounting](../protocol/shaped-backhaul-accounting.md).
+    Trace the separate action, scheduler and driver loss points. Reconcile
+    actual queue overflow against packet sequences and application delivery,
+    then compare incoming and outgoing action drops. Explain why a saturated
+    sender may block without overflowing the queue. Verify one common set of
+    service/loss intervals through real OVSDB recovery and identify the remaining
+    peer/media inputs before native publication.
 
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client

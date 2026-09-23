@@ -9,6 +9,7 @@ import signal
 import socket
 import subprocess
 import time
+from contextlib import ExitStack
 from pathlib import Path
 
 ROOT = Path("/opt/emosa-radio-manager/link-calibration")
@@ -46,7 +47,8 @@ def main(args):
 
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as channel:
+    with ExitStack() as resources:
+        channel = resources.enter_context(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         if args.receive:
             path = ROOT / (args.label + ".json")
             path.open("x").close()
@@ -88,6 +90,21 @@ def main(args):
             ):
                 raise ValueError("unsupported calibration workload")
             channel.bind(("192.0.2.20", 0))
+            channels = [channel]
+            if args.queue_loss:
+                # A single UDP socket retains charged skbs in the shaper and
+                # can block before the 512-KiB queue fills. Eight bounded
+                # sockets expose queue overflow without changing sysctls or
+                # the service being tested. Record actual buffers and counts.
+                for _ in range(7):
+                    extra = resources.enter_context(
+                        socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    )
+                    extra.bind(("192.0.2.20", 0))
+                    channels.append(extra)
+            result["sender_socket_buffers"] = [
+                s.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF) for s in channels
+            ]
             start = time.monotonic_ns()
             deadline = start + 4_000_000_000
             count = 0
@@ -107,7 +124,7 @@ def main(args):
                     + count.to_bytes(3, "big")
                     + bytes(args.size - 16)
                 )
-                channel.sendto(data, ("192.0.2.1", PORT))
+                channels[count % len(channels)].sendto(data, ("192.0.2.1", PORT))
                 count += 1
                 if count > 100000:
                     raise RuntimeError("sender budget")
@@ -131,4 +148,5 @@ if __name__ == "__main__":
     parser.add_argument("--phase", type=int)
     parser.add_argument("--size", type=int)
     parser.add_argument("--rate", type=int)
+    parser.add_argument("--queue-loss", action="store_true")
     main(parser.parse_args())

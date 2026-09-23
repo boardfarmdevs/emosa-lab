@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "status": "candidate_peer_baseline_only",
+  "controller": "prplMesh 6.0.0 with recorded lab patches",
+  "upstream_repository": "https://gitlab.com/prpl-foundation/prplmesh/prplMesh.git",
+  "upstream_commit": "2e153c7e00cbcab6b8ee35082f494a364e23f018",
+  "build_repository": "https://github.com/boardfarmdevs/prplmesh-lab",
+  "build_repository_commit": "fcb0b97910e0e9d164578565b970c130d766e88e",
+  "patchset_sha256": "09b8e3b0a4ad0bf12a8df59e6a316b8fc8897fab878adce867f958f2c6e4543f",
+  "archives": {
+    "prpl-install-nl80211-6.0.0.tar.gz": "a98a6903fb9db1494ece0c292dd85c7d4d8ff2f570b5b85768ed6f299f72fb1f",
+    "prpl-runtime-deps-6.0.0.tar.gz": "ad912dc63b7d2188096bd6c0a42978590c4a4b82b0590da1198514e122cec4d2"
+  },
+  "binaries": {
+    "beerocks_controller": "d6db692f97b5b1dd2bb20c7810bbe0a775351d6f5fd8e3c7e21310a230bf5436",
+    "ieee1905_transport": "9a705aa15c56eb82dfa4e143f0795c129858e4f77693075acae29a46bce78d62",
+    "beerocks_agent": "b00522358beef4c55c624e9a1924f17ce3c3bc8d4704801af175ab8566e5258b"
+  },
+  "al_mac": "02:00:00:e0:00:01",
+  "interface": "em0",
+  "bridge": "br-lan",
+  "mode": "Multi-AP-Controller",
+  "radio_requirement": "One mac80211_hwsim interface satisfies the helper's early startup check; no AP or client is started",
+  "default_bss_policy_configured": false,
+  "emosa_runtime_dependency": false,
+  "specification_substitute": false,
+  "interoperability_qualified": false,
+  "known_failures": [
+    "Controller/helper terminate with SIGABRT during shutdown; startup and frame delivery do not qualify clean recovery"
+  ],
+  "remaining_checks": [
+    "Actual search/response, topology query/response and WSC with EMOSA",
+    "Selected protocol/profile mandatory fields and controller compatibility",
+    "Explicit supported BSS policy before any provisioning trial",
+    "Reconnection and lost-reply behavior",
+    "Qualified unchanged physical pod and independent client"
+  ],
+  "candidate_experiment": {
+    "label": "native-shaped-01",
+    "baseline_controller_sha256": "737ab07f89fec1aabcc861bd90ddafda931be2e3e1a108cc7352ea2c3ecd994c",
+    "scope": "Isolated controller experiment; see candidate patch provenance"
+  }
+}

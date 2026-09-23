@@ -78,6 +78,12 @@ The optional [virtual-link exercise](doc/protocol/virtual-link-capacity.md)
 calibrates a declared 100 Mb/s software service against complete independent
 captures and carries its service-work estimate through OVSDB recovery. This
 diagnostic does not yet supply a complete neighbor metric or physical PHY profile.
+The [combined source](doc/protocol/shaped-backhaul-accounting.md) now accounts
+for selected action, queue and interface losses in the same service interval.
+Independent checks reconcile 19,124 queue drops and 17 losses in each selected
+action direction; a native recovery run checks 291 common intervals through
+OVSDB. Peer attribution and the media/availability contract remain the next
+boundary before actual native metric publication.
 
 The name also echoes **エモさ (*emosa*)**, a Japanese expression for emotional resonance, often with a nostalgic feeling. The banner illustrates this wordplay; see [Sanseido's explanation of エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html), from which エモさ is formed.
 

@@ -65,8 +65,10 @@ The optional [virtual-link calibration](virtual-link-capacity.md) now tests a
 declared 100 Mb/s software service with explicit Ethernet overhead and an
 observed unused-service estimate. Its independent packet audit and native
 OVSDB recovery regression are separate from complete per-neighbor publication.
-The combined loss path, peer attribution and media profile still need
-qualification; this does not measure a physical PHY or change acceptance status.
+The [combined source](shaped-backhaul-accounting.md) now checks selected action,
+queue and driver loss components alongside service work through OVSDB recovery.
+Complete peer attribution and media qualification remain pending; this does not
+measure a physical PHY or change acceptance status.
 
 No current pilot is a substitute for this complete acceptance run. Final client
 disassociation statistics, reporting policy/metrics and complete integrated

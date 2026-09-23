@@ -14,13 +14,7 @@ OPTIONS = {"rate": RATE_BYTES, "burst": "64Kb/1", "mpu": 0, "lat": 36700, "linkl
 STAB = {"linklayer": "ethernet", "overhead": 24, "mpu": 84, "mtu": 2048, "tsize": 2048}
 
 
-def counters(observation, ifindex, address):
-    observed_interface(observation, ifindex, address)
-    if any(row["mtu"] != 1500 for key in ("link", "link_after") for row in observation[key]):
-        raise ValueError("unsupported_mtu")
-    if observation["filters"] != {"root": [], "ingress": [], "egress": []}:
-        raise ValueError("unsupported_filter_path")
-    (qdisc,) = observation["qdiscs"]
+def service_counters(qdisc):
     if (qdisc["kind"], qdisc["handle"], qdisc["root"]) != ("tbf", "4e00:", True):
         raise ValueError("unsupported_service")
     if qdisc["options"] != OPTIONS or qdisc["stab"] != STAB:
@@ -34,7 +28,17 @@ def counters(observation, ifindex, address):
         "service_packets": integer(qdisc["packets"]),
         "queue_drops": integer(qdisc["drops"]),
         "token_waits": integer(qdisc["overlimits"]),
-    }, ("owned-tbf-100m-stab24-min84-v1",)
+    }
+
+
+def counters(observation, ifindex, address):
+    observed_interface(observation, ifindex, address)
+    if any(row["mtu"] != 1500 for key in ("link", "link_after") for row in observation[key]):
+        raise ValueError("unsupported_mtu")
+    if observation["filters"] != {"root": [], "ingress": [], "egress": []}:
+        raise ValueError("unsupported_filter_path")
+    (qdisc,) = observation["qdiscs"]
+    return service_counters(qdisc), ("owned-tbf-100m-stab24-min84-v1",)
 
 
 class VirtualCapacitySource(EgressAccountingSource):

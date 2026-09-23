@@ -1,0 +1,33 @@
+{
+  "label": "shaped-queue-01",
+  "complete_shaped_accounting_proven": false,
+  "analysis": "Single-socket sender backpressured before the queue filled. This temporary 1 Mb/s variant recorded no queue loss and does not qualify the final 100 Mb/s source. The final probe keeps the 100 Mb/s service and uses eight sockets.",
+  "retained_private_artifacts": [
+    {
+      "path": "backhaul-capture.log",
+      "sha256": "11be8acf217768a1c059413f77c8c82938e3b18e6678859de843031be35e38be",
+      "size": 176
+    },
+    {
+      "path": "backhaul.pcap",
+      "sha256": "df725ad3ab8c11ac1f6430080bd1a5ac50ed2d29b86db1e7364b6a5065f21554",
+      "size": 1793965
+    },
+    {
+      "path": "offered-capture.log",
+      "sha256": "2760e6f5bfdc5b24d5ba52881bf442e97f4a7ef628b49e22442a73ca0e075590",
+      "size": 168
+    },
+    {
+      "path": "offered.pcap",
+      "sha256": "4fc0be6758767d580b043e4c78564383e949c3d062baabe7801c03224d707683",
+      "size": 1793603
+    },
+    {
+      "path": "receiver.json",
+      "sha256": "f8c500dfcf1f8473cba3e03bd1cd643c6d9df870f3045147ce71d0dd5a10a262",
+      "size": 707882
+    }
+  ],
+  "raw_result_and_observation_hashes_preserved": true
+}

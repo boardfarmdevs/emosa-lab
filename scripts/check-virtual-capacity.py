@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 AUDIT = runpy.run_path(str(ROOT / "scripts/check-backhaul-accounting.py"))
 HEALTH = runpy.run_path(str(ROOT / "scripts/check-capture-health.py"))["check_file"]
+RECEIVE = runpy.run_path(str(ROOT / "scripts/check-receive-accounting.py"))
 
 
 def read(path):
@@ -42,7 +43,7 @@ def capture(directory, name):
         return AUDIT["packets"](path), health
 
 
-def rows(directory, native):
+def rows(directory, native, *, shaped=False):
     raw = lines(directory / "egress-observations.jsonl")
     final = read(directory / "egress-observer-final.json")
     assert raw[-1] == final and not final["running"] and not final["errors"]
@@ -54,7 +55,7 @@ def rows(directory, native):
         values = [
             (
                 v["worker_pid"],
-                v["virtual_capacity"],
+                v["shaped_backhaul" if shaped else "virtual_capacity"],
                 v["sample"]["egress_observation"] if v["sample"] else None,
             )
             for v in lines(directory / "forwarding-samples.jsonl")
@@ -63,11 +64,15 @@ def rows(directory, native):
         by_heartbeat = {v["heartbeat_ns"]: v for v in raw}
         values = [
             (1, v, by_heartbeat[v["heartbeat_ns"]])
-            for v in read(directory / "virtual-capacity-projection.json")["observations"]
+            for v in read(
+                directory
+                / ("shaped-projection.json" if shaped else "virtual-capacity-projection.json")
+            )["observations"]
         ]
     previous, previous_status = {}, {}
     workers, generations, windows = set(), set(), []
     baselines = duplicates = 0
+    totals = Counter()
     for worker, status, payload in values:
         workers.add(worker)
         assert not status["measurement_source_qualified"] and not status["capacity_qualified"]
@@ -79,7 +84,7 @@ def rows(directory, native):
             continue
         origin = origins[sample["started_ns"]]
         assert payload == origin and origin["running"] and not origin["errors"]
-        (q,) = origin["observation"]["qdiscs"]
+        (q,) = [q for q in origin["observation"]["qdiscs"] if not shaped or q.get("root")]
         assert q["kind"] == "tbf" and q["handle"] == "4e00:" and q["root"] is True
         assert q["options"] == {
             "rate": 12500000,
@@ -95,12 +100,15 @@ def rows(directory, native):
             "mtu": 2048,
             "tsize": 2048,
         }
-        assert sample["counters"] == {
+        expected = {
             "service_bytes": q["bytes"],
             "service_packets": q["packets"],
             "queue_drops": q["drops"],
             "token_waits": q["overlimits"],
         }
+        if shaped:
+            expected.update(RECEIVE["counters"](origin))
+        assert sample["counters"] == expected
         assert sample["epoch"][1:7] == [
             origin[k]
             for k in (
@@ -130,6 +138,28 @@ def rows(directory, native):
                 k: v - old["counters"][k] for k, v in sample["counters"].items()
             }
             assert min(window["deltas"].values()) >= 0
+            if shaped:
+                delta = window["deltas"]
+                assert (
+                    window["transmit_losses"]
+                    == delta["tx_driver_drops"] + delta["tx_action_drops"] + delta["queue_drops"]
+                )
+                assert (
+                    window["receive_losses"]
+                    == delta["rx_interface_drops"] + delta["rx_action_drops"]
+                )
+                totals.update(
+                    {
+                        k: delta[k]
+                        for k in (
+                            "tx_driver_drops",
+                            "tx_action_drops",
+                            "queue_drops",
+                            "rx_interface_drops",
+                            "rx_action_drops",
+                        )
+                    }
+                )
             a, b = window["first_read_ns"]
             c, d = window["last_read_ns"]
             assert 0 < a <= b < c <= d and c - a < 2_000_000_000
@@ -156,6 +186,7 @@ def rows(directory, native):
         "connection_generations": len(generations),
         "duplicate_observations": duplicates,
         "configuration_epochs": len(set(epochs)),
+        **({"loss_components": dict(totals)} if shaped else {}),
     }, windows
 
 

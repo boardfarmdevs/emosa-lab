@@ -1,0 +1,33 @@
+{
+  "label": "shaped-egress-01",
+  "complete_shaped_accounting_proven": false,
+  "analysis": "The selected-flow captures and projection observe 17 outgoing action losses, but the whole-interface direction-bearing capture was not collected. Superseded by new shaped-egress-02 for the complete interval audit.",
+  "retained_private_artifacts": [
+    {
+      "path": "backhaul-capture.log",
+      "sha256": "1781306a4d8b846e30e2cfb75710db04fd9d190bb5d9a1ff31ed65e2fe0cbd7f",
+      "size": 172
+    },
+    {
+      "path": "backhaul.pcap",
+      "sha256": "557f09a52eeaa011b4b0647b163df16a76c7fc35cae3da7be7b2f0fe0b33b970",
+      "size": 7776
+    },
+    {
+      "path": "ingress-capture.log",
+      "sha256": "661d78b07431c0a10bed8afbe542d722495a28c317aa0ba9a66f293560fe83db",
+      "size": 164
+    },
+    {
+      "path": "ingress.pcap",
+      "sha256": "68718d396c57a83b7152e09a82ba6b15225684a0d0c9248561a6b7410a7842ff",
+      "size": 9714
+    },
+    {
+      "path": "shaped-projection.json",
+      "sha256": "5394b01c2c3e06ea296fb2519dfd54f937093a6a44699e56f34796849c91b2f9",
+      "size": 48177
+    }
+  ],
+  "raw_result_and_observation_hashes_preserved": true
+}

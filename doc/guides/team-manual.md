@@ -4043,13 +4043,52 @@ It runs only in the owned lab; it never installs anything on a physical pod.
 estimate covers declared software service. It does not establish a physical
 PHY, a complete media profile, all losses or which neighbor owns every packet.
 The native publisher needs those inputs together. The unshaped loss source
-rejects the optional shaper until the combined path is qualified. Keep its
+rejects the optional shaper; the combined source in §13.27 checks selected
+losses and service work together. Keep its
 scope separate from AP/STA reporting and final disassociation statistics.
 
 **Learning checkpoint:** distinguish configured rate, observed output rate,
 application throughput, modeled occupied service and unused modeled service.
 Explain why a short calibrated recovery regression does not replace the full
 15-minute integrated acceptance run.
+
+### 13.27 Account for loss while the virtual link is shaped
+
+A full queue and a busy queue are different conditions. A busy queue delays
+packets; a full queue may discard them. In the previous exercise the sender can
+wait for room in its own socket buffer before it manages to fill the pod queue.
+Asking for 160 Mb/s therefore does not by itself demonstrate a loss test.
+
+Follow the [combined accounting guide](../protocol/shaped-backhaul-accounting.md):
+
+1. Draw the outgoing path: action filter → scheduler → veth → independent
+   capture → receiver. Mark where a dropped packet stops. The losses at these
+   separate stages can be added for this bounded experiment, while the
+   scheduler's root and child counts can describe the same dropped packet.
+2. Replay the retained queue-loss result on HOST. It uses eight sender sockets
+   so the sender actually offers more traffic than the service can carry.
+   Match the missing sequence numbers to queue drops and delivered sequences
+   to the receiver. Read actual counts, not the configured target rate.
+3. Compare incoming and outgoing action-loss results. Incoming packets can
+   appear in the interface counters and still be discarded before reaching
+   the client. This explains why an arrival count is not a delivery count.
+4. Read `shaped_backhaul.window` and `service_estimate`. The 12 raw deltas share
+   one pair of read bounds and one counter lifetime. Locate root queue drops,
+   selected action drops, interface drops and token waits. Explain why token
+   waits are excluded from `transmit_losses`.
+5. Follow the guide's exact staging, run, collection and independent-check
+   commands in the idle owned VM. Check restoration after each probe. A loss
+   test with no observed loss is an incomplete test, not proof of loss handling.
+6. Inspect the native run and its two recovery faults. Locate the withdrawn
+   source during OVSDB loss, then the new baselines after reconnection and
+   process restart. Confirm three authenticated operations and one total
+   Config-write attempt. Keep this short regression separate from the full
+   15-minute acceptance run.
+
+**Learning checkpoint:** explain why accurate whole-interface counts still
+need neighbor attribution and a media/availability contract before they can
+be sent as complete IEEE 1905 metrics. The adapter's own control multicast can
+also reach the pod-side capture in this lab topology.
 
 ## 14. Prepare an unchanged physical pod for read-only qualification
 

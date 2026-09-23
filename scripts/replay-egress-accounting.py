@@ -10,6 +10,7 @@ from pathlib import Path
 
 from emosa.simulation.backhaul_accounting import BackhaulAccountingSource
 from emosa.simulation.egress_accounting import EgressAccountingSource
+from emosa.simulation.shaped_backhaul import ShapedBackhaulSource
 from emosa.simulation.virtual_capacity import VirtualCapacitySource
 
 
@@ -46,12 +47,15 @@ if __name__ == "__main__":
     choice = parser.add_mutually_exclusive_group()
     choice.add_argument("--bidirectional", action="store_true")
     choice.add_argument("--virtual-service", action="store_true")
+    choice.add_argument("--shaped-backhaul", action="store_true")
     args = parser.parse_args()
     print(
         json.dumps(
             replay(
                 args.directory,
-                VirtualCapacitySource
+                ShapedBackhaulSource
+                if args.shaped_backhaul
+                else VirtualCapacitySource
                 if args.virtual_service
                 else BackhaulAccountingSource
                 if args.bidirectional
