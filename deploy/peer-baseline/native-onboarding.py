@@ -67,6 +67,7 @@ async def experiment(
     active_seconds=0,
     recovery_checks=False,
     observe_station_removal=False,
+    observe_session_reasons=False,
     medium_loss=False,
     observe_tx_status=False,
     telemetry_gap_check=False,
@@ -96,6 +97,7 @@ async def experiment(
         "recovery_checks_requested": recovery_checks,
         "agent_counter_units": 0,
         "station_removal_observation_requested": observe_station_removal,
+        "session_reason_observation_requested": observe_session_reasons,
         "capture_health_required": True,
         "capture_buffer_kib": 8192,
         "reporting_policy_receipt_expected": active_seconds > 0,
@@ -131,6 +133,7 @@ async def experiment(
                 *([RADIO_ROOT_DIR / "virtual-link.py"] if virtual_link else []),
                 *([RADIO_ROOT_DIR / "peer-path.py"] if neighbor_metrics else []),
                 *([RADIO_ROOT_DIR / "station-events.py"] if observe_station_removal else []),
+                *([RADIO_ROOT_DIR / "session-reasons.py"] if observe_session_reasons else []),
                 *([RADIO_ROOT_DIR / "medium.py"] if medium_loss else []),
                 *([RADIO_ROOT_DIR / "tx-status-trace.py"] if observe_tx_status else []),
                 *sorted((RADIO_ROOT_DIR / "source/emosa").rglob("*.py")),
@@ -152,6 +155,7 @@ async def experiment(
     probe_units = []
     medium = None
     tx_trace = None
+    reason_observer = None
     telemetry_policy_restore = None
     shaping = None
     peer_path = None
@@ -338,6 +342,10 @@ async def experiment(
                 if time.monotonic() >= end:
                     raise RuntimeError("station-removal observer did not become ready")
                 await asyncio.sleep(0.1)
+        if observe_session_reasons:
+            module = runpy.run_path(str(RADIO_ROOT_DIR / "session-reasons.py"))
+            reason_observer = module["ReasonObserver"](directory, active_seconds + 180)
+            await reason_observer.start()
         if active_seconds:
             mqtt_root = RADIO_ROOT_DIR / "mqtt-inputs/stage"
             executable = mqtt_root / "usr/sbin/mosquitto"
@@ -610,6 +618,8 @@ async def experiment(
             while time.monotonic() - started < active_seconds:
                 if medium:
                     medium.check()
+                if reason_observer:
+                    reason_observer.check()
                 if worker.returncode is not None:
                     raise RuntimeError("adapter exited during client activity")
                 index = len(samples)
@@ -898,6 +908,18 @@ async def experiment(
             )
             write(directory / "worker-stop.json", stopped)
             assert worker.returncode == 0
+            # No more adapter replies can now replace the last controller value.
+            # Retain a timed receipt observation for replies after the last
+            # periodic inventory sample, before stopping the native controller.
+            await asyncio.sleep(0.1)
+            final_observation = {
+                "started_ns": time.monotonic_ns(),
+                "wall_started_ns": time.time_ns(),
+            }
+            final_inventory = helpers["inventory"](depth=8)
+            final_observation.update(ended_ns=time.monotonic_ns(), wall_ended_ns=time.time_ns())
+            write(directory / "controller-final.json", final_inventory)
+            write(directory / "controller-final-observation.json", final_observation)
         report.update(
             status="observed_pending_capture_review",
             initial_operation=applied,
@@ -960,6 +982,16 @@ async def experiment(
                 report["station_removal_observation"] = records[-1]
             except Exception as exc:
                 errors.append("station_observer:" + str(exc))
+        if reason_observer:
+            try:
+                await reason_observer.stop()
+                report["session_reason_observation"] = json.loads(
+                    (directory / "reason-observer.json").read_text()
+                )
+                if report["session_reason_observation"]["errors"]:
+                    raise RuntimeError("live reason observation incomplete")
+            except Exception as exc:
+                errors.append("reason_observer:" + str(exc))
         if egress_unit:
             try:
                 radio["inside"](radio["AP"], "systemctl", "stop", egress_unit)
@@ -1097,6 +1129,11 @@ if __name__ == "__main__":
         help="Read kernel final-station events for measurement qualification; no counter mapping",
     )
     parser.add_argument(
+        "--observe-session-reasons",
+        action="store_true",
+        help="Join actual radio disconnect reasons to raw station-removal counters live",
+    )
+    parser.add_argument(
         "--medium-loss",
         action="store_true",
         help="Optional unqualified wmediumd counter experiment with 20%% AP-to-client loss",
@@ -1146,6 +1183,8 @@ if __name__ == "__main__":
         parser.error("recovery checks require at least 150 active seconds")
     if args.observe_station_removal and not args.active_seconds:
         parser.error("station-removal observation requires active client cycles")
+    if args.observe_session_reasons and not args.observe_station_removal:
+        parser.error("live reasons require station-removal observation")
     if args.medium_loss and not args.observe_station_removal:
         parser.error("medium loss requires station-removal observation")
     if args.observe_tx_status and not args.medium_loss:
@@ -1169,6 +1208,7 @@ if __name__ == "__main__":
                         active_seconds=args.active_seconds,
                         recovery_checks=args.recovery_checks,
                         observe_station_removal=args.observe_station_removal,
+                        observe_session_reasons=args.observe_session_reasons,
                         medium_loss=args.medium_loss,
                         observe_tx_status=args.observe_tx_status,
                         telemetry_gap_check=args.telemetry_gap_check,

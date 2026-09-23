@@ -1,0 +1,94 @@
+{
+  "live_session_reason_checks_passed": true,
+  "scope": "owned sole-client station-initiated unprotected hwsim disconnects",
+  "joined_removals": 8,
+  "bracketed_clock_checks_passed": true,
+  "records": [
+    {
+      "observed_lifetime": 1,
+      "radio_frame": 2570,
+      "reason": 3,
+      "live_join_latency_ms": 251.963561,
+      "leave_notification_frame": 28
+    },
+    {
+      "observed_lifetime": 2,
+      "radio_frame": 3870,
+      "reason": 3,
+      "live_join_latency_ms": 259.945587,
+      "leave_notification_frame": 32
+    },
+    {
+      "observed_lifetime": 3,
+      "radio_frame": 5362,
+      "reason": 3,
+      "live_join_latency_ms": 260.020828,
+      "leave_notification_frame": 59
+    },
+    {
+      "observed_lifetime": 4,
+      "radio_frame": 6096,
+      "reason": 3,
+      "live_join_latency_ms": 253.215491,
+      "leave_notification_frame": 65
+    },
+    {
+      "observed_lifetime": 5,
+      "radio_frame": 7395,
+      "reason": 3,
+      "live_join_latency_ms": 252.723879,
+      "leave_notification_frame": 69
+    },
+    {
+      "observed_lifetime": 6,
+      "radio_frame": 8613,
+      "reason": 3,
+      "live_join_latency_ms": 251.104183,
+      "leave_notification_frame": 98
+    },
+    {
+      "observed_lifetime": 7,
+      "radio_frame": 9912,
+      "reason": 3,
+      "live_join_latency_ms": 250.132858,
+      "leave_notification_frame": 102
+    },
+    {
+      "observed_lifetime": 8,
+      "radio_frame": 11209,
+      "reason": 3,
+      "live_join_latency_ms": 253.579209,
+      "leave_notification_frame": 106
+    }
+  ],
+  "capture_health": {
+    "ethernet": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 111,
+      "captured": 111,
+      "received_by_filter": 111,
+      "dropped_by_kernel": 0
+    },
+    "radio": {
+      "passed": true,
+      "linktype": 127,
+      "pcap_records": 11572,
+      "captured": 11572,
+      "received_by_filter": 11572,
+      "dropped_by_kernel": 0
+    }
+  },
+  "socket_drops": 0,
+  "collector_epoch": "0ebe9273-f66d-4c06-a4d2-444254e629d8",
+  "observation_sha256": "e5f83263724535dc8106bb0664e2a104246ae0868f58e3c30678c97b9145e9f2",
+  "final_counter_source_qualified": false,
+  "native_final_statistics_delivery_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "remaining": [
+    "Normative counter definitions and conversion",
+    "Online reporting-source handoff",
+    "Native final-statistics delivery and complete AP/STA reporting"
+  ]
+}

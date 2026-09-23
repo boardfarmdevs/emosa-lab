@@ -16,6 +16,50 @@ SHAPED = runpy.run_path(str(ROOT / "scripts/check-shaped-backhaul.py"))
 read, lines = SHAPED["read"], SHAPED["lines"]
 
 
+def queries_during_discovery_loss(
+    queries, gap, observations, offsets, baseline_start, baseline_end
+):
+    """Exempt only queries with no complete interval before their full deadline.
+
+    A planned pause is insufficient: require the actual frozen heartbeat and a
+    worker observation of its expired lease. The restored baseline's earliest
+    last read bounds when a complete new measurement could first exist.
+    """
+    assert max(offsets) - min(offsets) < 1_000_000
+    assert baseline_start < baseline_end
+    assert gap["session_before"]["observed_neighbor"]["available"]
+    assert gap["session_after"]["observed_neighbor"]["available"]
+    assert gap["operation_before"] == gap["operation_after"]
+    withheld = gap["session_withheld"]
+    assert not withheld["observed_neighbor"]["available"]
+    assert not withheld["peer_link_metrics"]["available"]
+    sample = withheld["forwarding_observation"]["sample"]
+    payload = sample["neighbor_observation"]
+    assert payload["running"] and not payload["errors"]
+    heartbeat = payload["heartbeat_ns"]
+    assert sample["started_ns"] >= heartbeat + 2_000_000_000
+    confirmed = [
+        row
+        for row in observations
+        if (
+            gap["started_at"] < (row["observed_ns"] + min(offsets)) / 1e9
+            and (row["observed_ns"] + max(offsets)) / 1e9 < gap["restored_at"]
+            and not row["observed_neighbor"]["available"]
+            and not row["peer_link_metrics"]["available"]
+            and row["sample"] is not None
+            and row["sample"]["neighbor_observation"] == payload
+            and row["observed_ns"] >= heartbeat + 2_000_000_000
+        )
+    ]
+    assert confirmed, "no observed expired discovery lease during the intended fault"
+    begin = (min(row["observed_ns"] for row in confirmed) + max(offsets)) / 1e9 + 0.001
+    return [
+        q["frame"]
+        for q in queries
+        if begin < q["time"] < baseline_start - 0.001 and q["time"] + 1 < baseline_end
+    ]
+
+
 def check(directory):
     accounting = SHAPED["check"](directory, True)
     runtime = read(directory / "result.json")
@@ -190,7 +234,12 @@ def check(directory):
         first["shaped_backhaul"]["window"]["last_read_ns"][0] / 1e9 + min(offsets) / 1e9 - 0.001
     )
     baseline_queries = [q["frame"] for q in queries if baseline_start < q["time"] < baseline_end]
-    unavailable_at_receipt = set(path_fault_queries + connection_fault_queries + baseline_queries)
+    discovery_fault_queries = queries_during_discovery_loss(
+        queries, discovery_gap, observations, offsets, baseline_start, baseline_end
+    )
+    unavailable_at_receipt = set(
+        path_fault_queries + connection_fault_queries + baseline_queries + discovery_fault_queries
+    )
     # A query may wait for new measurements within its original one-second
     # deadline. Validate every resulting reply against fresh source observations
     # below; unavailable-at-receipt is an exemption only for unanswered queries.
@@ -206,6 +255,16 @@ def check(directory):
     )
     queries = [q for q in queries if q["frame"] not in excluded]
     active_samples = read(directory / "active-samples.json")
+    inventories = [
+        (f, active_samples[int(f.stem.rsplit("-", 1)[1])]["inventory_observation"])
+        for f in sorted(directory.glob("active-inventory-*.json"))
+    ]
+    final_inventory = directory / "controller-final.json"
+    if final_inventory.exists():
+        timing = read(directory / "controller-final-observation.json")
+        assert stop["exited_at"] < timing["wall_started_ns"] / 1e9
+        assert timing["wall_ended_ns"] / 1e9 < stop["exited_at"] + 2
+        inventories.append((final_inventory, timing))
     records = []
     for query in queries:
         assert query["tlvs"] == [(8, b"\0\2")]
@@ -233,14 +292,13 @@ def check(directory):
         subsequent = [r["time"] for r in responses if r["time"] > response["time"]]
         # The native unmodified data model exposes per-interface packet/error
         # values. Capacity/availability remain independently checked on the wire.
-        for f in sorted(directory.glob("active-inventory-*.json")):
-            index = int(f.stem.rsplit("-", 1)[1])
-            timing = active_samples[index]["inventory_observation"]
+        for f, timing in inventories:
+            last_bound = stop["exited_at"] + 2 if f == final_inventory else stop["requested_at"]
             if (
                 not response["time"] + 0.001
                 < timing["wall_started_ns"] / 1e9
                 <= timing["wall_ended_ns"] / 1e9
-                < min(subsequent, default=stop["requested_at"])
+                < min(subsequent, default=last_bound)
             ):
                 continue
             objects = {k: v for group in read(f) for k, v in group.items() if isinstance(v, dict)}
@@ -311,6 +369,7 @@ def check(directory):
             q for q in path_fault_queries if q in excluded
         ],
         "queries_during_confirmed_pod_connection_loss": connection_fault_queries,
+        "queries_during_confirmed_discovery_loss": discovery_fault_queries,
         "queries_before_post_discovery_baseline_complete": baseline_queries,
         "post_discovery_baseline_unavailable_bounds": [baseline_start, baseline_end],
         "queries_answered_after_measurement_recovery": sorted(recovered_queries),

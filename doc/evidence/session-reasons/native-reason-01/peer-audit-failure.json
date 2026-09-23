@@ -1,0 +1,8 @@
+{
+  "peer_metric_acceptance_passed": false,
+  "initial_audit_error": "unanswered live peer query or unexpected reply count",
+  "corrected_discovery_classification_error": "native controller interface statistics never reflect this response",
+  "reason": "The latest reply has no subsequent timed native inventory observation. The new post-worker inventory is not present in this earlier run.",
+  "last_inventory_wall_end_ns": 1790165858282932003,
+  "full_sustained_operation_proven": false
+}

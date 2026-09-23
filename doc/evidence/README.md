@@ -10,6 +10,7 @@ for navigation and commands.
 
 | Collection | Entry point |
 | --- | --- |
+| Live disconnect reasons and recovery | [Online raw session joins, bounded clocks, native receipt and preserved failures](session-reasons/README.md) |
 | Native lifecycle and 15-minute recovery | [Actual C++ library comparison, restoration fault, measured neighbor replies and clean main-process exits](native-lifecycle/README.md) |
 | Ethernet WSC to OVSDB, hwsim and independent clients | [Normal/fault runs, received captures and cleanup](wsc-wire/README.md) |
 | Read-only database-backed report coordinator | [Ack/retry, State-derived reports, withdrawal and real Ethernet runs](coordinator/README.md) |

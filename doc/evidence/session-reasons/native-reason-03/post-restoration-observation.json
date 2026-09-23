@@ -1,0 +1,11 @@
+{
+  "observed_at": 1790166656.224998,
+  "owned_idle_check_passed": true,
+  "actual_restored_files": {
+    "/opt/prpl-install-nl80211/bin/beerocks_controller": "737ab07f89fec1aabcc861bd90ddafda931be2e3e1a108cc7352ea2c3ecd994c",
+    "/opt/prpl-install-nl80211/bin/beerocks_agent": "b00522358beef4c55c624e9a1924f17ce3c3bc8d4704801af175ab8566e5258b",
+    "/opt/emosa-baseline/prplmesh.reference.json": "56a43853b8264ca48c6236fe9576bc66e490d8566f3bbe95ba24fc85b21f5121",
+    "/opt/prpl-install-nl80211/lib/libbpl.so.6.0.0": "2e4d0b2ef7dc68e11ad8e6686418555100768634f7462a24f6bb454c77b42cf6"
+  },
+  "reference_before_sha256": "56a43853b8264ca48c6236fe9576bc66e490d8566f3bbe95ba24fc85b21f5121"
+}

@@ -144,7 +144,7 @@ TEL-01–04. Installing this simulation publisher on a physical pod is not allow
 | Associated Clients | EasyMesh 6.1 §6.2, §17.2.5/Table 28 | Join complete OVSDB membership with measured telemetry age; refuse incomplete inventory |
 | Client join/leave notification | §6.3, §17.1.5, §17.2.20/Table 43 | Send AL MAC and Client Association Event with observed STA/BSSID and join/leave bit; age updates alone are not joins |
 | Client Capability Query | §9.2, §17.1.14–15, §17.2.18–19, §17.2.36 | Correlated failure report: reason 2 for an absent station, reason 3 for an associated station whose association frame is unavailable |
-| Disassociation statistics | §6.3, §17.1.41 | [Sender and guarded handoff implemented](final-session-statistics.md); actual final session counters/reason still unqualified, so native polling continues to record the gap |
+| Disassociation statistics | §6.3, §17.1.41 | [Sender and guarded handoff implemented](final-session-statistics.md); [live reason/removal join](live-session-reasons.md) implemented; counter conversion and online delivery still unqualified, so native polling records the gap |
 | Reporting policy and metrics | §7.3 and §10 | [Durable selected receipt/Ack](reporting-policy.md) and [AP report assembly/periodic dispatch](ap-metric-reports.md); measured field mappings and native AP delivery remain pending |
 | Neighbor link metrics | IEEE 1905.1-2013 §6.3.5–6, §6.4.10–13, §11.1; amendment pp.10–12; EasyMesh §10.1 | [Query/response and guarded handoff implemented](neighbor-link-metrics.md); the optional [owned peer profile](native-peer-metrics.md) supplies measured native replies and controller receipt. The owned publisher also passes the 901-second recovery run; physical/multiple-peer qualification and complete reporting acceptance remain pending |
 | Channel procedures | §8.1–2; §17.2.13–16/Tables 36, 38–40 | Sole advertised channel 6; durable preferences, acceptance of requests requiring no adjustment, measured operating power and correlated Ack/retry |
@@ -394,6 +394,13 @@ hook to investigate in the owned simulator; the RADIUS termination cause is not
 automatically the IEEE 802.11 reason code, and that code path does not supply all
 EasyMesh traffic-error/retry fields. Do not change the physical pod to install
 such an observation hook. Qualify its existing OpenSync telemetry instead.
+
+The [live reason join](live-session-reasons.md) now removes one acquisition gap:
+it correlates actual unprotected disconnect frames with the kernel's final
+station sample during the run. It uses the existing hwsim monitor, preserves
+association/collector identities and rejects ambiguous, stale or incomplete
+inputs. The raw counters still require normative definitions and conversion;
+this observation does not by itself enable final-statistics delivery.
 
 Useful upstream OpenSync fields include `Survey` busy/duration values, `Client`
 traffic counters, and band-steering event `disconnect_reason`/association IEs in

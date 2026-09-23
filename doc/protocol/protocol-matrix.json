@@ -1811,7 +1811,7 @@
         "new_station_events": 7,
         "removal_events": 6,
         "reason_source": "Independent radio capture, not a reason attribute in kernel removal events",
-        "remaining": "Qualify EasyMesh conversion, nonzero failure/retry/queue paths and online reason/session join before sender integration",
+        "remaining": "Qualify EasyMesh counter conversion and integrate the live reason/session source with the sender",
         "measurement_semantics_qualified": false,
         "counter_accounting": {
           "status": "six_normal_traffic_sessions_reconciled_with_loss_checked_capture",
@@ -1861,6 +1861,40 @@
             }
           }
         }
+      },
+      "live_reason_observation": {
+        "status": "owned_15_minute_raw_reason_join_and_recovery_independently_verified",
+        "guide": "doc/protocol/live-session-reasons.md",
+        "evidence": "doc/evidence/session-reasons/README.md",
+        "observer": "deploy/radio-manager/session-reasons.py",
+        "join": "src/emosa/simulation/session_reasons.py",
+        "independent_check": "scripts/check-session-reasons.py",
+        "tests": "tests/test_session_reasons.py",
+        "source_sections": [
+          "IEEE 802.11-2024 9.3.3.4 and 9.3.3.12 (disassociation/deauthentication frame bodies)",
+          "IEEE 802.11-2024 9.4.1.7 Table 9-79 (assigned disconnect reasons)",
+          "EasyMesh 6.1 6.3; 17.1.41; 17.2.35/64 (final-session reporting and counter definitions)"
+        ],
+        "profile": "Owned sole-client hwsim, unprotected station-initiated disconnects; AP direction independently unit-tested only",
+        "clock_read_uncertainty_max_ns": 100000,
+        "clock_offset_discrepancy_max_ns": 1000000,
+        "join_after_removal_ns": [
+          250000000,
+          1000000000
+        ],
+        "final_counter_source_qualified": false,
+        "native_final_statistics_delivery_proven": false,
+        "physical_pod_proven": false,
+        "remaining": [
+          "Acquire selected Wi-Fi Data Elements counter definitions",
+          "Qualify complete counter conversion and online source handoff",
+          "Observe required AP/STA and final-statistics reports in native controller",
+          "Repeat complete sustained acceptance; physical pod remains separate"
+        ],
+        "active_seconds": 901.5653266309964,
+        "joined_removals": 35,
+        "bracketed_clock_checks_passed": true,
+        "independent_evidence": "doc/evidence/session-reasons/native-reason-04/independent-reason-check.json"
       }
     },
     "reporting_policy_receipt": {

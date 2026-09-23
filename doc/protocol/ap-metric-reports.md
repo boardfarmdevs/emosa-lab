@@ -174,7 +174,8 @@ peer-query attempt and its bounded-wait fix as well as the subsequent result.
 
 Next qualify each actual observation and conversion, including mandatory BE ESP,
 then connect the publisher and verify the native controller's received values.
-Complete final-session statistics and resolve native shutdown before the full
-integrated 15-minute acceptance. Preserve the ultimate physical boundary:
+The selected [native lifetime fix](native-lifecycle.md) now passes clean shutdown
+after the operational workload. Complete final-session statistics and required
+AP/STA reporting before the full integrated 15-minute acceptance. Preserve the ultimate physical boundary:
 **real EasyMesh messages → EMOSA → unchanged OpenSync pod → independently observed
 behavior**. Synthetic frame correctness cannot complete that demonstration.

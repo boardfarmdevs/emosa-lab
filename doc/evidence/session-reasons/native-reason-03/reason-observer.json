@@ -1,0 +1,66 @@
+{
+  "profile": "owned-hwsim-reason-join-v1",
+  "collector_epoch": "0ebe9273-f66d-4c06-a4d2-444254e629d8",
+  "run_label": "native-reason-03",
+  "interface": "hwsim0",
+  "ifindex": 19,
+  "collector_sha256": "0f810a1f5275f916eb380c52092b44ae031d6de78ca76dbb96133b8af791bc5a",
+  "boot_id": "ce35a9b0-e10d-4857-83cc-730ffd177a7d",
+  "running": false,
+  "ready": true,
+  "errors": [],
+  "joined": 8,
+  "socket_packets": 11558,
+  "socket_drops": 0,
+  "final_counter_source_qualified": false,
+  "physical_pod_changed": false,
+  "initial_clock_sample": {
+    "monotonic_ns": 45470552945567,
+    "wall_ns": 1790166368481440676,
+    "monotonic_after_ns": 45470552946309
+  },
+  "last_clock_sample": {
+    "monotonic_ns": 45726580332330,
+    "wall_ns": 1790166624508827158,
+    "monotonic_after_ns": 45726580332841
+  },
+  "heartbeat_monotonic_ns": 45726580332841,
+  "last_kernel_clock_sample": {
+    "wall_ns": 1790166624343929895,
+    "monotonic_ns": 45726415434316,
+    "monotonic_after_ns": 45726415435708
+  },
+  "kernel_collector": {
+    "boot_id": "4646cf49-821c-4068-9b73-60e29bc0924d",
+    "bssid": "02:00:00:ec:02:00",
+    "byteorder": "little",
+    "collector_sha256": "04b199fd8fdb6063e6f00610f5a2884bf9ca670116660a5f6ebb380929a7e961",
+    "event": "ready",
+    "family": 38,
+    "final_counter_source_qualified": false,
+    "ifindex": 17,
+    "interface": "wlan0",
+    "kernel": "6.8.0-139-generic",
+    "machine": "x86_64",
+    "mlme_group": 22,
+    "network_namespace": "net:[4026532652]",
+    "received_monotonic_after_ns": 45469406265032,
+    "received_monotonic_ns": 45469406264250,
+    "received_wall_ns": 1790166367334759338
+  },
+  "kernel_finished": {
+    "counts": {
+      "del_station": 8,
+      "new_station": 9
+    },
+    "errors": [],
+    "event": "finished",
+    "final_counter_source_qualified": false,
+    "received_monotonic_after_ns": 45726415435708,
+    "received_monotonic_ns": 45726415434316,
+    "received_wall_ns": 1790166624343929895,
+    "remaining_observed_stations": [
+      "02:00:00:00:02:00"
+    ]
+  }
+}

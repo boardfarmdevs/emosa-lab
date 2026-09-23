@@ -1,0 +1,40 @@
+/opt/emosa-radio-manager/source/emosa/wsc.py:106: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+  _private: dh.DHPrivateKey = field(repr=False)
+Traceback (most recent call last):
+  File "/opt/emosa-baseline/native-onboarding.py", line 1190, in <module>
+    wrapper["trial"](
+    ~~~~~~~~~~~~~~~~^
+        args.build,
+        ^^^^^^^^^^^
+    ...<16 lines>...
+        ),
+        ^^
+    )
+    ^
+  File "/opt/emosa-baseline/compatibility/controller-candidate.py", line 169, in trial
+    result = experiment(label)
+  File "/opt/emosa-baseline/native-onboarding.py", line 1193, in <lambda>
+    experiment=lambda label: asyncio.run(
+                             ~~~~~~~~~~~^
+        experiment(
+        ^^^^^^^^^^^
+    ...<12 lines>...
+        )
+        ^
+    ),
+    ^
+  File "/root/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/root/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/root/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/asyncio/base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/opt/emosa-baseline/native-onboarding.py", line 622, in experiment
+    reason_observer.check()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/emosa-radio-manager/session-reasons.py", line 243, in check
+    raise RuntimeError("live reason collector exited early; inspect retained log")
+RuntimeError: live reason collector exited early; inspect retained log

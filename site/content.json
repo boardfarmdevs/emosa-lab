@@ -951,10 +951,22 @@
       "title": "901-second lifecycle and recovery evidence",
       "description": "All 15 measured native neighbor replies, continuous traffic, real recovery faults, exact restoration and clean exits; AP/STA reporting remains pending.",
       "category": "Wire implementation"
+    },
+    {
+      "path": "doc/protocol/live-session-reasons.md",
+      "title": "Join live disconnect reasons to final raw samples",
+      "description": "Learn the passive hwsim observer, association identity, bounded clocks and fail-closed join. Counter conversion and wire delivery remain pending.",
+      "category": "Wire implementation"
+    },
+    {
+      "path": "doc/evidence/session-reasons/README.md",
+      "title": "Live disconnect joins and recovery evidence",
+      "description": "A 15-minute owned workload, independent packet review, preserved clock and receipt failures, and exact baseline restoration.",
+      "category": "Wire implementation"
     }
   ],
   "suite_evidence": {
-    "unit": "native-lifecycle/unit-results.xml",
+    "unit": "session-reasons/unit-results.xml",
     "ovsdb": "native-lifecycle/ovsdb-results.xml"
   }
 }

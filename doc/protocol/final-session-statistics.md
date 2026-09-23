@@ -21,9 +21,10 @@ This component does not close that acceptance gap or qualify an unchanged pod.
 
 The next [native station-removal observation](station-removal-observations.md)
 now obtains removal-time kernel counters and correlates actual reasons from an
-independent radio capture. Acquisition is verified; counter semantics and an
-online reason join remain unqualified. Those raw records are not yet passed to
-the sender.
+independent radio capture. The [live reason join](live-session-reasons.md) now
+correlates the actual reason and removal sample during operation under explicit
+association, clock and capture-health bounds. Counter semantics and the qualified
+reporting handoff remain pending; raw records are not yet passed to the sender.
 
 ## Implemented handoff and wire behavior
 

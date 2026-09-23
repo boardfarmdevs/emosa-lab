@@ -150,8 +150,9 @@ accounting under failed/aggregated traffic.
 
 Next exercise known failed, retried and queued traffic; establish the requested
 error and byte boundaries; and implement an online source tied to an association
-and restart epoch. Join the actual reason before submitting the complete final
-record. Require the native controller's acknowledgment and independently decoded
+and restart epoch. The [live reason observer](live-session-reasons.md) now joins the actual radio
+reason and raw removal sample during the experiment. Complete and qualify the
+counter conversion before submitting that record to the sender. Require the native controller's acknowledgment and independently decoded
 values. AP airtime/ESP, STA policy reporting and IEEE 1905 neighbor measurements
 remain separate gaps before the complete 15-minute acceptance can pass.
 

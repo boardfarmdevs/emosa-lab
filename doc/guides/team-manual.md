@@ -4226,6 +4226,48 @@ hide a defect, why a library lifetime probe needs a live follow-up, and why a
 15-minute operational pass still cannot establish complete reporting or physical
 OpenSync-pod viability by itself.
 
+### 13.31 Capture the actual disconnect reason while the system runs
+
+A client-leave notification tells the controller that a station departed. The
+additional final-statistics message must explain why and carry final counters
+for that exact association. A polled row disappearing from OVSDB cannot provide
+either the reason or the last packets. Even a correct reason found afterward in
+a capture is too late to drive the live sender.
+
+Follow [live final-session reasons](../protocol/live-session-reasons.md). The
+owned observer reads the existing hwsim monitor and the AP's kernel event log;
+it changes no radio configuration. The two streams can arrive in different
+orders, so the join uses the association lifetime, kernel timestamp, interface
+and BSSID rather than assuming adjacent records belong together.
+
+1. Run the focused tests and inspect the retained independent audit on HOST.
+   Identify the exact radio frame and kernel removal event for one joined record.
+   Its counters still have Linux raw field names; they are not yet the required
+   EasyMesh quantities.
+2. Stage the current observer, simulation module and native harness while VM is
+   idle. Use the existing optional lifecycle candidate so normal shutdown remains
+   part of the experiment. Preserve the original controller/library for restoration.
+3. Run the 900-second workload with client cycles, real OVSDB interruption and
+   adapter SIGKILL. The earlier 210-second pilots remain separate, including the
+   failed clock guard and missing final receipt observations. Watch the
+   collector's health and join count.
+4. Read `session-reasons.jsonl`. Each joined record must contain the actual frame,
+   association identity and final kernel event. No reason may be inferred from a
+   timeout. Missing, ambiguous, late or interrupted observations must fail.
+5. Run the independent checker. It matches the online result to a separate radio
+   pcap, tshark's reason decode and the EasyMesh leave notification, and checks
+   capture loss and measured delivery time. Both management recoveries must still
+   preserve traffic and avoid additional Config writes.
+6. Keep the remaining boundary explicit. The collector does not call the wire
+   sender because kernel byte, packet, error and retry semantics still need
+   qualification against the selected Data Elements definitions. A physical pod
+   must supply its existing qualified telemetry; this lab observer is not a
+   proposed installation on the pod.
+
+**Learning checkpoint:** distinguish an actual reason, an association-bound raw
+final sample, a qualified counter conversion and a report acknowledged by the
+controller. Each is necessary evidence for a different part of the same path.
+
 ## 14. Prepare an unchanged physical pod for read-only qualification
 
 **Qualification** means establishing which actual device/build, resources and

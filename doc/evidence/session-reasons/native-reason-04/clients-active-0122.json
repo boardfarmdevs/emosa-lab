@@ -1,0 +1,64 @@
+{
+  "nonce": "73f81e16e5d90b3e87143ba26fc9fa31",
+  "observations": {
+    "em-baseline-wired": {
+      "client": "em-baseline-wired",
+      "interface": "eth1",
+      "routes": [
+        {
+          "dst": "192.0.2.0/24",
+          "dev": "eth1",
+          "protocol": "kernel",
+          "scope": "link",
+          "prefsrc": "192.0.2.20",
+          "flags": []
+        }
+      ],
+      "ping": "PING 192.0.2.1 (192.0.2.1) from 192.0.2.20 eth1: 56(84) bytes of data.\n64 bytes from 192.0.2.1: icmp_seq=1 ttl=64 time=0.057 ms\n64 bytes from 192.0.2.1: icmp_seq=2 ttl=64 time=0.133 ms\n\n--- 192.0.2.1 ping statistics ---\n2 packets transmitted, 2 received, 0% packet loss, time 1002ms\nrtt min/avg/max/mdev = 0.057/0.095/0.133/0.038 ms\n",
+      "application": {
+        "nonce": "73f81e16e5d90b3e87143ba26fc9fa31",
+        "case": "active-0122",
+        "peer": "192.0.2.20"
+      },
+      "elapsed_seconds": 1.174
+    },
+    "em-baseline-wifi": {
+      "client": "em-baseline-wifi",
+      "interface": "wlan0",
+      "routes": [
+        {
+          "dst": "192.0.2.0/24",
+          "dev": "wlan0",
+          "protocol": "kernel",
+          "scope": "link",
+          "prefsrc": "192.0.2.21",
+          "flags": []
+        }
+      ],
+      "supplicant": {
+        "bssid": "02:00:00:ec:02:00",
+        "freq": "2437",
+        "ssid": "emosa-controller-trial",
+        "id": "0",
+        "mode": "station",
+        "wifi_generation": "4",
+        "pairwise_cipher": "CCMP",
+        "group_cipher": "CCMP",
+        "key_mgmt": "WPA2-PSK",
+        "wpa_state": "COMPLETED",
+        "ip_address": "192.0.2.21",
+        "p2p_device_address": "42:00:00:00:02:00",
+        "address": "02:00:00:00:02:00",
+        "uuid": "a134bcd4-edf6-548b-87e5-49d3aedf9b60"
+      },
+      "link": "Connected to 02:00:00:ec:02:00 (on wlan0)\n\tSSID: emosa-controller-trial\n\tfreq: 2437.0\n\tRX: 13175 bytes (118 packets)\n\tTX: 2953 bytes (27 packets)\n\tsignal: -30 dBm\n\trx bitrate: 13.0 MBit/s MCS 8\n\ttx bitrate: 13.0 MBit/s MCS 8\n\tbss flags: short-slot-time\n\tdtim period: 2\n\tbeacon int: 100\n",
+      "ping": "PING 192.0.2.1 (192.0.2.1) from 192.0.2.21 wlan0: 56(84) bytes of data.\n64 bytes from 192.0.2.1: icmp_seq=1 ttl=64 time=0.098 ms\n64 bytes from 192.0.2.1: icmp_seq=2 ttl=64 time=0.125 ms\n\n--- 192.0.2.1 ping statistics ---\n2 packets transmitted, 2 received, 0% packet loss, time 1002ms\nrtt min/avg/max/mdev = 0.098/0.111/0.125/0.013 ms\n",
+      "application": {
+        "nonce": "73f81e16e5d90b3e87143ba26fc9fa31",
+        "case": "active-0122",
+        "peer": "192.0.2.21"
+      },
+      "elapsed_seconds": 1.149
+    }
+  }
+}

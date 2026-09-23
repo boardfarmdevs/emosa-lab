@@ -32,7 +32,10 @@ onboarding handoff are implemented and independently decoded. Its measurement
 source remains unqualified; the native lab does not invent missing counters.
 The [read-only station-removal observer](doc/protocol/station-removal-observations.md)
 now acquires kernel records and independently correlates actual disconnect
-reasons and EasyMesh leaves. Counter conversion and online delivery remain next.
+reasons and EasyMesh leaves. The [live reason join](doc/protocol/live-session-reasons.md)
+now correlates those streams during the owned workload, with bounded timestamps
+and explicit rejection of missing or conflicting reasons. The raw counters
+remain unqualified; counter conversion and online reporting delivery are next.
 The [counter audit](doc/protocol/station-counter-accounting.md) reconciles six
 normal-traffic sessions against a loss-checked trace and the selected runtime
 kernel source. It identifies TX encryption-byte and RX management-packet

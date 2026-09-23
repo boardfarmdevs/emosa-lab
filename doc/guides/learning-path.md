@@ -302,6 +302,13 @@ OpenSync-format telemetry. Work through these exercises in order:
     controller/helper exit results. Keep clean shutdown separate from the still
     missing AP/STA and final-session reporting inputs.
 
+21. Follow [live final-session reasons](../protocol/live-session-reasons.md).
+    Explain why a membership disappearance is not a disconnect reason and why
+    a completed packet capture cannot feed a live deadline. Join the observed
+    radio reason with the removal-time kernel sample for the same association,
+    check the result independently, and distinguish this input from qualified
+    EasyMesh counter conversion and acknowledged final-statistics delivery.
+
 The real controller must supply WSC configuration, the independent manager must
 apply it, and the controller must report the observed radio/BSS before client
 traffic is checked. Read the retained negative trials and the bounded scope first.

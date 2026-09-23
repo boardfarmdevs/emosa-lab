@@ -235,8 +235,16 @@ if __name__ == "__main__":
         parser.error("seconds must be 30–7200")
 
     def emit(value):
-        value["received_monotonic_ns"] = time.monotonic_ns()
-        value["received_wall_ns"] = time.time_ns()
+        # Bound read uncertainty separately from actual wall/monotonic drift.
+        for _ in range(3):
+            before, wall, after = time.monotonic_ns(), time.time_ns(), time.monotonic_ns()
+            if 0 <= after - before <= 100_000:
+                break
+        else:
+            raise RuntimeError("station event clock read uncertainty exceeds budget")
+        value["received_monotonic_ns"] = before
+        value["received_wall_ns"] = wall
+        value["received_monotonic_after_ns"] = after
         print(json.dumps(value, sort_keys=True), flush=True)
 
     observe(args.seconds, emit=emit)

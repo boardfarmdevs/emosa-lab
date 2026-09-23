@@ -1,0 +1,283 @@
+{
+  "live_session_reason_checks_passed": true,
+  "scope": "owned sole-client station-initiated unprotected hwsim disconnects",
+  "joined_removals": 35,
+  "bracketed_clock_checks_passed": true,
+  "records": [
+    {
+      "observed_lifetime": 1,
+      "radio_frame": 2912,
+      "reason": 3,
+      "live_join_latency_ms": 258.023996,
+      "leave_notification_frame": 29
+    },
+    {
+      "observed_lifetime": 2,
+      "radio_frame": 4211,
+      "reason": 3,
+      "live_join_latency_ms": 258.359725,
+      "leave_notification_frame": 33
+    },
+    {
+      "observed_lifetime": 3,
+      "radio_frame": 5227,
+      "reason": 3,
+      "live_join_latency_ms": 250.581437,
+      "leave_notification_frame": 37
+    },
+    {
+      "observed_lifetime": 4,
+      "radio_frame": 6523,
+      "reason": 3,
+      "live_join_latency_ms": 258.990718,
+      "leave_notification_frame": 43
+    },
+    {
+      "observed_lifetime": 5,
+      "radio_frame": 7821,
+      "reason": 3,
+      "live_join_latency_ms": 259.667082,
+      "leave_notification_frame": 47
+    },
+    {
+      "observed_lifetime": 6,
+      "radio_frame": 9119,
+      "reason": 3,
+      "live_join_latency_ms": 258.270334,
+      "leave_notification_frame": 53
+    },
+    {
+      "observed_lifetime": 7,
+      "radio_frame": 10135,
+      "reason": 3,
+      "live_join_latency_ms": 258.850133,
+      "leave_notification_frame": 57
+    },
+    {
+      "observed_lifetime": 8,
+      "radio_frame": 11432,
+      "reason": 3,
+      "live_join_latency_ms": 254.631974,
+      "leave_notification_frame": 63
+    },
+    {
+      "observed_lifetime": 9,
+      "radio_frame": 12728,
+      "reason": 3,
+      "live_join_latency_ms": 258.629939,
+      "leave_notification_frame": 67
+    },
+    {
+      "observed_lifetime": 10,
+      "radio_frame": 13744,
+      "reason": 3,
+      "live_join_latency_ms": 255.759609,
+      "leave_notification_frame": 71
+    },
+    {
+      "observed_lifetime": 11,
+      "radio_frame": 15045,
+      "reason": 3,
+      "live_join_latency_ms": 257.495866,
+      "leave_notification_frame": 77
+    },
+    {
+      "observed_lifetime": 12,
+      "radio_frame": 16771,
+      "reason": 3,
+      "live_join_latency_ms": 259.043383,
+      "leave_notification_frame": 104
+    },
+    {
+      "observed_lifetime": 13,
+      "radio_frame": 17508,
+      "reason": 3,
+      "live_join_latency_ms": 251.419258,
+      "leave_notification_frame": 110
+    },
+    {
+      "observed_lifetime": 14,
+      "radio_frame": 18810,
+      "reason": 3,
+      "live_join_latency_ms": 257.629293,
+      "leave_notification_frame": 114
+    },
+    {
+      "observed_lifetime": 15,
+      "radio_frame": 20104,
+      "reason": 3,
+      "live_join_latency_ms": 255.277166,
+      "leave_notification_frame": 118
+    },
+    {
+      "observed_lifetime": 16,
+      "radio_frame": 21121,
+      "reason": 3,
+      "live_join_latency_ms": 253.337519,
+      "leave_notification_frame": 124
+    },
+    {
+      "observed_lifetime": 17,
+      "radio_frame": 22419,
+      "reason": 3,
+      "live_join_latency_ms": 258.824614,
+      "leave_notification_frame": 128
+    },
+    {
+      "observed_lifetime": 18,
+      "radio_frame": 23719,
+      "reason": 3,
+      "live_join_latency_ms": 250.014417,
+      "leave_notification_frame": 134
+    },
+    {
+      "observed_lifetime": 19,
+      "radio_frame": 24735,
+      "reason": 3,
+      "live_join_latency_ms": 259.083952,
+      "leave_notification_frame": 138
+    },
+    {
+      "observed_lifetime": 20,
+      "radio_frame": 26033,
+      "reason": 3,
+      "live_join_latency_ms": 257.605503,
+      "leave_notification_frame": 142
+    },
+    {
+      "observed_lifetime": 21,
+      "radio_frame": 27334,
+      "reason": 3,
+      "live_join_latency_ms": 251.065643,
+      "leave_notification_frame": 148
+    },
+    {
+      "observed_lifetime": 22,
+      "radio_frame": 28635,
+      "reason": 3,
+      "live_join_latency_ms": 257.068276,
+      "leave_notification_frame": 152
+    },
+    {
+      "observed_lifetime": 23,
+      "radio_frame": 29661,
+      "reason": 3,
+      "live_join_latency_ms": 258.11448,
+      "leave_notification_frame": 158
+    },
+    {
+      "observed_lifetime": 24,
+      "radio_frame": 31154,
+      "reason": 3,
+      "live_join_latency_ms": 259.436783,
+      "leave_notification_frame": 187
+    },
+    {
+      "observed_lifetime": 25,
+      "radio_frame": 32174,
+      "reason": 3,
+      "live_join_latency_ms": 256.562325,
+      "leave_notification_frame": 191
+    },
+    {
+      "observed_lifetime": 26,
+      "radio_frame": 33478,
+      "reason": 3,
+      "live_join_latency_ms": 254.104626,
+      "leave_notification_frame": 197
+    },
+    {
+      "observed_lifetime": 27,
+      "radio_frame": 34496,
+      "reason": 3,
+      "live_join_latency_ms": 256.001706,
+      "leave_notification_frame": 201
+    },
+    {
+      "observed_lifetime": 28,
+      "radio_frame": 35798,
+      "reason": 3,
+      "live_join_latency_ms": 255.937107,
+      "leave_notification_frame": 207
+    },
+    {
+      "observed_lifetime": 29,
+      "radio_frame": 37103,
+      "reason": 3,
+      "live_join_latency_ms": 259.344967,
+      "leave_notification_frame": 211
+    },
+    {
+      "observed_lifetime": 30,
+      "radio_frame": 38406,
+      "reason": 3,
+      "live_join_latency_ms": 256.815183,
+      "leave_notification_frame": 217
+    },
+    {
+      "observed_lifetime": 31,
+      "radio_frame": 39433,
+      "reason": 3,
+      "live_join_latency_ms": 256.131976,
+      "leave_notification_frame": 221
+    },
+    {
+      "observed_lifetime": 32,
+      "radio_frame": 40735,
+      "reason": 3,
+      "live_join_latency_ms": 256.804544,
+      "leave_notification_frame": 225
+    },
+    {
+      "observed_lifetime": 33,
+      "radio_frame": 42046,
+      "reason": 3,
+      "live_join_latency_ms": 256.91035,
+      "leave_notification_frame": 231
+    },
+    {
+      "observed_lifetime": 34,
+      "radio_frame": 43071,
+      "reason": 3,
+      "live_join_latency_ms": 251.671842,
+      "leave_notification_frame": 235
+    },
+    {
+      "observed_lifetime": 35,
+      "radio_frame": 44382,
+      "reason": 3,
+      "live_join_latency_ms": 252.615108,
+      "leave_notification_frame": 241
+    }
+  ],
+  "capture_health": {
+    "ethernet": {
+      "passed": true,
+      "linktype": 1,
+      "pcap_records": 244,
+      "captured": 244,
+      "received_by_filter": 244,
+      "dropped_by_kernel": 0
+    },
+    "radio": {
+      "passed": true,
+      "linktype": 127,
+      "pcap_records": 45624,
+      "captured": 45624,
+      "received_by_filter": 45624,
+      "dropped_by_kernel": 0
+    }
+  },
+  "socket_drops": 0,
+  "collector_epoch": "9aaa8a00-dd90-4a83-b4cf-cbf1086d197f",
+  "observation_sha256": "ecd4de7af9cb7a5de97202683965a8e08d4905d9d60c9625802516eee6a78932",
+  "final_counter_source_qualified": false,
+  "native_final_statistics_delivery_proven": false,
+  "sustained_operation_proven": false,
+  "physical_pod_proven": false,
+  "remaining": [
+    "Normative counter definitions and conversion",
+    "Online reporting-source handoff",
+    "Native final-statistics delivery and complete AP/STA reporting"
+  ]
+}

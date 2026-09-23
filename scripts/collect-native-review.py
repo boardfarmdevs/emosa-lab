@@ -22,6 +22,8 @@ FIXED = (
     "native-session.json",
     "controller-before.json",
     "controller-after.json",
+    "controller-final.json",
+    "controller-final-observation.json",
     "manager.jsonl",
     "mqtt-provenance.json",
     "radio.pcap",
@@ -52,6 +54,9 @@ FIXED = (
     "peer-path-gap-check.json",
     "native-processes-start.json",
     "native-processes-stop.json",
+    "session-reasons.jsonl",
+    "reason-observer.json",
+    "reason-observer.log",
 )
 PATTERNS = (
     "clients-*.json",

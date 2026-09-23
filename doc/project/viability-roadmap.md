@@ -25,6 +25,13 @@ and multiple-peer qualification remain separate work. The
 [901-second lifecycle run](../protocol/native-lifecycle.md) now joins the owned
 neighbor publisher to both recovery faults and clean native main-process exits.
 
+The [live reason/removal join](../protocol/live-session-reasons.md) now closes
+the offline-only disconnect-correlation gap for the owned sole-client hwsim
+profile. It records the actual reason and final raw kernel sample in real time.
+Next acquire the selected Wi-Fi Data Elements definitions, qualify counter
+conversion, connect the reporting source, and independently verify complete
+AP/STA and final-session delivery. The physical-pod profile remains pending.
+
 The critical milestone is **real EasyMesh messages → EMOSA adapter → unchanged
 physical pod → independently observed behavior**. Neither an OVSDB component pass
 nor a successful hwsim association completes that objective.

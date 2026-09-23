@@ -1,0 +1,62 @@
+Starting emosa-soak-native-reason-02.service - /usr/bin/ping -D -n -i 0.25 -I eth1 192.0.2.1...
+Started emosa-soak-native-reason-02.service - /usr/bin/ping -D -n -i 0.25 -I eth1 192.0.2.1.
+PING 192.0.2.1 (192.0.2.1) from 192.0.2.20 eth1: 56(84) bytes of data.
+[1790166015.115552] 64 bytes from 192.0.2.1: icmp_seq=1 ttl=64 time=0.068 ms
+[1790166015.370607] 64 bytes from 192.0.2.1: icmp_seq=2 ttl=64 time=0.083 ms
+[1790166015.622064] 64 bytes from 192.0.2.1: icmp_seq=3 ttl=64 time=0.068 ms
+[1790166015.874611] 64 bytes from 192.0.2.1: icmp_seq=4 ttl=64 time=0.068 ms
+[1790166016.130649] 64 bytes from 192.0.2.1: icmp_seq=5 ttl=64 time=0.097 ms
+[1790166016.387863] 64 bytes from 192.0.2.1: icmp_seq=6 ttl=64 time=0.074 ms
+[1790166016.642676] 64 bytes from 192.0.2.1: icmp_seq=7 ttl=64 time=0.094 ms
+[1790166016.898684] 64 bytes from 192.0.2.1: icmp_seq=8 ttl=64 time=0.086 ms
+[1790166017.154892] 64 bytes from 192.0.2.1: icmp_seq=9 ttl=64 time=0.149 ms
+[1790166017.410665] 64 bytes from 192.0.2.1: icmp_seq=10 ttl=64 time=0.099 ms
+[1790166017.666760] 64 bytes from 192.0.2.1: icmp_seq=11 ttl=64 time=0.136 ms
+[1790166017.923665] 64 bytes from 192.0.2.1: icmp_seq=12 ttl=64 time=0.089 ms
+[1790166018.178663] 64 bytes from 192.0.2.1: icmp_seq=13 ttl=64 time=0.089 ms
+[1790166018.434749] 64 bytes from 192.0.2.1: icmp_seq=14 ttl=64 time=0.088 ms
+[1790166018.690810] 64 bytes from 192.0.2.1: icmp_seq=15 ttl=64 time=0.128 ms
+[1790166018.947614] 64 bytes from 192.0.2.1: icmp_seq=16 ttl=64 time=0.063 ms
+[1790166019.202890] 64 bytes from 192.0.2.1: icmp_seq=17 ttl=64 time=0.159 ms
+[1790166019.459635] 64 bytes from 192.0.2.1: icmp_seq=18 ttl=64 time=0.084 ms
+[1790166019.714597] 64 bytes from 192.0.2.1: icmp_seq=19 ttl=64 time=0.057 ms
+[1790166019.970782] 64 bytes from 192.0.2.1: icmp_seq=20 ttl=64 time=0.129 ms
+[1790166020.227388] 64 bytes from 192.0.2.1: icmp_seq=21 ttl=64 time=0.073 ms
+[1790166020.483305] 64 bytes from 192.0.2.1: icmp_seq=22 ttl=64 time=0.159 ms
+[1790166020.740030] 64 bytes from 192.0.2.1: icmp_seq=23 ttl=64 time=0.062 ms
+[1790166020.994665] 64 bytes from 192.0.2.1: icmp_seq=24 ttl=64 time=0.096 ms
+[1790166021.252615] 64 bytes from 192.0.2.1: icmp_seq=25 ttl=64 time=0.077 ms
+[1790166021.506828] 64 bytes from 192.0.2.1: icmp_seq=26 ttl=64 time=0.165 ms
+[1790166021.762648] 64 bytes from 192.0.2.1: icmp_seq=27 ttl=64 time=0.094 ms
+[1790166022.018788] 64 bytes from 192.0.2.1: icmp_seq=28 ttl=64 time=0.133 ms
+[1790166022.274667] 64 bytes from 192.0.2.1: icmp_seq=29 ttl=64 time=0.080 ms
+[1790166022.530647] 64 bytes from 192.0.2.1: icmp_seq=30 ttl=64 time=0.088 ms
+[1790166022.786852] 64 bytes from 192.0.2.1: icmp_seq=31 ttl=64 time=0.153 ms
+[1790166023.042811] 64 bytes from 192.0.2.1: icmp_seq=32 ttl=64 time=0.121 ms
+[1790166023.298733] 64 bytes from 192.0.2.1: icmp_seq=33 ttl=64 time=0.096 ms
+[1790166023.554689] 64 bytes from 192.0.2.1: icmp_seq=34 ttl=64 time=0.088 ms
+[1790166023.810699] 64 bytes from 192.0.2.1: icmp_seq=35 ttl=64 time=0.107 ms
+[1790166024.066632] 64 bytes from 192.0.2.1: icmp_seq=36 ttl=64 time=0.089 ms
+[1790166024.322859] 64 bytes from 192.0.2.1: icmp_seq=37 ttl=64 time=0.184 ms
+[1790166024.578849] 64 bytes from 192.0.2.1: icmp_seq=38 ttl=64 time=0.156 ms
+[1790166024.834604] 64 bytes from 192.0.2.1: icmp_seq=39 ttl=64 time=0.066 ms
+[1790166025.090684] 64 bytes from 192.0.2.1: icmp_seq=40 ttl=64 time=0.102 ms
+[1790166025.346706] 64 bytes from 192.0.2.1: icmp_seq=41 ttl=64 time=0.078 ms
+[1790166025.602720] 64 bytes from 192.0.2.1: icmp_seq=42 ttl=64 time=0.090 ms
+[1790166025.858775] 64 bytes from 192.0.2.1: icmp_seq=43 ttl=64 time=0.125 ms
+[1790166026.114605] 64 bytes from 192.0.2.1: icmp_seq=44 ttl=64 time=0.058 ms
+[1790166026.370669] 64 bytes from 192.0.2.1: icmp_seq=45 ttl=64 time=0.071 ms
+[1790166026.626922] 64 bytes from 192.0.2.1: icmp_seq=46 ttl=64 time=0.171 ms
+[1790166026.882662] 64 bytes from 192.0.2.1: icmp_seq=47 ttl=64 time=0.091 ms
+[1790166027.138779] 64 bytes from 192.0.2.1: icmp_seq=48 ttl=64 time=0.125 ms
+[1790166027.394653] 64 bytes from 192.0.2.1: icmp_seq=49 ttl=64 time=0.062 ms
+[1790166027.650701] 64 bytes from 192.0.2.1: icmp_seq=50 ttl=64 time=0.083 ms
+[1790166027.906869] 64 bytes from 192.0.2.1: icmp_seq=51 ttl=64 time=0.172 ms
+[1790166028.162824] 64 bytes from 192.0.2.1: icmp_seq=52 ttl=64 time=0.119 ms
+[1790166028.418638] 64 bytes from 192.0.2.1: icmp_seq=53 ttl=64 time=0.092 ms
+[1790166028.674772] 64 bytes from 192.0.2.1: icmp_seq=54 ttl=64 time=0.070 ms
+emosa-soak-native-reason-02.service: Sent signal SIGINT to main process 5606 (ping) on client request.
+--- 192.0.2.1 ping statistics ---
+54 packets transmitted, 54 received, 0% packet loss, time 13560ms
+rtt min/avg/max/mdev = 0.057/0.101/0.184/0.033 ms
+emosa-soak-native-reason-02.service: Deactivated successfully.

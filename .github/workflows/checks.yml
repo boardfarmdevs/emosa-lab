@@ -114,6 +114,34 @@ jobs:
           python3 scripts/check-native-peer-metrics.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
           python3 scripts/check-native-ap-withholding.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
           python3 scripts/check-telemetry-gap.py doc/evidence/native-lifecycle/native-lifecycle-soak-01
+      - name: Verify live disconnect joins and 15-minute recovery
+        run: |
+          python3 scripts/check-session-reasons.py doc/evidence/session-reasons/native-reason-04
+          python3 scripts/check-native-lifecycle.py doc/evidence/session-reasons/native-reason-04
+          python3 scripts/check-native-recovery.py doc/evidence/session-reasons/native-reason-04
+          python3 scripts/check-native-peer-metrics.py doc/evidence/session-reasons/native-reason-04
+          python3 scripts/check-native-ap-withholding.py doc/evidence/session-reasons/native-reason-04
+          python3 scripts/check-telemetry-gap.py doc/evidence/session-reasons/native-reason-04
+      - name: Preserve early observer and controller-receipt failures
+        run: |
+          python3 - <<'PY'
+          import runpy
+          from pathlib import Path
+          root = Path("doc/evidence/session-reasons")
+          cases = [
+              ("check-session-reasons.py", "native-reason-02", "live reason observer unhealthy"),
+              ("check-native-peer-metrics.py", "native-reason-01", "native controller interface statistics never reflect this response"),
+              ("check-native-peer-metrics.py", "native-reason-03", "native controller interface statistics never reflect this response"),
+          ]
+          for script, label, expected in cases:
+              check = runpy.run_path(str(Path("scripts") / script))["check"]
+              try:
+                  check(root / label)
+              except AssertionError as error:
+                  assert str(error) == expected, (label, str(error))
+              else:
+                  raise AssertionError(f"Retained failure must not pass: {label}")
+          PY
       - name: Preserve the observed early peer-query failure
         run: |
           python3 - <<'PY'
