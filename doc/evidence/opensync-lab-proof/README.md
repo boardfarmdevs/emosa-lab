@@ -71,6 +71,48 @@ EMOSA restart, a pod restart (cold start) and a controller-side policy change.
      all three pods applied it within 25 s; clients with the old key dropped;
      reverting brought all six back with internet.
 
+## 900-second recovery workload (M7), run m7-01
+
+`deploy/opensync-lab/vm/workload.py` (`lab.sh workload LABEL`). All six clients
+ping the internet once a second for 901 s; a sampler records agents, the
+controller's data model and the pods every ~6 s (146 samples). Evidence in
+[m7-01/](m7-01/summary.json): timeline, faults, per-client ping logs.
+**Result: passed**, every check true.
+
+| Fault (offset) | Fault length | Recovered after it ended | Client data outage |
+| --- | --- | --- | --- |
+| client leave/join em-wc2 (60 s) | 40.6 s | 14.0 s | em-wc2 only, 54 s |
+| adapter process restart, pod-1 (150 s) | 0.5 s | 1.6 s | none |
+| OVSDB transport cut 20 s, pod-2 (240 s) | 21.7 s | 39.8 s (pod `cm` backoff) | none |
+| backhaul loss 30 s, pod-3 (360 s) | 30.6 s | 29.4 s | em-wc5/6, 49 s |
+| controller restart + policy re-entry 20 s later (510 s) | 45.1 s | 2.7 s | none |
+| client leave/join em-wc4 (690 s) | 40.6 s | 13.9 s | em-wc4 only, 53 s |
+
+"Recovered" is the first sample where every agent is provisioning with a live
+source, every pod is connected to EMOSA, the controller shows each pod with its
+expected stations and every client's ping succeeds. Every M2 during the run was
+an observed no-op (0 writes in the running agents: no duplicate effects); no
+operation is INDETERMINATE, FAILED, TIMED_OUT or in conflict. Agent RSS stayed at
+50 to 54 MB. The controller restart recovers because each agent now sends IEEE
+1905.1 Topology Discovery every 60 s, so the new controller finds the agents
+again; prplMesh keeps BML credentials in memory, so the operator re-enters the
+policy, and the resulting Renew is answered with a fresh M1.
+
+## Channel and reporting policy (M8, first part)
+
+With a channel policy store and the pod's measured channel and power, the
+controller's Channel Preference Query and Channel Selection Requests are
+answered and each agent sends Operating Channel Reports, which the controller
+acknowledges. The controller now shows operating class 81, channel 6 for every
+pod (it showed channel 0 before). Its Multi-AP Policy Config is acknowledged;
+metric reports then fall due with no qualified source and EMOSA sends none
+(recorded as `metric_reporting_due_without_qualified_source`).
+
+Metrics need the pod's own statistics: OpenSync `sm`/`qm` publish over MQTT with
+mutual TLS only (`/var/certs/ca.pem`, `client.pem`, `client_dec.key`, peer
+verification on). The lab image has no device certificate, so this needs lab
+PKI provisioning and a TLS broker before any metric can be qualified.
+
 ## Changes made during the run
 
 - `pod_profile.py`: the observed 6.6 encoding (`wpa-psk` + RSN, `key` slot);

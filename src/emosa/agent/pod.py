@@ -58,11 +58,13 @@ from emosa.secrets import SecretStore
 from emosa.simulation.wire_reports import fixtures
 from emosa.store import Store
 from emosa.wire.autoconfiguration import PeerBinding, WscExchange
-from emosa.wire.cmdu import MidSequence, decode_frame
+from emosa.wire.channel import ChannelPolicyStore, OperatingRadio
+from emosa.wire.cmdu import MULTICAST, MidSequence, Tlv, decode_frame, fragment_message
 from emosa.wire.coordinator import ReportSource
 from emosa.wire.ethernet import EthernetEndpoint
 from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession
 from emosa.wire.operation_bridge import ComponentTarget, WscComponentBridge
+from emosa.wire.reporting_policy import ReportingPolicyStore
 from emosa.wire.topology_values import (
     BridgingCapability,
     DeviceInformation,
@@ -74,6 +76,8 @@ from emosa.wsc_messages import M1Device
 
 log = logging.getLogger("emosa.agent")
 RENEW = 0x000A  # AP-Autoconfiguration Renew
+DISCOVERY_PERIOD = 60  # IEEE 1905.1 Topology Discovery interval
+CONTROLLER_TIMEOUT = 130  # no CMDU from the controller for about two discovery periods
 MONITOR = {
     **TABLES,
     "AWLAN_Node": [*TABLES["AWLAN_Node"], "id"],
@@ -88,13 +92,23 @@ def mac(text):
     return value
 
 
-def is_renew(frame, controller):
-    """An AP-Autoconfiguration Renew (type 0x000A) sent by the bound controller."""
+def from_controller(frame, controller):
+    """The message type of a frame sent by the bound controller, else None."""
     try:
         fragment = decode_frame(frame)
     except EmosaError:
-        return False
-    return fragment.message_type == RENEW and fragment.source == controller
+        return None
+    return fragment.message_type if fragment.source == controller else None
+
+
+def topology_discovery(al, mids):
+    """IEEE 1905.1 Topology Discovery: AL MAC TLV and the sending interface's MAC.
+
+    Every 1905 device sends it on each interface every 60 s (not relayed), so
+    neighbours, including a restarted controller, learn the agent. The agent's
+    interface MAC is its AL MAC here (its own macvlan).
+    """
+    return fragment_message(MULTICAST, al, 0, mids.next(), (Tlv(1, al), Tlv(2, al)))
 
 
 def write(path, value):
@@ -122,15 +136,20 @@ class PodReportSource:
         )
         self.capabilities = self.inventory = None
 
-    def _capabilities(self, ruid, channel):
+    def _capabilities(self, ruid, channel, max_eirp):
         radio = replace(
             self.caps_template.radios[0],
             # One BSS, operating class 81 (2.4 GHz, 20 MHz), only the pod's current
-            # channel operable: EMOSA does not move the pod's radio.
+            # channel operable: EMOSA does not move the pod's radio. Maximum power is
+            # the radio's configured power as the pod's own State reports it.
             basic=APRadioBasicCapabilities(
                 ruid,
                 1,
-                (BasicOperatingClass(81, 20, tuple(n for n in range(1, 14) if n != channel)),),
+                (
+                    BasicOperatingClass(
+                        81, max_eirp, tuple(n for n in range(1, 14) if n != channel)
+                    ),
+                ),
             ),
             ht=APHTCapabilities(ruid, 0),
             advanced=APRadioAdvancedCapabilities(ruid, 0),
@@ -164,7 +183,11 @@ class PodReportSource:
             ruid = mac(ident["radio_mac"])
             bssid = mac(ident["bssid"]) if state else None
             node = next(iter(rows["AWLAN_Node"].values()))
-            capabilities = self._capabilities(ruid, channel)
+            tx_power = radio.get("tx_power")
+            max_eirp = tx_power if type(tx_power) is int and 0 < tx_power <= 127 else 20
+            if self.capabilities is not None:
+                max_eirp = self.capabilities.radios[0].basic.operating_classes[0].max_eirp_dbm
+            capabilities = self._capabilities(ruid, channel, max_eirp)
             if self.capabilities is None:
                 self.capabilities = capabilities
                 self.inventory = DeviceInventory(
@@ -209,7 +232,14 @@ class PodReportSource:
                 clients=AssociatedClients((BssClients(bssid, clients),) if bssid else ()),
                 inventory_complete=True,
             )
-            facts = (raw["generation"], raw["revision"], ssid, bssid, tuple(sorted(active)))
+            facts = (
+                raw["generation"],
+                raw["revision"],
+                ssid,
+                bssid,
+                tuple(sorted(active)),
+                radio.get("tx_power"),
+            )
             if facts != self.last:
                 self.revision += 1
                 self.last = facts
@@ -231,12 +261,20 @@ class PodReportSource:
             if self._clients is not None and self._clients[0] == self.revision:
                 topology = replace(topology, clients=self._clients[1])
             self._clients = (self.revision, topology.clients)
+            # Measured operating parameters (channel procedures, Operating Channel
+            # Report) only while the BSS operates on the one supported channel.
+            operating = (
+                (OperatingRadio(ruid, 81, channel, tx_power),)
+                if bssid and channel == 6 and type(tx_power) is int and tx_power <= max_eirp
+                else ()
+            )
             self.source.publish(
                 (raw["generation"], self.revision),
                 self.capabilities,
                 topology,
                 observed_at=started,
                 lifetime=1.5,  # (t + 2) - t can exceed 2 in floating point
+                operating_radios=operating,
             )
             return True
         except (EmosaError, ConnectionError, TimeoutError, StopIteration) as exc:
@@ -304,6 +342,8 @@ async def serve(config, stop):
     mids = MidSequence(secrets.randbelow(65536))
     run_id = config.get("run_id", pod_id)
     lifecycle, last_status, last_facts, last_write = None, None, None, 0
+    next_discovery, last_contact = 0, time.monotonic()
+    channels = reporting = None
 
     def status():
         snapshot = report.source.current()
@@ -355,8 +395,16 @@ async def serve(config, stop):
                     ),
                     report.inventory,
                     mids=mids,
+                    channel_store=channels,
+                    reporting_policy_store=reporting,
+                    reset_channel_policy=lifecycle.starts == 0,
                 )
 
+            channels = ChannelPolicyStore(state_dir / "channel-policy.sqlite")
+            reporting = ReportingPolicyStore(
+                state_dir / "reporting-policy.sqlite",
+                boot_id=Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
+            )
             lifecycle = OnboardingRecovery(report.source, factory)
             while not stop.is_set():
                 ready = await report.refresh()
@@ -368,8 +416,24 @@ async def serve(config, stop):
                     await lifecycle.tick()
                 except EmosaError as exc:
                     log.warning("session tick: %s", exc)
+                now = time.monotonic()
+                if now >= next_discovery:
+                    for piece in topology_discovery(agent, mids):
+                        endpoint.send(piece)
+                    next_discovery = now + DISCOVERY_PERIOD
+                if now - last_contact > CONTROLLER_TIMEOUT:
+                    # Like a native agent's controller connectivity check: a silent
+                    # controller is lost; onboard again when it answers a Search.
+                    log.info(
+                        "no message from the controller for %ds: fresh attempt", CONTROLLER_TIMEOUT
+                    )
+                    lifecycle.renew()
+                    last_contact = now
                 frame = await asyncio.to_thread(endpoint.receive)
-                if frame is not None and is_renew(frame, controller):
+                kind = from_controller(frame, controller) if frame is not None else None
+                if kind is not None:
+                    last_contact = time.monotonic()
+                if kind == RENEW:
                     log.info("AP-Autoconfiguration Renew from the controller: fresh M1")
                     lifecycle.renew()
                 elif frame is not None:
@@ -409,6 +473,9 @@ async def serve(config, stop):
             write(state_dir / "status.json", status())
             lifecycle.close()
         store.close()
+        for extra in (channels, reporting):
+            if extra is not None:
+                extra.close()
         await session.close()
 
 

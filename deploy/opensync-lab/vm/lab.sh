@@ -14,6 +14,7 @@
 #   lab.sh topology                   the controller's DataElements (JSON)
 #   lab.sh ui                         controller UI (prplmesh-lab) on the VM, port 8093 (8091 is boardfarm's)
 #   lab.sh status
+#   lab.sh workload LABEL             900 s recovery workload under faults (vm/workload.py)
 set -euo pipefail
 exec </dev/null
 export PATH=/snap/bin:$PATH
@@ -216,5 +217,6 @@ print(s[\"pod_id\"], \"agent\", s[\"agent_al\"], \"session\", (s.get(\"session\"
 cmd=${1:-}; shift || true
 case $cmd in
     bridge|controller|emosa|agent|release|policy|client|topology|ui|status) "$cmd" "$@" ;;
+    workload) exec python3 "$HERE/vm/workload.py" "$@" ;;
     *) sed -n '2,17p' "$0"; exit 2 ;;
 esac

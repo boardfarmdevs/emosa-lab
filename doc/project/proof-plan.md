@@ -21,8 +21,8 @@ Branch `claude/0923-clean`, proposed 2026-09-23.
 | M4 warm onboarding | Done: pod-1, controller DataElements + UI, client with internet |
 | M5 three pods | Done: 3 virtual agents, 6 clients, policy change converges on all pods |
 | M6 cold start | Done for "pod container restart": M2 creates the missing fronthaul; other cold definitions not run |
-| M7 recovery | Partial: EMOSA restart, pod restart, policy change; no 900 s workload, relay cut or backhaul-loss case yet |
-| M8 reporting | Not started (no AP/STA metrics, no Operating Channel Report: pods show channel 0) |
+| M7 recovery | Done: 900 s workload m7-01 with client joins/leaves, adapter restart, transport cut, backhaul loss and controller restart, continuous traffic; passed |
+| M8 reporting | Partial: channel procedures and Operating Channel Report (controller shows channel 6), policy config acknowledged; metrics need OpenSync MQTT stats, which require TLS device certificates |
 | M9 | Not started |
 
 Deviations from this plan, found by running it:
@@ -33,6 +33,9 @@ Deviations from this plan, found by running it:
 - The agent must handle AP-Autoconfiguration Renew, or a policy change is never
   picked up.
 - A cold pod needs M2-driven VIF creation (M6 moved into Proof v1).
+- A restarted controller finds agents only through IEEE 1905.1 Topology Discovery,
+  which EMOSA did not send; each agent now sends it every 60 s and starts a fresh
+  attempt after 130 s without any message from its controller.
 
 The plan below is unchanged from its review version.
 
