@@ -157,7 +157,28 @@ class ControllerAdvertisement:
         return tuple(gaps)
 
 
-def parse_response(message: Message) -> ControllerAdvertisement:
+# Message sets for Profile-1 onboarding. EASYMESH_61 is EasyMesh 6.1 as selected in
+# the protocol matrix: a Profile-1 device's Search carries one Multi-AP Profile TLV
+# (value 1) and the Profile-2 AP Capability TLV, and its M1 carries the Profile-2
+# AP Capability and AP Radio Advanced Capabilities TLVs (§6.1, §17.1.1). R1 is the
+# EasyMesh R1 form, for controllers that validate those TLVs as not allowed for a
+# Profile-1 peer (for example RDK unified-wifi-mesh, which checks EasyMesh 5.0
+# profile-gated presence): none of the three in Search or M1, a Response without a
+# Profile TLV means Profile 1, and the R3 Controller Capability fields and Early
+# AP Capability Report do not apply. R1 is a per-controller compatibility choice,
+# never a default.
+EASYMESH_61 = "easymesh-6.1"
+R1 = "r1"
+MESSAGE_SETS = (EASYMESH_61, R1)
+
+
+def check_message_set(value):
+    if value not in MESSAGE_SETS:
+        _invalid("unknown EasyMesh message set")
+    return value
+
+
+def parse_response(message: Message, *, message_set=EASYMESH_61) -> ControllerAdvertisement:
     _header(message, RESPONSE)
     if _base(message, 0x0F, 1) != b"\0":
         _invalid("Response does not advertise Registrar")
@@ -166,7 +187,11 @@ def parse_response(message: Message) -> ControllerAdvertisement:
         raise EmosaError(Reason.UNSUPPORTED_OPERATION, "reserved autoconfiguration band")
     if 0 not in decode_value(0x80, _one(message, 0x80)).known_services:
         _invalid("Response does not advertise Controller service")
-    profile = decode_value(0xB3, _one(message, 0xB3)).profile
+    profiles = [t.value for t in message.tlvs if t.kind == 0xB3]
+    if message_set == R1 and not profiles:
+        profile = 1  # an R1 Response has no Multi-AP Profile TLV
+    else:
+        profile = decode_value(0xB3, _one(message, 0xB3)).profile
     flags = [t.value for t in message.tlvs if t.kind == 0xDD]
     security = [t.value for t in message.tlvs if t.kind == 0xA9]
     if len(flags) > 1 or (flags and not flags[0]) or len(security) > 1:
@@ -270,8 +295,10 @@ class DiscoveryExchange(_Lifetime):
         clock=time.monotonic,
         timeout=5,
         max_transmissions=3,
+        message_set=EASYMESH_61,
     ):
         super().__init__(clock, timeout, max_transmissions)
+        self.message_set = check_message_set(message_set)
         # Narrow WSC experiment: no 60 GHz, DPP/6 GHz, or newer profile claim.
         if type(band) is not int or band not in (0, 1) or type(profile) is not int or profile != 1:
             raise EmosaError(
@@ -284,9 +311,7 @@ class DiscoveryExchange(_Lifetime):
             Tlv(0x0E, bytes([band])),
             _tlv(SupportedServices((1,))),
             _tlv(SearchedServices((0,))),
-            _tlv(MultiAPProfile(profile)),
-            _tlv(profile2),
-        )
+        ) + (() if self.message_set == R1 else (_tlv(MultiAPProfile(profile)), _tlv(profile2)))
         self.sent_mids = set()
         self._response = None
 
@@ -301,10 +326,14 @@ class DiscoveryExchange(_Lifetime):
     def receive(self, message, *, ingress, generation):
         self._live()
         self.binding.check(message, ingress=ingress, generation=generation)
-        result = parse_response(message)
+        result = parse_response(message, message_set=self.message_set)
         if message.mid not in self.sent_mids or result.band != self.band:
             _invalid("Response does not match a live Search MID and band")
-        if MultiAPProfile(result.profile).effective_profile(self.profile) != self.profile:
+        # EasyMesh 6.1: the Response echoes the searching agent's profile. An R1
+        # agent predates the Multi-AP Profile TLV and does not interpret it, so in
+        # the R1 set a present Profile TLV is decoded but not matched.
+        effective = MultiAPProfile(result.profile).effective_profile(self.profile)
+        if self.message_set != R1 and effective != self.profile:
             _invalid("controller profile does not match the discovery request")
         if self._response is not None and result != self._response:
             _invalid("conflicting discovery advertisement in the same exchange")
@@ -342,6 +371,7 @@ class WscExchange(_Lifetime):
         clock=time.monotonic,
         timeout=5,
         max_transmissions=3,
+        message_set=EASYMESH_61,
     ):
         # Read-only discovery/capture inspection does not load WSC crypto.
         from emosa.wsc_messages import M1Transcript
@@ -354,7 +384,10 @@ class WscExchange(_Lifetime):
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "WSC exchange supports 2.4 or 5 GHz")
         self.binding, self.basic, self.mids = binding, basic, mids
         self.profile2, self.advanced = profile2, advanced
-        self.capabilities = (_tlv(basic), _tlv(profile2), _tlv(advanced))
+        self.message_set = check_message_set(message_set)
+        self.capabilities = (_tlv(basic),) + (
+            () if self.message_set == R1 else (_tlv(profile2), _tlv(advanced))
+        )
         self._transcript = M1Transcript.create(device)
         self.exchange_id = uuid.uuid4().hex
         self.m1_sha256 = hashlib.sha256(self._transcript.message).hexdigest()

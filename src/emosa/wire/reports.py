@@ -27,7 +27,7 @@ from emosa.easymesh_payloads import (
     encode_value,
 )
 from emosa.errors import EmosaError, Reason
-from emosa.wire.autoconfiguration import PeerBinding
+from emosa.wire.autoconfiguration import EASYMESH_61, R1, PeerBinding, check_message_set
 from emosa.wire.cmdu import MidSequence, Tlv, fragment_message, invalid
 from emosa.wire.topology_values import (
     BridgingCapability,
@@ -222,7 +222,7 @@ class TopologyFacts:
     mld_backhaul_vbss_tid_policy_absent: bool
 
 
-def _topology(facts, binding):
+def _topology(facts, binding, message_set=EASYMESH_61):
     _require(
         all(
             flag is True
@@ -294,10 +294,13 @@ def _topology(facts, binding):
         values.append(facts.bridges)
     values.extend((*facts.non1905, *facts.neighbors1905))
     tlvs = [Tlv(value.kind, encode_topology(value)) for value in values]
-    tlvs.extend((_em(SupportedServices((1,))), _em(facts.operational), _em(facts.configuration)))
+    tlvs.extend((_em(SupportedServices((1,))), _em(facts.operational)))
+    if message_set != R1:  # R1 has no BSS Configuration Report and no Profile TLV
+        tlvs.append(_em(facts.configuration))
     if clients:
         tlvs.append(_em(facts.clients))
-    tlvs.append(_em(MultiAPProfile(1)))
+    if message_set != R1:
+        tlvs.append(_em(MultiAPProfile(1)))
     return tlvs
 
 
@@ -311,6 +314,7 @@ def topology_response(
     generation,
     received_at,
     clock=time.monotonic,
+    message_set=EASYMESH_61,
 ):
     """Reply to an admitted Query with its MID, within IEEE 8.2.2.2's one second.
 
@@ -322,17 +326,26 @@ def topology_response(
     _require(_time(received_at) <= now < received_at + 1, "Topology Query response window expired")
     binding.check(query, ingress=ingress, generation=generation)
     _require(query.message_type == 2 and not query.relay, "expected a unicast Topology Query")
+    check_message_set(message_set)
     profiles = [t.value for t in query.tlvs if t.kind == 0xB3]
-    _require(len(profiles) == 1, "Topology Query requires one Multi-AP Profile")
+    _require(
+        len(profiles) == 1 or (message_set == R1 and not profiles),
+        "Topology Query requires one Multi-AP Profile",
+    )
     # EasyMesh 6.1 §6.2: Query advertises the sender's highest profile,
     # unlike discovery Response, which echoes the searching agent's profile.
     # Decode it without upgrading our own Profile-1 response or capabilities.
-    decode_value(0xB3, profiles[0]).effective_profile(1)
+    if profiles:
+        decode_value(0xB3, profiles[0]).effective_profile(1)
     _require(
         not any(t.kind in (0xAB, 0xAC) for t in query.tlvs),
         "DPP security processing is required before query dispatch",
     )
     frames = fragment_message(
-        binding.controller_al, binding.local_al, 3, query.mid, _topology(facts, binding)
+        binding.controller_al,
+        binding.local_al,
+        3,
+        query.mid,
+        _topology(facts, binding, message_set),
     )
     return PreparedReport(3, query.mid, stamp, received_at + 1, frames)

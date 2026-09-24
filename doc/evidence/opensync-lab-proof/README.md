@@ -187,6 +187,54 @@ The prplMesh setup was restored afterwards: the RDK container was stopped and
 kept, the agents rebound, the policy re-entered, and all three pods are back
 with 2 clients each.
 
+### Second attempt: the R1 message set
+
+EMOSA now has a per-controller message set:
+- the default `easymesh-6.1`, unchanged;
+- `r1`, the EasyMesh R1 form, off by default. It is selected per agent with
+  `"message_set": "r1"`, or `EMOSA_MESSAGE_SET` in `lab.sh`.
+
+In R1:
+- The Search carries no Multi-AP Profile or Profile-2 AP Capability TLV.
+- A Response's Profile TLV is decoded but not matched, since an R1 agent predates
+  it; EasyMesh 6.1 keeps the echoed-profile rule.
+- The R3 Controller Capability fields and the Early AP Capability Report do not
+  apply.
+- M1 carries only AP Radio Basic Capabilities.
+- The Topology Response has no Profile TLV and no BSS Configuration Report, and a
+  Topology Query's Profile TLV becomes optional.
+
+Unit tests cover both sets (8 new).
+
+With `r1` against the RDK controller ([log](rdk-controller-r1.log)), each stage
+went as follows:
+
+| Stage | Result |
+| --- | --- |
+| Search | accepted ("autoconfig rsp send success") |
+| Response | admitted (the controller advertises its own Profile 3) |
+| M1 | accepted; the controller built its operating class tables |
+| Topology Response | accepted ("no profile TLV, preserving profile: 1") |
+| M2 | refused by EMOSA |
+
+**Why EMOSA refused the M2:**
+- It carries five BSS configurations for a radio that advertised at most one:
+  fronthaul, backhaul, IoT, configurator (`lnf_radius`) and hotspot. RDK
+  builds one M2 per configured haul type, and its SSID list is seeded into the
+  controller's database from the image.
+- It also carries an AP MLD Configuration TLV (`0xE0`), even though empty.
+
+EMOSA refuses both by design. A controller must not configure more BSSes than
+advertised, and configuration TLVs are never silently dropped.
+
+**Result:** onboarding stops at M2. The next step is a feature: multi-BSS
+support in EMOSA. It would advertise the pod's real VIF capacity and map
+fronthaul, backhaul, IoT and hotspot haul types onto OpenSync VIFs, which pods
+already support. It could also accept an empty AP MLD Configuration as "no MLD".
+
+The prplMesh path, with the default set, re-onboarded all three pods unchanged
+after these changes.
+
 ## Changes made during the run
 
 - `pod_profile.py`: the observed 6.6 encoding (`wpa-psk` + RSN, `key` slot);

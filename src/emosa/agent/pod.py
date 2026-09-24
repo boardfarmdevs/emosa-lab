@@ -57,7 +57,12 @@ from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
 from emosa.simulation.wire_reports import fixtures
 from emosa.store import Store
-from emosa.wire.autoconfiguration import PeerBinding, WscExchange
+from emosa.wire.autoconfiguration import (
+    EASYMESH_61,
+    PeerBinding,
+    WscExchange,
+    check_message_set,
+)
 from emosa.wire.channel import ChannelPolicyStore, OperatingRadio
 from emosa.wire.cmdu import MULTICAST, MidSequence, Tlv, decode_frame, fragment_message
 from emosa.wire.coordinator import ReportSource
@@ -287,7 +292,9 @@ class PodReportSource:
     _clients = None
 
 
-def make_bridge(engine, backend, report, run_id, target, mids, capabilities):
+def make_bridge(
+    engine, backend, report, run_id, target, mids, capabilities, message_set=EASYMESH_61
+):
     node = report.facts
     uuid = hashlib.sha256(("emosa-agent:" + node["serial"]).encode()).digest()[:16]
     device = M1Device(
@@ -319,6 +326,7 @@ def make_bridge(engine, backend, report, run_id, target, mids, capabilities):
         radio.advanced,
         mids=mids,
         timeout=30,
+        message_set=message_set,
     )
     return WscComponentBridge(
         engine, exchange, target, backend.context, run_id=run_id, deadline=120
@@ -341,6 +349,9 @@ async def serve(config, stop):
     report = PodReportSource(backend, binding, pod_id)
     mids = MidSequence(secrets.randbelow(65536))
     run_id = config.get("run_id", pod_id)
+    # EasyMesh message set toward this controller: easymesh-6.1 unless the
+    # controller needs the R1 form (see emosa.wire.autoconfiguration).
+    message_set = check_message_set(config.get("message_set", EASYMESH_61))
     lifecycle, last_status, last_facts, last_write = None, None, None, 0
     next_discovery, last_contact = 0, time.monotonic()
     channels = reporting = None
@@ -391,10 +402,11 @@ async def serve(config, stop):
                     report.source,
                     endpoint.send,
                     lambda snap, m: make_bridge(
-                        engine, backend, report, run_id, target, m, snap.capabilities
+                        engine, backend, report, run_id, target, m, snap.capabilities, message_set
                     ),
                     report.inventory,
                     mids=mids,
+                    message_set=message_set,
                     channel_store=channels,
                     reporting_policy_store=reporting,
                     reset_channel_policy=lifecycle.starts == 0,

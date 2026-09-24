@@ -11,7 +11,13 @@ from collections import deque
 from emosa.easymesh_payloads import DeviceInventory, encode_value
 from emosa.errors import EmosaError, Reason
 from emosa.wire.ap_metrics import APMetricCoordinator, APMetricSource
-from emosa.wire.autoconfiguration import SECURITY_ENVELOPES, DiscoveryExchange
+from emosa.wire.autoconfiguration import (
+    EASYMESH_61,
+    R1,
+    SECURITY_ENVELOPES,
+    DiscoveryExchange,
+    check_message_set,
+)
 from emosa.wire.channel import ChannelCoordinator
 from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, decode_frame, fragment_message
 from emosa.wire.coordinator import ReportCoordinator
@@ -21,8 +27,14 @@ from emosa.wire.provisioning_session import ComponentProvisioningSession
 from emosa.wire.reporting_policy import ReportingPolicyCoordinator
 from emosa.wire.reports import PreparedReport, capability_tlvs
 
+R3_CONTROLLER_FIELDS = (
+    "controller_capability_absent",
+    "kib_mib_support_absent",
+    "early_ap_capability_bit_absent_for_non_dpp_search",
+)
 
-def non_dpp_admission(advertisement):
+
+def non_dpp_admission(advertisement, *, message_set=EASYMESH_61):
     """Apply 6.1 §§6.1, 9.1, 13.1, 18 to the selected non-DPP experiment.
 
     Table 117's named Early bit takes precedence over its overlapping reserved
@@ -32,7 +44,13 @@ def non_dpp_admission(advertisement):
     issues = list(advertisement.selected_response_issues)
     if "security_capability_absent" in issues:
         issues.remove("security_capability_absent")
-    if advertisement.profile != 1 or advertisement.band != 0:
+    if message_set == R1:
+        # EasyMesh R1 has no Controller Capability TLV and no Early AP Capability
+        # Report; their absence is not an admission gap in that message set.
+        issues = [i for i in issues if i not in R3_CONTROLLER_FIELDS]
+    # An R1 agent does not interpret the Response's Profile TLV (see
+    # DiscoveryExchange.receive); EasyMesh 6.1 requires the echoed Profile 1.
+    if (message_set != R1 and advertisement.profile != 1) or advertisement.band != 0:
         issues.append("outside_profile1_24ghz_contract")
     return tuple(issues)
 
@@ -60,7 +78,9 @@ class OnboardingSession:
         link_metric_source=None,
         ap_metric_source=None,
         reset_channel_policy=True,
+        message_set=EASYMESH_61,
     ):
+        self.message_set = check_message_set(message_set)
         if type(inventory) is not DeviceInventory:
             raise EmosaError(Reason.INVALID_INPUT, "explicit device inventory required")
         encode_value(inventory)
@@ -144,6 +164,7 @@ class OnboardingSession:
                 profile2=self.capabilities.profile2,
                 mids=self.mids,
                 clock=self.clock,
+                message_set=self.message_set,
             )
             self.state = "discovering"
         if self.state == "discovering":
@@ -267,13 +288,17 @@ class OnboardingSession:
                 advertisement = self.discovery.receive(
                     message, ingress=ingress, generation=generation
                 )
-                self.issues = non_dpp_admission(advertisement)
+                self.issues = non_dpp_admission(advertisement, message_set=self.message_set)
                 if self.issues:
                     self.state = "incompatible"
                     return self._record("response_incompatible")
                 self.state = "admitting"
                 self.reports = ReportCoordinator(
-                    self.source, self.send_frame, mids=self.mids, clock=self.clock
+                    self.source,
+                    self.send_frame,
+                    mids=self.mids,
+                    clock=self.clock,
+                    message_set=self.message_set,
                 )
                 self.disassociations = DisassociationCoordinator(
                     self.source, self.send_frame, self.mids, profile=1, clock=self.clock
@@ -310,11 +335,13 @@ class OnboardingSession:
                         reporter=self.ap_metrics,
                         clock=self.clock,
                     )
-                self.reports.notify_early()
+                if self.message_set != R1:
+                    self.reports.notify_early()
                 bridge = self.factory(snapshot, self.mids)
                 radio = self.capabilities.radios[0]
                 if (
                     bridge.exchange.binding != self.binding
+                    or bridge.exchange.message_set != self.message_set
                     or bridge.exchange.basic != radio.basic
                     or bridge.exchange.profile2 != self.capabilities.profile2
                     or bridge.exchange.advanced != radio.advanced

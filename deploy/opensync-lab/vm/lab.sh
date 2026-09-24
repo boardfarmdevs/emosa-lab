@@ -150,6 +150,7 @@ agent() {       # agent POD N
   "interface": "em$n",
   "al_mac": "$al",
   "controller_al": "$CTL_AL",
+  "message_set": "${EMOSA_MESSAGE_SET:-easymesh-6.1}",
   "vif": "home-ap-24",
   "state_dir": "/var/lib/emosa/$pod",
   "run_id": "$pod"
