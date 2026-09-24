@@ -46,7 +46,11 @@ network is still being verified.
 
 ## Run it
 
-The lab runs on one Linux host with LXD. The gateway, pods and clients come from
+To add EMOSA to an EasyMesh lab you already have (RDK, prplMesh or another),
+use the [adapter kit](deploy/adapter/README.md). It is a single tarball with
+an install script, and it states what the lab must provide.
+
+The reference lab runs on one Linux host with LXD. The gateway, pods and clients come from
 [opensync-lab](https://github.com/boardfarmdevs/opensync-lab). Every step is in
 the [lab manual](deploy/opensync-lab/README.md); in short:
 

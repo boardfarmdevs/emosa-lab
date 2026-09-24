@@ -3,8 +3,9 @@ Description=EMOSA virtual EasyMesh agent for OpenSync pod %i
 After=network-online.target
 
 [Service]
+EnvironmentFile=-/etc/default/emosa
 ExecStartPre=/usr/local/sbin/emosa-agent-link %i
-ExecStart=/opt/emosa/.venv/bin/python -m emosa.agent.pod /etc/emosa/%i.json
+ExecStart=/opt/emosa-adapter/venv/bin/emosa-agent /etc/emosa/%i.json
 Restart=on-failure
 RestartSec=3
 

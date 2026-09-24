@@ -15,10 +15,12 @@ pod-N ──5 GHz backhaul + GRE── mv3 ── WAN      clients ──2.4 GHz
 - **em-ctl**: prplMesh 6.0.0 (prplmesh-lab artifacts) with EMOSA's controller
   candidate `candidate-ap-esp-02`, run as in the peer baseline: controller plus
   colocated agent, one hwsim radio from opensync-lab's pool, `eth1` on `em-1905`.
-- **emosa**: this checkout, CPython 3.13.7 and `uv.lock`; one
-  `emosa-agent@POD` service per pod (`python -m emosa.agent.pod`), each with its
-  own AL MAC `02:00:00:5e:00:0N` on a macvlan `emN` over the container's single
-  `em-1905` NIC `emlan` (LXD allows one NIC per managed network per instance).
+- **emosa**: the adapter, installed with the same kit any other lab uses
+  ([`deploy/adapter`](../adapter/README.md), built by `lab.sh stage`) into
+  `/opt/emosa-adapter`. It runs one `emosa-agent@POD` service per pod, each with
+  its own AL MAC on a macvlan `emN`. The macvlans sit on the container's single
+  `em-1905` NIC `emlan`, the trunk, because LXD allows one NIC per managed
+  network per instance.
 - **Transport**: the pod's own `cm` dials EMOSA. `local-noc` (opensync-lab
   `--redirect` / `noc-ctl redirect`) writes the pod's `manager_addr`
   `tcp:10.101.0.1:665N` and ends the pod's session (OpenSync's `cm` acts on a new

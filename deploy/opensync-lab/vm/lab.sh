@@ -4,7 +4,7 @@
 #
 #   lab.sh bridge                     LXD network em-1905 (no IP): the EasyMesh LAN
 #   lab.sh controller                 container em-ctl: prplMesh controller + colocated agent
-#   lab.sh emosa                      container emosa: EMOSA source + Python 3.13 venv
+#   lab.sh emosa                      container emosa: the adapter kit (deploy/adapter) installed
 #   lab.sh agent POD N                EMOSA virtual agent N for opensync-lab pod POD:
 #                                     macvlan emN (MAC = AL) on em-1905, OVSDB 10.101.0.1:665N,
 #                                     service, then local-noc hands the pod over
@@ -113,25 +113,17 @@ emosa() {
             export DEBIAN_FRONTEND=noninteractive; apt-get -qq update
             apt-get -qq install -y build-essential iproute2 tcpdump >/dev/null'
     fi
-    log "emosa: source + venv (uv, CPython 3.13 from .python-version, uv.lock)"
-    lxc file push -q "$ART/uv" emosa/usr/local/bin/uv
-    cx emosa chmod 755 /usr/local/bin/uv
-    cx emosa rm -rf /opt/emosa.new
-    cx emosa mkdir -p /opt/emosa.new
-    tar -C /opt/emosa-lab/source -cf - . | lxc exec emosa -- tar -C /opt/emosa.new -xf -
-    cx emosa sh -ec 'rm -rf /opt/emosa.old; [ -d /opt/emosa ] && mv /opt/emosa /opt/emosa.old
-        mv /opt/emosa.new /opt/emosa
-        [ -d /opt/emosa.old/.venv ] && mv /opt/emosa.old/.venv /opt/emosa/.venv; rm -rf /opt/emosa.old
-        cd /opt/emosa && UV_PYTHON_INSTALL_DIR=/opt/uv-python uv sync --frozen --no-dev -q'
     # one trunk NIC on the EasyMesh LAN; each virtual agent adds its own macvlan
     # (emN, MAC = its AL). LXD allows one NIC per managed network per instance.
     lxc config device show emosa | grep -q '^emlan:' ||
         lxc config device add emosa emlan nic network=$NET name=emlan >/dev/null
-    lxc file push -q "$HERE/files/emosa-agent-link" emosa/usr/local/sbin/
-    cx emosa chmod 755 /usr/local/sbin/emosa-agent-link
-    lxc file push -q "$HERE/files/emosa-agent@.service" emosa/etc/systemd/system/
-    cx emosa systemctl daemon-reload
-    log "emosa: $(cx emosa /opt/emosa/.venv/bin/python -c 'import sys,emosa;print(sys.version.split()[0], emosa.__file__)')"
+    log "emosa: installing the adapter kit (deploy/adapter), trunk emlan"
+    lxc file push -q /opt/emosa-lab/adapter-kit.tar.gz emosa/root/adapter-kit.tar.gz
+    cx emosa sh -ec 'rm -rf /root/adapter-kit && mkdir /root/adapter-kit
+        tar -C /root/adapter-kit --strip-components=1 -xzf /root/adapter-kit.tar.gz
+        /root/adapter-kit/install.sh'
+    cx emosa sh -c 'grep -q "^EMOSA_TRUNK=emlan$" /etc/default/emosa || sed -i "s/^EMOSA_TRUNK=.*/EMOSA_TRUNK=emlan/" /etc/default/emosa'
+    log "emosa: $(cx emosa cat /root/adapter-kit/VERSION) in /opt/emosa-adapter"
 }
 
 pod_id() { cx "$1" /usr/opensync/tools/ovsh -r s AWLAN_Node id 2>/dev/null | tr -d '[:space:]'; }
@@ -201,14 +193,12 @@ fleet() {
   "admit": "*"
 }
 EOF
-    lxc file push -q "$HERE/files/emosa-fleet.service" emosa/etc/systemd/system/
-    cx emosa systemctl daemon-reload
     cx emosa systemctl enable -q emosa-fleet
     cx emosa systemctl restart emosa-fleet
     log "fleet: pods handed to tcp:$WAN_HOST:$FLEET_PORT get agents on ports $((FLEET_PORT + 1))-$FLEET_LAST"
 }
 
-fleet_agents() { cx emosa /opt/emosa/.venv/bin/python -m emosa.agent.fleet list /etc/emosa-fleet.json; }
+fleet_agents() { cx emosa /opt/emosa-adapter/venv/bin/emosa-fleet list /etc/emosa-fleet.json; }
 
 fleet_al() {    # fleet_al SERIAL: its agent's AL MAC, empty until the fleet registered it
     fleet_agents | python3 -c 'import json,sys; print(json.load(sys.stdin).get(sys.argv[1], {}).get("al_mac", ""))' "$1"
@@ -246,7 +236,7 @@ release() {     # release POD
         cx emosa systemctl disable --now "emosa-agent@$pod" >/dev/null 2>&1 || true
         cx emosa rm -f "/etc/emosa/$pod.json"
     elif [ -n "$serial" ] && cx emosa test -f "/etc/emosa/$serial.json"; then
-        cx emosa /opt/emosa/.venv/bin/python -m emosa.agent.fleet forget /etc/emosa-fleet.json "$serial" >/dev/null
+        cx emosa /opt/emosa-adapter/venv/bin/emosa-fleet forget /etc/emosa-fleet.json "$serial" >/dev/null
     fi
     log "$pod ($id) given back to local-noc"
 }

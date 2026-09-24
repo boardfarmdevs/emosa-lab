@@ -3,7 +3,8 @@ Description=EMOSA fleet: a virtual EasyMesh agent for every OpenSync pod handed 
 After=network-online.target
 
 [Service]
-ExecStart=/opt/emosa/.venv/bin/python -m emosa.agent.fleet serve /etc/emosa-fleet.json
+EnvironmentFile=-/etc/default/emosa
+ExecStart=/opt/emosa-adapter/venv/bin/emosa-fleet serve /etc/emosa-fleet.json
 Restart=on-failure
 RestartSec=3
 

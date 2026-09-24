@@ -20,6 +20,9 @@ stage() {
         --exclude=.pytest_cache --exclude=.ruff_cache -czf - . | lxc exec "$VM" -- tar -C /opt/emosa-lab/source -xzf -
     lxc exec "$VM" -- sh -c 'mkdir -p /opt/emosa-lab/deploy && cp -a /opt/emosa-lab/source/deploy/opensync-lab /opt/emosa-lab/deploy/'
     tar -C "$ART" -cf - . | lxc exec "$VM" -- tar -C /opt/emosa-lab/artifacts -xf -
+    # the adapter itself goes in as the kit any other lab would use (deploy/adapter)
+    kit=$(UV="$ART/uv" "$ROOT/deploy/adapter/build.sh" "$ROOT/.cache/adapter-kit" | tail -1)
+    lxc file push -q "$kit" "$VM/opt/emosa-lab/adapter-kit.tar.gz"
     echo "staged $(git -C "$ROOT" rev-parse --short HEAD)$(git -C "$ROOT" diff --quiet || echo +dirty) into $VM:/opt/emosa-lab"
 }
 

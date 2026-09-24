@@ -1,0 +1,13 @@
+{
+  "listen": "ptcp:6650:127.0.0.1",
+  "advertise": "192.0.2.10",
+  "ports": [6651, 6690],
+  "controller_al": "02:00:00:e0:00:01",
+  "message_set": "easymesh-6.1",
+  "multi_bss": false,
+  "m2_session": "distinct",
+  "profile": "opensync-lab-hwsim-6.6.1-v1",
+  "state_root": "/var/lib/emosa",
+  "config_dir": "/etc/emosa",
+  "admit": "*"
+}
