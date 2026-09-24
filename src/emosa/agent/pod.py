@@ -38,7 +38,6 @@ from emosa.opensync.schema import TABLES
 from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
-from emosa.simulation.wire_reports import fixtures
 from emosa.store import Store
 from emosa.wire.autoconfiguration import (
     EASYMESH_61,
@@ -114,7 +113,6 @@ class PodReportSource:
         self.revision, self.last = 0, None
         self.first_seen = {}  # station MAC -> monotonic time EMOSA first saw it active
         self.facts = None  # the pod's identity/radio/BSS facts behind the published reports
-        _, self.caps_template, self.topology_template = fixtures()
         self.source = ReportSource(
             binding,
             pod_id,
@@ -159,7 +157,6 @@ class PodReportSource:
             if self.capabilities is not None:
                 max_eirp = self.capabilities.radios[0].basic.operating_classes[0].max_eirp_dbm
             capabilities = radio_capabilities(
-                self.caps_template,
                 radio,
                 channel=channel,
                 max_bss=self.backend.max_bss,
@@ -175,7 +172,6 @@ class PodReportSource:
             active = {m for b in bsses for m in b.stations}
             self.first_seen = {m: self.first_seen.get(m, now) for m in active}
             report = topology(
-                self.topology_template,
                 agent_al=self.agent,
                 controller_al=self.binding.controller_al,
                 radio=radio,

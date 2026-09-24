@@ -14,7 +14,6 @@ from emosa.opensync.easymesh_view import device_view, inventory, radio_capabilit
 from emosa.opensync.pod_profile import PodBackend
 from emosa.opensync.schema import Schema, reference_path
 from emosa.secrets import SecretStore
-from emosa.simulation.wire_reports import fixtures
 from emosa.wire.autoconfiguration import PeerBinding
 
 pytestmark = pytest.mark.unit
@@ -101,16 +100,14 @@ def test_no_single_identity_is_not_a_device():
 def test_the_view_as_easymesh_payloads():
     view = device_view(decode(raw_tables()))
     radio = view.radio(RUID_24)
-    _, caps_template, topology_template = fixtures()
-    caps = radio_capabilities(caps_template, radio, channel=6, max_bss=1, max_eirp=30)
+    caps = radio_capabilities(radio, channel=6, max_bss=1, max_eirp=30)
     (opclass,) = caps.radios[0].basic.operating_classes
     assert caps.radios[0].basic.ruid == RUID_24 and caps.radios[0].basic.max_bss == 1
     assert opclass.operating_class == 81 and 6 not in opclass.non_operable_channels
     with pytest.raises(EmosaError):
-        radio_capabilities(caps_template, view.radio(RUID_5), channel=44, max_bss=1, max_eirp=23)
+        radio_capabilities(view.radio(RUID_5), channel=44, max_bss=1, max_eirp=23)
     assert inventory(view, radio).serial_number == SERIAL.encode()
     facts = topology(
-        topology_template,
         agent_al=AGENT,
         controller_al=CONTROLLER,
         radio=radio,

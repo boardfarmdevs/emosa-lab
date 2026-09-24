@@ -34,9 +34,11 @@ Southbound, the controller's M2 set becomes VIF rows (``pod_profile``); the
 pod's managers apply them, and only this view confirms what they applied.
 """
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 
 from emosa.easymesh_payloads import (
+    AKMSuiteCapabilities,
+    APCapability,
     APHTCapabilities,
     APOperationalBss,
     APRadioAdvancedCapabilities,
@@ -53,8 +55,10 @@ from emosa.easymesh_payloads import (
     OperationalBss,
     OperationalRadio,
     Profile2APCapability,
+    SupportedCipherSuites,
 )
 from emosa.errors import EmosaError, Reason
+from emosa.wire.reports import CCMP128, PSK, EarlyCapabilities, EarlyRadio, TopologyFacts
 from emosa.wire.topology_values import (
     BridgingCapability,
     DeviceInformation,
@@ -192,10 +196,11 @@ def device_view(decoded):
 # -- the view as EasyMesh payloads ----------------------------------------------
 
 
-def radio_capabilities(template, radio, *, channel, max_bss, max_eirp):
+def radio_capabilities(radio, *, channel, max_bss, max_eirp):
     """AP Capability Report contents for one radio operated on one channel.
 
     Only the current channel is operable: EMOSA does not move the pod's radio.
+    Declared: no HT/VHT/HE/EHT capability claims, WPA2-PSK with CCMP-128 only.
     """
     if radio.band not in OPERATING_CLASSES:
         raise EmosaError(Reason.UNSUPPORTED_OPERATION, "radio band not mapped")
@@ -205,13 +210,23 @@ def radio_capabilities(template, radio, *, channel, max_bss, max_eirp):
         max_bss,
         (BasicOperatingClass(opclass, max_eirp, tuple(n for n in channels if n != channel)),),
     )
-    caps = replace(
-        template.radios[0],
-        basic=basic,
-        ht=APHTCapabilities(radio.ruid, 0),
-        advanced=APRadioAdvancedCapabilities(radio.ruid, 0),
+    return EarlyCapabilities(
+        (
+            EarlyRadio(
+                basic,
+                APHTCapabilities(radio.ruid, 0),
+                APRadioAdvancedCapabilities(radio.ruid, 0),
+                False,
+                False,
+                False,
+            ),
+        ),
+        APCapability(0),
+        Profile2APCapability(0, 0, 0, 0),
+        AKMSuiteCapabilities((), (PSK,)),
+        SupportedCipherSuites((CCMP128,)),
+        True,
     )
-    return replace(template, radios=(caps,), profile2=Profile2APCapability(0, 0, 0, 0))
 
 
 def inventory(device, radio, chipset=b"mac80211_hwsim"):
@@ -223,7 +238,7 @@ def inventory(device, radio, chipset=b"mac80211_hwsim"):
     )
 
 
-def topology(template, *, agent_al, controller_al, radio, channel, bsses, ages):
+def topology(*, agent_al, controller_al, radio, channel, bsses, ages):
     """Topology Response contents: the agent, its BSSes and their stations.
 
     ``bsses`` is the subset of the radio's BSSes the agent represents; ``ages``
@@ -234,10 +249,10 @@ def topology(template, *, agent_al, controller_al, radio, channel, bsses, ages):
         LocalInterface(b.bssid, IEEE_802_11N_24, b.bssid + bytes([0x00, 0x00, channel, 0x00]))
         for b in bsses
     )
-    return replace(
-        template,
+    return TopologyFacts(
         device=DeviceInformation(agent_al, interfaces),
         bridges=BridgingCapability((tuple(i.mac for i in interfaces),)),
+        non1905=(),
         neighbors1905=(Neighbors1905(agent_al, (Neighbor(controller_al, False),)),),
         operational=APOperationalBss(
             (
@@ -264,4 +279,7 @@ def topology(template, *, agent_al, controller_al, radio, channel, bsses, ages):
             )
         ),
         inventory_complete=True,
+        powered_off_interfaces_absent=True,
+        l2_neighbor_records_absent=True,
+        mld_backhaul_vbss_tid_policy_absent=True,
     )
