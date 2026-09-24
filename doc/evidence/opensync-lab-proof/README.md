@@ -110,8 +110,38 @@ metric reports then fall due with no qualified source and EMOSA sends none
 
 Metrics need the pod's own statistics: OpenSync `sm`/`qm` publish over MQTT with
 mutual TLS only (`/var/certs/ca.pem`, `client.pem`, `client_dec.key`, peer
-verification on). The lab image has no device certificate, so this needs lab
-PKI provisioning and a TLS broker before any metric can be qualified.
+verification on). The lab image has no device certificate.
+
+**Statistics spike (pod-1, then reverted).**
+- *Setup:* `lab.sh telemetry` sets up a lab CA and a Mosquitto broker in the
+  `emosa` container. Pods reach it with mutual TLS at `10.101.0.1:8883`, and EMOSA
+  subscribes on loopback. `lab.sh provision pod-1` puts a lab device certificate
+  in the pod's `/var/certs`, which is device provisioning as a factory does it.
+- *Trial:* with `mqtt_settings` and two `Wifi_Stats_Config` rows (client and
+  survey, 2.4 GHz, 5 s / 10 s), `dm` started `qm`. `qm` connected with the
+  pod's certificate, and `sm` reports arrived every 60 s. EMOSA's pinned
+  `sts.Report` decoder read them: per station, MAC, SSID, per-interval rx/tx bytes
+  and frames, rx/tx rate, RSSI and interval length. No survey report was produced
+  on hwsim.
+- *Revert:* the trial config was written with `ovsh` on the pod, outside EMOSA's
+  session, so it was removed afterwards.
+
+**Finding:** EMOSA's AP Metrics Response needs a complete measured bundle, and
+the pod supplies none of it on hwsim. The missing parts are:
+- channel utilization;
+- the mandatory best-effort ESP;
+- per-BSS byte counters;
+- radio noise and utilization.
+
+EMOSA therefore still sends no AP metrics rather than inventing values. Station
+metrics have a qualified source:
+- rates directly;
+- traffic counters accumulated from the per-interval deltas.
+
+RCPI needs the noise floor a survey would give. Next steps:
+- EMOSA writes the telemetry configuration through its own session.
+- A per-pod subscriber feeds station link and traffic metrics.
+- AP metrics wait for a platform with survey data.
 
 ## Changes made during the run
 

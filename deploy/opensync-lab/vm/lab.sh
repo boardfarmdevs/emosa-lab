@@ -13,6 +13,8 @@
 #   lab.sh client NAME POD SSID KEY   opensync-lab wireless client on POD's fronthaul
 #   lab.sh topology                   the controller's DataElements (JSON)
 #   lab.sh ui                         controller UI (prplmesh-lab) on the VM, port 8093 (8091 is boardfarm's)
+#   lab.sh telemetry                  MQTT broker (mutual TLS) for the pods' own statistics
+#   lab.sh provision POD              lab device certificate into POD:/var/certs
 #   lab.sh status
 #   lab.sh workload LABEL             900 s recovery workload under faults (vm/workload.py)
 set -euo pipefail
@@ -182,6 +184,45 @@ client() {      # client NAME POD SSID KEY
 
 topology() { cx em-ctl em-ctl-node topology "${1:-6}"; }
 
+telemetry() {   # MQTT broker for the pods' own statistics (OpenSync sm/qm: mutual TLS only)
+    cx emosa sh -ec 'command -v mosquitto >/dev/null || { export DEBIAN_FRONTEND=noninteractive
+            apt-get -qq update; apt-get -qq install -y mosquitto mosquitto-clients openssl >/dev/null; }
+        P=/var/lib/emosa/pki; install -d -m 700 $P; cd $P
+        [ -f ca.pem ] || { openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=EMOSA lab CA" \
+                -keyout ca.key -out ca.pem 2>/dev/null; }
+        [ -f broker.pem ] || { openssl req -newkey rsa:2048 -nodes -subj "/CN=10.101.0.1" -keyout broker.key \
+                -out broker.csr 2>/dev/null
+            printf "subjectAltName=IP:10.101.0.1,IP:127.0.0.1\n" > broker.ext
+            openssl x509 -req -in broker.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 3650 \
+                -extfile broker.ext -out broker.pem 2>/dev/null; }
+        chown -R mosquitto $P; chmod 750 $P
+        printf "%s\n" "per_listener_settings true" "listener 8883 127.0.0.1" "cafile $P/ca.pem" \
+            "certfile $P/broker.pem" "keyfile $P/broker.key" "require_certificate true" \
+            "use_identity_as_username true" "listener 1883 127.0.0.1" "allow_anonymous true" \
+            > /etc/mosquitto/conf.d/emosa.conf
+        systemctl restart mosquitto'
+    lxc config device show emosa | grep -q '^mqtt:' ||
+        lxc config device add emosa mqtt proxy bind=host listen="tcp:$WAN_HOST:8883" \
+            connect=tcp:127.0.0.1:8883 >/dev/null
+    log "telemetry: broker tcp:$WAN_HOST:8883 (mutual TLS, lab CA) -> emosa; local subscriber 127.0.0.1:1883"
+}
+
+provision() {   # lab device certificate for POD, where OpenSync expects it (/var/certs)
+    local pod=$1 serial t
+    serial=$(pod_serial "$pod")
+    t=$(mktemp -d)
+    cx emosa sh -ec "cd /var/lib/emosa/pki; [ -f $serial.pem ] || { openssl req -newkey rsa:2048 -nodes \
+            -subj /CN=$serial -keyout $serial.key -out $serial.csr 2>/dev/null
+        openssl x509 -req -in $serial.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 3650 \
+            -out $serial.pem 2>/dev/null; }"
+    lxc file pull -q "emosa/var/lib/emosa/pki/ca.pem" "$t/ca.pem"
+    lxc file pull -q "emosa/var/lib/emosa/pki/$serial.pem" "$t/client.pem"
+    lxc file pull -q "emosa/var/lib/emosa/pki/$serial.key" "$t/client_dec.key"
+    for f in ca.pem client.pem client_dec.key; do lxc file push -q --mode 0600 "$t/$f" "$pod/var/certs/$f"; done
+    rm -rf "$t"
+    log "provision: $pod ($serial) lab device certificate in /var/certs (signed by the EMOSA lab CA)"
+}
+
 ui() {          # the controller's own topology: prplmesh-lab topology adapter + controller UI
     local port=${EMOSA_UI_PORT:-8093}
     lxc file push -q "$ART/controller-ui/topology-adapter.py" em-ctl/usr/local/sbin/em-topology-adapter
@@ -216,7 +257,7 @@ print(s[\"pod_id\"], \"agent\", s[\"agent_al\"], \"session\", (s.get(\"session\"
 
 cmd=${1:-}; shift || true
 case $cmd in
-    bridge|controller|emosa|agent|release|policy|client|topology|ui|status) "$cmd" "$@" ;;
+    bridge|controller|emosa|agent|release|policy|client|topology|ui|telemetry|provision|status) "$cmd" "$@" ;;
     workload) exec python3 "$HERE/vm/workload.py" "$@" ;;
     *) sed -n '2,17p' "$0"; exit 2 ;;
 esac

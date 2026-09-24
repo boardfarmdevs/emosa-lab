@@ -22,7 +22,7 @@ Branch `claude/0923-clean`, proposed 2026-09-23.
 | M5 three pods | Done: 3 virtual agents, 6 clients, policy change converges on all pods |
 | M6 cold start | Done for "pod container restart": M2 creates the missing fronthaul; other cold definitions not run |
 | M7 recovery | Done: 900 s workload m7-01 with client joins/leaves, adapter restart, transport cut, backhaul loss and controller restart, continuous traffic; passed |
-| M8 reporting | Partial: channel procedures and Operating Channel Report (controller shows channel 6), policy config acknowledged; metrics need OpenSync MQTT stats, which require TLS device certificates |
+| M8 reporting | Partial: channel procedures and Operating Channel Report (controller shows channel 6), policy config acknowledged; the pods' own statistics reach EMOSA over mutual-TLS MQTT with lab device certificates, but hwsim gives no survey data, so AP metrics cannot be qualified; station metrics are next |
 | M9 | Not started |
 
 Deviations from this plan, found by running it:
