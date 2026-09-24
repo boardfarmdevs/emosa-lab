@@ -159,7 +159,7 @@ agent() {       # agent POD N
   "message_set": "${EMOSA_MESSAGE_SET:-easymesh-6.1}",
   "multi_bss": ${EMOSA_MULTI_BSS:-false},
   "m2_session": "${EMOSA_M2_SESSION:-distinct}",
-  "vif": "home-ap-24",
+  "profile": "${EMOSA_POD_PROFILE:-opensync-lab-hwsim-6.6.1-v1}",
   "state_dir": "/var/lib/emosa/$pod",
   "run_id": "$pod"
 }
@@ -195,7 +195,7 @@ fleet() {
   "message_set": "${EMOSA_MESSAGE_SET:-easymesh-6.1}",
   "multi_bss": ${EMOSA_MULTI_BSS:-false},
   "m2_session": "${EMOSA_M2_SESSION:-distinct}",
-  "vif": "home-ap-24",
+  "profile": "${EMOSA_POD_PROFILE:-opensync-lab-hwsim-6.6.1-v1}",
   "state_root": "/var/lib/emosa",
   "config_dir": "/etc/emosa",
   "admit": "*"

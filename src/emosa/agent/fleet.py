@@ -40,6 +40,8 @@ import ovs.jsonrpc
 import ovs.poller
 import ovs.stream
 
+from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
+
 log = logging.getLogger("emosa.fleet")
 
 SERIAL = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
@@ -49,7 +51,7 @@ AGENT_DEFAULTS = {
     "message_set": "easymesh-6.1",
     "multi_bss": False,
     "m2_session": "distinct",
-    "vif": "home-ap-24",
+    "profile": DEFAULT_PROFILE,
 }
 
 

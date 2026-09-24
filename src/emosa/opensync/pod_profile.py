@@ -1,7 +1,9 @@
-"""OpenSync 6.6.1.0 on opensync-lab's hwsim pods: the observed VIF profile.
+"""OpenSync 6.6 pods: the VIF encoding and the guarded writes EMOSA makes.
 
-Profile ``opensync-lab-hwsim-6.6.1-v1`` is written from the pod's own managers,
-not from the synthetic simulator:
+The pod layout (VIF names, rows, band, channel, extra slots) is data: a pod
+profile (``emosa.opensync.profiles``, default ``opensync-lab-hwsim-6.6.1-v1``).
+The encoding below is written from the pod's own managers, not from the
+synthetic simulator:
 
 - ``ow_ovsdb.c`` reports the RSN PSK AKM as ``wpa_key_mgmt=["wpa-psk"]``; RSN
   (WPA2) versus WPA is carried by ``rsn_pairwise_ccmp`` / ``wpa_pairwise_*``.
@@ -40,9 +42,9 @@ from emosa.clock import utc_now
 from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
 from emosa.opensync.mapping import OpenSyncBackend, check_results, guard, where_uuid
+from emosa.opensync.profiles import load as load_profile
 from emosa.wire.operation_bridge import ScopeContext
 
-PROFILE = "opensync-lab-hwsim-6.6.1-v1"
 MODE = "opensync-6.6-hwsim"
 PROVENANCE = "opensync-owm:Wifi_VIF_State"
 VIF_GUARDS = (
@@ -58,41 +60,6 @@ VIF_GUARDS = (
     "wpa_pairwise_tkip",
     "wpa_pairwise_ccmp",
 )
-# A cold pod's fronthaul, as opensync-lab's NOC creates it (local-noc mesh.py pod_step).
-FRONTHAUL = {
-    "mode": "ap",
-    "enabled": True,
-    "bridge": "br-home",
-    "ssid_broadcast": "enabled",
-    "ap_bridge": True,
-    "mac_list_type": "none",
-    "vif_radio_idx": 1,  # as local-noc writes it; index 2 left hostapd unable to add the BSS
-    "wpa": True,
-    "wpa_key_mgmt": "wpa-psk",
-    "rsn_pairwise_ccmp": True,
-    "security": ["map", []],
-}
-BACKHAUL = {
-    **FRONTHAUL,
-    "ssid_broadcast": "disabled",
-    "ap_bridge": False,
-    "multi_ap": "backhaul_bss",
-}
-# (if_name, role, vif_radio_idx) beyond the bound fronthaul, in assignment order
-EXTRA_SLOTS_24 = (
-    ("svc-d-ap-24", "fronthaul", 4),
-    ("svc-e-ap-24", "fronthaul", 5),
-    ("fh-24", "fronthaul", 6),
-    ("b-ap-24", "backhaul", 1),
-)
-INET = {
-    "if_type": "vif",
-    "enabled": True,
-    "network": True,
-    "NAT": False,
-    "ip_assign_scheme": "none",
-    "mtu": 1500,
-}
 
 
 def wpa2_psk(row):
@@ -120,20 +87,23 @@ class PodBackend(OpenSyncBackend):
         vault,
         *,
         serial,
-        if_name="home-ap-24",
-        band="2.4G",
-        channel=6,
-        ht_mode="HT20",
+        profile=None,
         multi_bss=False,
-        extra_slots=EXTRA_SLOTS_24,
     ):
+        self.profile = profile or load_profile()
         super().__init__(
-            pod_id, session, vault, if_name=if_name, radio_name="", expected_serial=serial
+            pod_id,
+            session,
+            vault,
+            if_name=self.profile.fronthaul_if,
+            radio_name="",
+            expected_serial=serial,
         )
-        self.slots = tuple(extra_slots) if multi_bss else ()
+        self.slots = self.profile.extra_slots if multi_bss else ()
         self.max_bss = 1 + len(self.slots)
         self.state_provenance = PROVENANCE
-        self.band, self.channel, self.ht_mode = band, channel, ht_mode
+        self.band, self.channel = self.profile.band, self.profile.channel
+        self.ht_mode = self.profile.ht_mode
         self.anchor = None
         self.identity = None  # radio MAC, BSSID (None before the VIF exists), channel, radio
 
@@ -320,7 +290,8 @@ class PodBackend(OpenSyncBackend):
             raw["schema"].fingerprint,
             hashlib.sha256(
                 json.dumps(
-                    [PROFILE, node_uuid, radio_uuid, self.identity["radio_mac"]], sort_keys=True
+                    [self.profile.id, node_uuid, radio_uuid, self.identity["radio_mac"]],
+                    sort_keys=True,
                 ).encode()
             ).hexdigest(),
         )
@@ -350,7 +321,7 @@ class PodBackend(OpenSyncBackend):
         if self.slots:
             self._extras(decoded, radio_uuid)
         common = {
-            "mapping": PROFILE,
+            "mapping": self.profile.id,
             "radio_id": self.radio_id,
             "bss_id": self.bss_id,
             "ssid": intent.ssid,
@@ -427,7 +398,7 @@ class PodBackend(OpenSyncBackend):
                 "table": "Wifi_VIF_Config",
                 "uuid-name": "fh",
                 "row": {
-                    **FRONTHAUL,
+                    **self.profile.fronthaul_vif,
                     "if_name": self.if_name,
                     "ssid": intent.ssid,
                     "wpa_psks": ["map", [["key", key]]],
@@ -461,7 +432,7 @@ class PodBackend(OpenSyncBackend):
                 {
                     "op": "insert",
                     "table": "Wifi_Inet_Config",
-                    "row": {**INET, "if_name": self.if_name},
+                    "row": {**self.profile.inet, "if_name": self.if_name},
                 },
             ]
             counts += [None, None]
@@ -521,7 +492,9 @@ class PodBackend(OpenSyncBackend):
                     )
                     counts.append(None)
             elif bss is not None:
-                base = BACKHAUL if role == "backhaul" else FRONTHAUL
+                base = (
+                    self.profile.backhaul_row if role == "backhaul" else self.profile.fronthaul_vif
+                )
                 key = self.vault.resolve(bss["secret_ref"])
                 if present:
                     slots = sorted(present["config"].get("wpa_psks") or {})
@@ -585,7 +558,7 @@ class PodBackend(OpenSyncBackend):
                         {
                             "op": "insert",
                             "table": "Wifi_Inet_Config",
-                            "row": {**INET, "if_name": name},
+                            "row": {**self.profile.inet, "if_name": name},
                         }
                     )
                     counts.append(None)
@@ -659,7 +632,7 @@ class PodBackend(OpenSyncBackend):
                 "transaction_validated": True,
                 "transaction_id": attempt["transaction_id"],
                 "session_generation": raw["generation"],
-                "profile": PROFILE,
+                "profile": self.profile.id,
                 "action": "create" if vif_uuid is None else "update",
                 "additional_bss_count": len(intent.additional or ()),
                 "results": results,

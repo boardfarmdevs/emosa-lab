@@ -1,0 +1,30 @@
+{
+  "id": "opensync-lab-hwsim-6.6.1-v1",
+  "description": "opensync-lab pods: OpenSync 6.6.1.0 on mac80211_hwsim (opensync-platform-cfg80211). The fronthaul row is what the lab NOC creates (local-noc mesh.py pod_step); vif_radio_idx 1 as it writes it, since index 2 left hostapd unable to add the BSS. Extra slots are the VIFs the platform creates per radio (52_owm_prep.sh).",
+  "opensync_version": "6.6.1.0",
+  "radio": {"band": "2.4G", "channel": 6, "ht_mode": "HT20", "chipset": "mac80211_hwsim"},
+  "fronthaul": {
+    "if_name": "home-ap-24",
+    "vif": {
+      "mode": "ap",
+      "enabled": true,
+      "bridge": "br-home",
+      "ssid_broadcast": "enabled",
+      "ap_bridge": true,
+      "mac_list_type": "none",
+      "vif_radio_idx": 1,
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "rsn_pairwise_ccmp": true,
+      "security": ["map", []]
+    }
+  },
+  "backhaul_vif": {"ssid_broadcast": "disabled", "ap_bridge": false, "multi_ap": "backhaul_bss"},
+  "extra_slots": [
+    {"if_name": "svc-d-ap-24", "role": "fronthaul", "vif_radio_idx": 4},
+    {"if_name": "svc-e-ap-24", "role": "fronthaul", "vif_radio_idx": 5},
+    {"if_name": "fh-24", "role": "fronthaul", "vif_radio_idx": 6},
+    {"if_name": "b-ap-24", "role": "backhaul", "vif_radio_idx": 1}
+  ],
+  "inet": {"if_type": "vif", "enabled": true, "network": true, "NAT": false, "ip_assign_scheme": "none", "mtu": 1500}
+}

@@ -3,6 +3,7 @@
 import asyncio
 import copy
 import json
+from pathlib import Path
 
 import pytest
 
@@ -327,3 +328,27 @@ def test_single_bss_radio_refuses_additional_bsses(tmp_path):
     with pytest.raises(EmosaError) as error:
         asyncio.run(pod.plan(rdk_intent(1)))
     assert error.value.code == Reason.UNSUPPORTED_OPERATION
+
+
+def test_the_pod_layout_is_profile_data(tmp_path):
+    from emosa.opensync import profiles
+
+    bundled = profiles.load()
+    assert bundled.id == profiles.DEFAULT and bundled.fronthaul_if == "home-ap-24"
+    data = json.loads(
+        (Path(profiles.__file__).parents[1] / "profiles" / f"{profiles.DEFAULT}.json").read_text()
+    )
+    data.update(id="other-pod-v1")
+    data["fronthaul"]["if_name"] = "wl0.2"
+    data["radio"]["channel"] = 11
+    path = tmp_path / "other.json"
+    path.write_text(json.dumps(data))
+    vault = SecretStore(tmp_path / "secrets")
+    pod = PodBackend(
+        "pod-1", Session(tables()), vault, serial=SERIAL, profile=profiles.load(str(path))
+    )
+    assert (pod.if_name, pod.channel, pod.profile.id) == ("wl0.2", 11, "other-pod-v1")
+    data["radio"]["band"] = "5G"  # not a band the EasyMesh mapping covers yet
+    path.write_text(json.dumps(data))
+    with pytest.raises(EmosaError):
+        profiles.load(str(path))

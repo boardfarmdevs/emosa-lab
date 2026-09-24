@@ -33,7 +33,9 @@ from pathlib import Path
 
 from emosa.errors import EmosaError, Reason
 from emosa.opensync.easymesh_view import device_view, inventory, radio_capabilities, topology
-from emosa.opensync.pod_profile import PROFILE, PodBackend, wpa2_psk
+from emosa.opensync.pod_profile import PodBackend, wpa2_psk
+from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
+from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.schema import TABLES
 from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
@@ -117,7 +119,7 @@ class PodReportSource:
             binding,
             pod_id,
             hashlib.sha256(
-                f"{PROFILE}:sole-2.4G-fronthaul:PSK-CCMP:nonDPP:v1".encode()
+                f"{backend.profile.id}:sole-2.4G-fronthaul:PSK-CCMP:nonDPP:v1".encode()
             ).hexdigest(),
         )
         self.capabilities = self.inventory = None
@@ -164,7 +166,7 @@ class PodReportSource:
             )
             if self.capabilities is None:
                 self.capabilities = capabilities
-                self.inventory = inventory(device, radio)
+                self.inventory = inventory(device, radio, self.backend.profile.chipset.encode())
             elif capabilities != self.capabilities:
                 # A moved radio or replaced PHY is a different device to the controller.
                 raise EmosaError(Reason.NOT_READY, "pod radio identity or channel changed")
@@ -301,7 +303,7 @@ async def serve(config, stop):
         session,
         vault,
         serial=config["serial"],
-        if_name=config.get("vif", "home-ap-24"),
+        profile=load_profile(config.get("profile", DEFAULT_PROFILE)),
         multi_bss=config.get("multi_bss", False) is True,
     )
     engine = Engine(store, vault, {pod_id: backend})
@@ -333,7 +335,7 @@ async def serve(config, stop):
         ]
         return {
             "pod_id": pod_id,
-            "profile": PROFILE,
+            "profile": backend.profile.id,
             "agent_al": agent.hex(":"),
             "controller_al": controller.hex(":"),
             "pod": report.facts,

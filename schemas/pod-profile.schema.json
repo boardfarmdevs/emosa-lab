@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/boardfarmdevs/emosa-lab/schemas/pod-profile.schema.json",
+  "title": "EMOSA pod profile",
+  "description": "How one kind of OpenSync pod lays out the radio and VIFs EMOSA manages. Row values use OVSDB JSON encoding (RFC 7047), e.g. [\"map\", []].",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "opensync_version", "radio", "fronthaul", "backhaul_vif", "extra_slots", "inet"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{2,63}$"},
+    "description": {"type": "string"},
+    "opensync_version": {"type": "string"},
+    "radio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["band", "channel", "ht_mode", "chipset"],
+      "properties": {
+        "band": {"enum": ["2.4G"]},
+        "channel": {"type": "integer", "minimum": 1, "maximum": 13},
+        "ht_mode": {"enum": ["HT20"]},
+        "chipset": {"type": "string", "minLength": 1, "maxLength": 64}
+      }
+    },
+    "fronthaul": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["if_name", "vif"],
+      "properties": {
+        "if_name": {"$ref": "#/$defs/if_name"},
+        "vif": {"$ref": "#/$defs/row"}
+      }
+    },
+    "backhaul_vif": {"$ref": "#/$defs/row", "description": "Overrides of the fronthaul row for a backhaul BSS."},
+    "extra_slots": {
+      "type": "array",
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["if_name", "role", "vif_radio_idx"],
+        "properties": {
+          "if_name": {"$ref": "#/$defs/if_name"},
+          "role": {"enum": ["fronthaul", "backhaul"]},
+          "vif_radio_idx": {"type": "integer", "minimum": 0, "maximum": 15}
+        }
+      }
+    },
+    "inet": {"$ref": "#/$defs/row"}
+  },
+  "$defs": {
+    "if_name": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,15}$"},
+    "row": {"type": "object", "propertyNames": {"pattern": "^[A-Za-z_][A-Za-z0-9_]*$"}}
+  }
+}
