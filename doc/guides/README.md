@@ -25,6 +25,7 @@
 | [HE MCS and Wi-Fi 6 capability values](he-wifi6.md) | Inspect direction/width/role fields, reproduce a native negative case and understand remaining report/peer gaps |
 | [Wi-Fi 6 role inputs through the service](wifi6-inputs.md) | Map explicit AP/STA capabilities, inspect separate readiness, and test two-pod withdrawal/isolation/crash recovery |
 | [Read-only physical-pod qualification](pod-qualification.md) | Prepare private local connection inputs, collect an actual schema/inventory and supply useful root-pod/cloud captures |
+| [Physical pods in the labs](physical-pods.md) | Bring an operator-provisioned pod, including a years-old one, into opensync-lab and then EMOSA: provisioning asks, Ethernet attachment, cloud trust, profile and data plane |
 
 For the distinction between the adapter, its virtual-agent role and the native
 prplMesh peers, read [manual §2.5](team-manual.md#25-languages-and-upstream-reuse).
