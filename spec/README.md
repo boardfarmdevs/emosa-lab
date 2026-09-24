@@ -358,6 +358,8 @@ integration MUST meet the following:
 
 **GRE termination point (GTP), the baseline:** always provided. The pod keeps
 OpenSync's 3-address backhaul station and gretap. The GTP:
+- MUST use a link-local underlay (`169.254.0.0/16`), because OpenSync 6.6 `cm`
+  builds no tunnel over any other address;
 - MUST own the first host address (`.1`) of the underlay subnet, because
   OpenSync 6.6 `cm` uses it as the tunnel remote;
 - MUST serve DHCP on the underlay with option 26 (interface MTU) of at least
@@ -374,9 +376,11 @@ The gateway provides:
 The agent keeps reporting a declared Ethernet attachment.
 
 **EasyMesh backhaul, optional:** only for pods whose platform qualifies (data
-plane document §7). The agent reconfigures the pod's backhaul station as a
-4-address Multi-AP backhaul station, bridged into `br-home`, using the
-controller's backhaul credentials. The switch is one guarded operation that
+plane document §7). The agent adds a `Wifi_Credential_Config` entry with
+`onboard_type=multi_ap` (the controller's backhaul SSID and passphrase) at a
+higher priority than the existing `gre` entry, and clears the station's own
+`ssid`. OpenSync then joins as a 4-address Multi-AP backhaul station bridged
+into `br-home`, without GRE. The switch is one guarded operation that
 counts as applied only when the pod is back with the new uplink in its State.
 The pod MUST fall back to the GTP path if it does not come back, and EMOSA
 MUST NOT retry on its own.
