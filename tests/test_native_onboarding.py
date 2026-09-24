@@ -625,3 +625,43 @@ def test_bound_policy_receipt_does_not_claim_reporting_or_create_config_operatio
             store.close()
 
     asyncio.run(scenario())
+
+
+def test_clients_are_announced_again_once_the_controller_knows_the_bss(rig):
+    from emosa.easymesh_payloads import AssociatedClient, AssociatedClients, BssClients
+
+    async def scenario():
+        session, source, sent = lifecycle(rig)
+        await session.tick()
+        await receive(session, response())
+        snap = source.current()
+        bssid = snap.topology.clients.bsses[0].bssid
+        mac = bytes.fromhex("020000000200")
+        source.publish(
+            (1, 2),
+            snap.capabilities,
+            replace(
+                snap.topology,
+                clients=AssociatedClients((BssClients(bssid, (AssociatedClient(mac, 5),)),)),
+            ),
+            observed_at=snap.stamp.observed_at,
+        )
+        await session.tick()  # the early join, possibly before the controller knows the BSS
+        count = len(sent)
+        # M2 created the operation; the controller has not asked for topology yet.
+        session.state, session.topology_mark = "provisioning", 0
+        session.reports.counts["topology_response_sent"] = 0
+        await session.tick()
+        assert len(sent) == count
+        session.reports.counts["topology_response_sent"] = 1
+        await session.tick()
+        notification = assemble((sent[-1],))
+        assert notification.tlvs[-1] == Tlv(0x92, mac + bssid + b"\x80")
+        assert session.counts["clients_reannounced"] == 1
+        count = len(sent)
+        session.reports.counts["topology_response_sent"] = 2
+        await session.tick()
+        assert len(sent) == count  # once per configuration, not on every query
+        session.close()
+
+    asyncio.run(scenario())

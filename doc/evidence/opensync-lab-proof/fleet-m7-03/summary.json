@@ -1,0 +1,217 @@
+{
+ "label": "fleet-m7-03",
+ "duration_s": 901,
+ "faults": [
+  {
+   "name": "client leave/join em-wc2",
+   "began": 1790269305.4636734,
+   "ended": 1790269346.4340265,
+   "offset": 60.1,
+   "recovered_after_s": 12.6,
+   "outage_window_s": 53.6
+  },
+  {
+   "name": "adapter process restart (pod-1)",
+   "began": 1790269395.4828873,
+   "ended": 1790269396.3759384,
+   "offset": 150.1,
+   "recovered_after_s": 3.3,
+   "outage_window_s": 4.2
+  },
+  {
+   "name": "OVSDB transport cut 20 s (pod-2)",
+   "began": 1790269485.4419668,
+   "ended": 1790269505.4702263,
+   "offset": 240.0,
+   "recovered_after_s": 9.6,
+   "outage_window_s": 29.6
+  },
+  {
+   "name": "backhaul loss 30 s (pod-3)",
+   "began": 1790269605.532751,
+   "ended": 1790269636.3551037,
+   "offset": 360.1,
+   "recovered_after_s": 25.9,
+   "outage_window_s": 56.7
+  },
+  {
+   "name": "controller restart + policy re-entry",
+   "began": 1790269755.4427807,
+   "ended": 1790269800.3232834,
+   "offset": 510.0,
+   "recovered_after_s": 6.0,
+   "outage_window_s": 50.9
+  },
+  {
+   "name": "client leave/join em-wc4",
+   "began": 1790269935.4082499,
+   "ended": 1790269976.136565,
+   "offset": 690.0,
+   "recovered_after_s": 13.4,
+   "outage_window_s": 54.1
+  }
+ ],
+ "client_outages": {
+  "em-wc1": [],
+  "em-wc2": [
+   [
+    62,
+    115
+   ]
+  ],
+  "em-wc3": [],
+  "em-wc4": [
+   [
+    692,
+    744
+   ]
+  ],
+  "em-wc5": [
+   [
+    362,
+    410
+   ]
+  ],
+  "em-wc6": [
+   [
+    362,
+    410
+   ]
+  ]
+ },
+ "operations": {
+  "pod-1": [
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "REJECTED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "REJECTED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ],
+  "pod-2": [
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "REJECTED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ],
+  "pod-3": [
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "REJECTED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ]
+ },
+ "writes": {
+  "pod-1": 0,
+  "pod-2": 0,
+  "pod-3": 0
+ },
+ "agents": {
+  "pod-1": {
+   "pod_id": "MVXPOD023F87E628DD",
+   "unit": "emosa-agent@MVXPOD023F87E628DD",
+   "al": "02:72:f9:7f:07:85",
+   "port": 6651
+  },
+  "pod-2": {
+   "pod_id": "MVXPOD02D7777EF0D9",
+   "unit": "emosa-agent@MVXPOD02D7777EF0D9",
+   "al": "02:c2:b8:31:3a:f8",
+   "port": 6652
+  },
+  "pod-3": {
+   "pod_id": "MVXPOD02288DCB5DCC",
+   "unit": "emosa-agent@MVXPOD02288DCB5DCC",
+   "al": "02:2d:b0:6c:a5:ea",
+   "port": 6653
+  }
+ },
+ "fleet_handovers_start_end": [
+  {
+   "MVXPOD021EA2308717": 1,
+   "MVXPOD02288DCB5DCC": 1,
+   "MVXPOD023674CB574D": 1,
+   "MVXPOD023F87E628DD": 1,
+   "MVXPOD02D7777EF0D9": 1,
+   "MVXPOD02DD47D63E51": 1
+  },
+  {
+   "MVXPOD021EA2308717": 1,
+   "MVXPOD02288DCB5DCC": 1,
+   "MVXPOD023674CB574D": 1,
+   "MVXPOD023F87E628DD": 1,
+   "MVXPOD02D7777EF0D9": 1,
+   "MVXPOD02DD47D63E51": 1
+  }
+ ],
+ "agent_rss_kib_start_end": {
+  "pod-1": [
+   50660,
+   50644
+  ],
+  "pod-2": [
+   50544,
+   53548
+  ],
+  "pod-3": [
+   50752,
+   54108
+  ]
+ },
+ "samples": 138,
+ "checks": {
+  "healthy_at_end": true,
+  "every_fault_recovered": true,
+  "no_unresolved_operations": true,
+  "every_client_passing_at_end": true,
+  "agent_memory_bounded": true
+ },
+ "passed": true,
+ "scope": "hwsim lab; operational recovery (plan M7), not complete sustained reporting"
+}

@@ -45,6 +45,11 @@ one pod or its agent never reaches another. Admission is either every pod
 handed over (`"admit": "*"`) or a list of serials. The controller is set per
 fleet, not per pod.
 
+**Cost per pod** (six pods in the lab): about 50 MB of memory and about 2% of
+a core per idle agent, plus 23 MB for the fleet. An agent re-reads its pod's
+State twice a second, which keeps the 1.5 s report lifetime covered. It wakes
+at once for a frame, and otherwise every 200 ms.
+
 ## 2. The translation (`emosa.opensync.easymesh_view`)
 
 This module is pure, with no I/O and no clock. It has two steps.

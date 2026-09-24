@@ -59,6 +59,9 @@ log = logging.getLogger("emosa.agent")
 RENEW = 0x000A  # AP-Autoconfiguration Renew
 DISCOVERY_PERIOD = 60  # IEEE 1905.1 Topology Discovery interval
 CONTROLLER_TIMEOUT = 130  # no CMDU from the controller for about two discovery periods
+# The pod's State is re-read on this cadence, not on every received frame: the
+# published report lives 1.5 s, which this refreshes three times over.
+REFRESH_PERIOD = 0.5
 MONITOR = {
     **TABLES,
     "AWLAN_Node": [*TABLES["AWLAN_Node"], "id"],
@@ -316,6 +319,7 @@ async def serve(config, stop):
     message_set = check_message_set(config.get("message_set", EASYMESH_61))
     lifecycle, last_status, last_facts, last_write = None, None, None, 0
     next_discovery, last_contact = 0, time.monotonic()
+    next_refresh, ready = 0, False
     channels = reporting = None
 
     def status():
@@ -346,7 +350,8 @@ async def serve(config, stop):
         }
 
     try:
-        with EthernetEndpoint(config["interface"], agent, timeout=0.05) as endpoint:
+        # A frame returns at once; the timeout only paces idle wakeups (timers are >= 1 s).
+        with EthernetEndpoint(config["interface"], agent, timeout=0.2) as endpoint:
 
             def factory():
                 # Called by the recovery loop only while the source is current.
@@ -389,7 +394,10 @@ async def serve(config, stop):
             )
             lifecycle = OnboardingRecovery(report.source, factory)
             while not stop.is_set():
-                ready = await report.refresh()
+                refreshed = time.monotonic() >= next_refresh
+                if refreshed:
+                    ready = await report.refresh()
+                    next_refresh = time.monotonic() + REFRESH_PERIOD
                 facts = {k: v for k, v in (report.facts or {}).items() if k != "ovsdb_revision"}
                 if facts != last_facts:
                     log.info("pod: %s", json.dumps(facts or None, default=str))
@@ -427,7 +435,7 @@ async def serve(config, stop):
                             log.debug("rx: %s", result)
                     except EmosaError as exc:
                         log.debug("rx rejected: %s", exc)
-                if ready and store.operations():
+                if refreshed and ready and store.operations():
                     # The WSC provisioning session executes its operation; the
                     # engine only needs fresh State to confirm application.
                     try:
@@ -435,6 +443,8 @@ async def serve(config, stop):
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("reconcile: %s", exc)
                         report.source.invalidate()
+                if not refreshed and frame is None:
+                    continue  # nothing new to report: status only on the refresh cadence
                 value = status()
                 summary = json.dumps(
                     [

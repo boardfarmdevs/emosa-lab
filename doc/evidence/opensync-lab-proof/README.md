@@ -306,6 +306,84 @@ Results:
 out an agent that stopped sending Topology Discovery. This is controller
 behaviour, not EMOSA's.
 
+### The 900-second workload on the fleet (run fleet-m7-01)
+
+The same workload as m7-01 ran against the fleet agents
+([evidence](fleet-m7-01/summary.json)). The workload now finds each pod's
+agent from the lab's own configuration, so it runs on per-pod and fleet agents
+alike. One fault changed mechanism:
+- Before: pod-2's own proxy device was removed.
+- Now: the fleet's agent ports share one proxy range, so the VM firewall drops
+  pod-2's agent port in both directions for 20 s.
+
+**Result: passed.** Every check was true.
+
+| Fault (offset) | Recovered after it ended | m7-01 (per-pod agents) | Client data outage |
+| --- | --- | --- | --- |
+| client leave/join em-wc2 (60 s) | 14.4 s | 14.0 s | em-wc2 only, 53 s |
+| adapter process restart, pod-1 (150 s) | 2.3 s | 1.6 s | none |
+| OVSDB transport cut 20 s, pod-2 (240 s) | 13.5 s | 39.8 s | none |
+| backhaul loss 30 s, pod-3 (360 s) | 26.3 s | 29.4 s | em-wc5/6, 49 s |
+| controller restart + policy re-entry (510 s) | 2.1 s | 2.7 s | none |
+| client leave/join em-wc4 (690 s) | 16.4 s | 13.9 s | em-wc4 only, 53 s |
+
+Other observations:
+- Every M2 was an observed no-op: 0 writes.
+- Agent memory (RSS) stayed at 50 to 55 MB.
+- The fleet saw no second handover: after the cut, pod-2's `cm` reconnected
+  straight to its agent port.
+- The controller restart also cleared the stale entry of the released static
+  agent.
+- The transport cut recovered faster than in m7-01. The two faults differ
+  (dropped packets versus a removed listener), so their recovery times are not
+  directly comparable.
+
+### Six pods (runs fleet-m7-02 and fleet-m7-03)
+
+pod-4 to pod-6 were created with opensync-lab's own `deploy-mvx.sh pod`,
+unchanged. Each passed opensync-lab's checks on local-noc, then was handed over
+with `lab.sh admit pod-4 pod-5 pod-6`.
+- The fleet registered each pod 2 to 6 s after its redirect.
+- The controller then listed six agents, each on channel 6.
+- A client joined `emosa-mesh` on each new pod and reached the internet.
+
+**Cost per agent.** An idle agent used about 10% of a core. It re-read and
+re-decoded the pod's tables on every loop wake, about 17 times a second. It
+also rebuilt its status from the whole journal on each wake. Three changes cut
+this to about 2% per agent, with memory unchanged at about 50 MB:
+- the pod's State is re-read and reconciled twice a second;
+- status is built on that cadence;
+- the idle receive wakes every 200 ms instead of 50 ms.
+
+While a pod is disconnected, its session now polls for the reconnect every
+10 ms instead of every 2 ms.
+
+**fleet-m7-02: failed** ([evidence](fleet-m7-02/summary.json)). After the
+controller restart, the new prplMesh never relearned some clients: pod-3 showed
+0 of its 2 stations and pod-2 showed 1 of 2. The clients themselves kept their
+internet access.
+- **Cause:** EMOSA announced the pods' existing clients right after the
+  controller's Autoconfig Response, before M2. At that point the controller did
+  not yet know the BSS and dropped the announcements. The three earlier passes
+  had the same exposure, and the order simply happened to work out.
+- **Fix:** once M2 has configured the agent and the controller has fetched its
+  topology, the agent announces every current client again, once
+  (`OnboardingSession`, count `clients_reannounced`).
+
+**fleet-m7-03: passed** ([evidence](fleet-m7-03/summary.json)), with six pods
+live and every check true.
+
+| Fault (offset) | Recovered after it ended |
+| --- | --- |
+| client leave/join em-wc2 (60 s) | 12.6 s |
+| adapter process restart, pod-1 (150 s) | 3.3 s |
+| OVSDB transport cut 20 s, pod-2 (240 s) | 9.6 s |
+| backhaul loss 30 s, pod-3 (360 s) | 25.9 s |
+| controller restart + policy re-entry (510 s) | 6.0 s |
+| client leave/join em-wc4 (690 s) | 13.4 s |
+
+Writes during the run: 0. Agent memory stayed at 50 to 54 MB.
+
 **Bug found while writing the translation layer.** The agent did not monitor
 `Wifi_VIF_State.multi_ap`, so a backhaul BSS would have been reported with the
 fronthaul flag (0x40). It is now monitored, and the role comes from State.

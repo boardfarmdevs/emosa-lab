@@ -95,6 +95,10 @@ class OnboardingSession:
         self.discovery = self.reports = self.provisioning = None
         self.context = self.capabilities = self.last_topology = None
         self.last_clients = set()
+        # Clients are announced again once the controller has configured this
+        # agent (M2) and fetched its topology: before that it may not know the
+        # BSS yet and can drop the announcements (seen with a restarted prplMesh).
+        self.topology_mark, self.clients_reannounced = None, False
         self.next_search = 0
         self.counts, self.events = {}, deque(maxlen=64)
         self.tokens, self.token_time = 32.0, clock()
@@ -210,6 +214,14 @@ class OnboardingSession:
                     self.send_frame(frame)
                 self.last_topology = snapshot.topology.operational
                 self._record("observed_topology_notification")
+            if (
+                not self.clients_reannounced
+                and self.topology_mark is not None
+                and self.reports.counts.get("topology_response_sent", 0) > self.topology_mark
+            ):
+                self.last_clients = set()
+                self.clients_reannounced = True
+                self._record("clients_reannounced")
             if snapshot.topology.inventory_complete:
                 clients = {
                     (b.bssid, c.mac) for b in snapshot.topology.clients.bsses for c in b.clients
@@ -268,6 +280,8 @@ class OnboardingSession:
                 )
                 if result["status"] == "operation":
                     self.state = "provisioning"
+                    if self.topology_mark is None and self.reports:
+                        self.topology_mark = self.reports.counts.get("topology_response_sent", 0)
                 return self._record("wsc_" + result["status"])
             if fragment.message_type in (2, 0x8000) and self.reports:
                 if fragment.message_type == 0x8000 and self.disassociations:

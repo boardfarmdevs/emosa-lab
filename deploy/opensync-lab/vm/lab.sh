@@ -330,11 +330,17 @@ ui() {          # the controller's own topology: prplmesh-lab topology adapter +
 status() {
     lxc list -f csv -c ns em-ctl emosa 2>/dev/null || true
     cx em-ctl systemctl list-units --no-legend --plain 'em-*' 2>/dev/null | awk '{print "em-ctl", $1, $3, $4}' || true
-    cx emosa sh -c 'for f in /var/lib/emosa/*/status.json; do [ -f "$f" ] && python3 -c "
-import json,sys; s=json.load(open(sys.argv[1])); p=s.get(\"pod\") or {}
-print(s[\"pod_id\"], \"agent\", s[\"agent_al\"], \"session\", (s.get(\"session\") or {}).get(\"state\"),
-      \"ssid\", p.get(\"ssid\"), \"stations\", len(p.get(\"stations\") or []),
-      \"ops\", [(o[\"state\"], o[\"ssid\"]) for o in s[\"operations\"]])" "$f"; done' 2>/dev/null || true
+    # configured agents only (a released agent's state stays on disk as history)
+    cx emosa python3 -c '
+import glob, json, os
+for c in sorted(glob.glob("/etc/emosa/*.json")):
+    f = os.path.join(json.load(open(c))["state_dir"], "status.json")
+    if not os.path.exists(f):
+        continue
+    s = json.load(open(f)); p = s.get("pod") or {}
+    print(s["pod_id"], "agent", s["agent_al"], "session", (s.get("session") or {}).get("state"),
+          "ssid", p.get("ssid"), "stations", len(p.get("stations") or []),
+          "last ops", [(o["state"], o["ssid"]) for o in s["operations"][-2:]])' 2>/dev/null || true
     docker exec local-noc noc-ctl redirects 2>/dev/null || true
     if cx emosa systemctl is-active -q emosa-fleet 2>/dev/null; then
         fleet_agents | python3 -c '

@@ -8,15 +8,17 @@ records every 5 s what EMOSA's agents, the controller's own data model and the
 pods report. Scheduled faults:
 
   client leave/join    wpa_cli disconnect, then reconnect (em-wc2, later em-wc4)
-  adapter restart      systemctl restart emosa-agent@pod-1
-  transport cut        pod-2's OVSDB proxy removed for 20 s
+  adapter restart      pod-1's agent process restarted (systemctl)
+  transport cut        pod-2's agent port dropped for 20 s (VM firewall, both
+                       directions: the session dies and reconnects are refused)
   backhaul loss        pod-3's backhaul STA down for 30 s (GRE, LAN and management)
   controller restart   prplMesh stopped and started; the operator re-enters the
                        policy 20 s later (prplMesh keeps BML credentials in memory)
 
 Healthy = every agent provisioning with a live source, every pod connected to
 EMOSA, the controller showing each pod with its expected stations, and every
-connected client's ping succeeding. Recovery time per fault is measured to the
+connected client's ping succeeding. Agents are found from the lab's own files,
+per-pod (lab.sh agent) or fleet (lab.sh admit) alike. Recovery time per fault is measured to the
 first healthy sample after the fault ends. Writes runs/LABEL/ with timeline,
 faults, per-client ping logs and summary.json (verdict per check).
 """
@@ -33,6 +35,8 @@ CLIENTS = [c for v in PODS.values() for c in v.split()]
 ROOT = Path("/var/lib/emosa-lab/runs")
 POLICY = ("emosa-mesh", "EmosaMesh2026!")  # public lab test values
 BAD = {"INDETERMINATE", "FAILED", "OWNERSHIP_CONFLICT", "TIMED_OUT"}
+WAN_HOST = "10.101.0.1"  # where pods reach EMOSA (lab.sh WAN_HOST)
+AGENT_OF = {}  # pod container -> its agent (discover)
 
 
 def sh(*args, timeout=60, check=False):
@@ -49,7 +53,7 @@ def cx(container, *args, **kw):
 AGENTS = r"""
 import json, glob, re
 out = {}
-for f in sorted(glob.glob("/var/lib/emosa/pod-*/status.json")):
+for f in sorted(glob.glob("/var/lib/emosa/*/status.json")):
     s = json.load(open(f)); pid = s["worker_pid"]
     try:
         rss = int(re.search(r"VmRSS:\s+(\d+)", open(f"/proc/{pid}/status").read()).group(1))
@@ -63,16 +67,42 @@ for f in sorted(glob.glob("/var/lib/emosa/pod-*/status.json")):
         "stations": len((s.get("pod") or {}).get("stations") or []),
         "updated": s["updated"],
     }
+try:
+    fleet = json.load(open("/var/lib/emosa/fleet.json"))
+    out["_fleet"] = {k: v["handovers"] for k, v in fleet.items()}
+except OSError:
+    pass
 print(json.dumps(out))
 """
+
+
+def discover():
+    """Each pod's agent (per-pod or fleet) from its configuration in the emosa container."""
+    for pod in PODS:
+        serial = cx(pod, "/usr/opensync/tools/ovsh", "-r", "s", "AWLAN_Node", "serial_number")
+        for name in (pod, serial.strip()):
+            text = cx("emosa", "cat", f"/etc/emosa/{name}.json")
+            if text:
+                config = json.loads(text)
+                AGENT_OF[pod] = {
+                    "pod_id": config["pod_id"],
+                    "unit": f"emosa-agent@{config['pod_id']}",
+                    "al": config["al_mac"],
+                    "port": int(config["ovsdb"].split(":")[1]),
+                }
+                break
+        else:
+            raise SystemExit(f"{pod}: no EMOSA agent configured")
+    return AGENT_OF
 
 
 def sample(expected):
     t = time.time()
     try:
-        agents = json.loads(cx("emosa", "python3", "-c", AGENTS, timeout=20) or "{}")
+        raw = json.loads(cx("emosa", "python3", "-c", AGENTS, timeout=20) or "{}")
     except (ValueError, subprocess.TimeoutExpired):
-        agents = {}
+        raw = {}
+    agents = {p: raw[a["pod_id"]] for p, a in AGENT_OF.items() if a["pod_id"] in raw}
     try:
         topo = json.loads(sh("curl", "-s", "-m", "8", "http://127.0.0.1:8092/api/topology"))
         controller = {
@@ -85,18 +115,18 @@ def sample(expected):
     for pod in PODS:
         out = cx(pod, "/usr/opensync/tools/ovsh", "-r", "s", "Manager", "is_connected", timeout=15)
         pods[pod] = out.strip() == "true"
-    als = {f"pod-{n}": f"02:00:00:5e:00:0{n}" for n in (1, 2, 3)}
     healthy = (
         all(
             agents.get(p, {}).get("session") == "provisioning" and agents.get(p, {}).get("source")
             for p in PODS
         )
         and all(pods.values())
-        and all(controller.get(als[p]) == expected[p] for p in PODS)
+        and all(controller.get(AGENT_OF[p]["al"]) == expected[p] for p in PODS)
     )
     return {
         "t": t,
         "agents": agents,
+        "fleet_handovers": raw.get("_fleet"),
         "controller_stations": controller,
         "pods": pods,
         "healthy_management": healthy,
@@ -132,9 +162,7 @@ def policy():
         "em-ctl-node",
         "policy",
         *POLICY,
-        "02:00:00:5e:00:01",
-        "02:00:00:5e:00:02",
-        "02:00:00:5e:00:03",
+        *(a["al"] for a in AGENT_OF.values()),
         timeout=60,
     )
 
@@ -151,26 +179,23 @@ def fault_client(client, gap=40):
 
 
 def fault_adapter():
-    cx("emosa", "systemctl", "restart", "emosa-agent@pod-1", check=True)
+    cx("emosa", "systemctl", "restart", AGENT_OF["pod-1"]["unit"], check=True)
     return time.time()
 
 
 def fault_transport():
-    sh("lxc", "config", "device", "remove", "emosa", "ovsdb2", check=True)
-    time.sleep(20)
-    sh(
-        "lxc",
-        "config",
-        "device",
-        "add",
-        "emosa",
-        "ovsdb2",
-        "proxy",
-        "bind=host",
-        "listen=tcp:10.101.0.1:6652",
-        "connect=tcp:127.0.0.1:6652",
-        check=True,
+    port = str(AGENT_OF["pod-2"]["port"])
+    rules = (
+        ["INPUT", "-d", WAN_HOST, "-p", "tcp", "--dport", port, "-j", "DROP"],
+        ["OUTPUT", "-s", WAN_HOST, "-p", "tcp", "--sport", port, "-j", "DROP"],
     )
+    for rule in rules:
+        sh("iptables", "-I", *rule, check=True)
+    try:
+        time.sleep(20)
+    finally:
+        for rule in rules:
+            sh("iptables", "-D", *rule, check=True)
     return time.time()
 
 
@@ -235,6 +260,7 @@ def main():
     directory = ROOT / args.label
     directory.mkdir(parents=True, exist_ok=False)
     expected = {p: 2 for p in PODS}
+    print(json.dumps(discover()), flush=True)
     first = sample(expected)
     if not first["healthy_management"]:
         raise SystemExit(f"lab not healthy at start: {json.dumps(first)}")
@@ -317,6 +343,8 @@ def main():
         },
         "operations": ops,
         "writes": {p: last["agents"].get(p, {}).get("writes") for p in PODS},
+        "agents": AGENT_OF,
+        "fleet_handovers_start_end": [first.get("fleet_handovers"), last.get("fleet_handovers")],
         "agent_rss_kib_start_end": rss,
         "samples": len(samples),
         "checks": checks,

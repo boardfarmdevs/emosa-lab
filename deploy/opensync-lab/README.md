@@ -80,7 +80,20 @@ deploy/opensync-lab/lab.sh release pod-2          # back to local-noc; its agent
 no per-pod input. The pod's own identity decides its agent. `admit` re-applies
 the controller policy because prplMesh's lab policy lists credentials per AL
 MAC. With an operator's controller, that onboarding policy is the operator's.
-`workload` still expects the per-pod agents (`emosa-agent@pod-1`).
+`workload` finds each pod's agent itself, so it runs on per-pod agents and the
+fleet alike.
+
+More pods come from opensync-lab's own script, unchanged. Set `MVX_VM`
+explicitly: opensync-lab's `local.conf` may name another VM.
+
+```sh
+# in opensync-lab
+MVX_VM=emosa-osl-0923 MVX_POD_IMAGE=$HOME/yocto/mvx-pod-work/out/mvx-pod-20260923124229 \
+    ./deploy-mvx.sh pod pod-4
+# in emosa-lab
+deploy/opensync-lab/lab.sh admit pod-4
+deploy/opensync-lab/lab.sh client em-wc7 pod-4 emosa-mesh 'EmosaMesh2026!'
+```
 
 ## Artifacts
 
