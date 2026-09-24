@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/boardfarmdevs/emosa-lab/schemas/agent-config.schema.json",
+  "title": "EMOSA virtual agent configuration",
+  "description": "One virtual EasyMesh agent for one OpenSync pod. Written by the fleet (or by hand); read by emosa-agent.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pod_id", "serial", "ovsdb", "interface", "al_mac", "controller_al", "state_dir"],
+  "properties": {
+    "pod_id": {"$ref": "#/$defs/name", "description": "Operation and journal scope; the fleet uses the serial."},
+    "serial": {"type": "string", "minLength": 1, "maxLength": 64, "description": "AWLAN_Node.serial_number the agent is bound to; any other pod is refused."},
+    "ovsdb": {"type": "string", "pattern": "^(ptcp:[0-9]{1,5}:127\\.0\\.0\\.1|punix:/.+)$", "description": "Where the pod's OVSDB connection arrives (passive, local only)."},
+    "interface": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,15}$", "description": "The agent's own 1905.1 interface; its MAC is al_mac."},
+    "al_mac": {"$ref": "#/$defs/mac"},
+    "controller_al": {"$ref": "#/$defs/mac"},
+    "message_set": {"enum": ["easymesh-6.1", "r1"], "default": "easymesh-6.1"},
+    "multi_bss": {"type": "boolean", "default": false},
+    "m2_session": {"enum": ["distinct", "shared"], "default": "distinct"},
+    "profile": {"type": "string", "minLength": 1, "default": "opensync-lab-hwsim-6.6.1-v1", "description": "Pod profile ID, or a path to a profile file."},
+    "state_dir": {"type": "string", "minLength": 1},
+    "run_id": {"$ref": "#/$defs/name"},
+    "vif": {"type": "string", "deprecated": true, "description": "Ignored; the fronthaul VIF comes from the profile."}
+  },
+  "$defs": {
+    "mac": {"type": "string", "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"},
+    "name": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"}
+  }
+}

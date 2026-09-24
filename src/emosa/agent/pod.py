@@ -31,6 +31,7 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
+from emosa.config import validate
 from emosa.errors import EmosaError, Reason
 from emosa.opensync.easymesh_view import device_view, inventory, radio_capabilities, topology
 from emosa.opensync.pod_profile import PodBackend, wpa2_psk
@@ -481,6 +482,7 @@ def main():
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
     config = json.loads(args.config.read_text())
+    validate("agent-config", config)
 
     async def run():
         stop = asyncio.Event()

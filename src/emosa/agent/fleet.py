@@ -40,6 +40,7 @@ import ovs.jsonrpc
 import ovs.poller
 import ovs.stream
 
+from emosa.config import validate
 from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
 
 log = logging.getLogger("emosa.fleet")
@@ -149,6 +150,7 @@ def systemd_stopper(pod_id):
 
 class Fleet:
     def __init__(self, config, *, starter=systemd_starter, stopper=systemd_stopper):
+        validate("fleet-config", config)
         self.config = config
         low, high = config["ports"]
         self.registry = Registry(

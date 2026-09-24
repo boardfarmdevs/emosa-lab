@@ -1,0 +1,14 @@
+{
+  "al_mac": "02:72:f9:7f:07:85",
+  "controller_al": "02:00:00:e0:00:01",
+  "interface": "em1",
+  "m2_session": "distinct",
+  "message_set": "easymesh-6.1",
+  "multi_bss": false,
+  "ovsdb": "ptcp:6651:127.0.0.1",
+  "pod_id": "MVXPOD023F87E628DD",
+  "profile": "opensync-lab-hwsim-6.6.1-v1",
+  "run_id": "MVXPOD023F87E628DD",
+  "serial": "MVXPOD023F87E628DD",
+  "state_dir": "/var/lib/emosa/MVXPOD023F87E628DD"
+}

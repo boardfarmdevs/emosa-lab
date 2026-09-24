@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/boardfarmdevs/emosa-lab/schemas/fleet-config.schema.json",
+  "title": "EMOSA fleet configuration",
+  "description": "The front port every pod is handed to, and the settings every agent it creates inherits.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["listen", "advertise", "ports", "controller_al", "state_root", "config_dir"],
+  "properties": {
+    "listen": {"type": "string", "pattern": "^(ptcp:[0-9]{1,5}:[0-9.]+|punix:/.+)$", "description": "The front port (OVSDB, passive)."},
+    "advertise": {"type": "string", "minLength": 1, "description": "Host the pods reach agent ports on; manager_addr becomes tcp:ADVERTISE:PORT."},
+    "ports": {"type": "array", "prefixItems": [{"type": "integer", "minimum": 1, "maximum": 65535}, {"type": "integer", "minimum": 1, "maximum": 65535}], "minItems": 2, "maxItems": 2, "description": "First and last agent port (inclusive)."},
+    "controller_al": {"type": "string", "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"},
+    "message_set": {"enum": ["easymesh-6.1", "r1"]},
+    "multi_bss": {"type": "boolean"},
+    "m2_session": {"enum": ["distinct", "shared"]},
+    "profile": {"type": "string", "minLength": 1},
+    "state_root": {"type": "string", "minLength": 1},
+    "config_dir": {"type": "string", "minLength": 1},
+    "admit": {"oneOf": [{"const": "*"}, {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 64}}], "default": "*"},
+    "concurrency": {"type": "integer", "minimum": 1, "maximum": 256, "default": 16},
+    "database": {"type": "string", "default": "Open_vSwitch"},
+    "vif": {"type": "string", "deprecated": true, "description": "Ignored; the fronthaul VIF comes from the profile."}
+  }
+}

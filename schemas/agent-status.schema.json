@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/boardfarmdevs/emosa-lab/schemas/agent-status.schema.json",
+  "title": "EMOSA virtual agent status",
+  "description": "STATE_DIR/status.json, rewritten at least once a second while anything changes. Read-only for observers; never contains secrets.",
+  "type": "object",
+  "required": ["pod_id", "profile", "agent_al", "controller_al", "pod", "report_source_available", "session", "operations", "writes", "worker_pid", "updated"],
+  "properties": {
+    "pod_id": {"type": "string"},
+    "profile": {"type": "string"},
+    "agent_al": {"type": "string", "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"},
+    "controller_al": {"type": "string", "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"},
+    "pod": {
+      "description": "What the agent currently reports about the pod; null while the pod is unavailable.",
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["serial", "ruid", "channel", "bsses", "stations"],
+          "properties": {
+            "serial": {"type": "string"},
+            "node_id": {"type": ["string", "null"]},
+            "firmware": {"type": ["string", "null"]},
+            "radio": {"type": ["string", "null"]},
+            "ruid": {"type": "string"},
+            "bssid": {"type": ["string", "null"]},
+            "channel": {"type": "integer"},
+            "ssid": {"type": ["string", "null"]},
+            "bsses": {"type": "array", "items": {"type": "object", "required": ["role", "bssid", "ssid"], "properties": {"role": {"enum": ["fronthaul", "backhaul"]}, "bssid": {"type": "string"}, "ssid": {"type": "string"}}}},
+            "stations": {"type": "array", "items": {"type": "string"}},
+            "ovsdb_generation": {"type": "integer"},
+            "ovsdb_revision": {"type": "integer"}
+          }
+        }
+      ]
+    },
+    "report_source_available": {"type": "boolean"},
+    "session": {"type": ["object", "null"], "description": "The onboarding session: state, counters and recent events.", "properties": {"state": {"enum": ["waiting_source", "discovering", "admitting", "awaiting_m2", "provisioning", "source_lost", "failed", "incompatible", "closed"]}}},
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["operation_id", "state", "reason", "ssid", "attempts"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "state": {"enum": ["REQUESTED", "VALIDATED", "SUBMITTED", "CONFIG_COMMITTED", "INDETERMINATE", "OBSERVED_APPLIED", "TIMED_OUT", "FAILED", "REJECTED", "OWNERSHIP_CONFLICT", "CANCELLED"]},
+          "reason": {"type": ["string", "null"]},
+          "ssid": {"type": ["string", "null"]},
+          "attempts": {"type": "integer", "minimum": 0},
+          "application_evidence": {"type": ["object", "null"]}
+        }
+      }
+    },
+    "writes": {"type": "integer", "minimum": 0},
+    "worker_pid": {"type": "integer"},
+    "updated": {"type": "number"}
+  }
+}
