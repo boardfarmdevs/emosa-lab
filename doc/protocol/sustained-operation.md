@@ -17,6 +17,12 @@ The [BBF metric review](bbf-data-elements.md) now supplies public definitions an
 bounded representation conversions. It narrows the document-access gap without
 qualifying live AP/STA measurements or completing the WFA DEr3 comparison.
 
+For new OpenSync-container work, use the [acceptance levels](../project/integration-acceptance.md):
+R is operational recovery; S adds complete required reporting and the reviewed
+cold-start result. The [current status](../project/current-status.md) keeps older
+runs and different native candidates separate. Existing evidence below is not
+retroactively relabeled as an actual-OpenSync pass.
+
 ## What must be demonstrated
 
 The first sustained acceptance run is a 15-minute owned-lab experiment with the

@@ -10,6 +10,14 @@ measurements → clean LXD reproduction → wire envelope/discovery/reports → 
 discovery-to-topology lifecycle → durable WSC handoff → Ethernet WSC driving
 hwsim and independent clients → eventual native-controller-to-physical-pod proof.
 
+## Current status and next integration
+
+Start with [current status](project/current-status.md), then the
+[OpenSync integration plan](project/opensync-lab-integration-plan.md),
+[frozen baseline](project/integration-baseline.md) and
+[separate acceptance levels](project/integration-acceptance.md).
+The actual OpenSync container integration has not been executed.
+
 ## Guides: learn, run and demonstrate
 
 [Browse guides](guides/README.md) for the full team manual, the simulated extender

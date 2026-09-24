@@ -11,7 +11,7 @@
         "Exercise discovery, capabilities and selected provisioning procedures.",
         "Retain captures from an independent bridge observation point."
       ],
-      "next": "Qualify AP/STA and final-session measurements, verify native delivery and repeat complete 15-minute acceptance with all required reporting enabled.",
+      "next": "Use the preserved baseline for actual OpenSync-container qualification and warm/cold integration; complete qualified reporting before full sustained acceptance.",
       "path": "doc/protocol/native-onboarding.md"
     },
     "agent": {
@@ -26,7 +26,7 @@
         "Authenticate and validate genuine WSC provisioning.",
         "Bind the complete radio BSS request to supported semantic operations."
       ],
-      "next": "Qualify AP/STA and final-session measurements and integrate required reporting. The optional owned Ethernet profile now feeds checked neighbor measurements to the native controller; physical and multi-neighbor profiles remain pending.",
+      "next": "Qualify actual OpenSync-container mapping and warm/cold onboarding using the preserved baseline. Complete qualified AP/STA/final reporting before sustained acceptance; the existing Ethernet neighbor profile does not qualify Wi-Fi/GRE.",
       "path": "doc/protocol/native-onboarding.md"
     },
     "engine": {
@@ -96,7 +96,7 @@
         "Use a real Wi-Fi interface for a physical pod; hwsim has no RF link to hardware.",
         "Record BSSID/SSID, association, authentication, reachability and reconnect timing."
       ],
-      "next": "Integrate a separate Config-to-hostapd manager with independently observed State, then use a physical Wi-Fi client for the actual unchanged-pod demonstration.",
+      "next": "The independent simulated-manager/client path is integrated. Next repeat qualified behavior with actual OpenSync managers, then a physical pod and independent physical client.",
       "path": "deploy/hwsim/README.md"
     },
     "evaluator": {
@@ -215,44 +215,44 @@
   ],
   "roadmap": [
     {
-      "title": "Freeze the protocol contract",
-      "status": "P0 · critical path",
-      "description": "Review the proposed IEEE 1905.1-2013 + 1905.1a-2014, EasyMesh 6.1 and WPS 2.0.10 corpus. Use the obtained IEEE base/amendment, complete the initial procedure scope and finish the remaining normative rule matrix.",
-      "evidence": "Selected editions, rule/section references, complete radio-scope rules and independently checked packet/crypto vectors.",
-      "path": "doc/protocol/protocol-inputs.md",
-      "action": "Resolve specification inputs"
+      "title": "Use the preserved baseline and separate verdicts",
+      "status": "Preparation complete · integration unexecuted",
+      "description": "Current status is consolidated. Source/image/native artifacts are privately retained and hash-verified. Warm onboarding, cold start, recovery and full sustained operation have distinct acceptance levels.",
+      "evidence": "Baseline opensync-integration-20260923-01 and its documentary acceptance register; no runtime admission enabled.",
+      "path": "doc/project/integration-baseline.md",
+      "action": "Review the frozen baseline"
     },
     {
-      "title": "Discover and onboard the represented extender",
-      "status": "I3 → I4",
-      "description": "Select a real EasyMesh controller/build early. Implement the adapter’s virtual-agent discovery, qualified capabilities and genuine WSC onboarding/provisioning. First exercise actual frames against OVSDB simulation.",
-      "evidence": "Controller agent/topology view plus independent captures showing discovery, identity and onboarding; valid/invalid provisioning; duplicate/retry and lost-reply behavior.",
-      "path": "doc/project/EMOSA-CODING-HANDOFF.md",
-      "action": "Follow I3 and I4 exit conditions"
+      "title": "Qualify the actual OpenSync container read-only",
+      "status": "Q · next bounded step",
+      "description": "Keep gateway, pod and client together in the evaluated OpenSync VM. Establish controlled transport, collect the actual schema/resource graph and review identity, security, ownership and bootstrap.",
+      "evidence": "Formal draft with writable=false and no Config writes; existing evaluation is not a qualified backend.",
+      "path": "doc/project/opensync-lab-integration-plan.md",
+      "action": "Follow the qualification plan"
     },
     {
-      "title": "Qualify the physical pod and observer",
-      "status": "M0 · can progress now",
-      "description": "Supply trusted local connection inputs for read-only collection. Verify actual schema, firmware, a sole-BSS radio or complete BSS scope, writer controls, wired recovery and a real Wi-Fi client.",
-      "evidence": "A reviewed target profile with concrete observations for every required field; no automatic promotion from a draft.",
-      "path": "doc/guides/pod-qualification.md",
-      "action": "Collect and review the draft profile"
+      "title": "Establish ownership and warm onboarding",
+      "status": "A → W · integration work pending",
+      "description": "Retain NOC gateway/GRE duties, exclude pod fronthaul writes, add native OpenSync mapping and a configurable runner, then drive the real pod configuration from authenticated controller WSC.",
+      "evidence": "Native manager application, observed controller radio/BSS, independent client authentication/traffic, negative checks and restoration.",
+      "path": "doc/project/integration-acceptance.md",
+      "action": "Review semantic and warm exit criteria"
     },
     {
-      "title": "Show the OpenSync extender as an EasyMesh agent",
-      "status": "I5 · viability milestone",
-      "description": "Have the controller discover and onboard the EMOSA agent backed by one unchanged OpenSync extender. Apply a supported BSS change through the adapter and verify it with an independent physical client.",
-      "evidence": "Controller inventory before/after onboarding, stable identity and qualified capabilities, real frames, Config/State changes, physical client traffic and recovery. Record interventions.",
+      "title": "Prove cold start and complete sustained service",
+      "status": "C → R → S · separate results",
+      "description": "Qualify persistence/resource creation, native telemetry and management-over-backhaul recovery. Run 900 seconds with actual faults and every required report.",
+      "evidence": "Separate cold-start evidence and one complete sustained run. A duration/recovery pass with missing AP/STA/final reports remains operational only.",
+      "path": "doc/project/integration-acceptance.md",
+      "action": "Use the cold and sustained criteria"
+    },
+    {
+      "title": "Reach unchanged physical-pod proof",
+      "status": "Physical qualification still pending",
+      "description": "Supply private physical connection references, qualify the named device, and repeat real EasyMesh → EMOSA → unchanged pod → independent physical-client behavior. Reproduction, other peers and router deployment retain their own scope.",
+      "evidence": "Correlated real wire, native Config/State, client behavior and declared recovery/reporting evidence on the actual target.",
       "path": "doc/project/viability-roadmap.md",
-      "action": "Use the bounded viability criteria"
-    },
-    {
-      "title": "Make the result reproducible and independent",
-      "status": "I6 → I7",
-      "description": "Retain the Ubuntu/LXD image and package manifests, qualify wireless management separately, and repeat the procedure with a named independent EasyMesh controller. Use hwsim for useful client-stack tests along the way.",
-      "evidence": "A clean-environment rerun plus an independent-peer result for the declared procedure and versions. Optional native OpenSync work does not gate a ready physical experiment.",
-      "path": "deploy/README.md",
-      "action": "Prepare the evaluator environment"
+      "action": "Review the remaining objective"
     }
   ],
   "references": [
@@ -263,6 +263,30 @@
       "category": "Documentation"
     },
     {
+      "title": "Current status: what is proven today",
+      "description": "One current entry point for scoped native onboarding, operational recovery, unresolved reporting and actual OpenSync/physical boundaries. Historical evidence retains its original claims.",
+      "path": "doc/project/current-status.md",
+      "category": "Status"
+    },
+    {
+      "title": "Frozen OpenSync integration baseline",
+      "description": "Privately preserved source trees, dirty changes, selected pod image and two distinct controller candidates; public hashes and read-only verification. No integration executed.",
+      "path": "doc/project/integration-baseline.md",
+      "category": "Integration preparation"
+    },
+    {
+      "title": "Warm, cold and sustained acceptance",
+      "description": "Separate documentary verdicts for qualification, native application, warm onboarding, cold start, 900-second recovery and full sustained reporting. Actual OpenSync levels remain not evaluated.",
+      "path": "doc/project/integration-acceptance.md",
+      "category": "Integration preparation"
+    },
+    {
+      "title": "OpenSync lab integration plan",
+      "description": "Evaluated rev140 gateway/pod/client system, exact OpenSync sources and patches, remote-first deployment and phased implementation tests. Planning only.",
+      "path": "doc/project/opensync-lab-integration-plan.md",
+      "category": "Integration preparation"
+    },
+    {
       "title": "Team onboarding: the beginner’s guide",
       "description": "Concepts, purpose and expected results for all 18 chapters: setup, model, OVSDB, services, wireless labs, demos and recovery. Includes multi-pod architecture and cloud/EasyMesh/ODH flows.",
       "path": "doc/guides/team-manual.md",
@@ -270,7 +294,7 @@
     },
     {
       "title": "Simulated extender connects to EMOSA",
-      "description": "Step-by-step pod-initiated OVSDB, local northbound virtual-agent inventory, semantic configuration, disconnect/reconnect and restart. Actual EasyMesh onboarding remains pending.",
+      "description": "Pod-initiated OVSDB, local diagnostic inventory, semantic configuration and recovery. This component exercise does not run the separate native-controller onboarding path.",
       "path": "doc/guides/connecting-pod.md",
       "category": "Operator walkthrough"
     },
@@ -293,8 +317,8 @@
       "category": "System design"
     },
     {
-      "title": "Current delivery & evidence",
-      "description": "Implemented behavior, retained suite results and unresolved acceptance gates.",
+      "title": "Historical delivery increments",
+      "description": "Original component delivery scopes; use Current status for the consolidated latest result.",
       "path": "doc/project/delivery.md",
       "category": "Status"
     },
@@ -372,7 +396,7 @@
     },
     {
       "title": "Independent controller baseline",
-      "description": "Pinned prplMesh peer, hwsim startup requirement, paired captures and observed shutdown failures. No EMOSA onboarding yet.",
+      "description": "Historical/component scope: Pinned prplMesh peer, hwsim startup requirement, paired captures and observed shutdown failures. No EMOSA onboarding yet. See Current status for later bounded native onboarding and candidate fixes.",
       "path": "deploy/peer/README.md",
       "category": "Controller peer"
     },
@@ -384,7 +408,7 @@
     },
     {
       "title": "Specification acquisition checklist",
-      "description": "Exact pending IEEE editions, Ethernet/security dependencies, conditional documents and already obtained WFA PDFs.",
+      "description": "Single acquisition checklist: IEEE 1905 base/amendment obtained; remaining exact-edition/WFA inputs and clarification questions kept explicit.",
       "path": "doc/protocol/specification-acquisition.md",
       "category": "Pending external inputs"
     },
@@ -434,7 +458,7 @@
       "path": "doc/evidence/service-integration/summary.json",
       "title": "Service integration evidence",
       "category": "Service and protocol integration",
-      "description": "Reviewed service/radio observations and native controller preparation; captures, source digests and known shutdown defects."
+      "description": "Historical/component scope: Reviewed service/radio observations and native controller preparation; captures, source digests and known shutdown defects. See Current status for later bounded native onboarding and candidate fixes."
     },
     {
       "path": "doc/protocol/procedure-audit.md",
@@ -452,7 +476,7 @@
       "path": "doc/evidence/onboarding-readiness/summary.json",
       "title": "Onboarding readiness evidence",
       "category": "Service and protocol integration",
-      "description": "Stricter service/hwsim run and matching native-capture findings under two tshark versions; wire and physical proof pending."
+      "description": "Historical/component scope: Stricter service/hwsim run and matching native-capture findings under two tshark versions; wire and physical proof pending. See Current status for later bounded native onboarding and candidate fixes."
     },
     {
       "path": "doc/protocol/ieee-media-review.md",
@@ -590,7 +614,7 @@
       "path": "doc/evidence/ieee1905/README.md",
       "title": "IEEE 1905 implementation evidence",
       "category": "Wire implementation",
-      "description": "Independent 59-frame comparisons, two isolated AF_PACKET runs, 706 unit and 46 OVSDB results; full onboarding remains pending."
+      "description": "Historical/component scope: Independent 59-frame comparisons, two isolated AF_PACKET runs, 706 unit and 46 OVSDB results; full onboarding remains pending. See Current status for later bounded native onboarding and candidate fixes."
     },
     {
       "path": "doc/protocol/ieee1905-envelope.md",
@@ -613,7 +637,7 @@
     {
       "path": "doc/evidence/autoconfiguration/README.md",
       "title": "Discovery and WSC exchange evidence",
-      "description": "762 unit / 46 OVSDB checks, independent references and preserved zero-operation wire gate; no live controller onboarding claim.",
+      "description": "Historical/component scope: 762 unit / 46 OVSDB checks, independent references and preserved zero-operation wire gate; no live controller onboarding claim. See Current status for later bounded native onboarding and candidate fixes.",
       "category": "Wire implementation"
     },
     {
@@ -673,13 +697,13 @@
     {
       "path": "doc/evidence/wsc-wire/README.md",
       "title": "Ethernet WSC and radio evidence",
-      "description": "928 unit / 53 OVSDB checks, normal and lost-reply packet/radio runs, independent captures and interruption cleanup. Synthetic peer; native onboarding pending.",
+      "description": "Historical/component scope: 928 unit / 53 OVSDB checks, normal and lost-reply packet/radio runs, independent captures and interruption cleanup. Synthetic peer; native onboarding pending. See Current status for later bounded native onboarding and candidate fixes.",
       "category": "Wire implementation"
     },
     {
       "path": "doc/guides/native-discovery.md",
       "title": "EMOSA discovery with the native controller",
-      "description": "Reproduce a Profile-1 Search/Response and inspect the initial controller device entry; zero radio/BSS entries mean onboarding remains pending.",
+      "description": "Historical/component scope: Reproduce a Profile-1 Search/Response and inspect the initial controller device entry; zero radio/BSS entries mean onboarding remains pending. See Current status for later bounded native onboarding and candidate fixes.",
       "category": "Wire implementation"
     },
     {
@@ -697,7 +721,7 @@
     {
       "path": "doc/guides/controller-counter-candidate.md",
       "title": "Native controller counter-capability candidate",
-      "description": "Build the C++ fix, run 12 native conversion checks, compare actual responses, exercise failure recovery and restore the baseline. Admission remains pending.",
+      "description": "Historical/component scope: Build the C++ fix, run 12 native conversion checks, compare actual responses, exercise failure recovery and restore the baseline. Admission remains pending. See Current status for later bounded native onboarding and candidate fixes.",
       "category": "Wire implementation"
     },
     {

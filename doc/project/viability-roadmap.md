@@ -1,255 +1,75 @@
-# Next experiments toward a bounded viability result
+# Next experiments toward bounded viability
 
-The current follow-on is [sustained operation](../protocol/sustained-operation.md):
-keep EMOSA active through client activity, handle recurring native-controller
-procedures, and validate restart/reconnect recovery in a 15-minute acceptance
-run. Measured OVSDB/MQTT station reporting, selected channel procedures and a
-fresh-session recovery supervisor are implemented. The [908-second operational run](../evidence/native-soak/README.md) passes both
-recovery faults without another Config write. The full acceptance still
-requires fulfilled policy/AP/STA reporting and final disassociation
-statistics; duration and recovery are separately reviewed operational checks.
+Read [current status](current-status.md) first. It separates completed scoped
+experiments from unresolved acceptance. The [integration baseline](integration-baseline.md)
+is preserved, and [acceptance levels](integration-acceptance.md) distinguish warm
+onboarding, cold startup, operational recovery and full sustained service.
 
-The [virtual-link calibration](../protocol/virtual-link-capacity.md) provides an
-explicit software service and an independently checked work estimate. The
-[combined source](../protocol/shaped-backhaul-accounting.md) now reconciles
-selected action and actual queue losses over common service intervals, including
-291 live intervals through both recovery faults. The optional
-[native peer publisher](../protocol/native-peer-metrics.md) now adds observed
-isolation and disabled aggregation, sends checked measurements to the native
-controller and verifies received interface statistics. The [AP report builder](../protocol/ap-metric-reports.md) now implements complete
-selected companions and durable periodic dispatch with independently decoded
-synthetic evidence. Next qualify and connect actual AP/STA measurements, complete
-final-session statistics, and run the full
-integrated 15-minute acceptance with every required source enabled. Physical
-and multiple-peer qualification remain separate work. The
-[901-second lifecycle run](../protocol/native-lifecycle.md) now joins the owned
-neighbor publisher to both recovery faults and clean native main-process exits.
+The next target is **actual OpenSync managers in opensync-lab's hwsim pod**, reached
+from EMOSA while its gateway and wireless client stay in the same VM. This is an
+intermediate software integration milestone. Final physical acceptance remains
+real EasyMesh messages → EMOSA → unchanged physical pod → independently observed
+behavior.
 
-The [live reason/removal join](../protocol/live-session-reasons.md) now closes
-the offline-only disconnect-correlation gap for the owned sole-client hwsim
-profile. It records the actual reason and final raw kernel sample in real time.
-The [public BBF definition review](../protocol/bbf-data-elements.md) now pins
-33 matching USP/CWMP parameters and implements bounded representation conversions.
-Next qualify counter conversion against those explicit definitions, resolve the
-remaining source/width ambiguities, connect the reporting source, and verify complete
-AP/STA and final-session delivery. The physical-pod profile remains pending.
+## Preparation completed
 
-The [native sparse-ESP fix](../protocol/native-ap-esp.md) closes a concrete
-controller receipt defect: BE+VI reports caused SIGSEGV because absent categories
-were treated as fixed slots. The patched candidate passes actual receipt and
-malformed-input checks. This does not resolve ESP estimation or conversion.
+- Consolidated current status, with explicit corrections to historical KiB,
+  missing-wire, native shutdown and reporting claims.
+- Preserved EMOSA/native inputs and the selected OpenSync source/image state in
+  private, hash-verified baseline `opensync-integration-20260923-01`.
+- Published separate acceptance levels and an initial register. No OpenSync-lab
+  integration level has been executed or passed.
 
-The critical milestone is **real EasyMesh messages → EMOSA adapter → unchanged
-physical pod → independently observed behavior**. Neither an OVSDB component pass
-nor a successful hwsim association completes that objective.
+The [detailed integration plan](opensync-lab-integration-plan.md) is the execution
+handoff when that work is authorized. Nothing in this roadmap authorizes changing
+the shared running lab merely to make a status entry green.
 
-The next independent work package is now implemented as
-[authenticated TLS, real-service fleet measurements and repeated recovery](../guides/secure-fleet.md),
-followed by [clean nested-LXD reproduction](../../deploy/reliability/README.md).
-The [new learning sequence](../guides/learning-path.md) teaches those boundaries
-in order. See [retained evidence](../evidence/reliability/README.md) for the exact
-host/container workloads, resource samples, earlier failures and installed image.
-These results reduce southbound/service risk while full procedure validation and physical inputs remain
-pending; they do not populate an EasyMesh controller's inventory.
+## Next work, in order
 
-The [service integration walkthrough](../guides/service-integration.md) now
-provides a two-pod service exercise, actual process-crash recovery with hwsim
-clients, and live native-controller preparation. The
-[retained results](../evidence/service-integration/summary.json) keep semantic
-initiation separate from the absent EMOSA wire exchange. The
-[available WFA audit](../protocol/procedure-audit.md) advances the contract while
-the complete procedure audit remains unfinished. Both exact IEEE PDFs were
-obtained on 2026-09-22; the [envelope implementation](../protocol/ieee1905-envelope.md)
-now passes native-capture and isolated packet checks. The later
-[discovery-to-topology lifecycle](../protocol/discovery-session.md) joins selected
-Search/Response checks to the real database source, with reconnect invalidation
-and repeated socket tests. Automatic Early Report, complete profile admission,
-native controller visibility and admission into the complete lifecycle remain next.
-The [owned WSC provisioning experiment](../protocol/wsc-provisioning.md) now
-joins authenticated M2 input to durable operations, guarded OVSDB and separately
-observed State. Lost replies, duplicates, identity races and real process death
-are exercised. It uses a synthetic hostap payload peer and in-memory Ethernet;
-the subsequent [Ethernet WSC/radio experiment](../protocol/wsc-wire-radio.md)
-now connects the component over actual Ethernet to hwsim and independent clients.
-Normal and lost-reply runs pass, including withholding and wrong-key rejection.
-Native-controller admission, its own inventory and physical acceptance remain
-required; neither component opens the full-wire gate.
-
-The [native discovery probe](../guides/native-discovery.md) now confirms a matching
-Profile-1 Search/Response with EMOSA and a controller-created initial device
-entry. It has no represented radios or BSSs. Remaining capability omissions,
-complete admission and the causal WSC-to-radio integration are still required.
-The [native simulated-pod integration](../protocol/native-onboarding.md) now joins
-discovery, Early reporting, authenticated WSC and observed topology in an owned
-experimental coordinator. The first native attempt identified unsolicited
-configuration companions and an overly strict EMOSA query-profile check; the
-extended candidate now completes the bounded native run, independently checked
-against its receipt, radio/BSS inventory and clients. Next keep the adapter active
-through client association and complete required policy/metrics and final-session
-reporting. The selected channel exchange and native-run recovery now have their
-own implementation and independent-check path; they do not broaden the physical
-viability claim.
-
-The [native controller candidate](../guides/controller-counter-candidate.md)
-now fixes the missing KiB/MiB advertisement in an isolated C++ build. Its native
-counter regression and differential discovery experiment address one defect;
-the pinned baseline is restored afterward. Next apply the unsupported-feature
-rule to an explicit non-DPP contract, resolve Early/AP capability admission, then
-join the tested WSC path to complete native radio/BSS inventory and client proof.
-
-The [onboarding readiness checks](../guides/onboarding-readiness.md) now add
-strict synthetic sole-radio scope admission and offline review of native captures.
-The scope passed an actual-service hwsim/client run. Both native captures expose
-a Profile-2 Search/Profile-1 Response mismatch against the proposed 6.1 discovery
-rule and a two-M2-plus-M8 request outside the narrow mapping. Resolve the named
-controller policy/build intersection alongside P0. These observations do not
-select a fully qualified profile or enable the missing wire connection.
-
-The [isolated compatibility experiment](../guides/native-compatibility.md) now
-fixes the candidate HAL's HE MCS length and records two clean native wired runs
-with one agent BSS, one M2 and no M8. Independent clients passed; original
-libraries were restored. Profile 2/1 mismatch, MCS ordering and native shutdown
-abort remain open. The [first complete wire experiment contract](../guides/first-wire-experiment.md)
-defines the next causal integration and its five-step completion status.
-
-The [EasyMesh value components](../protocol/easymesh-payloads.md) now implement
-service lists, Radio Identifier, Operational BSS and profile values, with an
-offline inspection CLI and independent native-capture checks. The
-[observed-topology exercise](../guides/observed-topology.md) now pins explicit
-per-pod radio/VIF identities in the local journal, validates the full observed
-graph and builds an Operational BSS value without transmission. It survives
-UUID recreation and actual service restart with two simulated pods. The
-[radio-capability exercise](../guides/radio-capabilities.md) now adds explicit
-synthetic capacity/class/EIRP inputs, evidence hashes, validity windows and a
-read-only mapping that withdraws values on changed inputs, firmware, country or
-topology. It does not qualify physical claims or a complete AP Capability Report.
-The [profile-readiness report](../protocol/profile-readiness.md) now inventories
-15 requirement families and selected feature-dependent obligations. AP,
-Profile-2 AP and Radio Advanced value codecs and counter-unit decisions are
-tested independently; they do not implement the features they describe.
-The [technology/inventory extension](../guides/technology-inventory.md) now maps
-explicit synthetic HT/VHT and Device Inventory inputs through the read-only
-two-pod service. The [Wi-Fi 6 role exercise](../guides/wifi6-inputs.md) also maps
-evidence-bound synthetic AP/STA capabilities, without making complete HE
-reporting ready. Next are reviewed `0x88` conversion and independent peer vectors,
-remaining mandatory functions/clause review and the native peer profile mismatch. Actual capability
-qualification needs a named pod. Complete IEEE message processing remains
-P0-dependent.
-
-The user-facing proof is specifically **an EasyMesh controller discovers and
-onboards an OpenSync extender as another EasyMesh agent, represented by the
-adapter around the controller**. The extender remains an OpenSync device;
-EMOSA owns the protocol endpoint and maps its agent/radio/BSS identity to the
-actual pod. Provisioning is the first management action after that discovery and
-onboarding proof, not a substitute for controller-visible agent membership.
-
-Select an actual controller/build early. Capture its topology/agent inventory
-and protocol trace before discovery, after onboarding, after a supported BSS
-change, and after reconnect. Advertise only capabilities supported by the
-qualified pod mapping. A passing internal semantic API call is insufficient.
-
-The [prplMesh 6.0.0 candidate](../../deploy/peer/README.md) now has verified startup,
-an empty agent inventory and independently captured discovery traffic delivered
-to the EMOSA container. This establishes the peer and transport setup for the
-next implementation. No EMOSA exchange has occurred; the candidate's native
-controller/helper shutdown aborts are a recorded qualification gap.
-
-A separate [controller–standard-agent baseline](../../deploy/peer-baseline/README.md)
-now exercises that controller with a normal native prplMesh agent and independent
-wired/wireless client containers. Its Ethernet and WPS/hwsim paths establish the
-existing peer's behavior before inserting EMOSA. This is a separate experiment
-from the empty EMOSA-facing inventory above. Its observed native exchanges do
-not remove EMOSA's specification or physical-pod gates.
-
-## Current sustained-operation follow-on
-
-The [908-second operational run](../evidence/native-soak/README.md) now joins
-native discovery/WSC, observed BSS/STA inventory, repeated client cycles and
-continuous traffic with pod reconnect and adapter SIGKILL recovery. It creates
-fresh authenticated operations without duplicate Config writes. This supersedes
-the earlier empty-inventory and integration milestones described above.
-
-The [901-second lifecycle repeat](../protocol/native-lifecycle.md) now integrates
-the optional owned neighbor publisher through both recovery faults and verifies
-clean native controller/helper exits with the selected BPL candidate. Its 15
-measured replies reach native controller statistics; the original baseline is
-restored. Complete sustained acceptance still needs fulfilled reporting policy,
-qualified AP/STA measurements and final session reporting. The
-[final-session component](../protocol/final-session-statistics.md) now implements
-encoding, bounded delivery and a guarded lifecycle handoff. Its final-counter
-publisher is unqualified. The [150-second native regression](../evidence/final-statistics/README.md)
-verifies corrected byte-unit advertisement through both recovery faults, without
-claiming that final session statistics were measured or delivered.
-
-The follow-on [kernel removal observation](../protocol/station-removal-observations.md)
-now captures raw counters at station removal. Its 158.51-second native run joins
-six removal records to actual radio reasons and EasyMesh leaves while preserving
-both recovery checks. Counter meanings and the online source-to-sender join still
-need qualification; acquisition alone does not establish final reporting.
-
-Next qualify measurement meanings, completeness and session finality, connect
-those records to the implemented handoff, then re-run complete 15-minute
-acceptance with independently decoded reports. The unchanged physical-pod path
-remains a separate pending input and acceptance boundary.
-
-## Priority and exit evidence
-
-| Order | Work | Exit evidence / decision |
+| Order | Work | Required exit evidence |
 | --- | --- | --- |
-| 1 — P0 | Freeze proposed editions and procedure subset; use the acquired IEEE text; resolve remaining LLDP/WFA dependencies and complete normative rules and independent packet/crypto vectors | Reproducible encodings, authentication rules, timers and radio-wide BSS semantics with exact references |
-| 2 — I3/I4 | Join compatible native discovery/profile/capability admission to the tested Ethernet WSC/operation/hwsim path | Wire-driven OVSDB simulation and captures; valid/invalid authentication, duplicate/retry and lost-reply cases; no semantic fallback |
-| In parallel — M0 | Run read-only qualification when trusted local inputs arrive; inspect pod/build, schema, managed radio/VIF, writers, recovery and client | Reviewed profile; sole-BSS radio or full radio-scope mapping; actual wired management and independent observer |
-| 3 — I5 | Execute one SSID/PSK change over wired management on an unchanged physical pod | Correlated EasyMesh exchange, Config delta, fresh State, observed BSSID/SSID, station authentication and usable traffic |
-| 4 — recovery | Repeat with lost acknowledgement and adapter restart; then qualify wireless management independently | Truthful unknown attribution; bounded recovery; no duplicate effects or unsupported rollback; outage/intervention duration retained |
-| 5 — I6/I7 | Reproduce on retained Ubuntu/LXD images and a named independent EasyMesh controller | Same procedure from a separate peer, exact versions and a clean-environment rerun |
+| 1 — Q | Recheck baseline drift and provide a controlled transport to the existing pod socket; run formal read-only qualification | Actual schema, complete radio/BSS/backhaul graph, endpoint trust, draft `writable=false` profile and no configuration writes |
+| 2 — ownership | Implement per-pod NOC redirect assignment and writer exclusion; retain gateway AP/GRE duties; validate a pod-initiated EMOSA session read-only | Selected pod bound to the authorized session; gateway/client path preserved; no competing fronthaul writer after reconnect |
+| 3 — A | Add a truthful OpenSync-container profile, native security/resource mapping and configurable runner; test offline/OVSDB before native writes | Real `owm` application and independent client observations; untouched backhaul; duplicate/lost-reply/conflict/failure checks; restoration |
+| 4 — W | Drive a warm fronthaul change from the real native controller through EMOSA | Real discovery/WSC, causal operation and State, actual radio/BSS inventory and independent authentication/traffic; limitations explicit |
+| 5 — C | Qualify bootstrap, PSM persistence and missing-resource creation from the declared cold state | Complete causal onboarding after cold start; NOC did not pre-provision the controller's target SSID/key |
+| 6 — R/S | Connect and qualify native telemetry; complete the 900-second workload with recovery and all required reporting | R records operational recovery separately. S requires complete selected AP/STA/neighbor/final reporting and controller receipt, including management-over-backhaul recovery |
+| 7 — reproduction | Consume pinned opensync-lab artifacts/build inputs in a fresh isolated lab if useful | Same profile and acceptance repeated; no silent image/source substitution or transfer of old verdicts |
 
-M0 collection can progress while P0/I3/I4 proceed. hwsim can independently qualify
-the observer and a future lab manager; it must not postpone a ready physical-pod
-experiment. Optional native OpenSync R0 and an expanded UI are not acceptance gates.
+The 5 GHz underlay is Wi-Fi/GRE. EMOSA's existing calibrated software-Ethernet
+neighbor profile cannot be copied onto it without new measurement/media review.
+Native OpenSync may be the best source for the next reporting work; there is no
+requirement to finish a duplicate synthetic publisher before Q.
 
-## What would demonstrate viability?
+## Work that can proceed alongside qualification
 
-Declare the procedure and target tuple before the run: controller/version,
-EMOSA revision, pod model/firmware, actual schema fingerprint, radio/BSS scope,
-security representation, management direction/trust and deadline budget.
+- Complete remaining normative/procedure review: Early/Ack and AP-delivery
+  interpretation, ESP byte conversion, BBF representation/source limits and exact
+  WFA DEr3 comparison. Use the already obtained IEEE base/amendment; do not reopen
+  their acquisition request.
+- Qualify real native publisher output, membership, epochs and finality. A matching
+  `.proto` file establishes format compatibility only. Preserve unavailable-data
+  and incomplete-report outcomes until their sources are qualified.
+- Collect a physical-pod draft when its populated private connection path and
+  endpoint trust are supplied. A ready physical experiment need not wait for
+  optional router ports, UI expansion or every synthetic lab feature.
 
-For that tuple, retain evidence that:
+Router C/Rust deployment, a complete ODH ingestion service, multiple wire agents
+and another controller remain later or separately scoped work. They are not
+prerequisites for the first container-pod experiment and will not be proven by it.
 
-1. The controller discovered and onboarded the extender's EMOSA representation
-   as an agent, with the expected stable identity, topology and qualified radio
-   capabilities. It then sent a genuine selected provisioning procedure and
-   EMOSA processed its complete supported scope, including radio-wide BSS rules.
-2. Existing pod managers accepted and applied the qualified change, with
-   unrelated fields and management/recovery behavior checked.
-3. A separate physical station observed the intended BSSID/SSID, authenticated
-   with the new credentials, and exchanged traffic over its Wi-Fi interface.
-4. Invalid requests and unsupported scope caused visible, correct outcomes.
-   Lost replies/restarts did not produce invented success or untracked effects.
-5. Another run from the same inputs reproduced the result. A named independent
-   peer repeated the wire path before any third-party interoperability claim.
+## Keep existing evidence in its original scope
 
-A useful negative result identifies a concrete mismatch: a required BSS teardown
-that cannot be represented, unavailable security encoding, cloud writer
-interference, an unrecoverable management outage, or a controller expectation the
-unchanged pod cannot meet. Record where it failed and whether adaptation is
-possible within the no-new-pod-software constraint. One successful tuple does not
-establish full EasyMesh conformance or support for all OpenSync pods.
+| Retained result | What to reuse | What not to infer |
+| --- | --- | --- |
+| [Native controller/standard-agent baseline](../evaluation/peer-baseline.md) | Named peer startup, wired/wireless onboarding and independent clients | Universal onboarding or OpenSync integration |
+| [Native simulated-pod onboarding](../protocol/native-onboarding.md) | Selected real-wire discovery/WSC and durable operation/application chain | Actual OpenSync managers or physical firmware |
+| [901-second lifecycle run](../protocol/native-lifecycle.md) | Recovery, software-Ethernet neighbor publisher and clean selected native exits | Complete AP/STA/final reporting or a Wi-Fi/GRE metric profile |
+| [Sparse-ESP candidate](../protocol/native-ap-esp.md) | Native parser fix and its own bounded onboarding/exit checks | A new full sustained run or measured ESP |
+| [BBF conversions](../protocol/bbf-data-elements.md) | Pinned public definitions and selected encodings | WFA package equivalence or qualified native source values |
+| [Secure fleet/reproduction](../guides/secure-fleet.md) | Real-service TLS, multi-pod simulation and recovery tools | Multiple EasyMesh wire agents or physical-pod support |
 
-## Radio/client work
-
-The [optional hwsim harness](../../deploy/hwsim/README.md) uses hostapd and
-wpa_supplicant in separate LXD containers and interface-bound traffic after
-removing setup Ethernet. Its standalone scope must remain explicit.
-
-The [OVSDB/hwsim integration](../evaluation/radio-manager.md) now connects semantic EMOSA
-Config changes to a separate hostapd manager and derives State from
-hostapd/nl80211. Three selected runs passed 13 cases with independent clients,
-including wrong-key rejection, SSID/key change, lost reply, withholding, restart
-and data-path failures. The next integration is genuine controller discovery/WSC
-through EMOSA into this boundary, as the remaining procedure contract and inputs are resolved.
-
-For real pods use a physical Wi-Fi NIC in the observer, with an isolated client
-data path and a separately verified management/recovery path. Archive captures
-privately, review them for publication, and retain package/kernel/image details
-and hashes. RF performance, roaming and interference modeling are later
-experiments, not initial viability criteria.
+Earlier milestones and failed attempts remain in their linked evidence and
+[the pre-consolidation roadmap](https://github.com/boardfarmdevs/emosa-lab/blob/4dece3c1c7581bb7eec0372c587e4f10cf8e05d0/doc/project/viability-roadmap.md).
+They explain development history, not today's work order. Use the
+[learning path](../guides/learning-path.md) for the broader component curriculum.

@@ -1,5 +1,10 @@
 # Foundation delivery and remaining acceptance gates
 
+**Historical delivery record.** Use [current status](current-status.md) for today's
+result and [the roadmap](viability-roadmap.md) for the next work. The increments
+below retain their original component scope; a historical “pending” statement is
+not automatically a current blocker.
+
 The working delivery covers the I0 package/contracts/bootstrap, I1 durable
 semantic operation engine, I2 real OVSDB component simulator, incremental I6
 evaluation tooling and a read-only physical-pod preparation command. It does

@@ -1,5 +1,13 @@
 # A learning sequence from first checkout to a defensible demonstration
 
+Read [current status](../project/current-status.md) before interpreting an older
+exercise's pending gates. Bounded native simulated-pod onboarding and operational
+recovery already pass. For the next actual OpenSync-container target, review the
+[integration baseline](../project/integration-baseline.md),
+[plan](../project/opensync-lab-integration-plan.md) and
+[warm/cold/sustained acceptance levels](../project/integration-acceptance.md).
+That integration remains unexecuted; these are preparation documents.
+
 [Documentation index](../README.md) · [Full team manual](team-manual.md)
 
 EMOSA is the **EasyMesh to OpenSync Adapter**. The lab teaches and tests its
@@ -32,8 +40,8 @@ OpenSync managers, and the independent client. OVSDB is the adapter's southbound
 management interface; it is not the name or full purpose of the adapter.
 
 **Checkpoint:** draw the intended path: real controller messages → EMOSA → an
-unchanged physical pod → independently observed client behavior. Name the missing
-wire and physical qualification inputs without assuming a simulator supplies them.
+unchanged physical pod → independently observed client behavior. Name the remaining full-profile and actual-pod qualification inputs without
+assuming a bounded simulator result supplies them.
 
 ## 2. Install and verify the developer environment — HOST
 

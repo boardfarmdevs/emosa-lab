@@ -15,6 +15,12 @@ pod image contains explicit lab adaptations. Success would prove a **containeriz
 OpenSync integration**, not unchanged physical-pod support or general EasyMesh
 conformance.
 
+**Preparation update:** [current status](current-status.md), a privately retained
+[source/image baseline](integration-baseline.md), and separate
+[acceptance levels](integration-acceptance.md) are now recorded. The evaluated VM
+remains selected; a newer separately running VM is not automatically its replacement.
+Implementation phases below remain unexecuted.
+
 ## 1. Scope, evidence and how to use this plan
 
 The evaluation inspected:
@@ -648,7 +654,9 @@ green tests are enough to start qualification when integration is authorized.
 The new pod may provide the most useful actual source for the reporting work, so
 finishing a complete synthetic telemetry publisher first would duplicate effort.
 
-Small preparation worth finishing first:
+The following small preparation is now recorded in [current status](current-status.md),
+the [baseline](integration-baseline.md) and [acceptance register](integration-acceptance.json).
+Keep these records current rather than reopening completed preparation:
 
 1. **Consolidate current status references.** Some older onboarding/roadmap sections
    still describe historical KiB advertising and already-superseded gaps. Add a

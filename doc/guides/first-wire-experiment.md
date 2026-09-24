@@ -1,7 +1,11 @@
 # Establish the first complete controller-to-pod experiment
 
-This is the acceptance contract for the next integration, and a checklist for
-handing it to another developer. **The complete experiment is not runnable yet.**
+This is the original simulated/physical wire-experiment contract. The later
+[bounded native simulated-pod run](../protocol/native-onboarding.md) is implemented
+and passes. Statements below about missing integration describe earlier component
+stages. Use [current status](../project/current-status.md) for today's result and
+the [new acceptance levels](../project/integration-acceptance.md) for actual
+OpenSync-container warm/cold/sustained work, which has not been executed.
 The IEEE 1905 inputs are obtained and the [bounded envelope/packet components](../protocol/ieee1905-envelope.md)
 are implemented. Complete procedure/profile audit and exchange integration remain pending. The existing native-peer and semantic-service exercises test the two
 sides separately. Their successes must not be combined into a wire-onboarding

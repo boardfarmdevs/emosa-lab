@@ -1,0 +1,44 @@
+## Manager
+--------------------------------------
+is_connected | true                  |
+target       | tcp:[10.101.0.1]:6653 |
+--------------------------------------
+## AWLAN_Node
+-----------------------------------------------------
+firmware_version | 6.6.1.0-0-g1dad64-mods-mvx-local |
+id               | MVXPOD02288DCB5DCC               |
+manager_addr     | tcp:10.101.0.1:6653              |
+redirector_addr  | tcp:10.101.0.40:6640             |
+serial_number    | MVXPOD02288DCB5DCC               |
+-----------------------------------------------------
+## Wifi_VIF_State home-ap-24
+--------------------------------------------
+associated_clients | [8258~2299,97b5~37e6] |
+enabled            | true                  |
+if_name            | home-ap-24            |
+mac                | 82:00:00:00:08:00     |
+mode               | ap                    |
+rsn_pairwise_ccmp  | true                  |
+ssid               | emosa-mesh            |
+wpa                | true                  |
+wpa_key_mgmt       | wpa-psk               |
+--------------------------------------------
+## nl80211
+Interface home-ap-24
+	ifindex 8
+	wdev 0x80000001c
+	addr 82:00:00:00:08:00
+	ssid emosa-mesh
+	type AP
+	wiphy 8
+	channel 6 (2437 MHz), width: 20 MHz, center1: 2437 MHz
+	txpower 30.00 dBm
+	multicast TXQ:
+		qsz-byt	qsz-pkt	flows	drops	marks	overlmt	hashcol	tx-bytes	tx-packets
+		0	0	19	0	0	0	0	1664		19
+## backhaul
+Connected to 02:00:00:00:02:04 (on bhaul-sta-50)
+	SSID: opensync-lab-bhaul
+	freq: 5220
+g-bhaul-sta-50@bhaul-sta-50 UNKNOWN        c6:37:14:0e:3e:28 <BROADCAST,MULTICAST,UP,LOWER_UP> 
+br-home          UP             192.168.0.231/24 

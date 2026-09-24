@@ -1,0 +1,60 @@
+PASS em-wc2 via pod-1 2026-09-24T01:46:38+00:00
+INFO interfaces: gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+PASS association: 'emosa-mesh' bssid 82:00:00:00:01:00 (2437 MHz) = pod-1 home-ap-24
+PASS pod station: pod-1 home-ap-24 lists 02:00:00:00:0a:00
+PASS DHCP: 192.168.0.177/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+PASS DHCP client: udhcpc running (pid 452), started at boot by OpenRC local
+PASS gateway lease: mv3 dnsmasq leased to 02:00:00:00:0a:00
+PASS internet (ICMP): round-trip min/avg/max = 29.667/30.026/30.633 ms
+PASS DNS: example.com resolves
+PASS internet (HTTP): GET http://example.com -> 200
+PASS em-wc3 via pod-2 2026-09-24T01:47:08+00:00
+INFO interfaces: gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+PASS association: 'emosa-mesh' bssid 82:00:00:00:06:00 (2437 MHz) = pod-2 home-ap-24
+PASS pod station: pod-2 home-ap-24 lists 02:00:00:00:0b:00
+PASS DHCP: 192.168.0.211/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+PASS DHCP client: udhcpc running (pid 452), started at boot by OpenRC local
+PASS gateway lease: mv3 dnsmasq leased to 02:00:00:00:0b:00
+PASS internet (ICMP): round-trip min/avg/max = 25.315/27.589/29.130 ms
+PASS DNS: example.com resolves
+PASS internet (HTTP): GET http://example.com -> 200
+PASS em-wc4 via pod-2 2026-09-24T01:47:37+00:00
+INFO interfaces: gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+PASS association: 'emosa-mesh' bssid 82:00:00:00:06:00 (2437 MHz) = pod-2 home-ap-24
+PASS pod station: pod-2 home-ap-24 lists 02:00:00:00:0c:00
+PASS DHCP: 192.168.0.245/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+PASS DHCP client: udhcpc running (pid 452), started at boot by OpenRC local
+PASS gateway lease: mv3 dnsmasq leased to 02:00:00:00:0c:00
+PASS internet (ICMP): round-trip min/avg/max = 28.718/29.212/30.167 ms
+PASS DNS: example.com resolves
+PASS internet (HTTP): GET http://example.com -> 200
+PASS em-wc5 via pod-3 2026-09-24T01:48:06+00:00
+INFO interfaces: gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+PASS association: 'emosa-mesh' bssid 82:00:00:00:08:00 (2437 MHz) = pod-3 home-ap-24
+PASS pod station: pod-3 home-ap-24 lists 02:00:00:00:0d:00
+PASS DHCP: 192.168.0.124/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+PASS DHCP client: udhcpc running (pid 452), started at boot by OpenRC local
+PASS gateway lease: mv3 dnsmasq leased to 02:00:00:00:0d:00
+PASS internet (ICMP): round-trip min/avg/max = 28.986/33.002/39.683 ms
+PASS DNS: example.com resolves
+PASS internet (HTTP): GET http://example.com -> 200
+PASS em-wc6 via pod-3 2026-09-24T01:48:36+00:00
+INFO interfaces: gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+PASS association: 'emosa-mesh' bssid 82:00:00:00:08:00 (2437 MHz) = pod-3 home-ap-24
+PASS pod station: pod-3 home-ap-24 lists 02:00:00:00:0e:00
+PASS DHCP: 192.168.0.158/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+PASS DHCP client: udhcpc running (pid 452), started at boot by OpenRC local
+PASS gateway lease: mv3 dnsmasq leased to 02:00:00:00:0e:00
+PASS internet (ICMP): round-trip min/avg/max = 27.693/28.438/29.118 ms
+PASS DNS: example.com resolves
+PASS internet (HTTP): GET http://example.com -> 200
+PASS em-wc1 via pod-1 2026-09-24T01:37:26+00:00
+INFO interfaces: gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+PASS association: 'emosa-mesh' bssid 82:00:00:00:01:00 (2437 MHz) = pod-1 home-ap-24
+PASS pod station: pod-1 home-ap-24 lists 02:00:00:00:10:00
+PASS DHCP: 192.168.0.226/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+PASS DHCP client: udhcpc running (pid 452), started at boot by OpenRC local
+PASS gateway lease: mv3 dnsmasq leased to 02:00:00:00:10:00
+PASS internet (ICMP): round-trip min/avg/max = 29.857/30.491/31.625 ms
+PASS DNS: example.com resolves
+PASS internet (HTTP): GET http://example.com -> 200

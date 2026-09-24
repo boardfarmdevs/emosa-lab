@@ -1,0 +1,120 @@
+[18:22:07] push: guest scripts + boardfarm overlay -> emosa-osl-0923:/opt/opensync-lab
+[18:22:08] pod: pushing mvx-pod-20260923124229 (76M)
+[18:22:12] guest: 70-pod.sh pod-3
+[vm 01:22:13] pod: (re)creating pod-3
+[vm 01:22:17] hwsim: reclaimed phy8 as virt-wlan8
+[vm 01:22:17] hwsim: reclaimed phy9 as virt-wlan9
+[vm 01:22:19] pod: wlan0 <- virt-wlan8
+[vm 01:22:19] pod: wlan1 <- virt-wlan9
+[vm 01:22:25] pod: Finished opensync-lab pod: hand the hwsim radios to OpenSync, eth0 identity.
+ovsdb-server:up dm:up cm:up wm:- owm:up nm:up wano:up 
+[vm 01:22:28] pod: launched pod-3 id=MVXPOD02288DCB5DCC
+=== extender: pod-3 (MVXPOD02288DCB5DCC) via mv3 wl1.1 ===
+[vm 01:22:28] WARN mv3 is not on local-noc (ssl:wildfire.plume.tech:443); the backhaul is orchestrated by local-noc (deploy-mvx.sh opensync --cloud local)
+  PASS backhaul association     bhaul-sta-50 -> mv3 wl1.1 (02:00:00:00:02:04)
+  PASS pod GRE (cm)             g-bhaul-sta-50 gretap remote 169.254.1.1 local 169.254.1.15 (bhaul 169.254.1.15/25)
+  PASS gateway GRE (local-noc)  mv3 pgd1_15 gretap remote 169.254.1.15 local 169.254.1.1, port of brlan0
+  PASS pod LAN (br-home)        192.168.0.231/24 default via 192.168.0.1 (the gateway, across the GRE)
+  PASS cloud (local-noc)        MVXPOD02288DCB5DCC: Manager tcp:[10.101.0.40]:6641 connected=true
+  PASS fronthaul (local-noc)    home-ap-24 'opensync-lab-home' ch6 in br-home
+=== extender: PASS ===
+[18:23:50] push: guest scripts + boardfarm overlay -> emosa-osl-0923:/opt/opensync-lab
+[18:23:51] guest: 80-client.sh pod-1-wc1 pod-1
+[vm 01:23:51] client: building image mvx-wclient (alpine + wpa_supplicant)
+[vm 01:24:15] client: (re)creating pod-1-wc1
+[vm 01:24:20] client: pod-1-wc1 has virt-wlan10 as wlan0 and no other NIC
+=== wireless client: pod-1-wc1 -> 'opensync-lab-home' (pod pod-1) ===
+  INFO interfaces               gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+  PASS association              'opensync-lab-home' bssid 82:00:00:00:01:00 (2437 MHz) = pod-1 home-ap-24
+  PASS pod station              pod-1 home-ap-24 lists 02:00:00:00:0a:00
+  PASS DHCP                     192.168.0.177/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+  PASS DHCP client              udhcpc running (pid 452), started at boot by OpenRC local
+  PASS gateway lease            mv3 dnsmasq leased to 02:00:00:00:0a:00
+  PASS internet (ICMP)          round-trip min/avg/max = 30.368/30.928/31.438 ms
+  PASS DNS                      example.com resolves
+  PASS internet (HTTP)          GET http://example.com -> 200
+=== wireless client: PASS ===
+[18:24:47] push: guest scripts + boardfarm overlay -> emosa-osl-0923:/opt/opensync-lab
+[18:24:48] guest: 80-client.sh pod-1-wc2 pod-1
+[vm 01:24:49] client: (re)creating pod-1-wc2
+[vm 01:24:54] client: pod-1-wc2 has virt-wlan11 as wlan0 and no other NIC
+=== wireless client: pod-1-wc2 -> 'opensync-lab-home' (pod pod-1) ===
+  INFO interfaces               gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+  PASS association              'opensync-lab-home' bssid 82:00:00:00:01:00 (2437 MHz) = pod-1 home-ap-24
+  PASS pod station              pod-1 home-ap-24 lists 02:00:00:00:0b:00
+  PASS DHCP                     192.168.0.211/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+  PASS DHCP client              udhcpc running (pid 452), started at boot by OpenRC local
+  PASS gateway lease            mv3 dnsmasq leased to 02:00:00:00:0b:00
+  PASS internet (ICMP)          round-trip min/avg/max = 28.034/29.158/29.738 ms
+  PASS DNS                      example.com resolves
+  PASS internet (HTTP)          GET http://example.com -> 200
+=== wireless client: PASS ===
+[18:25:20] push: guest scripts + boardfarm overlay -> emosa-osl-0923:/opt/opensync-lab
+[18:25:21] guest: 80-client.sh pod-2-wc1 pod-2
+[vm 01:25:22] client: (re)creating pod-2-wc1
+[vm 01:25:27] client: pod-2-wc1 has virt-wlan12 as wlan0 and no other NIC
+=== wireless client: pod-2-wc1 -> 'opensync-lab-home' (pod pod-2) ===
+  INFO interfaces               gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+  PASS association              'opensync-lab-home' bssid 82:00:00:00:06:00 (2437 MHz) = pod-2 home-ap-24
+  PASS pod station              pod-2 home-ap-24 lists 02:00:00:00:0c:00
+  PASS DHCP                     192.168.0.245/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+  PASS DHCP client              udhcpc running (pid 452), started at boot by OpenRC local
+  PASS gateway lease            mv3 dnsmasq leased to 02:00:00:00:0c:00
+  PASS internet (ICMP)          round-trip min/avg/max = 29.097/30.165/31.035 ms
+  PASS DNS                      example.com resolves
+  PASS internet (HTTP)          GET http://example.com -> 200
+=== wireless client: PASS ===
+[18:25:53] push: guest scripts + boardfarm overlay -> emosa-osl-0923:/opt/opensync-lab
+[18:25:54] guest: 80-client.sh pod-2-wc2 pod-2
+[vm 01:25:55] client: (re)creating pod-2-wc2
+[vm 01:26:00] client: pod-2-wc2 has virt-wlan13 as wlan0 and no other NIC
+=== wireless client: pod-2-wc2 -> 'opensync-lab-home' (pod pod-2) ===
+  INFO interfaces               gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+  PASS association              'opensync-lab-home' bssid 82:00:00:00:06:00 (2437 MHz) = pod-2 home-ap-24
+  PASS pod station              pod-2 home-ap-24 lists 02:00:00:00:0d:00
+  PASS DHCP                     192.168.0.124/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+  PASS DHCP client              udhcpc running (pid 452), started at boot by OpenRC local
+  PASS gateway lease            mv3 dnsmasq leased to 02:00:00:00:0d:00
+  PASS internet (ICMP)          round-trip min/avg/max = 29.255/30.377/31.716 ms
+  PASS DNS                      example.com resolves
+  PASS internet (HTTP)          GET http://example.com -> 200
+=== wireless client: PASS ===
+[18:26:27] push: guest scripts + boardfarm overlay -> emosa-osl-0923:/opt/opensync-lab
+[18:26:28] guest: 80-client.sh pod-3-wc1 pod-3
+[vm 01:26:29] client: (re)creating pod-3-wc1
+[vm 01:26:34] client: pod-3-wc1 has virt-wlan14 as wlan0 and no other NIC
+=== wireless client: pod-3-wc1 -> 'opensync-lab-home' (pod pod-3) ===
+  INFO interfaces               gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+  PASS association              'opensync-lab-home' bssid 82:00:00:00:08:00 (2437 MHz) = pod-3 home-ap-24
+  PASS pod station              pod-3 home-ap-24 lists 02:00:00:00:0e:00
+  PASS DHCP                     192.168.0.158/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+  PASS DHCP client              udhcpc running (pid 452), started at boot by OpenRC local
+  PASS gateway lease            mv3 dnsmasq leased to 02:00:00:00:0e:00
+  PASS internet (ICMP)          round-trip min/avg/max = 28.816/29.601/30.787 ms
+  PASS DNS                      example.com resolves
+  PASS internet (HTTP)          GET http://example.com -> 200
+=== wireless client: PASS ===
+[18:27:00] push: guest scripts + boardfarm overlay -> emosa-osl-0923:/opt/opensync-lab
+[18:27:01] guest: 80-client.sh pod-3-wc2 pod-3
+[vm 01:27:02] client: (re)creating pod-3-wc2
+[vm 01:27:07] client: pod-3-wc2 has virt-wlan15 as wlan0 and no other NIC
+=== wireless client: pod-3-wc2 -> 'opensync-lab-home' (pod pod-3) ===
+  INFO interfaces               gre0@NONE gretap0@NONE erspan0@NONE wlan0 (no wired NIC)
+  PASS association              'opensync-lab-home' bssid 82:00:00:00:08:00 (2437 MHz) = pod-3 home-ap-24
+  PASS pod station              pod-3 home-ap-24 lists 02:00:00:00:0f:00
+  PASS DHCP                     192.168.0.192/24 via 192.168.0.1 (mv3 brlan0 192.168.0.1/24, served across the GRE backhaul)
+  PASS DHCP client              udhcpc running (pid 452), started at boot by OpenRC local
+  PASS gateway lease            mv3 dnsmasq leased to 02:00:00:00:0f:00
+  PASS internet (ICMP)          round-trip min/avg/max = 30.958/31.816/32.487 ms
+  PASS DNS                      example.com resolves
+  PASS internet (HTTP)          GET http://example.com -> 200
+=== wireless client: PASS ===
+=== topology: mv3 + 3 pods x 2 clients ===
+  PASS mv3 backhaul           3 stations on wl1.1
+  PASS mv3 GRE ports          pgd1_15 pgd1_50 pgd1_91 in brlan0
+  PASS mv3 cloud              controller session in local-noc
+  PASS pod-1                  MVXPOD023F87E628DD fronthaul 82:00:00:00:01:00, clients: pod-1-wc1=192.168.0.177 pod-1-wc2=192.168.0.211
+  PASS pod-2                  MVXPOD02D7777EF0D9 fronthaul 82:00:00:00:06:00, clients: pod-2-wc1=192.168.0.245 pod-2-wc2=192.168.0.124
+  PASS pod-3                  MVXPOD02288DCB5DCC fronthaul 82:00:00:00:08:00, clients: pod-3-wc1=192.168.0.158 pod-3-wc2=192.168.0.192
+  PASS topology view          http://<host>:8650/ shows 1 gateway, 3 extenders, 6 clients, all online
+=== topology: PASS ===

@@ -1,0 +1,10 @@
+cec287b95d588ca715c7384a8bd6985f9b492e192becdf69b6e708067afc2b9d  ./candidate-ap-esp-02/stage/bin/beerocks_controller
+f25812f74db0996ae8bfb15360a775d536aee9f3c2ff44f5264f4dafe301582f  ./candidate-ap-esp-02/stage/lib/libbpl.so.6.0.0
+e4246e31c4c8267f5f9331f0589405bbc08dbf69b9a48dbf385388e3d819a40d  ./controller-ui/easymesh-controller
+8a45fa4a32e9cf0627823c8d84987c1b34ad61a6f9815a14a398ad2e537a5a2b  ./controller-ui/topology-adapter.py
+ae7beaf8a5ab436f85961bd4a6535aa700f04bd73913879bd3796a53de6ca236  ./emosa-hostap-wps-2.10.tar.gz
+2e1464f5e8a4096e6d896e4732f2eb3c039f6c995b8d00c6a543cccca6b8de89  ./emosa-prpl-bwl-6.0.0.tar.gz
+7f049ac211db9c2b50056bd75fb6ec229ba0e7562e0b7b75efd8c303998dbc0d  ./hostap-runtime-2.10.tar.gz
+a98a6903fb9db1494ece0c292dd85c7d4d8ff2f570b5b85768ed6f299f72fb1f  ./prpl-install-nl80211-6.0.0.tar.gz
+ad912dc63b7d2188096bd6c0a42978590c4a4b82b0590da1198514e122cec4d2  ./prpl-runtime-deps-6.0.0.tar.gz
+8ac91b3913a96c6d98d65b2fc6996064c85d0dc42a626977d337046be796c75d  ./uv

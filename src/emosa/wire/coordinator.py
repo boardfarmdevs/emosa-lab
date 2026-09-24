@@ -14,7 +14,12 @@ from dataclasses import dataclass, field, replace
 
 from emosa.easymesh_payloads import AssociatedClients, BssClients
 from emosa.errors import EmosaError, Reason
-from emosa.wire.autoconfiguration import SECURITY_ENVELOPES, PeerBinding
+from emosa.wire.autoconfiguration import (
+    EASYMESH_61,
+    SECURITY_ENVELOPES,
+    PeerBinding,
+    check_message_set,
+)
 from emosa.wire.channel import OperatingRadio
 from emosa.wire.cmdu import MidSequence, Reassembler, decode_frame, invalid
 from emosa.wire.reports import (
@@ -237,7 +242,10 @@ class ReportCoordinator:
     Local retry policy is three transmissions, 250 ms apart, within one second.
     """
 
-    def __init__(self, source, send_frame, *, mids=None, clock=time.monotonic):
+    def __init__(
+        self, source, send_frame, *, mids=None, clock=time.monotonic, message_set=EASYMESH_61
+    ):
+        self.message_set = check_message_set(message_set)
         self.source, self.binding, self.send_frame = source, source.binding, send_frame
         self.clock = clock
         self.mids = mids if mids is not None else MidSequence(secrets.randbits(16))
@@ -392,6 +400,7 @@ class ReportCoordinator:
             generation=generation,
             received_at=received_at,
             clock=self.clock,
+            message_set=self.message_set,
         )
         try:
             report.send(self.send_frame, self._stamp, clock=self.clock)

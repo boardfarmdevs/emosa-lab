@@ -1,0 +1,216 @@
+{
+  "generated_at": "2026-09-24T02:14:33.496746+00:00",
+  "source": "prplMesh Device.WiFi.DataElements NBAPI",
+  "devices": [
+    {
+      "id": "02:00:00:e0:00:01",
+      "name": "controller",
+      "role": "controller",
+      "profile": 2,
+      "software_version": "6.0.0",
+      "backhaul": {
+        "parent_id": "",
+        "type": "None",
+        "mac": "",
+        "station_mac": "",
+        "signal_raw": 0,
+        "signal_dbm": -110.0,
+        "signal_updated_at": "1970-01-01T00:00:00Z"
+      },
+      "radios": [
+        {
+          "id": "02:00:00:ec:01:00",
+          "name": "wlan0",
+          "band": "2.4 GHz",
+          "opclass": 81,
+          "channel": 6,
+          "utilization": 0,
+          "bsses": [
+            {
+              "bssid": "02:00:00:ec:01:00",
+              "ssid": "emosa-mesh",
+              "fronthaul": true,
+              "backhaul": false,
+              "clients": []
+            },
+            {
+              "bssid": "02:00:00:ec:01:01",
+              "ssid": "emosa-mesh-bh",
+              "fronthaul": false,
+              "backhaul": true,
+              "clients": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02:00:00:5e:00:01",
+      "name": "agent-1",
+      "role": "agent",
+      "profile": 1,
+      "software_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+      "backhaul": {
+        "parent_id": "02:00:00:e0:00:01",
+        "type": "Ethernet",
+        "mac": "00:00:00:00:00:00",
+        "station_mac": "02:00:00:5e:00:01",
+        "signal_raw": 0,
+        "signal_dbm": -110.0,
+        "signal_updated_at": "1970-01-01T00:00:00Z"
+      },
+      "radios": [
+        {
+          "id": "02:00:00:00:01:00",
+          "name": "N/A",
+          "band": "2.4 GHz",
+          "opclass": 0,
+          "channel": 0,
+          "utilization": 0,
+          "bsses": [
+            {
+              "bssid": "82:00:00:00:01:00",
+              "ssid": "emosa-mesh",
+              "fronthaul": true,
+              "backhaul": false,
+              "clients": [
+                {
+                  "id": "02:00:00:00:0a:00",
+                  "name": "sta-0a",
+                  "cohort": "sta",
+                  "signal_raw": 0,
+                  "signal_dbm": -110.0,
+                  "signal_updated_at": "2026-09-24T02:13:40.543650396Z",
+                  "ipv4": "0",
+                  "last_connect_seconds": 53
+                },
+                {
+                  "id": "02:00:00:00:10:00",
+                  "name": "sta-10",
+                  "cohort": "sta",
+                  "signal_raw": 0,
+                  "signal_dbm": -110.0,
+                  "signal_updated_at": "2026-09-24T02:13:40.558783508Z",
+                  "ipv4": "0",
+                  "last_connect_seconds": 53
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02:00:00:5e:00:02",
+      "name": "agent-2",
+      "role": "agent",
+      "profile": 1,
+      "software_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+      "backhaul": {
+        "parent_id": "02:00:00:e0:00:01",
+        "type": "Ethernet",
+        "mac": "00:00:00:00:00:00",
+        "station_mac": "02:00:00:5e:00:02",
+        "signal_raw": 0,
+        "signal_dbm": -110.0,
+        "signal_updated_at": "1970-01-01T00:00:00Z"
+      },
+      "radios": [
+        {
+          "id": "02:00:00:00:06:00",
+          "name": "N/A",
+          "band": "2.4 GHz",
+          "opclass": 0,
+          "channel": 0,
+          "utilization": 0,
+          "bsses": [
+            {
+              "bssid": "82:00:00:00:06:00",
+              "ssid": "emosa-mesh",
+              "fronthaul": true,
+              "backhaul": false,
+              "clients": [
+                {
+                  "id": "02:00:00:00:0b:00",
+                  "name": "sta-0b",
+                  "cohort": "sta",
+                  "signal_raw": 0,
+                  "signal_dbm": -110.0,
+                  "signal_updated_at": "2026-09-24T02:13:40.573883574Z",
+                  "ipv4": "0",
+                  "last_connect_seconds": 53
+                },
+                {
+                  "id": "02:00:00:00:0c:00",
+                  "name": "sta-0c",
+                  "cohort": "sta",
+                  "signal_raw": 0,
+                  "signal_dbm": -110.0,
+                  "signal_updated_at": "2026-09-24T02:13:40.588241095Z",
+                  "ipv4": "0",
+                  "last_connect_seconds": 53
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02:00:00:5e:00:03",
+      "name": "agent-3",
+      "role": "agent",
+      "profile": 1,
+      "software_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+      "backhaul": {
+        "parent_id": "02:00:00:e0:00:01",
+        "type": "Ethernet",
+        "mac": "00:00:00:00:00:00",
+        "station_mac": "02:00:00:5e:00:03",
+        "signal_raw": 0,
+        "signal_dbm": -110.0,
+        "signal_updated_at": "1970-01-01T00:00:00Z"
+      },
+      "radios": [
+        {
+          "id": "02:00:00:00:08:00",
+          "name": "N/A",
+          "band": "2.4 GHz",
+          "opclass": 0,
+          "channel": 0,
+          "utilization": 0,
+          "bsses": [
+            {
+              "bssid": "82:00:00:00:08:00",
+              "ssid": "emosa-mesh",
+              "fronthaul": true,
+              "backhaul": false,
+              "clients": [
+                {
+                  "id": "02:00:00:00:0d:00",
+                  "name": "sta-0d",
+                  "cohort": "sta",
+                  "signal_raw": 0,
+                  "signal_dbm": -110.0,
+                  "signal_updated_at": "2026-09-24T02:13:45.642095509Z",
+                  "ipv4": "0",
+                  "last_connect_seconds": 48
+                },
+                {
+                  "id": "02:00:00:00:0e:00",
+                  "name": "sta-0e",
+                  "cohort": "sta",
+                  "signal_raw": 0,
+                  "signal_dbm": -110.0,
+                  "signal_updated_at": "2026-09-24T02:13:45.654817693Z",
+                  "ipv4": "0",
+                  "last_connect_seconds": 48
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

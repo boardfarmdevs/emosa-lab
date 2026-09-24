@@ -1,5 +1,12 @@
 # Test a native controller capability fix without replacing the baseline
 
+**Scope note:** this is the counter-advertisement component exercise. Current
+native onboarding also uses configuration-scope/lifetime fixes, and the newer
+candidate adds sparse-ESP handling. See [current status](../project/current-status.md)
+and the [frozen candidate identities](../project/integration-baseline.md).
+Current Profile-1 agent runs advertise bytes; controller KiB/MiB support is a
+separate capability.
+
 This developer exercise fixes one measured interoperability defect: the pinned
 controller handles KiB/MiB counters but omits the corresponding flag from its
 discovery Response. EMOSA observes `0x40`; the candidate advertises `0xC0`.

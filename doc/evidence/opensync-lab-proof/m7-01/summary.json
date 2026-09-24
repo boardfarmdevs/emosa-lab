@@ -1,0 +1,152 @@
+{
+ "label": "m7-01",
+ "duration_s": 901,
+ "faults": [
+  {
+   "name": "client leave/join em-wc2",
+   "began": 1790217739.0142026,
+   "ended": 1790217779.6210668,
+   "offset": 60.0,
+   "recovered_after_s": 14.0,
+   "outage_window_s": 54.6
+  },
+  {
+   "name": "adapter process restart (pod-1)",
+   "began": 1790217829.1417906,
+   "ended": 1790217829.639033,
+   "offset": 150.1,
+   "recovered_after_s": 1.6,
+   "outage_window_s": 2.1
+  },
+  {
+   "name": "OVSDB transport cut 20 s (pod-2)",
+   "began": 1790217919.1672742,
+   "ended": 1790217940.8660083,
+   "offset": 240.2,
+   "recovered_after_s": 39.8,
+   "outage_window_s": 61.5
+  },
+  {
+   "name": "backhaul loss 30 s (pod-3)",
+   "began": 1790218039.3999627,
+   "ended": 1790218069.9784427,
+   "offset": 360.4,
+   "recovered_after_s": 29.4,
+   "outage_window_s": 60.0
+  },
+  {
+   "name": "controller restart + policy re-entry",
+   "began": 1790218189.0255702,
+   "ended": 1790218234.113412,
+   "offset": 510.0,
+   "recovered_after_s": 2.7,
+   "outage_window_s": 47.8
+  },
+  {
+   "name": "client leave/join em-wc4",
+   "began": 1790218369.1594307,
+   "ended": 1790218409.710546,
+   "offset": 690.2,
+   "recovered_after_s": 13.9,
+   "outage_window_s": 54.4
+  }
+ ],
+ "client_outages": {
+  "em-wc1": [],
+  "em-wc2": [
+   [
+    62,
+    115
+   ]
+  ],
+  "em-wc3": [],
+  "em-wc4": [
+   [
+    692,
+    744
+   ]
+  ],
+  "em-wc5": [
+   [
+    362,
+    410
+   ]
+  ],
+  "em-wc6": [
+   [
+    362,
+    411
+   ]
+  ]
+ },
+ "operations": {
+  "pod-1": [
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ],
+  "pod-2": [
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ],
+  "pod-3": [
+   "OBSERVED_APPLIED",
+   "REJECTED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ]
+ },
+ "writes": {
+  "pod-1": 0,
+  "pod-2": 0,
+  "pod-3": 0
+ },
+ "agent_rss_kib_start_end": {
+  "pod-1": [
+   50272,
+   50152
+  ],
+  "pod-2": [
+   53116,
+   54192
+  ],
+  "pod-3": [
+   53320,
+   54416
+  ]
+ },
+ "samples": 146,
+ "checks": {
+  "healthy_at_end": true,
+  "every_fault_recovered": true,
+  "no_unresolved_operations": true,
+  "every_client_passing_at_end": true,
+  "agent_memory_bounded": true
+ },
+ "passed": true,
+ "scope": "hwsim lab; operational recovery (plan M7), not complete sustained reporting"
+}

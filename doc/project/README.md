@@ -4,6 +4,9 @@
 
 | Document | Scope |
 | --- | --- |
+| [Current status](current-status.md) | Consolidated current evidence, resolved historical claims and remaining work |
+| [Frozen integration baseline](integration-baseline.md) | Private retained source/image/native artifacts, public hashes and read-only verification |
+| [Integration acceptance levels](integration-acceptance.md) | Separate qualification, semantic apply, warm onboarding, cold start, operational recovery and full sustained verdicts |
 | [OpenSync lab integration plan](opensync-lab-integration-plan.md) | Read-only evaluation of rev140's actual OpenSync pod, source/patch provenance, deployment choices and staged implementation/acceptance plan; not executed |
 | [Coding handoff](EMOSA-CODING-HANDOFF.md) | Implementation stages, constraints and acceptance obligations |
 | [Viability roadmap](viability-roadmap.md) | Prioritized experiments and the evidence required to assess EMOSA |
