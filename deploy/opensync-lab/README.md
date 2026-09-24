@@ -35,7 +35,7 @@ pod-N ──5 GHz backhaul + GRE── mv3 ── WAN      clients ──2.4 GHz
 
 ## Run
 
-opensync-lab VM first (opensync-lab branch `claude/emosa-hooks`: `--redirect`
+opensync-lab VM first (opensync-lab `main`, which carries the `--redirect`
 and `MVX_CLIENT_SSID`), then the EasyMesh side. The run record is in
 [doc/evidence/opensync-lab-proof](../../doc/evidence/opensync-lab-proof/README.md).
 

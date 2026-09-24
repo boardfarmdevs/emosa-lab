@@ -14,7 +14,7 @@ Branch `claude/0923-clean`, proposed 2026-09-23.
 
 | Milestone | Status |
 | --- | --- |
-| M0 baseline | New lab VM from opensync-lab `claude/emosa-hooks` and the current pod image; the old frozen baseline is not used |
+| M0 baseline | New lab VM from opensync-lab `main` (then branch `claude/emosa-hooks`, tag `archive/claude/emosa-hooks`) and the current pod image; the old frozen baseline is not used |
 | M1 read-only | Profile `opensync-lab-hwsim-6.6.1-v1` from the pod's source and live State (`src/emosa/opensync/pod_profile.py`) |
 | M2 handover | Done: local-noc redirect ends the session, the pod's `cm` dials EMOSA; GRE stays with local-noc |
 | M3 application | Done inside M4: guarded update, PSK slot replaced, State-confirmed, wrong key refused |
