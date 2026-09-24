@@ -1,5 +1,16 @@
 # Frozen source and image baseline
 
+> **Retired as the integration target on 2026-09-24.** Its pod image
+> (`20260923012050`) predates the opensync-lab fix for the 180 s `owm` abort, and
+> its opensync-lab commit (`77318dc`) was reworded before it was pushed. The
+> integration ran on a new lab instead:
+> - opensync-lab `main` from `53aadd9` plus the redirect/handover change (now `0582f3a`);
+> - pod image `mvx-pod-20260923124229`;
+> - VM `emosa-osl-0923`.
+>
+> See the [run record](../evidence/opensync-lab-proof/README.md). This page and its
+> manifest stay as history.
+
 **Baseline ID: `opensync-integration-20260923-01`; preserved and hash-verified on
 2026-09-23.** The [public manifest](integration-baseline.json) contains selected
 identifiers and hashes. Raw source archives, applied patches, image archives,

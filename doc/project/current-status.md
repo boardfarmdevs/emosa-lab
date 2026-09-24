@@ -1,5 +1,22 @@
 # Current EMOSA status
 
+> **Update 2026-09-24: real OpenSync pods onboarded.** A native prplMesh
+> controller onboarded three unchanged OpenSync 6.6.1.0 pods (opensync-lab, hwsim)
+> as EasyMesh agents through EMOSA virtual agents.
+> - The fronthaul came only from the controller's M2 and was applied by each
+>   pod's own `owm`, and six clients reached the internet.
+> - A 900 s recovery workload with transport, backhaul, adapter and controller
+>   faults passed.
+> - The controller shows the pods' channel through Operating Channel Reports.
+> - A second controller, RDK-B unified-wifi-mesh, gets as far as M2 with the
+>   `r1` message set.
+>
+> Start with the [run record](../evidence/opensync-lab-proof/README.md) and the
+> status table in the [proof plan](proof-plan.md). The rows below about the
+> "actual OpenSync container" predate this and are superseded by the run record.
+> The frozen baseline `opensync-integration-20260923-01` is retired as an
+> integration target; see [integration-baseline](integration-baseline.md).
+
 **Reviewed 2026-09-23. This is the current-status entry point.** Historical
 experiment records describe their own revisions and results; they are not a list
 of today's unresolved tasks. The [roadmap](viability-roadmap.md) gives the next
