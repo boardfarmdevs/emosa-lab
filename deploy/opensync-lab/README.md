@@ -97,6 +97,30 @@ deploy/opensync-lab/lab.sh admit pod-4
 deploy/opensync-lab/lab.sh client em-wc7 pod-4 emosa-mesh 'EmosaMesh2026!'
 ```
 
+### Data plane experiments
+
+`lab.sh gtp` adds `em-gtp`, standing in for the EasyMesh gateway side. It
+carries:
+- a pod-backhaul SSID and the GRE termination point (option 2);
+- a hostapd Multi-AP backhaul BSS (option 1).
+
+`lab.sh uplink POD gtp|multi-ap|restore|show` moves a pod's uplink.
+
+Option 1 needs a pod image built by opensync-lab `d1dc985` or later, which
+applies the platform patch for the Multi-AP link state.
+
+```sh
+# in opensync-lab: build the image and relaunch a pod from it
+./build-pod.sh sources && ./build-pod.sh build && ./build-pod.sh image
+MVX_VM=emosa-osl-0923 MVX_POD_IMAGE=$HOME/yocto/mvx-pod-work/out/mvx-pod-<stamp> ./deploy-mvx.sh pod pod-6
+# in emosa-lab
+deploy/opensync-lab/lab.sh release pod-6 && deploy/opensync-lab/lab.sh admit pod-6
+deploy/opensync-lab/lab.sh uplink pod-6 multi-ap
+```
+
+The design and the results are in
+[the data plane document](../../doc/architecture/data-plane.md).
+
 ## Artifacts
 
 `.cache/opensync-lab-artifacts` (not in git), checked against

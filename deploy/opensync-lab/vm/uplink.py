@@ -5,9 +5,10 @@ Inside the lab VM (root): python3 uplink.py POD MODE [--ssid S --key K ...]
 
   gtp        option 2: bhaul-sta-24 joins the pod-backhaul SSID (served by em-gtp)
              with a gre credential; the pod's cm builds its GRE to the GTP (.1)
-  multi-ap   option 1: bhaul-sta-24 joins the EasyMesh backhaul BSS (em-ctl) with a
-             multi_ap credential; the gre credential for the pod-backhaul SSID stays
-             as a lower-priority fallback
+  multi-ap   option 1: bhaul-sta-24 joins the Multi-AP backhaul BSS (em-gtp's
+             emosa-lab-bh) with a sole multi_ap credential. --fallback adds the gre
+             credential for the pod-backhaul SSID at a lower priority (an experiment:
+             osw aborts owm when it stays on the lower-priority network)
   restore    back to the lab's original uplink: bhaul-sta-50 to mv3, bhaul-sta-24 off
   show       the pod's backhaul stations, credentials and uplink as it reports them
 
@@ -163,14 +164,14 @@ def main():
     ap.add_argument("--podbh-key", default="EmosaPodBh2026!")
     ap.add_argument("--bh-ssid", default="emosa-lab-bh")
     ap.add_argument("--bh-key", default="EmosaLabBh2026!")
+    ap.add_argument("--fallback", action="store_true", help="multi-ap: also the gre credential")
     args = ap.parse_args()
     gre = credential(args.podbh_ssid, args.podbh_key, "gre", 1)
     if args.mode == "gtp":
         apply(args.pod, [gre], use_station=True)
     elif args.mode == "multi-ap":
-        apply(
-            args.pod, [credential(args.bh_ssid, args.bh_key, "multi_ap", 2), gre], use_station=True
-        )
+        creds = [credential(args.bh_ssid, args.bh_key, "multi_ap", 2)]
+        apply(args.pod, creds + ([gre] if args.fallback else []), use_station=True)
     elif args.mode == "restore":
         apply(args.pod, [], use_station=False)
     json.dump(show(args.pod), sys.stdout, indent=1)

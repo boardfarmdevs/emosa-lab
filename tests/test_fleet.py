@@ -94,8 +94,13 @@ def test_every_pod_gets_its_own_agent_and_is_handed_to_its_port(tmp_path):
     fleet._call = Pod("POD2")
     fleet.handle(None, "peer")
     assert started[-1] == ("POD2", True)
-    fleet.forget("POD2")
+    (tmp_path / "state" / "POD2" / "journal").mkdir(parents=True)
+    released = fleet.forget("POD2")
     assert started[-1] == ("POD2", "stopped") and not (tmp_path / "etc/POD2.json").exists()
+    # the old ownership period is archived, not reused by a re-admitted pod
+    assert not (tmp_path / "state" / "POD2").exists()
+    assert "POD2.released-" in released["archived_state"]
+    assert list((tmp_path / "state").glob("POD2.released-*/journal"))
 
 
 @pytest.mark.unit

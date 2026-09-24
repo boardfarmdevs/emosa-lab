@@ -295,10 +295,19 @@ class Fleet:
             pstream.close()
 
     def forget(self, serial):
+        """Release a pod: stop its agent, drop its entry and configuration, and
+        archive its state. A pod handed over again starts a new ownership period;
+        conflicts recorded in the old one (someone else changed the pod after the
+        release) must not block it. The archive keeps the history."""
         entry = self.registry.forget(serial)
         if entry is not None:
             self.stopper(entry["pod_id"])
             (self.config_dir / f"{entry['pod_id']}.json").unlink(missing_ok=True)
+            state = Path(self.config["state_root"]) / entry["pod_id"]
+            if state.is_dir():
+                archive = state.with_name(f"{state.name}.released-{time.strftime('%Y%m%dT%H%M%S')}")
+                state.rename(archive)
+                entry["archived_state"] = str(archive)
         return entry
 
 

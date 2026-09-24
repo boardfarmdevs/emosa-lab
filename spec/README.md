@@ -261,8 +261,10 @@ For each connection on the front port, the fleet:
 5. writes `manager_addr` and ends the session.
 
 The whole exchange MUST complete within 5 s. A pod returning later gets the
-same entry. `forget SERIAL` stops the agent and deletes the entry and the
-configuration, but keeps the agent's state directory.
+same entry. `forget SERIAL` stops the agent, deletes the entry and the
+configuration, and archives the agent's state directory. A pod handed over
+again starts a new ownership period, so conflicts recorded before its release
+don't block it.
 
 ## 5. Operations
 
@@ -388,8 +390,8 @@ The agent keeps reporting a declared Ethernet attachment.
 **EasyMesh backhaul, optional:** only for pods whose platform qualifies (data
 plane document §7). A pod qualifies only if its platform reports
 `multi_ap=backhaul_sta` in `Wifi_VIF_State` for a Multi-AP link. OpenSync
-6.6's cfg80211 platform does so for MediaTek drivers only, which excludes
-hwsim. The agent writes the controller's backhaul SSID and passphrase with
+6.6's cfg80211 platform does so for MediaTek drivers only; opensync-lab's pod
+image patches it for every driver (`d1dc985`). The agent writes the controller's backhaul SSID and passphrase with
 `multi_ap=backhaul_sta` on the pod's backhaul station. OpenSync then joins as a
 4-address Multi-AP backhaul station bridged into `br-home`, without GRE.
 EMOSA MUST NOT rely on a lower-priority `gre` credential as the fallback: osw
