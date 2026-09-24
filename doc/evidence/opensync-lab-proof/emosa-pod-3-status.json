@@ -1,0 +1,247 @@
+{
+  "agent_al": "02:00:00:5e:00:03",
+  "controller_al": "02:00:00:e0:00:01",
+  "operations": [
+    {
+      "application_evidence": {
+        "fresh": true,
+        "generation": 1,
+        "predicate_satisfied": true,
+        "provenance": "opensync-owm:Wifi_VIF_State",
+        "received_at": "2026-09-24T01:44:47.213Z",
+        "revision": 5,
+        "source": "ovsdb"
+      },
+      "attempts": 1,
+      "operation_id": "c6bc2b2e-c506-4501-ad76-fa06f5986e61",
+      "reason": null,
+      "ssid": "emosa-mesh",
+      "state": "OBSERVED_APPLIED"
+    },
+    {
+      "application_evidence": null,
+      "attempts": 0,
+      "operation_id": "f1765749-77ce-4d78-9654-fb139b16f903",
+      "reason": "NOT_READY",
+      "ssid": "emosa-mesh",
+      "state": "REJECTED"
+    },
+    {
+      "application_evidence": {
+        "fresh": true,
+        "generation": 1,
+        "predicate_satisfied": true,
+        "provenance": "opensync-owm:Wifi_VIF_State",
+        "received_at": "2026-09-24T02:11:18.495Z",
+        "revision": 4,
+        "source": "ovsdb"
+      },
+      "attempts": 1,
+      "operation_id": "d15aeb5a-17f0-498e-8823-4b792b0b44ca",
+      "reason": null,
+      "ssid": "emosa-mesh",
+      "state": "OBSERVED_APPLIED"
+    },
+    {
+      "application_evidence": {
+        "fresh": true,
+        "generation": 1,
+        "predicate_satisfied": true,
+        "provenance": "opensync-owm:Wifi_VIF_State",
+        "received_at": "2026-09-24T02:12:34.991Z",
+        "revision": 10,
+        "source": "ovsdb"
+      },
+      "attempts": 1,
+      "operation_id": "68072dc4-d95c-46d9-8fca-3df13d5764ee",
+      "reason": null,
+      "ssid": "emosa-mesh-2",
+      "state": "OBSERVED_APPLIED"
+    },
+    {
+      "application_evidence": {
+        "fresh": true,
+        "generation": 1,
+        "predicate_satisfied": true,
+        "provenance": "opensync-owm:Wifi_VIF_State",
+        "received_at": "2026-09-24T02:13:26.791Z",
+        "revision": 12,
+        "source": "ovsdb"
+      },
+      "attempts": 1,
+      "operation_id": "498ad2b5-16c1-4612-9b07-de39c7d86d6a",
+      "reason": null,
+      "ssid": "emosa-mesh",
+      "state": "OBSERVED_APPLIED"
+    }
+  ],
+  "pod": {
+    "bssid": "82:00:00:00:08:00",
+    "channel": 6,
+    "firmware": "6.6.1.0-0-g1dad64-mods-mvx-local",
+    "node_id": "MVXPOD02288DCB5DCC",
+    "ovsdb_generation": 1,
+    "ovsdb_revision": 14,
+    "radio": "phy8",
+    "ruid": "02:00:00:00:08:00",
+    "serial": "MVXPOD02288DCB5DCC",
+    "ssid": "emosa-mesh",
+    "stations": [
+      "02:00:00:00:0d:00",
+      "02:00:00:00:0e:00"
+    ]
+  },
+  "pod_id": "pod-3",
+  "profile": "opensync-lab-hwsim-6.6.1-v1",
+  "report_source_available": true,
+  "session": {
+    "admission_issues": [],
+    "ap_metrics": {
+      "counts": {},
+      "measurement_available": false
+    },
+    "channels": null,
+    "counts": {
+      "ap_capability_report_sent": 1,
+      "client_capability_unavailable_report": 2,
+      "client_join_notification": 2,
+      "early_then_m1_sent": 1,
+      "neighbor_measurement_unavailable": 1,
+      "observed_topology_notification": 2,
+      "rejected_INVALID_INPUT": 13,
+      "search_sent": 1,
+      "unsupported_message_0001": 2,
+      "unsupported_message_8003": 1,
+      "unsupported_message_8004": 1,
+      "unsupported_message_8006": 4,
+      "wsc_operation": 1
+    },
+    "disassociations": {
+      "counts": {},
+      "pending": 0
+    },
+    "events": [
+      "search_sent",
+      "rejected_INVALID_INPUT",
+      "rejected_INVALID_INPUT",
+      "early_then_m1_sent",
+      "observed_topology_notification",
+      "rejected_INVALID_INPUT",
+      "rejected_INVALID_INPUT",
+      "wsc_operation",
+      "unsupported_message_8006",
+      "rejected_INVALID_INPUT",
+      "observed_topology_notification",
+      "unsupported_message_8006",
+      "rejected_INVALID_INPUT",
+      "rejected_INVALID_INPUT",
+      "unsupported_message_0001",
+      "unsupported_message_8003",
+      "unsupported_message_8006",
+      "unsupported_message_8004",
+      "ap_capability_report_sent",
+      "unsupported_message_8006",
+      "rejected_INVALID_INPUT",
+      "rejected_INVALID_INPUT",
+      "rejected_INVALID_INPUT",
+      "rejected_INVALID_INPUT",
+      "client_join_notification",
+      "client_join_notification",
+      "client_capability_unavailable_report",
+      "client_capability_unavailable_report",
+      "rejected_INVALID_INPUT",
+      "unsupported_message_0001",
+      "rejected_INVALID_INPUT",
+      "neighbor_measurement_unavailable"
+    ],
+    "full_profile_qualified": false,
+    "neighbor_link_metrics": {
+      "counts": {
+        "measurement_unavailable": 1,
+        "waiting_query_withdrawn": 1
+      },
+      "measurement_available": false
+    },
+    "physical_pod_proven": false,
+    "recovery": {
+      "attempts_started": 3,
+      "history": [
+        {
+          "at": 6495.127674136,
+          "attempt": 1,
+          "event": "attempt_started"
+        },
+        {
+          "at": 6571.658552345,
+          "attempt": 1,
+          "event": "renew"
+        },
+        {
+          "at": 6571.670172284,
+          "attempt": 2,
+          "event": "attempt_started"
+        },
+        {
+          "at": 6623.497337197,
+          "attempt": 2,
+          "event": "renew"
+        },
+        {
+          "at": 6623.503818395,
+          "attempt": 3,
+          "event": "attempt_started"
+        }
+      ],
+      "next_start": 0
+    },
+    "reporting_policy": null,
+    "reports": {
+      "counts": {
+        "early_sent": 1,
+        "early_source_invalidated": 1,
+        "topology_response_sent": 3
+      },
+      "early_pending": false,
+      "events": [
+        {
+          "event": "early_sent",
+          "mid": 10161
+        },
+        {
+          "event": "early_source_invalidated"
+        },
+        {
+          "event": "topology_response_sent",
+          "mid": 781
+        },
+        {
+          "event": "topology_response_sent",
+          "mid": 792
+        },
+        {
+          "event": "topology_response_sent",
+          "mid": 800
+        }
+      ]
+    },
+    "scope": "owned_non_dpp_sole_radio_onboarding",
+    "state": "provisioning",
+    "wsc": {
+      "closed": false,
+      "counts": {
+        "operation": 1
+      },
+      "events": [
+        {
+          "mid": 778,
+          "operation_id": "498ad2b5-16c1-4612-9b07-de39c7d86d6a",
+          "state": "CONFIG_COMMITTED",
+          "status": "operation"
+        }
+      ]
+    }
+  },
+  "updated": 1790216076.1374702,
+  "worker_pid": 3003,
+  "writes": 3
+}

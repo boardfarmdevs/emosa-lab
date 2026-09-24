@@ -551,6 +551,20 @@ class OnboardingRecovery:
             return "recovery_waiting_for_fresh_source"
         return await self.session.receive(frame, ingress=ingress, generation=generation)
 
+    def renew(self):
+        """AP-Autoconfiguration Renew (EasyMesh 6.1 §7.1): the controller asks for M1 again.
+
+        The current attempt ends; the next tick starts a fresh one on the live
+        source (discovery, Early Report, new M1). No WSC transcript is reused.
+        """
+        if self.closed:
+            return
+        self.history.append({"event": "renew", "attempt": self.starts, "at": self.clock()})
+        if self.session:
+            self.session.close()
+            self.session = None
+        self.failures, self.next_start = 0, 0
+
     def close(self):
         if self.session:
             self.session.close()

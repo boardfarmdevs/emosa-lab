@@ -1,0 +1,6 @@
+{
+  "MVXPOD02288DCB5DCC": "tcp:10.101.0.1:6653",
+  "MVXPOD023F87E628DD": "tcp:10.101.0.1:6651",
+  "MVXPOD02D7777EF0D9": "tcp:10.101.0.1:6652"
+}
+mv3          controller 10.101.0.20:53170      tables=27  /var/lib/local-noc/sessions/mv3/20260924T013121Z-controller-10.101.0.20_53170.jsonl

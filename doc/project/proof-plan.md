@@ -1,7 +1,40 @@
 # Proof plan: an EasyMesh controller onboards OpenSync pods through EMOSA
 
-Branch `claude/0923-clean`, proposed 2026-09-23. This is a plan for review, not a
-record of results. Nothing below has been executed.
+Branch `claude/0923-clean`, proposed 2026-09-23.
+
+## Status, 2026-09-24
+
+**Proof v1 holds on the hwsim lab**
+([run record](../evidence/opensync-lab-proof/README.md)):
+- A prplMesh controller (EMOSA's candidate with its two patches) onboarded three
+  unchanged OpenSync 6.6.1.0 pods as EasyMesh agents through EMOSA.
+- The fronthaul came only from its M2, and each pod's own `owm` applied it.
+- Six clients reached the internet.
+- It held through an EMOSA restart, a pod restart (cold start) and a policy change.
+
+| Milestone | Status |
+| --- | --- |
+| M0 baseline | New lab VM from opensync-lab `claude/emosa-hooks` and the current pod image; the old frozen baseline is not used |
+| M1 read-only | Profile `opensync-lab-hwsim-6.6.1-v1` from the pod's source and live State (`src/emosa/opensync/pod_profile.py`) |
+| M2 handover | Done: local-noc redirect ends the session, the pod's `cm` dials EMOSA; GRE stays with local-noc |
+| M3 application | Done inside M4: guarded update, PSK slot replaced, State-confirmed, wrong key refused |
+| M4 warm onboarding | Done: pod-1, controller DataElements + UI, client with internet |
+| M5 three pods | Done: 3 virtual agents, 6 clients, policy change converges on all pods |
+| M6 cold start | Done for "pod container restart": M2 creates the missing fronthaul; other cold definitions not run |
+| M7 recovery | Partial: EMOSA restart, pod restart, policy change; no 900 s workload, relay cut or backhaul-loss case yet |
+| M8 reporting | Not started (no AP/STA metrics, no Operating Channel Report: pods show channel 0) |
+| M9 | Not started |
+
+Deviations from this plan, found by running it:
+- `cm` ignores a new `manager_addr` while connected, so local-noc also ends
+  the session (O1).
+- Clients need `MVX_CLIENT_SSID/PSK`, because opensync-lab's `vm.env`
+  overrides the environment.
+- The agent must handle AP-Autoconfiguration Renew, or a policy change is never
+  picked up.
+- A cold pod needs M2-driven VIF creation (M6 moved into Proof v1).
+
+The plan below is unchanged from its review version.
 
 ## 1. The claim and what the proof looks like
 

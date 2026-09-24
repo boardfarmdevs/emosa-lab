@@ -1,0 +1,9 @@
+#!/bin/bash
+# emosa-agent-link POD: the virtual agent's own 1905 interface, a macvlan on the
+# EasyMesh LAN trunk (emlan) whose MAC is the agent's AL MAC (/etc/emosa/POD.json).
+set -euo pipefail
+read -r ifname al < <(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])); print(c["interface"], c["al_mac"])' "/etc/emosa/$1.json")
+ip link show "$ifname" >/dev/null 2>&1 || ip link add "$ifname" link emlan type macvlan mode bridge
+ip link set "$ifname" address "$al"
+ip link set emlan up
+ip link set "$ifname" up

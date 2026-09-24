@@ -52,7 +52,7 @@ class WscComponentBridge:
         backend = engine.backends.get(target.pod_id)
         if (
             backend is None
-            or backend.mode not in ("model", "ovsdb-sim")
+            or backend.mode not in ("model", "ovsdb-sim", "opensync-6.6-hwsim")
             or exchange.basic.ruid != target.ruid
             or exchange.basic.max_bss != 1
         ):
