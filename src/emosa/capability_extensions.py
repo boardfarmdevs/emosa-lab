@@ -16,8 +16,8 @@ from emosa.easymesh_payloads import (
     encode_value,
 )
 from emosa.errors import EmosaError
-from emosa.evaluation.payloads import describe
 from emosa.he_mcs import HEMCSPair, HESupportedMCS
+from emosa.payload_description import describe
 
 WIFI6_BEAMFORMING_BITS = {
     "su_beamformer": 7,
