@@ -366,7 +366,17 @@ OpenSync's 3-address backhaul station and gretap. The GTP:
   1538 (1600 in the reference);
 - MUST create one gretap per associated pod lease (MTU 1562), bridged to the
   gateway LAN, and remove it when the lease or association ends;
-- MUST NOT bridge the underlay segment itself into the LAN.
+- MUST NOT bridge the underlay segment itself into the LAN;
+- MUST answer ICMP echo on `.1`: OpenSync 6.6 `cm`'s link check pings it,
+  without an ARP fallback.
+
+OpenSync restarts a pod to its bootstrap uplink after 8 consecutive failed
+router checks (`CM2_STABILITY_THRESH_FATAL`), which is roughly half a minute
+while failing. So:
+- the gateway LAN's router MUST answer ICMP echo or ARP from pods;
+- an uplink change MUST restore router reachability within that time;
+- in an RDK or prpl deployment, the pods' bootstrap credentials MUST name
+  the pod-backhaul SSID, so that every restart lands a pod on the GTP path.
 
 The gateway provides:
 - a fronthaul-type pod-backhaul SSID on the underlay segment, because a
@@ -376,14 +386,18 @@ The gateway provides:
 The agent keeps reporting a declared Ethernet attachment.
 
 **EasyMesh backhaul, optional:** only for pods whose platform qualifies (data
-plane document §7). The agent adds a `Wifi_Credential_Config` entry with
-`onboard_type=multi_ap` (the controller's backhaul SSID and passphrase) at a
-higher priority than the existing `gre` entry, and clears the station's own
-`ssid`. OpenSync then joins as a 4-address Multi-AP backhaul station bridged
-into `br-home`, without GRE. The switch is one guarded operation that
+plane document §7). A pod qualifies only if its platform reports
+`multi_ap=backhaul_sta` in `Wifi_VIF_State` for a Multi-AP link. OpenSync
+6.6's cfg80211 platform does so for MediaTek drivers only, which excludes
+hwsim. The agent writes the controller's backhaul SSID and passphrase with
+`multi_ap=backhaul_sta` on the pod's backhaul station. OpenSync then joins as a
+4-address Multi-AP backhaul station bridged into `br-home`, without GRE.
+EMOSA MUST NOT rely on a lower-priority `gre` credential as the fallback: osw
+aborts `owm` when it stays on a lower-priority network. The fallback is the
+pod's restart to its bootstrap (GTP) path. The switch is one guarded operation that
 counts as applied only when the pod is back with the new uplink in its State.
-The pod MUST fall back to the GTP path if it does not come back, and EMOSA
-MUST NOT retry on its own.
+If the pod doesn't come back, it returns to the GTP path by its own restart,
+and EMOSA MUST NOT retry on its own.
 
 ## 9. Not covered yet
 

@@ -96,13 +96,13 @@ class Links:
         return [m.group(1) for m in re.finditer(r"^\d+: ([^:@\s]+)", out, re.M)]
 
     def gretaps(self):
-        """Our tunnels: name -> (local, remote)."""
+        """Our tunnels: name -> (local, remote, pinned underlay device or None)."""
         out = self.run("-d", "-o", "link", "show", "type", "gretap", check=False)
         tunnels = {}
         for line in out.splitlines():
-            m = re.match(r"\d+: (gtp\d+_\d+)[@:].* remote (\S+) local (\S+)", line)
+            m = re.match(r"\d+: (gtp\d+_\d+)[@:].* remote (\S+) local (\S+)(?: dev (\S+))?", line)
             if m:
-                tunnels[m.group(1)] = (m.group(3), m.group(2))
+                tunnels[m.group(1)] = (m.group(3), m.group(2), m.group(4))
         return tunnels
 
 
@@ -180,13 +180,14 @@ class GTP:
     def ensure(self, ip):
         name = tunnel_name(ip)
         current = self.links.gretaps().get(name)
-        if current == (self.local, ip):
+        # Tunnels are routed by address, not pinned to the underlay device: an AP that
+        # recreates its bridge (hostapd does on restart) must not leave a dead tunnel.
+        if current == (self.local, ip, None):
             return name
         if current is not None:
             self.links.run("link", "del", name)
         run = self.links.run
-        run("link", "add", name, "type", "gretap", "local", self.local, "remote", ip,
-            "dev", self.underlay)  # fmt: skip
+        run("link", "add", name, "type", "gretap", "local", self.local, "remote", ip)
         run("link", "set", name, "mtu", str(self.config["tunnel_mtu"]))
         run("link", "set", name, "master", self.bridge, "up")
         log.info("tunnel %s: %s -> %s in %s", name, self.local, ip, self.bridge)
@@ -212,7 +213,7 @@ class GTP:
 
     def reconcile(self):
         wanted = set(self.leases())
-        for name, (_, remote) in self.links.gretaps().items():
+        for name, (_, remote, _) in self.links.gretaps().items():
             if remote not in wanted:
                 self.links.run("link", "del", name)
         for ip in sorted(wanted):
@@ -223,7 +224,7 @@ class GTP:
         leases = self.leases()
         return {
             name: {"remote": remote, "mac": leases.get(remote)}
-            for name, (_, remote) in sorted(self.links.gretaps().items())
+            for name, (_, remote, _) in sorted(self.links.gretaps().items())
         }
 
 

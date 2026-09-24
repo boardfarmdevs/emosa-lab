@@ -38,8 +38,10 @@ class FakeIp:
             return f"{args[4]} UP\n" if args[4] in self.links else ""
         if args[:5] == ("-d", "-o", "link", "show", "type"):
             return "".join(
-                f"7: {n}@podbh: <UP> mtu 1562 \\    gretap"
-                f" remote {v['remote']} local {v['local']} dev podbh\n"
+                f"7: {n}@NONE: <UP> mtu 1562 \\    gretap"
+                f" remote {v['remote']} local {v['local']}"
+                + (f" dev {v['dev']}" if v.get("dev") else "")
+                + " ttl inherit\n"
                 for n, v in self.links.items()
                 if v.get("type") == "gretap"
             )
@@ -130,6 +132,15 @@ def test_one_gretap_per_lease_into_the_lan_bridge(tmp_path):
     assert "gtp2_57" not in fake.links
     with pytest.raises(ConfigError):
         gateway.lease("add", "02:00:00:00:05:00", "169.254.1.57")  # not our underlay
+
+
+def test_a_tunnel_pinned_to_a_vanished_underlay_is_rebuilt(tmp_path):
+    gateway, fake = gtp(tmp_path)
+    stale = {"type": "gretap", "local": "169.254.2.1", "remote": "169.254.2.57", "dev": "if31"}
+    fake.links["gtp2_57"] = dict(stale)
+    gateway.ensure("169.254.2.57")
+    assert fake.links["gtp2_57"].get("dev") is None and fake.links["gtp2_57"]["master"] == "br-gtp"
+    assert ("link", "del", "gtp2_57") in fake.calls
 
 
 def test_reconcile_makes_the_tunnels_exactly_the_leases(tmp_path):

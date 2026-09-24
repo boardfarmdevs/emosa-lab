@@ -86,7 +86,29 @@ by EMOSA.
    `10.101.0.1:665x`) runs inside the tunnel, through mv3's NAT. **If the
    tunnel is down, the pod cannot reach EMOSA.**
 
-### 2.2 MTU
+### 2.2 OpenSync's safety net: stability checks and the bootstrap restart
+
+The pod's `cm` checks its uplink (`cm2_stability.c`, `target_kconfig.c`):
+- every 40 s when healthy (`CM2_STABILITY_INTERVAL`), and every few seconds
+  while failing;
+- **link check:** for a GRE uplink, `cm` pings the tunnel's remote address
+  (the gateway end, `.1`) through the backhaul station. There is no ARP
+  fallback: an end that doesn't answer ICMP echo is a dead link;
+- **router check:** `cm` pings the default router through `br-home`, and falls
+  back to arping.
+
+After 8 consecutive router failures (`CM2_STABILITY_THRESH_FATAL=8`) `cm`
+logs "Restart managers due to exceeding the threshold for fatal failures" and
+restarts OpenSync. The database is rebuilt from the pod's bootstrap, so every
+cloud-written change is gone, and the pod rejoins its bootstrap uplink with
+its built-in credentials. The lab saw this three times (§4.7, §7).
+
+**This restart is the pod's real safety net.** Whatever an uplink change does,
+a pod that loses its router for roughly half a minute returns to its bootstrap
+path by itself. It then reconnects to its cloud, and through the redirector to
+EMOSA's fleet.
+
+### 2.3 MTU
 
 | Hop | MTU | Set by |
 | --- | --- | --- |
@@ -99,7 +121,7 @@ A full 1500-byte client frame becomes a 1538-byte underlay packet, which fits
 in 1600. Nothing is fragmented, and clients keep a standard 1500 MTU. This
 depends on the backhaul Wi-Fi link carrying frames above 1500 bytes.
 
-### 2.3 What EMOSA does and does not touch
+### 2.4 What EMOSA does and does not touch
 
 - **Changed by the handover:** only the pod's `AWLAN_Node.manager_addr`.
   local-noc keeps managing mv3, including every `pgd` tunnel, and stops writing
@@ -111,7 +133,7 @@ depends on the backhaul Wi-Fi link carrying frames above 1500 bytes.
   with the controller as its 1905 neighbour. The Wi-Fi uplink and the tunnel
   are not reported.
 
-### 2.4 Observed behaviour
+### 2.5 Observed behaviour
 
 - **Clients** get mv3's DHCP and reach the internet (the client check reports
   "served across the GRE backhaul").
@@ -245,6 +267,7 @@ unaffected, because EMOSA's agents re-onboard over 1905 as they do today.
 | --- | --- |
 | Backhaul BSS rejects 3-address stations | The pod-backhaul SSID must be a fronthaul-type BSS. Both prplMesh and RDK can add SSIDs. |
 | Underlay and client LAN on one subnet | The pod would have `bhaul-sta` and `br-home` in the same subnet, and the route to `.1` would be ambiguous. **Not allowed** (D6). A separate segment and subnet are required, either through Traffic Separation or a local bridge on the gateway. |
+| ICMP | The GTP MUST answer ICMP echo on `.1`: `cm`'s link check pings it without an ARP fallback (§2.2). The gateway LAN's router MUST answer ICMP echo or ARP from pods (router check). |
 | The `.1` and link-local rules | The underlay MUST be a `169.254.0.0/16` subnet, and the GTP MUST be its `.1`. This is what OpenSync 6.6 `cm` requires (§2.1). A gateway that uses `.1` on that segment for itself can only do 2a. |
 | Controller treats pod stations as clients | The gateway's own agent reports each pod's `bhaul-sta` as an associated client of the pod-backhaul SSID. The controller may try to steer it (BTM or disassociation) or show it as a client. The operator MUST add those MACs to the Multi-AP Policy's steering-disallowed lists. EMOSA knows them from each pod's `Wifi_VIF_State` and lists them. |
 | Pod backhaul credentials | A pod joins only SSIDs in its `Wifi_Credential_Config`. Either the pod-backhaul SSID matches them, or EMOSA writes one entry, which is a change to the pod's uplink configuration and done once. |
@@ -260,6 +283,53 @@ unaffected, because EMOSA's agents re-onboard over 1905 as they do today.
 - The pod's backhaul station appears as an ordinary client of the gateway,
   which is true.
 - EMOSA MUST NOT claim a Wi-Fi backhaul link to the controller in this option.
+
+### 4.7 In the lab
+
+`lab.sh gtp` builds `em-gtp`, standing in for the EasyMesh gateway side:
+- a hwsim radio serves the pod-backhaul SSID `emosa-podbh` (2.4 GHz channel 6)
+  into the underlay bridge `podbh`;
+- the GTP from the adapter kit (`emosa-gtp`) holds `169.254.2.1/25`;
+- `br-gtp` has a LAN leg on mv3's LAN port bridge (`lan-p4`), which stands in
+  for the EasyMesh gateway's LAN.
+
+`lab.sh uplink POD gtp` moves a pod's uplink to its 2.4 GHz backhaul station
+in credential-list mode.
+
+**Results:**
+- **Switch:** pod-3 moved from mv3's GRE to the GTP with OpenSync's
+  protection on. Within 30 s it leased `169.254.2.53`, its `cm` built the
+  GRE to `.1`, and the GTP built `gtp2_53` into `br-gtp`. `br-home` kept its
+  LAN address, the fronthaul and both clients stayed up, and OpenSync did not
+  restart.
+- **Fault workload** `gtp-m7-01` (900 s, pod-3 on the GTP): passed, every check
+  true. The backhaul-loss fault took down `bhaul-sta-24` and recovered 25.7 s
+  after the link returned, against 25.9 s on mv3's path.
+
+  | Fault | Recovered after |
+  | --- | --- |
+  | client leave/join em-wc2 | 14.7 s |
+  | adapter restart (pod-1) | 4.7 s |
+  | OVSDB transport cut 20 s (pod-2) | 9.6 s |
+  | backhaul loss 30 s (pod-3, via the GTP) | 25.7 s |
+  | controller restart + policy re-entry | 1.9 s |
+  | client leave/join em-wc4 | 14.5 s |
+
+**Found and fixed on the way:**
+- **Lab: VLAN filtering.** The `lan-p*` bridges filter VLANs, and mv3's port
+  is an untagged access port in its own VLAN, so the GTP's LAN leg must join
+  that VLAN. Until it did, even ARP failed. `cm` then restarted pod-3 to its
+  bootstrap uplink, which is the safety net of §2.2 working as designed.
+- **GTP: tunnels pinned to a device.** hostapd deletes and recreates a bridge
+  it created itself whenever it restarts. Tunnels pinned to that bridge then
+  pointed at a vanished device. Now the GTP routes tunnels by address and
+  rebuilds any tunnel pinned elsewhere, and the lab creates both bridges before
+  hostapd starts.
+- **EMOSA: pods whose database is rebuilt.** An agent refused a pod after
+  OpenSync restarted on it (new row UUIDs, same serial and radio), until the
+  agent itself was restarted. The agent no longer compares with an earlier
+  exchange's anchor. After OpenSync restarts on the pod, the same agent
+  process now re-onboards it (verified twice, in about 2 minutes).
 
 ## 5. Option 1: switch the pod's uplink to an EasyMesh backhaul (optional)
 
@@ -282,17 +352,14 @@ GRE, no GTP and no pod-backhaul SSID.
      (flag `0x40`). Its SSID and key are the network's backhaul credentials.
    - Otherwise they come from the fleet configuration.
 2. **Uplink change.** EMOSA writes the pod's backhaul station through OVSDB,
-   as one guarded operation like any other (§5.3). OpenSync 6.6 expresses this
-   natively as a credential with `onboard_type=multi_ap` (§7):
-   - add a `Wifi_Credential_Config` entry (the backhaul SSID and passphrase,
-     `onboard_type=multi_ap`, a higher priority than the existing `gre`
-     entry), and link it from the station's `credential_configs`;
-   - clear the station's own `Wifi_VIF_Config.ssid`, so that `owm` builds
-     `wpa_supplicant` networks from the credential list instead.
+   as one guarded operation like any other (§5.3): the controller's backhaul
+   SSID and passphrase with `multi_ap=backhaul_sta`. This can be done either
+   on the station's `Wifi_VIF_Config`, or as a sole `Wifi_Credential_Config`
+   entry with `onboard_type=multi_ap`.
 
-   `wpa_supplicant` gets the Multi-AP entry as a network with
-   `multi_ap_backhaul_sta=1`, bridged into the LAN bridge (`br-home`). The
-   `gre` entry stays as a lower-priority fallback.
+   `wpa_supplicant` gets a network with `multi_ap_backhaul_sta=1`, bridged into
+   the LAN bridge (`br-home`). No lower-priority `gre` entry is kept, because
+   osw does not hold that fallback (§5.3, §7).
 3. **Link-up.** The station associates with the Multi-AP element (backhaul
    STA). The gateway's hostapd creates a 4-address per-station interface in
    its LAN bridge.
@@ -319,38 +386,47 @@ GRE, no GTP and no pod-backhaul SSID.
 | Party | Configures |
 | --- | --- |
 | EasyMesh controller or gateway | nothing beyond a normal backhaul BSS |
-| EMOSA agent | the uplink switch (credentials, Multi-AP backhaul STA, 4-address, bridge), keeping the option-2 credentials as fallback, and the truthful backhaul report |
-| GTP | none for this pod. It remains in place for the fallback. |
+| EMOSA agent | the uplink switch (credentials, Multi-AP backhaul STA, bridge), and the truthful backhaul report |
+| Pod bootstrap | credentials that lead to the option-2 path, so every restart lands the pod there (§5.3) |
+| GTP | none for this pod while it is on option 1. It is where the pod returns after any restart. |
 
 ### 5.3 Switching safely
 
-Switching the uplink moves the path EMOSA itself uses to reach the pod. A bad
-write strands the pod, and EMOSA cannot undo it from outside. So the switch:
+Switching the uplink moves the path EMOSA itself uses to reach the pod. EMOSA
+cannot undo a bad switch from outside, so the design relies on OpenSync's own
+safety net (§2.2): a pod whose new uplink gives it no router for about half a
+minute restarts to its bootstrap uplink.
 
+That leads to the key rule:
+
+**In an RDK or prpl deployment, the pods' bootstrap credentials MUST lead to
+the option-2 path**, meaning the pod-backhaul SSID and the GTP. Then every
+restart, planned or not, lands the pod on a working path, and EMOSA's fleet
+re-onboards it (§4.7). Option 1 is a runtime upgrade that EMOSA re-applies
+after each re-onboarding, for pods that qualify.
+
+The switch:
 1. starts only from a working option-2 path;
 2. first confirms that the gateway's backhaul BSS is up and advertising
-   Multi-AP. The gateway's own agent reports it, so EMOSA can check this in the
-   controller's configuration, or the operator states it;
-3. writes, in one guarded transaction:
-   - the `multi_ap` credential, at a higher priority than the existing `gre`
-     credential, which stays;
-   - the station's cleared `ssid` (§5.1);
+   Multi-AP;
+3. writes the new backhaul station configuration in one guarded transaction:
+   the controller's backhaul SSID and passphrase, with `multi_ap=backhaul_sta`;
 4. waits for the pod to come back on its agent port with the new uplink in its
-   State. That means `bhaul-sta` associated with `multi_ap=backhaul_sta` and
-   `wds=true` in `Wifi_VIF_State`, bridged into `br-home`, and no
-   `g-bhaul-sta-*`;
+   State. That means `multi_ap=backhaul_sta` and `wds=true` in
+   `Wifi_VIF_State`, bridged into `br-home`, `cm` using the station as its
+   uplink, and no `g-bhaul-sta-*`;
 5. counts as applied only then (the operation lifecycle, spec §5).
 
-If the Multi-AP network cannot be associated, `wpa_supplicant` falls back to
-the lower-priority `gre` credential by itself, and the pod returns over
-option 2 (§7, Q5). EMOSA then records the operation as `TIMED_OUT`, removes
-the `multi_ap` credential, marks the pod option-2-only, and never retries on
-its own.
+If the pod doesn't come back within the deadline, it has already restarted to
+option 2, or will. EMOSA records the operation as `TIMED_OUT`, marks the pod
+option-2-only, and never retries on its own.
 
-**Remaining risk:** the Multi-AP link associates but carries no data, for
-example because the gateway does not bridge the 4-address station. That does
-not trigger `wpa_supplicant`'s fallback. It must be excluded by the live test
-(§7, Q4) and by step 2 before any pod is switched.
+**Credential-list fallback is not the safety net.** OpenSync can hold a
+`multi_ap` credential above a `gre` one, and `wpa_supplicant` does connect to
+the `gre` network when the Multi-AP SSID is absent (§7, Q5). But osw treats
+"connected to the lower-priority network" as never settled, and aborts `owm`
+after 180 s. The pod was left without a working uplink until OpenSync
+restarted.
 
 ### 5.4 Performance
 
@@ -367,7 +443,7 @@ not trigger `wpa_supplicant`'s fallback. It must be excluded by the live test
 
 | Concern | Consequence, and how it is handled |
 | --- | --- |
-| OpenSync 6.6 support | In the source: the data model, `owm`/osw, `wpa_supplicant` and `cm` all support a Multi-AP backhaul station bridged into `br-home` without GRE (§7). Not yet shown live. |
+| OpenSync 6.6 support | The data path works live: a 4-address Multi-AP station, bridged into `br-home`, with no GRE (§7). But `cm` adopts it as the uplink only if the platform reports `multi_ap=backhaul_sta` in `Wifi_VIF_State`. The open-source cfg80211 platform does that only for MediaTek drivers (`mt76`, `mtk_wifi`), not for hwsim. |
 | Driver and platform | The pod's Wi-Fi driver and `wpa_supplicant` must support a 4-address STA with the Multi-AP element (`multi_ap_backhaul_sta`), and vendor platforms differ. mac80211 and `mac80211_hwsim` support 4-address. |
 | Gateway backhaul BSS | prplMesh and RDK both run standard hostapd Multi-AP backhaul BSSes. Profile-2 backhaul BSSes may expect a Multi-AP Profile subelement and an R2 primary VLAN (Traffic Separation). The station must match. |
 | 1905 source interface | The agent's 1905 frames come from EMOSA on the LAN while the pod's link is on the backhaul BSS. prplMesh and RDK tolerance of that is unknown. It must be tested; the fallback is to keep reporting the declared Ethernet attachment. |
@@ -381,7 +457,7 @@ not trigger `wpa_supplicant`'s fallback. It must be excluded by the live test
 | --- | --- | --- |
 | Pod changes | none, if the pod-backhaul SSID matches its credentials | uplink reconfiguration through OVSDB |
 | Gateway changes | a pod-backhaul SSID on its own segment, and a GTP (on or next to it) | none |
-| Works with unchanged OpenSync 6.6 | yes: today's path, with the GTP in place of local-noc | yes in the source, as native Multi-AP onboarding. Live test pending (§7). |
+| Works with unchanged OpenSync 6.6 | yes: shown in the lab, including the fault workload (§4.7) | data path yes. Uplink adoption needs platform support for reporting the Multi-AP link state: MediaTek platforms yes, hwsim no (§7). |
 | Client MTU | 1500, if the underlay allows at least 1538 | 1500 native |
 | Overhead | 38 bytes per frame, software GRE | none |
 | Controller's view of the uplink | declared (Ethernet), plus the pod's station as a client | truthful Wi-Fi backhaul, once translated |
@@ -396,33 +472,34 @@ Investigated in the OpenSync 6.6.1.0 source the lab pods are built from
 pod, without changing it.
 
 **Verdict:** OpenSync 6.6.1.0 supports a Multi-AP backhaul station natively,
-under the name "Multi-AP onboarding". This holds for the data model, the Wi-Fi
-stack and the connection manager. Two things remain before a pod is switched:
-- a live test in the lab (Q4);
-- a check that a Multi-AP link that associates but carries no data is caught
-  (Q5).
+under the name "Multi-AP onboarding", and **its data path works live**. The
+open-source cfg80211 platform, however, reports the Multi-AP link state only
+for MediaTek drivers. On the lab's hwsim radios `cm` therefore never adopts
+the working link as its uplink, and OpenSync restarts to its bootstrap after
+about 2 minutes. On MediaTek-based pods the code path is present. Other
+vendor platforms must be checked one by one.
 
 | # | Question | Answer | Evidence |
 | --- | --- | --- | --- |
 | Q1 | Can OVSDB express it? | **Yes.** | `Wifi_VIF_Config` and `Wifi_VIF_State` have `multi_ap` (`none`, `backhaul_sta`, `backhaul_bss`, `fronthaul_bss`, `fronthaul_backhaul_bss`), `wds`, `parent` and `bridge`. `Wifi_Credential_Config.onboard_type` is `gre` or `multi_ap` (`schema_consts.h`). |
 | Q2 | Do `owm`/osw and the platform implement it? | **Yes, in configuration.** | `owm` maps `multi_ap=backhaul_sta`, or a `multi_ap` credential, to a station network with `multi_ap=true` and bridge `br-home` (`ow_ovsdb.c`, `ow_ovsdb_cconf.c`). osw writes `multi_ap_backhaul_sta=1` into `wpa_supplicant`'s network block (`osw_wpas_conf.c`) and passes the bridge to `wpa_supplicant`. After a Multi-AP backhaul association, `wpa_supplicant` itself switches the interface to 4-address mode. State reports `wds=true` and `multi_ap=backhaul_sta` while such a link is up. The pod's `wpa_supplicant` (v2.11-devel) contains `multi_ap_backhaul_sta`, and its hwsim radios support `AP/VLAN`. |
 | Q3 | Does `cm` skip the GRE and bridge the station? | **Yes.** | `cm2_util_is_wds_station` treats a station with `multi_ap=backhaul_sta` in State as a WDS station. It runs no DHCP on it and makes the station itself the bridged uplink in `Connection_Manager_Uplink` (`cm2_ovsdb.c`). `cm2_bh_gre` builds a tunnel only for a station with a link-local address, and a WDS station has none. |
-| Q4 | Does it work end to end in the lab? | **Not tested.** | The prplMesh gateway (`em-ctl`) has a backhaul BSS, `wlan0.0`, whose Multi-AP role is set at runtime. The test moves one pod's uplink away from the path EMOSA uses to reach it, so it needs a pod that may be lost, and an agreed recovery (reset the pod container). |
-| Q5 | Is there a fallback? | **Partly.** | With the station's `ssid` empty, `owm` builds one `wpa_supplicant` network per enabled credential, with its priority. `wpa_supplicant` falls back when the preferred network cannot be associated. Today's pods set `ssid` on the VIF (a single network, no fallback), so the switch must move them to the credential list (§5.1). A link that associates but carries no data is not covered. |
+| Q4 | Does it work end to end in the lab? | **The data path works; uplink adoption fails on hwsim.** | pod-6's `bhaul-sta-24` joined a hostapd Multi-AP backhaul BSS (`multi_ap=1`, `wds_sta=1`; `em-gtp`, `emosa-lab-bh`) in 29 s. The station ran in 4-address mode and was bridged into `br-home` with no GRE, and the pod and its client had internet. But `Wifi_VIF_State` said `multi_ap=none`, `wds=false`. `osw_plat_cfg80211` copies `multi_ap` into the link state only for known drivers, and hwsim is `drv_id: unknown`. So `cm` skipped the station as a legacy one, never selected an uplink, and OpenSync restarted to bootstrap after about 2 minutes. The prplMesh gateway's own agent doesn't configure its BSSes in this lab ("Not all BSSes from M2 configured by agent"), hence the hostapd stand-in. |
+| Q5 | Is there a fallback? | **Yes: OpenSync's restart to its bootstrap uplink.** | With a missing Multi-AP SSID above a working `gre` credential, `wpa_supplicant` connected to the `gre` network within 24 s, and the GTP path came up. But osw never considered that settled, and `owm` aborted 180 s later. What does recover every case is `cm`'s fatal restart (§2.2): the pod restarts and rejoins its bootstrap uplink. It was seen after a broken tunnel (about 40 s), after the hwsim uplink-adoption failure (about 2 minutes), and when forced with OpenSync's own `restart.sh`. |
 
 ## 8. Next steps
 
-1. **GTP (option 2) in the lab.**
-   - Build `emosa-gtp`: DHCP on the underlay, one gretap per lease, and a
-     bridge into a LAN.
-   - Move one pod from mv3's backhaul to a pod-backhaul SSID on the prplMesh
-     gateway (`em-ctl`), terminated by the GTP.
-   - Run the fault workload against it.
-2. **Spec.** The normative data plane section (spec §8) states D1 to D7 and the
-   GTP's contract: `.1`, DHCP option 26, one gretap per lease, and MTU 1562 on
-   the GTP side.
-3. **Option 1.** The source says OpenSync 6.6 supports it (§7). The next step
-   is the live test (Q4) on one expendable pod against the prplMesh backhaul
-   BSS. That covers the association, 4-address mode, bridging into `br-home`,
-   the absence of GRE, and falling back to the `gre` credential. Then comes
-   the staged switch (§5.3) as an EMOSA operation.
+1. **Option 2 is ready** for the RDK and prpl labs: the adapter kit ships
+   `emosa-gtp`. What the gateway side must provide is in spec §8 and §4.3.
+   Both of the following follow from §5.3:
+   - the pods' bootstrap credentials must name the pod-backhaul SSID;
+   - the gateway must answer ICMP echo or ARP.
+2. **Option 1 on hwsim** needs the platform to report the Multi-AP link state
+   for any driver. That is a small change in `osw_plat_cfg80211`: copy
+   `multi_ap` from the connected network even when `drv_id` is unknown. It
+   belongs in the pod build (opensync-lab), not in EMOSA, and needs your
+   decision. On MediaTek pods the path should work as it is, which needs a
+   physical pod to confirm.
+3. **The prplMesh gateway's own BSSes** are not configured in this lab. That's
+   a prplMesh lab issue, separate from EMOSA, and should be looked into before
+   testing option 1 against prplMesh itself.

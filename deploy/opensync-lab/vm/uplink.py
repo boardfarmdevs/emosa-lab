@@ -22,7 +22,7 @@ import subprocess
 import sys
 
 STATION, ORIGINAL = "bhaul-sta-24", "bhaul-sta-50"
-LAB_SSIDS = {"emosa-podbh", "emosa-mesh-bh"}  # credentials this script owns
+LAB_SSIDS = {"emosa-podbh", "emosa-lab-bh", "emosa-lab-bh-missing"}  # credentials this script owns
 LINKS = r"""
 for i in bhaul-sta-24 bhaul-sta-50; do
     echo "$i: $(iw dev $i link | head -2 | tr '\n' ' ')$(iw dev $i info | grep -o '4addr: on')"
@@ -161,8 +161,8 @@ def main():
     ap.add_argument("mode", choices=("gtp", "multi-ap", "restore", "show"))
     ap.add_argument("--podbh-ssid", default="emosa-podbh")
     ap.add_argument("--podbh-key", default="EmosaPodBh2026!")
-    ap.add_argument("--bh-ssid", default="emosa-mesh-bh")
-    ap.add_argument("--bh-key", default="EmosaMesh2026!")
+    ap.add_argument("--bh-ssid", default="emosa-lab-bh")
+    ap.add_argument("--bh-key", default="EmosaLabBh2026!")
     args = ap.parse_args()
     gre = credential(args.podbh_ssid, args.podbh_key, "gre", 1)
     if args.mode == "gtp":

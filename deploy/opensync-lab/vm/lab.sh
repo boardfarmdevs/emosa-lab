@@ -362,7 +362,35 @@ wpa=2
 wpa_key_mgmt=WPA-PSK
 rsn_pairwise=CCMP
 wpa_passphrase=${EMOSA_PODBH_KEY:-EmosaPodBh2026!}
+
+# an EasyMesh backhaul BSS (data plane option 1): hostapd's standard Multi-AP backhaul,
+# a 4-address station per backhaul STA, bridged into the LAN bridge (${EMOSA_MAP_BRIDGE:-br-gtp})
+bss=wlan0_1
+bridge=${EMOSA_MAP_BRIDGE:-br-gtp}
+ssid=${EMOSA_MAP_SSID:-emosa-lab-bh}
+multi_ap=1
+wds_sta=1
+wpa=2
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+wpa_passphrase=${EMOSA_MAP_KEY:-EmosaLabBh2026!}
 EOF
+    # The bridges exist before hostapd: a bridge hostapd creates is one it deletes when it
+    # restarts, taking the GTP's tunnels and LAN leg with it.
+    cx em-gtp sh -c 'cat > /etc/systemd/system/emosa-lab-bridges.service' <<'EOF'
+[Unit]
+Description=Lab bridges for em-gtp: podbh (underlay) and br-gtp (LAN), before hostapd
+Before=hostapd.service emosa-gtp.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'for b in podbh br-gtp; do ip link show $b >/dev/null 2>&1 || ip link add $b type bridge; ip link set $b up; done'
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    cx em-gtp sh -c 'systemctl daemon-reload; systemctl enable -q --now emosa-lab-bridges'
     cx em-gtp sh -ec 'grep -q "^DAEMON_CONF=" /etc/default/hostapd 2>/dev/null ||
             echo DAEMON_CONF=/etc/hostapd/hostapd.conf >> /etc/default/hostapd
         systemctl unmask hostapd >/dev/null 2>&1; systemctl enable -q hostapd; systemctl restart hostapd'
@@ -383,6 +411,7 @@ EOF
     sleep 2
     cx em-gtp systemctl is-active -q emosa-gtp || die "emosa-gtp did not start: $(cx em-gtp journalctl -u emosa-gtp -n 5 --no-pager)"
     log "em-gtp: pod-backhaul SSID ${EMOSA_PODBH_SSID:-emosa-podbh}, GTP 169.254.2.1 on podbh, tunnels into br-gtp ($lan)"
+    log "em-gtp: Multi-AP backhaul BSS ${EMOSA_MAP_SSID:-emosa-lab-bh} into ${EMOSA_MAP_BRIDGE:-br-gtp}"
 }
 
 uplink() {      # uplink POD gtp|multi-ap|restore|show

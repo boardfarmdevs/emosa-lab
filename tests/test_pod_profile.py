@@ -352,3 +352,17 @@ def test_the_pod_layout_is_profile_data(tmp_path):
     path.write_text(json.dumps(data))
     with pytest.raises(EmosaError):
         profiles.load(str(path))
+
+
+def test_a_pod_whose_database_was_rebuilt_is_the_same_pod(tmp_path):
+    """OpenSync restarts rebuild the database: new UUIDs, same serial and radio."""
+    pod, _ = backend(tmp_path)
+    first = asyncio.run(pod.context())
+    rebuilt = json.loads(
+        json.dumps(pod.session.tables)
+        .replace(NODE, "00000000-0000-4000-8000-0000000000a1")
+        .replace(RADIO, "00000000-0000-4000-8000-0000000000a2")
+    )
+    pod.session.tables = rebuilt
+    second = asyncio.run(pod.context())
+    assert second.binding_token != first.binding_token  # a new graph, accepted

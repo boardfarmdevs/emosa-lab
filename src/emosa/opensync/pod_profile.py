@@ -295,11 +295,10 @@ class PodBackend(OpenSyncBackend):
                 ).encode()
             ).hexdigest(),
         )
-        if self.anchor is not None and (
-            self.anchor.schema_fingerprint != anchor.schema_fingerprint
-            or self.anchor.binding_token != anchor.binding_token
-        ):
-            raise EmosaError(Reason.NOT_READY, "bound pod graph changed")
+        # No comparison with an earlier exchange's anchor: a pod whose OpenSync restarts
+        # rebuilds its database with new row UUIDs and is the same pod (same serial and
+        # radio). Within one exchange the WSC bridge compares every step with the anchor
+        # it started from, so an M2 is never applied to a changed graph.
         self.anchor = anchor
         return anchor
 
