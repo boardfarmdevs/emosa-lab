@@ -33,7 +33,7 @@ jobs:
           done
       - name: Reproduce selected synthetic AP reports
         run: |
-          uv run python -m emosa.simulation.ap_metrics /tmp/emosa-ap-vectors
+          uv run python -m emosa_lab.simulation.ap_metrics /tmp/emosa-ap-vectors
           cmp /tmp/emosa-ap-vectors/synthetic-ap-metrics.pcap doc/evidence/ap-reporting/vectors/synthetic-ap-metrics.pcap
   easymesh-reference:
     runs-on: ubuntu-24.04

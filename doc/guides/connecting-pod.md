@@ -72,7 +72,7 @@ name for each attempt. Retain failed attempts when comparing results.
 ## 2. Run the automated demonstration
 
 ```sh
-uv run python -m emosa.simulation.connecting_pod \
+uv run python -m emosa_lab.simulation.connecting_pod \
   --directory .lab/connecting-pod-01 --verify
 ```
 
@@ -111,7 +111,7 @@ Use three HOST terminals in the same checkout. These commands use the new path
 **Terminal A — start the simulated pod and independent manager:**
 
 ```sh
-uv run python -m emosa.simulation.connecting_pod \
+uv run python -m emosa_lab.simulation.connecting_pod \
   --directory .lab/connecting-pod-live-01
 ```
 

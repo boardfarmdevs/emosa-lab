@@ -17,13 +17,13 @@ from common import NODES, ROOT, guard, inside, run, write
 from run import CHANGED_KEY, clients, connect, eventually, require_idle, setup
 
 from emosa.config import load
-from emosa.evaluation.evidence import artifact, write_json
-from emosa.evaluation.service import AdapterProcess
 from emosa.opensync.session import OvsSession
 from emosa.secrets import SecretStore
-from emosa.simulation.connecting_pod import AL_MAC, SERIAL, configuration
-from emosa.simulation.database import SimDatabase
-from emosa.simulation.radio import MONITOR, seed_radio_database
+from emosa_lab.evaluation.evidence import artifact, write_json
+from emosa_lab.evaluation.service import AdapterProcess
+from emosa_lab.simulation.connecting_pod import AL_MAC, SERIAL, configuration
+from emosa_lab.simulation.database import SimDatabase
+from emosa_lab.simulation.radio import MONITOR, seed_radio_database
 
 PROVENANCE = "independent-hostapd-nl80211-manager:Wifi_VIF_State"
 

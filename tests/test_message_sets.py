@@ -1,15 +1,6 @@
 """EasyMesh 6.1 (default) versus R1 message sets for Profile-1 onboarding."""
 
 import pytest
-from test_autoconfiguration import (
-    RESPONSE,
-    assemble,
-    exchange,
-    fixed_entropy,  # noqa: F401 (fixture)
-    message,
-    receive,
-    search,
-)
 
 from emosa.errors import EmosaError
 from emosa.wire.autoconfiguration import (
@@ -21,6 +12,15 @@ from emosa.wire.autoconfiguration import (
 )
 from emosa.wire.cmdu import Tlv
 from emosa.wire.onboarding import non_dpp_admission
+from test_autoconfiguration import (
+    RESPONSE,
+    assemble,
+    exchange,
+    fixed_entropy,  # noqa: F401 (fixture)
+    message,
+    receive,
+    search,
+)
 
 pytestmark = pytest.mark.unit
 R1_RESPONSE = tuple(t for t in RESPONSE if t.kind != 0xB3)
@@ -86,8 +86,8 @@ def test_r1_ignores_the_controllers_profile_value_but_61_requires_the_echo():
 
 
 def test_r1_topology_response_has_no_profile_or_bss_configuration_report():
-    from emosa.simulation.wire_reports import fixtures
     from emosa.wire.reports import _topology
+    from emosa_lab.simulation.wire_reports import fixtures
 
     binding, _, facts = fixtures()
     assert {0xB3, 0xB7} <= {t.kind for t in _topology(facts, binding)}

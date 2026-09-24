@@ -3,11 +3,11 @@ from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
-from test_link_metrics import Rig
 
-from emosa.simulation.peer_metrics import PeerMetricPublisher
 from emosa.wire.link_metrics import LinkMetricCoordinator, decode_metrics
 from emosa.wire.topology_values import Neighbor, Neighbors1905
+from emosa_lab.simulation.peer_metrics import PeerMetricPublisher
+from test_link_metrics import Rig
 
 pytestmark = pytest.mark.unit
 

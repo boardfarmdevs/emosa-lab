@@ -20,19 +20,7 @@ from emosa.easymesh_payloads import (
     encode_value,
 )
 from emosa.errors import EmosaError
-from emosa.evaluation.payloads import inspect_value
-from emosa.simulation.wire_reports import (
-    AGENT,
-    BSSID,
-    CONTROLLER,
-    RUID,
-    SSID,
-    fixtures,
-    main,
-    query_frames,
-)
 from emosa.wire.cmdu import MidSequence, Reassembler, Tlv
-from emosa.wire.inspection import inspect_capture
 from emosa.wire.reports import ReportStamp, early_report, topology_response
 from emosa.wire.topology_values import (
     BridgingCapability,
@@ -44,6 +32,18 @@ from emosa.wire.topology_values import (
     decode_topology,
     encode_topology,
 )
+from emosa_lab.evaluation.payloads import inspect_value
+from emosa_lab.simulation.wire_reports import (
+    AGENT,
+    BSSID,
+    CONTROLLER,
+    RUID,
+    SSID,
+    fixtures,
+    main,
+    query_frames,
+)
+from emosa_lab.wire.inspection import inspect_capture
 
 pytestmark = pytest.mark.unit
 STAMP = ReportStamp("synthetic-pod-1/revision-1/inputs-1", 0, 2)

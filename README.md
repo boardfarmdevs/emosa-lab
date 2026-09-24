@@ -60,6 +60,16 @@ deploy/opensync-lab/lab.sh admit pod-1 pod-2 pod-3
 
 ## Develop
 
+The repository is a `uv` workspace with two packages:
+
+| Package | Where | What |
+| --- | --- | --- |
+| `emosa` | `src/emosa` | The adapter. Runtime dependencies: `ovs`, `cryptography`, `jsonschema`. Commands: `emosa-fleet`, `emosa-agent`. |
+| `emosa-lab` | `lab/src/emosa_lab` | Simulators, evaluation and experiment tooling. It depends on the adapter, never the other way round (`tests/test_adapter_boundary.py`). |
+
+`uv sync --frozen --no-dev` installs the adapter alone. A development sync
+installs both.
+
 ```sh
 uv sync --frozen
 uv run ruff check . && uv run ruff format --check .

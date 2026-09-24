@@ -269,7 +269,7 @@ identity. Qualification must bind those names to the intended actual resources.
 ### 2.4 Source map
 
 Read the [architecture overview](../architecture/overview.md) after this section.
-The actual adapter is assembled in `src/emosa/app.py`; it spans several modules.
+The actual adapter is assembled in `lab/src/emosa_lab/app.py`; it spans several modules.
 The same Python package also contains separate simulation and evaluation tools.
 For hands-on work:
 
@@ -277,9 +277,9 @@ For hands-on work:
 | --- | --- |
 | `src/emosa/reconcile.py`, `model.py`, `store.py` | Durable operations, lifecycle, recovery and per-pod serialization |
 | `src/emosa/opensync/` | Upstream OVS session, schema decoding and narrow existing-BSS mapping |
-| `src/emosa/simulation/` | Disposable databases, separate synthetic manager and radio manager component |
-| `src/emosa/app.py`, `cli.py`, `local_api.py` | Adapter service and local Unix-socket commands |
-| `src/emosa/evaluation/` | Scenarios, gates, reports, comparisons and LXD routing |
+| `lab/src/emosa_lab/simulation/` | Disposable databases, separate synthetic manager and radio manager component |
+| `lab/src/emosa_lab/app.py`, `cli.py`, `local_api.py` | Adapter service and local Unix-socket commands |
+| `lab/src/emosa_lab/evaluation/` | Scenarios, gates, reports, comparisons and LXD routing |
 | `src/emosa/wsc*.py` | Bounded payload and radio-request components |
 | `src/emosa/wire/operation_bridge.py` | Authenticated WSC candidate to durable component operation; owned simulation only, explained in §13.12 |
 | `schemas/`, `scenarios/`, `tests/` | Versioned contracts, runnable experiments and checks |
@@ -304,8 +304,8 @@ radio/BSS resources, and selects journal, secret and local API locations.
 
 | Adapter part | Source | What it does |
 | --- | --- | --- |
-| Service assembly | [app.py](../../src/emosa/app.py), `Application` and `serve()` | Creates per-pod backends, the operation engine, journal, local API and diagnostic directory; refreshes observations |
-| Operator entry points | [cli.py](../../src/emosa/cli.py) and [local_api.py](../../src/emosa/local_api.py) | Starts the service or sends short-lived diagnostic/semantic requests over its private Unix socket |
+| Service assembly | [app.py](../../lab/src/emosa_lab/app.py), `Application` and `serve()` | Creates per-pod backends, the operation engine, journal, local API and diagnostic directory; refreshes observations |
+| Operator entry points | [cli.py](../../lab/src/emosa_lab/cli.py) and [local_api.py](../../lab/src/emosa_lab/local_api.py) | Starts the service or sends short-lived diagnostic/semantic requests over its private Unix socket |
 | Virtual-agent directory | [agents.py](../../src/emosa/agents.py), `AgentDirectory` | Reports configured synthetic AL identities with observed inventory and freshness; currently a local diagnostic view |
 | Operation engine | [reconcile.py](../../src/emosa/reconcile.py), `Engine` | Validates and serializes requests, tracks deadlines, distinguishes commit from application, and reconciles recovery |
 | Durable state and credentials | [store.py](../../src/emosa/store.py) and [secrets.py](../../src/emosa/secrets.py) | Journals operations and evidence; resolves protected local secret references |
@@ -914,7 +914,7 @@ paths. Never serve the repository root as a demo website.
 **Running the model means running a software-only experiment against a simplified
 simulated pod.** The evaluator uses EMOSA's actual operation engine and journal,
 but replaces the OpenSync mapper, OVSDB connection and device with
-[ModelBackend](../../src/emosa/backends/mock.py). The pod's configuration and
+[ModelBackend](../../lab/src/emosa_lab/backends/mock.py). The pod's configuration and
 observed state are ordinary Python values in memory. No OpenSync firmware,
 EasyMesh controller, database server or Wi-Fi network is started.
 
@@ -1590,7 +1590,7 @@ backend. Complete the interactive exercise before attempting that deployment.
 The local API is newline-delimited, versioned JSON over a private Unix socket,
 not HTTP. The CLI supplies a correlated `request_id`. Integrators should read
 [local-api.schema.json](../../schemas/local-api.schema.json) and use
-`emosa.local_api.request`; do not expose the socket as a network control service.
+`emosa_lab.local_api.request`; do not expose the socket as a network control service.
 Use event `sequence` values with `--after` to page without replaying the full log.
 Defaults are 64 KiB frames, 16 local clients and 16 OVS requests/session;
 configuration permits bounded changes, not unlimited buffers.
@@ -1629,7 +1629,7 @@ freshness, reconnect and adapter restart, with automated and three-terminal demo
 Run this on HOST using the same development prerequisites as chapters 3 and 5:
 
 ```sh
-uv run python -m emosa.simulation.connecting_pod \
+uv run python -m emosa_lab.simulation.connecting_pod \
   --directory .lab/connecting-pod-01 --verify
 ```
 
@@ -1691,7 +1691,7 @@ binding, local journal persistence and `pod pod-1 topology --json` command. Begi
 with its automated exercise on HOST:
 
 ```bash
-uv run python -m emosa.simulation.topology --output .lab/topology-demo
+uv run python -m emosa_lab.simulation.topology --output .lab/topology-demo
 ```
 
 It starts one read-only adapter and two connecting simulated pods. Each has two
@@ -1721,7 +1721,7 @@ the exact input fields, blocked results and the path to physical qualification.
 Run its complete demonstration on HOST after chapter 5:
 
 ```bash
-uv run python -m emosa.simulation.radio_capabilities \
+uv run python -m emosa_lab.simulation.radio_capabilities \
   --output .lab/radio-capabilities-demo
 ```
 
@@ -1754,7 +1754,7 @@ and result field reference. These commands run on **HOST**, without a VM or radi
 
 ```sh
 uv run pytest tests/test_tls_listener.py -q
-uv run python -m emosa.simulation.reliability \
+uv run python -m emosa_lab.simulation.reliability \
   --directory .cache/reliability/manual-two --pods 2 --cycles 1
 ```
 
@@ -2967,7 +2967,7 @@ machine running EMOSA.
 Follow the [technology/inventory walkthrough](technology-inventory.md) on HOST:
 
 ```bash
-uv run python -m emosa.simulation.radio_capabilities \
+uv run python -m emosa_lab.simulation.radio_capabilities \
   --with-extensions --output .lab/technology-inventory-first
 ```
 
@@ -3010,7 +3010,7 @@ evidence-bound role mapping through the actual service. On HOST, with disposable
 OVSDB installed and a fresh output directory:
 
 ```bash
-uv run python -m emosa.simulation.radio_capabilities \
+uv run python -m emosa_lab.simulation.radio_capabilities \
   --with-wifi6 --output .lab/wifi6-role-first
 ```
 
@@ -3119,7 +3119,7 @@ that a BSS is already operational.
 On **HOST**, run the new offline exercise after the normal installation:
 
 ```bash
-uv run python -m emosa.simulation.wire_reports --output .lab/manual-reports-01
+uv run python -m emosa_lab.simulation.wire_reports --output .lab/manual-reports-01
 uv run emosa-lab wire-inspect --capture .lab/manual-reports-01/synthetic-reports.pcap
 uv run pytest tests/test_wire_reports.py -q
 python3 scripts/check-report-reference.py
@@ -3168,7 +3168,7 @@ and it has no path to create an operation or enable the regular service's wire g
 Run on **HOST** after building the OVSDB tools from chapter 5:
 
 ```bash
-uv run python -m emosa.simulation.coordinator --output .lab/manual-coordinator-01
+uv run python -m emosa_lab.simulation.coordinator --output .lab/manual-coordinator-01
 uv run emosa-lab wire-inspect --capture .lab/manual-coordinator-01/messages.pcap
 uv run pytest tests/test_report_coordinator.py -q
 uv run pytest tests/test_report_coordinator_ovsdb.py -q
@@ -3220,7 +3220,7 @@ establishes trust in an arbitrary Ethernet sender.
 On **HOST**, after §13.10, run:
 
 ```bash
-uv run python -m emosa.simulation.discovery --output .lab/manual-discovery-01
+uv run python -m emosa_lab.simulation.discovery --output .lab/manual-discovery-01
 uv run emosa-lab wire-inspect --capture .lab/manual-discovery-01/messages.pcap
 uv run pytest tests/test_discovery_session.py -q
 uv run pytest tests/test_discovery_session_ovsdb.py -q
@@ -3278,7 +3278,7 @@ Run on **HOST**, from the checkout. No VM, hwsim radio or physical pod is needed
 ```bash
 bash scripts/build-ovsdb.sh
 python3 scripts/build-wsc-registrar.py
-uv run python -m emosa.simulation.wsc_provisioning \
+uv run python -m emosa_lab.simulation.wsc_provisioning \
   --registrar .cache/wsc-registrar/component-registrar \
   --output .lab/manual-wsc-provisioning-01
 uv run pytest tests/test_wsc_operation_bridge.py tests/test_wsc_provisioning.py -q
@@ -4371,7 +4371,7 @@ It needs no running lab VM, radio or pod connection.
    becomes `c50004000003e8`; no packet is transmitted. Tests also reject missing
    counters and unreviewed width overflow. Passing proves the bounded
    conversion behavior, not that a pod measures anything every second.
-5. Trace the output of `src/emosa/wire/bbf_metrics.py` into the existing typed
+5. Trace the output of `lab/src/emosa_lab/wire/bbf_metrics.py` into the existing typed
    radio/AP/link report objects. The module consumes already qualified BBF
    representations. It does not replace the live publisher or relax membership,
    identity, freshness or complete-report checks. In particular, it does not

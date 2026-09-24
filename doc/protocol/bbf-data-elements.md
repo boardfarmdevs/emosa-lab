@@ -139,7 +139,7 @@ needs no VM, container, radio, controller or pod credentials.
 
    ```bash
    uv run python - <<'PY'
-   from emosa.wire.bbf_metrics import collection_interval_tlv
+   from emosa_lab.wire.bbf_metrics import collection_interval_tlv
    print(collection_interval_tlv(1000).encode().hex())
    PY
    ```
@@ -149,7 +149,7 @@ needs no VM, container, radio, controller or pod credentials.
    measurement is collected every second or transmit a capability report.
 
 5. Read [AP report assembly](ap-metric-reports.md) again. The functions in
-   [bbf_metrics.py](../../src/emosa/wire/bbf_metrics.py) return the existing typed
+   [bbf_metrics.py](../../lab/src/emosa_lab/wire/bbf_metrics.py) return the existing typed
    AP/radio/link inputs. A live publisher must still provide identities, epoch,
    complete membership, age, source authority and every mandatory companion.
    Existing freshness and reporting guards remain in effect.

@@ -9,7 +9,7 @@ import pytest
 
 from emosa.agent.fleet import Fleet, Registry, agent_config, derive_al
 from emosa.opensync.session import OvsSession
-from emosa.simulation.database import SimDatabase
+from emosa_lab.simulation.database import SimDatabase
 
 CONTROLLER = "02:00:00:e0:00:01"
 

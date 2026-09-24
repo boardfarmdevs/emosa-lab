@@ -14,8 +14,8 @@ from pathlib import Path
 from common import AP, ROOT, guard
 
 from emosa.opensync.session import OvsSession
-from emosa.simulation.radio import MONITOR, RadioManager
-from emosa.simulation.station_telemetry import LabMqtt
+from emosa_lab.simulation.radio import MONITOR, RadioManager
+from emosa_lab.simulation.station_telemetry import LabMqtt
 
 
 class Driver:

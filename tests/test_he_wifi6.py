@@ -8,10 +8,10 @@ import pytest
 
 from emosa.easymesh_payloads import APWifi6Capabilities, Wifi6Role, decode_value, encode_value
 from emosa.errors import EmosaError
-from emosa.evaluation.cli import main
-from emosa.evaluation.payloads import describe
-from emosa.evaluation.profile_audit import audit
 from emosa.he_mcs import HEMCSPair, HESupportedMCS, decode_he_mcs, encode_he_mcs
+from emosa_lab.evaluation.cli import main
+from emosa_lab.evaluation.payloads import describe
+from emosa_lab.evaluation.profile_audit import audit
 
 pytestmark = pytest.mark.unit
 RUID = bytes.fromhex("020000014001")

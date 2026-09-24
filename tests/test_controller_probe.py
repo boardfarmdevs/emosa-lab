@@ -3,10 +3,10 @@ from pathlib import Path
 
 import pytest
 
-from emosa.simulation.wire_reports import AGENT, CONTROLLER, fixtures
 from emosa.wire.cmdu import Reassembler, Tlv, fragment_message
-from emosa.wire.controller_probe import ControllerProbe
-from emosa.wire.inspection import packets
+from emosa_lab.simulation.wire_reports import AGENT, CONTROLLER, fixtures
+from emosa_lab.wire.controller_probe import ControllerProbe
+from emosa_lab.wire.inspection import packets
 
 pytestmark = pytest.mark.unit
 

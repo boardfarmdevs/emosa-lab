@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from emosa.simulation.connecting_fleet import run
+from emosa_lab.simulation.connecting_fleet import run
 
 pytestmark = pytest.mark.ovsdb
 

@@ -15,7 +15,7 @@ export UV_PYTHON_INSTALL_DIR=/opt/emosa-python
 uv python install 3.13.7
 uv venv --python 3.13.7 /opt/emosa-runtime
 uv pip sync --python /opt/emosa-runtime/bin/python --require-hashes requirements.txt
-uv pip install --python /opt/emosa-runtime/bin/python --no-deps emosa-*.whl
+uv pip install --python /opt/emosa-runtime/bin/python --no-deps emosa-*.whl emosa_lab-*.whl
 bash scripts/build-ovsdb.sh
 mkdir -p /opt/emosa-ovs /opt/emosa-evidence /opt/emosa-tests
 install -m 0755 .cache/upstream/openvswitch-4.0.0/ovsdb/ovsdb-{server,tool} /opt/emosa-ovs/

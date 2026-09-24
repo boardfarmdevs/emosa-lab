@@ -4,7 +4,6 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from test_wsc_messages import device, pair, raw, second_m2
 
 from emosa import wsc_messages
 from emosa.easymesh_payloads import (
@@ -23,8 +22,9 @@ from emosa.wire.autoconfiguration import (
     parse_search,
 )
 from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, fragment_message
-from emosa.wire.inspection import describe, inspect_capture, packets
 from emosa.wsc import KeyPair
+from emosa_lab.wire.inspection import describe, inspect_capture, packets
+from test_wsc_messages import device, pair, raw, second_m2
 
 pytestmark = pytest.mark.unit
 LOCAL = device().al_mac

@@ -4,7 +4,7 @@ import json
 import pytest
 
 from emosa.easymesh_payloads import decode_value
-from emosa.simulation.topology import run
+from emosa_lab.simulation.topology import run
 
 pytestmark = pytest.mark.ovsdb
 

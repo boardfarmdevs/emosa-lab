@@ -23,8 +23,8 @@ from emosa.opensync.schema import TABLES
 from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
-from emosa.simulation.database import SimDatabase
 from emosa.store import Store
+from emosa_lab.simulation.database import SimDatabase
 
 
 class NativeProbe(OpenSyncBackend):

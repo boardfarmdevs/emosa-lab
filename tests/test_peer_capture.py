@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from emosa.errors import EmosaError
-from emosa.evaluation import peer_capture as capture
+from emosa_lab.evaluation import peer_capture as capture
 
 pytestmark = pytest.mark.unit
 FIXTURE = Path(__file__).parent / "fixtures" / "peer-capture"

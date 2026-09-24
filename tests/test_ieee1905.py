@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 from emosa.errors import EmosaError, Reason
-from emosa.evaluation.cli import main
 from emosa.wire.cmdu import (
     END,
     MULTICAST,
@@ -18,7 +17,8 @@ from emosa.wire.cmdu import (
     fragment_message,
     parse_tlvs,
 )
-from emosa.wire.inspection import discovery, inspect_capture, packets
+from emosa_lab.evaluation.cli import main
+from emosa_lab.wire.inspection import discovery, inspect_capture, packets
 
 pytestmark = pytest.mark.unit
 SOURCE = bytes.fromhex("020000003001")

@@ -8,8 +8,8 @@ from emosa.model import Intent
 from emosa.opensync.mapping import OpenSyncBackend
 from emosa.opensync.session import OvsSession
 from emosa.secrets import SecretStore
-from emosa.simulation.connecting_pod import SERIAL
-from emosa.simulation.database import SimDatabase, SimManager
+from emosa_lab.simulation.connecting_pod import SERIAL
+from emosa_lab.simulation.database import SimDatabase, SimManager
 
 pytestmark = pytest.mark.ovsdb
 

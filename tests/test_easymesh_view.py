@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 
 import pytest
-from test_pod_profile import Session
 
 from emosa.agent.pod import MONITOR, PodReportSource
 from emosa.errors import EmosaError
@@ -15,6 +14,7 @@ from emosa.opensync.pod_profile import PodBackend
 from emosa.opensync.schema import Schema, reference_path
 from emosa.secrets import SecretStore
 from emosa.wire.autoconfiguration import PeerBinding
+from test_pod_profile import Session
 
 pytestmark = pytest.mark.unit
 

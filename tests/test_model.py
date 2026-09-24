@@ -4,7 +4,6 @@ from dataclasses import replace
 
 import pytest
 
-from emosa.backends.mock import ModelBackend
 from emosa.clock import ManualClock
 from emosa.errors import EmosaError, Reason
 from emosa.model import Intent, State
@@ -12,6 +11,7 @@ from emosa.operations import transition
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
 from emosa.store import Store
+from emosa_lab.backends.mock import ModelBackend
 
 pytestmark = pytest.mark.unit
 

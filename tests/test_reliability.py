@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from emosa.simulation.reliability import run
+from emosa_lab.simulation.reliability import run
 
 
 @pytest.mark.ovsdb

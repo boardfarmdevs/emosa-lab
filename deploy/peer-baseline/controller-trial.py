@@ -20,10 +20,10 @@ from run import CONTROLLER, guard, node, stop_collect
 from setup import NODES, ROOT, inside, lxc
 
 from emosa.config import load
-from emosa.evaluation.evidence import artifact, write_json
 from emosa.secrets import SecretStore
-from emosa.simulation.connecting_pod import AL_MAC, SERIAL, configuration, verify
-from emosa.simulation.database import SimDatabase, SimManager
+from emosa_lab.evaluation.evidence import artifact, write_json
+from emosa_lab.simulation.connecting_pod import AL_MAC, SERIAL, configuration, verify
+from emosa_lab.simulation.database import SimDatabase, SimManager
 
 STAGED = Path("/opt/emosa-radio-manager")
 KEY = "ControllerTrialSynthetic2026!"

@@ -157,12 +157,15 @@ def main():
                 )
             bundle = directory / "bundle"
             bundle.mkdir(exist_ok=False)
-            command("uv", "build", "--wheel", "--out-dir", bundle, ROOT)
+            # The adapter (emosa) and the lab tools (emosa-lab, which runs `emosa serve`).
+            command(
+                "uv", "build", "--wheel", "--all-packages", "--out-dir", bundle, "--directory", ROOT
+            )
             command(
                 "uv",
                 "export",
                 "--frozen",
-                "--no-emit-project",
+                "--no-emit-workspace",
                 "--all-groups",
                 "--project",
                 ROOT,
@@ -308,7 +311,7 @@ def main():
                     "/opt/emosa-runtime/bin/python",
                     "-I",
                     "-m",
-                    "emosa.simulation.reliability",
+                    "emosa_lab.simulation.reliability",
                     "--directory",
                     f"/home/emosa/runs/fleet-{count}",
                     "--pods",
@@ -321,7 +324,7 @@ def main():
                 "/opt/emosa-runtime/bin/python",
                 "-I",
                 "-m",
-                "emosa.simulation.reliability",
+                "emosa_lab.simulation.reliability",
                 "--directory",
                 "/home/emosa/runs/soak",
                 "--pods",

@@ -18,7 +18,7 @@
       "id": "ARCH-01",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py"
@@ -31,7 +31,7 @@
       "id": "ARCH-02",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py"
@@ -108,7 +108,7 @@
       "implementation_refs": [
         "src/emosa/opensync/session.py",
         "src/emosa/opensync/tls_listener.py",
-        "src/emosa/simulation/reliability.py",
+        "lab/src/emosa_lab/simulation/reliability.py",
         "deploy/reliability/lab.py"
       ],
       "test_refs": [
@@ -131,7 +131,7 @@
       "implementation_refs": [
         "src/emosa/opensync/session.py",
         "src/emosa/opensync/tls_listener.py",
-        "src/emosa/simulation/reliability.py",
+        "lab/src/emosa_lab/simulation/reliability.py",
         "deploy/reliability/lab.py"
       ],
       "test_refs": [
@@ -164,7 +164,7 @@
         "deploy/README.md",
         "deploy/images.lock.json",
         "src/emosa/opensync/tls_listener.py",
-        "src/emosa/simulation/reliability.py",
+        "lab/src/emosa_lab/simulation/reliability.py",
         "deploy/reliability/lab.py"
       ],
       "test_refs": [
@@ -188,7 +188,7 @@
         "deploy/README.md",
         "deploy/images.lock.json",
         "src/emosa/opensync/tls_listener.py",
-        "src/emosa/simulation/reliability.py",
+        "lab/src/emosa_lab/simulation/reliability.py",
         "deploy/reliability/lab.py"
       ],
       "test_refs": [
@@ -212,7 +212,7 @@
         "deploy/README.md",
         "deploy/images.lock.json",
         "src/emosa/opensync/tls_listener.py",
-        "src/emosa/simulation/reliability.py",
+        "lab/src/emosa_lab/simulation/reliability.py",
         "deploy/reliability/lab.py"
       ],
       "test_refs": [
@@ -332,7 +332,7 @@
         "deploy/README.md",
         "deploy/images.lock.json",
         "src/emosa/opensync/tls_listener.py",
-        "src/emosa/simulation/reliability.py",
+        "lab/src/emosa_lab/simulation/reliability.py",
         "deploy/reliability/lab.py"
       ],
       "test_refs": [
@@ -356,7 +356,7 @@
         "deploy/README.md",
         "deploy/images.lock.json",
         "src/emosa/opensync/tls_listener.py",
-        "src/emosa/simulation/reliability.py",
+        "lab/src/emosa_lab/simulation/reliability.py",
         "deploy/reliability/lab.py"
       ],
       "test_refs": [
@@ -465,7 +465,7 @@
       "id": "MODEL-01",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -570,7 +570,7 @@
       "id": "MODEL-07",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/capabilities.py"
+        "lab/src/emosa_lab/capabilities.py"
       ],
       "test_refs": [
         "tests/test_api.py"
@@ -596,7 +596,7 @@
       "id": "OWN-02",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -613,7 +613,7 @@
       "id": "OWN-03",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -657,7 +657,7 @@
       "id": "OWN-06",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -674,7 +674,7 @@
       "id": "OWN-07",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/capabilities.py"
+        "lab/src/emosa_lab/capabilities.py"
       ],
       "test_refs": [
         "tests/test_model.py"
@@ -700,7 +700,7 @@
       "id": "OWN-09",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/app.py"
+        "lab/src/emosa_lab/app.py"
       ],
       "test_refs": [
         "tests/test_api.py"
@@ -773,7 +773,7 @@
       "id": "API-05",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/capabilities.py"
+        "lab/src/emosa_lab/capabilities.py"
       ],
       "test_refs": [
         "tests/test_model.py",
@@ -789,7 +789,7 @@
       "id": "SCHEMA-01",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -806,7 +806,7 @@
       "id": "SCHEMA-02",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -1003,7 +1003,7 @@
       "id": "DB-06",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -1095,7 +1095,7 @@
       "id": "DB-12",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -1195,7 +1195,7 @@
       "id": "REC-07",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_ovsdb.py",
@@ -1224,7 +1224,7 @@
       "id": "CLI-01",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/cli.py"
+        "lab/src/emosa_lab/cli.py"
       ],
       "test_refs": [
         "tests/test_api.py"
@@ -1237,7 +1237,7 @@
       "id": "CLI-02",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/local_api.py"
+        "lab/src/emosa_lab/local_api.py"
       ],
       "test_refs": [
         "tests/test_api.py"
@@ -1252,7 +1252,7 @@
       "id": "CLI-03",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/local_api.py"
+        "lab/src/emosa_lab/local_api.py"
       ],
       "test_refs": [
         "tests/test_api.py"
@@ -1265,7 +1265,7 @@
       "id": "CLI-04",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/local_api.py"
+        "lab/src/emosa_lab/local_api.py"
       ],
       "test_refs": [
         "tests/test_api.py"
@@ -1280,7 +1280,7 @@
       "id": "CLI-05",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/cli.py"
+        "lab/src/emosa_lab/cli.py"
       ],
       "test_refs": [
         "tests/test_api.py",
@@ -1294,7 +1294,7 @@
       "id": "CLI-06",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/app.py"
+        "lab/src/emosa_lab/app.py"
       ],
       "test_refs": [
         "tests/test_api.py"
@@ -1307,7 +1307,7 @@
       "id": "CFG-01",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/local_api.py"
+        "lab/src/emosa_lab/local_api.py"
       ],
       "test_refs": [
         "tests/test_api.py"
@@ -1322,7 +1322,7 @@
       "id": "CFG-02",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py"
@@ -1335,7 +1335,7 @@
       "id": "CFG-03",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py"
@@ -1348,7 +1348,7 @@
       "id": "CFG-04",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/local_api.py"
+        "lab/src/emosa_lab/local_api.py"
       ],
       "test_refs": [
         "tests/test_api.py"
@@ -1533,8 +1533,8 @@
         "src/emosa/opensync/topology.py",
         "src/emosa/radio_capabilities.py",
         "src/emosa/operating_classes.py",
-        "src/emosa/evaluation/profile_audit.py",
-        "src/emosa/counter_units.py",
+        "lab/src/emosa_lab/evaluation/profile_audit.py",
+        "lab/src/emosa_lab/counter_units.py",
         "src/emosa/capability_extensions.py",
         "src/emosa/he_mcs.py",
         "src/emosa/wire/cmdu.py",
@@ -1726,7 +1726,7 @@
       "id": "EVAL-01",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py"
@@ -1754,7 +1754,7 @@
       "id": "EVAL-03",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py"
@@ -1769,7 +1769,7 @@
       "id": "EVAL-04",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py",
@@ -1783,7 +1783,7 @@
       "id": "EVAL-05",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_ovsdb.py"
@@ -1811,7 +1811,7 @@
       "id": "EVAL-07",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py"
@@ -1839,7 +1839,7 @@
       "id": "EVAL-09",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py"
@@ -1854,7 +1854,7 @@
       "id": "EVAL-10",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py"
@@ -1882,7 +1882,7 @@
       "id": "EVAL-12",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/cli.py"
+        "lab/src/emosa_lab/evaluation/cli.py"
       ],
       "test_refs": [
         "tests/test_api.py",
@@ -1896,7 +1896,7 @@
       "id": "EVAL-13",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/cli.py"
+        "lab/src/emosa_lab/evaluation/cli.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py"
@@ -1909,7 +1909,7 @@
       "id": "EVAL-14",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py"
@@ -1924,7 +1924,7 @@
       "id": "EVAL-15",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py"
@@ -1939,7 +1939,7 @@
       "id": "EVAL-16",
       "status": "verified",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py"
@@ -2102,7 +2102,7 @@
       "id": "CORE-04",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py"
+        "lab/src/emosa_lab/evaluation/runner.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py"
@@ -2134,7 +2134,7 @@
       "id": "A01",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2151,7 +2151,7 @@
       "id": "A02",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2168,7 +2168,7 @@
       "id": "A03",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2185,7 +2185,7 @@
       "id": "A04",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2202,7 +2202,7 @@
       "id": "A05",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2219,7 +2219,7 @@
       "id": "A06",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2236,7 +2236,7 @@
       "id": "A07",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2253,7 +2253,7 @@
       "id": "A08",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2270,7 +2270,7 @@
       "id": "A09",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2287,7 +2287,7 @@
       "id": "A10",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2304,7 +2304,7 @@
       "id": "A11",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2321,7 +2321,7 @@
       "id": "A12",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2338,7 +2338,7 @@
       "id": "A13",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2355,7 +2355,7 @@
       "id": "A14",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2372,7 +2372,7 @@
       "id": "A15",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py",
+        "lab/src/emosa_lab/qualification.py",
         "src/emosa/topology_bindings.py",
         "src/emosa/opensync/topology.py"
       ],
@@ -2395,7 +2395,7 @@
       "id": "A16",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2412,7 +2412,7 @@
       "id": "A17",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2429,7 +2429,7 @@
       "id": "A18",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2446,7 +2446,7 @@
       "id": "A19",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2463,7 +2463,7 @@
       "id": "A20",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2480,7 +2480,7 @@
       "id": "A21",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2497,7 +2497,7 @@
       "id": "A22",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2514,7 +2514,7 @@
       "id": "A23",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2531,7 +2531,7 @@
       "id": "A24",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2548,7 +2548,7 @@
       "id": "A25",
       "status": "blocked",
       "implementation_refs": [
-        "src/emosa/qualification.py"
+        "lab/src/emosa_lab/qualification.py"
       ],
       "test_refs": [
         "tests/test_qualification.py",
@@ -2687,8 +2687,8 @@
       "id": "E01",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py",
-        "src/emosa/evaluation/cli.py"
+        "lab/src/emosa_lab/evaluation/runner.py",
+        "lab/src/emosa_lab/evaluation/cli.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py",
@@ -2703,8 +2703,8 @@
       "id": "E02",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py",
-        "src/emosa/evaluation/cli.py"
+        "lab/src/emosa_lab/evaluation/runner.py",
+        "lab/src/emosa_lab/evaluation/cli.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py",
@@ -2719,8 +2719,8 @@
       "id": "E03",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py",
-        "src/emosa/evaluation/cli.py"
+        "lab/src/emosa_lab/evaluation/runner.py",
+        "lab/src/emosa_lab/evaluation/cli.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py",
@@ -2735,8 +2735,8 @@
       "id": "E04",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py",
-        "src/emosa/evaluation/cli.py"
+        "lab/src/emosa_lab/evaluation/runner.py",
+        "lab/src/emosa_lab/evaluation/cli.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py",
@@ -2751,8 +2751,8 @@
       "id": "E05",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py",
-        "src/emosa/evaluation/cli.py"
+        "lab/src/emosa_lab/evaluation/runner.py",
+        "lab/src/emosa_lab/evaluation/cli.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py",
@@ -2767,8 +2767,8 @@
       "id": "E06",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py",
-        "src/emosa/evaluation/cli.py"
+        "lab/src/emosa_lab/evaluation/runner.py",
+        "lab/src/emosa_lab/evaluation/cli.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py",
@@ -2783,8 +2783,8 @@
       "id": "E07",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py",
-        "src/emosa/evaluation/cli.py"
+        "lab/src/emosa_lab/evaluation/runner.py",
+        "lab/src/emosa_lab/evaluation/cli.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py",
@@ -2799,8 +2799,8 @@
       "id": "E08",
       "status": "implemented",
       "implementation_refs": [
-        "src/emosa/evaluation/runner.py",
-        "src/emosa/evaluation/cli.py"
+        "lab/src/emosa_lab/evaluation/runner.py",
+        "lab/src/emosa_lab/evaluation/cli.py"
       ],
       "test_refs": [
         "tests/test_evaluation.py",

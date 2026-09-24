@@ -1,6 +1,11 @@
 """Authenticated radio payload semantics; no IEEE procedure or pod authority."""
 
 import pytest
+
+from emosa.errors import EmosaError, Reason
+from emosa.wsc import authenticate_message, encode_attribute
+from emosa.wsc_messages import WFA_ID, M1Transcript
+from emosa.wsc_radio import decode_radio_payloads
 from test_wsc_messages import (
     altered_settings,
     device,
@@ -11,11 +16,6 @@ from test_wsc_messages import (
     signed,
     transcript,
 )
-
-from emosa.errors import EmosaError, Reason
-from emosa.wsc import authenticate_message, encode_attribute
-from emosa.wsc_messages import WFA_ID, M1Transcript
-from emosa.wsc_radio import decode_radio_payloads
 
 pytestmark = pytest.mark.unit
 

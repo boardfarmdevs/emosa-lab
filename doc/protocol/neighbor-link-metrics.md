@@ -87,7 +87,7 @@ python3 scripts/check-neighbor-metrics.py
 uv run pytest -q tests/test_link_metrics.py tests/test_native_onboarding.py
 
 # Generate a new explicitly synthetic corpus; preserve existing evidence.
-uv run python -m emosa.simulation.link_metrics .lab/neighbor-vectors-01
+uv run python -m emosa_lab.simulation.link_metrics .lab/neighbor-vectors-01
 python3 scripts/check-neighbor-metrics.py --directory .lab/neighbor-vectors-01
 ```
 

@@ -5,23 +5,28 @@ build-backend = "hatchling.build"
 [project]
 name = "emosa"
 version = "0.1.0"
-description = "Evidence-driven EasyMesh to OpenSync adaptation experiments"
+description = "EMOSA: EasyMesh to OpenSync adapter (one virtual EasyMesh agent per OpenSync pod)"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "cryptography==50.0.1",
     "jsonschema==4.26.0",
     "ovs==4.0.0",
-    "paho-mqtt==2.1.0",
-    "protobuf==6.33.5",
 ]
 
 [project.scripts]
-emosa = "emosa.cli:main"
-em-controller = "emosa.cli:controller_main"
-emosa-lab = "emosa.evaluation.cli:main"
+emosa-fleet = "emosa.agent.fleet:main"
+emosa-agent = "emosa.agent.pod:main"
 
 [dependency-groups]
-dev = ["pytest==9.1.1", "ruff==0.16.7"]
+# The lab tools (lab/, package emosa_lab) are developed and tested alongside
+# the adapter; a --no-dev install is the adapter alone.
+dev = ["emosa-lab", "pytest==9.1.1", "ruff==0.16.7"]
+
+[tool.uv.workspace]
+members = ["lab"]
+
+[tool.uv.sources]
+emosa-lab = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/emosa"]
@@ -45,6 +50,7 @@ markers = [
 
 [tool.ruff]
 target-version = "py313"
+src = ["src", "lab/src", "tests"]
 line-length = 100
 
 [tool.ruff.lint]

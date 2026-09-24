@@ -1,13 +1,13 @@
 from dataclasses import replace
 
 import pytest
-from test_report_coordinator import Rig as SourceRig
 
-from emosa.simulation.wire_reports import AGENT, CONTROLLER, query_frames
 from emosa.wire.autoconfiguration import parse_response
 from emosa.wire.cmdu import MidSequence, Reassembler, Tlv, fragment_message
-from emosa.wire.discovery_session import DiscoveryReportSession
-from emosa.wire.inspection import packets
+from emosa_lab.simulation.wire_reports import AGENT, CONTROLLER, query_frames
+from emosa_lab.wire.discovery_session import DiscoveryReportSession
+from emosa_lab.wire.inspection import packets
+from test_report_coordinator import Rig as SourceRig
 
 pytestmark = pytest.mark.unit
 

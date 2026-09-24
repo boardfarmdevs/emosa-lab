@@ -39,7 +39,7 @@ these commands inside the radio containers. Choose a new output directory; the
 command rejects an existing one to preserve earlier evidence.
 
 ```bash
-uv run python -m emosa.simulation.wire_reports --output .lab/reports-demo-01
+uv run python -m emosa_lab.simulation.wire_reports --output .lab/reports-demo-01
 uv run emosa-lab wire-inspect --capture .lab/reports-demo-01/synthetic-reports.pcap
 ```
 

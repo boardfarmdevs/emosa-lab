@@ -6,7 +6,6 @@ import pytest
 
 from emosa.easymesh_payloads import AssociatedClient, AssociatedClients, BssClients
 from emosa.errors import EmosaError
-from emosa.simulation.wire_reports import BSSID, RUID, fixtures
 from emosa.wire.ap_metrics import (
     APExtendedMetrics,
     APMetricBundle,
@@ -21,6 +20,7 @@ from emosa.wire.cmdu import MidSequence, Reassembler, Tlv, fragment_message
 from emosa.wire.coordinator import ReportSource
 from emosa.wire.disassociation import TrafficCounters
 from emosa.wire.reporting_policy import ReportingPolicyCoordinator, ReportingPolicyStore
+from emosa_lab.simulation.wire_reports import BSSID, RUID, fixtures
 
 pytestmark = pytest.mark.unit
 STA = bytes.fromhex("020000004020")

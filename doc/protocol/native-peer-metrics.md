@@ -63,7 +63,7 @@ remain part of qualifying each experiment. Broader paths require another profile
 
 ## What EMOSA sends
 
-`src/emosa/simulation/peer_metrics.py` joins the checked path to the current
+`lab/src/emosa_lab/simulation/peer_metrics.py` joins the checked path to the current
 `ShapedBackhaulSource` interval and the existing guarded `LinkMetricSource`.
 `OnboardingSession` handles native queries only under its authenticated current
 control context. The publisher does not write pod Config.

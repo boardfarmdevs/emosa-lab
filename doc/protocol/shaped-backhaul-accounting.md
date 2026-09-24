@@ -42,7 +42,7 @@ This is a reviewed software path, not a general formula for arbitrary firmware.
 
 ## Read the combined observation
 
-`ShapedBackhaulSource` in `src/emosa/simulation/shaped_backhaul.py` consumes the
+`ShapedBackhaulSource` in `lab/src/emosa_lab/simulation/shaped_backhaul.py` consumes the
 same passive observations carried through OpenSync-schema OVSDB. It publishes
 the diagnostic `shaped_backhaul` status in the native session and forwarding
 log. It does not add a database table or a new physical-pod requirement.

@@ -10,8 +10,8 @@ from emosa.opensync.mapping import OpenSyncBackend, check_results, where_uuid
 from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
-from emosa.simulation.database import SimDatabase, SimManager
 from emosa.store import Store
+from emosa_lab.simulation.database import SimDatabase, SimManager
 
 pytestmark = pytest.mark.ovsdb
 

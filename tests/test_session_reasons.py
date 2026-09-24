@@ -3,7 +3,7 @@ import struct
 
 import pytest
 
-from emosa.simulation.session_reasons import (
+from emosa_lab.simulation.session_reasons import (
     BSSID,
     RAW_FIELDS,
     STATION,

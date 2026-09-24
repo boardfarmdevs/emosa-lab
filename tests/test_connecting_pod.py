@@ -7,8 +7,8 @@ from emosa.model import Intent
 from emosa.opensync.mapping import OpenSyncBackend, check_results
 from emosa.opensync.session import OvsSession
 from emosa.secrets import SecretStore
-from emosa.simulation.connecting_pod import AL_MAC, SERIAL, poll, run
-from emosa.simulation.database import SimDatabase
+from emosa_lab.simulation.connecting_pod import AL_MAC, SERIAL, poll, run
+from emosa_lab.simulation.database import SimDatabase
 
 pytestmark = pytest.mark.ovsdb
 

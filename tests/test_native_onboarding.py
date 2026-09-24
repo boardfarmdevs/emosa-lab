@@ -2,16 +2,16 @@ import asyncio
 from dataclasses import replace
 
 import pytest
+
+from emosa.easymesh_payloads import DeviceInventory, InventoryRadio, encode_value
+from emosa.wire.cmdu import MidSequence, Tlv, fragment_message
+from emosa.wire.coordinator import ReportSource
+from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession, non_dpp_admission
+from emosa_lab.simulation.wire_reports import fixtures
 from test_autoconfiguration import BINDING, RESPONSE, assemble, m2
 from test_autoconfiguration import fixed_entropy as fixed_entropy
 from test_provisioning_session import frames
 from test_wsc_operation_bridge import rig as rig
-
-from emosa.easymesh_payloads import DeviceInventory, InventoryRadio, encode_value
-from emosa.simulation.wire_reports import fixtures
-from emosa.wire.cmdu import MidSequence, Tlv, fragment_message
-from emosa.wire.coordinator import ReportSource
-from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession, non_dpp_admission
 
 pytestmark = pytest.mark.unit
 
@@ -342,10 +342,9 @@ def test_final_stats_require_provisioning_and_an_observed_departure(rig):
 
 
 def test_recovery_requires_fresh_discovery_and_rejects_previous_m2(rig, monkeypatch):
-    from test_autoconfiguration import exchange
-
     from emosa import wsc_messages
     from emosa.wire.operation_bridge import WscComponentBridge
+    from test_autoconfiguration import exchange
 
     async def scenario():
         old_bridge, engine, backend, clock = rig

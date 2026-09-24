@@ -55,7 +55,7 @@ does not add SSL support to `ovsdb-server`.
 sudo apt-get install -y build-essential pkg-config libssl-dev curl
 bash scripts/build-ovsdb.sh
 uv run pytest tests/test_tls_listener.py -q
-uv run python -m emosa.simulation.reliability \
+uv run python -m emosa_lab.simulation.reliability \
   --directory .cache/reliability/lesson-two --pods 2 --cycles 1
 ```
 
@@ -100,7 +100,7 @@ Do not run another benchmark at the same time if comparing timing results.
 
 ```sh
 for count in 4 8 16 32; do
-  uv run python -m emosa.simulation.reliability \
+  uv run python -m emosa_lab.simulation.reliability \
     --directory ".cache/reliability/lesson-${count}" --pods "$count" --cycles 1
 done
 ```
@@ -144,7 +144,7 @@ interval after each, rather than extrapolating from one recovery. It usually
 takes several minutes; read the final report for the actual elapsed duration.
 
 ```sh
-uv run python -m emosa.simulation.reliability \
+uv run python -m emosa_lab.simulation.reliability \
   --directory .cache/reliability/lesson-soak --pods 4 --cycles 12 --interval 5
 ```
 

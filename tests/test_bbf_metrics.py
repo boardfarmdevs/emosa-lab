@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from emosa.errors import EmosaError, Reason
-from emosa.wire.bbf_metrics import (
+from emosa_lab.wire.bbf_metrics import (
     BSS_COUNTERS,
     ap_extended_metrics,
     collection_interval_tlv,

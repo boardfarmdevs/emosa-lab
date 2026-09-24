@@ -134,7 +134,7 @@ does not validate ESP's internal semantic conversion.
 Use a fresh output directory; the command refuses to overwrite one:
 
 ```bash
-uv run python -m emosa.simulation.ap_metrics .lab/ap-metrics-learning-01
+uv run python -m emosa_lab.simulation.ap_metrics .lab/ap-metrics-learning-01
 python3 scripts/check-ap-metrics-reference.py .lab/ap-metrics-learning-01
 uv run pytest -q tests/test_ap_metrics.py tests/test_reporting_policy.py
 ```

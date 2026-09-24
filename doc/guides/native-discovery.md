@@ -46,7 +46,7 @@ radio-manager staging:
 
 ```bash
 uv sync --frozen
-lxc file push src/emosa/wire/controller_probe.py \
+lxc file push lab/src/emosa_lab/wire/controller_probe.py \
   emosa-lab/opt/emosa-radio-manager/source/emosa/wire/controller_probe.py
 lxc file push deploy/peer-baseline/controller-trial.py \
   deploy/peer-baseline/discovery-trial.py emosa-lab/opt/emosa-baseline/

@@ -10,7 +10,7 @@ from emosa.easymesh_payloads import (
     encode_value,
 )
 from emosa.errors import EmosaError
-from emosa.evaluation.payloads import describe
+from emosa_lab.evaluation.payloads import describe
 
 pytestmark = pytest.mark.unit
 RUID = bytes.fromhex("020000014001")

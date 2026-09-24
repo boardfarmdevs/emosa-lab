@@ -53,7 +53,7 @@ blocked by the parent loader, even if every role and hash is supplied.
 From the checkout root, choose a **new** output directory:
 
 ```bash
-uv run python -m emosa.simulation.radio_capabilities \
+uv run python -m emosa_lab.simulation.radio_capabilities \
   --with-wifi6 --output .lab/wifi6-role-first
 ```
 

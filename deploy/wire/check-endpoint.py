@@ -78,9 +78,9 @@ def worker(side, interface, directory):
 
 def report_worker(side, interface, directory):
     from emosa.easymesh_payloads import decode_value
-    from emosa.simulation.wire_reports import fixtures, inventory, pcap, query_frames
     from emosa.wire.cmdu import MidSequence
     from emosa.wire.reports import ReportStamp, early_report, topology_response
+    from emosa_lab.simulation.wire_reports import fixtures, inventory, pcap, query_frames
 
     directory = Path(directory)
     own, peer = (LEFT, RIGHT) if side == "left" else (RIGHT, LEFT)
@@ -176,7 +176,7 @@ def main():
     if socket.gethostname() != "emosa-lab" or os.geteuid() != 0:
         raise SystemExit("Run as root only inside the dedicated emosa-lab VM")
     if args.provisioning:
-        from emosa.simulation.wsc_wire import verify_registrar
+        from emosa_lab.simulation.wsc_wire import verify_registrar
 
         if args.registrar is None:
             parser.error("--provisioning requires --registrar")
@@ -185,7 +185,7 @@ def main():
         parser.error("WSC options require --provisioning")
     if args.worker:
         if args.provisioning:
-            from emosa.simulation.wsc_wire import worker as provisioning_worker
+            from emosa_lab.simulation.wsc_wire import worker as provisioning_worker
 
             asyncio.run(
                 provisioning_worker(
@@ -199,12 +199,12 @@ def main():
             )
             return
         if args.discovery:
-            from emosa.simulation.discovery_wire import worker as discovery_worker
+            from emosa_lab.simulation.discovery_wire import worker as discovery_worker
 
             asyncio.run(discovery_worker(args.worker, args.interface, args.directory))
             return
         if args.coordinator:
-            from emosa.simulation.coordinator_wire import worker as coordinator_worker
+            from emosa_lab.simulation.coordinator_wire import worker as coordinator_worker
 
             asyncio.run(coordinator_worker(args.worker, args.interface, args.directory))
             return
@@ -248,7 +248,7 @@ def main():
         )
         addresses = (LEFT, RIGHT)
         if args.provisioning:
-            from emosa.simulation.wsc_provisioning import AGENT, CONTROLLER
+            from emosa_lab.simulation.wsc_provisioning import AGENT, CONTROLLER
 
             addresses = (AGENT, CONTROLLER)
         for name, link, address in zip(names, links, addresses, strict=True):

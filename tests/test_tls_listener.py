@@ -5,8 +5,8 @@ import ssl
 import pytest
 
 from emosa.opensync.session import OvsSession
-from emosa.simulation.database import SimDatabase
-from emosa.simulation.tls import create_pki, unused_port
+from emosa_lab.simulation.database import SimDatabase
+from emosa_lab.simulation.tls import create_pki, unused_port
 
 
 @pytest.mark.ovsdb
@@ -54,8 +54,8 @@ def test_incomplete_handshakes_are_bounded_and_expire_without_displacing_pod(tmp
 def test_read_only_qualification_accepts_pod_initiated_tls_without_writes(tmp_path):
     import json
 
-    from emosa.qualification import collect
-    from emosa.simulation.tls import trust_config
+    from emosa_lab.qualification import collect
+    from emosa_lab.simulation.tls import trust_config
 
     pki = create_pki(tmp_path / "secrets", 1)
     port = unused_port()

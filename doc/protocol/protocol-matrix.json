@@ -664,7 +664,7 @@
         "IEEE 802.11-2024 section 9.2.2 p.656"
       ],
       "implementation": "src/emosa/easymesh_payloads.py",
-      "inspection": "src/emosa/evaluation/payloads.py",
+      "inspection": "lab/src/emosa_lab/evaluation/payloads.py",
       "types": [
         "0x80",
         "0x81",
@@ -873,7 +873,7 @@
   "native_peer_observation_review": {
     "guide": "doc/guides/onboarding-readiness.md",
     "evidence": "doc/evidence/onboarding-readiness/summary.json",
-    "implementation": "src/emosa/evaluation/peer_capture.py",
+    "implementation": "lab/src/emosa_lab/evaluation/peer_capture.py",
     "tests": "tests/test_peer_capture.py",
     "status": "compatibility_findings_open",
     "normative_references": [
@@ -1019,9 +1019,9 @@
   "profile_readiness_audit": {
     "status": "requirement_families_and_selected_feature_conditions_reviewed",
     "guide": "doc/protocol/profile-readiness.md",
-    "implementation": "src/emosa/evaluation/profile_audit.py",
+    "implementation": "lab/src/emosa_lab/evaluation/profile_audit.py",
     "input_schema": "schemas/profile-features.schema.json",
-    "counter_unit_component": "src/emosa/counter_units.py",
+    "counter_unit_component": "lab/src/emosa_lab/counter_units.py",
     "evidence": "doc/evidence/profile-audit/summary.json",
     "normative_sections": [
       "EasyMesh 6.1 section 18 and Table 133 pp.197-198",
@@ -1174,7 +1174,7 @@
     "guide": "doc/protocol/ieee1905-envelope.md",
     "implementation": [
       "src/emosa/wire/cmdu.py",
-      "src/emosa/wire/inspection.py",
+      "lab/src/emosa_lab/wire/inspection.py",
       "src/emosa/wire/ethernet.py"
     ],
     "tests": [
@@ -1208,7 +1208,7 @@
     "guide": "doc/protocol/autoconfiguration.md",
     "implementation": [
       "src/emosa/wire/autoconfiguration.py",
-      "src/emosa/wire/inspection.py"
+      "lab/src/emosa_lab/wire/inspection.py"
     ],
     "tests": [
       "tests/test_autoconfiguration.py",
@@ -1308,7 +1308,7 @@
       "src/emosa/wire/reports.py",
       "src/emosa/wire/topology_values.py",
       "src/emosa/easymesh_payloads.py",
-      "src/emosa/simulation/wire_reports.py"
+      "lab/src/emosa_lab/simulation/wire_reports.py"
     ],
     "tests": [
       "tests/test_wire_reports.py",
@@ -1407,9 +1407,9 @@
     "guide": "doc/protocol/report-coordinator.md",
     "implementation": [
       "src/emosa/wire/coordinator.py",
-      "src/emosa/simulation/report_source.py",
-      "src/emosa/simulation/coordinator.py",
-      "src/emosa/simulation/coordinator_wire.py"
+      "lab/src/emosa_lab/simulation/report_source.py",
+      "lab/src/emosa_lab/simulation/coordinator.py",
+      "lab/src/emosa_lab/simulation/coordinator_wire.py"
     ],
     "tests": [
       "tests/test_report_coordinator.py",
@@ -1486,9 +1486,9 @@
   },
   "discovery_report_session": {
     "implementation": [
-      "src/emosa/wire/discovery_session.py",
-      "src/emosa/simulation/discovery.py",
-      "src/emosa/simulation/discovery_wire.py"
+      "lab/src/emosa_lab/wire/discovery_session.py",
+      "lab/src/emosa_lab/simulation/discovery.py",
+      "lab/src/emosa_lab/simulation/discovery_wire.py"
     ],
     "tests": [
       "tests/test_discovery_session.py",
@@ -1556,7 +1556,7 @@
       "src/emosa/reconcile.py",
       "src/emosa/store.py",
       "src/emosa/secrets.py",
-      "src/emosa/simulation/wsc_provisioning.py",
+      "lab/src/emosa_lab/simulation/wsc_provisioning.py",
       "schemas/wsc-receipt.schema.json"
     ],
     "tests": [
@@ -1635,7 +1635,7 @@
     "evidence": "doc/evidence/wsc-wire/summary.json",
     "implementation": [
       "src/emosa/wire/provisioning_session.py",
-      "src/emosa/simulation/wsc_wire.py",
+      "lab/src/emosa_lab/simulation/wsc_wire.py",
       "deploy/wire/check-endpoint.py",
       "deploy/radio-manager/run-wsc.py"
     ],
@@ -1695,7 +1695,7 @@
   "native_controller_discovery_probe": {
     "guide": "doc/guides/native-discovery.md",
     "evidence": "doc/evidence/native-discovery/summary.json",
-    "implementation": "src/emosa/wire/controller_probe.py",
+    "implementation": "lab/src/emosa_lab/wire/controller_probe.py",
     "runner": "deploy/peer-baseline/discovery-trial.py",
     "independent_check": "scripts/check-controller-probe.py",
     "source_sections": [
@@ -1792,12 +1792,12 @@
       "qualification": "owned sole-radio complete snapshots only; physical publisher/trust/timing unqualified"
     },
     "implementation_refs": [
-      "src/emosa/telemetry/stations.py",
-      "src/emosa/simulation/station_telemetry.py",
+      "lab/src/emosa_lab/telemetry/stations.py",
+      "lab/src/emosa_lab/simulation/station_telemetry.py",
       "src/emosa/wire/onboarding.py",
       "src/emosa/wire/channel.py",
       "src/emosa/wire/disassociation.py",
-      "src/emosa/simulation/disassociation.py"
+      "lab/src/emosa_lab/simulation/disassociation.py"
     ],
     "test_refs": [
       "tests/test_station_telemetry.py",
@@ -1895,7 +1895,7 @@
         "guide": "doc/protocol/live-session-reasons.md",
         "evidence": "doc/evidence/session-reasons/README.md",
         "observer": "deploy/radio-manager/session-reasons.py",
-        "join": "src/emosa/simulation/session_reasons.py",
+        "join": "lab/src/emosa_lab/simulation/session_reasons.py",
         "independent_check": "scripts/check-session-reasons.py",
         "tests": "tests/test_session_reasons.py",
         "source_sections": [
@@ -1953,7 +1953,7 @@
       "guide": "doc/protocol/telemetry-freshness.md",
       "implementation": [
         "src/emosa/wire/coordinator.py",
-        "src/emosa/simulation/native_onboarding.py"
+        "lab/src/emosa_lab/simulation/native_onboarding.py"
       ],
       "independent_check": "scripts/check-telemetry-gap.py",
       "evidence": "doc/evidence/telemetry-freshness/native-telemetry-gap-01/independent-gap-check.json",
@@ -2005,7 +2005,7 @@
       "raw_forwarding_observations": {
         "status": "owned_pod_raw_interface_observations_and_intervals_implemented_per_neighbor_qualification_pending",
         "guide": "doc/protocol/forwarding-observations.md",
-        "implementation": "src/emosa/simulation/forwarding.py",
+        "implementation": "lab/src/emosa_lab/simulation/forwarding.py",
         "sources": [
           "IEEE 1905.1-2013 section 8.1 pp.46-47 (AL/interface identities and topology/LLDP bridge inference)",
           "pinned OpenSync 78d8a7194d5e77635877cc456231e7be5cf03d68 interfaces/opensync.ovsschema: Open_vSwitch, Bridge, Port, Interface",
@@ -2029,8 +2029,8 @@
         "guide": "doc/protocol/neighbor-discovery-binding.md",
         "implementation": [
           "deploy/radio-manager/neighbor-observer.py",
-          "src/emosa/simulation/neighbor_binding.py",
-          "src/emosa/simulation/native_onboarding.py",
+          "lab/src/emosa_lab/simulation/neighbor_binding.py",
+          "lab/src/emosa_lab/simulation/native_onboarding.py",
           "src/emosa/wire/coordinator.py"
         ],
         "source_references": [
@@ -2122,9 +2122,9 @@
         "guide": "doc/protocol/egress-accounting-source.md",
         "implementation": [
           "deploy/radio-manager/egress-observer.py",
-          "src/emosa/simulation/egress_accounting.py",
-          "src/emosa/simulation/forwarding.py",
-          "src/emosa/simulation/native_onboarding.py"
+          "lab/src/emosa_lab/simulation/egress_accounting.py",
+          "lab/src/emosa_lab/simulation/forwarding.py",
+          "lab/src/emosa_lab/simulation/native_onboarding.py"
         ],
         "source_references": [
           "IEEE 1905.1-2013 Tables 6-18 and 6-20, section 11.1; IEEE 1905.1a-2014 amended PHY/RSSI rules",
@@ -2168,9 +2168,9 @@
         "status": "selected_ingress_loss_and_common_tx_rx_accounting_live_ovsdb_recovery_verified_complete_metrics_pending",
         "guide": "doc/protocol/receive-counter-accounting.md",
         "implementation": [
-          "src/emosa/simulation/backhaul_accounting.py",
-          "src/emosa/simulation/egress_accounting.py",
-          "src/emosa/simulation/native_onboarding.py"
+          "lab/src/emosa_lab/simulation/backhaul_accounting.py",
+          "lab/src/emosa_lab/simulation/egress_accounting.py",
+          "lab/src/emosa_lab/simulation/native_onboarding.py"
         ],
         "helper": "deploy/radio-manager/backhaul-loss.py --direction ingress --observe-egress",
         "source_references": [
@@ -2219,8 +2219,8 @@
         "status": "packet_calibrated_software_service_and_native_ovsdb_recovery_verified_full_link_source_pending",
         "guide": "doc/protocol/virtual-link-capacity.md",
         "implementation": [
-          "src/emosa/simulation/virtual_capacity.py",
-          "src/emosa/simulation/native_onboarding.py",
+          "lab/src/emosa_lab/simulation/virtual_capacity.py",
+          "lab/src/emosa_lab/simulation/native_onboarding.py",
           "deploy/radio-manager/egress-observer.py"
         ],
         "calibration_runner": "deploy/radio-manager/calibrate-link.py",
@@ -2278,10 +2278,10 @@
         "status": "selected_action_queue_interface_loss_and_service_intervals_verified_through_ovsdb_recovery_complete_neighbor_publication_pending",
         "guide": "doc/protocol/shaped-backhaul-accounting.md",
         "implementation": [
-          "src/emosa/simulation/shaped_backhaul.py",
-          "src/emosa/simulation/backhaul_accounting.py",
-          "src/emosa/simulation/virtual_capacity.py",
-          "src/emosa/simulation/native_onboarding.py"
+          "lab/src/emosa_lab/simulation/shaped_backhaul.py",
+          "lab/src/emosa_lab/simulation/backhaul_accounting.py",
+          "lab/src/emosa_lab/simulation/virtual_capacity.py",
+          "lab/src/emosa_lab/simulation/native_onboarding.py"
         ],
         "independent_check": "scripts/check-shaped-backhaul.py",
         "test_refs": [
@@ -2325,7 +2325,7 @@
         "profile": "owned-isolated-peer-path-v1",
         "guide": "doc/protocol/native-peer-metrics.md",
         "implementation": [
-          "src/emosa/simulation/peer_metrics.py",
+          "lab/src/emosa_lab/simulation/peer_metrics.py",
           "deploy/radio-manager/peer-path.py"
         ],
         "source_path": "Independent manager observes pod counters and VM bridge path before/after read; actual OpenSync-schema Interface.external_ids carries observations through OVSDB",
@@ -2417,7 +2417,7 @@
       "bbf_representation_bridge": {
         "status": "public_definition_review_and_bounded_value_bridge_implemented",
         "reviewed_on": "2026-09-23",
-        "implementation": "src/emosa/wire/bbf_metrics.py",
+        "implementation": "lab/src/emosa_lab/wire/bbf_metrics.py",
         "tests": "tests/test_bbf_metrics.py",
         "source_review": "scripts/review-bbf-data-elements.py",
         "evidence": "doc/evidence/bbf-data-elements/source-review.json",

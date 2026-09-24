@@ -4,11 +4,11 @@ import time
 
 import pytest
 
-from emosa.app import Application
 from emosa.config import validate
 from emosa.errors import EmosaError
-from emosa.local_api import LocalServer, request
 from emosa.secrets import SecretStore
+from emosa_lab.app import Application
+from emosa_lab.local_api import LocalServer, request
 
 pytestmark = pytest.mark.unit
 

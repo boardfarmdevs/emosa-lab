@@ -2,6 +2,12 @@ version = 1
 revision = 3
 requires-python = "==3.13.*"
 
+[manifest]
+members = [
+    "emosa",
+    "emosa-lab",
+]
+
 [[package]]
 name = "attrs"
 version = "26.1.0"
@@ -90,12 +96,11 @@ dependencies = [
     { name = "cryptography" },
     { name = "jsonschema" },
     { name = "ovs" },
-    { name = "paho-mqtt" },
-    { name = "protobuf" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "emosa-lab" },
     { name = "pytest" },
     { name = "ruff" },
 ]
@@ -105,14 +110,36 @@ requires-dist = [
     { name = "cryptography", specifier = "==50.0.1" },
     { name = "jsonschema", specifier = "==4.26.0" },
     { name = "ovs", specifier = "==4.0.0" },
-    { name = "paho-mqtt", specifier = "==2.1.0" },
-    { name = "protobuf", specifier = "==6.33.5" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "emosa-lab", editable = "lab" },
     { name = "pytest", specifier = "==9.1.1" },
     { name = "ruff", specifier = "==0.16.7" },
+]
+
+[[package]]
+name = "emosa-lab"
+version = "0.1.0"
+source = { editable = "lab" }
+dependencies = [
+    { name = "cryptography" },
+    { name = "emosa" },
+    { name = "jsonschema" },
+    { name = "ovs" },
+    { name = "paho-mqtt" },
+    { name = "protobuf" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cryptography", specifier = "==50.0.1" },
+    { name = "emosa", editable = "." },
+    { name = "jsonschema", specifier = "==4.26.0" },
+    { name = "ovs", specifier = "==4.0.0" },
+    { name = "paho-mqtt", specifier = "==2.1.0" },
+    { name = "protobuf", specifier = "==6.33.5" },
 ]
 
 [[package]]
