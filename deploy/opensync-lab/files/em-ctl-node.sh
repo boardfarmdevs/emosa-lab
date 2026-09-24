@@ -130,7 +130,12 @@ policy() {      # policy SSID KEY AL...
     local ssid=$1 key=$2 al; shift 2
     bml bml_clear_wifi_credentials $AL
     bml bml_set_wifi_credentials $AL "$ssid" "$key" 24g-5g fronthaul 0
-    bml bml_set_wifi_credentials $AL "$ssid-bh" "$key" 24g-5g backhaul 0
+    # The network's backhaul is "$ssid-bh". This node's own radio is on the 1905-only
+    # LAN (no router, no DHCP), so its backhaul BSS would strand a pod's backhaul
+    # station: em-gtp serves "$ssid-bh" into the gateway LAN instead (vm/lab.sh gtp).
+    if [ "${EM_GATEWAY_BACKHAUL:-0}" = 1 ]; then
+        bml bml_set_wifi_credentials $AL "$ssid-bh" "$key" 24g-5g backhaul 0
+    fi
     for al in "$@"; do
         bml bml_clear_wifi_credentials "$al"
         bml bml_set_wifi_credentials "$al" "$ssid" "$key" 24g-5g fronthaul 0

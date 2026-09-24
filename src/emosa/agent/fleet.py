@@ -53,6 +53,7 @@ AGENT_DEFAULTS = {
     "multi_bss": False,
     "m2_session": "distinct",
     "profile": DEFAULT_PROFILE,
+    "uplink": {"mode": "off"},
 }
 
 
@@ -123,7 +124,12 @@ class Registry:
 
 
 def agent_config(entry, fleet):
-    """The per-pod agent configuration (the format ``emosa.agent.pod`` reads)."""
+    """The per-pod agent configuration (the format ``emosa.agent.pod`` reads).
+
+    The fleet's settings apply to every agent; ``pods.<serial>`` overrides them
+    for one pod (a different pod model's profile, or its uplink policy).
+    """
+    own = fleet.get("pods", {}).get(entry["pod_id"], {})
     return {
         "pod_id": entry["pod_id"],
         "serial": entry["pod_id"],
@@ -131,7 +137,7 @@ def agent_config(entry, fleet):
         "interface": entry["interface"],
         "al_mac": entry["al_mac"],
         "controller_al": fleet["controller_al"],
-        **{k: fleet.get(k, v) for k, v in AGENT_DEFAULTS.items()},
+        **{k: own.get(k, fleet.get(k, v)) for k, v in AGENT_DEFAULTS.items()},
         "state_dir": str(Path(fleet["state_root"]) / entry["pod_id"]),
         "run_id": entry["pod_id"],
     }

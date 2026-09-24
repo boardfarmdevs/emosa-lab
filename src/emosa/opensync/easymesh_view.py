@@ -25,9 +25,13 @@ Wifi_VIF_State multi_ap                    BSS Configuration Report flags:
                                            backhaul_bss 0x80, else fronthaul 0x40
 Wifi_Associated_Clients state=active,      Associated Clients of that BSS
 listed in the VIF's associated_clients
-Wifi_VIF_State mode=sta (backhaul STA)     the pod's Wi-Fi uplink: kept in the
-                                           view, not yet reported (declared
-                                           representation: Ethernet to EMOSA)
+Wifi_VIF_State mode=sta (backhaul STA)     the pod's Wi-Fi uplink. Reported only
+                                           as an EasyMesh backhaul (option 1): a
+                                           non-AP STA interface on the parent
+                                           BSSID, and Backhaul STA Radio
+                                           Capabilities. Over GRE (option 2) it
+                                           is not an EasyMesh link: declared
+                                           Ethernet to EMOSA only
 =========================================  ======================================
 
 Southbound, the controller's M2 set becomes VIF rows (``pod_profile``); the
@@ -72,6 +76,8 @@ REPORT_FLAGS = {FRONTHAUL: 0x40, BACKHAUL: 0x80}  # BSS Configuration Report
 # freq_band -> (global operating class of a 20 MHz channel, its channels)
 OPERATING_CLASSES = {"2.4G": (81, tuple(range(1, 14)))}
 IEEE_802_11N_24 = 0x0103  # 1905.1 media type of an 802.11n 2.4 GHz interface
+MEDIA = {"2.4G": IEEE_802_11N_24, "5G": 0x0104}  # 802.11n per band (no HT claims beyond)
+AP_ROLE, STA_ROLE = 0x00, 0x40  # 1905.1 802.11 media-specific role: AP, non-AP STA
 
 
 def mac(text):
@@ -107,6 +113,18 @@ class UplinkView:
     if_name: str
     mac: bytes
     ssid: str
+    parent: bytes | None = None  # the BSSID it is associated with
+    multi_ap: bool = False  # a Multi-AP backhaul STA (4-address), not a 3-address station
+
+
+@dataclass(frozen=True)
+class BackhaulView:
+    """The pod's EasyMesh backhaul (option 1): its station, on which radio, to which BSS."""
+
+    ruid: bytes
+    band: str
+    channel: int
+    station: UplinkView
 
 
 @dataclass(frozen=True)
@@ -154,7 +172,16 @@ def device_view(decoded):
             if not vif or vif.get("enabled") is not True or not vif.get("mac"):
                 continue
             if vif.get("mode") == "sta":
-                uplinks.append(UplinkView(vif["if_name"], mac(vif["mac"]), vif.get("ssid") or ""))
+                parent = vif.get("parent")
+                uplinks.append(
+                    UplinkView(
+                        vif["if_name"],
+                        mac(vif["mac"]),
+                        vif.get("ssid") or "",
+                        mac(parent) if isinstance(parent, str) and parent else None,
+                        vif.get("multi_ap") == "backhaul_sta" and vif.get("wds") is True,
+                    )
+                )
             elif vif.get("mode") == "ap":
                 stations = sorted(
                     mac(clients[c]["mac"])
@@ -191,6 +218,25 @@ def device_view(decoded):
         node.get("firmware_version"),
         tuple(sorted(radios, key=lambda r: r.ruid)),
     )
+
+
+def backhaul(device, station):
+    """The pod's EasyMesh backhaul through ``station``, or None.
+
+    Only a connected Multi-AP backhaul STA on a mapped band with a known
+    channel and parent qualifies; the caller decides that ``cm`` uses it.
+    """
+    for radio in device.radios:
+        for uplink in radio.uplinks:
+            if (
+                uplink.if_name == station
+                and uplink.multi_ap
+                and uplink.parent is not None
+                and radio.band in MEDIA
+                and radio.channel is not None
+            ):
+                return BackhaulView(radio.ruid, radio.band, radio.channel, uplink)
+    return None
 
 
 # -- the view as EasyMesh payloads ----------------------------------------------
@@ -238,17 +284,29 @@ def inventory(device, radio, chipset=b"mac80211_hwsim"):
     )
 
 
-def topology(*, agent_al, controller_al, radio, channel, bsses, ages):
+def topology(*, agent_al, controller_al, radio, channel, bsses, ages, uplink=None):
     """Topology Response contents: the agent, its BSSes and their stations.
 
     ``bsses`` is the subset of the radio's BSSes the agent represents; ``ages``
     maps a station MAC to seconds since association (as far as EMOSA knows).
     The agent's 1905 interface is its own Ethernet port (declared representation).
+    ``uplink`` (a :class:`BackhaulView`) adds the pod's EasyMesh backhaul STA as a
+    non-AP STA interface on its parent BSSID, bridged with the BSSes; the 1905
+    neighbor stays on the Ethernet port, where EMOSA's frames actually go.
     """
     interfaces = (LocalInterface(agent_al, 1, b""),) + tuple(
-        LocalInterface(b.bssid, IEEE_802_11N_24, b.bssid + bytes([0x00, 0x00, channel, 0x00]))
+        LocalInterface(b.bssid, IEEE_802_11N_24, b.bssid + bytes([AP_ROLE, 0x00, channel, 0x00]))
         for b in bsses
     )
+    if uplink is not None:
+        station = uplink.station
+        interfaces += (
+            LocalInterface(
+                station.mac,
+                MEDIA[uplink.band],
+                station.parent + bytes([STA_ROLE, 0x00, uplink.channel, 0x00]),
+            ),
+        )
     return TopologyFacts(
         device=DeviceInformation(agent_al, interfaces),
         bridges=BridgingCapability((tuple(i.mac for i in interfaces),)),
@@ -282,4 +340,5 @@ def topology(*, agent_al, controller_al, radio, channel, bsses, ages):
         powered_off_interfaces_absent=True,
         l2_neighbor_records_absent=True,
         mld_backhaul_vbss_tid_policy_absent=True,
+        backhaul_stations=() if uplink is None else ((uplink.ruid, uplink.station.mac),),
     )

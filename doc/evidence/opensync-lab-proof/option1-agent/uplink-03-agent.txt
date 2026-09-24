@@ -1,0 +1,11 @@
+Sep 24 21:50:47 emosa emosa-agent[7395]: 2026-09-24 21:50:47,257 INFO emosa.agent.uplink: switching bhaul-sta-50 to the EasyMesh backhaul 'emosa-mesh-bh'
+Sep 24 21:50:47 emosa emosa-agent[7395]: 2026-09-24 21:50:47,394 INFO emosa.agent.uplink: uplink switch 9144ee64-1d08-4957-93d1-469c08021549: CONFIG_COMMITTED
+Sep 24 21:50:51 emosa emosa-agent[7426]: 2026-09-24 21:50:51,080 INFO emosa.agent: pod: null
+Sep 24 21:51:03 emosa emosa-agent[7426]: 2026-09-24 21:51:03,666 INFO emosa.agent.uplink: uplink on the EasyMesh backhaul: {'kind': 'multi-ap', 'in_use': 'bhaul-sta-50', 'stat
+Sep 24 21:51:06 emosa emosa-agent[7426]: 2026-09-24 21:51:06,436 INFO emosa.agent: pod: null
+Sep 24 21:51:32 emosa emosa-agent[7426]: 2026-09-24 21:51:32,042 INFO emosa.agent: pod: null
+Sep 24 21:52:59 emosa emosa-agent[7426]: 2026-09-24 21:52:59,070 INFO emosa.agent.uplink: switching bhaul-sta-50 to the EasyMesh backhaul 'emosa-mesh-bh'
+Sep 24 21:52:59 emosa emosa-agent[7426]: 2026-09-24 21:52:59,174 INFO emosa.agent.uplink: uplink switch 3314b734-ad20-4181-bb28-04e181ac54ff: CONFIG_COMMITTED
+Sep 24 21:53:03 emosa emosa-agent[7426]: 2026-09-24 21:53:03,962 INFO emosa.agent: pod: null
+Sep 24 21:53:15 emosa emosa-agent[7426]: 2026-09-24 21:53:15,598 INFO emosa.agent.uplink: uplink on the EasyMesh backhaul: {'kind': 'multi-ap', 'in_use': 'bhaul-sta-50', 'stat
+Sep 24 21:53:18 emosa emosa-agent[7426]: 2026-09-24 21:53:18,028 INFO emosa.agent: pod: null

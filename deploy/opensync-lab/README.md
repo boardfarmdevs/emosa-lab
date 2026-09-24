@@ -102,9 +102,19 @@ deploy/opensync-lab/lab.sh client em-wc7 pod-4 emosa-mesh 'EmosaMesh2026!'
 `lab.sh gtp` adds `em-gtp`, standing in for the EasyMesh gateway side. It
 carries:
 - a pod-backhaul SSID and the GRE termination point (option 2);
-- a hostapd Multi-AP backhaul BSS (option 1).
+- a hostapd Multi-AP backhaul BSS on 2.4 GHz (`emosa-lab-bh`), for moving
+  uplinks by hand;
+- once a controller policy is saved (`lab.sh policy`), the controller's
+  backhaul BSS: 5 GHz, `<ssid>-bh` with the policy's key, bridged into the
+  gateway LAN. The controller no longer gives its own node that BSS: em-ctl's
+  radio sits on the 1905-only LAN, with no router, and a pod that joined it
+  was stranded (run `uplink-01` below).
 
-`lab.sh uplink POD gtp|multi-ap|restore|show` moves a pod's uplink.
+`lab.sh option1 POD on|off` makes POD's agent perform option 1 itself (spec
+§8.3). The agent writes the pod's `bhaul-sta-50` onto the controller's
+backhaul, confirms it from State, and does it again after every OpenSync
+restart. `lab.sh uplink POD gtp|multi-ap|restore|show` still moves an uplink by
+hand.
 
 Option 1 needs a pod image built by opensync-lab `d1dc985` or later, which
 applies the platform patch for the Multi-AP link state.
@@ -115,8 +125,12 @@ applies the platform patch for the Multi-AP link state.
 MVX_VM=emosa-osl-0923 MVX_POD_IMAGE=$HOME/yocto/mvx-pod-work/out/mvx-pod-<stamp> ./deploy-mvx.sh pod pod-6
 # in emosa-lab
 deploy/opensync-lab/lab.sh release pod-6 && deploy/opensync-lab/lab.sh admit pod-6
-deploy/opensync-lab/lab.sh uplink pod-6 multi-ap
+deploy/opensync-lab/lab.sh gtp                  # the controller's backhaul BSS on em-gtp
+deploy/opensync-lab/lab.sh option1 pod-6 on
 ```
+
+A pod whose switch was not confirmed is held on option 2, and its agent status
+says why. `lab.sh release` followed by `lab.sh admit` starts over.
 
 The design and the results are in
 [the data plane document](../../doc/architecture/data-plane.md).

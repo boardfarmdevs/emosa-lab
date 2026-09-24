@@ -81,14 +81,16 @@ Sent by the agent:
 | `0x0006` | Link Metric Response | in answer to a Link Metric Query, once provisioned |
 | `0x0007` | AP-Autoconfiguration Search | up to 3 times, 1 s apart, when onboarding starts |
 | `0x0009` | AP-Autoconfiguration WSC (M1) | after an admitted Response |
-| `0x8000` | 1905 Ack | acknowledging a Multi-AP Policy Config Request |
+| `0x8000` | 1905 Ack | acknowledging a Multi-AP Policy Config Request or a Backhaul Steering Request |
 | `0x8002` | AP Capability Report | in answer to an AP Capability Query |
 | `0x8005` | Channel Preference Report | in answer to a Channel Preference Query |
 | `0x8007` | Channel Selection Response | in answer to a Channel Selection Request: accepted (code 0), without moving the radio |
 | `0x8008` | Operating Channel Report | after a Channel Selection Request, while the BSS operates |
 | `0x800A` | Client Capability Report | in answer to a Client Capability Query (declares the capability unavailable) |
 | `0x800C` | AP Metrics Response | in answer to an AP Metrics Query, only with qualified measurements |
+| `0x801A` | Backhaul Steering Response | after its Ack: result code `0x01` (failure). EMOSA refuses backhaul steering |
 | `0x8022` | Client Disassociation Stats | after an observed client departure, only with qualified statistics |
+| `0x8028` | Backhaul STA Capability Report | in answer to a Backhaul STA Capability Query: one Backhaul STA Radio Capabilities TLV (`0xCB`) for the pod's EasyMesh backhaul STA (§8.3), none over GRE |
 | `0x8043` | Early AP Capability Report | with M1, before configuration |
 
 Received by the agent:
@@ -106,6 +108,8 @@ Received by the agent:
 | `0x8004` / `0x8006` | Channel Preference Query / Channel Selection Request | answered (§3.4) |
 | `0x8009` | Client Capability Query | answered |
 | `0x800B` | AP Metrics Query | answered only with qualified measurements |
+| `0x8019` | Backhaul Steering Request | acknowledged and refused (`0x801A`) |
+| `0x8027` | Backhaul STA Capability Query | answered |
 
 Any other message is ignored and counted as `unsupported_message_<type>`.
 
@@ -146,7 +150,8 @@ was written to Config:
 
 The agent's own 1905 interface is declared Ethernet (media type `0x0001`). Each
 BSS is an 802.11n 2.4 GHz interface (`0x0103`). The pod's own Wi-Fi uplink is
-not reported.
+reported only while it is an EasyMesh backhaul (§8.3). Over OpenSync's GRE it
+is not an EasyMesh link, and the agent reports nothing about it.
 
 ## 3. Southbound: OpenSync OVSDB
 
@@ -174,9 +179,11 @@ Monitored, read-only:
 | `AWLAN_Node` | `serial_number`, `model`, `firmware_version`, `id` |
 | `Wifi_Radio_Config` | `if_name`, `freq_band`, `enabled`, `vif_configs` |
 | `Wifi_Radio_State` | `if_name`, `radio_config`, `vif_states`, `freq_band`, `channel`, `mac`, `enabled`, `country`, `tx_power` |
-| `Wifi_VIF_Config` | `if_name`, `mode`, `ssid`, `enabled`, `wpa`, `wpa_key_mgmt`, `wpa_psks`, `security`, `rsn_pairwise_ccmp`, `wpa_pairwise_tkip`, `wpa_pairwise_ccmp`, `wpa_oftags`, `bridge`, `multi_ap` |
-| `Wifi_VIF_State` | the Config columns above, plus `vif_config`, `mac`, `associated_clients`, `multi_ap` |
+| `Wifi_VIF_Config` | `if_name`, `mode`, `ssid`, `enabled`, `wpa`, `wpa_key_mgmt`, `wpa_psks`, `security`, `rsn_pairwise_ccmp`, `wpa_pairwise_tkip`, `wpa_pairwise_ccmp`, `wpa_oftags`, `bridge`, `multi_ap`, `credential_configs`, `wds`, `parent` |
+| `Wifi_VIF_State` | the Config columns above except `credential_configs`, plus `vif_config`, `mac`, `associated_clients` |
 | `Wifi_Associated_Clients` | `mac`, `state` |
+| `Wifi_Credential_Config` | `ssid`, `security`, `onboard_type`, `priority`, `enabled` |
+| `Connection_Manager_Uplink` | `if_name`, `if_type`, `is_used`, `has_L2`, `has_L3` |
 
 Written, each as one guarded transaction. A cold create and a multi-BSS set are
 preceded by a read-only `select` of `Wifi_Inet_Config`.
@@ -187,9 +194,10 @@ preceded by a read-only `select` of `Wifi_Inet_Config`.
 | Update the fronthaul | `wait` on the AWLAN_Node serial, the radio's references (`if_name`, `vif_configs`) and the VIF's guarded fields → `update Wifi_VIF_Config ssid` → `mutate wpa_psks` (the single slot becomes key `key`) |
 | Cold pod: create the fronthaul | `wait` on the serial and that the VIF is absent → `insert Wifi_VIF_Config` (profile row, received SSID and PSK) → `mutate Wifi_Radio_Config vif_configs` → `update Wifi_Radio_Config channel, ht_mode, enabled` → `insert Wifi_Inet_Config` if absent |
 | Multi-BSS set | as above for the primary BSS, plus: insert, update or delete each profile slot VIF so the slots are **exactly** the received set, with the matching `vif_configs` mutations and `Wifi_Inet_Config` rows |
+| Uplink switch (§8.3) | `wait` on the AWLAN_Node row and serial, and on the station's guarded fields (`if_name`, `mode`, `enabled`, `ssid`, `credential_configs`, `multi_ap`) → `insert Wifi_Credential_Config` (the backhaul SSID and passphrase, `onboard_type=multi_ap`, `priority` 1) → `update Wifi_VIF_Config` of the station: `enabled=true`, `ssid` and `security` empty, `multi_ap` and `wds` unset, `credential_configs` = that credential only |
 
 Every write MUST be guarded: if the pod's graph or guarded fields changed,
-nothing is written. Guarded VIF fields: `if_name`, `mode`, `enabled`, `ssid`,
+nothing is written. Guarded AP VIF fields: `if_name`, `mode`, `enabled`, `ssid`,
 `wpa`, `wpa_key_mgmt`, `wpa_psks`, `security`, and the pairwise cipher flags.
 EMOSA MUST NOT write any other table or column.
 
@@ -203,7 +211,8 @@ EMOSA MUST NOT write any other table or column.
 | `Wifi_VIF_State` with `mode=ap`, `enabled=true`, a `mac`, and listed in its radio's `vif_states` | a BSS: BSSID = `mac`, SSID = `ssid` |
 | `Wifi_VIF_State.multi_ap` | BSS Configuration Report flags: `backhaul_bss` → `0x80`, anything else → `0x40` |
 | `Wifi_Associated_Clients` with `state=active`, listed in the VIF's `associated_clients` | associated clients of that BSS |
-| `Wifi_VIF_State` with `mode=sta` | the pod's uplink: not reported |
+| `Wifi_VIF_State` with `mode=sta`, `multi_ap=backhaul_sta`, `wds=true`, a `parent`, and the only `Connection_Manager_Uplink` row with `is_used=true` | the EasyMesh backhaul (§8.3): a local interface of media type `0x0103` (2.4 GHz) or `0x0104` (5 GHz) with the station's `mac`, media-specific information `parent` BSSID, role `0x40` (non-AP STA), channel; in the bridging tuple with the BSSes; and in the Backhaul STA Capability Report. The 1905 neighbor stays on the Ethernet interface, where EMOSA's frames go |
+| any other `Wifi_VIF_State` with `mode=sta` | not reported |
 
 The primary BSS is represented only while its State shows a WPA2-PSK AP in the
 6.6 encoding (below). Before that, the radio is advertised without a BSS so the
@@ -243,7 +252,9 @@ A profile gives:
 - the fronthaul VIF name and its row;
 - the backhaul overrides;
 - the extra VIF slots for multi-BSS;
-- the `Wifi_Inet_Config` row of a created VIF.
+- the `Wifi_Inet_Config` row of a created VIF;
+- the backhaul station the uplink switch moves (§8.3), one the pod's bootstrap
+  creates.
 
 The bundled profile is `opensync-lab-hwsim-6.6.1-v1`.
 
@@ -261,7 +272,10 @@ For each connection on the front port, the fleet:
 5. writes `manager_addr` and ends the session.
 
 The whole exchange MUST complete within 5 s. A pod returning later gets the
-same entry. `forget SERIAL` stops the agent, deletes the entry and the
+same entry. The agent configuration takes the fleet's settings (`message_set`,
+`multi_bss`, `m2_session`, `profile`, `uplink`), overridden per pod by
+`pods.<serial>`: a different pod model needs its own profile, and the uplink
+switch (§8.3) is enabled per pod. `forget SERIAL` stops the agent, deletes the entry and the
 configuration, and archives the agent's state directory. A pod handed over
 again starts a new ownership period, so conflicts recorded before its release
 don't block it.
@@ -293,6 +307,9 @@ Rules:
 - After a restart, a `SUBMITTED` operation becomes `INDETERMINATE`, and an
   unsent one is cancelled.
 - Legal transitions are listed in `src/emosa/operations.py` and MUST be kept.
+- The uplink switch (§8.3) is a second scope with its own journal and the same
+  states and transitions. Its deadline is 90 s. At most one operation per scope
+  is active.
 
 ## 6. Management and state
 
@@ -303,7 +320,7 @@ Rules:
 | Fleet registry | [`fleet-registry.schema.json`](../schemas/fleet-registry.schema.json) | `<state_root>/fleet.json` |
 | Agent status | [`agent-status.schema.json`](../schemas/agent-status.schema.json) | `<state_dir>/status.json`, rewritten on change, at most once a second |
 | Pod profile | [`pod-profile.schema.json`](../schemas/pod-profile.schema.json) | bundled, or a path |
-| Operation journal, secrets | implementation-private | `<state_dir>/journal`, `<state_dir>/secrets` |
+| Operation journal, secrets | implementation-private | `<state_dir>/journal`, `<state_dir>/uplink` (the uplink scope), `<state_dir>/secrets` |
 
 Real examples from the lab are in [`examples/`](examples).
 
@@ -328,6 +345,7 @@ Timers:
 | Pod State re-read and reconcile | 0.5 s |
 | Published report lifetime | 1.5 s |
 | Operation deadline | 120 s |
+| Uplink switch deadline | 90 s |
 | Fleet exchange | 5 s |
 | Idle wakeup (frames are handled at once) | 0.2 s |
 
@@ -346,7 +364,9 @@ Timers:
 EMOSA carries a pod's control. A pod's clients also need a data path to the
 gateway LAN. The design and its reasoning are in
 [`doc/architecture/data-plane.md`](../doc/architecture/data-plane.md). Any
-integration MUST meet the following:
+integration MUST meet the following.
+
+### 8.1 Requirements
 
 | # | Requirement |
 | --- | --- |
@@ -358,8 +378,10 @@ integration MUST meet the following:
 | D6 | The pods' underlay has its own L2 segment and subnet, separate from the client LAN. |
 | D7 | What the controller is told about the uplink is true, or declared as a simplification. |
 
-**GRE termination point (GTP), the baseline:** always provided. The pod keeps
-OpenSync's 3-address backhaul station and gretap. The GTP:
+### 8.2 GRE termination point (GTP), the baseline
+
+Always provided. The pod keeps OpenSync's 3-address backhaul station and
+gretap. The GTP:
 - MUST use a link-local underlay (`169.254.0.0/16`), because OpenSync 6.6 `cm`
   builds no tunnel over any other address;
 - MUST own the first host address (`.1`) of the underlay subnet, because
@@ -387,25 +409,51 @@ The gateway provides:
 
 The agent keeps reporting a declared Ethernet attachment.
 
-**EasyMesh backhaul, optional:** only for pods whose platform qualifies (data
-plane document §7). A pod qualifies only if its platform reports
-`multi_ap=backhaul_sta` in `Wifi_VIF_State` for a Multi-AP link. OpenSync
-6.6's cfg80211 platform does so for MediaTek drivers only; opensync-lab's pod
-image patches it for every driver (`d1dc985`). The agent writes the controller's backhaul SSID and passphrase with
-`multi_ap=backhaul_sta` on the pod's backhaul station. OpenSync then joins as a
-4-address Multi-AP backhaul station bridged into `br-home`, without GRE.
-EMOSA MUST NOT rely on a lower-priority `gre` credential as the fallback: osw
-aborts `owm` when it stays on a lower-priority network. The fallback is the
-pod's restart to its bootstrap (GTP) path. The switch is one guarded operation that
-counts as applied only when the pod is back with the new uplink in its State.
-If the pod doesn't come back, it returns to the GTP path by its own restart,
-and EMOSA MUST NOT retry on its own.
+### 8.3 EasyMesh backhaul, optional
+
+Only for pods whose platform qualifies (data plane document §7): the platform
+MUST report `multi_ap=backhaul_sta` in `Wifi_VIF_State` for a Multi-AP link.
+OpenSync 6.6's cfg80211 platform does so for MediaTek drivers only;
+opensync-lab's pod image patches it for every driver (`d1dc985`). The pod then
+joins as a 4-address Multi-AP backhaul station bridged into `br-home`, without
+GRE.
+
+The agent makes the switch itself when its configuration has
+`uplink.mode = multi-ap`:
+- **Credentials:** the backhaul BSS (role backhaul) of the controller's
+  applied M2 set, with `multi_bss`; or `uplink.ssid` and `uplink.secret_ref`
+  from the configuration.
+- **Station:** the profile's uplink station (`uplink.station` overrides it).
+  The pod's bootstrap MUST create it.
+- **When:** the pod is bound, `cm` reports a working uplink, and the station is
+  not already on that backhaul. One switch per start of the pod's OpenSync. A
+  start is identified by the UUIDs of its `Wifi_Radio_Config` rows: OpenSync's
+  start scripts create them anew, while `AWLAN_Node` comes from the database
+  template and keeps its UUID. The switch is therefore made again after every
+  re-onboarding, because every OpenSync restart returns the pod to its
+  bootstrap uplink.
+- **Write:** one guarded transaction (§3.2): the station in credential-list
+  mode with one `multi_ap` credential. EMOSA MUST NOT keep a lower-priority
+  `gre` credential as the fallback, because osw aborts `owm` when it stays on a
+  lower-priority network. The fallback is the pod's restart to its bootstrap
+  (GTP) path.
+- **Applied** only when, on the same start of the pod, its State shows the
+  station with `multi_ap=backhaul_sta` and `wds=true` on the configured SSID,
+  and it is `cm`'s only uplink in use.
+- **Held:** a switch not applied within 90 s becomes `TIMED_OUT`. EMOSA then
+  holds the pod on option 2 and MUST NOT switch it again on its own. So does a
+  switch that fails or is rejected by OVSDB, and one whose station
+  configuration another manager changes on the same start. A new admission
+  (§4 `forget`) clears the hold.
+- **Reported:** while the switch is applied, the backhaul is reported as in
+  §3.3. Backhaul Steering Requests are refused (§2.4).
 
 ## 9. Not covered yet
 
 - 5 and 6 GHz radios, and WPA3;
 - more than one radio per agent;
-- the pod's Wi-Fi uplink in the topology;
+- Backhaul Steering (refused), backhaul link metrics, and a 1905 neighbor on
+  the backhaul interface;
 - AP and station metrics from real measurements;
 - TLS on the front port and agent ports (a physical pod requires it);
 - DPP onboarding.

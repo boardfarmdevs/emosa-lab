@@ -1,0 +1,20 @@
+Sep 24 21:29:45 pod-6 CM[7667]: <NOTICE>   EVENT: State LINK_SEL success -> WAN_IP
+Sep 24 21:29:48 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv4 failed, arping ret = 0
+Sep 24 21:29:50 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv6 failed, ndisc6 ret = 0
+Sep 24 21:29:52 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv4 failed, arping ret = 0
+Sep 24 21:29:54 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv6 failed, ndisc6 ret = 0
+Sep 24 21:29:56 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv4 failed, arping ret = 0
+Sep 24 21:29:58 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv6 failed, ndisc6 ret = 0
+Sep 24 21:30:00 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv4 failed, arping ret = 0
+Sep 24 21:30:02 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv4 failed, arping ret = 0
+Sep 24 21:30:04 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv4 failed, arping ret = 0
+Sep 24 21:30:06 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv4 failed, arping ret = 0
+Sep 24 21:30:09 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv4 failed, arping ret = 0
+Sep 24 21:30:11 pod-6 CM[7667]: <INFO>    TARGET: Router check: ping ipv4 failed, arping ret = 0
+Sep 24 21:30:11 pod-6 CM[7667]: <WARNING>   MISC: Restart managers due to exceeding the threshold for fatal failures
+Sep 24 21:30:11 pod-6 CM[7667]: <WARNING>  EVENT: Trigger restart managers
+Sep 24 21:30:11 pod-6 CM[7667]: <INFO>    TARGET: FATAL condition triggered, restarting managers...
+Sep 24 21:30:11 pod-6 ovsdb-server[7474]: ovs|00091|fatal_signal|WARN|terminating with signal 15 (Terminated)
+Sep 24 21:30:11 pod-6 DM[7655]: <NOTICE>    MISC: Child terminated by non-fatal signal SIGTERM (Terminated), exiting ...
+Sep 24 21:30:11 pod-6 stop.sh[8733]: + CONFIG_CM2_CLOUD_FATAL_THRESHOLD=0
+Sep 24 21:30:11 pod-6 stop.sh[8733]: + CONFIG_CM2_STABILITY_THRESH_FATAL=8

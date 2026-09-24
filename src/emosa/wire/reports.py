@@ -220,6 +220,9 @@ class TopologyFacts:
     powered_off_interfaces_absent: bool
     l2_neighbor_records_absent: bool
     mld_backhaul_vbss_tid_policy_absent: bool
+    # (RUID, backhaul STA MAC) of each radio whose station is the agent's EasyMesh
+    # backhaul: the Backhaul STA Capability Report (0x8028). Empty over GRE.
+    backhaul_stations: tuple = ()
 
 
 def _topology(facts, binding, message_set=EASYMESH_61):

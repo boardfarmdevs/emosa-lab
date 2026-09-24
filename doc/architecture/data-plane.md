@@ -350,7 +350,8 @@ GRE, no GTP and no pod-backhaul SSID.
    controller.
    - In multi-BSS mode the controller's M2 set includes the backhaul BSS
      (flag `0x40`). Its SSID and key are the network's backhaul credentials.
-   - Otherwise they come from the fleet configuration.
+   - Otherwise they come from the agent's configuration (`uplink.ssid` and
+     `uplink.secret_ref`, set per pod in the fleet configuration).
 2. **Uplink change.** EMOSA writes the pod's backhaul station through OVSDB,
    as one guarded operation like any other (§5.3): the controller's backhaul
    SSID and passphrase with `multi_ap=backhaul_sta`. This can be done either
@@ -375,7 +376,10 @@ GRE, no GTP and no pod-backhaul SSID.
      backhaul BSS as its neighbour;
    - Backhaul STA Radio Capabilities.
 
-   It MUST handle, or explicitly refuse, Backhaul Steering Requests.
+   It MUST handle, or explicitly refuse, Backhaul Steering Requests. The agent
+   refuses them (Backhaul Steering Response, result failure). It answers a
+   Backhaul STA Capability Query with the station's Backhaul STA Radio
+   Capabilities, and with none while the pod is on GRE.
 
    The 1905 frames still come from EMOSA's port on the LAN, not from the pod's
    radio. A controller that checks which interface a neighbour's frames arrive
@@ -421,6 +425,16 @@ If the pod doesn't come back within the deadline, it has already restarted to
 option 2, or will. EMOSA records the operation as `TIMED_OUT`, marks the pod
 option-2-only, and never retries on its own.
 
+Two more rules came from the lab (§5.6):
+- The switch waits until the pod serves the controller's fronthaul and no
+  fronthaul write is in flight. The switch moves the path such a write travels
+  on, and after an OpenSync restart the controller's M2 re-creates the
+  fronthaul at about the same moment.
+- "After every re-onboarding" means after every start of the pod's OpenSync.
+  The start is told by its `Wifi_Radio_Config` rows, which the start scripts
+  create anew. `AWLAN_Node` comes from the database template and keeps its
+  UUID.
+
 **Credential-list fallback is not the safety net.** OpenSync can hold a
 `multi_ap` credential above a `gre` one, and `wpa_supplicant` does connect to
 the `gre` network when the Multi-AP SSID is absent (§7, Q5). But osw treats
@@ -453,12 +467,17 @@ restarted.
 
 ### 5.6 In the lab
 
-**Backhaul BSS.** The prplMesh gateway's own agent doesn't configure its BSSes in
-this lab (§8), so the Multi-AP backhaul BSS is hostapd's standard
-implementation (`multi_ap=1`, `wds_sta=1`), in `em-gtp` (`emosa-lab-bh`,
-bridged into the LAN bridge). prplMesh and RDK use the same hostapd feature.
-`lab.sh uplink POD multi-ap` writes the pod's backhaul station with a sole
-`multi_ap` credential.
+**Backhaul BSS.** The Multi-AP backhaul BSS is hostapd's standard
+implementation (`multi_ap=1`, `wds_sta=1`), in `em-gtp`, bridged into the LAN
+bridge. prplMesh and RDK use the same hostapd feature. There are two:
+- `emosa-lab-bh` (2.4 GHz), used by hand: `lab.sh uplink POD multi-ap` writes
+  the pod's backhaul station with a sole `multi_ap` credential;
+- the controller's backhaul, `emosa-mesh-bh` (5 GHz), used by the agent's
+  switch.
+
+The prplMesh node does run its own backhaul BSS once the policy gives it one,
+but its radio is on the 1905-only LAN, where there is no router (run
+`uplink-01` below). The lab policy therefore gives it none.
 
 **Unpatched pod image.** The data path worked: pod-6 joined as a 4-address
 station bridged into `br-home`, with no GRE, and the client had internet.
@@ -482,6 +501,20 @@ protection on:
   OpenSync restart;
 - after a 30 s backhaul loss, the client was back 13 s after the link
   returned, `cm` re-adopted the station, and nothing restarted.
+
+**The agent makes the switch** (runs `uplink-01` to `uplink-04`, evidence
+`doc/evidence/opensync-lab-proof/option1-agent`). With `lab.sh option1 pod-6 on`,
+pod-6's agent writes `bhaul-sta-50` onto the controller's backhaul BSS
+(`emosa-mesh-bh`, served by `em-gtp` on 5 GHz into the gateway LAN):
+- applied 16 to 22 s after the write: 4-address, bridged into `br-home`,
+  `cm`'s only uplink, no GRE; the client had internet;
+- the controller lists the station as the agent's 802.11n 5 GHz interface;
+- after an OpenSync restart the pod came back on GRE, the fronthaul was
+  re-created from M2, and the agent switched it again, 0.7 s later;
+- when the station joined a backhaul BSS with no router behind it (the prplMesh
+  node's own, on the 1905-only LAN), OpenSync restarted to GRE after 12 failed
+  router checks. The agent timed the switch out at 90 s and held the pod on
+  option 2. The lab no longer gives that node a backhaul BSS.
 
 **Found on the way (EMOSA):** after a release, a re-admitted pod was refused
 with `OWNERSHIP_CONFLICT`. Its old journal still recorded that someone else
@@ -531,12 +564,16 @@ connected Multi-AP station.
 1. **Option 2 is ready** for the RDK and prpl labs: the adapter kit ships
    `emosa-gtp`. The gateway side's obligations are in spec §8 and §4.3,
    including the pods' bootstrap credentials leading to the GTP (§5.3).
-2. **Option 1 works in the lab** on the patched pod image (§5.6). What's left
-   for EMOSA is to perform the switch itself, as an operation (§5.3): take the
-   backhaul credentials from the controller's M2 set, write the backhaul
-   station, confirm it from State, and re-apply after every re-onboarding. It
-   also needs to report the Wi-Fi backhaul to the controller truthfully
-   (§5.1, step 6).
-3. **Against prplMesh itself,** its gateway agent must first configure its own
-   BSSes in this lab ("Not all BSSes from M2 configured by agent"). That's a
-   prplMesh lab issue, separate from EMOSA.
+2. **Option 1 is an agent operation** (spec §8.3, §5.6): the agent switches a
+   qualifying pod, confirms it from State, holds a pod whose switch failed on
+   option 2, and switches it again after every OpenSync restart. It reports
+   the backhaul STA and refuses Backhaul Steering. Still open:
+   - credentials from the controller's M2 set run in unit tests only. The lab
+     controller gives its agents no backhaul BSS yet (single-BSS agents);
+   - Backhaul Steering, backhaul link metrics, and a 1905 neighbor on the
+     backhaul interface;
+   - prplMesh keeps the agent's Backhaul `LinkType` at Ethernet, because its
+     1905 frames arrive on EMOSA's port.
+3. **Against prplMesh itself,** its gateway node's radio is on the 1905-only
+   LAN in this lab, so its backhaul BSS has no router behind it (§5.6).
+   A pod's backhaul station must never be offered that BSS.

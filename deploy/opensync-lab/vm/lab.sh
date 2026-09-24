@@ -21,7 +21,9 @@
 #   lab.sh provision POD              lab device certificate into POD:/var/certs
 #   lab.sh gtp                        container em-gtp: pod-backhaul SSID + GRE termination point
 #                                     (data plane option 2), its LAN leg on mv3's LAN (lan-p4)
-#   lab.sh uplink POD MODE            move POD's uplink: gtp | multi-ap | restore | show
+#   lab.sh uplink POD MODE            move POD's uplink by hand: gtp | multi-ap | restore | show
+#   lab.sh option1 POD on|off         POD's EMOSA agent switches its uplink to the controller's
+#                                     backhaul BSS itself (em-gtp, 5 GHz), and keeps it switched
 #   lab.sh status
 #   lab.sh workload LABEL             900 s recovery workload under faults (vm/workload.py)
 set -euo pipefail
@@ -391,9 +393,61 @@ ExecStart=/bin/sh -c 'for b in podbh br-gtp; do ip link show $b >/dev/null 2>&1 
 WantedBy=multi-user.target
 EOF
     cx em-gtp sh -c 'systemctl daemon-reload; systemctl enable -q --now emosa-lab-bridges'
-    cx em-gtp sh -ec 'grep -q "^DAEMON_CONF=" /etc/default/hostapd 2>/dev/null ||
-            echo DAEMON_CONF=/etc/hostapd/hostapd.conf >> /etc/default/hostapd
-        systemctl unmask hostapd >/dev/null 2>&1; systemctl enable -q hostapd; systemctl restart hostapd'
+    local confs=/etc/hostapd/hostapd.conf
+    if [ -f /opt/emosa-lab/policy ]; then
+        # The controller's backhaul BSS, as the EasyMesh gateway would run it: 5 GHz, the
+        # policy's "<ssid>-bh" and key (em-ctl-node policy), Multi-AP backhaul into br-gtp.
+        # Data plane option 1 for the agents' uplink switch (lab.sh option1). Own radio.
+        if ! lxc config device show em-gtp | grep -q '^wlan1:'; then
+            # shellcheck source=/dev/null
+            radio=$(source "$OSL/guest/common.sh"; hwsim_free | head -1)
+            [ -n "$radio" ] || die "no free hwsim radio"
+            lxc stop em-gtp
+            lxc config device add em-gtp wlan1 nic nictype=physical parent="$radio" name=wlan1 >/dev/null
+            lxc start em-gtp
+            wait_net em-gtp
+            log "em-gtp: radio $radio as wlan1 (5 GHz backhaul BSS)"
+        fi
+        local ssid key
+        read -r ssid key < /opt/emosa-lab/policy
+        cx em-gtp sh -c "umask 077; cat > /etc/hostapd/hostapd-bh.conf" <<EOF
+interface=wlan1
+bridge=${EMOSA_MAP_BRIDGE:-br-gtp}
+driver=nl80211
+ctrl_interface=/run/hostapd
+ssid=$ssid-bh
+hw_mode=a
+channel=${EMOSA_BH_CHANNEL:-36}
+multi_ap=1
+wds_sta=1
+wpa=2
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+wpa_passphrase=$key
+EOF
+        # its own hostapd: the packaged unit passes DAEMON_CONF as one argument
+        cx em-gtp sh -c 'cat > /etc/systemd/system/emosa-lab-backhaul.service' <<'EOF'
+[Unit]
+Description=The controller's backhaul BSS (5 GHz Multi-AP) for data plane option 1
+After=emosa-lab-bridges.service
+Requires=emosa-lab-bridges.service
+
+[Service]
+ExecStart=/usr/sbin/hostapd /etc/hostapd/hostapd-bh.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        confs="$confs /etc/hostapd/hostapd-bh.conf"
+    fi
+    cx em-gtp sh -ec "sed -i '/^DAEMON_CONF=/d' /etc/default/hostapd 2>/dev/null || true
+        echo DAEMON_CONF=/etc/hostapd/hostapd.conf >> /etc/default/hostapd
+        systemctl unmask hostapd >/dev/null 2>&1; systemctl enable -q hostapd; systemctl restart hostapd"
+    if [ "$confs" != /etc/hostapd/hostapd.conf ]; then
+        cx em-gtp sh -ec 'systemctl daemon-reload; systemctl enable -q emosa-lab-backhaul
+            systemctl restart emosa-lab-backhaul'
+    fi
     lxc file push -q /opt/emosa-lab/adapter-kit.tar.gz em-gtp/root/adapter-kit.tar.gz
     cx em-gtp sh -ec 'rm -rf /root/adapter-kit && mkdir /root/adapter-kit
         tar -C /root/adapter-kit --strip-components=1 -xzf /root/adapter-kit.tar.gz
@@ -412,10 +466,45 @@ EOF
     cx em-gtp systemctl is-active -q emosa-gtp || die "emosa-gtp did not start: $(cx em-gtp journalctl -u emosa-gtp -n 5 --no-pager)"
     log "em-gtp: pod-backhaul SSID ${EMOSA_PODBH_SSID:-emosa-podbh}, GTP 169.254.2.1 on podbh, tunnels into br-gtp ($lan)"
     log "em-gtp: Multi-AP backhaul BSS ${EMOSA_MAP_SSID:-emosa-lab-bh} into ${EMOSA_MAP_BRIDGE:-br-gtp}"
+    [ "$confs" = /etc/hostapd/hostapd.conf ] ||
+        log "em-gtp: the controller's backhaul BSS (5 GHz, channel ${EMOSA_BH_CHANNEL:-36}) into ${EMOSA_MAP_BRIDGE:-br-gtp}"
 }
 
 uplink() {      # uplink POD gtp|multi-ap|restore|show
     python3 "$HERE/vm/uplink.py" "$@"
+}
+
+option1() {     # option1 POD on|off: POD's agent switches its uplink to the EasyMesh backhaul
+    local pod=$1 mode serial ssid key
+    case ${2:-} in on) mode=multi-ap ;; off) mode=off ;; *) die "option1 POD on|off" ;; esac
+    serial=$(pod_serial "$pod")
+    [ -n "$serial" ] || die "$pod: no AWLAN_Node serial"
+    cx emosa test -f "/etc/emosa/$serial.json" || die "$pod ($serial) is not a fleet agent: lab.sh admit $pod"
+    [ -f /opt/emosa-lab/policy ] || die "no controller policy saved yet: run lab.sh policy SSID KEY"
+    read -r ssid key < /opt/emosa-lab/policy
+    # The controller's backhaul credentials (em-ctl-node policy: "<ssid>-bh", same key), given
+    # to the agent by configuration: its secret file, then the fleet's per-pod setting (kept
+    # across handovers) and the running agent's configuration.
+    printf '%s' "$key" | cx emosa sh -c "install -d -m 700 /var/lib/emosa/$serial/secrets
+        umask 077; cat > /var/lib/emosa/$serial/secrets/backhaul"
+    cx emosa python3 - "$serial" "$mode" "$ssid-bh" <<'EOF'
+import json, sys
+serial, mode, ssid = sys.argv[1:]
+uplink = {"mode": mode}
+if mode != "off":
+    uplink.update(credentials="config", ssid=ssid, secret_ref="backhaul")
+for path, update in (
+    ("/etc/emosa-fleet.json", lambda c: c.setdefault("pods", {}).setdefault(serial, {}).update(uplink=uplink)),
+    (f"/etc/emosa/{serial}.json", lambda c: c.update(uplink=uplink)),
+):
+    config = json.load(open(path))
+    update(config)
+    with open(path, "w") as f:
+        json.dump(config, f, indent=2)
+        f.write("\n")
+EOF
+    cx emosa systemctl restart emosa-fleet "emosa-agent@$serial"
+    log "option1: $pod ($serial) uplink $mode (backhaul '$ssid-bh' from the controller policy)"
 }
 
 status() {
@@ -443,7 +532,7 @@ for serial, a in sorted(json.load(sys.stdin).items()):
 
 cmd=${1:-}; shift || true
 case $cmd in
-    bridge|controller|emosa|agent|fleet|admit|release|policy|client|topology|ui|telemetry|provision|gtp|uplink|status) "$cmd" "$@" ;;
+    bridge|controller|emosa|agent|fleet|admit|release|policy|client|topology|ui|telemetry|provision|gtp|uplink|option1|status) "$cmd" "$@" ;;
     workload) exec python3 "$HERE/vm/workload.py" "$@" ;;
     *) sed -n '2,26p' "$0"; exit 2 ;;
 esac

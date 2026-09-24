@@ -438,6 +438,39 @@ class OnboardingSession:
                 )
                 response.send(self.send_frame, self._stamp, clock=self.clock)
                 return self._record("client_capability_unavailable_report")
+            if message.message_type == 0x8027 and self.provisioning:
+                # Backhaul STA Capability Report: a Backhaul STA Radio Capabilities
+                # TLV (RUID, MAC-included flag, STA MAC) for the station that is the
+                # pod's EasyMesh backhaul; none while the pod's uplink is GRE.
+                tlvs = tuple(
+                    Tlv(0xCB, ruid + b"\x80" + sta)
+                    for ruid, sta in snapshot.topology.backhaul_stations
+                )
+                response = PreparedReport(
+                    0x8028,
+                    message.mid,
+                    snapshot.stamp,
+                    min(now + 1, snapshot.stamp.valid_until),
+                    fragment_message(
+                        self.binding.controller_al, self.binding.local_al, 0x8028, message.mid, tlvs
+                    ),
+                )
+                response.send(self.send_frame, self._stamp, clock=self.clock)
+                return self._record("backhaul_sta_capability_report_sent")
+            if message.message_type == 0x8019 and self.provisioning:
+                # Backhaul Steering is refused: EMOSA does not move the pod's backhaul
+                # station on the controller's request. 1905 ACK, then a Backhaul
+                # Steering Response with result code 0x01 (failure).
+                requests = [t for t in message.tlvs if t.kind == 0x9E]
+                if len(requests) != 1 or len(requests[0].value) != 14:
+                    raise EmosaError(Reason.INVALID_INPUT, "one Backhaul Steering Request TLV")
+                request = requests[0].value
+                for kind, tlvs in ((0x8000, ()), (0x801A, (Tlv(0x9F, request[:12] + b"\x01"),))):
+                    for piece in fragment_message(
+                        self.binding.controller_al, self.binding.local_al, kind, message.mid, tlvs
+                    ):
+                        self.send_frame(piece)
+                return self._record("backhaul_steering_refused")
             return self._record(f"unsupported_message_{message.message_type:04x}")
         except (EmosaError, OSError) as exc:
             # A failed admission/handoff never restarts implicitly.

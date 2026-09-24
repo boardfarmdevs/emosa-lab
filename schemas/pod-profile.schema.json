@@ -45,7 +45,16 @@
         }
       }
     },
-    "inet": {"$ref": "#/$defs/row"}
+    "inet": {"$ref": "#/$defs/row"},
+    "uplink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["station"],
+      "description": "The pod's backhaul station that data plane option 1 moves onto the EasyMesh backhaul (the pod's bootstrap creates it).",
+      "properties": {
+        "station": {"$ref": "#/$defs/if_name"}
+      }
+    }
   },
   "$defs": {
     "if_name": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,15}$"},

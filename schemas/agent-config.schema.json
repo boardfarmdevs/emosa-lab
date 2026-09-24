@@ -17,6 +17,19 @@
     "multi_bss": {"type": "boolean", "default": false},
     "m2_session": {"enum": ["distinct", "shared"], "default": "distinct"},
     "profile": {"type": "string", "minLength": 1, "default": "opensync-lab-hwsim-6.6.1-v1", "description": "Pod profile ID, or a path to a profile file."},
+    "uplink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "description": "Data plane option 1: the agent switches the pod's backhaul station onto the EasyMesh backhaul (data-plane.md §5.3, spec §8). Absent or mode off: the pod keeps its OpenSync uplink (option 2).",
+      "properties": {
+        "mode": {"enum": ["off", "multi-ap"]},
+        "credentials": {"enum": ["m2", "config"], "default": "m2", "description": "m2: the backhaul BSS of the controller's applied M2 set (multi_bss); config: ssid and secret_ref below."},
+        "ssid": {"type": "string", "minLength": 1, "maxLength": 32},
+        "secret_ref": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$", "description": "A file in the agent's secret directory (state_dir/secrets), mode 0600."},
+        "station": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,15}$", "description": "Overrides the profile's uplink station."}
+      }
+    },
     "state_dir": {"type": "string", "minLength": 1},
     "run_id": {"$ref": "#/$defs/name"},
     "vif": {"type": "string", "deprecated": true, "description": "Ignored; the fronthaul VIF comes from the profile."}

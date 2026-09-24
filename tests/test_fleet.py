@@ -61,6 +61,21 @@ def test_al_mac_is_derived_from_the_serial_unicast_and_collision_free():
 
 
 @pytest.mark.unit
+def test_one_pod_can_have_its_own_profile_and_uplink_policy(tmp_path):
+    from emosa.config import validate
+
+    uplink = {"mode": "multi-ap", "credentials": "config", "ssid": "bh", "secret_ref": "bh"}
+    config = fleet_config(tmp_path, multi_bss=True, pods={"POD2": {"uplink": uplink}})
+    validate("fleet-config", config)
+    entry = {"pod_id": "POD2", "port": 6652, "interface": "em2", "al_mac": derive_al("POD2")}
+    own = agent_config(entry, config)
+    validate("agent-config", own)
+    assert own["uplink"] == uplink and own["multi_bss"] is True  # fleet-wide setting kept
+    other = agent_config({**entry, "pod_id": "POD1"}, config)
+    assert other["uplink"] == {"mode": "off"}
+
+
+@pytest.mark.unit
 def test_registry_allocates_once_persists_and_reports_full(tmp_path):
     registry = Registry(tmp_path / "fleet.json", range(6651, 6653))
     a = registry.assign({"serial_number": "A", "id": "a"})

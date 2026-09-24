@@ -28,6 +28,13 @@
             "ssid": {"type": ["string", "null"]},
             "bsses": {"type": "array", "items": {"type": "object", "required": ["role", "bssid", "ssid"], "properties": {"role": {"enum": ["fronthaul", "backhaul"]}, "bssid": {"type": "string"}, "ssid": {"type": "string"}}}},
             "stations": {"type": "array", "items": {"type": "string"}},
+            "backhaul": {
+              "description": "The pod's EasyMesh backhaul STA (option 1), as reported to the controller; null over OpenSync's GRE (option 2).",
+              "oneOf": [
+                {"type": "null"},
+                {"type": "object", "required": ["station", "mac", "parent", "band", "channel"], "properties": {"station": {"type": "string"}, "mac": {"type": "string"}, "parent": {"type": "string"}, "band": {"type": "string"}, "channel": {"type": "integer"}}}
+              ]
+            },
             "ovsdb_generation": {"type": "integer"},
             "ovsdb_revision": {"type": "integer"}
           }
@@ -48,6 +55,31 @@
           "ssid": {"type": ["string", "null"]},
           "attempts": {"type": "integer", "minimum": 0},
           "application_evidence": {"type": ["object", "null"]}
+        }
+      }
+    },
+    "uplink": {
+      "description": "The uplink scope (data plane option 1). mode off: the agent leaves the pod's uplink alone.",
+      "type": "object",
+      "required": ["station"],
+      "properties": {
+        "station": {"type": ["string", "null"]},
+        "mode": {"enum": ["off"]},
+        "uplink": {"type": ["string", "null"], "description": "multi-ap, or the if_type of the uplink cm uses (gre, eth, vif)."},
+        "in_use": {"type": ["string", "null"]},
+        "parent": {"type": ["string", "null"]},
+        "option": {"enum": [1, 2]},
+        "held": {"type": ["object", "null"], "description": "Held on option 2 and why; EMOSA does not switch this pod again until it is admitted anew."},
+        "waiting": {"type": ["string", "null"]},
+        "operation": {
+          "type": ["object", "null"],
+          "properties": {
+            "operation_id": {"type": "string"},
+            "state": {"type": "string"},
+            "reason": {"type": ["string", "null"]},
+            "ssid": {"type": ["string", "null"]},
+            "instance": {"type": ["string", "null"]}
+          }
         }
       }
     },

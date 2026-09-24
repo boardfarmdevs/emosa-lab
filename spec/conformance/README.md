@@ -12,6 +12,7 @@ conforms when its own harness reproduces them too.
 | `fleet.json` | §4 | a fleet configuration and pods arriving in order (their `AWLAN_Node` rows) | per arrival: the registry entry (without timestamps), the agent configuration, and the `manager_addr` update |
 | `translation-northbound.json` | §2.6, §3.3 | the pod's OVSDB rows, plus the agent's parameters | the device view, the capability TLVs, the Device Inventory TLV, and the Topology Response TLVs for each message set |
 | `translation-southbound.json` | §3.2, §3.4 | the pod's OVSDB rows, a pod profile, and an accepted M2 intent | the result status and every OVSDB transaction sent, operation by operation |
+| `uplink.json` | §8.3 | the pod's OVSDB rows (one pod on its bootstrap GRE uplink, one on a Multi-AP backhaul), a backhaul station, and an uplink intent | the uplink as `cm` and `owm` report it; for an EasyMesh backhaul, its view, the Topology Response TLVs and the Backhaul STA Radio Capabilities TLV; the switch's result status and OVSDB transaction |
 
 Formats:
 - **OVSDB rows** use raw RFC 7047 JSON, `{table: {uuid: row}}`, exactly as a

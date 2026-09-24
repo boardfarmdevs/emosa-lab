@@ -15,10 +15,39 @@
     "multi_bss": {"type": "boolean"},
     "m2_session": {"enum": ["distinct", "shared"]},
     "profile": {"type": "string", "minLength": 1},
+    "uplink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "description": "Given to every agent. Data plane option 1: the agent switches the pod's backhaul station onto the EasyMesh backhaul (data-plane.md §5.3, spec §8). Absent or mode off: the pod keeps its OpenSync uplink (option 2).",
+      "properties": {
+        "mode": {"enum": ["off", "multi-ap"]},
+        "credentials": {"enum": ["m2", "config"], "default": "m2", "description": "m2: the backhaul BSS of the controller's applied M2 set (multi_bss); config: ssid and secret_ref below."},
+        "ssid": {"type": "string", "minLength": 1, "maxLength": 32},
+        "secret_ref": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$", "description": "A file in the agent's secret directory (state_dir/secrets), mode 0600."},
+        "station": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,15}$", "description": "Overrides the profile's uplink station."}
+      }
+    },
     "state_root": {"type": "string", "minLength": 1},
     "config_dir": {"type": "string", "minLength": 1},
     "admit": {"oneOf": [{"const": "*"}, {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 64}}], "default": "*"},
     "concurrency": {"type": "integer", "minimum": 1, "maximum": 256, "default": 16},
+    "pods": {
+      "type": "object",
+      "description": "Per-pod overrides of the agent settings above, by serial number.",
+      "propertyNames": {"pattern": "^[A-Za-z0-9._-]{1,64}$"},
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "message_set": {"enum": ["easymesh-6.1", "r1"]},
+          "multi_bss": {"type": "boolean"},
+          "m2_session": {"enum": ["distinct", "shared"]},
+          "profile": {"type": "string", "minLength": 1},
+          "uplink": {"$ref": "#/properties/uplink"}
+        }
+      }
+    },
     "database": {"type": "string", "default": "Open_vSwitch"},
     "vif": {"type": "string", "deprecated": true, "description": "Ignored; the fronthaul VIF comes from the profile."}
   }

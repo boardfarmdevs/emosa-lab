@@ -19,7 +19,10 @@
      "profile": "opensync-lab-hwsim-6.6.1-v1",
      "run_id": "MVXPOD023F87E628DD",
      "serial": "MVXPOD023F87E628DD",
-     "state_dir": "/var/lib/emosa/MVXPOD023F87E628DD"
+     "state_dir": "/var/lib/emosa/MVXPOD023F87E628DD",
+     "uplink": {
+      "mode": "off"
+     }
     },
     "manager_addr_update": [
      {
@@ -54,7 +57,10 @@
      "profile": "opensync-lab-hwsim-6.6.1-v1",
      "run_id": "MVXPOD02D7777EF0D9",
      "serial": "MVXPOD02D7777EF0D9",
-     "state_dir": "/var/lib/emosa/MVXPOD02D7777EF0D9"
+     "state_dir": "/var/lib/emosa/MVXPOD02D7777EF0D9",
+     "uplink": {
+      "mode": "off"
+     }
     },
     "manager_addr_update": [
      {
@@ -89,7 +95,10 @@
      "profile": "opensync-lab-hwsim-6.6.1-v1",
      "run_id": "MVXPOD023F87E628DD",
      "serial": "MVXPOD023F87E628DD",
-     "state_dir": "/var/lib/emosa/MVXPOD023F87E628DD"
+     "state_dir": "/var/lib/emosa/MVXPOD023F87E628DD",
+     "uplink": {
+      "mode": "off"
+     }
     },
     "manager_addr_update": [
      {

@@ -590,6 +590,50 @@ def test_client_capability_unavailable_is_explicit_specification_error(rig, asso
     asyncio.run(scenario())
 
 
+def test_backhaul_sta_capability_report_names_only_an_easymesh_backhaul(rig):
+    async def scenario():
+        session, source, sent = lifecycle(rig)
+        await session.tick()
+        await receive(session, response())
+        query = fragment_message(BINDING.local_al, BINDING.controller_al, 0x8027, 713, ())[0]
+        assert await receive(session, query) == "backhaul_sta_capability_report_sent"
+        report = assemble((sent[-1],))
+        assert (report.message_type, report.mid, report.tlvs) == (0x8028, 713, ())  # GRE uplink
+        snap = source.current()
+        ruid, sta = bytes.fromhex("020000001500"), bytes.fromhex("020000001501")
+        source.publish(
+            (1, 2),
+            snap.capabilities,
+            replace(snap.topology, backhaul_stations=((ruid, sta),)),
+            observed_at=snap.stamp.observed_at,
+        )
+        assert await receive(session, query) == "backhaul_sta_capability_report_sent"
+        report = assemble((sent[-1],))
+        assert report.tlvs == (Tlv(0xCB, ruid + b"\x80" + sta),)
+        session.close()
+
+    asyncio.run(scenario())
+
+
+def test_backhaul_steering_is_acknowledged_and_refused(rig):
+    async def scenario():
+        session, _, sent = lifecycle(rig)
+        await session.tick()
+        await receive(session, response())
+        count = len(sent)
+        sta, target = bytes.fromhex("020000001501"), bytes.fromhex("020000001902")
+        request = Tlv(0x9E, sta + target + bytes([115, 36]))
+        frame = fragment_message(BINDING.local_al, BINDING.controller_al, 0x8019, 714, (request,))
+        assert await receive(session, frame[0]) == "backhaul_steering_refused"
+        ack, reply = (assemble((f,)) for f in sent[count:])
+        assert (ack.message_type, ack.mid, ack.tlvs) == (0x8000, 714, ())
+        assert (reply.message_type, reply.mid) == (0x801A, 714)
+        assert reply.tlvs == (Tlv(0x9F, sta + target + b"\x01"),)  # result: failure
+        session.close()
+
+    asyncio.run(scenario())
+
+
 def test_bound_policy_receipt_does_not_claim_reporting_or_create_config_operation(rig, tmp_path):
     from emosa.wire.reporting_policy import ReportingPolicyStore
 

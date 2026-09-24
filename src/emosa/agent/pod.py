@@ -11,8 +11,12 @@ controller as one agent with one radio and one fronthaul BSS:
 - an operation is applied only when the pod's own State shows it.
 
 Declared representation: the agent's 1905 interface is EMOSA's Ethernet port
-on the controller's bridge. The pod's physical path to the gateway (Wi-Fi
-backhaul plus GRE, owned by OpenSync and the lab NOC) is not represented.
+on the controller's bridge. The pod's path to the gateway over OpenSync's GRE
+(data plane option 2) is not an EasyMesh link and is not represented. When the
+pod's backhaul station is on the EasyMesh backhaul (option 1), the agent reports
+it: a non-AP STA interface on its parent BSSID, and Backhaul STA Radio
+Capabilities. With ``uplink.mode = multi-ap`` the agent makes that switch
+itself (``emosa.agent.uplink``).
 Station association age is the time since EMOSA first observed the station
 (OpenSync 6.6 has no association timestamp in OVSDB), a lower bound.
 
@@ -31,14 +35,24 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
+from emosa.agent.uplink import UplinkSwitch, m2_backhaul
 from emosa.config import validate
 from emosa.errors import EmosaError, Reason
-from emosa.opensync.easymesh_view import device_view, inventory, radio_capabilities, topology
+from emosa.model import ACTIVE
+from emosa.opensync.easymesh_view import (
+    backhaul,
+    device_view,
+    inventory,
+    radio_capabilities,
+    topology,
+)
 from emosa.opensync.pod_profile import PodBackend, wpa2_psk
 from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
 from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.schema import TABLES
 from emosa.opensync.session import OvsSession
+from emosa.opensync.uplink import MONITOR as UPLINK_MONITOR
+from emosa.opensync.uplink import MULTI_AP, UplinkBackend, uplink_state
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
 from emosa.store import Store
@@ -61,6 +75,10 @@ log = logging.getLogger("emosa.agent")
 RENEW = 0x000A  # AP-Autoconfiguration Renew
 DISCOVERY_PERIOD = 60  # IEEE 1905.1 Topology Discovery interval
 CONTROLLER_TIMEOUT = 130  # no CMDU from the controller for about two discovery periods
+# Provisioned, yet the pod does not serve the controller's BSS and nothing is being
+# applied (its configuration was lost, e.g. a write lost to an uplink move): ask
+# for the configuration again with a fresh M1 after this long.
+UNSERVED_RENEW = 60
 # The pod's State is re-read on this cadence, not on every received frame: the
 # published report lives 1.5 s, which this refreshes three times over.
 REFRESH_PERIOD = 0.5
@@ -69,6 +87,8 @@ MONITOR = {
     "AWLAN_Node": [*TABLES["AWLAN_Node"], "id"],
     "Wifi_Radio_State": [*TABLES["Wifi_Radio_State"], "tx_power"],
 }
+for _table, _columns in UPLINK_MONITOR.items():  # the uplink scope's tables and columns
+    MONITOR[_table] = [*MONITOR.get(_table, []), *_columns]
 
 
 def mac(text):
@@ -110,8 +130,9 @@ class PodReportSource:
     chooses what the agent represents and keeps the report source current.
     """
 
-    def __init__(self, backend, binding, pod_id):
+    def __init__(self, backend, binding, pod_id, station=None):
         self.backend, self.binding = backend, binding
+        self.station = station  # the pod's backhaul station, reported when it is option 1
         self.agent = binding.local_al
         self.revision, self.last = 0, None
         self.first_seen = {}  # station MAC -> monotonic time EMOSA first saw it active
@@ -171,6 +192,9 @@ class PodReportSource:
             elif capabilities != self.capabilities:
                 # A moved radio or replaced PHY is a different device to the controller.
                 raise EmosaError(Reason.NOT_READY, "pod radio identity or channel changed")
+            uplink = None
+            if self.station and uplink_state(rows, self.station)["kind"] == MULTI_AP:
+                uplink = backhaul(device, self.station)
             now = time.monotonic()
             active = {m for b in bsses for m in b.stations}
             self.first_seen = {m: self.first_seen.get(m, now) for m in active}
@@ -181,12 +205,14 @@ class PodReportSource:
                 channel=channel,
                 bsses=bsses,
                 ages={m: now - t for m, t in self.first_seen.items()},
+                uplink=uplink,
             )
             facts = (
                 raw["generation"],
                 raw["revision"],
                 tuple((b.bssid, b.ssid, b.stations) for b in bsses),
                 radio.tx_power,
+                uplink,
             )
             if facts != self.last:
                 self.revision += 1
@@ -204,6 +230,15 @@ class PodReportSource:
                     {"role": b.role, "bssid": b.bssid.hex(":"), "ssid": b.ssid} for b in bsses
                 ],
                 "stations": sorted(m.hex(":") for m in active),
+                "backhaul": None
+                if uplink is None
+                else {
+                    "station": uplink.station.if_name,
+                    "mac": uplink.station.mac.hex(":"),
+                    "parent": uplink.station.parent.hex(":"),
+                    "band": uplink.band,
+                    "channel": uplink.channel,
+                },
                 "ovsdb_generation": raw["generation"],
                 "ovsdb_revision": raw["revision"],
             }
@@ -309,8 +344,37 @@ async def serve(config, stop):
     )
     engine = Engine(store, vault, {pod_id: backend})
     engine.recover()
+    uplink_config = config.get("uplink", {"mode": "off"})
+    station = uplink_config.get("station") or backend.profile.uplink_station
+    switch = uplink_store = None
+    if uplink_config["mode"] == MULTI_AP:
+        if station is None:
+            raise EmosaError(Reason.INVALID_INPUT, "uplink: no station (profile or configuration)")
+        if uplink_config.get("credentials", "m2") == "config":
+            if not uplink_config.get("ssid") or not uplink_config.get("secret_ref"):
+                raise EmosaError(
+                    Reason.INVALID_INPUT, "uplink: config credentials need ssid and secret_ref"
+                )
+            fixed = (uplink_config["ssid"], uplink_config["secret_ref"])
+            credentials = lambda: fixed  # noqa: E731
+        else:
+            credentials = lambda: m2_backhaul(store)  # noqa: E731
+        uplink_store = Store(state_dir / "uplink")
+        switch = UplinkSwitch(
+            pod_id,
+            UplinkBackend(pod_id, session, vault, serial=config["serial"], station=station),
+            uplink_store,
+            vault,
+            credentials,
+            run_id=config.get("run_id", pod_id),
+            # the pod serves the controller's fronthaul, and no fronthaul write is in flight
+            settled=lambda: (
+                (report.facts or {}).get("ssid") is not None
+                and not any(op.state in ACTIVE for op in store.operations())
+            ),
+        )
     binding = PeerBinding(config["interface"], 1, agent, controller, (controller,))
-    report = PodReportSource(backend, binding, pod_id)
+    report = PodReportSource(backend, binding, pod_id, station)
     mids = MidSequence(secrets.randbelow(65536))
     run_id = config.get("run_id", pod_id)
     # EasyMesh message set toward this controller: easymesh-6.1 unless the
@@ -318,6 +382,7 @@ async def serve(config, stop):
     message_set = check_message_set(config.get("message_set", EASYMESH_61))
     lifecycle, last_status, last_facts, last_write = None, None, None, 0
     next_discovery, last_contact = 0, time.monotonic()
+    unserved_since = None
     next_refresh, ready = 0, False
     channels = reporting = None
 
@@ -343,6 +408,7 @@ async def serve(config, stop):
             "report_source_available": snapshot is not None,
             "session": lifecycle.status() if lifecycle else None,
             "operations": ops,
+            "uplink": switch.status() if switch else {"station": station, "mode": "off"},
             "writes": backend.write_count,
             "worker_pid": os.getpid(),
             "updated": time.time(),
@@ -410,6 +476,18 @@ async def serve(config, stop):
                     for piece in topology_discovery(agent, mids):
                         endpoint.send(piece)
                     next_discovery = now + DISCOVERY_PERIOD
+                unserved = (
+                    lifecycle.session is not None
+                    and lifecycle.session.state == "provisioning"
+                    and report.facts is not None
+                    and report.facts.get("ssid") is None
+                    and not any(op.state in ACTIVE for op in store.operations())
+                )
+                unserved_since = (unserved_since or now) if unserved else None
+                if unserved_since is not None and now - unserved_since > UNSERVED_RENEW:
+                    log.info("provisioned, but the pod serves no BSS: fresh M1")
+                    lifecycle.renew()
+                    unserved_since = None
                 if now - last_contact > CONTROLLER_TIMEOUT:
                     # Like a native agent's controller connectivity check: a silent
                     # controller is lost; onboard again when it answers a Search.
@@ -442,6 +520,12 @@ async def serve(config, stop):
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("reconcile: %s", exc)
                         report.source.invalidate()
+                if refreshed and switch:
+                    # Also while the pod is away: an unconfirmed switch times out.
+                    try:
+                        await switch.tick()
+                    except (EmosaError, ConnectionError, TimeoutError) as exc:
+                        log.warning("uplink: %s", exc)
                 if not refreshed and frame is None:
                     continue  # nothing new to report: status only on the refresh cadence
                 value = status()
@@ -464,7 +548,7 @@ async def serve(config, stop):
             write(state_dir / "status.json", status())
             lifecycle.close()
         store.close()
-        for extra in (channels, reporting):
+        for extra in (channels, reporting, uplink_store):
             if extra is not None:
                 extra.close()
         await session.close()

@@ -11,8 +11,11 @@ from emosa.operations import transition
 
 
 class Engine:
-    def __init__(self, store, vault, backends, clock=None):
+    def __init__(self, store, vault, backends, clock=None, intent_type=Intent):
+        """``intent_type`` is the scope's intent (``Intent``: one AP BSS; see
+        ``emosa.opensync.uplink.UplinkIntent``). One engine and journal per scope."""
         self.store, self.vault, self.backends = store, vault, backends
+        self.intent_type = intent_type
         self.clock = clock or Clock()
         self.deadlines = {}
         self.busy = set()
@@ -123,7 +126,7 @@ class Engine:
         self.busy.add(op.pod_id)
         try:
             backend = self.backends[op.pod_id]
-            intent = Intent(**op.intent)
+            intent = self.intent_type(**op.intent)
             try:
                 await self._check_wsc(op)
                 op.plan = await self.plan(intent)
@@ -264,7 +267,7 @@ class Engine:
                     transition(op, State.TIMED_OUT)
                     op.reason = Reason.APPLY_TIMEOUT
             try:
-                target = Intent(**op.intent).target(self.vault)
+                target = self.intent_type(**op.intent).target(self.vault)
             except EmosaError:
                 if not op.blocked_for_resubmission:
                     op.blocked_for_resubmission = True

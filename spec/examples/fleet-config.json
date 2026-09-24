@@ -7,6 +7,16 @@
   "m2_session": "distinct",
   "message_set": "easymesh-6.1",
   "multi_bss": false,
+  "pods": {
+    "MVXPOD023674CB574D": {
+      "uplink": {
+        "credentials": "config",
+        "mode": "multi-ap",
+        "secret_ref": "backhaul",
+        "ssid": "emosa-mesh-bh"
+      }
+    }
+  },
   "ports": [
     6651,
     6690

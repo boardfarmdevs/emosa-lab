@@ -3,7 +3,8 @@
 A profile is data (``src/emosa/profiles/*.json``, schema
 ``schemas/pod-profile.schema.json``): the radio band and channel a cold pod's
 BSS is created on, the fronthaul VIF and its row, the backhaul overrides, the
-platform's extra VIF slots for multi-BSS, and the Inet row of a created VIF.
+platform's extra VIF slots for multi-BSS, the Inet row of a created VIF, and
+the backhaul station data plane option 1 moves onto the EasyMesh backhaul.
 A new pod model needs a new profile, not new code.
 """
 
@@ -29,6 +30,7 @@ class PodProfile:
     backhaul_vif: dict
     extra_slots: tuple  # (if_name, role, vif_radio_idx), in assignment order
     inet: dict
+    uplink_station: str | None = None  # the backhaul station option 1 moves (bootstrap-created)
 
     @property
     def backhaul_row(self):
@@ -54,4 +56,5 @@ def load(ref=DEFAULT):
         data["backhaul_vif"],
         tuple((s["if_name"], s["role"], s["vif_radio_idx"]) for s in data["extra_slots"]),
         data["inet"],
+        data.get("uplink", {}).get("station"),
     )

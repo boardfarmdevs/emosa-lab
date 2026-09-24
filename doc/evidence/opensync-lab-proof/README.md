@@ -388,6 +388,39 @@ Writes during the run: 0. Agent memory stayed at 50 to 54 MB.
 `Wifi_VIF_State.multi_ap`, so a backhaul BSS would have been reported with the
 fronthaul flag (0x40). It is now monitored, and the role comes from State.
 
+## Option 1 by the agent (runs uplink-01 to uplink-04)
+
+The agent now performs data plane option 1 itself (spec §8.3): it moves the
+pod's backhaul station onto the controller's backhaul BSS, confirms it from
+State, and does it again after every OpenSync restart. Tested on pod-6 (the
+image with the Multi-AP link-state patch), with `lab.sh option1 pod-6 on`
+([summary](option1-agent/summary.json)).
+
+| Run | What happened |
+| --- | --- |
+| uplink-01 | The station joined the prplMesh node's own backhaul BSS, which sits on the 1905-only LAN with no router. `cm` adopted it, 12 router checks failed, and OpenSync restarted to its GRE bootstrap. The agent timed the switch out at 90 s and held the pod on option 2, with no retry. |
+| uplink-02 | After the lab change below: applied 22 s after the write. `bhaul-sta-50` was 4-address on em-gtp's 5 GHz backhaul BSS, bridged into `br-home`, and was `cm`'s only uplink (no GRE). The client had internet. The controller listed the station as the agent's 5 GHz interface. |
+| uplink-03 | Found two faults (below). The switch was nevertheless re-applied on the pod's next start, 16 s after the write. |
+| uplink-04 | After an OpenSync restart: the fronthaul came back from M2 first, then the switch was written 0.7 s later and applied 22 s after that. The client was back with internet 5 s later. |
+
+**Lab change.** The controller policy no longer gives the prplMesh node a
+backhaul BSS: its radio is on the 1905-only LAN. `em-gtp` serves the
+controller's backhaul BSS (`<ssid>-bh`, 5 GHz) into the gateway LAN instead.
+
+**Faults found and fixed:**
+- **A pod's restart was taken for another manager's change.** `AWLAN_Node`
+  comes from OpenSync's database template and keeps its UUID across starts. A
+  start is now identified by the `Wifi_Radio_Config` rows, which the start
+  scripts create anew.
+- **The switch raced the fronthaul.** After a restart, the controller's M2
+  re-creates the fronthaul, and the switch moved the pod's path while that
+  write was in flight. The write was lost, and later M2s were refused as busy.
+  The switch now waits until the pod serves the controller's BSS and no
+  fronthaul operation is active.
+- **A lost fronthaul was never asked for again.** A provisioned agent whose pod
+  serves no BSS, with nothing in flight, for 60 s now starts onboarding again
+  (fresh M1).
+
 ## Changes made during the run
 
 - `pod_profile.py`: the observed 6.6 encoding (`wpa-psk` + RSN, `key` slot);

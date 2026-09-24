@@ -21,10 +21,17 @@ from pathlib import Path
 from emosa.agent.fleet import Fleet, agent_config, derive_al
 from emosa.easymesh_payloads import encode_value
 from emosa.model import ACTIVE, Intent
-from emosa.opensync.easymesh_view import device_view, inventory, radio_capabilities, topology
+from emosa.opensync.easymesh_view import (
+    backhaul,
+    device_view,
+    inventory,
+    radio_capabilities,
+    topology,
+)
 from emosa.opensync.pod_profile import PodBackend
 from emosa.opensync.profiles import DEFAULT
 from emosa.opensync.schema import Schema, reference_path
+from emosa.opensync.uplink import UplinkBackend, UplinkIntent, uplink_state
 from emosa.operations import TRANSITIONS
 from emosa.secrets import SecretStore
 from emosa.wire.autoconfiguration import EASYMESH_61, R1, PeerBinding
@@ -33,6 +40,10 @@ from emosa.wire.reports import _topology, capability_tlvs
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_DIR = ROOT / "spec" / "conformance"
 POD_ROWS = ROOT / "tests" / "fixtures" / "opensync" / "pod-6.6.1-hwsim-tables.json"
+UPLINK_ROWS = {  # recorded: a pod on its bootstrap GRE uplink, and one on a Multi-AP backhaul
+    kind: ROOT / "tests" / "fixtures" / "opensync" / f"pod-6.6.1-hwsim-uplink-{kind}.json"
+    for kind in ("gre", "multi-ap")
+}
 SERIAL = "MVXPOD023F87E628DD"
 RUID = "02:00:00:00:01:00"
 AGENT = "02:72:f9:7f:07:85"
@@ -297,6 +308,85 @@ def southbound_vectors():
     }
 
 
+def uplink_state_case(name, raw, station):
+    rows = decode(raw)
+    state = uplink_state(rows, station)
+    view = device_view(rows)
+    case = {
+        "name": name,
+        "ovsdb_tables": raw,
+        "station": station,
+        "expected": {
+            "uplink": {k: v for k, v in state.items() if k != "state"},
+            "backhaul": None,
+        },
+    }
+    link = backhaul(view, station) if state["kind"] == "multi-ap" else None
+    if link is not None:
+        radio = view.radio(link.ruid)
+        facts = topology(
+            agent_al=mac(AGENT),
+            controller_al=mac(CONTROLLER),
+            radio=radio,
+            channel=radio.channel,
+            bsses=radio.bsses,
+            ages={m: 0 for b in radio.bsses for m in b.stations},
+            uplink=link,
+        )
+        binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
+        case["expected"]["backhaul"] = {
+            "view": plain(link),
+            "topology_tlvs": tlvs(_topology(facts, binding, EASYMESH_61)),
+            "backhaul_sta_capability_tlvs": [
+                {"type": "0xcb", "value": (ruid + b"\x80" + sta).hex()}
+                for ruid, sta in facts.backhaul_stations
+            ],
+        }
+    return case
+
+
+def uplink_switch_case(name, raw, station, ssid):
+    serial = next(iter(raw["AWLAN_Node"].values()))["serial_number"]
+    with tempfile.TemporaryDirectory() as directory:
+        vault = SecretStore(Path(directory) / "secrets")
+        for ref, passphrase in PASSPHRASES.items():
+            vault.write_simulated(ref, passphrase)
+        session = Recorder(copy.deepcopy(raw))
+        backend = UplinkBackend("pod-1", session, vault, serial=serial, station=station)
+        intent = UplinkIntent("pod-1", station, ssid, "ref-primary")
+
+        async def run():
+            await backend.snapshot()
+            await backend.plan(intent)
+            attempt = {"attempt_id": "a", "transaction_id": "t", "session_generation": 1}
+            return await backend.submit(intent, attempt)
+
+        result = asyncio.run(run())
+    return {
+        "name": name,
+        "ovsdb_tables": raw,
+        "intent": intent.record(),
+        "passphrases": PASSPHRASES,
+        "expected": {"status": result.status, "transactions": session.sent},
+    }
+
+
+def uplink_vectors():
+    gre = json.loads(UPLINK_ROWS["gre"].read_text())["tables"]
+    multi_ap = json.loads(UPLINK_ROWS["multi-ap"].read_text())["tables"]
+    return {
+        "description": "spec §8.3: data plane option 1. The pod's uplink as cm and owm report it "
+        "(recorded rows), the backhaul the agent then reports (1905 TLVs, 'value' in hex "
+        "without type and length), and the exact OVSDB transaction of the switch.",
+        "states": [
+            uplink_state_case("bootstrap-gre", gre, "bhaul-sta-50"),
+            uplink_state_case("multi-ap-backhaul", multi_ap, "bhaul-sta-24"),
+            uplink_state_case("multi-ap-other-station", multi_ap, "bhaul-sta-50"),
+        ],
+        "switch": [uplink_switch_case("switch-from-gre", gre, "bhaul-sta-50", "emosa-mesh-bh")],
+    }
+
+
 def fleet_vectors():
     cases = []
     config = {
@@ -352,6 +442,7 @@ VECTOR_SETS = {
     "translation-northbound.json": northbound_vectors,
     "translation-southbound.json": southbound_vectors,
     "fleet.json": fleet_vectors,
+    "uplink.json": uplink_vectors,
 }
 
 
