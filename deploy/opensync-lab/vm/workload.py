@@ -37,6 +37,7 @@ POLICY = ("emosa-mesh", "EmosaMesh2026!")  # public lab test values
 BAD = {"INDETERMINATE", "FAILED", "OWNERSHIP_CONFLICT", "TIMED_OUT"}
 WAN_HOST = "10.101.0.1"  # where pods reach EMOSA (lab.sh WAN_HOST)
 AGENT_OF = {}  # pod container -> its agent (discover)
+FAULT_NOTES = {}  # fault name -> what it acted on, when that varies
 
 
 def sh(*args, timeout=60, check=False):
@@ -199,10 +200,21 @@ def fault_transport():
     return time.time()
 
 
+def backhaul_station(pod):
+    """The pod's connected backhaul station: bhaul-sta-50 to mv3, or bhaul-sta-24 when
+    its uplink was moved (lab.sh uplink, data plane experiments)."""
+    for name in ("bhaul-sta-50", "bhaul-sta-24"):
+        if "Connected" in cx(pod, "iw", "dev", name, "link"):
+            return name
+    raise RuntimeError(f"{pod}: no connected backhaul station")
+
+
 def fault_backhaul():
-    cx("pod-3", "ip", "link", "set", "bhaul-sta-50", "down", check=True)
+    station = backhaul_station("pod-3")
+    FAULT_NOTES["backhaul loss 30 s (pod-3)"] = station
+    cx("pod-3", "ip", "link", "set", station, "down", check=True)
     time.sleep(30)
-    cx("pod-3", "ip", "link", "set", "bhaul-sta-50", "up", check=True)
+    cx("pod-3", "ip", "link", "set", station, "up", check=True)
     return time.time()
 
 
@@ -291,7 +303,13 @@ def main():
         ended = action()
         current_expected = dict(expected)
         faults.append(
-            {"name": name, "began": began, "ended": ended, "offset": round(began - t0, 1)}
+            {
+                "name": name,
+                "began": began,
+                "ended": ended,
+                "offset": round(began - t0, 1),
+                **({"acted_on": FAULT_NOTES[name]} if name in FAULT_NOTES else {}),
+            }
         )
     while time.time() - t0 < args.duration:
         time.sleep(1)

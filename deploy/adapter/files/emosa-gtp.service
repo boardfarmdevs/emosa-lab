@@ -1,0 +1,13 @@
+[Unit]
+Description=EMOSA GRE termination point: the gateway end of the pods' OpenSync GRE
+After=network-online.target hostapd.service
+
+[Service]
+ExecStartPre=/opt/emosa-adapter/venv/bin/emosa-gtp setup /etc/emosa-gtp.json
+ExecStart=/usr/sbin/dnsmasq -k -C /var/lib/emosa-gtp/dnsmasq.conf
+ExecStopPost=/opt/emosa-adapter/venv/bin/emosa-gtp list /etc/emosa-gtp.json
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

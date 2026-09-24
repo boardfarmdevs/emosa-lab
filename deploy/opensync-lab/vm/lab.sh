@@ -19,6 +19,9 @@
 #   lab.sh ui                         controller UI (prplmesh-lab) on the VM, port 8093 (8091 is boardfarm's)
 #   lab.sh telemetry                  MQTT broker (mutual TLS) for the pods' own statistics
 #   lab.sh provision POD              lab device certificate into POD:/var/certs
+#   lab.sh gtp                        container em-gtp: pod-backhaul SSID + GRE termination point
+#                                     (data plane option 2), its LAN leg on mv3's LAN (lan-p4)
+#   lab.sh uplink POD MODE            move POD's uplink: gtp | multi-ap | restore | show
 #   lab.sh status
 #   lab.sh workload LABEL             900 s recovery workload under faults (vm/workload.py)
 set -euo pipefail
@@ -317,6 +320,75 @@ ui() {          # the controller's own topology: prplmesh-lab topology adapter +
     log "controller UI on the VM at :$port (adapter em-ctl:8092 via proxy)"
 }
 
+gtp() {         # GRE termination point (data plane option 2) with a pod-backhaul SSID
+    exists emosa || die "run: lab.sh emosa (it stages the adapter kit)"
+    local lan=${EMOSA_GTP_LAN:-lan-p4} radio
+    if ! exists em-gtp; then
+        lxc init "$IMAGE" em-gtp --network lxdbr0 >/dev/null
+        lxc config set em-gtp user.emosa.role gtp
+        lxc start em-gtp
+        wait_net em-gtp
+        cx em-gtp sh -ec 'systemctl mask --now apt-daily.timer apt-daily-upgrade.timer >/dev/null 2>&1
+            export DEBIAN_FRONTEND=noninteractive; apt-get -qq update
+            apt-get -qq install -y build-essential iproute2 iw hostapd dnsmasq-base tcpdump >/dev/null'
+        # shellcheck source=/dev/null
+        radio=$(source "$OSL/guest/common.sh"; hwsim_free | head -1)
+        [ -n "$radio" ] || die "no free hwsim radio"
+        lxc stop em-gtp
+        lxc config device add em-gtp wlan0 nic nictype=physical parent="$radio" name=wlan0 >/dev/null
+        # eth1: a port on mv3's LAN, standing in for the EasyMesh gateway's LAN. The lan-p*
+        # bridges filter VLANs, and each mv3 port is an untagged access port in its own VLAN:
+        # join that VLAN, or nothing (not even ARP) crosses.
+        local host pvid
+        host=$(lxc config get mv3 "volatile.${EMOSA_GTP_MV3_PORT:-eth4}.host_name")
+        pvid=$(bridge -j vlan show dev "$host" | python3 -c 'import json,sys
+print([v["vlan"] for p in json.load(sys.stdin) for v in p["vlans"] if "PVID" in v.get("flags", [])][0])')
+        lxc config device add em-gtp eth1 nic nictype=bridged parent="$lan" name=eth1 vlan="$pvid" >/dev/null
+        lxc start em-gtp
+        wait_net em-gtp
+        log "em-gtp: radio $radio as wlan0, eth1 on $lan (VLAN $pvid, mv3 ${EMOSA_GTP_MV3_PORT:-eth4})"
+    fi
+    # the pod-backhaul SSID: a 3-address AP on 2.4 GHz channel 6 into the underlay bridge podbh.
+    # No country_code: the regulatory domain is VM-wide and must not be changed from a container.
+    cx em-gtp sh -c "cat > /etc/hostapd/hostapd.conf" <<EOF
+interface=wlan0
+bridge=podbh
+driver=nl80211
+ctrl_interface=/run/hostapd
+ssid=${EMOSA_PODBH_SSID:-emosa-podbh}
+hw_mode=g
+channel=6
+wpa=2
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+wpa_passphrase=${EMOSA_PODBH_KEY:-EmosaPodBh2026!}
+EOF
+    cx em-gtp sh -ec 'grep -q "^DAEMON_CONF=" /etc/default/hostapd 2>/dev/null ||
+            echo DAEMON_CONF=/etc/hostapd/hostapd.conf >> /etc/default/hostapd
+        systemctl unmask hostapd >/dev/null 2>&1; systemctl enable -q hostapd; systemctl restart hostapd'
+    lxc file push -q /opt/emosa-lab/adapter-kit.tar.gz em-gtp/root/adapter-kit.tar.gz
+    cx em-gtp sh -ec 'rm -rf /root/adapter-kit && mkdir /root/adapter-kit
+        tar -C /root/adapter-kit --strip-components=1 -xzf /root/adapter-kit.tar.gz
+        /root/adapter-kit/install.sh >/dev/null'
+    cx em-gtp sh -c 'cat > /etc/emosa-gtp.json' <<'EOF'
+{
+  "underlay": {"interface": "podbh", "address": "169.254.2.1/25", "mtu": 1600,
+               "dhcp_range": ["169.254.2.10", "169.254.2.126"], "lease_time": "1h"},
+  "lan": {"bridge": "br-gtp", "ports": ["eth1"]},
+  "tunnel_mtu": 1562,
+  "state_dir": "/var/lib/emosa-gtp"
+}
+EOF
+    cx em-gtp sh -c 'systemctl enable -q emosa-gtp; systemctl restart emosa-gtp'
+    sleep 2
+    cx em-gtp systemctl is-active -q emosa-gtp || die "emosa-gtp did not start: $(cx em-gtp journalctl -u emosa-gtp -n 5 --no-pager)"
+    log "em-gtp: pod-backhaul SSID ${EMOSA_PODBH_SSID:-emosa-podbh}, GTP 169.254.2.1 on podbh, tunnels into br-gtp ($lan)"
+}
+
+uplink() {      # uplink POD gtp|multi-ap|restore|show
+    python3 "$HERE/vm/uplink.py" "$@"
+}
+
 status() {
     lxc list -f csv -c ns em-ctl emosa 2>/dev/null || true
     cx em-ctl systemctl list-units --no-legend --plain 'em-*' 2>/dev/null | awk '{print "em-ctl", $1, $3, $4}' || true
@@ -342,7 +414,7 @@ for serial, a in sorted(json.load(sys.stdin).items()):
 
 cmd=${1:-}; shift || true
 case $cmd in
-    bridge|controller|emosa|agent|fleet|admit|release|policy|client|topology|ui|telemetry|provision|status) "$cmd" "$@" ;;
+    bridge|controller|emosa|agent|fleet|admit|release|policy|client|topology|ui|telemetry|provision|gtp|uplink|status) "$cmd" "$@" ;;
     workload) exec python3 "$HERE/vm/workload.py" "$@" ;;
-    *) sed -n '2,23p' "$0"; exit 2 ;;
+    *) sed -n '2,26p' "$0"; exit 2 ;;
 esac

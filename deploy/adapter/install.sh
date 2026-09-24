@@ -26,15 +26,16 @@ rm -rf "$ROOT/venv.old"
 [ -d "$ROOT/venv" ] && mv "$ROOT/venv" "$ROOT/venv.old"
 mv "$ROOT/venv.new" "$ROOT/venv"
 # the venv's scripts carry its build path; point them at the final one
-sed -i "1s|$ROOT/venv.new/|$ROOT/venv/|" "$ROOT"/venv/bin/emosa-fleet "$ROOT"/venv/bin/emosa-agent
+sed -i "1s|$ROOT/venv.new/|$ROOT/venv/|" "$ROOT"/venv/bin/emosa-fleet "$ROOT"/venv/bin/emosa-agent "$ROOT"/venv/bin/emosa-gtp
 rm -rf "$ROOT/venv.old"
 install -m 0755 files/emosa-agent-link /usr/local/sbin/emosa-agent-link
-install -m 0644 files/emosa-agent@.service files/emosa-fleet.service /etc/systemd/system/
+install -m 0644 files/emosa-agent@.service files/emosa-fleet.service files/emosa-gtp.service /etc/systemd/system/
 [ -e /etc/default/emosa ] || install -m 0644 files/default-emosa /etc/default/emosa
 [ -e /etc/emosa-fleet.json ] || install -m 0644 files/fleet.example.json /etc/emosa-fleet.json
+[ -e /etc/emosa-gtp.json ] || install -m 0644 files/gtp.example.json /etc/emosa-gtp.json
 install -d -m 0755 /etc/emosa
 install -d -m 0700 /var/lib/emosa
 systemctl daemon-reload
-running=$(systemctl list-units --no-legend --plain --state=active 'emosa-fleet.service' 'emosa-agent@*.service' | awk '{print $1}')
+running=$(systemctl list-units --no-legend --plain --state=active 'emosa-fleet.service' 'emosa-agent@*.service' 'emosa-gtp.service' | awk '{print $1}')
 [ -n "$running" ] && systemctl restart $running
 echo "emosa $(cat VERSION) installed in $ROOT${running:+; restarted: $(echo $running)}"

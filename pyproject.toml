@@ -16,6 +16,7 @@ dependencies = [
 [project.scripts]
 emosa-fleet = "emosa.agent.fleet:main"
 emosa-agent = "emosa.agent.pod:main"
+emosa-gtp = "emosa.gtp:main"
 
 [dependency-groups]
 # The lab tools (lab/, package emosa_lab) are developed and tested alongside

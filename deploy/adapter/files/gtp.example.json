@@ -1,0 +1,12 @@
+{
+  "underlay": {
+    "interface": "podbh",
+    "address": "169.254.2.1/25",
+    "mtu": 1600,
+    "dhcp_range": ["169.254.2.10", "169.254.2.126"],
+    "lease_time": "1h"
+  },
+  "lan": {"bridge": "br-gtp", "ports": ["eth1"]},
+  "tunnel_mtu": 1562,
+  "state_dir": "/var/lib/emosa-gtp"
+}
