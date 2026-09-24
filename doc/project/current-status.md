@@ -13,6 +13,11 @@
 >   accepted and committed. Application on the pod is not verified yet: the
 >   RDK controller must run in its own lab, not in the EMOSA VM.
 >
+> - The fleet gives every pod handed to it its own virtual agent, with an AL
+>   derived from the serial and no per-pod configuration. Three pods were
+>   onboarded this way. The OVSDB to EasyMesh translation is one pure module;
+>   see [OpenSync pods as EasyMesh agents](../architecture/opensync-easymesh-mapping.md).
+>
 > Start with the [run record](../evidence/opensync-lab-proof/README.md) and the
 > status table in the [proof plan](proof-plan.md). The rows below about the
 > "actual OpenSync container" predate this and are superseded by the run record.

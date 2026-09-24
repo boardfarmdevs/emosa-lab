@@ -60,6 +60,28 @@ deploy/opensync-lab/lab.sh release pod-1          # give pod-1 back to local-noc
 
 The lab credentials above are public test values.
 
+### Fleet: an agent for every pod
+
+Instead of one `agent POD N` per pod, the fleet gives every pod handed to it
+its own virtual agent. The agent's AL MAC is derived from the pod's serial,
+and its port and 1905 interface are allocated and persisted
+(`src/emosa/agent/fleet.py`).
+
+```sh
+deploy/opensync-lab/lab.sh release pod-1          # per-pod agents first, if any
+deploy/opensync-lab/lab.sh fleet                  # front port 10.101.0.1:6650, agents 6651-6690
+deploy/opensync-lab/lab.sh policy emosa-mesh 'EmosaMesh2026!'   # saved, re-applied by admit
+deploy/opensync-lab/lab.sh admit pod-1 pod-2 pod-3
+deploy/opensync-lab/lab.sh status                 # "fleet SERIAL AL emN PORT" per pod
+deploy/opensync-lab/lab.sh release pod-2          # back to local-noc; its agent is forgotten
+```
+
+`admit` only asks local-noc to redirect the pod to the front port. EMOSA needs
+no per-pod input. The pod's own identity decides its agent. `admit` re-applies
+the controller policy because prplMesh's lab policy lists credentials per AL
+MAC. With an operator's controller, that onboarding policy is the operator's.
+`workload` still expects the per-pod agents (`emosa-agent@pod-1`).
+
 ## Artifacts
 
 `.cache/opensync-lab-artifacts` (not in git), checked against

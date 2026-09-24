@@ -272,6 +272,44 @@ write: every later M2 was rejected `BUSY`. Now, once the deadline has passed and
 the pod's current configuration lacks the write, the operation ends as
 `TIMED_OUT`. A late application is still recorded.
 
+## Fleet: an agent for every pod that appears
+
+The three per-pod agents were released and replaced by the fleet
+([design](../../architecture/opensync-easymesh-mapping.md)). The steps:
+
+1. `lab.sh fleet` set up the front port `10.101.0.1:6650` and an agent port
+   range `6651-6690`.
+2. `lab.sh admit pod-1 pod-2 pod-3` asked local-noc to redirect each pod to
+   the front port. Nothing else was configured per pod.
+
+For each pod, the fleet read `AWLAN_Node` from the pod's own connection,
+allocated an agent, started it, and moved the pod's `manager_addr` to that
+agent's port. `cm` reached the fleet 12 to 43 s after the redirect (its own
+backoff).
+
+| Pod | Serial | Agent AL (from the serial) | Interface | Port |
+| --- | --- | --- | --- | --- |
+| pod-1 | MVXPOD023F87E628DD | 02:72:f9:7f:07:85 | em1 | 6651 |
+| pod-2 | MVXPOD02D7777EF0D9 | 02:c2:b8:31:3a:f8 | em2 | 6652 |
+| pod-3 | MVXPOD02288DCB5DCC | 02:2d:b0:6c:a5:ea | em3 | 6653 |
+
+Results:
+- The prplMesh controller onboarded all three new agents. Each operation
+  reached `OBSERVED_APPLIED`.
+- The controller shows each agent on channel 6, with its `emosa-mesh` BSS and
+  its 2 stations. All six clients reached the internet.
+- The same held after the agents were restarted on the new translation layer
+  (`easymesh_view`).
+
+**prplMesh keeps a stale entry.** The released static agent
+`02:00:00:5e:00:02` was still listed after 40 minutes. prplMesh does not age
+out an agent that stopped sending Topology Discovery. This is controller
+behaviour, not EMOSA's.
+
+**Bug found while writing the translation layer.** The agent did not monitor
+`Wifi_VIF_State.multi_ap`, so a backhaul BSS would have been reported with the
+fronthaul flag (0x40). It is now monitored, and the role comes from State.
+
 ## Changes made during the run
 
 - `pod_profile.py`: the observed 6.6 encoding (`wpa-psk` + RSN, `key` slot);

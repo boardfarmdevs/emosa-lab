@@ -8,6 +8,10 @@
 #   lab.sh agent POD N                EMOSA virtual agent N for opensync-lab pod POD:
 #                                     macvlan emN (MAC = AL) on em-1905, OVSDB 10.101.0.1:665N,
 #                                     service, then local-noc hands the pod over
+#   lab.sh fleet                      EMOSA fleet: one front port (10.101.0.1:6650); every pod
+#                                     handed to it gets its own virtual agent, started on demand
+#   lab.sh admit POD...               local-noc hands each POD to the fleet front port; the
+#                                     saved controller policy is re-applied for the new agents
 #   lab.sh release POD                hand POD back to local-noc, stop its agent
 #   lab.sh policy SSID KEY            controller fronthaul policy for the gateway + all agents
 #   lab.sh client NAME POD SSID KEY   opensync-lab wireless client on POD's fronthaul
@@ -27,6 +31,8 @@ NET=em-1905
 WAN_HOST=${EMOSA_WAN_HOST:-10.101.0.1}             # the VM on boardfarm's WAN (br-wan101)
 CTL_AL=${EMOSA_CONTROLLER_AL:-02:00:00:e0:00:01}    # the EasyMesh controller agents bind to
 IMAGE=${EMOSA_IMAGE:-ubuntu:24.04}
+FLEET_PORT=6650                                     # fleet front port; agents on the ports after it
+FLEET_LAST=${EMOSA_FLEET_LAST_PORT:-6690}
 
 log() { printf '\033[1;36m[emosa %s]\033[0m %s\n' "$(date +%H:%M:%S)" "$*"; }
 die() { printf '\033[1;31m[emosa %s] FATAL\033[0m %s\n' "$(date +%H:%M:%S)" "$*" >&2; exit 1; }
@@ -165,11 +171,83 @@ EOF
     log "local-noc: $id handed to tcp:$WAN_HOST:$port (its fronthaul is now EMOSA's; GRE on mv3 kept)"
 }
 
+fleet() {
+    exists emosa || die "run: lab.sh emosa"
+    cx emosa sh -c 'ls /etc/emosa/pod-*.json' >/dev/null 2>&1 &&
+        die "per-pod agents configured (/etc/emosa/pod-*.json): lab.sh release each POD first"
+    local d
+    for d in $(lxc config device list emosa | grep '^ovsdb[0-9]*$' || true); do
+        lxc config device remove emosa "$d" >/dev/null    # superseded by the agents range
+    done
+    lxc config device show emosa | grep -q '^fleet:' ||
+        lxc config device add emosa fleet proxy bind=host listen="tcp:$WAN_HOST:$FLEET_PORT" \
+            connect="tcp:127.0.0.1:$FLEET_PORT" >/dev/null
+    lxc config device show emosa | grep -q '^agents:' ||
+        lxc config device add emosa agents proxy bind=host \
+            listen="tcp:$WAN_HOST:$((FLEET_PORT + 1))-$FLEET_LAST" \
+            connect="tcp:127.0.0.1:$((FLEET_PORT + 1))-$FLEET_LAST" >/dev/null
+    cx emosa sh -c "cat > /etc/emosa-fleet.json" <<EOF
+{
+  "listen": "ptcp:$FLEET_PORT:127.0.0.1",
+  "advertise": "$WAN_HOST",
+  "ports": [$((FLEET_PORT + 1)), $FLEET_LAST],
+  "controller_al": "$CTL_AL",
+  "message_set": "${EMOSA_MESSAGE_SET:-easymesh-6.1}",
+  "multi_bss": ${EMOSA_MULTI_BSS:-false},
+  "m2_session": "${EMOSA_M2_SESSION:-distinct}",
+  "vif": "home-ap-24",
+  "state_root": "/var/lib/emosa",
+  "config_dir": "/etc/emosa",
+  "admit": "*"
+}
+EOF
+    lxc file push -q "$HERE/files/emosa-fleet.service" emosa/etc/systemd/system/
+    cx emosa systemctl daemon-reload
+    cx emosa systemctl enable -q emosa-fleet
+    cx emosa systemctl restart emosa-fleet
+    log "fleet: pods handed to tcp:$WAN_HOST:$FLEET_PORT get agents on ports $((FLEET_PORT + 1))-$FLEET_LAST"
+}
+
+fleet_agents() { cx emosa /opt/emosa/.venv/bin/python -m emosa.agent.fleet list /etc/emosa-fleet.json; }
+
+fleet_al() {    # fleet_al SERIAL: its agent's AL MAC, empty until the fleet registered it
+    fleet_agents | python3 -c 'import json,sys; print(json.load(sys.stdin).get(sys.argv[1], {}).get("al_mac", ""))' "$1"
+}
+
+admit() {       # admit POD...
+    local pod id serial al
+    for pod in "$@"; do
+        id=$(pod_id "$pod") serial=$(pod_serial "$pod")
+        [ -n "$id" ] && [ -n "$serial" ] || die "$pod: no AWLAN_Node id/serial"
+        docker exec local-noc noc-ctl redirect "$id" "tcp:$WAN_HOST:$FLEET_PORT" >/dev/null
+        log "local-noc: $pod ($id) handed to the fleet front port"
+        al=
+        for _ in $(seq 60); do
+            al=$(fleet_al "$serial")
+            [ -n "$al" ] && break
+            sleep 1
+        done
+        [ -n "$al" ] || die "$pod: the fleet did not register $serial"
+        log "fleet: $pod ($serial) is virtual agent $al"
+    done
+    if [ -f /opt/emosa-lab/policy ]; then
+        # shellcheck disable=SC2046    # the saved SSID and KEY, split on purpose
+        policy $(cat /opt/emosa-lab/policy)
+    else
+        log "no controller policy saved yet: run lab.sh policy SSID KEY"
+    fi
+}
+
 release() {     # release POD
-    local pod=$1 id
-    id=$(pod_id "$pod")
+    local pod=$1 id serial
+    id=$(pod_id "$pod") serial=$(pod_serial "$pod")
     docker exec local-noc noc-ctl redirect "$id" - >/dev/null
-    cx emosa systemctl disable --now "emosa-agent@$pod" >/dev/null 2>&1 || true
+    if cx emosa test -f "/etc/emosa/$pod.json"; then
+        cx emosa systemctl disable --now "emosa-agent@$pod" >/dev/null 2>&1 || true
+        cx emosa rm -f "/etc/emosa/$pod.json"
+    elif [ -n "$serial" ] && cx emosa test -f "/etc/emosa/$serial.json"; then
+        cx emosa /opt/emosa/.venv/bin/python -m emosa.agent.fleet forget /etc/emosa-fleet.json "$serial" >/dev/null
+    fi
     log "$pod ($id) given back to local-noc"
 }
 
@@ -178,6 +256,7 @@ policy() {      # policy SSID KEY
     for f in $(cx emosa sh -c 'ls /etc/emosa/*.json 2>/dev/null' || true); do
         als+=("$(cx emosa python3 -c "import json;print(json.load(open('$f'))['al_mac'])")")
     done
+    ( umask 077; printf '%s %s\n' "$1" "$2" > /opt/emosa-lab/policy )    # re-applied by admit
     cx em-ctl em-ctl-node policy "$1" "$2" "${als[@]}"
 }
 
@@ -257,11 +336,17 @@ print(s[\"pod_id\"], \"agent\", s[\"agent_al\"], \"session\", (s.get(\"session\"
       \"ssid\", p.get(\"ssid\"), \"stations\", len(p.get(\"stations\") or []),
       \"ops\", [(o[\"state\"], o[\"ssid\"]) for o in s[\"operations\"]])" "$f"; done' 2>/dev/null || true
     docker exec local-noc noc-ctl redirects 2>/dev/null || true
+    if cx emosa systemctl is-active -q emosa-fleet 2>/dev/null; then
+        fleet_agents | python3 -c '
+import json, sys
+for serial, a in sorted(json.load(sys.stdin).items()):
+    print("fleet", serial, a["al_mac"], a["interface"], a["port"], "handovers", a["handovers"])'
+    fi
 }
 
 cmd=${1:-}; shift || true
 case $cmd in
-    bridge|controller|emosa|agent|release|policy|client|topology|ui|telemetry|provision|status) "$cmd" "$@" ;;
+    bridge|controller|emosa|agent|fleet|admit|release|policy|client|topology|ui|telemetry|provision|status) "$cmd" "$@" ;;
     workload) exec python3 "$HERE/vm/workload.py" "$@" ;;
-    *) sed -n '2,17p' "$0"; exit 2 ;;
+    *) sed -n '2,23p' "$0"; exit 2 ;;
 esac

@@ -31,26 +31,9 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
-from emosa.easymesh_payloads import (
-    APHTCapabilities,
-    APOperationalBss,
-    APRadioAdvancedCapabilities,
-    APRadioBasicCapabilities,
-    AssociatedClient,
-    AssociatedClients,
-    BasicOperatingClass,
-    BssClients,
-    BssConfigurationReport,
-    ConfiguredBss,
-    ConfiguredRadio,
-    DeviceInventory,
-    InventoryRadio,
-    OperationalBss,
-    OperationalRadio,
-    Profile2APCapability,
-)
 from emosa.errors import EmosaError, Reason
-from emosa.opensync.pod_profile import PROFILE, PodBackend
+from emosa.opensync.easymesh_view import device_view, inventory, radio_capabilities, topology
+from emosa.opensync.pod_profile import PROFILE, PodBackend, wpa2_psk
 from emosa.opensync.schema import TABLES
 from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
@@ -70,13 +53,6 @@ from emosa.wire.ethernet import EthernetEndpoint
 from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession
 from emosa.wire.operation_bridge import ComponentTarget, WscComponentBridge
 from emosa.wire.reporting_policy import ReportingPolicyStore
-from emosa.wire.topology_values import (
-    BridgingCapability,
-    DeviceInformation,
-    LocalInterface,
-    Neighbor,
-    Neighbors1905,
-)
 from emosa.wsc_messages import M1Device
 
 log = logging.getLogger("emosa.agent")
@@ -123,7 +99,11 @@ def write(path, value):
 
 
 class PodReportSource:
-    """Capabilities and topology of the bound pod VIF from one fresh snapshot."""
+    """What the agent reports about its pod: the bound BSS (and managed slot BSSes).
+
+    The translation itself is :mod:`emosa.opensync.easymesh_view`; this class
+    chooses what the agent represents and keeps the report source current.
+    """
 
     def __init__(self, backend, binding, pod_id):
         self.backend, self.binding = backend, binding
@@ -141,159 +121,85 @@ class PodReportSource:
         )
         self.capabilities = self.inventory = None
 
-    def _capabilities(self, ruid, channel, max_eirp):
-        radio = replace(
-            self.caps_template.radios[0],
-            # One BSS, operating class 81 (2.4 GHz, 20 MHz), only the pod's current
-            # channel operable: EMOSA does not move the pod's radio. Maximum power is
-            # the radio's configured power as the pod's own State reports it.
-            basic=APRadioBasicCapabilities(
-                ruid,
-                self.backend.max_bss,
-                (
-                    BasicOperatingClass(
-                        81, max_eirp, tuple(n for n in range(1, 14) if n != channel)
-                    ),
-                ),
-            ),
-            ht=APHTCapabilities(ruid, 0),
-            advanced=APRadioAdvancedCapabilities(ruid, 0),
-        )
-        return replace(
-            self.caps_template, radios=(radio,), profile2=Profile2APCapability(0, 0, 0, 0)
-        )
+    def _represented(self, radio, bound):
+        """The BSSes the agent represents: the bound one, then managed slot VIFs.
+
+        A bound BSS the pod does not operate as a qualified WPA2-PSK AP is not
+        represented (as on a cold pod): the radio stays reachable so the
+        controller can configure it.
+        """
+        primary = radio.bss(self.backend.if_name) if bound else None
+        if primary is not None and not (
+            radio.enabled and wpa2_psk(primary.vif) and radio.channel is not None
+        ):
+            primary = None
+        extras = [radio.bss(name) for name, _, _ in self.backend.slots]
+        return primary, tuple(b for b in (primary, *extras) if b is not None)
 
     async def refresh(self):
         started = time.monotonic()
         try:
             raw = await self.backend.session.snapshot()
-            _, radio_uuid, _, state, rows = self.backend._binding(raw)
+            _, _, _, state, rows = self.backend._binding(raw)
             ident = self.backend.identity
             if not raw["ready"] or not ident:
                 raise EmosaError(Reason.NOT_READY, "bound radio State unavailable")
-            radio = next(
-                r for r in rows["Wifi_Radio_State"].values() if r.get("mac") == ident["radio_mac"]
-            )
-            if state and not (
-                state.get("enabled")
-                and radio.get("enabled")
-                and state.get("mode") == "ap"
-                and self.backend._values(state)["security_mode"] == "wpa2-psk"
-                and type(ident["channel"]) is int
-            ):
-                # A BSS the pod does not operate is not represented (as on a cold
-                # pod): the radio stays reachable so the controller can configure it.
-                state = {}
+            device = device_view(rows)
+            radio = device.radio(mac(ident["radio_mac"]))
+            if radio is None:
+                raise EmosaError(Reason.NOT_READY, "bound radio absent from the view")
+            primary, bsses = self._represented(radio, bool(state))
             # A cold pod has the radio but no BSS yet: advertise the radio on the
             # channel the profile would create the BSS on, and no BSS.
-            channel = ident["channel"] if state else self.backend.channel
-            ruid = mac(ident["radio_mac"])
-            bssid = mac(ident["bssid"]) if state else None
-            node = next(iter(rows["AWLAN_Node"].values()))
-            tx_power = radio.get("tx_power")
-            max_eirp = tx_power if type(tx_power) is int and 0 < tx_power <= 127 else 20
+            channel = radio.channel if primary else self.backend.channel
+            max_eirp = radio.tx_power if radio.tx_power and 0 < radio.tx_power <= 127 else 20
             if self.capabilities is not None:
                 max_eirp = self.capabilities.radios[0].basic.operating_classes[0].max_eirp_dbm
-            capabilities = self._capabilities(ruid, channel, max_eirp)
+            capabilities = radio_capabilities(
+                self.caps_template,
+                radio,
+                channel=channel,
+                max_bss=self.backend.max_bss,
+                max_eirp=max_eirp,
+            )
             if self.capabilities is None:
                 self.capabilities = capabilities
-                self.inventory = DeviceInventory(
-                    node["serial_number"].encode()[:64],
-                    (node.get("firmware_version") or "unknown").encode()[:64],
-                    b"OpenSync pod via EMOSA",
-                    (InventoryRadio(ruid, b"mac80211_hwsim"),),
-                )
+                self.inventory = inventory(device, radio)
             elif capabilities != self.capabilities:
                 # A moved radio or replaced PHY is a different device to the controller.
                 raise EmosaError(Reason.NOT_READY, "pod radio identity or channel changed")
             now = time.monotonic()
-            associated = rows.get("Wifi_Associated_Clients", {})
-            # Every BSS the pod operates: the bound one, then managed slot VIFs,
-            # each only when its own State shows an enabled AP.
-            operating = []
-            if state:
-                operating.append(("fronthaul", bssid, state))
-            if self.backend.slots:
-                for extra in self.backend._extras(rows, radio_uuid).values():
-                    st = extra["state"]
-                    if st and st.get("enabled") and st.get("mode") == "ap" and st.get("mac"):
-                        operating.append((self.backend.role(st), mac(st["mac"]), st))
-            members = {}
-            for _, bss_mac, st in operating:
-                members[bss_mac] = {
-                    mac(r["mac"])
-                    for u, r in associated.items()
-                    if r.get("state") == "active" and u in (st.get("associated_clients") or [])
-                }
-            active = set().union(*members.values()) if members else set()
+            active = {m for b in bsses for m in b.stations}
             self.first_seen = {m: self.first_seen.get(m, now) for m in active}
-            interfaces = (LocalInterface(self.agent, 1, b""),) + tuple(
-                LocalInterface(b, 0x103, b + bytes([0x00, 0x00, channel, 0x00]))
-                for _, b, _ in operating
-            )
-            topology = replace(
+            report = topology(
                 self.topology_template,
-                device=DeviceInformation(self.agent, interfaces),
-                bridges=BridgingCapability((tuple(i.mac for i in interfaces),)),
-                neighbors1905=(
-                    Neighbors1905(self.agent, (Neighbor(self.binding.controller_al, False),)),
-                ),
-                operational=APOperationalBss(
-                    (
-                        OperationalRadio(
-                            ruid,
-                            tuple(OperationalBss(b, st["ssid"].encode()) for _, b, st in operating),
-                        ),
-                    )
-                ),
-                configuration=BssConfigurationReport(
-                    (
-                        ConfiguredRadio(
-                            ruid,
-                            tuple(
-                                ConfiguredBss(
-                                    b, 0x80 if role == "backhaul" else 0x40, st["ssid"].encode()
-                                )
-                                for role, b, st in operating
-                            ),
-                        ),
-                    )
-                ),
-                clients=AssociatedClients(
-                    tuple(
-                        BssClients(
-                            b,
-                            tuple(
-                                AssociatedClient(m, min(65535, int(now - self.first_seen[m])))
-                                for m in sorted(members[b])
-                            ),
-                        )
-                        for _, b, _ in operating
-                    )
-                ),
-                inventory_complete=True,
+                agent_al=self.agent,
+                controller_al=self.binding.controller_al,
+                radio=radio,
+                channel=channel,
+                bsses=bsses,
+                ages={m: now - t for m, t in self.first_seen.items()},
             )
             facts = (
                 raw["generation"],
                 raw["revision"],
-                tuple((b, st.get("ssid"), tuple(sorted(members[b]))) for _, b, st in operating),
-                radio.get("tx_power"),
+                tuple((b.bssid, b.ssid, b.stations) for b in bsses),
+                radio.tx_power,
             )
             if facts != self.last:
                 self.revision += 1
                 self.last = facts
             self.facts = {
-                "serial": node["serial_number"],
-                "node_id": node.get("id"),
-                "firmware": node.get("firmware_version"),
+                "serial": device.serial,
+                "node_id": device.node_id,
+                "firmware": device.firmware,
                 "radio": ident["radio_if_name"],
                 "ruid": ident["radio_mac"],
                 "bssid": ident["bssid"],
                 "channel": channel,
-                "ssid": state.get("ssid"),
+                "ssid": primary.ssid if primary else None,
                 "bsses": [
-                    {"role": role, "bssid": b.hex(":"), "ssid": st.get("ssid")}
-                    for role, b, st in operating
+                    {"role": b.role, "bssid": b.bssid.hex(":"), "ssid": b.ssid} for b in bsses
                 ],
                 "stations": sorted(m.hex(":") for m in active),
                 "ovsdb_generation": raw["generation"],
@@ -302,25 +208,28 @@ class PodReportSource:
             # Station ages advance every refresh, but facts may change only with
             # a new source revision: ages are taken when membership changes.
             if self._clients is not None and self._clients[0] == self.revision:
-                topology = replace(topology, clients=self._clients[1])
-            self._clients = (self.revision, topology.clients)
+                report = replace(report, clients=self._clients[1])
+            self._clients = (self.revision, report.clients)
             # Measured operating parameters (channel procedures, Operating Channel
             # Report) only while the BSS operates on the one supported channel.
             operating = (
-                (OperatingRadio(ruid, 81, channel, tx_power),)
-                if bssid and channel == 6 and type(tx_power) is int and tx_power <= max_eirp
+                (OperatingRadio(radio.ruid, 81, channel, radio.tx_power),)
+                if primary
+                and channel == 6
+                and radio.tx_power is not None
+                and radio.tx_power <= max_eirp
                 else ()
             )
             self.source.publish(
                 (raw["generation"], self.revision),
                 self.capabilities,
-                topology,
+                report,
                 observed_at=started,
                 lifetime=1.5,  # (t + 2) - t can exceed 2 in floating point
                 operating_radios=operating,
             )
             return True
-        except (EmosaError, ConnectionError, TimeoutError, StopIteration) as exc:
+        except (EmosaError, ConnectionError, TimeoutError) as exc:
             if self.facts is not None:
                 log.info("pod source unavailable: %s", exc)
             self.facts = None
