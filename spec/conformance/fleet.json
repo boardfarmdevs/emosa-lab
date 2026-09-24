@@ -1,0 +1,122 @@
+{
+ "cases": [
+  {
+   "awlan_node": {
+    "id": "MVXPOD023F87E628DD",
+    "model": "HWSIM_POD",
+    "serial_number": "MVXPOD023F87E628DD"
+   },
+   "expected": {
+    "agent_config": {
+     "al_mac": "02:72:f9:7f:07:85",
+     "controller_al": "02:00:00:e0:00:01",
+     "interface": "em1",
+     "m2_session": "distinct",
+     "message_set": "easymesh-6.1",
+     "multi_bss": false,
+     "ovsdb": "ptcp:6651:127.0.0.1",
+     "pod_id": "MVXPOD023F87E628DD",
+     "profile": "opensync-lab-hwsim-6.6.1-v1",
+     "run_id": "MVXPOD023F87E628DD",
+     "serial": "MVXPOD023F87E628DD",
+     "state_dir": "/var/lib/emosa/MVXPOD023F87E628DD"
+    },
+    "manager_addr_update": [
+     {
+      "manager_addr": "tcp:10.101.0.1:6651"
+     }
+    ],
+    "registry_entry": {
+     "al_mac": "02:72:f9:7f:07:85",
+     "handovers": 1,
+     "interface": "em1",
+     "pod_id": "MVXPOD023F87E628DD",
+     "port": 6651
+    }
+   }
+  },
+  {
+   "awlan_node": {
+    "id": "MVXPOD02D7777EF0D9",
+    "model": "HWSIM_POD",
+    "serial_number": "MVXPOD02D7777EF0D9"
+   },
+   "expected": {
+    "agent_config": {
+     "al_mac": "02:c2:b8:31:3a:f8",
+     "controller_al": "02:00:00:e0:00:01",
+     "interface": "em2",
+     "m2_session": "distinct",
+     "message_set": "easymesh-6.1",
+     "multi_bss": false,
+     "ovsdb": "ptcp:6652:127.0.0.1",
+     "pod_id": "MVXPOD02D7777EF0D9",
+     "profile": "opensync-lab-hwsim-6.6.1-v1",
+     "run_id": "MVXPOD02D7777EF0D9",
+     "serial": "MVXPOD02D7777EF0D9",
+     "state_dir": "/var/lib/emosa/MVXPOD02D7777EF0D9"
+    },
+    "manager_addr_update": [
+     {
+      "manager_addr": "tcp:10.101.0.1:6652"
+     }
+    ],
+    "registry_entry": {
+     "al_mac": "02:c2:b8:31:3a:f8",
+     "handovers": 1,
+     "interface": "em2",
+     "pod_id": "MVXPOD02D7777EF0D9",
+     "port": 6652
+    }
+   }
+  },
+  {
+   "awlan_node": {
+    "id": "MVXPOD023F87E628DD",
+    "model": "HWSIM_POD",
+    "serial_number": "MVXPOD023F87E628DD"
+   },
+   "expected": {
+    "agent_config": {
+     "al_mac": "02:72:f9:7f:07:85",
+     "controller_al": "02:00:00:e0:00:01",
+     "interface": "em1",
+     "m2_session": "distinct",
+     "message_set": "easymesh-6.1",
+     "multi_bss": false,
+     "ovsdb": "ptcp:6651:127.0.0.1",
+     "pod_id": "MVXPOD023F87E628DD",
+     "profile": "opensync-lab-hwsim-6.6.1-v1",
+     "run_id": "MVXPOD023F87E628DD",
+     "serial": "MVXPOD023F87E628DD",
+     "state_dir": "/var/lib/emosa/MVXPOD023F87E628DD"
+    },
+    "manager_addr_update": [
+     {
+      "manager_addr": "tcp:10.101.0.1:6651"
+     }
+    ],
+    "registry_entry": {
+     "al_mac": "02:72:f9:7f:07:85",
+     "handovers": 2,
+     "interface": "em1",
+     "pod_id": "MVXPOD023F87E628DD",
+     "port": 6651
+    }
+   }
+  }
+ ],
+ "description": "spec §4: pods arriving at the front port, in order, with this fleet configuration; timestamps are omitted.",
+ "fleet_config": {
+  "advertise": "10.101.0.1",
+  "config_dir": "/etc/emosa",
+  "controller_al": "02:00:00:e0:00:01",
+  "listen": "punix:/run/emosa-fleet.sock",
+  "message_set": "easymesh-6.1",
+  "ports": [
+   6651,
+   6690
+  ],
+  "state_root": "/var/lib/emosa"
+ }
+}

@@ -178,12 +178,13 @@ Monitored, read-only:
 | `Wifi_VIF_State` | the Config columns above, plus `vif_config`, `mac`, `associated_clients`, `multi_ap` |
 | `Wifi_Associated_Clients` | `mac`, `state` |
 
-Written, each as one transaction:
+Written, each as one guarded transaction. A cold create and a multi-BSS set are
+preceded by a read-only `select` of `Wifi_Inet_Config`.
 
 | Change | Operations |
 | --- | --- |
 | Hand over (fleet) | `update AWLAN_Node manager_addr` |
-| Update the fronthaul | `wait` on the AWLAN_Node serial and the VIF's guarded fields → `update Wifi_VIF_Config ssid` → `mutate wpa_psks` (one slot, key `key`) |
+| Update the fronthaul | `wait` on the AWLAN_Node serial, the radio's references (`if_name`, `vif_configs`) and the VIF's guarded fields → `update Wifi_VIF_Config ssid` → `mutate wpa_psks` (the single slot becomes key `key`) |
 | Cold pod: create the fronthaul | `wait` on the serial and that the VIF is absent → `insert Wifi_VIF_Config` (profile row, received SSID and PSK) → `mutate Wifi_Radio_Config vif_configs` → `update Wifi_Radio_Config channel, ht_mode, enabled` → `insert Wifi_Inet_Config` if absent |
 | Multi-BSS set | as above for the primary BSS, plus: insert, update or delete each profile slot VIF so the slots are **exactly** the received set, with the matching `vif_configs` mutations and `Wifi_Inet_Config` rows |
 

@@ -1,0 +1,1628 @@
+{
+ "cases": [
+  {
+   "expected": {
+    "status": "committed",
+    "transactions": [
+     [
+      {
+       "columns": [
+        "_uuid",
+        "serial_number"
+       ],
+       "op": "wait",
+       "rows": [
+        {
+         "_uuid": [
+          "uuid",
+          "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+         ],
+         "serial_number": "MVXPOD023F87E628DD"
+        }
+       ],
+       "table": "AWLAN_Node",
+       "timeout": 0,
+       "until": "==",
+       "where": []
+      },
+      {
+       "columns": [
+        "if_name",
+        "vif_configs"
+       ],
+       "op": "wait",
+       "rows": [
+        {
+         "if_name": "phy1",
+         "vif_configs": [
+          "uuid",
+          "5e205523-2215-4670-9433-e4742fa22055"
+         ]
+        }
+       ],
+       "table": "Wifi_Radio_Config",
+       "timeout": 0,
+       "until": "==",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+         ]
+        ]
+       ]
+      },
+      {
+       "columns": [
+        "if_name",
+        "mode",
+        "enabled",
+        "ssid",
+        "wpa",
+        "wpa_key_mgmt",
+        "wpa_psks",
+        "security",
+        "rsn_pairwise_ccmp",
+        "wpa_pairwise_tkip",
+        "wpa_pairwise_ccmp"
+       ],
+       "op": "wait",
+       "rows": [
+        {
+         "enabled": true,
+         "if_name": "home-ap-24",
+         "mode": "ap",
+         "rsn_pairwise_ccmp": true,
+         "security": [
+          "map",
+          []
+         ],
+         "ssid": "emosa-mesh",
+         "wpa": true,
+         "wpa_key_mgmt": "wpa-psk",
+         "wpa_pairwise_ccmp": [
+          "set",
+          []
+         ],
+         "wpa_pairwise_tkip": [
+          "set",
+          []
+         ],
+         "wpa_psks": [
+          "map",
+          [
+           [
+            "key",
+            "fixture-psk"
+           ]
+          ]
+         ]
+        }
+       ],
+       "table": "Wifi_VIF_Config",
+       "timeout": 0,
+       "until": "==",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "5e205523-2215-4670-9433-e4742fa22055"
+         ]
+        ]
+       ]
+      },
+      {
+       "op": "update",
+       "row": {
+        "ssid": "emosa-mesh-2"
+       },
+       "table": "Wifi_VIF_Config",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "5e205523-2215-4670-9433-e4742fa22055"
+         ]
+        ]
+       ]
+      },
+      {
+       "mutations": [
+        [
+         "wpa_psks",
+         "delete",
+         [
+          "set",
+          [
+           "key"
+          ]
+         ]
+        ],
+        [
+         "wpa_psks",
+         "insert",
+         [
+          "map",
+          [
+           [
+            "key",
+            "conformance-psk-1"
+           ]
+          ]
+         ]
+        ]
+       ],
+       "op": "mutate",
+       "table": "Wifi_VIF_Config",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "5e205523-2215-4670-9433-e4742fa22055"
+         ]
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "intent": {
+    "secret_ref": "ref-primary",
+    "ssid": "emosa-mesh-2"
+   },
+   "multi_bss": false,
+   "name": "update-fronthaul",
+   "ovsdb_tables": {
+    "AWLAN_Node": {
+     "96bc1650-4197-4cd8-9036-f9eb854e87ec": {
+      "firmware_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+      "id": "MVXPOD023F87E628DD",
+      "model": "HWSIM_POD",
+      "serial_number": "MVXPOD023F87E628DD"
+     }
+    },
+    "Wifi_Associated_Clients": {
+     "5610f878-8aa3-40a8-95b1-76cad74d386d": {
+      "mac": "02:00:00:00:02:04",
+      "state": "active"
+     },
+     "754e678c-11a4-43ec-bda8-f655bf59b8d2": {
+      "mac": "02:00:00:00:10:00",
+      "state": "active"
+     },
+     "af38859b-bedf-41a2-bddf-98652851cbd1": {
+      "mac": "02:00:00:00:0a:00",
+      "state": "active"
+     }
+    },
+    "Wifi_Radio_Config": {
+     "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2": {
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "vif_configs": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ]
+     },
+     "bad3456e-79cc-4d17-9719-afdb2b723dc4": {
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "vif_configs": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ]
+     }
+    },
+    "Wifi_Radio_State": {
+     "6d532b35-45c2-4fb6-b7e5-a88eac97f2c1": {
+      "channel": 6,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "mac": "02:00:00:00:01:00",
+      "radio_config": [
+       "uuid",
+       "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+      ],
+      "tx_power": 30,
+      "vif_states": [
+       "uuid",
+       "46f21b59-4487-4c60-bab6-2d2874107cfa"
+      ]
+     },
+     "b4398810-4002-400c-937d-2487ede88cf5": {
+      "channel": 44,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "mac": "02:00:00:00:05:00",
+      "radio_config": [
+       "uuid",
+       "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2"
+      ],
+      "tx_power": 23,
+      "vif_states": [
+       "uuid",
+       "95d7b177-73ef-44f6-903a-3db7dbc81bfd"
+      ]
+     }
+    },
+    "Wifi_VIF_Config": {
+     "527b652b-fb37-4881-8386-a555857b77e7": {
+      "bridge": "",
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     },
+     "5e205523-2215-4670-9433-e4742fa22055": {
+      "bridge": "br-home",
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mode": "ap",
+      "multi_ap": [
+       "set",
+       []
+      ],
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     }
+    },
+    "Wifi_VIF_State": {
+     "46f21b59-4487-4c60-bab6-2d2874107cfa": {
+      "associated_clients": [
+       "set",
+       [
+        [
+         "uuid",
+         "754e678c-11a4-43ec-bda8-f655bf59b8d2"
+        ],
+        [
+         "uuid",
+         "af38859b-bedf-41a2-bddf-98652851cbd1"
+        ]
+       ]
+      ],
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mac": "82:00:00:00:01:00",
+      "mode": "ap",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "vif_config": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ],
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_pairwise_ccmp": false,
+      "wpa_pairwise_tkip": false,
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     },
+     "95d7b177-73ef-44f6-903a-3db7dbc81bfd": {
+      "associated_clients": [
+       "uuid",
+       "5610f878-8aa3-40a8-95b1-76cad74d386d"
+      ],
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mac": "02:00:00:00:05:00",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "vif_config": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ],
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     }
+    }
+   },
+   "passphrases": {
+    "ref-extra-1": "conformance-psk-2",
+    "ref-extra-2": "conformance-psk-3",
+    "ref-extra-3": "conformance-psk-4",
+    "ref-primary": "conformance-psk-1"
+   },
+   "profile": "opensync-lab-hwsim-6.6.1-v1"
+  },
+  {
+   "expected": {
+    "status": "committed",
+    "transactions": [
+     [
+      {
+       "columns": [
+        "_uuid"
+       ],
+       "op": "select",
+       "table": "Wifi_Inet_Config",
+       "where": [
+        [
+         "if_name",
+         "==",
+         "home-ap-24"
+        ]
+       ]
+      }
+     ],
+     [
+      {
+       "columns": [
+        "_uuid",
+        "serial_number"
+       ],
+       "op": "wait",
+       "rows": [
+        {
+         "_uuid": [
+          "uuid",
+          "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+         ],
+         "serial_number": "MVXPOD023F87E628DD"
+        }
+       ],
+       "table": "AWLAN_Node",
+       "timeout": 0,
+       "until": "==",
+       "where": []
+      },
+      {
+       "columns": [
+        "if_name",
+        "vif_configs"
+       ],
+       "op": "wait",
+       "rows": [
+        {
+         "if_name": "phy1",
+         "vif_configs": [
+          "set",
+          []
+         ]
+        }
+       ],
+       "table": "Wifi_Radio_Config",
+       "timeout": 0,
+       "until": "==",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+         ]
+        ]
+       ]
+      },
+      {
+       "columns": [
+        "if_name"
+       ],
+       "op": "wait",
+       "rows": [],
+       "table": "Wifi_VIF_Config",
+       "timeout": 0,
+       "until": "==",
+       "where": [
+        [
+         "if_name",
+         "==",
+         "home-ap-24"
+        ]
+       ]
+      },
+      {
+       "op": "insert",
+       "row": {
+        "ap_bridge": true,
+        "bridge": "br-home",
+        "enabled": true,
+        "if_name": "home-ap-24",
+        "mac_list_type": "none",
+        "mode": "ap",
+        "rsn_pairwise_ccmp": true,
+        "security": [
+         "map",
+         []
+        ],
+        "ssid": "emosa-mesh-2",
+        "ssid_broadcast": "enabled",
+        "vif_radio_idx": 1,
+        "wpa": true,
+        "wpa_key_mgmt": "wpa-psk",
+        "wpa_psks": [
+         "map",
+         [
+          [
+           "key",
+           "conformance-psk-1"
+          ]
+         ]
+        ]
+       },
+       "table": "Wifi_VIF_Config",
+       "uuid-name": "fh"
+      },
+      {
+       "mutations": [
+        [
+         "vif_configs",
+         "insert",
+         [
+          "set",
+          [
+           [
+            "named-uuid",
+            "fh"
+           ]
+          ]
+         ]
+        ]
+       ],
+       "op": "mutate",
+       "table": "Wifi_Radio_Config",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+         ]
+        ]
+       ]
+      },
+      {
+       "op": "update",
+       "row": {
+        "channel": 6,
+        "enabled": true,
+        "ht_mode": "HT20"
+       },
+       "table": "Wifi_Radio_Config",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+         ]
+        ]
+       ]
+      },
+      {
+       "columns": [
+        "if_name"
+       ],
+       "op": "wait",
+       "rows": [],
+       "table": "Wifi_Inet_Config",
+       "timeout": 0,
+       "until": "==",
+       "where": [
+        [
+         "if_name",
+         "==",
+         "home-ap-24"
+        ]
+       ]
+      },
+      {
+       "op": "insert",
+       "row": {
+        "NAT": false,
+        "enabled": true,
+        "if_name": "home-ap-24",
+        "if_type": "vif",
+        "ip_assign_scheme": "none",
+        "mtu": 1500,
+        "network": true
+       },
+       "table": "Wifi_Inet_Config"
+      }
+     ]
+    ]
+   },
+   "intent": {
+    "secret_ref": "ref-primary",
+    "ssid": "emosa-mesh-2"
+   },
+   "multi_bss": false,
+   "name": "cold-pod-create",
+   "ovsdb_tables": {
+    "AWLAN_Node": {
+     "96bc1650-4197-4cd8-9036-f9eb854e87ec": {
+      "firmware_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+      "id": "MVXPOD023F87E628DD",
+      "model": "HWSIM_POD",
+      "serial_number": "MVXPOD023F87E628DD"
+     }
+    },
+    "Wifi_Associated_Clients": {
+     "5610f878-8aa3-40a8-95b1-76cad74d386d": {
+      "mac": "02:00:00:00:02:04",
+      "state": "active"
+     },
+     "754e678c-11a4-43ec-bda8-f655bf59b8d2": {
+      "mac": "02:00:00:00:10:00",
+      "state": "active"
+     },
+     "af38859b-bedf-41a2-bddf-98652851cbd1": {
+      "mac": "02:00:00:00:0a:00",
+      "state": "active"
+     }
+    },
+    "Wifi_Radio_Config": {
+     "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2": {
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "vif_configs": [
+       "set",
+       [
+        [
+         "uuid",
+         "527b652b-fb37-4881-8386-a555857b77e7"
+        ]
+       ]
+      ]
+     },
+     "bad3456e-79cc-4d17-9719-afdb2b723dc4": {
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "vif_configs": [
+       "set",
+       []
+      ]
+     }
+    },
+    "Wifi_Radio_State": {
+     "6d532b35-45c2-4fb6-b7e5-a88eac97f2c1": {
+      "channel": 6,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "mac": "02:00:00:00:01:00",
+      "radio_config": [
+       "uuid",
+       "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+      ],
+      "tx_power": 30,
+      "vif_states": [
+       "set",
+       []
+      ]
+     },
+     "b4398810-4002-400c-937d-2487ede88cf5": {
+      "channel": 44,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "mac": "02:00:00:00:05:00",
+      "radio_config": [
+       "uuid",
+       "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2"
+      ],
+      "tx_power": 23,
+      "vif_states": [
+       "set",
+       [
+        [
+         "uuid",
+         "95d7b177-73ef-44f6-903a-3db7dbc81bfd"
+        ]
+       ]
+      ]
+     }
+    },
+    "Wifi_VIF_Config": {
+     "527b652b-fb37-4881-8386-a555857b77e7": {
+      "bridge": "",
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     }
+    },
+    "Wifi_VIF_State": {
+     "95d7b177-73ef-44f6-903a-3db7dbc81bfd": {
+      "associated_clients": [
+       "uuid",
+       "5610f878-8aa3-40a8-95b1-76cad74d386d"
+      ],
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mac": "02:00:00:00:05:00",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "vif_config": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ],
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     }
+    }
+   },
+   "passphrases": {
+    "ref-extra-1": "conformance-psk-2",
+    "ref-extra-2": "conformance-psk-3",
+    "ref-extra-3": "conformance-psk-4",
+    "ref-primary": "conformance-psk-1"
+   },
+   "profile": "opensync-lab-hwsim-6.6.1-v1"
+  },
+  {
+   "expected": {
+    "status": "committed",
+    "transactions": [
+     [
+      {
+       "columns": [
+        "if_name"
+       ],
+       "op": "select",
+       "table": "Wifi_Inet_Config",
+       "where": []
+      }
+     ],
+     [
+      {
+       "columns": [
+        "_uuid",
+        "serial_number"
+       ],
+       "op": "wait",
+       "rows": [
+        {
+         "_uuid": [
+          "uuid",
+          "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+         ],
+         "serial_number": "MVXPOD023F87E628DD"
+        }
+       ],
+       "table": "AWLAN_Node",
+       "timeout": 0,
+       "until": "==",
+       "where": []
+      },
+      {
+       "columns": [
+        "if_name",
+        "vif_configs"
+       ],
+       "op": "wait",
+       "rows": [
+        {
+         "if_name": "phy1",
+         "vif_configs": [
+          "uuid",
+          "5e205523-2215-4670-9433-e4742fa22055"
+         ]
+        }
+       ],
+       "table": "Wifi_Radio_Config",
+       "timeout": 0,
+       "until": "==",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+         ]
+        ]
+       ]
+      },
+      {
+       "columns": [
+        "if_name",
+        "mode",
+        "enabled",
+        "ssid",
+        "wpa",
+        "wpa_key_mgmt",
+        "wpa_psks",
+        "security",
+        "rsn_pairwise_ccmp",
+        "wpa_pairwise_tkip",
+        "wpa_pairwise_ccmp"
+       ],
+       "op": "wait",
+       "rows": [
+        {
+         "enabled": true,
+         "if_name": "home-ap-24",
+         "mode": "ap",
+         "rsn_pairwise_ccmp": true,
+         "security": [
+          "map",
+          []
+         ],
+         "ssid": "emosa-mesh",
+         "wpa": true,
+         "wpa_key_mgmt": "wpa-psk",
+         "wpa_pairwise_ccmp": [
+          "set",
+          []
+         ],
+         "wpa_pairwise_tkip": [
+          "set",
+          []
+         ],
+         "wpa_psks": [
+          "map",
+          [
+           [
+            "key",
+            "fixture-psk"
+           ]
+          ]
+         ]
+        }
+       ],
+       "table": "Wifi_VIF_Config",
+       "timeout": 0,
+       "until": "==",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "5e205523-2215-4670-9433-e4742fa22055"
+         ]
+        ]
+       ]
+      },
+      {
+       "op": "update",
+       "row": {
+        "ssid": "emosa-mesh-2"
+       },
+       "table": "Wifi_VIF_Config",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "5e205523-2215-4670-9433-e4742fa22055"
+         ]
+        ]
+       ]
+      },
+      {
+       "mutations": [
+        [
+         "wpa_psks",
+         "delete",
+         [
+          "set",
+          [
+           "key"
+          ]
+         ]
+        ],
+        [
+         "wpa_psks",
+         "insert",
+         [
+          "map",
+          [
+           [
+            "key",
+            "conformance-psk-1"
+           ]
+          ]
+         ]
+        ]
+       ],
+       "op": "mutate",
+       "table": "Wifi_VIF_Config",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "5e205523-2215-4670-9433-e4742fa22055"
+         ]
+        ]
+       ]
+      },
+      {
+       "columns": [
+        "if_name"
+       ],
+       "op": "wait",
+       "rows": [],
+       "table": "Wifi_VIF_Config",
+       "timeout": 0,
+       "until": "==",
+       "where": [
+        [
+         "if_name",
+         "==",
+         "svc-d-ap-24"
+        ]
+       ]
+      },
+      {
+       "op": "insert",
+       "row": {
+        "ap_bridge": true,
+        "bridge": "br-home",
+        "enabled": true,
+        "if_name": "svc-d-ap-24",
+        "mac_list_type": "none",
+        "mode": "ap",
+        "rsn_pairwise_ccmp": true,
+        "security": [
+         "map",
+         []
+        ],
+        "ssid": "emosa-iot",
+        "ssid_broadcast": "enabled",
+        "vif_radio_idx": 4,
+        "wpa": true,
+        "wpa_key_mgmt": "wpa-psk",
+        "wpa_psks": [
+         "map",
+         [
+          [
+           "key",
+           "conformance-psk-2"
+          ]
+         ]
+        ]
+       },
+       "table": "Wifi_VIF_Config",
+       "uuid-name": "extra0"
+      },
+      {
+       "mutations": [
+        [
+         "vif_configs",
+         "insert",
+         [
+          "set",
+          [
+           [
+            "named-uuid",
+            "extra0"
+           ]
+          ]
+         ]
+        ]
+       ],
+       "op": "mutate",
+       "table": "Wifi_Radio_Config",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+         ]
+        ]
+       ]
+      },
+      {
+       "op": "insert",
+       "row": {
+        "NAT": false,
+        "enabled": true,
+        "if_name": "svc-d-ap-24",
+        "if_type": "vif",
+        "ip_assign_scheme": "none",
+        "mtu": 1500,
+        "network": true
+       },
+       "table": "Wifi_Inet_Config"
+      },
+      {
+       "columns": [
+        "if_name"
+       ],
+       "op": "wait",
+       "rows": [],
+       "table": "Wifi_VIF_Config",
+       "timeout": 0,
+       "until": "==",
+       "where": [
+        [
+         "if_name",
+         "==",
+         "svc-e-ap-24"
+        ]
+       ]
+      },
+      {
+       "op": "insert",
+       "row": {
+        "ap_bridge": true,
+        "bridge": "br-home",
+        "enabled": true,
+        "if_name": "svc-e-ap-24",
+        "mac_list_type": "none",
+        "mode": "ap",
+        "rsn_pairwise_ccmp": true,
+        "security": [
+         "map",
+         []
+        ],
+        "ssid": "emosa-guest",
+        "ssid_broadcast": "enabled",
+        "vif_radio_idx": 5,
+        "wpa": true,
+        "wpa_key_mgmt": "wpa-psk",
+        "wpa_psks": [
+         "map",
+         [
+          [
+           "key",
+           "conformance-psk-3"
+          ]
+         ]
+        ]
+       },
+       "table": "Wifi_VIF_Config",
+       "uuid-name": "extra1"
+      },
+      {
+       "mutations": [
+        [
+         "vif_configs",
+         "insert",
+         [
+          "set",
+          [
+           [
+            "named-uuid",
+            "extra1"
+           ]
+          ]
+         ]
+        ]
+       ],
+       "op": "mutate",
+       "table": "Wifi_Radio_Config",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+         ]
+        ]
+       ]
+      },
+      {
+       "op": "insert",
+       "row": {
+        "NAT": false,
+        "enabled": true,
+        "if_name": "svc-e-ap-24",
+        "if_type": "vif",
+        "ip_assign_scheme": "none",
+        "mtu": 1500,
+        "network": true
+       },
+       "table": "Wifi_Inet_Config"
+      },
+      {
+       "columns": [
+        "if_name"
+       ],
+       "op": "wait",
+       "rows": [],
+       "table": "Wifi_VIF_Config",
+       "timeout": 0,
+       "until": "==",
+       "where": [
+        [
+         "if_name",
+         "==",
+         "b-ap-24"
+        ]
+       ]
+      },
+      {
+       "op": "insert",
+       "row": {
+        "ap_bridge": false,
+        "bridge": "br-home",
+        "enabled": true,
+        "if_name": "b-ap-24",
+        "mac_list_type": "none",
+        "mode": "ap",
+        "multi_ap": "backhaul_bss",
+        "rsn_pairwise_ccmp": true,
+        "security": [
+         "map",
+         []
+        ],
+        "ssid": "emosa-bh",
+        "ssid_broadcast": "disabled",
+        "vif_radio_idx": 1,
+        "wpa": true,
+        "wpa_key_mgmt": "wpa-psk",
+        "wpa_psks": [
+         "map",
+         [
+          [
+           "key",
+           "conformance-psk-4"
+          ]
+         ]
+        ]
+       },
+       "table": "Wifi_VIF_Config",
+       "uuid-name": "extra3"
+      },
+      {
+       "mutations": [
+        [
+         "vif_configs",
+         "insert",
+         [
+          "set",
+          [
+           [
+            "named-uuid",
+            "extra3"
+           ]
+          ]
+         ]
+        ]
+       ],
+       "op": "mutate",
+       "table": "Wifi_Radio_Config",
+       "where": [
+        [
+         "_uuid",
+         "==",
+         [
+          "uuid",
+          "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+         ]
+        ]
+       ]
+      },
+      {
+       "op": "insert",
+       "row": {
+        "NAT": false,
+        "enabled": true,
+        "if_name": "b-ap-24",
+        "if_type": "vif",
+        "ip_assign_scheme": "none",
+        "mtu": 1500,
+        "network": true
+       },
+       "table": "Wifi_Inet_Config"
+      }
+     ]
+    ]
+   },
+   "intent": {
+    "additional": [
+     {
+      "role": "fronthaul",
+      "secret_ref": "ref-extra-1",
+      "ssid": "emosa-iot"
+     },
+     {
+      "role": "fronthaul",
+      "secret_ref": "ref-extra-2",
+      "ssid": "emosa-guest"
+     },
+     {
+      "role": "backhaul",
+      "secret_ref": "ref-extra-3",
+      "ssid": "emosa-bh"
+     }
+    ],
+    "secret_ref": "ref-primary",
+    "ssid": "emosa-mesh-2"
+   },
+   "multi_bss": true,
+   "name": "multi-bss-set",
+   "ovsdb_tables": {
+    "AWLAN_Node": {
+     "96bc1650-4197-4cd8-9036-f9eb854e87ec": {
+      "firmware_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+      "id": "MVXPOD023F87E628DD",
+      "model": "HWSIM_POD",
+      "serial_number": "MVXPOD023F87E628DD"
+     }
+    },
+    "Wifi_Associated_Clients": {
+     "5610f878-8aa3-40a8-95b1-76cad74d386d": {
+      "mac": "02:00:00:00:02:04",
+      "state": "active"
+     },
+     "754e678c-11a4-43ec-bda8-f655bf59b8d2": {
+      "mac": "02:00:00:00:10:00",
+      "state": "active"
+     },
+     "af38859b-bedf-41a2-bddf-98652851cbd1": {
+      "mac": "02:00:00:00:0a:00",
+      "state": "active"
+     }
+    },
+    "Wifi_Radio_Config": {
+     "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2": {
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "vif_configs": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ]
+     },
+     "bad3456e-79cc-4d17-9719-afdb2b723dc4": {
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "vif_configs": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ]
+     }
+    },
+    "Wifi_Radio_State": {
+     "6d532b35-45c2-4fb6-b7e5-a88eac97f2c1": {
+      "channel": 6,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "mac": "02:00:00:00:01:00",
+      "radio_config": [
+       "uuid",
+       "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+      ],
+      "tx_power": 30,
+      "vif_states": [
+       "uuid",
+       "46f21b59-4487-4c60-bab6-2d2874107cfa"
+      ]
+     },
+     "b4398810-4002-400c-937d-2487ede88cf5": {
+      "channel": 44,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "mac": "02:00:00:00:05:00",
+      "radio_config": [
+       "uuid",
+       "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2"
+      ],
+      "tx_power": 23,
+      "vif_states": [
+       "uuid",
+       "95d7b177-73ef-44f6-903a-3db7dbc81bfd"
+      ]
+     }
+    },
+    "Wifi_VIF_Config": {
+     "527b652b-fb37-4881-8386-a555857b77e7": {
+      "bridge": "",
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     },
+     "5e205523-2215-4670-9433-e4742fa22055": {
+      "bridge": "br-home",
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mode": "ap",
+      "multi_ap": [
+       "set",
+       []
+      ],
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     }
+    },
+    "Wifi_VIF_State": {
+     "46f21b59-4487-4c60-bab6-2d2874107cfa": {
+      "associated_clients": [
+       "set",
+       [
+        [
+         "uuid",
+         "754e678c-11a4-43ec-bda8-f655bf59b8d2"
+        ],
+        [
+         "uuid",
+         "af38859b-bedf-41a2-bddf-98652851cbd1"
+        ]
+       ]
+      ],
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mac": "82:00:00:00:01:00",
+      "mode": "ap",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "vif_config": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ],
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_pairwise_ccmp": false,
+      "wpa_pairwise_tkip": false,
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     },
+     "95d7b177-73ef-44f6-903a-3db7dbc81bfd": {
+      "associated_clients": [
+       "uuid",
+       "5610f878-8aa3-40a8-95b1-76cad74d386d"
+      ],
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mac": "02:00:00:00:05:00",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "vif_config": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ],
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     }
+    }
+   },
+   "passphrases": {
+    "ref-extra-1": "conformance-psk-2",
+    "ref-extra-2": "conformance-psk-3",
+    "ref-extra-3": "conformance-psk-4",
+    "ref-primary": "conformance-psk-1"
+   },
+   "profile": "opensync-lab-hwsim-6.6.1-v1"
+  }
+ ],
+ "description": "spec §3.2, §3.4: an accepted M2 intent against pod rows, and the exact OVSDB transaction(s) sent. Passphrases are public test values by reference."
+}

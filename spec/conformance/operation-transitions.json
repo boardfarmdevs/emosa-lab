@@ -1,0 +1,43 @@
+{
+ "active": [
+  "CONFIG_COMMITTED",
+  "INDETERMINATE",
+  "REQUESTED",
+  "SUBMITTED",
+  "VALIDATED"
+ ],
+ "description": "spec §5: legal operation state transitions and the active set",
+ "transitions": {
+  "CONFIG_COMMITTED": [
+   "FAILED",
+   "OBSERVED_APPLIED",
+   "OWNERSHIP_CONFLICT",
+   "TIMED_OUT"
+  ],
+  "INDETERMINATE": [
+   "CONFIG_COMMITTED",
+   "FAILED",
+   "OBSERVED_APPLIED",
+   "OWNERSHIP_CONFLICT",
+   "TIMED_OUT"
+  ],
+  "REQUESTED": [
+   "CANCELLED",
+   "REJECTED",
+   "VALIDATED"
+  ],
+  "SUBMITTED": [
+   "CONFIG_COMMITTED",
+   "FAILED",
+   "INDETERMINATE",
+   "OWNERSHIP_CONFLICT"
+  ],
+  "VALIDATED": [
+   "CANCELLED",
+   "OBSERVED_APPLIED",
+   "OWNERSHIP_CONFLICT",
+   "REJECTED",
+   "SUBMITTED"
+  ]
+ }
+}
