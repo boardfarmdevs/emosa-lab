@@ -627,6 +627,15 @@ code {
   color: var(--muted);
 }
 
+/* where it fits among the labs */
+.fits {
+  max-width: 62ch;
+  margin-top: 18px;
+  color: var(--muted, inherit);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
 /* learn */
 .learn {
   display: grid;

@@ -19,7 +19,7 @@
     <script src="app.js" defer></script>
   </head>
   <body>
-    <a class="skip" href="#how">Skip to the walkthrough</a>
+    <a class="skip" href="#what">Skip to the walkthrough</a>
     <header class="topbar">
       <nav class="topnav" aria-label="Main">
         <a class="brand" href="#top">
@@ -27,10 +27,10 @@
           <span>EMOSA<span class="brand-sub"> Lab</span></span>
         </a>
         <div class="navlinks">
-          <a href="#how">How it works</a>
-          <a href="#today">What it does</a>
-          <a href="#try">Try it</a>
-          <a href="#learn">Learn more</a>
+          <a href="#what">What it is</a>
+          <a href="#state">Current state</a>
+          <a href="#run">Run it</a>
+          <a href="#reference">Reference</a>
         </div>
         <a class="repo" href="https://github.com/boardfarmdevs/emosa-lab">GitHub&nbsp;↗</a>
       </nav>
@@ -49,6 +49,15 @@
           controller configures it and sees its clients. The pod itself runs
           unchanged.
         </p>
+        <p class="fits">
+          Part of the <strong>OpenSync adapter</strong> goal, with the
+          <a href="https://boardfarmdevs.github.io/opensync-lab/">OpenSync lab</a>
+          it is proven on. The
+          <a href="https://boardfarmdevs.github.io/meta-cmf-bananapi-vcpe/">RDK</a> and
+          <a href="https://boardfarmdevs.github.io/prplmesh-lab/">prplMesh</a> labs develop
+          the EasyMesh optimizer. The end goal is one EasyMesh system on wmediumd,
+          with native EasyMesh agents and OpenSync pods working together.
+        </p>
         <ul class="proof">
           <li><strong>6 pods</strong> onboarded as agents in the lab</li>
           <li><strong>0 changes</strong> on the pods (OpenSync 6.6.1)</li>
@@ -56,9 +65,9 @@
         </ul>
       </section>
 
-      <section id="how" class="wrap section">
+      <section id="what" class="wrap section">
         <div class="section-head">
-          <h2>How it works</h2>
+          <h2>What it is</h2>
           <p>
             Pick a situation and watch one message at a time move through the
             adapter. Each step says what EMOSA translates between the two
@@ -116,9 +125,9 @@
         </div>
       </section>
 
-      <section id="today" class="wrap section">
+      <section id="state" class="wrap section">
         <div class="section-head">
-          <h2>What it does today</h2>
+          <h2>Current state</h2>
           <p>Verified in the lab with unchanged OpenSync 6.6.1 pods on simulated radios and a prplMesh 6.0 controller.</p>
         </div>
         <div class="caps">
@@ -137,6 +146,15 @@
               message. EMOSA writes them to the pod as one guarded change, and
               counts it as done only when the pod reports it running. It can
               optionally apply sets of fronthaul and backhaul BSSes.
+            </p>
+          </article>
+          <article>
+            <h3>Moves a pod onto the EasyMesh backhaul</h3>
+            <p>
+              Optionally, it switches a pod's own backhaul station to the
+              controller's backhaul BSS and counts it as done only when the pod
+              uses it, with no GRE. If the switch fails, the pod falls back to
+              its own uplink and EMOSA leaves it there.
             </p>
           </article>
           <article>
@@ -167,9 +185,9 @@
         </div>
       </section>
 
-      <section id="try" class="wrap section">
+      <section id="run" class="wrap section">
         <div class="section-head">
-          <h2>Try it</h2>
+          <h2>Run it</h2>
           <p>
             The lab runs on one Linux host with LXD. The OpenSync side
             (gateway, pods, clients) comes from
@@ -225,9 +243,9 @@ deploy/opensync-lab/lab.sh status</code></pre></div>
         <p class="note">The passphrase above is a public lab value.</p>
       </section>
 
-      <section id="learn" class="wrap section">
+      <section id="reference" class="wrap section">
         <div class="section-head">
-          <h2>Learn more</h2>
+          <h2>Reference</h2>
         </div>
         <div class="learn">
           <div>

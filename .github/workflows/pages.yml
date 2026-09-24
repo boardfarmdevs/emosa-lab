@@ -1,4 +1,8 @@
-name: documentation-pages
+# The Pages workflow of the four lab sites (meta-cmf-bananapi-vcpe, prplmesh-lab,
+# emosa-lab, opensync-lab): the same file in each. The repository's own step is
+# pages/build (into dist/site); pages/finish-site.py adds the labs bar and build.json.
+# Pages source: GitHub Actions. Deploys from main only.
+name: pages
 on:
   push:
     branches: [main]
@@ -16,11 +20,16 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Build and validate public evidence snapshot
-        run: python3 scripts/build-site.py
-      - name: Check JavaScript syntax
-        run: node --check site/app.js
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - name: Build the site
+        run: pages/build
+      - name: Finish the site (labs bar, build.json)
+        run: python3 pages/finish-site.py dist/site
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist/site
@@ -36,6 +45,5 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/configure-pages@v5
-      - name: Deploy GitHub Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
