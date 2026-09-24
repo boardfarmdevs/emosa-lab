@@ -1,0 +1,12 @@
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: [onewifi_em_ctrl] 09/24/2026 - 03:18:42.552305 :em_ctrl.cpp:1219: INFO: [find_em_for_msg_type] Received autoconfig search from agent al mac: 02:00:00:5e:00:02
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: [onewifi_em_ctrl] 09/24/2026 - 03:18:42.554796 :em_configuration.cpp:6559: INFO: Received autoconfig search with profile type 1
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: Failed TLV [1]: 17.2.47 of Wi-Fi Easy Mesh 5.0
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: [onewifi_em_ctrl] 09/24/2026 - 03:18:42.554882 :em_configuration.cpp:6561: INFO: received autoconfig search msg failed validation
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: [onewifi_em_ctrl] 09/24/2026 - 03:18:42.555192 :em_ctrl.cpp:1219: INFO: [find_em_for_msg_type] Received autoconfig search from agent al mac: 02:00:00:5e:00:03
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: [onewifi_em_ctrl] 09/24/2026 - 03:18:42.555312 :em_configuration.cpp:6559: INFO: Received autoconfig search with profile type 1
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: Failed TLV [1]: 17.2.47 of Wi-Fi Easy Mesh 5.0
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: [onewifi_em_ctrl] 09/24/2026 - 03:18:42.555656 :em_configuration.cpp:6561: INFO: received autoconfig search msg failed validation
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: [onewifi_em_ctrl] 09/24/2026 - 03:18:42.556121 :em_ctrl.cpp:1219: INFO: [find_em_for_msg_type] Received autoconfig search from agent al mac: 02:00:00:5e:00:01
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: [onewifi_em_ctrl] 09/24/2026 - 03:18:42.556219 :em_configuration.cpp:6559: INFO: Received autoconfig search with profile type 1
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: Failed TLV [1]: 17.2.47 of Wi-Fi Easy Mesh 5.0
+2026 Sep 23 20:18:42 Filogic-GW onewifi_em_ctrl[3324]: [onewifi_em_ctrl] 09/24/2026 - 03:18:42.556276 :em_configuration.cpp:6561: INFO: received autoconfig search msg failed validation

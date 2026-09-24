@@ -25,7 +25,7 @@ ART=/opt/emosa-lab/artifacts
 OSL=${MVX_GUEST_ROOT:-/opt/opensync-lab}
 NET=em-1905
 WAN_HOST=${EMOSA_WAN_HOST:-10.101.0.1}             # the VM on boardfarm's WAN (br-wan101)
-CTL_AL=02:00:00:e0:00:01
+CTL_AL=${EMOSA_CONTROLLER_AL:-02:00:00:e0:00:01}    # the EasyMesh controller agents bind to
 IMAGE=${EMOSA_IMAGE:-ubuntu:24.04}
 
 log() { printf '\033[1;36m[emosa %s]\033[0m %s\n' "$(date +%H:%M:%S)" "$*"; }

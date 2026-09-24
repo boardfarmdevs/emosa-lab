@@ -143,6 +143,50 @@ RCPI needs the noise floor a survey would give. Next steps:
 - A per-pod subscriber feeds station link and traffic metrics.
 - AP metrics wait for a platform with survey data.
 
+## Second controller: RDK-B unified-wifi-mesh (M9, first attempt)
+
+**Setup:**
+- The controller image `X86EMLTRBPIBB_rdk-next_20260922213132` (from
+  meta-cmf-bananapi-vcpe, layer `3beda39`; its build checkout carries 21
+  uncommitted changes) was launched in the lab VM with that project's own
+  `gen/bpi.sh -b br-wan101 -l em-1905`.
+- Its LAN port joined `brlan0`, which put the RDK controller on EMOSA's
+  EasyMesh LAN.
+- In the VM's copy of `gen-util.sh` only, one guard was skipped. It requires a
+  cfg80211 patched against a netns cleanup bug seen on Ubuntu 7.0 kernels, and
+  this VM runs the stock 6.8 module.
+- The prplMesh controller was stopped, and the three agents were bound to the
+  RDK controller's AL `00:60:2f:da:68:d4`.
+
+**Observed:**
+- The RDK controller and its colocated agent (`…68:e4`) found all three EMOSA
+  agents through their Topology Discovery. They sent them Topology and Link
+  Metric Queries.
+- EMOSA's AP-Autoconfiguration Search was rejected
+  ([log](rdk-controller-search-rejection.log)): "Received autoconfig search with
+  profile type 1 … Failed TLV: 17.2.47 … failed validation".
+- No Response was sent, so no M1/M2 followed.
+
+**Cause:** unified-wifi-mesh `em_msg.cpp` validates against EasyMesh 5.0 with
+profile-gated presence rules. For a Profile-1 peer it marks the following as
+not allowed:
+- the Multi-AP Profile TLV in Search;
+- the Profile-2 AP Capability and AP Radio Advanced Capabilities TLVs in M1.
+
+EasyMesh 6.1 (§6.1, §17.1.1, as EMOSA's procedure audit records) has a
+Profile-1 device include one Profile TLV and the Profile-2 AP Capability TLV.
+EMOSA also admits a controller only with the 6.1 Controller Capability fields.
+
+**Result: not onboarded, EasyMesh edition mismatch.** Getting through needs a
+deliberate choice:
+- an EMOSA "R1 compatibility" message set across Search, M1 and admission; or
+- EMOSA implementing and advertising Profile-2/3; or
+- a controller that accepts 6.1 Profile-1 messages.
+
+The prplMesh setup was restored afterwards: the RDK container was stopped and
+kept, the agents rebound, the policy re-entered, and all three pods are back
+with 2 clients each.
+
 ## Changes made during the run
 
 - `pod_profile.py`: the observed 6.6 encoding (`wpa-psk` + RSN, `key` slot);

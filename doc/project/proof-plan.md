@@ -23,7 +23,7 @@ Branch `claude/0923-clean`, proposed 2026-09-23.
 | M6 cold start | Done for "pod container restart": M2 creates the missing fronthaul; other cold definitions not run |
 | M7 recovery | Done: 900 s workload m7-01 with client joins/leaves, adapter restart, transport cut, backhaul loss and controller restart, continuous traffic; passed |
 | M8 reporting | Partial: channel procedures and Operating Channel Report (controller shows channel 6), policy config acknowledged; the pods' own statistics reach EMOSA over mutual-TLS MQTT with lab device certificates, but hwsim gives no survey data, so AP metrics cannot be qualified; station metrics are next |
-| M9 | Not started |
+| M9 | Second controller tried: the RDK-B unified-wifi-mesh controller finds EMOSA's agents (1905 discovery, topology queries) but rejects their EasyMesh 6.1 Profile-1 Search (it validates against 5.0 profile-gated rules); onboarding needs an R1 compatibility mode or Profile-2/3 in EMOSA. Physical pod, TLS transport, 5 GHz, EasyMesh backhaul not started |
 
 Deviations from this plan, found by running it:
 - `cm` ignores a new `manager_addr` while connected, so local-noc also ends
