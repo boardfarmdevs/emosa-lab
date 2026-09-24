@@ -339,7 +339,49 @@ Timers:
 - **Not needed:** nothing on the pod, and nothing from the controller's
   software (prplMesh, RDK) at build time or run time.
 
-## 8. Not covered yet
+## 8. Data plane (RDK and prpl integration)
+
+EMOSA carries a pod's control. A pod's clients also need a data path to the
+gateway LAN. The design and its reasoning are in
+[`doc/architecture/data-plane.md`](../doc/architecture/data-plane.md). Any
+integration MUST meet the following:
+
+| # | Requirement |
+| --- | --- |
+| D1 | A pod's clients are on the gateway LAN at L2, getting its DHCP, IPv6 RAs, DNS, broadcast and multicast. |
+| D2 | The pod reaches EMOSA's front port and agent port over its data path. |
+| D3 | Pods are not modified. Only OVSDB configuration, and only as specified. |
+| D4 | Client MTU is 1500, without fragmentation in normal operation. |
+| D5 | The path rebuilds by itself after backhaul loss or reboot. A failed change never strands a pod. |
+| D6 | The pods' underlay has its own L2 segment and subnet, separate from the client LAN. |
+| D7 | What the controller is told about the uplink is true, or declared as a simplification. |
+
+**GRE termination point (GTP), the baseline:** always provided. The pod keeps
+OpenSync's 3-address backhaul station and gretap. The GTP:
+- MUST own the first host address (`.1`) of the underlay subnet, because
+  OpenSync 6.6 `cm` uses it as the tunnel remote;
+- MUST serve DHCP on the underlay with option 26 (interface MTU) of at least
+  1538 (1600 in the reference);
+- MUST create one gretap per associated pod lease (MTU 1562), bridged to the
+  gateway LAN, and remove it when the lease or association ends;
+- MUST NOT bridge the underlay segment itself into the LAN.
+
+The gateway provides:
+- a fronthaul-type pod-backhaul SSID on the underlay segment, because a
+  Multi-AP backhaul BSS rejects 3-address stations;
+- the steering-disallowed entries for the pods' backhaul stations.
+
+The agent keeps reporting a declared Ethernet attachment.
+
+**EasyMesh backhaul, optional:** only for pods whose platform qualifies (data
+plane document §7). The agent reconfigures the pod's backhaul station as a
+4-address Multi-AP backhaul station, bridged into `br-home`, using the
+controller's backhaul credentials. The switch is one guarded operation that
+counts as applied only when the pod is back with the new uplink in its State.
+The pod MUST fall back to the GTP path if it does not come back, and EMOSA
+MUST NOT retry on its own.
+
+## 9. Not covered yet
 
 - 5 and 6 GHz radios, and WPA3;
 - more than one radio per agent;
