@@ -294,16 +294,30 @@ def test_configuration_and_state_graph_cannot_disagree_in_response():
                 (ConfiguredRadio(RUID, (ConfiguredBss(BSSID, 0x40, b"different"),)),)
             ),
         ),
-        replace(
-            facts,
-            configuration=BssConfigurationReport(
-                (ConfiguredRadio(RUID, (ConfiguredBss(BSSID, 0x80, SSID),)),)
-            ),
+        *(
+            replace(
+                facts,
+                configuration=BssConfigurationReport(
+                    (ConfiguredRadio(RUID, (ConfiguredBss(BSSID, flags, SSID),)),)
+                ),
+            )
+            for flags in (0xC0, 0x20)  # combined fronthaul+backhaul, reserved bit
         ),
         replace(facts, device=replace(facts.device, interfaces=facts.device.interfaces[:1])),
     ):
         with pytest.raises(EmosaError):
             reply(changed)
+
+
+def test_a_pure_backhaul_bss_is_reported():
+    _, _, facts = fixtures()
+    backhaul = replace(
+        facts,
+        configuration=BssConfigurationReport(
+            (ConfiguredRadio(RUID, (ConfiguredBss(BSSID, 0x80, SSID),)),)
+        ),
+    )
+    assert reply(backhaul) is not None
 
 
 def test_nonempty_clients_require_ages_and_are_reported_on_the_correct_bss():

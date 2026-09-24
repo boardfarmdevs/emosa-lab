@@ -84,7 +84,8 @@ class SecretStore:
         No overwrite, private owned files, file and directory fsync. This is not
         an authorization API; only the isolated WSC lab currently calls it.
         """
-        if not re.fullmatch(r"wsc-[a-f0-9]{32}", ref) or (
+        # One reference per BSS of a received M2 set: wsc-<exchange>[-1..7]
+        if not re.fullmatch(r"wsc-[a-f0-9]{32}(-[1-7])?", ref) or (
             not isinstance(value, str)
             or not 8 <= len(value) <= 63
             or not value.isascii()

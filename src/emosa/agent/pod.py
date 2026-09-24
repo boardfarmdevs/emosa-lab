@@ -149,7 +149,7 @@ class PodReportSource:
             # the radio's configured power as the pod's own State reports it.
             basic=APRadioBasicCapabilities(
                 ruid,
-                1,
+                self.backend.max_bss,
                 (
                     BasicOperatingClass(
                         81, max_eirp, tuple(n for n in range(1, 14) if n != channel)
@@ -167,7 +167,7 @@ class PodReportSource:
         started = time.monotonic()
         try:
             raw = await self.backend.session.snapshot()
-            _, _, _, state, rows = self.backend._binding(raw)
+            _, radio_uuid, _, state, rows = self.backend._binding(raw)
             ident = self.backend.identity
             if not raw["ready"] or not ident:
                 raise EmosaError(Reason.NOT_READY, "bound radio State unavailable")
@@ -181,7 +181,9 @@ class PodReportSource:
                 and self.backend._values(state)["security_mode"] == "wpa2-psk"
                 and type(ident["channel"]) is int
             ):
-                raise EmosaError(Reason.NOT_READY, "bound AP is not operating as WPA2-PSK")
+                # A BSS the pod does not operate is not represented (as on a cold
+                # pod): the radio stays reachable so the controller can configure it.
+                state = {}
             # A cold pod has the radio but no BSS yet: advertise the radio on the
             # channel the profile would create the BSS on, and no BSS.
             channel = ident["channel"] if state else self.backend.channel
@@ -206,21 +208,29 @@ class PodReportSource:
                 raise EmosaError(Reason.NOT_READY, "pod radio identity or channel changed")
             now = time.monotonic()
             associated = rows.get("Wifi_Associated_Clients", {})
-            active = {
-                mac(r["mac"])
-                for u, r in associated.items()
-                if r.get("state") == "active" and u in (state.get("associated_clients") or [])
-            }
+            # Every BSS the pod operates: the bound one, then managed slot VIFs,
+            # each only when its own State shows an enabled AP.
+            operating = []
+            if state:
+                operating.append(("fronthaul", bssid, state))
+            if self.backend.slots:
+                for extra in self.backend._extras(rows, radio_uuid).values():
+                    st = extra["state"]
+                    if st and st.get("enabled") and st.get("mode") == "ap" and st.get("mac"):
+                        operating.append((self.backend.role(st), mac(st["mac"]), st))
+            members = {}
+            for _, bss_mac, st in operating:
+                members[bss_mac] = {
+                    mac(r["mac"])
+                    for u, r in associated.items()
+                    if r.get("state") == "active" and u in (st.get("associated_clients") or [])
+                }
+            active = set().union(*members.values()) if members else set()
             self.first_seen = {m: self.first_seen.get(m, now) for m in active}
-            clients = tuple(
-                AssociatedClient(m, min(65535, int(now - self.first_seen[m])))
-                for m in sorted(active)
+            interfaces = (LocalInterface(self.agent, 1, b""),) + tuple(
+                LocalInterface(b, 0x103, b + bytes([0x00, 0x00, channel, 0x00]))
+                for _, b, _ in operating
             )
-            ssid = state["ssid"].encode() if state else None
-            interfaces = (LocalInterface(self.agent, 1, b""),)
-            if bssid:
-                media = bssid + bytes([0x00, 0x00, channel, 0x00])  # AP role, 20 MHz, channel
-                interfaces += (LocalInterface(bssid, 0x103, media),)
             topology = replace(
                 self.topology_template,
                 device=DeviceInformation(self.agent, interfaces),
@@ -229,20 +239,44 @@ class PodReportSource:
                     Neighbors1905(self.agent, (Neighbor(self.binding.controller_al, False),)),
                 ),
                 operational=APOperationalBss(
-                    (OperationalRadio(ruid, ((OperationalBss(bssid, ssid),) if bssid else ())),)
+                    (
+                        OperationalRadio(
+                            ruid,
+                            tuple(OperationalBss(b, st["ssid"].encode()) for _, b, st in operating),
+                        ),
+                    )
                 ),
                 configuration=BssConfigurationReport(
-                    (ConfiguredRadio(ruid, ((ConfiguredBss(bssid, 0x40, ssid),) if bssid else ())),)
+                    (
+                        ConfiguredRadio(
+                            ruid,
+                            tuple(
+                                ConfiguredBss(
+                                    b, 0x80 if role == "backhaul" else 0x40, st["ssid"].encode()
+                                )
+                                for role, b, st in operating
+                            ),
+                        ),
+                    )
                 ),
-                clients=AssociatedClients((BssClients(bssid, clients),) if bssid else ()),
+                clients=AssociatedClients(
+                    tuple(
+                        BssClients(
+                            b,
+                            tuple(
+                                AssociatedClient(m, min(65535, int(now - self.first_seen[m])))
+                                for m in sorted(members[b])
+                            ),
+                        )
+                        for _, b, _ in operating
+                    )
+                ),
                 inventory_complete=True,
             )
             facts = (
                 raw["generation"],
                 raw["revision"],
-                ssid,
-                bssid,
-                tuple(sorted(active)),
+                tuple((b, st.get("ssid"), tuple(sorted(members[b]))) for _, b, st in operating),
                 radio.get("tx_power"),
             )
             if facts != self.last:
@@ -257,6 +291,10 @@ class PodReportSource:
                 "bssid": ident["bssid"],
                 "channel": channel,
                 "ssid": state.get("ssid"),
+                "bsses": [
+                    {"role": role, "bssid": b.hex(":"), "ssid": st.get("ssid")}
+                    for role, b, st in operating
+                ],
                 "stations": sorted(m.hex(":") for m in active),
                 "ovsdb_generation": raw["generation"],
                 "ovsdb_revision": raw["revision"],
@@ -293,7 +331,15 @@ class PodReportSource:
 
 
 def make_bridge(
-    engine, backend, report, run_id, target, mids, capabilities, message_set=EASYMESH_61
+    engine,
+    backend,
+    report,
+    run_id,
+    target,
+    mids,
+    capabilities,
+    message_set=EASYMESH_61,
+    m2_session="distinct",
 ):
     node = report.facts
     uuid = hashlib.sha256(("emosa-agent:" + node["serial"]).encode()).digest()[:16]
@@ -327,6 +373,8 @@ def make_bridge(
         mids=mids,
         timeout=30,
         message_set=message_set,
+        multi_bss=bool(backend.slots),
+        m2_session=m2_session,
     )
     return WscComponentBridge(
         engine, exchange, target, backend.context, run_id=run_id, deadline=120
@@ -341,7 +389,12 @@ async def serve(config, stop):
     session = OvsSession(config["ovsdb"], monitor_columns=MONITOR, timeout=2)
     vault, store = SecretStore(state_dir / "secrets"), Store(state_dir / "journal")
     backend = PodBackend(
-        pod_id, session, vault, serial=config["serial"], if_name=config.get("vif", "home-ap-24")
+        pod_id,
+        session,
+        vault,
+        serial=config["serial"],
+        if_name=config.get("vif", "home-ap-24"),
+        multi_bss=config.get("multi_bss", False) is True,
     )
     engine = Engine(store, vault, {pod_id: backend})
     engine.recover()
@@ -402,7 +455,15 @@ async def serve(config, stop):
                     report.source,
                     endpoint.send,
                     lambda snap, m: make_bridge(
-                        engine, backend, report, run_id, target, m, snap.capabilities, message_set
+                        engine,
+                        backend,
+                        report,
+                        run_id,
+                        target,
+                        m,
+                        snap.capabilities,
+                        message_set,
+                        config.get("m2_session", "distinct"),
                     ),
                     report.inventory,
                     mids=mids,

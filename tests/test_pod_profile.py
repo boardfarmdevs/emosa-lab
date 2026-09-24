@@ -211,3 +211,119 @@ def test_cold_pod_fronthaul_is_created_only_from_the_intent(tmp_path):
     assert ops[4]["mutations"] == [["vif_configs", "insert", ["set", [["named-uuid", "fh"]]]]]
     assert ops[5]["row"] == {"channel": 6, "ht_mode": "HT20", "enabled": True}
     assert "tx_chainmask" not in json.dumps(ops)
+
+
+EXTRA = "00000000-0000-4000-8000-000000000006"
+RDK_SET = (  # RDK unified-wifi-mesh's M2 set, besides its private fronthaul
+    ("fronthaul", "iot_ssid"),
+    ("fronthaul", "lnf_radius"),
+    ("fronthaul", "hotspot"),
+    ("backhaul", "mesh_backhaul"),
+)
+
+
+def multi(tmp_path, raw=None):
+    vault = SecretStore(tmp_path / "secrets")
+    vault.write_simulated("new", "EmosaMesh2026!")
+    for n, _ in enumerate(RDK_SET):
+        vault.write_simulated(f"x{n}", f"ExtraKey{n}-2026")
+    session = Session(raw or tables())
+    return PodBackend("pod-1", session, vault, serial=SERIAL, multi_bss=True), vault
+
+
+def rdk_intent(count=4):
+    extra = tuple(
+        {"role": role, "ssid": ssid, "secret_ref": f"x{n}"}
+        for n, (role, ssid) in enumerate(RDK_SET[:count])
+    )
+    return Intent("pod-1", "radio-1", "bss-1", "private_ssid", "new", additional=extra)
+
+
+def with_slot_vif(name="svc-d-ap-24"):
+    raw = tables()
+    raw["Wifi_VIF_Config"][EXTRA] = {
+        "if_name": name,
+        "mode": "ap",
+        "ssid": "old",
+        "enabled": True,
+        **SECURITY,
+    }
+    raw["Wifi_Radio_Config"][RADIO]["vif_configs"] = ["set", [["uuid", VIF], ["uuid", EXTRA]]]
+    return raw
+
+
+def test_multi_bss_maps_the_rdk_set_onto_the_platform_vifs(tmp_path):
+    pod, _ = multi(tmp_path)
+    assert pod.max_bss == 5
+    plan = asyncio.run(pod.plan(rdk_intent()))
+    assert plan["additional_slots"] == {
+        "svc-d-ap-24": "fronthaul",
+        "svc-e-ap-24": "fronthaul",
+        "fh-24": "fronthaul",
+        "b-ap-24": "backhaul",
+    }
+    asyncio.run(pod.context())
+    result = asyncio.run(pod.submit(rdk_intent(), {"transaction_id": "t", "session_generation": 1}))
+    assert result.status == "committed" and result.evidence["additional_bss_count"] == 4
+    _, ops = pod.session.sent  # Inet select, then one transaction
+    inserts = {
+        op["row"]["if_name"]: op["row"]
+        for op in ops
+        if op["op"] == "insert" and op["table"] == "Wifi_VIF_Config"
+    }
+    assert set(inserts) >= {"svc-d-ap-24", "svc-e-ap-24", "fh-24", "b-ap-24"}
+    assert (
+        inserts["b-ap-24"]["multi_ap"] == "backhaul_bss"
+        and inserts["b-ap-24"]["vif_radio_idx"] == 1
+    )
+    assert inserts["fh-24"]["ssid"] == "hotspot" and inserts["fh-24"]["vif_radio_idx"] == 6
+    assert inserts["svc-d-ap-24"]["wpa_psks"] == ["map", [["key", "ExtraKey0-2026"]]]
+    assert "tx_chainmask" not in json.dumps(ops)
+
+
+def test_slot_vifs_outside_the_new_set_are_removed(tmp_path):
+    pod, _ = multi(tmp_path, with_slot_vif())
+    single = Intent("pod-1", "radio-1", "bss-1", "emosa-mesh", "new", additional=())
+    asyncio.run(pod.context())
+    asyncio.run(pod.submit(single, {"transaction_id": "t", "session_generation": 1}))
+    ops = pod.session.sent[-1]
+    assert {
+        "op": "delete",
+        "table": "Wifi_VIF_Config",
+        "where": [["_uuid", "==", ["uuid", EXTRA]]],
+    } in ops
+    removal = [op for op in ops if op["op"] == "mutate" and op["table"] == "Wifi_Radio_Config"]
+    assert removal[0]["mutations"] == [["vif_configs", "delete", ["set", [["uuid", EXTRA]]]]]
+
+
+def test_more_bsses_of_a_role_than_slots_is_unsupported(tmp_path):
+    pod, _ = multi(tmp_path)
+    too_many = Intent(
+        "pod-1",
+        "radio-1",
+        "bss-1",
+        "a",
+        "new",
+        additional=tuple({"role": "backhaul", "ssid": f"b{n}", "secret_ref": "x0"} for n in (1, 2)),
+    )
+    with pytest.raises(EmosaError) as error:
+        asyncio.run(pod.plan(too_many))
+    assert error.value.code == Reason.UNSUPPORTED_OPERATION
+
+
+def test_extra_bsses_are_observed_from_their_own_state(tmp_path):
+    pod, vault = multi(tmp_path, with_slot_vif())
+    snap = asyncio.run(pod.snapshot())
+    assert snap.config["additional"] == [
+        ["fronthaul", "old", vault.fingerprint("opensync-lab-home-psk")]
+    ]
+    assert snap.observed.values["additional"] == []  # configured, but no State yet
+    single, _ = backend(tmp_path / "single")
+    assert "additional" not in asyncio.run(single.snapshot()).config
+
+
+def test_single_bss_radio_refuses_additional_bsses(tmp_path):
+    pod, _ = backend(tmp_path)
+    with pytest.raises(EmosaError) as error:
+        asyncio.run(pod.plan(rdk_intent(1)))
+    assert error.value.code == Reason.UNSUPPORTED_OPERATION

@@ -54,7 +54,7 @@ class WscComponentBridge:
             backend is None
             or backend.mode not in ("model", "ovsdb-sim", "opensync-6.6-hwsim")
             or exchange.basic.ruid != target.ruid
-            or exchange.basic.max_bss != 1
+            or (exchange.basic.max_bss != 1 and not exchange.multi_bss)
         ):
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "component requires one simulated BSS")
         self.engine, self.exchange, self.target = engine, exchange, target
@@ -102,7 +102,7 @@ class WscComponentBridge:
         if self.receiving:
             raise EmosaError(Reason.BUSY, "one WSC component handoff at a time")
         self.receiving = True
-        ref = None
+        ref, refs = None, []
         created = authenticated = False
         try:
             self.exchange.binding.check(message, ingress=ingress, generation=generation)
@@ -118,14 +118,25 @@ class WscComponentBridge:
             # Invalid/unsupported packets get here only after complete-message,
             # crypto, encrypted-role and sole-M2 scope checks have all passed.
             ref = "wsc-" + self.exchange.exchange_id
+            refs.append(ref)
             self.engine.vault.persist_received(ref, result.candidate.passphrase)
             created = True
+            additional = None
+            if self.exchange.multi_bss:
+                additional = []
+                for index, (role, candidate) in enumerate(result.additional, 1):
+                    extra = f"{ref}-{index}"
+                    self.engine.vault.persist_received(extra, candidate.passphrase)
+                    refs.append(extra)
+                    additional.append({"role": role, "ssid": candidate.ssid, "secret_ref": extra})
+                additional = tuple(additional)
             intent = Intent(
                 self.target.pod_id,
                 self.target.radio_id,
                 self.target.bss_id,
                 result.candidate.ssid,
                 ref,
+                additional=additional,
             )
             await self.backend.plan(intent)
             await self._bound()
@@ -148,6 +159,7 @@ class WscComponentBridge:
                 "database_generation": self.context.generation,
                 "schema_fingerprint": self.context.schema_fingerprint,
                 "first_mid": message.mid,
+                "bss_count": 1 + len(result.additional),
                 "pod_id": self.target.pod_id,
                 "radio_id": self.target.radio_id,
                 "bss_id": self.target.bss_id,
@@ -174,7 +186,8 @@ class WscComponentBridge:
                     self.exchange.exchange_id,
                 )
                 if existing is None:
-                    (self.engine.vault.directory / ref).unlink(missing_ok=True)
+                    for name in refs:
+                        (self.engine.vault.directory / name).unlink(missing_ok=True)
                 else:
                     self.operation_id = existing.operation_id
             if authenticated and self.operation_id is None:

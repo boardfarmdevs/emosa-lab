@@ -163,6 +163,16 @@ def test_legacy_passphrase_terminator_and_utf8_mapping_boundary():
         assert error.value.code == Reason.UNSUPPORTED_OPERATION
 
 
+def test_one_trailing_ssid_terminator_is_accepted_other_nuls_are_not():
+    plain = rewrite(raw("ap_settings"), 0x1045, b"private_ssid\0")
+    assert request(altered_settings(plain)).existing_fronthaul_candidate().ssid == "private_ssid"
+    for ssid in (b"private_ssid\0\0", b"\0"):
+        plain = rewrite(raw("ap_settings"), 0x1045, ssid)
+        with pytest.raises(EmosaError) as error:
+            request(altered_settings(plain)).existing_fronthaul_candidate()
+        assert error.value.code == Reason.UNSUPPORTED_OPERATION
+
+
 def test_password_change_is_not_silently_omitted_from_the_candidate():
     plain = raw("ap_settings") + encode_attribute(0x102A, b"new-public-password")
     plain += encode_attribute(0x1012, b"\x00\x00")

@@ -16,6 +16,7 @@
     "database_generation": {"type": "integer", "minimum": 1},
     "schema_fingerprint": {"type": "string", "minLength": 1, "maxLength": 128},
     "first_mid": {"type": "integer", "minimum": 0, "maximum": 65535},
+    "bss_count": {"type": "integer", "minimum": 1, "maximum": 16},
     "pod_id": {"type": "string", "minLength": 1, "maxLength": 128},
     "radio_id": {"type": "string", "minLength": 1, "maxLength": 128},
     "bss_id": {"type": "string", "minLength": 1, "maxLength": 128}

@@ -151,6 +151,8 @@ agent() {       # agent POD N
   "al_mac": "$al",
   "controller_al": "$CTL_AL",
   "message_set": "${EMOSA_MESSAGE_SET:-easymesh-6.1}",
+  "multi_bss": ${EMOSA_MULTI_BSS:-false},
+  "m2_session": "${EMOSA_M2_SESSION:-distinct}",
   "vif": "home-ap-24",
   "state_dir": "/var/lib/emosa/$pod",
   "run_id": "$pod"
@@ -232,6 +234,7 @@ ui() {          # the controller's own topology: prplmesh-lab topology adapter +
     lxc config device show em-ctl | grep -q '^nbapi:' ||
         lxc config device add em-ctl nbapi proxy bind=host listen=tcp:127.0.0.1:8092 connect=tcp:127.0.0.1:8092 >/dev/null
     install -d /opt/emosa-lab/controller-ui
+    systemctl stop emosa-controller-ui 2>/dev/null || true    # a running binary is "Text file busy"
     cp -a "$ART/controller-ui/easymesh-controller" "$ART/controller-ui/config" /opt/emosa-lab/controller-ui/
     printf '%s\n' '[Unit]' 'Description=EasyMesh controller UI (prplmesh-lab) on the controller NBAPI' \
         'After=network-online.target' '' '[Service]' 'WorkingDirectory=/opt/emosa-lab/controller-ui' \

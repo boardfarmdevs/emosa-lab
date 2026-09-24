@@ -62,7 +62,7 @@ class Engine:
         if intent.pod_id not in self.backends:
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "pod outside configured allowlist")
         fingerprint = self.vault.fingerprint(
-            {**asdict(intent), "target": intent.target(self.vault)}
+            {**intent.record(), "target": intent.target(self.vault)}
         )
         old = self.store.lookup(source, intent.pod_id, key)
         if old:
@@ -78,7 +78,7 @@ class Engine:
             run_id,
             source,
             initiating_interface,
-            asdict(intent),
+            intent.record(),
             fingerprint,
             key,
             now,
@@ -296,6 +296,18 @@ class Engine:
                         },
                         pod_id,
                     )
+                if (
+                    snap.ready
+                    and op.state == State.INDETERMINATE
+                    and op.deadline_elapsed
+                    and not self._matches(snap.config, target)
+                ):
+                    # The current configuration, past the deadline, lacks the
+                    # write (it never landed, or a pod restart dropped it). Stop
+                    # blocking the pod; a late application is still recorded.
+                    transition(op, State.TIMED_OUT)
+                    op.reason = Reason.APPLY_TIMEOUT
+                    changed = True
                 if snap.ready and snap.observed.fresh:
                     config_matches = self._matches(snap.config, target)
                     applied = snap.observed.satisfies(target)

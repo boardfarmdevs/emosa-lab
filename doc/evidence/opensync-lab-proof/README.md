@@ -235,6 +235,43 @@ already support. It could also accept an empty AP MLD Configuration as "no MLD".
 The prplMesh path, with the default set, re-onboarded all three pods unchanged
 after these changes.
 
+### Third attempt: multi-BSS
+
+EMOSA can now map a radio's whole M2 set onto OpenSync VIFs. It is off by
+default, and turned on per agent with `"multi_bss": true` (`EMOSA_MULTI_BSS`).
+- The agent advertises the pod's spare VIF slots as its BSS capacity.
+- The first fronthaul M2 is the primary BSS; up to 7 more become extra VIFs.
+  A BSS whose M2 flags say backhaul becomes a hidden, non-bridged
+  `multi_ap=backhaul_bss` VIF.
+- The set is one intent, written in one guarded OVSDB transaction, and
+  confirmed as a whole from `Wifi_VIF_State`. Exact-set semantics: a later,
+  smaller M2 set removes the extra VIFs. prplMesh's single M2 did exactly that.
+- RDK sends every M2 of a set from one registrar session (one nonce, one
+  public key). `"m2_session": "shared"` (`EMOSA_M2_SESSION`) accepts that; the
+  default still requires a distinct session per M2.
+- An empty AP MLD Configuration TLV is accepted as "no MLD".
+
+**Result against RDK** (`r1`, `multi_bss`, `m2_session=shared`):
+- The controller's five-BSS M2 set was accepted.
+- The operation reached `CONFIG_COMMITTED` with all five VIFs written.
+- Application on the pod was **not verified**. The RDK container ran in this
+  VM without its lab's cfg80211 network-namespace patch. It changed the
+  VM-wide regulatory domain to an intersected domain ("98"). osw then wrote
+  `country_code=98`, which hostapd rejects, so no BSS could start on any pod.
+
+Rebooting the VM restored the domain. The prplMesh setup then re-onboarded all
+three pods, and all six clients regained internet access.
+
+**Lesson:** the RDK controller belongs in its own lab (meta-cmf-bananapi-vcpe
+with its patched kernel). EMOSA reaches it over an L2 link to its controller
+LAN, not by running it inside the EMOSA VM.
+
+**Liveness fix found during recovery.** An operation whose outcome is unknown
+(`INDETERMINATE`) blocked its pod permanently if the pod restarted and lost the
+write: every later M2 was rejected `BUSY`. Now, once the deadline has passed and
+the pod's current configuration lacks the write, the operation ends as
+`TIMED_OUT`. A late application is still recorded.
+
 ## Changes made during the run
 
 - `pod_profile.py`: the observed 6.6 encoding (`wpa-psk` + RSN, `key` slot);

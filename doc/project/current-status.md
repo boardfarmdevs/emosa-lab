@@ -9,7 +9,9 @@
 >   faults passed.
 > - The controller shows the pods' channel through Operating Channel Reports.
 > - A second controller, RDK-B unified-wifi-mesh, gets as far as M2 with the
->   `r1` message set.
+>   `r1` message set. With multi-BSS (off by default), its five-BSS M2 set is
+>   accepted and committed. Application on the pod is not verified yet: the
+>   RDK controller must run in its own lab, not in the EMOSA VM.
 >
 > Start with the [run record](../evidence/opensync-lab-proof/README.md) and the
 > status table in the [proof plan](proof-plan.md). The rows below about the

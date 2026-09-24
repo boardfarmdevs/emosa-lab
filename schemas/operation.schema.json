@@ -53,6 +53,36 @@
             "wpa2-psk",
             "wpa3-sae"
           ]
+        },
+        "additional": {
+          "type": "array",
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "enum": [
+                  "fronthaul",
+                  "backhaul"
+                ]
+              },
+              "ssid": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32
+              },
+              "secret_ref": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$"
+              }
+            },
+            "required": [
+              "role",
+              "ssid",
+              "secret_ref"
+            ],
+            "additionalProperties": false
+          }
         }
       },
       "required": [

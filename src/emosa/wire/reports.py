@@ -268,8 +268,8 @@ def _topology(facts, binding, message_set=EASYMESH_61):
         "operational and BSS configuration reports disagree",
     )
     _require(
-        all(b.flags == 0x40 for r in facts.configuration.radios for b in r.bsses),
-        "topology report currently supports pure fronthaul non-MBSSID BSSs",
+        all(b.flags in (0x40, 0x80) for r in facts.configuration.radios for b in r.bsses),
+        "topology report supports pure fronthaul or backhaul non-MBSSID BSSs",
     )
     for bssid in bsses:
         matches = [i for i in facts.device.interfaces if i.mac == bssid]

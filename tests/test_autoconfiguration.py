@@ -316,6 +316,19 @@ def test_companion_configuration_is_never_silently_dropped(fixed_entropy, kind):
     assert session.state == "closed" and session._candidate is None
 
 
+def test_an_ap_mld_configuration_with_zero_mlds_configures_nothing(fixed_entropy):
+    session = exchange()
+    session.request()
+    msg = m2()
+    result = receive(session, replace(msg, tlvs=msg.tlvs + (Tlv(0xE0, b"\0"),)))
+    assert result.candidate.ssid and not result.duplicate
+    other = exchange()
+    other.request()
+    with pytest.raises(EmosaError) as error:
+        receive(other, replace(msg, tlvs=msg.tlvs + (Tlv(0xE0, b"\1" + bytes(20)),)))
+    assert error.value.code == Reason.UNSUPPORTED_OPERATION
+
+
 @pytest.mark.parametrize("case", ["auth", "teardown", "multiple", "m8", "empty"])
 def test_failed_complete_request_cannot_be_retried_with_old_transcript(fixed_entropy, case):
     session = exchange()
