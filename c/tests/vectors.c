@@ -12,6 +12,7 @@
 #include "../src/operation.h"
 #include "../src/ovs.h"
 #include "../src/southbound.h"
+#include "../src/stats.h"
 #include "../src/view.h"
 #include "../src/wsc.h"
 
@@ -884,6 +885,47 @@ static void fleet_vectors(const char *dir)
     cJSON_Delete(doc);
 }
 
+/* -- telemetry.json ----------------------------------------------------------------- */
+
+static double stats_clock(void *ctx) { return *(double *)ctx; }
+
+static void telemetry_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "telemetry.json");
+    double clock = num(doc, "clock");
+    em_pod_stats *stats = malloc(sizeof(*stats));
+    em_pod_stats_init(stats, str(doc, "topic"), (unsigned)num(doc, "reporting_interval"), stats_clock, &clock);
+    const cJSON *step;
+    int index = 0;
+    cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(doc, "steps"))
+    {
+        char name[16];
+        snprintf(name, sizeof(name), "step %d", index++);
+        em_buf payload = {0};
+        em_unhex(str(step, "payload"), &payload);
+        bool accepted = em_pod_stats_receive(stats, str(step, "topic"), payload.data, payload.len,
+                                             cJSON_IsTrue(cJSON_GetObjectItem(step, "retained")));
+        em_buf_free(&payload);
+        const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
+        cJSON *status = em_pod_stats_status(stats);
+        cJSON_DeleteItemFromObjectCaseSensitive(status, "last_report_at");
+        checks++;
+        if (accepted != cJSON_IsTrue(cJSON_GetObjectItem(expected, "accepted")))
+            fail("telemetry", name, "accepted differs");
+        else if (!cJSON_Compare(status, cJSON_GetObjectItemCaseSensitive(expected, "status"), 1)) {
+            fail("telemetry", name, "status differs");
+            if (getenv("EMOSA_VECTORS_DEBUG")) {
+                char *text = cJSON_PrintUnformatted(status);
+                fprintf(stderr, "%s\n", text);
+                free(text);
+            }
+        }
+        cJSON_Delete(status);
+    }
+    free(stats);
+    cJSON_Delete(doc);
+}
+
 int main(int argc, char **argv)
 {
     const char *dir = argc > 1 ? argv[1] : "spec/conformance";
@@ -894,6 +936,7 @@ int main(int argc, char **argv)
     southbound_vectors(dir);
     uplink_vectors(dir);
     fleet_vectors(dir);
+    telemetry_vectors(dir);
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? 1 : 0;
 }

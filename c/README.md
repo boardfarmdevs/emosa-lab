@@ -22,8 +22,8 @@ What makes it interchangeable with the Python reference (`src/emosa`):
 | Pod view and 1905 TLVs | `emosa.opensync.easymesh_view`, `emosa.wire.reports` | `translation-northbound.json` | done |
 | Control plane (channel, policy, steering) | `emosa.wire.channel`, `.reporting_policy`, `.steering` | `control.json` | done |
 | OVSDB writes (M2, steering, uplink) | `emosa.opensync.pod_profile`, `.steering`, `.uplink` | `translation-southbound.json`, `steering.json`, `uplink.json` | done |
-| Pod statistics | `emosa.opensync.stats` | `telemetry.json` | next |
-| Agent runtime (config, OVSDB session, Ethernet, status) | `emosa.agent.pod` | live in `rdk-emosa` | |
+| Pod statistics | `emosa.opensync.stats` | `telemetry.json` | done |
+| Agent runtime (config, OVSDB session, Ethernet, status) | `emosa.agent.pod` | live in `rdk-emosa` | next |
 | Yocto recipe for the RDK lab image | | | |
 
 ## Build and check

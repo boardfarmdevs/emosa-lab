@@ -9,7 +9,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(CJSON REQUIRED libcjson)
 pkg_check_modules(CRYPTO REQUIRED libcrypto)
 
-add_library(emosa STATIC src/common.c src/cmdu.c src/wsc.c src/autoconf.c src/ovs.c src/view.c src/control.c src/southbound.c src/fleet.c src/operation.c)
+add_library(emosa STATIC src/common.c src/cmdu.c src/wsc.c src/autoconf.c src/ovs.c src/view.c src/control.c src/southbound.c src/fleet.c src/operation.c src/stats.c)
 target_include_directories(emosa PUBLIC src ${CJSON_INCLUDE_DIRS} ${CRYPTO_INCLUDE_DIRS})
 target_link_libraries(emosa ${CRYPTO_LIBRARIES} ${CJSON_LIBRARIES})
 
