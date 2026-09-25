@@ -8,6 +8,8 @@
 #include "../src/autoconf.h"
 #include "../src/cmdu.h"
 #include "../src/control.h"
+#include "../src/ovs.h"
+#include "../src/southbound.h"
 #include "../src/view.h"
 #include "../src/wsc.h"
 
@@ -455,7 +457,7 @@ static void northbound_vectors(const char *dir)
         {
             checks++;
             bool r1 = !strcmp(set->string, "r1");
-            if (em_topology_tlvs(agent_al, controller_al, radio, channel, ages, nages, r1, &list) != EM_OK) {
+            if (em_topology_tlvs(agent_al, controller_al, radio, channel, ages, nages, r1, NULL, &list) != EM_OK) {
                 fail("northbound", name, "topology TLVs not built");
                 continue;
             }
@@ -563,6 +565,225 @@ static void control_vectors(const char *dir)
     cJSON_Delete(doc);
 }
 
+/* -- translation-southbound.json, steering.json ------------------------------------- */
+
+/* An OVSDB session over fixed rows that records every transaction (the generator's). */
+static cJSON *record(void *ctx, const cJSON *operations)
+{
+    cJSON *sent = ctx, *results = cJSON_CreateArray();
+    cJSON_AddItemToArray(sent, cJSON_Duplicate(operations, 1));
+    const cJSON *o;
+    cJSON_ArrayForEach(o, operations)
+    {
+        const char *kind = str(o, "op");
+        cJSON *r = cJSON_CreateObject();
+        if (!strcmp(kind, "select")) {
+            cJSON_AddItemToObject(r, "rows", cJSON_CreateArray());
+        } else if (!strcmp(kind, "insert")) {
+            cJSON *u = cJSON_CreateArray();
+            cJSON_AddItemToArray(u, cJSON_CreateString("uuid"));
+            cJSON_AddItemToArray(u, cJSON_CreateString("00000000-0000-4000-8000-0000000000ff"));
+            cJSON_AddItemToObject(r, "uuid", u);
+        } else if (strcmp(kind, "wait")) {
+            cJSON_AddNumberToObject(r, "count", 1);
+        }
+        cJSON_AddItemToArray(results, r);
+    }
+    return results;
+}
+
+static const char *passphrase(void *ctx, const char *ref)
+{
+    return str(ctx, ref);
+}
+
+static void southbound_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "translation-southbound.json");
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name");
+        char path[1200];
+        snprintf(path, sizeof(path), "%s/../../src/emosa/profiles/%s.json", dir, str(c, "profile"));
+        em_profile profile;
+        checks++;
+        if (em_profile_load(path, &profile) != EM_OK) {
+            fail("southbound", name, "profile");
+            continue;
+        }
+        const cJSON *in = cJSON_GetObjectItemCaseSensitive(c, "intent"), *extra;
+        em_ap_intent intent = {.ssid = str(in, "ssid"), .secret_ref = str(in, "secret_ref")};
+        const cJSON *additional = cJSON_GetObjectItemCaseSensitive(in, "additional");
+        intent.has_additional = additional != NULL;
+        cJSON_ArrayForEach(extra, additional)
+        {
+            intent.additional[intent.nadditional].role = str(extra, "role");
+            intent.additional[intent.nadditional].ssid = str(extra, "ssid");
+            intent.additional[intent.nadditional].secret_ref = str(extra, "secret_ref");
+            intent.nadditional++;
+        }
+        cJSON *sent = cJSON_CreateArray();
+        em_ovs_session session = {cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables"), 1, record, sent};
+        em_submit_result result;
+        em_reason r = em_ap_submit(&profile, "MVXPOD023F87E628DD",
+                                   cJSON_IsTrue(cJSON_GetObjectItem(c, "multi_bss")), &session,
+                                   &intent, passphrase,
+                                   cJSON_GetObjectItemCaseSensitive(c, "passphrases"), &result);
+        const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
+        if (r != EM_OK)
+            fail("southbound", name, em_reason_name(r));
+        else if (strcmp(result.status, str(expected, "status")))
+            fail("southbound", name, "status");
+        else if (!cJSON_Compare(sent, cJSON_GetObjectItemCaseSensitive(expected, "transactions"), 1))
+            fail("southbound", name, "transactions differ");
+        if (getenv("EMOSA_VECTORS_DEBUG")) {
+            char *text = cJSON_PrintUnformatted(sent);
+            fprintf(stderr, "%s got %s\n", name, text);
+            free(text);
+        }
+        cJSON_Delete(sent);
+        em_profile_free(&profile);
+    }
+    cJSON_Delete(doc);
+
+    doc = load(dir, "steering.json");
+    const cJSON *in = cJSON_GetObjectItemCaseSensitive(doc, "intent");
+    em_steering_intent intent = {0};
+    snprintf(intent.station, sizeof(intent.station), "%s", str(in, "station"));
+    snprintf(intent.source_bssid, sizeof(intent.source_bssid), "%s", str(in, "source_bssid"));
+    snprintf(intent.target_bssid, sizeof(intent.target_bssid), "%s", str(in, "target_bssid"));
+    intent.op_class = (int)num(in, "op_class");
+    intent.channel = (int)num(in, "channel");
+    intent.window = (int)num(in, "window");
+    intent.disassoc_imminent = cJSON_IsTrue(cJSON_GetObjectItem(in, "disassoc_imminent"));
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name");
+        cJSON *sent = cJSON_CreateArray();
+        em_ovs_session session = {cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables"), 1, record, sent};
+        em_submit_result result;
+        em_steering_rows created;
+        checks++;
+        em_reason r = em_steering_open("MVXPOD023F87E628DD", &session, &intent, &result, &created);
+        if (r == EM_OK)
+            r = em_steering_kick("MVXPOD023F87E628DD", &session, intent.station, created.client);
+        if (r == EM_OK)
+            r = em_steering_close(&session, &intent, &created);
+        const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
+        if (r != EM_OK || strcmp(result.status, str(expected, "status")) || cJSON_GetArraySize(sent) != 3)
+            fail("steering", name, r != EM_OK ? em_reason_name(r) : "status or transaction count");
+        else if (!cJSON_Compare(cJSON_GetArrayItem(sent, 0), cJSON_GetObjectItemCaseSensitive(expected, "open"), 1) ||
+                 !cJSON_Compare(cJSON_GetArrayItem(sent, 1), cJSON_GetObjectItemCaseSensitive(expected, "kick"), 1) ||
+                 !cJSON_Compare(cJSON_GetArrayItem(sent, 2), cJSON_GetObjectItemCaseSensitive(expected, "close"), 1))
+            fail("steering", name, "transactions differ");
+        cJSON_Delete(sent);
+    }
+    cJSON_Delete(doc);
+}
+
+static const char *ovs_str_first_serial(const cJSON *tables)
+{
+    const cJSON *nodes = cJSON_GetObjectItemCaseSensitive(tables, "AWLAN_Node");
+    return nodes && nodes->child ? ovs_str(nodes->child, "serial_number") : "";
+}
+
+/* -- uplink.json -------------------------------------------------------------------- */
+
+static void uplink_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "uplink.json");
+    const cJSON *c;
+    uint8_t agent_al[6], controller_al[6];
+    em_parse_mac("02:72:f9:7f:07:85", agent_al);
+    em_parse_mac("02:00:00:e0:00:01", controller_al);
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "states"))
+    {
+        const char *name = str(c, "name"), *station = str(c, "station");
+        const cJSON *tables = cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables");
+        const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
+        em_uplink_state state;
+        em_uplink_state_of(tables, station, &state);
+        cJSON *got = em_uplink_state_json(&state);
+        checks++;
+        if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(expected, "uplink"), 1))
+            fail("uplink", name, "uplink state differs");
+        cJSON_Delete(got);
+        em_device_view *view = malloc(sizeof(*view));
+        em_backhaul link;
+        const cJSON *want = cJSON_GetObjectItemCaseSensitive(expected, "backhaul");
+        bool has = strcmp(state.kind, "multi-ap") == 0 &&
+                   em_device_view_from_rows(tables, view) == EM_OK &&
+                   em_view_backhaul(view, station, &link);
+        checks++;
+        if (has != !cJSON_IsNull(want)) {
+            fail("uplink", name, "backhaul presence");
+        } else if (has) {
+            got = em_backhaul_json(&link);
+            if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(want, "view"), 1))
+                fail("uplink", name, "backhaul view differs");
+            cJSON_Delete(got);
+            const em_radio_view *radio = em_view_radio(view, link.ruid);
+            em_station_age ages[64];
+            size_t nages = 0;
+            for (size_t i = 0; i < radio->nbss; i++)
+                for (size_t k = 0; k < radio->bss[i].nstations; k++) {
+                    memcpy(ages[nages].mac, radio->bss[i].stations[k], 6);
+                    ages[nages++].seconds = 0;
+                }
+            em_tlv_list list;
+            checks++;
+            if (em_topology_tlvs(agent_al, controller_al, radio, radio->channel, ages, nages, false,
+                                 &link, &list) != EM_OK) {
+                fail("uplink", name, "topology TLVs not built");
+            } else {
+                got = list_json(list.tlvs, list.count);
+                if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(want, "topology_tlvs"), 1))
+                    fail("uplink", name, "topology TLVs differ");
+                cJSON_Delete(got);
+                em_tlv_list_free(&list);
+            }
+            uint8_t cap[13];
+            memcpy(cap, link.ruid, 6);
+            cap[6] = 0x80;
+            memcpy(cap + 7, link.station.mac, 6);
+            em_tlv t = {0xCB, 13, cap};
+            got = list_json(&t, 1);
+            checks++;
+            if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(want, "backhaul_sta_capability_tlvs"), 1))
+                fail("uplink", name, "backhaul STA capability differs");
+            cJSON_Delete(got);
+        }
+        free(view);
+    }
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "switch"))
+    {
+        const char *name = str(c, "name");
+        const cJSON *in = cJSON_GetObjectItemCaseSensitive(c, "intent");
+        const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
+        const cJSON *tables = cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables");
+        em_uplink_intent intent = {str(in, "station"), str(in, "ssid"), str(in, "secret_ref"),
+                                   str(in, "bssid")};
+        cJSON *sent = cJSON_CreateArray();
+        em_ovs_session session = {tables, 1, record, sent};
+        em_submit_result result;
+        const char *refusal;
+        const char *serial = ovs_str_first_serial(tables);
+        em_reason r = em_uplink_submit(serial, &session, &intent, passphrase,
+                                       cJSON_GetObjectItemCaseSensitive(c, "passphrases"), &result,
+                                       &refusal);
+        const char *status = r == EM_OK ? result.status : em_reason_name(r);
+        checks++;
+        if (strcmp(status, str(expected, "status")) ||
+            (str(expected, "refusal") && (!refusal || strcmp(refusal, str(expected, "refusal")))))
+            fail("uplink", name, refusal ? refusal : status);
+        else if (!cJSON_Compare(sent, cJSON_GetObjectItemCaseSensitive(expected, "transactions"), 1))
+            fail("uplink", name, "transactions differ");
+        cJSON_Delete(sent);
+    }
+    cJSON_Delete(doc);
+}
+
 int main(int argc, char **argv)
 {
     const char *dir = argc > 1 ? argv[1] : "spec/conformance";
@@ -570,6 +791,8 @@ int main(int argc, char **argv)
     onboarding_vectors(dir);
     northbound_vectors(dir);
     control_vectors(dir);
+    southbound_vectors(dir);
+    uplink_vectors(dir);
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? 1 : 0;
 }

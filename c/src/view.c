@@ -292,24 +292,34 @@ static long age_of(const em_station_age *ages, size_t n, const uint8_t mac[6], b
 
 em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_al[6],
                            const em_radio_view *r, int channel, const em_station_age *ages,
-                           size_t nages, bool r1, em_tlv_list *out)
+                           size_t nages, bool r1, const em_backhaul *uplink, em_tlv_list *out)
 {
+    size_t extra = uplink ? 1 : 0;
     memset(out, 0, sizeof(*out));
     em_buf dev = {0}, bridge = {0}, nb = {0}, op = {0}, conf = {0}, cl = {0};
     size_t clients = 0;
     /* Device Information: the agent's own port, then one AP interface per BSS */
-    bool ok = em_buf_put(&dev, agent_al, 6) && em_buf_u8(&dev, (uint8_t)(1 + r->nbss)) &&
+    bool ok = em_buf_put(&dev, agent_al, 6) && em_buf_u8(&dev, (uint8_t)(1 + r->nbss + extra)) &&
               em_buf_put(&dev, agent_al, 6) && em_buf_u16(&dev, 0x0001) && em_buf_u8(&dev, 0);
     for (size_t i = 0; ok && i < r->nbss; i++) {
         uint8_t media[4] = {0x00, 0x00, (uint8_t)channel, 0x00};
         ok = em_buf_put(&dev, r->bss[i].bssid, 6) && em_buf_u16(&dev, 0x0103) &&
              em_buf_u8(&dev, 10) && em_buf_put(&dev, r->bss[i].bssid, 6) && em_buf_put(&dev, media, 4);
     }
+    if (ok && uplink) {
+        /* the backhaul STA: a non-AP STA interface on its parent BSSID */
+        uint8_t media[4] = {0x40, 0x00, (uint8_t)uplink->channel, 0x00};
+        ok = em_buf_put(&dev, uplink->station.mac, 6) &&
+             em_buf_u16(&dev, strcmp(uplink->band, "5G") ? 0x0103 : 0x0104) && em_buf_u8(&dev, 10) &&
+             em_buf_put(&dev, uplink->station.parent, 6) && em_buf_put(&dev, media, 4);
+    }
     /* Bridging Capability: every interface in one tuple */
-    ok = ok && em_buf_u8(&bridge, 1) && em_buf_u8(&bridge, (uint8_t)(1 + r->nbss)) &&
+    ok = ok && em_buf_u8(&bridge, 1) && em_buf_u8(&bridge, (uint8_t)(1 + r->nbss + extra)) &&
          em_buf_put(&bridge, agent_al, 6);
     for (size_t i = 0; ok && i < r->nbss; i++)
         ok = em_buf_put(&bridge, r->bss[i].bssid, 6);
+    if (ok && uplink)
+        ok = em_buf_put(&bridge, uplink->station.mac, 6);
     /* 1905 Neighbor Device: the controller, on the agent's port */
     ok = ok && em_buf_put(&nb, agent_al, 6) && em_buf_put(&nb, controller_al, 6) && em_buf_u8(&nb, 0);
     ok = ok && em_buf_u8(&op, 1) && em_buf_put(&op, r->ruid, 6) && em_buf_u8(&op, (uint8_t)r->nbss);
@@ -349,4 +359,107 @@ em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_a
         return EM_INVALID_INPUT;
     }
     return EM_OK;
+}
+
+/* -- the uplink (spec §8.3) --------------------------------------------------------- */
+
+bool em_view_backhaul(const em_device_view *v, const char *station, em_backhaul *out)
+{
+    for (size_t i = 0; i < v->nradios; i++) {
+        const em_radio_view *r = &v->radios[i];
+        for (size_t k = 0; k < r->nuplinks; k++) {
+            const em_uplink_view *u = &r->uplinks[k];
+            if (strcmp(u->if_name, station) || !u->multi_ap || !u->has_parent || !r->has_channel ||
+                (strcmp(r->band, "2.4G") && strcmp(r->band, "5G")))
+                continue;
+            memcpy(out->ruid, r->ruid, 6);
+            strcpy(out->band, r->band);
+            out->channel = r->channel;
+            out->station = *u;
+            return true;
+        }
+    }
+    return false;
+}
+
+cJSON *em_backhaul_json(const em_backhaul *b)
+{
+    cJSON *o = cJSON_CreateObject(), *s = cJSON_CreateObject();
+    add_mac(o, "ruid", b->ruid);
+    cJSON_AddStringToObject(o, "band", b->band);
+    cJSON_AddNumberToObject(o, "channel", b->channel);
+    cJSON_AddStringToObject(s, "if_name", b->station.if_name);
+    add_mac(s, "mac", b->station.mac);
+    cJSON_AddStringToObject(s, "ssid", b->station.ssid);
+    add_mac(s, "parent", b->station.parent);
+    cJSON_AddBoolToObject(s, "multi_ap", b->station.multi_ap);
+    cJSON_AddItemToObject(o, "station", s);
+    return o;
+}
+
+static void lower_copy(char *dst, size_t cap, const char *src)
+{
+    size_t i = 0;
+    for (; src && src[i] && i + 1 < cap; i++)
+        dst[i] = (char)(src[i] >= 'A' && src[i] <= 'F' ? src[i] + 32 : src[i]);
+    dst[i] = 0;
+}
+
+void em_uplink_state_of(const cJSON *tables, const char *station, em_uplink_state *out)
+{
+    memset(out, 0, sizeof(*out));
+    const cJSON *row, *used = NULL, *state = NULL;
+    int nused = 0, nstates = 0;
+    cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(tables, "Connection_Manager_Uplink"))
+    {
+        if (ovs_true(row, "is_used")) {
+            nused++;
+            used = row;
+        }
+    }
+    cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(tables, "Wifi_VIF_State"))
+    {
+        const char *name = ovs_str(row, "if_name"), *mode = ovs_str(row, "mode");
+        if (name && !strcmp(name, station) && mode && !strcmp(mode, "sta")) {
+            nstates++;
+            state = row;
+        }
+    }
+    if (nstates != 1)
+        state = NULL;
+    const char *multi_ap = state ? ovs_str(state, "multi_ap") : NULL;
+    bool wds_sta = state && ovs_true(state, "enabled") && multi_ap &&
+                   !strcmp(multi_ap, "backhaul_sta") && ovs_true(state, "wds");
+    const char *in_use = nused == 1 ? ovs_str(used, "if_name") : NULL;
+    if (wds_sta && in_use && !strcmp(in_use, station))
+        strcpy(out->kind, "multi-ap");
+    else if (nused == 1 && ovs_str(used, "if_type"))
+        copy_str(out->kind, sizeof(out->kind), ovs_str(used, "if_type"));
+    copy_str(out->in_use, sizeof(out->in_use), in_use);
+    copy_str(out->station, sizeof(out->station), station);
+    if (state) {
+        copy_str(out->ssid, sizeof(out->ssid), ovs_str(state, "ssid"));
+        lower_copy(out->parent, sizeof(out->parent), ovs_str(state, "parent"));
+        copy_str(out->mac, sizeof(out->mac), ovs_str(state, "mac"));
+    }
+}
+
+static void add_or_null(cJSON *o, const char *key, const char *value)
+{
+    if (*value)
+        cJSON_AddStringToObject(o, key, value);
+    else
+        cJSON_AddNullToObject(o, key);
+}
+
+cJSON *em_uplink_state_json(const em_uplink_state *u)
+{
+    cJSON *o = cJSON_CreateObject();
+    add_or_null(o, "kind", u->kind);
+    add_or_null(o, "in_use", u->in_use);
+    cJSON_AddStringToObject(o, "station", u->station);
+    add_or_null(o, "ssid", u->ssid);
+    add_or_null(o, "parent", u->parent);
+    add_or_null(o, "mac", u->mac);
+    return o;
 }

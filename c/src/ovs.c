@@ -81,3 +81,45 @@ const char *ovs_map_get(const cJSON *row, const char *name, const char *key)
     }
     return NULL;
 }
+
+size_t ovs_strings(const cJSON *row, const char *name, const char **out, size_t max)
+{
+    const cJSON *v = column(row, name);
+    size_t n = 0;
+    if (cJSON_IsString(v)) {
+        out[n++] = v->valuestring;
+    } else if (cJSON_IsArray(v) && cJSON_GetArraySize(v) == 2 &&
+               cJSON_IsString(cJSON_GetArrayItem(v, 0)) &&
+               !strcmp(cJSON_GetArrayItem(v, 0)->valuestring, "set")) {
+        const cJSON *item;
+        cJSON_ArrayForEach(item, cJSON_GetArrayItem(v, 1))
+        {
+            if (n < max && cJSON_IsString(item))
+                out[n++] = item->valuestring;
+        }
+    }
+    qsort(out, n, sizeof(*out), cmp);
+    return n;
+}
+
+size_t ovs_map_keys(const cJSON *row, const char *name, const char **out, size_t max)
+{
+    const cJSON *v = column(row, name), *pair;
+    size_t n = 0;
+    if (!cJSON_IsArray(v) || cJSON_GetArraySize(v) != 2)
+        return 0;
+    cJSON_ArrayForEach(pair, cJSON_GetArrayItem(v, 1))
+    {
+        const cJSON *k = cJSON_GetArrayItem(pair, 0);
+        if (n < max && cJSON_IsString(k))
+            out[n++] = k->valuestring;
+    }
+    qsort(out, n, sizeof(*out), cmp);
+    return n;
+}
+
+size_t ovs_map_size(const cJSON *row, const char *name)
+{
+    const char *keys[64];
+    return ovs_map_keys(row, name, keys, 64);
+}

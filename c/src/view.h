@@ -73,9 +73,30 @@ typedef struct {
     long seconds;
 } em_station_age;
 
-/* Topology Response TLVs for the radio's BSSes (6.1 or r1). */
+/* The pod's EasyMesh backhaul (data plane option 1): its station on which radio. */
+typedef struct {
+    uint8_t ruid[6];
+    char band[8];
+    int channel;
+    em_uplink_view station;
+} em_backhaul;
+
+/* The backhaul through `station`, when it is a connected Multi-AP backhaul STA. */
+bool em_view_backhaul(const em_device_view *v, const char *station, em_backhaul *out);
+cJSON *em_backhaul_json(const em_backhaul *b);
+
+/* Topology Response TLVs for the radio's BSSes (6.1 or r1); uplink may be NULL. */
 em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_al[6],
                            const em_radio_view *r, int channel, const em_station_age *ages,
-                           size_t nages, bool r1, em_tlv_list *out);
+                           size_t nages, bool r1, const em_backhaul *uplink, em_tlv_list *out);
+
+/* How the pod reaches its gateway, from cm's and owm's State (spec §8.3). */
+typedef struct {
+    char kind[16]; /* "multi-ap", cm's if_type ("gre", "eth", ...), or "" for none */
+    char in_use[33], station[33], ssid[65], parent[18], mac[18]; /* "" for none */
+} em_uplink_state;
+
+void em_uplink_state_of(const cJSON *tables, const char *station, em_uplink_state *out);
+cJSON *em_uplink_state_json(const em_uplink_state *u);
 
 #endif

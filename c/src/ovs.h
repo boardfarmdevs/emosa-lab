@@ -17,4 +17,11 @@ size_t ovs_uuids(const cJSON *row, const char *column, const char **out, size_t 
 /* A map column's value for a key, or NULL. */
 const char *ovs_map_get(const cJSON *row, const char *column, const char *key);
 
+/* The strings of a set column (a single atom reads as one), sorted. */
+size_t ovs_strings(const cJSON *row, const char *column, const char **out, size_t max);
+/* The keys of a map column, sorted. */
+size_t ovs_map_keys(const cJSON *row, const char *column, const char **out, size_t max);
+/* A map column's size (0 for an empty or absent map). */
+size_t ovs_map_size(const cJSON *row, const char *column);
+
 #endif
