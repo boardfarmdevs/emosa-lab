@@ -51,8 +51,8 @@ from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
 from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.schema import TABLES
 from emosa.opensync.session import OvsSession
+from emosa.opensync.uplink import BSSID, MULTI_AP, UplinkBackend, uplink_state
 from emosa.opensync.uplink import MONITOR as UPLINK_MONITOR
-from emosa.opensync.uplink import MULTI_AP, UplinkBackend, uplink_state
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
 from emosa.store import Store
@@ -327,6 +327,16 @@ def make_bridge(
     )
 
 
+def uplink_bssid(uplink_config):
+    """The upstream backhaul BSS a multi-ap uplink is pinned to, in lower case."""
+    bssid = (uplink_config.get("bssid") or "").lower()
+    if not BSSID.match(bssid):
+        raise EmosaError(
+            Reason.INVALID_INPUT, "uplink: bssid (the upstream backhaul BSS) is required"
+        )
+    return bssid
+
+
 async def serve(config, stop):
     state_dir = Path(config["state_dir"])
     state_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -350,6 +360,7 @@ async def serve(config, stop):
     if uplink_config["mode"] == MULTI_AP:
         if station is None:
             raise EmosaError(Reason.INVALID_INPUT, "uplink: no station (profile or configuration)")
+        bssid = uplink_bssid(uplink_config)
         if uplink_config.get("credentials", "m2") == "config":
             if not uplink_config.get("ssid") or not uplink_config.get("secret_ref"):
                 raise EmosaError(
@@ -366,6 +377,7 @@ async def serve(config, stop):
             uplink_store,
             vault,
             credentials,
+            bssid=bssid,
             run_id=config.get("run_id", pod_id),
             # the pod serves the controller's fronthaul, and no fronthaul write is in flight
             settled=lambda: (

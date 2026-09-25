@@ -1,0 +1,52 @@
+{
+  "what": "Data plane option 1 with credentials from the controller's M2 set (spec §8.3): pod-2's agent is given the backhaul BSS in its M2 set (policy AL+bh), so the pod runs b-ap-24 'emosa-mesh-bh' itself, and switches bhaul-sta-50 onto the controller's backhaul BSS on em-gtp (5 GHz)",
+  "vm": "emosa-osl-0925 (rev150, 8 CPU, 16 GiB)",
+  "pod": "pod-2 (MVXPOD02D7777EF0D9), image mvx-pod-20260924183456",
+  "date": "2026-09-25",
+  "times": "UTC",
+  "monitor": "storm-watch.py in the VM: MemAvailable, slab growth and the busiest interfaces of every network namespace, each second",
+  "runs": [
+    {
+      "run": "m2-unpinned",
+      "emosa": "43c010e (the station's multi_ap credential had no BSSID)",
+      "result": "br-home loop, VM livelock",
+      "events": [
+        "03:55:59 option1 pod-2 on m2; b-ap-24 up with 'emosa-mesh-bh' on channel 6",
+        "03:56:13 slab +1335 MB in one second (kmalloc-rnd-07-2k, skbuff_head_cache): pod-2 bhaul-sta-50 tx 29782/s, b-ap-24 tx 28226/s, br-home rx 28223/s, home-ap-24 tx 28223/s",
+        "03:56:14 slab +2496 MB; b-ap-24.sta1 rx 34039/s: the 4-address interface of pod-2's own backhaul BSS for pod-2's own station",
+        "03:56:14 the monitor's cut (wireless interfaces down) did not run: all 8 vCPUs busy, lxd-agent unreachable",
+        "03:57 VM force-stopped and restarted"
+      ],
+      "cause": "hwsim radios support every band; the unpinned station (5 GHz radio) joined the pod's own 2.4 GHz backhaul BSS with the same SSID and key; both are in br-home, which runs no STP",
+      "logs": ["loop-unpinned-switch.log", "loop-unpinned-watch.log"]
+    },
+    {
+      "run": "m2-pinned",
+      "emosa": "this commit: the credential carries Wifi_Credential_Config.bssid = em-gtp's backhaul BSS (02:00:00:00:11:00), own BSSIDs refused",
+      "result": "applied",
+      "committed": "04:22:29",
+      "applied": "04:22:52",
+      "checks": [
+        "bhaul-sta-50: multi_ap=backhaul_sta, wds=true, parent 02:00:00:00:11:00, bridge br-home; cm's only uplink; no g-bhaul-sta-50",
+        "b-ap-24 up at the same time: multi_ap=backhaul_bss, ssid emosa-mesh-bh",
+        "clients em-wc3 and em-wc4 (pod-2): internet",
+        "monitor, 420 s: no trip, slab at most +11 MB, no pod-2 radio interface above 200 packets/s"
+      ],
+      "logs": ["pinned-switch.log", "pinned-watch.log"]
+    },
+    {
+      "run": "m2-pinned-reapply",
+      "result": "applied again on the new start",
+      "events": [
+        "04:23:31 OpenSync restarted on pod-2",
+        "04:24:01 back on GRE on a new start (new Wifi_Radio_Config UUIDs), M2 re-created the fronthaul and b-ap-24; switch written",
+        "04:24:23 applied"
+      ],
+      "logs": ["pinned-reapply.log"]
+    },
+    {
+      "run": "renew-rate",
+      "result": "one AP-Autoconfiguration Renew (0x000A) and 19 1905 frames in 60 s on the EasyMesh LAN, pod-2's agent still with the backhaul BSS: the Renew storm reported on emosa-osl-0923 was a symptom of the loop"
+    }
+  ]
+}

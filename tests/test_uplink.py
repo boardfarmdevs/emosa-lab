@@ -6,6 +6,7 @@ import json
 
 import pytest
 
+from emosa.agent.pod import uplink_bssid
 from emosa.agent.uplink import DEADLINE, UplinkSwitch, m2_backhaul
 from emosa.clock import ManualClock
 from emosa.errors import EmosaError, Reason
@@ -110,12 +111,12 @@ class Pod:
                 self.tables["Wifi_VIF_Config"][VIF].update(row)
         return [{} if op["op"] in ("wait", "insert") else {"count": 1} for op in operations]
 
-    def adopt(self):
+    def adopt(self, parent=PARENT):
         """owm joins the Multi-AP backhaul, cm uses the station: no GRE."""
         self.generation += 1  # the management session moved to the new uplink
         state = self.tables["Wifi_VIF_State"][VIF_STATE]
         state.update(
-            ssid="emosa-mesh-bh", multi_ap="backhaul_sta", wds=True, parent=PARENT, bridge="br-home"
+            ssid="emosa-mesh-bh", multi_ap="backhaul_sta", wds=True, parent=parent, bridge="br-home"
         )
         self.tables["Connection_Manager_Uplink"] = {
             UPLINK: {"if_name": STATION, "if_type": "vif", "is_used": True}
@@ -130,14 +131,21 @@ class Pod:
 CRED = "00000000-0000-4000-8000-0000000000c1"
 
 
-def rig(tmp_path, credentials=("emosa-mesh-bh", "backhaul")):
+def rig(tmp_path, credentials=("emosa-mesh-bh", "backhaul"), bssid=PARENT):
     vault = SecretStore(tmp_path / "secrets")
     vault.write_simulated("backhaul", "EmosaMesh2026!")
     pod, clock = Pod(), ManualClock()
     backend = UplinkBackend("pod-1", pod, vault, serial=SERIAL, station=STATION)
     store = Store(tmp_path / "uplink")
     switch = UplinkSwitch(
-        "pod-1", backend, store, vault, lambda: credentials, run_id="pod-1", clock=clock
+        "pod-1",
+        backend,
+        store,
+        vault,
+        lambda: credentials,
+        bssid=bssid,
+        run_id="pod-1",
+        clock=clock,
     )
     return switch, pod, clock, store
 
@@ -159,6 +167,7 @@ def test_the_switch_is_one_guarded_transaction_with_a_sole_multi_ap_credential(t
     assert sent[1]["where"] == [["_uuid", "==", ["uuid", VIF]]]
     credential = sent[2]["row"]
     assert credential["onboard_type"] == "multi_ap" and credential["ssid"] == "emosa-mesh-bh"
+    assert credential["bssid"] == PARENT  # pinned: never any BSS with that SSID
     assert credential["security"] == ["map", [["encryption", "WPA-PSK"], ["key", "EmosaMesh2026!"]]]
     station = sent[3]["row"]
     assert station["ssid"] == "" and station["security"] == ["map", []]  # credential-list mode
@@ -244,11 +253,20 @@ def test_no_switch_without_credentials_or_a_working_uplink(tmp_path):
     asyncio.run(switch.tick())
     assert not pod.sent and switch.status()["waiting"] == "no working uplink yet"
     with pytest.raises(EmosaError) as exc:
-        asyncio.run(switch.backend.plan(UplinkIntent("pod-1", STATION, "x", "backhaul")))
+        asyncio.run(
+            switch.backend.plan(UplinkIntent("pod-1", STATION, "x", "backhaul", bssid=PARENT))
+        )
     assert exc.value.code == Reason.NOT_READY
     with pytest.raises(EmosaError) as exc:
-        asyncio.run(switch.backend.plan(UplinkIntent("pod-1", "bhaul-sta-24", "x", "backhaul")))
+        asyncio.run(
+            switch.backend.plan(
+                UplinkIntent("pod-1", "bhaul-sta-24", "x", "backhaul", bssid=PARENT)
+            )
+        )
     assert exc.value.code == Reason.UNSUPPORTED_OPERATION
+    with pytest.raises(EmosaError) as exc:  # unpinned
+        asyncio.run(switch.backend.plan(UplinkIntent("pod-1", STATION, "x", "backhaul")))
+    assert exc.value.code == Reason.INVALID_INPUT
 
 
 def test_credentials_come_from_the_applied_m2_backhaul_bss():
@@ -337,6 +355,7 @@ def test_a_switch_times_out_even_when_the_pod_cannot_be_read_after_an_agent_rest
         Store(tmp_path / "uplink"),
         vault,
         lambda: ("emosa-mesh-bh", "backhaul"),
+        bssid=PARENT,
         run_id="pod-1",
         clock=clock,
     )
@@ -345,3 +364,52 @@ def test_a_switch_times_out_even_when_the_pod_cannot_be_read_after_an_agent_rest
     clock.advance(DEADLINE + 1)
     asyncio.run(again.tick())
     assert again.latest().state == State.TIMED_OUT and again.held()
+
+
+OWN_BACKHAUL_BSS = "72:00:00:00:00:00"
+
+
+def with_own_backhaul_bss(pod):
+    """The pod runs the controller's backhaul BSS itself (multi-BSS M2 set): b-ap-24."""
+    pod.tables["Wifi_VIF_State"]["00000000-0000-4000-8000-0000000000d1"] = {
+        "if_name": "b-ap-24",
+        "mode": "ap",
+        "enabled": True,
+        "ssid": "emosa-mesh-bh",
+        "multi_ap": "backhaul_bss",
+        "mac": OWN_BACKHAUL_BSS,
+    }
+
+
+def test_a_switch_to_one_of_the_pods_own_bsses_is_refused_before_any_write(tmp_path):
+    # Live, the unpinned station joined its own b-ap-24: br-home looped and the
+    # host ran out of memory within seconds (data-plane.md §5.6).
+    for n, own in enumerate((OWN_BACKHAUL_BSS, "02:00:00:00:15:01")):
+        switch, pod, _, _ = rig(tmp_path / str(n), bssid=own)
+        with_own_backhaul_bss(pod)
+        asyncio.run(switch.tick())
+        op = switch.latest()
+        assert not pod.sent and op.state == State.REJECTED and op.reason == Reason.INVALID_INPUT
+        asyncio.run(switch.tick())
+        assert switch.held() and not pod.sent  # a configuration error: never retried on its own
+
+
+def test_applied_only_on_the_pinned_upstream_bss(tmp_path):
+    switch, pod, clock, _ = rig(tmp_path)
+    with_own_backhaul_bss(pod)
+    asyncio.run(switch.tick())
+    pod.adopt(parent="02:00:00:00:77:01")  # some other BSS with the backhaul SSID
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.CONFIG_COMMITTED
+    pod.adopt()
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED
+    assert switch.status()["bssid"] == switch.status()["parent"] == PARENT
+
+
+def test_a_multi_ap_uplink_configuration_needs_the_upstream_bssid():
+    assert uplink_bssid({"mode": "multi-ap", "bssid": "02:00:00:00:09:0A"}) == "02:00:00:00:09:0a"
+    for config in ({"mode": "multi-ap"}, {"mode": "multi-ap", "bssid": "not-a-mac"}):
+        with pytest.raises(EmosaError) as exc:
+            uplink_bssid(config)
+        assert exc.value.code == Reason.INVALID_INPUT

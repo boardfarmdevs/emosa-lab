@@ -10,6 +10,7 @@
   "pods": {
     "MVXPOD023674CB574D": {
       "uplink": {
+        "bssid": "02:00:00:00:09:00",
         "credentials": "config",
         "mode": "multi-ap",
         "secret_ref": "backhaul",

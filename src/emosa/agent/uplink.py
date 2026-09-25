@@ -7,6 +7,10 @@ different scope from the fronthaul BSS, with its own lifecycle rules.
   set (multi-BSS mode). They can instead come from the agent configuration
   (``uplink.ssid`` and ``uplink.secret_ref``, a file in the agent's secret
   directory).
+- **Upstream:** the BSSID the station may join (``uplink.bssid``), whatever
+  the credential source. The station never picks a BSS by SSID alone: a pod
+  whose M2 set includes the backhaul BSS serves that SSID itself, and a station
+  on its own backhaul BSS loops ``br-home`` (data-plane.md §5.6).
 - **When:** the pod is bound, reports a working uplink, serves the controller's
   fronthaul with no fronthaul operation in flight (the switch moves the path a
   fronthaul write travels on), and is not already on the controller's backhaul.
@@ -36,14 +40,25 @@ SOURCE = "uplink-policy"
 
 class UplinkSwitch:
     def __init__(
-        self, pod_id, backend, store, vault, credentials, *, run_id, settled=None, clock=None
+        self,
+        pod_id,
+        backend,
+        store,
+        vault,
+        credentials,
+        *,
+        bssid,
+        run_id,
+        settled=None,
+        clock=None,
     ):
         """``credentials()`` -> (ssid, secret_ref) of the EasyMesh backhaul, or None.
 
+        ``bssid`` is the upstream backhaul BSS the station is pinned to.
         ``settled()`` is true while the fronthaul scope is served and idle.
         """
         self.pod_id, self.backend, self.store = pod_id, backend, store
-        self.credentials, self.run_id = credentials, run_id
+        self.credentials, self.bssid, self.run_id = credentials, bssid, run_id
         self.settled = settled or (lambda: True)
         self.engine = Engine(store, vault, {pod_id: backend}, clock, intent_type=UplinkIntent)
         self.engine.recover()
@@ -116,7 +131,7 @@ class UplinkSwitch:
         if credentials is None:
             self.waiting = "no EasyMesh backhaul credentials"
             return None
-        intent = UplinkIntent(self.pod_id, self.backend.station, *credentials)
+        intent = UplinkIntent(self.pod_id, self.backend.station, *credentials, bssid=self.bssid)
         try:
             intent.target(self.engine.vault)
         except EmosaError as exc:
@@ -174,6 +189,7 @@ class UplinkSwitch:
         facts = self.backend.facts or {}
         return {
             "station": self.backend.station,
+            "bssid": self.bssid,
             "uplink": facts.get("kind"),
             "in_use": facts.get("in_use"),
             "parent": facts.get("parent"),

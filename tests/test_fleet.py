@@ -64,7 +64,13 @@ def test_al_mac_is_derived_from_the_serial_unicast_and_collision_free():
 def test_one_pod_can_have_its_own_profile_and_uplink_policy(tmp_path):
     from emosa.config import validate
 
-    uplink = {"mode": "multi-ap", "credentials": "config", "ssid": "bh", "secret_ref": "bh"}
+    uplink = {
+        "mode": "multi-ap",
+        "credentials": "config",
+        "ssid": "bh",
+        "secret_ref": "bh",
+        "bssid": "02:00:00:00:09:00",
+    }
     config = fleet_config(tmp_path, multi_bss=True, pods={"POD2": {"uplink": uplink}})
     validate("fleet-config", config)
     entry = {"pod_id": "POD2", "port": 6652, "interface": "em2", "al_mac": derive_al("POD2")}

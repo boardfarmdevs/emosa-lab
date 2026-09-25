@@ -414,7 +414,8 @@ The switch:
 2. first confirms that the gateway's backhaul BSS is up and advertising
    Multi-AP;
 3. writes the new backhaul station configuration in one guarded transaction:
-   the controller's backhaul SSID and passphrase, with `multi_ap=backhaul_sta`;
+   the controller's backhaul SSID and passphrase, with `multi_ap=backhaul_sta`,
+   pinned to one upstream BSSID;
 4. waits for the pod to come back on its agent port with the new uplink in its
    State. That means `multi_ap=backhaul_sta` and `wds=true` in
    `Wifi_VIF_State`, bridged into `br-home`, `cm` using the station as its
@@ -425,7 +426,16 @@ If the pod doesn't come back within the deadline, it has already restarted to
 option 2, or will. EMOSA records the operation as `TIMED_OUT`, marks the pod
 option-2-only, and never retries on its own.
 
-Two more rules came from the lab (§5.6):
+Three more rules came from the lab (§5.6):
+- **The station is pinned to one upstream BSSID, never one of the pod's own.**
+  A pod that is given the backhaul BSS in its M2 set serves the backhaul SSID
+  itself, bridged into `br-home`. A station that may join any BSS with that
+  SSID joined its own: `br-home` then looped through the station and the
+  backhaul BSS's 4-address interface, with no STP to stop it. The kernel's
+  socket buffers grew by 1.3 GB in one second and the VM locked up. OpenSync
+  cannot exclude BSSIDs, but a credential's `bssid` pins the one to join.
+  Which BSS is upstream is the controller's decision (Backhaul Steering, not
+  yet supported); until then it is configured (`uplink.bssid`).
 - The switch waits until the pod serves the controller's fronthaul and no
   fronthaul write is in flight. The switch moves the path such a write travels
   on, and after an OpenSync restart the controller's M2 re-creates the
@@ -516,6 +526,25 @@ pod-6's agent writes `bhaul-sta-50` onto the controller's backhaul BSS
   router checks. The agent timed the switch out at 90 s and held the pod on
   option 2. The lab no longer gives that node a backhaul BSS.
 
+**Credentials from the M2 set** (evidence
+`doc/evidence/opensync-lab-proof/option1-m2`, VM `emosa-osl-0925`). With
+`lab.sh option1 pod-2 on m2`, the controller gives pod-2's agent the backhaul
+BSS in its M2 set, so pod-2 itself runs `b-ap-24` with `emosa-mesh-bh`, and the
+agent takes its uplink credentials from the same set:
+- unpinned, the station joined pod-2's own `b-ap-24`: hwsim radios support
+  every band, and nothing kept the 5 GHz station off the 2.4 GHz BSS. Frames
+  circled `bhaul-sta-50` → `b-ap-24.sta1` → `br-home` → `bhaul-sta-50`, and
+  were flooded into the fronthaul too. The kernel's socket buffers grew by
+  1.3 GB in the first second, all eight vCPUs were busy, and the VM had to be
+  force-stopped. The AP-Autoconfiguration Renew storm and the out-of-memory
+  event on `emosa-osl-0923` had the same cause;
+- pinned to em-gtp's backhaul BSS, the switch was applied 23 s after the
+  write, with `b-ap-24` up at the same time. The clients had internet, and
+  over 7 minutes, including an OpenSync restart, no pod-2 radio interface
+  carried more than 200 packets a second. After the restart the agent switched
+  the pod again (22 s after the write);
+- one Renew and 19 1905 frames a minute on the EasyMesh LAN.
+
 **Found on the way (EMOSA):** after a release, a re-admitted pod was refused
 with `OWNERSHIP_CONFLICT`. Its old journal still recorded that someone else
 (local-noc, after the release) had changed the fronthaul. `forget` now
@@ -568,8 +597,9 @@ connected Multi-AP station.
    qualifying pod, confirms it from State, holds a pod whose switch failed on
    option 2, and switches it again after every OpenSync restart. It reports
    the backhaul STA and refuses Backhaul Steering. Still open:
-   - credentials from the controller's M2 set run in unit tests only. The lab
-     controller gives its agents no backhaul BSS yet (single-BSS agents);
+   - the upstream BSS is configured (`uplink.bssid`). The controller should
+     choose it: Backhaul Steering (target BSSID) is the EasyMesh way, and would
+     also let pods chain through each other's backhaul BSSes without a loop;
    - Backhaul Steering, backhaul link metrics, and a 1905 neighbor on the
      backhaul interface;
    - prplMesh keeps the agent's Backhaul `LinkType` at Ethernet, because its

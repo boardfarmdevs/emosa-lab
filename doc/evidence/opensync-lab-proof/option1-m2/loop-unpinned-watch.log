@@ -1,0 +1,35 @@
+03:55:40 start avail=13882MB slab=310MB netns=24
+03:55:41 avail=13892MB slab=+-1MB fuse_request:+38K proc_inode_cache:+15K btrfs_path:+15K | 
+03:55:42 avail=13887MB slab=+0MB anon_vma_chain:+32K btrfs_inode:+31K cred_jar:+27K | 
+03:55:43 avail=13880MB slab=+0MB task_struct:+237K cred_jar:+15K | 
+03:55:44 avail=13862MB slab=+0MB kmalloc-rnd-11-1k:+32K kernfs_node_cache:+7K fuse_request:+7K | 
+03:55:45 avail=13837MB slab=+0MB kmalloc-rnd-07-4k:+128K biovec-max:+32K btrfs_inode:+31K | vm/vethcfdeb61 rx158 tx157
+03:55:46 avail=13846MB slab=+0MB task_struct:+142K buffer_head:+3K | 
+03:55:47 avail=13844MB slab=+0MB fuse_request:+7K | 
+03:55:48 avail=13846MB slab=+0MB  | 
+03:55:49 avail=13846MB slab=+0MB anon_vma:+3K | 
+03:55:50 avail=13857MB slab=+0MB task_struct:+95K | 
+03:55:51 avail=13855MB slab=+0MB task_struct:+95K filp:+16K dentry:+11K | 
+03:55:52 avail=13855MB slab=+0MB dentry:+7K | 
+03:55:53 avail=13855MB slab=+0MB  | 
+03:55:54 avail=13865MB slab=+0MB cred_jar:+3K | 
+03:55:55 avail=13871MB slab=+0MB kmalloc-rnd-01-512:+16K | 
+03:55:56 avail=13871MB slab=+0MB task_struct:+47K cred_jar:+19K | 
+03:55:57 avail=13867MB slab=+0MB dentry:+15K anon_vma:+7K fuse_request:+3K | 
+03:55:58 avail=13868MB slab=+0MB  | 
+03:55:59 avail=13870MB slab=+0MB fuse_request:+77K dentry:+47K kmalloc-rnd-08-1k:+32K | 
+03:56:00 avail=13877MB slab=+0MB kmalloc-rnd-07-4k:+32K kmalloc-rnd-01-512:+16K buffer_head:+3K | 
+03:56:01 avail=13880MB slab=+0MB  | 
+03:56:02 avail=13806MB slab=+0MB kmalloc-rnd-01-512:+32K | 
+03:56:03 avail=13813MB slab=+0MB kmalloc-rnd-07-64:+4K buffer_head:+3K | 
+03:56:04 avail=13819MB slab=+0MB task_struct:+23K dentry:+19K cred_jar:+3K | 
+03:56:05 avail=13833MB slab=+0MB kernfs_node_cache:+3K | 
+03:56:06 avail=13843MB slab=+0MB task_struct:+23K | 
+03:56:07 avail=13793MB slab=+0MB kmalloc-rnd-07-4k:+32K | 
+03:56:08 avail=13798MB slab=+0MB kmalloc-rnd-07-1k:+32K skbuff_small_head:+31K | 
+03:56:09 avail=13752MB slab=+0MB  | 
+03:56:10 avail=13761MB slab=+0MB  | 
+03:56:11 avail=13745MB slab=+0MB  | 
+03:56:12 avail=13805MB slab=+0MB  | 
+03:56:13 avail=12476MB slab=+1335MB kmalloc-rnd-07-2k:+1215232K skbuff_head_cache:+151928K kmalloc-rnd-07-1k:+384K | pod-2-1/bhaul-sta-50 rx2 tx29782 pod-2-1/br-home.ethc rx0 tx29779 pod-2-1/b-ap-24 rx2 tx28226 pod-2-1/br-home rx28223 tx1 pod-2-1/home-ap-24 rx0 tx28223
+03:56:14 avail=11319MB slab=+2496MB kmalloc-rnd-07-2k:+1055136K skbuff_head_cache:+132088K kmalloc-rnd-07-1k:+768K | pod-2-1/br-home.ethc rx0 tx34039 pod-2-1/bhaul-sta-50 rx0 tx34039 pod-2-1/b-ap-24.sta1 rx34039 tx0 pod-2-1/home-ap-24 rx0 tx17019 pod-2-1/br-home rx17019 tx0 pod-2-1/b-ap-24 rx0 tx17019

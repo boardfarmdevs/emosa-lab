@@ -16,10 +16,17 @@ The write is one guarded transaction on one existing station row (the pod's
 bootstrap creates it). No ``gre`` credential is kept beside the ``multi_ap``
 one: osw aborts ``owm`` when it settles on a lower-priority network (§5.3).
 OpenSync's own bootstrap restart is the fallback when the new uplink fails.
+
+The credential is pinned to one upstream BSSID (``Wifi_Credential_Config.bssid``,
+which owm passes to wpa_supplicant). Unpinned, the station joins any BSS with
+the backhaul SSID, including the pod's own backhaul BSS: both are in
+``br-home``, and the loop floods the pod's bridge until the host runs out of
+memory (seen live, data-plane.md §5.6). A BSSID of the pod itself is refused.
 """
 
 import hashlib
 import json
+import re
 from dataclasses import asdict, dataclass
 
 from emosa.backends.base import Snapshot, SubmitResult
@@ -31,25 +38,31 @@ from emosa.opensync.mapping import check_results, guard, where_uuid
 MODE = "opensync-6.6-uplink"
 PROVENANCE = "opensync-cm:Connection_Manager_Uplink+owm:Wifi_VIF_State"
 MULTI_AP = "multi-ap"
+BSSID = re.compile(r"^[0-9a-f]{2}(:[0-9a-f]{2}){5}$")
 STATION_GUARDS = ("if_name", "mode", "enabled", "ssid", "credential_configs", "multi_ap")
 # What the switch monitors beyond the AP scope's tables (emosa.opensync.schema.TABLES).
 MONITOR = {
     "Wifi_VIF_Config": ["credential_configs", "wds", "parent"],
     "Wifi_VIF_State": ["wds", "parent", "bridge"],
-    "Wifi_Credential_Config": ["ssid", "security", "onboard_type", "priority", "enabled"],
+    "Wifi_Credential_Config": ["ssid", "security", "onboard_type", "priority", "enabled", "bssid"],
     "Connection_Manager_Uplink": ["if_name", "if_type", "is_used", "has_L2", "has_L3"],
 }
 
 
 @dataclass(frozen=True)
 class UplinkIntent:
-    """Move ``station`` onto the EasyMesh backhaul BSS ``ssid`` (option 1)."""
+    """Move ``station`` onto the EasyMesh backhaul BSS ``bssid`` with ``ssid`` (option 1).
+
+    ``bssid`` is required for a switch (``UplinkBackend`` refuses one without it);
+    records journaled before it existed have none.
+    """
 
     pod_id: str
     station: str
     ssid: str
     secret_ref: str
     mode: str = MULTI_AP
+    bssid: str | None = None
 
     def record(self):
         return asdict(self)
@@ -63,15 +76,34 @@ class UplinkIntent:
             not isinstance(x, str) or not x for x in (self.pod_id, self.station, self.secret_ref)
         ):
             raise EmosaError(Reason.INVALID_INPUT, "explicit station and secret reference required")
+        if self.bssid is not None and not BSSID.match(self.bssid):
+            raise EmosaError(Reason.INVALID_INPUT, "BSSID must be a lower-case MAC address")
 
     def target(self, vault):
         self.validate()
-        return {
+        target = {
             "uplink": MULTI_AP,
             "station": self.station,
             "ssid": self.ssid,
             "credential_fingerprint": vault.fingerprint(vault.resolve(self.secret_ref)),
         }
+        if self.bssid is not None:
+            target["bssid"] = self.bssid
+        return target
+
+
+def lower_mac(value):
+    return value.lower() if isinstance(value, str) and value else None
+
+
+def own_bssids(decoded):
+    """Every MAC address the pod's own VIFs use: none of them may be its upstream."""
+    return {
+        lower_mac(r.get("mac"))
+        for table in ("Wifi_VIF_State", "Wifi_Radio_State")
+        for r in decoded.get(table, {}).values()
+        if lower_mac(r.get("mac"))
+    }
 
 
 def credential_key(row):
@@ -109,7 +141,7 @@ def uplink_state(decoded, station):
         "in_use": used[0].get("if_name") if len(used) == 1 else None,
         "station": station,
         "ssid": state.get("ssid") or None,
-        "parent": state.get("parent") or None,
+        "parent": lower_mac(state.get("parent")),
         "mac": state.get("mac") or None,
         "state": state,
     }
@@ -179,6 +211,7 @@ class UplinkBackend:
             "station": self.station,
             "ssid": sole.get("ssid") if multi_ap else vif.get("ssid"),
             "credential_fingerprint": self.vault.fingerprint(key) if multi_ap else None,
+            "bssid": lower_mac(sole.get("bssid")) if multi_ap else None,
         }, (sole if multi_ap else None)
 
     async def snapshot(self):
@@ -199,6 +232,7 @@ class UplinkBackend:
                     if credential and state["ssid"] == credential.get("ssid")
                     else None
                 ),
+                "bssid": state["parent"],
             }
             fresh = bool(raw["ready"] and state["state"])
             self.last = Snapshot(
@@ -226,15 +260,21 @@ class UplinkBackend:
             self.last.observed.fresh = False
         return self.last
 
-    def _check(self, intent):
+    def _check(self, intent, decoded=None):
         intent.target(self.vault)
         if (intent.pod_id, intent.station) != (self.pod_id, self.station):
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "request exceeds the bound station")
+        if intent.bssid is None:
+            raise EmosaError(Reason.INVALID_INPUT, "the upstream BSSID is required")
+        if decoded is not None and intent.bssid in own_bssids(decoded):
+            # joining itself would bridge the pod's backhaul BSS into its own br-home
+            raise EmosaError(Reason.INVALID_INPUT, "the upstream BSSID is one of the pod's own")
 
     async def plan(self, intent):
         self._check(intent)
         raw = await self.session.snapshot()
         decoded, vif_uuid, _ = self._binding(raw)
+        self._check(intent, decoded)
         if not raw["ready"] or vif_uuid is None:
             raise EmosaError(Reason.NOT_READY, "the pod's backhaul station row is required")
         state = uplink_state(decoded, self.station)
@@ -247,6 +287,7 @@ class UplinkBackend:
             "action": "multi-ap-uplink",
             "station": self.station,
             "ssid": intent.ssid,
+            "bssid": intent.bssid,
             "secret_ref": intent.secret_ref,
             "from": {"kind": state["kind"], "in_use": state["in_use"]},
             "instance": self.instance,
@@ -284,6 +325,7 @@ class UplinkBackend:
                     "onboard_type": "multi_ap",
                     "priority": 1,
                     "enabled": True,
+                    "bssid": intent.bssid,
                 },
             },
             {

@@ -425,6 +425,12 @@ The agent makes the switch itself when its configuration has
 - **Credentials:** the backhaul BSS (role backhaul) of the controller's
   applied M2 set, with `multi_bss`; or `uplink.ssid` and `uplink.secret_ref`
   from the configuration.
+- **Upstream:** the one BSSID the station may join, `uplink.bssid`, required
+  whatever the credential source. The credential carries it
+  (`Wifi_Credential_Config.bssid`), so the station never picks a BSS by SSID
+  alone. EMOSA MUST refuse a switch to any of the pod's own BSSIDs. A pod given
+  the backhaul BSS in its M2 set serves the backhaul SSID itself, and a station
+  on its own backhaul BSS puts a loop into `br-home` (data plane document §5.6).
 - **Station:** the profile's uplink station (`uplink.station` overrides it).
   The pod's bootstrap MUST create it.
 - **When:** the pod is bound, `cm` reports a working uplink, and the station is
@@ -435,13 +441,13 @@ The agent makes the switch itself when its configuration has
   re-onboarding, because every OpenSync restart returns the pod to its
   bootstrap uplink.
 - **Write:** one guarded transaction (§3.2): the station in credential-list
-  mode with one `multi_ap` credential. EMOSA MUST NOT keep a lower-priority
+  mode with one `multi_ap` credential, pinned to the upstream BSSID. EMOSA MUST NOT keep a lower-priority
   `gre` credential as the fallback, because osw aborts `owm` when it stays on a
   lower-priority network. The fallback is the pod's restart to its bootstrap
   (GTP) path.
 - **Applied** only when, on the same start of the pod, its State shows the
-  station with `multi_ap=backhaul_sta` and `wds=true` on the configured SSID,
-  and it is `cm`'s only uplink in use.
+  station with `multi_ap=backhaul_sta` and `wds=true` on the configured SSID
+  and upstream BSSID (its `parent`), and it is `cm`'s only uplink in use.
 - **Held:** a switch not applied within 90 s becomes `TIMED_OUT`. EMOSA then
   holds the pod on option 2 and MUST NOT switch it again on its own. So does a
   switch that fails or is rejected by OVSDB, and one whose station

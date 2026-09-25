@@ -14,7 +14,7 @@ Branch `claude/0923-clean`, proposed 2026-09-23.
 
 | Milestone | Status |
 | --- | --- |
-| M0 baseline | New lab VM from opensync-lab `main` (then branch `claude/emosa-hooks`, tag `archive/claude/emosa-hooks`) and the current pod image; the old frozen baseline is not used |
+| M0 baseline | New lab VM from opensync-lab `main` and the current pod image; since 2026-09-25 the fresh `emosa-osl-0925` built from the easymesh-labs workspace (its `docs/fresh-build.md`); the old frozen baseline is not used |
 | M1 read-only | Profile `opensync-lab-hwsim-6.6.1-v1` from the pod's source and live State (`src/emosa/opensync/pod_profile.py`) |
 | M2 handover | Done: local-noc redirect ends the session, the pod's `cm` dials EMOSA; GRE stays with local-noc |
 | M3 application | Done inside M4: guarded update, PSK slot replaced, State-confirmed, wrong key refused |
@@ -23,7 +23,7 @@ Branch `claude/0923-clean`, proposed 2026-09-23.
 | M6 cold start | Done for "pod container restart": M2 creates the missing fronthaul; other cold definitions not run |
 | M7 recovery | Done: 900 s workload m7-01 with client joins/leaves, adapter restart, transport cut, backhaul loss and controller restart, continuous traffic; passed |
 | M8 reporting | Partial: channel procedures and Operating Channel Report (controller shows channel 6), policy config acknowledged; the pods' own statistics reach EMOSA over mutual-TLS MQTT with lab device certificates, but hwsim gives no survey data, so AP metrics cannot be qualified; station metrics are next |
-| M9 | Second controller (RDK-B unified-wifi-mesh): with EMOSA's `r1` message set, Search, Response, M1 and Topology Response pass; the controller's M2 configures five BSSes for a 1-BSS radio plus an AP MLD configuration, which EMOSA refuses. Next: multi-BSS support. Physical pod, TLS transport, 5 GHz, EasyMesh backhaul not started |
+| M9 | Second controller (RDK-B unified-wifi-mesh): Search, Response, M1 and Topology Response pass; multi-BSS (`multi_bss`, shared M2 session) now accepts its five-BSS M2 set, live apply on RDK not yet verified. EasyMesh backhaul (data plane option 1): the agent switches a pod's uplink to the controller's backhaul BSS itself (spec §8.3), with credentials from configuration, and re-applies after an OpenSync restart; also with credentials from the controller's M2 set while the pod runs the backhaul BSS itself, the station pinned to the upstream BSSID (unpinned, it joined its own backhaul BSS and looped `br-home`). Physical pod, TLS transport, 5 GHz fronthaul not started |
 
 Deviations from this plan, found by running it:
 - `cm` ignores a new `manager_addr` while connected, so local-noc also ends

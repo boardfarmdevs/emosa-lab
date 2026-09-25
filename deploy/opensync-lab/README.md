@@ -113,7 +113,10 @@ carries:
 `lab.sh option1 POD on|off` makes POD's agent perform option 1 itself (spec
 §8.3). The agent writes the pod's `bhaul-sta-50` onto the controller's
 backhaul, confirms it from State, and does it again after every OpenSync
-restart. `lab.sh uplink POD gtp|multi-ap|restore|show` still moves an uplink by
+restart. The station is pinned to em-gtp's backhaul BSS (`uplink.bssid`, read
+from em-gtp's `wlan1`). With `m2` the credentials come from the controller's
+M2 set, and the pod also runs the backhaul BSS itself (`b-ap-24`); unpinned,
+its station joined that BSS and looped `br-home` until the VM locked up. `lab.sh uplink POD gtp|multi-ap|restore|show` still moves an uplink by
 hand.
 
 Option 1 needs a pod image built by opensync-lab `d1dc985` or later, which

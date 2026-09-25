@@ -20,6 +20,7 @@ from pathlib import Path
 
 from emosa.agent.fleet import Fleet, agent_config, derive_al
 from emosa.easymesh_payloads import encode_value
+from emosa.errors import EmosaError
 from emosa.model import ACTIVE, Intent
 from emosa.opensync.easymesh_view import (
     backhaul,
@@ -345,7 +346,7 @@ def uplink_state_case(name, raw, station):
     return case
 
 
-def uplink_switch_case(name, raw, station, ssid):
+def uplink_switch_case(name, raw, station, ssid, bssid):
     serial = next(iter(raw["AWLAN_Node"].values()))["serial_number"]
     with tempfile.TemporaryDirectory() as directory:
         vault = SecretStore(Path(directory) / "secrets")
@@ -353,21 +354,27 @@ def uplink_switch_case(name, raw, station, ssid):
             vault.write_simulated(ref, passphrase)
         session = Recorder(copy.deepcopy(raw))
         backend = UplinkBackend("pod-1", session, vault, serial=serial, station=station)
-        intent = UplinkIntent("pod-1", station, ssid, "ref-primary")
+        intent = UplinkIntent("pod-1", station, ssid, "ref-primary", bssid=bssid)
 
         async def run():
             await backend.snapshot()
-            await backend.plan(intent)
+            try:
+                await backend.plan(intent)
+            except EmosaError as exc:
+                return exc.code.value, str(exc)
             attempt = {"attempt_id": "a", "transaction_id": "t", "session_generation": 1}
-            return await backend.submit(intent, attempt)
+            return (await backend.submit(intent, attempt)).status, None
 
-        result = asyncio.run(run())
+        status, refusal = asyncio.run(run())
+    expected = {"status": status, "transactions": session.sent}
+    if refusal:
+        expected["refusal"] = refusal
     return {
         "name": name,
         "ovsdb_tables": raw,
         "intent": intent.record(),
         "passphrases": PASSPHRASES,
-        "expected": {"status": result.status, "transactions": session.sent},
+        "expected": expected,
     }
 
 
@@ -383,7 +390,15 @@ def uplink_vectors():
             uplink_state_case("multi-ap-backhaul", multi_ap, "bhaul-sta-24"),
             uplink_state_case("multi-ap-other-station", multi_ap, "bhaul-sta-50"),
         ],
-        "switch": [uplink_switch_case("switch-from-gre", gre, "bhaul-sta-50", "emosa-mesh-bh")],
+        "switch": [
+            uplink_switch_case(
+                "switch-from-gre", gre, "bhaul-sta-50", "emosa-mesh-bh", "02:00:00:00:09:00"
+            ),
+            # one of the pod's own BSSes (the fixture's home-ap-24): a br-home loop
+            uplink_switch_case(
+                "refused-own-bssid", gre, "bhaul-sta-50", "emosa-mesh-bh", "82:00:00:00:01:00"
+            ),
+        ],
     }
 
 

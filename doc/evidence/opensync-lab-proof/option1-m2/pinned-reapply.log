@@ -1,0 +1,8 @@
+04:23:11 11fafb192be01489 OBSERVED_APPLIED multi-ap - provisioning
+04:23:31 restarting OpenSync on pod-2
+04:23:36 11fafb192be01489 OBSERVED_APPLIED multi-ap - recovering
+04:24:01 77fd3f1ef89bb783 CONFIG_COMMITTED gre - provisioning
+04:24:16 77fd3f1ef89bb783 CONFIG_COMMITTED gre - recovering
+04:24:23 77fd3f1ef89bb783 OBSERVED_APPLIED multi-ap - provisioning
+04:24:23 applied again on a new start
+reapply-exit=0

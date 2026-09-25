@@ -421,6 +421,14 @@ controller's backhaul BSS (`<ssid>-bh`, 5 GHz) into the gateway LAN instead.
   serves no BSS, with nothing in flight, for 60 s now starts onboarding again
   (fresh M1).
 
+## Option 1 with credentials from the M2 set (runs option1-m2)
+
+pod-2's agent gets the backhaul BSS in its M2 set and takes its uplink
+credentials from it ([summary](option1-m2/summary.json)). Unpinned, the station
+joined the pod's own backhaul BSS and looped `br-home` until the VM locked up;
+pinned to em-gtp's backhaul BSS, the switch was applied in 23 s and again after
+an OpenSync restart, with no loop (data-plane.md §5.6).
+
 ## Fresh build from the easymesh-labs workspace (run fresh-0925-m7)
 
 The whole lab was built again from the pinned workspace
