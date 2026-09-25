@@ -12,6 +12,8 @@
 #   lab.sh gtp                        container em-gtp: the pods' onboarding SSID (the pod image's
 #                                     backhaul credentials) and their GRE, LAN leg on br-emosa
 #   lab.sh pod [NAME]                 the unchanged OpenSync pod image on two pool radios
+#   lab.sh repod [NAME]               the pod again from the staged image (its radios are
+#                                     returned to the VM first, so they survive)
 #   lab.sh client NAME SSID KEY       a Wi-Fi client on one pool radio
 #   lab.sh medium                     regenerate wmediumd's radios (guests: user.wmediumd.guest)
 #   lab.sh status
@@ -63,7 +65,7 @@ radios_reserved() {
     done
 }
 # radios_take PROFILE N: add N free radios to PROFILE as wlan0..wlanN-1, under the lock
-radios_take() {
+radios_take() {    # radios_take PROFILE N: wlan0..wlanN-1
     local profile=$1 n=$2 fd free i
     exec {fd}>"$LOCK"
     flock "$fd"
@@ -101,6 +103,46 @@ radios_reclaim() {
         log "$profile: reclaimed phy$n as $parent"
     done
 }
+# radios_await PROFILE: a deleted container's phys return to the VM only when its network
+# namespace is torn down, which the kernel does asynchronously (seconds, sometimes more).
+# Wait for them before a restart, so they are reclaimed rather than replaced as lost.
+radios_await() {
+    local profile=$1 d parent missing i
+    for i in $(seq 60); do
+        missing=0
+        for d in $(lxc profile device list "$profile"); do
+            parent=$(lxc profile device get "$profile" "$d" parent 2>/dev/null) || continue
+            case "$parent" in virt-wlan[0-9]*) ;; *) continue ;; esac
+            [ -d "/sys/class/ieee80211/phy${parent#virt-wlan}" ] || missing=$((missing + 1))
+        done
+        [ "$missing" -eq 0 ] && return 0
+        sleep 2
+    done
+    log "$profile: $missing radio(s) did not come back within 120 s"
+}
+# radios_replace_lost PROFILE: a profile radio whose phy no longer exists is swapped for a
+# free one under the same device name (wlan0 stays the 2.4 GHz radio, wlan1 the 5 GHz one)
+radios_replace_lost() {
+    local profile=$1 d parent fd free=() lost=()
+    for d in $(lxc profile device list "$profile"); do
+        parent=$(lxc profile device get "$profile" "$d" parent 2>/dev/null) || continue
+        case "$parent" in virt-wlan[0-9]*) ;; *) continue ;; esac
+        [ -d "/sys/class/ieee80211/phy${parent#virt-wlan}" ] || lost+=("$d:$parent")
+    done
+    [ "${#lost[@]}" -gt 0 ] || return 0
+    exec {fd}>"$LOCK"
+    flock "$fd"
+    mapfile -t free < <(comm -23 <(radios_free | sort) <(radios_reserved | grep "^virt-wlan" | sort -u) | sort -V)
+    [ "${#free[@]}" -ge "${#lost[@]}" ] || { flock -u "$fd"; die "only ${#free[@]} free pool radios"; }
+    for d in "${!lost[@]}"; do
+        lxc profile device remove "$profile" "${lost[$d]%%:*}" >/dev/null
+        lxc profile device add "$profile" "${lost[$d]%%:*}" nic nictype=physical \
+            parent="${free[$d]}" name="${lost[$d]%%:*}" >/dev/null
+        log "$profile: ${lost[$d]%%:*}: radio ${lost[$d]#*:} is lost (no wiphy), now ${free[$d]}"
+    done
+    flock -u "$fd"
+    log "$profile: new radios are not on the medium yet: run medium"
+}
 guest_profile() {    # guest_profile NAME RADIOS [memory]: a container on the medium
     local name=$1
     lxc profile show "$name" >/dev/null 2>&1 && return
@@ -119,7 +161,10 @@ start_guarded() {
     local name=$1 before
     before=$(regdom)
     if ! running "$name"; then
-        ! lxc profile show "$name" >/dev/null 2>&1 || radios_reclaim "$name"
+        if lxc profile show "$name" >/dev/null 2>&1; then
+            radios_reclaim "$name"
+            radios_replace_lost "$name"
+        fi
         # a radio moving into a container can fail the first start: once more, then stop
         lxc start "$name" 2>/dev/null || { sleep 3; lxc start "$name"; } || die "$name did not start"
     fi
@@ -139,10 +184,40 @@ lanport() {
     has_device "$CTL" emosa-lan ||
         lxc config device add "$CTL" emosa-lan nic nictype=bridged parent="$LAN" name=eth2 \
             hwaddr="${EMOSA_LANPORT_MAC:-0a:e0:5a:00:00:01}" >/dev/null
-    # brlan0 membership is not persistent across the controller's restarts: re-run after one
-    cx "$CTL" sh -c 'ip link set eth2 up; brctl addif brlan0 eth2 2>/dev/null || true
-        brctl show brlan0 | grep -w eth2 >/dev/null'
-    log "lanport: $CTL eth2 in brlan0, VM bridge $LAN"
+    # brlan0 membership is not persistent: the gateway rebuilds brlan0 from its own config when
+    # it restarts (RDK self-heal reboots it, e.g. CPU_THRESHOLD under load). A timer puts the
+    # port back within 15 s.
+    cat > /usr/local/sbin/emosa-lab-lanport <<EOF
+#!/bin/sh
+# re-attach $CTL eth2 to brlan0 after the gateway rebuilt it (emosa-lab deploy/rdk-lab)
+lxc info $CTL 2>/dev/null | grep -q '^Status: RUNNING' || exit 0
+lxc exec $CTL -- sh -c 'brctl show brlan0 2>/dev/null | grep -qw eth2 && exit 0
+    ip link show brlan0 >/dev/null 2>&1 || exit 0
+    ip link set eth2 up && brctl addif brlan0 eth2 && echo "eth2 re-attached to brlan0"'
+EOF
+    chmod 755 /usr/local/sbin/emosa-lab-lanport
+    cat > /etc/systemd/system/emosa-lab-lanport.service <<EOF
+[Unit]
+Description=emosa-lab: keep $CTL eth2 (the EMOSA LAN port) in brlan0
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/emosa-lab-lanport
+EOF
+    cat > /etc/systemd/system/emosa-lab-lanport.timer <<EOF
+[Unit]
+Description=emosa-lab: keep $CTL eth2 in brlan0
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=15
+AccuracySec=1
+[Install]
+WantedBy=timers.target
+EOF
+    systemctl daemon-reload
+    systemctl enable --now emosa-lab-lanport.timer >/dev/null 2>&1
+    /usr/local/sbin/emosa-lab-lanport
+    cx "$CTL" sh -c 'brctl show brlan0 | grep -w eth2 >/dev/null'
+    log "lanport: $CTL eth2 in brlan0 (kept there by emosa-lab-lanport.timer), VM bridge $LAN"
 }
 
 emosa() {
@@ -302,6 +377,15 @@ pod() {
     log "pod: $name from mvx-pod-$fp (wlan0 2.4 GHz, wlan1 5 GHz backhaul station)"
 }
 
+repod() {
+    local name=${1:-pod-1}
+    if exists "$name"; then
+        lxc delete -f "$name"
+        radios_await "$name"
+    fi
+    pod "$name"
+}
+
 client() {    # client NAME SSID KEY [BSSID]: pinned to BSSID when given (every RDK AP has the SSID)
     local name=$1 ssid=$2 key=$3 bssid=${4:-}
     if ! exists "$name"; then
@@ -350,6 +434,7 @@ status() {
 case ${1:-} in
     lanport|emosa|fleet|gtp|medium|status|controller_al) "$1" ;;
     pod) shift; pod "$@" ;;
+    repod) shift; repod "$@" ;;
     client) shift; client "$@" ;;
     *) sed -n '2,18p' "$0"; exit 1 ;;
 esac
