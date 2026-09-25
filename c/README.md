@@ -23,8 +23,31 @@ What makes it interchangeable with the Python reference (`src/emosa`):
 | Control plane (channel, policy, steering) | `emosa.wire.channel`, `.reporting_policy`, `.steering` | `control.json` | done |
 | OVSDB writes (M2, steering, uplink) | `emosa.opensync.pod_profile`, `.steering`, `.uplink` | `translation-southbound.json`, `steering.json`, `uplink.json` | done |
 | Pod statistics | `emosa.opensync.stats` | `telemetry.json` | done |
-| Agent runtime (config, OVSDB session, Ethernet, status) | `emosa.agent.pod` | live in `rdk-emosa` | next |
+| Agent runtime (config, OVSDB session, Ethernet, status) | `emosa.agent.pod` | live in `rdk-emosa` | done, gaps below |
 | Yocto recipe for the RDK lab image | | | |
+
+## The agent runtime
+
+`emosa-agent-c CONFIG.json [--profiles DIR]` takes the Python agent's
+configuration and writes the same status file, marked
+`"implementation": "c-lab-prototype"`. Profiles come from `--profiles`, else
+`EMOSA_PROFILES`, else `/usr/share/emosa/profiles`. One owner thread runs a poll
+loop over the pod's OVSDB connection (`ovsdb.c`: the pod dials in, as it does to
+the Python agent) and the 1905 socket (`ethernet.c`: AF_PACKET, ethertype
+`0x893A`); the pod state is refreshed every 0.5 s under a 1.5 s lease.
+
+Checked live in `rdk-emosa` against RDK's controller, in place of the Python
+agent for `pod-1`: search, M1, the five-BSS M2 set applied to the pod, the
+controller configuring the pod's radio, a steering mandate from `steer.sh`
+carried out by the pod (the station left the source BSS).
+
+Not in the C runtime yet (the Python agent has them):
+- the durable operation journal: a restart forgets what was submitted, and
+  steering windows a previous process left open are not closed;
+- the uplink (EasyMesh backhaul STA) and telemetry scopes;
+- Link Metric and AP Metrics answers (the queries are counted, not answered);
+- retries of the Early AP Capability Report;
+- schema validation of the configuration and status.
 
 ## Build and check
 
