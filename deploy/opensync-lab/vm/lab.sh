@@ -277,9 +277,11 @@ telemetry() {   # MQTT broker for the pods' own statistics (OpenSync sm/qm: mutu
             printf "subjectAltName=IP:10.101.0.1,IP:127.0.0.1\n" > broker.ext
             openssl x509 -req -in broker.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 3650 \
                 -extfile broker.ext -out broker.pem 2>/dev/null; }
-        chown -R mosquitto $P; chmod 750 $P
-        printf "%s\n" "per_listener_settings true" "listener 8883 127.0.0.1" "cafile $P/ca.pem" \
-            "certfile $P/broker.pem" "keyfile $P/broker.key" "require_certificate true" \
+        # the CA key stays with root; the broker gets its own copy (/var/lib/emosa is 0700)
+        C=/etc/mosquitto/certs; install -d -o mosquitto -m 750 $C
+        install -o mosquitto -m 644 ca.pem broker.pem $C/; install -o mosquitto -m 600 broker.key $C/
+        printf "%s\n" "per_listener_settings true" "listener 8883 127.0.0.1" "cafile $C/ca.pem" \
+            "certfile $C/broker.pem" "keyfile $C/broker.key" "require_certificate true" \
             "use_identity_as_username true" "listener 1883 127.0.0.1" "allow_anonymous true" \
             > /etc/mosquitto/conf.d/emosa.conf
         systemctl restart mosquitto'

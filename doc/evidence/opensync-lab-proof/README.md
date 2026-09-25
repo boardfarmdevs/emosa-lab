@@ -143,6 +143,19 @@ RCPI needs the noise floor a survey would give. Next steps:
 - A per-pod subscriber feeds station link and traffic metrics.
 - AP metrics wait for a platform with survey data.
 
+**Repeat on the fresh VM (2026-09-25, `emosa-osl-0925`, pod image
+`mvx-pod-20260924183456`): no reports.** `qm` connected to the broker with the
+pod's certificate, and `owm` started both stats entries (client and survey,
+2.4 GHz), but its OSW stats layer delivered no samples: every period ended in
+`ow: stats: conf: underrun`, and nothing was published, also after an OpenSync
+restart. In this OpenSync version `owm` produces the Wi-Fi statistics (`sm`
+accepts only device statistics). A lab quirk is visible in the same code:
+OSW classifies a phy by its channel list, and hwsim phys support every band,
+so both pod radios count as 2.4 GHz. Whether that, or the pod image, stops the
+samples is still to be found, in opensync-lab. The trial configuration was
+removed again. `lab.sh telemetry` now gives the broker its own copy of its
+certificate: `/var/lib/emosa` is mode 0700 on the fleet VM.
+
 ## Second controller: RDK-B unified-wifi-mesh (M9, first attempt)
 
 **Setup:**
