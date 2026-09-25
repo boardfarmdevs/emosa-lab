@@ -70,7 +70,9 @@ class UplinkSwitch:
         """Confirm or time out the latest operation; hold on failure."""
         if op.state in (State.CONFIG_COMMITTED, State.INDETERMINATE):
             target = UplinkIntent(**op.intent).target(self.engine.vault)
-            same_start = snap.ready and self.backend.instance == op.plan.get("instance")
+            same_start = (
+                snap is not None and snap.ready and self.backend.instance == op.plan.get("instance")
+            )
             if (
                 same_start
                 and snap.observed.fresh
@@ -90,7 +92,7 @@ class UplinkSwitch:
                 op.reason = Reason.APPLY_TIMEOUT
                 self._save(op, {"observation": self.backend.facts})
                 self.hold(op, "switch not confirmed within the deadline")
-        elif op.state == State.OBSERVED_APPLIED and snap.ready and snap.observed.fresh:
+        elif op.state == State.OBSERVED_APPLIED and snap and snap.ready and snap.observed.fresh:
             target = UplinkIntent(**op.intent).target(self.engine.vault)
             same_start = self.backend.instance == op.plan.get("instance")
             if same_start and not self.engine._matches(snap.config, target):
@@ -144,10 +146,14 @@ class UplinkSwitch:
         try:
             snap = await self.backend.snapshot()
         except (EmosaError, ConnectionError, TimeoutError):
-            return  # never read yet
+            # Not read since this process started. A switch in flight still times
+            # out: the pod may be gone because of it (e.g. after an agent restart).
+            snap = None
         op = self.latest()
         if op is not None:
             self._settle(op, snap)
+        if snap is None:
+            return
         intent = self._wanted(self.latest(), snap)
         if intent is None:
             return

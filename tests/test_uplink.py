@@ -315,3 +315,33 @@ def test_the_switch_waits_until_the_fronthaul_is_served_and_idle(tmp_path):
     settled[0] = True
     asyncio.run(switch.tick())
     assert len(pod.sent) == 1
+
+
+def test_a_switch_times_out_even_when_the_pod_cannot_be_read_after_an_agent_restart(tmp_path):
+    switch, pod, clock, store = rig(tmp_path)
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.CONFIG_COMMITTED
+    # The agent restarts (a new process with the same journal) and the pod has
+    # not come back: its database cannot be read at all.
+    store.close()
+
+    async def gone():
+        raise ConnectionError("no pod")
+
+    pod.snapshot = gone
+    vault = switch.engine.vault
+    backend = UplinkBackend("pod-1", pod, vault, serial=SERIAL, station=STATION)
+    again = UplinkSwitch(
+        "pod-1",
+        backend,
+        Store(tmp_path / "uplink"),
+        vault,
+        lambda: ("emosa-mesh-bh", "backhaul"),
+        run_id="pod-1",
+        clock=clock,
+    )
+    asyncio.run(again.tick())
+    assert again.latest().state == State.CONFIG_COMMITTED  # the deadline has not passed
+    clock.advance(DEADLINE + 1)
+    asyncio.run(again.tick())
+    assert again.latest().state == State.TIMED_OUT and again.held()
