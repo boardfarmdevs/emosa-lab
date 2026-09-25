@@ -421,6 +421,36 @@ controller's backhaul BSS (`<ssid>-bh`, 5 GHz) into the gateway LAN instead.
   serves no BSS, with nothing in flight, for 60 s now starts onboarding again
   (fresh M1).
 
+## Fresh build from the easymesh-labs workspace (run fresh-0925-m7)
+
+The whole lab was built again from the pinned workspace
+([easymesh-labs](https://github.com/boardfarmdevs/easymesh-labs), `docs/fresh-build.md`)
+on a new VM, `emosa-osl-0925` on rev150 (16 GB), with a new mv3 image (identical
+to the reference build) and a new pod image carrying the Multi-AP link-state
+patch.
+- opensync-lab: `setup-vm.sh all`, `deploy-mvx.sh all` and `mesh`: 89 checks
+  passed, none failed.
+- EMOSA: the documented sequence (`stage`, `emosa`, `controller`, `ui`, `fleet`,
+  `policy`, `admit pod-1 pod-2 pod-3`, `gtp`, two clients per pod). The three
+  pods got the same agent AL MACs as in the old lab (derived from the serials).
+  `lab.sh gtp` failed on the fresh VM: the script's own function `bridge`
+  shadowed iproute2's, so the port VLAN lookup read nothing (fixed in `43c010e`).
+- **fresh-0925-m7: passed** ([evidence](fresh-0925-m7/summary.json)).
+
+| Fault (offset) | Recovered after it ended |
+| --- | --- |
+| client leave/join em-wc2 (60 s) | 15.8 s |
+| adapter process restart, pod-1 (150 s) | 4.3 s |
+| OVSDB transport cut 20 s, pod-2 (240 s) | 10.9 s |
+| backhaul loss 30 s, pod-3 (360 s) | 30.1 s |
+| controller restart + policy re-entry (510 s) | 4.6 s |
+| client leave/join em-wc4 (690 s) | 18.0 s |
+
+- Option 1 on pod-3 by its agent (`lab.sh option1 pod-3 on`): applied 22 s after
+  the write; after an OpenSync restart on the pod, applied again on the new start
+  21 s after the write. Its clients kept internet access; `cm` used
+  `bhaul-sta-50` as the uplink, with no GRE.
+
 ## Changes made during the run
 
 - `pod_profile.py`: the observed 6.6 encoding (`wpa-psk` + RSN, `key` slot);
