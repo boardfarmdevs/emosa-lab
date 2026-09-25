@@ -20,8 +20,8 @@ What makes it interchangeable with the Python reference (`src/emosa`):
 | 1905 envelope | `emosa.wire.cmdu` | `cmdu.json` | done |
 | WSC M1/M2, onboarding | `emosa.wsc`, `emosa.wsc_messages`, `emosa.wire.autoconfiguration` | `onboarding.json` | done |
 | Pod view and 1905 TLVs | `emosa.opensync.easymesh_view`, `emosa.wire.reports` | `translation-northbound.json` | done |
-| Control plane (channel, policy, steering) | `emosa.wire.channel`, `.reporting_policy`, `.steering` | `control.json` | next |
-| OVSDB writes (M2, steering, uplink) | `emosa.opensync.pod_profile`, `.steering`, `.uplink` | `translation-southbound.json`, `steering.json`, `uplink.json` | |
+| Control plane (channel, policy, steering) | `emosa.wire.channel`, `.reporting_policy`, `.steering` | `control.json` | done |
+| OVSDB writes (M2, steering, uplink) | `emosa.opensync.pod_profile`, `.steering`, `.uplink` | `translation-southbound.json`, `steering.json`, `uplink.json` | next |
 | Pod statistics | `emosa.opensync.stats` | `telemetry.json` | |
 | Agent runtime (config, OVSDB session, Ethernet, status) | `emosa.agent.pod` | live in `rdk-emosa` | |
 | Yocto recipe for the RDK lab image | | | |

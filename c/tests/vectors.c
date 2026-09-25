@@ -7,6 +7,7 @@
 
 #include "../src/autoconf.h"
 #include "../src/cmdu.h"
+#include "../src/control.h"
 #include "../src/view.h"
 #include "../src/wsc.h"
 
@@ -469,12 +470,106 @@ static void northbound_vectors(const char *dir)
     cJSON_Delete(doc);
 }
 
+/* -- control.json ----------------------------------------------------------------- */
+
+static const char *record_mandate(void *ctx, const em_steering_request *r, uint16_t mid)
+{
+    cJSON *handed = ctx, *m = cJSON_CreateObject(), *stations = cJSON_CreateArray(),
+          *targets = cJSON_CreateArray();
+    char *text = em_mac_str(r->source_bssid);
+    cJSON_AddBoolToObject(m, "abridged", r->abridged);
+    cJSON_AddBoolToObject(m, "disassoc_imminent", r->disassoc_imminent);
+    cJSON_AddNumberToObject(m, "disassoc_timer", r->disassoc_timer);
+    cJSON_AddBoolToObject(m, "mandate", r->mandate);
+    cJSON_AddNumberToObject(m, "mid", mid);
+    cJSON_AddStringToObject(m, "source_bssid", text);
+    free(text);
+    for (size_t i = 0; i < r->nstations; i++) {
+        text = em_mac_str(r->stations[i]);
+        cJSON_AddItemToArray(stations, cJSON_CreateString(text));
+        free(text);
+    }
+    for (size_t i = 0; i < r->ntargets; i++) {
+        cJSON *t = cJSON_CreateArray();
+        text = em_mac_str(r->targets[i].bssid);
+        cJSON_AddItemToArray(t, cJSON_CreateString(text));
+        free(text);
+        cJSON_AddItemToArray(t, cJSON_CreateNumber(r->targets[i].op_class));
+        cJSON_AddItemToArray(t, cJSON_CreateNumber(r->targets[i].channel));
+        cJSON_AddItemToArray(targets, t);
+    }
+    cJSON_AddItemToObject(m, "stations", stations);
+    cJSON_AddItemToObject(m, "targets", targets);
+    cJSON_AddNumberToObject(m, "window", r->window);
+    cJSON_AddItemToArray(handed, m);
+    return NULL;
+}
+
+static void control_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "control.json");
+    const cJSON *agent = cJSON_GetObjectItemCaseSensitive(doc, "agent");
+    em_device_view *view = malloc(sizeof(*view));
+    if (em_device_view_from_rows(cJSON_GetObjectItemCaseSensitive(doc, "ovsdb_tables"), view) != EM_OK) {
+        fail("control", "rows", "device view");
+        free(view);
+        cJSON_Delete(doc);
+        return;
+    }
+    uint8_t ruid[6];
+    em_parse_mac(str(agent, "radio"), ruid);
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name");
+        cJSON *handed = cJSON_CreateArray();
+        em_control control = {0};
+        em_parse_mac(str(agent, "al_mac"), control.binding.local_al);
+        em_parse_mac(str(agent, "controller_al"), control.binding.controller_al);
+        memcpy(control.binding.sources[0], control.binding.controller_al, 6);
+        control.binding.nsources = 1;
+        control.radio = em_view_radio(view, ruid);
+        control.tx_power_dbm = control.radio->tx_power;
+        control.max_eirp_dbm = 30;
+        control.previous_mid = (uint16_t)(num(agent, "first_mid") - 1);
+        control.executor = record_mandate;
+        control.executor_ctx = handed;
+        const cJSON *step;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+        {
+            checks++;
+            cJSON *frames = cJSON_CreateArray();
+            cJSON_AddItemToArray(frames, cJSON_CreateString(str(step, "request")));
+            em_message *m = assemble(frames);
+            cJSON_Delete(frames);
+            em_frames out = {0};
+            em_reason error = EM_OK;
+            const char *result = m ? em_control_handle(&control, m, &out, &error) : NULL;
+            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
+            const char *want = str(expected, "result");
+            if (!result || !want || strcmp(result, want))
+                fail("control", name, result ? result : em_reason_name(error));
+            else if (!frames_equal(&out, cJSON_GetObjectItemCaseSensitive(expected, "frames")))
+                fail("control", name, "frames differ");
+            em_frames_free(&out);
+            em_message_free(m);
+        }
+        checks++;
+        if (!cJSON_Compare(handed, cJSON_GetObjectItemCaseSensitive(c, "handed_to_pod"), 1))
+            fail("control", name, "mandates handed to the pod differ");
+        cJSON_Delete(handed);
+    }
+    free(view);
+    cJSON_Delete(doc);
+}
+
 int main(int argc, char **argv)
 {
     const char *dir = argc > 1 ? argv[1] : "spec/conformance";
     cmdu_vectors(dir);
     onboarding_vectors(dir);
     northbound_vectors(dir);
+    control_vectors(dir);
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? 1 : 0;
 }
