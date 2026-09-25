@@ -4,6 +4,7 @@
 
 | Document | Scope |
 | --- | --- |
+| [Component design](../../spec/design.md) | Processes, interfaces, thread model, state, timing and dependencies: what an independent team builds to |
 | [Architecture overview](overview.md) | Main building blocks, current implementation and intended acceptance path |
 | [OpenSync pods as EasyMesh agents](opensync-easymesh-mapping.md) | The fleet, the OVSDB ↔ EasyMesh/1905.1 translation, and plugging into an existing controller |
 | [The data plane](data-plane.md) | How pods' client traffic reaches the gateway LAN today, and in RDK/prpl: GRE termination (baseline) or EasyMesh backhaul (optional) |

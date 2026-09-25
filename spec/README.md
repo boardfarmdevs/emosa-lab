@@ -7,6 +7,9 @@ conformant when it:
 - accepts and produces the formats in [`schemas/`](../schemas);
 - passes the conformance vectors in [`conformance/`](conformance).
 
+The [component design](design.md) gives the processes, interfaces, thread
+model, state, timing and resource budgets an implementation is built to.
+
 While two implementations run side by side, this document is the contract
 between them. A change to either implementation that changes behaviour
 described here starts with a change here.
