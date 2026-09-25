@@ -8,6 +8,8 @@
 #include "../src/autoconf.h"
 #include "../src/cmdu.h"
 #include "../src/control.h"
+#include "../src/fleet.h"
+#include "../src/operation.h"
 #include "../src/ovs.h"
 #include "../src/southbound.h"
 #include "../src/view.h"
@@ -784,6 +786,104 @@ static void uplink_vectors(const char *dir)
     cJSON_Delete(doc);
 }
 
+/* -- al-mac.json, operation-transitions.json, fleet.json ---------------------------- */
+
+static int cmp_str(const void *a, const void *b)
+{
+    return strcmp(*(const char *const *)a, *(const char *const *)b);
+}
+
+static void fleet_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "al-mac.json");
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *taken[64];
+        size_t n = 0;
+        const cJSON *t;
+        cJSON_ArrayForEach(t, cJSON_GetObjectItemCaseSensitive(c, "taken")) taken[n++] = t->valuestring;
+        char al[18];
+        checks++;
+        if (!em_derive_al(str(c, "serial"), taken, n, al) || strcmp(al, str(c, "expected")))
+            fail("al-mac", str(c, "serial"), al);
+    }
+    cJSON_Delete(doc);
+
+    doc = load(dir, "operation-transitions.json");
+    cJSON *active = cJSON_CreateArray(), *transitions = cJSON_CreateObject();
+    const char *names[EM_OP_COUNT];
+    size_t nactive = 0;
+    for (int st = 0; st < EM_OP_COUNT; st++)
+        if (em_op_active((em_op_state)st))
+            names[nactive++] = em_op_state_name((em_op_state)st);
+    qsort(names, nactive, sizeof(*names), cmp_str);
+    for (size_t i = 0; i < nactive; i++)
+        cJSON_AddItemToArray(active, cJSON_CreateString(names[i]));
+    for (int from = 0; from < EM_OP_COUNT; from++) {
+        size_t n = 0;
+        for (int to = 0; to < EM_OP_COUNT; to++)
+            if (em_op_may_transition((em_op_state)from, (em_op_state)to))
+                names[n++] = em_op_state_name((em_op_state)to);
+        if (!n)
+            continue;
+        qsort(names, n, sizeof(*names), cmp_str);
+        cJSON *list = cJSON_CreateArray();
+        for (size_t i = 0; i < n; i++)
+            cJSON_AddItemToArray(list, cJSON_CreateString(names[i]));
+        cJSON_AddItemToObject(transitions, em_op_state_name((em_op_state)from), list);
+    }
+    checks++;
+    if (!cJSON_Compare(active, cJSON_GetObjectItemCaseSensitive(doc, "active"), 1) ||
+        !cJSON_Compare(transitions, cJSON_GetObjectItemCaseSensitive(doc, "transitions"), 1))
+        fail("operation-transitions", "table", "differs");
+    cJSON_Delete(active);
+    cJSON_Delete(transitions);
+    cJSON_Delete(doc);
+
+    doc = load(dir, "fleet.json");
+    const cJSON *config = cJSON_GetObjectItemCaseSensitive(doc, "fleet_config");
+    em_registry *registry = calloc(1, sizeof(*registry));
+    const cJSON *ports = cJSON_GetObjectItemCaseSensitive(config, "ports");
+    registry->port_low = cJSON_GetArrayItem(ports, 0)->valueint;
+    registry->port_high = cJSON_GetArrayItem(ports, 1)->valueint;
+    snprintf(registry->reserved_al, sizeof(registry->reserved_al), "%s", str(config, "controller_al"));
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const cJSON *node = cJSON_GetObjectItemCaseSensitive(c, "awlan_node");
+        const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
+        const char *serial = str(node, "serial_number");
+        em_fleet_entry *e = em_registry_assign(registry, serial, str(node, "id"), str(node, "model"),
+                                               str(node, "firmware_version"), 0);
+        checks++;
+        if (!e) {
+            fail("fleet", serial, "no agent");
+            continue;
+        }
+        cJSON *entry = cJSON_CreateObject();
+        cJSON_AddStringToObject(entry, "al_mac", e->al_mac);
+        cJSON_AddNumberToObject(entry, "handovers", e->handovers);
+        cJSON_AddStringToObject(entry, "interface", e->interface);
+        cJSON_AddStringToObject(entry, "pod_id", e->pod_id);
+        cJSON_AddNumberToObject(entry, "port", e->port);
+        cJSON *agent = em_agent_config(e, config), *update = em_manager_update(e, config);
+        cJSON *rows = cJSON_CreateArray();
+        cJSON_AddItemToArray(rows, cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(update, "row"), 1));
+        if (!cJSON_Compare(entry, cJSON_GetObjectItemCaseSensitive(expected, "registry_entry"), 1))
+            fail("fleet", serial, "registry entry differs");
+        else if (!cJSON_Compare(agent, cJSON_GetObjectItemCaseSensitive(expected, "agent_config"), 1))
+            fail("fleet", serial, "agent configuration differs");
+        else if (!cJSON_Compare(rows, cJSON_GetObjectItemCaseSensitive(expected, "manager_addr_update"), 1))
+            fail("fleet", serial, "manager_addr update differs");
+        cJSON_Delete(entry);
+        cJSON_Delete(agent);
+        cJSON_Delete(update);
+        cJSON_Delete(rows);
+    }
+    free(registry);
+    cJSON_Delete(doc);
+}
+
 int main(int argc, char **argv)
 {
     const char *dir = argc > 1 ? argv[1] : "spec/conformance";
@@ -793,6 +893,7 @@ int main(int argc, char **argv)
     control_vectors(dir);
     southbound_vectors(dir);
     uplink_vectors(dir);
+    fleet_vectors(dir);
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? 1 : 0;
 }
