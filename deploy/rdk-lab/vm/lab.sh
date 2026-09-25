@@ -9,6 +9,8 @@
 #                                     address 10.101.0.40 on br-wan101, forwarded to it
 #   lab.sh fleet                      EMOSA fleet on the front port 10.101.0.40:6640 (the pod
 #                                     image's redirector) and agents on 6651-6690
+#   lab.sh agent POD python|c         which implementation runs POD's agent: the Python
+#                                     reference or the C lab prototype (same config and status)
 #   lab.sh gtp                        container em-gtp: the pods' onboarding SSID (the pod image's
 #                                     backhaul credentials) and their GRE, LAN leg on br-emosa
 #   lab.sh pod [NAME]                 the unchanged OpenSync pod image on two pool radios
@@ -230,6 +232,10 @@ emosa() {
             export DEBIAN_FRONTEND=noninteractive; apt-get -qq update
             apt-get -qq install -y iproute2 tcpdump isc-dhcp-client mosquitto mosquitto-clients >/dev/null'
     fi
+    # the kit builds the C lab prototype when these are there
+    cx emosa sh -ec 'dpkg -s cmake pkg-config gcc libcjson-dev libssl-dev >/dev/null 2>&1 || {
+            export DEBIAN_FRONTEND=noninteractive; apt-get -qq update
+            apt-get -qq install -y cmake pkg-config gcc libcjson-dev libssl-dev >/dev/null; }'
     running emosa || lxc start emosa
     has_device emosa emlan ||
         lxc config device add emosa emlan nic nictype=bridged parent="$LAN" name=emlan >/dev/null
@@ -262,6 +268,21 @@ EOF
         /root/adapter-kit/install.sh'
     cx emosa sh -c 'sed -i "s/^EMOSA_TRUNK=.*/EMOSA_TRUNK=emlan/" /etc/default/emosa'
     log "emosa: $(cx emosa cat /root/adapter-kit/VERSION) in /opt/emosa-adapter; front $WAN_HOST:$FLEET_PORT"
+}
+
+agent() {
+    local pod=${1:?usage: lab.sh agent POD python|c} bin
+    case ${2:-} in
+        python) bin=/opt/emosa-adapter/venv/bin/emosa-agent ;;
+        c) bin=/opt/emosa-adapter/bin/emosa-agent-c ;;
+        *) die "usage: lab.sh agent POD python|c" ;;
+    esac
+    exists emosa || die "run: lab.sh emosa"
+    cx emosa test -f "/etc/emosa/$pod.json" || die "no agent for $pod (lab.sh status lists them)"
+    cx emosa test -x "$bin" || die "$bin is not installed (lab.sh emosa)"
+    cx emosa sh -c "echo EMOSA_AGENT=$bin > /etc/default/emosa-$pod"
+    cx emosa systemctl restart "emosa-agent@$pod"
+    log "agent: $pod runs $bin"
 }
 
 controller_al() {    # the RDK controller's AL MAC, from the lab's own topology API
@@ -427,14 +448,16 @@ medium() {
 
 status() {
     lxc list -c ns4 -f csv | grep -E '^(emosa|em-gtp|pod-|emc-)' || true
-    exists emosa && cx emosa sh -c '/opt/emosa-adapter/venv/bin/emosa-fleet list /etc/emosa-fleet.json 2>/dev/null' || true
+    exists emosa && cx emosa sh -c '/opt/emosa-adapter/venv/bin/emosa-fleet list /etc/emosa-fleet.json 2>/dev/null
+        for f in /etc/default/emosa-*; do [ -f "$f" ] && echo "${f#/etc/default/emosa-}: $(cat "$f")"; done' || true
     echo "regulatory: $(regdom)"
 }
 
 case ${1:-} in
     lanport|emosa|fleet|gtp|medium|status|controller_al) "$1" ;;
     pod) shift; pod "$@" ;;
+    agent) shift; agent "$@" ;;
     repod) shift; repod "$@" ;;
     client) shift; client "$@" ;;
-    *) sed -n '2,18p' "$0"; exit 1 ;;
+    *) sed -n '2,20p' "$0"; exit 1 ;;
 esac

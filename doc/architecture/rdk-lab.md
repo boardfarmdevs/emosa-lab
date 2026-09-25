@@ -130,10 +130,14 @@ artifact is rebuilt with the lab's own `gen/rebuild-em-cli-artifact.sh`.
 | 5. Onboarding | the RDK controller onboards the agent; the pod runs its fronthaul; a client has internet | passed: the five-BSS M2 set applied (`private_ssid`, `iot_ssid`, `lnf_radius`, `hotspot`, `mesh_backhaul`); a client on the pod's `private_ssid` reached the internet |
 | 6. Topology | the pod in the controller's topology and in em_cli, marked as an OpenSync pod | passed: Agent-1 with kind `opensync-pod`, its own icon, model and manufacturer on hover and in the dashboard (meta-cmf `37c70e8`, controller image `…20260925081052`; installed in place in `rdk-emosa`) |
 | 7. Agent behaviour | client steering (BTM) through the pod; metrics on the medium | steering passed: the controller's `steer.sh` → Client Steering Request → EMOSA → `owm` BTM request to the target; the station left the pod's BSS in each run (§7). Metrics on the medium: not started |
+| 8. C agent | the C lab prototype (`c/`) in place of the Python agent for the pod, same configuration | passed: `lab.sh agent MVXPOD023F87E628DD c`; onboarded, the controller configured the radio, a `steer.sh` mandate ended with the station off the pod's BSS. `lab.sh agent POD python` switches back |
 
 The lab driver is `deploy/rdk-lab/` in emosa-lab, like `deploy/opensync-lab/`:
 a host-side wrapper and a VM-side script that reuses the same components (the
 adapter kit, `emosa-gtp`, the fleet).
+`lab.sh agent POD python|c` picks the implementation for one pod
+(`/etc/default/emosa-POD` in the `emosa` container); the adapter kit builds the
+C agent at install.
 
 ## 6. Found on the way
 
@@ -188,6 +192,11 @@ adapter kit, `emosa-gtp`, the fleet).
   (source lost, a fresh onboarding). Under this VM's load that happened a few
   times, and the controller then needs about 40 s to configure the radio
   again. The agent logs each loop step slower than 0.5 s.
+- **The Channel Scan Request.** Configuring an agent, RDK's controller sends
+  a Channel Scan Request (`0x801B`) and keeps the radio scan-pending until the
+  Ack arrives. Unanswered, a steering request later left the radio
+  unconfigured. EMOSA now acknowledges it and reports the scan as not
+  supported (spec §3.4).
 - **The controller's own identity.** The controller writes every M1's
   manufacturer and model onto its own device record as well: its node reads
   "Banana Pi - R4", or "OpenSync via EMOSA" once the pod has onboarded. em_cli

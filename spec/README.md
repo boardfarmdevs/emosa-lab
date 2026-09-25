@@ -265,8 +265,9 @@ The 6.6 encoding of WPA2-PSK:
   each channel the request names for the pod's radio (or its current channel
   when the request names none), result status `0x01`. Radios of other agents in
   the request are left out. An unchanged pod gives EMOSA no scan results it
-  could qualify. RDK's controller repeats an unanswered request every few
-  seconds.
+  could qualify. RDK's controller sends the request as one step of configuring
+  an agent and keeps the radio scan-pending until the Ack arrives; a steering
+  request in that state leaves the radio unconfigured afterwards.
 
 ### 3.5 Pod profiles
 

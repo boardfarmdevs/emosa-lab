@@ -86,11 +86,13 @@ static void count(counters *c, const char *name)
     }
 }
 
-static cJSON *counters_json(const counters *c)
+/* The counters whose names start with prefix ("" for all). */
+static cJSON *counters_json(const counters *c, const char *prefix)
 {
     cJSON *o = cJSON_CreateObject();
     for (size_t i = 0; i < c->n; i++)
-        cJSON_AddNumberToObject(o, c->items[i].name, c->items[i].count);
+        if (!strncmp(c->items[i].name, prefix, strlen(prefix)))
+            cJSON_AddNumberToObject(o, c->items[i].name, c->items[i].count);
     return o;
 }
 
@@ -382,7 +384,7 @@ static const char *resolve(void *ctx, const char *ref)
     if (!strcmp(ref, "primary"))
         return op->key;
     for (size_t i = 0; i < op->nextra; i++) {
-        char name[24];
+        char name[32];
         snprintf(name, sizeof(name), "extra-%zu", i);
         if (!strcmp(ref, name))
             return op->extra[i].key;
@@ -1091,9 +1093,9 @@ static cJSON *status(agent *a)
     cJSON_AddItemToObject(o, "pod", pod_facts(a));
     cJSON_AddBoolToObject(o, "report_source_available", source_current(a));
     cJSON_AddStringToObject(session, "state", SESSION_NAMES[a->state]);
-    cJSON_AddItemToObject(session, "counts", counters_json(&a->counts));
+    cJSON_AddItemToObject(session, "counts", counters_json(&a->counts, ""));
     cJSON *steering = cJSON_AddObjectToObject(session, "steering");
-    cJSON_AddItemToObject(steering, "counts", cJSON_CreateObject());
+    cJSON_AddItemToObject(steering, "counts", counters_json(&a->counts, "client_steering_"));
     cJSON *recovery = cJSON_AddObjectToObject(session, "recovery");
     cJSON_AddNumberToObject(recovery, "attempts_started", a->starts);
     cJSON_AddItemToObject(o, "session", session);
@@ -1117,7 +1119,7 @@ static cJSON *status(agent *a)
     cJSON_AddStringToObject(telemetry, "mode", "off");
     cJSON *st = cJSON_AddObjectToObject(o, "steering");
     cJSON_AddStringToObject(st, "mode", a->steering_on ? "owm" : "off");
-    cJSON_AddItemToObject(st, "counts", counters_json(&a->steering_counts));
+    cJSON_AddItemToObject(st, "counts", counters_json(&a->steering_counts, ""));
     if (a->job.active) {
         cJSON *x = cJSON_AddObjectToObject(st, "active");
         cJSON_AddStringToObject(x, "station", a->job.intent.station);

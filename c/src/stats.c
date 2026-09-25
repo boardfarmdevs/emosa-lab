@@ -125,7 +125,7 @@ typedef enum { OK, MALFORMED, INCOMPLETE } decoded;
 static decoded rate_stats(const uint8_t *d, size_t n)
 {
     reader r = {d, d + n};
-    pb_field f;
+    pb_field f = {0};
     bool error = false, seen[4] = {0};
     while (next(&r, &f, &error))
         if (f.field <= 3 && f.wire == 0)
@@ -137,7 +137,7 @@ static decoded client(const uint8_t *d, size_t n, pb_client *c)
 {
     memset(c, 0, sizeof(*c));
     reader r = {d, d + n};
-    pb_field f;
+    pb_field f = {0};
     bool error = false;
     decoded result = OK;
     while (next(&r, &f, &error)) {
@@ -152,7 +152,7 @@ static decoded client(const uint8_t *d, size_t n, pb_client *c)
             if (f.wire == 2) {
                 c->has_stats = true;
                 reader s = {f.data, f.data + f.len};
-                pb_field g;
+                pb_field g = {0};
                 while (next(&s, &g, &error)) {
                     if (g.field < 1 || g.field > 13)
                         continue;
@@ -232,7 +232,7 @@ static const char *client_report(em_pod_stats *s, const pb_client_report *cr)
     s->has_last[band] = true;
     s->last_timestamp[band] = stamp;
     reader r = {cr->data, cr->data + cr->len};
-    pb_field f;
+    pb_field f = {0};
     bool error = false;
     size_t count = 0;
     while (next(&r, &f, &error))
@@ -317,7 +317,7 @@ bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *pay
         goto done;
     }
     reader r = {payload, payload + len};
-    pb_field f;
+    pb_field f = {0};
     bool error = false, node = false;
     reports = calloc(len, sizeof(*reports));
     while (reports && next(&r, &f, &error)) {
