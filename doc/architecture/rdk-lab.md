@@ -343,6 +343,33 @@ are onboarded, each with the five-BSS set. On the way:
   `bpibroadband` (`onewifi_em_ctrl`, `onewifi_em_cli`; the previous binaries
   kept as `*.pre-0211`, `*.pre-0212`); the images still need a rebuild.
 
+### Step 2: the native baseline
+
+The room suite runs on rev120 from `~/git/easymesh-labs/meta-cmf-bananapi-vcpe`
+(Node 22 in `~/opt/node22`; `EASYMESH_LXD_NAME=rdk-emosa`,
+`EASYMESH_HOST_ADDRESS=192.168.2.120`, ports 21020/21021/21022,
+`run-easymesh-suite.sh rooms --yes-act`), with EMOSA idle: the pods and `emc-1`
+stopped, the fleet stopped, and the pods' rows removed from the controller's
+model (the room preflight counts devices, radios and BSSes exactly).
+
+Found before it could run:
+
+- **The room service had failed since 07:21 UTC** (first an incomplete
+  topology, then the pods' leftover rows). Restarted once the model was native.
+- **The gateway's own agent reported no client metrics.** Every client on
+  Agent-1's BSSes had RCPI 0 in the controller and em_cli, so every room failed
+  `metricsFresh`, and the room's hero preflight failed. The extenders were
+  fine; the controller builds (0211) and em_cli (0212) were ruled out by A/B
+  with the image's binaries. OneWifi's EasyMesh app on the gateway was not
+  collecting associated-client stats (no `assoc_client_response` in
+  `/rdklogs/logs/wifiEM.txt`), although the controller's stored policy asks for
+  them and the agent acknowledged the Policy Config Request. Repair: restart
+  the gateway's `onewifi`, then `em_agent`, then post the gateway agent's own
+  policy again (`/api/v1/wifipolicy`, its current entry unchanged); OneWifi then
+  collects and the room converges (20 of 20 clients measured). A policy post
+  alone did not help. Probable trigger: the gateway's self-heal reboot earlier
+  that day.
+
 ### What the room model needs (meta-cmf-bananapi-vcpe)
 
 - **A pod node kind.** A world must keep every bound `fronthaul_ap` role, so
