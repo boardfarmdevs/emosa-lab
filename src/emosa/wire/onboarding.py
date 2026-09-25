@@ -261,14 +261,21 @@ class OnboardingSession:
         if self.state in ("closed", "source_lost", "failed", "incompatible"):
             return self._record("inactive_input")
         now = self.clock()
+        try:
+            fragment = decode_frame(frame)
+            self.binding.check(fragment, ingress=ingress, generation=generation)
+        except EmosaError:
+            # Not from this agent's controller to this agent (e.g. the other agents'
+            # 1905 traffic on a shared LAN), or malformed: dropped without spending
+            # the rate budget, and without touching the session (an admission in
+            # progress must not fail because of someone else's frame).
+            return self._record("foreign_frame")
         self.tokens = min(32, self.tokens + max(0, now - self.token_time) * 16)
         self.token_time = now
         if self.tokens < 1:
             return self._record("rate_limited")
         self.tokens -= 1
         try:
-            fragment = decode_frame(frame)
-            self.binding.check(fragment, ingress=ingress, generation=generation)
             snapshot = self._snapshot()
             if snapshot is None:
                 return self._record("source_unavailable")

@@ -1,0 +1,22 @@
+{
+  "what": "An unchanged OpenSync pod onboarded by the RDK-B EasyMesh controller through EMOSA (doc/architecture/rdk-lab.md)",
+  "vm": "rdk-emosa (rev120), built from the meta-cmf-bananapi-vcpe images of 2026-09-25 (controller X86EMLTRBPIBB_rdk-next_20260925030253, extender X86EMLTRBPIAP_rdk-next_20260925032259), layer 215535b",
+  "pod": "pod-1, image mvx-pod-20260925002533 (opensync-lab with core patch 0002), serial MVXPOD023F87E628DD",
+  "date": "2026-09-25",
+  "steps": {
+    "lan_port": "bpibroadband eth2 (0a:e0:5a:00:00:01) in brlan0 over the VM bridge br-emosa; a test host leased 10.0.0.98 from 10.0.0.1",
+    "gtp": "em-gtp serves the pod's onboarding SSID opensync-lab-bhaul on channel 44 (virt-wlan105), underlay 169.254.2.1/25",
+    "pod": "joined the GTP, GRE g-bhaul-sta-50, br-home 10.0.0.155/24 from the RDK router; dialed its built-in redirector tcp:10.101.0.40:6640 (EMOSA's fleet) through the RDK router",
+    "agent": "AL 02:72:f9:7f:07:85 on agent port 6651; message set r1, multi_bss, m2_session shared; controller 00:60:2f:da:68:d4",
+    "onboarding": "the controller's five-BSS M2 set applied on the pod (OBSERVED_APPLIED): home-ap-24 private_ssid, svc-d-ap-24 iot_ssid, svc-e-ap-24 lnf_radius, fh-24 hotspot, b-ap-24 mesh_backhaul (Multi-AP backhaul BSS); 2.4 GHz channel 6",
+    "controller_topology": "Agent-1 02:72:f9:7f:07:85 with 5 BSSes and 1 station, Ethernet edge from the controller",
+    "client": "emc-1 (02:00:00:00:6c:00) on the pod's private_ssid, pinned to BSSID 82:00:00:00:6a:00: 10.0.0.52 from the RDK router, gateway and internet (ICMP and HTTP)",
+    "regulatory_domain": "unchanged (country 00) throughout"
+  },
+  "fixed_on_the_way": [
+    "opensync-lab core patch 0002: OSW writes only an ISO 3166 alpha-2 country_code (hwsim reported 99; hostapd rejected it and no BSS started)",
+    "emosa: frames not matching the agent's binding are dropped before the rate limit and without touching the session (the first M2 set was lost on the shared LAN)",
+    "meta-cmf 215535b: wmediumd includes guest containers' radios (user.wmediumd.guest=true)"
+  ],
+  "next": ["em_cli renders EMOSA-fronted pods (manufacturer from M1)", "client steering (BTM) through the pod", "metrics on the medium"]
+}
