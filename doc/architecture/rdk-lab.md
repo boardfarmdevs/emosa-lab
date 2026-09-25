@@ -299,3 +299,86 @@ controller sees the outcome in the topology: the station leaves the pod's BSS
 **Known limitation.** The pod does not tell EMOSA whether a station supports
 BTM (`Wifi_Associated_Clients.capabilities` is empty). `owm` deauthenticates a
 station without BTM support at once, also for a gentle request.
+
+## 8. Room integration and the 24-room qualification
+
+Goal (2026-09-25): at least two wired OpenSync pods, with GRE termination, in
+the RDK lab's room model, then the full room suite
+(`gen/tests/run-easymesh-suite.sh rooms` in meta-cmf-bananapi-vcpe: 24 ordinary
+rooms and 3 geometry rooms) with the pods present. prplMesh follows separately.
+
+Decisions:
+
+- **Pods are extra APs.** Every room keeps its gateway and four extenders and
+  gains `pod_1` and `pod_2`, in pod-variant golden files. The native rooms stay
+  as they are and remain the baseline.
+- **Wired means the GTP path, held fixed.** A pod reaches the controller's LAN
+  as today (onboarding SSID to `em-gtp`, GRE terminated there, `em-gtp` wired
+  into `brlan0`). Its backhaul station's link to the GTP is a fixed link on the
+  medium, outside every room geometry (`user.wmediumd.links`,
+  `bhaul-sta-50=em-gtp/wlan0:45`, meta-cmf `f2bb9e7`). Only the pod's 2.4 GHz
+  fronthaul is in the room.
+- **Measurements are real or absent.** See below.
+
+### Step 1: two pods (done)
+
+`pod-1` (`MVXPOD023F87E628DD`, agent `02:72:f9:7f:07:85`) and `pod-2`
+(`MVXPOD02D7777EF0D9`, agent `02:c2:b8:31:3a:f8`, fronthaul `82:00:00:00:6a:00`)
+are onboarded, each with the five-BSS set. On the way:
+
+- **M1 without M2.** em_ctrl restarted between pod-2's M1 and its M2 and forgot
+  the M1; its other queries kept the agent's 130 s silence rule from firing.
+  Both agents now search again after 30 s without M2 (spec §2.5).
+- **Five children per topology node.** RDK's topology tree held at most
+  `EM_MAX_NETWORKS` (5) children per node. Rebuilt after a controller restart,
+  before the extenders' backhaul parent is known, it hangs every agent off the
+  root, and with two pods the gateway's own agent and Extender-4 fell out of the
+  topology API and em_cli. meta-cmf `0211` bounds the children by
+  `EM_MAX_DEVICES` (16).
+- **Agent-1 is the gateway's agent.** em_cli named Ethernet-attached agents
+  Agent-N in traversal order, so the pods took Agent-1 and Agent-2, while the
+  lab relies on Agent-1 being the gateway's co-located agent (the room's gateway
+  role, the layout's anchor). meta-cmf `0212` names pods Pod-N from their own
+  counter. Both patches are installed in place in `rdk-emosa`'s
+  `bpibroadband` (`onewifi_em_ctrl`, `onewifi_em_cli`; the previous binaries
+  kept as `*.pre-0211`, `*.pre-0212`); the images still need a rebuild.
+
+### What the room model needs (meta-cmf-bananapi-vcpe)
+
+- **A pod node kind.** A world must keep every bound `fronthaul_ap` role, so
+  pods cannot be bound as that kind without breaking the native rooms. Pods
+  get their own kind, which a world may include.
+- **Single-band nodes.** The inventory (`wmdcfg/inventory.py`) and the world
+  loader (`room_demo/worlds.py`) require tri-band mesh nodes on one PHY; a pod
+  in the room is one 2.4 GHz radio. Its links on 5 and 6 GHz do not exist.
+- **Pods in the layouts.** Positions for `pod_1` and `pod_2` in each layout and
+  new golden files. Outside the room model a pod's radio has the medium's
+  default SNR (40 dB) to every radio, i.e. strong everywhere.
+- **The acceptance's fixed topology.** `room-feature-acceptance.js` requires
+  six topology nodes and four backhaul parents; the pod variant has eight nodes,
+  the pods attached over Ethernet.
+
+### Measurements from the pods
+
+The optimizer and the room gates need two measurements per client:
+
+| Measurement | Used for | Pod source | Freshness |
+| --- | --- | --- | --- |
+| Serving RCPI of each client on a pod | `metricsFresh` (≤ 30 s), the policy's current metric (≤ 60 s) | OpenSync client reports (`sts.Report`, EMOSA telemetry) | `sm` reporting interval plus `qm`'s publish interval, which `AWLAN_Node.mqtt_settings` `agg_stats_interval` sets (default 60 s) |
+| Candidate RCPI of a client at a pod | the optimizer's candidates (Unassociated STA Link Metrics, per agent) | probe requests: hostapd `RX-PROBE-REQUEST` signal → `ow_steer_bm` `PROBE` events with RSSI in the band-steering report | only for stations with a `Band_Steering_Clients` row; the report every 60 s (fixed) |
+
+Both travel over the pods' MQTT telemetry, which the RDK lab does not run yet:
+it needs the broker stage of the OpenSync lab driver (mutual TLS, lab CA) at
+`10.101.0.40:8883`. A candidate measurement is reported with its age (the
+response carries it); whether the optimizer's candidate handling accepts an
+age of up to about a minute is to be checked. If the pods cannot measure
+honestly, how the gates treat an abstaining agent is the user's decision.
+
+### Order
+
+1. Two pods through the GTP path, backhaul held fixed (done).
+2. Native baseline: the room suite on `rdk-emosa` with EMOSA idle.
+3. Pods in the room model (above).
+4. Measurements: telemetry in the RDK lab; serving metrics; candidates from probe
+   requests.
+5. The pod-variant suite over the 24 rooms, compared with the baseline.
