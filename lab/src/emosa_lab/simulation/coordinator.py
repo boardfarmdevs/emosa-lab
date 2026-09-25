@@ -87,6 +87,7 @@ async def run(directory):
 
     try:
         await fixture.start()
+        await fixture.wait_settled()  # the retry check needs a source that holds still
         coordinator.notify_early()
         first_mid = Reassembler().feed(sent[-1]).mid
         # Deliberately withhold the first receipt; no fabricated controller timer.

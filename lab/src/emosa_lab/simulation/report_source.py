@@ -203,6 +203,26 @@ class DatabaseReportFixture:
             await asyncio.sleep(0.05)
         raise EmosaError(Reason.NOT_READY, "owned report fixture did not become ready")
 
+    async def wait_settled(self, *, quiet=0.5):
+        """Until the source has not changed for ``quiet`` seconds.
+
+        wait_ready returns at the first complete read, while the manager may still
+        be making its start-up writes; each one advances the source token. A check
+        that needs the source to hold still starts from here.
+        """
+        end = self.clock() + 10
+        token, since = None, self.clock()
+        while self.clock() < end:
+            await self.refresh()
+            current = self.source.current()
+            now = self.clock()
+            if current is None or current.stamp.token != token:
+                token, since = (current.stamp.token if current else None), now
+            elif now - since >= quiet:
+                return
+            await asyncio.sleep(0.05)
+        raise EmosaError(Reason.NOT_READY, "owned report fixture did not settle")
+
     async def change_config(self):
         check_results(
             await self.admin.transact(
