@@ -29,6 +29,7 @@
         "bssid": {"type": "string", "pattern": "^[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5}$", "description": "The upstream backhaul BSS the station is pinned to, required with mode multi-ap. Never one of the pod's own BSSIDs: a station on its own backhaul BSS loops br-home."}
       }
     },
+    "telemetry": {"type": "object", "additionalProperties": false, "required": ["mode"], "description": "Given to every agent (each subscribes to its own pod's topic). The pod's own statistics (spec §3.6): the agent sets the pod's MQTT settings and a raw client report once per OpenSync start, and subscribes to the pod's topic. Absent or mode off: the agent leaves the pod's statistics publishing alone.", "properties": {"mode": {"enum": ["off", "mqtt"]}, "broker": {"type": "string", "minLength": 1, "maxLength": 253, "pattern": "^[^ /:]+$", "description": "Broker host the pod connects to (mutual TLS with its device certificate)."}, "port": {"type": "integer", "minimum": 1, "maximum": 65535, "default": 8883}, "topic": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[^#+]+$", "description": "Default emosa/stats/<serial>."}, "subscribe": {"type": "string", "pattern": "^[^ ]+:[0-9]{1,5}$", "default": "127.0.0.1:1883", "description": "host:port where the agent reads the pod's topic."}, "radio_type": {"enum": ["2.4G", "5G", "5GL", "5GU", "6G"], "default": "2.4G"}, "reporting_interval": {"type": "integer", "minimum": 1, "maximum": 3600, "default": 10}, "sampling_interval": {"type": "integer", "minimum": 1, "maximum": 3600, "default": 5}}},
     "state_root": {"type": "string", "minLength": 1},
     "config_dir": {"type": "string", "minLength": 1},
     "admit": {"oneOf": [{"const": "*"}, {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 64}}], "default": "*"},
@@ -45,7 +46,8 @@
           "multi_bss": {"type": "boolean"},
           "m2_session": {"enum": ["distinct", "shared"]},
           "profile": {"type": "string", "minLength": 1},
-          "uplink": {"$ref": "#/properties/uplink"}
+          "uplink": {"$ref": "#/properties/uplink"},
+          "telemetry": {"$ref": "#/properties/telemetry"}
         }
       }
     },

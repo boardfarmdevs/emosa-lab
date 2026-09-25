@@ -96,6 +96,8 @@ dependencies = [
     { name = "cryptography" },
     { name = "jsonschema" },
     { name = "ovs" },
+    { name = "paho-mqtt" },
+    { name = "protobuf" },
 ]
 
 [package.dev-dependencies]
@@ -110,6 +112,8 @@ requires-dist = [
     { name = "cryptography", specifier = "==50.0.1" },
     { name = "jsonschema", specifier = "==4.26.0" },
     { name = "ovs", specifier = "==4.0.0" },
+    { name = "paho-mqtt", specifier = "==2.1.0" },
+    { name = "protobuf", specifier = "==6.33.5" },
 ]
 
 [package.metadata.requires-dev]

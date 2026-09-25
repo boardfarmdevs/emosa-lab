@@ -54,6 +54,7 @@ AGENT_DEFAULTS = {
     "m2_session": "distinct",
     "profile": DEFAULT_PROFILE,
     "uplink": {"mode": "off"},
+    "telemetry": {"mode": "off"},
 }
 
 

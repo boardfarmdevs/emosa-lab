@@ -176,7 +176,7 @@ Monitored, read-only:
 
 | Table | Columns |
 | --- | --- |
-| `AWLAN_Node` | `serial_number`, `model`, `firmware_version`, `id` |
+| `AWLAN_Node` | `serial_number`, `model`, `firmware_version`, `id`, `mqtt_settings` |
 | `Wifi_Radio_Config` | `if_name`, `freq_band`, `enabled`, `vif_configs` |
 | `Wifi_Radio_State` | `if_name`, `radio_config`, `vif_states`, `freq_band`, `channel`, `mac`, `enabled`, `country`, `tx_power` |
 | `Wifi_VIF_Config` | `if_name`, `mode`, `ssid`, `enabled`, `wpa`, `wpa_key_mgmt`, `wpa_psks`, `security`, `rsn_pairwise_ccmp`, `wpa_pairwise_tkip`, `wpa_pairwise_ccmp`, `wpa_oftags`, `bridge`, `multi_ap`, `credential_configs`, `wds`, `parent` |
@@ -184,6 +184,7 @@ Monitored, read-only:
 | `Wifi_Associated_Clients` | `mac`, `state` |
 | `Wifi_Credential_Config` | `ssid`, `security`, `onboard_type`, `priority`, `enabled` |
 | `Connection_Manager_Uplink` | `if_name`, `if_type`, `is_used`, `has_L2`, `has_L3` |
+| `Wifi_Stats_Config` | `stats_type`, `radio_type`, `report_type`, `reporting_interval`, `sampling_interval` |
 
 Written, each as one guarded transaction. A cold create and a multi-BSS set are
 preceded by a read-only `select` of `Wifi_Inet_Config`.
@@ -195,6 +196,7 @@ preceded by a read-only `select` of `Wifi_Inet_Config`.
 | Cold pod: create the fronthaul | `wait` on the serial and that the VIF is absent → `insert Wifi_VIF_Config` (profile row, received SSID and PSK) → `mutate Wifi_Radio_Config vif_configs` → `update Wifi_Radio_Config channel, ht_mode, enabled` → `insert Wifi_Inet_Config` if absent |
 | Multi-BSS set | as above for the primary BSS, plus: insert, update or delete each profile slot VIF so the slots are **exactly** the received set, with the matching `vif_configs` mutations and `Wifi_Inet_Config` rows |
 | Uplink switch (§8.3) | `wait` on the AWLAN_Node row and serial, and on the station's guarded fields (`if_name`, `mode`, `enabled`, `ssid`, `credential_configs`, `multi_ap`) → `insert Wifi_Credential_Config` (the backhaul SSID and passphrase, `onboard_type=multi_ap`, `priority` 1) → `update Wifi_VIF_Config` of the station: `enabled=true`, `ssid` and `security` empty, `multi_ap` and `wds` unset, `credential_configs` = that credential only |
+| Statistics publishing (§3.6) | `wait` on the AWLAN_Node serial and its current `mqtt_settings` → `update AWLAN_Node mqtt_settings` (broker, port, the pod's topic, QoS 0, no compression) → `insert Wifi_Stats_Config` (a raw client report for the radio type) unless one exists |
 
 Every write MUST be guarded: if the pod's graph or guarded fields changed,
 nothing is written. Guarded AP VIF fields: `if_name`, `mode`, `enabled`, `ssid`,
@@ -259,6 +261,40 @@ A profile gives:
   creates.
 
 The bundled profile is `opensync-lab-hwsim-6.6.1-v1`.
+
+### 3.6 The pod's own statistics
+
+OVSDB carries no station measurements. OpenSync publishes them itself, as
+`sts.Report` protobuf messages (the pinned `opensync_stats.proto`) over MQTT:
+`qm` connects to the broker in `AWLAN_Node.mqtt_settings` with the pod's device
+certificate, and `owm` produces the reports that `Wifi_Stats_Config` asks for.
+With `telemetry.mode = mqtt` the agent (the telemetry scope):
+- **writes** the broker, the pod's own topic (default `emosa/stats/<serial>`)
+  and one raw client report for the radio type, as one guarded transaction
+  (§3.2), once per start of the pod's OpenSync (the database starts from its
+  template), like the uplink switch (§8.3). It MUST NOT take over a broker
+  another manager set, such as the operator's cloud: that write is refused;
+- counts the write as **applied** when the pod's database has it on the same
+  start. Whether reports arrive is reported beside it;
+- **subscribes** to the pod's topic. A report is bound to its pod by the topic
+  (the report's `nodeID` may be empty). Retained, duplicate and out-of-order
+  reports are dropped.
+
+What it keeps, per station, is only what the pod measured:
+- counters (bytes, frames, retries, errors) summed per counter epoch. A period
+  with a join or a leave, a missing period, or a station's absence starts a
+  new epoch;
+- OpenSync sends a counter only when it is not zero. An absent counter is
+  therefore zero only once the pod has shown that counter non-zero; until then
+  it is unknown, and so is every total that includes it. `tx_retries` is sent
+  only together with `rx_retries`, so its absence never means zero;
+- the last rates and the SNR as reported, and the end of the last period, so
+  the age of every value is known. A station is current for three periods plus
+  `qm`'s one-minute batching.
+
+These measurements are in the agent's status. EMOSA sends an EasyMesh metric
+only when it can be built completely from them; until then it sends none
+(§9).
 
 ## 4. The fleet
 
@@ -354,7 +390,9 @@ Timers:
 ## 7. Dependencies
 
 - **Runtime:** OVSDB JSON-RPC (RFC 7047); Diffie-Hellman group 5 (MODP-1536),
-  AES-CBC and HMAC-SHA256 for WSC; JSON Schema draft 2020-12 for contracts.
+  AES-CBC and HMAC-SHA256 for WSC; JSON Schema draft 2020-12 for contracts;
+  with telemetry (§3.6), an MQTT broker the pods reach with their device
+  certificates, and protobuf for OpenSync's pinned statistics schema.
 - **Operating system:** raw packet sockets and one macvlan (or other L2
   interface) per agent. A supervisor, systemd in the reference, starts one
   agent process per pod.
@@ -462,6 +500,9 @@ The agent makes the switch itself when its configuration has
 - more than one radio per agent;
 - Backhaul Steering (refused), backhaul link metrics, and a 1905 neighbor on
   the backhaul interface;
-- AP and station metrics from real measurements;
+- EasyMesh AP and station metrics. The pod's station measurements are
+  collected (§3.6), but a complete metric needs more than a hwsim pod reports:
+  RCPI needs the noise floor, traffic statistics need retries and errors, and
+  AP metrics need channel utilization, which needs a radio model (wmediumd);
 - TLS on the front port and agent ports (a physical pod requires it);
 - DPP onboarding.

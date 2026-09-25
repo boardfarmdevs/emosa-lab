@@ -156,6 +156,17 @@ samples is still to be found, in opensync-lab. The trial configuration was
 removed again. `lab.sh telemetry` now gives the broker its own copy of its
 certificate: `/var/lib/emosa` is mode 0700 on the fleet VM.
 
+**The pods' own statistics, collected (2026-09-25, [summary](telemetry-m8/summary.json)).**
+The cause of "no reports" was in the pod platform: OSW's nl80211 driver dumps
+station statistics only for phys the platform names, so `owm` never had any
+(opensync-lab `1a74cd8` names them). Each agent now writes the pod's MQTT
+settings and a raw client report once per OpenSync start and subscribes to the
+pod's topic (spec §3.6). Per station it keeps rates, SNR and byte and frame
+totals; retries and errors, which hwsim never reports, stay unknown. Over 12
+periods with 4.4 MB each way, the summed totals matched the driver's own
+counters within 0.006 % (bytes) and 3 frames. Nothing is sent to the controller
+from these yet (spec §9).
+
 ## Second controller: RDK-B unified-wifi-mesh (M9, first attempt)
 
 **Setup:**

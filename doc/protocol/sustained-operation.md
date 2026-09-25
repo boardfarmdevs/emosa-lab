@@ -440,9 +440,9 @@ hashed before loading; regenerate it with `grpcio-tools==1.78.0`:
 
 ```bash
 uv run --with grpcio-tools==1.78.0 python -m grpc_tools.protoc \
-  -I lab/src/emosa_lab/telemetry/data \
-  --descriptor_set_out=lab/src/emosa_lab/telemetry/data/opensync_stats.desc \
-  lab/src/emosa_lab/telemetry/data/opensync_stats.proto
+  -I src/emosa/data \
+  --descriptor_set_out=src/emosa/data/opensync_stats.desc \
+  src/emosa/data/opensync_stats.proto
 ```
 
 Source: [pinned OpenSync statistics schema](https://github.com/plume-design/opensync/blob/78d8a7194d5e77635877cc456231e7be5cf03d68/src/lib/protobuf/opensync_stats.proto).

@@ -35,6 +35,7 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
+from emosa.agent.telemetry import MqttSubscriber, TelemetrySetup
 from emosa.agent.uplink import UplinkSwitch, m2_backhaul
 from emosa.config import validate
 from emosa.errors import EmosaError, Reason
@@ -51,6 +52,9 @@ from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
 from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.schema import TABLES
 from emosa.opensync.session import OvsSession
+from emosa.opensync.stats import PodStats
+from emosa.opensync.telemetry import MONITOR as TELEMETRY_MONITOR
+from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent
 from emosa.opensync.uplink import BSSID, MULTI_AP, UplinkBackend, uplink_state
 from emosa.opensync.uplink import MONITOR as UPLINK_MONITOR
 from emosa.reconcile import Engine
@@ -87,8 +91,9 @@ MONITOR = {
     "AWLAN_Node": [*TABLES["AWLAN_Node"], "id"],
     "Wifi_Radio_State": [*TABLES["Wifi_Radio_State"], "tx_power"],
 }
-for _table, _columns in UPLINK_MONITOR.items():  # the uplink scope's tables and columns
-    MONITOR[_table] = [*MONITOR.get(_table, []), *_columns]
+for _scope in (UPLINK_MONITOR, TELEMETRY_MONITOR):  # the other scopes' tables and columns
+    for _table, _columns in _scope.items():
+        MONITOR[_table] = [*MONITOR.get(_table, []), *_columns]
 
 
 def mac(text):
@@ -327,6 +332,25 @@ def make_bridge(
     )
 
 
+def telemetry_intent(pod_id, serial, telemetry_config):
+    """The statistics publishing an agent configuration asks for, or None (mode off)."""
+    if telemetry_config.get("mode", "off") == "off":
+        return None
+    if telemetry_config["mode"] != "mqtt" or not telemetry_config.get("broker"):
+        raise EmosaError(Reason.INVALID_INPUT, "telemetry: mode mqtt needs a broker")
+    intent = TelemetryIntent(
+        pod_id,
+        telemetry_config["broker"],
+        telemetry_config.get("port", 8883),
+        telemetry_config.get("topic") or f"emosa/stats/{serial}",
+        telemetry_config.get("radio_type", "2.4G"),
+        telemetry_config.get("reporting_interval", 10),
+        telemetry_config.get("sampling_interval", 5),
+    )
+    intent.validate()
+    return intent
+
+
 def uplink_bssid(uplink_config):
     """The upstream backhaul BSS a multi-ap uplink is pinned to, in lower case."""
     bssid = (uplink_config.get("bssid") or "").lower()
@@ -385,6 +409,31 @@ async def serve(config, stop):
                 and not any(op.state in ACTIVE for op in store.operations())
             ),
         )
+    telemetry = stats = subscriber = telemetry_store = None
+    telemetry_config = config.get("telemetry", {"mode": "off"})
+    wanted = telemetry_intent(pod_id, config["serial"], telemetry_config)
+    if wanted is not None:
+        telemetry_store = Store(state_dir / "telemetry")
+        telemetry = TelemetrySetup(
+            pod_id,
+            TelemetryBackend(
+                pod_id, session, serial=config["serial"], radio_type=wanted.radio_type
+            ),
+            telemetry_store,
+            vault,
+            wanted,
+            run_id=config.get("run_id", pod_id),
+        )
+        stats = PodStats(wanted.topic, interval=wanted.reporting_interval)
+        host, _, port = telemetry_config.get("subscribe", "127.0.0.1:1883").rpartition(":")
+        subscriber = MqttSubscriber(
+            host,
+            int(port),
+            wanted.topic,
+            lambda topic, payload, retained: stats.receive(topic, payload, retained=retained),
+            client_id=f"emosa-agent-{pod_id}",
+        )
+        subscriber.start(asyncio.get_running_loop())
     binding = PeerBinding(config["interface"], 1, agent, controller, (controller,))
     report = PodReportSource(backend, binding, pod_id, station)
     mids = MidSequence(secrets.randbelow(65536))
@@ -421,6 +470,12 @@ async def serve(config, stop):
             "session": lifecycle.status() if lifecycle else None,
             "operations": ops,
             "uplink": switch.status() if switch else {"station": station, "mode": "off"},
+            "telemetry": (
+                {"mode": "mqtt", **telemetry.status(), "subscribed": subscriber.connected}
+                | stats.status()
+                if telemetry
+                else {"mode": "off"}
+            ),
             "writes": backend.write_count,
             "worker_pid": os.getpid(),
             "updated": time.time(),
@@ -538,6 +593,11 @@ async def serve(config, stop):
                         await switch.tick()
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("uplink: %s", exc)
+                if refreshed and telemetry:
+                    try:
+                        await telemetry.tick()
+                    except (EmosaError, ConnectionError, TimeoutError) as exc:
+                        log.warning("telemetry: %s", exc)
                 if not refreshed and frame is None:
                     continue  # nothing new to report: status only on the refresh cadence
                 value = status()
@@ -560,7 +620,9 @@ async def serve(config, stop):
             write(state_dir / "status.json", status())
             lifecycle.close()
         store.close()
-        for extra in (channels, reporting, uplink_store):
+        if subscriber is not None:
+            subscriber.stop()
+        for extra in (channels, reporting, uplink_store, telemetry_store):
             if extra is not None:
                 extra.close()
         await session.close()

@@ -27,9 +27,7 @@ def source():
 
 def test_pinned_descriptor_and_actual_association_offset_not_reporting_duration():
     assert (
-        hashlib.sha256(
-            Path("lab/src/emosa_lab/telemetry/data/opensync_stats.proto").read_bytes()
-        ).hexdigest()
+        hashlib.sha256(Path("src/emosa/data/opensync_stats.proto").read_bytes()).hexdigest()
         == PROTO_SHA256
     )
     value = Report.FromString(payload())

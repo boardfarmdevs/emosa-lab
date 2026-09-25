@@ -17,7 +17,9 @@
 #   lab.sh client NAME POD SSID KEY   opensync-lab wireless client on POD's fronthaul
 #   lab.sh topology                   the controller's DataElements (JSON)
 #   lab.sh ui                         controller UI (prplmesh-lab) on the VM, port 8093 (8091 is boardfarm's)
-#   lab.sh telemetry                  MQTT broker (mutual TLS) for the pods' own statistics
+#   lab.sh telemetry [POD...]         MQTT broker (mutual TLS) for the pods' own statistics; every
+#                                     agent then has its pod publish them (a lab device
+#                                     certificate for each POD, and for pods admitted later)
 #   lab.sh provision POD              lab device certificate into POD:/var/certs
 #   lab.sh gtp                        container em-gtp: pod-backhaul SSID + GRE termination point
 #                                     (data plane option 2), its LAN leg on mv3's LAN (lan-p4)
@@ -198,7 +200,8 @@ fleet() {
   "profile": "${EMOSA_POD_PROFILE:-opensync-lab-hwsim-6.6.1-v1}",
   "state_root": "/var/lib/emosa",
   "config_dir": "/etc/emosa",
-  "admit": "*"
+  "admit": "*",
+  "telemetry": $(telemetry_json)
 }
 EOF
     cx emosa systemctl enable -q emosa-fleet
@@ -217,6 +220,7 @@ admit() {       # admit POD...
     for pod in "$@"; do
         id=$(pod_id "$pod") serial=$(pod_serial "$pod")
         [ -n "$id" ] && [ -n "$serial" ] || die "$pod: no AWLAN_Node id/serial"
+        [ ! -f /opt/emosa-lab/telemetry ] || provision "$pod"
         docker exec local-noc noc-ctl redirect "$id" "tcp:$WAN_HOST:$FLEET_PORT" >/dev/null
         log "local-noc: $pod ($id) handed to the fleet front port"
         al=
@@ -289,6 +293,35 @@ telemetry() {   # MQTT broker for the pods' own statistics (OpenSync sm/qm: mutu
         lxc config device add emosa mqtt proxy bind=host listen="tcp:$WAN_HOST:8883" \
             connect=tcp:127.0.0.1:8883 >/dev/null
     log "telemetry: broker tcp:$WAN_HOST:8883 (mutual TLS, lab CA) -> emosa; local subscriber 127.0.0.1:1883"
+    local pod
+    for pod in "$@"; do provision "$pod"; done
+    touch /opt/emosa-lab/telemetry    # lab.sh fleet and admit keep it on
+    # The fleet writes an agent's configuration when its pod is handed over:
+    # the running agents get the setting directly.
+    cx emosa python3 - "$(telemetry_json)" <<'EOF'
+import glob, json, sys
+telemetry = json.loads(sys.argv[1])
+for path in ["/etc/emosa-fleet.json", *glob.glob("/etc/emosa/*.json")]:
+    with open(path) as f:
+        config = json.load(f)
+    config["telemetry"] = telemetry
+    with open(path, "w") as f:
+        json.dump(config, f, indent=2)
+        f.write("\n")
+EOF
+    cx emosa sh -c 'systemctl restart emosa-fleet
+        for u in $(systemctl list-units --plain --no-legend "emosa-agent@*" | cut -d" " -f1); do
+            systemctl restart "$u"
+        done'
+    log "telemetry: every agent has its pod publish client reports to emosa/stats/<serial>"
+}
+
+telemetry_json() {    # the fleet's telemetry setting
+    if [ -f /opt/emosa-lab/telemetry ]; then
+        printf '{"mode": "mqtt", "broker": "%s", "port": 8883}' "$WAN_HOST"
+    else
+        printf '{"mode": "off"}'
+    fi
 }
 
 provision() {   # lab device certificate for POD, where OpenSync expects it (/var/certs)

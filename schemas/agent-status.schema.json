@@ -84,6 +84,7 @@
         }
       }
     },
+    "telemetry": {"description": "The telemetry scope and the pod's own statistics as measured (spec §3.6). Absent fields stay absent: nothing is filled in.", "type": "object", "required": ["mode"], "properties": {"mode": {"enum": ["off", "mqtt"]}, "waiting": {"type": ["string", "null"]}, "subscribed": {"type": "boolean"}, "operation": {"type": ["object", "null"]}, "topic": {"type": "string"}, "reports_accepted": {"type": "integer", "minimum": 0}, "reports_rejected": {"type": "integer", "minimum": 0}, "gaps": {"type": "integer", "minimum": 0}, "last_error": {"type": ["string", "null"]}, "last_report_at": {"type": ["number", "null"]}, "stations": {"type": "object", "additionalProperties": {"type": "object"}}}},
     "writes": {"type": "integer", "minimum": 0},
     "worker_pid": {"type": "integer"},
     "updated": {"type": "number"}

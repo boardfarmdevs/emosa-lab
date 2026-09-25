@@ -106,6 +106,19 @@ def own_bssids(decoded):
     }
 
 
+def start_instance(decoded):
+    """Which start of the pod's OpenSync: a hash of its radio rows' UUIDs.
+
+    Its start scripts create the radio rows anew (new UUIDs), which then live as
+    long as that start does. AWLAN_Node comes from the database template and
+    keeps its UUID (seen live), so it cannot tell two starts apart.
+    """
+    radios = sorted(decoded.get("Wifi_Radio_Config", {}))
+    if not radios:
+        raise EmosaError(Reason.NOT_READY, "the pod's radios are not configured yet")
+    return hashlib.sha256(json.dumps(radios).encode()).hexdigest()[:16]
+
+
 def credential_key(row):
     security = row.get("security") or {}
     return security.get("key") if security.get("encryption") == "WPA-PSK" else None
@@ -174,13 +187,7 @@ class UplinkBackend:
             self.expected_serial
         ):
             raise EmosaError(Reason.NOT_READY, "pod identity absent or not the bound serial")
-        # One start of the pod's OpenSync from the next: its start scripts create the
-        # radio rows anew (new UUIDs), which then live as long as that start does.
-        # AWLAN_Node comes from the database template and keeps its UUID (seen live).
-        radios = sorted(decoded.get("Wifi_Radio_Config", {}))
-        if not radios:
-            raise EmosaError(Reason.NOT_READY, "the pod's radios are not configured yet")
-        self.instance = hashlib.sha256(json.dumps(radios).encode()).hexdigest()[:16]
+        self.instance = start_instance(decoded)
         rows = [
             (u, r)
             for u, r in decoded.get("Wifi_VIF_Config", {}).items()

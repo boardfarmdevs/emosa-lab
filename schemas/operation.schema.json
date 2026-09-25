@@ -141,6 +141,61 @@
             "mode"
           ],
           "additionalProperties": false
+        },
+        {
+          "title": "Have the pod publish its own statistics (the telemetry scope)",
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "broker": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253
+            },
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "topic": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "radio_type": {
+              "enum": [
+                "2.4G",
+                "5G",
+                "5GL",
+                "5GU",
+                "6G"
+              ]
+            },
+            "reporting_interval": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3600
+            },
+            "sampling_interval": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3600
+            }
+          },
+          "required": [
+            "pod_id",
+            "broker",
+            "port",
+            "topic",
+            "radio_type",
+            "reporting_interval",
+            "sampling_interval"
+          ],
+          "additionalProperties": false
         }
       ]
     },

@@ -12,7 +12,13 @@ pytestmark = pytest.mark.unit
 ROOT = Path(__file__).resolve().parents[1]
 ADAPTER = ROOT / "src" / "emosa"
 # distribution name -> import name, for the adapter's declared runtime dependencies
-IMPORT_NAMES = {"cryptography": "cryptography", "jsonschema": "jsonschema", "ovs": "ovs"}
+IMPORT_NAMES = {
+    "cryptography": "cryptography",
+    "jsonschema": "jsonschema",
+    "ovs": "ovs",
+    "paho-mqtt": "paho",  # the pod's own statistics (emosa.agent.telemetry)
+    "protobuf": "google",  # their pinned sts.Report schema (emosa.opensync.stats)
+}
 
 
 def imports(path):

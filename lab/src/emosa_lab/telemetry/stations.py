@@ -5,32 +5,16 @@ publisher sends complete snapshots with association offsets measured by hostapd.
 Other publishers require their own reviewed sampling/identity contract.
 """
 
-import hashlib
 import re
 import time
 from dataclasses import dataclass
-from importlib.resources import files
 
-from google.protobuf import descriptor_pb2, descriptor_pool, message_factory
 from google.protobuf.message import DecodeError
 
-DESCRIPTOR_SHA256 = "604de5ab4e0f085c0ef15d44c49d2a36aa99d39c4e0dc6fd2b3701b61384ad8e"
-PROTO_SHA256 = "0bf534da0d677d7bb41a4f591fcb1ad0b25a9f1c9eedf3abc5b69ed16ef9a6cd"
+# The pinned schema lives with the adapter (emosa.opensync.stats).
+from emosa.opensync.stats import DESCRIPTOR_SHA256, PROTO_SHA256, Report  # noqa: F401
+
 MAC = re.compile(r"[0-9a-f]{2}(?::[0-9a-f]{2}){5}")
-
-
-def report_type():
-    data = files(__package__).joinpath("data/opensync_stats.desc").read_bytes()
-    if hashlib.sha256(data).hexdigest() != DESCRIPTOR_SHA256:
-        raise RuntimeError("OpenSync descriptor differs from the pinned input")
-    descriptor = descriptor_pb2.FileDescriptorSet.FromString(data)
-    pool = descriptor_pool.DescriptorPool()
-    for item in descriptor.file:
-        pool.Add(item)
-    return message_factory.GetMessageClass(pool.FindMessageTypeByName("sts.Report"))
-
-
-Report = report_type()
 
 
 @dataclass(frozen=True)
