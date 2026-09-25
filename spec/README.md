@@ -231,7 +231,9 @@ The 6.6 encoding of WPA2-PSK:
 - **M2 → one intent.** The first fronthaul BSS's SSID and passphrase are the
   primary intent. With `multi_bss`, up to 7 further BSSes follow. Each BSS's
   role comes from the WSC Multi-AP extension flags in its M2: `0x20` is
-  fronthaul, `0x40` is backhaul. Combined or teardown flags are refused.
+  fronthaul, `0x40` is backhaul. A backhaul BSS may also carry the Backhaul STA
+  bit (`0x80`), as prplMesh sends it: the same credentials serve the agent's
+  backhaul station (§8.3). Combined or teardown flags are refused.
 - **Checked before any write.** Settings are refused when:
   - an SSID is longer than 32 bytes or contains an embedded NUL;
   - a passphrase is outside 8 to 63 characters or is not printable ASCII;

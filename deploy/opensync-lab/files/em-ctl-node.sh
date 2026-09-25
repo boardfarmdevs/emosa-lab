@@ -6,6 +6,7 @@
 #   em-ctl-node.sh prepare            platform db, br-lan (eth1), hostapd config
 #   em-ctl-node.sh start              hostapd, ubusd, ieee1905_transport, controller, agent
 #   em-ctl-node.sh policy SSID KEY AL...   fronthaul SSID/KEY for the gateway agent and each AL
+#                                     (AL+bh: that agent also gets the backhaul BSS "SSID-bh")
 #   em-ctl-node.sh stop
 #   em-ctl-node.sh topology [DEPTH]   the controller's own Device.WiFi.DataElements.Network
 set -euo pipefail
@@ -137,8 +138,14 @@ policy() {      # policy SSID KEY AL...
         bml bml_set_wifi_credentials $AL "$ssid-bh" "$key" 24g-5g backhaul 0
     fi
     for al in "$@"; do
+        # AL+bh: this agent also runs the network's backhaul BSS, so its M2 set carries
+        # the backhaul credentials (EMOSA's uplink switch can take them from there)
+        local bh=${al#*+}; al=${al%+bh}
         bml bml_clear_wifi_credentials "$al"
         bml bml_set_wifi_credentials "$al" "$ssid" "$key" 24g-5g fronthaul 0
+        if [ "$bh" = bh ]; then
+            bml bml_set_wifi_credentials "$al" "$ssid-bh" "$key" 24g-5g backhaul 0
+        fi
     done
     bml bml_update_wifi_credentials
     echo "policy: fronthaul '$ssid' for gateway $AL${*:+ and $*}"

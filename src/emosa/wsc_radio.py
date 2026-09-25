@@ -71,7 +71,9 @@ class RadioPayloadSet:
         """Every BSS of the set with its role, for a radio that maps several BSSes.
 
         Roles: exactly Fronthaul BSS, or Backhaul BSS (its Profile-1/Profile-2
-        backhaul STA disallowed bits are accepted and not applied). A combined
+        backhaul STA disallowed bits are accepted and not applied; so is the Backhaul
+        STA bit, which prplMesh sets on its backhaul BSS: the same credentials serve
+        the agent's backhaul station, see emosa.agent.uplink). A combined
         fronthaul+backhaul BSS, teardown or any other role is unsupported, as is
         any BSS outside the WPA2-PSK/AES shape. At least one fronthaul BSS.
         """
@@ -82,7 +84,9 @@ class RadioPayloadSet:
             flags = bss.multi_ap_flags
             if flags == FRONTHAUL_BSS:
                 role = "fronthaul"
-            elif flags & ~(PROFILE1_DISALLOWED | PROFILE2_DISALLOWED) == BACKHAUL_BSS:
+            elif (
+                flags & ~(PROFILE1_DISALLOWED | PROFILE2_DISALLOWED | BACKHAUL_STA) == BACKHAUL_BSS
+            ):
                 role = "backhaul"
             else:
                 raise _unsupported(f"BSS {len(pairs)}: Multi-AP role 0x{flags:02x}")

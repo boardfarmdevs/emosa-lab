@@ -22,8 +22,10 @@
 #   lab.sh gtp                        container em-gtp: pod-backhaul SSID + GRE termination point
 #                                     (data plane option 2), its LAN leg on mv3's LAN (lan-p4)
 #   lab.sh uplink POD MODE            move POD's uplink by hand: gtp | multi-ap | restore | show
-#   lab.sh option1 POD on|off         POD's EMOSA agent switches its uplink to the controller's
-#                                     backhaul BSS itself (em-gtp, 5 GHz), and keeps it switched
+#   lab.sh option1 POD on|off [config|m2]
+#                                     POD's EMOSA agent switches its uplink to the controller's
+#                                     backhaul BSS itself (em-gtp, 5 GHz), and keeps it switched;
+#                                     credentials from its config, or from the controller's M2 set
 #   lab.sh status
 #   lab.sh workload LABEL             900 s recovery workload under faults (vm/workload.py)
 set -euo pipefail
@@ -249,7 +251,9 @@ release() {     # release POD
 policy() {      # policy SSID KEY
     local als=() f
     for f in $(cx emosa sh -c 'ls /etc/emosa/*.json 2>/dev/null' || true); do
-        als+=("$(cx emosa python3 -c "import json;print(json.load(open('$f'))['al_mac'])")")
+        # an agent that takes its uplink credentials from M2 also gets the backhaul BSS
+        als+=("$(cx emosa python3 -c "import json; c = json.load(open('$f'))
+print(c['al_mac'] + ('+bh' if c.get('uplink', {}).get('credentials') == 'm2' and c.get('uplink', {}).get('mode') == 'multi-ap' else ''))")")
     done
     ( umask 077; printf '%s %s\n' "$1" "$2" > /opt/emosa-lab/policy )    # re-applied by admit
     cx em-ctl em-ctl-node policy "$1" "$2" "${als[@]}"
@@ -474,9 +478,10 @@ uplink() {      # uplink POD gtp|multi-ap|restore|show
     python3 "$HERE/vm/uplink.py" "$@"
 }
 
-option1() {     # option1 POD on|off: POD's agent switches its uplink to the EasyMesh backhaul
-    local pod=$1 mode serial ssid key
-    case ${2:-} in on) mode=multi-ap ;; off) mode=off ;; *) die "option1 POD on|off" ;; esac
+option1() {     # option1 POD on|off [config|m2]: POD's agent switches its uplink to the EasyMesh backhaul
+    local pod=$1 mode serial ssid key source=${3:-config}
+    case ${2:-} in on) mode=multi-ap ;; off) mode=off ;; *) die "option1 POD on|off [config|m2]" ;; esac
+    case $source in config|m2) ;; *) die "option1: credentials from config or m2" ;; esac
     serial=$(pod_serial "$pod")
     [ -n "$serial" ] || die "$pod: no AWLAN_Node serial"
     cx emosa test -f "/etc/emosa/$serial.json" || die "$pod ($serial) is not a fleet agent: lab.sh admit $pod"
@@ -487,15 +492,20 @@ option1() {     # option1 POD on|off: POD's agent switches its uplink to the Eas
     # across handovers) and the running agent's configuration.
     printf '%s' "$key" | cx emosa sh -c "install -d -m 700 /var/lib/emosa/$serial/secrets
         umask 077; cat > /var/lib/emosa/$serial/secrets/backhaul"
-    cx emosa python3 - "$serial" "$mode" "$ssid-bh" <<'EOF'
+    cx emosa python3 - "$serial" "$mode" "$ssid-bh" "$source" <<'EOF'
 import json, sys
-serial, mode, ssid = sys.argv[1:]
+serial, mode, ssid, source = sys.argv[1:]
 uplink = {"mode": mode}
-if mode != "off":
+own = {"uplink": uplink}
+if mode != "off" and source == "config":
     uplink.update(credentials="config", ssid=ssid, secret_ref="backhaul")
+elif mode != "off":
+    # from the controller's M2 set: the agent maps the set's BSSes (multi-BSS)
+    uplink.update(credentials="m2")
+    own["multi_bss"] = True
 for path, update in (
-    ("/etc/emosa-fleet.json", lambda c: c.setdefault("pods", {}).setdefault(serial, {}).update(uplink=uplink)),
-    (f"/etc/emosa/{serial}.json", lambda c: c.update(uplink=uplink)),
+    ("/etc/emosa-fleet.json", lambda c: c.setdefault("pods", {}).setdefault(serial, {}).update(own)),
+    (f"/etc/emosa/{serial}.json", lambda c: c.update(own)),
 ):
     config = json.load(open(path))
     update(config)
@@ -504,7 +514,12 @@ for path, update in (
         f.write("\n")
 EOF
     cx emosa systemctl restart emosa-fleet "emosa-agent@$serial"
-    log "option1: $pod ($serial) uplink $mode (backhaul '$ssid-bh' from the controller policy)"
+    if [ "$source" = m2 ]; then
+        policy "$ssid" "$key"    # the controller now gives this agent the backhaul BSS in its M2 set
+        log "option1: $pod ($serial) uplink $mode, credentials from the controller's M2 set"
+    else
+        log "option1: $pod ($serial) uplink $mode (backhaul '$ssid-bh' from the controller policy)"
+    fi
 }
 
 status() {
