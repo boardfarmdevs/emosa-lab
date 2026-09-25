@@ -18,8 +18,8 @@ What makes it interchangeable with the Python reference (`src/emosa`):
 | Part | Reference | Vectors | State |
 | --- | --- | --- | --- |
 | 1905 envelope | `emosa.wire.cmdu` | `cmdu.json` | done |
-| WSC M1/M2, onboarding | `emosa.wsc`, `emosa.wsc_messages`, `emosa.wire.autoconfiguration` | `onboarding.json` | next |
-| Pod view and 1905 TLVs | `emosa.opensync.easymesh_view`, `emosa.wire.reports` | `translation-northbound.json` | |
+| WSC M1/M2, onboarding | `emosa.wsc`, `emosa.wsc_messages`, `emosa.wire.autoconfiguration` | `onboarding.json` | done |
+| Pod view and 1905 TLVs | `emosa.opensync.easymesh_view`, `emosa.wire.reports` | `translation-northbound.json` | next |
 | Control plane (channel, policy, steering) | `emosa.wire.channel`, `.reporting_policy`, `.steering` | `control.json` | |
 | OVSDB writes (M2, steering, uplink) | `emosa.opensync.pod_profile`, `.steering`, `.uplink` | `translation-southbound.json`, `steering.json`, `uplink.json` | |
 | Pod statistics | `emosa.opensync.stats` | `telemetry.json` | |

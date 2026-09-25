@@ -24,7 +24,9 @@
    "uuid": "404142434445464748494a4b4c4d4e4f",
    "wps_state": 2
   },
+  "profile2_ap_capability": "00000000",
   "radio": {
+   "advanced_flags": 0,
    "max_bss": 2,
    "operating_classes": [
     [
@@ -34,6 +36,10 @@
     ]
    ],
    "ruid": "02:00:00:00:10:01"
+  },
+  "search": {
+   "band": 0,
+   "profile": 1
   }
  },
  "cases": [
