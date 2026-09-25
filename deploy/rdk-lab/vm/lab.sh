@@ -13,7 +13,8 @@
 #                                     reference or the C lab prototype (same config and status)
 #   lab.sh gtp                        container em-gtp: the pods' onboarding SSID (the pod image's
 #                                     backhaul credentials) and their GRE, LAN leg on br-emosa
-#   lab.sh pod [NAME]                 the unchanged OpenSync pod image on two pool radios
+#   lab.sh pod [NAME]                 the unchanged OpenSync pod image on two pool radios; its
+#                                     backhaul to the GTP is a fixed link (EMOSA_BACKHAUL_SNR, 45)
 #   lab.sh repod [NAME]               the pod again from the staged image (its radios are
 #                                     returned to the VM first, so they survive)
 #   lab.sh client NAME SSID KEY       a Wi-Fi client on one pool radio
@@ -394,8 +395,11 @@ pod() {
         lxc init "mvx-pod-$fp" "$name" -p "$name" >/dev/null
     fi
     lxc config set "$name" user.emosa.role=pod user.opensync-lab.image="$fp"
+    # wired-equivalent backhaul: the pod's station to the GTP is a fixed link on the medium,
+    # outside any room geometry (the lab's gen-config pins it; lab.sh medium applies it)
+    lxc profile set "$name" user.wmediumd.links="bhaul-sta-50=em-gtp/wlan0:${EMOSA_BACKHAUL_SNR:-45}"
     start_guarded "$name"
-    log "pod: $name from mvx-pod-$fp (wlan0 2.4 GHz, wlan1 5 GHz backhaul station)"
+    log "pod: $name from mvx-pod-$fp (wlan0 2.4 GHz, wlan1 5 GHz backhaul station); run lab.sh medium once it is up"
 }
 
 repod() {
@@ -459,5 +463,5 @@ case ${1:-} in
     agent) shift; agent "$@" ;;
     repod) shift; repod "$@" ;;
     client) shift; client "$@" ;;
-    *) sed -n '2,20p' "$0"; exit 1 ;;
+    *) sed -n '2,22p' "$0"; exit 1 ;;
 esac

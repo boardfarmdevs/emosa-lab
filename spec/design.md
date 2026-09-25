@@ -250,7 +250,7 @@ flowchart TB
 | --- | --- | --- | --- | --- |
 | Envelope | encode, fragment, reassemble CMDUs | frames ↔ messages | `wire/cmdu.py` | `cmdu.json` |
 | Ethernet endpoint | own interface, `0x893A` packet socket, 0.2 s receive timeout | socket ↔ frames | `wire/ethernet.py` | none |
-| Onboarding session | Search (3 times, 1 s apart), Response admission, early AP capability report, M1, M2 → operation, Renew, recovery after source loss, controller silence (130 s) → fresh attempt | messages ↔ messages, operations | `wire/onboarding.py`, `wire/autoconfiguration.py` | `onboarding.json` |
+| Onboarding session | Search (3 times, 1 s apart), Response admission, early AP capability report, M1, M2 → operation, Renew, recovery after source loss, controller silence (130 s) or no M2 within 30 s of M1 → fresh attempt | messages ↔ messages, operations | `wire/onboarding.py`, `wire/autoconfiguration.py` | `onboarding.json` |
 | WSC | M1 build, M2 authentication and decryption, M2-set mapping | device facts, M2 → BSS settings | `wsc.py`, `wsc_messages.py`, `wsc_radio.py` | `onboarding.json`, hostap fixture |
 | Report coordinator | Topology Discovery/Query/Response/Notification, AP Capability, Client Capability, Link Metric, Backhaul STA Capability, client join/leave announcements | snapshot → messages | `wire/coordinator.py`, `wire/reports.py` | `translation-northbound.json` |
 | Channel coordinator | Channel Preference Query/Report, Channel Selection Request/Response (accept or decline), Operating Channel Report and its Ack, Channel Scan Request (Ack, then a not-supported Channel Scan Report) | messages, snapshot → messages, policy record | `wire/channel.py` | `control.json` |
@@ -340,7 +340,7 @@ Main loop, one iteration:
    snapshot;
 2. tick the onboarding session (timers, Search repetitions, retries);
 3. every 60 s: Topology Discovery;
-4. controller silence ≥ 130 s: a fresh onboarding attempt;
+4. controller silence ≥ 130 s, or M1 without M2 for 30 s: a fresh onboarding attempt;
 5. receive at most one frame (≤ 0.2 s) and dispatch it: binding filter, rate
    limit, reassembly, then the session and its coordinators;
 6. on a refresh: reconcile the AP scope, then tick the uplink, telemetry and
@@ -423,6 +423,7 @@ Specified elsewhere; listed here so that nothing is missed:
 | Search | up to 3, 1 s apart; discovery window 5 s |
 | M1 window | 5 s, up to 3 transmissions |
 | controller silence before a fresh attempt | 130 s |
+| M1 without M2 before a fresh attempt | 30 s |
 | provisioned but serving no BSS before a fresh M1 | 60 s |
 | reassembly deadline | 5 s from the first fragment |
 | input rate | 16 messages/s, burst 32 |

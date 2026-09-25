@@ -139,6 +139,9 @@ Rules:
   new one. Restarts after failures back off by `min(30, 2^failures)` seconds.
 - If nothing arrives from the controller for 130 s, the agent MUST start
   onboarding again.
+- If no M2 arrives within 30 s of M1, the agent MUST start onboarding again. A
+  controller that restarted in between has forgotten the M1, and its other
+  queries keep the silence rule from firing (seen with RDK).
 - Once the agent is `provisioning` and the controller has sent its next
   Topology Query, the agent MUST announce every current client again, once.
   A controller that restarted may otherwise never learn clients that joined
@@ -443,6 +446,7 @@ Timers:
 | --- | --- |
 | Topology Discovery interval | 60 s |
 | Controller silence before onboarding again | 130 s |
+| M1 without M2 before onboarding again | 30 s |
 | Pod State re-read and reconcile | 0.5 s |
 | Published report lifetime | 1.5 s |
 | Operation deadline | 120 s |

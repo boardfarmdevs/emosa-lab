@@ -86,6 +86,9 @@ CONTROLLER_TIMEOUT = 130  # no CMDU from the controller for about two discovery 
 # applied (its configuration was lost, e.g. a write lost to an uplink move): ask
 # for the configuration again with a fresh M1 after this long.
 UNSERVED_RENEW = 60
+# M1 sent and no M2: a controller that restarted meanwhile has forgotten the M1, and
+# its other queries keep CONTROLLER_TIMEOUT from firing. Search again after this long.
+M2_TIMEOUT = 30
 # The pod's State is re-read on this cadence, not on every received frame: the
 # published report lives 1.5 s, which this refreshes three times over.
 REFRESH_PERIOD = 0.5
@@ -472,7 +475,7 @@ async def serve(config, stop):
     message_set = check_message_set(config.get("message_set", EASYMESH_61))
     lifecycle, last_status, last_facts, last_write = None, None, None, 0
     next_discovery, last_contact = 0, time.monotonic()
-    unserved_since = None
+    unserved_since = awaiting_since = None
     next_refresh, ready = 0, False
     channels = reporting = None
 
@@ -590,6 +593,14 @@ async def serve(config, stop):
                     log.info("provisioned, but the pod serves no BSS: fresh M1")
                     lifecycle.renew()
                     unserved_since = None
+                awaiting = (
+                    lifecycle.session is not None and lifecycle.session.state == "awaiting_m2"
+                )
+                awaiting_since = (awaiting_since or now) if awaiting else None
+                if awaiting_since is not None and now - awaiting_since > M2_TIMEOUT:
+                    log.info("no M2 for %ds after M1: fresh attempt", M2_TIMEOUT)
+                    lifecycle.renew()
+                    awaiting_since = None
                 if now - last_contact > CONTROLLER_TIMEOUT:
                     # Like a native agent's controller connectivity check: a silent
                     # controller is lost; onboard again when it answers a Search.

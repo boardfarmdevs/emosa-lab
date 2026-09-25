@@ -35,6 +35,7 @@
 #define DISCOVERY_PERIOD 60
 #define CONTROLLER_TIMEOUT 130
 #define UNSERVED_RENEW 60
+#define M2_TIMEOUT 30 /* M1 sent, no M2: search again (a restarted controller forgot the M1) */
 #define AP_DEADLINE 120
 #define STEER_APPLY 10
 #define STEER_GENTLE 8
@@ -171,7 +172,7 @@ typedef struct {
     long topology_mark;
     bool reannounced;
     unsigned topology_responses;
-    double tokens, token_time, last_contact, next_discovery, unserved_since;
+    double tokens, token_time, last_contact, next_discovery, unserved_since, awaiting_since;
     counters counts;
     /* operations */
     size_t nops;
@@ -1278,6 +1279,14 @@ int main(int argc, char **argv)
         if (a.state == S_PROVISIONING && t - a.last_contact > CONTROLLER_TIMEOUT) {
             renew(&a, "no message from the controller for 130s");
             a.last_contact = t;
+        }
+        if (a.state != S_AWAITING_M2)
+            a.awaiting_since = 0;
+        else if (!a.awaiting_since)
+            a.awaiting_since = t;
+        else if (t - a.awaiting_since > M2_TIMEOUT) {
+            renew(&a, "no M2 for 30s after M1");
+            a.awaiting_since = 0;
         }
         bool unserved = a.state == S_PROVISIONING && source_current(&a) && !a.has_primary && !active_op(&a);
         if (!unserved)
