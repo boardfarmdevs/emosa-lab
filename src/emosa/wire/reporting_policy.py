@@ -36,7 +36,11 @@ def decode_policy(tlvs, ruid):
 
     Omitted policy TLVs leave the corresponding previous policy unchanged.
     Reserved bit fields are ignored on reception and retained in raw evidence.
-    Unsupported companions remain an explicit procedure gap, not a partial Ack.
+    Companions EMOSA does not interpret (e.g. RDK's Default 802.1Q, Traffic
+    Separation, Channel Scan Reporting and Unsuccessful Association policies, a
+    vendor TLV) are recorded as received and not applied: nothing in a policy is
+    applied to the pod, and the Ack confirms receipt only. Withholding the Ack
+    instead makes a controller give the radio up (RDK's does).
     """
     result = {}
     for tlv in tlvs:
@@ -99,7 +103,7 @@ def decode_policy(tlvs, ruid):
                 invalid("malformed QoS management policy reserved field")
             result.setdefault("qos", []).append({"mscs_disallowed": mscs, "scs_disallowed": scs})
         else:
-            raise EmosaError(Reason.UNSUPPORTED_OPERATION, "unimplemented policy companion")
+            result.setdefault("not_applied", []).append({"kind": tlv.kind, "length": len(data)})
     return result
 
 

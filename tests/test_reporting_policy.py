@@ -183,7 +183,6 @@ def test_source_loss_stops_active_work_and_recovery_accounts_elapsed_periods(rig
         (0x89, b"\x00\x00\x01"),
         (0xDB, bytes(21)),
         (0xDB, bytes(23)),
-        (0x99, b""),
     ],
 )
 def test_bad_companion_cannot_partially_replace_policy(rig, kind, value):
@@ -192,6 +191,32 @@ def test_bad_companion_cannot_partially_replace_policy(rig, kind, value):
     with pytest.raises(EmosaError):
         rig.request((rig.metrics(10), Tlv(kind, value)), mid=24)
     assert rig.store.read() == before and len(rig.sent) == 1
+
+
+def test_the_rdk_controllers_policy_is_acknowledged_with_its_companions_recorded(rig):
+    """RDK's Multi-AP Policy Config Request as captured (RUID replaced)."""
+    ruid = rig.ruid
+    tlvs = (
+        Tlv(0x89, bytes.fromhex("000001") + ruid + bytes.fromhex("023c78")),
+        Tlv(0x8A, bytes.fromhex("0501") + ruid + bytes.fromhex("78053cc0")),
+        Tlv(0xB5, bytes.fromhex("000140")),
+        Tlv(
+            0xB6,
+            bytes.fromhex(
+                "050c707269766174655f73736964000c08696f745f73736964000e0a6c6e665f7261"
+                "64697573000f0d6d6573685f6261636b6861756c000d07686f7473706f740010"
+            ),
+        ),
+        Tlv(0xA4, b"\x00"),
+        Tlv(0xC4, bytes(5)),
+        Tlv(0x0B, bytes.fromhex("d89c8e00")),
+    )
+    decoded = decode_policy(tlvs, ruid)
+    assert decoded["metrics"]["interval_seconds"] == 5
+    assert decoded["steering"]["radios"][0]["policy"] == 2
+    assert [c["kind"] for c in decoded["not_applied"]] == [0xB5, 0xB6, 0xA4, 0xC4, 0x0B]
+    assert rig.request(tlvs, mid=31) == "policy_receipt_ack_sent"
+    assert rig.store.read()["policy"]["not_applied"][0] == {"kind": 0xB5, "length": 3}
 
 
 def test_reserved_bits_ignored_and_complete_counted_lists_retained(rig):

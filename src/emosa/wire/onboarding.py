@@ -26,6 +26,7 @@ from emosa.wire.link_metrics import LinkMetricCoordinator, LinkMetricSource
 from emosa.wire.provisioning_session import ComponentProvisioningSession
 from emosa.wire.reporting_policy import ReportingPolicyCoordinator
 from emosa.wire.reports import PreparedReport, capability_tlvs
+from emosa.wire.steering import SteeringCoordinator
 
 R3_CONTROLLER_FIELDS = (
     "controller_capability_absent",
@@ -79,6 +80,7 @@ class OnboardingSession:
         ap_metric_source=None,
         reset_channel_policy=True,
         message_set=EASYMESH_61,
+        steering_executor=None,
     ):
         self.message_set = check_message_set(message_set)
         if type(inventory) is not DeviceInventory:
@@ -126,6 +128,9 @@ class OnboardingSession:
             else APMetricSource(source, clock=clock)
         )
         self.ap_metrics = None
+        # Client steering mandates go to the pod through this (emosa.agent.steering).
+        self.steering_executor = steering_executor
+        self.steering = None
 
     def _record(self, event):
         self.counts[event] = self.counts.get(event, 0) + 1
@@ -348,6 +353,14 @@ class OnboardingSession:
                         clock=self.clock,
                         reset_policy=self.reset_channel_policy,
                     )
+                if self.steering_executor is not None:
+                    self.steering = SteeringCoordinator(
+                        self.source,
+                        self.send_frame,
+                        self.steering_executor,
+                        self.mids,
+                        clock=self.clock,
+                    )
                 if self.reporting_policy_store is not None:
                     self.reporting_policy = ReportingPolicyCoordinator(
                         self.source,
@@ -405,6 +418,10 @@ class OnboardingSession:
                 result = self.ap_metrics.handle(
                     message, now, ingress=ingress, generation=generation
                 )
+                if result:
+                    return self._record(result)
+            if self.steering and self.state == "provisioning":
+                result = self.steering.handle(message, now)
                 if result:
                     return self._record(result)
             if message.message_type == 0x8001 and self.provisioning:
@@ -540,6 +557,7 @@ class OnboardingSession:
             "full_profile_qualified": False,
             "physical_pod_proven": False,
             "reporting_policy": self.reporting_policy.status() if self.reporting_policy else None,
+            "steering": self.steering.status() if self.steering else None,
             "ap_metrics": {
                 "counts": dict(self.ap_metrics.counts),
                 "measurement_available": self.ap_metric_source.current() is not None,
@@ -555,6 +573,7 @@ class OnboardingSession:
             "channels": {
                 "counts": dict(self.channels.counts),
                 "operating_ack_pending": self.channels.pending is not None,
+                "last_decline": self.channels.last_decline,
             }
             if self.channels
             else None,

@@ -172,8 +172,6 @@ def test_complete_scope_validation_before_any_acceptance_or_persistence(rig):
     for tlvs in (
         (supported, supported),
         (supported, Tlv(0xEB, b"unknown-actuation")),
-        (Tlv(0x8D, rig.radio.ruid + b"\x10"),),  # Lower than observed 17; needs actuator.
-        (Tlv(0x8B, rig.radio.ruid + bytes.fromhex("0151010600")),),
         (Tlv(0x8B, bytes.fromhex("02000000ffff00")),),
     ):
         with pytest.raises(EmosaError):
@@ -185,6 +183,48 @@ def test_complete_scope_validation_before_any_acceptance_or_persistence(rig):
     )
     assert rig.store.read()["power_limit_dbm"] == 20
     assert rig.store.read()["preferences"][0]["preference"] == 14
+
+
+@pytest.mark.parametrize(
+    ("kind", "body"),
+    [
+        (0x8D, b"\x10"),  # a power limit below the observed 17 dBm
+        (0x8B, bytes.fromhex("0151010600")),  # channel 6, the only one the pod uses, forbidden
+    ],
+)
+def test_what_the_pod_cannot_do_is_declined_and_keeps_the_policy(rig, kind, body):
+    before = rig.store.read()
+    assert rig.request(tlvs=(Tlv(kind, rig.radio.ruid + body),)) == "channel_selection_declined"
+    assert rig.store.read() == before
+    response, report = (Reassembler().feed(f) for f in rig.sent)
+    assert (response.message_type, response.mid) == (0x8007, 41)
+    assert response.tlvs == (Tlv(0x8E, rig.radio.ruid + b"\x02"),)
+    assert report.message_type == 0x8008 and report.tlvs == (rig.radio.tlv(),)
+    assert rig.coordinator.last_decline["mid"] == 41
+
+
+def test_the_rdk_controllers_request_is_answered(rig):
+    """RDK's Channel Selection Request as captured (RUID replaced): channel 6 preferred,
+    groups for the 40 MHz classes 83/84 the radio does not advertise, and a transmit
+    power limit of 0 dBm (the controller's unset value)."""
+    ruid = rig.radio.ruid
+    preferences = bytes.fromhex(
+        "05510c0102030405070809"
+        "0a0b0c0d00510106105308"
+        "0102030405070809105301"
+        "06e054090506070809"
+        "0a0b0c0d10"
+    )
+    tlvs = (Tlv(0x8B, ruid + preferences), Tlv(0x8D, ruid + b"\x00"))
+    assert rig.request(tlvs=tlvs) == "channel_selection_declined"  # 0 dBm is below 17
+    assert Reassembler().feed(rig.sent[0]).tlvs == (Tlv(0x8E, ruid + b"\x02"),)
+    policy = selected_policy((tlvs[0],), rig.radio)
+    assert policy["decline"] is None
+    assert [g["class"] for g in policy["ignored"]] == [83, 83, 84]
+    assert [(g["channels"], g["preference"]) for g in policy["preferences"]] == [
+        ([1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13], 0),
+        ([6], 1),
+    ]
 
 
 def test_no_measured_radio_no_late_reply_no_disk_no_success(rig, monkeypatch):

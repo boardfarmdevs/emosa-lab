@@ -11,12 +11,18 @@
     "onboarding": "the controller's five-BSS M2 set applied on the pod (OBSERVED_APPLIED): home-ap-24 private_ssid, svc-d-ap-24 iot_ssid, svc-e-ap-24 lnf_radius, fh-24 hotspot, b-ap-24 mesh_backhaul (Multi-AP backhaul BSS); 2.4 GHz channel 6",
     "controller_topology": "Agent-1 02:72:f9:7f:07:85 with 5 BSSes and 1 station, Ethernet edge from the controller",
     "client": "emc-1 (02:00:00:00:6c:00) on the pod's private_ssid, pinned to BSSID 82:00:00:00:6a:00: 10.0.0.52 from the RDK router, gateway and internet (ICMP and HTTP)",
-    "regulatory_domain": "unchanged (country 00) throughout"
+    "regulatory_domain": "unchanged (country 00) throughout",
+    "client_steering": "the controller's /usr/bin/steer.sh 02:00:00:00:6c:00 02:00:00:12:75:2c (a mandate, disassociation imminent) sent a Client Steering Request to the agent; EMOSA acknowledged it, opened a steering window on the pod (owm cs_state steering), wrote the directed kick; owm sent the BTM request naming 02:00:00:12:75:2c; the station left the pod's BSS and the window's rows were deleted. Eight runs on 2026-09-25 (pod image mvx-pod-20260925075828): seven ended left_source; one, sent while the agent was restarting, was not carried out. The client (wpa_supplicant 2.10) chose its next BSS itself: every link on this medium has the same SNR, and on a throughput tie it stays, so owm's deauthentication ended the association"
   },
   "fixed_on_the_way": [
     "opensync-lab core patch 0002: OSW writes only an ISO 3166 alpha-2 country_code (hwsim reported 99; hostapd rejected it and no BSS started)",
     "emosa: frames not matching the agent's binding are dropped before the rate limit and without touching the session (the first M2 set was lost on the shared LAN)",
-    "meta-cmf 215535b: wmediumd includes guest containers' radios (user.wmediumd.guest=true)"
+    "meta-cmf 215535b: wmediumd includes guest containers' radios (user.wmediumd.guest=true)",
+    "opensync-lab daca9a9: owm client steering on hwsim (core 0003 BTM response age, hostapd ACL per phy, hostap 992 deny list keeps associated stations, hostap 993 assoc_ies)",
+    "EMOSA answers RDK's Channel Selection Request (other operating classes ignored, the 0 dBm power limit declined with code 2) and acknowledges its Multi-AP Policy Config Request with companions recorded as not applied: before, both went unanswered and the controller marked the pod's radio misconfigured"
   ],
-  "next": ["em_cli renders EMOSA-fronted pods (manufacturer from M1)", "client steering (BTM) through the pod", "metrics on the medium"]
+  "next": [
+    "metrics on the medium",
+    "guests in the room model, so a steering target can be a better link than the pod"
+  ]
 }

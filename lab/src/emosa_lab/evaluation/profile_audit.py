@@ -76,8 +76,9 @@ REQUIREMENTS = (
         "steering",
         "Client steering",
         "11",
-        "not_implemented",
-        "No qualified steering request, policy, outcome or failure mapping",
+        "partial_component",
+        "A one-station mandate to a named target goes to the pod's owm (spec §3.7); no BTM"
+        " Report (the pod exposes no BTM status), opportunities are completed unsteered",
     ),
     (
         "backhaul",

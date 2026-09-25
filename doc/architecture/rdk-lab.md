@@ -129,7 +129,7 @@ artifact is rebuilt with the lab's own `gen/rebuild-em-cli-artifact.sh`.
 | 4. Pod | the unchanged pod joins the GTP, dials `.40`, gets an agent | passed: GRE up, `br-home` `10.0.0.155` from the RDK router, agent `02:72:f9:7f:07:85` |
 | 5. Onboarding | the RDK controller onboards the agent; the pod runs its fronthaul; a client has internet | passed: the five-BSS M2 set applied (`private_ssid`, `iot_ssid`, `lnf_radius`, `hotspot`, `mesh_backhaul`); a client on the pod's `private_ssid` reached the internet |
 | 6. Topology | the pod in the controller's topology and in em_cli, marked as an OpenSync pod | passed: Agent-1 with kind `opensync-pod`, its own icon, model and manufacturer on hover and in the dashboard (meta-cmf `37c70e8`, controller image `…20260925081052`; installed in place in `rdk-emosa`) |
-| 7. Agent behaviour | client steering (BTM) through the pod; metrics on the medium | not started |
+| 7. Agent behaviour | client steering (BTM) through the pod; metrics on the medium | steering passed: the controller's `steer.sh` → Client Steering Request → EMOSA → `owm` BTM request to the target; the station left the pod's BSS in each run (§7). Metrics on the medium: not started |
 
 The lab driver is `deploy/rdk-lab/` in emosa-lab, like `deploy/opensync-lab/`:
 a host-side wrapper and a VM-side script that reuses the same components (the
@@ -149,44 +149,144 @@ adapter kit, `emosa-gtp`, the fleet).
 - **A bridge takes its lowest port MAC.** LXD's `00:16:3e:…` port would have
   become `brlan0`'s address; the port gets a locally administered MAC above
   the lab's.
-- **Radios come back renamed.** A deleted pod's phys return carrying
+- **Radios come back renamed, and late.** A deleted pod's phys return carrying
   OpenSync's VIFs and no `virt-wlanN`; the driver reclaims its own radios
-  before a start, as the lab's allocator does for its roles.
+  before a start, as the lab's allocator does for its roles. They return only
+  when the kernel tears the container's network namespace down, which it does
+  asynchronously (seconds): the driver waits for them. A radio taken as a
+  replacement is a new device to the controller (EMOSA refuses the changed
+  radio identity) and is not on the medium until wmediumd is regenerated.
+- **The gateway reboots itself.** Under load RDK's self-heal reboots
+  `bpibroadband` (last reboot reason `CPU_THRESHOLD`), and brlan0 is rebuilt
+  from RDK's own configuration, without `eth2`. A VM timer
+  (`emosa-lab-lanport.timer`) puts the port back within 15 s.
 - **wmediumd.** The generator includes guest radios (meta-cmf `215535b`); the
   room demo stops while the medium is regenerated.
+- **The controller gave the pod's radio up.** RDK's controller configures a
+  radio in steps and waits for each answer: a Multi-AP Policy Config Request
+  (Ack), channel preference, a Channel Selection Request (response), and the
+  Operating Channel Report. Only a radio that completes them is `configured`,
+  and only a configured radio is steered (`steer_sta` is otherwise cancelled).
+  EMOSA withheld two answers: the policy request carries TLVs it does not
+  interpret (Default 802.1Q, Traffic Separation, Channel Scan Reporting,
+  Unsuccessful Association, a vendor TLV), and the channel request carries
+  preferences for the 40 MHz classes and a transmit power limit of 0 dBm (the
+  controller's unset value). Unanswered, the controller retried every second,
+  timed out, marked the radio misconfigured and sent a Renew: the uncounted
+  `rejected_UNSUPPORTED_OPERATION` seen since step 5. EMOSA now acknowledges
+  the policy (companions recorded as not applied) and answers the channel
+  request: other classes ignored, the power limit declined (code 2), the
+  Operating Channel Report after it. The radio then reaches `configured`.
+- **A replaced radio stays in the controller.** After the lost-radio
+  replacement the controller kept the pod's old radio (RUID `…:6a:00`) under
+  the agent, and its topology sync waited for that radio for ever. Removing
+  its rows (`RadioList`, `BSSList`, `OperatingClassList`, `PolicyList`) with
+  the controller stopped cleared it. The driver now waits for returning radios
+  instead of replacing them.
+- **The agent's source lease.** The agent re-reads the pod every 0.5 s and its
+  report lives 1.5 s; a refresh that comes later ends the controller session
+  (source lost, a fresh onboarding). Under this VM's load that happened a few
+  times, and the controller then needs about 40 s to configure the radio
+  again. The agent logs each loop step slower than 0.5 s.
 - **The controller's own identity.** The controller writes every M1's
   manufacturer and model onto its own device record as well: its node reads
   "Banana Pi - R4", or "OpenSync via EMOSA" once the pod has onboarded. em_cli
   never classifies the root; the controller itself is unchanged there.
 
-## 7. Next: client steering through the pod (design)
+## 7. Client steering through the pod
 
-The RDK controller steers a station with a Client Steering Request (`0x8014`,
-Steering Request TLV `0x9B`: the source BSSID, the request mode (mandate or
-opportunity), BTM disassociation imminent, the stations, and the target
-BSSIDs with operating class and channel). The lab's optimizer triggers these
-through em_cli (`/api/v1/steer-native`). A native agent then:
-1. acknowledges (1905 ACK);
+The RDK controller steers a station with a Client Steering Request (`0x8014`)
+carrying one Steering Request TLV (`0x9B`): the source BSSID, the request mode
+(mandate or opportunity) with the BTM flags (disassociation imminent,
+abridged), the opportunity window, the BTM disassociation timer, the stations,
+and the target BSSs with operating class and channel. The lab drives it with
+`/usr/bin/steer.sh STA TARGET` on the controller (through `steer_drv`, also
+behind em_cli's `/api/v1/steer-native`): always a mandate with an abridged
+candidate list, either with disassociation imminent (timer 5, window 5) or
+"gentle" (neither, window 50: a station that declines stays). A native agent:
+1. acknowledges within one second (1905 ACK, with an Error Code TLV `0xA3`,
+   reason `0x02`, for a station not on the source BSS);
 2. sends the station a BTM request toward the target;
-3. reports the station's answer in a Client Steering BTM Report (`0x8016`,
-   TLV `0x9E`: BSSID, station, BTM status code, target BSSID);
-4. sends Steering Completed (`0x8017`) when a mandate is done.
+3. reports the station's answer in a Client Steering BTM Report (`0x8015`,
+   Steering BTM Report TLV `0x9C`: BSSID, station, BTM status, target);
+4. for an opportunity, sends Steering Completed (`0x8017`) when the window
+   ends.
 
-On an OpenSync 6.6 pod, `owm`'s steering does step 2 from OVSDB, and the pod's
-own statistics report the result (§3.6 of the spec):
-- **Write** (one guarded transaction, a new steering scope): the station's
-  `Band_Steering_Clients` row with `kick_type` `btm_deauth`,
-  `steering_btm_params` `{bssid: <target>, disassoc_imminent: 0|1}` (the only
-  two keys `owm` reads) and `force_kick` `directed` (a one-shot kick,
-  `ow_steer_policy_force_kick`, enforced for 20 s).
-- **Observe:** the band-steering report (`sts.BSReport`, enabled by a
-  `Wifi_Stats_Config` row of type `steering`) carries `CLIENT_DIRECTED_KICK`
-  and `CLIENT_BTM_STATUS` events with the station's `btm_status`, which is the
-  BTM status code the report needs. The station's association in
-  `Wifi_Associated_Clients` shows whether it left.
-- **Refuse** what the pod cannot do: more than one target, or a target
-  EMOSA cannot name to the pod, is answered with the EasyMesh error and no
-  write. An opportunity request is handled like a mandate with the pod's
-  normal BTM (OpenSync has no separate opportunity window).
-- **Clean up:** the row is removed when the window ends, so the pod's own
-  steering policy is left as it was.
+The controller handles the ACK and `0x8015`; it has no handler for `0x8017`.
+
+### 7.1 On the pod: owm's client steering
+
+OpenSync 6.6's `owm` steers one station away from its BSS when it has a
+steering group (`Band_Steering_Config` naming the VIF), the target as a
+neighbor (`Wifi_VIF_Neighbors`), and the station's complete
+`Band_Steering_Clients` row with client steering `away` for an enforcement
+period (`cs_mode`, `cs_params.cs_enforce_period`), `sc_kick_type` `btm_deauth`
+and `sc_btm_params` `{bssid, disassoc_imminent}`. Once `cs_state` is
+`steering`, a one-shot `force_kick` `directed` makes its executor block the
+station on the source (hostapd deny list), send the BTM request naming the
+target, and deauthenticate the station if it stays (10 s after the BTM
+request, at once for a station without BTM support).
+
+On hwsim that never produced a BTM request. Four faults, fixed in opensync-lab
+(`daca9a9`):
+- core `0003`: the BTM response policy's age overflowed, and with no response
+  yet every candidate was masked out;
+- the nl80211 driver has no ACL unless the platform names one per phy
+  (`OSW_DRV_NL80211_ACL_IMPL_PHY_<phy>`): the block never applied and the
+  executor waited on it for ever. The pod bootstrap names hostapd's;
+- hostap `992`: hostapd disassociated a station as soon as it was on the deny
+  list, before the executor's BTM request. A deny-list entry now refuses new
+  associations only, which is what the executor assumes;
+- hostap `993`: `owm` reads BTM support from the association request elements
+  in hostapd's STA output and AP-STA-CONNECTED (`assoc_ies`), which upstream
+  hostapd never reports: every station looked BTM-incapable and was only
+  deauthenticated.
+
+Seen live after the fixes: the BTM request carries the target as its only
+candidate, and the station answers (BTM response, status 0). The lab's client
+(wpa_supplicant 2.10) then keeps its current BSS: it ranks candidates by
+estimated throughput and, on a tie, stays, even with disassociation imminent.
+Every guest link has the same SNR on this medium, so the target is never
+better; `owm` then deauthenticates the station and it reconnects where it
+chooses. A target that is a better link needs the guests in the room model
+(the room integration step).
+
+### 7.2 In EMOSA
+
+`emosa.wire.steering` acknowledges every Client Steering Request and hands a
+**mandate for one station and one named target**, from a BSS of the pod, to
+the steering scope (`emosa.agent.steering`, `emosa.opensync.steering`; spec
+§3.7):
+- the window opens with one guarded transaction: the pod is the bound serial
+  and no `Band_Steering_Clients` row exists for the station (another manager's
+  steering is not taken over); group and neighbor rows are reused when
+  present and inserted when absent. The window is the request's opportunity
+  window, 15 to 120 s;
+- it is applied when `owm` reports `cs_state` `steering`; then the directed
+  kick, guarded by that state;
+- it closes when `owm` stops steering, or at the latest after the window, and
+  exactly the rows it inserted are deleted (by UUID). Without disassociation
+  imminent it closes 8 s after the kick, before `owm`'s deauthentication, so a
+  declining station stays as the controller asked;
+- one mandate at a time. Several stations or targets, the wildcard target and
+  a foreign source are acknowledged and not carried out. An opportunity is
+  completed at once (`0x8017`): EMOSA makes no steering decisions of its own.
+
+**Seen live** (2026-09-25): the controller's `steer.sh 02:00:00:00:6c:00
+02:00:00:12:75:2c` reached the agent as a Client Steering Request; EMOSA
+acknowledged it, opened the window, `owm` took it and sent the BTM request
+naming the target after the kick, the station left the pod's BSS, and the
+window's rows were deleted. Seven of eight runs ended so; the eighth arrived
+while the agent was restarting. Where the station went was its own choice
+(§7.1).
+
+**No BTM Report.** OpenSync 6.6 does not expose the station's BTM status: its
+band-steering report (`sts.BSReport`) has a `CLIENT_BTM_STATUS` event and a
+`btm_status` field, but `owm` never sets either, and no table carries the
+response. EMOSA therefore sends no `0x8015` rather than a guessed status. The
+controller sees the outcome in the topology: the station leaves the pod's BSS
+(Client Association Event) and joins the target.
+
+**Known limitation.** The pod does not tell EMOSA whether a station supports
+BTM (`Wifi_Associated_Clients.capabilities` is empty). `owm` deauthenticates a
+station without BTM support at once, also for a gentle request.

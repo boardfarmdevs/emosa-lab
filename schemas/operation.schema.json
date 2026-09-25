@@ -196,6 +196,64 @@
             "sampling_interval"
           ],
           "additionalProperties": false
+        },
+        {
+          "title": "Steer one station from a BSS of the pod to a target BSS (the steering scope)",
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "station": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"
+            },
+            "source_bssid": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"
+            },
+            "target_bssid": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"
+            },
+            "op_class": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 255
+            },
+            "channel": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 233
+            },
+            "disassoc_imminent": {
+              "type": "boolean"
+            },
+            "window": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 120
+            },
+            "request_mid": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          },
+          "required": [
+            "pod_id",
+            "station",
+            "source_bssid",
+            "target_bssid",
+            "op_class",
+            "channel",
+            "disassoc_imminent",
+            "window",
+            "request_mid"
+          ],
+          "additionalProperties": false
         }
       ]
     },

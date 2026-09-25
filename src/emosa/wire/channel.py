@@ -3,6 +3,16 @@
 The initial radio profile supports only class 81/channel 6. Compatible requests
 need no actuator change; their acceptance still requires durable preferences and
 fresh observed operating parameters. This is not a generic channel actuator.
+
+Every well-formed Channel Selection Request is answered within its deadline, as
+§8.2 requires (a controller that gets no response retries and gives the radio
+up, as RDK's does). Preferences for operating classes the radio does not
+advertise do not concern it and are recorded as ignored. A request EMOSA cannot
+carry out on the pod (it forbids the channel the pod operates on, or limits the
+power below what the pod transmits) is declined with response code 0x02: it
+violates the preferences and capabilities last reported. A decline keeps the
+stored policy. The Operating Channel Report of the actual operation follows
+either answer. Malformed requests get no answer.
 """
 
 import json
@@ -82,7 +92,7 @@ def selected_policy(tlvs, radio):
     outside this controller/profile contract. It must not replace a usable policy
     and then silently keep operating on a newly forbidden channel.
     """
-    preferences, power = None, None
+    preferences, power, ignored, decline = None, None, [], None
     for tlv in tlvs:
         if tlv.kind == 0x8B:
             if preferences is not None or len(tlv.value) < 7 or tlv.value[:6] != radio.ruid:
@@ -100,25 +110,22 @@ def selected_policy(tlvs, radio):
                 channels, value = tuple(body[2 : 2 + n]), body[2 + n]
                 body = body[3 + n :]
                 score, reason = value >> 4, value & 15
-                if (
-                    opclass != 81
-                    or len(set(channels)) != len(channels)
-                    or any(c not in range(1, 14) for c in channels)
-                ):
-                    raise EmosaError(
-                        Reason.UNSUPPORTED_OPERATION,
-                        "preferences outside advertised operating class",
-                    )
                 if score == 15 or reason > 13 or reason in (6, 7, 8, 9, 10):
                     invalid("reserved preference or agent-only reason in controller request")
+                if opclass != 81:
+                    # Not an operating class the radio advertises (e.g. RDK's 40 MHz
+                    # classes 83/84): nothing in it applies to this radio.
+                    ignored.append({"class": opclass, "channels": list(channels)})
+                    continue
+                if len(set(channels)) != len(channels) or any(
+                    c not in range(1, 14) for c in channels
+                ):
+                    invalid("channels outside the operating class")
                 applies = set(channels or range(1, 14))
                 if applies & specified:
                     invalid("overlapping controller channel preferences")
                 if 6 in applies and score == 0:
-                    raise EmosaError(
-                        Reason.UNSUPPORTED_OPERATION,
-                        "controller forbids the sole advertised operable channel",
-                    )
+                    decline = "controller forbids the sole advertised operable channel"
                 specified |= applies
                 preferences.append(
                     {
@@ -135,14 +142,17 @@ def selected_policy(tlvs, radio):
                 invalid("duplicate, truncated or foreign power limit")
             power = int.from_bytes(tlv.value[6:], "big", signed=True)
             if power < radio.tx_power_dbm:
-                raise EmosaError(
-                    Reason.UNSUPPORTED_OPERATION, "power actuation requires a qualified mapping"
-                )
+                decline = decline or "power actuation requires a qualified mapping"
         else:
             raise EmosaError(
                 Reason.UNSUPPORTED_OPERATION, "unimplemented channel configuration companion"
             )
-    return {"preferences": preferences or [], "power_limit_dbm": power}
+    return {
+        "preferences": preferences or [],
+        "power_limit_dbm": power,
+        "ignored": ignored,
+        "decline": decline,
+    }
 
 
 @dataclass
@@ -162,6 +172,7 @@ class ChannelCoordinator:
         self.source, self.binding, self.send_frame = source, source.binding, send_frame
         self.store, self.mids, self.clock = store, mids, clock
         self.pending = None
+        self.last_decline = None
         self.last_operating = None
         self.queries = {}
         self.waiting = {}
@@ -261,6 +272,17 @@ class ChannelCoordinator:
         snapshot.stamp.check(self.stamp(), self.clock())
         if self.clock() >= received_at + 1:
             raise EmosaError(Reason.NOT_READY, "channel response deadline expired")
+        if policy["decline"]:
+            # 0x02: the request violates the most recently reported preferences.
+            self.last_decline = {"mid": message.mid, "reason": policy["decline"]}
+            self.send(
+                0x8007, message.mid, (Tlv(0x8E, radio.ruid + b"\x02"),), snapshot, received_at + 1
+            )
+            self.queries[key] = self.clock() + 5
+            self.record("channel_selection_declined")
+            self.notify(snapshot, radio)
+            return "channel_selection_declined"
+        del policy["decline"]
         try:
             self.store.save(
                 {

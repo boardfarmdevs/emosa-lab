@@ -81,13 +81,14 @@ Sent by the agent:
 | `0x0006` | Link Metric Response | in answer to a Link Metric Query, once provisioned |
 | `0x0007` | AP-Autoconfiguration Search | up to 3 times, 1 s apart, when onboarding starts |
 | `0x0009` | AP-Autoconfiguration WSC (M1) | after an admitted Response |
-| `0x8000` | 1905 Ack | acknowledging a Multi-AP Policy Config Request or a Backhaul Steering Request |
+| `0x8000` | 1905 Ack | acknowledging a Multi-AP Policy Config Request, a Client Steering Request (with an Error Code TLV `0xA3` per station not on the source BSS) or a Backhaul Steering Request |
 | `0x8002` | AP Capability Report | in answer to an AP Capability Query |
 | `0x8005` | Channel Preference Report | in answer to a Channel Preference Query |
-| `0x8007` | Channel Selection Response | in answer to a Channel Selection Request: accepted (code 0), without moving the radio |
+| `0x8007` | Channel Selection Response | in answer to every well-formed Channel Selection Request: accepted (code 0) without moving the radio, or declined (code 2) when the pod cannot do what it asks (§3.4) |
 | `0x8008` | Operating Channel Report | after a Channel Selection Request, while the BSS operates |
 | `0x800A` | Client Capability Report | in answer to a Client Capability Query (declares the capability unavailable) |
 | `0x800C` | AP Metrics Response | in answer to an AP Metrics Query, only with qualified measurements |
+| `0x8017` | Steering Completed | after the Ack of a steering opportunity: EMOSA steers nothing on its own account (§3.7) |
 | `0x801A` | Backhaul Steering Response | after its Ack: result code `0x01` (failure). EMOSA refuses backhaul steering |
 | `0x8022` | Client Disassociation Stats | after an observed client departure, only with qualified statistics |
 | `0x8028` | Backhaul STA Capability Report | in answer to a Backhaul STA Capability Query: one Backhaul STA Radio Capabilities TLV (`0xCB`) for the pod's EasyMesh backhaul STA (§8.3), none over GRE |
@@ -104,10 +105,11 @@ Received by the agent:
 | `0x000A` | AP-Autoconfiguration Renew | onboarding starts again with a fresh M1 |
 | `0x8000` | 1905 Ack | acknowledgement for the agent's own reports |
 | `0x8001` | AP Capability Query | answered |
-| `0x8003` | Multi-AP Policy Config Request | stored and acknowledged. Nothing is applied to the pod. |
+| `0x8003` | Multi-AP Policy Config Request | stored and acknowledged, also with policy TLVs EMOSA does not interpret (recorded as not applied). Nothing is applied to the pod. |
 | `0x8004` / `0x8006` | Channel Preference Query / Channel Selection Request | answered (§3.4) |
 | `0x8009` | Client Capability Query | answered |
 | `0x800B` | AP Metrics Query | answered only with qualified measurements |
+| `0x8014` | Client Steering Request | acknowledged; a mandate for one station and one target is carried out by the pod (§3.7) |
 | `0x8019` | Backhaul Steering Request | acknowledged and refused (`0x801A`) |
 | `0x8027` | Backhaul STA Capability Query | answered |
 
@@ -243,9 +245,16 @@ The 6.6 encoding of WPA2-PSK:
   - the set has more BSSes of a role than the profile has slots.
 - **Shared M2 session.** With `m2_session=shared`, an M2 set from one
   registrar session (one nonce, one public key) is accepted, as RDK sends it.
-- **Channel selection** is accepted (response code 0), but EMOSA does not move
-  the pod's radio. The Operating Channel Report that follows gives the channel
-  the pod actually uses.
+- **Channel selection** is answered within one second. It is accepted
+  (response code 0), without moving the pod's radio, when it allows the channel
+  the pod operates on. Preference groups for operating classes the radio does
+  not advertise are ignored. A request that forbids that channel, or limits the
+  power below what the pod transmits, is declined (code 2: it violates the
+  preferences and capabilities last reported) and does not replace the stored
+  policy; EMOSA has no qualified mapping to move or turn down the radio. The
+  Operating Channel Report that follows either answer gives what the pod
+  actually uses. A controller that gets no answer gives the radio up: RDK's
+  then refuses to steer through it.
 
 ### 3.5 Pod profiles
 
@@ -295,6 +304,47 @@ What it keeps, per station, is only what the pod measured:
 These measurements are in the agent's status. EMOSA sends an EasyMesh metric
 only when it can be built completely from them; until then it sends none
 (§9).
+
+### 3.7 Client steering
+
+A Client Steering Request (`0x8014`) is acknowledged within one second, with an
+Error Code TLV (`0xA3`, reason `0x02`) for each listed station that is not
+associated with the source BSS. A **mandate** for one station and one named
+target, from a BSS of the pod, is then carried out by the pod's band steering
+(`owm`, the steering scope):
+- **opens** a steering window as one guarded transaction (§3.2): the pod is the
+  bound serial and no `Band_Steering_Clients` row exists for the station
+  (another manager's steering MUST NOT be taken over). The window is the
+  station's complete client row with client steering `away` for the window
+  (`cs_params.cs_enforce_period`), a BTM kick with deauthentication fallback
+  (`sc_kick_type` `btm_deauth`) and the target in its BTM parameters
+  (`sc_btm_params`: `bssid`, `disassoc_imminent`), plus a steering group
+  (`Band_Steering_Config`) and the target as a neighbor (`Wifi_VIF_Neighbors`)
+  on the source VIF, each reused when present and inserted when absent;
+- counts it **applied** when `owm` reports `cs_state` `steering` for the row,
+  then writes the directed kick (`force_kick` `directed`, guarded by that
+  state). `owm` sends the BTM request with the target as its candidate;
+- **closes** the window when `owm` stops steering, or at the latest after the
+  window, by deleting exactly the rows it inserted (by UUID). Without
+  disassociation imminent the station is to be left where it is if it
+  declines: the window closes 8 s after the kick, before `owm`'s
+  deauthentication fallback (10 s after its BTM request).
+
+The window is 15 to 120 s (the request's opportunity window, raised to 15 s).
+One mandate at a time; a request while a window is open is acknowledged and
+not carried out. So are several stations or targets, the wildcard target (the
+agent would choose it), and a source that is not a BSS of the pod. A steering
+**opportunity** leaves the choice to the agent: EMOSA makes none, so Steering
+Completed (`0x8017`) follows the Ack at once.
+
+No Client Steering BTM Report (`0x8015`) is sent: OpenSync 6.6 does not expose
+the station's BTM status (its band-steering report never carries it). The
+controller sees the outcome in the topology: the station leaves the pod's BSS
+(Client Association Event, §2.4) and joins the target.
+
+Known limitation: the pod does not tell EMOSA whether a station supports BTM.
+`owm` deauthenticates a station without BTM support at once, also for a
+request without disassociation imminent.
 
 ## 4. The fleet
 

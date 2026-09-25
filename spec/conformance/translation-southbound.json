@@ -548,10 +548,12 @@
        "row": {
         "ap_bridge": true,
         "bridge": "br-home",
+        "btm": 1,
         "enabled": true,
         "if_name": "home-ap-24",
         "mac_list_type": "none",
         "mode": "ap",
+        "rrm": 1,
         "rsn_pairwise_ccmp": true,
         "security": [
          "map",
@@ -1069,10 +1071,12 @@
        "row": {
         "ap_bridge": true,
         "bridge": "br-home",
+        "btm": 1,
         "enabled": true,
         "if_name": "svc-d-ap-24",
         "mac_list_type": "none",
         "mode": "ap",
+        "rrm": 1,
         "rsn_pairwise_ccmp": true,
         "security": [
          "map",
@@ -1160,10 +1164,12 @@
        "row": {
         "ap_bridge": true,
         "bridge": "br-home",
+        "btm": 1,
         "enabled": true,
         "if_name": "svc-e-ap-24",
         "mac_list_type": "none",
         "mode": "ap",
+        "rrm": 1,
         "rsn_pairwise_ccmp": true,
         "security": [
          "map",
@@ -1251,11 +1257,13 @@
        "row": {
         "ap_bridge": false,
         "bridge": "br-home",
+        "btm": 1,
         "enabled": true,
         "if_name": "b-ap-24",
         "mac_list_type": "none",
         "mode": "ap",
         "multi_ap": "backhaul_bss",
+        "rrm": 1,
         "rsn_pairwise_ccmp": true,
         "security": [
          "map",
