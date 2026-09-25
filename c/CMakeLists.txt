@@ -9,9 +9,9 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(CJSON REQUIRED libcjson)
 pkg_check_modules(CRYPTO REQUIRED libcrypto)
 
-add_library(emosa STATIC src/common.c src/cmdu.c src/wsc.c src/autoconf.c)
+add_library(emosa STATIC src/common.c src/cmdu.c src/wsc.c src/autoconf.c src/ovs.c src/view.c)
 target_include_directories(emosa PUBLIC src ${CJSON_INCLUDE_DIRS} ${CRYPTO_INCLUDE_DIRS})
-target_link_libraries(emosa ${CRYPTO_LIBRARIES})
+target_link_libraries(emosa ${CRYPTO_LIBRARIES} ${CJSON_LIBRARIES})
 
 add_executable(emosa-vectors tests/vectors.c)
 target_link_libraries(emosa-vectors emosa ${CJSON_LIBRARIES})

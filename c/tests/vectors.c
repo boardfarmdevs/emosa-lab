@@ -7,6 +7,7 @@
 
 #include "../src/autoconf.h"
 #include "../src/cmdu.h"
+#include "../src/view.h"
 #include "../src/wsc.h"
 
 static int failures, checks;
@@ -377,11 +378,103 @@ static void onboarding_vectors(const char *dir)
     cJSON_Delete(doc);
 }
 
+/* -- translation-northbound.json ------------------------------------------------- */
+
+static cJSON *list_json(const em_tlv *tlvs, size_t n)
+{
+    em_message m = {0};
+    m.ntlvs = n;
+    m.tlvs = (em_tlv *)tlvs;
+    return tlvs_json(&m);
+}
+
+static void northbound_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "translation-northbound.json");
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name");
+        const cJSON *agent = cJSON_GetObjectItemCaseSensitive(c, "agent");
+        const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
+        em_device_view *view = malloc(sizeof(*view));
+        checks++;
+        if (em_device_view_from_rows(cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables"), view) != EM_OK) {
+            fail("northbound", name, "device view");
+            free(view);
+            continue;
+        }
+        cJSON *got = em_device_view_json(view);
+        if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(expected, "device_view"), 1))
+            fail("northbound", name, "device view differs");
+        cJSON_Delete(got);
+        uint8_t ruid[6], agent_al[6], controller_al[6];
+        em_parse_mac(str(agent, "radio"), ruid);
+        em_parse_mac(str(agent, "al_mac"), agent_al);
+        em_parse_mac(str(agent, "controller_al"), controller_al);
+        const em_radio_view *radio = em_view_radio(view, ruid);
+        int channel = radio && radio->nbss && radio->has_channel ? radio->channel : 6;
+        checks++;
+        if (!radio || channel != num(agent, "channel")) {
+            fail("northbound", name, "radio or channel");
+            free(view);
+            continue;
+        }
+        em_tlv_list list;
+        checks++;
+        if (em_capability_tlvs(radio, channel, (uint8_t)num(agent, "max_bss"), (int8_t)num(agent, "max_eirp"), &list) != EM_OK)
+            fail("northbound", name, "capability TLVs not built");
+        got = list_json(list.tlvs, list.count);
+        if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(expected, "capability_tlvs"), 1))
+            fail("northbound", name, "capability TLVs differ");
+        cJSON_Delete(got);
+        em_tlv_list_free(&list);
+        em_tlv inv;
+        checks++;
+        if (em_inventory_tlv(view, radio, str(agent, "chipset"), &inv) != EM_OK) {
+            fail("northbound", name, "inventory TLV not built");
+        } else {
+            got = list_json(&inv, 1);
+            if (!cJSON_Compare(cJSON_GetArrayItem(got, 0), cJSON_GetObjectItemCaseSensitive(expected, "inventory_tlv"), 1))
+                fail("northbound", name, "inventory TLV differs");
+            cJSON_Delete(got);
+            free(inv.value);
+        }
+        em_station_age ages[64];
+        size_t nages = 0;
+        const cJSON *age;
+        cJSON_ArrayForEach(age, cJSON_GetObjectItemCaseSensitive(agent, "station_ages"))
+        {
+            em_parse_mac(age->string, ages[nages].mac);
+            ages[nages++].seconds = (long)age->valuedouble;
+        }
+        const cJSON *sets = cJSON_GetObjectItemCaseSensitive(expected, "topology_tlvs");
+        const cJSON *set;
+        cJSON_ArrayForEach(set, sets)
+        {
+            checks++;
+            bool r1 = !strcmp(set->string, "r1");
+            if (em_topology_tlvs(agent_al, controller_al, radio, channel, ages, nages, r1, &list) != EM_OK) {
+                fail("northbound", name, "topology TLVs not built");
+                continue;
+            }
+            got = list_json(list.tlvs, list.count);
+            if (!cJSON_Compare(got, set, 1))
+                fail("northbound", name, r1 ? "topology r1 differs" : "topology 6.1 differs");
+            cJSON_Delete(got);
+            em_tlv_list_free(&list);
+        }
+        free(view);
+    }
+    cJSON_Delete(doc);
+}
+
 int main(int argc, char **argv)
 {
     const char *dir = argc > 1 ? argv[1] : "spec/conformance";
     cmdu_vectors(dir);
     onboarding_vectors(dir);
+    northbound_vectors(dir);
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? 1 : 0;
 }
