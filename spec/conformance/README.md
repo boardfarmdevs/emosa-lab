@@ -15,6 +15,8 @@ conforms when its own harness reproduces them too.
 | `cmdu.json` | §2.1 | a message (addresses, type, MID, TLVs, relay flag, MTU); received frames | the Ethernet frames the agent transmits; the reassembled message, none while incomplete, or the rejection's reason code |
 | `control.json` | §2.4, §3.4, §3.7 | the recorded pod rows under a provisioned agent, and controller request frames in order | per request: the agent's result and the exact frames it sends (its own messages take MIDs from 500); the steering mandates it hands to the pod |
 | `steering.json` | §3.7 | the recorded pod rows (with and without an existing steering group and neighbor) and one steering intent | the open, kick and close OVSDB transactions |
+| `onboarding.json` | §2.5 | the agent's identity, radio and M1 device facts, the fixed entropy of the independent WSC fixture, and controller Response and M2 frames, per message set | the Search and M1 frames; the Response's admission; the M2's BSS settings; the rejection of an M2 with a changed Authenticator |
+| `telemetry.json` | §3.6 | the pod's statistics topic and interval, a fixed clock, and MQTT publishes: three recorded `sts.Report` payloads, then a repeated, a retained and a foreign one | per publish: whether the report is used, and the statistics status after it |
 | `uplink.json` | §8.3 | the pod's OVSDB rows (one pod on its bootstrap GRE uplink, one on a Multi-AP backhaul), a backhaul station, and an uplink intent | the uplink as `cm` and `owm` report it; for an EasyMesh backhaul, its view, the Topology Response TLVs and the Backhaul STA Radio Capabilities TLV; the switch's result status and OVSDB transaction |
 
 Formats:
@@ -46,9 +48,9 @@ uv run python -m emosa_lab.conformance check
 ```
 
 Not covered by vectors yet, but by the reference implementation's tests:
-- the WSC M1/M2 cryptography, which has independent hostap vectors in
-  `tests/fixtures/protocol/wsc-messages`;
-- onboarding message sequences (Search, Response admission, M1, M2);
+- the WSC M1/M2 cryptography beyond `onboarding.json`, which has independent
+  hostap vectors in `tests/fixtures/protocol/wsc-messages`;
+- onboarding's timing and retries (Search repetitions, the M1 window);
 - the remaining control messages (Topology, AP and Client Capability, link and
   AP metrics, Backhaul Steering), whose TLVs `translation-northbound.json`
   covers;

@@ -780,6 +780,205 @@ def steering_vectors():
     }
 
 
+WSC_FIXTURE = ROOT / "tests" / "fixtures" / "protocol" / "wsc-messages" / "vectors.json"
+
+
+def onboarding_vectors():
+    """Search, Response admission, M1 and M2 around the independent WSC payload fixture."""
+    from contextlib import ExitStack
+    from unittest import mock
+
+    from cryptography.hazmat.primitives.asymmetric import dh
+
+    from emosa import wsc_messages
+    from emosa.easymesh_payloads import (
+        APRadioAdvancedCapabilities,
+        APRadioBasicCapabilities,
+        BasicOperatingClass,
+        Profile2APCapability,
+    )
+    from emosa.wire.autoconfiguration import DiscoveryExchange, WscExchange, parse_response
+    from emosa.wire.cmdu import MidSequence, Reassembler, Tlv, fragment_message
+    from emosa.wsc import MODP_1536, KeyPair
+    from emosa.wsc_messages import M1Device
+
+    fixture = json.loads(WSC_FIXTURE.read_text())["cases"][0]
+    local, controller = bytes.fromhex("020000000001"), bytes.fromhex("020000000002")
+    ruid = bytes.fromhex("020000001001")
+    device = M1Device(
+        uuid=bytes(range(0x40, 0x50)),
+        al_mac=local,
+        authentication_types=0x23,
+        encryption_types=0x0D,
+        connection_types=1,
+        configuration_methods=0x0280,
+        wps_state=2,
+        manufacturer=b"EMOSA synthetic laboratory",
+        model_name=b"Payload reference",
+        model_number=b"1",
+        serial_number=b"public-vector-1",
+        primary_device_type=bytes.fromhex("00060050f2040001"),
+        device_name=b"Synthetic represented AP",
+        rf_band=1,
+        association_state=0,
+        device_password_id=4,
+        configuration_error=0,
+        os_version=1,
+    )
+    basic = APRadioBasicCapabilities(ruid, 2, (BasicOperatingClass(81, 20, ()),))
+    profile2 = Profile2APCapability(0, 0, 0, 0)
+    advanced = APRadioAdvancedCapabilities(ruid, 0)
+    binding = PeerBinding("conformance", 1, local, controller, (controller,))
+
+    def pair():
+        parameters = dh.DHParameterNumbers(MODP_1536, 2, (MODP_1536 - 1) // 2)
+        public = dh.DHPublicNumbers(
+            int.from_bytes(bytes.fromhex(fixture["enrollee_public"]), "big"), parameters
+        )
+        private = int.from_bytes(bytes.fromhex(fixture["enrollee_private"]), "big")
+        return KeyPair(dh.DHPrivateNumbers(private, public).private_key())
+
+    def feed(frames):
+        parser, result = Reassembler(), None
+        for frame in frames:
+            result = parser.feed(frame)
+        return result
+
+    cases = []
+    for message_set in (EASYMESH_61, R1):
+        with ExitStack() as stack:
+            # The fixture's public synthetic entropy: its DH key, enrollee nonce 00..0f.
+            stack.enter_context(mock.patch.object(KeyPair, "generate", pair))
+            stack.enter_context(
+                mock.patch.object(wsc_messages.secrets, "token_bytes", lambda n: bytes(range(n)))
+            )
+            mids = MidSequence(65534)
+            discovery = DiscoveryExchange(
+                binding, band=0, profile=1, profile2=profile2, mids=mids, message_set=message_set
+            )
+            search = discovery.request()
+            response_tlvs = (
+                Tlv(0x0F, b"\0"),
+                Tlv(0x10, b"\0"),
+                Tlv(0x80, b"\x01\0"),
+                Tlv(0xB3, b"\x01"),
+            )
+            response = fragment_message(local, controller, 0x0008, 65535, response_tlvs)
+            admitted = discovery.receive(feed(response), ingress="conformance", generation=1)
+            exchange = WscExchange(
+                binding, device, basic, profile2, advanced, mids=mids, message_set=message_set
+            )
+            m1 = exchange.request()
+            m2 = fragment_message(
+                local,
+                controller,
+                0x0009,
+                321,
+                (Tlv(0x82, ruid), Tlv(0x11, bytes.fromhex(fixture["m2"]))),
+            )
+            result = exchange.receive(feed(m2), ingress="conformance", generation=1)
+            tampered_value = bytearray(bytes.fromhex(fixture["m2"]))
+            tampered_value[-1] ^= 1  # the Authenticator's last octet
+            tampered = fragment_message(
+                local, controller, 0x0009, 322, (Tlv(0x82, ruid), Tlv(0x11, bytes(tampered_value)))
+            )
+            second = WscExchange(
+                binding,
+                device,
+                basic,
+                profile2,
+                advanced,
+                mids=MidSequence(99),
+                message_set=message_set,
+            )
+            second.request()
+            try:
+                second.receive(feed(tampered), ingress="conformance", generation=1)
+                rejected = None
+            except EmosaError as exc:
+                rejected = str(exc.code)
+        candidate = result.candidate
+        cases.append(
+            {
+                "message_set": message_set,
+                "search_frames": [f.hex() for f in search],
+                "response_frames": [f.hex() for f in response],
+                "expected_admission": plain(parse_response(feed(response), message_set=message_set))
+                | {"admitted": admitted is not None},
+                "m1_frames": [f.hex() for f in m1],
+                "m2_frames": [f.hex() for f in m2],
+                "expected_m2": {
+                    "ruid": result.ruid.hex(":"),
+                    "ssid": candidate.ssid,
+                    "passphrase": candidate.passphrase,
+                    "bss_index": candidate.bss_index,
+                },
+                "tampered_m2_frames": [f.hex() for f in tampered],
+                "expected_tampered": {"error": rejected},
+            }
+        )
+    return {
+        "description": "spec §2.5: the agent's Search, a controller Response and its admission, "
+        "the agent's M1, and a controller M2 decrypted to the BSS settings, for each message "
+        "set. The WSC payloads are the independent synthetic fixture "
+        "(tests/fixtures/protocol/wsc-messages): public values, including its DH key pair and "
+        "the enrollee nonce 000102..0f the agent must use for these vectors. A real exchange "
+        "never uses fixed entropy. The M2 with a changed Authenticator is rejected.",
+        "agent": {
+            "al_mac": local.hex(":"),
+            "controller_al": controller.hex(":"),
+            "first_mid": 65535,
+            "radio": {"ruid": ruid.hex(":"), "max_bss": 2, "operating_classes": [[81, 20, []]]},
+            "m1_device": plain(device),
+            "enrollee_private": fixture["enrollee_private"],
+        },
+        "cases": cases,
+    }
+
+
+STATS_RECORDED = ROOT / "tests" / "fixtures" / "opensync" / "pod-6.6.1-hwsim-client-stats.hex"
+
+
+def telemetry_vectors():
+    from emosa.opensync.stats import PodStats
+
+    topic = f"emosa/stats/{SERIAL}"
+    publishes = [
+        (line.split()[0], line.split()[1]) for line in STATS_RECORDED.read_text().splitlines()
+    ]
+    now = 1790313745.0  # the capture's time, fixed: station lifetimes are measured from it
+    stats = PodStats(topic, interval=10, clock=lambda: now)
+    steps = []
+    inputs = [(t, d, False) for t, d in publishes] + [
+        (publishes[1][0], publishes[1][1], False),  # the second again: out of order
+        (publishes[2][0], publishes[2][1], True),  # retained
+        ("emosa/stats/ANOTHERPOD", publishes[2][1], False),  # another pod's topic
+    ]
+    for t, data, retained in inputs:
+        accepted = stats.receive(t, bytes.fromhex(data), retained=retained)
+        status = stats.status()
+        status.pop("last_report_at")
+        steps.append(
+            {
+                "topic": t,
+                "payload": data,
+                "retained": retained,
+                "expected": {"accepted": bool(accepted), "status": plain(status)},
+            }
+        )
+    return {
+        "description": "spec §3.6: the pod's statistics as the agent keeps them. Three "
+        "sts.Report publishes recorded from an opensync-lab pod (OpenSync 6.6.1.0, raw client "
+        "reports every 10 s, topic " + topic + "), then a repeated, a retained and a foreign "
+        "publish; the clock stands at " + str(now) + " throughout. Per step: whether the "
+        "report is used, and the agent's statistics status after it.",
+        "topic": topic,
+        "reporting_interval": 10,
+        "clock": now,
+        "steps": steps,
+    }
+
+
 VECTOR_SETS = {
     "al-mac.json": al_mac_vectors,
     "operation-transitions.json": transition_vectors,
@@ -790,6 +989,8 @@ VECTOR_SETS = {
     "cmdu.json": cmdu_vectors,
     "control.json": control_vectors,
     "steering.json": steering_vectors,
+    "onboarding.json": onboarding_vectors,
+    "telemetry.json": telemetry_vectors,
 }
 
 
