@@ -329,31 +329,43 @@ ui() {          # the controller's own topology: prplmesh-lab topology adapter +
 gtp() {         # GRE termination point (data plane option 2) with a pod-backhaul SSID
     exists emosa || die "run: lab.sh emosa (it stages the adapter kit)"
     local lan=${EMOSA_GTP_LAN:-lan-p4} radio
+    # Each part only when missing, so a run that stopped half-way is completed by the next.
     if ! exists em-gtp; then
         lxc init "$IMAGE" em-gtp --network lxdbr0 >/dev/null
         lxc config set em-gtp user.emosa.role gtp
-        lxc start em-gtp
+    fi
+    if ! cx em-gtp sh -c 'command -v hostapd' >/dev/null 2>&1; then
+        lxc start em-gtp 2>/dev/null || true
         wait_net em-gtp
         cx em-gtp sh -ec 'systemctl mask --now apt-daily.timer apt-daily-upgrade.timer >/dev/null 2>&1
             export DEBIAN_FRONTEND=noninteractive; apt-get -qq update
             apt-get -qq install -y build-essential iproute2 iw hostapd dnsmasq-base tcpdump >/dev/null'
+    fi
+    if ! lxc config device show em-gtp | grep -q '^wlan0:'; then
         # shellcheck source=/dev/null
         radio=$(source "$OSL/guest/common.sh"; hwsim_free | head -1)
         [ -n "$radio" ] || die "no free hwsim radio"
-        lxc stop em-gtp
+        lxc stop em-gtp 2>/dev/null || true
         lxc config device add em-gtp wlan0 nic nictype=physical parent="$radio" name=wlan0 >/dev/null
+        log "em-gtp: radio $radio as wlan0"
+    fi
+    if ! lxc config device show em-gtp | grep -q '^eth1:'; then
         # eth1: a port on mv3's LAN, standing in for the EasyMesh gateway's LAN. The lan-p*
         # bridges filter VLANs, and each mv3 port is an untagged access port in its own VLAN:
-        # join that VLAN, or nothing (not even ARP) crosses.
+        # join that VLAN, or nothing (not even ARP) crosses. (`command bridge`: this script
+        # has a function of that name.)
         local host pvid
         host=$(lxc config get mv3 "volatile.${EMOSA_GTP_MV3_PORT:-eth4}.host_name")
-        pvid=$(bridge -j vlan show dev "$host" | python3 -c 'import json,sys
-print([v["vlan"] for p in json.load(sys.stdin) for v in p["vlans"] if "PVID" in v.get("flags", [])][0])')
+        [ -n "$host" ] || die "em-gtp: mv3 has no ${EMOSA_GTP_MV3_PORT:-eth4} on the host side"
+        pvid=$(command bridge -j vlan show dev "$host" | python3 -c 'import json,sys
+print([v["vlan"] for p in json.load(sys.stdin) for v in p["vlans"] if "PVID" in v.get("flags", [])][0])') ||
+            die "em-gtp: no port VLAN on mv3's ${EMOSA_GTP_MV3_PORT:-eth4} ($host)"
+        lxc stop em-gtp 2>/dev/null || true
         lxc config device add em-gtp eth1 nic nictype=bridged parent="$lan" name=eth1 vlan="$pvid" >/dev/null
-        lxc start em-gtp
-        wait_net em-gtp
-        log "em-gtp: radio $radio as wlan0, eth1 on $lan (VLAN $pvid, mv3 ${EMOSA_GTP_MV3_PORT:-eth4})"
+        log "em-gtp: eth1 on $lan (VLAN $pvid, mv3 ${EMOSA_GTP_MV3_PORT:-eth4})"
     fi
+    lxc start em-gtp 2>/dev/null || true
+    wait_net em-gtp
     # the pod-backhaul SSID: a 3-address AP on 2.4 GHz channel 6 into the underlay bridge podbh.
     # No country_code: the regulatory domain is VM-wide and must not be changed from a container.
     cx em-gtp sh -c "cat > /etc/hostapd/hostapd.conf" <<EOF
