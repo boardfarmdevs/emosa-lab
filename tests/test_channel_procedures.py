@@ -203,6 +203,25 @@ def test_what_the_pod_cannot_do_is_declined_and_keeps_the_policy(rig, kind, body
     assert rig.coordinator.last_decline["mid"] == 41
 
 
+def test_a_channel_scan_request_is_acknowledged_and_reported_unsupported(rig):
+    ruid = rig.radio.ruid
+    other = bytes.fromhex("020000009901")
+    request = Tlv(0xA6, b"\x00\x02" + ruid + bytes.fromhex("0151020106") + other + b"\x00")
+    rig.coordinator.utc = lambda: "2026-09-25T00:00:00.000Z"
+    assert rig.request(0x801B, tlvs=(request,)) == "channel_scan_not_supported_reported"
+    ack, report = (Reassembler().feed(f) for f in rig.sent)
+    assert (ack.message_type, ack.mid, ack.tlvs) == (0x8000, 41, ())
+    stamp = b"2026-09-25T00:00:00.000Z"
+    assert report.message_type == 0x801C and report.tlvs == (
+        Tlv(0xA8, bytes([len(stamp)]) + stamp),
+        Tlv(0xA7, ruid + bytes((81, 1, 1))),
+        Tlv(0xA7, ruid + bytes((81, 6, 1))),
+    )  # only this agent's radio; status 1: scan not supported
+    assert rig.request(0x801B, tlvs=(request,)) == "duplicate_channel_request"
+    with pytest.raises(EmosaError):
+        rig.request(0x801B, mid=42, tlvs=(Tlv(0xA6, b"\x00\x01" + ruid),))
+
+
 def test_the_rdk_controllers_request_is_answered(rig):
     """RDK's Channel Selection Request as captured (RUID replaced): channel 6 preferred,
     groups for the 40 MHz classes 83/84 the radio does not advertise, and a transmit

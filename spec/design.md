@@ -253,7 +253,7 @@ flowchart TB
 | Onboarding session | Search (3 times, 1 s apart), Response admission, early AP capability report, M1, M2 → operation, Renew, recovery after source loss, controller silence (130 s) → fresh attempt | messages ↔ messages, operations | `wire/onboarding.py`, `wire/autoconfiguration.py` | `onboarding.json` |
 | WSC | M1 build, M2 authentication and decryption, M2-set mapping | device facts, M2 → BSS settings | `wsc.py`, `wsc_messages.py`, `wsc_radio.py` | `onboarding.json`, hostap fixture |
 | Report coordinator | Topology Discovery/Query/Response/Notification, AP Capability, Client Capability, Link Metric, Backhaul STA Capability, client join/leave announcements | snapshot → messages | `wire/coordinator.py`, `wire/reports.py` | `translation-northbound.json` |
-| Channel coordinator | Channel Preference Query/Report, Channel Selection Request/Response (accept or decline), Operating Channel Report and its Ack | messages, snapshot → messages, policy record | `wire/channel.py` | `control.json` |
+| Channel coordinator | Channel Preference Query/Report, Channel Selection Request/Response (accept or decline), Operating Channel Report and its Ack, Channel Scan Request (Ack, then a not-supported Channel Scan Report) | messages, snapshot → messages, policy record | `wire/channel.py` | `control.json` |
 | Policy coordinator | Multi-AP Policy Config: record and Ack | messages → Ack, policy record | `wire/reporting_policy.py` | `control.json` |
 | AP metrics, link metrics | answer only with qualified measurements (spec §3.6) | snapshot, statistics → messages | `wire/ap_metrics.py`, `wire/link_metrics.py` | none |
 | Steering coordinator | Client Steering Request: Ack with error codes, hand mandates to the steering scope, Steering Completed for opportunities | messages → Ack, mandates | `wire/steering.py` | `control.json` |
@@ -415,7 +415,7 @@ Specified elsewhere; listed here so that nothing is missed:
 
 | Item | Value |
 | --- | --- |
-| 1905 Ack, Topology Response, Channel Selection Response, Channel Preference Report | within 1 s of the complete request |
+| 1905 Ack, Topology Response, Channel Selection Response, Channel Preference Report, Channel Scan Report | within 1 s of the complete request |
 | pod state refresh | every 0.5 s |
 | report snapshot lease | 1.5 s; a lapsed lease ends the controller session |
 | OVSDB request timeout | 2 s |

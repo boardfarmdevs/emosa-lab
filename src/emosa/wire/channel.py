@@ -13,12 +13,18 @@ power below what the pod transmits) is declined with response code 0x02: it
 violates the preferences and capabilities last reported. A decline keeps the
 stored policy. The Operating Channel Report of the actual operation follows
 either answer. Malformed requests get no answer.
+
+A Channel Scan Request (§8.4) is acknowledged, and answered with a Channel Scan
+Report whose result for every requested channel of the radio is "scan not
+supported" (status 0x01): EMOSA does not scan on the pod's radio. A controller
+that gets no Ack retries (RDK's every few seconds).
 """
 
 import json
 import sqlite3
 import time
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 
 from emosa.errors import EmosaError, Reason
 from emosa.wire.autoconfiguration import SECURITY_ENVELOPES
@@ -155,6 +161,29 @@ def selected_policy(tlvs, radio):
     }
 
 
+def decode_scan_request(tlvs):
+    """The one Channel Scan Request TLV: [(RUID, [(operating class, [channels])])]."""
+    found = [t for t in tlvs if t.kind == 0xA6]
+    if len(found) != 1 or len(found[0].value) < 2:
+        invalid("one Channel Scan Request TLV required")
+    data, radios, offset = found[0].value, [], 2
+    for _ in range(data[1]):
+        if len(data) < offset + 7:
+            invalid("truncated channel scan radio")
+        ruid, count, offset = data[offset : offset + 6], data[offset + 6], offset + 7
+        classes = []
+        for _ in range(count):
+            if len(data) < offset + 2 or len(data) < offset + 2 + data[offset + 1]:
+                invalid("truncated channel scan operating class")
+            opclass, n = data[offset], data[offset + 1]
+            classes.append((opclass, list(data[offset + 2 : offset + 2 + n])))
+            offset += 2 + n
+        radios.append((ruid, classes))
+    if offset != len(data):
+        invalid("trailing channel scan request octets")
+    return radios
+
+
 @dataclass
 class PendingOperating:
     radio: OperatingRadio
@@ -168,9 +197,19 @@ class PendingOperating:
 class ChannelCoordinator:
     """One bound radio, bounded retry state and fresh-read report transmission."""
 
-    def __init__(self, source, send_frame, store, mids, *, clock=time.monotonic, reset_policy=True):
+    def __init__(
+        self,
+        source,
+        send_frame,
+        store,
+        mids,
+        *,
+        clock=time.monotonic,
+        reset_policy=True,
+        utc=lambda: datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+    ):
         self.source, self.binding, self.send_frame = source, source.binding, send_frame
-        self.store, self.mids, self.clock = store, mids, clock
+        self.store, self.mids, self.clock, self.utc = store, mids, clock, utc
         self.pending = None
         self.last_decline = None
         self.last_operating = None
@@ -236,6 +275,8 @@ class ChannelCoordinator:
         report.send(self.send_frame, self.stamp, clock=self.clock)
 
     def handle(self, message, received_at):
+        if message.message_type == 0x801B:
+            return self.scan(message, received_at)
         if message.message_type not in (0x8004, 0x8006):
             return None
         self.tick()
@@ -302,6 +343,32 @@ class ChannelCoordinator:
         self.record("channel_selection_accepted")
         self.notify(snapshot, radio)
         return "channel_selection_accepted"
+
+    def scan(self, message, received_at):
+        """Channel Scan Request: Ack, then a report of "scan not supported" results."""
+        self.tick()
+        snapshot = self.snapshot()
+        key = (message.message_type, message.mid)
+        if key in self.queries:
+            return self.record("duplicate_channel_request")
+        if self.clock() >= received_at + 1:
+            raise EmosaError(Reason.NOT_READY, "channel scan Ack deadline expired")
+        radio = self.radio(snapshot)
+        requested = decode_scan_request(message.tlvs)
+        stamp = self.utc().encode()
+        results = []
+        for ruid, classes in requested:
+            if ruid != radio.ruid:
+                continue  # not a radio of this agent
+            for opclass, channels in classes or [(81, [radio.channel])]:
+                for channel in channels or ([radio.channel] if opclass == 81 else []):
+                    # status 0x01: scan not supported on this class and channel
+                    results.append(Tlv(0xA7, ruid + bytes((opclass, channel, 0x01))))
+        self.send(0x8000, message.mid, (), snapshot, received_at + 1)
+        self.queries[key] = self.clock() + 5
+        report = (Tlv(0xA8, bytes([len(stamp)]) + stamp), *results)
+        self.send(0x801C, self.mids.next(), report, snapshot, self.clock() + 1)
+        return self.record("channel_scan_not_supported_reported")
 
     def notify(self, snapshot, radio):
         now = self.clock()

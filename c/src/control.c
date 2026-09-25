@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 static bool seen(em_control *c, uint16_t type, uint16_t mid)
 {
@@ -146,7 +147,7 @@ static const char *channel(em_control *c, const em_message *m, em_frames *out, e
     memcpy(report, c->radio->ruid, 6);
     report[6] = 1;
     report[7] = 81;
-    report[8] = 6;
+    report[8] = (uint8_t)c->radio->channel;
     report[9] = (uint8_t)c->tx_power_dbm;
     em_tlv rt = {0x8E, 7, response}, ot = {0x8F, 10, report};
     if ((r = send(c, 0x8007, m->mid, &rt, 1, out)) != EM_OK ||
@@ -157,6 +158,96 @@ static const char *channel(em_control *c, const em_message *m, em_frames *out, e
     remember(c, m->message_type, m->mid);
     c->channel_policy_declined = decline;
     return decline ? "channel_selection_declined" : "channel_selection_accepted";
+}
+
+static void system_utc(char out[40])
+{
+    struct timespec now;
+    struct tm tm;
+    clock_gettime(CLOCK_REALTIME, &now);
+    gmtime_r(&now.tv_sec, &tm);
+    size_t n = strftime(out, 40, "%Y-%m-%dT%H:%M:%S", &tm);
+    snprintf(out + n, 40 - n, ".%03ldZ", now.tv_nsec / 1000000);
+}
+
+/* Channel Scan Request: Ack, then a report of "scan not supported" results. */
+static const char *scan(em_control *c, const em_message *m, em_frames *out, em_reason *error)
+{
+    if (seen(c, m->message_type, m->mid))
+        return "duplicate_channel_request";
+    const em_tlv *request = NULL;
+    for (size_t i = 0; i < m->ntlvs; i++)
+        if (m->tlvs[i].kind == 0xA6) {
+            if (request) {
+                *error = EM_INVALID_INPUT;
+                return NULL;
+            }
+            request = &m->tlvs[i];
+        }
+    if (!request || request->len < 2) {
+        *error = EM_INVALID_INPUT; /* one Channel Scan Request TLV required */
+        return NULL;
+    }
+    const uint8_t *d = request->value;
+    size_t length = request->len, offset = 2, nresults = 0;
+    uint8_t results[256][9];
+    for (unsigned radio = 0; radio < d[1]; radio++) {
+        if (length < offset + 7) {
+            *error = EM_INVALID_INPUT;
+            return NULL;
+        }
+        const uint8_t *ruid = d + offset;
+        unsigned nclasses = d[offset + 6];
+        bool ours = !memcmp(ruid, c->radio->ruid, 6);
+        offset += 7;
+        if (ours && !nclasses) {
+            memcpy(results[nresults], ruid, 6);
+            results[nresults][6] = 81;
+            results[nresults][7] = (uint8_t)c->radio->channel;
+            results[nresults++][8] = 0x01;
+        }
+        for (unsigned k = 0; k < nclasses; k++) {
+            if (length < offset + 2 || length < offset + 2 + d[offset + 1]) {
+                *error = EM_INVALID_INPUT;
+                return NULL;
+            }
+            uint8_t op_class = d[offset], n = d[offset + 1];
+            const uint8_t *channels = d + offset + 2;
+            uint8_t current = (uint8_t)c->radio->channel;
+            if (!n && op_class == 81) {
+                channels = &current;
+                n = 1;
+            }
+            for (unsigned j = 0; ours && j < n && nresults < 256; j++) {
+                memcpy(results[nresults], ruid, 6);
+                results[nresults][6] = op_class;
+                results[nresults][7] = channels[j];
+                results[nresults++][8] = 0x01; /* scan not supported */
+            }
+            offset += 2 + d[offset + 1];
+        }
+    }
+    if (offset != length) {
+        *error = EM_INVALID_INPUT; /* trailing octets */
+        return NULL;
+    }
+    char stamp[40];
+    (c->utc ? c->utc : system_utc)(stamp);
+    uint8_t timestamp[41];
+    timestamp[0] = (uint8_t)strlen(stamp);
+    memcpy(timestamp + 1, stamp, timestamp[0]);
+    em_tlv report[257];
+    report[0] = (em_tlv){0xA8, (uint16_t)(timestamp[0] + 1), timestamp};
+    for (size_t i = 0; i < nresults; i++)
+        report[i + 1] = (em_tlv){0xA7, 9, results[i]};
+    em_reason r;
+    if ((r = send(c, 0x8000, m->mid, NULL, 0, out)) != EM_OK ||
+        (r = send(c, 0x801C, next_mid(c), report, nresults + 1, out)) != EM_OK) {
+        *error = r;
+        return NULL;
+    }
+    remember(c, m->message_type, m->mid);
+    return "channel_scan_not_supported_reported";
 }
 
 /* -- Multi-AP policy (receipt only) ----------------------------------------------- */
@@ -368,7 +459,7 @@ const char *em_control_handle(em_control *c, const em_message *m, em_frames *out
 {
     *error = EM_OK;
     if (m->message_type != 0x8003 && m->message_type != 0x8004 && m->message_type != 0x8006 &&
-        m->message_type != 0x8014)
+        m->message_type != 0x8014 && m->message_type != 0x801B)
         return NULL;
     if (memcmp(m->source, c->binding.controller_al, 6) ||
         memcmp(m->destination, c->binding.local_al, 6) || m->relay) {
@@ -378,6 +469,7 @@ const char *em_control_handle(em_control *c, const em_message *m, em_frames *out
     switch (m->message_type) {
     case 0x8003: return policy(c, m, out, error);
     case 0x8014: return steer(c, m, out, error);
+    case 0x801B: return scan(c, m, out, error);
     default: return channel(c, m, out, error);
     }
 }

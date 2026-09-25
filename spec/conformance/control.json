@@ -3,7 +3,8 @@
   "al_mac": "02:72:f9:7f:07:85",
   "controller_al": "02:00:00:e0:00:01",
   "first_mid": 500,
-  "radio": "02:00:00:00:01:00"
+  "radio": "02:00:00:00:01:00",
+  "scan_timestamp": "2026-09-25T00:00:00.000Z"
  },
  "cases": [
   {
@@ -65,6 +66,22 @@
       "result": "policy_receipt_ack_sent"
      },
      "request": "0272f97f0785020000e00001893a00008003000e008089000c000001020000000100023c788a000c050102000000010078053cc0b50003000140b60042050c707269766174655f73736964000c08696f745f73736964000e0a6c6e665f726164697573000f0d6d6573685f6261636b6861756c000d07686f7473706f740010a4000100c4000500000000000b0004d89c8e00000000"
+    }
+   ]
+  },
+  {
+   "handed_to_pod": [],
+   "name": "channel-scan",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a0000800000130080000000",
+       "020000e000010272f97f0785893a0000801c01f40080a8001918323032362d30392d32355430303a30303a30302e3030305aa70009020000000100510101a70009020000000100510601000000"
+      ],
+      "result": "channel_scan_not_supported_reported"
+     },
+     "request": "0272f97f0785020000e00001893a0000801b00130080a6000d00010200000001000151020106000000"
     }
    ]
   },
@@ -159,7 +176,7 @@
    ]
   }
  ],
- "description": "spec §2.4, §3.4, §3.7: a provisioned agent over the recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00 on class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller request frame and the frames the agent sends in answer, in order; the agent's own messages take MIDs from 500. 'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), as decoded from the request.",
+ "description": "spec §2.4, §3.4, §3.7: a provisioned agent over the recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00 on class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller request frame and the frames the agent sends in answer, in order; the agent's own messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. 'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), as decoded from the request.",
  "ovsdb_tables": {
   "AWLAN_Node": {
    "96bc1650-4197-4cd8-9036-f9eb854e87ec": {

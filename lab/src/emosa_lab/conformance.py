@@ -575,6 +575,9 @@ def control_agent(raw, stations):
     return source, radio
 
 
+SCAN_TIMESTAMP = "2026-09-25T00:00:00.000Z"  # the Channel Scan Report's time, fixed
+
+
 def control_vectors():
     from emosa.wire.channel import ChannelCoordinator, ChannelPolicyStore
     from emosa.wire.cmdu import MidSequence, Reassembler, Tlv, fragment_message
@@ -631,6 +634,10 @@ def control_vectors():
         ),
         ("policy-rdk", [request(0x8003, 14, rdk_policy)]),  # RDK's TLV set, captured
         (
+            "channel-scan",  # RDK's layout: no fresh scan, one radio, one class
+            [request(0x801B, 19, (Tlv(0xA6, b"\x00\x01" + ruid + bytes.fromhex("0151020106")),))],
+        ),
+        (
             "steering-mandate",
             [request(0x8014, 15, (steering_tlv([mac(stations[0])], [(target, 81, 6)]),))] * 2,
         ),
@@ -666,6 +673,7 @@ def control_vectors():
                     ChannelPolicyStore(Path(directory) / "channel.sqlite"),
                     mids,
                     clock=lambda: 0.0,
+                    utc=lambda: SCAN_TIMESTAMP,
                 ),
                 ReportingPolicyCoordinator(
                     source,
@@ -701,9 +709,16 @@ def control_vectors():
         "(stations " + ", ".join(stations) + " on 82:00:00:00:01:00, radio " + RUID + " on "
         "class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller "
         "request frame and the frames the agent sends in answer, in order; the agent's own "
-        "messages take MIDs from 500. 'handed_to_pod' lists the steering mandates the agent "
-        "carries out (spec §3.7), as decoded from the request.",
-        "agent": {"al_mac": AGENT, "controller_al": CONTROLLER, "radio": RUID, "first_mid": 500},
+        "messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. "
+        "'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), "
+        "as decoded from the request.",
+        "agent": {
+            "al_mac": AGENT,
+            "controller_al": CONTROLLER,
+            "radio": RUID,
+            "first_mid": 500,
+            "scan_timestamp": SCAN_TIMESTAMP,
+        },
         "ovsdb_tables": raw,
         "cases": cases,
     }

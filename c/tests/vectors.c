@@ -510,10 +510,15 @@ static const char *record_mandate(void *ctx, const em_steering_request *r, uint1
     return NULL;
 }
 
+static char scan_timestamp[40];
+
+static void fixed_utc(char out[40]) { memcpy(out, scan_timestamp, sizeof(scan_timestamp)); }
+
 static void control_vectors(const char *dir)
 {
     cJSON *doc = load(dir, "control.json");
     const cJSON *agent = cJSON_GetObjectItemCaseSensitive(doc, "agent");
+    snprintf(scan_timestamp, sizeof(scan_timestamp), "%s", str(agent, "scan_timestamp"));
     em_device_view *view = malloc(sizeof(*view));
     if (em_device_view_from_rows(cJSON_GetObjectItemCaseSensitive(doc, "ovsdb_tables"), view) != EM_OK) {
         fail("control", "rows", "device view");
@@ -537,6 +542,7 @@ static void control_vectors(const char *dir)
         control.tx_power_dbm = control.radio->tx_power;
         control.max_eirp_dbm = 30;
         control.previous_mid = (uint16_t)(num(agent, "first_mid") - 1);
+        control.utc = fixed_utc;
         control.executor = record_mandate;
         control.executor_ctx = handed;
         const cJSON *step;

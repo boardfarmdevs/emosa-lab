@@ -84,7 +84,7 @@ Sent by the agent:
 | `0x0006` | Link Metric Response | in answer to a Link Metric Query, once provisioned |
 | `0x0007` | AP-Autoconfiguration Search | up to 3 times, 1 s apart, when onboarding starts |
 | `0x0009` | AP-Autoconfiguration WSC (M1) | after an admitted Response |
-| `0x8000` | 1905 Ack | acknowledging a Multi-AP Policy Config Request, a Client Steering Request (with an Error Code TLV `0xA3` per station not on the source BSS) or a Backhaul Steering Request |
+| `0x8000` | 1905 Ack | acknowledging a Multi-AP Policy Config Request, a Channel Scan Request, a Client Steering Request (with an Error Code TLV `0xA3` per station not on the source BSS) or a Backhaul Steering Request |
 | `0x8002` | AP Capability Report | in answer to an AP Capability Query |
 | `0x8005` | Channel Preference Report | in answer to a Channel Preference Query |
 | `0x8007` | Channel Selection Response | in answer to every well-formed Channel Selection Request: accepted (code 0) without moving the radio, or declined (code 2) when the pod cannot do what it asks (§3.4) |
@@ -93,6 +93,7 @@ Sent by the agent:
 | `0x800C` | AP Metrics Response | in answer to an AP Metrics Query, only with qualified measurements |
 | `0x8017` | Steering Completed | after the Ack of a steering opportunity: EMOSA steers nothing on its own account (§3.7) |
 | `0x801A` | Backhaul Steering Response | after its Ack: result code `0x01` (failure). EMOSA refuses backhaul steering |
+| `0x801C` | Channel Scan Report | after the Ack of a Channel Scan Request: a Timestamp TLV (`0xA8`) and one Channel Scan Result TLV (`0xA7`) per requested channel of the pod's radio, status `0x01` (scan not supported) (§3.4) |
 | `0x8022` | Client Disassociation Stats | after an observed client departure, only with qualified statistics |
 | `0x8028` | Backhaul STA Capability Report | in answer to a Backhaul STA Capability Query: one Backhaul STA Radio Capabilities TLV (`0xCB`) for the pod's EasyMesh backhaul STA (§8.3), none over GRE |
 | `0x8043` | Early AP Capability Report | with M1, before configuration |
@@ -114,6 +115,7 @@ Received by the agent:
 | `0x800B` | AP Metrics Query | answered only with qualified measurements |
 | `0x8014` | Client Steering Request | acknowledged; a mandate for one station and one target is carried out by the pod (§3.7) |
 | `0x8019` | Backhaul Steering Request | acknowledged and refused (`0x801A`) |
+| `0x801B` | Channel Scan Request | acknowledged and reported as not supported (§3.4) |
 | `0x8027` | Backhaul STA Capability Query | answered |
 
 Any other message is ignored and counted as `unsupported_message_<type>`.
@@ -258,6 +260,13 @@ The 6.6 encoding of WPA2-PSK:
   Operating Channel Report that follows either answer gives what the pod
   actually uses. A controller that gets no answer gives the radio up: RDK's
   then refuses to steer through it.
+- **Channel scans** are acknowledged and reported as not supported: the
+  Channel Scan Report carries the time of the answer (RFC 3339, UTC) and, for
+  each channel the request names for the pod's radio (or its current channel
+  when the request names none), result status `0x01`. Radios of other agents in
+  the request are left out. An unchanged pod gives EMOSA no scan results it
+  could qualify. RDK's controller repeats an unanswered request every few
+  seconds.
 
 ### 3.5 Pod profiles
 

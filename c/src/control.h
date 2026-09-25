@@ -35,6 +35,8 @@ typedef struct {
     uint32_t recent[64];
     /* the stored channel and reporting policy, as receipt only */
     bool channel_policy_declined;
+    /* the Channel Scan Report's time, RFC 3339 UTC; NULL: the system clock */
+    void (*utc)(char out[40]);
 } em_control;
 
 /* Handle one complete message. Returns the result label, or NULL when the
