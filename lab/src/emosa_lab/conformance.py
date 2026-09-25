@@ -451,6 +451,335 @@ def fleet_vectors():
     }
 
 
+# -- the 1905 envelope and the provisioned agent's control plane ------------------
+
+
+def cmdu_vectors():
+    from emosa.wire.cmdu import Reassembler, Tlv, fragment_message
+
+    agent, controller = mac(AGENT), mac(CONTROLLER)
+    encode = []
+    for name, message_type, mid, items, relay, mtu in (
+        ("topology-query", 0x0002, 1, (), False, 1500),
+        (
+            "ack-with-error-codes",
+            0x8000,
+            0x1234,
+            (Tlv(0xA3, b"\x02" + bytes(range(6))),),
+            False,
+            1500,
+        ),
+        ("relayed-multicast", 0x0007, 7, (Tlv(0x01, agent), Tlv(0x0F, b"\x00")), True, 1500),
+        (
+            "fragmented",
+            0x0009,
+            42,
+            tuple(Tlv(0x11, bytes([i]) * 600) for i in range(3)),
+            False,
+            1500,
+        ),
+        ("small-mtu", 0x8002, 9, (Tlv(0x80, b"\x05" * 40), Tlv(0x85, b"\x06" * 40)), False, 64),
+    ):
+        destination = bytes.fromhex("0180c2000013") if relay else controller
+        frames = fragment_message(
+            destination, agent, message_type, mid, items, relay=relay, mtu=mtu
+        )
+        encode.append(
+            {
+                "name": name,
+                "input": {
+                    "destination": destination.hex(":"),
+                    "source": AGENT,
+                    "message_type": f"0x{message_type:04x}",
+                    "mid": mid,
+                    "relay": relay,
+                    "mtu": mtu,
+                    "tlvs": tlvs(items),
+                },
+                "expected_frames": [f.hex() for f in frames],
+            }
+        )
+    decode = []
+    good = fragment_message(agent, controller, 0x8014, 900, (Tlv(0x9B, bytes(13)),))[0]
+    header = 14 + 8  # Ethernet + 1905 header
+
+    def case(name, frames):
+        parser, result, error = Reassembler(), None, None
+        try:
+            for frame in frames:
+                result = parser.feed(frame)
+        except EmosaError as exc:
+            error = str(exc.code)
+        expected = (
+            {"error": error}
+            if error
+            else {
+                "message": None
+                if result is None
+                else {
+                    "destination": result.destination.hex(":"),
+                    "source": result.source.hex(":"),
+                    "message_type": f"0x{result.message_type:04x}",
+                    "mid": result.mid,
+                    "relay": result.relay,
+                    "tlvs": tlvs(result.tlvs),
+                }
+            }
+        )
+        decode.append({"name": name, "frames": [f.hex() for f in frames], "expected": expected})
+
+    case("single", [good])
+    large = tuple(Tlv(0x11, bytes([i]) * 600) for i in range(3))
+    case("fragments-in-order", list(fragment_message(agent, controller, 0x0009, 42, large)))
+    case("first-fragment-only", [fragment_message(agent, controller, 0x0009, 43, large)[0]])
+    case("reserved-version", [good[:14] + b"\x01" + good[15:]])
+    case("truncated-tlv", [good[: header + 5]])
+    case("missing-end-of-message", [good[: header + 16]])
+    case("ethernet-padding-after-end", [good + bytes(20)])
+    return {
+        "description": "spec §2.1: the IEEE 1905.1 envelope. 'encode': a message to the "
+        "Ethernet frames the agent transmits (fragmented at TLV boundaries within the MTU). "
+        "'decode': received frames, fed in order, to the reassembled message, none while "
+        "incomplete, or the reason code of the rejection.",
+        "encode": encode,
+        "decode": decode,
+    }
+
+
+def control_agent(raw, stations):
+    """A provisioned agent's report source over recorded rows, at time 0."""
+    from emosa.wire.channel import OperatingRadio
+    from emosa.wire.coordinator import ReportSource
+
+    view = device_view(decode(raw))
+    radio = view.radio(mac(RUID))
+    caps = radio_capabilities(radio, channel=6, max_bss=5, max_eirp=30)
+    facts = topology(
+        agent_al=mac(AGENT),
+        controller_al=mac(CONTROLLER),
+        radio=radio,
+        channel=6,
+        bsses=radio.bsses,
+        ages={mac(m): 10 for m in stations},
+    )
+    binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
+    source = ReportSource(binding, "pod-1", "c" * 64, clock=lambda: 0.0)
+    source.publish(
+        (1, 1),
+        caps,
+        facts,
+        observed_at=0.0,
+        lifetime=1.5,
+        operating_radios=(OperatingRadio(mac(RUID), 81, 6, radio.tx_power),),
+    )
+    return source, radio
+
+
+def control_vectors():
+    from emosa.wire.channel import ChannelCoordinator, ChannelPolicyStore
+    from emosa.wire.cmdu import MidSequence, Reassembler, Tlv, fragment_message
+    from emosa.wire.reporting_policy import ReportingPolicyCoordinator, ReportingPolicyStore
+    from emosa.wire.steering import SteeringCoordinator
+
+    raw = pod_rows()
+    stations = ["02:00:00:00:0a:00", "02:00:00:00:10:00"]
+    bssid = mac("82:00:00:00:01:00")
+    ruid = mac(RUID)
+    target = mac("02:00:00:12:75:2c")
+
+    def request(message_type, mid, items):
+        return fragment_message(mac(AGENT), mac(CONTROLLER), message_type, mid, items)[0]
+
+    def steering_tlv(stas, targets, *, mandate=True, imminent=True, window=5):
+        flags = (0x80 if mandate else 0) | (0x40 if imminent else 0) | 0x20
+        value = bssid + bytes([flags]) + window.to_bytes(2, "big") + (5).to_bytes(2, "big")
+        value += bytes([len(stas)]) + b"".join(stas)
+        value += bytes([len(targets)]) + b"".join(b + bytes([c, n]) for b, c, n in targets)
+        return Tlv(0x9B, value)
+
+    rdk_preferences = bytes.fromhex(  # RDK's, captured: channel 6, 40 MHz classes 83/84
+        "05510c01020304050708090a0b0c0d00510106105308010203040507080910"
+        "530106e0540905060708090a0b0c0d10"
+    )
+    rdk_policy = (
+        Tlv(0x89, bytes.fromhex("000001") + ruid + bytes.fromhex("023c78")),
+        Tlv(0x8A, bytes.fromhex("0501") + ruid + bytes.fromhex("78053cc0")),
+        Tlv(0xB5, bytes.fromhex("000140")),
+        Tlv(
+            0xB6,
+            bytes.fromhex(
+                "050c707269766174655f73736964000c08696f745f73736964000e0a6c6e665f7261"
+                "64697573000f0d6d6573685f6261636b6861756c000d07686f7473706f740010"
+            ),
+        ),
+        Tlv(0xA4, b"\x00"),
+        Tlv(0xC4, bytes(5)),
+        Tlv(0x0B, bytes.fromhex("d89c8e00")),
+    )
+    sequences = [
+        (
+            "channel-preference-query",
+            [request(0x8004, 11, ())],
+        ),
+        (
+            "channel-selection-accepted",
+            [request(0x8006, 12, (Tlv(0x8B, ruid + bytes.fromhex("01510106e0")),))],
+        ),
+        (
+            "channel-selection-rdk-declined",  # RDK's request: 40 MHz classes, 0 dBm power limit
+            [request(0x8006, 13, (Tlv(0x8B, ruid + rdk_preferences), Tlv(0x8D, ruid + b"\x00")))],
+        ),
+        ("policy-rdk", [request(0x8003, 14, rdk_policy)]),  # RDK's TLV set, captured
+        (
+            "steering-mandate",
+            [request(0x8014, 15, (steering_tlv([mac(stations[0])], [(target, 81, 6)]),))] * 2,
+        ),
+        (
+            "steering-station-not-on-source",
+            [request(0x8014, 16, (steering_tlv([mac("02:00:00:00:99:99")], [(target, 81, 6)]),))],
+        ),
+        (
+            "steering-opportunity",
+            [
+                request(
+                    0x8014,
+                    17,
+                    (steering_tlv([mac(stations[0])], [(target, 81, 6)], mandate=False),),
+                )
+            ],
+        ),
+        (
+            "steering-agent-selected-target",
+            [request(0x8014, 18, (steering_tlv([mac(stations[0])], [(b"\xff" * 6, 0, 0)]),))],
+        ),
+    ]
+    cases = []
+    for name, frames in sequences:
+        with tempfile.TemporaryDirectory() as directory:
+            source, _ = control_agent(copy.deepcopy(raw), stations)
+            sent, handed = [], []
+            mids = MidSequence(499)
+            handlers = (
+                ChannelCoordinator(
+                    source,
+                    sent.append,
+                    ChannelPolicyStore(Path(directory) / "channel.sqlite"),
+                    mids,
+                    clock=lambda: 0.0,
+                ),
+                ReportingPolicyCoordinator(
+                    source,
+                    sent.append,
+                    ReportingPolicyStore(Path(directory) / "policy.sqlite", boot_id="conformance"),
+                    clock=lambda: 0.0,
+                ),
+                SteeringCoordinator(
+                    source,
+                    sent.append,
+                    lambda r, mid, handed=handed: handed.append({"mid": mid, **r.record()}),
+                    mids,
+                    clock=lambda: 0.0,
+                ),
+            )
+            steps = []
+            for frame in frames:
+                message, before = Reassembler().feed(frame), len(sent)
+                result = next(
+                    (r for r in (h.handle(message, 0.0) for h in handlers) if r is not None), None
+                )
+                steps.append(
+                    {
+                        "request": frame.hex(),
+                        "expected": {"result": result, "frames": [f.hex() for f in sent[before:]]},
+                    }
+                )
+            for handler in handlers:
+                handler.close()
+            cases.append({"name": name, "steps": steps, "handed_to_pod": handed})
+    return {
+        "description": "spec §2.4, §3.4, §3.7: a provisioned agent over the recorded pod rows "
+        "(stations " + ", ".join(stations) + " on 82:00:00:00:01:00, radio " + RUID + " on "
+        "class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller "
+        "request frame and the frames the agent sends in answer, in order; the agent's own "
+        "messages take MIDs from 500. 'handed_to_pod' lists the steering mandates the agent "
+        "carries out (spec §3.7), as decoded from the request.",
+        "agent": {"al_mac": AGENT, "controller_al": CONTROLLER, "radio": RUID, "first_mid": 500},
+        "ovsdb_tables": raw,
+        "cases": cases,
+    }
+
+
+def steering_vectors():
+    from emosa.opensync.steering import SteeringBackend, SteeringIntent
+
+    intent = SteeringIntent(
+        "pod-1",
+        "02:00:00:00:0a:00",
+        "82:00:00:00:01:00",
+        "02:00:00:12:75:2c",
+        81,
+        6,
+        True,
+        15,
+        900,
+    )
+    cases = []
+    for name, extra in (
+        ("new-group-and-neighbor", {}),
+        (
+            "existing-group-and-neighbor",
+            {
+                "Band_Steering_Config": {
+                    "00000000-0000-4000-8000-0000000000b1": {"if_name_2g": "home-ap-24"}
+                },
+                "Wifi_VIF_Neighbors": {
+                    "00000000-0000-4000-8000-0000000000b2": {
+                        "bssid": "02:00:00:12:75:2c",
+                        "if_name": "home-ap-24",
+                        "channel": 6,
+                    }
+                },
+            },
+        ),
+    ):
+        raw = {**pod_rows(), **copy.deepcopy(extra)}
+        session = Recorder(copy.deepcopy(raw))
+        backend = SteeringBackend("pod-1", session, serial=SERIAL)
+
+        async def run(backend):
+            await backend.snapshot()
+            attempt = {"transaction_id": "conformance", "session_generation": 1}
+            result = await backend.submit(intent, attempt)
+            created = result.evidence.get("created", {})
+            await backend.kick(intent.station, created["client"])
+            await backend.close(intent, created)
+            return result
+
+        result = asyncio.run(run(backend))
+        opened, kicked, closed = session.sent
+        cases.append(
+            {
+                "name": name,
+                "ovsdb_tables": raw,
+                "expected": {
+                    "status": result.status,
+                    "open": opened,
+                    "kick": kicked,
+                    "close": closed,
+                },
+            }
+        )
+    return {
+        "description": "spec §3.7: the steering window on the pod for one mandate, as OVSDB "
+        "transactions: open (guarded; group and neighbor reused when present, inserted when "
+        "absent), the directed kick once owm steers, and the close deleting exactly what the "
+        "open inserted. The server's reply to every insert is the UUID "
+        "00000000-0000-4000-8000-0000000000ff.",
+        "intent": dataclasses.asdict(intent),
+        "cases": cases,
+    }
+
+
 VECTOR_SETS = {
     "al-mac.json": al_mac_vectors,
     "operation-transitions.json": transition_vectors,
@@ -458,6 +787,9 @@ VECTOR_SETS = {
     "translation-southbound.json": southbound_vectors,
     "fleet.json": fleet_vectors,
     "uplink.json": uplink_vectors,
+    "cmdu.json": cmdu_vectors,
+    "control.json": control_vectors,
+    "steering.json": steering_vectors,
 }
 
 

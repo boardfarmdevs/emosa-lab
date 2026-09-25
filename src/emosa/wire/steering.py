@@ -216,3 +216,8 @@ class SteeringCoordinator:
 
     def status(self):
         return {"counts": dict(self.counts), "last": self.last}
+
+    def close(self):
+        """A closed session hands nothing further to the pod."""
+        self.executor = lambda request, mid: "session_closed"
+        self.recent.clear()

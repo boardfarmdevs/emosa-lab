@@ -533,6 +533,7 @@ class OnboardingSession:
             self.disassociations,
             self.link_metrics,
             self.ap_metrics,
+            self.steering,
         ):
             if component:
                 component.close()

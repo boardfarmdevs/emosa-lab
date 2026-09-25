@@ -1,0 +1,431 @@
+{
+ "agent": {
+  "al_mac": "02:72:f9:7f:07:85",
+  "controller_al": "02:00:00:e0:00:01",
+  "first_mid": 500,
+  "radio": "02:00:00:00:01:00"
+ },
+ "cases": [
+  {
+   "handed_to_pod": [],
+   "name": "channel-preference-query",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008005000b0080000000"
+      ],
+      "result": "channel_preference_report_sent"
+     },
+     "request": "0272f97f0785020000e00001893a00008004000b0080000000"
+    }
+   ]
+  },
+  {
+   "handed_to_pod": [],
+   "name": "channel-selection-accepted",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008007000c00808e000702000000010000000000",
+       "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e000000"
+      ],
+      "result": "channel_selection_accepted"
+     },
+     "request": "0272f97f0785020000e00001893a00008006000c00808b000b02000000010001510106e0000000"
+    }
+   ]
+  },
+  {
+   "handed_to_pod": [],
+   "name": "channel-selection-rdk-declined",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008007000d00808e000702000000010002000000",
+       "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e000000"
+      ],
+      "result": "channel_selection_declined"
+     },
+     "request": "0272f97f0785020000e00001893a00008006000d00808b003502000000010005510c01020304050708090a0b0c0d00510106105308010203040507080910530106e0540905060708090a0b0c0d108d000702000000010000000000"
+    }
+   ]
+  },
+  {
+   "handed_to_pod": [],
+   "name": "policy-rdk",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008000000e0080000000"
+      ],
+      "result": "policy_receipt_ack_sent"
+     },
+     "request": "0272f97f0785020000e00001893a00008003000e008089000c000001020000000100023c788a000c050102000000010078053cc0b50003000140b60042050c707269766174655f73736964000c08696f745f73736964000e0a6c6e665f726164697573000f0d6d6573685f6261636b6861756c000d07686f7473706f740010a4000100c4000500000000000b0004d89c8e00000000"
+    }
+   ]
+  },
+  {
+   "handed_to_pod": [
+    {
+     "abridged": true,
+     "disassoc_imminent": true,
+     "disassoc_timer": 5,
+     "mandate": true,
+     "mid": 15,
+     "source_bssid": "82:00:00:00:01:00",
+     "stations": [
+      "02:00:00:00:0a:00"
+     ],
+     "targets": [
+      [
+       "02:00:00:12:75:2c",
+       81,
+       6
+      ]
+     ],
+     "window": 5
+    }
+   ],
+   "name": "steering-mandate",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008000000f0080000000"
+      ],
+      "result": "client_steering_started"
+     },
+     "request": "0272f97f0785020000e00001893a00008014000f00809b001b820000000100e00005000501020000000a000102000012752c5106000000"
+    },
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008000000f0080000000"
+      ],
+      "result": "client_steering_repeated_ack_sent"
+     },
+     "request": "0272f97f0785020000e00001893a00008014000f00809b001b820000000100e00005000501020000000a000102000012752c5106000000"
+    }
+   ]
+  },
+  {
+   "handed_to_pod": [],
+   "name": "steering-station-not-on-source",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a0000800000100080a3000702020000009999000000"
+      ],
+      "result": "client_steering_refused_station_not_associated"
+     },
+     "request": "0272f97f0785020000e00001893a00008014001000809b001b820000000100e000050005010200000099990102000012752c5106000000"
+    }
+   ]
+  },
+  {
+   "handed_to_pod": [],
+   "name": "steering-opportunity",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a0000800000110080000000",
+       "020000e000010272f97f0785893a0000801701f40080000000"
+      ],
+      "result": "client_steering_opportunity_completed"
+     },
+     "request": "0272f97f0785020000e00001893a00008014001100809b001b820000000100600005000501020000000a000102000012752c5106000000"
+    }
+   ]
+  },
+  {
+   "handed_to_pod": [],
+   "name": "steering-agent-selected-target",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a0000800000120080000000"
+      ],
+      "result": "client_steering_refused_agent_selected_target"
+     },
+     "request": "0272f97f0785020000e00001893a00008014001200809b001b820000000100e00005000501020000000a0001ffffffffffff0000000000"
+    }
+   ]
+  }
+ ],
+ "description": "spec §2.4, §3.4, §3.7: a provisioned agent over the recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00 on class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller request frame and the frames the agent sends in answer, in order; the agent's own messages take MIDs from 500. 'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), as decoded from the request.",
+ "ovsdb_tables": {
+  "AWLAN_Node": {
+   "96bc1650-4197-4cd8-9036-f9eb854e87ec": {
+    "firmware_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+    "id": "MVXPOD023F87E628DD",
+    "model": "HWSIM_POD",
+    "serial_number": "MVXPOD023F87E628DD"
+   }
+  },
+  "Wifi_Associated_Clients": {
+   "5610f878-8aa3-40a8-95b1-76cad74d386d": {
+    "mac": "02:00:00:00:02:04",
+    "state": "active"
+   },
+   "754e678c-11a4-43ec-bda8-f655bf59b8d2": {
+    "mac": "02:00:00:00:10:00",
+    "state": "active"
+   },
+   "af38859b-bedf-41a2-bddf-98652851cbd1": {
+    "mac": "02:00:00:00:0a:00",
+    "state": "active"
+   }
+  },
+  "Wifi_Radio_Config": {
+   "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2": {
+    "enabled": true,
+    "freq_band": "5G",
+    "if_name": "phy5",
+    "vif_configs": [
+     "uuid",
+     "527b652b-fb37-4881-8386-a555857b77e7"
+    ]
+   },
+   "bad3456e-79cc-4d17-9719-afdb2b723dc4": {
+    "enabled": true,
+    "freq_band": "2.4G",
+    "if_name": "phy1",
+    "vif_configs": [
+     "uuid",
+     "5e205523-2215-4670-9433-e4742fa22055"
+    ]
+   }
+  },
+  "Wifi_Radio_State": {
+   "6d532b35-45c2-4fb6-b7e5-a88eac97f2c1": {
+    "channel": 6,
+    "country": "US",
+    "enabled": true,
+    "freq_band": "2.4G",
+    "if_name": "phy1",
+    "mac": "02:00:00:00:01:00",
+    "radio_config": [
+     "uuid",
+     "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+    ],
+    "tx_power": 30,
+    "vif_states": [
+     "uuid",
+     "46f21b59-4487-4c60-bab6-2d2874107cfa"
+    ]
+   },
+   "b4398810-4002-400c-937d-2487ede88cf5": {
+    "channel": 44,
+    "country": "US",
+    "enabled": true,
+    "freq_band": "5G",
+    "if_name": "phy5",
+    "mac": "02:00:00:00:05:00",
+    "radio_config": [
+     "uuid",
+     "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2"
+    ],
+    "tx_power": 23,
+    "vif_states": [
+     "uuid",
+     "95d7b177-73ef-44f6-903a-3db7dbc81bfd"
+    ]
+   }
+  },
+  "Wifi_VIF_Config": {
+   "527b652b-fb37-4881-8386-a555857b77e7": {
+    "bridge": "",
+    "enabled": true,
+    "if_name": "bhaul-sta-50",
+    "mode": "sta",
+    "multi_ap": "none",
+    "rsn_pairwise_ccmp": [
+     "set",
+     []
+    ],
+    "security": [
+     "map",
+     [
+      [
+       "encryption",
+       "WPA-PSK"
+      ],
+      [
+       "key",
+       "fixture-psk"
+      ]
+     ]
+    ],
+    "ssid": "opensync-lab-bhaul",
+    "wpa": [
+     "set",
+     []
+    ],
+    "wpa_key_mgmt": [
+     "set",
+     []
+    ],
+    "wpa_oftags": [
+     "map",
+     []
+    ],
+    "wpa_pairwise_ccmp": [
+     "set",
+     []
+    ],
+    "wpa_pairwise_tkip": [
+     "set",
+     []
+    ],
+    "wpa_psks": [
+     "map",
+     []
+    ]
+   },
+   "5e205523-2215-4670-9433-e4742fa22055": {
+    "bridge": "br-home",
+    "enabled": true,
+    "if_name": "home-ap-24",
+    "mode": "ap",
+    "multi_ap": [
+     "set",
+     []
+    ],
+    "rsn_pairwise_ccmp": true,
+    "security": [
+     "map",
+     []
+    ],
+    "ssid": "emosa-mesh",
+    "wpa": true,
+    "wpa_key_mgmt": "wpa-psk",
+    "wpa_oftags": [
+     "map",
+     []
+    ],
+    "wpa_pairwise_ccmp": [
+     "set",
+     []
+    ],
+    "wpa_pairwise_tkip": [
+     "set",
+     []
+    ],
+    "wpa_psks": [
+     "map",
+     [
+      [
+       "key",
+       "fixture-psk"
+      ]
+     ]
+    ]
+   }
+  },
+  "Wifi_VIF_State": {
+   "46f21b59-4487-4c60-bab6-2d2874107cfa": {
+    "associated_clients": [
+     "set",
+     [
+      [
+       "uuid",
+       "754e678c-11a4-43ec-bda8-f655bf59b8d2"
+      ],
+      [
+       "uuid",
+       "af38859b-bedf-41a2-bddf-98652851cbd1"
+      ]
+     ]
+    ],
+    "enabled": true,
+    "if_name": "home-ap-24",
+    "mac": "82:00:00:00:01:00",
+    "mode": "ap",
+    "multi_ap": "none",
+    "rsn_pairwise_ccmp": true,
+    "security": [
+     "map",
+     []
+    ],
+    "ssid": "emosa-mesh",
+    "vif_config": [
+     "uuid",
+     "5e205523-2215-4670-9433-e4742fa22055"
+    ],
+    "wpa": true,
+    "wpa_key_mgmt": "wpa-psk",
+    "wpa_pairwise_ccmp": false,
+    "wpa_pairwise_tkip": false,
+    "wpa_psks": [
+     "map",
+     [
+      [
+       "key",
+       "fixture-psk"
+      ]
+     ]
+    ]
+   },
+   "95d7b177-73ef-44f6-903a-3db7dbc81bfd": {
+    "associated_clients": [
+     "uuid",
+     "5610f878-8aa3-40a8-95b1-76cad74d386d"
+    ],
+    "enabled": true,
+    "if_name": "bhaul-sta-50",
+    "mac": "02:00:00:00:05:00",
+    "mode": "sta",
+    "multi_ap": "none",
+    "rsn_pairwise_ccmp": [
+     "set",
+     []
+    ],
+    "security": [
+     "map",
+     [
+      [
+       "encryption",
+       "WPA-PSK"
+      ],
+      [
+       "key",
+       "fixture-psk"
+      ]
+     ]
+    ],
+    "ssid": "opensync-lab-bhaul",
+    "vif_config": [
+     "uuid",
+     "527b652b-fb37-4881-8386-a555857b77e7"
+    ],
+    "wpa": [
+     "set",
+     []
+    ],
+    "wpa_key_mgmt": [
+     "set",
+     []
+    ],
+    "wpa_pairwise_ccmp": [
+     "set",
+     []
+    ],
+    "wpa_pairwise_tkip": [
+     "set",
+     []
+    ],
+    "wpa_psks": [
+     "map",
+     []
+    ]
+   }
+  }
+ }
+}
