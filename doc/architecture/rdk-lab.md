@@ -370,6 +370,19 @@ Found before it could run:
   alone did not help. Probable trigger: the gateway's self-heal reboot earlier
   that day.
 
+Result (rev120 `test-results/emosa-baseline-20260925T211427Z`, 25 September
+2026 14:14–15:49 PDT, meta-cmf `00694d3` with 0211/0212 installed, EMOSA idle):
+7 steps passed, 2 failed.
+
+| Step | Result |
+| --- | --- |
+| guest-audit, default-readiness | passed |
+| catalog (24 rooms) | failed: 22 passed; `fifty-client-counter-roam` (at its 18 s pause the 50 clients first converged after 56.4 s of the 60 s window, too late to hold), `received-discovery-recovery` (24 s pause: kernel audit, one station associated to Extender-4 while the controller still had it on Extender-3, `native_owner_mismatch`) |
+| geometry | failed: `backhaul-branch-formation` did not converge after loading (candidate measurements 9 of 10), the failure the lab already records for this room; the other two geometry rooms were not reached; default recovery passed |
+| rf-hover, rf-access, rf-properties, world-switch (all worlds), restore-default | passed |
+
+This is the reference for the pod-variant run: the same rooms, with pods.
+
 ### What the room model needs (meta-cmf-bananapi-vcpe)
 
 - **A pod node kind.** A world must keep every bound `fronthaul_ap` role, so
@@ -404,7 +417,7 @@ honestly, how the gates treat an abstaining agent is the user's decision.
 ### Order
 
 1. Two pods through the GTP path, backhaul held fixed (done).
-2. Native baseline: the room suite on `rdk-emosa` with EMOSA idle.
+2. Native baseline: the room suite on `rdk-emosa` with EMOSA idle (done).
 3. Pods in the room model (above).
 4. Measurements: telemetry in the RDK lab; serving metrics; candidates from probe
    requests.
