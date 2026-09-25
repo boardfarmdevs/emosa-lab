@@ -128,7 +128,7 @@ artifact is rebuilt with the lab's own `gen/rebuild-em-cli-artifact.sh`.
 | 3. EMOSA and GTP | fleet at `10.101.0.40:6640`; the GTP serves `opensync-lab-bhaul` on a pool radio on the medium | passed: channel 44, underlay `169.254.2.1/25` |
 | 4. Pod | the unchanged pod joins the GTP, dials `.40`, gets an agent | passed: GRE up, `br-home` `10.0.0.155` from the RDK router, agent `02:72:f9:7f:07:85` |
 | 5. Onboarding | the RDK controller onboards the agent; the pod runs its fronthaul; a client has internet | passed: the five-BSS M2 set applied (`private_ssid`, `iot_ssid`, `lnf_radius`, `hotspot`, `mesh_backhaul`); a client on the pod's `private_ssid` reached the internet |
-| 6. Topology | the pod in the controller's topology and in em_cli, marked as an OpenSync pod | in the controller's topology (Agent-1, 5 BSSes, its station); the em_cli marking is next |
+| 6. Topology | the pod in the controller's topology and in em_cli, marked as an OpenSync pod | passed: Agent-1 with kind `opensync-pod`, its own icon, model and manufacturer on hover and in the dashboard (meta-cmf `37c70e8`, controller image `…20260925081052`; installed in place in `rdk-emosa`) |
 | 7. Agent behaviour | client steering (BTM) through the pod; metrics on the medium | not started |
 
 The lab driver is `deploy/rdk-lab/` in emosa-lab, like `deploy/opensync-lab/`:
@@ -154,3 +154,39 @@ adapter kit, `emosa-gtp`, the fleet).
   before a start, as the lab's allocator does for its roles.
 - **wmediumd.** The generator includes guest radios (meta-cmf `215535b`); the
   room demo stops while the medium is regenerated.
+- **The controller's own identity.** The controller writes every M1's
+  manufacturer and model onto its own device record as well: its node reads
+  "Banana Pi - R4", or "OpenSync via EMOSA" once the pod has onboarded. em_cli
+  never classifies the root; the controller itself is unchanged there.
+
+## 7. Next: client steering through the pod (design)
+
+The RDK controller steers a station with a Client Steering Request (`0x8014`,
+Steering Request TLV `0x9B`: the source BSSID, the request mode (mandate or
+opportunity), BTM disassociation imminent, the stations, and the target
+BSSIDs with operating class and channel). The lab's optimizer triggers these
+through em_cli (`/api/v1/steer-native`). A native agent then:
+1. acknowledges (1905 ACK);
+2. sends the station a BTM request toward the target;
+3. reports the station's answer in a Client Steering BTM Report (`0x8016`,
+   TLV `0x9E`: BSSID, station, BTM status code, target BSSID);
+4. sends Steering Completed (`0x8017`) when a mandate is done.
+
+On an OpenSync 6.6 pod, `owm`'s steering does step 2 from OVSDB, and the pod's
+own statistics report the result (§3.6 of the spec):
+- **Write** (one guarded transaction, a new steering scope): the station's
+  `Band_Steering_Clients` row with `kick_type` `btm_deauth`,
+  `steering_btm_params` `{bssid: <target>, disassoc_imminent: 0|1}` (the only
+  two keys `owm` reads) and `force_kick` `directed` (a one-shot kick,
+  `ow_steer_policy_force_kick`, enforced for 20 s).
+- **Observe:** the band-steering report (`sts.BSReport`, enabled by a
+  `Wifi_Stats_Config` row of type `steering`) carries `CLIENT_DIRECTED_KICK`
+  and `CLIENT_BTM_STATUS` events with the station's `btm_status`, which is the
+  BTM status code the report needs. The station's association in
+  `Wifi_Associated_Clients` shows whether it left.
+- **Refuse** what the pod cannot do: more than one target, or a target
+  EMOSA cannot name to the pod, is answered with the EasyMesh error and no
+  write. An opportunity request is handled like a mandate with the pod's
+  normal BTM (OpenSync has no separate opportunity window).
+- **Clean up:** the row is removed when the window ends, so the pod's own
+  steering policy is left as it was.
