@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 from emosa.opensync.session import OvsSession
-from emosa.simulation.database import SimDatabase
-from emosa.simulation.radio import (
+from emosa_lab.simulation.database import SimDatabase
+from emosa_lab.simulation.radio import (
     MONITOR,
     RadioConfig,
     RadioManager,
@@ -221,11 +221,11 @@ def test_manager_never_echoes_requested_state_and_rejects_unsupported_scope(tmp_
 @pytest.mark.ovsdb
 def test_station_membership_age_and_binding_with_real_ovsdb(tmp_path):
     from emosa.secrets import SecretStore
-    from emosa.simulation.native_onboarding import AGENT, CONTROLLER, RadioReportSource
-    from emosa.simulation.station_telemetry import NODE_ID, TOPIC, encode_stations
-    from emosa.simulation.wsc_provisioning import BoundBackend
-    from emosa.telemetry.stations import StationSource
     from emosa.wire.autoconfiguration import PeerBinding
+    from emosa_lab.simulation.native_onboarding import AGENT, CONTROLLER, RadioReportSource
+    from emosa_lab.simulation.station_telemetry import NODE_ID, TOPIC, encode_stations
+    from emosa_lab.simulation.wsc_provisioning import BoundBackend
+    from emosa_lab.telemetry.stations import StationSource
 
     class Driver:
         clients = []

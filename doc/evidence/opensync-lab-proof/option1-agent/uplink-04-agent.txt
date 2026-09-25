@@ -1,0 +1,15 @@
+2026-09-24T22:05:26+00:00 emosa emosa-agent[8010]: 2026-09-24 22:05:26,146 INFO emosa.agent: pod source unavailable: OVSDB endpoint did not connect
+2026-09-24T22:05:26+00:00 emosa emosa-agent[8010]: 2026-09-24 22:05:26,146 INFO emosa.agent: pod: null
+2026-09-24T22:05:28+00:00 emosa emosa-agent[8010]: 2026-09-24 22:05:28,160 INFO emosa.agent: state: session=recovering source=False fronthaul_ops=['REJECTED', 'OBSERVED_APPLIED']
+2026-09-24T22:06:09+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:09,770 INFO emosa.agent: state: session=awaiting_m2 source=True fronthaul_ops=['REJECTED', 'OBSERVED_APPLIED']
+2026-09-24T22:06:10+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:10,074 INFO emosa.agent: state: session=provisioning source=True fronthaul_ops=['OBSERVED_APPLIED', 'CONFIG_COMMITTED']
+2026-09-24T22:06:10+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:10,599 INFO emosa.agent: state: session=provisioning source=True fronthaul_ops=['OBSERVED_APPLIED', 'OBSERVED_APPLIED']
+2026-09-24T22:06:11+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:11,110 INFO emosa.agent.uplink: switching bhaul-sta-50 to the EasyMesh backhaul 'emosa-mesh-bh'
+2026-09-24T22:06:11+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:11,262 INFO emosa.agent.uplink: uplink switch f6c48df0-7d46-4d1f-9516-31988ddde46a: CONFIG_COMMITTED
+2026-09-24T22:06:21+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:21,524 INFO emosa.agent: pod source unavailable: connection lost while draining monitor
+2026-09-24T22:06:21+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:21,524 INFO emosa.agent: pod: null
+2026-09-24T22:06:23+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:23,734 INFO emosa.agent: state: session=recovering source=False fronthaul_ops=['OBSERVED_APPLIED', 'OBSERVED_APPLIED']
+2026-09-24T22:06:33+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:33,592 INFO emosa.agent: pod source unavailable: report source changed or expired before delivery
+2026-09-24T22:06:33+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:33,659 INFO emosa.agent.uplink: uplink on the EasyMesh backhaul: {'kind': 'multi-ap', 'in_use': 'bhaul-sta-50', 'station': 'bhaul-sta-50', 'ssid': 'emosa-mesh-bh'
+2026-09-24T22:06:34+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:34,395 INFO emosa.agent: state: session=awaiting_m2 source=True fronthaul_ops=['OBSERVED_APPLIED', 'OBSERVED_APPLIED']
+2026-09-24T22:06:34+00:00 emosa emosa-agent[8010]: 2026-09-24 22:06:34,640 INFO emosa.agent: state: session=provisioning source=True fronthaul_ops=['OBSERVED_APPLIED', 'OBSERVED_APPLIED']

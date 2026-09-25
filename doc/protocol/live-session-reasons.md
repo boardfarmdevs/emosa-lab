@@ -99,7 +99,7 @@ Keep its candidate directory name or substitute your own consistently. While
 the owned lab is idle, stage the new files:
 
 ```bash
-lxc file push src/emosa/simulation/session_reasons.py \
+lxc file push lab/src/emosa_lab/simulation/session_reasons.py \
   emosa-lab/opt/emosa-radio-manager/source/emosa/simulation/
 lxc file push deploy/radio-manager/session-reasons.py \
   emosa-lab/opt/emosa-radio-manager/

@@ -3,7 +3,6 @@ from dataclasses import replace
 import pytest
 
 from emosa.errors import EmosaError, Reason
-from emosa.simulation.wire_reports import fixtures
 from emosa.wire.cmdu import Reassembler, Tlv, fragment_message
 from emosa.wire.coordinator import ReportSource
 from emosa.wire.link_metrics import (
@@ -18,6 +17,7 @@ from emosa.wire.link_metrics import (
     decode_query,
 )
 from emosa.wire.topology_values import LocalInterface, Neighbor, Neighbors1905
+from emosa_lab.simulation.wire_reports import fixtures
 
 pytestmark = pytest.mark.unit
 PEER_INTERFACE = bytes.fromhex("020000005002")

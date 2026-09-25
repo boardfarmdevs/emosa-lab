@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/boardfarmdevs/emosa-lab/schemas/fleet-registry.schema.json",
+  "title": "EMOSA fleet registry",
+  "description": "Every pod the fleet has seen, by serial: its agent's identity and port. STATE_ROOT/fleet.json.",
+  "type": "object",
+  "propertyNames": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+  "additionalProperties": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["pod_id", "al_mac", "port", "interface", "first_seen", "last_seen", "handovers"],
+    "properties": {
+      "pod_id": {"type": "string"},
+      "al_mac": {"type": "string", "pattern": "^02(:[0-9a-f]{2}){5}$"},
+      "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+      "interface": {"type": "string", "pattern": "^em[0-9]+$"},
+      "first_seen": {"type": "number"},
+      "last_seen": {"type": "number"},
+      "handovers": {"type": "integer", "minimum": 1},
+      "node_id": {"type": ["string", "null"]},
+      "model": {"type": ["string", "null"]},
+      "firmware": {"type": ["string", "null"]}
+    }
+  }
+}

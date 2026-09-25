@@ -55,6 +55,7 @@ TABLES = {
         "wpa_pairwise_ccmp",
         "mac",
         "associated_clients",
+        "multi_ap",
     ],
     "Wifi_Associated_Clients": ["mac", "state"],
 }

@@ -2,16 +2,16 @@ import asyncio
 from dataclasses import replace
 
 import pytest
+
+from emosa.easymesh_payloads import DeviceInventory, InventoryRadio, encode_value
+from emosa.wire.cmdu import MidSequence, Tlv, fragment_message
+from emosa.wire.coordinator import ReportSource
+from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession, non_dpp_admission
+from emosa_lab.simulation.wire_reports import fixtures
 from test_autoconfiguration import BINDING, RESPONSE, assemble, m2
 from test_autoconfiguration import fixed_entropy as fixed_entropy
 from test_provisioning_session import frames
 from test_wsc_operation_bridge import rig as rig
-
-from emosa.easymesh_payloads import DeviceInventory, InventoryRadio, encode_value
-from emosa.simulation.wire_reports import fixtures
-from emosa.wire.cmdu import MidSequence, Tlv, fragment_message
-from emosa.wire.coordinator import ReportSource
-from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession, non_dpp_admission
 
 pytestmark = pytest.mark.unit
 
@@ -342,10 +342,9 @@ def test_final_stats_require_provisioning_and_an_observed_departure(rig):
 
 
 def test_recovery_requires_fresh_discovery_and_rejects_previous_m2(rig, monkeypatch):
-    from test_autoconfiguration import exchange
-
     from emosa import wsc_messages
     from emosa.wire.operation_bridge import WscComponentBridge
+    from test_autoconfiguration import exchange
 
     async def scenario():
         old_bridge, engine, backend, clock = rig
@@ -591,6 +590,50 @@ def test_client_capability_unavailable_is_explicit_specification_error(rig, asso
     asyncio.run(scenario())
 
 
+def test_backhaul_sta_capability_report_names_only_an_easymesh_backhaul(rig):
+    async def scenario():
+        session, source, sent = lifecycle(rig)
+        await session.tick()
+        await receive(session, response())
+        query = fragment_message(BINDING.local_al, BINDING.controller_al, 0x8027, 713, ())[0]
+        assert await receive(session, query) == "backhaul_sta_capability_report_sent"
+        report = assemble((sent[-1],))
+        assert (report.message_type, report.mid, report.tlvs) == (0x8028, 713, ())  # GRE uplink
+        snap = source.current()
+        ruid, sta = bytes.fromhex("020000001500"), bytes.fromhex("020000001501")
+        source.publish(
+            (1, 2),
+            snap.capabilities,
+            replace(snap.topology, backhaul_stations=((ruid, sta),)),
+            observed_at=snap.stamp.observed_at,
+        )
+        assert await receive(session, query) == "backhaul_sta_capability_report_sent"
+        report = assemble((sent[-1],))
+        assert report.tlvs == (Tlv(0xCB, ruid + b"\x80" + sta),)
+        session.close()
+
+    asyncio.run(scenario())
+
+
+def test_backhaul_steering_is_acknowledged_and_refused(rig):
+    async def scenario():
+        session, _, sent = lifecycle(rig)
+        await session.tick()
+        await receive(session, response())
+        count = len(sent)
+        sta, target = bytes.fromhex("020000001501"), bytes.fromhex("020000001902")
+        request = Tlv(0x9E, sta + target + bytes([115, 36]))
+        frame = fragment_message(BINDING.local_al, BINDING.controller_al, 0x8019, 714, (request,))
+        assert await receive(session, frame[0]) == "backhaul_steering_refused"
+        ack, reply = (assemble((f,)) for f in sent[count:])
+        assert (ack.message_type, ack.mid, ack.tlvs) == (0x8000, 714, ())
+        assert (reply.message_type, reply.mid) == (0x801A, 714)
+        assert reply.tlvs == (Tlv(0x9F, sta + target + b"\x01"),)  # result: failure
+        session.close()
+
+    asyncio.run(scenario())
+
+
 def test_bound_policy_receipt_does_not_claim_reporting_or_create_config_operation(rig, tmp_path):
     from emosa.wire.reporting_policy import ReportingPolicyStore
 
@@ -623,5 +666,45 @@ def test_bound_policy_receipt_does_not_claim_reporting_or_create_config_operatio
         finally:
             session.close()
             store.close()
+
+    asyncio.run(scenario())
+
+
+def test_clients_are_announced_again_once_the_controller_knows_the_bss(rig):
+    from emosa.easymesh_payloads import AssociatedClient, AssociatedClients, BssClients
+
+    async def scenario():
+        session, source, sent = lifecycle(rig)
+        await session.tick()
+        await receive(session, response())
+        snap = source.current()
+        bssid = snap.topology.clients.bsses[0].bssid
+        mac = bytes.fromhex("020000000200")
+        source.publish(
+            (1, 2),
+            snap.capabilities,
+            replace(
+                snap.topology,
+                clients=AssociatedClients((BssClients(bssid, (AssociatedClient(mac, 5),)),)),
+            ),
+            observed_at=snap.stamp.observed_at,
+        )
+        await session.tick()  # the early join, possibly before the controller knows the BSS
+        count = len(sent)
+        # M2 created the operation; the controller has not asked for topology yet.
+        session.state, session.topology_mark = "provisioning", 0
+        session.reports.counts["topology_response_sent"] = 0
+        await session.tick()
+        assert len(sent) == count
+        session.reports.counts["topology_response_sent"] = 1
+        await session.tick()
+        notification = assemble((sent[-1],))
+        assert notification.tlvs[-1] == Tlv(0x92, mac + bssid + b"\x80")
+        assert session.counts["clients_reannounced"] == 1
+        count = len(sent)
+        session.reports.counts["topology_response_sent"] = 2
+        await session.tick()
+        assert len(sent) == count  # once per configuration, not on every query
+        session.close()
 
     asyncio.run(scenario())

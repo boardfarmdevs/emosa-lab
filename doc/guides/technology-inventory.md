@@ -105,7 +105,7 @@ bash scripts/build-ovsdb.sh
 Choose a fresh output directory; the demo refuses to overwrite an existing run:
 
 ```bash
-uv run python -m emosa.simulation.radio_capabilities \
+uv run python -m emosa_lab.simulation.radio_capabilities \
   --with-extensions --output .lab/technology-inventory-first
 ```
 

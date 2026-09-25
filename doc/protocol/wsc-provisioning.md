@@ -84,7 +84,7 @@ implementation; it does not replace the IEEE/WFA specifications.
 Choose a new output directory each time:
 
 ```bash
-uv run python -m emosa.simulation.wsc_provisioning \
+uv run python -m emosa_lab.simulation.wsc_provisioning \
   --registrar .cache/wsc-registrar/component-registrar \
   --output .lab/wsc-provisioning-01
 uv run pytest tests/test_wsc_operation_bridge.py tests/test_wsc_provisioning.py -q

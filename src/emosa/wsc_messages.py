@@ -310,11 +310,17 @@ class M1Transcript:
     def authenticate_m2(self, message: bytes) -> AuthenticatedM2:
         return self.authenticate_m2_envelope(message).ap_configuration()
 
-    def authenticate_m2_envelopes(self, messages: tuple[bytes, ...], *, max_bss: int):
+    def authenticate_m2_envelopes(
+        self, messages: tuple[bytes, ...], *, max_bss: int, shared_session=False
+    ):
         """Return the entire checked payload set, or raise without returning any settings.
 
         This verifies nonce/index uniqueness within one received set only, not
         cross-exchange replay, controller/radio binding or complete CMDU semantics.
+        Every M2 is authenticated on its own. By default each carries its own
+        registrar nonce. ``shared_session`` accepts one registrar session split
+        over the set (RDK unified-wifi-mesh): one nonce and one registrar public
+        key for every M2, and no two M2s identical.
         """
         if type(max_bss) is not int or not 1 <= max_bss <= MAX_M2_PAYLOADS:
             raise _invalid()
@@ -323,7 +329,13 @@ class M1Transcript:
         results = tuple(self.authenticate_m2_envelope(message) for message in messages)
         nonces = [r.registrar_nonce for r in results]
         indexes = [r.bss_index for r in results if r.bss_index is not None]
-        if len(set(nonces)) != len(nonces) or len(set(indexes)) != len(indexes):
+        if shared_session:
+            publics = {a.value for r in results for a in r.attributes if a.kind == PUBLIC_KEY}
+            if len(set(nonces)) != 1 or len(publics) != 1 or len(set(messages)) != len(messages):
+                raise _invalid()
+        elif len(set(nonces)) != len(nonces):
+            raise _invalid()
+        if len(set(indexes)) != len(indexes):
             raise _invalid()
         return results
 

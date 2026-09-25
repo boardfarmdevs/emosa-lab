@@ -20,9 +20,9 @@ from emosa.opensync.mapping import OpenSyncBackend
 from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
-from emosa.simulation.database import SimDatabase
-from emosa.simulation.radio import MONITOR, seed_radio_database
 from emosa.store import Store
+from emosa_lab.simulation.database import SimDatabase
+from emosa_lab.simulation.radio import MONITOR, seed_radio_database
 
 # Public synthetic edge case: preserve literal quote and backslash bytes.
 CHANGED_KEY = 'Radio "quoted\\ key2026!'
@@ -213,7 +213,7 @@ async def experiment(label):
         source_files = [
             *ROOT.glob("*.py"),
             ROOT / "peer-reference.json",
-            Path(__import__("emosa.simulation.radio", fromlist=["__file__"]).__file__),
+            Path(__import__("emosa_lab.simulation.radio", fromlist=["__file__"]).__file__),
             Path(__import__("emosa.opensync.mapping", fromlist=["__file__"]).__file__),
         ]
         write(

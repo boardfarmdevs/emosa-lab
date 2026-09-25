@@ -29,7 +29,7 @@ physical endpoint or credentials are used by this exercise.
 
 ```bash
 emosa_fleet_parent=$(mktemp -d /tmp/emosa-fleet-XXXXXX)
-uv run python -m emosa.simulation.connecting_fleet \
+uv run python -m emosa_lab.simulation.connecting_fleet \
   --directory "$emosa_fleet_parent/run"
 python3 -m json.tool "$emosa_fleet_parent/run/report.json"
 ```

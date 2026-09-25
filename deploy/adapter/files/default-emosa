@@ -1,0 +1,3 @@
+# EMOSA adapter environment (read by emosa-fleet and emosa-agent@ units).
+# The interface on the EasyMesh controller's LAN; every agent adds a macvlan on it.
+EMOSA_TRUNK=emlan

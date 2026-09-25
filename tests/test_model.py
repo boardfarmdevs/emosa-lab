@@ -4,7 +4,6 @@ from dataclasses import replace
 
 import pytest
 
-from emosa.backends.mock import ModelBackend
 from emosa.clock import ManualClock
 from emosa.errors import EmosaError, Reason
 from emosa.model import Intent, State
@@ -12,6 +11,7 @@ from emosa.operations import transition
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
 from emosa.store import Store
+from emosa_lab.backends.mock import ModelBackend
 
 pytestmark = pytest.mark.unit
 
@@ -89,6 +89,39 @@ def test_deadline_and_late_evidence_preserve_timing_verdict(rig, lost):
         assert late.commit_evidence["attribution"] == ("unknown" if lost else "reply")
         if not lost:
             assert late.state == State.TIMED_OUT
+
+    asyncio.run(scenario())
+
+
+def test_unknown_outcome_lost_with_a_pod_restart_stops_blocking_after_the_deadline(rig):
+    async def scenario():
+        engine, backend, intent, clock = rig
+        backend.fault = "lost-reply"
+        op = requested(engine, intent)
+        await engine.execute(op.operation_id)
+        # The pod restarts: the unconfirmed write is gone from its config.
+        backend.config["ssid"] = "initial-network"
+        backend.pending = None
+        backend.reconnect()
+        snapshot = backend.snapshot
+
+        async def no_state_row():  # the pod has no VIF State row: not fresh
+            snap = await snapshot()
+            snap.observed.fresh = False
+            return snap
+
+        backend.snapshot = no_state_row
+        backend.fault = "none"
+        await engine.reconcile("pod-1")
+        assert engine.store.get(op.operation_id).state == State.INDETERMINATE
+        blocked = requested(engine, intent, key="key-2")
+        assert blocked.state == State.REJECTED and blocked.reason == Reason.BUSY
+        clock.advance(31)
+        await engine.reconcile("pod-1")
+        timed = engine.store.get(op.operation_id)
+        assert timed.state == State.TIMED_OUT and timed.reason == Reason.APPLY_TIMEOUT
+        retry = requested(engine, intent, key="key-3")
+        assert (await engine.execute(retry.operation_id)).state == State.CONFIG_COMMITTED
 
     asyncio.run(scenario())
 

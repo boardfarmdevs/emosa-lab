@@ -174,7 +174,7 @@ advertising Traffic Separation.
 
 Section 9.1 distinguishes a Profile-1 controller without a KiB/MiB indication
 from the other cases. The former uses bytes; the latter uses an explicit KiB or
-MiB choice. The [decision helper](../../src/emosa/counter_units.py) requires known
+MiB choice. The [decision helper](../../lab/src/emosa_lab/counter_units.py) requires known
 peer facts and refuses to turn unknown Profile-1 capability into an absent bit.
 A missing profile fact also remains unknown; it is not automatically a verified
 legacy Profile-1 observation.

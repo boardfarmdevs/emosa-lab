@@ -29,6 +29,7 @@ TRANSITIONS = {
         State.OBSERVED_APPLIED,
         State.OWNERSHIP_CONFLICT,
         State.FAILED,
+        State.TIMED_OUT,
     },
 }
 

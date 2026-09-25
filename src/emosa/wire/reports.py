@@ -220,6 +220,9 @@ class TopologyFacts:
     powered_off_interfaces_absent: bool
     l2_neighbor_records_absent: bool
     mld_backhaul_vbss_tid_policy_absent: bool
+    # (RUID, backhaul STA MAC) of each radio whose station is the agent's EasyMesh
+    # backhaul: the Backhaul STA Capability Report (0x8028). Empty over GRE.
+    backhaul_stations: tuple = ()
 
 
 def _topology(facts, binding, message_set=EASYMESH_61):
@@ -268,8 +271,8 @@ def _topology(facts, binding, message_set=EASYMESH_61):
         "operational and BSS configuration reports disagree",
     )
     _require(
-        all(b.flags == 0x40 for r in facts.configuration.radios for b in r.bsses),
-        "topology report currently supports pure fronthaul non-MBSSID BSSs",
+        all(b.flags in (0x40, 0x80) for r in facts.configuration.radios for b in r.bsses),
+        "topology report supports pure fronthaul or backhaul non-MBSSID BSSs",
     )
     for bssid in bsses:
         matches = [i for i in facts.device.interfaces if i.mac == bssid]

@@ -2,7 +2,6 @@ import json
 
 import pytest
 
-from emosa.counter_units import select_counter_units
 from emosa.easymesh_payloads import (
     APCapability,
     APRadioAdvancedCapabilities,
@@ -11,8 +10,9 @@ from emosa.easymesh_payloads import (
     encode_value,
 )
 from emosa.errors import EmosaError, Reason
-from emosa.evaluation.cli import main
-from emosa.evaluation.payloads import describe
+from emosa_lab.counter_units import select_counter_units
+from emosa_lab.evaluation.cli import main
+from emosa_lab.evaluation.payloads import describe
 
 pytestmark = pytest.mark.unit
 RUID = bytes.fromhex("020000014001")

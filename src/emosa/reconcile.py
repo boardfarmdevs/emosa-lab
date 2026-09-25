@@ -11,8 +11,11 @@ from emosa.operations import transition
 
 
 class Engine:
-    def __init__(self, store, vault, backends, clock=None):
+    def __init__(self, store, vault, backends, clock=None, intent_type=Intent):
+        """``intent_type`` is the scope's intent (``Intent``: one AP BSS; see
+        ``emosa.opensync.uplink.UplinkIntent``). One engine and journal per scope."""
         self.store, self.vault, self.backends = store, vault, backends
+        self.intent_type = intent_type
         self.clock = clock or Clock()
         self.deadlines = {}
         self.busy = set()
@@ -62,7 +65,7 @@ class Engine:
         if intent.pod_id not in self.backends:
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "pod outside configured allowlist")
         fingerprint = self.vault.fingerprint(
-            {**asdict(intent), "target": intent.target(self.vault)}
+            {**intent.record(), "target": intent.target(self.vault)}
         )
         old = self.store.lookup(source, intent.pod_id, key)
         if old:
@@ -78,7 +81,7 @@ class Engine:
             run_id,
             source,
             initiating_interface,
-            asdict(intent),
+            intent.record(),
             fingerprint,
             key,
             now,
@@ -123,7 +126,7 @@ class Engine:
         self.busy.add(op.pod_id)
         try:
             backend = self.backends[op.pod_id]
-            intent = Intent(**op.intent)
+            intent = self.intent_type(**op.intent)
             try:
                 await self._check_wsc(op)
                 op.plan = await self.plan(intent)
@@ -264,7 +267,7 @@ class Engine:
                     transition(op, State.TIMED_OUT)
                     op.reason = Reason.APPLY_TIMEOUT
             try:
-                target = Intent(**op.intent).target(self.vault)
+                target = self.intent_type(**op.intent).target(self.vault)
             except EmosaError:
                 if not op.blocked_for_resubmission:
                     op.blocked_for_resubmission = True
@@ -296,6 +299,18 @@ class Engine:
                         },
                         pod_id,
                     )
+                if (
+                    snap.ready
+                    and op.state == State.INDETERMINATE
+                    and op.deadline_elapsed
+                    and not self._matches(snap.config, target)
+                ):
+                    # The current configuration, past the deadline, lacks the
+                    # write (it never landed, or a pod restart dropped it). Stop
+                    # blocking the pod; a late application is still recorded.
+                    transition(op, State.TIMED_OUT)
+                    op.reason = Reason.APPLY_TIMEOUT
+                    changed = True
                 if snap.ready and snap.observed.fresh:
                     config_matches = self._matches(snap.config, target)
                     applied = snap.observed.satisfies(target)

@@ -2,13 +2,13 @@ import asyncio
 from dataclasses import replace
 
 import pytest
-from test_autoconfiguration import BINDING, m2
-from test_autoconfiguration import fixed_entropy as fixed_entropy
-from test_wsc_operation_bridge import rig as rig
 
 from emosa.model import State
 from emosa.wire.cmdu import Tlv, fragment_message
 from emosa.wire.provisioning_session import ComponentProvisioningSession
+from test_autoconfiguration import BINDING, m2
+from test_autoconfiguration import fixed_entropy as fixed_entropy
+from test_wsc_operation_bridge import rig as rig
 
 pytestmark = pytest.mark.unit
 

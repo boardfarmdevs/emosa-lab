@@ -1,0 +1,62 @@
+{
+  "what": "Data plane option 1 performed by the EMOSA agent (spec §8.3): pod-6 (MVXPOD023674CB574D, opensync-lab image mvx-pod-20260924130806 with the Multi-AP link-state patch), station bhaul-sta-50, backhaul 'emosa-mesh-bh' (the controller policy's backhaul), credentials from the agent configuration",
+  "vm": "emosa-osl-0923",
+  "date": "2026-09-24",
+  "times": "UTC",
+  "runs": [
+    {
+      "run": "uplink-01",
+      "result": "held on option 2, as designed; the lab was wrong",
+      "committed": "21:29:29.671",
+      "events": [
+        "21:29:42 the station joined 'emosa-mesh-bh' at 02:00:00:ec:01:01: the prplMesh node's own backhaul BSS, on the 1905-only LAN (no router)",
+        "21:29:45 cm adopted the Multi-AP station as its uplink (LINK_SEL -> WAN_IP)",
+        "21:29:48-21:30:11 12 router checks failed; 21:30:11 cm restarted the managers (fatal threshold 8)",
+        "21:30:59 the agent timed the switch out (90 s) and held the pod on option 2",
+        "21:31:48 the pod was back on its bootstrap GRE uplink and its agent again; no retry"
+      ],
+      "change": "the controller policy no longer gives the prplMesh node a backhaul BSS (em-ctl-node.sh, EM_GATEWAY_BACKHAUL=1 restores it); em-gtp serves the controller's backhaul BSS (5 GHz, channel 36) into the gateway LAN",
+      "logs": ["uplink-01-agent.txt", "uplink-01-pod.txt"]
+    },
+    {
+      "run": "uplink-02",
+      "result": "applied",
+      "committed": "21:38:47.762",
+      "applied": "21:39:09.932",
+      "switch_seconds": 22,
+      "observed": {
+        "Wifi_VIF_State": "bhaul-sta-50 multi_ap=backhaul_sta wds=true bridge=br-home parent=02:00:00:00:1a:00 (em-gtp wlan1) ssid=emosa-mesh-bh, channel 36, 4addr on",
+        "Connection_Manager_Uplink": "bhaul-sta-50 if_type=vif is_used=true; no g-bhaul-sta-50",
+        "br-home": "192.168.0.162/24 from mv3's LAN",
+        "client": "em-wc9 on pod-6's emosa-mesh: 3/3 pings to 1.1.1.1",
+        "controller": "Device.10 (02:00:a2:1c:ff:56) Interface.3: MediaType IEEE_802_11N_5_GHZ, MACAddress 02:00:00:00:15:00; MultiAPDevice.Backhaul.LinkType stays Ethernet (1905 frames arrive on EMOSA's port)"
+      },
+      "logs": ["uplink-02-agent.txt"]
+    },
+    {
+      "run": "uplink-03",
+      "result": "re-applied after an OpenSync restart, with two faults found and fixed",
+      "events": [
+        "21:40:14 first attempt: restart.sh on pod-6; the agent took the pod's restart for another manager's change and held it. AWLAN_Node comes from the database template (conf.db.bck) and keeps its UUID across starts. Fix: a start is identified by the Wifi_Radio_Config row UUIDs, which the start scripts create anew",
+        "21:50:47 switched after re-admission, applied 21:51:03.7 (16 s)",
+        "21:51:25 restart.sh on pod-6; 21:52:59 switched again on the new start, applied 21:53:15.6 (16 s)",
+        "but the switch ran alongside the controller's M2 that re-creates the fronthaul: the create's reply was lost when the path moved (INDETERMINATE, then TIMED_OUT), later M2s were rejected BUSY, and the pod served no BSS. Fixes: the switch waits until the fronthaul is served and no fronthaul operation is active; a provisioned agent whose pod serves no BSS for 60 s asks for M2 again (fresh M1)"
+      ],
+      "logs": ["uplink-03-agent.txt"]
+    },
+    {
+      "run": "uplink-04",
+      "result": "re-applied after an OpenSync restart, in order",
+      "restart": "22:05:23",
+      "events": [
+        "22:06:09 pod back on GRE, agent awaiting M2",
+        "22:06:10.6 fronthaul created from M2 and observed applied",
+        "22:06:11.3 switch committed on the new start",
+        "22:06:33.7 switch applied (22 s)",
+        "22:06:38 client em-wc9 back on emosa-mesh; 3/3 pings to 1.1.1.1"
+      ],
+      "logs": ["uplink-04-agent.txt"],
+      "script": "reapply.sh"
+    }
+  ]
+}

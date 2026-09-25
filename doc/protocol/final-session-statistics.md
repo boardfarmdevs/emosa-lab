@@ -98,7 +98,7 @@ Use the development checkout on HOST after the manual's Python/tshark setup:
 3. Generate a fresh set with the adapter encoder, using a new output directory:
 
    ```bash
-   uv run python -m emosa.simulation.disassociation .lab/final-stats-learning-01
+   uv run python -m emosa_lab.simulation.disassociation .lab/final-stats-learning-01
    python3 scripts/check-disassociation-reference.py --directory .lab/final-stats-learning-01
    ```
 

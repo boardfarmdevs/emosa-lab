@@ -128,7 +128,7 @@ controller. Check the executable, then choose a new private result directory:
 ```bash
 tshark --version
 emosa_review="$HOME/.local/state/emosa/peer-review/wired-$(date -u +%Y%m%d-%H%M%S)"
-uv run python -m emosa.evaluation.peer_capture \
+uv run python -m emosa_lab.evaluation.peer_capture \
   --capture doc/evidence/peer-baseline/samples/wired/ethernet.pcap \
   --output "$emosa_review" \
   --controller-al 02:00:00:e0:00:01 \

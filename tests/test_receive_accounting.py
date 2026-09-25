@@ -4,14 +4,14 @@ import runpy
 import struct
 
 import pytest
-from test_egress_accounting import ADDRESS, payload, refresh
-from test_forwarding import observation as forwarding_observation
 
 from emosa.opensync.session import OvsSession
-from emosa.simulation.backhaul_accounting import BackhaulAccountingSource
-from emosa.simulation.database import SimDatabase
-from emosa.simulation.forwarding import ForwardingSource, updates
-from emosa.simulation.radio import MONITOR, seed_radio_database
+from emosa_lab.simulation.backhaul_accounting import BackhaulAccountingSource
+from emosa_lab.simulation.database import SimDatabase
+from emosa_lab.simulation.forwarding import ForwardingSource, updates
+from emosa_lab.simulation.radio import MONITOR, seed_radio_database
+from test_egress_accounting import ADDRESS, payload, refresh
+from test_forwarding import observation as forwarding_observation
 
 
 def joint(start=10_000_000_000, *, rx_packets=100, rx_drops=0, tx_drops=0):

@@ -4,11 +4,11 @@ import pytest
 
 from emosa.easymesh_payloads import AssociatedClient, AssociatedClients, BssClients
 from emosa.errors import EmosaError
-from emosa.simulation.wire_reports import fixtures
-from emosa.telemetry.stations import Report
 from emosa.wire.cmdu import MidSequence, Reassembler, Tlv, fragment_message
 from emosa.wire.coordinator import ReportSource
 from emosa.wire.disassociation import DisassociationCoordinator, FinalSession, TrafficCounters
+from emosa_lab.simulation.wire_reports import fixtures
+from emosa_lab.telemetry.stations import Report
 
 pytestmark = pytest.mark.unit
 STA = bytes.fromhex("020000000020")

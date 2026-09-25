@@ -40,7 +40,7 @@ flowchart TD
 ```
 
 The reusable Python component is
-[discovery_session.py](../../src/emosa/wire/discovery_session.py). It wraps the
+[discovery_session.py](../../lab/src/emosa_lab/wire/discovery_session.py). It wraps the
 report coordinator, uses one MID sequence, and has no operation callback. The
 only implemented source is the owned simulator. A restricted topology reply
 does not claim that the selected profile is completely implemented.
@@ -55,7 +55,7 @@ and source freshness are familiar. No root, radio or LXD is required here.
 Run these commands from the checkout, choosing an unused output directory:
 
 ```bash
-uv run python -m emosa.simulation.discovery --output .lab/discovery-demo-01
+uv run python -m emosa_lab.simulation.discovery --output .lab/discovery-demo-01
 uv run emosa-lab wire-inspect --capture .lab/discovery-demo-01/messages.pcap
 uv run pytest tests/test_discovery_session.py -q
 uv run pytest tests/test_discovery_session_ovsdb.py -q

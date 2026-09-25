@@ -19,50 +19,185 @@
       "minLength": 1
     },
     "intent": {
-      "type": "object",
-      "properties": {
-        "pod_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "radio_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "bss_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "ssid": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "secret_ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "security_mode": {
+              "enum": [
+                "wpa2-psk",
+                "wpa3-sae"
+              ]
+            },
+            "additional": {
+              "type": "array",
+              "maxItems": 7,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "enum": [
+                      "fronthaul",
+                      "backhaul"
+                    ]
+                  },
+                  "ssid": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32
+                  },
+                  "secret_ref": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$"
+                  }
+                },
+                "required": [
+                  "role",
+                  "ssid",
+                  "secret_ref"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "pod_id",
+            "radio_id",
+            "bss_id",
+            "ssid",
+            "secret_ref"
+          ],
+          "additionalProperties": false,
+          "title": "Configure a BSS (the fronthaul scope)"
         },
-        "radio_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128
+        {
+          "title": "Move the pod's backhaul station onto the EasyMesh backhaul (the uplink scope, data plane option 1)",
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "station": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]{1,15}$"
+            },
+            "ssid": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "secret_ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$"
+            },
+            "mode": {
+              "enum": [
+                "multi-ap"
+              ]
+            },
+            "bssid": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$",
+              "description": "The upstream backhaul BSS; required for a switch, absent in records made before it existed"
+            }
+          },
+          "required": [
+            "pod_id",
+            "station",
+            "ssid",
+            "secret_ref",
+            "mode"
+          ],
+          "additionalProperties": false
         },
-        "bss_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128
-        },
-        "ssid": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 32
-        },
-        "secret_ref": {
-          "type": "string",
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$"
-        },
-        "enabled": {
-          "type": "boolean"
-        },
-        "security_mode": {
-          "enum": [
-            "wpa2-psk",
-            "wpa3-sae"
-          ]
+        {
+          "title": "Have the pod publish its own statistics (the telemetry scope)",
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "broker": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253
+            },
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "topic": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "radio_type": {
+              "enum": [
+                "2.4G",
+                "5G",
+                "5GL",
+                "5GU",
+                "6G"
+              ]
+            },
+            "reporting_interval": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3600
+            },
+            "sampling_interval": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3600
+            }
+          },
+          "required": [
+            "pod_id",
+            "broker",
+            "port",
+            "topic",
+            "radio_type",
+            "reporting_interval",
+            "sampling_interval"
+          ],
+          "additionalProperties": false
         }
-      },
-      "required": [
-        "pod_id",
-        "radio_id",
-        "bss_id",
-        "ssid",
-        "secret_ref"
-      ],
-      "additionalProperties": false
+      ]
     },
     "intent_fingerprint": {
       "type": "string",

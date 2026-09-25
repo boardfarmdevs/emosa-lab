@@ -1,0 +1,21 @@
+{
+  "al_mac": "02:00:a2:1c:ff:56",
+  "controller_al": "02:00:00:e0:00:01",
+  "interface": "em6",
+  "m2_session": "distinct",
+  "message_set": "easymesh-6.1",
+  "multi_bss": false,
+  "ovsdb": "ptcp:6656:127.0.0.1",
+  "pod_id": "MVXPOD023674CB574D",
+  "profile": "opensync-lab-hwsim-6.6.1-v1",
+  "run_id": "MVXPOD023674CB574D",
+  "serial": "MVXPOD023674CB574D",
+  "state_dir": "/var/lib/emosa/MVXPOD023674CB574D",
+  "uplink": {
+    "bssid": "02:00:00:00:09:00",
+    "credentials": "config",
+    "mode": "multi-ap",
+    "secret_ref": "backhaul",
+    "ssid": "emosa-mesh-bh"
+  }
+}

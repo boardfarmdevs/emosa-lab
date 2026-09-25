@@ -6,15 +6,15 @@ from types import SimpleNamespace
 import pytest
 
 from emosa.agents import validate_bindings
-from emosa.app import Application
 from emosa.config import validate
 from emosa.easymesh_payloads import decode_value
 from emosa.errors import EmosaError, Reason
 from emosa.opensync.topology import project
-from emosa.simulation.connecting_pod import configuration
-from emosa.simulation.topology import agent_binding
 from emosa.store import Store
 from emosa.topology_bindings import REGISTRY_KEY, binding_digest, canonical_binding
+from emosa_lab.app import Application
+from emosa_lab.simulation.connecting_pod import configuration
+from emosa_lab.simulation.topology import agent_binding
 
 pytestmark = pytest.mark.unit
 

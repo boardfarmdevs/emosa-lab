@@ -6,13 +6,13 @@ import struct
 from pathlib import Path
 
 import pytest
-from test_forwarding import observation as forwarding_observation
 
 from emosa.opensync.session import OvsSession
-from emosa.simulation.database import SimDatabase
-from emosa.simulation.egress_accounting import EgressAccountingSource
-from emosa.simulation.forwarding import ForwardingSource, updates
-from emosa.simulation.radio import MONITOR, seed_radio_database
+from emosa_lab.simulation.database import SimDatabase
+from emosa_lab.simulation.egress_accounting import EgressAccountingSource
+from emosa_lab.simulation.forwarding import ForwardingSource, updates
+from emosa_lab.simulation.radio import MONITOR, seed_radio_database
+from test_forwarding import observation as forwarding_observation
 
 DATA = Path("doc/evidence/backhaul-accounting/backhaul-loss-02/result.json")
 BOOT = "30e207c8-ed45-444b-a5ac-dcc6a44ef820"

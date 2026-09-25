@@ -47,7 +47,7 @@ the pinned Python/uv environment and disposable OVSDB binaries must be available
 Use a new output directory on each run:
 
 ```bash
-uv run python -m emosa.simulation.topology --output .lab/topology-demo
+uv run python -m emosa_lab.simulation.topology --output .lab/topology-demo
 ```
 
 The command starts two owned databases, separate manager simulators and one real
@@ -108,7 +108,7 @@ For a live CLI session use the existing single-radio connecting-pod fixture.
 Start a **new** exercise in terminal A:
 
 ```bash
-uv run python -m emosa.simulation.connecting_pod --directory .lab/topology-live
+uv run python -m emosa_lab.simulation.connecting_pod --directory .lab/topology-live
 ```
 
 Wait for `Fixture ready` and leave it running. Before starting the adapter, use

@@ -212,7 +212,7 @@ class OvsSession:
             self._pump()
             if self.rpc.is_connected():
                 return
-            time.sleep(0.002)
+            time.sleep(0.01)  # an absent pod must not keep its agent busy
         raise EmosaError(Reason.NOT_READY, "OVSDB endpoint did not connect")
 
     def _request(self, method, params, transaction_id=None, discard_reply=False):

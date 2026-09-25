@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Build this repository's Pages site into dist/site. This is the only per-repository
+# step: pages/finish-site.py, pages/labs-bar.js and .github/workflows/pages.yml are
+# the same in the four lab repositories.
+#
+# emosa-lab: the newcomer site (site/), four static files, every repository link checked.
+set -euo pipefail
+cd "$(dirname "$(readlink -f "$0")")/.."
+python3 scripts/build-site.py
+node --check site/app.js

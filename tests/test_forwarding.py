@@ -7,8 +7,8 @@ import pytest
 
 from emosa.opensync.schema import Schema, reference_path
 from emosa.opensync.session import OvsSession
-from emosa.simulation.database import SimDatabase
-from emosa.simulation.forwarding import (
+from emosa_lab.simulation.database import SimDatabase
+from emosa_lab.simulation.forwarding import (
     COUNTERS,
     NAMES,
     ForwardingSource,
@@ -16,7 +16,7 @@ from emosa.simulation.forwarding import (
     seed_entries,
     updates,
 )
-from emosa.simulation.radio import MONITOR, seed_radio_database
+from emosa_lab.simulation.radio import MONITOR, seed_radio_database
 
 
 def observation(start=10_000_000_000, count=100):

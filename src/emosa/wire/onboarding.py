@@ -95,6 +95,10 @@ class OnboardingSession:
         self.discovery = self.reports = self.provisioning = None
         self.context = self.capabilities = self.last_topology = None
         self.last_clients = set()
+        # Clients are announced again once the controller has configured this
+        # agent (M2) and fetched its topology: before that it may not know the
+        # BSS yet and can drop the announcements (seen with a restarted prplMesh).
+        self.topology_mark, self.clients_reannounced = None, False
         self.next_search = 0
         self.counts, self.events = {}, deque(maxlen=64)
         self.tokens, self.token_time = 32.0, clock()
@@ -210,6 +214,14 @@ class OnboardingSession:
                     self.send_frame(frame)
                 self.last_topology = snapshot.topology.operational
                 self._record("observed_topology_notification")
+            if (
+                not self.clients_reannounced
+                and self.topology_mark is not None
+                and self.reports.counts.get("topology_response_sent", 0) > self.topology_mark
+            ):
+                self.last_clients = set()
+                self.clients_reannounced = True
+                self._record("clients_reannounced")
             if snapshot.topology.inventory_complete:
                 clients = {
                     (b.bssid, c.mac) for b in snapshot.topology.clients.bsses for c in b.clients
@@ -268,6 +280,8 @@ class OnboardingSession:
                 )
                 if result["status"] == "operation":
                     self.state = "provisioning"
+                    if self.topology_mark is None and self.reports:
+                        self.topology_mark = self.reports.counts.get("topology_response_sent", 0)
                 return self._record("wsc_" + result["status"])
             if fragment.message_type in (2, 0x8000) and self.reports:
                 if fragment.message_type == 0x8000 and self.disassociations:
@@ -424,6 +438,39 @@ class OnboardingSession:
                 )
                 response.send(self.send_frame, self._stamp, clock=self.clock)
                 return self._record("client_capability_unavailable_report")
+            if message.message_type == 0x8027 and self.provisioning:
+                # Backhaul STA Capability Report: a Backhaul STA Radio Capabilities
+                # TLV (RUID, MAC-included flag, STA MAC) for the station that is the
+                # pod's EasyMesh backhaul; none while the pod's uplink is GRE.
+                tlvs = tuple(
+                    Tlv(0xCB, ruid + b"\x80" + sta)
+                    for ruid, sta in snapshot.topology.backhaul_stations
+                )
+                response = PreparedReport(
+                    0x8028,
+                    message.mid,
+                    snapshot.stamp,
+                    min(now + 1, snapshot.stamp.valid_until),
+                    fragment_message(
+                        self.binding.controller_al, self.binding.local_al, 0x8028, message.mid, tlvs
+                    ),
+                )
+                response.send(self.send_frame, self._stamp, clock=self.clock)
+                return self._record("backhaul_sta_capability_report_sent")
+            if message.message_type == 0x8019 and self.provisioning:
+                # Backhaul Steering is refused: EMOSA does not move the pod's backhaul
+                # station on the controller's request. 1905 ACK, then a Backhaul
+                # Steering Response with result code 0x01 (failure).
+                requests = [t for t in message.tlvs if t.kind == 0x9E]
+                if len(requests) != 1 or len(requests[0].value) != 14:
+                    raise EmosaError(Reason.INVALID_INPUT, "one Backhaul Steering Request TLV")
+                request = requests[0].value
+                for kind, tlvs in ((0x8000, ()), (0x801A, (Tlv(0x9F, request[:12] + b"\x01"),))):
+                    for piece in fragment_message(
+                        self.binding.controller_al, self.binding.local_al, kind, message.mid, tlvs
+                    ):
+                        self.send_frame(piece)
+                return self._record("backhaul_steering_refused")
             return self._record(f"unsupported_message_{message.message_type:04x}")
         except (EmosaError, OSError) as exc:
             # A failed admission/handoff never restarts implicitly.

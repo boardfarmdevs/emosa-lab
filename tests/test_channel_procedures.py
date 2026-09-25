@@ -4,7 +4,6 @@ from dataclasses import replace
 import pytest
 
 from emosa.errors import EmosaError
-from emosa.simulation.wire_reports import fixtures
 from emosa.wire.channel import (
     ChannelCoordinator,
     ChannelPolicyStore,
@@ -13,6 +12,7 @@ from emosa.wire.channel import (
 )
 from emosa.wire.cmdu import MidSequence, Reassembler, Tlv, fragment_message
 from emosa.wire.coordinator import ReportSource
+from emosa_lab.simulation.wire_reports import fixtures
 
 pytestmark = pytest.mark.unit
 

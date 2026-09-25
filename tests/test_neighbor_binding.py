@@ -5,12 +5,16 @@ import time
 from dataclasses import replace
 
 import pytest
-from test_forwarding import observation, snapshot
 
 from emosa.errors import EmosaError
-from emosa.simulation.forwarding import ForwardingSource
-from emosa.simulation.neighbor_binding import NeighborSource, bridge_discovery, topology_discovery
 from emosa.wire.cmdu import MULTICAST, Tlv, fragment_message
+from emosa_lab.simulation.forwarding import ForwardingSource
+from emosa_lab.simulation.neighbor_binding import (
+    NeighborSource,
+    bridge_discovery,
+    topology_discovery,
+)
+from test_forwarding import observation, snapshot
 
 CONTROLLER, LOCAL, PEER = (
     bytes.fromhex(v) for v in ("020000e00001", "020000003001", "00163eb8c4a7")
@@ -260,18 +264,17 @@ def test_frame_and_heartbeat_budgets_remain_bounded():
 
 @pytest.mark.ovsdb
 def test_native_topology_uses_observed_interfaces_and_withdraws_only_stale_topology(tmp_path):
-    from test_radio_manager import observation as radio_observation
-
     from emosa.opensync.session import OvsSession
     from emosa.secrets import SecretStore
-    from emosa.simulation.database import SimDatabase
-    from emosa.simulation.native_onboarding import AGENT, RADIO_BSSID, RadioReportSource
-    from emosa.simulation.radio import MONITOR, RadioManager, seed_radio_database
-    from emosa.simulation.wsc_provisioning import SERIAL, BoundBackend
     from emosa.wire.autoconfiguration import PeerBinding
     from emosa.wire.cmdu import Message, Reassembler
     from emosa.wire.reports import topology_response
     from emosa.wire.topology_values import decode_topology
+    from emosa_lab.simulation.database import SimDatabase
+    from emosa_lab.simulation.native_onboarding import AGENT, RADIO_BSSID, RadioReportSource
+    from emosa_lab.simulation.radio import MONITOR, RadioManager, seed_radio_database
+    from emosa_lab.simulation.wsc_provisioning import SERIAL, BoundBackend
+    from test_radio_manager import observation as radio_observation
 
     class Driver:
         stale = False

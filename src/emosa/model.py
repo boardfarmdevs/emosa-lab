@@ -36,10 +36,39 @@ class Intent:
     secret_ref: str
     enabled: bool = True
     security_mode: str = "wpa2-psk"
+    # Further BSSes of the same radio, configured together with this one (one M2
+    # set): ({"role": "fronthaul"|"backhaul", "ssid", "secret_ref"}, ...). None
+    # means a single-BSS intent that says nothing about other BSSes; an empty
+    # tuple means the radio has no other managed BSS.
+    additional: tuple | None = None
+
+    def record(self):
+        """The persisted form; an absent `additional` is omitted (legacy records)."""
+        value = asdict(self)
+        if self.additional is None:
+            del value["additional"]
+        else:
+            value["additional"] = [dict(b) for b in self.additional]
+        return value
 
     def validate(self):
         if not 1 <= len(self.ssid.encode("utf-8")) <= 32 or "\x00" in self.ssid:
             raise EmosaError(Reason.INVALID_INPUT, "SSID must contain 1–32 UTF-8 bytes, no NUL")
+        if self.additional is not None:
+            if not isinstance(self.additional, (tuple, list)) or len(self.additional) > 7:
+                raise EmosaError(Reason.INVALID_INPUT, "at most seven additional BSSes")
+            for bss in self.additional:
+                if (
+                    not isinstance(bss, dict)
+                    or set(bss) != {"role", "ssid", "secret_ref"}
+                    or bss["role"] not in ("fronthaul", "backhaul")
+                    or not isinstance(bss["ssid"], str)
+                    or not 1 <= len(bss["ssid"].encode("utf-8")) <= 32
+                    or "\x00" in bss["ssid"]
+                    or not isinstance(bss["secret_ref"], str)
+                    or not bss["secret_ref"]
+                ):
+                    raise EmosaError(Reason.INVALID_INPUT, "invalid additional BSS")
         if self.security_mode != "wpa2-psk" or self.enabled is not True:
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "only enabled existing WPA2-PSK APs")
         if any(
@@ -58,7 +87,16 @@ class Intent:
             "mode": "ap",
             "security_mode": self.security_mode,
             "credential_fingerprint": vault.fingerprint(vault.resolve(self.secret_ref)),
-        }
+        } | (
+            {}
+            if self.additional is None
+            else {
+                "additional": sorted(
+                    [b["role"], b["ssid"], vault.fingerprint(vault.resolve(b["secret_ref"]))]
+                    for b in self.additional
+                )
+            }
+        )
 
 
 @dataclass

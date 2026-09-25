@@ -1,0 +1,422 @@
+04:22:09 start avail=13835MB slab=324MB netns=24
+04:22:10 avail=13834MB slab=+0MB proc_inode_cache:+31K dentry:+11K btrfs_path:+7K | 
+04:22:11 avail=13833MB slab=+-1MB  | 
+04:22:12 avail=13832MB slab=+0MB task_struct:+95K cred_jar:+74K kmalloc-4k:+64K | 
+04:22:13 avail=13792MB slab=+0MB cred_jar:+63K anon_vma_chain:+16K inode_cache:+15K | 
+04:22:14 avail=13803MB slab=+0MB kmalloc-4k:+64K btrfs_inode:+31K kmalloc-rnd-10-512:+16K | vm/veth73b6768 rx310 tx311 vm/veth4512d6f6 rx179 tx132 mv3/wl1.1 rx179 tx132 mv3/eth0 rx132 tx179 mv3/erouter0 rx132 tx179 mv3/brlan0 rx179 tx132
+04:22:15 avail=13800MB slab=+0MB task_struct:+166K skbuff_small_head:+15K cred_jar:+11K | 
+04:22:16 avail=13808MB slab=+0MB cred_jar:+66K biovec-max:+32K task_struct:+23K | 
+04:22:17 avail=13806MB slab=+0MB task_struct:+118K cred_jar:+27K skbuff_small_head:+15K | pod-3/lo rx168 tx168
+04:22:18 avail=13802MB slab=+0MB fuse_request:+46K btrfs_path:+39K kmalloc-rnd-02-64:+28K | pod-3/lo rx176 tx176
+04:22:19 avail=13807MB slab=+1MB task_struct:+166K nf_conntrack:+16K cred_jar:+15K | pod-3/lo rx168 tx168
+04:22:20 avail=13809MB slab=+1MB nf_conntrack:+24K kmalloc-rnd-01-128:+8K dentry:+3K | pod-3/lo rx168 tx168
+04:22:21 avail=13809MB slab=+1MB sw_flow:+31K nf_conntrack:+24K task_struct:+23K | pod-3/lo rx160 tx160
+04:22:22 avail=13809MB slab=+1MB task_struct:+71K cred_jar:+55K nf_conntrack:+24K | pod-3/lo rx168 tx168
+04:22:23 avail=13827MB slab=+1MB nf_conntrack:+32K kmalloc-rnd-01-128:+16K vma_lock:+3K | pod-3/lo rx176 tx176
+04:22:24 avail=13830MB slab=+1MB cred_jar:+31K nf_conntrack:+16K kmalloc-rnd-01-128:+12K | pod-3/lo rx168 tx168
+04:22:25 avail=13829MB slab=+1MB nf_conntrack:+32K kmalloc-rnd-01-128:+12K kmalloc-rnd-11-192:+11K | pod-3/lo rx172 tx172
+04:22:26 avail=13839MB slab=+0MB nf_conntrack:+24K kmalloc-rnd-01-128:+12K shared_policy_node:+3K | pod-3/lo rx176 tx176
+04:22:27 avail=13844MB slab=+1MB cred_jar:+55K nf_conntrack:+24K kmalloc-rnd-01-128:+12K | pod-3/lo rx160 tx160
+04:22:28 avail=13850MB slab=+1MB fuse_request:+92K task_struct:+47K btrfs_path:+39K | pod-3/lo rx168 tx168
+04:22:29 avail=13860MB slab=+1MB sock_inode_cache:+158K dentry:+35K kmalloc-rnd-07-8k:+32K | pod-3/lo rx168 tx168
+04:22:30 avail=13798MB slab=+1MB nf_conntrack:+24K skbuff_small_head:+15K kmalloc-rnd-01-128:+12K | pod-3/lo rx156 tx156
+04:22:31 avail=13797MB slab=+1MB fuse_request:+123K biovec-max:+96K btrfs_path:+78K | pod-3/lo rx176 tx176
+04:22:32 avail=13736MB slab=+1MB task_struct:+142K nf_conntrack:+24K kmalloc-rnd-01-128:+12K | vm/veth73b6768 rx166 tx166 pod-3/lo rx156 tx156 pod-3/bhaul-sta-50 rx104 tx114 mv3/wl1.1 rx114 tx104 mv3/pgd1_53 rx114 tx104 mv3/brlan0 rx114 tx104
+04:22:33 avail=13754MB slab=+1MB backing_aio:+88K kmalloc-rnd-01-64:+64K kmalloc-rnd-10-32:+28K | pod-3/lo rx168 tx168
+04:22:34 avail=13766MB slab=+1MB nf_conntrack:+32K biovec-max:+32K btrfs_inode:+31K | pod-3/lo rx160 tx160
+04:22:35 avail=13727MB slab=+1MB kmalloc-4k:+32K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx224 tx224
+04:22:36 avail=13736MB slab=+1MB dentry:+47K nf_conntrack:+32K kmalloc-rnd-01-128:+12K | pod-3/lo rx240 tx240
+04:22:37 avail=13704MB slab=+1MB kmalloc-rnd-06-2k:+32K task_struct:+23K nf_conntrack:+16K | pod-3/lo rx224 tx224
+04:22:38 avail=13754MB slab=+2MB nf_conntrack:+16K vmap_area:+15K kmalloc-rnd-01-128:+8K | pod-3/lo rx232 tx232
+04:22:39 avail=13764MB slab=+2MB task_struct:+166K nf_conntrack:+24K skbuff_small_head:+15K | pod-3/lo rx248 tx248
+04:22:40 avail=13787MB slab=+2MB nf_conntrack:+24K cred_jar:+19K kmalloc-rnd-01-128:+12K | pod-3/lo rx224 tx224
+04:22:41 avail=13801MB slab=+2MB nf_conntrack:+24K cred_jar:+15K kmalloc-rnd-01-128:+12K | pod-3/lo rx236 tx236
+04:22:42 avail=13751MB slab=+2MB backing_aio:+152K fuse_request:+142K kmalloc-rnd-01-64:+104K | pod-3/lo rx220 tx220
+04:22:43 avail=13753MB slab=+2MB nf_conntrack:+24K kmalloc-rnd-01-128:+12K | pod-3/lo rx232 tx232
+04:22:44 avail=13757MB slab=+2MB nf_conntrack:+16K skbuff_small_head:+15K kmalloc-rnd-01-128:+8K | pod-3/lo rx240 tx240
+04:22:45 avail=13745MB slab=+3MB cred_jar:+66K biovec-max:+64K nf_conntrack:+24K | pod-3/lo rx224 tx224
+04:22:46 avail=13760MB slab=+3MB kmalloc-2k:+32K cred_jar:+23K nf_conntrack:+8K | pod-3/lo rx232 tx232
+04:22:47 avail=13780MB slab=+3MB task_struct:+71K nf_conntrack:+24K kmalloc-rnd-01-128:+8K | pod-3/lo rx224 tx224
+04:22:48 avail=13793MB slab=+3MB cred_jar:+19K nf_conntrack:+16K anon_vma_chain:+16K | pod-3/lo rx232 tx232
+04:22:49 avail=13802MB slab=+2MB nf_conntrack:+24K kmalloc-rnd-01-128:+12K | pod-3/lo rx240 tx240
+04:22:50 avail=13841MB slab=+2MB cred_jar:+27K nf_conntrack:+24K radix_tree_node:+15K | pod-3/lo rx224 tx224 vm/veth73b6768 rx113 tx113
+04:22:51 avail=13844MB slab=+2MB nf_conntrack:+16K kmalloc-rnd-01-128:+16K vmap_area:+11K | pod-3/lo rx232 tx232
+04:22:52 avail=13801MB slab=+3MB kmalloc-4k:+96K task_struct:+95K nf_conntrack:+24K | pod-3/lo rx232 tx232
+04:22:53 avail=13803MB slab=+3MB nf_conntrack:+24K cred_jar:+11K kmalloc-rnd-01-128:+8K | pod-3/lo rx224 tx224
+04:22:54 avail=13806MB slab=+3MB nf_conntrack:+24K kmalloc-rnd-01-128:+12K | pod-3/lo rx240 tx240
+04:22:55 avail=13785MB slab=+2MB kmalloc-4k:+64K task_struct:+47K nf_conntrack:+16K | pod-3/lo rx216 tx216
+04:22:56 avail=13791MB slab=+2MB nf_conntrack:+24K skbuff_small_head:+15K kmalloc-rnd-01-128:+8K | pod-3/lo rx240 tx240
+04:22:57 avail=13803MB slab=+2MB nf_conntrack:+16K kmalloc-rnd-10-512:+16K radix_tree_node:+15K | pod-3/lo rx224 tx224
+04:22:58 avail=13821MB slab=+2MB task_struct:+71K nf_conntrack:+16K maple_node:+16K | pod-3/lo rx240 tx240
+04:22:59 avail=13821MB slab=+3MB fuse_request:+169K btrfs_path:+161K backing_aio:+100K | pod-3/lo rx232 tx232
+04:23:00 avail=13824MB slab=+3MB skbuff_small_head:+31K nf_conntrack:+16K kmalloc-rnd-10-512:+16K | pod-3/lo rx232 tx232
+04:23:01 avail=13826MB slab=+3MB nf_conntrack:+32K cred_jar:+23K anon_vma:+19K | pod-3/lo rx232 tx232
+04:23:02 avail=13718MB slab=+3MB task_struct:+95K radix_tree_node:+79K kmalloc-4k:+64K | pod-3/lo rx216 tx216
+04:23:03 avail=13764MB slab=+3MB kmalloc-rnd-13-2k:+32K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx224 tx224
+04:23:04 avail=13768MB slab=+3MB backing_aio:+132K kmalloc-rnd-01-64:+80K fuse_request:+54K | pod-3/lo rx240 tx240
+04:23:05 avail=13759MB slab=+3MB nf_conntrack:+24K anon_vma:+15K skbuff_small_head:+15K | pod-3/lo rx216 tx216
+04:23:06 avail=13761MB slab=+3MB biovec-max:+32K task_struct:+23K nf_conntrack:+16K | pod-3/lo rx248 tx248
+04:23:07 avail=13752MB slab=+4MB kmalloc-4k:+128K task_struct:+23K nf_conntrack:+16K | pod-3/lo rx216 tx216
+04:23:08 avail=13751MB slab=+4MB task_struct:+142K maple_node:+40K nf_conntrack:+24K | pod-3/lo rx240 tx240
+04:23:09 avail=13759MB slab=+4MB nf_conntrack:+24K kmalloc-rnd-01-128:+8K cred_jar:+3K | pod-3/lo rx240 tx240
+04:23:10 avail=13712MB slab=+4MB radix_tree_node:+31K nf_conntrack:+16K inode_cache:+15K | pod-3/lo rx224 tx224
+04:23:11 avail=13717MB slab=+4MB cred_jar:+27K nf_conntrack:+24K kmalloc-rnd-01-128:+12K | pod-3/lo rx232 tx232
+04:23:12 avail=13732MB slab=+4MB task_struct:+23K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx208 tx208
+04:23:13 avail=13733MB slab=+4MB skbuff_small_head:+31K nf_conntrack:+24K kmalloc-rnd-01-128:+12K | pod-3/lo rx240 tx240
+04:23:14 avail=13743MB slab=+4MB fuse_request:+127K btrfs_path:+106K backing_aio:+104K | pod-3/lo rx232 tx232
+04:23:15 avail=13791MB slab=+4MB kmalloc-4k:+32K nf_conntrack:+24K task_struct:+23K | pod-3/lo rx224 tx224
+04:23:16 avail=13802MB slab=+4MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K backing_aio:+8K | pod-3/lo rx248 tx248
+04:23:17 avail=13818MB slab=+4MB task_struct:+71K kmalloc-4k:+32K nf_conntrack:+24K | pod-3/lo rx216 tx216
+04:23:18 avail=13838MB slab=+4MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K buffer_head:+3K | pod-3/lo rx240 tx240
+04:23:19 avail=13836MB slab=+4MB task_struct:+166K cred_jar:+3K | pod-3/lo rx232 tx232
+04:23:20 avail=13763MB slab=+4MB radix_tree_node:+15K cred_jar:+15K vma_lock:+3K | pod-3/lo rx224 tx224
+04:23:21 avail=13770MB slab=+4MB anon_vma:+3K skbuff_ext_cache:+3K | pod-3/lo rx232 tx232
+04:23:22 avail=13724MB slab=+4MB kmalloc-4k:+32K task_struct:+23K skbuff_small_head:+15K | pod-3/lo rx224 tx224
+04:23:23 avail=13741MB slab=+4MB task_struct:+23K skbuff_small_head:+15K | pod-3/lo rx240 tx240
+04:23:24 avail=13750MB slab=+4MB cred_jar:+11K | pod-3/lo rx240 tx240
+04:23:25 avail=13728MB slab=+3MB kmalloc-4k:+64K apparmor_auditcache:+7K anon_vma:+7K | pod-3/lo rx216 tx216
+04:23:26 avail=13744MB slab=+3MB cred_jar:+15K | pod-3/lo rx240 tx240
+04:23:27 avail=13744MB slab=+4MB task_struct:+166K | pod-3/lo rx224 tx224
+04:23:28 avail=13753MB slab=+4MB anon_vma:+7K cred_jar:+7K | pod-3/lo rx232 tx232
+04:23:29 avail=13760MB slab=+4MB skbuff_small_head:+15K | pod-3/lo rx240 tx240
+04:23:30 avail=13775MB slab=+4MB fuse_request:+293K btrfs_path:+232K backing_aio:+100K | pod-3/lo rx216 tx216
+04:23:31 avail=13777MB slab=+4MB kmalloc-rnd-10-32:+4K kmalloc-rnd-03-192:+3K | pod-3/lo rx240 tx240
+04:23:32 avail=13849MB slab=+3MB kmalloc-rnd-10-32:+4K kmalloc-rnd-02-64:+4K | pod-3/lo rx208 tx208
+04:23:33 avail=13849MB slab=+3MB  | pod-3/lo rx224 tx224
+04:23:34 avail=13849MB slab=+3MB skbuff_small_head:+15K dentry:+15K skbuff_head_cache:+8K | pod-3/lo rx232 tx232
+04:23:35 avail=13817MB slab=+3MB backing_aio:+100K kmalloc-rnd-01-64:+64K kmalloc-4k:+64K | pod-3/lo rx216 tx216
+04:23:36 avail=13796MB slab=+4MB cred_jar:+476K filp:+168K anon_vma:+118K | pod-3/lo rx216 tx216
+04:23:37 avail=13774MB slab=+4MB task_struct:+47K lsm_file_cache:+4K kmalloc-rnd-07-128:+4K | pod-3/lo rx224 tx224
+04:23:38 avail=13780MB slab=+4MB biovec-max:+32K btrfs_inode:+31K vmap_area:+31K | pod-3/lo rx232 tx232
+04:23:39 avail=13785MB slab=+4MB task_struct:+71K kmalloc-4k:+64K sighand_cache:+30K | pod-3/lo rx224 tx224
+04:23:40 avail=13735MB slab=+4MB cred_jar:+11K kmalloc-rnd-02-256:+8K filp:+8K | pod-3/lo rx232 tx232
+04:23:41 avail=13760MB slab=+5MB fuse_request:+258K btrfs_path:+204K kmalloc-rnd-01-64:+116K | pod-3/lo rx224 tx224
+04:23:42 avail=13777MB slab=+5MB task_struct:+23K radix_tree_node:+15K | pod-3/lo rx224 tx224
+04:23:43 avail=13780MB slab=+5MB  | pod-3/lo rx240 tx240
+04:23:44 avail=13783MB slab=+5MB kmalloc-4k:+64K | pod-3/lo rx224 tx224
+04:23:45 avail=13750MB slab=+5MB task_struct:+71K filp:+8K vmap_area:+7K | pod-3/lo rx224 tx224
+04:23:46 avail=13757MB slab=+5MB anon_vma:+3K | pod-3/lo rx240 tx240
+04:23:47 avail=13708MB slab=+5MB task_struct:+47K cred_jar:+11K anon_vma_chain:+8K | pod-3/lo rx224 tx224
+04:23:48 avail=13726MB slab=+5MB kmalloc-rnd-01-64:+68K kmalloc-rnd-10-32:+48K task_struct:+47K | pod-3/lo rx236 tx236
+04:23:49 avail=13754MB slab=+6MB kmalloc-4k:+96K backing_aio:+68K kmalloc-rnd-01-64:+36K | pod-3/lo rx232 tx232
+04:23:50 avail=13791MB slab=+6MB vmap_area:+19K nf_conntrack:+16K kmalloc-rnd-10-512:+16K | pod-3/lo rx216 tx216
+04:23:51 avail=13794MB slab=+6MB nf_conntrack:+32K vmap_area:+15K kmalloc-rnd-01-128:+8K | pod-3/lo rx240 tx240
+04:23:52 avail=13823MB slab=+6MB kmalloc-4k:+64K cred_jar:+31K nf_conntrack:+16K | pod-3/lo rx216 tx216
+04:23:53 avail=13821MB slab=+6MB nf_conntrack:+16K anon_vma:+15K kmalloc-rnd-11-256:+8K | pod-3/lo rx232 tx232
+04:23:54 avail=13833MB slab=+6MB backing_aio:+128K kmalloc-rnd-01-64:+120K kmalloc-rnd-10-32:+68K | pod-3/lo rx216 tx216
+04:23:55 avail=13834MB slab=+6MB cred_jar:+66K nf_conntrack:+32K vma_lock:+23K | pod-3/lo rx224 tx224 pod-2/lo rx148 tx148
+04:23:56 avail=13846MB slab=+5MB maple_node:+56K task_struct:+47K nf_conntrack:+32K | pod-3/lo rx216 tx216 pod-2/lo rx216 tx216
+04:23:57 avail=13820MB slab=+5MB kmalloc-4k:+64K task_struct:+47K nf_conntrack:+40K | pod-3/lo rx216 tx216 pod-2/lo rx216 tx216
+04:23:58 avail=13853MB slab=+5MB cred_jar:+66K nf_conntrack:+48K maple_node:+48K | pod-3/lo rx216 tx216 pod-2/lo rx176 tx176
+04:23:59 avail=13833MB slab=+5MB task_struct:+118K kmalloc-4k:+64K nf_conntrack:+40K | pod-3/lo rx208 tx208 vm/veth73b6768 rx171 tx171 pod-2/lo rx152 tx152 mv3/wl1.1 rx148 tx126 mv3/brlan0 rx148 tx125 pod-2/bhaul-sta-50 rx98 tx121
+04:24:00 avail=13763MB slab=+5MB task_struct:+95K nf_conntrack:+24K anon_vma:+19K | pod-3/lo rx216 tx216
+04:24:01 avail=13766MB slab=+6MB fuse_request:+555K btrfs_path:+346K biovec-max:+128K | pod-3/lo rx224 tx224
+04:24:02 avail=13768MB slab=+6MB nf_conntrack:+24K skbuff_small_head:+15K kmalloc-rnd-01-128:+4K | pod-3/lo rx224 tx224
+04:24:03 avail=13767MB slab=+6MB nf_conntrack:+16K kmalloc-rnd-01-128:+12K filp:+8K | pod-3/lo rx232 tx232
+04:24:04 avail=13724MB slab=+6MB task_struct:+23K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx224 tx224
+04:24:05 avail=13795MB slab=+6MB kmalloc-rnd-01-64:+72K kmalloc-4k:+64K backing_aio:+64K | pod-3/lo rx224 tx224
+04:24:06 avail=13802MB slab=+6MB nf_conntrack:+24K kmalloc-rnd-01-128:+12K anon_vma:+7K | pod-3/lo rx240 tx240
+04:24:07 avail=13753MB slab=+6MB cred_jar:+43K kmalloc-4k:+32K radix_tree_node:+31K | pod-3/lo rx224 tx224
+04:24:08 avail=13758MB slab=+6MB nf_conntrack:+24K kmalloc-rnd-01-128:+8K | pod-3/lo rx232 tx232
+04:24:09 avail=13712MB slab=+6MB biovec-max:+64K task_struct:+23K nf_conntrack:+16K | pod-3/lo rx240 tx240
+04:24:10 avail=13710MB slab=+6MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K kmalloc-rnd-01-64:+4K | pod-3/lo rx216 tx216
+04:24:11 avail=13721MB slab=+6MB nf_conntrack:+24K kmalloc-rnd-01-128:+8K vmap_area:+7K | pod-3/lo rx240 tx240
+04:24:12 avail=13712MB slab=+7MB task_struct:+285K fuse_request:+216K btrfs_path:+129K | pod-3/lo rx216 tx216
+04:24:13 avail=13736MB slab=+7MB kmalloc-cg-4k:+32K nf_conntrack:+16K kmalloc-rnd-01-128:+12K | pod-3/lo rx232 tx232
+04:24:14 avail=13707MB slab=+7MB task_struct:+213K nf_conntrack:+16K kmalloc-rnd-10-512:+16K | pod-3/lo rx224 tx224
+04:24:15 avail=13725MB slab=+7MB vmap_area:+23K nf_conntrack:+16K kmalloc-rnd-10-512:+16K | pod-3/lo rx224 tx224
+04:24:16 avail=13736MB slab=+7MB nf_conntrack:+24K vmap_area:+23K kmalloc-rnd-01-128:+12K | pod-3/lo rx240 tx240
+04:24:17 avail=13770MB slab=+8MB kmalloc-rnd-01-64:+116K backing_aio:+104K cred_jar:+82K | pod-3/lo rx216 tx216
+04:24:18 avail=13771MB slab=+8MB nf_conntrack:+24K kmalloc-rnd-01-128:+8K | pod-3/lo rx240 tx240
+04:24:19 avail=13724MB slab=+8MB task_struct:+166K filp:+32K nf_conntrack:+16K | pod-3/lo rx224 tx224
+04:24:20 avail=13725MB slab=+8MB filp:+32K skbuff_small_head:+31K radix_tree_node:+15K | pod-3/lo rx231 tx231
+04:24:21 avail=13742MB slab=+8MB kmalloc-rnd-01-64:+108K kmalloc-4k:+96K backing_aio:+84K | pod-3/lo rx225 tx225
+04:24:22 avail=13752MB slab=+8MB radix_tree_node:+15K request_sock_TCP:+7K buffer_head:+7K | pod-3/lo rx216 tx216 vm/veth73b6768 rx115 tx116
+04:24:23 avail=13745MB slab=+8MB filp:+16K vmap_area:+15K posix_timers_cache:+8K | pod-3/lo rx232 tx232
+04:24:24 avail=13735MB slab=+8MB vmap_area:+11K | pod-3/lo rx224 tx224
+04:24:25 avail=13750MB slab=+8MB kmalloc-4k:+64K task_struct:+47K kmalloc-rnd-02-8k:+32K | pod-3/lo rx224 tx224
+04:24:26 avail=13762MB slab=+6MB cred_jar:+43K skbuff_small_head:+15K kmalloc-rnd-11-192:+7K | pod-3/lo rx240 tx240
+04:24:27 avail=13786MB slab=+6MB radix_tree_node:+15K inode_cache:+15K bio-200:+8K | pod-3/lo rx224 tx224
+04:24:28 avail=13785MB slab=+6MB cred_jar:+3K | pod-3/lo rx240 tx240
+04:24:29 avail=13731MB slab=+6MB cred_jar:+3K | pod-3/lo rx232 tx232
+04:24:30 avail=13753MB slab=+6MB kmalloc-4k:+64K kmalloc-rnd-04-1k:+32K skbuff_small_head:+31K | pod-3/lo rx232 tx232
+04:24:31 avail=13755MB slab=+7MB fuse_request:+513K btrfs_path:+311K biovec-max:+64K | pod-3/lo rx232 tx232
+04:24:32 avail=13724MB slab=+7MB task_struct:+23K kmalloc-rnd-01-64:+8K backing_aio:+8K | pod-3/lo rx224 tx224
+04:24:33 avail=13726MB slab=+7MB  | pod-3/lo rx232 tx232
+04:24:34 avail=13755MB slab=+7MB kmalloc-4k:+64K task_struct:+23K kmalloc-rnd-01-64:+4K | pod-3/lo rx224 tx224
+04:24:35 avail=13791MB slab=+7MB task_struct:+118K inode_cache:+15K cred_jar:+7K | pod-3/lo rx232 tx232
+04:24:36 avail=13800MB slab=+8MB fuse_request:+277K btrfs_path:+220K kmalloc-rnd-01-64:+124K | pod-3/lo rx232 tx232
+04:24:37 avail=13806MB slab=+8MB kmalloc-4k:+64K kmalloc-rnd-10-512:+16K kmalloc-rnd-01-64:+4K | pod-3/lo rx224 tx224
+04:24:38 avail=13810MB slab=+7MB  | pod-3/lo rx232 tx232
+04:24:39 avail=13812MB slab=+8MB task_struct:+166K cred_jar:+3K | pod-3/lo rx224 tx224
+04:24:40 avail=13799MB slab=+8MB kmalloc-4k:+96K task_struct:+95K cred_jar:+74K | pod-3/lo rx232 tx232
+04:24:41 avail=13797MB slab=+8MB task_struct:+71K cred_jar:+59K anon_vma_chain:+24K | pod-3/lo rx232 tx232
+04:24:42 avail=13749MB slab=+9MB biovec-max:+160K fuse_request:+127K kmalloc-rnd-01-64:+116K | pod-3/lo rx224 tx224
+04:24:43 avail=13749MB slab=+9MB kmalloc-64:+8K filp:+8K anon_vma:+3K | pod-3/lo rx232 tx232
+04:24:44 avail=13762MB slab=+9MB radix_tree_node:+15K kmalloc-rnd-02-64:+4K | pod-3/lo rx232 tx232
+04:24:45 avail=13814MB slab=+8MB vmap_area:+43K kmalloc-rnd-10-32:+24K kmalloc-rnd-01-64:+24K | pod-3/lo rx216 tx216
+04:24:46 avail=13812MB slab=+8MB kmalloc-rnd-01-256:+16K vmap_area:+7K | pod-3/lo rx240 tx240
+04:24:47 avail=13743MB slab=+8MB task_struct:+71K cred_jar:+23K radix_tree_node:+15K | pod-3/lo rx216 tx216
+04:24:48 avail=13752MB slab=+9MB fuse_request:+366K btrfs_path:+228K kmalloc-rnd-01-64:+104K | pod-3/lo rx240 tx240
+04:24:49 avail=13713MB slab=+9MB kmalloc-4k:+32K cred_jar:+27K anon_vma:+3K | pod-3/lo rx224 tx224
+04:24:50 avail=13719MB slab=+9MB kmalloc-4k:+32K vmap_area:+19K cred_jar:+15K | pod-3/lo rx232 tx232
+04:24:51 avail=13723MB slab=+9MB task_struct:+23K vmap_area:+15K kmalloc-rnd-02-64:+4K | pod-3/lo rx240 tx240
+04:24:52 avail=13748MB slab=+9MB vmap_area:+27K task_struct:+23K skbuff_small_head:+15K | pod-3/lo rx216 tx216
+04:24:53 avail=13751MB slab=+9MB kmalloc-rnd-01-64:+112K fuse_request:+73K kmalloc-rnd-10-32:+68K | pod-3/lo rx232 tx232
+04:24:54 avail=13771MB slab=+9MB kmalloc-rnd-02-64:+4K kmalloc-rnd-07-192:+3K | pod-3/lo rx224 tx224
+04:24:55 avail=13796MB slab=+10MB task_struct:+237K biovec-max:+64K vmap_area:+19K | pod-3/lo rx224 tx224
+04:24:56 avail=13796MB slab=+8MB sock_inode_cache:+31K cred_jar:+31K anon_vma:+11K | pod-3/lo rx240 tx240
+04:24:57 avail=13734MB slab=+8MB kmalloc-4k:+32K anon_vma:+15K | pod-3/lo rx224 tx224
+04:24:58 avail=13734MB slab=+8MB cred_jar:+15K | pod-3/lo rx240 tx240
+04:24:59 avail=13757MB slab=+7MB task_struct:+71K kmalloc-rnd-10-512:+16K | pod-3/lo rx224 tx224
+04:25:00 avail=13764MB slab=+7MB kmalloc-4k:+32K proc_inode_cache:+15K kernfs_node_cache:+3K | pod-3/lo rx232 tx232
+04:25:01 avail=13764MB slab=+8MB btrfs_inode:+31K dentry:+11K cred_jar:+11K | pod-3/lo rx240 tx240
+04:25:02 avail=13735MB slab=+7MB proc_inode_cache:+31K kmalloc-rnd-01-128:+8K anon_vma:+3K | pod-3/lo rx216 tx216
+04:25:03 avail=13741MB slab=+7MB cred_jar:+27K kmalloc-rnd-01-128:+12K nf_conntrack:+8K | pod-3/lo rx240 tx240
+04:25:04 avail=13685MB slab=+9MB fuse_request:+729K btrfs_path:+468K kmalloc-rnd-01-64:+80K | pod-3/lo rx224 tx224
+04:25:05 avail=13710MB slab=+9MB task_struct:+142K cred_jar:+59K nf_conntrack:+24K | pod-3/lo rx224 tx224
+04:25:06 avail=13728MB slab=+9MB kmalloc-rnd-01-64:+44K kmalloc-rnd-10-32:+24K backing_aio:+20K | pod-3/lo rx244 tx244
+04:25:07 avail=13709MB slab=+9MB backing_aio:+56K kmalloc-rnd-01-64:+48K biovec-max:+32K | pod-3/lo rx216 tx216
+04:25:08 avail=13721MB slab=+9MB cred_jar:+35K nf_conntrack:+24K skbuff_small_head:+15K | pod-3/lo rx232 tx232
+04:25:09 avail=13706MB slab=+9MB kmalloc-4k:+32K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx232 tx232
+04:25:10 avail=13717MB slab=+9MB nf_conntrack:+24K task_struct:+23K kmalloc-rnd-01-128:+12K | pod-3/lo rx232 tx232
+04:25:11 avail=13728MB slab=+10MB fuse_request:+316K btrfs_path:+208K kmalloc-rnd-01-64:+108K | pod-3/lo rx232 tx232
+04:25:12 avail=13749MB slab=+10MB nf_conntrack:+24K task_struct:+23K kernfs_node_cache:+15K | pod-3/lo rx216 tx216
+04:25:13 avail=13759MB slab=+10MB nf_conntrack:+16K kmalloc-rnd-01-128:+16K kmalloc-64:+4K | pod-3/lo rx240 tx240
+04:25:14 avail=13745MB slab=+10MB task_struct:+95K kmalloc-4k:+64K inode_cache:+31K | pod-3/lo rx224 tx224
+04:25:15 avail=13764MB slab=+10MB kmalloc-rnd-01-64:+100K kmalloc-rnd-10-32:+80K backing_aio:+64K | pod-3/lo rx232 tx232
+04:25:16 avail=13769MB slab=+10MB nf_conntrack:+16K kmalloc-rnd-01-128:+12K anon_vma:+3K | pod-3/lo rx240 tx240
+04:25:17 avail=13713MB slab=+10MB vmap_area:+19K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx224 tx224
+04:25:18 avail=13725MB slab=+10MB vmap_area:+27K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx240 tx240
+04:25:19 avail=13739MB slab=+10MB task_struct:+166K kmalloc-4k:+64K nf_conntrack:+24K | pod-3/lo rx232 tx232
+04:25:20 avail=13746MB slab=+11MB biovec-max:+160K kmalloc-rnd-01-64:+116K kmalloc-rnd-10-32:+84K | pod-3/lo rx224 tx224
+04:25:21 avail=13754MB slab=+11MB kmalloc-rnd-01-128:+4K cred_jar:+3K | pod-3/lo rx240 tx240
+04:25:22 avail=13723MB slab=+11MB kmalloc-4k:+64K task_struct:+23K cred_jar:+19K | pod-3/lo rx224 tx224
+04:25:23 avail=13731MB slab=+11MB vmap_area:+23K skbuff_small_head:+15K cred_jar:+7K | pod-3/lo rx240 tx240
+04:25:24 avail=13715MB slab=+11MB vmap_area:+19K dentry:+7K | pod-3/lo rx232 tx232
+04:25:25 avail=13723MB slab=+11MB kmalloc-rnd-01-64:+128K kmalloc-rnd-10-32:+88K fuse_request:+69K | pod-3/lo rx216 tx216
+04:25:26 avail=13734MB slab=+9MB task_struct:+71K cred_jar:+35K anon_vma:+3K | pod-3/lo rx240 tx240
+04:25:27 avail=13708MB slab=+9MB kmalloc-4k:+64K bio-200:+16K anon_vma:+15K | pod-3/lo rx216 tx216
+04:25:28 avail=13721MB slab=+9MB skbuff_small_head:+15K | pod-3/lo rx240 tx240
+04:25:29 avail=13694MB slab=+9MB cred_jar:+47K bio-200:+8K kernfs_node_cache:+7K | pod-3/lo rx216 tx216
+04:25:30 avail=13705MB slab=+9MB dmaengine-unmap-2:+4K buffer_head:+3K | pod-3/lo rx240 tx240
+04:25:32 avail=13717MB slab=+9MB task_struct:+237K cred_jar:+43K filp:+8K | pod-3/lo rx240 tx240
+04:25:33 avail=13760MB slab=+9MB kmalloc-4k:+32K radix_tree_node:+15K | pod-3/lo rx224 tx224
+04:25:34 avail=13769MB slab=+10MB fuse_request:+659K btrfs_path:+433K kmalloc-rnd-01-64:+72K | pod-3/lo rx224 tx224
+04:25:35 avail=13761MB slab=+10MB task_struct:+166K kmalloc-4k:+64K kmalloc-rnd-02-64:+4K | pod-3/lo rx224 tx224
+04:25:36 avail=13797MB slab=+10MB kmalloc-4k:+32K cred_jar:+19K maple_node:+16K | pod-3/lo rx232 tx232
+04:25:37 avail=13797MB slab=+10MB task_struct:+23K cred_jar:+7K kmalloc-rnd-12-64:+4K | pod-3/lo rx240 tx240
+04:25:38 avail=13785MB slab=+10MB radix_tree_node:+15K buffer_head:+3K | pod-3/lo rx224 tx224
+04:25:39 avail=13793MB slab=+10MB  | pod-3/lo rx248 tx248
+04:25:40 avail=13732MB slab=+10MB task_struct:+190K biovec-max:+96K cred_jar:+15K | pod-3/lo rx224 tx224
+04:25:41 avail=13755MB slab=+9MB skbuff_small_head:+15K buffer_head:+3K | pod-3/lo rx224 tx224
+04:25:42 avail=13772MB slab=+10MB task_struct:+285K cred_jar:+27K maple_node:+8K | pod-3/lo rx232 tx232
+04:25:43 avail=13714MB slab=+10MB kmalloc-4k:+32K radix_tree_node:+15K kmalloc-rnd-02-64:+4K | pod-3/lo rx216 tx216
+04:25:44 avail=13726MB slab=+10MB cred_jar:+31K | pod-3/lo rx240 tx240
+04:25:45 avail=13718MB slab=+9MB kmalloc-rnd-02-64:+4K buffer_head:+3K | pod-3/lo rx224 tx224
+04:25:46 avail=13735MB slab=+10MB task_struct:+166K cred_jar:+11K maple_node:+8K | pod-3/lo rx224 tx224
+04:25:47 avail=13749MB slab=+10MB task_struct:+23K kmalloc-rnd-10-32:+12K kmalloc-rnd-01-64:+8K | pod-3/lo rx232 tx232
+04:25:48 avail=13706MB slab=+9MB kmalloc-4k:+64K radix_tree_node:+15K kernfs_node_cache:+7K | pod-3/lo rx224 tx224
+04:25:49 avail=13711MB slab=+9MB cred_jar:+3K | pod-3/lo rx240 tx240
+04:25:50 avail=13782MB slab=+9MB task_struct:+118K cred_jar:+23K | pod-3/lo rx224 tx224
+04:25:51 avail=13783MB slab=+9MB kmalloc-rnd-10-32:+12K kmalloc-rnd-01-64:+12K kmalloc-rnd-02-64:+4K | pod-3/lo rx240 tx240
+04:25:52 avail=13787MB slab=+9MB task_struct:+142K | pod-3/lo rx232 tx232
+04:25:53 avail=13751MB slab=+9MB radix_tree_node:+15K cred_jar:+3K | pod-3/lo rx232 tx232
+04:25:54 avail=13761MB slab=+9MB cred_jar:+19K filp:+8K backing_aio:+4K | pod-3/lo rx240 tx240
+04:25:55 avail=13758MB slab=+9MB kmalloc-4k:+96K radix_tree_node:+15K kernfs_node_cache:+7K | pod-3/lo rx224 tx224
+04:25:56 avail=13775MB slab=+9MB task_struct:+190K cred_jar:+23K anon_vma:+15K | pod-3/lo rx232 tx232
+04:25:57 avail=13787MB slab=+9MB apparmor_auditcache:+23K buffer_head:+3K | pod-3/lo rx232 tx232
+04:25:58 avail=13757MB slab=+9MB PINGv6:+30K | pod-3/lo rx224 tx224
+04:25:59 avail=13764MB slab=+9MB backing_aio:+8K cred_jar:+3K | pod-3/lo rx240 tx240
+04:26:00 avail=13764MB slab=+9MB task_struct:+237K cred_jar:+7K | pod-3/lo rx224 tx224
+04:26:01 avail=13779MB slab=+9MB cred_jar:+15K | pod-3/lo rx240 tx240
+04:26:02 avail=13785MB slab=+9MB task_struct:+47K | pod-3/lo rx232 tx232
+04:26:03 avail=13794MB slab=+9MB radix_tree_node:+47K cred_jar:+27K buffer_head:+3K | pod-3/lo rx224 tx224
+04:26:04 avail=13796MB slab=+9MB  | pod-3/lo rx248 tx248
+04:26:05 avail=13740MB slab=+9MB task_struct:+47K radix_tree_node:+31K cred_jar:+11K | pod-3/lo rx224 tx224
+04:26:06 avail=13738MB slab=+9MB task_struct:+403K cred_jar:+39K skbuff_small_head:+31K | pod-3/lo rx240 tx240
+04:26:07 avail=13777MB slab=+9MB nf_conntrack:+24K kmalloc-rnd-01-128:+12K | pod-3/lo rx232 tx232
+04:26:08 avail=13773MB slab=+9MB kmalloc-4k:+64K radix_tree_node:+31K nf_conntrack:+16K | pod-3/lo rx232 tx232
+04:26:09 avail=13776MB slab=+9MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx244 tx244
+04:26:10 avail=13774MB slab=+9MB task_struct:+71K nf_conntrack:+24K kmalloc-rnd-01-128:+12K | pod-3/lo rx224 tx224
+04:26:11 avail=13775MB slab=+9MB biovec-max:+32K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx240 tx240
+04:26:12 avail=13783MB slab=+9MB nf_conntrack:+24K proc_inode_cache:+15K kmalloc-rnd-01-128:+12K | pod-3/lo rx232 tx232
+04:26:13 avail=13788MB slab=+9MB anon_vma:+19K cred_jar:+19K nf_conntrack:+16K | pod-3/lo rx232 tx232
+04:26:14 avail=13788MB slab=+9MB task_struct:+23K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx232 tx232
+04:26:15 avail=13795MB slab=+9MB task_struct:+95K cred_jar:+59K kmalloc-4k:+32K | pod-3/lo rx224 tx224
+04:26:16 avail=13793MB slab=+9MB nf_conntrack:+16K kmalloc-rnd-01-128:+12K | pod-3/lo rx232 tx232
+04:26:17 avail=13795MB slab=+9MB task_struct:+142K nf_conntrack:+16K kmalloc-rnd-01-128:+12K | pod-3/lo rx240 tx240
+04:26:18 avail=13786MB slab=+9MB kmalloc-4k:+32K radix_tree_node:+31K nf_conntrack:+24K | pod-3/lo rx224 tx224
+04:26:19 avail=13788MB slab=+9MB nf_conntrack:+16K skbuff_small_head:+15K kmalloc-rnd-01-128:+8K | pod-3/lo rx240 tx240
+04:26:20 avail=13732MB slab=+10MB task_struct:+166K cred_jar:+31K nf_conntrack:+16K | pod-3/lo rx224 tx224
+04:26:21 avail=13744MB slab=+9MB nf_conntrack:+24K kmalloc-rnd-01-128:+8K anon_vma:+3K | pod-3/lo rx240 tx240
+04:26:22 avail=13792MB slab=+9MB sock_inode_cache:+31K nf_conntrack:+16K proc_inode_cache:+15K | pod-3/lo rx240 tx240
+04:26:23 avail=13732MB slab=+9MB kmalloc-4k:+32K nf_conntrack:+8K kmalloc-rnd-01-128:+4K | pod-3/lo rx224 tx224
+04:26:24 avail=13738MB slab=+9MB  | pod-3/lo rx232 tx232
+04:26:25 avail=13695MB slab=+10MB kmalloc-4k:+96K cred_jar:+66K kernfs_node_cache:+7K | pod-3/lo rx224 tx224
+04:26:26 avail=13695MB slab=+10MB task_struct:+23K | pod-3/lo rx232 tx232
+04:26:27 avail=13720MB slab=+9MB anon_vma:+7K buffer_head:+3K kmalloc-rnd-11-192:+3K | pod-3/lo rx232 tx232
+04:26:28 avail=13768MB slab=+9MB radix_tree_node:+15K kernfs_node_cache:+7K dentry:+3K | pod-3/lo rx224 tx224
+04:26:29 avail=13774MB slab=+9MB biovec-max:+32K backing_aio:+12K btrfs_path:+3K | pod-3/lo rx240 tx240
+04:26:30 avail=13732MB slab=+10MB task_struct:+47K radix_tree_node:+31K cred_jar:+27K | pod-3/lo rx224 tx224
+04:26:31 avail=13737MB slab=+9MB anon_vma:+11K kmalloc-rnd-12-64:+4K buffer_head:+3K | pod-3/lo rx240 tx240
+04:26:32 avail=13756MB slab=+10MB task_struct:+95K cred_jar:+15K sw_flow:+15K | pod-3/lo rx232 tx232
+04:26:33 avail=13717MB slab=+10MB radix_tree_node:+31K task_struct:+23K anon_vma:+7K | pod-3/lo rx224 tx224
+04:26:34 avail=13728MB slab=+10MB cred_jar:+19K | pod-3/lo rx240 tx240
+04:26:35 avail=13686MB slab=+9MB inode_cache:+15K kernfs_node_cache:+7K dentry:+3K | pod-3/lo rx224 tx224
+04:26:36 avail=13695MB slab=+9MB anon_vma:+3K | pod-3/lo rx240 tx240
+04:26:37 avail=13708MB slab=+10MB task_struct:+261K kmalloc-4k:+32K cred_jar:+7K | pod-3/lo rx232 tx232
+04:26:38 avail=13770MB slab=+10MB radix_tree_node:+31K cred_jar:+23K skbuff_small_head:+15K | pod-3/lo rx232 tx232
+04:26:39 avail=13770MB slab=+10MB cred_jar:+11K anon_vma:+3K | pod-3/lo rx232 tx232
+04:26:40 avail=13721MB slab=+10MB task_struct:+190K | pod-3/lo rx224 tx224
+04:26:41 avail=13739MB slab=+9MB  | pod-3/lo rx232 tx232
+04:26:42 avail=13773MB slab=+9MB  | pod-3/lo rx240 tx240
+04:26:43 avail=13771MB slab=+9MB radix_tree_node:+15K | pod-3/lo rx224 tx224
+04:26:44 avail=13772MB slab=+9MB biovec-max:+64K anon_vma:+3K | pod-3/lo rx240 tx240
+04:26:45 avail=13756MB slab=+9MB kmalloc-4k:+64K backing_aio:+4K | pod-3/lo rx224 tx224
+04:26:46 avail=13768MB slab=+9MB kmalloc-rnd-05-2k:+32K fuse_request:+19K btrfs_path:+11K | pod-3/lo rx232 tx232
+04:26:47 avail=13771MB slab=+9MB task_struct:+95K | pod-3/lo rx224 tx224
+04:26:48 avail=13740MB slab=+9MB kmalloc-4k:+64K | pod-3/lo rx224 tx224
+04:26:49 avail=13748MB slab=+9MB kmalloc-rnd-11-192:+7K | pod-3/lo rx240 tx240
+04:26:50 avail=13777MB slab=+9MB kmalloc-4k:+32K cred_jar:+3K | pod-3/lo rx224 tx224
+04:26:51 avail=13780MB slab=+9MB cred_jar:+11K | pod-3/lo rx238 tx238
+04:26:52 avail=13811MB slab=+9MB task_struct:+23K | pod-3/lo rx234 tx234
+04:26:53 avail=13828MB slab=+9MB task_struct:+23K | pod-3/lo rx232 tx232
+04:26:54 avail=13825MB slab=+9MB task_struct:+71K | pod-3/lo rx234 tx234
+04:26:55 avail=13809MB slab=+9MB  | pod-3/lo rx230 tx230
+04:26:56 avail=13809MB slab=+9MB sock_inode_cache:+31K cred_jar:+11K | pod-3/lo rx224 tx224
+04:26:57 avail=13745MB slab=+9MB task_struct:+47K anon_vma:+7K kernfs_node_cache:+3K | pod-3/lo rx232 tx232
+04:26:58 avail=13797MB slab=+9MB kmalloc-4k:+32K anon_vma:+7K buffer_head:+3K | pod-3/lo rx216 tx216
+04:26:59 avail=13799MB slab=+9MB  | pod-3/lo rx240 tx240
+04:27:00 avail=13788MB slab=+9MB task_struct:+142K kmalloc-4k:+32K anon_vma:+15K | pod-3/lo rx224 tx224
+04:27:01 avail=13804MB slab=+9MB proc_inode_cache:+15K backing_aio:+4K buffer_head:+3K | pod-3/lo rx232 tx232
+04:27:02 avail=13763MB slab=+9MB dentry:+3K | pod-3/lo rx232 tx232
+04:27:03 avail=13797MB slab=+9MB radix_tree_node:+15K skbuff_small_head:+15K | pod-3/lo rx224 tx224
+04:27:04 avail=13796MB slab=+9MB  | pod-3/lo rx240 tx240
+04:27:05 avail=13752MB slab=+9MB kmalloc-4k:+32K task_struct:+23K radix_tree_node:+15K | pod-3/lo rx232 tx232
+04:27:06 avail=13750MB slab=+9MB task_struct:+23K kmalloc-rnd-01-128:+8K | pod-3/lo rx232 tx232
+04:27:07 avail=13771MB slab=+9MB task_struct:+23K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx232 tx232
+04:27:08 avail=13752MB slab=+9MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K anon_vma:+7K | pod-3/lo rx216 tx216
+04:27:09 avail=13752MB slab=+9MB skbuff_small_head:+31K nf_conntrack:+16K kmalloc-rnd-01-128:+12K | pod-3/lo rx240 tx240
+04:27:10 avail=13722MB slab=+9MB kmalloc-4k:+32K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx224 tx224
+04:27:11 avail=13739MB slab=+9MB nf_conntrack:+24K kmalloc-rnd-01-128:+12K anon_vma:+3K | pod-3/lo rx240 tx240
+04:27:12 avail=13710MB slab=+9MB kmalloc-1k:+32K task_struct:+23K nf_conntrack:+16K | pod-3/lo rx232 tx232
+04:27:13 avail=13775MB slab=+9MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx228 tx228
+04:27:14 avail=13781MB slab=+9MB nf_conntrack:+24K kmalloc-rnd-01-128:+8K | pod-3/lo rx240 tx240
+04:27:15 avail=13759MB slab=+9MB task_struct:+47K nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx224 tx224
+04:27:16 avail=13763MB slab=+9MB nf_conntrack:+24K kmalloc-rnd-01-128:+12K anon_vma:+7K | pod-3/lo rx232 tx232
+04:27:17 avail=13706MB slab=+9MB kmalloc-4k:+64K task_struct:+47K nf_conntrack:+16K | pod-3/lo rx232 tx232
+04:27:18 avail=13776MB slab=+9MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K anon_vma:+7K | pod-3/lo rx216 tx216
+04:27:19 avail=13778MB slab=+9MB nf_conntrack:+16K fuse_request:+15K kmalloc-rnd-01-128:+12K | pod-3/lo rx232 tx232
+04:27:20 avail=13795MB slab=+10MB kmalloc-4k:+128K task_struct:+95K nf_conntrack:+16K | pod-3/lo rx224 tx224
+04:27:21 avail=13796MB slab=+10MB nf_conntrack:+24K kmalloc-rnd-01-128:+8K | pod-3/lo rx240 tx240
+04:27:22 avail=13751MB slab=+10MB task_struct:+23K nf_conntrack:+16K kmalloc-rnd-01-128:+12K | pod-3/lo rx232 tx232
+04:27:23 avail=13750MB slab=+10MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K kernfs_node_cache:+7K | pod-3/lo rx224 tx224
+04:27:24 avail=13760MB slab=+10MB nf_conntrack:+16K kmalloc-rnd-01-128:+4K | pod-3/lo rx240 tx240
+04:27:25 avail=13785MB slab=+10MB kmalloc-4k:+128K kernfs_node_cache:+7K | pod-3/lo rx224 tx224
+04:27:26 avail=13782MB slab=+10MB filp:+8K | pod-3/lo rx240 tx240
+04:27:27 avail=13794MB slab=+10MB kmalloc-4k:+32K task_struct:+23K backing_aio:+16K | pod-3/lo rx224 tx224
+04:27:28 avail=13795MB slab=+10MB  | pod-3/lo rx232 tx232
+04:27:29 avail=13797MB slab=+9MB skbuff_small_head:+15K anon_vma:+7K | pod-3/lo rx232 tx232
+04:27:30 avail=13757MB slab=+9MB kmalloc-4k:+32K backing_aio:+4K | pod-3/lo rx224 tx224
+04:27:31 avail=13754MB slab=+9MB buffer_head:+3K dentry:+3K | pod-3/lo rx232 tx232
+04:27:32 avail=13723MB slab=+10MB task_struct:+95K cred_jar:+15K | pod-3/lo rx232 tx232
+04:27:33 avail=13731MB slab=+9MB kernfs_node_cache:+7K | pod-3/lo rx232 tx232
+04:27:34 avail=13740MB slab=+9MB  | pod-3/lo rx232 tx232
+04:27:35 avail=13737MB slab=+9MB kmalloc-4k:+32K anon_vma:+3K cred_jar:+3K | pod-3/lo rx224 tx224
+04:27:36 avail=13743MB slab=+9MB fuse_request:+23K skbuff_head_cache:+8K dentry:+7K | pod-3/lo rx232 tx232
+04:27:37 avail=13743MB slab=+10MB task_struct:+118K radix_tree_node:+15K cred_jar:+7K | pod-3/lo rx229 tx229
+04:27:38 avail=13753MB slab=+10MB fuse_request:+54K anon_vma:+15K btrfs_path:+11K | pod-3/lo rx235 tx235
+04:27:39 avail=13758MB slab=+10MB skbuff_small_head:+31K | pod-3/lo rx224 tx224
+04:27:40 avail=13700MB slab=+10MB task_struct:+166K biovec-max:+64K cred_jar:+3K | pod-3/lo rx224 tx224
+04:27:41 avail=13720MB slab=+10MB cred_jar:+19K skbuff_ext_cache:+3K | pod-3/lo rx240 tx240
+04:27:42 avail=13713MB slab=+10MB task_struct:+47K proc_inode_cache:+31K | pod-3/lo rx224 tx224
+04:27:43 avail=13729MB slab=+10MB  | pod-3/lo rx232 tx232
+04:27:44 avail=13737MB slab=+10MB biovec-max:+32K | pod-3/lo rx240 tx240
+04:27:45 avail=13746MB slab=+10MB kmalloc-4k:+32K anon_vma:+11K | pod-3/lo rx224 tx224
+04:27:46 avail=13754MB slab=+10MB anon_vma:+3K | pod-3/lo rx240 tx240
+04:27:47 avail=13725MB slab=+10MB kmalloc-4k:+96K task_struct:+71K radix_tree_node:+31K | pod-3/lo rx232 tx232
+04:27:48 avail=13751MB slab=+10MB fuse_request:+23K backing_aio:+16K skbuff_small_head:+15K | pod-3/lo rx224 tx224
+04:27:49 avail=13759MB slab=+10MB kmalloc-4k:+32K | pod-3/lo rx232 tx232
+04:27:50 avail=13761MB slab=+10MB kernfs_node_cache:+7K buffer_head:+3K | pod-3/lo rx216 tx216
+04:27:51 avail=13766MB slab=+10MB fuse_request:+3K | pod-3/lo rx240 tx240
+04:27:52 avail=13709MB slab=+10MB task_struct:+47K radix_tree_node:+31K skbuff_small_head:+15K | pod-3/lo rx224 tx224
+04:27:53 avail=13725MB slab=+10MB  | pod-3/lo rx232 tx232
+04:27:54 avail=13735MB slab=+10MB  | pod-3/lo rx240 tx240
+04:27:55 avail=13704MB slab=+10MB kmalloc-4k:+64K radix_tree_node:+15K kernfs_node_cache:+3K | pod-3/lo rx216 tx216
+04:27:56 avail=13717MB slab=+10MB fuse_request:+3K | pod-3/lo rx232 tx232
+04:27:57 avail=13733MB slab=+10MB task_struct:+166K kmalloc-rnd-10-512:+16K cred_jar:+11K | pod-3/lo rx224 tx224
+04:27:58 avail=13753MB slab=+10MB anon_vma:+7K kmalloc-rcl-96:+3K | pod-3/lo rx224 tx224
+04:27:59 avail=13768MB slab=+10MB  | pod-3/lo rx232 tx232
+04:28:00 avail=13771MB slab=+10MB task_struct:+71K shmem_inode_cache:+15K | pod-3/lo rx224 tx224
+04:28:01 avail=13774MB slab=+10MB kmalloc-4k:+64K | pod-3/lo rx232 tx232
+04:28:02 avail=13717MB slab=+10MB task_struct:+23K | pod-3/lo rx232 tx232
+04:28:03 avail=13728MB slab=+10MB skbuff_small_head:+15K anon_vma:+7K | pod-3/lo rx232 tx232
+04:28:04 avail=13740MB slab=+10MB backing_aio:+4K anon_vma:+3K fuse_request:+3K | pod-3/lo rx232 tx232
+04:28:05 avail=13712MB slab=+10MB kmalloc-4k:+32K kmalloc-rnd-10-512:+16K kernfs_node_cache:+7K | pod-3/lo rx224 tx224
+04:28:06 avail=13726MB slab=+10MB anon_vma:+3K | pod-3/lo rx240 tx240
+04:28:07 avail=13681MB slab=+10MB task_struct:+118K cred_jar:+23K anon_vma:+3K | pod-3/lo rx224 tx224
+04:28:08 avail=13701MB slab=+10MB  | pod-3/lo rx232 tx232
+04:28:09 avail=13713MB slab=+10MB fuse_request:+7K backing_aio:+4K | pod-3/lo rx240 tx240
+04:28:10 avail=13705MB slab=+10MB kmalloc-4k:+96K nf_conntrack:+16K buffer_head:+3K | pod-3/lo rx224 tx224
+04:28:11 avail=13711MB slab=+10MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx232 tx232
+04:28:12 avail=13735MB slab=+10MB nf_conntrack:+24K kmalloc-rnd-01-128:+8K anon_vma:+3K | pod-3/lo rx232 tx232
+04:28:13 avail=13761MB slab=+10MB cred_jar:+55K biovec-max:+32K nf_conntrack:+24K | pod-3/lo rx232 tx232
+04:28:14 avail=13772MB slab=+10MB nf_conntrack:+8K kmalloc-rnd-01-128:+8K | pod-3/lo rx232 tx232
+04:28:15 avail=13799MB slab=+10MB task_struct:+142K kmalloc-4k:+64K biovec-max:+32K | pod-3/lo rx224 tx224
+04:28:16 avail=13798MB slab=+10MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx240 tx240
+04:28:17 avail=13740MB slab=+10MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K anon_vma:+3K | pod-3/lo rx224 tx224
+04:28:18 avail=13754MB slab=+10MB task_struct:+71K cred_jar:+23K nf_conntrack:+16K | pod-3/lo rx240 tx240
+04:28:19 avail=13759MB slab=+10MB task_struct:+118K kmalloc-4k:+32K nf_conntrack:+24K | pod-3/lo rx232 tx232
+04:28:20 avail=13733MB slab=+10MB nf_conntrack:+16K kmalloc-rnd-01-128:+8K | pod-3/lo rx224 tx224
+04:28:21 avail=13732MB slab=+10MB nf_conntrack:+16K cred_jar:+15K kmalloc-rnd-01-128:+12K | pod-3/lo rx240 tx240
+04:28:22 avail=13742MB slab=+10MB fuse_request:+19K nf_conntrack:+16K bio-200:+16K | pod-3/lo rx224 tx224
+04:28:23 avail=13743MB slab=+10MB nf_conntrack:+24K kmalloc-rnd-01-128:+8K | pod-3/lo rx240 tx240
+04:28:24 avail=13752MB slab=+10MB nf_conntrack:+24K kmalloc-rnd-01-128:+12K | pod-3/lo rx232 tx232
+04:28:25 avail=13759MB slab=+10MB nf_conntrack:+16K radix_tree_node:+15K kmalloc-rnd-01-128:+12K | pod-3/lo rx224 tx224
+04:28:26 avail=13761MB slab=+10MB  | pod-3/lo rx240 tx240
+04:28:27 avail=13766MB slab=+10MB task_struct:+71K radix_tree_node:+15K anon_vma:+3K | pod-3/lo rx224 tx224
+04:28:28 avail=13784MB slab=+10MB  | pod-3/lo rx224 tx224
+04:28:29 avail=13782MB slab=+10MB  | pod-3/lo rx248 tx248
+04:28:30 avail=13777MB slab=+10MB radix_tree_node:+31K anon_vma:+3K | pod-3/lo rx220 tx220
+04:28:31 avail=13775MB slab=+10MB kmalloc-4k:+64K skbuff_small_head:+15K cred_jar:+3K | pod-3/lo rx240 tx240
+04:28:32 avail=13720MB slab=+10MB task_struct:+23K kmalloc-rnd-10-512:+16K anon_vma:+11K | pod-3/lo rx216 tx216
+04:28:33 avail=13730MB slab=+10MB  | pod-3/lo rx240 tx240
+04:28:34 avail=13738MB slab=+10MB anon_vma:+3K | pod-3/lo rx240 tx240
+04:28:35 avail=13755MB slab=+10MB kmalloc-4k:+32K task_struct:+23K dentry:+7K | pod-3/lo rx216 tx216
+04:28:36 avail=13761MB slab=+10MB dentry:+43K cred_jar:+7K | pod-3/lo rx240 tx240
+04:28:37 avail=13748MB slab=+10MB fuse_request:+88K biovec-max:+64K btrfs_path:+59K | pod-3/lo rx216 tx216
+04:28:38 avail=13775MB slab=+10MB  | pod-3/lo rx240 tx240
+04:28:39 avail=13779MB slab=+10MB task_struct:+71K | pod-3/lo rx240 tx240
+04:28:40 avail=13727MB slab=+10MB skbuff_small_head:+15K anon_vma:+11K filp:+8K | pod-3/lo rx224 tx224
+04:28:41 avail=13731MB slab=+10MB kmalloc-4k:+64K anon_vma:+3K | pod-3/lo rx216 tx216
+04:28:42 avail=13725MB slab=+10MB biovec-max:+64K backing_aio:+4K | pod-3/lo rx224 tx224
+04:28:43 avail=13730MB slab=+10MB kmalloc-rnd-05-4k:+32K anon_vma:+7K | pod-3/lo rx240 tx240
+04:28:44 avail=13747MB slab=+10MB  | pod-3/lo rx240 tx240
+04:28:45 avail=13802MB slab=+10MB kmalloc-4k:+64K anon_vma:+15K kernfs_node_cache:+7K | pod-3/lo rx224 tx224
+04:28:46 avail=13801MB slab=+11MB biovec-max:+32K backing_aio:+4K | pod-3/lo rx232 tx232
+04:28:47 avail=13800MB slab=+10MB cred_jar:+11K | pod-3/lo rx232 tx232
+04:28:48 avail=13819MB slab=+10MB task_struct:+23K backing_aio:+8K buffer_head:+3K | pod-3/lo rx232 tx232
+04:28:49 avail=13818MB slab=+10MB  | pod-3/lo rx240 tx240
+04:28:50 avail=13757MB slab=+10MB kmalloc-4k:+32K buffer_head:+3K | pod-3/lo rx224 tx224
+04:28:51 avail=13757MB slab=+10MB  | pod-3/lo rx224 tx224
+04:28:52 avail=13698MB slab=+10MB kmalloc-4k:+32K task_struct:+23K radix_tree_node:+15K | pod-3/lo rx224 tx224
+04:28:53 avail=13705MB slab=+10MB skbuff_small_head:+15K bio-384:+15K backing_aio:+4K | pod-3/lo rx240 tx240
+04:28:54 avail=13720MB slab=+10MB  | pod-3/lo rx232 tx232
+04:28:55 avail=13755MB slab=+10MB kmalloc-4k:+32K anon_vma:+15K | pod-3/lo rx224 tx224
+04:28:56 avail=13764MB slab=+10MB  | pod-3/lo rx240 tx240
+04:28:57 avail=13801MB slab=+10MB task_struct:+47K kernfs_node_cache:+7K Acpi-ParseExt:+3K | pod-3/lo rx232 tx232
+04:28:58 avail=13804MB slab=+10MB task_struct:+71K skbuff_small_head:+15K buffer_head:+3K | pod-3/lo rx232 tx232
+04:28:59 avail=13806MB slab=+10MB  | pod-3/lo rx240 tx240
+04:29:00 avail=13754MB slab=+10MB kmalloc-4k:+64K buffer_head:+3K | pod-3/lo rx224 tx224
+04:29:01 avail=13764MB slab=+10MB cred_jar:+11K anon_vma:+7K | pod-3/lo rx232 tx232
+04:29:02 avail=13736MB slab=+10MB kmalloc-4k:+96K task_struct:+23K backing_aio:+4K | pod-3/lo rx216 tx216
+04:29:03 avail=13741MB slab=+10MB biovec-max:+32K backing_aio:+4K | pod-3/lo rx232 tx232
+04:29:04 avail=13752MB slab=+10MB anon_vma:+7K | pod-3/lo rx232 tx232
+04:29:05 avail=13712MB slab=+10MB kernfs_node_cache:+7K | pod-3/lo rx216 tx216
+04:29:06 avail=13725MB slab=+10MB cred_jar:+7K | pod-3/lo rx240 tx240
+04:29:07 avail=13729MB slab=+10MB  | pod-3/lo rx224 tx224
+04:29:08 avail=13740MB slab=+10MB fuse_request:+19K backing_aio:+8K anon_vma:+7K | pod-3/lo rx232 tx232
+04:29:09 avail=13745MB slab=+10MB kmalloc-4k:+32K | pod-3/lo rx240 tx240
+04:29:09 done, no trip
+exit=0

@@ -6,8 +6,13 @@ from pathlib import Path
 import pytest
 
 from emosa.errors import EmosaError
-from emosa.evaluation.cli import main
-from emosa.evaluation.profile_audit import audit, read_features, unknown_features, validate_features
+from emosa_lab.evaluation.cli import main
+from emosa_lab.evaluation.profile_audit import (
+    audit,
+    read_features,
+    unknown_features,
+    validate_features,
+)
 
 pytestmark = pytest.mark.unit
 

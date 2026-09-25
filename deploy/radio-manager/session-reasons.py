@@ -20,7 +20,7 @@ from pathlib import Path
 
 from common import AP, ROOT, guard, write
 
-from emosa.simulation.session_reasons import ClockBounds, ReasonJoin, reason_frame
+from emosa_lab.simulation.session_reasons import ClockBounds, ReasonJoin, reason_frame
 
 
 async def observe(directory, seconds):

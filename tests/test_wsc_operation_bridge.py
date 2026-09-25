@@ -5,10 +5,7 @@ import sqlite3
 from dataclasses import replace
 
 import pytest
-from test_autoconfiguration import BINDING, exchange, m2
-from test_autoconfiguration import fixed_entropy as fixed_entropy
 
-from emosa.backends.mock import ModelBackend
 from emosa.clock import ManualClock
 from emosa.errors import EmosaError, Reason
 from emosa.model import Intent, State
@@ -16,6 +13,9 @@ from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
 from emosa.store import Store
 from emosa.wire.operation_bridge import ComponentTarget, ScopeContext, WscComponentBridge
+from emosa_lab.backends.mock import ModelBackend
+from test_autoconfiguration import BINDING, exchange, m2
+from test_autoconfiguration import fixed_entropy as fixed_entropy
 
 pytestmark = pytest.mark.unit
 

@@ -4,8 +4,8 @@ import pytest
 
 from emosa.errors import EmosaError
 from emosa.opensync.mapping import check_results
-from emosa.simulation.coordinator import run
-from emosa.simulation.report_source import COLUMNS, DatabaseReportFixture
+from emosa_lab.simulation.coordinator import run
+from emosa_lab.simulation.report_source import COLUMNS, DatabaseReportFixture
 
 pytestmark = pytest.mark.ovsdb
 

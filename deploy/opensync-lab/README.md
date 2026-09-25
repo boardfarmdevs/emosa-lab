@@ -15,10 +15,12 @@ pod-N ──5 GHz backhaul + GRE── mv3 ── WAN      clients ──2.4 GHz
 - **em-ctl**: prplMesh 6.0.0 (prplmesh-lab artifacts) with EMOSA's controller
   candidate `candidate-ap-esp-02`, run as in the peer baseline: controller plus
   colocated agent, one hwsim radio from opensync-lab's pool, `eth1` on `em-1905`.
-- **emosa**: this checkout, CPython 3.13.7 and `uv.lock`; one
-  `emosa-agent@POD` service per pod (`python -m emosa.agent.pod`), each with its
-  own AL MAC `02:00:00:5e:00:0N` on a macvlan `emN` over the container's single
-  `em-1905` NIC `emlan` (LXD allows one NIC per managed network per instance).
+- **emosa**: the adapter, installed with the same kit any other lab uses
+  ([`deploy/adapter`](../adapter/README.md), built by `lab.sh stage`) into
+  `/opt/emosa-adapter`. It runs one `emosa-agent@POD` service per pod, each with
+  its own AL MAC on a macvlan `emN`. The macvlans sit on the container's single
+  `em-1905` NIC `emlan`, the trunk, because LXD allows one NIC per managed
+  network per instance.
 - **Transport**: the pod's own `cm` dials EMOSA. `local-noc` (opensync-lab
   `--redirect` / `noc-ctl redirect`) writes the pod's `manager_addr`
   `tcp:10.101.0.1:665N` and ends the pod's session (OpenSync's `cm` acts on a new
@@ -33,7 +35,7 @@ pod-N ──5 GHz backhaul + GRE── mv3 ── WAN      clients ──2.4 GHz
 
 ## Run
 
-opensync-lab VM first (opensync-lab branch `claude/emosa-hooks`: `--redirect`
+opensync-lab VM first (opensync-lab `main`, which carries the `--redirect`
 and `MVX_CLIENT_SSID`), then the EasyMesh side. The run record is in
 [doc/evidence/opensync-lab-proof](../../doc/evidence/opensync-lab-proof/README.md).
 
@@ -59,6 +61,82 @@ deploy/opensync-lab/lab.sh release pod-1          # give pod-1 back to local-noc
 ```
 
 The lab credentials above are public test values.
+
+### Fleet: an agent for every pod
+
+Instead of one `agent POD N` per pod, the fleet gives every pod handed to it
+its own virtual agent. The agent's AL MAC is derived from the pod's serial,
+and its port and 1905 interface are allocated and persisted
+(`src/emosa/agent/fleet.py`).
+
+```sh
+deploy/opensync-lab/lab.sh release pod-1          # per-pod agents first, if any
+deploy/opensync-lab/lab.sh fleet                  # front port 10.101.0.1:6650, agents 6651-6690
+deploy/opensync-lab/lab.sh policy emosa-mesh 'EmosaMesh2026!'   # saved, re-applied by admit
+deploy/opensync-lab/lab.sh admit pod-1 pod-2 pod-3
+deploy/opensync-lab/lab.sh status                 # "fleet SERIAL AL emN PORT" per pod
+deploy/opensync-lab/lab.sh release pod-2          # back to local-noc; its agent is forgotten
+```
+
+`admit` only asks local-noc to redirect the pod to the front port. EMOSA needs
+no per-pod input. The pod's own identity decides its agent. `admit` re-applies
+the controller policy because prplMesh's lab policy lists credentials per AL
+MAC. With an operator's controller, that onboarding policy is the operator's.
+`workload` finds each pod's agent itself, so it runs on per-pod agents and the
+fleet alike.
+
+More pods come from opensync-lab's own script, unchanged. Set `MVX_VM`
+explicitly: opensync-lab's `local.conf` may name another VM.
+
+```sh
+# in opensync-lab
+MVX_VM=emosa-osl-0923 MVX_POD_IMAGE=$HOME/yocto/mvx-pod-work/out/mvx-pod-20260923124229 \
+    ./deploy-mvx.sh pod pod-4
+# in emosa-lab
+deploy/opensync-lab/lab.sh admit pod-4
+deploy/opensync-lab/lab.sh client em-wc7 pod-4 emosa-mesh 'EmosaMesh2026!'
+```
+
+### Data plane experiments
+
+`lab.sh gtp` adds `em-gtp`, standing in for the EasyMesh gateway side. It
+carries:
+- a pod-backhaul SSID and the GRE termination point (option 2);
+- a hostapd Multi-AP backhaul BSS on 2.4 GHz (`emosa-lab-bh`), for moving
+  uplinks by hand;
+- once a controller policy is saved (`lab.sh policy`), the controller's
+  backhaul BSS: 5 GHz, `<ssid>-bh` with the policy's key, bridged into the
+  gateway LAN. The controller no longer gives its own node that BSS: em-ctl's
+  radio sits on the 1905-only LAN, with no router, and a pod that joined it
+  was stranded (run `uplink-01` below).
+
+`lab.sh option1 POD on|off` makes POD's agent perform option 1 itself (spec
+§8.3). The agent writes the pod's `bhaul-sta-50` onto the controller's
+backhaul, confirms it from State, and does it again after every OpenSync
+restart. The station is pinned to em-gtp's backhaul BSS (`uplink.bssid`, read
+from em-gtp's `wlan1`). With `m2` the credentials come from the controller's
+M2 set, and the pod also runs the backhaul BSS itself (`b-ap-24`); unpinned,
+its station joined that BSS and looped `br-home` until the VM locked up. `lab.sh uplink POD gtp|multi-ap|restore|show` still moves an uplink by
+hand.
+
+Option 1 needs a pod image built by opensync-lab `d1dc985` or later, which
+applies the platform patch for the Multi-AP link state.
+
+```sh
+# in opensync-lab: build the image and relaunch a pod from it
+./build-pod.sh sources && ./build-pod.sh build && ./build-pod.sh image
+MVX_VM=emosa-osl-0923 MVX_POD_IMAGE=$HOME/yocto/mvx-pod-work/out/mvx-pod-<stamp> ./deploy-mvx.sh pod pod-6
+# in emosa-lab
+deploy/opensync-lab/lab.sh release pod-6 && deploy/opensync-lab/lab.sh admit pod-6
+deploy/opensync-lab/lab.sh gtp                  # the controller's backhaul BSS on em-gtp
+deploy/opensync-lab/lab.sh option1 pod-6 on
+```
+
+A pod whose switch was not confirmed is held on option 2, and its agent status
+says why. `lab.sh release` followed by `lab.sh admit` starts over.
+
+The design and the results are in
+[the data plane document](../../doc/architecture/data-plane.md).
 
 ## Artifacts
 

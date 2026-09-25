@@ -6,7 +6,6 @@ import os
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from test_topology import config, observation
 
 from emosa.agents import validate_bindings
 from emosa.config import validate
@@ -19,7 +18,8 @@ from emosa.easymesh_payloads import (
 from emosa.errors import EmosaError
 from emosa.opensync.mapping import OpenSyncBackend
 from emosa.radio_capabilities import InputUnavailable, load_inputs, project
-from emosa.simulation.radio_capabilities import fixture_profile
+from emosa_lab.simulation.radio_capabilities import fixture_profile
+from test_topology import config, observation
 
 pytestmark = pytest.mark.unit
 NOW = datetime(2026, 9, 21, 12, tzinfo=UTC)

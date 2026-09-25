@@ -8,10 +8,10 @@ import argparse
 import json
 from pathlib import Path
 
-from emosa.simulation.backhaul_accounting import BackhaulAccountingSource
-from emosa.simulation.egress_accounting import EgressAccountingSource
-from emosa.simulation.shaped_backhaul import ShapedBackhaulSource
-from emosa.simulation.virtual_capacity import VirtualCapacitySource
+from emosa_lab.simulation.backhaul_accounting import BackhaulAccountingSource
+from emosa_lab.simulation.egress_accounting import EgressAccountingSource
+from emosa_lab.simulation.shaped_backhaul import ShapedBackhaulSource
+from emosa_lab.simulation.virtual_capacity import VirtualCapacitySource
 
 
 def replay(directory, source_class=EgressAccountingSource):

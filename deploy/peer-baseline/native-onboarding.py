@@ -23,13 +23,13 @@ from run import CONTROLLER, node, stop_collect
 from setup import ROOT, run
 
 from emosa.opensync.session import OvsSession
-from emosa.simulation.database import SimDatabase
-from emosa.simulation.forwarding import ForwardingSource
-from emosa.simulation.native_onboarding import OWNER, RADIO_ROOT
-from emosa.simulation.neighbor_binding import NeighborSource
-from emosa.simulation.radio import MONITOR, seed_radio_database
-from emosa.simulation.wsc_provisioning import SERIAL
-from emosa.simulation.wsc_wire import RADIO_BSSID, write
+from emosa_lab.simulation.database import SimDatabase
+from emosa_lab.simulation.forwarding import ForwardingSource
+from emosa_lab.simulation.native_onboarding import OWNER, RADIO_ROOT
+from emosa_lab.simulation.neighbor_binding import NeighborSource
+from emosa_lab.simulation.radio import MONITOR, seed_radio_database
+from emosa_lab.simulation.wsc_provisioning import SERIAL
+from emosa_lab.simulation.wsc_wire import RADIO_BSSID, write
 
 RADIO_ROOT_DIR = RADIO_ROOT.parent
 
@@ -171,7 +171,7 @@ async def experiment(
             namespace,
             sys.executable,
             "-m",
-            "emosa.simulation.native_onboarding",
+            "emosa_lab.simulation.native_onboarding",
             str(directory),
             *(["--telemetry", "--duration", str(active_seconds + 180)] if active_seconds else []),
             stdout=log("native-worker"),

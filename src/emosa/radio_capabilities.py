@@ -15,9 +15,9 @@ from emosa import capability_extensions
 from emosa.config import validate
 from emosa.easymesh_payloads import APRadioBasicCapabilities, BasicOperatingClass, encode_value
 from emosa.errors import EmosaError
-from emosa.evaluation.payloads import describe
 from emosa.opensync.topology import project as project_topology
 from emosa.operating_classes import CENTER_CHANNEL_CLASSES, GLOBAL_OPERATING_CLASSES
+from emosa.payload_description import describe
 from emosa.topology_bindings import binding_digest
 
 PROFILE_BYTES = 65_536

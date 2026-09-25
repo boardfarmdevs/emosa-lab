@@ -8,10 +8,10 @@ import pytest
 
 from emosa.config import load, validate
 from emosa.errors import EmosaError
-from emosa.evaluation.cli import main
-from emosa.evaluation.evidence import compare, html_report
-from emosa.evaluation.runner import run
 from emosa.store import Store
+from emosa_lab.evaluation.cli import main
+from emosa_lab.evaluation.evidence import compare, html_report
+from emosa_lab.evaluation.runner import run
 
 pytestmark = pytest.mark.unit
 
@@ -136,7 +136,7 @@ def test_missing_required_evidence_and_wrong_fault_boundary_do_not_pass(tmp_path
 
 
 def test_lxd_command_routes_only_named_endpoints():
-    from emosa.evaluation.lxd import endpoint_command
+    from emosa_lab.evaluation.lxd import endpoint_command
 
     assert endpoint_command("emosa", ["emosa", "status"]) == [
         "lxc",

@@ -52,7 +52,7 @@ On HOST, from the checkout root:
 
 ```bash
 uv sync --locked
-uv run python -m emosa.simulation.radio_capabilities \
+uv run python -m emosa_lab.simulation.radio_capabilities \
   --output .lab/radio-capabilities-demo
 ```
 

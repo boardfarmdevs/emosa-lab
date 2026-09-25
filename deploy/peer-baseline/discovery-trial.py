@@ -26,8 +26,8 @@ from setup import OWNER, ROOT, inside, lxc, run
 
 from emosa.errors import EmosaError
 from emosa.wire.autoconfiguration import PeerBinding
-from emosa.wire.controller_probe import ControllerProbe
 from emosa.wire.ethernet import EthernetEndpoint
+from emosa_lab.wire.controller_probe import ControllerProbe
 
 AGENT = bytes.fromhex("020000003001")
 PEER = bytes.fromhex("020000e00001")

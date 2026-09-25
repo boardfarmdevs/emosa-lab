@@ -51,7 +51,7 @@ Start in the development or learning checkout after the normal installation and
 No root, LXD or radio is needed for this first run. Choose a new output directory.
 
 ```bash
-uv run python -m emosa.simulation.coordinator --output .lab/coordinator-demo-01
+uv run python -m emosa_lab.simulation.coordinator --output .lab/coordinator-demo-01
 uv run emosa-lab wire-inspect --capture .lab/coordinator-demo-01/messages.pcap
 uv run pytest tests/test_report_coordinator.py -q
 uv run pytest tests/test_report_coordinator_ovsdb.py -q
@@ -179,14 +179,14 @@ loop and source-publication component. It dispatches only Topology Query and
 1905 Ack. WSC and AP Capability Query are visible unsupported inputs; they cannot
 create operations. A lease-available status is not a profile qualification.
 
-[report_source.py](../../src/emosa/simulation/report_source.py) is the **owned
+[report_source.py](../../lab/src/emosa_lab/simulation/report_source.py) is the **owned
 simulation source**, not an actual-pod adapter profile. It starts its own database
 and uses explicit fixture capability/adjacency declarations. Its projection
 reuses the complete OpenSync radio/VIF graph checks, validates current role and
 security representation, and refuses unknown client age. It exposes no CLI for
 supplying a physical endpoint or bypassing the application wire gate.
 
-[coordinator_wire.py](../../src/emosa/simulation/coordinator_wire.py) runs that
+[coordinator_wire.py](../../lab/src/emosa_lab/simulation/coordinator_wire.py) runs that
 component and a synthetic peer over actual AF_PACKET sockets in the dedicated
 VM. It performs no discovery-profile admission and never starts M1 from an Ack.
 

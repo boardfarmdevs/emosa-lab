@@ -18,7 +18,7 @@ from pathlib import Path
 
 from emosa.config import validate
 from emosa.secrets import SecretStore
-from emosa.simulation.database import SimDatabase, SimManager
+from emosa_lab.simulation.database import SimDatabase, SimManager
 
 
 async def run(directory):

@@ -4,7 +4,7 @@ import json
 import pytest
 
 from emosa.easymesh_payloads import decode_value
-from emosa.simulation.radio_capabilities import run
+from emosa_lab.simulation.radio_capabilities import run
 
 pytestmark = pytest.mark.ovsdb
 

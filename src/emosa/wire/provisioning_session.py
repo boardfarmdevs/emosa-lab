@@ -62,7 +62,7 @@ class ComponentProvisioningSession:
                 "operation", mid=message.mid, operation_id=result.operation_id, state=result.state
             )
         except EmosaError as exc:
-            return self._record("rejected", reason=exc.code)
+            return self._record("rejected", reason=exc.code, message=str(exc))
         finally:
             self.receiving = False
 

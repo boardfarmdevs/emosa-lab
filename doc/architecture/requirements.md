@@ -862,7 +862,7 @@ The architectural requirements and proposed CLI/module layout are design decisio
 | [OpenSync 6.6 statistics Protobuf](https://github.com/plume-design/opensync/blob/78d8a7194d5e77635877cc456231e7be5cf03d68/src/lib/protobuf/opensync_stats.proto) | Optional telemetry decoding reference; enabled reports require qualification |
 | [OpenSync OWM native test script](https://github.com/plume-design/opensync/blob/78d8a7194d5e77635877cc456231e7be5cf03d68/src/owm/scripts/test.sh) | Existing native OWM build/test integration with a disposable OVSDB server |
 | [OpenSync OSW dummy driver](https://github.com/plume-design/opensync/blob/78d8a7194d5e77635877cc456231e7be5cf03d68/src/lib/osw/src/osw_drv_dummy.c) | Candidate simulated device boundary; not a standalone pod emulator |
-| [prplmesh-lab architecture](https://github.com/boardfarmdevs/prplmesh-lab/blob/codex/0913-clean/reference/platform/software-architecture.md) | Context for the original EasyMesh learning lab |
+| [prplmesh-lab architecture](https://github.com/boardfarmdevs/prplmesh-lab/blob/main/reference/platform/software-architecture.md) | Context for the original EasyMesh learning lab |
 | [Python packet socket API](https://docs.python.org/3/library/socket.html#socket.AF_PACKET) | Required internal protocol transport |
 | [prplMesh message IDs](https://gitlab.com/prpl-foundation/prplmesh/prplMesh/-/raw/master/framework/tlvf/yaml/tlvf/ieee_1905_1/eMessageType.yaml) | Implementation-level message identifier cross-check, not normative coverage |
 

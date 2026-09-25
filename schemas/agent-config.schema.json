@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/boardfarmdevs/emosa-lab/schemas/agent-config.schema.json",
+  "title": "EMOSA virtual agent configuration",
+  "description": "One virtual EasyMesh agent for one OpenSync pod. Written by the fleet (or by hand); read by emosa-agent.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pod_id", "serial", "ovsdb", "interface", "al_mac", "controller_al", "state_dir"],
+  "properties": {
+    "pod_id": {"$ref": "#/$defs/name", "description": "Operation and journal scope; the fleet uses the serial."},
+    "serial": {"type": "string", "minLength": 1, "maxLength": 64, "description": "AWLAN_Node.serial_number the agent is bound to; any other pod is refused."},
+    "ovsdb": {"type": "string", "pattern": "^(ptcp:[0-9]{1,5}:127\\.0\\.0\\.1|punix:/.+)$", "description": "Where the pod's OVSDB connection arrives (passive, local only)."},
+    "interface": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,15}$", "description": "The agent's own 1905.1 interface; its MAC is al_mac."},
+    "al_mac": {"$ref": "#/$defs/mac"},
+    "controller_al": {"$ref": "#/$defs/mac"},
+    "message_set": {"enum": ["easymesh-6.1", "r1"], "default": "easymesh-6.1"},
+    "multi_bss": {"type": "boolean", "default": false},
+    "m2_session": {"enum": ["distinct", "shared"], "default": "distinct"},
+    "profile": {"type": "string", "minLength": 1, "default": "opensync-lab-hwsim-6.6.1-v1", "description": "Pod profile ID, or a path to a profile file."},
+    "uplink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "if": {"properties": {"mode": {"const": "multi-ap"}}},
+      "then": {"required": ["mode", "bssid"]},
+      "description": "Data plane option 1: the agent switches the pod's backhaul station onto the EasyMesh backhaul (data-plane.md §5.3, spec §8). Absent or mode off: the pod keeps its OpenSync uplink (option 2).",
+      "properties": {
+        "mode": {"enum": ["off", "multi-ap"]},
+        "credentials": {"enum": ["m2", "config"], "default": "m2", "description": "m2: the backhaul BSS of the controller's applied M2 set (multi_bss); config: ssid and secret_ref below."},
+        "ssid": {"type": "string", "minLength": 1, "maxLength": 32},
+        "secret_ref": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$", "description": "A file in the agent's secret directory (state_dir/secrets), mode 0600."},
+        "station": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,15}$", "description": "Overrides the profile's uplink station."},
+        "bssid": {"type": "string", "pattern": "^[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5}$", "description": "The upstream backhaul BSS the station is pinned to, required with mode multi-ap. Never one of the pod's own BSSIDs: a station on its own backhaul BSS loops br-home."}
+      }
+    },
+    "telemetry": {"type": "object", "additionalProperties": false, "required": ["mode"], "description": "The pod's own statistics (spec §3.6): the agent sets the pod's MQTT settings and a raw client report once per OpenSync start, and subscribes to the pod's topic. Absent or mode off: the agent leaves the pod's statistics publishing alone.", "properties": {"mode": {"enum": ["off", "mqtt"]}, "broker": {"type": "string", "minLength": 1, "maxLength": 253, "pattern": "^[^ /:]+$", "description": "Broker host the pod connects to (mutual TLS with its device certificate)."}, "port": {"type": "integer", "minimum": 1, "maximum": 65535, "default": 8883}, "topic": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[^#+]+$", "description": "Default emosa/stats/<serial>."}, "subscribe": {"type": "string", "pattern": "^[^ ]+:[0-9]{1,5}$", "default": "127.0.0.1:1883", "description": "host:port where the agent reads the pod's topic."}, "radio_type": {"enum": ["2.4G", "5G", "5GL", "5GU", "6G"], "default": "2.4G"}, "reporting_interval": {"type": "integer", "minimum": 1, "maximum": 3600, "default": 10}, "sampling_interval": {"type": "integer", "minimum": 1, "maximum": 3600, "default": 5}}, "if": {"properties": {"mode": {"const": "mqtt"}}}, "then": {"required": ["mode", "broker"]}},
+    "state_dir": {"type": "string", "minLength": 1},
+    "run_id": {"$ref": "#/$defs/name"},
+    "vif": {"type": "string", "deprecated": true, "description": "Ignored; the fronthaul VIF comes from the profile."}
+  },
+  "$defs": {
+    "mac": {"type": "string", "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"},
+    "name": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"}
+  }
+}

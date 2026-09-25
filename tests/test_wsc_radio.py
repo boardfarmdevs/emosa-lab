@@ -1,6 +1,11 @@
 """Authenticated radio payload semantics; no IEEE procedure or pod authority."""
 
 import pytest
+
+from emosa.errors import EmosaError, Reason
+from emosa.wsc import authenticate_message, encode_attribute, encrypt_settings
+from emosa.wsc_messages import WFA_ID, M1Transcript
+from emosa.wsc_radio import decode_radio_payloads
 from test_wsc_messages import (
     altered_settings,
     device,
@@ -11,11 +16,6 @@ from test_wsc_messages import (
     signed,
     transcript,
 )
-
-from emosa.errors import EmosaError, Reason
-from emosa.wsc import authenticate_message, encode_attribute
-from emosa.wsc_messages import WFA_ID, M1Transcript
-from emosa.wsc_radio import decode_radio_payloads
 
 pytestmark = pytest.mark.unit
 
@@ -163,6 +163,16 @@ def test_legacy_passphrase_terminator_and_utf8_mapping_boundary():
         assert error.value.code == Reason.UNSUPPORTED_OPERATION
 
 
+def test_one_trailing_ssid_terminator_is_accepted_other_nuls_are_not():
+    plain = rewrite(raw("ap_settings"), 0x1045, b"private_ssid\0")
+    assert request(altered_settings(plain)).existing_fronthaul_candidate().ssid == "private_ssid"
+    for ssid in (b"private_ssid\0\0", b"\0"):
+        plain = rewrite(raw("ap_settings"), 0x1045, ssid)
+        with pytest.raises(EmosaError) as error:
+            request(altered_settings(plain)).existing_fronthaul_candidate()
+        assert error.value.code == Reason.UNSUPPORTED_OPERATION
+
+
 def test_password_change_is_not_silently_omitted_from_the_candidate():
     plain = raw("ap_settings") + encode_attribute(0x102A, b"new-public-password")
     plain += encode_attribute(0x1012, b"\x00\x00")
@@ -194,3 +204,38 @@ def test_role_semantics_wait_until_the_entire_payload_set_is_authenticated(monke
     monkeypatch.setattr(AuthenticatedM2Envelope, "ap_configuration", forbidden)
     with pytest.raises(EmosaError):
         decode_radio_payloads(transcript(), (raw("m2"), second_m2()[:-1]), max_bss=2)
+
+
+def second_bss(flags):
+    """A second authenticated M2 of the same set whose BSS has the given Multi-AP role."""
+    nonce = bytes(range(0x20, 0x30))
+    session_keys = pair().derive(raw("registrar_public"), bytes(range(16)), device().al_mac, nonce)
+    body = rewrite(raw("m2")[:-12], 0x1039, nonce)
+    settings = rewrite(raw("ap_settings"), 0x1049, role_value(flags))
+    body = rewrite(body, 0x1018, encrypt_settings(session_keys, settings))
+    body = rewrite(body, 0x1BBC, bytes([2]))
+    return authenticate_message(session_keys, raw("m1"), body)
+
+
+@pytest.mark.parametrize(
+    "flags,backhaul",
+    # prplMesh sends its backhaul BSS as 0xC0: Backhaul BSS with the Backhaul STA bit,
+    # the credentials the agent's own backhaul station uses too
+    [
+        (0x40, True),
+        (0xC0, True),
+        (0x4C, True),
+        (0xCC, True),
+        (0xE0, False),
+        (0x60, False),
+        (0x50, False),
+    ],
+)
+def test_a_backhaul_bss_may_carry_the_backhaul_sta_bit(flags, backhaul):
+    payloads = (raw("m2"), second_bss(flags))
+    if backhaul:
+        result = decode_radio_payloads(transcript(), payloads, max_bss=2)
+        assert [role for role, _ in result.radio_candidates()] == ["fronthaul", "backhaul"]
+    else:  # refused when the set is decoded (teardown in a set) or when it is mapped
+        with pytest.raises(EmosaError):
+            decode_radio_payloads(transcript(), payloads, max_bss=2).radio_candidates()

@@ -20,19 +20,7 @@ from emosa.easymesh_payloads import (
     encode_value,
 )
 from emosa.errors import EmosaError
-from emosa.evaluation.payloads import inspect_value
-from emosa.simulation.wire_reports import (
-    AGENT,
-    BSSID,
-    CONTROLLER,
-    RUID,
-    SSID,
-    fixtures,
-    main,
-    query_frames,
-)
 from emosa.wire.cmdu import MidSequence, Reassembler, Tlv
-from emosa.wire.inspection import inspect_capture
 from emosa.wire.reports import ReportStamp, early_report, topology_response
 from emosa.wire.topology_values import (
     BridgingCapability,
@@ -44,6 +32,18 @@ from emosa.wire.topology_values import (
     decode_topology,
     encode_topology,
 )
+from emosa_lab.evaluation.payloads import inspect_value
+from emosa_lab.simulation.wire_reports import (
+    AGENT,
+    BSSID,
+    CONTROLLER,
+    RUID,
+    SSID,
+    fixtures,
+    main,
+    query_frames,
+)
+from emosa_lab.wire.inspection import inspect_capture
 
 pytestmark = pytest.mark.unit
 STAMP = ReportStamp("synthetic-pod-1/revision-1/inputs-1", 0, 2)
@@ -294,16 +294,30 @@ def test_configuration_and_state_graph_cannot_disagree_in_response():
                 (ConfiguredRadio(RUID, (ConfiguredBss(BSSID, 0x40, b"different"),)),)
             ),
         ),
-        replace(
-            facts,
-            configuration=BssConfigurationReport(
-                (ConfiguredRadio(RUID, (ConfiguredBss(BSSID, 0x80, SSID),)),)
-            ),
+        *(
+            replace(
+                facts,
+                configuration=BssConfigurationReport(
+                    (ConfiguredRadio(RUID, (ConfiguredBss(BSSID, flags, SSID),)),)
+                ),
+            )
+            for flags in (0xC0, 0x20)  # combined fronthaul+backhaul, reserved bit
         ),
         replace(facts, device=replace(facts.device, interfaces=facts.device.interfaces[:1])),
     ):
         with pytest.raises(EmosaError):
             reply(changed)
+
+
+def test_a_pure_backhaul_bss_is_reported():
+    _, _, facts = fixtures()
+    backhaul = replace(
+        facts,
+        configuration=BssConfigurationReport(
+            (ConfiguredRadio(RUID, (ConfiguredBss(BSSID, 0x80, SSID),)),)
+        ),
+    )
+    assert reply(backhaul) is not None
 
 
 def test_nonempty_clients_require_ages_and_are_reported_on_the_correct_bss():

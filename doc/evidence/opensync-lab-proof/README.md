@@ -143,6 +143,30 @@ RCPI needs the noise floor a survey would give. Next steps:
 - A per-pod subscriber feeds station link and traffic metrics.
 - AP metrics wait for a platform with survey data.
 
+**Repeat on the fresh VM (2026-09-25, `emosa-osl-0925`, pod image
+`mvx-pod-20260924183456`): no reports.** `qm` connected to the broker with the
+pod's certificate, and `owm` started both stats entries (client and survey,
+2.4 GHz), but its OSW stats layer delivered no samples: every period ended in
+`ow: stats: conf: underrun`, and nothing was published, also after an OpenSync
+restart. In this OpenSync version `owm` produces the Wi-Fi statistics (`sm`
+accepts only device statistics). A lab quirk is visible in the same code:
+OSW classifies a phy by its channel list, and hwsim phys support every band,
+so both pod radios count as 2.4 GHz. Whether that, or the pod image, stops the
+samples is still to be found, in opensync-lab. The trial configuration was
+removed again. `lab.sh telemetry` now gives the broker its own copy of its
+certificate: `/var/lib/emosa` is mode 0700 on the fleet VM.
+
+**The pods' own statistics, collected (2026-09-25, [summary](telemetry-m8/summary.json)).**
+The cause of "no reports" was in the pod platform: OSW's nl80211 driver dumps
+station statistics only for phys the platform names, so `owm` never had any
+(opensync-lab `1a74cd8` names them). Each agent now writes the pod's MQTT
+settings and a raw client report once per OpenSync start and subscribes to the
+pod's topic (spec §3.6). Per station it keeps rates, SNR and byte and frame
+totals; retries and errors, which hwsim never reports, stay unknown. Over 12
+periods with 4.4 MB each way, the summed totals matched the driver's own
+counters within 0.006 % (bytes) and 3 frames. Nothing is sent to the controller
+from these yet (spec §9).
+
 ## Second controller: RDK-B unified-wifi-mesh (M9, first attempt)
 
 **Setup:**
@@ -234,6 +258,230 @@ already support. It could also accept an empty AP MLD Configuration as "no MLD".
 
 The prplMesh path, with the default set, re-onboarded all three pods unchanged
 after these changes.
+
+### Third attempt: multi-BSS
+
+EMOSA can now map a radio's whole M2 set onto OpenSync VIFs. It is off by
+default, and turned on per agent with `"multi_bss": true` (`EMOSA_MULTI_BSS`).
+- The agent advertises the pod's spare VIF slots as its BSS capacity.
+- The first fronthaul M2 is the primary BSS; up to 7 more become extra VIFs.
+  A BSS whose M2 flags say backhaul becomes a hidden, non-bridged
+  `multi_ap=backhaul_bss` VIF.
+- The set is one intent, written in one guarded OVSDB transaction, and
+  confirmed as a whole from `Wifi_VIF_State`. Exact-set semantics: a later,
+  smaller M2 set removes the extra VIFs. prplMesh's single M2 did exactly that.
+- RDK sends every M2 of a set from one registrar session (one nonce, one
+  public key). `"m2_session": "shared"` (`EMOSA_M2_SESSION`) accepts that; the
+  default still requires a distinct session per M2.
+- An empty AP MLD Configuration TLV is accepted as "no MLD".
+
+**Result against RDK** (`r1`, `multi_bss`, `m2_session=shared`):
+- The controller's five-BSS M2 set was accepted.
+- The operation reached `CONFIG_COMMITTED` with all five VIFs written.
+- Application on the pod was **not verified**. The RDK container ran in this
+  VM without its lab's cfg80211 network-namespace patch. It changed the
+  VM-wide regulatory domain to an intersected domain ("98"). osw then wrote
+  `country_code=98`, which hostapd rejects, so no BSS could start on any pod.
+
+Rebooting the VM restored the domain. The prplMesh setup then re-onboarded all
+three pods, and all six clients regained internet access.
+
+**Lesson:** the RDK controller belongs in its own lab (meta-cmf-bananapi-vcpe
+with its patched kernel). EMOSA reaches it over an L2 link to its controller
+LAN, not by running it inside the EMOSA VM.
+
+**Liveness fix found during recovery.** An operation whose outcome is unknown
+(`INDETERMINATE`) blocked its pod permanently if the pod restarted and lost the
+write: every later M2 was rejected `BUSY`. Now, once the deadline has passed and
+the pod's current configuration lacks the write, the operation ends as
+`TIMED_OUT`. A late application is still recorded.
+
+## Fleet: an agent for every pod that appears
+
+The three per-pod agents were released and replaced by the fleet
+([design](../../architecture/opensync-easymesh-mapping.md)). The steps:
+
+1. `lab.sh fleet` set up the front port `10.101.0.1:6650` and an agent port
+   range `6651-6690`.
+2. `lab.sh admit pod-1 pod-2 pod-3` asked local-noc to redirect each pod to
+   the front port. Nothing else was configured per pod.
+
+For each pod, the fleet read `AWLAN_Node` from the pod's own connection,
+allocated an agent, started it, and moved the pod's `manager_addr` to that
+agent's port. `cm` reached the fleet 12 to 43 s after the redirect (its own
+backoff).
+
+| Pod | Serial | Agent AL (from the serial) | Interface | Port |
+| --- | --- | --- | --- | --- |
+| pod-1 | MVXPOD023F87E628DD | 02:72:f9:7f:07:85 | em1 | 6651 |
+| pod-2 | MVXPOD02D7777EF0D9 | 02:c2:b8:31:3a:f8 | em2 | 6652 |
+| pod-3 | MVXPOD02288DCB5DCC | 02:2d:b0:6c:a5:ea | em3 | 6653 |
+
+Results:
+- The prplMesh controller onboarded all three new agents. Each operation
+  reached `OBSERVED_APPLIED`.
+- The controller shows each agent on channel 6, with its `emosa-mesh` BSS and
+  its 2 stations. All six clients reached the internet.
+- The same held after the agents were restarted on the new translation layer
+  (`easymesh_view`).
+
+**prplMesh keeps a stale entry.** The released static agent
+`02:00:00:5e:00:02` was still listed after 40 minutes. prplMesh does not age
+out an agent that stopped sending Topology Discovery. This is controller
+behaviour, not EMOSA's.
+
+### The 900-second workload on the fleet (run fleet-m7-01)
+
+The same workload as m7-01 ran against the fleet agents
+([evidence](fleet-m7-01/summary.json)). The workload now finds each pod's
+agent from the lab's own configuration, so it runs on per-pod and fleet agents
+alike. One fault changed mechanism:
+- Before: pod-2's own proxy device was removed.
+- Now: the fleet's agent ports share one proxy range, so the VM firewall drops
+  pod-2's agent port in both directions for 20 s.
+
+**Result: passed.** Every check was true.
+
+| Fault (offset) | Recovered after it ended | m7-01 (per-pod agents) | Client data outage |
+| --- | --- | --- | --- |
+| client leave/join em-wc2 (60 s) | 14.4 s | 14.0 s | em-wc2 only, 53 s |
+| adapter process restart, pod-1 (150 s) | 2.3 s | 1.6 s | none |
+| OVSDB transport cut 20 s, pod-2 (240 s) | 13.5 s | 39.8 s | none |
+| backhaul loss 30 s, pod-3 (360 s) | 26.3 s | 29.4 s | em-wc5/6, 49 s |
+| controller restart + policy re-entry (510 s) | 2.1 s | 2.7 s | none |
+| client leave/join em-wc4 (690 s) | 16.4 s | 13.9 s | em-wc4 only, 53 s |
+
+Other observations:
+- Every M2 was an observed no-op: 0 writes.
+- Agent memory (RSS) stayed at 50 to 55 MB.
+- The fleet saw no second handover: after the cut, pod-2's `cm` reconnected
+  straight to its agent port.
+- The controller restart also cleared the stale entry of the released static
+  agent.
+- The transport cut recovered faster than in m7-01. The two faults differ
+  (dropped packets versus a removed listener), so their recovery times are not
+  directly comparable.
+
+### Six pods (runs fleet-m7-02 and fleet-m7-03)
+
+pod-4 to pod-6 were created with opensync-lab's own `deploy-mvx.sh pod`,
+unchanged. Each passed opensync-lab's checks on local-noc, then was handed over
+with `lab.sh admit pod-4 pod-5 pod-6`.
+- The fleet registered each pod 2 to 6 s after its redirect.
+- The controller then listed six agents, each on channel 6.
+- A client joined `emosa-mesh` on each new pod and reached the internet.
+
+**Cost per agent.** An idle agent used about 10% of a core. It re-read and
+re-decoded the pod's tables on every loop wake, about 17 times a second. It
+also rebuilt its status from the whole journal on each wake. Three changes cut
+this to about 2% per agent, with memory unchanged at about 50 MB:
+- the pod's State is re-read and reconciled twice a second;
+- status is built on that cadence;
+- the idle receive wakes every 200 ms instead of 50 ms.
+
+While a pod is disconnected, its session now polls for the reconnect every
+10 ms instead of every 2 ms.
+
+**fleet-m7-02: failed** ([evidence](fleet-m7-02/summary.json)). After the
+controller restart, the new prplMesh never relearned some clients: pod-3 showed
+0 of its 2 stations and pod-2 showed 1 of 2. The clients themselves kept their
+internet access.
+- **Cause:** EMOSA announced the pods' existing clients right after the
+  controller's Autoconfig Response, before M2. At that point the controller did
+  not yet know the BSS and dropped the announcements. The three earlier passes
+  had the same exposure, and the order simply happened to work out.
+- **Fix:** once M2 has configured the agent and the controller has fetched its
+  topology, the agent announces every current client again, once
+  (`OnboardingSession`, count `clients_reannounced`).
+
+**fleet-m7-03: passed** ([evidence](fleet-m7-03/summary.json)), with six pods
+live and every check true.
+
+| Fault (offset) | Recovered after it ended |
+| --- | --- |
+| client leave/join em-wc2 (60 s) | 12.6 s |
+| adapter process restart, pod-1 (150 s) | 3.3 s |
+| OVSDB transport cut 20 s, pod-2 (240 s) | 9.6 s |
+| backhaul loss 30 s, pod-3 (360 s) | 25.9 s |
+| controller restart + policy re-entry (510 s) | 6.0 s |
+| client leave/join em-wc4 (690 s) | 13.4 s |
+
+Writes during the run: 0. Agent memory stayed at 50 to 54 MB.
+
+**Bug found while writing the translation layer.** The agent did not monitor
+`Wifi_VIF_State.multi_ap`, so a backhaul BSS would have been reported with the
+fronthaul flag (0x40). It is now monitored, and the role comes from State.
+
+## Option 1 by the agent (runs uplink-01 to uplink-04)
+
+The agent now performs data plane option 1 itself (spec §8.3): it moves the
+pod's backhaul station onto the controller's backhaul BSS, confirms it from
+State, and does it again after every OpenSync restart. Tested on pod-6 (the
+image with the Multi-AP link-state patch), with `lab.sh option1 pod-6 on`
+([summary](option1-agent/summary.json)).
+
+| Run | What happened |
+| --- | --- |
+| uplink-01 | The station joined the prplMesh node's own backhaul BSS, which sits on the 1905-only LAN with no router. `cm` adopted it, 12 router checks failed, and OpenSync restarted to its GRE bootstrap. The agent timed the switch out at 90 s and held the pod on option 2, with no retry. |
+| uplink-02 | After the lab change below: applied 22 s after the write. `bhaul-sta-50` was 4-address on em-gtp's 5 GHz backhaul BSS, bridged into `br-home`, and was `cm`'s only uplink (no GRE). The client had internet. The controller listed the station as the agent's 5 GHz interface. |
+| uplink-03 | Found two faults (below). The switch was nevertheless re-applied on the pod's next start, 16 s after the write. |
+| uplink-04 | After an OpenSync restart: the fronthaul came back from M2 first, then the switch was written 0.7 s later and applied 22 s after that. The client was back with internet 5 s later. |
+
+**Lab change.** The controller policy no longer gives the prplMesh node a
+backhaul BSS: its radio is on the 1905-only LAN. `em-gtp` serves the
+controller's backhaul BSS (`<ssid>-bh`, 5 GHz) into the gateway LAN instead.
+
+**Faults found and fixed:**
+- **A pod's restart was taken for another manager's change.** `AWLAN_Node`
+  comes from OpenSync's database template and keeps its UUID across starts. A
+  start is now identified by the `Wifi_Radio_Config` rows, which the start
+  scripts create anew.
+- **The switch raced the fronthaul.** After a restart, the controller's M2
+  re-creates the fronthaul, and the switch moved the pod's path while that
+  write was in flight. The write was lost, and later M2s were refused as busy.
+  The switch now waits until the pod serves the controller's BSS and no
+  fronthaul operation is active.
+- **A lost fronthaul was never asked for again.** A provisioned agent whose pod
+  serves no BSS, with nothing in flight, for 60 s now starts onboarding again
+  (fresh M1).
+
+## Option 1 with credentials from the M2 set (runs option1-m2)
+
+pod-2's agent gets the backhaul BSS in its M2 set and takes its uplink
+credentials from it ([summary](option1-m2/summary.json)). Unpinned, the station
+joined the pod's own backhaul BSS and looped `br-home` until the VM locked up;
+pinned to em-gtp's backhaul BSS, the switch was applied in 23 s and again after
+an OpenSync restart, with no loop (data-plane.md §5.6).
+
+## Fresh build from the easymesh-labs workspace (run fresh-0925-m7)
+
+The whole lab was built again from the pinned workspace
+([easymesh-labs](https://github.com/boardfarmdevs/easymesh-labs), `docs/fresh-build.md`)
+on a new VM, `emosa-osl-0925` on rev150 (16 GB), with a new mv3 image (identical
+to the reference build) and a new pod image carrying the Multi-AP link-state
+patch.
+- opensync-lab: `setup-vm.sh all`, `deploy-mvx.sh all` and `mesh`: 89 checks
+  passed, none failed.
+- EMOSA: the documented sequence (`stage`, `emosa`, `controller`, `ui`, `fleet`,
+  `policy`, `admit pod-1 pod-2 pod-3`, `gtp`, two clients per pod). The three
+  pods got the same agent AL MACs as in the old lab (derived from the serials).
+  `lab.sh gtp` failed on the fresh VM: the script's own function `bridge`
+  shadowed iproute2's, so the port VLAN lookup read nothing (fixed in `43c010e`).
+- **fresh-0925-m7: passed** ([evidence](fresh-0925-m7/summary.json)).
+
+| Fault (offset) | Recovered after it ended |
+| --- | --- |
+| client leave/join em-wc2 (60 s) | 15.8 s |
+| adapter process restart, pod-1 (150 s) | 4.3 s |
+| OVSDB transport cut 20 s, pod-2 (240 s) | 10.9 s |
+| backhaul loss 30 s, pod-3 (360 s) | 30.1 s |
+| controller restart + policy re-entry (510 s) | 4.6 s |
+| client leave/join em-wc4 (690 s) | 18.0 s |
+
+- Option 1 on pod-3 by its agent (`lab.sh option1 pod-3 on`): applied 22 s after
+  the write; after an OpenSync restart on the pod, applied again on the new start
+  21 s after the write. Its clients kept internet access; `cm` used
+  `bhaul-sta-50` as the uplink, with no GRE.
 
 ## Changes made during the run
 

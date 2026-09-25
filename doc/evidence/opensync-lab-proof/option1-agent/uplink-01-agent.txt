@@ -1,0 +1,22 @@
+Sep 24 21:29:26 emosa systemd[1]: Stopping emosa-agent@MVXPOD023674CB574D.service - EMOSA virtual EasyMesh agent for OpenSync pod MVXPOD023674CB574D...
+Sep 24 21:29:26 emosa systemd[1]: emosa-agent@MVXPOD023674CB574D.service: Deactivated successfully.
+Sep 24 21:29:26 emosa systemd[1]: Stopped emosa-agent@MVXPOD023674CB574D.service - EMOSA virtual EasyMesh agent for OpenSync pod MVXPOD023674CB574D.
+Sep 24 21:29:26 emosa systemd[1]: emosa-agent@MVXPOD023674CB574D.service: Consumed 2.052s CPU time.
+Sep 24 21:29:26 emosa systemd[1]: Starting emosa-agent@MVXPOD023674CB574D.service - EMOSA virtual EasyMesh agent for OpenSync pod MVXPOD023674CB574D...
+Sep 24 21:29:26 emosa systemd[1]: Started emosa-agent@MVXPOD023674CB574D.service - EMOSA virtual EasyMesh agent for OpenSync pod MVXPOD023674CB574D.
+Sep 24 21:29:27 emosa emosa-agent[6154]: /opt/emosa-adapter/venv/lib/python3.13/site-packages/emosa/wsc.py:106: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be r
+Sep 24 21:29:27 emosa emosa-agent[6154]:   _private: dh.DHPrivateKey = field(repr=False)
+Sep 24 21:29:29 emosa emosa-agent[6154]: 2026-09-24 21:29:29,172 INFO emosa.agent: pod: {"serial": "MVXPOD023674CB574D", "node_id": "MVXPOD023674CB574D", "firmware": "6.6.1.0-0-g1dad64-mods-mvx-local", "radio": "phy20", 
+Sep 24 21:29:29 emosa emosa-agent[6154]: /opt/emosa-adapter/venv/lib/python3.13/site-packages/emosa/wsc.py:101: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be r
+Sep 24 21:29:29 emosa emosa-agent[6154]:   return dh.DHParameterNumbers(MODP_1536, 2, (MODP_1536 - 1) // 2).parameters()
+Sep 24 21:29:29 emosa emosa-agent[6154]: /opt/emosa-adapter/venv/lib/python3.13/site-packages/emosa/wsc.py:109: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be r
+Sep 24 21:29:29 emosa emosa-agent[6154]:   if not isinstance(self._private, dh.DHPrivateKey):
+Sep 24 21:29:29 emosa emosa-agent[6154]: 2026-09-24 21:29:29,535 INFO emosa.agent.uplink: switching bhaul-sta-50 to the EasyMesh backhaul 'emosa-mesh-bh'
+Sep 24 21:29:29 emosa emosa-agent[6154]: 2026-09-24 21:29:29,671 INFO emosa.agent.uplink: uplink switch e69c8650-c123-483a-adb7-0366ba1fee47: CONFIG_COMMITTED
+Sep 24 21:29:30 emosa emosa-agent[6154]: /opt/emosa-adapter/venv/lib/python3.13/site-packages/emosa/wsc.py:138: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be r
+Sep 24 21:29:30 emosa emosa-agent[6154]:   peer = dh.DHPublicNumbers(peer_number, _parameters().parameter_numbers()).public_key()
+Sep 24 21:29:39 emosa emosa-agent[6154]: 2026-09-24 21:29:39,782 INFO emosa.agent: pod source unavailable: connection lost while draining monitor
+Sep 24 21:29:39 emosa emosa-agent[6154]: 2026-09-24 21:29:39,782 INFO emosa.agent: pod: null
+Sep 24 21:30:59 emosa emosa-agent[6154]: 2026-09-24 21:30:59,773 WARNING emosa.agent.uplink: uplink held on option 2: switch not confirmed within the deadline
+Sep 24 21:31:48 emosa emosa-agent[6154]: 2026-09-24 21:31:48,021 INFO emosa.agent: pod: {"serial": "MVXPOD023674CB574D", "node_id": "MVXPOD023674CB574D", "firmware": "6.6.1.0-0-g1dad64-mods-mvx-local", "radio": "phy20", 
+Sep 24 21:31:50 emosa emosa-agent[6154]: 2026-09-24 21:31:50,094 INFO emosa.agent: pod: {"serial": "MVXPOD023674CB574D", "node_id": "MVXPOD023674CB574D", "firmware": "6.6.1.0-0-g1dad64-mods-mvx-local", "radio": "phy20", 

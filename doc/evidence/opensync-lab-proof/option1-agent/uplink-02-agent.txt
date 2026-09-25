@@ -1,0 +1,8 @@
+Sep 24 21:38:47 emosa emosa-agent[6596]: 2026-09-24 21:38:47,639 INFO emosa.agent.uplink: switching bhaul-sta-50 to the EasyMesh backhaul 'emosa-mesh-bh'
+Sep 24 21:38:47 emosa emosa-agent[6596]: 2026-09-24 21:38:47,762 INFO emosa.agent.uplink: uplink switch af0b29c1-dbab-4733-a6d3-4256fa1da1f9: CONFIG_COMMITTED
+Sep 24 21:38:51 emosa emosa-agent[6716]: 2026-09-24 21:38:51,127 INFO emosa.agent: pod: null
+Sep 24 21:39:09 emosa emosa-agent[6716]: 2026-09-24 21:39:09,932 INFO emosa.agent.uplink: uplink on the EasyMesh backhaul: {'kind': 'multi-ap', 'in_use': 'bhaul-sta-50', 'station': 'bhaul-sta-50', 'ss
+provisioning ['02:00:00:00:18:00']
+backhaul {'band': '5G', 'channel': 36, 'mac': '02:00:00:00:15:00', 'parent': '02:00:00:00:1a:00', 'station': 'bhaul-sta-50'}
+{'held': None, 'in_use': 'bhaul-sta-50', 'operation': {'instance': '39d453da6d12bd67', 'operation_id': 'af0b29c1-dbab-4733-a6d3-4256fa1da1f9', 'reason': None, 'ssid': 'emosa-mesh-bh', 'state': 'OBSERVED_APPLIED'}, 'option': 1, 'parent': '02:00:00:00:1a:00', 'station': 'bhaul-sta-50', 'uplink': 'multi-ap', 'waiting': None}
+{'ap_capability_report_sent': 1, 'channel_preference_report_sent': 1, 'channel_selection_accepted': 1, 'client_capability_unavailable_report': 2, 'client_join_notification': 2, 'clients_reannounced': 1, 'early_then_m1_sent': 1, 'observed_topology_notification': 1, 'operating_channel_acknowledged': 1, 'policy_receipt_ack_sent': 1, 'search_sent': 1, 'wsc_operation': 1}

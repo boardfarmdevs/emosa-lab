@@ -1,0 +1,12 @@
+policy: fronthaul 'emosa-mesh' for gateway 02:00:00:e0:00:01 and 02:2d:b0:6c:a5:ea 02:72:f9:7f:07:85 02:c2:b8:31:3a:f8+bh
+[emosa 03:55:59] option1: pod-2 (MVXPOD02D7777EF0D9) uplink multi-ap, credentials from the controller's M2 set
+03:55:59 sta: Not connected. |	ssid emosa-mesh-bh 	channel 6 (2437 MHz), width: 20 MHz, center1: 2437 MHz 
+03:56:01 sta: Not connected. |	ssid emosa-mesh-bh 	channel 6 (2437 MHz), width: 20 MHz, center1: 2437 MHz 
+03:56:04 sta: Not connected. |	ssid emosa-mesh-bh 	channel 6 (2437 MHz), width: 20 MHz, center1: 2437 MHz 
+03:56:06 sta: Not connected. |	ssid emosa-mesh-bh 	channel 6 (2437 MHz), width: 20 MHz, center1: 2437 MHz 
+03:56:08 sta: Not connected. |	ssid emosa-mesh-bh 	channel 6 (2437 MHz), width: 20 MHz, center1: 2437 MHz 
+03:56:11 sta: Not connected. |	ssid emosa-mesh-bh 	channel 6 (2437 MHz), width: 20 MHz, center1: 2437 MHz 
+03:56:13 sta: internal error, please report: running "lxd.lxc" failed: transient scope not created in 10s|
+03:56:25 sta: Error: Post "https://custom.socket/1.0/exec": net/http: TLS handshake timeout|
+03:56:32 sta: Error: Failed connecting to lxd-agent|
+run-done

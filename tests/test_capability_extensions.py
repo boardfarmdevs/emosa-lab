@@ -2,10 +2,10 @@ import copy
 import json
 
 import pytest
-from test_radio_capabilities import NOW, inputs, mapped, save
 
 from emosa.radio_capabilities import InputUnavailable, load_inputs
-from emosa.simulation.radio_capabilities import fixture_profile
+from emosa_lab.simulation.radio_capabilities import fixture_profile
+from test_radio_capabilities import NOW, inputs, mapped, save
 
 pytestmark = pytest.mark.unit
 

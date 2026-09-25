@@ -1,0 +1,37 @@
+{
+ "cases": [
+  {
+   "expected": "02:72:f9:7f:07:85",
+   "serial": "MVXPOD023F87E628DD",
+   "taken": []
+  },
+  {
+   "expected": "02:c2:b8:31:3a:f8",
+   "serial": "MVXPOD02D7777EF0D9",
+   "taken": []
+  },
+  {
+   "expected": "02:2d:b0:6c:a5:ea",
+   "serial": "MVXPOD02288DCB5DCC",
+   "taken": []
+  },
+  {
+   "expected": "02:b4:90:e3:7a:7f",
+   "serial": "A",
+   "taken": []
+  },
+  {
+   "expected": "02:63:4a:de:af:c8",
+   "serial": "serial.with-punctuation_1",
+   "taken": []
+  },
+  {
+   "expected": "02:d5:9d:f9:a4:45",
+   "serial": "MVXPOD023F87E628DD",
+   "taken": [
+    "02:72:f9:7f:07:85"
+   ]
+  }
+ ],
+ "description": "spec §2.2: AL MAC from the pod serial"
+}

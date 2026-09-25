@@ -20,12 +20,12 @@ from collections import Counter
 from common import CLIENTS, NODES, ROOT, guard, inside, run, write
 from run import clients, connect, eventually, require_idle, setup
 
-from emosa.evaluation.evidence import artifact
 from emosa.opensync.session import OvsSession
-from emosa.simulation.database import SimDatabase
-from emosa.simulation.radio import MONITOR, seed_radio_database
-from emosa.simulation.wsc_provisioning import SERIAL
-from emosa.simulation.wsc_wire import RADIO_BSSID, SSID, verify_registrar
+from emosa_lab.evaluation.evidence import artifact
+from emosa_lab.simulation.database import SimDatabase
+from emosa_lab.simulation.radio import MONITOR, seed_radio_database
+from emosa_lab.simulation.wsc_provisioning import SERIAL
+from emosa_lab.simulation.wsc_wire import RADIO_BSSID, SSID, verify_registrar
 
 # Deliberately public fixture input from the independent C registrar. Used only
 # by the observer; never submitted via the semantic API to drive configuration.

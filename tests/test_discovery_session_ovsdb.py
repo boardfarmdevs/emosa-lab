@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from emosa.simulation.discovery import run
+from emosa_lab.simulation.discovery import run
 
 pytestmark = pytest.mark.ovsdb
 

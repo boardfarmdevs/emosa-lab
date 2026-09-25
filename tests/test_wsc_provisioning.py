@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from emosa.model import State
-from emosa.simulation.wsc_provisioning import CASES, run_case
+from emosa_lab.simulation.wsc_provisioning import CASES, run_case
 
 pytestmark = pytest.mark.ovsdb
 

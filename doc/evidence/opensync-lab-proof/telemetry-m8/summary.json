@@ -1,0 +1,24 @@
+{
+  "what": "The pod's own statistics (spec §3.6): EMOSA's agents have their pods publish raw client reports over MQTT and keep what was measured per station",
+  "vm": "emosa-osl-0925 (rev150)",
+  "date": "2026-09-25",
+  "found": [
+    "OpenSync 6.6 produces Wi-Fi statistics in owm (OSW), not sm; OSW's nl80211 driver dumps station and survey statistics only for phys the platform names (OSW_DRV_NL80211_DUMP_STA_IMPL_PHY_<phy>, default NONE), so no report was ever published: fixed in the pod bootstrap, opensync-lab 1a74cd8, image mvx-pod-20260924222327",
+    "OpenSync's encoder (dppline.c) sends a counter only when it is not zero, and tx_retries only together with rx_retries",
+    "qm publishes the queued reports about once a minute; a period is sometimes missing after a start"
+  ],
+  "runs": [
+    {
+      "run": "three pods",
+      "result": "pod-3 (new image) and pod-1 (same setting at run time) publish every period; pod-2 (old image, control) publishes nothing although configured; the telemetry write applied once per start on all three",
+      "measured": "per station: rates (e.g. 52/26 Mbps), SNR 76, byte and frame totals; retries and errors never reported on hwsim (unknown, not zero)"
+    },
+    {
+      "run": "counter qualification",
+      "stimulus": "3000 pings of 1400 bytes from em-wc5 (pod-3) to mv3",
+      "result": "EMOSA's summed per-period totals against the driver's cumulative counters (iw) over the same 12 periods: bytes within 0.006 %, frames within 3",
+      "logs": ["qualify-result.json", "qualify-emosa.log", "qualify-driver.log", "qualify-marks.log", "qualify-analyse.py"]
+    }
+  ],
+  "not_sent": "No EasyMesh metric is sent from these yet: RCPI needs the noise floor, traffic statistics need retries and errors, AP metrics need channel utilization (a radio model such as wmediumd)"
+}

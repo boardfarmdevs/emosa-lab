@@ -1,0 +1,29 @@
+{
+ "window": [
+  1790315412.813,
+  1790315532.813
+ ],
+ "periods": 12,
+ "iw_sample_offsets_s": [
+  0.01,
+  -0.2
+ ],
+ "emosa": {
+  "tx_bytes": 4386546,
+  "rx_bytes": 4434684,
+  "tx_frames": 3007,
+  "rx_frames": 3008
+ },
+ "driver": {
+  "tx_bytes": 4386304,
+  "rx_bytes": 4434420,
+  "tx_frames": 3004,
+  "rx_frames": 3006
+ },
+ "difference_percent": {
+  "tx_bytes": 0.006,
+  "rx_bytes": 0.006,
+  "tx_frames": 0.1,
+  "rx_frames": 0.067
+ }
+}

@@ -349,6 +349,8 @@ class ExchangeResult:
     duplicate: bool
     ruid: bytes
     candidate: ExistingBssCandidate = field(repr=False)
+    # multi_bss exchanges: the other BSSes of the set, ((role, candidate), ...)
+    additional: tuple = field(default=(), repr=False)
 
 
 class WscExchange(_Lifetime):
@@ -372,6 +374,8 @@ class WscExchange(_Lifetime):
         timeout=5,
         max_transmissions=3,
         message_set=EASYMESH_61,
+        multi_bss=False,
+        m2_session="distinct",
     ):
         # Read-only discovery/capture inspection does not load WSC crypto.
         from emosa.wsc_messages import M1Transcript
@@ -385,6 +389,14 @@ class WscExchange(_Lifetime):
         self.binding, self.basic, self.mids = binding, basic, mids
         self.profile2, self.advanced = profile2, advanced
         self.message_set = check_message_set(message_set)
+        # multi_bss: the radio maps every BSS of one M2 set (up to basic.max_bss);
+        # otherwise exactly one existing fronthaul BSS.
+        self.multi_bss = multi_bss is True
+        # "distinct": one registrar nonce per M2 (default); "shared": one registrar
+        # session over the whole M2 set, see M1Transcript.authenticate_m2_envelopes.
+        if m2_session not in ("distinct", "shared"):
+            _invalid("unknown M2 session policy")
+        self.shared_m2_session = m2_session == "shared"
         self.capabilities = (_tlv(basic),) + (
             () if self.message_set == R1 else (_tlv(profile2), _tlv(advanced))
         )
@@ -393,12 +405,14 @@ class WscExchange(_Lifetime):
         self.m1_sha256 = hashlib.sha256(self._transcript.message).hexdigest()
         self._digest = None
         self._candidate = None
+        self._additional = ()
         self._configuration = None
 
     def close(self):
         super().close()
         # Drop references; Python cannot promise cryptographic memory erasure.
         self._transcript = self._candidate = self._digest = self._configuration = None
+        self._additional = ()
 
     def request(self):
         self._transmit()
@@ -423,7 +437,13 @@ class WscExchange(_Lifetime):
             _invalid("M2 Radio Identifier differs from the initiating radio")
         messages = tuple(t.value for t in message.tlvs if t.kind == 0x11)
         try:
-            if any(t.kind in CONFIGURATION_COMPANIONS for t in message.tlvs):
+            # An AP MLD Configuration listing zero AP MLDs (EasyMesh 6.x §17.2.96,
+            # first octet = number of AP MLDs) configures nothing on a non-MLD
+            # radio; any other companion configuration is never silently dropped.
+            if any(
+                t.kind in CONFIGURATION_COMPANIONS and not (t.kind == 0xE0 and t.value == b"\0")
+                for t in message.tlvs
+            ):
                 raise EmosaError(
                     Reason.UNSUPPORTED_OPERATION,
                     "complete M2 request has unsupported configuration TLVs",
@@ -443,9 +463,18 @@ class WscExchange(_Lifetime):
             return ExchangeResult(True, self.basic.ruid, self._candidate)
         try:
             radio = decode_radio_payloads(
-                self._transcript, messages, max_bss=min(self.basic.max_bss, MAX_M2_PAYLOADS)
+                self._transcript,
+                messages,
+                max_bss=min(self.basic.max_bss, MAX_M2_PAYLOADS),
+                shared_session=self.shared_m2_session,
             )
-            candidate = radio.existing_fronthaul_candidate()
+            if self.multi_bss:
+                pairs = radio.radio_candidates()
+                primary = next(i for i, (role, _) in enumerate(pairs) if role == "fronthaul")
+                candidate = pairs[primary][1]
+                additional = pairs[:primary] + pairs[primary + 1 :]
+            else:
+                candidate, additional = radio.existing_fronthaul_candidate(), ()
         except EmosaError:
             # An unsuccessful parameter-configuration phase requires discovery
             # restart (IEEE 10.1.2), never reuse this failed transcript.
@@ -458,8 +487,8 @@ class WscExchange(_Lifetime):
             if radio != self._configuration:
                 _invalid("conflicting M2 after a complete request was already accepted")
             self._digest = digest
-            return ExchangeResult(True, self.basic.ruid, self._candidate)
-        self._digest, self._candidate = digest, candidate
+            return ExchangeResult(True, self.basic.ruid, self._candidate, self._additional)
+        self._digest, self._candidate, self._additional = digest, candidate, additional
         self._configuration = radio
         self.state = "received"
-        return ExchangeResult(False, self.basic.ruid, candidate)
+        return ExchangeResult(False, self.basic.ruid, candidate, additional)

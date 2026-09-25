@@ -7,8 +7,8 @@ import pytest
 
 from emosa import easymesh_payloads as em
 from emosa.errors import EmosaError, Reason
-from emosa.evaluation.cli import main
-from emosa.evaluation.payloads import describe, inspect_value, read_value
+from emosa_lab.evaluation.cli import main
+from emosa_lab.evaluation.payloads import describe, inspect_value, read_value
 
 pytestmark = pytest.mark.unit
 FIXTURE = Path(__file__).parent / "fixtures/protocol/easymesh"

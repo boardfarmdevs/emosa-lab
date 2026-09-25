@@ -3,9 +3,9 @@ from dataclasses import replace
 import pytest
 
 from emosa.errors import EmosaError
-from emosa.simulation.wire_reports import AGENT, CONTROLLER, fixtures, query_frames
 from emosa.wire.cmdu import MidSequence, Reassembler, Tlv, fragment_message
 from emosa.wire.coordinator import ReportCoordinator, ReportSource
+from emosa_lab.simulation.wire_reports import AGENT, CONTROLLER, fixtures, query_frames
 
 pytestmark = pytest.mark.unit
 
@@ -244,7 +244,7 @@ def test_report_source_is_per_instance_and_event_retention_is_bounded():
 
 def test_source_changes_while_sending_do_not_leak_a_second_fragment():
     from emosa.easymesh_payloads import AssociatedClient, AssociatedClients, BssClients
-    from emosa.simulation.wire_reports import BSSID
+    from emosa_lab.simulation.wire_reports import BSSID
 
     rig = Rig()
     clients = tuple(

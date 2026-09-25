@@ -4,7 +4,6 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from test_wsc_messages import device, pair, raw, second_m2
 
 from emosa import wsc_messages
 from emosa.easymesh_payloads import (
@@ -23,8 +22,9 @@ from emosa.wire.autoconfiguration import (
     parse_search,
 )
 from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, fragment_message
-from emosa.wire.inspection import describe, inspect_capture, packets
 from emosa.wsc import KeyPair
+from emosa_lab.wire.inspection import describe, inspect_capture, packets
+from test_wsc_messages import device, pair, raw, second_m2
 
 pytestmark = pytest.mark.unit
 LOCAL = device().al_mac
@@ -314,6 +314,19 @@ def test_companion_configuration_is_never_silently_dropped(fixed_entropy, kind):
         receive(session, replace(msg, tlvs=msg.tlvs + (Tlv(kind, b""),)))
     assert error.value.code == Reason.UNSUPPORTED_OPERATION
     assert session.state == "closed" and session._candidate is None
+
+
+def test_an_ap_mld_configuration_with_zero_mlds_configures_nothing(fixed_entropy):
+    session = exchange()
+    session.request()
+    msg = m2()
+    result = receive(session, replace(msg, tlvs=msg.tlvs + (Tlv(0xE0, b"\0"),)))
+    assert result.candidate.ssid and not result.duplicate
+    other = exchange()
+    other.request()
+    with pytest.raises(EmosaError) as error:
+        receive(other, replace(msg, tlvs=msg.tlvs + (Tlv(0xE0, b"\1" + bytes(20)),)))
+    assert error.value.code == Reason.UNSUPPORTED_OPERATION
 
 
 @pytest.mark.parametrize("case", ["auth", "teardown", "multiple", "m8", "empty"])

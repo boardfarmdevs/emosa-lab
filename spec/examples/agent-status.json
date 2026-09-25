@@ -1,0 +1,107 @@
+{
+  "agent_al": "02:00:a2:1c:ff:56",
+  "controller_al": "02:00:00:e0:00:01",
+  "operations": [
+    {
+      "application_evidence": {
+        "fresh": true,
+        "generation": 2,
+        "predicate_satisfied": true,
+        "provenance": "opensync-owm:Wifi_VIF_State",
+        "received_at": "2026-09-24T22:06:10.518Z",
+        "revision": 9,
+        "source": "ovsdb"
+      },
+      "attempts": 1,
+      "operation_id": "21a3747d-1f5d-40e5-9987-8f1a973b5650",
+      "reason": null,
+      "ssid": "emosa-mesh",
+      "state": "OBSERVED_APPLIED"
+    },
+    {
+      "application_evidence": {
+        "fresh": true,
+        "generation": 3,
+        "observed_noop": true,
+        "predicate_satisfied": true,
+        "provenance": "opensync-owm:Wifi_VIF_State",
+        "received_at": "2026-09-24T22:06:34.586Z",
+        "revision": 11,
+        "source": "ovsdb"
+      },
+      "attempts": 0,
+      "operation_id": "f1563de4-cc3f-42a3-91b6-61cb4618503c",
+      "reason": null,
+      "ssid": "emosa-mesh",
+      "state": "OBSERVED_APPLIED"
+    }
+  ],
+  "pod": {
+    "backhaul": {
+      "band": "5G",
+      "channel": 36,
+      "mac": "02:00:00:00:15:00",
+      "parent": "02:00:00:00:1a:00",
+      "station": "bhaul-sta-50"
+    },
+    "bsses": [
+      {
+        "bssid": "82:00:00:00:14:00",
+        "role": "fronthaul",
+        "ssid": "emosa-mesh"
+      }
+    ],
+    "bssid": "82:00:00:00:14:00",
+    "channel": 6,
+    "firmware": "6.6.1.0-0-g1dad64-mods-mvx-local",
+    "node_id": "MVXPOD023674CB574D",
+    "ovsdb_generation": 3,
+    "ovsdb_revision": 12,
+    "radio": "phy20",
+    "ruid": "02:00:00:00:14:00",
+    "serial": "MVXPOD023674CB574D",
+    "ssid": "emosa-mesh",
+    "stations": [
+      "02:00:00:00:18:00"
+    ]
+  },
+  "pod_id": "MVXPOD023674CB574D",
+  "profile": "opensync-lab-hwsim-6.6.1-v1",
+  "report_source_available": true,
+  "session": {
+    "counts": {
+      "ap_capability_report_sent": 1,
+      "channel_waiting_for_observation": 2,
+      "client_capability_unavailable_report": 1,
+      "client_join_notification": 1,
+      "clients_reannounced": 1,
+      "early_then_m1_sent": 1,
+      "neighbor_measurement_unavailable": 9,
+      "observed_topology_notification": 1,
+      "policy_receipt_ack_sent": 1,
+      "rejected_INVALID_INPUT": 54,
+      "search_sent": 1,
+      "wsc_operation": 1
+    },
+    "state": "provisioning"
+  },
+  "updated": 1790288166.875687,
+  "uplink": {
+    "held": null,
+    "in_use": "bhaul-sta-50",
+    "operation": {
+      "instance": "6a372e0b8f340a0b",
+      "operation_id": "f6c48df0-7d46-4d1f-9516-31988ddde46a",
+      "reason": null,
+      "ssid": "emosa-mesh-bh",
+      "state": "OBSERVED_APPLIED"
+    },
+    "option": 1,
+    "parent": "02:00:00:00:1a:00",
+    "station": "bhaul-sta-50",
+    "uplink": "multi-ap",
+    "waiting": null
+  },
+  "worker_pid": 8010,
+  "writes": 2
+}

@@ -1,0 +1,27 @@
+{
+  "admit": "*",
+  "advertise": "10.101.0.1",
+  "config_dir": "/etc/emosa",
+  "controller_al": "02:00:00:e0:00:01",
+  "listen": "ptcp:6650:127.0.0.1",
+  "m2_session": "distinct",
+  "message_set": "easymesh-6.1",
+  "multi_bss": false,
+  "pods": {
+    "MVXPOD023674CB574D": {
+      "uplink": {
+        "bssid": "02:00:00:00:09:00",
+        "credentials": "config",
+        "mode": "multi-ap",
+        "secret_ref": "backhaul",
+        "ssid": "emosa-mesh-bh"
+      }
+    }
+  },
+  "ports": [
+    6651,
+    6690
+  ],
+  "profile": "opensync-lab-hwsim-6.6.1-v1",
+  "state_root": "/var/lib/emosa"
+}

@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from emosa.simulation.station_telemetry import NODE_ID, TOPIC, encode_stations
-from emosa.telemetry.stations import PROTO_SHA256, Report, StationSource
+from emosa_lab.simulation.station_telemetry import NODE_ID, TOPIC, encode_stations
+from emosa_lab.telemetry.stations import PROTO_SHA256, Report, StationSource
 
 pytestmark = pytest.mark.unit
 MAC = "02:00:00:00:02:00"
@@ -27,9 +27,7 @@ def source():
 
 def test_pinned_descriptor_and_actual_association_offset_not_reporting_duration():
     assert (
-        hashlib.sha256(
-            Path("src/emosa/telemetry/data/opensync_stats.proto").read_bytes()
-        ).hexdigest()
+        hashlib.sha256(Path("src/emosa/data/opensync_stats.proto").read_bytes()).hexdigest()
         == PROTO_SHA256
     )
     value = Report.FromString(payload())

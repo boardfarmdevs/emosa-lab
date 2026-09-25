@@ -6,7 +6,7 @@ import pytest
 from emosa.agents import AgentDirectory
 from emosa.config import load, validate
 from emosa.errors import EmosaError
-from emosa.simulation.connecting_pod import configuration
+from emosa_lab.simulation.connecting_pod import configuration
 
 pytestmark = pytest.mark.unit
 
@@ -77,7 +77,7 @@ def test_agents_local_request_contract():
 
 @pytest.mark.parametrize("fault", ["no-trust", "no-binding", "remote-write", "duplicate-pin"])
 def test_tls_service_requires_local_unique_explicit_trust(tmp_path, fault):
-    from emosa.simulation.tls import create_pki, trust_config
+    from emosa_lab.simulation.tls import create_pki, trust_config
 
     pki = create_pki(tmp_path / "secrets", 1)
     config = configuration(tmp_path, "unix:/private/one.sock")

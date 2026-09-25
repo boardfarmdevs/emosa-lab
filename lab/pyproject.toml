@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling==1.32.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "emosa-lab"
+version = "0.1.0"
+description = "EMOSA lab: simulators, evaluation and experiment tooling around the EMOSA adapter"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "emosa",
+    "cryptography==50.0.1",
+    "jsonschema==4.26.0",
+    "ovs==4.0.0",
+    "paho-mqtt==2.1.0",
+    "protobuf==6.33.5",
+]
+
+[project.scripts]
+emosa = "emosa_lab.cli:main"
+em-controller = "emosa_lab.cli:controller_main"
+emosa-lab = "emosa_lab.evaluation.cli:main"
+
+[tool.uv.sources]
+emosa = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/emosa_lab"]

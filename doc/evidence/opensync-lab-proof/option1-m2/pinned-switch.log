@@ -1,0 +1,16 @@
+policy: fronthaul 'emosa-mesh' for gateway 02:00:00:e0:00:01 and 02:2d:b0:6c:a5:ea 02:72:f9:7f:07:85 02:c2:b8:31:3a:f8+bh
+[emosa 04:22:29] option1: pod-2 (MVXPOD02D7777EF0D9) uplink multi-ap to 02:00:00:00:11:00, credentials from the controller's M2 set
+04:22:29 sta: Not connected. ssid emosa-mesh-bh  agent: CONFIG_COMMITTED None gre 02:00:00:00:11:00 02:00:00:00:01:04 None - provisioning
+04:22:32 sta: Not connected. ssid emosa-mesh-bh  agent: CONFIG_COMMITTED None gre 02:00:00:00:11:00 02:00:00:00:01:04 switch in progress - provisioning
+04:22:42 sta: Connected to 02:00:00:00:11:00 (on bhaul-sta-50) ssid emosa-mesh-bh  agent: CONFIG_COMMITTED None gre 02:00:00:00:11:00 02:00:00:00:01:04 pod not bound - provisioning
+04:22:47 sta: Connected to 02:00:00:00:11:00 (on bhaul-sta-50) ssid emosa-mesh-bh  agent: CONFIG_COMMITTED None gre 02:00:00:00:11:00 02:00:00:00:01:04 pod not bound - recovering
+04:22:52 sta: Connected to 02:00:00:00:11:00 (on bhaul-sta-50) ssid emosa-mesh-bh  agent: OBSERVED_APPLIED None multi-ap 02:00:00:00:11:00 02:00:00:00:11:00 None - provisioning
+04:23:32 sta: Not connected.  agent: OBSERVED_APPLIED None multi-ap 02:00:00:00:11:00 02:00:00:00:11:00 None - provisioning
+04:23:37 sta: Not connected.  agent: OBSERVED_APPLIED None multi-ap 02:00:00:00:11:00 02:00:00:00:11:00 pod not bound - recovering
+04:23:49 sta: Connected to 02:00:00:00:01:04 (on bhaul-sta-50)  agent: OBSERVED_APPLIED None multi-ap 02:00:00:00:11:00 02:00:00:00:11:00 pod not bound - recovering
+04:23:59 sta: Connected to 02:00:00:00:01:04 (on bhaul-sta-50) ssid emosa-mesh-bh  agent: OBSERVED_APPLIED None gre 02:00:00:00:11:00 02:00:00:00:01:04 fronthaul not settled - provisioning
+04:24:02 sta: Not connected. ssid emosa-mesh-bh  agent: CONFIG_COMMITTED None gre 02:00:00:00:11:00 02:00:00:00:01:04 switch in progress - provisioning
+04:24:14 sta: Connected to 02:00:00:00:11:00 (on bhaul-sta-50) ssid emosa-mesh-bh  agent: CONFIG_COMMITTED None gre 02:00:00:00:11:00 02:00:00:00:01:04 pod not bound - provisioning
+04:24:17 sta: Connected to 02:00:00:00:11:00 (on bhaul-sta-50) ssid emosa-mesh-bh  agent: CONFIG_COMMITTED None gre 02:00:00:00:11:00 02:00:00:00:01:04 pod not bound - recovering
+04:24:22 sta: Connected to 02:00:00:00:11:00 (on bhaul-sta-50) ssid emosa-mesh-bh  agent: OBSERVED_APPLIED None multi-ap 02:00:00:00:11:00 02:00:00:00:11:00 None - provisioning
+run-done

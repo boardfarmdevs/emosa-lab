@@ -1,0 +1,13 @@
+#!/bin/bash
+# emosa-agent-link POD: the agent's own 1905.1 interface, a macvlan on the
+# EasyMesh LAN trunk ($EMOSA_TRUNK, /etc/default/emosa) whose MAC is the agent's
+# AL MAC. Interface and AL MAC come from /etc/emosa/POD.json.
+set -euo pipefail
+trunk=${EMOSA_TRUNK:-emlan}
+read -r ifname al < <(/opt/emosa-adapter/venv/bin/python -c \
+    'import json,sys; c=json.load(open(sys.argv[1])); print(c["interface"], c["al_mac"])' "/etc/emosa/$1.json")
+ip link show "$trunk" >/dev/null 2>&1 || { echo "trunk interface $trunk not found (EMOSA_TRUNK)" >&2; exit 1; }
+ip link show "$ifname" >/dev/null 2>&1 || ip link add "$ifname" link "$trunk" type macvlan mode bridge
+ip link set "$ifname" address "$al"
+ip link set "$trunk" up
+ip link set "$ifname" up

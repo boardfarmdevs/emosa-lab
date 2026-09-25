@@ -10,8 +10,8 @@ import pytest
 from emosa.errors import EmosaError
 from emosa.opensync.schema import Schema
 from emosa.opensync.session import OvsSession
-from emosa.qualification import collect
-from emosa.simulation.database import SimDatabase
+from emosa_lab.qualification import collect
+from emosa_lab.simulation.database import SimDatabase
 
 
 def config_for(endpoint, secret_directory, trust=None):
@@ -155,7 +155,7 @@ def test_mutual_tls_collection_and_peer_pin(tmp_path):
 
 @pytest.mark.unit
 def test_qualification_rejects_plaintext_remote_and_unsafe_secrets(tmp_path):
-    from emosa.qualification import private_reference, qualification_session
+    from emosa_lab.qualification import private_reference, qualification_session
 
     with pytest.raises(EmosaError):
         qualification_session(
