@@ -284,11 +284,15 @@ def inventory(device, radio, chipset=b"mac80211_hwsim"):
     )
 
 
-def topology(*, agent_al, controller_al, radio, channel, bsses, ages, uplink=None):
+def topology(
+    *, agent_al, controller_al, radio, channel, bsses, ages, uplink=None, associated_at=None
+):
     """Topology Response contents: the agent, its BSSes and their stations.
 
     ``bsses`` is the subset of the radio's BSSes the agent represents; ``ages``
-    maps a station MAC to seconds since association (as far as EMOSA knows).
+    maps a station MAC to seconds since association (as far as EMOSA knows);
+    ``associated_at`` (station MAC -> monotonic time), when given, lets each
+    Topology Response report the age as of the response.
     The agent's 1905 interface is its own Ethernet port (declared representation).
     ``uplink`` (a :class:`BackhaulView`) adds the pod's EasyMesh backhaul STA as a
     non-AP STA interface on its parent BSSID, bridged with the BSSes; the 1905
@@ -341,4 +345,5 @@ def topology(*, agent_al, controller_al, radio, channel, bsses, ages, uplink=Non
         l2_neighbor_records_absent=True,
         mld_backhaul_vbss_tid_policy_absent=True,
         backhaul_stations=() if uplink is None else ((uplink.ruid, uplink.station.mac),),
+        associated_at=tuple(sorted((associated_at or {}).items())),
     )

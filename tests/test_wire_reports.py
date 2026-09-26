@@ -451,3 +451,29 @@ def test_offline_learning_command_and_native_diagnostic_boundaries(tmp_path):
     assert "0x03" in topo["invalid_or_unsupported_value_tlvs"]
     assert "0x04" in topo["missing_required_tlvs"]
     assert native["operations_created"] == 0 and not native["onboarding_proven"]
+
+
+def test_a_topology_response_reports_each_stations_age_as_it_is_sent():
+    # RDK's controller drops a link metric sample older than the association age
+    # it last heard: an age frozen at association would drop every later sample.
+    _, _, facts = fixtures()
+    sta = bytes.fromhex("0200000000c1")
+    facts = replace(
+        facts,
+        clients=AssociatedClients((BssClients(BSSID, (AssociatedClient(sta, 0),)),)),
+        associated_at=((sta, -0.25),),
+    )
+    message = assemble(reply(facts, clock=lambda: 0.5).frames)
+    (value,) = [t.value for t in message.tlvs if t.kind == 0x84]
+    assert decode_value(0x84, value) == AssociatedClients(
+        (BssClients(BSSID, (AssociatedClient(sta, 0),)),)
+    )
+    later = ReportStamp("synthetic-pod-1/revision-1/inputs-1", 41, 43)
+    message = assemble(
+        topology_response(
+            assemble(query_frames()), fixtures()[0], facts, later,
+            ingress="fixture", generation=1, received_at=41.5, clock=lambda: 41.75,
+        ).frames
+    )  # fmt: skip
+    (value,) = [t.value for t in message.tlvs if t.kind == 0x84]
+    assert decode_value(0x84, value).bsses[0].clients[0].association_seconds == 42

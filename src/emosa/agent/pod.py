@@ -231,6 +231,7 @@ class PodReportSource:
                 bsses=bsses,
                 ages={m: now - t for m, t in self.first_seen.items()},
                 uplink=uplink,
+                associated_at=self.first_seen,
             )
             facts = (
                 raw["generation"],
@@ -267,8 +268,9 @@ class PodReportSource:
                 "ovsdb_generation": raw["generation"],
                 "ovsdb_revision": raw["revision"],
             }
-            # Station ages advance every refresh, but facts may change only with
-            # a new source revision: ages are taken when membership changes.
+            # Facts may change only with a new source revision: the published ages
+            # are taken when membership changes, and a Topology Response ages them
+            # from the association times as it is sent.
             if self._clients is not None and self._clients[0] == self.revision:
                 report = replace(report, clients=self._clients[1])
             self._clients = (self.revision, report.clients)
