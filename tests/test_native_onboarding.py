@@ -708,3 +708,26 @@ def test_clients_are_announced_again_once_the_controller_knows_the_bss(rig):
         session.close()
 
     asyncio.run(scenario())
+
+
+def test_other_agents_frames_neither_spend_the_rate_budget_nor_fail_admission(rig):
+    # On a shared LAN (the RDK lab's brlan0) every agent's 1905 multicast and
+    # unicast reaches this agent too. Before its M2 arrives, a burst of those must
+    # not use up the input budget, nor end the admission as a failed one.
+    async def scenario():
+        _, engine, _, _ = rig
+        session, _, _ = lifecycle(rig)
+        await session.tick()
+        assert await receive(session, response()) == "early_then_m1_sent"
+        other = bytes.fromhex("020000000820")
+        for mid in range(50):  # the clock stands still: no budget is refilled
+            multicast = fragment_message(bytes.fromhex("0180c2000013"), other, 1, mid, ())[0]
+            unicast = fragment_message(BINDING.local_al, other, 2, 100 + mid, ())[0]
+            assert await receive(session, multicast) == "foreign_frame"
+            assert await receive(session, unicast) == "foreign_frame"
+        assert session.state == "awaiting_m2"
+        assert await receive(session, frames()[0]) == "wsc_operation"
+        assert len(engine.store.operations()) == 1
+        session.close()
+
+    asyncio.run(scenario())

@@ -3,12 +3,28 @@
 The initial radio profile supports only class 81/channel 6. Compatible requests
 need no actuator change; their acceptance still requires durable preferences and
 fresh observed operating parameters. This is not a generic channel actuator.
+
+Every well-formed Channel Selection Request is answered within its deadline, as
+§8.2 requires (a controller that gets no response retries and gives the radio
+up, as RDK's does). Preferences for operating classes the radio does not
+advertise do not concern it and are recorded as ignored. A request EMOSA cannot
+carry out on the pod (it forbids the channel the pod operates on, or limits the
+power below what the pod transmits) is declined with response code 0x02: it
+violates the preferences and capabilities last reported. A decline keeps the
+stored policy. The Operating Channel Report of the actual operation follows
+either answer. Malformed requests get no answer.
+
+A Channel Scan Request (§8.4) is acknowledged, and answered with a Channel Scan
+Report whose result for every requested channel of the radio is "scan not
+supported" (status 0x01): EMOSA does not scan on the pod's radio. A controller
+that gets no Ack retries (RDK's every few seconds).
 """
 
 import json
 import sqlite3
 import time
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 
 from emosa.errors import EmosaError, Reason
 from emosa.wire.autoconfiguration import SECURITY_ENVELOPES
@@ -82,7 +98,7 @@ def selected_policy(tlvs, radio):
     outside this controller/profile contract. It must not replace a usable policy
     and then silently keep operating on a newly forbidden channel.
     """
-    preferences, power = None, None
+    preferences, power, ignored, decline = None, None, [], None
     for tlv in tlvs:
         if tlv.kind == 0x8B:
             if preferences is not None or len(tlv.value) < 7 or tlv.value[:6] != radio.ruid:
@@ -100,25 +116,22 @@ def selected_policy(tlvs, radio):
                 channels, value = tuple(body[2 : 2 + n]), body[2 + n]
                 body = body[3 + n :]
                 score, reason = value >> 4, value & 15
-                if (
-                    opclass != 81
-                    or len(set(channels)) != len(channels)
-                    or any(c not in range(1, 14) for c in channels)
-                ):
-                    raise EmosaError(
-                        Reason.UNSUPPORTED_OPERATION,
-                        "preferences outside advertised operating class",
-                    )
                 if score == 15 or reason > 13 or reason in (6, 7, 8, 9, 10):
                     invalid("reserved preference or agent-only reason in controller request")
+                if opclass != 81:
+                    # Not an operating class the radio advertises (e.g. RDK's 40 MHz
+                    # classes 83/84): nothing in it applies to this radio.
+                    ignored.append({"class": opclass, "channels": list(channels)})
+                    continue
+                if len(set(channels)) != len(channels) or any(
+                    c not in range(1, 14) for c in channels
+                ):
+                    invalid("channels outside the operating class")
                 applies = set(channels or range(1, 14))
                 if applies & specified:
                     invalid("overlapping controller channel preferences")
                 if 6 in applies and score == 0:
-                    raise EmosaError(
-                        Reason.UNSUPPORTED_OPERATION,
-                        "controller forbids the sole advertised operable channel",
-                    )
+                    decline = "controller forbids the sole advertised operable channel"
                 specified |= applies
                 preferences.append(
                     {
@@ -135,14 +148,40 @@ def selected_policy(tlvs, radio):
                 invalid("duplicate, truncated or foreign power limit")
             power = int.from_bytes(tlv.value[6:], "big", signed=True)
             if power < radio.tx_power_dbm:
-                raise EmosaError(
-                    Reason.UNSUPPORTED_OPERATION, "power actuation requires a qualified mapping"
-                )
+                decline = decline or "power actuation requires a qualified mapping"
         else:
             raise EmosaError(
                 Reason.UNSUPPORTED_OPERATION, "unimplemented channel configuration companion"
             )
-    return {"preferences": preferences or [], "power_limit_dbm": power}
+    return {
+        "preferences": preferences or [],
+        "power_limit_dbm": power,
+        "ignored": ignored,
+        "decline": decline,
+    }
+
+
+def decode_scan_request(tlvs):
+    """The one Channel Scan Request TLV: [(RUID, [(operating class, [channels])])]."""
+    found = [t for t in tlvs if t.kind == 0xA6]
+    if len(found) != 1 or len(found[0].value) < 2:
+        invalid("one Channel Scan Request TLV required")
+    data, radios, offset = found[0].value, [], 2
+    for _ in range(data[1]):
+        if len(data) < offset + 7:
+            invalid("truncated channel scan radio")
+        ruid, count, offset = data[offset : offset + 6], data[offset + 6], offset + 7
+        classes = []
+        for _ in range(count):
+            if len(data) < offset + 2 or len(data) < offset + 2 + data[offset + 1]:
+                invalid("truncated channel scan operating class")
+            opclass, n = data[offset], data[offset + 1]
+            classes.append((opclass, list(data[offset + 2 : offset + 2 + n])))
+            offset += 2 + n
+        radios.append((ruid, classes))
+    if offset != len(data):
+        invalid("trailing channel scan request octets")
+    return radios
 
 
 @dataclass
@@ -158,10 +197,21 @@ class PendingOperating:
 class ChannelCoordinator:
     """One bound radio, bounded retry state and fresh-read report transmission."""
 
-    def __init__(self, source, send_frame, store, mids, *, clock=time.monotonic, reset_policy=True):
+    def __init__(
+        self,
+        source,
+        send_frame,
+        store,
+        mids,
+        *,
+        clock=time.monotonic,
+        reset_policy=True,
+        utc=lambda: datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+    ):
         self.source, self.binding, self.send_frame = source, source.binding, send_frame
-        self.store, self.mids, self.clock = store, mids, clock
+        self.store, self.mids, self.clock, self.utc = store, mids, clock, utc
         self.pending = None
+        self.last_decline = None
         self.last_operating = None
         self.queries = {}
         self.waiting = {}
@@ -225,6 +275,8 @@ class ChannelCoordinator:
         report.send(self.send_frame, self.stamp, clock=self.clock)
 
     def handle(self, message, received_at):
+        if message.message_type == 0x801B:
+            return self.scan(message, received_at)
         if message.message_type not in (0x8004, 0x8006):
             return None
         self.tick()
@@ -261,6 +313,17 @@ class ChannelCoordinator:
         snapshot.stamp.check(self.stamp(), self.clock())
         if self.clock() >= received_at + 1:
             raise EmosaError(Reason.NOT_READY, "channel response deadline expired")
+        if policy["decline"]:
+            # 0x02: the request violates the most recently reported preferences.
+            self.last_decline = {"mid": message.mid, "reason": policy["decline"]}
+            self.send(
+                0x8007, message.mid, (Tlv(0x8E, radio.ruid + b"\x02"),), snapshot, received_at + 1
+            )
+            self.queries[key] = self.clock() + 5
+            self.record("channel_selection_declined")
+            self.notify(snapshot, radio)
+            return "channel_selection_declined"
+        del policy["decline"]
         try:
             self.store.save(
                 {
@@ -280,6 +343,32 @@ class ChannelCoordinator:
         self.record("channel_selection_accepted")
         self.notify(snapshot, radio)
         return "channel_selection_accepted"
+
+    def scan(self, message, received_at):
+        """Channel Scan Request: Ack, then a report of "scan not supported" results."""
+        self.tick()
+        snapshot = self.snapshot()
+        key = (message.message_type, message.mid)
+        if key in self.queries:
+            return self.record("duplicate_channel_request")
+        if self.clock() >= received_at + 1:
+            raise EmosaError(Reason.NOT_READY, "channel scan Ack deadline expired")
+        radio = self.radio(snapshot)
+        requested = decode_scan_request(message.tlvs)
+        stamp = self.utc().encode()
+        results = []
+        for ruid, classes in requested:
+            if ruid != radio.ruid:
+                continue  # not a radio of this agent
+            for opclass, channels in classes or [(81, [radio.channel])]:
+                for channel in channels or ([radio.channel] if opclass == 81 else []):
+                    # status 0x01: scan not supported on this class and channel
+                    results.append(Tlv(0xA7, ruid + bytes((opclass, channel, 0x01))))
+        self.send(0x8000, message.mid, (), snapshot, received_at + 1)
+        self.queries[key] = self.clock() + 5
+        report = (Tlv(0xA8, bytes([len(stamp)]) + stamp), *results)
+        self.send(0x801C, self.mids.next(), report, snapshot, self.clock() + 1)
+        return self.record("channel_scan_not_supported_reported")
 
     def notify(self, snapshot, radio):
         now = self.clock()

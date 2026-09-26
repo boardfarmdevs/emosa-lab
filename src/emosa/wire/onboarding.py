@@ -23,9 +23,12 @@ from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, decode_fra
 from emosa.wire.coordinator import ReportCoordinator
 from emosa.wire.disassociation import DisassociationCoordinator, FinalSession
 from emosa.wire.link_metrics import LinkMetricCoordinator, LinkMetricSource
+from emosa.wire.pod_metrics import PodMetricReporter
 from emosa.wire.provisioning_session import ComponentProvisioningSession
 from emosa.wire.reporting_policy import ReportingPolicyCoordinator
 from emosa.wire.reports import PreparedReport, capability_tlvs
+from emosa.wire.steering import SteeringCoordinator
+from emosa.wire.unassociated import UnassociatedCoordinator
 
 R3_CONTROLLER_FIELDS = (
     "controller_capability_absent",
@@ -79,6 +82,10 @@ class OnboardingSession:
         ap_metric_source=None,
         reset_channel_policy=True,
         message_set=EASYMESH_61,
+        steering_executor=None,
+        pod_metrics=None,
+        probes=None,
+        watch=None,
     ):
         self.message_set = check_message_set(message_set)
         if type(inventory) is not DeviceInventory:
@@ -126,6 +133,14 @@ class OnboardingSession:
             else APMetricSource(source, clock=clock)
         )
         self.ap_metrics = None
+        # AP metrics from the pod's statistics (spec §3.8): {"stats", "esp_be", "freshness"}
+        self.pod_metrics = pod_metrics
+        self.probes = probes  # the pod's probe requests (PodStats), with telemetry
+        self.unassociated = None
+        self.watch = watch  # the pod's probe watch (ProbeWatch.ask), with telemetry
+        # Client steering mandates go to the pod through this (emosa.agent.steering).
+        self.steering_executor = steering_executor
+        self.steering = None
 
     def _record(self, event):
         self.counts[event] = self.counts.get(event, 0) + 1
@@ -261,14 +276,21 @@ class OnboardingSession:
         if self.state in ("closed", "source_lost", "failed", "incompatible"):
             return self._record("inactive_input")
         now = self.clock()
+        try:
+            fragment = decode_frame(frame)
+            self.binding.check(fragment, ingress=ingress, generation=generation)
+        except EmosaError:
+            # Not from this agent's controller to this agent (e.g. the other agents'
+            # 1905 traffic on a shared LAN), or malformed: dropped without spending
+            # the rate budget, and without touching the session (an admission in
+            # progress must not fail because of someone else's frame).
+            return self._record("foreign_frame")
         self.tokens = min(32, self.tokens + max(0, now - self.token_time) * 16)
         self.token_time = now
         if self.tokens < 1:
             return self._record("rate_limited")
         self.tokens -= 1
         try:
-            fragment = decode_frame(frame)
-            self.binding.check(fragment, ingress=ingress, generation=generation)
             snapshot = self._snapshot()
             if snapshot is None:
                 return self._record("source_unavailable")
@@ -320,18 +342,32 @@ class OnboardingSession:
                 self.link_metrics = LinkMetricCoordinator(
                     self.link_metric_source, self.send_frame, clock=self.clock
                 )
-                self.ap_metrics = APMetricCoordinator(
-                    self.ap_metric_source,
-                    self.send_frame,
-                    self.mids,
-                    admitted=lambda: self.state == "provisioning",
-                    policy=lambda: (
-                        self.reporting_policy.value["policy"]
-                        if self.reporting_policy and self.reporting_policy.value
-                        else {}
-                    ),
-                    clock=self.clock,
+                policy = lambda: (  # noqa: E731
+                    self.reporting_policy.value["policy"]
+                    if self.reporting_policy and self.reporting_policy.value
+                    else {}
                 )
+                if self.pod_metrics is not None:
+                    self.ap_metrics = PodMetricReporter(
+                        self.source,
+                        self.pod_metrics["stats"],
+                        self.send_frame,
+                        self.mids,
+                        admitted=lambda: self.state == "provisioning",
+                        policy=policy,
+                        esp_be=self.pod_metrics["esp_be"],
+                        freshness=self.pod_metrics["freshness"],
+                        clock=self.clock,
+                    )
+                else:
+                    self.ap_metrics = APMetricCoordinator(
+                        self.ap_metric_source,
+                        self.send_frame,
+                        self.mids,
+                        admitted=lambda: self.state == "provisioning",
+                        policy=policy,
+                        clock=self.clock,
+                    )
                 if self.channel_store is not None:
                     self.channels = ChannelCoordinator(
                         self.source,
@@ -340,6 +376,22 @@ class OnboardingSession:
                         self.mids,
                         clock=self.clock,
                         reset_policy=self.reset_channel_policy,
+                    )
+                self.unassociated = UnassociatedCoordinator(
+                    self.source,
+                    self.send_frame,
+                    self.mids,
+                    probes=self.probes,
+                    watch=self.watch,
+                    clock=self.clock,
+                )
+                if self.steering_executor is not None:
+                    self.steering = SteeringCoordinator(
+                        self.source,
+                        self.send_frame,
+                        self.steering_executor,
+                        self.mids,
+                        clock=self.clock,
                     )
                 if self.reporting_policy_store is not None:
                     self.reporting_policy = ReportingPolicyCoordinator(
@@ -398,6 +450,14 @@ class OnboardingSession:
                 result = self.ap_metrics.handle(
                     message, now, ingress=ingress, generation=generation
                 )
+                if result:
+                    return self._record(result)
+            if self.steering and self.state == "provisioning":
+                result = self.steering.handle(message, now)
+                if result:
+                    return self._record(result)
+            if self.unassociated and self.state == "provisioning":
+                result = self.unassociated.handle(message, now)
                 if result:
                     return self._record(result)
             if message.message_type == 0x8001 and self.provisioning:
@@ -509,6 +569,8 @@ class OnboardingSession:
             self.disassociations,
             self.link_metrics,
             self.ap_metrics,
+            self.steering,
+            self.unassociated,
         ):
             if component:
                 component.close()
@@ -533,10 +595,16 @@ class OnboardingSession:
             "full_profile_qualified": False,
             "physical_pod_proven": False,
             "reporting_policy": self.reporting_policy.status() if self.reporting_policy else None,
-            "ap_metrics": {
-                "counts": dict(self.ap_metrics.counts),
-                "measurement_available": self.ap_metric_source.current() is not None,
-            }
+            "steering": self.steering.status() if self.steering else None,
+            "unassociated_metrics": self.unassociated.status() if self.unassociated else None,
+            "ap_metrics": (
+                self.ap_metrics.status()
+                if self.pod_metrics is not None
+                else {
+                    "counts": dict(self.ap_metrics.counts),
+                    "measurement_available": self.ap_metric_source.current() is not None,
+                }
+            )
             if self.ap_metrics
             else None,
             "neighbor_link_metrics": {
@@ -548,6 +616,7 @@ class OnboardingSession:
             "channels": {
                 "counts": dict(self.channels.counts),
                 "operating_ack_pending": self.channels.pending is not None,
+                "last_decline": self.channels.last_decline,
             }
             if self.channels
             else None,

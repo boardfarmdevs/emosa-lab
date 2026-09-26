@@ -7,6 +7,9 @@ conformant when it:
 - accepts and produces the formats in [`schemas/`](../schemas);
 - passes the conformance vectors in [`conformance/`](conformance).
 
+The [component design](design.md) gives the processes, interfaces, thread
+model, state, timing and resource budgets an implementation is built to.
+
 While two implementations run side by side, this document is the contract
 between them. A change to either implementation that changes behaviour
 described here starts with a change here.
@@ -81,14 +84,17 @@ Sent by the agent:
 | `0x0006` | Link Metric Response | in answer to a Link Metric Query, once provisioned |
 | `0x0007` | AP-Autoconfiguration Search | up to 3 times, 1 s apart, when onboarding starts |
 | `0x0009` | AP-Autoconfiguration WSC (M1) | after an admitted Response |
-| `0x8000` | 1905 Ack | acknowledging a Multi-AP Policy Config Request or a Backhaul Steering Request |
+| `0x8000` | 1905 Ack | acknowledging a Multi-AP Policy Config Request, a Channel Scan Request, a Client Steering Request (with an Error Code TLV `0xA3` per station not on the source BSS) or a Backhaul Steering Request |
 | `0x8002` | AP Capability Report | in answer to an AP Capability Query |
 | `0x8005` | Channel Preference Report | in answer to a Channel Preference Query |
-| `0x8007` | Channel Selection Response | in answer to a Channel Selection Request: accepted (code 0), without moving the radio |
+| `0x8007` | Channel Selection Response | in answer to every well-formed Channel Selection Request: accepted (code 0) without moving the radio, or declined (code 2) when the pod cannot do what it asks (§3.4) |
 | `0x8008` | Operating Channel Report | after a Channel Selection Request, while the BSS operates |
 | `0x800A` | Client Capability Report | in answer to a Client Capability Query (declares the capability unavailable) |
-| `0x800C` | AP Metrics Response | in answer to an AP Metrics Query, only with qualified measurements |
+| `0x800C` | AP Metrics Response | in answer to an AP Metrics Query, and unsolicited at the controller's AP metrics reporting interval, from the pod's statistics (§3.8) |
+| `0x8010` | Unassociated STA Link Metrics Response | after the Ack of an Unassociated STA Link Metrics Query: the stations the pod heard recently (§3.9) |
+| `0x8017` | Steering Completed | after the Ack of a steering opportunity: EMOSA steers nothing on its own account (§3.7) |
 | `0x801A` | Backhaul Steering Response | after its Ack: result code `0x01` (failure). EMOSA refuses backhaul steering |
+| `0x801C` | Channel Scan Report | after the Ack of a Channel Scan Request: a Timestamp TLV (`0xA8`) and one Channel Scan Result TLV (`0xA7`) per requested channel of the pod's radio, status `0x01` (scan not supported) (§3.4) |
 | `0x8022` | Client Disassociation Stats | after an observed client departure, only with qualified statistics |
 | `0x8028` | Backhaul STA Capability Report | in answer to a Backhaul STA Capability Query: one Backhaul STA Radio Capabilities TLV (`0xCB`) for the pod's EasyMesh backhaul STA (§8.3), none over GRE |
 | `0x8043` | Early AP Capability Report | with M1, before configuration |
@@ -104,11 +110,14 @@ Received by the agent:
 | `0x000A` | AP-Autoconfiguration Renew | onboarding starts again with a fresh M1 |
 | `0x8000` | 1905 Ack | acknowledgement for the agent's own reports |
 | `0x8001` | AP Capability Query | answered |
-| `0x8003` | Multi-AP Policy Config Request | stored and acknowledged. Nothing is applied to the pod. |
+| `0x8003` | Multi-AP Policy Config Request | stored and acknowledged, also with policy TLVs EMOSA does not interpret (recorded as not applied). Nothing is applied to the pod. |
 | `0x8004` / `0x8006` | Channel Preference Query / Channel Selection Request | answered (§3.4) |
 | `0x8009` | Client Capability Query | answered |
-| `0x800B` | AP Metrics Query | answered only with qualified measurements |
+| `0x800B` | AP Metrics Query | answered from the pod's statistics (§3.8) |
+| `0x800F` | Unassociated STA Link Metrics Query | acknowledged, with an Error Code TLV for every station the pod cannot report (§3.9) |
+| `0x8014` | Client Steering Request | acknowledged; a mandate for one station and one target is carried out by the pod (§3.7) |
 | `0x8019` | Backhaul Steering Request | acknowledged and refused (`0x801A`) |
+| `0x801B` | Channel Scan Request | acknowledged and reported as not supported (§3.4) |
 | `0x8027` | Backhaul STA Capability Query | answered |
 
 Any other message is ignored and counted as `unsupported_message_<type>`.
@@ -132,6 +141,9 @@ Rules:
   new one. Restarts after failures back off by `min(30, 2^failures)` seconds.
 - If nothing arrives from the controller for 130 s, the agent MUST start
   onboarding again.
+- If no M2 arrives within 30 s of M1, the agent MUST start onboarding again. A
+  controller that restarted in between has forgotten the M1, and its other
+  queries keep the silence rule from firing (seen with RDK).
 - Once the agent is `provisioning` and the controller has sent its next
   Topology Query, the agent MUST announce every current client again, once.
   A controller that restarted may otherwise never learn clients that joined
@@ -243,9 +255,24 @@ The 6.6 encoding of WPA2-PSK:
   - the set has more BSSes of a role than the profile has slots.
 - **Shared M2 session.** With `m2_session=shared`, an M2 set from one
   registrar session (one nonce, one public key) is accepted, as RDK sends it.
-- **Channel selection** is accepted (response code 0), but EMOSA does not move
-  the pod's radio. The Operating Channel Report that follows gives the channel
-  the pod actually uses.
+- **Channel selection** is answered within one second. It is accepted
+  (response code 0), without moving the pod's radio, when it allows the channel
+  the pod operates on. Preference groups for operating classes the radio does
+  not advertise are ignored. A request that forbids that channel, or limits the
+  power below what the pod transmits, is declined (code 2: it violates the
+  preferences and capabilities last reported) and does not replace the stored
+  policy; EMOSA has no qualified mapping to move or turn down the radio. The
+  Operating Channel Report that follows either answer gives what the pod
+  actually uses. A controller that gets no answer gives the radio up: RDK's
+  then refuses to steer through it.
+- **Channel scans** are acknowledged and reported as not supported: the
+  Channel Scan Report carries the time of the answer (RFC 3339, UTC) and, for
+  each channel the request names for the pod's radio (or its current channel
+  when the request names none), result status `0x01`. Radios of other agents in
+  the request are left out. An unchanged pod gives EMOSA no scan results it
+  could qualify. RDK's controller sends the request as one step of configuring
+  an agent and keeps the radio scan-pending until the Ack arrives; a steering
+  request in that state leaves the radio unconfigured afterwards.
 
 ### 3.5 Pod profiles
 
@@ -269,8 +296,10 @@ OVSDB carries no station measurements. OpenSync publishes them itself, as
 `qm` connects to the broker in `AWLAN_Node.mqtt_settings` with the pod's device
 certificate, and `owm` produces the reports that `Wifi_Stats_Config` asks for.
 With `telemetry.mode = mqtt` the agent (the telemetry scope):
-- **writes** the broker, the pod's own topic (default `emosa/stats/<serial>`)
-  and one raw client report for the radio type, as one guarded transaction
+- **writes** the broker, the pod's own topic (default `emosa/stats/<serial>`),
+  optionally `qm`'s publish interval (`agg_stats_interval`; OpenSync's default
+  is 60 s, too slow for a controller that wants client metrics younger than
+  30 s) and one raw client report for the radio type, as one guarded transaction
   (§3.2), once per start of the pod's OpenSync (the database starts from its
   template), like the uplink switch (§8.3). It MUST NOT take over a broker
   another manager set, such as the operator's cloud: that write is refused;
@@ -295,6 +324,103 @@ What it keeps, per station, is only what the pod measured:
 These measurements are in the agent's status. EMOSA sends an EasyMesh metric
 only when it can be built completely from them; until then it sends none
 (§9).
+
+### 3.7 Client steering
+
+A Client Steering Request (`0x8014`) is acknowledged within one second, with an
+Error Code TLV (`0xA3`, reason `0x02`) for each listed station that is not
+associated with the source BSS. A **mandate** for one station and one named
+target, from a BSS of the pod, is then carried out by the pod's band steering
+(`owm`, the steering scope):
+- **opens** a steering window as one guarded transaction (§3.2): the pod is the
+  bound serial and no `Band_Steering_Clients` row exists for the station
+  (another manager's steering MUST NOT be taken over). The window is the
+  station's complete client row with client steering `away` for the window
+  (`cs_params.cs_enforce_period`), a BTM kick with deauthentication fallback
+  (`sc_kick_type` `btm_deauth`) and the target in its BTM parameters
+  (`sc_btm_params`: `bssid`, `disassoc_imminent`), plus a steering group
+  (`Band_Steering_Config`) and the target as a neighbor (`Wifi_VIF_Neighbors`)
+  on the source VIF, each reused when present and inserted when absent;
+- counts it **applied** when `owm` reports `cs_state` `steering` for the row,
+  then writes the directed kick (`force_kick` `directed`, guarded by that
+  state). `owm` sends the BTM request with the target as its candidate;
+- **closes** the window when `owm` stops steering, or at the latest after the
+  window, by deleting exactly the rows it inserted (by UUID). Without
+  disassociation imminent the station is to be left where it is if it
+  declines: the window closes 8 s after the kick, before `owm`'s
+  deauthentication fallback (10 s after its BTM request).
+
+The window is 15 to 120 s (the request's opportunity window, raised to 15 s).
+One mandate at a time; a request while a window is open is acknowledged and
+not carried out. So are several stations or targets, the wildcard target (the
+agent would choose it), and a source that is not a BSS of the pod. A steering
+**opportunity** leaves the choice to the agent: EMOSA makes none, so Steering
+Completed (`0x8017`) follows the Ack at once.
+
+No Client Steering BTM Report (`0x8015`) is sent: OpenSync 6.6 does not expose
+the station's BTM status (its band-steering report never carries it). The
+controller sees the outcome in the topology: the station leaves the pod's BSS
+(Client Association Event, §2.4) and joins the target.
+
+Known limitation: the pod does not tell EMOSA whether a station supports BTM.
+`owm` deauthenticates a station without BTM support at once, also for a
+request without disassociation imminent.
+
+### 3.8 AP metrics from the pod's statistics
+
+With telemetry (§3.6), the agent reports AP metrics as a native agent does:
+in answer to an AP Metrics Query and, when the controller's Metric Reporting
+Policy sets an AP metrics reporting interval, unsolicited at that interval.
+RDK's controller learns a client's signal only this way.
+
+Telemetry configures two reports on the pod: the raw client report and a raw
+on-channel survey of the represented radio, both at the reporting interval.
+
+An AP Metrics Response carries, for each of the pod's operating BSSes:
+- **AP Metrics TLV** (`0x94`): the BSSID; the channel utilization, measured:
+  the survey sample's busy percentage scaled to 0–255, from a sample at most
+  three reporting intervals old; the number of stations on the BSS; and the
+  Estimated Service Parameters for best effort, **declared**: the profile's
+  `esp_be` value (three octets), reported as configured, not measured, in the
+  agent's status. Without a fresh survey sample no AP Metrics TLV is sent for
+  the radio, and no response.
+- **Associated STA Link Metrics TLV** (`0x96`), when the radio's policy asks
+  for link metrics: for each station on the BSS with a fresh client report
+  (at most three reporting intervals old): the time since the measurement,
+  the last downlink and uplink rates, and the uplink RCPI. The pod reports
+  SNR; OpenSync derives it from the received signal with a fixed noise floor,
+  and the agent applies the inverse to obtain the RSSI and from it the RCPI.
+  A station without a fresh report is left out.
+- **Associated STA Traffic Stats TLV** (`0xA2`), when the policy asks for
+  traffic statistics: for stations whose counters the pod measures (§3.6).
+
+### 3.9 Unassociated station measurements
+
+The pod hears probe requests. OpenSync's band steering records each probe from
+a station it tracks with its SNR and time, and publishes these events in its
+band-steering report (every 60 s). The agent keeps a monitor-only
+`Band_Steering_Clients` row for each station the controller asks about on the
+pod's operating class and channel: client steering off, no kick, no probe
+blocking, no band preference, marked `cs_params` `{"emosa": "watch"}` so the
+row is recognisably the agent's on the pod itself. At most 32 stations are
+watched, the most recently asked; a station not asked about for 10 minutes,
+associated with the pod, or with another manager's client row is not watched.
+The rows join a `Band_Steering_Config` group on the fronthaul VIF (reused when
+present, left in place). The watch set is written in one guarded transaction,
+at most every 10 s. A steering window for a watched station (§3.7) replaces its
+watch row in the window's transaction. The agent reads the probe events from
+the pod's statistics.
+
+On an Unassociated STA Link Metrics Query the agent acknowledges within one
+second. The Ack carries an Error Code TLV for every requested station it
+cannot report: reason `0x01` for a station associated with one of the pod's
+BSSes, reason `0x02` for a station the pod has not heard on the requested
+channel within the last two minutes. Then an Unassociated STA Link Metrics
+Response, with the query's MID, lists the other stations: the channel, the time since the probe, and
+the uplink RCPI derived from the probe's SNR as in §3.8. Channels other than
+the pod's operating channel are answered with reason `0x02` for their
+stations. Measurements are real or absent: the agent never fills a station
+from the radio model or a default.
 
 ## 4. The fleet
 
@@ -380,6 +506,7 @@ Timers:
 | --- | --- |
 | Topology Discovery interval | 60 s |
 | Controller silence before onboarding again | 130 s |
+| M1 without M2 before onboarding again | 30 s |
 | Pod State re-read and reconcile | 0.5 s |
 | Published report lifetime | 1.5 s |
 | Operation deadline | 120 s |

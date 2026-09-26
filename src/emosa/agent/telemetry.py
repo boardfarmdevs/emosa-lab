@@ -65,7 +65,13 @@ class TelemetrySetup:
 
     def key(self):
         """One write per OpenSync start and requested configuration."""
-        return f"{self.backend.instance}:{self.intent.client_stats()}:{self.intent.topic}"
+        key = f"{self.backend.instance}:{self.intent.client_stats()}:{self.intent.topic}"
+        # options change what is written; unset they keep the key as before
+        if self.intent.publish_interval is not None:
+            key += f":publish={self.intent.publish_interval}"
+        if self.intent.survey:
+            key += f":survey={self.intent.survey_stats()}"
+        return key
 
     def _wanted(self, op, snap):
         if not snap.ready:

@@ -53,6 +53,7 @@ COUNTERS = (
 NEVER_IMPLIED = {"tx_retries"}  # dppline.c sends it only together with rx_retries
 MAX_PAYLOAD = 65536
 MAX_STATIONS = 64
+MAX_PROBED = 256  # stations whose last probe request is kept
 QM_BATCH = 60  # seconds: qm publishes the queued reports about once a minute
 
 
@@ -68,6 +69,40 @@ def report_type():
 
 
 Report = report_type()
+PROBE = Report.DESCRIPTOR.file.enum_types_by_name["BSEventType"].values_by_name["PROBE"].number
+
+
+@dataclass(frozen=True)
+class SurveyStats:
+    """The last raw on-channel survey sample: the channel's busy percentage."""
+
+    band: str
+    channel: int
+    busy_percent: int
+    duration_ms: int | None
+    measured_at: float  # epoch seconds: the sample's time
+
+    def public(self):
+        return {
+            "band": self.band,
+            "channel": self.channel,
+            "busy_percent": self.busy_percent,
+            "duration_ms": self.duration_ms,
+            "measured_at": self.measured_at,
+        }
+
+
+@dataclass(frozen=True)
+class ProbeSample:
+    """A station's last probe request heard by the pod (band steering, watched stations)."""
+
+    band: str
+    ifname: str
+    snr_db: int  # over OpenSync's fixed noise floor, as the client reports
+    measured_at: float  # epoch seconds: when the pod received it
+
+    def public(self):
+        return dict(self.__dict__)
 
 
 @dataclass(frozen=True)
@@ -105,6 +140,8 @@ class PodStats:
         self.lifetime = 3 * interval + batch
         self.last_timestamp = {}  # band -> ms of the last accepted client report
         self.stations = {}  # mac -> StationStats
+        self.surveys = {}  # channel -> SurveyStats (raw on-channel samples)
+        self.probes = {}  # mac -> ProbeSample (the last probe request)
         self.measured = set()  # counters seen non-zero on this pod
         self.accepted = self.rejected = self.gaps = 0
         self.last_error = None
@@ -120,6 +157,10 @@ class PodStats:
                 raise ValueError("incomplete report")
             for radio in sorted(report.clients, key=lambda r: r.timestamp_ms):
                 self._client_report(radio)
+            for survey in report.survey:
+                self._survey(survey)
+            for bs in report.bs_report:
+                self._bs_report(bs)
         except (ValueError, DecodeError) as exc:
             self.rejected += 1
             self.last_error = str(exc)
@@ -197,6 +238,60 @@ class PodStats:
                 **totals,
             )
 
+    def _survey(self, survey):
+        # ON_CHANNEL (0) raw samples of the operating channel; busy is a percentage
+        if (
+            survey.survey_type != 0
+            or survey.band not in BANDS
+            or not survey.HasField("timestamp_ms")
+        ):
+            return
+        for sample in survey.survey_list:
+            if not sample.HasField("busy") or not 0 <= sample.busy <= 100:
+                continue
+            # dppline.c: offset_ms = report time - sample time
+            at = (survey.timestamp_ms - sample.offset_ms) / 1000
+            old = self.surveys.get(sample.channel)
+            if old is not None and at <= old.measured_at:
+                continue
+            self.surveys[sample.channel] = SurveyStats(
+                BANDS[survey.band],
+                sample.channel,
+                sample.busy,
+                sample.duration_ms if sample.HasField("duration_ms") else None,
+                at,
+            )
+
+    def _bs_report(self, bs):
+        # The band-steering report: PROBE events of the stations the pod watches
+        if not bs.HasField("timestamp_ms"):
+            return
+        for client in bs.clients:
+            mac = client.mac_address.lower()
+            if len(mac) != 17:
+                continue
+            for band in client.bs_band_report:
+                if band.band not in BANDS:
+                    continue
+                for event in band.event_list:
+                    if event.type != PROBE or not event.HasField("rssi"):
+                        continue
+                    # dppline.c: offset_ms = report time - event time
+                    at = (bs.timestamp_ms - event.offset_ms) / 1000
+                    old = self.probes.get(mac)
+                    if old is not None and at <= old.measured_at:
+                        continue
+                    self.probes[mac] = ProbeSample(BANDS[band.band], band.ifname, event.rssi, at)
+        if len(self.probes) > MAX_PROBED:
+            for mac in sorted(self.probes, key=lambda m: self.probes[m].measured_at)[
+                : len(self.probes) - MAX_PROBED
+            ]:
+                del self.probes[mac]
+
+    def probe(self, mac):
+        """The station's last probe request, or None."""
+        return self.probes.get(mac.lower())
+
     def current(self):
         """Stations whose last period ended within the lifetime, by MAC."""
         now = self.clock()
@@ -215,4 +310,12 @@ class PodStats:
             "last_error": self.last_error,
             "last_report_at": self.last_report_at,
             "stations": {mac: s.public() for mac, s in sorted(self.current().items())},
+            "surveys": {str(c): s.public() for c, s in sorted(self.surveys.items())},
+            "probes": {
+                mac: p.public()
+                for mac, p in sorted(
+                    self.probes.items(), key=lambda i: i[1].measured_at, reverse=True
+                )[:16]
+            },
+            "probed_stations": len(self.probes),
         }

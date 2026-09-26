@@ -3,9 +3,15 @@ Description=EMOSA virtual EasyMesh agent for OpenSync pod %i
 After=network-online.target
 
 [Service]
+# The agent implementation: EMOSA_AGENT in /etc/default/emosa, or for one pod in
+# /etc/default/emosa-POD (the later file wins). The C lab prototype is
+# /opt/emosa-adapter/bin/emosa-agent-c; both take the same configuration.
+Environment=EMOSA_AGENT=/opt/emosa-adapter/venv/bin/emosa-agent
+Environment=EMOSA_PROFILES=/opt/emosa-adapter/share/profiles
 EnvironmentFile=-/etc/default/emosa
+EnvironmentFile=-/etc/default/emosa-%i
 ExecStartPre=/usr/local/sbin/emosa-agent-link %i
-ExecStart=/opt/emosa-adapter/venv/bin/emosa-agent /etc/emosa/%i.json
+ExecStart=/bin/sh -c 'exec "$$EMOSA_AGENT" /etc/emosa/%i.json'
 Restart=on-failure
 RestartSec=3
 

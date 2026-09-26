@@ -3,6 +3,7 @@
 import asyncio
 import copy
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -14,7 +15,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.model import State
 from emosa.opensync.schema import Schema, reference_path
 from emosa.opensync.stats import PodStats, Report
-from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent
+from emosa.opensync.telemetry import MONITOR, TelemetryBackend, TelemetryIntent
 from emosa.secrets import SecretStore
 from emosa.store import Store
 
@@ -25,6 +26,7 @@ TOPIC = f"emosa/stats/{SERIAL}"
 RECORDED = Path("tests/fixtures/opensync/pod-6.6.1-hwsim-client-stats.hex")
 NODE = "00000000-0000-4000-8000-0000000000b1"
 STATS_ROW = "00000000-0000-4000-8000-0000000000c1"
+SURVEY_ROW = "00000000-0000-4000-8000-0000000000c2"
 STA1, STA2 = "02:00:00:00:12:00", "02:00:00:00:13:00"
 
 
@@ -161,8 +163,14 @@ class Pod:
         }
 
     async def snapshot(self):
+        # the session monitors only the listed columns of the statistics rows
+        tables = copy.deepcopy(self.tables)
+        tables["Wifi_Stats_Config"] = {
+            u: {k: v for k, v in r.items() if k in MONITOR["Wifi_Stats_Config"]}
+            for u, r in tables["Wifi_Stats_Config"].items()
+        }
         return {
-            "tables": copy.deepcopy(self.tables),
+            "tables": tables,
             "generation": self.generation,
             "revision": 1,
             "ready": True,
@@ -182,8 +190,9 @@ class Pod:
                 self.tables["AWLAN_Node"][NODE].update(op["row"])
                 results.append({"count": 1})
             else:
-                self.tables["Wifi_Stats_Config"][STATS_ROW] = op["row"]
-                results.append({"uuid": ["uuid", STATS_ROW]})
+                row = STATS_ROW if op["row"]["stats_type"] == "client" else SURVEY_ROW
+                self.tables["Wifi_Stats_Config"][row] = op["row"]
+                results.append({"uuid": ["uuid", row]})
         return results
 
 
@@ -235,6 +244,20 @@ def test_written_again_after_every_opensync_start_and_only_then(tmp_path):
     assert len(telemetry.store.operations()) == 2
 
 
+def test_a_changed_request_is_written_on_the_same_start(tmp_path):
+    pod = Pod()
+    telemetry, _ = setup(tmp_path, pod)
+    asyncio.run(telemetry.tick())
+    first = telemetry.key()
+    telemetry.intent = replace(telemetry.intent, survey=True, publish_interval=5)
+    telemetry.backend.survey = True  # as the agent builds it from the same request
+    assert telemetry.key().startswith(first + ":")
+    asyncio.run(telemetry.tick())
+    asyncio.run(telemetry.tick())
+    assert len(pod.sent) == 2 and telemetry.latest().state == State.OBSERVED_APPLIED
+    assert "survey" in [op["row"].get("stats_type") for op in pod.sent[1] if op["op"] == "insert"]
+
+
 def test_another_managers_broker_is_not_taken_over(tmp_path):
     pod = Pod(mqtt=[("broker", "cloud.example.net"), ("topics", "operator/stats")])
     telemetry, _ = setup(tmp_path, pod)
@@ -267,10 +290,17 @@ def test_agent_configuration():
     assert telemetry_intent("pod-1", SERIAL, {"mode": "off"}) is None
     intent = telemetry_intent("pod-1", SERIAL, {"mode": "mqtt", "broker": "10.101.0.1"})
     assert intent.topic == TOPIC and intent.port == 8883 and intent.reporting_interval == 10
+    assert intent.publish_interval is None and "publish_interval" not in intent.record()
+    assert "agg_stats_interval" not in intent.settings()
+    fast = telemetry_intent(
+        "pod-1", SERIAL, {"mode": "mqtt", "broker": "10.101.0.40", "publish_interval": 5}
+    )
+    assert fast.settings()["agg_stats_interval"] == "5" and fast.record()["publish_interval"] == 5
     for bad in (
         {"mode": "mqtt"},
         {"mode": "mqtt", "broker": "10.101.0.1", "topic": "emosa/#"},
         {"mode": "mqtt", "broker": "10.101.0.1", "sampling_interval": 20},
+        {"mode": "mqtt", "broker": "10.101.0.1", "publish_interval": 0},
     ):
         with pytest.raises(EmosaError):
             telemetry_intent("pod-1", SERIAL, bad)

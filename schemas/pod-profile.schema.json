@@ -46,6 +46,19 @@
       }
     },
     "inet": {"$ref": "#/$defs/row"},
+    "ap_metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["esp_be"],
+      "description": "Declared values for AP metrics the pod does not measure (spec 3.8).",
+      "properties": {
+        "esp_be": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{6}$",
+          "description": "Estimated Service Parameters for best effort (three octets, hex), declared: reported as configured, not measured."
+        }
+      }
+    },
     "uplink": {
       "type": "object",
       "additionalProperties": false,

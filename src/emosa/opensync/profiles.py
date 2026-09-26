@@ -31,6 +31,7 @@ class PodProfile:
     extra_slots: tuple  # (if_name, role, vif_radio_idx), in assignment order
     inet: dict
     uplink_station: str | None = None  # the backhaul station option 1 moves (bootstrap-created)
+    esp_be: bytes | None = None  # declared best-effort ESP for AP metrics (spec §3.8)
 
     @property
     def backhaul_row(self):
@@ -57,4 +58,5 @@ def load(ref=DEFAULT):
         tuple((s["if_name"], s["role"], s["vif_radio_idx"]) for s in data["extra_slots"]),
         data["inet"],
         data.get("uplink", {}).get("station"),
+        bytes.fromhex(data["ap_metrics"]["esp_be"]) if "ap_metrics" in data else None,
     )

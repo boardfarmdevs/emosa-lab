@@ -35,6 +35,8 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
+from emosa.agent.probe_watch import ProbeWatch
+from emosa.agent.steering import ClientSteering
 from emosa.agent.telemetry import MqttSubscriber, TelemetrySetup
 from emosa.agent.uplink import UplinkSwitch, m2_backhaul
 from emosa.config import validate
@@ -48,11 +50,15 @@ from emosa.opensync.easymesh_view import (
     topology,
 )
 from emosa.opensync.pod_profile import PodBackend, wpa2_psk
+from emosa.opensync.probe_watch import MONITOR as WATCH_MONITOR
+from emosa.opensync.probe_watch import WatchBackend
 from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
 from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.schema import TABLES
 from emosa.opensync.session import OvsSession
 from emosa.opensync.stats import PodStats
+from emosa.opensync.steering import MONITOR as STEERING_MONITOR
+from emosa.opensync.steering import SteeringBackend
 from emosa.opensync.telemetry import MONITOR as TELEMETRY_MONITOR
 from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent
 from emosa.opensync.uplink import BSSID, MULTI_AP, UplinkBackend, uplink_state
@@ -83,6 +89,9 @@ CONTROLLER_TIMEOUT = 130  # no CMDU from the controller for about two discovery 
 # applied (its configuration was lost, e.g. a write lost to an uplink move): ask
 # for the configuration again with a fresh M1 after this long.
 UNSERVED_RENEW = 60
+# M1 sent and no M2: a controller that restarted meanwhile has forgotten the M1, and
+# its other queries keep CONTROLLER_TIMEOUT from firing. Search again after this long.
+M2_TIMEOUT = 30
 # The pod's State is re-read on this cadence, not on every received frame: the
 # published report lives 1.5 s, which this refreshes three times over.
 REFRESH_PERIOD = 0.5
@@ -91,9 +100,20 @@ MONITOR = {
     "AWLAN_Node": [*TABLES["AWLAN_Node"], "id"],
     "Wifi_Radio_State": [*TABLES["Wifi_Radio_State"], "tx_power"],
 }
-for _scope in (UPLINK_MONITOR, TELEMETRY_MONITOR):  # the other scopes' tables and columns
-    for _table, _columns in _scope.items():
-        MONITOR[_table] = [*MONITOR.get(_table, []), *_columns]
+for _scope in (UPLINK_MONITOR, TELEMETRY_MONITOR, STEERING_MONITOR, WATCH_MONITOR):
+    for _table, _columns in _scope.items():  # the other scopes, each column once
+        MONITOR[_table] = list(dict.fromkeys([*MONITOR.get(_table, []), *_columns]))
+
+
+async def timed(label, awaitable, slow=0.5):
+    """Await, and log a step of the agent loop that holds up the pod's state refresh."""
+    start = time.monotonic()
+    try:
+        return await awaitable
+    finally:
+        spent = time.monotonic() - start
+        if spent > slow:
+            log.warning("slow %s: %.1f s", label, spent)
 
 
 def mac(text):
@@ -211,6 +231,7 @@ class PodReportSource:
                 bsses=bsses,
                 ages={m: now - t for m, t in self.first_seen.items()},
                 uplink=uplink,
+                associated_at=self.first_seen,
             )
             facts = (
                 raw["generation"],
@@ -247,8 +268,9 @@ class PodReportSource:
                 "ovsdb_generation": raw["generation"],
                 "ovsdb_revision": raw["revision"],
             }
-            # Station ages advance every refresh, but facts may change only with
-            # a new source revision: ages are taken when membership changes.
+            # Facts may change only with a new source revision: the published ages
+            # are taken when membership changes, and a Topology Response ages them
+            # from the association times as it is sent.
             if self._clients is not None and self._clients[0] == self.revision:
                 report = replace(report, clients=self._clients[1])
             self._clients = (self.revision, report.clients)
@@ -272,13 +294,17 @@ class PodReportSource:
             )
             return True
         except (EmosaError, ConnectionError, TimeoutError) as exc:
-            if self.facts is not None:
+            # Once per cause: a pod that stays away must not flood the log, but a
+            # new reason (a replaced radio after a reconnect) must show.
+            if self.facts is not None or str(exc) != self._unavailable:
                 log.info("pod source unavailable: %s", exc)
+            self._unavailable = str(exc)
             self.facts = None
             self.source.invalidate()
             return False
 
     _clients = None
+    _unavailable = None
 
 
 def make_bridge(
@@ -346,6 +372,8 @@ def telemetry_intent(pod_id, serial, telemetry_config):
         telemetry_config.get("radio_type", "2.4G"),
         telemetry_config.get("reporting_interval", 10),
         telemetry_config.get("sampling_interval", 5),
+        telemetry_config.get("publish_interval"),
+        telemetry_config.get("survey", False),
     )
     intent.validate()
     return intent
@@ -409,7 +437,7 @@ async def serve(config, stop):
                 and not any(op.state in ACTIVE for op in store.operations())
             ),
         )
-    telemetry = stats = subscriber = telemetry_store = None
+    telemetry = stats = subscriber = telemetry_store = watch = None
     telemetry_config = config.get("telemetry", {"mode": "off"})
     wanted = telemetry_intent(pod_id, config["serial"], telemetry_config)
     if wanted is not None:
@@ -417,7 +445,11 @@ async def serve(config, stop):
         telemetry = TelemetrySetup(
             pod_id,
             TelemetryBackend(
-                pod_id, session, serial=config["serial"], radio_type=wanted.radio_type
+                pod_id,
+                session,
+                serial=config["serial"],
+                radio_type=wanted.radio_type,
+                survey=wanted.survey,
             ),
             telemetry_store,
             vault,
@@ -425,6 +457,16 @@ async def serve(config, stop):
             run_id=config.get("run_id", pod_id),
         )
         stats = PodStats(wanted.topic, interval=wanted.reporting_interval)
+        # the stations the controller asks about, watched for their probe requests (§3.9)
+        watch = ProbeWatch(
+            pod_id,
+            WatchBackend(pod_id, session, serial=config["serial"]),
+            Store(state_dir / "probe-watch"),
+            vault,
+            if_name=backend.profile.fronthaul_if,
+            band=wanted.radio_type,
+            run_id=config.get("run_id", pod_id),
+        )
         host, _, port = telemetry_config.get("subscribe", "127.0.0.1:1883").rpartition(":")
         subscriber = MqttSubscriber(
             host,
@@ -434,6 +476,27 @@ async def serve(config, stop):
             client_id=f"emosa-agent-{pod_id}",
         )
         subscriber.start(asyncio.get_running_loop())
+    # Client steering mandates from the controller, carried out by owm (on unless "off").
+    steering = steering_store = None
+    if config.get("steering", {}).get("mode", "owm") != "off":
+        steering_store = Store(state_dir / "steering")
+        steering = ClientSteering(
+            pod_id,
+            SteeringBackend(pod_id, session, serial=config["serial"]),
+            steering_store,
+            vault,
+            run_id=config.get("run_id", pod_id),
+        )
+    # AP metrics from the pod's statistics (spec §3.8): telemetry with the survey,
+    # and the profile's declared best-effort ESP
+    pod_metrics = None
+    if stats is not None and wanted.survey and backend.profile.esp_be is not None:
+        pod_metrics = {
+            "stats": stats,
+            "esp_be": backend.profile.esp_be,
+            # a report is current for three reporting periods after its publication
+            "freshness": 3 * wanted.reporting_interval + (wanted.publish_interval or 60),
+        }
     binding = PeerBinding(config["interface"], 1, agent, controller, (controller,))
     report = PodReportSource(backend, binding, pod_id, station)
     mids = MidSequence(secrets.randbelow(65536))
@@ -443,7 +506,7 @@ async def serve(config, stop):
     message_set = check_message_set(config.get("message_set", EASYMESH_61))
     lifecycle, last_status, last_facts, last_write = None, None, None, 0
     next_discovery, last_contact = 0, time.monotonic()
-    unserved_since = None
+    unserved_since = awaiting_since = None
     next_refresh, ready = 0, False
     channels = reporting = None
 
@@ -476,6 +539,8 @@ async def serve(config, stop):
                 if telemetry
                 else {"mode": "off"}
             ),
+            "steering": {"mode": "owm", **steering.status()} if steering else {"mode": "off"},
+            "probe_watch": watch.status() if watch else None,
             "writes": backend.write_count,
             "worker_pid": os.getpid(),
             "updated": time.time(),
@@ -517,6 +582,10 @@ async def serve(config, stop):
                     channel_store=channels,
                     reporting_policy_store=reporting,
                     reset_channel_policy=lifecycle.starts == 0,
+                    steering_executor=steering.start if steering else None,
+                    pod_metrics=pod_metrics,
+                    probes=stats,
+                    watch=watch.ask if watch else None,
                 )
 
             channels = ChannelPolicyStore(state_dir / "channel-policy.sqlite")
@@ -528,14 +597,18 @@ async def serve(config, stop):
             while not stop.is_set():
                 refreshed = time.monotonic() >= next_refresh
                 if refreshed:
-                    ready = await report.refresh()
+                    late = time.monotonic() - next_refresh
+                    if next_refresh and late > REFRESH_PERIOD:
+                        # the published report lives 1.5 s: a late refresh risks its lease
+                        log.warning("pod state refresh %.1f s late", late)
+                    ready = await timed("refresh", report.refresh())
                     next_refresh = time.monotonic() + REFRESH_PERIOD
                 facts = {k: v for k, v in (report.facts or {}).items() if k != "ovsdb_revision"}
                 if facts != last_facts:
                     log.info("pod: %s", json.dumps(facts or None, default=str))
                     last_facts = facts
                 try:
-                    await lifecycle.tick()
+                    await timed("session tick", lifecycle.tick())
                 except EmosaError as exc:
                     log.warning("session tick: %s", exc)
                 now = time.monotonic()
@@ -555,6 +628,14 @@ async def serve(config, stop):
                     log.info("provisioned, but the pod serves no BSS: fresh M1")
                     lifecycle.renew()
                     unserved_since = None
+                awaiting = (
+                    lifecycle.session is not None and lifecycle.session.state == "awaiting_m2"
+                )
+                awaiting_since = (awaiting_since or now) if awaiting else None
+                if awaiting_since is not None and now - awaiting_since > M2_TIMEOUT:
+                    log.info("no M2 for %ds after M1: fresh attempt", M2_TIMEOUT)
+                    lifecycle.renew()
+                    awaiting_since = None
                 if now - last_contact > CONTROLLER_TIMEOUT:
                     # Like a native agent's controller connectivity check: a silent
                     # controller is lost; onboard again when it answers a Search.
@@ -563,7 +644,7 @@ async def serve(config, stop):
                     )
                     lifecycle.renew()
                     last_contact = now
-                frame = await asyncio.to_thread(endpoint.receive)
+                frame = await timed("receive", asyncio.to_thread(endpoint.receive))
                 kind = from_controller(frame, controller) if frame is not None else None
                 if kind is not None:
                     last_contact = time.monotonic()
@@ -572,8 +653,9 @@ async def serve(config, stop):
                     lifecycle.renew()
                 elif frame is not None:
                     try:
-                        result = await lifecycle.receive(
-                            frame, ingress=config["interface"], generation=1
+                        result = await timed(
+                            "frame",
+                            lifecycle.receive(frame, ingress=config["interface"], generation=1),
                         )
                         if result and result not in ("incomplete",):
                             log.debug("rx: %s", result)
@@ -583,21 +665,31 @@ async def serve(config, stop):
                     # The WSC provisioning session executes its operation; the
                     # engine only needs fresh State to confirm application.
                     try:
-                        await engine.reconcile(pod_id)
+                        await timed("reconcile", engine.reconcile(pod_id))
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("reconcile: %s", exc)
                         report.source.invalidate()
                 if refreshed and switch:
                     # Also while the pod is away: an unconfirmed switch times out.
                     try:
-                        await switch.tick()
+                        await timed("uplink", switch.tick())
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("uplink: %s", exc)
                 if refreshed and telemetry:
                     try:
-                        await telemetry.tick()
+                        await timed("telemetry", telemetry.tick())
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("telemetry: %s", exc)
+                if refreshed and steering:
+                    try:
+                        await timed("steering", steering.tick())
+                    except (EmosaError, ConnectionError, TimeoutError) as exc:
+                        log.warning("steering: %s", exc)
+                if refreshed and watch:
+                    try:
+                        await timed("probe_watch", watch.tick())
+                    except (EmosaError, ConnectionError, TimeoutError) as exc:
+                        log.warning("probe watch: %s", exc)
                 if not refreshed and frame is None:
                     continue  # nothing new to report: status only on the refresh cadence
                 value = status()
@@ -622,7 +714,7 @@ async def serve(config, stop):
         store.close()
         if subscriber is not None:
             subscriber.stop()
-        for extra in (channels, reporting, uplink_store, telemetry_store):
+        for extra in (channels, reporting, uplink_store, telemetry_store, steering_store):
             if extra is not None:
                 extra.close()
         await session.close()

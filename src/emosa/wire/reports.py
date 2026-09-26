@@ -8,7 +8,7 @@ an Ethernet peer or authorize pod operations. See doc/protocol/reports.md.
 import math
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from emosa.easymesh_payloads import (
     AKMSuiteCapabilities,
@@ -17,7 +17,9 @@ from emosa.easymesh_payloads import (
     APOperationalBss,
     APRadioAdvancedCapabilities,
     APRadioBasicCapabilities,
+    AssociatedClient,
     AssociatedClients,
+    BssClients,
     BssConfigurationReport,
     MultiAPProfile,
     Profile2APCapability,
@@ -223,9 +225,34 @@ class TopologyFacts:
     # (RUID, backhaul STA MAC) of each radio whose station is the agent's EasyMesh
     # backhaul: the Backhaul STA Capability Report (0x8028). Empty over GRE.
     backhaul_stations: tuple = ()
+    # (station MAC, monotonic association time) of associated stations: a Topology
+    # Response reports each station's time since association as of the response
+    # (the controller compares it with the age of every link metric sample).
+    associated_at: tuple = ()
 
 
-def _topology(facts, binding, message_set=EASYMESH_61):
+def aged_clients(facts, now):
+    """The Associated Clients TLV with each station's age as of ``now``."""
+    since = dict(facts.associated_at)
+    return AssociatedClients(
+        tuple(
+            BssClients(
+                bss.bssid,
+                tuple(
+                    AssociatedClient(c.mac, min(65535, max(0, int(now - since[c.mac]))))
+                    if c.mac in since
+                    else c
+                    for c in bss.clients
+                ),
+            )
+            for bss in facts.clients.bsses
+        )
+    )
+
+
+def _topology(facts, binding, message_set=EASYMESH_61, now=None):
+    if facts.associated_at and now is not None:
+        facts = replace(facts, clients=aged_clients(facts, now))
     _require(
         all(
             flag is True
@@ -349,6 +376,6 @@ def topology_response(
         binding.local_al,
         3,
         query.mid,
-        _topology(facts, binding, message_set),
+        _topology(facts, binding, message_set, now),
     )
     return PreparedReport(3, query.mid, stamp, received_at + 1, frames)

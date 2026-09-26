@@ -5,7 +5,8 @@ a broker (``qm`` connects with the pod's device certificate) and a
 ``Wifi_Stats_Config`` row asks for a report (``owm`` produces client and
 survey reports for its radios). EMOSA writes both in one guarded transaction:
 
-- ``mqtt_settings``: broker, port, the pod's topic, QoS 0, no compression;
+- ``mqtt_settings``: broker, port, the pod's topic, QoS 0, no compression and,
+  when configured, qm's publish interval (``agg_stats_interval``);
 - one raw client report for the configured radio type, at the reporting and
   sampling intervals.
 
@@ -38,6 +39,7 @@ MONITOR = {
     "Wifi_Stats_Config": [
         "stats_type",
         "radio_type",
+        "survey_type",
         "report_type",
         "reporting_interval",
         "sampling_interval",
@@ -56,9 +58,19 @@ class TelemetryIntent:
     radio_type: str = "2.4G"
     reporting_interval: int = 10
     sampling_interval: int = 5
+    # qm's publish interval (mqtt_settings agg_stats_interval, seconds); None
+    # leaves OpenSync's default (60 s)
+    publish_interval: int | None = None
+    # a raw on-channel survey of the radio too (channel utilization, spec §3.8)
+    survey: bool = False
 
     def record(self):
-        return asdict(self)
+        record = asdict(self)
+        if self.publish_interval is None:
+            record.pop("publish_interval")
+        if not self.survey:
+            record.pop("survey")
+        return record
 
     def validate(self):
         if not self.broker or any(c in self.broker for c in " /:") or len(self.broker) > 253:
@@ -71,22 +83,37 @@ class TelemetryIntent:
             raise EmosaError(Reason.INVALID_INPUT, "unknown radio type")
         if not 1 <= self.sampling_interval <= self.reporting_interval <= 3600:
             raise EmosaError(Reason.INVALID_INPUT, "sampling must not exceed reporting interval")
+        if self.publish_interval is not None and (
+            type(self.publish_interval) is not int or not 1 <= self.publish_interval <= 3600
+        ):
+            raise EmosaError(Reason.INVALID_INPUT, "publish interval out of range")
+        if type(self.survey) is not bool:
+            raise EmosaError(Reason.INVALID_INPUT, "survey must be true or false")
 
     def settings(self):
-        return {
+        settings = {
             "broker": self.broker,
             "port": str(self.port),
             "topics": self.topic,
             "qos": "0",
             "compress": "none",
         }
+        if self.publish_interval is not None:
+            settings["agg_stats_interval"] = str(self.publish_interval)
+        return settings
 
     def client_stats(self):
         return f"{self.radio_type}/raw/{self.reporting_interval}/{self.sampling_interval}"
 
+    def survey_stats(self):
+        return f"{self.radio_type}/on-chan/raw/{self.reporting_interval}/{self.sampling_interval}"
+
     def target(self, vault=None):
         self.validate()
-        return {"mqtt": self.settings(), "client_stats": self.client_stats()}
+        target = {"mqtt": self.settings(), "client_stats": self.client_stats()}
+        if self.survey:
+            target["survey_stats"] = self.survey_stats()
+        return target
 
 
 def client_rows(decoded, radio_type):
@@ -95,6 +122,20 @@ def client_rows(decoded, radio_type):
         for u, r in decoded.get("Wifi_Stats_Config", {}).items()
         if r.get("stats_type") == "client" and r.get("radio_type") == radio_type
     ]
+
+
+def survey_rows(decoded, radio_type):
+    return [
+        (u, r)
+        for u, r in decoded.get("Wifi_Stats_Config", {}).items()
+        if r.get("stats_type") == "survey"
+        and r.get("radio_type") == radio_type
+        and r.get("survey_type") == "on-chan"
+    ]
+
+
+def survey_key(row):
+    return f"{row.get('radio_type')}/on-chan/{row_key(row).split('/', 1)[1]}"
 
 
 def row_key(row):
@@ -109,9 +150,10 @@ class TelemetryBackend:
 
     mode = MODE
 
-    def __init__(self, pod_id, session, *, serial, radio_type):
+    def __init__(self, pod_id, session, *, serial, radio_type, survey=False):
         self.pod_id, self.session = pod_id, session
         self.expected_serial, self.radio_type = serial, radio_type
+        self.survey = survey  # the intent's survey report is part of what is observed
         self.instance = None
         self.last = None
         self.write_count = 0
@@ -136,10 +178,14 @@ class TelemetryBackend:
 
     def _configured(self, decoded, node):
         rows = client_rows(decoded, self.radio_type)
-        return {
+        configured = {
             "mqtt": dict(node.get("mqtt_settings") or {}),
             "client_stats": row_key(rows[0][1]) if len(rows) == 1 else None,
         }
+        if self.survey:
+            surveys = survey_rows(decoded, self.radio_type)
+            configured["survey_stats"] = survey_key(surveys[0][1]) if len(surveys) == 1 else None
+        return configured
 
     async def snapshot(self):
         try:
@@ -187,6 +233,13 @@ class TelemetryBackend:
         if len(rows) > 1 or (rows and row_key(rows[0][1]) != intent.client_stats()):
             raise EmosaError(
                 Reason.OWNERSHIP_CONFLICT, "another client report is configured for this radio"
+            )
+        surveys = survey_rows(decoded, self.radio_type)
+        if intent.survey and (
+            len(surveys) > 1 or (surveys and survey_key(surveys[0][1]) != intent.survey_stats())
+        ):
+            raise EmosaError(
+                Reason.OWNERSHIP_CONFLICT, "another survey report is configured for this radio"
             )
 
     async def plan(self, intent):
@@ -247,6 +300,22 @@ class TelemetryBackend:
                     "row": {
                         "stats_type": "client",
                         "radio_type": self.radio_type,
+                        "report_type": "raw",
+                        "reporting_interval": intent.reporting_interval,
+                        "sampling_interval": intent.sampling_interval,
+                    },
+                }
+            )
+            counts.append(None)
+        if intent.survey and not survey_rows(decoded, self.radio_type):
+            transaction.append(
+                {
+                    "op": "insert",
+                    "table": "Wifi_Stats_Config",
+                    "row": {
+                        "stats_type": "survey",
+                        "radio_type": self.radio_type,
+                        "survey_type": "on-chan",
                         "report_type": "raw",
                         "reporting_interval": intent.reporting_interval,
                         "sampling_interval": intent.sampling_interval,

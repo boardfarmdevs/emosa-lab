@@ -1,3 +1,7 @@
 # EMOSA adapter environment (read by emosa-fleet and emosa-agent@ units).
 # The interface on the EasyMesh controller's LAN; every agent adds a macvlan on it.
 EMOSA_TRUNK=emlan
+# The agent implementation for every pod (a pod's own: /etc/default/emosa-POD).
+# Python reference (the default): /opt/emosa-adapter/venv/bin/emosa-agent
+# C lab prototype:                /opt/emosa-adapter/bin/emosa-agent-c
+#EMOSA_AGENT=/opt/emosa-adapter/venv/bin/emosa-agent

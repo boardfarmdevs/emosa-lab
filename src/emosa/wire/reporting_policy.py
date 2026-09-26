@@ -36,7 +36,11 @@ def decode_policy(tlvs, ruid):
 
     Omitted policy TLVs leave the corresponding previous policy unchanged.
     Reserved bit fields are ignored on reception and retained in raw evidence.
-    Unsupported companions remain an explicit procedure gap, not a partial Ack.
+    Companions EMOSA does not interpret (e.g. RDK's Default 802.1Q, Traffic
+    Separation, Channel Scan Reporting and Unsuccessful Association policies, a
+    vendor TLV) are recorded as received and not applied: nothing in a policy is
+    applied to the pod, and the Ack confirms receipt only. Withholding the Ack
+    instead makes a controller give the radio up (RDK's does).
     """
     result = {}
     for tlv in tlvs:
@@ -99,7 +103,7 @@ def decode_policy(tlvs, ruid):
                 invalid("malformed QoS management policy reserved field")
             result.setdefault("qos", []).append({"mscs_disallowed": mscs, "scs_disallowed": scs})
         else:
-            raise EmosaError(Reason.UNSUPPORTED_OPERATION, "unimplemented policy companion")
+            result.setdefault("not_applied", []).append({"kind": tlv.kind, "length": len(data)})
     return result
 
 
@@ -108,6 +112,13 @@ class ReportingPolicyStore:
 
     The caller supplies the OS boot identity because monotonic timestamps can
     survive process restart, but must be rebased after a machine reboot.
+
+    Commits survive a process crash but are not synced to disk one by one
+    (WAL, synchronous=NORMAL): the record is written twice per reporting
+    period on the agent's loop, and a synced commit took up to 0.9 s on a
+    loaded lab host, long enough for the pod's report lease to lapse. An OS
+    crash can lose the latest accounting; the schedule is rebased after a
+    reboot anyway.
     """
 
     def __init__(self, path, *, boot_id):
@@ -116,7 +127,7 @@ class ReportingPolicyStore:
         self.boot_id = boot_id
         self.db = sqlite3.connect(path)
         self.db.execute("PRAGMA journal_mode=WAL")
-        self.db.execute("PRAGMA synchronous=FULL")
+        self.db.execute("PRAGMA synchronous=NORMAL")
         self.db.execute(
             "CREATE TABLE IF NOT EXISTS reporting_policy "
             "(id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL)"
