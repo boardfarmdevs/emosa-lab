@@ -961,6 +961,18 @@ def onboarding_vectors():
 STATS_RECORDED = ROOT / "tests" / "fixtures" / "opensync" / "pod-6.6.1-hwsim-client-stats.hex"
 
 
+def survey_report(timestamp_ms, *, channel=6, busy=41):
+    """A raw on-channel survey publish (spec §3.8), built from the pinned schema."""
+    from emosa.opensync.stats import Report
+
+    report = Report(nodeID="")
+    survey = report.survey.add(band=0, survey_type=0, timestamp_ms=timestamp_ms)
+    sample = survey.survey_list.add(duration_ms=5000, busy=busy)
+    if channel is not None:
+        sample.channel = channel
+    return report.SerializePartialToString().hex()
+
+
 def telemetry_vectors():
     from emosa.opensync.stats import PodStats
 
@@ -975,6 +987,8 @@ def telemetry_vectors():
         (publishes[1][0], publishes[1][1], False),  # the second again: out of order
         (publishes[2][0], publishes[2][1], True),  # retained
         ("emosa/stats/ANOTHERPOD", publishes[2][1], False),  # another pod's topic
+        (topic, survey_report(int(now * 1000) - 2000), False),  # a survey sample: kept
+        (topic, survey_report(int(now * 1000), channel=None), False),  # no channel: incomplete
     ]
     for t, data, retained in inputs:
         accepted = stats.receive(t, bytes.fromhex(data), retained=retained)
@@ -992,7 +1006,8 @@ def telemetry_vectors():
         "description": "spec §3.6: the pod's statistics as the agent keeps them. Three "
         "sts.Report publishes recorded from an opensync-lab pod (OpenSync 6.6.1.0, raw client "
         "reports every 10 s, topic " + topic + "), then a repeated, a retained and a foreign "
-        "publish; the clock stands at " + str(now) + " throughout. Per step: whether the "
+        "publish, then a raw on-channel survey (spec §3.8) and one lacking its required "
+        "channel; the clock stands at " + str(now) + " throughout. Per step: whether the "
         "report is used, and the agent's statistics status after it.",
         "topic": topic,
         "reporting_interval": 10,

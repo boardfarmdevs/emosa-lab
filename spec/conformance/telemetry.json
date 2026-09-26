@@ -1,6 +1,6 @@
 {
  "clock": 1790313745.0,
- "description": "spec §3.6: the pod's statistics as the agent keeps them. Three sts.Report publishes recorded from an opensync-lab pod (OpenSync 6.6.1.0, raw client reports every 10 s, topic emosa/stats/MVXPOD023F87E628DD), then a repeated, a retained and a foreign publish; the clock stands at 1790313745.0 throughout. Per step: whether the report is used, and the agent's statistics status after it.",
+ "description": "spec §3.6: the pod's statistics as the agent keeps them. Three sts.Report publishes recorded from an opensync-lab pod (OpenSync 6.6.1.0, raw client reports every 10 s, topic emosa/stats/MVXPOD023F87E628DD), then a repeated, a retained and a foreign publish, then a raw on-channel survey (spec §3.8) and one lacking its required channel; the clock stands at 1790313745.0 throughout. Per step: whether the report is used, and the agent's statistics status after it.",
  "reporting_interval": 10,
  "steps": [
   {
@@ -18,6 +18,7 @@
      "reports_accepted": 1,
      "reports_rejected": 0,
      "stations": {},
+     "surveys": {},
      "topic": "emosa/stats/MVXPOD023F87E628DD"
     }
    },
@@ -79,6 +80,7 @@
        "tx_retries": null
       }
      },
+     "surveys": {},
      "topic": "emosa/stats/MVXPOD023F87E628DD"
     }
    },
@@ -140,6 +142,7 @@
        "tx_retries": null
       }
      },
+     "surveys": {},
      "topic": "emosa/stats/MVXPOD023F87E628DD"
     }
    },
@@ -201,6 +204,7 @@
        "tx_retries": null
       }
      },
+     "surveys": {},
      "topic": "emosa/stats/MVXPOD023F87E628DD"
     }
    },
@@ -262,6 +266,7 @@
        "tx_retries": null
       }
      },
+     "surveys": {},
      "topic": "emosa/stats/MVXPOD023F87E628DD"
     }
    },
@@ -323,12 +328,153 @@
        "tx_retries": null
       }
      },
+     "surveys": {},
      "topic": "emosa/stats/MVXPOD023F87E628DD"
     }
    },
    "payload": "0a002abb010800108efd8bb88d341a550a1130323a30303a30303a30303a31323a3030120a656d6f73612d6d657368180120002800408f4e4a18081a180149000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a30301a550a1130323a30303a30303a30303a31333a3030120a656d6f73612d6d657368180120002800408f4e4a18081a180149000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a303020062a002ab3010800109ecb8cb88d341a510a1130323a30303a30303a30303a31323a3030120a656d6f73612d6d65736818012000280040904e4a1449000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a30301a510a1130323a30303a30303a30303a31333a3030120a656d6f73612d6d65736818012000280040904e4a1449000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a303020062a002ab301080010ad998db88d341a510a1130323a30303a30303a30303a31323a3030120a656d6f73612d6d65736818012000280040904e4a1449000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a30301a510a1130323a30303a30303a30303a31333a3030120a656d6f73612d6d65736818012000280040904e4a1449000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a303020062a002abb01080010bde78db88d341a550a1130323a30303a30303a30303a31323a3030120a656d6f73612d6d657368180120002800408e4e4a18081a180149000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a30301a550a1130323a30303a30303a30303a31333a3030120a656d6f73612d6d657368180120002800408f4e4a18081a180149000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a303020062a002ab301080010ceb58eb88d341a510a1130323a30303a30303a30303a31323a3030120a656d6f73612d6d657368180120002800408f4e4a1449000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a30301a510a1130323a30303a30303a30303a31333a3030120a656d6f73612d6d657368180120002800408f4e4a1449000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a303020062a002ab301080010de838fb88d341a510a1130323a30303a30303a30303a31323a3030120a656d6f73612d6d65736818012000280040914e4a1449000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a30301a510a1130323a30303a30303a30303a31333a3030120a656d6f73612d6d65736818012000280040914e4a1449000000000000f03f51000000000000f03f584c7a1130303a30303a30303a30303a30303a303020062a00",
    "retained": false,
    "topic": "emosa/stats/ANOTHERPOD"
+  },
+  {
+   "expected": {
+    "accepted": true,
+    "status": {
+     "gaps": 1,
+     "last_error": "not a live report on this pod's topic",
+     "measured_counters": [
+      "rx_bytes",
+      "rx_frames",
+      "tx_bytes",
+      "tx_frames"
+     ],
+     "reports_accepted": 4,
+     "reports_rejected": 3,
+     "stations": {
+      "02:00:00:00:12:00": {
+       "band": "2.4G",
+       "channel": 6,
+       "epoch_start": 1790313632.814,
+       "measured_at": 1790313742.814,
+       "periods": 11,
+       "rx_bytes": 78,
+       "rx_errors": null,
+       "rx_frames": 3,
+       "rx_rate_mbps": 1.0,
+       "rx_retries": null,
+       "snr_db": 76,
+       "ssid": "emosa-mesh",
+       "tx_bytes": 0,
+       "tx_errors": null,
+       "tx_frames": 0,
+       "tx_rate_mbps": 1.0,
+       "tx_retries": null
+      },
+      "02:00:00:00:13:00": {
+       "band": "2.4G",
+       "channel": 6,
+       "epoch_start": 1790313632.814,
+       "measured_at": 1790313742.814,
+       "periods": 11,
+       "rx_bytes": 78,
+       "rx_errors": null,
+       "rx_frames": 3,
+       "rx_rate_mbps": 1.0,
+       "rx_retries": null,
+       "snr_db": 76,
+       "ssid": "emosa-mesh",
+       "tx_bytes": 0,
+       "tx_errors": null,
+       "tx_frames": 0,
+       "tx_rate_mbps": 1.0,
+       "tx_retries": null
+      }
+     },
+     "surveys": {
+      "6": {
+       "band": "2.4G",
+       "busy_percent": 41,
+       "channel": 6,
+       "duration_ms": 5000,
+       "measured_at": 1790313743.0
+      }
+     },
+     "topic": "emosa/stats/MVXPOD023F87E628DD"
+    }
+   },
+   "payload": "0a001214080010001898858fb88d34220708061088272829",
+   "retained": false,
+   "topic": "emosa/stats/MVXPOD023F87E628DD"
+  },
+  {
+   "expected": {
+    "accepted": false,
+    "status": {
+     "gaps": 1,
+     "last_error": "incomplete report",
+     "measured_counters": [
+      "rx_bytes",
+      "rx_frames",
+      "tx_bytes",
+      "tx_frames"
+     ],
+     "reports_accepted": 4,
+     "reports_rejected": 4,
+     "stations": {
+      "02:00:00:00:12:00": {
+       "band": "2.4G",
+       "channel": 6,
+       "epoch_start": 1790313632.814,
+       "measured_at": 1790313742.814,
+       "periods": 11,
+       "rx_bytes": 78,
+       "rx_errors": null,
+       "rx_frames": 3,
+       "rx_rate_mbps": 1.0,
+       "rx_retries": null,
+       "snr_db": 76,
+       "ssid": "emosa-mesh",
+       "tx_bytes": 0,
+       "tx_errors": null,
+       "tx_frames": 0,
+       "tx_rate_mbps": 1.0,
+       "tx_retries": null
+      },
+      "02:00:00:00:13:00": {
+       "band": "2.4G",
+       "channel": 6,
+       "epoch_start": 1790313632.814,
+       "measured_at": 1790313742.814,
+       "periods": 11,
+       "rx_bytes": 78,
+       "rx_errors": null,
+       "rx_frames": 3,
+       "rx_rate_mbps": 1.0,
+       "rx_retries": null,
+       "snr_db": 76,
+       "ssid": "emosa-mesh",
+       "tx_bytes": 0,
+       "tx_errors": null,
+       "tx_frames": 0,
+       "tx_rate_mbps": 1.0,
+       "tx_retries": null
+      }
+     },
+     "surveys": {
+      "6": {
+       "band": "2.4G",
+       "busy_percent": 41,
+       "channel": 6,
+       "duration_ms": 5000,
+       "measured_at": 1790313743.0
+      }
+     },
+     "topic": "emosa/stats/MVXPOD023F87E628DD"
+    }
+   },
+   "payload": "0a0012120800100018e8948fb88d3422051088272829",
+   "retained": false,
+   "topic": "emosa/stats/MVXPOD023F87E628DD"
   }
  ],
  "topic": "emosa/stats/MVXPOD023F87E628DD"

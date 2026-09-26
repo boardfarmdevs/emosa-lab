@@ -29,5 +29,8 @@
     {"if_name": "b-ap-24", "role": "backhaul", "vif_radio_idx": 1}
   ],
   "inet": {"if_type": "vif", "enabled": true, "network": true, "NAT": false, "ip_assign_scheme": "none", "mtu": 1500},
-  "uplink": {"station": "bhaul-sta-50"}
+  "uplink": {"station": "bhaul-sta-50"},
+  "ap_metrics": {
+    "esp_be": "3fff00"
+  }
 }

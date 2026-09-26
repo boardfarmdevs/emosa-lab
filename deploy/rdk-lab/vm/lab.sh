@@ -277,9 +277,9 @@ EOF
 
 pod_serial() { cx "$1" /usr/opensync/tools/ovsh -r s AWLAN_Node serial_number 2>/dev/null | tr -d '[:space:]'; }
 
-telemetry_json() {    # the fleet's telemetry setting: 5 s reports, published every 5 s
+telemetry_json() {    # the fleet's telemetry setting: 5 s reports and survey, published every 5 s
     if [ -f /opt/emosa-lab/telemetry ]; then
-        printf '{"mode": "mqtt", "broker": "%s", "port": 8883, "reporting_interval": 5, "sampling_interval": 5, "publish_interval": 5}' "$WAN_HOST"
+        printf '{"mode": "mqtt", "broker": "%s", "port": 8883, "reporting_interval": 5, "sampling_interval": 5, "publish_interval": 5, "survey": true}' "$WAN_HOST"
     else
         printf '{"mode": "off"}'
     fi

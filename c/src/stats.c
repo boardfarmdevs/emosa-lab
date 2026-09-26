@@ -306,12 +306,69 @@ static const char *client_report(em_pod_stats *s, const pb_client_report *cr)
     return NULL;
 }
 
+/* One sts.Survey (Report field 2): ON_CHANNEL raw samples kept per channel, newest only.
+ * Sets *incomplete when a required field is missing, as proto2 IsInitialized. */
+static bool survey(em_pod_stats *s, const uint8_t *d, size_t n, bool apply, bool *incomplete)
+{
+    reader r = {d, d + n};
+    pb_field f = {0};
+    bool error = false, has_band = false, has_type = false, has_time = false;
+    uint64_t band = 0, type = 0, stamp = 0;
+    while (next(&r, &f, &error)) {
+        if (f.field == 1 && f.wire == 0) { band = f.varint; has_band = true; }
+        else if (f.field == 2 && f.wire == 0) { type = f.varint; has_type = true; }
+        else if (f.field == 3 && f.wire == 0) { stamp = f.varint; has_time = true; }
+    }
+    if (error)
+        return false;
+    if (!has_band || !has_type)
+        *incomplete = true;
+    r = (reader){d, d + n};
+    while (next(&r, &f, &error)) {
+        if (f.field != 4 || f.wire != 2)
+            continue;
+        reader x = {f.data, f.data + f.len};
+        pb_field g = {0};
+        bool has_channel = false, has_busy = false, has_duration = false;
+        uint64_t channel = 0, busy = 0, duration = 0, offset = 0;
+        while (next(&x, &g, &error)) {
+            if (g.field == 1 && g.wire == 0) { channel = g.varint; has_channel = true; }
+            else if (g.field == 2 && g.wire == 0) { duration = g.varint; has_duration = true; }
+            else if (g.field == 5 && g.wire == 0) { busy = g.varint; has_busy = true; }
+            else if (g.field == 9 && g.wire == 0) offset = g.varint;
+        }
+        if (error)
+            return false;
+        if (!has_channel)
+            *incomplete = true;
+        if (!apply || type != 0 || band >= 7 || !has_time || !has_busy || busy > 100)
+            continue;
+        double at = (double)(stamp + offset) / 1000;
+        em_survey_stats *slot = NULL;
+        for (size_t i = 0; i < s->nsurveys; i++)
+            if (s->surveys[i].channel == channel)
+                slot = &s->surveys[i];
+        if (slot && at <= slot->measured_at)
+            continue;
+        if (!slot) {
+            if (s->nsurveys == sizeof(s->surveys) / sizeof(s->surveys[0]))
+                continue;
+            slot = &s->surveys[s->nsurveys++];
+        }
+        *slot = (em_survey_stats){.channel = (unsigned)channel, .busy_percent = (unsigned)busy,
+                                  .duration_ms = (unsigned)duration, .has_duration = has_duration,
+                                  .measured_at = at};
+        snprintf(slot->band, sizeof(slot->band), "%s", BANDS[band]);
+    }
+    return !error;
+}
+
 bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *payload, size_t len,
                           bool retained)
 {
     const char *reason = NULL;
-    pb_client_report *reports = NULL;
-    size_t nreports = 0;
+    pb_client_report *reports = NULL, *surveys = NULL;
+    size_t nreports = 0, nsurveys = 0;
     if (retained || strcmp(topic, s->topic) || len < 1 || len > MAX_PAYLOAD) {
         reason = "not a live report on this pod's topic";
         goto done;
@@ -320,12 +377,17 @@ bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *pay
     pb_field f = {0};
     bool error = false, node = false;
     reports = calloc(len, sizeof(*reports));
-    while (reports && next(&r, &f, &error)) {
+    surveys = calloc(len, sizeof(*surveys));
+    while (reports && surveys && next(&r, &f, &error)) {
         if (f.field == 1 && f.wire == 2)
             node = true;
         else if (f.field == 5 && f.wire == 2)
             reports[nreports++] = (pb_client_report){.data = f.data, .len = f.len};
+        else if (f.field == 2 && f.wire == 2)
+            surveys[nsurveys++] = (pb_client_report){.data = f.data, .len = f.len};
     }
+    if (!surveys)
+        error = true;
     if (!reports || error) {
         reason = "Error parsing message";
         goto done;
@@ -355,6 +417,8 @@ bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *pay
         }
         incomplete = incomplete || !cr->has_band || !cr->has_channel;
     }
+    for (size_t i = 0; i < nsurveys && !error; i++)
+        error = !survey(s, surveys[i].data, surveys[i].len, false, &incomplete);
     if (error) {
         reason = "Error parsing message";
         goto done;
@@ -366,8 +430,11 @@ bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *pay
     qsort(reports, nreports, sizeof(*reports), by_timestamp);
     for (size_t i = 0; i < nreports && !reason; i++)
         reason = client_report(s, &reports[i]);
+    for (size_t i = 0; i < nsurveys && !reason; i++)
+        survey(s, surveys[i].data, surveys[i].len, true, &incomplete);
 done:
     free(reports);
+    free(surveys);
     if (reason) {
         s->rejected++;
         snprintf(s->last_error, sizeof(s->last_error), "%s", reason);
@@ -446,5 +513,30 @@ cJSON *em_pod_stats_status(em_pod_stats *s)
         cJSON_AddItemToObject(stations, st->mac, x);
     }
     cJSON_AddItemToObject(o, "stations", stations);
+    cJSON *surveys = cJSON_CreateObject();
+    size_t order[16];
+    for (size_t i = 0; i < s->nsurveys; i++)
+        order[i] = i;
+    for (size_t i = 0; i < s->nsurveys; i++) /* by channel */
+        for (size_t j = i + 1; j < s->nsurveys; j++)
+            if (s->surveys[order[j]].channel < s->surveys[order[i]].channel) {
+                size_t t = order[i];
+                order[i] = order[j];
+                order[j] = t;
+            }
+    for (size_t i = 0; i < s->nsurveys; i++) {
+        const em_survey_stats *sv = &s->surveys[order[i]];
+        cJSON *x = cJSON_CreateObject();
+        char key[12];
+        snprintf(key, sizeof(key), "%u", sv->channel);
+        cJSON_AddStringToObject(x, "band", sv->band);
+        cJSON_AddNumberToObject(x, "channel", sv->channel);
+        cJSON_AddNumberToObject(x, "busy_percent", sv->busy_percent);
+        if (sv->has_duration) cJSON_AddNumberToObject(x, "duration_ms", sv->duration_ms);
+        else cJSON_AddNullToObject(x, "duration_ms");
+        cJSON_AddNumberToObject(x, "measured_at", sv->measured_at);
+        cJSON_AddItemToObject(surveys, key, x);
+    }
+    cJSON_AddItemToObject(o, "surveys", surveys);
     return o;
 }

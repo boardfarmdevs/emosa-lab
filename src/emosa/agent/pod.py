@@ -368,6 +368,7 @@ def telemetry_intent(pod_id, serial, telemetry_config):
         telemetry_config.get("reporting_interval", 10),
         telemetry_config.get("sampling_interval", 5),
         telemetry_config.get("publish_interval"),
+        telemetry_config.get("survey", False),
     )
     intent.validate()
     return intent
@@ -439,7 +440,11 @@ async def serve(config, stop):
         telemetry = TelemetrySetup(
             pod_id,
             TelemetryBackend(
-                pod_id, session, serial=config["serial"], radio_type=wanted.radio_type
+                pod_id,
+                session,
+                serial=config["serial"],
+                radio_type=wanted.radio_type,
+                survey=wanted.survey,
             ),
             telemetry_store,
             vault,
@@ -467,6 +472,16 @@ async def serve(config, stop):
             vault,
             run_id=config.get("run_id", pod_id),
         )
+    # AP metrics from the pod's statistics (spec §3.8): telemetry with the survey,
+    # and the profile's declared best-effort ESP
+    pod_metrics = None
+    if stats is not None and wanted.survey and backend.profile.esp_be is not None:
+        pod_metrics = {
+            "stats": stats,
+            "esp_be": backend.profile.esp_be,
+            # a report is current for three reporting periods after its publication
+            "freshness": 3 * wanted.reporting_interval + (wanted.publish_interval or 60),
+        }
     binding = PeerBinding(config["interface"], 1, agent, controller, (controller,))
     report = PodReportSource(backend, binding, pod_id, station)
     mids = MidSequence(secrets.randbelow(65536))
@@ -552,6 +567,7 @@ async def serve(config, stop):
                     reporting_policy_store=reporting,
                     reset_channel_policy=lifecycle.starts == 0,
                     steering_executor=steering.start if steering else None,
+                    pod_metrics=pod_metrics,
                 )
 
             channels = ChannelPolicyStore(state_dir / "channel-policy.sqlite")

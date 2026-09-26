@@ -44,7 +44,9 @@ carried out by the pod (the station left the source BSS).
 Not in the C runtime yet (the Python agent has them):
 - the durable operation journal: a restart forgets what was submitted, and
   steering windows a previous process left open are not closed;
-- the uplink (EasyMesh backhaul STA) and telemetry scopes;
+- the uplink (EasyMesh backhaul STA) and telemetry scopes, and with them the AP
+  metrics from the pod's statistics (spec §3.8; the statistics decoder, survey
+  included, is here and checked by the vectors);
 - Link Metric and AP Metrics answers (the queries are counted, not answered);
 - retries of the Early AP Capability Report;
 - schema validation of the configuration and status.

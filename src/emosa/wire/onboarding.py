@@ -23,6 +23,7 @@ from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, decode_fra
 from emosa.wire.coordinator import ReportCoordinator
 from emosa.wire.disassociation import DisassociationCoordinator, FinalSession
 from emosa.wire.link_metrics import LinkMetricCoordinator, LinkMetricSource
+from emosa.wire.pod_metrics import PodMetricReporter
 from emosa.wire.provisioning_session import ComponentProvisioningSession
 from emosa.wire.reporting_policy import ReportingPolicyCoordinator
 from emosa.wire.reports import PreparedReport, capability_tlvs
@@ -81,6 +82,7 @@ class OnboardingSession:
         reset_channel_policy=True,
         message_set=EASYMESH_61,
         steering_executor=None,
+        pod_metrics=None,
     ):
         self.message_set = check_message_set(message_set)
         if type(inventory) is not DeviceInventory:
@@ -128,6 +130,8 @@ class OnboardingSession:
             else APMetricSource(source, clock=clock)
         )
         self.ap_metrics = None
+        # AP metrics from the pod's statistics (spec §3.8): {"stats", "esp_be", "freshness"}
+        self.pod_metrics = pod_metrics
         # Client steering mandates go to the pod through this (emosa.agent.steering).
         self.steering_executor = steering_executor
         self.steering = None
@@ -332,18 +336,32 @@ class OnboardingSession:
                 self.link_metrics = LinkMetricCoordinator(
                     self.link_metric_source, self.send_frame, clock=self.clock
                 )
-                self.ap_metrics = APMetricCoordinator(
-                    self.ap_metric_source,
-                    self.send_frame,
-                    self.mids,
-                    admitted=lambda: self.state == "provisioning",
-                    policy=lambda: (
-                        self.reporting_policy.value["policy"]
-                        if self.reporting_policy and self.reporting_policy.value
-                        else {}
-                    ),
-                    clock=self.clock,
+                policy = lambda: (  # noqa: E731
+                    self.reporting_policy.value["policy"]
+                    if self.reporting_policy and self.reporting_policy.value
+                    else {}
                 )
+                if self.pod_metrics is not None:
+                    self.ap_metrics = PodMetricReporter(
+                        self.source,
+                        self.pod_metrics["stats"],
+                        self.send_frame,
+                        self.mids,
+                        admitted=lambda: self.state == "provisioning",
+                        policy=policy,
+                        esp_be=self.pod_metrics["esp_be"],
+                        freshness=self.pod_metrics["freshness"],
+                        clock=self.clock,
+                    )
+                else:
+                    self.ap_metrics = APMetricCoordinator(
+                        self.ap_metric_source,
+                        self.send_frame,
+                        self.mids,
+                        admitted=lambda: self.state == "provisioning",
+                        policy=policy,
+                        clock=self.clock,
+                    )
                 if self.channel_store is not None:
                     self.channels = ChannelCoordinator(
                         self.source,
@@ -559,10 +577,14 @@ class OnboardingSession:
             "physical_pod_proven": False,
             "reporting_policy": self.reporting_policy.status() if self.reporting_policy else None,
             "steering": self.steering.status() if self.steering else None,
-            "ap_metrics": {
-                "counts": dict(self.ap_metrics.counts),
-                "measurement_available": self.ap_metric_source.current() is not None,
-            }
+            "ap_metrics": (
+                self.ap_metrics.status()
+                if self.pod_metrics is not None
+                else {
+                    "counts": dict(self.ap_metrics.counts),
+                    "measurement_available": self.ap_metric_source.current() is not None,
+                }
+            )
             if self.ap_metrics
             else None,
             "neighbor_link_metrics": {

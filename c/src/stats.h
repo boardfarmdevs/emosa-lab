@@ -20,6 +20,14 @@ typedef struct {
     uint64_t counters[EM_COUNTERS];
 } em_station_stats;
 
+/* The last raw on-channel survey sample of a channel: its busy percentage (spec §3.8). */
+typedef struct {
+    unsigned channel, busy_percent, duration_ms;
+    bool has_duration;
+    char band[8];
+    double measured_at;
+} em_survey_stats;
+
 typedef struct {
     char topic[160];
     unsigned interval;
@@ -30,6 +38,8 @@ typedef struct {
     uint64_t last_timestamp[7]; /* per band */
     size_t nstations;
     em_station_stats stations[256];
+    size_t nsurveys;
+    em_survey_stats surveys[16];
     bool measured[EM_COUNTERS];
     unsigned accepted, rejected, gaps;
     char last_error[96];

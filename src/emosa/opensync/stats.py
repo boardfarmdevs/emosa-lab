@@ -71,6 +71,26 @@ Report = report_type()
 
 
 @dataclass(frozen=True)
+class SurveyStats:
+    """The last raw on-channel survey sample: the channel's busy percentage."""
+
+    band: str
+    channel: int
+    busy_percent: int
+    duration_ms: int | None
+    measured_at: float  # epoch seconds: the sample's time
+
+    def public(self):
+        return {
+            "band": self.band,
+            "channel": self.channel,
+            "busy_percent": self.busy_percent,
+            "duration_ms": self.duration_ms,
+            "measured_at": self.measured_at,
+        }
+
+
+@dataclass(frozen=True)
 class StationStats:
     """One station as the pod measured it, lower-case MAC; counters since ``epoch_start``."""
 
@@ -105,6 +125,7 @@ class PodStats:
         self.lifetime = 3 * interval + batch
         self.last_timestamp = {}  # band -> ms of the last accepted client report
         self.stations = {}  # mac -> StationStats
+        self.surveys = {}  # channel -> SurveyStats (raw on-channel samples)
         self.measured = set()  # counters seen non-zero on this pod
         self.accepted = self.rejected = self.gaps = 0
         self.last_error = None
@@ -120,6 +141,8 @@ class PodStats:
                 raise ValueError("incomplete report")
             for radio in sorted(report.clients, key=lambda r: r.timestamp_ms):
                 self._client_report(radio)
+            for survey in report.survey:
+                self._survey(survey)
         except (ValueError, DecodeError) as exc:
             self.rejected += 1
             self.last_error = str(exc)
@@ -197,6 +220,29 @@ class PodStats:
                 **totals,
             )
 
+    def _survey(self, survey):
+        # ON_CHANNEL (0) raw samples of the operating channel; busy is a percentage
+        if (
+            survey.survey_type != 0
+            or survey.band not in BANDS
+            or not survey.HasField("timestamp_ms")
+        ):
+            return
+        for sample in survey.survey_list:
+            if not sample.HasField("busy") or not 0 <= sample.busy <= 100:
+                continue
+            at = (survey.timestamp_ms + sample.offset_ms) / 1000
+            old = self.surveys.get(sample.channel)
+            if old is not None and at <= old.measured_at:
+                continue
+            self.surveys[sample.channel] = SurveyStats(
+                BANDS[survey.band],
+                sample.channel,
+                sample.busy,
+                sample.duration_ms if sample.HasField("duration_ms") else None,
+                at,
+            )
+
     def current(self):
         """Stations whose last period ended within the lifetime, by MAC."""
         now = self.clock()
@@ -215,4 +261,5 @@ class PodStats:
             "last_error": self.last_error,
             "last_report_at": self.last_report_at,
             "stations": {mac: s.public() for mac, s in sorted(self.current().items())},
+            "surveys": {str(c): s.public() for c, s in sorted(self.surveys.items())},
         }
