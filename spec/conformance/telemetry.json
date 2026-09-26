@@ -15,6 +15,8 @@
       "tx_bytes",
       "tx_frames"
      ],
+     "probed_stations": 0,
+     "probes": {},
      "reports_accepted": 1,
      "reports_rejected": 0,
      "stations": {},
@@ -38,6 +40,8 @@
       "tx_bytes",
       "tx_frames"
      ],
+     "probed_stations": 0,
+     "probes": {},
      "reports_accepted": 2,
      "reports_rejected": 0,
      "stations": {
@@ -100,6 +104,8 @@
       "tx_bytes",
       "tx_frames"
      ],
+     "probed_stations": 0,
+     "probes": {},
      "reports_accepted": 3,
      "reports_rejected": 0,
      "stations": {
@@ -162,6 +168,8 @@
       "tx_bytes",
       "tx_frames"
      ],
+     "probed_stations": 0,
+     "probes": {},
      "reports_accepted": 3,
      "reports_rejected": 1,
      "stations": {
@@ -224,6 +232,8 @@
       "tx_bytes",
       "tx_frames"
      ],
+     "probed_stations": 0,
+     "probes": {},
      "reports_accepted": 3,
      "reports_rejected": 2,
      "stations": {
@@ -286,6 +296,8 @@
       "tx_bytes",
       "tx_frames"
      ],
+     "probed_stations": 0,
+     "probes": {},
      "reports_accepted": 3,
      "reports_rejected": 3,
      "stations": {
@@ -348,6 +360,8 @@
       "tx_bytes",
       "tx_frames"
      ],
+     "probed_stations": 0,
+     "probes": {},
      "reports_accepted": 4,
      "reports_rejected": 3,
      "stations": {
@@ -396,13 +410,13 @@
        "busy_percent": 41,
        "channel": 6,
        "duration_ms": 5000,
-       "measured_at": 1790313743.0
+       "measured_at": 1790313741.5
       }
      },
      "topic": "emosa/stats/MVXPOD023F87E628DD"
     }
    },
-   "payload": "0a001214080010001898858fb88d34220708061088272829",
+   "payload": "0a001217080010001898858fb88d34220a0806108827282948dc0b",
    "retained": false,
    "topic": "emosa/stats/MVXPOD023F87E628DD"
   },
@@ -418,6 +432,8 @@
       "tx_bytes",
       "tx_frames"
      ],
+     "probed_stations": 0,
+     "probes": {},
      "reports_accepted": 4,
      "reports_rejected": 4,
      "stations": {
@@ -466,13 +482,13 @@
        "busy_percent": 41,
        "channel": 6,
        "duration_ms": 5000,
-       "measured_at": 1790313743.0
+       "measured_at": 1790313741.5
       }
      },
      "topic": "emosa/stats/MVXPOD023F87E628DD"
     }
    },
-   "payload": "0a0012120800100018e8948fb88d3422051088272829",
+   "payload": "0a0012150800100018e8948fb88d342208108827282948dc0b",
    "retained": false,
    "topic": "emosa/stats/MVXPOD023F87E628DD"
   }

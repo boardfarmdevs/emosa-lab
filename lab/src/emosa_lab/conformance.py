@@ -583,6 +583,7 @@ def control_vectors():
     from emosa.wire.cmdu import MidSequence, Reassembler, Tlv, fragment_message
     from emosa.wire.reporting_policy import ReportingPolicyCoordinator, ReportingPolicyStore
     from emosa.wire.steering import SteeringCoordinator
+    from emosa.wire.unassociated import UnassociatedCoordinator
 
     raw = pod_rows()
     stations = ["02:00:00:00:0a:00", "02:00:00:00:10:00"]
@@ -659,6 +660,28 @@ def control_vectors():
             "steering-agent-selected-target",
             [request(0x8014, 18, (steering_tlv([mac(stations[0])], [(b"\xff" * 6, 0, 0)]),))],
         ),
+        (
+            # without telemetry nothing was heard: an associated station is refused with
+            # 0x01, the others with 0x02, and the Ack is the whole answer (spec §3.9)
+            "unassociated-query-refused",
+            [
+                request(
+                    0x800F,
+                    20,
+                    (
+                        Tlv(
+                            0x97,
+                            bytes((81, 2, 6, 2))
+                            + mac(stations[0])
+                            + mac("02:00:00:00:99:99")
+                            + bytes((1, 2))
+                            + mac("02:00:00:00:98:98")
+                            + mac(stations[0]),
+                        ),
+                    ),
+                )
+            ],
+        ),
     ]
     cases = []
     for name, frames in sequences:
@@ -688,6 +711,7 @@ def control_vectors():
                     mids,
                     clock=lambda: 0.0,
                 ),
+                UnassociatedCoordinator(source, sent.append, mids, clock=lambda: 0.0),
             )
             steps = []
             for frame in frames:
@@ -705,7 +729,7 @@ def control_vectors():
                 handler.close()
             cases.append({"name": name, "steps": steps, "handed_to_pod": handed})
     return {
-        "description": "spec §2.4, §3.4, §3.7: a provisioned agent over the recorded pod rows "
+        "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded pod rows "
         "(stations " + ", ".join(stations) + " on 82:00:00:00:01:00, radio " + RUID + " on "
         "class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller "
         "request frame and the frames the agent sends in answer, in order; the agent's own "
@@ -967,7 +991,8 @@ def survey_report(timestamp_ms, *, channel=6, busy=41):
 
     report = Report(nodeID="")
     survey = report.survey.add(band=0, survey_type=0, timestamp_ms=timestamp_ms)
-    sample = survey.survey_list.add(duration_ms=5000, busy=busy)
+    # sampled 1.5 s before the report's time (offset_ms = report time - sample time)
+    sample = survey.survey_list.add(duration_ms=5000, busy=busy, offset_ms=1500)
     if channel is not None:
         sample.channel = channel
     return report.SerializePartialToString().hex()

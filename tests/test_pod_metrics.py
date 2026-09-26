@@ -144,8 +144,9 @@ def test_the_pod_survey_is_decoded_from_its_report():
 
     report = Report(nodeID="")
     survey = report.survey.add(band=0, survey_type=0, timestamp_ms=int(WALL * 1000))
-    survey.survey_list.add(channel=6, duration_ms=5000, busy=41)
+    # dppline.c: a sample's offset_ms is the report's time minus the sample's
+    survey.survey_list.add(channel=6, duration_ms=5000, busy=41, offset_ms=2000)
     stats = PodStats("emosa/stats/pod", interval=5, clock=lambda: WALL)
     assert stats.receive("emosa/stats/pod", report.SerializeToString())
-    assert stats.surveys[6].busy_percent == 41 and stats.surveys[6].measured_at == WALL
+    assert stats.surveys[6].busy_percent == 41 and stats.surveys[6].measured_at == WALL - 2
     assert stats.status()["surveys"]["6"]["busy_percent"] == 41

@@ -48,6 +48,8 @@ Not in the C runtime yet (the Python agent has them):
   metrics from the pod's statistics (spec §3.8; the statistics decoder, survey
   included, is here and checked by the vectors);
 - Link Metric and AP Metrics answers (the queries are counted, not answered);
+- probe requests from the band-steering report: an Unassociated STA Link
+  Metrics Query is answered, but every station is refused (spec §3.9);
 - retries of the Early AP Capability Report;
 - schema validation of the configuration and status.
 

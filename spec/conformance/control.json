@@ -174,9 +174,24 @@
      "request": "0272f97f0785020000e00001893a00008014001200809b001b820000000100e00005000501020000000a0001ffffffffffff0000000000"
     }
    ]
+  },
+  {
+   "handed_to_pod": [],
+   "name": "unassociated-query-refused",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a0000800000140080a3000701020000000a00a3000702020000009999a3000702020000009898000000"
+      ],
+      "result": "unassociated_query_refused"
+     },
+     "request": "0272f97f0785020000e00001893a0000800f0014008097001e51020602020000000a000200000099990102020000009898020000000a00000000"
+    }
+   ]
   }
  ],
- "description": "spec §2.4, §3.4, §3.7: a provisioned agent over the recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00 on class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller request frame and the frames the agent sends in answer, in order; the agent's own messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. 'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), as decoded from the request.",
+ "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00 on class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller request frame and the frames the agent sends in answer, in order; the agent's own messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. 'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), as decoded from the request.",
  "ovsdb_tables": {
   "AWLAN_Node": {
    "96bc1650-4197-4cd8-9036-f9eb854e87ec": {

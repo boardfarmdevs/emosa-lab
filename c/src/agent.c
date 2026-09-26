@@ -797,8 +797,9 @@ static void handle_message(agent *a, const em_message *m)
         count(&a->counts, "ack_received");
         return;
     }
-    if (m->message_type == 0x8014 && a->state != S_PROVISIONING) {
-        count(&a->counts, "unsupported_message_8014");
+    if ((m->message_type == 0x8014 || m->message_type == 0x800F) && a->state != S_PROVISIONING) {
+        snprintf(label, sizeof(label), "unsupported_message_%04x", m->message_type);
+        count(&a->counts, label);
         return;
     }
     /* channel, policy and client steering */

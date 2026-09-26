@@ -28,6 +28,7 @@ from emosa.wire.provisioning_session import ComponentProvisioningSession
 from emosa.wire.reporting_policy import ReportingPolicyCoordinator
 from emosa.wire.reports import PreparedReport, capability_tlvs
 from emosa.wire.steering import SteeringCoordinator
+from emosa.wire.unassociated import UnassociatedCoordinator
 
 R3_CONTROLLER_FIELDS = (
     "controller_capability_absent",
@@ -83,6 +84,7 @@ class OnboardingSession:
         message_set=EASYMESH_61,
         steering_executor=None,
         pod_metrics=None,
+        probes=None,
     ):
         self.message_set = check_message_set(message_set)
         if type(inventory) is not DeviceInventory:
@@ -132,6 +134,8 @@ class OnboardingSession:
         self.ap_metrics = None
         # AP metrics from the pod's statistics (spec §3.8): {"stats", "esp_be", "freshness"}
         self.pod_metrics = pod_metrics
+        self.probes = probes  # the pod's probe requests (PodStats), with telemetry
+        self.unassociated = None
         # Client steering mandates go to the pod through this (emosa.agent.steering).
         self.steering_executor = steering_executor
         self.steering = None
@@ -371,6 +375,9 @@ class OnboardingSession:
                         clock=self.clock,
                         reset_policy=self.reset_channel_policy,
                     )
+                self.unassociated = UnassociatedCoordinator(
+                    self.source, self.send_frame, self.mids, probes=self.probes, clock=self.clock
+                )
                 if self.steering_executor is not None:
                     self.steering = SteeringCoordinator(
                         self.source,
@@ -440,6 +447,10 @@ class OnboardingSession:
                     return self._record(result)
             if self.steering and self.state == "provisioning":
                 result = self.steering.handle(message, now)
+                if result:
+                    return self._record(result)
+            if self.unassociated and self.state == "provisioning":
+                result = self.unassociated.handle(message, now)
                 if result:
                     return self._record(result)
             if message.message_type == 0x8001 and self.provisioning:
@@ -552,6 +563,7 @@ class OnboardingSession:
             self.link_metrics,
             self.ap_metrics,
             self.steering,
+            self.unassociated,
         ):
             if component:
                 component.close()
@@ -577,6 +589,7 @@ class OnboardingSession:
             "physical_pod_proven": False,
             "reporting_policy": self.reporting_policy.status() if self.reporting_policy else None,
             "steering": self.steering.status() if self.steering else None,
+            "unassociated_metrics": self.unassociated.status() if self.unassociated else None,
             "ap_metrics": (
                 self.ap_metrics.status()
                 if self.pod_metrics is not None

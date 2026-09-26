@@ -568,6 +568,7 @@ async def serve(config, stop):
                     reset_channel_policy=lifecycle.starts == 0,
                     steering_executor=steering.start if steering else None,
                     pod_metrics=pod_metrics,
+                    probes=stats,
                 )
 
             channels = ChannelPolicyStore(state_dir / "channel-policy.sqlite")

@@ -455,11 +455,78 @@ static const char *steer(em_control *c, const em_message *m, em_frames *out, em_
     return "client_steering_started";
 }
 
+/* Unassociated STA Link Metrics Query (spec §3.9): the Ack refuses every
+ * station, reason 0x01 when it is associated with a BSS of the pod, 0x02 when
+ * it is not: this agent has no telemetry, so it has heard no probe request. */
+static const char *unassociated(em_control *c, const em_message *m, em_frames *out, em_reason *error)
+{
+    const em_tlv *t = NULL;
+    for (size_t i = 0; i < m->ntlvs; i++)
+        if (m->tlvs[i].kind == 0x97) {
+            if (t) {
+                *error = EM_INVALID_INPUT;
+                return NULL;
+            }
+            t = &m->tlvs[i];
+        }
+    if (!t || t->len < 2) {
+        *error = EM_INVALID_INPUT;
+        return NULL;
+    }
+    const uint8_t *d = t->value;
+    size_t at = 2, n = 0;
+    static uint8_t stations[64][6];
+    for (size_t k = 0; k < d[1]; k++) {
+        if (at + 2 > t->len || at + 2 + 6 * (size_t)d[at + 1] > t->len) {
+            *error = EM_INVALID_INPUT;
+            return NULL;
+        }
+        size_t count = d[at + 1];
+        at += 2;
+        for (size_t i = 0; i < count; i++, at += 6) {
+            if (!unicast_mac(d + at)) {
+                *error = EM_INVALID_INPUT;
+                return NULL;
+            }
+            bool seen = false;
+            for (size_t j = 0; j < n && !seen; j++)
+                seen = !memcmp(stations[j], d + at, 6);
+            if (seen)
+                continue;
+            if (n == 64) {
+                *error = EM_INVALID_INPUT; /* the controller's own bound */
+                return NULL;
+            }
+            memcpy(stations[n++], d + at, 6);
+        }
+    }
+    if (at != t->len || n == 0) {
+        *error = EM_INVALID_INPUT;
+        return NULL;
+    }
+    static em_tlv errors[64];
+    static uint8_t values[64][7];
+    for (size_t i = 0; i < n; i++) {
+        bool on_pod = false;
+        for (size_t b = 0; b < c->radio->nbss && !on_pod; b++)
+            on_pod = associated(&c->radio->bss[b], stations[i]);
+        values[i][0] = on_pod ? 0x01 : 0x02;
+        memcpy(values[i] + 1, stations[i], 6);
+        errors[i] = (em_tlv){0xA3, 7, values[i]};
+    }
+    em_reason e = send(c, 0x8000, m->mid, errors, n, out);
+    if (e != EM_OK) {
+        *error = e;
+        return NULL;
+    }
+    return "unassociated_query_refused";
+}
+
 const char *em_control_handle(em_control *c, const em_message *m, em_frames *out, em_reason *error)
 {
     *error = EM_OK;
     if (m->message_type != 0x8003 && m->message_type != 0x8004 && m->message_type != 0x8006 &&
-        m->message_type != 0x8014 && m->message_type != 0x801B)
+        m->message_type != 0x8014 && m->message_type != 0x801B && m->message_type != 0x800F)
         return NULL;
     if (memcmp(m->source, c->binding.controller_al, 6) ||
         memcmp(m->destination, c->binding.local_al, 6) || m->relay) {
@@ -469,6 +536,7 @@ const char *em_control_handle(em_control *c, const em_message *m, em_frames *out
     switch (m->message_type) {
     case 0x8003: return policy(c, m, out, error);
     case 0x8014: return steer(c, m, out, error);
+    case 0x800F: return unassociated(c, m, out, error);
     case 0x801B: return scan(c, m, out, error);
     default: return channel(c, m, out, error);
     }

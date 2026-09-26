@@ -414,6 +414,54 @@ response carries it); whether the optimizer's candidate handling accepts an
 age of up to about a minute is to be checked. If the pods cannot measure
 honestly, how the gates treat an abstaining agent is the user's decision.
 
+### Step 4: measurements (in progress)
+
+**Telemetry** runs in the lab (`lab.sh telemetry`): the broker stage at
+`10.101.0.40:8883` (mutual TLS, lab CA, a device certificate per pod), each
+pod publishing to `emosa/stats/<serial>` with raw client and on-channel survey
+reports every 5 s and `qm` publishing every 5 s (`agg_stats_interval`).
+
+**Serving metrics** (spec §3.8). Each pod's agent sends an AP Metrics Response
+every 5 s, as the controller's Metric Reporting Policy asks: the channel
+utilization measured by the survey (about 41 % busy on channel 6), the
+declared best-effort ESP of the profile (`3fff00`, as the native agents), and
+per station with a fresh report its link metrics (RCPI from the SNR) and
+traffic counters. Two defects hid this at first: a changed telemetry request
+(survey, publish interval) was not written on the same OpenSync start, and the
+session did not monitor `Wifi_Stats_Config.survey_type`, so the agent never
+saw its own survey row and the write timed out. Also corrected: a survey
+sample's time is the report's time minus its `offset_ms` (dppline.c), not plus.
+
+**Candidate measurements** (spec §3.9), checked on `pod-1` by hand with a
+`Band_Steering_Config` group on `home-ap-24` and inert `Band_Steering_Clients`
+rows (`cs_mode` off, every kick and preference off):
+
+- hostapd delivers `RX-PROBE-REQUEST sa=… signal=…` to `owm`, which attaches
+  with `probe_rx_events=1` (it also emits the older `NL80211-CMD-FRAME
+  type=EVT-FRAME-PROBE-REQ`, hostap patch 991, which `owm` 6.6 ignores);
+- `owm` records a `PROBE` event only for a station with a client row, with the
+  SNR over its fixed -96 dBm floor (28 for a -68 dBm probe);
+- the band-steering report (`sts.BSReport`) follows every 60 s (fixed in
+  `ow_steer_bm`), each event with `offset_ms` before the report's time. A
+  recorded report is the fixture `tests/fixtures/opensync/pod-6.6.1-hwsim-bs-probe.hex`.
+
+An associated station probes only when it scans (the probes above came from
+`iw scan` on `wlan-client-008`). A pod therefore measures few candidates, and
+each measurement can be a minute or more old; the response carries its age,
+and a probe older than two minutes is not reported.
+
+Stage A (done): both agents answer the Unassociated STA Link Metrics Query.
+The Ack refuses every station the pod cannot report (Error Code `0x01` when it
+is associated with the pod, `0x02` otherwise), and the response lists the
+others. RDK's controller completes a query that refuses every station on the
+Ack alone (meta-cmf patch 0140), so the optimizer's candidate snapshot is
+complete. The C agent has no telemetry and refuses every station; the Python
+agent measures stations whose probes the pod reports.
+
+Stage B (next): the agent writes the group and a monitor row for each station
+the controller asks about (bounded, removed when no longer asked for), so the
+pods hear their probes.
+
 ### Order
 
 1. Two pods through the GTP path, backhaul held fixed (done).

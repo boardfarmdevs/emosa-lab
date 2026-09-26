@@ -341,9 +341,10 @@ static bool survey(em_pod_stats *s, const uint8_t *d, size_t n, bool apply, bool
             return false;
         if (!has_channel)
             *incomplete = true;
-        if (!apply || type != 0 || band >= 7 || !has_time || !has_busy || busy > 100)
+        if (!apply || type != 0 || band >= 7 || !has_time || !has_busy || busy > 100 || offset > stamp)
             continue;
-        double at = (double)(stamp + offset) / 1000;
+        /* dppline.c: offset_ms = report time - sample time */
+        double at = (double)(stamp - offset) / 1000;
         em_survey_stats *slot = NULL;
         for (size_t i = 0; i < s->nsurveys; i++)
             if (s->surveys[i].channel == channel)
@@ -538,5 +539,8 @@ cJSON *em_pod_stats_status(em_pod_stats *s)
         cJSON_AddItemToObject(surveys, key, x);
     }
     cJSON_AddItemToObject(o, "surveys", surveys);
+    /* band-steering probe requests (spec §3.9) are not decoded here yet */
+    cJSON_AddItemToObject(o, "probes", cJSON_CreateObject());
+    cJSON_AddNumberToObject(o, "probed_stations", 0);
     return o;
 }
