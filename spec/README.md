@@ -90,7 +90,8 @@ Sent by the agent:
 | `0x8007` | Channel Selection Response | in answer to every well-formed Channel Selection Request: accepted (code 0) without moving the radio, or declined (code 2) when the pod cannot do what it asks (§3.4) |
 | `0x8008` | Operating Channel Report | after a Channel Selection Request, while the BSS operates |
 | `0x800A` | Client Capability Report | in answer to a Client Capability Query (declares the capability unavailable) |
-| `0x800C` | AP Metrics Response | in answer to an AP Metrics Query, only with qualified measurements |
+| `0x800C` | AP Metrics Response | in answer to an AP Metrics Query, and unsolicited at the controller's AP metrics reporting interval, from the pod's statistics (§3.8) |
+| `0x8010` | Unassociated STA Link Metrics Response | after the Ack of an Unassociated STA Link Metrics Query: the stations the pod heard recently (§3.9) |
 | `0x8017` | Steering Completed | after the Ack of a steering opportunity: EMOSA steers nothing on its own account (§3.7) |
 | `0x801A` | Backhaul Steering Response | after its Ack: result code `0x01` (failure). EMOSA refuses backhaul steering |
 | `0x801C` | Channel Scan Report | after the Ack of a Channel Scan Request: a Timestamp TLV (`0xA8`) and one Channel Scan Result TLV (`0xA7`) per requested channel of the pod's radio, status `0x01` (scan not supported) (§3.4) |
@@ -112,7 +113,8 @@ Received by the agent:
 | `0x8003` | Multi-AP Policy Config Request | stored and acknowledged, also with policy TLVs EMOSA does not interpret (recorded as not applied). Nothing is applied to the pod. |
 | `0x8004` / `0x8006` | Channel Preference Query / Channel Selection Request | answered (§3.4) |
 | `0x8009` | Client Capability Query | answered |
-| `0x800B` | AP Metrics Query | answered only with qualified measurements |
+| `0x800B` | AP Metrics Query | answered from the pod's statistics (§3.8) |
+| `0x800F` | Unassociated STA Link Metrics Query | acknowledged, with an Error Code TLV for every station the pod cannot report (§3.9) |
 | `0x8014` | Client Steering Request | acknowledged; a mandate for one station and one target is carried out by the pod (§3.7) |
 | `0x8019` | Backhaul Steering Request | acknowledged and refused (`0x801A`) |
 | `0x801B` | Channel Scan Request | acknowledged and reported as not supported (§3.4) |
@@ -363,6 +365,54 @@ controller sees the outcome in the topology: the station leaves the pod's BSS
 Known limitation: the pod does not tell EMOSA whether a station supports BTM.
 `owm` deauthenticates a station without BTM support at once, also for a
 request without disassociation imminent.
+
+### 3.8 AP metrics from the pod's statistics
+
+With telemetry (§3.6), the agent reports AP metrics as a native agent does:
+in answer to an AP Metrics Query and, when the controller's Metric Reporting
+Policy sets an AP metrics reporting interval, unsolicited at that interval.
+RDK's controller learns a client's signal only this way.
+
+Telemetry configures two reports on the pod: the raw client report and a raw
+on-channel survey of the represented radio, both at the reporting interval.
+
+An AP Metrics Response carries, for each of the pod's operating BSSes:
+- **AP Metrics TLV** (`0x94`): the BSSID; the channel utilization, measured:
+  the survey sample's busy percentage scaled to 0–255, from a sample at most
+  three reporting intervals old; the number of stations on the BSS; and the
+  Estimated Service Parameters for best effort, **declared**: the profile's
+  `esp_be` value (three octets), reported as configured, not measured, in the
+  agent's status. Without a fresh survey sample no AP Metrics TLV is sent for
+  the radio, and no response.
+- **Associated STA Link Metrics TLV** (`0x96`), when the radio's policy asks
+  for link metrics: for each station on the BSS with a fresh client report
+  (at most three reporting intervals old): the time since the measurement,
+  the last downlink and uplink rates, and the uplink RCPI. The pod reports
+  SNR; OpenSync derives it from the received signal with a fixed noise floor,
+  and the agent applies the inverse to obtain the RSSI and from it the RCPI.
+  A station without a fresh report is left out.
+- **Associated STA Traffic Stats TLV** (`0xA2`), when the policy asks for
+  traffic statistics: for stations whose counters the pod measures (§3.6).
+
+### 3.9 Unassociated station measurements
+
+The pod hears probe requests. OpenSync's band steering records each probe from
+a station it tracks with its SNR and time, and publishes these events in its
+band-steering report. The agent keeps a monitor-only `Band_Steering_Clients`
+row for each station the controller asks about (no steering, no kick, no
+probe blocking; bounded in number, removed when no longer asked for), and
+reads the probe events from the pod's statistics.
+
+On an Unassociated STA Link Metrics Query the agent acknowledges within one
+second. The Ack carries an Error Code TLV for every requested station it
+cannot report: reason `0x01` for a station associated with one of the pod's
+BSSes, reason `0x02` for a station the pod has not heard on the requested
+channel within the last two minutes. Then an Unassociated STA Link Metrics
+Response lists the other stations: the channel, the time since the probe, and
+the uplink RCPI derived from the probe's SNR as in §3.8. Channels other than
+the pod's operating channel are answered with reason `0x02` for their
+stations. Measurements are real or absent: the agent never fills a station
+from the radio model or a default.
 
 ## 4. The fleet
 
