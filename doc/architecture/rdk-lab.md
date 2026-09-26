@@ -468,8 +468,28 @@ Stage B: the agent writes the group and a watch row for each station the
 controller asks about on the pod's channel (spec §3.9: at most 32, marked
 `cs_params` `{"emosa": "watch"}`, dropped after 10 minutes without a query,
 written at most every 10 s), so the pods hear their probes. A steering window
-replaces the station's watch row. Not yet deployed: the pod-variant suite was
-started with stage A.
+replaces the station's watch row. Deployed in `rdk-emosa` (EMOSA `2815061`)
+for runs 6 to 8 of the pod-variant suite.
+
+### Step 5: the pod-variant suite (in progress)
+
+`run-easymesh-suite.sh rooms` with `EASYMESH_ROOM_WORLDS_ROOT=gen/wmediumd/configurator/worlds-pods`
+on `rdk-emosa`. Run 8 (2026-09-26 12:01 UTC, meta-cmf `1b6b454`, EMOSA
+`2815061`): 7 of 9 steps passed; the catalog passed 23 of 24 rooms; geometry
+failed one of its three rooms. The catalog failure also failed in the native
+baseline; geometry is not repeatable natively either. Both are native-lab
+limits the pods make somewhat worse, not pod defects:
+
+| Room | Cause | Fix |
+| --- | --- | --- |
+| `band-ap-counter-roam` (runs 6, 7) | the band init's REASSOCIATE scan is active and 40 ms long on one channel; the client missed the gateway's 2.4 GHz BSS at -37 dBm and joined a pod or an extender at -63 to -69 dBm; after the optimizer's AP steer, wpa_supplicant 2.11 roamed on to 5 GHz on its own (within-ESS, better estimated throughput) and the expected 2.4 to 5 GHz step was never verified | meta-cmf `1b6b454`: a passive scan-only scan of the initial band before reassociating; passed in run 8 |
+| `fifty-client-counter-roam` (native baseline, three of four pod runs) | the optimizer's candidate collection is too slow for 50 clients: one round over 16 radios, one agent at a time, takes 10 to 13 s, and a steered client's snapshot needs up to two more rounds; convergence lands near the window's end (checkpoint 40 to 56 s of 60, load 65 to 91 s of 90) | open. Longer windows only move the failure (a 90 s checkpoint passed twice, then the load missed its 90 s); the fix is collection throughput |
+| geometry (three rooms) | not repeatable, with or without pods: one pass in ten attempts since the native baseline, each failure in a different place (initial convergence, branch client decisions, parent handover, isolation return). Seen: 50 to 80 s windows in which an extender's candidate queries time out (HTTP 504; Extender-2's 2.4 GHz radio in two runs); a stronger-parent handover that never starts: for 60 s the controller's only fresh candidate for extender_3's backhaul station is the gateway's backhaul AP, never the stronger extender_2; the journals of em_ctrl and em_agent drop most lines under load (journald suppression), so why cannot be read afterwards | open |
+
+Installed in place in `rdk-emosa`, still to be built into the images:
+controller patches 0211 and 0212 (`*.pre-0211`, `*.pre-0212`); OneWifi 0040
+(64 unassociated stations per channel) in the gateway and extenders, 0041 (one
+backhaul connection attempt per scan) in the extenders (`*.pre-0040`).
 
 ### Order
 
