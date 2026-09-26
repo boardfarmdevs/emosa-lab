@@ -3,6 +3,7 @@
 import asyncio
 import copy
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,7 @@ TOPIC = f"emosa/stats/{SERIAL}"
 RECORDED = Path("tests/fixtures/opensync/pod-6.6.1-hwsim-client-stats.hex")
 NODE = "00000000-0000-4000-8000-0000000000b1"
 STATS_ROW = "00000000-0000-4000-8000-0000000000c1"
+SURVEY_ROW = "00000000-0000-4000-8000-0000000000c2"
 STA1, STA2 = "02:00:00:00:12:00", "02:00:00:00:13:00"
 
 
@@ -182,8 +184,9 @@ class Pod:
                 self.tables["AWLAN_Node"][NODE].update(op["row"])
                 results.append({"count": 1})
             else:
-                self.tables["Wifi_Stats_Config"][STATS_ROW] = op["row"]
-                results.append({"uuid": ["uuid", STATS_ROW]})
+                row = STATS_ROW if op["row"]["stats_type"] == "client" else SURVEY_ROW
+                self.tables["Wifi_Stats_Config"][row] = op["row"]
+                results.append({"uuid": ["uuid", row]})
         return results
 
 
@@ -233,6 +236,20 @@ def test_written_again_after_every_opensync_start_and_only_then(tmp_path):
     asyncio.run(telemetry.tick())
     assert len(pod.sent) == 2 and telemetry.latest().state == State.OBSERVED_APPLIED
     assert len(telemetry.store.operations()) == 2
+
+
+def test_a_changed_request_is_written_on_the_same_start(tmp_path):
+    pod = Pod()
+    telemetry, _ = setup(tmp_path, pod)
+    asyncio.run(telemetry.tick())
+    first = telemetry.key()
+    telemetry.intent = replace(telemetry.intent, survey=True, publish_interval=5)
+    telemetry.backend.survey = True  # as the agent builds it from the same request
+    assert telemetry.key().startswith(first + ":")
+    asyncio.run(telemetry.tick())
+    asyncio.run(telemetry.tick())
+    assert len(pod.sent) == 2 and telemetry.latest().state == State.OBSERVED_APPLIED
+    assert "survey" in [op["row"].get("stats_type") for op in pod.sent[1] if op["op"] == "insert"]
 
 
 def test_another_managers_broker_is_not_taken_over(tmp_path):
