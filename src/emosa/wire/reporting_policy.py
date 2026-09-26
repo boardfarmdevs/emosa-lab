@@ -112,6 +112,13 @@ class ReportingPolicyStore:
 
     The caller supplies the OS boot identity because monotonic timestamps can
     survive process restart, but must be rebased after a machine reboot.
+
+    Commits survive a process crash but are not synced to disk one by one
+    (WAL, synchronous=NORMAL): the record is written twice per reporting
+    period on the agent's loop, and a synced commit took up to 0.9 s on a
+    loaded lab host, long enough for the pod's report lease to lapse. An OS
+    crash can lose the latest accounting; the schedule is rebased after a
+    reboot anyway.
     """
 
     def __init__(self, path, *, boot_id):
@@ -120,7 +127,7 @@ class ReportingPolicyStore:
         self.boot_id = boot_id
         self.db = sqlite3.connect(path)
         self.db.execute("PRAGMA journal_mode=WAL")
-        self.db.execute("PRAGMA synchronous=FULL")
+        self.db.execute("PRAGMA synchronous=NORMAL")
         self.db.execute(
             "CREATE TABLE IF NOT EXISTS reporting_policy "
             "(id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL)"
