@@ -39,6 +39,7 @@ MONITOR = {
     "Wifi_Stats_Config": [
         "stats_type",
         "radio_type",
+        "survey_type",
         "report_type",
         "reporting_interval",
         "sampling_interval",

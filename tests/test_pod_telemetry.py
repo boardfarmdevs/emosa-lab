@@ -15,7 +15,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.model import State
 from emosa.opensync.schema import Schema, reference_path
 from emosa.opensync.stats import PodStats, Report
-from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent
+from emosa.opensync.telemetry import MONITOR, TelemetryBackend, TelemetryIntent
 from emosa.secrets import SecretStore
 from emosa.store import Store
 
@@ -163,8 +163,14 @@ class Pod:
         }
 
     async def snapshot(self):
+        # the session monitors only the listed columns of the statistics rows
+        tables = copy.deepcopy(self.tables)
+        tables["Wifi_Stats_Config"] = {
+            u: {k: v for k, v in r.items() if k in MONITOR["Wifi_Stats_Config"]}
+            for u, r in tables["Wifi_Stats_Config"].items()
+        }
         return {
-            "tables": copy.deepcopy(self.tables),
+            "tables": tables,
             "generation": self.generation,
             "revision": 1,
             "ready": True,
