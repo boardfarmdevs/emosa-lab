@@ -368,7 +368,13 @@ Found before it could run:
   policy again (`/api/v1/wifipolicy`, its current entry unchanged); OneWifi then
   collects and the room converges (20 of 20 clients measured). A policy post
   alone did not help. Probable trigger: the gateway's self-heal reboot earlier
-  that day.
+  that day. Seen again on 26 September: the controller sends a Policy Config
+  Request only when the posted policy differs from the stored one, so an
+  unchanged post sends nothing (checked on the wire). The repair that works:
+  restart `onewifi`, then `em_agent`, then post the gateway agent's policy
+  with one value changed (the AP metrics interval + 1) and then as it was;
+  both requests go out and OneWifi collects within a minute (12 of 12 gateway
+  clients measured).
 
 Result (rev120 `test-results/emosa-baseline-20260925T211427Z`, 25 September
 2026 14:14–15:49 PDT, meta-cmf `00694d3` with 0211/0212 installed, EMOSA idle):
