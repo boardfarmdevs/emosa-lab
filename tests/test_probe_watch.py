@@ -16,7 +16,7 @@ from emosa.opensync.steering import CLIENT_ROW, SteeringBackend
 from emosa.secrets import SecretStore
 from emosa.store import Store
 from emosa_lab.simulation.database import SimDatabase
-from test_client_steering import SOURCE, STA, TARGET, mandate, rows
+from test_client_steering import STA, mandate, rows
 
 pytestmark = pytest.mark.ovsdb
 SERIAL = "EMOSA-STEER-1"

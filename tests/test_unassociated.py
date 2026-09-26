@@ -96,7 +96,7 @@ def test_a_heard_station_is_measured_and_the_others_refused_in_the_ack():
     ack, response = rig.messages()
     assert ack.message_type == 0x8000 and ack.mid == 90
     assert errors(ack) == {ASSOCIATED: 0x01, SILENT: 0x02}
-    assert response.message_type == 0x8010 and response.mid == 701
+    assert response.message_type == 0x8010 and response.mid == 90  # the query's
     ((kind, value),) = [(t.kind, t.value) for t in response.tlvs if t.kind != 0]
     assert kind == 0x98 and value[:2] == bytes((81, 1))
     mac, channel, age, rcpi = value[2:8], value[8], *struct.unpack("!IB", value[9:14])

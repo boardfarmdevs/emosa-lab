@@ -416,7 +416,7 @@ second. The Ack carries an Error Code TLV for every requested station it
 cannot report: reason `0x01` for a station associated with one of the pod's
 BSSes, reason `0x02` for a station the pod has not heard on the requested
 channel within the last two minutes. Then an Unassociated STA Link Metrics
-Response lists the other stations: the channel, the time since the probe, and
+Response, with the query's MID, lists the other stations: the channel, the time since the probe, and
 the uplink RCPI derived from the probe's SNR as in §3.8. Channels other than
 the pod's operating channel are answered with reason `0x02` for their
 stations. Measurements are real or absent: the agent never fills a station

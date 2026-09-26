@@ -12,7 +12,7 @@ agent acknowledges it within one second (1905 Ack) with an Error Code TLV
   channel).
 
 The other stations follow in an Unassociated STA Link Metrics Response
-(``0x8010``, TLV ``0x98``): per station the channel, the time since the probe
+(``0x8010``, TLV ``0x98``, the query's MID): per station the channel, the time since the probe
 request it was measured on and the uplink RCPI from that probe's SNR (as for
 associated stations, §3.8). When every station is refused, the Ack is the
 whole answer.
@@ -192,9 +192,11 @@ class UnassociatedCoordinator:
         body = bytearray((op_class, len(measured)))
         for station, channel, age_ms, value in measured:
             body += station + bytes((channel,)) + age_ms.to_bytes(4, "big") + bytes((value,))
+        # a response carries its request's MID (IEEE 1905.1): the controller
+        # correlates the response with its query by it
         self.send(
             RESPONSE,
-            self.mids.next(),
+            message.mid,
             (Tlv(RESPONSE_TLV, bytes(body)),),
             snapshot,
             self.clock() + 1,
