@@ -84,13 +84,30 @@ class UnassociatedCoordinator:
 
     ``probes`` is the pod's statistics cache (``PodStats``) or None when the
     agent has no telemetry; ``probe(mac)`` gives the station's last probe.
+    ``watch(macs)``, when given, is told the stations queried on the pod's own
+    operating class and channel that are not associated with it: the pod is
+    to watch their probe requests (``emosa.agent.probe_watch``).
     """
 
     def __init__(
-        self, source, send_frame, mids, *, probes=None, clock=time.monotonic, wall=time.time
+        self,
+        source,
+        send_frame,
+        mids,
+        *,
+        probes=None,
+        watch=None,
+        clock=time.monotonic,
+        wall=time.time,
     ):
         self.source, self.binding, self.send_frame = source, source.binding, send_frame
-        self.mids, self.probes, self.clock, self.wall = mids, probes, clock, wall
+        self.mids, self.probes, self.watch, self.clock, self.wall = (
+            mids,
+            probes,
+            watch,
+            clock,
+            wall,
+        )
         self.counts = {}
         self.last = None
         self.closed = False
@@ -149,8 +166,10 @@ class UnassociatedCoordinator:
         radios = snapshot.operating_radios
         operating = (radios[0].operating_class, radios[0].channel) if len(radios) == 1 else None
         now = self.wall()
-        errors, measured = [], []
+        errors, measured, heard_here = [], [], []
         for channel, stations in channels:
+            if (op_class, channel) == operating:
+                heard_here += [m for m in stations if m not in associated]
             for station in stations:
                 result = self.measure(
                     op_class, channel, station, associated=associated, operating=operating, now=now
@@ -160,6 +179,8 @@ class UnassociatedCoordinator:
                 else:
                     measured.append((station, *result))
         self.send(ACK, message.mid, tuple(errors), snapshot, received_at + 1)
+        if self.watch is not None and heard_here:
+            self.watch([m.hex(":") for m in heard_here])
         self.last = {
             "mid": message.mid,
             "operating_class": op_class,

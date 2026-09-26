@@ -85,6 +85,7 @@ class OnboardingSession:
         steering_executor=None,
         pod_metrics=None,
         probes=None,
+        watch=None,
     ):
         self.message_set = check_message_set(message_set)
         if type(inventory) is not DeviceInventory:
@@ -136,6 +137,7 @@ class OnboardingSession:
         self.pod_metrics = pod_metrics
         self.probes = probes  # the pod's probe requests (PodStats), with telemetry
         self.unassociated = None
+        self.watch = watch  # the pod's probe watch (ProbeWatch.ask), with telemetry
         # Client steering mandates go to the pod through this (emosa.agent.steering).
         self.steering_executor = steering_executor
         self.steering = None
@@ -376,7 +378,12 @@ class OnboardingSession:
                         reset_policy=self.reset_channel_policy,
                     )
                 self.unassociated = UnassociatedCoordinator(
-                    self.source, self.send_frame, self.mids, probes=self.probes, clock=self.clock
+                    self.source,
+                    self.send_frame,
+                    self.mids,
+                    probes=self.probes,
+                    watch=self.watch,
+                    clock=self.clock,
                 )
                 if self.steering_executor is not None:
                     self.steering = SteeringCoordinator(

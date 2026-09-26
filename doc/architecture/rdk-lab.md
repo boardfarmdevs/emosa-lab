@@ -464,9 +464,12 @@ Ack alone (meta-cmf patch 0140), so the optimizer's candidate snapshot is
 complete. The C agent has no telemetry and refuses every station; the Python
 agent measures stations whose probes the pod reports.
 
-Stage B (next): the agent writes the group and a monitor row for each station
-the controller asks about (bounded, removed when no longer asked for), so the
-pods hear their probes.
+Stage B: the agent writes the group and a watch row for each station the
+controller asks about on the pod's channel (spec §3.9: at most 32, marked
+`cs_params` `{"emosa": "watch"}`, dropped after 10 minutes without a query,
+written at most every 10 s), so the pods hear their probes. A steering window
+replaces the station's watch row. Not yet deployed: the pod-variant suite was
+started with stage A.
 
 ### Order
 

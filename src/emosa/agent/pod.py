@@ -35,6 +35,7 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
+from emosa.agent.probe_watch import ProbeWatch
 from emosa.agent.steering import ClientSteering
 from emosa.agent.telemetry import MqttSubscriber, TelemetrySetup
 from emosa.agent.uplink import UplinkSwitch, m2_backhaul
@@ -49,6 +50,8 @@ from emosa.opensync.easymesh_view import (
     topology,
 )
 from emosa.opensync.pod_profile import PodBackend, wpa2_psk
+from emosa.opensync.probe_watch import MONITOR as WATCH_MONITOR
+from emosa.opensync.probe_watch import WatchBackend
 from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
 from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.schema import TABLES
@@ -97,9 +100,9 @@ MONITOR = {
     "AWLAN_Node": [*TABLES["AWLAN_Node"], "id"],
     "Wifi_Radio_State": [*TABLES["Wifi_Radio_State"], "tx_power"],
 }
-for _scope in (UPLINK_MONITOR, TELEMETRY_MONITOR, STEERING_MONITOR):  # the other scopes
-    for _table, _columns in _scope.items():
-        MONITOR[_table] = [*MONITOR.get(_table, []), *_columns]
+for _scope in (UPLINK_MONITOR, TELEMETRY_MONITOR, STEERING_MONITOR, WATCH_MONITOR):
+    for _table, _columns in _scope.items():  # the other scopes, each column once
+        MONITOR[_table] = list(dict.fromkeys([*MONITOR.get(_table, []), *_columns]))
 
 
 async def timed(label, awaitable, slow=0.5):
@@ -432,7 +435,7 @@ async def serve(config, stop):
                 and not any(op.state in ACTIVE for op in store.operations())
             ),
         )
-    telemetry = stats = subscriber = telemetry_store = None
+    telemetry = stats = subscriber = telemetry_store = watch = None
     telemetry_config = config.get("telemetry", {"mode": "off"})
     wanted = telemetry_intent(pod_id, config["serial"], telemetry_config)
     if wanted is not None:
@@ -452,6 +455,16 @@ async def serve(config, stop):
             run_id=config.get("run_id", pod_id),
         )
         stats = PodStats(wanted.topic, interval=wanted.reporting_interval)
+        # the stations the controller asks about, watched for their probe requests (§3.9)
+        watch = ProbeWatch(
+            pod_id,
+            WatchBackend(pod_id, session, serial=config["serial"]),
+            Store(state_dir / "probe-watch"),
+            vault,
+            if_name=backend.profile.fronthaul_if,
+            band=wanted.radio_type,
+            run_id=config.get("run_id", pod_id),
+        )
         host, _, port = telemetry_config.get("subscribe", "127.0.0.1:1883").rpartition(":")
         subscriber = MqttSubscriber(
             host,
@@ -525,6 +538,7 @@ async def serve(config, stop):
                 else {"mode": "off"}
             ),
             "steering": {"mode": "owm", **steering.status()} if steering else {"mode": "off"},
+            "probe_watch": watch.status() if watch else None,
             "writes": backend.write_count,
             "worker_pid": os.getpid(),
             "updated": time.time(),
@@ -569,6 +583,7 @@ async def serve(config, stop):
                     steering_executor=steering.start if steering else None,
                     pod_metrics=pod_metrics,
                     probes=stats,
+                    watch=watch.ask if watch else None,
                 )
 
             channels = ChannelPolicyStore(state_dir / "channel-policy.sqlite")
@@ -668,6 +683,11 @@ async def serve(config, stop):
                         await timed("steering", steering.tick())
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("steering: %s", exc)
+                if refreshed and watch:
+                    try:
+                        await timed("probe_watch", watch.tick())
+                    except (EmosaError, ConnectionError, TimeoutError) as exc:
+                        log.warning("probe watch: %s", exc)
                 if not refreshed and frame is None:
                     continue  # nothing new to report: status only on the refresh cadence
                 value = status()

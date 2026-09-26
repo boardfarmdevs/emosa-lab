@@ -44,6 +44,7 @@ MONITOR = {
     "Band_Steering_Clients": [
         "mac",
         "cs_mode",
+        "cs_params",
         "cs_state",
         "force_kick",
         "sc_kick_type",
@@ -84,6 +85,14 @@ CLIENT_ROW = {
     "steering_kick_cnt": 0,
     "sticky_kick_cnt": 0,
 }
+
+# The probe watch's rows (emosa.opensync.probe_watch): client steering off,
+# marked in cs_params. A steering window replaces the station's watch row.
+WATCH_MARKER = {"emosa": "watch"}
+
+
+def is_watch_row(row):
+    return row.get("cs_mode") == "off" and (row.get("cs_params") or {}) == WATCH_MARKER
 
 
 def ht_mode(op_class):
@@ -254,12 +263,14 @@ class SteeringBackend:
             for u, r in decoded.get("Wifi_VIF_Neighbors", {}).items()
             if r.get("bssid") == intent.target_bssid and r.get("if_name") == if_name
         ]
-        clients = [
-            u
+        rows = {
+            u: r
             for u, r in decoded.get("Band_Steering_Clients", {}).items()
             if r.get("mac") == intent.station
-        ]
-        return groups, neighbors, clients
+        }
+        clients = [u for u, r in rows.items() if not is_watch_row(r)]
+        watch = [u for u, r in rows.items() if is_watch_row(r)]
+        return groups, neighbors, clients, watch
 
     async def plan(self, intent):
         intent.target()
@@ -277,7 +288,7 @@ class SteeringBackend:
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "the source radio's band has no group")
         if intent.station not in stations:
             raise EmosaError(Reason.NOT_READY, "the station is not associated with the source")
-        groups, neighbors, clients = self._existing(decoded, intent, if_name)
+        groups, neighbors, clients, watch = self._existing(decoded, intent, if_name)
         if clients:
             # The station's steering belongs to another manager (or an earlier window).
             raise EmosaError(Reason.OWNERSHIP_CONFLICT, "the station has a steering row already")
@@ -290,6 +301,7 @@ class SteeringBackend:
             "group_column": column,
             "group": groups[0] if groups else None,
             "neighbor": neighbors[0] if neighbors else None,
+            "watch": watch,  # the probe watch's row for the station, replaced
             "instance": self.instance,
             "fields": ["Band_Steering_Config", "Wifi_VIF_Neighbors", "Band_Steering_Clients"],
             "guard": "pod serial; no steering row for the station; group and neighbor as seen",
@@ -329,9 +341,21 @@ class SteeringBackend:
             present(
                 "AWLAN_Node", node_uuid, ["serial_number"], {"serial_number": self.expected_serial}
             ),
-            absent("Band_Steering_Clients", [["mac", "==", intent.station]]),
         ]
-        counts, created = [None, None], []
+        counts, created = [None], []
+        for row_id in plan["watch"]:
+            transaction += [
+                present(
+                    "Band_Steering_Clients",
+                    row_id,
+                    ["mac", "cs_mode"],
+                    {"mac": intent.station, "cs_mode": "off"},
+                ),
+                {"op": "delete", "table": "Band_Steering_Clients", "where": where_uuid(row_id)},
+            ]
+            counts += [None, 1]
+        transaction.append(absent("Band_Steering_Clients", [["mac", "==", intent.station]]))
+        counts.append(None)
         if plan["group"]:
             transaction.append(
                 present("Band_Steering_Config", plan["group"], [column], {column: if_name})

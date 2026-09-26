@@ -262,6 +262,45 @@
             "request_mid"
           ],
           "additionalProperties": false
+        },
+        {
+          "title": "Watch the probe requests of these stations on the pod (the probe-watch scope)",
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "if_name": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]{1,15}$"
+            },
+            "band": {
+              "enum": [
+                "2.4G",
+                "5G",
+                "5GL",
+                "5GU"
+              ]
+            },
+            "stations": {
+              "type": "array",
+              "maxItems": 32,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"
+              }
+            }
+          },
+          "required": [
+            "pod_id",
+            "if_name",
+            "band",
+            "stations"
+          ],
+          "additionalProperties": false
         }
       ]
     },

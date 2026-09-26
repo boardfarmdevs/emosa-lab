@@ -398,10 +398,18 @@ An AP Metrics Response carries, for each of the pod's operating BSSes:
 
 The pod hears probe requests. OpenSync's band steering records each probe from
 a station it tracks with its SNR and time, and publishes these events in its
-band-steering report. The agent keeps a monitor-only `Band_Steering_Clients`
-row for each station the controller asks about (no steering, no kick, no
-probe blocking; bounded in number, removed when no longer asked for), and
-reads the probe events from the pod's statistics.
+band-steering report (every 60 s). The agent keeps a monitor-only
+`Band_Steering_Clients` row for each station the controller asks about on the
+pod's operating class and channel: client steering off, no kick, no probe
+blocking, no band preference, marked `cs_params` `{"emosa": "watch"}` so the
+row is recognisably the agent's on the pod itself. At most 32 stations are
+watched, the most recently asked; a station not asked about for 10 minutes,
+associated with the pod, or with another manager's client row is not watched.
+The rows join a `Band_Steering_Config` group on the fronthaul VIF (reused when
+present, left in place). The watch set is written in one guarded transaction,
+at most every 10 s. A steering window for a watched station (§3.7) replaces its
+watch row in the window's transaction. The agent reads the probe events from
+the pod's statistics.
 
 On an Unassociated STA Link Metrics Query the agent acknowledges within one
 second. The Ack carries an Error Code TLV for every requested station it

@@ -166,3 +166,15 @@ def test_a_late_query_is_not_acknowledged():
     with pytest.raises(EmosaError):
         rig.coordinator.handle(rig.query(81, (6, (HEARD,))), rig.now - 1)
     assert not rig.sent
+
+
+def test_stations_queried_on_the_pods_channel_are_handed_to_the_watch():
+    rig = Rig()
+    asked = []
+    rig.coordinator.watch = asked.extend
+    rig.coordinator.handle(
+        rig.query(81, (6, (HEARD, ASSOCIATED, SILENT)), (1, (bytes.fromhex("0200000000c3"),))),
+        rig.now,
+    )
+    # not the associated one, not the one queried on another channel
+    assert asked == ["02:00:00:00:14:00", "02:00:00:00:00:c2"]
