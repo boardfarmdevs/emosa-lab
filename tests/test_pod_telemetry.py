@@ -267,10 +267,17 @@ def test_agent_configuration():
     assert telemetry_intent("pod-1", SERIAL, {"mode": "off"}) is None
     intent = telemetry_intent("pod-1", SERIAL, {"mode": "mqtt", "broker": "10.101.0.1"})
     assert intent.topic == TOPIC and intent.port == 8883 and intent.reporting_interval == 10
+    assert intent.publish_interval is None and "publish_interval" not in intent.record()
+    assert "agg_stats_interval" not in intent.settings()
+    fast = telemetry_intent(
+        "pod-1", SERIAL, {"mode": "mqtt", "broker": "10.101.0.40", "publish_interval": 5}
+    )
+    assert fast.settings()["agg_stats_interval"] == "5" and fast.record()["publish_interval"] == 5
     for bad in (
         {"mode": "mqtt"},
         {"mode": "mqtt", "broker": "10.101.0.1", "topic": "emosa/#"},
         {"mode": "mqtt", "broker": "10.101.0.1", "sampling_interval": 20},
+        {"mode": "mqtt", "broker": "10.101.0.1", "publish_interval": 0},
     ):
         with pytest.raises(EmosaError):
             telemetry_intent("pod-1", SERIAL, bad)

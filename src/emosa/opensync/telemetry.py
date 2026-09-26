@@ -5,7 +5,8 @@ a broker (``qm`` connects with the pod's device certificate) and a
 ``Wifi_Stats_Config`` row asks for a report (``owm`` produces client and
 survey reports for its radios). EMOSA writes both in one guarded transaction:
 
-- ``mqtt_settings``: broker, port, the pod's topic, QoS 0, no compression;
+- ``mqtt_settings``: broker, port, the pod's topic, QoS 0, no compression and,
+  when configured, qm's publish interval (``agg_stats_interval``);
 - one raw client report for the configured radio type, at the reporting and
   sampling intervals.
 
@@ -56,9 +57,15 @@ class TelemetryIntent:
     radio_type: str = "2.4G"
     reporting_interval: int = 10
     sampling_interval: int = 5
+    # qm's publish interval (mqtt_settings agg_stats_interval, seconds); None
+    # leaves OpenSync's default (60 s)
+    publish_interval: int | None = None
 
     def record(self):
-        return asdict(self)
+        record = asdict(self)
+        if self.publish_interval is None:
+            record.pop("publish_interval")
+        return record
 
     def validate(self):
         if not self.broker or any(c in self.broker for c in " /:") or len(self.broker) > 253:
@@ -71,15 +78,22 @@ class TelemetryIntent:
             raise EmosaError(Reason.INVALID_INPUT, "unknown radio type")
         if not 1 <= self.sampling_interval <= self.reporting_interval <= 3600:
             raise EmosaError(Reason.INVALID_INPUT, "sampling must not exceed reporting interval")
+        if self.publish_interval is not None and (
+            type(self.publish_interval) is not int or not 1 <= self.publish_interval <= 3600
+        ):
+            raise EmosaError(Reason.INVALID_INPUT, "publish interval out of range")
 
     def settings(self):
-        return {
+        settings = {
             "broker": self.broker,
             "port": str(self.port),
             "topics": self.topic,
             "qos": "0",
             "compress": "none",
         }
+        if self.publish_interval is not None:
+            settings["agg_stats_interval"] = str(self.publish_interval)
+        return settings
 
     def client_stats(self):
         return f"{self.radio_type}/raw/{self.reporting_interval}/{self.sampling_interval}"

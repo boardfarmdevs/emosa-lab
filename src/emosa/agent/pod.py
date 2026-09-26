@@ -367,6 +367,7 @@ def telemetry_intent(pod_id, serial, telemetry_config):
         telemetry_config.get("radio_type", "2.4G"),
         telemetry_config.get("reporting_interval", 10),
         telemetry_config.get("sampling_interval", 5),
+        telemetry_config.get("publish_interval"),
     )
     intent.validate()
     return intent

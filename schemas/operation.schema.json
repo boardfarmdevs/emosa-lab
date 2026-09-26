@@ -184,6 +184,11 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 3600
+            },
+            "publish_interval": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3600
             }
           },
           "required": [

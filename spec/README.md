@@ -294,8 +294,10 @@ OVSDB carries no station measurements. OpenSync publishes them itself, as
 `qm` connects to the broker in `AWLAN_Node.mqtt_settings` with the pod's device
 certificate, and `owm` produces the reports that `Wifi_Stats_Config` asks for.
 With `telemetry.mode = mqtt` the agent (the telemetry scope):
-- **writes** the broker, the pod's own topic (default `emosa/stats/<serial>`)
-  and one raw client report for the radio type, as one guarded transaction
+- **writes** the broker, the pod's own topic (default `emosa/stats/<serial>`),
+  optionally `qm`'s publish interval (`agg_stats_interval`; OpenSync's default
+  is 60 s, too slow for a controller that wants client metrics younger than
+  30 s) and one raw client report for the radio type, as one guarded transaction
   (§3.2), once per start of the pod's OpenSync (the database starts from its
   template), like the uplink switch (§8.3). It MUST NOT take over a broker
   another manager set, such as the operator's cloud: that write is refused;
