@@ -19,6 +19,8 @@
 #                                     returned to the VM first, so they survive)
 #   lab.sh client NAME SSID KEY       a Wi-Fi client on one pool radio
 #   lab.sh medium                     regenerate wmediumd's radios (guests: user.wmediumd.guest)
+#   lab.sh rooms pods|native          the room service with the pods as APs (meta-cmf worlds-pods),
+#                                     or the lab's own rooms (pods stopped, controller rows removed)
 #   lab.sh status
 set -euo pipefail
 exec </dev/null
@@ -450,6 +452,61 @@ medium() {
     [ -z "$room" ] || systemctl start easymesh-room-demo
 }
 
+pods_running() { lxc list -c n -f csv | grep -E '^pod-[0-9]+$' || true; }
+
+agents_provisioned() {    # the number of EMOSA agents whose session is provisioning
+    cx emosa sh -c 'grep -l "\"state\": \"provisioning\"" /var/lib/emosa/*/status.json 2>/dev/null | wc -l'
+}
+
+forget_pods() {    # remove the EMOSA agents' rows from the controller's model (em_ctrl stopped)
+    local als
+    als=$(cx emosa sh -c '/opt/emosa-adapter/venv/bin/emosa-fleet list /etc/emosa-fleet.json 2>/dev/null' |
+        jq -r '.[].al_mac' | tr '\n' ' ')
+    [ -n "$als" ] || return 0
+    cx bpibroadband sh -ec "systemctl stop em_ctrl
+        for al in $als; do for t in PolicyList OperatingClassList BSSList RadioList DeviceList; do
+            mysql -N -ubpi -proot OneWifiMesh -e \"delete from \$t where ID like '%@\$al@%'\" 2>/dev/null; done; done
+        systemctl start em_ctrl"
+    log "controller model: EMOSA agents $als removed"
+}
+
+room_manifest() {    # the room service's manifest: the lab's own rooms, or the rooms with pods
+    local dropin=/etc/systemd/system/easymesh-room-demo.service.d/90-emosa-pods.conf
+    if [ "$1" = pods ]; then
+        mkdir -p "${dropin%/*}"
+        printf '[Service]\nEnvironment=EASYMESH_ROOM_MANIFEST=gen/demo/manifests/private-client-room-walk-pods.json\n' > "$dropin"
+    else
+        rm -f "$dropin"
+    fi
+    systemctl daemon-reload
+}
+
+rooms() {    # rooms pods|native: which rooms the lab's room service runs
+    local pod n
+    case ${1:-} in
+    pods)
+        systemctl stop easymesh-room-demo
+        for pod in $(lxc list -c n -f csv | grep -E '^pod-[0-9]+$'); do start_guarded "$pod"; done
+        cx emosa systemctl start emosa-fleet
+        n=$(pods_running | wc -l)
+        for _ in $(seq 60); do [ "$(agents_provisioned)" -ge "$n" ] && break; sleep 5; done
+        [ "$(agents_provisioned)" -ge "$n" ] || die "not every pod's agent is provisioned"
+        medium    # pins the pods' backhaul links now that their stations exist
+        room_manifest pods
+        systemctl reset-failed easymesh-room-demo; systemctl start easymesh-room-demo
+        log "rooms: with pods ($n); suite: EASYMESH_ROOM_WORLDS_ROOT=gen/wmediumd/configurator/worlds-pods" ;;
+    native)
+        systemctl stop easymesh-room-demo
+        cx emosa sh -c 'systemctl stop emosa-fleet "emosa-agent@*"'
+        for pod in $(pods_running); do lxc stop "$pod"; done
+        forget_pods
+        room_manifest native
+        systemctl reset-failed easymesh-room-demo; systemctl start easymesh-room-demo
+        log "rooms: the lab's own (pods stopped, their controller rows removed)" ;;
+    *) die "usage: lab.sh rooms pods|native" ;;
+    esac
+}
+
 status() {
     lxc list -c ns4 -f csv | grep -E '^(emosa|em-gtp|pod-|emc-)' || true
     exists emosa && cx emosa sh -c '/opt/emosa-adapter/venv/bin/emosa-fleet list /etc/emosa-fleet.json 2>/dev/null
@@ -461,7 +518,8 @@ case ${1:-} in
     lanport|emosa|fleet|gtp|medium|status|controller_al) "$1" ;;
     pod) shift; pod "$@" ;;
     agent) shift; agent "$@" ;;
+    rooms) shift; rooms "$@" ;;
     repod) shift; repod "$@" ;;
     client) shift; client "$@" ;;
-    *) sed -n '2,22p' "$0"; exit 1 ;;
+    *) sed -n '2,24p' "$0"; exit 1 ;;
 esac
