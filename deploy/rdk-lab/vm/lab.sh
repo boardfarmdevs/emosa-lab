@@ -19,6 +19,8 @@
 #                                     returned to the VM first, so they survive)
 #   lab.sh client NAME SSID KEY       a Wi-Fi client on one pool radio
 #   lab.sh medium                     regenerate wmediumd's radios (guests: user.wmediumd.guest)
+#   lab.sh telemetry [POD...]         MQTT broker (mutual TLS) for the pods' own statistics; every
+#                                     agent has its pod publish 5 s client reports every 5 s
 #   lab.sh rooms pods|native          the room service with the pods as APs (meta-cmf worlds-pods),
 #                                     or the lab's own rooms (pods stopped, controller rows removed)
 #   lab.sh status
@@ -273,6 +275,76 @@ EOF
     log "emosa: $(cx emosa cat /root/adapter-kit/VERSION) in /opt/emosa-adapter; front $WAN_HOST:$FLEET_PORT"
 }
 
+pod_serial() { cx "$1" /usr/opensync/tools/ovsh -r s AWLAN_Node serial_number 2>/dev/null | tr -d '[:space:]'; }
+
+telemetry_json() {    # the fleet's telemetry setting: 5 s reports, published every 5 s
+    if [ -f /opt/emosa-lab/telemetry ]; then
+        printf '{"mode": "mqtt", "broker": "%s", "port": 8883, "reporting_interval": 5, "sampling_interval": 5, "publish_interval": 5}' "$WAN_HOST"
+    else
+        printf '{"mode": "off"}'
+    fi
+}
+
+provision() {   # lab device certificate for POD, where OpenSync expects it (/var/certs)
+    local pod=$1 serial t
+    serial=$(pod_serial "$pod")
+    [ -n "$serial" ] || die "$pod: no serial yet (OpenSync not up)"
+    t=$(mktemp -d)
+    cx emosa sh -ec "cd /var/lib/emosa/pki; [ -f $serial.pem ] || { openssl req -newkey rsa:2048 -nodes \
+            -subj /CN=$serial -keyout $serial.key -out $serial.csr 2>/dev/null
+        openssl x509 -req -in $serial.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 3650 \
+            -out $serial.pem 2>/dev/null; }"
+    lxc file pull -q "emosa/var/lib/emosa/pki/ca.pem" "$t/ca.pem"
+    lxc file pull -q "emosa/var/lib/emosa/pki/$serial.pem" "$t/client.pem"
+    lxc file pull -q "emosa/var/lib/emosa/pki/$serial.key" "$t/client_dec.key"
+    for f in ca.pem client.pem client_dec.key; do lxc file push -q --mode 0600 "$t/$f" "$pod/var/certs/$f"; done
+    rm -rf "$t"
+    log "provision: $pod ($serial) lab device certificate in /var/certs (EMOSA lab CA)"
+}
+
+telemetry() {   # telemetry [POD...]: MQTT broker for the pods' own statistics (mutual TLS)
+    local pod
+    cx emosa sh -ec 'command -v mosquitto >/dev/null || { export DEBIAN_FRONTEND=noninteractive
+            apt-get -qq update; apt-get -qq install -y mosquitto mosquitto-clients openssl >/dev/null; }
+        P=/var/lib/emosa/pki; install -d -m 700 $P; cd $P
+        [ -f ca.pem ] || openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=EMOSA lab CA" \
+            -keyout ca.key -out ca.pem 2>/dev/null
+        [ -f broker.pem ] || { openssl req -newkey rsa:2048 -nodes -subj "/CN='"$WAN_HOST"'" -keyout broker.key \
+                -out broker.csr 2>/dev/null
+            printf "subjectAltName=IP:'"$WAN_HOST"',IP:127.0.0.1\n" > broker.ext
+            openssl x509 -req -in broker.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 3650 \
+                -extfile broker.ext -out broker.pem 2>/dev/null; }
+        C=/etc/mosquitto/certs; install -d -o mosquitto -m 750 $C
+        install -o mosquitto -m 644 ca.pem broker.pem $C/; install -o mosquitto -m 600 broker.key $C/
+        printf "%s\n" "per_listener_settings true" "listener 8883 127.0.0.1" "cafile $C/ca.pem" \
+            "certfile $C/broker.pem" "keyfile $C/broker.key" "require_certificate true" \
+            "use_identity_as_username true" "listener 1883 127.0.0.1" "allow_anonymous true" \
+            > /etc/mosquitto/conf.d/emosa.conf
+        systemctl restart mosquitto'
+    has_device emosa mqtt ||
+        lxc config device add emosa mqtt proxy bind=host listen="tcp:$WAN_HOST:8883" \
+            connect=tcp:127.0.0.1:8883 >/dev/null
+    touch /opt/emosa-lab/telemetry    # lab.sh fleet and pod keep it on
+    for pod in ${*:-$(pods_running)}; do provision "$pod"; done
+    # the fleet writes an agent's configuration when its pod is handed over;
+    # the running agents get the setting directly
+    cx emosa python3 - "$(telemetry_json)" <<'EOF'
+import glob, json, sys
+telemetry = json.loads(sys.argv[1])
+for path in ["/etc/emosa-fleet.json", *glob.glob("/etc/emosa/*.json")]:
+    with open(path) as f:
+        config = json.load(f)
+    config["telemetry"] = telemetry
+    with open(path, "w") as f:
+        json.dump(config, f, indent=2)
+        f.write("\n")
+EOF
+    cx emosa sh -c 'systemctl restart emosa-fleet
+        for u in $(systemctl list-units --plain --no-legend "emosa-agent@*" | cut -d" " -f1); do
+            systemctl restart "$u"; done'
+    log "telemetry: broker tcp:$WAN_HOST:8883 (mutual TLS, lab CA) -> emosa; pods publish to emosa/stats/<serial>"
+}
+
 agent() {
     local pod=${1:?usage: lab.sh agent POD python|c} bin
     case ${2:-} in
@@ -311,7 +383,8 @@ fleet() {
   "profile": "${EMOSA_POD_PROFILE:-opensync-lab-hwsim-6.6.1-v1}",
   "state_root": "/var/lib/emosa",
   "config_dir": "/etc/emosa",
-  "admit": "*"
+  "admit": "*",
+  "telemetry": $(telemetry_json)
 }
 EOF
     cx emosa systemctl enable -q emosa-fleet
@@ -401,6 +474,10 @@ pod() {
     # outside any room geometry (the lab's gen-config pins it; lab.sh medium applies it)
     lxc profile set "$name" user.wmediumd.links="bhaul-sta-50=em-gtp/wlan0:${EMOSA_BACKHAUL_SNR:-45}"
     start_guarded "$name"
+    if [ -f /opt/emosa-lab/telemetry ]; then    # its lab device certificate, once OpenSync is up
+        for _ in $(seq 60); do [ -n "$(pod_serial "$name")" ] && break; sleep 2; done
+        provision "$name"
+    fi
     log "pod: $name from mvx-pod-$fp (wlan0 2.4 GHz, wlan1 5 GHz backhaul station); run lab.sh medium once it is up"
 }
 
@@ -519,7 +596,8 @@ case ${1:-} in
     pod) shift; pod "$@" ;;
     agent) shift; agent "$@" ;;
     rooms) shift; rooms "$@" ;;
+    telemetry) shift; telemetry "$@" ;;
     repod) shift; repod "$@" ;;
     client) shift; client "$@" ;;
-    *) sed -n '2,24p' "$0"; exit 1 ;;
+    *) sed -n '2,26p' "$0"; exit 1 ;;
 esac
