@@ -8,7 +8,7 @@ from dataclasses import replace
 import pytest
 
 from emosa.agent.pod import MONITOR
-from emosa.agent.steering import APPLY, GENTLE, ClientSteering
+from emosa.agent.steering import APPLY, GENTLE, QUEUE, WAIT, ClientSteering
 from emosa.clock import ManualClock
 from emosa.easymesh_payloads import AssociatedClient, AssociatedClients, BssClients
 from emosa.errors import EmosaError
@@ -247,8 +247,8 @@ async def leave(admin):
     )
 
 
-def mandate(imminent=True, window=5):
-    return SteeringRequest(SOURCE, True, imminent, True, window, 5, (STA,), ((TARGET, 81, 6),))
+def mandate(imminent=True, window=5, station=STA):
+    return SteeringRequest(SOURCE, True, imminent, True, window, 5, (station,), ((TARGET, 81, 6),))
 
 
 @pytest.mark.ovsdb
@@ -256,7 +256,6 @@ def test_a_mandate_opens_a_window_kicks_and_closes_it(tmp_path):
     async def scenario():
         async with pod(tmp_path) as (steering, admin, clock):
             assert steering.start(mandate(), 900) is None
-            assert steering.start(mandate(), 901) == "busy"
             await steering.tick()
             op = steering.store.operations()[-1]
             assert op.state == State.CONFIG_COMMITTED
@@ -383,6 +382,73 @@ def test_a_gentle_request_closes_before_owms_deauthentication(tmp_path):
             await steering.tick()
             assert steering.history[-1]["outcome"] == "stayed"
             assert await rows(admin, "Band_Steering_Clients", ["_uuid"]) == []
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.ovsdb
+def test_a_mandate_during_a_window_waits_and_starts_when_it_closes(tmp_path):
+    async def scenario():
+        async with pod(tmp_path) as (steering, admin, clock):
+            steering.start(mandate(imminent=False), 900)
+            await steering.tick()
+            await owm(admin, cs_state="steering")
+            await steering.tick()
+            assert steering.start(mandate(), 901) is None
+            assert [q["station"] for q in steering.status()["queued"]] == [STA.hex(":")]
+            clock.advance(GENTLE + 1)
+            await steering.tick()  # the first window closes, the queued one opens at once
+            assert steering.history[-1]["outcome"] == "stayed"
+            assert steering.status()["queued"] == []
+            assert steering.job["intent"].request_mid == 901 and steering.job["phase"] == "opening"
+            (client,) = await rows(admin, "Band_Steering_Clients", ["sc_btm_params"])
+            assert ["disassoc_imminent", "1"] in client["sc_btm_params"][1]
+            assert steering.counts["queued"] == 1
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.ovsdb
+def test_a_queued_mandate_is_dropped_when_stale_or_already_moved(tmp_path):
+    async def scenario():
+        async with pod(tmp_path) as (steering, admin, clock):
+            steering.start(mandate(), 900)
+            steering.start(mandate(), 901)
+            await steering.tick()
+            clock.advance(max(APPLY, WAIT) + 1)
+            await steering.tick()
+            assert [h["outcome"] for h in steering.history] == ["not_applied", "queue_expired"]
+            assert steering.job is None
+            steering.start(mandate(), 902)
+            steering.start(mandate(), 903)
+            await steering.tick()
+            await owm(admin, cs_state="steering")
+            await steering.tick()
+            await leave(admin)
+            await steering.tick()
+            assert [h["outcome"] for h in steering.history[-2:]] == [
+                "left_source",
+                "moved_while_queued",
+            ]
+            assert steering.job is None
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.ovsdb
+def test_a_newer_mandate_replaces_the_queued_one_and_a_full_queue_is_busy(tmp_path):
+    async def scenario():
+        async with pod(tmp_path) as (steering, admin, clock):
+            steering.start(mandate(), 900)
+            others = [bytes.fromhex(f"0200000070{i:02x}") for i in range(QUEUE)]
+            for mid, station in enumerate(others[:-1], 901):
+                assert steering.start(mandate(station=station), mid) is None
+            assert steering.start(mandate(station=others[0]), 950) is None
+            assert steering.counts["queued_replaced"] == 1
+            queued = [q["station"] for q in steering.status()["queued"]]
+            assert queued == [s.hex(":") for s in [*others[1:-1], others[0]]]
+            assert steering.start(mandate(station=others[-1]), 951) is None
+            assert steering.start(mandate(), 952) == "busy"
 
     asyncio.run(scenario())
 

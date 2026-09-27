@@ -1,8 +1,12 @@
 """The agent carries out the controller's client steering mandates on its pod.
 
 One ``ClientSteering`` per agent, with its own operation journal (the steering
-scope, ``emosa.opensync.steering``). One mandate at a time: a request while a
-window is open is refused (``busy``), like a native agent that cannot take it.
+scope, ``emosa.opensync.steering``). One window at a time: a mandate that
+arrives while one is open waits in a short queue (the Ack has already gone out,
+so a refusal would only leave the controller waiting for a move that never
+comes). A newer mandate for a queued station replaces it. A queued mandate
+starts when the window closes, unless it waited longer than ``WAIT`` or its
+station is no longer on the source. Only a full queue is refused (``busy``).
 
 1. ``start`` (from the Client Steering Request handler) journals the window as
    an operation. The Ack has already gone out.
@@ -34,6 +38,8 @@ SOURCE = "steering-request"
 APPLY = 10  # owm takes the row within a second or two (seen live)
 GENTLE = 8  # < owm's 10 s deauthentication delay after a BTM request
 MARGIN = 5
+QUEUE = 8
+WAIT = 10  # a controller verifies a steer for about this long (the optimizer: 10 s)
 TERMINAL = (
     State.REJECTED,
     State.FAILED,
@@ -54,6 +60,7 @@ class ClientSteering:
         self.clock = self.engine.clock
         self.engine.recover()
         self.job = None
+        self.queue = []
         self.counts = {}
         self.history = []
         # Windows a previous process left open are closed once the pod is reachable
@@ -90,8 +97,50 @@ class ClientSteering:
 
     def start(self, request, mid):
         """A mandate for one station and one target (already checked on the wire side)."""
-        if self.job is not None:
+        if self.job is None and not self.queue:
+            return self._begin(request, mid)
+        station = request.stations[0]
+        waiting = [q for q in self.queue if q["request"].stations[0] != station]
+        if len(waiting) >= QUEUE:
             return "busy"
+        if len(waiting) < len(self.queue):
+            self._record("queued_replaced")
+        self.queue = [*waiting, {"request": request, "mid": mid, "at": self.clock.monotonic()}]
+        self._record("queued")
+        return None
+
+    async def _dequeue(self):
+        """Start the next queued mandate that is still worth carrying out."""
+        while self.job is None and self.queue:
+            queued = self.queue.pop(0)
+            request = queued["request"]
+            station = request.stations[0].hex(":")
+            if self.clock.monotonic() - queued["at"] > WAIT:
+                self._drop(queued, "queue_expired")
+                continue
+            try:
+                _, on_source = await self.backend.observe(station, request.source_bssid.hex(":"))
+            except (EmosaError, ConnectionError, TimeoutError):
+                on_source = None
+            if on_source is False:
+                self._drop(queued, "moved_while_queued")
+                continue
+            reason = self._begin(request, queued["mid"])
+            if reason is not None:
+                self._drop(queued, f"refused_{reason}")
+
+    def _drop(self, queued, outcome):
+        self._record(outcome)
+        entry = {
+            "station": queued["request"].stations[0].hex(":"),
+            "target": queued["request"].targets[0][0].hex(":"),
+            "outcome": outcome,
+            "operation_id": None,
+        }
+        self.history = [*self.history[-7:], entry]
+        log.info("client steering %s -> %s: %s", entry["station"], entry["target"], outcome)
+
+    def _begin(self, request, mid):
         target_bssid, op_class, channel = request.targets[0]
         intent = SteeringIntent(
             self.pod_id,
@@ -164,6 +213,11 @@ class ClientSteering:
             self._record("close_failed")
 
     async def tick(self):
+        await self._step()
+        if self.job is None and self.queue:
+            await self._step()  # the next queued mandate goes out in the same tick
+
+    async def _step(self):
         if self.leftover:
             try:
                 reachable = (await self.backend.snapshot()).ready
@@ -176,6 +230,7 @@ class ClientSteering:
             if op.state != State.REQUESTED:
                 await self._close(op, SteeringIntent(**op.intent))
             self._end(op, "closed_after_restart")
+        await self._dequeue()
         if self.job is None:
             return
         job = self.job
@@ -240,5 +295,13 @@ class ClientSteering:
                 "phase": job["phase"],
                 "operation_id": job["op"],
             },
+            "queued": [
+                {
+                    "station": q["request"].stations[0].hex(":"),
+                    "target": q["request"].targets[0][0].hex(":"),
+                    "waited_seconds": round(self.clock.monotonic() - q["at"], 1),
+                }
+                for q in self.queue
+            ],
             "history": list(self.history),
         }

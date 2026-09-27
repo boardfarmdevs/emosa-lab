@@ -468,8 +468,31 @@ Stage B: the agent writes the group and a watch row for each station the
 controller asks about on the pod's channel (spec §3.9: at most 32, marked
 `cs_params` `{"emosa": "watch"}`, dropped after 10 minutes without a query,
 written at most every 10 s), so the pods hear their probes. A steering window
-replaces the station's watch row. Not yet deployed: the pod-variant suite was
-started with stage A.
+replaces the station's watch row. Deployed in `rdk-emosa` (EMOSA `2815061`)
+for runs 6 to 8 of the pod-variant suite.
+
+### Step 5: the pod-variant suite (in progress)
+
+`run-easymesh-suite.sh rooms` with `EASYMESH_ROOM_WORLDS_ROOT=gen/wmediumd/configurator/worlds-pods`
+on `rdk-emosa`. Run 8 (2026-09-26 12:01 UTC, meta-cmf `1b6b454`, EMOSA
+`2815061`): 7 of 9 steps passed; the catalog passed 23 of 24 rooms; geometry
+failed one of its three rooms. The catalog failure also failed in the native
+baseline; geometry was not repeatable natively either. Both are native-lab
+issues the pods make somewhat worse, not pod defects:
+
+| Room | Cause | Fix |
+| --- | --- | --- |
+| `band-ap-counter-roam` (runs 6, 7) | the band init's REASSOCIATE scan is active and 40 ms long on one channel; the client missed the gateway's 2.4 GHz BSS at -37 dBm and joined a pod or an extender at -63 to -69 dBm; after the optimizer's AP steer, wpa_supplicant 2.11 roamed on to 5 GHz on its own (within-ESS, better estimated throughput) and the expected 2.4 to 5 GHz step was never verified | meta-cmf `1b6b454`: a passive scan-only scan of the initial band before reassociating; passed in run 8 |
+| `fifty-client-counter-roam` (native baseline, three of four pod runs) | the optimizer's candidate collection is too slow for 50 clients: one round over 16 radios, one agent at a time, takes 10 to 13 s, and a steered client's snapshot needs up to two more rounds; convergence lands near the window's end (checkpoint 40 to 56 s of 60, load 65 to 91 s of 90). Two pod-side stalls on top: a second steer to a pod while its window was open was refused as busy after its Ack (the verification timed out), and after a pod rejoined, the controller dropped the Channel Scan Request ACK (patch 0011 routes only metrics, steering and policy ACKs), kept both pod radios in `channel_scan_pending` for 40 s and more, refused candidate queries to them (Error_Not_Ready) and held every action on an incomplete snapshot | meta-cmf `d228a62` (em_cli: candidate steps first for the native lock), `762a5ec`, `daa72e3`, `9e9b4db`, `b7b6e6d` (optimizer: one inventory read per second, rounds ask only for due pairs, missing pairs first): a query 530 to about 440 ms, a round 16 to 7 queries (about 4 s), checkpoint 31 to 49 s. EMOSA `57449bd` (mandates queue behind an open window) and meta-cmf `1e253bc` (unified-wifi-mesh 0215: the scan ACK completes the request). Then meta-cmf `a915f2d`: profiling acts on five unsettled steers, and a steer the client did not follow held its slot for the whole 40 s verification (four such steers left one slot, one steer per round); a steer now counts for 8 s (1058 verified steers: p99 5.8 s). Four of four runs passed, load 54 to 83 s |
+| geometry (three rooms) | not repeatable, with or without pods: two full passes in twelve runs. Two native causes, found with complete journals (meta-cmf `bab9032`, `gen/lab-journal-evidence.sh`), hwsim captures and in-namespace captures: (1) an extender revoked its backhaul when one root proof renewal stayed unanswered for 2 s, and a 2 to 3 s hiccup at an RF change expired all four at once (about 45 s mesh outage); (2) an extender's 1905 daemon deleted the controller from its topology when one Topology Query went unanswered for 5 s, then dropped every CMDU to it ("No destination_mac found") until the proof expired | meta-cmf `c86b2da` (unified-wifi-mesh 0213: renewals retry for 8 s) and `c27015f` (ieee1905 0009: keep a live node, reset only the stalled query). With both (seven runs): all three rooms passed in six, the default restore in five; no 1905 drops to the controller remain. The misses are convergence times at the edge of the windows (load 90 s, restore 60 s): clients converge, dip by one and reconverge seconds after the deadline |
+
+Installed in place in `rdk-emosa`, still to be built into the images:
+controller patches 0211 and 0212 (`*.pre-0211`, `*.pre-0212`); OneWifi 0040
+(64 unassociated stations per channel) in the gateway and extenders, 0041 (one
+backhaul connection attempt per scan) in the extenders (`*.pre-0040`).
+unified-wifi-mesh 0213 (`onewifi_em_agent`, gateway and extenders, `*.pre-0213`)
+and ieee1905 0009 (`/usr/bin/ieee1905`, gateway and extenders, `*.pre-0009`).
+Controller 0215 (`onewifi_em_ctrl`, `*.pre-0215`); em_cli 0214 (`em-cli.tar.gz`).
 
 ### Order
 
