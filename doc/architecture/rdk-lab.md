@@ -486,13 +486,154 @@ issues the pods make somewhat worse, not pod defects:
 | `fifty-client-counter-roam` (native baseline, three of four pod runs) | the optimizer's candidate collection is too slow for 50 clients: one round over 16 radios, one agent at a time, takes 10 to 13 s, and a steered client's snapshot needs up to two more rounds; convergence lands near the window's end (checkpoint 40 to 56 s of 60, load 65 to 91 s of 90). Two pod-side stalls on top: a second steer to a pod while its window was open was refused as busy after its Ack (the verification timed out), and after a pod rejoined, the controller dropped the Channel Scan Request ACK (patch 0011 routes only metrics, steering and policy ACKs), kept both pod radios in `channel_scan_pending` for 40 s and more, refused candidate queries to them (Error_Not_Ready) and held every action on an incomplete snapshot | meta-cmf `d228a62` (em_cli: candidate steps first for the native lock), `762a5ec`, `daa72e3`, `9e9b4db`, `b7b6e6d` (optimizer: one inventory read per second, rounds ask only for due pairs, missing pairs first): a query 530 to about 440 ms, a round 16 to 7 queries (about 4 s), checkpoint 31 to 49 s. EMOSA `57449bd` (mandates queue behind an open window) and meta-cmf `1e253bc` (unified-wifi-mesh 0215: the scan ACK completes the request). Then meta-cmf `a915f2d`: profiling acts on five unsettled steers, and a steer the client did not follow held its slot for the whole 40 s verification (four such steers left one slot, one steer per round); a steer now counts for 8 s (1058 verified steers: p99 5.8 s). Four of four runs passed, load 54 to 83 s |
 | geometry (three rooms) | not repeatable, with or without pods: two full passes in twelve runs. Two native causes, found with complete journals (meta-cmf `bab9032`, `gen/lab-journal-evidence.sh`), hwsim captures and in-namespace captures: (1) an extender revoked its backhaul when one root proof renewal stayed unanswered for 2 s, and a 2 to 3 s hiccup at an RF change expired all four at once (about 45 s mesh outage); (2) an extender's 1905 daemon deleted the controller from its topology when one Topology Query went unanswered for 5 s, then dropped every CMDU to it ("No destination_mac found") until the proof expired | meta-cmf `c86b2da` (unified-wifi-mesh 0213: renewals retry for 8 s) and `c27015f` (ieee1905 0009: keep a live node, reset only the stalled query). With both (seven runs): all three rooms passed in six, the default restore in five; no 1905 drops to the controller remain. The misses are convergence times at the edge of the windows (load 90 s, restore 60 s): clients converge, dip by one and reconverge seconds after the deadline |
 
-Installed in place in `rdk-emosa`, still to be built into the images:
-controller patches 0211 and 0212 (`*.pre-0211`, `*.pre-0212`); OneWifi 0040
-(64 unassociated stations per channel) in the gateway and extenders, 0041 (one
-backhaul connection attempt per scan) in the extenders (`*.pre-0040`).
-unified-wifi-mesh 0213 (`onewifi_em_agent`, gateway and extenders, `*.pre-0213`)
-and ieee1905 0009 (`/usr/bin/ieee1905`, gateway and extenders, `*.pre-0009`).
-Controller 0215 (`onewifi_em_ctrl`, `*.pre-0215`); em_cli 0214 (`em-cli.tar.gz`).
+These were first installed in place in `rdk-emosa`: controller patches 0211,
+0212 and 0215; OneWifi 0040 (64 unassociated stations per channel) in the
+gateway and extenders, 0041 (one backhaul connection attempt per scan) in the
+extenders; unified-wifi-mesh 0213 and ieee1905 0009 in all of them; em_cli 0214.
+Since 28 Sep all of them, and every later one, are in the images (below).
+
+### Step 6: the pods on Wi-Fi backhaul
+
+`lab.sh backhaul wifi` moves both pods from the GTP path to the gateway's
+5 GHz `mesh_backhaul` (EMOSA's option 1, spec §8.3): the fleet gives each pod
+`uplink.mode = multi-ap` pinned to that BSS (per-pod settings from the pod
+container's `user.emosa.backhaul`, so `lab.sh fleet` keeps them), and the pod's
+station gets a fixed 50 dB link to the gateway's radio, as strong as the lab's
+own gateway-extender backhaul (`fixed-startup-mesh`). `lab.sh backhaul wired`
+returns them: it drops both and restarts the pod's OpenSync, which comes up on
+its bootstrap GTP path; EMOSA never switches a pod back by itself. Both pods
+switched within a minute of their agent being provisioned.
+
+What the RDK side needed:
+
+| Found | Fix |
+| --- | --- |
+| The pod's station on the gateway's backhaul, but the controller hung the pod off the root as if wired: it builds its backhaul tree from backhaul-STA rows, and only RDK's vendor operational BSS TLV creates them. EMOSA reports the station in standard TLVs (Device Information: 802.11, non-AP STA, upstream BSSID as network membership) | meta-cmf `343db84`, unified-wifi-mesh 0216: without the vendor snapshot such a station gets a backhaul-STA row of its own (its radio is the station, which the controller does not model), keyed by its upstream BSSID, removed when no longer reported. A first version keyed it by the station MAC: the database write never found it and inserted it again on every topology response (about 100 rows in 20 minutes) |
+| em_cli drew the gateway's agent as a pod (Pod-2) and shifted every Agent-N and Pod-N name: it read a device's Manufacturer with a depth-first, prefix-matching subtree search, which found the pod below the gateway's agent first | meta-cmf `ce6906b`, patch 0217: a device's identity from its own keys |
+| The room's health stayed false with the pods on Wi-Fi: a pod on the backhaul adds a backhaul-STA row and an association at its parent | meta-cmf `05d376b` (mesh_health counts pods on Wireless LAN backhaul) and `b2398a4` (the room compares with mesh_health's expectations instead of its own copy) |
+| emosa-fleet had refused its own configuration since the telemetry settings were added (30383 restarts; the running agents hid it): the fleet contract lacked the agent contract's `publish_interval` and `survey` | EMOSA `20b64a3`, with a test holding the fleet's per-agent settings equal to the agent's |
+| A pod's station could not be pinned to a lab mesh node on the medium | meta-cmf `abca04c`: `user.wmediumd.links` may name a mesh node's radio |
+
+The suite with both pods on Wi-Fi backhaul (rev120
+`test-results/emosa-pods-wifi-20260927T071344Z`, reruns in
+`emosa-pods-wifi-rerun-20260927T083826Z`): the catalog passed 23 of 24 rooms;
+the one miss, `large-room-extender-evacuation` (load 90.5 s of 90), passed
+twice on its own (34 and 41 s). Geometry passed two of three reruns, as
+before without pods on Wi-Fi. Three more fixes came out of it:
+
+| Found | Fix |
+| --- | --- |
+| Every pod-variant room failed its convergence checks with the mesh intact: `meshConnected` wanted exactly four backhaul edges, and a pod on Wi-Fi adds its own | meta-cmf `335e5fd`: each of the world's own extenders must reach the gateway, and every other edge too |
+| rf-hover: one pod's hover lost all its BSSes. The tooltip skipped a whole group named `mesh_backhaul`, and em_cli names a pod's single group after its first BSS | meta-cmf `476cd3f`: backhaul BSSes are left out one by one (installed in place: `room-topology.js` in em_cli's static directory, `*.pre-476cd3f`) |
+| world-switch and restore-default: the room session died. A candidate reply measuring a station its query did not ask for killed the optimizer worker (four times since 26 Sep, all on native radios) | meta-cmf `1b6e007`: such a reply is discarded and the query retried |
+
+The pods' backhaul is fixed, like the native extenders' in every room except
+the geometry rooms; in those, the native backhaul follows the geometry and the
+pods' stays at 50 dB to the gateway (EMOSA pins the upstream BSSID and refuses
+Backhaul Steering). Modelling the pods' backhaul in the geometry is a later
+step. Installed in place in `rdk-emosa`: controller 0216 (`*.pre-0216`), em_cli
+0217 (`*.pre-0217`), the fleet contract in the emosa container.
+
+### Step 7: a wired EasyMesh extender
+
+The pod rooms with one more AP: the lab's own extender image as `bpiap-004`,
+its LAN port bridged into the controller's LAN (`br-emosa`) instead of a
+Wi-Fi backhaul station, room role `extender_5` (meta-cmf
+`worlds-pods-wired/`, manifest `private-client-room-walk-pods-wired.json`).
+`lab.sh rooms pods-wired` runs the room service on it; meta-cmf
+`gen/wired-extender.sh up|down|status` makes or removes the extender. It
+onboards over Ethernet with its three radios and ten BSSes and em_cli names it
+`Extender-N` (unified-wifi-mesh 0218: only the gateway's co-located agent is
+`Agent-1`).
+
+A wired extender must never have a second path into the LAN, and the lab has
+three ways of giving it one; each is closed:
+
+| Found | Fix |
+| --- | --- |
+| A pool radio handed to a new container is on the medium at once (idle pool radios at the default SNR), so creating the extender with its LAN port let its backhaul station associate too: a short L2 loop | `wired-extender.sh up` creates it without a LAN port, marks it `user.easymesh.backhaul=wired`, regenerates the medium (gen-config gives it -20 dB to every mesh node, meta-cmf `c9e1ca6`), and only then bridges `eth1` |
+| The room engine set AP-to-AP 5180 MHz overrides from positions, one of them 23 dB between the wired extender and the gateway: its station associated while `eth1` was bridged, a live L2 loop; both pods' uplink switches timed out in it and EMOSA held them on option 2 | meta-cmf `113d925`: no AP pair that includes a `wired_backhaul` role; `57bdd87`: the extender's unit keeps every station interface down |
+| OneWifi's station selfheal disables and enables every radio once the extender station has been disconnected for half the selfheal publish time (5 minutes): on a wired extender it never connects, so every AP went down 5 minutes after each OneWifi start | meta-cmf `69eafdb`: `up` sets `/nvram/selfheal_event_publish_time` beyond reach (OneWifi's own Ethernet backhaul signal needs `RDKB_EXTENDER_ENABLED`, which the image does not build) |
+
+What else it needed:
+
+| Found | Fix |
+| --- | --- |
+| em_agent's start waits for a bridged Wi-Fi backhaul | unified-wifi-mesh bbappend `e8682fa`: an Ethernet port of `brlan0` with carrier also ends the wait |
+| The extender needs the reference extender's in-place binaries, and a newer OneWifi with the image's `libwifi_bus` or `libwifi_webconfig` never finishes starting | `wired-extender.sh` copies OneWifi with its own libraries, em_agent and ieee1905 from `bpiap` |
+| RDK does not bridge `eth1` in extender mode | the extender's unit keeps `eth1` a port of `brlan0` |
+| The room model: a wired AP has no backhaul links, geometry or not; the controller model gains its device but no backhaul association | meta-cmf `5e9a207`, `c6a0b8d`: `"backhaul": "wired"` in the layout, the world's `wired_backhaul`, `expected_lab.wired_devices`, health one association fewer, `meshConnected` expects no edge for it |
+| A pod held on option 2 could not be released | EMOSA `ba432a6`: `lab.sh backhaul wifi` releases the hold and restarts the pod's OpenSync (a switch is made once per pod start) |
+| A wmediumd restart cost every Wi-Fi extender its station and APs until OneWifi and em_agent were restarted | `wired-extender.sh` and `lab.sh medium` restart the medium only when its configuration changes |
+
+After any agent restart the restarted agents reported RCPI 0 for their clients:
+the controller sent its Multi-AP Policy Config only after a channel preference
+exchange the RDK agents never complete, and not at all to an agent onboarding
+again, so only a posted policy change (the lab's policy bump) restored the
+metrics. unified-wifi-mesh 0219 (meta-cmf `c4a167f`) sends every agent its
+Metric Reporting Policy at topology sync; the full policy there broke the
+gateway's onboarding. And 0220 keeps a pod's learned backhaul station across a
+controller restart, which had put the pod back on Ethernet in the model.
+meta-cmf `gen/lab-bringup.sh up` (in the VM, as root) brings the lab back from
+a medium or controller restart in that order, recovering the Wi-Fi extenders
+whose fronthaul or backhaul station stayed down, and settles the room; `status`
+shows every node, the controller's topology and model, and the room.
+
+The suite with the wired extender and both pods on Wi-Fi backhaul (rev120
+`test-results/emosa-pods-wired-20260927T191447Z`, reruns in
+`emosa-pods-wired-rerun-20260927T204722Z`): the catalog passed 23 of 24
+rooms, and the wired extender kept its six fronthaul BSSes throughout (its
+unit never had to repair or take a station down). The one catalog miss,
+`home-a-flash-crowd`, did not converge within 90 s of loading: a client the
+room makes dormant was still "on" the wired extender. It passed twice on its
+own; the cause (an agent bug, fixed by unified-wifi-mesh 0221) is under the
+images below. Four more steps failed at once on gates that knew only the native
+and pod default worlds; with the pods-wired default added (meta-cmf `81fd17e`,
+`98981b9`) default-readiness, rf-properties, world-switch and restore-default
+all passed. rf-hover and rf-access passed in the suite. Geometry passed one
+run of four, each failure in a room where RDK's own parent selection must
+follow the moved APs: `backhaul-parent-handover` in the suite (extender_3
+never moved under extender_2), `backhaul-branch-formation` in two reruns
+(the branch not formed within 60 s, then recovery not verified; its
+ten-client room not converged before the movement). The geometry rooms also
+failed in the native baseline and passed two runs of three with the pods on
+Wi-Fi; the wired extender has no backhaul links in them.
+
+### The images (28 Sep)
+
+Everything that was installed in place is in the images since 28 Sep:
+controller `X86EMLTRBPIBB_rdk-next_20260928034131`, extender
+`X86EMLTRBPIAP_rdk-next_20260928035241`, both from meta-cmf `c3d8560` with
+`doc/easymesh/build/scripts/build-images.sh`. Each node was redeployed with
+`bpi.sh` and its own nvram (the same AL MAC, radios and controller database),
+the gateway's `emosa-lan` port and em_cli drop-in and the wired extender
+(`wired-extender.sh up 4`) restored; no `*.pre-*` file is left in any node.
+meta-cmf `gen/lab-bringup.sh status|up|room` brings the lab back after a
+redeploy, a medium or a controller restart.
+
+| Found | Fix |
+| --- | --- |
+| Patch 0214 never applied in a clean build: it changed `candidate_coordination.go`, a file the recipe copies in after the patches (the lab had it only from in-place builds) | meta-cmf `ba10c66`: the change is in the layer's copy of the file |
+| Restarted agents reported RCPI 0: the controller sent its Multi-AP Policy Config only after a channel preference exchange the RDK agents never complete, and not to an agent onboarding again | unified-wifi-mesh 0219 (`c4a167f`): the Metric Reporting Policy at topology sync. The full policy there broke the gateway's onboarding (a radio stuck in WSC) |
+| After a controller restart a pod on Wi-Fi fell back to Ethernet in the model: its learned backhaul-STA row came back from the database without mode or station | 0220 (`a624fd1`) |
+| `home-a-flash-crowd` failed in both pods-wired suites. An agent rejected every full station snapshot without a client ("unknown reporting RUID": the command's model had no radios), so the withdrawal of an AP's last client was lost and the agent kept reporting the client for about 3 minutes; once the client left its new AP, the controller put it back on the old one. The wired extender at the room's edge usually serves one client. A roam test (client onto bpiap-004, roamed away, disconnected) reproduced it 5 of 5, never on a Wi-Fi extender | 0221 (`c3d8560`): 0 of 2 in the roam test; `home-a-fast-transit` then `home-a-flash-crowd` (the suite's order) passed twice |
+| Journal evidence mode stopped half way: em_agent's start now waits for a backhaul, longer than the script's 60 s per command | `225ffc4` |
+| The room would not start after a hand test: its preflight counts the whole client pool online (it pauses dormant clients itself) | `lab-bringup.sh room` reconnects the pool first (`6e44b35`) |
+
+The suite on the images (before 0221, rev120
+`test-results/emosa-pods-wired-images-20260928T011145Z`): seven steps of nine,
+the catalog 21 of 24. Reruns on the 0221 images
+(`emosa-pods-wired-0221-rerun-20260928T050447Z`): `home-a-fast-transit` then
+`home-a-flash-crowd` 2 of 2, `received-discovery-recovery` 2 of 2,
+`fifty-client-counter-roam` 1 of 2, geometry 0 of 3 (one run passed all three
+rooms' checks and missed only the 60 s default recovery).
+
+Open: candidate collection with the wired extender's three more radios (20
+instead of 17). In `fifty-client-counter-roam` the fleet's candidate count
+rises towards 250 and falls back as measurements age out before one round over
+all radios completes; the geometry rooms' convergence windows miss for the
+same reason (measurements incomplete before the movement or at the default
+recovery). This is the optimizer's collection rate, not the images.
 
 ### Order
 
@@ -502,3 +643,6 @@ Controller 0215 (`onewifi_em_ctrl`, `*.pre-0215`); em_cli 0214 (`em-cli.tar.gz`)
 4. Measurements: telemetry in the RDK lab; serving metrics; candidates from probe
    requests.
 5. The pod-variant suite over the 24 rooms, compared with the baseline.
+6. The pods on Wi-Fi backhaul and its suite (done).
+7. A wired EasyMesh extender next to the pods and its suite (done); the
+   images carrying every change (done).

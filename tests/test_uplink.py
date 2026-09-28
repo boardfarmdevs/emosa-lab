@@ -213,6 +213,24 @@ def test_an_unconfirmed_switch_times_out_and_holds_the_pod_on_option_2(tmp_path)
     assert len(pod.sent) == 1 and switch.status()["waiting"] == "held on option 2"
 
 
+def test_only_an_operator_release_lets_a_held_pod_switch_again(tmp_path):
+    # the release takes effect on the pod's next start: one switch per start and credential
+    switch, pod, clock, store = rig(tmp_path)
+    asyncio.run(switch.tick())
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())
+    assert switch.held() and len(pod.sent) == 1
+    store.release("pod-1")
+    asyncio.run(switch.tick())
+    assert not switch.held() and len(pod.sent) == 1
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == 2 and switch.latest().state == State.CONFIG_COMMITTED
+    pod.adopt()
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED
+
+
 def test_the_switch_is_applied_again_after_every_re_onboarding(tmp_path):
     switch, pod, clock, _ = rig(tmp_path)
     asyncio.run(switch.tick())

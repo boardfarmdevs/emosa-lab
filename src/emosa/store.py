@@ -227,6 +227,11 @@ class Store:
                 (pod_id, json.dumps(redact(evidence))),
             )
 
+    def release(self, pod_id):
+        """An operator's decision: the adapter may act on the pod again."""
+        with self.db:
+            self.db.execute("DELETE FROM ownership WHERE pod=?", (pod_id,))
+
     def ownership(self, pod_id):
         row = self.db.execute("SELECT record FROM ownership WHERE pod=?", (pod_id,)).fetchone()
         return json.loads(row[0]) if row else None

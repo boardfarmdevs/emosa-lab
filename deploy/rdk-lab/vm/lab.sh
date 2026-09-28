@@ -15,14 +15,23 @@
 #                                     backhaul credentials) and their GRE, LAN leg on br-emosa
 #   lab.sh pod [NAME]                 the unchanged OpenSync pod image on two pool radios; its
 #                                     backhaul to the GTP is a fixed link (EMOSA_BACKHAUL_SNR, 45)
+#   lab.sh backhaul wired|wifi [POD...]
+#                                     the pods' uplink: the GTP path (wired), or the gateway's
+#                                     5 GHz mesh_backhaul (wifi: EMOSA's option 1, a fixed link
+#                                     like the lab's own backhaul, EMOSA_WIFI_BACKHAUL_SNR 50).
+#                                     Releases an uplink hold (a failed switch): the pod
+#                                     switches on its next OpenSync start, restarted here
 #   lab.sh repod [NAME]               the pod again from the staged image (its radios are
 #                                     returned to the VM first, so they survive)
 #   lab.sh client NAME SSID KEY       a Wi-Fi client on one pool radio
 #   lab.sh medium                     regenerate wmediumd's radios (guests: user.wmediumd.guest)
 #   lab.sh telemetry [POD...]         MQTT broker (mutual TLS) for the pods' own statistics; every
 #                                     agent has its pod publish 5 s client reports every 5 s
-#   lab.sh rooms pods|native          the room service with the pods as APs (meta-cmf worlds-pods),
-#                                     or the lab's own rooms (pods stopped, controller rows removed)
+#   lab.sh rooms pods|pods-wired|native
+#                                     the room service with the pods as APs (meta-cmf worlds-pods),
+#                                     with the pods and the lab's wired extender extender_5 (bpiap-004,
+#                                     meta-cmf gen/wired-extender.sh; worlds-pods-wired), or the lab's
+#                                     own rooms (pods stopped, controller rows removed)
 #   lab.sh status
 set -euo pipefail
 exec </dev/null
@@ -39,6 +48,7 @@ BHAUL_SSID=${EMOSA_PODBH_SSID:-opensync-lab-bhaul}          # also from the pod 
 BHAUL_KEY=${EMOSA_PODBH_KEY:-opensync-lab-bhaul-psk}
 LABREPO=${EMOSA_RDK_LAB_REPO:-/home/easymesh/git/meta-cmf-bananapi-vcpe}
 LOCK=/run/easymesh-hwsim-allocator.lock                     # the RDK lab's own allocator lock
+UPSTREAM=${EMOSA_POD_UPSTREAM:-bpibroadband/wifi1.1}          # the backhaul BSS a pod on Wi-Fi joins
 
 log() { printf '\033[1;36m[emosa-rdk %s]\033[0m %s\n' "$(date +%H:%M:%S)" "$*"; }
 die() { printf '\033[1;31m[emosa-rdk %s] FATAL\033[0m %s\n' "$(date +%H:%M:%S)" "$*" >&2; exit 1; }
@@ -384,7 +394,8 @@ fleet() {
   "state_root": "/var/lib/emosa",
   "config_dir": "/etc/emosa",
   "admit": "*",
-  "telemetry": $(telemetry_json)
+  "telemetry": $(telemetry_json),
+  "pods": $(pods_json)
 }
 EOF
     cx emosa systemctl enable -q emosa-fleet
@@ -470,15 +481,95 @@ pod() {
         lxc init "mvx-pod-$fp" "$name" -p "$name" >/dev/null
     fi
     lxc config set "$name" user.emosa.role=pod user.opensync-lab.image="$fp"
-    # wired-equivalent backhaul: the pod's station to the GTP is a fixed link on the medium,
-    # outside any room geometry (the lab's gen-config pins it; lab.sh medium applies it)
-    lxc profile set "$name" user.wmediumd.links="bhaul-sta-50=em-gtp/wlan0:${EMOSA_BACKHAUL_SNR:-45}"
+    pod_links "$name"
     start_guarded "$name"
     if [ -f /opt/emosa-lab/telemetry ]; then    # its lab device certificate, once OpenSync is up
         for _ in $(seq 60); do [ -n "$(pod_serial "$name")" ] && break; sleep 2; done
         provision "$name"
     fi
     log "pod: $name from mvx-pod-$fp (wlan0 2.4 GHz, wlan1 5 GHz backhaul station); run lab.sh medium once it is up"
+}
+
+pod_links() {    # the pod's fixed backhaul links on the medium (the lab's gen-config pins them)
+    # Wired-equivalent: its station to the GTP, outside any room geometry. Every OpenSync start
+    # comes up there. On Wi-Fi backhaul (EMOSA option 1) its station is also pinned to the
+    # upstream backhaul BSS's radio, as strong as the lab's own gateway-extender backhaul.
+    local links="bhaul-sta-50=em-gtp/wlan0:${EMOSA_BACKHAUL_SNR:-45}"
+    [ "$(lxc config get "$1" user.emosa.backhaul)" = wifi ] &&
+        links="$links bhaul-sta-50=$UPSTREAM:${EMOSA_WIFI_BACKHAUL_SNR:-50}"
+    lxc profile set "$1" user.wmediumd.links="$links"
+}
+
+upstream_bssid() { cx "${UPSTREAM%%/*}" cat "/sys/class/net/${UPSTREAM#*/}/address"; }
+
+pods_json() {    # the fleet's per-pod settings: a pod on Wi-Fi backhaul, pinned to the upstream BSS
+    local pod serial first=1 bssid=
+    printf '{'
+    for pod in $(pods_running); do
+        [ "$(lxc config get "$pod" user.emosa.backhaul)" = wifi ] || continue
+        [ -n "$bssid" ] || bssid=$(upstream_bssid) || die "no upstream backhaul BSS $UPSTREAM"
+        serial=$(pod_serial "$pod")
+        [ -n "$serial" ] || die "$pod: no serial yet (OpenSync not up)"
+        [ "$first" = 1 ] || printf ', '
+        first=0
+        printf '"%s": {"uplink": {"mode": "multi-ap", "bssid": "%s"}}' "$serial" "$bssid"
+    done
+    printf '}'
+}
+
+agent_reconfigure() {    # rewrite a bound pod's agent configuration from the fleet's, restart it
+    # and release its uplink hold (EMOSA's option 2 after a failed switch): choosing the pod's
+    # backhaul is the operator's decision a hold waits for. Prints "released" if it held.
+    cx emosa systemctl stop "emosa-agent@$1"
+    cx emosa /opt/emosa-adapter/venv/bin/python - "$1" <<'PY'
+import json, sys
+from pathlib import Path
+from emosa.agent.fleet import agent_config
+from emosa.config import validate
+from emosa.store import Store
+fleet = json.load(open("/etc/emosa-fleet.json"))
+entry = json.load(open(Path(fleet["state_root"]) / "fleet.json"))[sys.argv[1]]
+config = agent_config(entry, fleet)
+validate("agent-config", config)
+(Path(fleet["config_dir"]) / f"{sys.argv[1]}.json").write_text(json.dumps(config, indent=1) + "\n")
+uplink = Path(config["state_dir"]) / "uplink"
+if (uplink / "journal.db").exists():
+    store = Store(uplink)
+    if store.ownership(sys.argv[1]):
+        store.release(sys.argv[1])
+        print("released")
+PY
+    cx emosa systemctl start "emosa-agent@$1"
+}
+
+backhaul() {    # backhaul wired|wifi [POD...]: the pods' uplink
+    local mode=${1:-} pods pod serial
+    case $mode in wired|wifi) ;; *) die "usage: lab.sh backhaul wired|wifi [POD...]" ;; esac
+    shift
+    pods=${*:-$(pods_running)}
+    [ -n "$pods" ] || die "no pod is running"
+    for pod in $pods; do
+        running "$pod" || die "$pod is not running"
+        lxc config set "$pod" user.emosa.backhaul "$mode"
+        pod_links "$pod"
+    done
+    fleet     # the per-pod uplink settings
+    medium    # the links
+    for pod in $pods; do
+        serial=$(pod_serial "$pod")
+        released=$(agent_reconfigure "$serial")
+        # EMOSA never switches a pod back: an OpenSync restart returns it to its bootstrap (GTP)
+        # path. A released hold switches on the pod's next start: one switch per start.
+        if [ "$mode" = wired ] || [ -n "$released" ]; then
+            [ -z "$released" ] || log "$pod: uplink hold released"
+            cx "$pod" systemctl restart opensync
+        fi
+    done
+    if [ "$mode" = wifi ]; then
+        log "backhaul: $(echo $pods) on Wi-Fi to $UPSTREAM (EMOSA switches once the agent is provisioned)"
+    else
+        log "backhaul: $(echo $pods) on the GTP path"
+    fi
 }
 
 repod() {
@@ -523,7 +614,14 @@ client() {    # client NAME SSID KEY [BSSID]: pinned to BSSID when given (every 
 medium() {
     # the lab's own generator (as root: it reads LXD), with guests (user.wmediumd.guest=true).
     # The room demo drives wmediumd live: it stops for the restart and starts again.
-    local room=
+    # A restart drops every Wi-Fi backhaul (the extenders lost their APs with it until OneWifi
+    # and em_agent were restarted): only when the generated configuration differs.
+    local room= cfg=/run/meta-cmf-wmediumd/wmediumd.cfg
+    if [ -f "$cfg" ] && kill -0 "$(cat /run/meta-cmf-wmediumd/wmediumd.pid 2>/dev/null)" 2>/dev/null &&
+            cmp -s "$cfg" <(cd "$LABREPO" && bash gen/wmediumd/gen-config.sh "${SNR:-40}" 2>/dev/null); then
+        log "medium: already current"
+        return
+    fi
     systemctl is-active --quiet easymesh-room-demo && room=1 && systemctl stop easymesh-room-demo
     (cd "$LABREPO" && bash gen/wmediumd/wmediumd-up.sh up) | tail -2
     [ -z "$room" ] || systemctl start easymesh-room-demo
@@ -547,11 +645,11 @@ forget_pods() {    # remove the EMOSA agents' rows from the controller's model (
     log "controller model: EMOSA agents $als removed"
 }
 
-room_manifest() {    # the room service's manifest: the lab's own rooms, or the rooms with pods
+room_manifest() {    # the room service's manifest: the lab's own rooms, or the rooms with pods (and wired extender)
     local dropin=/etc/systemd/system/easymesh-room-demo.service.d/90-emosa-pods.conf
-    if [ "$1" = pods ]; then
+    if [ "$1" = pods ] || [ "$1" = pods-wired ]; then
         mkdir -p "${dropin%/*}"
-        printf '[Service]\nEnvironment=EASYMESH_ROOM_MANIFEST=gen/demo/manifests/private-client-room-walk-pods.json\n' > "$dropin"
+        printf '[Service]\nEnvironment=EASYMESH_ROOM_MANIFEST=gen/demo/manifests/private-client-room-walk-%s.json\n' "$1" > "$dropin"
     else
         rm -f "$dropin"
     fi
@@ -560,8 +658,16 @@ room_manifest() {    # the room service's manifest: the lab's own rooms, or the 
 
 rooms() {    # rooms pods|native: which rooms the lab's room service runs
     local pod n
+    # a wired extender (bpiap-004) belongs to pods-wired only: elsewhere it is an unbound AP
+    # every client hears at the medium's default SNR
+    if [ "${1:-}" = pods-wired ]; then
+        [ "$(lxc config get bpiap-004 user.easymesh.backhaul 2>/dev/null)" = wired ] && running bpiap-004 ||
+            die "no wired extender bpiap-004 (meta-cmf gen/wired-extender.sh up 4)"
+    elif exists bpiap-004; then
+        die "bpiap-004 is present: rooms $1 has no wired extender (meta-cmf gen/wired-extender.sh down 4)"
+    fi
     case ${1:-} in
-    pods)
+    pods|pods-wired)
         systemctl stop easymesh-room-demo
         for pod in $(lxc list -c n -f csv | grep -E '^pod-[0-9]+$'); do start_guarded "$pod"; done
         cx emosa systemctl start emosa-fleet
@@ -569,9 +675,9 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         for _ in $(seq 60); do [ "$(agents_provisioned)" -ge "$n" ] && break; sleep 5; done
         [ "$(agents_provisioned)" -ge "$n" ] || die "not every pod's agent is provisioned"
         medium    # pins the pods' backhaul links now that their stations exist
-        room_manifest pods
+        room_manifest "$1"
         systemctl reset-failed easymesh-room-demo; systemctl start easymesh-room-demo
-        log "rooms: with pods ($n); suite: EASYMESH_ROOM_WORLDS_ROOT=gen/wmediumd/configurator/worlds-pods" ;;
+        log "rooms: $1 ($n pods); suite: EASYMESH_ROOM_WORLDS_ROOT=gen/wmediumd/configurator/worlds-$1" ;;
     native)
         systemctl stop easymesh-room-demo
         cx emosa sh -c 'systemctl stop emosa-fleet "emosa-agent@*"'
@@ -580,12 +686,16 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         room_manifest native
         systemctl reset-failed easymesh-room-demo; systemctl start easymesh-room-demo
         log "rooms: the lab's own (pods stopped, their controller rows removed)" ;;
-    *) die "usage: lab.sh rooms pods|native" ;;
+    *) die "usage: lab.sh rooms pods|pods-wired|native" ;;
     esac
 }
 
 status() {
     lxc list -c ns4 -f csv | grep -E '^(emosa|em-gtp|pod-|emc-)' || true
+    local pod
+    for pod in $(pods_running); do
+        echo "$pod backhaul: $(lxc config get "$pod" user.emosa.backhaul | sed 's/^$/wired/')"
+    done
     exists emosa && cx emosa sh -c '/opt/emosa-adapter/venv/bin/emosa-fleet list /etc/emosa-fleet.json 2>/dev/null
         for f in /etc/default/emosa-*; do [ -f "$f" ] && echo "${f#/etc/default/emosa-}: $(cat "$f")"; done' || true
     echo "regulatory: $(regdom)"
@@ -593,6 +703,7 @@ status() {
 
 case ${1:-} in
     lanport|emosa|fleet|gtp|medium|status|controller_al) "$1" ;;
+    backhaul) shift; backhaul "$@" ;;
     pod) shift; pod "$@" ;;
     agent) shift; agent "$@" ;;
     rooms) shift; rooms "$@" ;;
