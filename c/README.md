@@ -46,10 +46,13 @@ Not in the C runtime yet (the Python agent has them):
   steering windows a previous process left open are not closed;
 - the uplink (EasyMesh backhaul STA) and telemetry scopes, and with them the AP
   metrics from the pod's statistics (spec §3.8; the statistics decoder, survey
-  included, is here and checked by the vectors);
+  and band-steering probe requests included, is here and checked by the
+  vectors);
 - Link Metric and AP Metrics answers (the queries are counted, not answered);
-- probe requests from the band-steering report: an Unassociated STA Link
-  Metrics Query is answered, but every station is refused (spec §3.9);
+- the probe watch (spec §3.9: the pod's `Band_Steering_Clients` watch rows). The
+  Unassociated STA Link Metrics answer measures a station from its last probe
+  request (`control.c`, vector `unassociated-query-measured`), but without the
+  telemetry scope the runtime has no probes, so it refuses every station;
 - retries of the Early AP Capability Report;
 - schema validation of the configuration and status.
 

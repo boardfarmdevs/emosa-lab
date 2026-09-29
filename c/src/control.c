@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <time.h>
 
 static bool seen(em_control *c, uint16_t type, uint16_t mid)
@@ -455,9 +456,32 @@ static const char *steer(em_control *c, const em_message *m, em_frames *out, em_
     return "client_steering_started";
 }
 
-/* Unassociated STA Link Metrics Query (spec §3.9): the Ack refuses every
- * station, reason 0x01 when it is associated with a BSS of the pod, 0x02 when
- * it is not: this agent has no telemetry, so it has heard no probe request. */
+#define PROBE_LIFETIME 120 /* seconds: an older probe is not a measurement */
+#define NOISE_FLOOR_DBM (-96) /* OpenSync reports SNR = signal - its fixed noise floor */
+
+/* The band of an audited operating class (emosa.operating_classes), or NULL. */
+static const char *class_band(uint8_t op_class)
+{
+    if (op_class >= 81 && op_class <= 84)
+        return "2.4G";
+    if ((op_class >= 115 && op_class <= 117) || op_class == 128)
+        return "5G";
+    return NULL;
+}
+
+static double wall_now(const em_control *c)
+{
+    if (c->wall)
+        return c->wall();
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return (double)t.tv_sec + (double)t.tv_nsec / 1e9;
+}
+
+/* Unassociated STA Link Metrics Query (spec §3.9), as emosa.wire.unassociated: the Ack
+ * refuses a station associated with a BSS of the pod (reason 0x01) and one the pod has
+ * not heard on the requested class and channel within PROBE_LIFETIME (0x02); the others
+ * follow in a Response with the query's MID, measured from their last probe request. */
 static const char *unassociated(em_control *c, const em_message *m, em_frames *out, em_reason *error)
 {
     const em_tlv *t = NULL;
@@ -474,13 +498,15 @@ static const char *unassociated(em_control *c, const em_message *m, em_frames *o
         return NULL;
     }
     const uint8_t *d = t->value;
+    uint8_t op_class = d[0];
     size_t at = 2, n = 0;
-    static uint8_t stations[64][6];
+    static uint8_t stations[64][6], channels[64];
     for (size_t k = 0; k < d[1]; k++) {
         if (at + 2 > t->len || at + 2 + 6 * (size_t)d[at + 1] > t->len) {
             *error = EM_INVALID_INPUT;
             return NULL;
         }
+        uint8_t channel = d[at];
         size_t count = d[at + 1];
         at += 2;
         for (size_t i = 0; i < count; i++, at += 6) {
@@ -497,6 +523,7 @@ static const char *unassociated(em_control *c, const em_message *m, em_frames *o
                 *error = EM_INVALID_INPUT; /* the controller's own bound */
                 return NULL;
             }
+            channels[n] = channel;
             memcpy(stations[n++], d + at, 6);
         }
     }
@@ -504,22 +531,62 @@ static const char *unassociated(em_control *c, const em_message *m, em_frames *o
         *error = EM_INVALID_INPUT;
         return NULL;
     }
+    /* the represented radio's class and channel: the pod hears nothing off channel */
+    bool operating = c->radio->has_channel && !strcmp(c->radio->band, "2.4G");
+    double now = wall_now(c);
     static em_tlv errors[64];
-    static uint8_t values[64][7];
+    static uint8_t values[64][7], body[2 + 64 * 12];
+    size_t nerrors = 0, measured = 0;
+    body[0] = op_class;
     for (size_t i = 0; i < n; i++) {
         bool on_pod = false;
         for (size_t b = 0; b < c->radio->nbss && !on_pod; b++)
             on_pod = associated(&c->radio->bss[b], stations[i]);
-        values[i][0] = on_pod ? 0x01 : 0x02;
-        memcpy(values[i] + 1, stations[i], 6);
-        errors[i] = (em_tlv){0xA3, 7, values[i]};
+        const em_probe_stats *p = NULL;
+        if (!on_pod && operating && op_class == 81 && channels[i] == c->radio->channel && c->stats) {
+            char mac[18];
+            snprintf(mac, sizeof(mac), "%02x:%02x:%02x:%02x:%02x:%02x", stations[i][0],
+                     stations[i][1], stations[i][2], stations[i][3], stations[i][4], stations[i][5]);
+            p = em_pod_stats_probe(c->stats, mac);
+            const char *band = class_band(op_class);
+            if (p && (!band || strcmp(p->band, band) || now - p->measured_at < 0 ||
+                      now - p->measured_at > PROBE_LIFETIME))
+                p = NULL;
+        }
+        if (!p) {
+            values[nerrors][0] = on_pod ? 0x01 : 0x02;
+            memcpy(values[nerrors] + 1, stations[i], 6);
+            errors[nerrors] = (em_tlv){0xA3, 7, values[nerrors]};
+            nerrors++;
+            continue;
+        }
+        /* round half to even, as the reference */
+        uint32_t age_ms = (uint32_t)nearbyint((now - p->measured_at) * 1000);
+        int rcpi = 2 * ((int)p->snr_db + NOISE_FLOOR_DBM + 110);
+        uint8_t *e = body + 2 + 12 * measured++;
+        memcpy(e, stations[i], 6);
+        e[6] = channels[i];
+        e[7] = (uint8_t)(age_ms >> 24);
+        e[8] = (uint8_t)(age_ms >> 16);
+        e[9] = (uint8_t)(age_ms >> 8);
+        e[10] = (uint8_t)age_ms;
+        e[11] = (uint8_t)(rcpi < 0 ? 0 : rcpi > 220 ? 220 : rcpi);
     }
-    em_reason e = send(c, 0x8000, m->mid, errors, n, out);
+    em_reason e = send(c, 0x8000, m->mid, errors, nerrors, out);
     if (e != EM_OK) {
         *error = e;
         return NULL;
     }
-    return "unassociated_query_refused";
+    if (!measured)
+        return "unassociated_query_refused";
+    body[1] = (uint8_t)measured;
+    em_tlv response = {0x98, (uint16_t)(2 + 12 * measured), body};
+    /* a response carries its request's MID (IEEE 1905.1) */
+    if ((e = send(c, 0x8010, m->mid, &response, 1, out)) != EM_OK) {
+        *error = e;
+        return NULL;
+    }
+    return "unassociated_metrics_response_sent";
 }
 
 const char *em_control_handle(em_control *c, const em_message *m, em_frames *out, em_reason *error)

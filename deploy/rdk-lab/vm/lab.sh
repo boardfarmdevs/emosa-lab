@@ -3,8 +3,10 @@
 # unchanged OpenSync pod next to the RDK lab. Staged by ../lab.sh into /opt/emosa-lab.
 # Design: doc/architecture/rdk-lab.md.
 #
-#   lab.sh lanport                    bridge br-emosa, a wired port of the controller's brlan0
-#                                     (bpibroadband eth2): the EasyMesh LAN for EMOSA and the GTP
+#   lab.sh lanport                    the RDK lab's wired LAN port, a VM bridge that is a port of
+#                                     the controller's brlan0 (bpibroadband eth2): the EasyMesh LAN
+#                                     for EMOSA and the GTP (meta-cmf gen/wired-extender.sh lanport;
+#                                     here, bridge br-emosa, with an older lab checkout)
 #   lab.sh emosa                      container emosa: the adapter kit; the pods' redirector
 #                                     address 10.101.0.40 on br-wan101, forwarded to it
 #   lab.sh fleet                      EMOSA fleet on the front port 10.101.0.40:6640 (the pod
@@ -12,7 +14,7 @@
 #   lab.sh agent POD python|c         which implementation runs POD's agent: the Python
 #                                     reference or the C lab prototype (same config and status)
 #   lab.sh gtp                        container em-gtp: the pods' onboarding SSID (the pod image's
-#                                     backhaul credentials) and their GRE, LAN leg on br-emosa
+#                                     backhaul credentials) and their GRE, LAN leg on the lab's wired LAN port
 #   lab.sh pod [NAME]                 the unchanged OpenSync pod image on two pool radios; its
 #                                     backhaul to the GTP is a fixed link (EMOSA_BACKHAUL_SNR, 45)
 #   lab.sh backhaul wired|wifi [POD...]
@@ -31,7 +33,8 @@
 #                                     the room service with the pods as APs (meta-cmf worlds-pods),
 #                                     with the pods and the lab's wired extender extender_5 (bpiap-004,
 #                                     meta-cmf gen/wired-extender.sh; worlds-pods-wired), or the lab's
-#                                     own rooms (pods stopped, controller rows removed)
+#                                     own rooms (pods stopped, controller rows removed; with the wired
+#                                     extender where the lab has one, worlds-wired)
 #   lab.sh status
 set -euo pipefail
 exec </dev/null
@@ -39,7 +42,6 @@ export PATH=/snap/bin:$PATH
 ART=/opt/emosa-lab
 IMAGE=${EMOSA_IMAGE:-ubuntu:24.04}
 CTL=${EMOSA_RDK_CONTROLLER:-bpibroadband}
-LAN=br-emosa
 WAN_BRIDGE=${EMOSA_WAN_BRIDGE:-br-wan101}
 WAN_HOST=${EMOSA_WAN_HOST:-10.101.0.40}    # the pod image's redirector (service provider mvx-local)
 FLEET_PORT=${EMOSA_FLEET_PORT:-6640}
@@ -55,6 +57,19 @@ die() { printf '\033[1;31m[emosa-rdk %s] FATAL\033[0m %s\n' "$(date +%H:%M:%S)" 
 exists() { lxc info "$1" >/dev/null 2>&1; }
 running() { [ "$(lxc list "^$1\$" -c s -f csv)" = RUNNING ]; }
 has_device() { lxc config device list "$1" | grep -x "$2" >/dev/null; }
+
+lan_bridge() {    # the bridge of the RDK lab's wired LAN port (meta-cmf gen/wired-extender.sh lanport)
+    local d n
+    for d in $(lxc config device list "$CTL" 2>/dev/null); do
+        [ "$(lxc config device get "$CTL" "$d" name 2>/dev/null)" = eth2 ] || continue
+        lxc config device get "$CTL" "$d" parent
+        return
+    done
+    for n in $(lxc network list -f csv 2>/dev/null | cut -d, -f1); do
+        [ "$(lxc network get "$n" user.easymesh.lanport 2>/dev/null)" = true ] && { echo "$n"; return; }
+    done
+    echo br-emosa    # this script's own port, before the RDK lab owned one
+}
 cx() { local c=$1; shift; lxc exec "$c" -- "$@"; }
 wait_net() {
     for _ in $(seq 60); do cx "$1" getent hosts archive.ubuntu.com >/dev/null 2>&1 && return; sleep 2; done
@@ -193,6 +208,13 @@ start_guarded() {
 }
 
 lanport() {
+    # The RDK lab owns its wired LAN port (a VM bridge as eth2 of the gateway's brlan0) since
+    # its wired extender needs it too; this script's own port is for an older lab checkout.
+    if grep -q '^    lanport)' "$LABREPO/gen/wired-extender.sh" 2>/dev/null; then
+        "$LABREPO/gen/wired-extender.sh" lanport
+        return
+    fi
+    LAN=br-emosa
     lxc network show "$LAN" >/dev/null 2>&1 ||
         lxc network create "$LAN" ipv4.address=none ipv6.address=none >/dev/null
     # A bridge without a fixed address takes its lowest port MAC: LXD's 00:16:3e:... would
@@ -253,7 +275,7 @@ emosa() {
             apt-get -qq install -y cmake pkg-config gcc libcjson-dev libssl-dev >/dev/null; }'
     running emosa || lxc start emosa
     has_device emosa emlan ||
-        lxc config device add emosa emlan nic nictype=bridged parent="$LAN" name=emlan >/dev/null
+        lxc config device add emosa emlan nic nictype=bridged parent="$(lan_bridge)" name=emlan >/dev/null
     # The pods' redirector: the VM owns br-wan101 (10.101.0.1); add .40 and forward the
     # front port and the agent ports into the container's loopback (agents listen there only).
     cat > /etc/systemd/system/emosa-lab-wan-address.service <<EOF
@@ -409,7 +431,7 @@ gtp() {
         guest_profile em-gtp 1
         lxc init "$IMAGE" em-gtp --network lxdbr0 -p default -p em-gtp >/dev/null
         lxc config set em-gtp user.emosa.role gtp
-        lxc config device add em-gtp eth1 nic nictype=bridged parent="$LAN" name=eth1 >/dev/null
+        lxc config device add em-gtp eth1 nic nictype=bridged parent="$(lan_bridge)" name=eth1 >/dev/null
     fi
     start_guarded em-gtp
     wait_net em-gtp
@@ -464,7 +486,7 @@ EOF
 }
 EOF
     cx em-gtp sh -c 'systemctl enable -q emosa-gtp; systemctl restart emosa-gtp'
-    log "em-gtp: '$BHAUL_SSID' on channel $channel, GRE into br-gtp, LAN leg on $LAN"
+    log "em-gtp: '$BHAUL_SSID' on channel $channel, GRE into br-gtp, LAN leg on $(lan_bridge)"
 }
 
 pod() {
@@ -658,13 +680,18 @@ room_manifest() {    # the room service's manifest: the lab's own rooms, or the 
 
 rooms() {    # rooms pods|native: which rooms the lab's room service runs
     local pod n
-    # a wired extender (bpiap-004) belongs to pods-wired only: elsewhere it is an unbound AP
-    # every client hears at the medium's default SNR
+    # A wired extender (bpiap-004) must be in the rooms wherever it runs: elsewhere it is an
+    # unbound AP every client hears at the medium's default SNR. pods-wired has it; native
+    # then means the lab's own rooms with it (worlds-wired, which the RDK lab's
+    # gen/wired-extender.sh selects with its own room drop-in); pods has no room for it.
     if [ "${1:-}" = pods-wired ]; then
         [ "$(lxc config get bpiap-004 user.easymesh.backhaul 2>/dev/null)" = wired ] && running bpiap-004 ||
             die "no wired extender bpiap-004 (meta-cmf gen/wired-extender.sh up 4)"
-    elif exists bpiap-004; then
-        die "bpiap-004 is present: rooms $1 has no wired extender (meta-cmf gen/wired-extender.sh down 4)"
+    elif [ "${1:-}" = pods ] && exists bpiap-004; then
+        die "bpiap-004 is present: rooms pods has no wired extender (rooms pods-wired, or meta-cmf gen/wired-extender.sh down 4)"
+    elif [ "${1:-}" = native ] && exists bpiap-004 &&
+            [ ! -e /etc/systemd/system/easymesh-room-demo.service.d/80-wired-extender.conf ]; then
+        die "bpiap-004 is present but the room service has no rooms with it (meta-cmf gen/wired-extender.sh up 4)"
     fi
     case ${1:-} in
     pods|pods-wired)
@@ -685,7 +712,7 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         forget_pods
         room_manifest native
         systemctl reset-failed easymesh-room-demo; systemctl start easymesh-room-demo
-        log "rooms: the lab's own (pods stopped, their controller rows removed)" ;;
+        log "rooms: the lab's own$(exists bpiap-004 && echo ', with the wired extender') (pods stopped, their controller rows removed)" ;;
     *) die "usage: lab.sh rooms pods|pods-wired|native" ;;
     esac
 }

@@ -84,6 +84,9 @@ meets those expectations; it does not change the pod.
   change to the RDK side. On a product, EMOSA would run on the gateway itself
   and use `brlan0` directly. The same port is what a wired extender needs
   later.
+  Since 2026-09-29 the RDK lab owns this port (meta-cmf-bananapi-vcpe
+  `gen/wired-extender.sh lanport`, which its wired extender needs as well);
+  `lab.sh lanport` hands over to it, and a lab that had `br-emosa` keeps it.
 - **Data plane: option 2 first.** The GTP serves the pod's onboarding SSID and
   terminates its GRE (spec §8.2). Option 1 comes later: the pod's station on
   RDK's `mesh_backhaul` BSS, pinned to its BSSID (spec §8.3).
@@ -420,7 +423,7 @@ response carries it); whether the optimizer's candidate handling accepts an
 age of up to about a minute is to be checked. If the pods cannot measure
 honestly, how the gates treat an abstaining agent is the user's decision.
 
-### Step 4: measurements (in progress)
+### Step 4: measurements (done)
 
 **Telemetry** runs in the lab (`lab.sh telemetry`): the broker stage at
 `10.101.0.40:8883` (mutual TLS, lab CA, a device certificate per pod), each
@@ -471,7 +474,7 @@ written at most every 10 s), so the pods hear their probes. A steering window
 replaces the station's watch row. Deployed in `rdk-emosa` (EMOSA `2815061`)
 for runs 6 to 8 of the pod-variant suite.
 
-### Step 5: the pod-variant suite (in progress)
+### Step 5: the pod-variant suite (done)
 
 `run-easymesh-suite.sh rooms` with `EASYMESH_ROOM_WORLDS_ROOT=gen/wmediumd/configurator/worlds-pods`
 on `rdk-emosa`. Run 8 (2026-09-26 12:01 UTC, meta-cmf `1b6b454`, EMOSA
@@ -633,16 +636,114 @@ instead of 17). In `fifty-client-counter-roam` the fleet's candidate count
 rises towards 250 and falls back as measurements age out before one round over
 all radios completes; the geometry rooms' convergence windows miss for the
 same reason (measurements incomplete before the movement or at the default
-recovery). This is the optimizer's collection rate, not the images.
+recovery). This is the optimizer's collection rate, not the images (below).
+
+### The open items (28 Sep)
+
+What the images left open, each traced to its cause in the lab (meta-cmf
+`9a0ac77` to `5616b68`, unified-wifi-mesh 0222 to 0230):
+
+| Found | Fix |
+| --- | --- |
+| Candidate collection over 20 radios took about 12 s a round, longer than the candidate stream's 7.5 s refresh: the controller admitted one Unassociated STA Link Metrics Query at a time for the whole mesh | 0222: one query in flight per agent, em_cli runs four agents at once (`/api/v1/coordination`); the optimizer's parallel collection defers a query the controller did not admit to a second pass instead of failing the agent (`9a0ac77`). 0229: a reply completes its own radio's query, and a query times out on its own (the type's timer never went idle with four agents queried continuously, so every check cancelled every query and radios stayed "not ready"). A round over 24 queries (500 candidates, 100 clients) now takes 3.2 to 3.8 s with four agents and 7.0 to 7.7 s one at a time (12 s before); the room settles 2 minutes after the topology, all 20 clients checked |
+| The RDK agents never answered the Channel Preference Query. The agent built its command on the AL node in `ap_cap_report`, a state only the radios reach since 0180; the query was dropped without a word, the controller re-sent it about once a second, its radios stayed in `channel_query_pending` (em_config's fourth step) and refused every candidate query as not ready | 0223: the AL node answers every query at once. Completing em_config then needs: 0224, a Channel Selection Request without preferences keeps the channel; 0225, no default channel preferences in the controller (its presets, op classes 83/6, 128/42 and 135/7, would move every agent to those channels and widths, off the rooms' 20 MHz 6, 36 and 37); 0226, the policy ACK configures every radio of the agent (the others waited in `set_policy_pending`). In the lab all 20 radios reach topology publish, the channels stay put and the extenders' backhaul stays up through the gateway's full policy (`4eec210`) |
+| em_config's timeouts read the type's time (the longest any agent's em_config took since the type was last idle): with every agent now running all em_config steps, one slow agent got every other agent reaching topology sync cancelled and renewed | 0230 (`5616b68`): each agent's em_config times out from its own start and cancels only itself. After a controller restart, topology sync takes 1 to 16 s for most agents; an agent caught between the controller's renews and its own restart can still loop through renews (118 and 258 s), as before these patches (the 04:13 bring-up needed two agent restarts); `lab-bringup.sh up` restarts the agents again and the topology completes |
+| After a controller restart the gateway's agent sometimes stayed with a radio in WSC (Agent-1 with 4 of 10 BSSes). The renewed radios' M2s arrive in one second; the agent pushes one OneWifi subdoc at a time, a queued radio asks again with M1, and the controller ignored an M1 for a radio in `wsc_m2_sent` | 0228 (`ce6c84a`): the controller answers it. `lab-bringup.sh up` restarts the agents up to three times and names the short nodes (`ce6f2c1`) |
+| `received-discovery-recovery` (`native_owner_mismatch`): a Topology Response claim for a station another BSS holds is taken only if younger, but the existing claim's age stops at its AP's last report. A station back on A after a short stint on B kept B's small frozen age (live: 316 s against 57 s) | 0227 (`8134cb7`): the controller keeps when each claim's association began (boot clock) and compares those |
+| "Geometry native outage": all four extenders without a parent at once in `backhaul-branch-formation`. The room's own geometry: extender_1 and extender_2 hear extender_3 and extender_4 better than the gateway (20 against 13 dB on 5 GHz), so the native tree may start with them hanging off extender_3 and extender_4; the midpoint then inverts the whole tree, and re-forming took 62 s of the room's 60 s | `4f024f7`: the branch convergence has 150 s and the report keeps the initial native parents. The 27 Sep failure was another room (`backhaul-parent-handover`: extender_3 never moved to extender_2, native stickiness) |
+| The gateway container reached its 1 GiB memory limit: the evidence journal (271 MB, in `/run`) and the daemons (450 to 700 MB). Memory-cgroup thrash: VM load past 100, every `lxc exec` and `wpa_cli` timed out, all four Wi-Fi extenders lost their backhaul | `825b76e`: 96 MB of evidence journal on the gateway, 256 MB on the extenders |
+
+The suite with all of them installed in place (rev120
+`test-results/emosa-pods-wired-0230-20260928T162152Z`): eight steps of nine,
+the catalog 23 of 24, geometry all three rooms (0 of 3 on the images before).
+`fifty-client-counter-roam`, `home-a-flash-crowd`, `home-a-fast-transit` and
+`large-room-extender-evacuation` passed. The one miss,
+`received-discovery-recovery`, was the test's own audit: its query of the
+client's state to the VM's LXD API took longer than 5 s (meta-cmf `3f5a8e0`:
+20 s); the room's checks had passed.
+
+The images carrying all of them (28 Sep 18:07): controller
+`X86EMLTRBPIBB_rdk-next_20260928161525`, extender
+`X86EMLTRBPIAP_rdk-next_20260928162627`, both from meta-cmf `5616b68`, no
+`*.pre-*` file left in any node; after the redeploy the topology completed
+at the first attempt and the room settled 4 minutes later. Their suite
+(`test-results/emosa-pods-wired-images-0230-20260928T182827Z`): seven steps
+of nine, the catalog 22 of 24, `received-discovery-recovery` passed. The
+misses are the known convergence windows: `large-room-extender-evacuation`
+converged at 89.5 s and was confirmed at 90.5 s of its 90 s load window,
+`fifty-client-counter-roam` was not converged at 90 s (candidates complete,
+the steering policy still settling); geometry passed all three rooms'
+checks, the branch room from an inverted start (extender_1 under
+extender_3), and missed the 60 s default restore with 19 of 20 clients
+measured. Rerun alone (`test-results/rerun-20260928T200635Z`),
+`large-room-extender-evacuation` loaded in 30 s and passed;
+`fifty-client-counter-roam` missed again. With 50 clients the candidate
+rounds slow from 3.5 s (idle) to 6.6 s at the median and up to 10.6 s: queries
+to radios busy steering are refused as not ready (deferred), and some time
+out in em_cli (HTTP 504 after 8 s) having waited 3.4 to 4.7 s for its native
+lock behind the room's topology and client reads.
+
+Two more fixes for that room. The waiting was the queries' own polls: each
+read the whole station tree (about 70 ms with 50 clients) under the lock,
+four agents at once. Polls now share a read no older than 100 ms
+(unified-wifi-mesh 0231, meta-cmf `239f9f6`): rounds 3.5 s under the load,
+no timeout. The room then passed 2 of 3 alone; the miss was coverage
+flapping around 210 of 250: a client counts as measured only while all its
+candidates are younger than 15 s, and refreshed at 7.5 s a candidate whose
+query met a busy radio could expire before the next round. The room now
+refreshes at 5 s (meta-cmf `a8b256b`): `fifty-client-counter-roam` passed 3
+of 3 alone, loaded in 81, 84 and 81 s of its 90 s (first convergence 75 to
+79 s). Images with 0231: controller `X86EMLTRBPIBB_rdk-next_20260928203255`,
+extender `X86EMLTRBPIAP_rdk-next_20260928204402`.
+
+EMOSA in C (emosa-lab `beef95a`): the statistics decoder reads the pod's
+band-steering report (each watched station's last probe request), and the
+Unassociated STA Link Metrics answer measures a station from it, as the
+Python agent does; checked by new vectors. The C runtime still has no
+telemetry scope, so live it refuses every station.
+
+Not done, and why: the pods' backhaul in the geometry rooms. In those rooms
+the pods stand where the geometry gives them no usable path to the gateway
+(-1 dB), and EMOSA pins its upstream to the gateway's BSS (Backhaul Steering
+refused, spec §2.4): modelled, the pods would just lose their backhaul.
+It needs EMOSA to take an extender as its parent first. The TP-Link RE653BE
+on `br-emosa` needs the device.
+
+### The qualification closed (29 Sep)
+
+The images from meta-cmf `239f9f6` (0231; controller
+`X86EMLTRBPIBB_rdk-next_20260928203255`, extender
+`X86EMLTRBPIAP_rdk-next_20260928204402`) went into `rdk-emosa` with the lab's
+new `gen/lab-redeploy.sh`, every node keeping its identity. After the
+redeploy the wired extender fell into a renew loop (its em_config never
+reached topology sync within its time limit, so the controller renewed its
+radios about every minute; the room's health stayed false). Restarting its
+agent alone did not end it; `gen/lab-bringup.sh up` did. The cause, the
+agent's one-subdoc-at-a-time M2 path (0107) against the controller's answer
+to a repeated M1 (0228), is open in the RDK lab (alignment plan phase 1).
+
+The pods-wired suite on those images
+(`test-results/emosa-pods-wired-239f9f6-20260929T005904Z`): eight steps of
+nine, and the catalog passed all 24 rooms for the first time, with both pods
+on Wi-Fi backhaul and the wired extender. Geometry failed in the suite: in
+`backhaul-branch-formation` the native branch formed, but the controller's
+model had not caught up within the 150 s window (extender_3's edge missing,
+two of ten clients not active). Run again alone (`geometry-rerun-023705`),
+all three geometry rooms passed their checks; the final restore to the
+default room missed its 60 s window, as on 28 Sep. With that, steps 3 to 5
+below are done and the qualification against the 24 rooms is closed. The
+open items are the controller's catch-up after a geometry re-parenting and
+the default-restore window.
 
 ### Order
 
 1. Two pods through the GTP path, backhaul held fixed (done).
 2. Native baseline: the room suite on `rdk-emosa` with EMOSA idle (done).
-3. Pods in the room model (above).
+3. Pods in the room model (done).
 4. Measurements: telemetry in the RDK lab; serving metrics; candidates from probe
-   requests.
-5. The pod-variant suite over the 24 rooms, compared with the baseline.
+   requests (done).
+5. The pod-variant suite over the 24 rooms, compared with the baseline (done:
+   the qualification closed on 29 Sep, above).
 6. The pods on Wi-Fi backhaul and its suite (done).
 7. A wired EasyMesh extender next to the pods and its suite (done); the
    images carrying every change (done).

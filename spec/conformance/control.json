@@ -3,6 +3,7 @@
   "al_mac": "02:72:f9:7f:07:85",
   "controller_al": "02:00:00:e0:00:01",
   "first_mid": 500,
+  "probe_wall": 1790313745.0,
   "radio": "02:00:00:00:01:00",
   "scan_timestamp": "2026-09-25T00:00:00.000Z"
  },
@@ -189,9 +190,51 @@
      "request": "0272f97f0785020000e00001893a0000800f0014008097001e51020602020000000a000200000099990102020000009898020000000a00000000"
     }
    ]
+  },
+  {
+   "handed_to_pod": [],
+   "name": "unassociated-query-measured",
+   "probes": {
+    "02:00:00:00:95:95": {
+     "band": "5G",
+     "ifname": "wl1.1",
+     "measured_at": 1790313740.0,
+     "snr_db": 40
+    },
+    "02:00:00:00:96:96": {
+     "band": "2.4G",
+     "ifname": "wl0.1",
+     "measured_at": 1790313545.0,
+     "snr_db": 30
+    },
+    "02:00:00:00:98:98": {
+     "band": "2.4G",
+     "ifname": "wl0.1",
+     "measured_at": 1790313735.0,
+     "snr_db": 28
+    },
+    "02:00:00:00:99:99": {
+     "band": "2.4G",
+     "ifname": "wl0.1",
+     "measured_at": 1790313715.0,
+     "snr_db": 34
+    }
+   },
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a0000800000150080a3000701020000000a00a3000702020000009797a3000702020000009696a3000702020000009595a3000702020000009898000000",
+       "020000e000010272f97f0785893a000080100015008098000e5101020000009999060000753060000000"
+      ],
+      "result": "unassociated_metrics_response_sent"
+     },
+     "request": "0272f97f0785020000e00001893a0000800f0015008097002a51020605020000000a000200000099990200000097970200000096960200000095950101020000009898000000"
+    }
+   ]
   }
  ],
- "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00 on class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller request frame and the frames the agent sends in answer, in order; the agent's own messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. 'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), as decoded from the request.",
+ "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00 on class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller request frame and the frames the agent sends in answer, in order; the agent's own messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. 'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), as decoded from the request. A case with 'probes' gives the pod's last probe request per station (spec §3.9); probe_wall is the agent's clock for their ages.",
  "ovsdb_tables": {
   "AWLAN_Node": {
    "96bc1650-4197-4cd8-9036-f9eb854e87ec": {

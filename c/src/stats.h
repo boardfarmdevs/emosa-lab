@@ -28,6 +28,16 @@ typedef struct {
     double measured_at;
 } em_survey_stats;
 
+/* A station's last probe request the pod heard (spec §3.9), from its band-steering
+ * report: the SNR over OpenSync's noise floor, and when the pod received it. */
+typedef struct {
+    char mac[18], band[8], ifname[17];
+    unsigned snr_db;
+    double measured_at; /* epoch seconds */
+} em_probe_stats;
+
+#define EM_MAX_PROBED 256 /* stations whose last probe request is kept */
+
 typedef struct {
     char topic[160];
     unsigned interval;
@@ -40,6 +50,8 @@ typedef struct {
     em_station_stats stations[256];
     size_t nsurveys;
     em_survey_stats surveys[16];
+    size_t nprobes;
+    em_probe_stats probes[EM_MAX_PROBED];
     bool measured[EM_COUNTERS];
     unsigned accepted, rejected, gaps;
     char last_error[96];
@@ -52,6 +64,8 @@ void em_pod_stats_init(em_pod_stats *s, const char *topic, unsigned interval,
 /* One MQTT message; false (and counted) when it is not a usable report. */
 bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *payload, size_t len,
                           bool retained);
+/* The station's last probe request (MAC in any case), or NULL. */
+const em_probe_stats *em_pod_stats_probe(const em_pod_stats *s, const char *mac);
 /* The status as the agent reports it (last_report_at included). */
 cJSON *em_pod_stats_status(em_pod_stats *s);
 

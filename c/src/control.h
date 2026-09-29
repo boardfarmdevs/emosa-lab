@@ -5,6 +5,7 @@
 #define EMOSA_CONTROL_H
 
 #include "autoconf.h"
+#include "stats.h"
 #include "view.h"
 
 /* A decoded Steering Request TLV (spec §3.7). */
@@ -37,6 +38,11 @@ typedef struct {
     bool channel_policy_declined;
     /* the Channel Scan Report's time, RFC 3339 UTC; NULL: the system clock */
     void (*utc)(char out[40]);
+    /* the pod's statistics, whose probe requests answer an Unassociated STA Link
+     * Metrics Query (spec §3.9); NULL: no telemetry, every station is refused */
+    const em_pod_stats *stats;
+    /* epoch seconds, for probe ages; NULL: the system clock */
+    double (*wall)(void);
 } em_control;
 
 /* Handle one complete message. Returns the result label, or NULL when the

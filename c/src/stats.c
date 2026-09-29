@@ -364,12 +364,140 @@ static bool survey(em_pod_stats *s, const uint8_t *d, size_t n, bool apply, bool
     return !error;
 }
 
+static em_probe_stats *probe_slot(em_pod_stats *s, const char *mac)
+{
+    for (size_t i = 0; i < s->nprobes; i++)
+        if (!strcmp(s->probes[i].mac, mac))
+            return &s->probes[i];
+    return NULL;
+}
+
+const em_probe_stats *em_pod_stats_probe(const em_pod_stats *s, const char *mac)
+{
+    char key[18];
+    if (strlen(mac) != 17)
+        return NULL;
+    for (size_t i = 0; i < 18; i++)
+        key[i] = (char)(mac[i] >= 'A' && mac[i] <= 'Z' ? mac[i] - 'A' + 'a' : mac[i]);
+    return probe_slot((em_pod_stats *)s, key);
+}
+
+/* One BSClient.BSBandReport: its PROBE events with an RSSI, the newest kept per station. */
+static bool band_report(em_pod_stats *s, const char *mac, uint64_t stamp, const uint8_t *d,
+                        size_t n, bool apply, bool *incomplete)
+{
+    reader r = {d, d + n};
+    pb_field f = {0};
+    bool error = false, has_band = false;
+    uint64_t band = 0;
+    char ifname[17] = "";
+    while (next(&r, &f, &error)) {
+        if (f.field == 1 && f.wire == 0) { band = f.varint; has_band = true; }
+        else if (f.field == 16 && f.wire == 2)
+            snprintf(ifname, sizeof(ifname), "%.*s", (int)f.len, (const char *)f.data);
+    }
+    if (error)
+        return false;
+    if (!has_band || band >= 7) /* an unknown RadioBandType is no value (proto2) */
+        *incomplete = true;
+    r = (reader){d, d + n};
+    while (next(&r, &f, &error)) {
+        if (f.field != 15 || f.wire != 2)
+            continue;
+        reader x = {f.data, f.data + f.len};
+        pb_field g = {0};
+        bool has_type = false, has_offset = false, has_rssi = false;
+        uint64_t type = 0, offset = 0, rssi = 0;
+        while (next(&x, &g, &error)) {
+            if (g.field == 1 && g.wire == 0) { type = g.varint; has_type = true; }
+            else if (g.field == 2 && g.wire == 0) { offset = g.varint; has_offset = true; }
+            else if (g.field == 3 && g.wire == 0) { rssi = g.varint; has_rssi = true; }
+        }
+        if (error)
+            return false;
+        if (!has_type || !has_offset)
+            *incomplete = true;
+        if (!apply || !mac || band >= 7 || type != 0 /* PROBE */ || !has_rssi)
+            continue;
+        /* dppline.c: offset_ms = report time - event time */
+        double at = ((double)stamp - (double)offset) / 1000;
+        em_probe_stats *slot = probe_slot(s, mac);
+        if (slot && at <= slot->measured_at)
+            continue;
+        if (!slot) {
+            if (s->nprobes == EM_MAX_PROBED) { /* forget the oldest */
+                size_t oldest = 0;
+                for (size_t i = 1; i < s->nprobes; i++)
+                    if (s->probes[i].measured_at < s->probes[oldest].measured_at)
+                        oldest = i;
+                s->probes[oldest] = s->probes[--s->nprobes];
+            }
+            slot = &s->probes[s->nprobes++];
+        }
+        *slot = (em_probe_stats){.snr_db = (unsigned)rssi, .measured_at = at};
+        snprintf(slot->mac, sizeof(slot->mac), "%s", mac);
+        snprintf(slot->band, sizeof(slot->band), "%s", BANDS[band]);
+        snprintf(slot->ifname, sizeof(slot->ifname), "%s", ifname);
+    }
+    return !error;
+}
+
+/* One sts.BSReport (Report field 7): the band-steering report's probe requests of the
+ * stations the pod watches (spec §3.9). Sets *incomplete as proto2 IsInitialized. */
+static bool bs_report(em_pod_stats *s, const uint8_t *d, size_t n, bool apply, bool *incomplete)
+{
+    reader r = {d, d + n};
+    pb_field f = {0};
+    bool error = false, has_time = false;
+    uint64_t stamp = 0;
+    while (next(&r, &f, &error))
+        if (f.field == 1 && f.wire == 0) { stamp = f.varint; has_time = true; }
+    if (error)
+        return false;
+    if (!has_time)
+        *incomplete = true;
+    r = (reader){d, d + n};
+    while (next(&r, &f, &error)) {
+        if (f.field != 2 || f.wire != 2)
+            continue;
+        reader x = {f.data, f.data + f.len};
+        pb_field g = {0};
+        bool has_mac = false;
+        char mac[18] = "";
+        size_t mac_len = 0;
+        while (next(&x, &g, &error))
+            if (g.field == 1 && g.wire == 2) {
+                has_mac = true;
+                mac_len = g.len;
+                if (g.len == 17)
+                    for (size_t i = 0; i < 17; i++) {
+                        char ch = (char)g.data[i];
+                        mac[i] = (char)(ch >= 'A' && ch <= 'Z' ? ch - 'A' + 'a' : ch);
+                    }
+            }
+        if (error)
+            return false;
+        if (!has_mac)
+            *incomplete = true;
+        x = (reader){f.data, f.data + f.len};
+        while (next(&x, &g, &error))
+            if (g.field == 2 && g.wire == 2 &&
+                !band_report(s, mac_len == 17 ? mac : NULL, stamp, g.data, g.len, apply, incomplete))
+                return false;
+        if (error)
+            return false;
+    }
+    if (error)
+        return false;
+    return true;
+}
+
 bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *payload, size_t len,
                           bool retained)
 {
     const char *reason = NULL;
-    pb_client_report *reports = NULL, *surveys = NULL;
-    size_t nreports = 0, nsurveys = 0;
+    pb_client_report *reports = NULL, *surveys = NULL, *bs = NULL;
+    size_t nreports = 0, nsurveys = 0, nbs = 0;
     if (retained || strcmp(topic, s->topic) || len < 1 || len > MAX_PAYLOAD) {
         reason = "not a live report on this pod's topic";
         goto done;
@@ -379,15 +507,18 @@ bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *pay
     bool error = false, node = false;
     reports = calloc(len, sizeof(*reports));
     surveys = calloc(len, sizeof(*surveys));
-    while (reports && surveys && next(&r, &f, &error)) {
+    bs = calloc(len, sizeof(*bs));
+    while (reports && surveys && bs && next(&r, &f, &error)) {
         if (f.field == 1 && f.wire == 2)
             node = true;
         else if (f.field == 5 && f.wire == 2)
             reports[nreports++] = (pb_client_report){.data = f.data, .len = f.len};
         else if (f.field == 2 && f.wire == 2)
             surveys[nsurveys++] = (pb_client_report){.data = f.data, .len = f.len};
+        else if (f.field == 7 && f.wire == 2)
+            bs[nbs++] = (pb_client_report){.data = f.data, .len = f.len};
     }
-    if (!surveys)
+    if (!surveys || !bs)
         error = true;
     if (!reports || error) {
         reason = "Error parsing message";
@@ -420,6 +551,8 @@ bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *pay
     }
     for (size_t i = 0; i < nsurveys && !error; i++)
         error = !survey(s, surveys[i].data, surveys[i].len, false, &incomplete);
+    for (size_t i = 0; i < nbs && !error; i++)
+        error = !bs_report(s, bs[i].data, bs[i].len, false, &incomplete);
     if (error) {
         reason = "Error parsing message";
         goto done;
@@ -433,9 +566,12 @@ bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *pay
         reason = client_report(s, &reports[i]);
     for (size_t i = 0; i < nsurveys && !reason; i++)
         survey(s, surveys[i].data, surveys[i].len, true, &incomplete);
+    for (size_t i = 0; i < nbs && !reason; i++)
+        bs_report(s, bs[i].data, bs[i].len, true, &incomplete);
 done:
     free(reports);
     free(surveys);
+    free(bs);
     if (reason) {
         s->rejected++;
         snprintf(s->last_error, sizeof(s->last_error), "%s", reason);
@@ -539,8 +675,25 @@ cJSON *em_pod_stats_status(em_pod_stats *s)
         cJSON_AddItemToObject(surveys, key, x);
     }
     cJSON_AddItemToObject(o, "surveys", surveys);
-    /* band-steering probe requests (spec §3.9) are not decoded here yet */
-    cJSON_AddItemToObject(o, "probes", cJSON_CreateObject());
-    cJSON_AddNumberToObject(o, "probed_stations", 0);
+    /* the 16 newest probe requests (spec §3.9) */
+    cJSON *probes = cJSON_CreateObject();
+    bool shown[EM_MAX_PROBED] = {0};
+    for (size_t k = 0; k < 16 && k < s->nprobes; k++) {
+        size_t newest = s->nprobes;
+        for (size_t i = 0; i < s->nprobes; i++)
+            if (!shown[i] && (newest == s->nprobes ||
+                              s->probes[i].measured_at > s->probes[newest].measured_at))
+                newest = i;
+        shown[newest] = true;
+        const em_probe_stats *p = &s->probes[newest];
+        cJSON *x = cJSON_CreateObject();
+        cJSON_AddStringToObject(x, "band", p->band);
+        cJSON_AddStringToObject(x, "ifname", p->ifname);
+        cJSON_AddNumberToObject(x, "snr_db", p->snr_db);
+        cJSON_AddNumberToObject(x, "measured_at", p->measured_at);
+        cJSON_AddItemToObject(probes, p->mac, x);
+    }
+    cJSON_AddItemToObject(o, "probes", probes);
+    cJSON_AddNumberToObject(o, "probed_stations", (double)s->nprobes);
     return o;
 }

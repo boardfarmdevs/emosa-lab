@@ -6,7 +6,7 @@ A static, dependency-free page for newcomers. It has four parts:
 - **Run it**: the lab demo, as copyable commands;
 - **Reference**: a short glossary and three links.
 
-The four lab sites share these section names and a top bar that links them
+The five lab sites share these section names and a top bar that links them
 (`pages/labs-bar.js`, the same file in each repository).
 
 Keep it to what EMOSA does now. Put history and evidence in `doc/`, not here.
@@ -23,7 +23,7 @@ python3 -m http.server 8000 --directory dist/site
   `mesh` for the EasyMesh side, `sync` for the OpenSync OVSDB side.
 - The build copies `index.html`, `style.css`, `app.js` and `icon.svg`. It fails
   if the page links to a repository path that does not exist on `main`.
-- `.github/workflows/pages.yml`, the same in the four lab repositories, runs
+- `.github/workflows/pages.yml`, the same in the five lab repositories, runs
   `pages/build` and `pages/finish-site.py` on pull requests and pushes, and
   deploys from `main` to <https://boardfarmdevs.github.io/emosa-lab/>. The
   repository's Pages source must be **GitHub Actions**.

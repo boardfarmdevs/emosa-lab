@@ -1,6 +1,6 @@
 {
  "clock": 1790313745.0,
- "description": "spec §3.6: the pod's statistics as the agent keeps them. Three sts.Report publishes recorded from an opensync-lab pod (OpenSync 6.6.1.0, raw client reports every 10 s, topic emosa/stats/MVXPOD023F87E628DD), then a repeated, a retained and a foreign publish, then a raw on-channel survey (spec §3.8) and one lacking its required channel; the clock stands at 1790313745.0 throughout. Per step: whether the report is used, and the agent's statistics status after it.",
+ "description": "spec §3.6: the pod's statistics as the agent keeps them. Three sts.Report publishes recorded from an opensync-lab pod (OpenSync 6.6.1.0, raw client reports every 10 s, topic emosa/stats/MVXPOD023F87E628DD), then a repeated, a retained and a foreign publish, then a raw on-channel survey (spec §3.8) and one lacking its required channel, then band-steering reports with probe requests (spec §3.9), the last lacking an event's required offset; the clock stands at 1790313745.0 throughout. Per step: whether the report is used, and the agent's statistics status after it.",
  "reporting_interval": 10,
  "steps": [
   {
@@ -489,6 +489,261 @@
     }
    },
    "payload": "0a0012150800100018e8948fb88d342208108827282948dc0b",
+   "retained": false,
+   "topic": "emosa/stats/MVXPOD023F87E628DD"
+  },
+  {
+   "expected": {
+    "accepted": true,
+    "status": {
+     "gaps": 1,
+     "last_error": "incomplete report",
+     "measured_counters": [
+      "rx_bytes",
+      "rx_frames",
+      "tx_bytes",
+      "tx_frames"
+     ],
+     "probed_stations": 2,
+     "probes": {
+      "02:00:00:00:95:95": {
+       "band": "5G",
+       "ifname": "",
+       "measured_at": 1790313743.5,
+       "snr_db": 40
+      },
+      "02:00:00:00:99:99": {
+       "band": "2.4G",
+       "ifname": "wl0.1",
+       "measured_at": 1790313742.5,
+       "snr_db": 34
+      }
+     },
+     "reports_accepted": 5,
+     "reports_rejected": 4,
+     "stations": {
+      "02:00:00:00:12:00": {
+       "band": "2.4G",
+       "channel": 6,
+       "epoch_start": 1790313632.814,
+       "measured_at": 1790313742.814,
+       "periods": 11,
+       "rx_bytes": 78,
+       "rx_errors": null,
+       "rx_frames": 3,
+       "rx_rate_mbps": 1.0,
+       "rx_retries": null,
+       "snr_db": 76,
+       "ssid": "emosa-mesh",
+       "tx_bytes": 0,
+       "tx_errors": null,
+       "tx_frames": 0,
+       "tx_rate_mbps": 1.0,
+       "tx_retries": null
+      },
+      "02:00:00:00:13:00": {
+       "band": "2.4G",
+       "channel": 6,
+       "epoch_start": 1790313632.814,
+       "measured_at": 1790313742.814,
+       "periods": 11,
+       "rx_bytes": 78,
+       "rx_errors": null,
+       "rx_frames": 3,
+       "rx_rate_mbps": 1.0,
+       "rx_retries": null,
+       "snr_db": 76,
+       "ssid": "emosa-mesh",
+       "tx_bytes": 0,
+       "tx_errors": null,
+       "tx_frames": 0,
+       "tx_rate_mbps": 1.0,
+       "tx_retries": null
+      }
+     },
+     "surveys": {
+      "6": {
+       "band": "2.4G",
+       "busy_percent": 41,
+       "channel": 6,
+       "duration_ms": 5000,
+       "measured_at": 1790313741.5
+      }
+     },
+     "topic": "emosa/stats/MVXPOD023F87E628DD"
+    }
+   },
+   "payload": "0a003aa90108808d8fb88d34122f0a1130323a30303a30303a30303a39393a3939121a08007a07080010dc0b18227a05080110b009820105776c302e3112200a1130323a30303a30303a30303a39353a3935120b08017a07080010f403182812260a1130323a30303a30303a30303a39343a3934121108007a05080010a006820105776c302e3112250a0e30323a30303a30303a30303a3933121308007a07080010a0061814820105776c302e31",
+   "retained": false,
+   "topic": "emosa/stats/MVXPOD023F87E628DD"
+  },
+  {
+   "expected": {
+    "accepted": true,
+    "status": {
+     "gaps": 1,
+     "last_error": "incomplete report",
+     "measured_counters": [
+      "rx_bytes",
+      "rx_frames",
+      "tx_bytes",
+      "tx_frames"
+     ],
+     "probed_stations": 2,
+     "probes": {
+      "02:00:00:00:95:95": {
+       "band": "5G",
+       "ifname": "wl1.1",
+       "measured_at": 1790313744.9,
+       "snr_db": 42
+      },
+      "02:00:00:00:99:99": {
+       "band": "2.4G",
+       "ifname": "wl0.1",
+       "measured_at": 1790313742.5,
+       "snr_db": 34
+      }
+     },
+     "reports_accepted": 6,
+     "reports_rejected": 4,
+     "stations": {
+      "02:00:00:00:12:00": {
+       "band": "2.4G",
+       "channel": 6,
+       "epoch_start": 1790313632.814,
+       "measured_at": 1790313742.814,
+       "periods": 11,
+       "rx_bytes": 78,
+       "rx_errors": null,
+       "rx_frames": 3,
+       "rx_rate_mbps": 1.0,
+       "rx_retries": null,
+       "snr_db": 76,
+       "ssid": "emosa-mesh",
+       "tx_bytes": 0,
+       "tx_errors": null,
+       "tx_frames": 0,
+       "tx_rate_mbps": 1.0,
+       "tx_retries": null
+      },
+      "02:00:00:00:13:00": {
+       "band": "2.4G",
+       "channel": 6,
+       "epoch_start": 1790313632.814,
+       "measured_at": 1790313742.814,
+       "periods": 11,
+       "rx_bytes": 78,
+       "rx_errors": null,
+       "rx_frames": 3,
+       "rx_rate_mbps": 1.0,
+       "rx_retries": null,
+       "snr_db": 76,
+       "ssid": "emosa-mesh",
+       "tx_bytes": 0,
+       "tx_errors": null,
+       "tx_frames": 0,
+       "tx_rate_mbps": 1.0,
+       "tx_retries": null
+      }
+     },
+     "surveys": {
+      "6": {
+       "band": "2.4G",
+       "busy_percent": 41,
+       "channel": 6,
+       "duration_ms": 5000,
+       "measured_at": 1790313741.5
+      }
+     },
+     "topic": "emosa/stats/MVXPOD023F87E628DD"
+    }
+   },
+   "payload": "0a003a5a08e8948fb88d3412280a1130323a30303a30303a30303a39393a3939121308007a07080010a8461814820105776c302e3112270a1130323a30303a30303a30303a39353a3935121208017a0608001064182a820105776c312e31",
+   "retained": false,
+   "topic": "emosa/stats/MVXPOD023F87E628DD"
+  },
+  {
+   "expected": {
+    "accepted": false,
+    "status": {
+     "gaps": 1,
+     "last_error": "incomplete report",
+     "measured_counters": [
+      "rx_bytes",
+      "rx_frames",
+      "tx_bytes",
+      "tx_frames"
+     ],
+     "probed_stations": 2,
+     "probes": {
+      "02:00:00:00:95:95": {
+       "band": "5G",
+       "ifname": "wl1.1",
+       "measured_at": 1790313744.9,
+       "snr_db": 42
+      },
+      "02:00:00:00:99:99": {
+       "band": "2.4G",
+       "ifname": "wl0.1",
+       "measured_at": 1790313742.5,
+       "snr_db": 34
+      }
+     },
+     "reports_accepted": 6,
+     "reports_rejected": 5,
+     "stations": {
+      "02:00:00:00:12:00": {
+       "band": "2.4G",
+       "channel": 6,
+       "epoch_start": 1790313632.814,
+       "measured_at": 1790313742.814,
+       "periods": 11,
+       "rx_bytes": 78,
+       "rx_errors": null,
+       "rx_frames": 3,
+       "rx_rate_mbps": 1.0,
+       "rx_retries": null,
+       "snr_db": 76,
+       "ssid": "emosa-mesh",
+       "tx_bytes": 0,
+       "tx_errors": null,
+       "tx_frames": 0,
+       "tx_rate_mbps": 1.0,
+       "tx_retries": null
+      },
+      "02:00:00:00:13:00": {
+       "band": "2.4G",
+       "channel": 6,
+       "epoch_start": 1790313632.814,
+       "measured_at": 1790313742.814,
+       "periods": 11,
+       "rx_bytes": 78,
+       "rx_errors": null,
+       "rx_frames": 3,
+       "rx_rate_mbps": 1.0,
+       "rx_retries": null,
+       "snr_db": 76,
+       "ssid": "emosa-mesh",
+       "tx_bytes": 0,
+       "tx_errors": null,
+       "tx_frames": 0,
+       "tx_rate_mbps": 1.0,
+       "tx_retries": null
+      }
+     },
+     "surveys": {
+      "6": {
+       "band": "2.4G",
+       "busy_percent": 41,
+       "channel": 6,
+       "duration_ms": 5000,
+       "measured_at": 1790313741.5
+      }
+     },
+     "topic": "emosa/stats/MVXPOD023F87E628DD"
+    }
+   },
+   "payload": "0a003a2e08e8948fb88d3412250a1130323a30303a30303a30303a39323a3932121008007a040800181e820105776c302e31",
    "retained": false,
    "topic": "emosa/stats/MVXPOD023F87E628DD"
   }

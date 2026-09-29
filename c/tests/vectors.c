@@ -514,11 +514,35 @@ static char scan_timestamp[40];
 
 static void fixed_utc(char out[40]) { memcpy(out, scan_timestamp, sizeof(scan_timestamp)); }
 
+static double probe_wall;
+
+static double fixed_wall(void) { return probe_wall; }
+
+/* The pod's statistics holding a case's probe requests (spec §3.9), or NULL. */
+static em_pod_stats *case_probes(const cJSON *c)
+{
+    const cJSON *probes = cJSON_GetObjectItemCaseSensitive(c, "probes"), *p;
+    if (!probes)
+        return NULL;
+    em_pod_stats *s = calloc(1, sizeof(*s));
+    cJSON_ArrayForEach(p, probes)
+    {
+        em_probe_stats *x = &s->probes[s->nprobes++];
+        snprintf(x->mac, sizeof(x->mac), "%s", p->string);
+        snprintf(x->band, sizeof(x->band), "%s", str(p, "band"));
+        snprintf(x->ifname, sizeof(x->ifname), "%s", str(p, "ifname"));
+        x->snr_db = (unsigned)num(p, "snr_db");
+        x->measured_at = num(p, "measured_at");
+    }
+    return s;
+}
+
 static void control_vectors(const char *dir)
 {
     cJSON *doc = load(dir, "control.json");
     const cJSON *agent = cJSON_GetObjectItemCaseSensitive(doc, "agent");
     snprintf(scan_timestamp, sizeof(scan_timestamp), "%s", str(agent, "scan_timestamp"));
+    probe_wall = num(agent, "probe_wall");
     em_device_view *view = malloc(sizeof(*view));
     if (em_device_view_from_rows(cJSON_GetObjectItemCaseSensitive(doc, "ovsdb_tables"), view) != EM_OK) {
         fail("control", "rows", "device view");
@@ -545,6 +569,9 @@ static void control_vectors(const char *dir)
         control.utc = fixed_utc;
         control.executor = record_mandate;
         control.executor_ctx = handed;
+        em_pod_stats *probes = case_probes(c);
+        control.stats = probes;
+        control.wall = fixed_wall;
         const cJSON *step;
         cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
         {
@@ -569,6 +596,7 @@ static void control_vectors(const char *dir)
         if (!cJSON_Compare(handed, cJSON_GetObjectItemCaseSensitive(c, "handed_to_pod"), 1))
             fail("control", name, "mandates handed to the pod differ");
         cJSON_Delete(handed);
+        free(probes);
     }
     free(view);
     cJSON_Delete(doc);

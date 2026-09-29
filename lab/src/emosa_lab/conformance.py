@@ -576,6 +576,28 @@ def control_agent(raw, stations):
 
 
 SCAN_TIMESTAMP = "2026-09-25T00:00:00.000Z"  # the Channel Scan Report's time, fixed
+PROBE_WALL = 1790313745.0  # the agent's wall clock for probe ages (epoch seconds), fixed
+# The pod's last probe requests (spec §3.9) for the measured query: heard 30 s
+# before, heard 200 s before (too old), a 5 GHz probe, and one on the station
+# queried on another channel
+PROBES = {
+    "02:00:00:00:99:99": {"band": "2.4G", "ifname": "wl0.1", "snr_db": 34, "measured_at": PROBE_WALL - 30},
+    "02:00:00:00:96:96": {"band": "2.4G", "ifname": "wl0.1", "snr_db": 30, "measured_at": PROBE_WALL - 200},
+    "02:00:00:00:95:95": {"band": "5G", "ifname": "wl1.1", "snr_db": 40, "measured_at": PROBE_WALL - 5},
+    "02:00:00:00:98:98": {"band": "2.4G", "ifname": "wl0.1", "snr_db": 28, "measured_at": PROBE_WALL - 10},
+}
+
+
+class RecordedProbes:
+    """The pod's statistics as the query sees them: the last probe per station."""
+
+    def __init__(self, samples):
+        from emosa.opensync.stats import ProbeSample
+
+        self.samples = {m: ProbeSample(**s) for m, s in samples.items()}
+
+    def probe(self, mac):
+        return self.samples.get(mac.lower())
 
 
 def control_vectors():
@@ -682,7 +704,33 @@ def control_vectors():
                 )
             ],
         ),
+        (
+            # the pod heard 02:00:00:00:99:99 on its channel 30 s ago: measured, in a
+            # Response after the Ack; the others are refused (associated, never heard,
+            # heard too long ago, heard on 5 GHz, asked on another channel)
+            "unassociated-query-measured",
+            [
+                request(
+                    0x800F,
+                    21,
+                    (
+                        Tlv(
+                            0x97,
+                            bytes((81, 2, 6, 5))
+                            + mac(stations[0])
+                            + mac("02:00:00:00:99:99")
+                            + mac("02:00:00:00:97:97")
+                            + mac("02:00:00:00:96:96")
+                            + mac("02:00:00:00:95:95")
+                            + bytes((1, 1))
+                            + mac("02:00:00:00:98:98"),
+                        ),
+                    ),
+                )
+            ],
+        ),
     ]
+    measured = {"unassociated-query-measured"}
     cases = []
     for name, frames in sequences:
         with tempfile.TemporaryDirectory() as directory:
@@ -711,7 +759,14 @@ def control_vectors():
                     mids,
                     clock=lambda: 0.0,
                 ),
-                UnassociatedCoordinator(source, sent.append, mids, clock=lambda: 0.0),
+                UnassociatedCoordinator(
+                    source,
+                    sent.append,
+                    mids,
+                    probes=RecordedProbes(PROBES) if name in measured else None,
+                    clock=lambda: 0.0,
+                    wall=lambda: PROBE_WALL,
+                ),
             )
             steps = []
             for frame in frames:
@@ -727,7 +782,10 @@ def control_vectors():
                 )
             for handler in handlers:
                 handler.close()
-            cases.append({"name": name, "steps": steps, "handed_to_pod": handed})
+            case = {"name": name, "steps": steps, "handed_to_pod": handed}
+            if name in measured:
+                case["probes"] = PROBES
+            cases.append(case)
     return {
         "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded pod rows "
         "(stations " + ", ".join(stations) + " on 82:00:00:00:01:00, radio " + RUID + " on "
@@ -735,13 +793,15 @@ def control_vectors():
         "request frame and the frames the agent sends in answer, in order; the agent's own "
         "messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. "
         "'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), "
-        "as decoded from the request.",
+        "as decoded from the request. A case with 'probes' gives the pod's last probe "
+        "request per station (spec §3.9); probe_wall is the agent's clock for their ages.",
         "agent": {
             "al_mac": AGENT,
             "controller_al": CONTROLLER,
             "radio": RUID,
             "first_mid": 500,
             "scan_timestamp": SCAN_TIMESTAMP,
+            "probe_wall": PROBE_WALL,
         },
         "ovsdb_tables": raw,
         "cases": cases,
@@ -998,6 +1058,29 @@ def survey_report(timestamp_ms, *, channel=6, busy=41):
     return report.SerializePartialToString().hex()
 
 
+def bs_report(timestamp_ms, clients, *, complete=True):
+    """A band-steering publish (spec §3.9): clients as (mac, ((band, ifname, events), ...)),
+    events as (type, offset_ms, rssi or None). ``complete=False`` drops a required
+    event field (offset_ms)."""
+    from emosa.opensync.stats import Report
+
+    report = Report(nodeID="")
+    bs = report.bs_report.add(timestamp_ms=timestamp_ms)
+    for station, bands in clients:
+        client = bs.clients.add(mac_address=station)
+        for band, ifname, events in bands:
+            entry = client.bs_band_report.add(band=band)
+            if ifname is not None:
+                entry.ifname = ifname
+            for kind, offset_ms, rssi in events:
+                event = entry.event_list.add(type=kind)
+                if complete:
+                    event.offset_ms = offset_ms
+                if rssi is not None:
+                    event.rssi = rssi
+    return report.SerializePartialToString().hex()
+
+
 def telemetry_vectors():
     from emosa.opensync.stats import PodStats
 
@@ -1014,6 +1097,40 @@ def telemetry_vectors():
         ("emosa/stats/ANOTHERPOD", publishes[2][1], False),  # another pod's topic
         (topic, survey_report(int(now * 1000) - 2000), False),  # a survey sample: kept
         (topic, survey_report(int(now * 1000), channel=None), False),  # no channel: incomplete
+        # probe requests (spec §3.9): a 2.4 GHz probe and a connect event of one station,
+        # a 5 GHz probe without its VIF, a probe without RSSI, and an unusable MAC
+        (
+            topic,
+            bs_report(
+                int(now * 1000) - 1000,
+                [
+                    ("02:00:00:00:99:99", ((0, "wl0.1", ((0, 1500, 34), (1, 1200, None))),)),
+                    ("02:00:00:00:95:95", ((1, None, ((0, 500, 40),)),)),
+                    ("02:00:00:00:94:94", ((0, "wl0.1", ((0, 800, None),)),)),
+                    ("02:00:00:00:93", ((0, "wl0.1", ((0, 800, 20),)),)),
+                ],
+            ),
+            False,
+        ),
+        # an older probe of the first station is not kept; a newer one of the second is,
+        # upper-case MAC and all
+        (
+            topic,
+            bs_report(
+                int(now * 1000),
+                [
+                    ("02:00:00:00:99:99", ((0, "wl0.1", ((0, 9000, 20),)),)),
+                    ("02:00:00:00:95:95".upper(), ((1, "wl1.1", ((0, 100, 42),)),)),
+                ],
+            ),
+            False,
+        ),
+        # an event without its required offset: incomplete
+        (
+            topic,
+            bs_report(int(now * 1000), [("02:00:00:00:92:92", ((0, "wl0.1", ((0, 0, 30),)),))], complete=False),
+            False,
+        ),
     ]
     for t, data, retained in inputs:
         accepted = stats.receive(t, bytes.fromhex(data), retained=retained)
@@ -1032,7 +1149,8 @@ def telemetry_vectors():
         "sts.Report publishes recorded from an opensync-lab pod (OpenSync 6.6.1.0, raw client "
         "reports every 10 s, topic " + topic + "), then a repeated, a retained and a foreign "
         "publish, then a raw on-channel survey (spec §3.8) and one lacking its required "
-        "channel; the clock stands at " + str(now) + " throughout. Per step: whether the "
+        "channel, then band-steering reports with probe requests (spec §3.9), the last "
+        "lacking an event's required offset; the clock stands at " + str(now) + " throughout. Per step: whether the "
         "report is used, and the agent's statistics status after it.",
         "topic": topic,
         "reporting_interval": 10,
