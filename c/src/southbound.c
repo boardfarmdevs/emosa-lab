@@ -16,20 +16,9 @@
 em_reason em_profile_load(const char *path, em_profile *out)
 {
     memset(out, 0, sizeof(*out));
-    FILE *f = fopen(path, "rb");
-    if (!f)
+    char *text = em_read_file(path, 1 << 20, NULL);
+    if (!text)
         return EM_NOT_READY;
-    fseek(f, 0, SEEK_END);
-    long n = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    char *text = malloc((size_t)n + 1);
-    size_t got = text ? fread(text, 1, (size_t)n, f) : 0;
-    fclose(f);
-    if (!text || got != (size_t)n) {
-        free(text);
-        return EM_NOT_READY;
-    }
-    text[n] = 0;
     out->doc = cJSON_Parse(text);
     free(text);
     const cJSON *d = out->doc, *radio = cJSON_GetObjectItemCaseSensitive(d, "radio"),
@@ -46,6 +35,15 @@ em_reason em_profile_load(const char *path, em_profile *out)
     out->inet = cJSON_GetObjectItemCaseSensitive(d, "inet");
     out->uplink_station = cJSON_GetStringValue(
         cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(d, "uplink"), "station"));
+    /* the declared best-effort ESP (three octets in hex), when the profile has one */
+    const char *esp = cJSON_GetStringValue(
+        cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(d, "ap_metrics"), "esp_be"));
+    em_buf esp_bytes = {0};
+    if (esp && em_unhex(esp, &esp_bytes) && esp_bytes.len == 3) {
+        memcpy(out->esp_be, esp_bytes.data, 3);
+        out->has_esp_be = true;
+    }
+    em_buf_free(&esp_bytes);
     cJSON_ArrayForEach(slot, cJSON_GetObjectItemCaseSensitive(d, "extra_slots"))
     {
         if (out->nslots == 8)
@@ -580,8 +578,8 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
                     PUSH(upd, 1);
                     PUSH(psk_mutate(found[i].uuid, found[i].config, bkey), 1);
                 } else {
-                    char label[16];
-                    snprintf(label, sizeof(label), "extra%zu", i);
+                    char label[32];
+                    EM_FORMAT_FIXED(label, sizeof(label), "extra%zu", i);
                     PUSH(absent("Wifi_VIF_Config", where_eq("if_name", name), "if_name"), -1);
                     cJSON *ins = op("insert", "Wifi_VIF_Config", NULL), *row = cJSON_CreateObject();
                     cJSON_AddStringToObject(ins, "uuid-name", label);
@@ -731,19 +729,29 @@ em_reason em_steering_open(const char *serial, em_ovs_session *s, const em_steer
             neighbor = row->string;
         }
     }
+    /* the probe watch's row for the station is replaced; any other row is another manager's */
+    const char *watch[4];
+    size_t nwatch = 0;
     cJSON_ArrayForEach(row, table(s, "Band_Steering_Clients"))
     {
         const char *mac = ovs_str(row, "mac");
-        if (mac && !strcmp(mac, in->station))
+        if (!mac || strcmp(mac, in->station))
+            continue;
+        if (!em_is_watch_row(row) || nwatch == 4)
             return EM_OWNERSHIP_CONFLICT; /* the station has a steering row already */
+        watch[nwatch++] = row->string;
     }
     if (ngroups > 1 || nneighbors > 1)
         return EM_OWNERSHIP_CONFLICT;
     cJSON *ops = cJSON_CreateArray();
-    int counts[16];
+    int counts[24];
     size_t nops = 0;
     int group_at = -1, neighbor_at = -1, client_at;
     PUSH(present("AWLAN_Node", node, "serial_number", serial, NULL, NULL), -1);
+    for (size_t i = 0; i < nwatch; i++) {
+        PUSH(present("Band_Steering_Clients", watch[i], "mac", in->station, "cs_mode", "off"), -1);
+        PUSH(op("delete", "Band_Steering_Clients", where_uuid(watch[i])), 1);
+    }
     {
         cJSON *w = cJSON_CreateArray();
         cJSON_AddItemToArray(w, clause("mac", "==", cJSON_CreateString(in->station)));
@@ -799,8 +807,8 @@ em_reason em_steering_open(const char *serial, em_ovs_session *s, const em_steer
     cJSON_AddStringToObject(r, "pref_6g", "never");
     cJSON_AddStringToObject(r, "mac", in->station);
     cJSON_AddStringToObject(r, "cs_mode", "away");
-    char window[8];
-    snprintf(window, sizeof(window), "%d", in->window);
+    char window[12];
+    EM_FORMAT_FIXED(window, sizeof(window), "%d", in->window);
     cJSON_AddItemToObject(r, "cs_params", map2("cs_enforce_period", window, NULL, NULL));
     cJSON_AddStringToObject(r, "sc_kick_type", "btm_deauth");
     cJSON_AddItemToObject(r, "sc_btm_params",
@@ -1027,4 +1035,22 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
     commit(s, ops, counts, out, NULL);
     cJSON_Delete(ops);
     return EM_OK;
+}
+
+/* -- shared with the other scopes (emosa.opensync.mapping) ---------------------------- */
+
+cJSON *em_ovs_where_uuid(const char *uuid) { return where_uuid(uuid); }
+cJSON *em_ovs_where_eq(const char *column, const char *value) { return where_eq(column, value); }
+cJSON *em_ovs_op(const char *kind, const char *table, cJSON *where) { return op(kind, table, where); }
+cJSON *em_ovs_strings(const char *const *items, size_t n) { return strings(items, n); }
+cJSON *em_ovs_guard(const char *table, const char *uuid, const cJSON *row, const char *const *columns, size_t n)
+{
+    return guard(table, uuid, row, columns, n);
+}
+cJSON *em_ovs_absent(const char *table, cJSON *where, const char *column) { return absent(table, where, column); }
+
+bool em_is_watch_row(const cJSON *row)
+{
+    const char *mode = ovs_str(row, "cs_mode"), *marker = ovs_map_get(row, "cs_params", "emosa");
+    return mode && !strcmp(mode, "off") && ovs_map_size(row, "cs_params") == 1 && marker && !strcmp(marker, "watch");
 }

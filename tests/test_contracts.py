@@ -62,6 +62,13 @@ def test_the_fleet_passes_every_agent_setting_its_agents_accept():
 
 
 def test_a_fleet_with_the_rdk_labs_telemetry_is_valid(tmp_path):
-    telemetry = {"mode": "mqtt", "broker": "10.101.0.40", "port": 8883, "reporting_interval": 5,
-                 "sampling_interval": 5, "publish_interval": 5, "survey": True}
+    telemetry = {
+        "mode": "mqtt",
+        "broker": "10.101.0.40",
+        "port": 8883,
+        "reporting_interval": 5,
+        "sampling_interval": 5,
+        "publish_interval": 5,
+        "survey": True,
+    }
     make_fleet(tmp_path, [], telemetry=telemetry)

@@ -64,7 +64,7 @@ size_t ovs_uuids(const cJSON *row, const char *name, const char **out, size_t ma
                 out[n++] = cJSON_GetArrayItem(item, 1)->valuestring;
         }
     }
-    qsort(out, n, sizeof(*out), cmp);
+    em_sort(out, n, sizeof(*out), cmp);
     return n;
 }
 
@@ -98,7 +98,7 @@ size_t ovs_strings(const cJSON *row, const char *name, const char **out, size_t 
                 out[n++] = item->valuestring;
         }
     }
-    qsort(out, n, sizeof(*out), cmp);
+    em_sort(out, n, sizeof(*out), cmp);
     return n;
 }
 
@@ -114,7 +114,7 @@ size_t ovs_map_keys(const cJSON *row, const char *name, const char **out, size_t
         if (n < max && cJSON_IsString(k))
             out[n++] = k->valuestring;
     }
-    qsort(out, n, sizeof(*out), cmp);
+    em_sort(out, n, sizeof(*out), cmp);
     return n;
 }
 

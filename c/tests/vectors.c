@@ -1,16 +1,31 @@
-/* Replays the conformance vectors (spec/conformance) against the C lab prototype.
+/* Replays the conformance vectors (spec/conformance) against the C implementation.
  * Usage: emosa-vectors <spec/conformance directory> */
 #include <cjson/cJSON.h>
+#include <math.h>
+#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "../src/autoconf.h"
+#include "../src/bhsteer.h"
 #include "../src/cmdu.h"
 #include "../src/control.h"
+#include "fixture.h"
 #include "../src/fleet.h"
 #include "../src/operation.h"
 #include "../src/ovs.h"
+#include "../src/early.h"
+#include "../src/engine.h"
+#include "../src/journal.h"
+#include "../src/lifecycle.h"
+#include "../src/jschema.h"
+#include "../src/ovsdb.h"
+#include "../src/vault.h"
+#include "../src/reporting.h"
+#include "../src/scope_steering.h"
+#include "../src/scope_telemetry.h"
+#include "../src/scope_watch.h"
 #include "../src/southbound.h"
 #include "../src/stats.h"
 #include "../src/view.h"
@@ -198,12 +213,6 @@ static void cmdu_vectors(const char *dir)
 
 /* -- onboarding.json ------------------------------------------------------------- */
 
-static void hexfield(const cJSON *o, const char *key, em_buf *out)
-{
-    memset(out, 0, sizeof(*out));
-    em_unhex(str(o, key), out);
-}
-
 static bool frames_equal(const em_frames *f, const cJSON *expected)
 {
     if ((int)f->count != cJSON_GetArraySize(expected))
@@ -243,62 +252,13 @@ static void onboarding_vectors(const char *dir)
 {
     cJSON *doc = load(dir, "onboarding.json");
     const cJSON *agent = cJSON_GetObjectItemCaseSensitive(doc, "agent");
-    const cJSON *dev = cJSON_GetObjectItemCaseSensitive(agent, "m1_device");
-    const cJSON *radio_json = cJSON_GetObjectItemCaseSensitive(agent, "radio");
-    em_binding binding = {0};
-    em_parse_mac(str(agent, "al_mac"), binding.local_al);
-    em_parse_mac(str(agent, "controller_al"), binding.controller_al);
-    memcpy(binding.sources[0], binding.controller_al, 6);
-    binding.nsources = 1;
-    em_radio_caps radio = {0};
-    em_parse_mac(str(radio_json, "ruid"), radio.ruid);
-    radio.max_bss = (uint8_t)num(radio_json, "max_bss");
-    radio.advanced_flags = (uint8_t)num(radio_json, "advanced_flags");
-    const cJSON *cls;
-    cJSON_ArrayForEach(cls, cJSON_GetObjectItemCaseSensitive(radio_json, "operating_classes"))
-    {
-        em_basic_class *c = &radio.classes[radio.nclasses++];
-        c->operating_class = (uint8_t)cJSON_GetArrayItem(cls, 0)->valueint;
-        c->max_eirp_dbm = (int8_t)cJSON_GetArrayItem(cls, 1)->valueint;
-        const cJSON *ch;
-        cJSON_ArrayForEach(ch, cJSON_GetArrayItem(cls, 2))
-            c->non_operable[c->nnon_operable++] = (uint8_t)ch->valueint;
-    }
-    em_buf p2;
-    hexfield(agent, "profile2_ap_capability", &p2);
-    memcpy(radio.profile2, p2.data, 4);
-    em_buf_free(&p2);
+    em_test_agent fixture;
+    em_test_agent_load(agent, &fixture);
+    const em_binding binding = fixture.binding;
+    const em_radio_caps radio = fixture.radio;
+    const em_m1_device d = fixture.device;
+    const em_wsc_entropy entropy = fixture.entropy;
     const cJSON *search = cJSON_GetObjectItemCaseSensitive(agent, "search");
-    em_m1_device d = {0};
-    em_buf b;
-    hexfield(dev, "uuid", &b);
-    memcpy(d.uuid, b.data, 16);
-    em_buf_free(&b);
-    em_parse_mac(str(dev, "al_mac"), d.al_mac);
-    d.authentication_types = (uint16_t)num(dev, "authentication_types");
-    d.encryption_types = (uint16_t)num(dev, "encryption_types");
-    d.connection_types = (uint8_t)num(dev, "connection_types");
-    d.configuration_methods = (uint16_t)num(dev, "configuration_methods");
-    d.wps_state = (uint8_t)num(dev, "wps_state");
-    hexfield(dev, "manufacturer", &d.manufacturer);
-    hexfield(dev, "model_name", &d.model_name);
-    hexfield(dev, "model_number", &d.model_number);
-    hexfield(dev, "serial_number", &d.serial_number);
-    hexfield(dev, "device_name", &d.device_name);
-    hexfield(dev, "primary_device_type", &b);
-    memcpy(d.primary_device_type, b.data, 8);
-    em_buf_free(&b);
-    d.rf_band = (uint8_t)num(dev, "rf_band");
-    d.association_state = (uint16_t)num(dev, "association_state");
-    d.device_password_id = (uint16_t)num(dev, "device_password_id");
-    d.configuration_error = (uint16_t)num(dev, "configuration_error");
-    d.os_version = (uint32_t)num(dev, "os_version");
-    em_buf private_key;
-    hexfield(agent, "enrollee_private", &private_key);
-    uint8_t nonce[16];
-    for (int i = 0; i < 16; i++)
-        nonce[i] = (uint8_t)i;
-    em_wsc_entropy entropy = {private_key.data, private_key.len, nonce};
 
     const cJSON *c;
     cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
@@ -375,12 +335,7 @@ static void onboarding_vectors(const char *dir)
         em_message_free(tampered);
         em_m1_free(&m1);
     }
-    em_buf_free(&private_key);
-    em_buf_free(&d.manufacturer);
-    em_buf_free(&d.model_name);
-    em_buf_free(&d.model_number);
-    em_buf_free(&d.serial_number);
-    em_buf_free(&d.device_name);
+    em_test_agent_free(&fixture);
     cJSON_Delete(doc);
 }
 
@@ -472,6 +427,48 @@ static void northbound_vectors(const char *dir)
         }
         free(view);
     }
+    /* the stations' ages as of each Topology Response */
+    const cJSON *aged = cJSON_GetObjectItemCaseSensitive(doc, "aged_at_response");
+    em_device_view *view = malloc(sizeof(*view));
+    checks++;
+    if (!aged || em_device_view_from_rows(cJSON_GetObjectItemCaseSensitive(aged, "ovsdb_tables"), view) != EM_OK) {
+        fail("northbound", "aged_at_response", "device view");
+    } else {
+        uint8_t ruid[6], agent_al[6], controller_al[6];
+        const cJSON *first = cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(doc, "cases"), 0);
+        const cJSON *agent = cJSON_GetObjectItemCaseSensitive(first, "agent");
+        em_parse_mac(str(agent, "radio"), ruid);
+        em_parse_mac(str(agent, "al_mac"), agent_al);
+        em_parse_mac(str(agent, "controller_al"), controller_al);
+        const em_radio_view *radio = em_view_radio(view, ruid);
+        const cJSON *response;
+        cJSON_ArrayForEach(response, cJSON_GetObjectItemCaseSensitive(aged, "responses"))
+        {
+            double t = num(response, "now");
+            em_station_age ages[64];
+            size_t nages = 0;
+            const cJSON *at;
+            cJSON_ArrayForEach(at, cJSON_GetObjectItemCaseSensitive(aged, "associated_at"))
+            {
+                em_parse_mac(at->string, ages[nages].mac);
+                ages[nages++].seconds = em_age_at(t, at->valuedouble);
+            }
+            char label[64];
+            snprintf(label, sizeof(label), "aged_at_response %.1f", t);
+            em_tlv_list list;
+            checks++;
+            if (!radio || em_topology_tlvs(agent_al, controller_al, radio, 6, ages, nages, false, NULL, &list) != EM_OK) {
+                fail("northbound", label, "topology TLVs not built");
+                continue;
+            }
+            cJSON *got = list_json(list.tlvs, list.count);
+            if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(response, "topology_tlvs"), 1))
+                fail("northbound", label, "topology 6.1 differs");
+            cJSON_Delete(got);
+            em_tlv_list_free(&list);
+        }
+    }
+    free(view);
     cJSON_Delete(doc);
 }
 
@@ -537,6 +534,15 @@ static em_pod_stats *case_probes(const cJSON *c)
     return s;
 }
 
+/* The accepted channel policy's record, as the store would keep it. */
+static bool keep_record(void *ctx, const cJSON *record)
+{
+    cJSON **kept = ctx;
+    cJSON_Delete(*kept);
+    *kept = cJSON_Duplicate(record, true);
+    return true;
+}
+
 static void control_vectors(const char *dir)
 {
     cJSON *doc = load(dir, "control.json");
@@ -572,6 +578,9 @@ static void control_vectors(const char *dir)
         em_pod_stats *probes = case_probes(c);
         control.stats = probes;
         control.wall = fixed_wall;
+        cJSON *kept = NULL;
+        control.keep_channel_policy = keep_record;
+        control.keep_ctx = &kept;
         const cJSON *step;
         cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
         {
@@ -595,6 +604,11 @@ static void control_vectors(const char *dir)
         checks++;
         if (!cJSON_Compare(handed, cJSON_GetObjectItemCaseSensitive(c, "handed_to_pod"), 1))
             fail("control", name, "mandates handed to the pod differ");
+        checks++;
+        const cJSON *want = cJSON_GetObjectItemCaseSensitive(c, "channel_policy");
+        if (cJSON_IsNull(want) ? kept != NULL : !kept || !cJSON_Compare(kept, want, 1))
+            fail("control", name, "the kept channel policy differs");
+        cJSON_Delete(kept);
         cJSON_Delete(handed);
         free(probes);
     }
@@ -933,7 +947,7 @@ static void telemetry_vectors(const char *dir)
     int index = 0;
     cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(doc, "steps"))
     {
-        char name[16];
+        char name[24];
         snprintf(name, sizeof(name), "step %d", index++);
         em_buf payload = {0};
         em_unhex(str(step, "payload"), &payload);
@@ -960,8 +974,943 @@ static void telemetry_vectors(const char *dir)
     cJSON_Delete(doc);
 }
 
+/* -- metrics.json: the Multi-AP Policy kept, AP metrics from the pod's statistics -------- */
+
+static double metrics_wall_value;
+static double metrics_wall(void) { return metrics_wall_value; }
+static uint16_t metrics_mid(void *ctx) { return ++*(uint16_t *)ctx; }
+
+static cJSON *counts_of(const cJSON *status)
+{
+    return cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(status, "counts"), 1);
+}
+
+static void metrics_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "metrics.json");
+    const cJSON *agent = cJSON_GetObjectItemCaseSensitive(doc, "agent");
+    metrics_wall_value = num(agent, "wall");
+    double stats_now = metrics_wall_value;
+    em_device_view *view = malloc(sizeof(*view));
+    if (em_device_view_from_rows(cJSON_GetObjectItemCaseSensitive(doc, "ovsdb_tables"), view) != EM_OK) {
+        fail("metrics", "rows", "device view");
+        free(view);
+        cJSON_Delete(doc);
+        return;
+    }
+    uint8_t ruid[6], controller[6], al[6], esp[3];
+    em_parse_mac(str(agent, "radio"), ruid);
+    em_parse_mac(str(agent, "controller_al"), controller);
+    em_parse_mac(str(agent, "al_mac"), al);
+    em_buf esp_hex = {0};
+    em_unhex(str(agent, "esp_be"), &esp_hex);
+    memcpy(esp, esp_hex.data, 3);
+    em_buf_free(&esp_hex);
+    const em_radio_view *radio = em_view_radio(view, ruid);
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name");
+        char path[] = "/tmp/emosa-vectors-XXXXXX", db[64];
+        if (!mkdtemp(path)) {
+            fail("metrics", name, "temporary directory");
+            continue;
+        }
+        snprintf(db, sizeof(db), "%s/policy.sqlite", path);
+        em_policy_store *store = em_policy_store_open(db, "conformance");
+        em_reporting r = {0};
+        em_reporting_start(&r, store, controller, al, ruid);
+        em_pod_stats *stats = malloc(sizeof(*stats));
+        em_pod_stats_init(stats, str(agent, "topic"), (unsigned)num(agent, "reporting_interval"), stats_clock,
+                          &stats_now);
+        const cJSON *p;
+        cJSON_ArrayForEach(p, cJSON_GetObjectItemCaseSensitive(c, "publishes"))
+        {
+            em_buf payload = {0};
+            em_unhex(p->valuestring, &payload);
+            em_pod_stats_receive(stats, str(agent, "topic"), payload.data, payload.len, false);
+            em_buf_free(&payload);
+        }
+        em_metric_source source = {radio, stats, esp, num(agent, "freshness"), metrics_wall};
+        uint16_t mid = (uint16_t)(num(agent, "first_mid") - 1);
+        const cJSON *step;
+        int index = 0;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+        {
+            char label[96];
+            snprintf(label, sizeof(label), "%s step %d", name, index++);
+            checks++;
+            double at = num(step, "at");
+            em_frames out = {0};
+            em_reason error = EM_OK;
+            const char *result = NULL;
+            if (cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "tick"))) {
+                em_reporting_tick(&r, at, true, &source, metrics_mid, &mid, &out);
+            } else {
+                cJSON *frames = cJSON_CreateArray();
+                cJSON_AddItemToArray(frames, cJSON_CreateString(str(step, "request")));
+                em_message *m = assemble(frames);
+                cJSON_Delete(frames);
+                if (m && m->message_type == 0x8003)
+                    result = em_reporting_policy(&r, m, at, true, &source, metrics_mid, &mid, &out, &error);
+                else if (m && m->message_type == 0x800B)
+                    result = em_reporting_query(&r, m, true, &source, &out, &error);
+                em_message_free(m);
+            }
+            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
+            const char *want = str(expected, "result");
+            if ((want == NULL) != (result == NULL) || (want && strcmp(want, result)))
+                fail("metrics", label, result ? result : em_reason_name(error));
+            else if (!frames_equal(&out, cJSON_GetObjectItemCaseSensitive(expected, "frames")))
+                fail("metrics", label, "frames differ");
+            em_frames_free(&out);
+        }
+        const cJSON *counts = cJSON_GetObjectItemCaseSensitive(c, "expected_counts");
+        cJSON *policy_status = em_reporting_status(&r), *reporter_status = em_reporting_metrics_status(&r, &source);
+        cJSON *pc = counts_of(policy_status), *rc = counts_of(reporter_status);
+        checks++;
+        if (!cJSON_Compare(pc, cJSON_GetObjectItemCaseSensitive(counts, "policy"), 1) ||
+            !cJSON_Compare(rc, cJSON_GetObjectItemCaseSensitive(counts, "reporter"), 1))
+            fail("metrics", name, "counts differ");
+        checks++;
+        cJSON *kept = r.value ? cJSON_Duplicate(r.value, 1) : cJSON_CreateNull();
+        cJSON_DeleteItemFromObjectCaseSensitive(kept, "boot_id");
+        if (!cJSON_Compare(kept, cJSON_GetObjectItemCaseSensitive(c, "expected_policy"), 1)) {
+            fail("metrics", name, "kept policy differs");
+            if (getenv("EMOSA_VECTORS_DEBUG")) {
+                char *text = cJSON_PrintUnformatted(kept);
+                fprintf(stderr, "%s\n", text);
+                free(text);
+            }
+        }
+        cJSON_Delete(kept);
+        cJSON_Delete(pc);
+        cJSON_Delete(rc);
+        cJSON_Delete(policy_status);
+        cJSON_Delete(reporter_status);
+        cJSON_Delete(r.value);
+        em_policy_store_close(store);
+        free(stats);
+        char cmd[128];
+        snprintf(cmd, sizeof(cmd), "rm -rf %s", path);
+        if (system(cmd)) {
+        }
+    }
+    free(view);
+    cJSON_Delete(doc);
+}
+
+/* -- backhaul-steering.json ---------------------------------------------------------------- */
+
+typedef struct {
+    const cJSON *step;
+    cJSON *handed;
+} bh_script;
+
+static const char *bh_executor(void *ctx, const char *bssid)
+{
+    bh_script *s = ctx;
+    cJSON_AddItemToArray(s->handed, cJSON_CreateString(bssid));
+    const cJSON *reply = cJSON_GetObjectItemCaseSensitive(s->step, "executor");
+    return cJSON_IsString(reply) ? reply->valuestring : NULL;
+}
+
+static int bh_outcome(void *ctx, const char *bssid, const char **why)
+{
+    bh_script *s = ctx;
+    (void)bssid;
+    const cJSON *o = cJSON_GetObjectItemCaseSensitive(s->step, "outcome");
+    if (cJSON_IsTrue(o))
+        return 1;
+    if (cJSON_IsString(o)) {
+        *why = o->valuestring;
+        return -1;
+    }
+    return 0;
+}
+
+static void backhaul_steering_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "backhaul-steering.json");
+    const cJSON *agent = cJSON_GetObjectItemCaseSensitive(doc, "agent");
+    uint8_t controller[6], al[6], stations[4][6];
+    em_parse_mac(str(agent, "controller_al"), controller);
+    em_parse_mac(str(agent, "al_mac"), al);
+    size_t nstations = 0;
+    const cJSON *m;
+    cJSON_ArrayForEach(m, cJSON_GetObjectItemCaseSensitive(doc, "backhaul_stations"))
+    em_parse_mac(m->valuestring, stations[nstations++]);
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name");
+        em_bh_shared shared = {0};
+        em_bh_coordinator sessions[4] = {0};
+        bool started[4] = {0};
+        int last = 0;
+        bh_script script = {NULL, cJSON_CreateArray()};
+        const cJSON *step;
+        int index = 0;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+        {
+            char label[96];
+            snprintf(label, sizeof(label), "%s step %d", name, index++);
+            int k = (int)num(step, "session");
+            last = k > last ? k : last;
+            if (!started[k]) {
+                em_bh_start(&sessions[k], &shared, controller, al, bh_executor, bh_outcome, &script);
+                started[k] = true;
+            }
+            script.step = step;
+            double at = num(step, "at");
+            em_frames out = {0};
+            em_reason error = EM_OK;
+            const char *result = NULL;
+            checks++;
+            if (cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "close"))) {
+                em_bh_close(&sessions[k]);
+            } else if (cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "tick"))) {
+                /* a tick's result is the event it records, if any: the counter that grew */
+                unsigned before[16] = {0};
+                size_t n = sessions[k].counts.n;
+                for (size_t i = 0; i < n; i++)
+                    before[i] = sessions[k].counts.items[i].count;
+                em_bh_tick(&sessions[k], at, cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "source_available")), &out);
+                for (size_t i = 0; i < sessions[k].counts.n && !result; i++)
+                    if (i >= n || sessions[k].counts.items[i].count > before[i])
+                        result = sessions[k].counts.items[i].name;
+            } else {
+                cJSON *frames = cJSON_CreateArray();
+                cJSON_AddItemToArray(frames, cJSON_CreateString(str(step, "request")));
+                em_message *msg = assemble(frames);
+                cJSON_Delete(frames);
+                result = msg ? em_bh_handle(&sessions[k], msg, at, (const uint8_t(*)[6])stations, nstations, &out, &error)
+                             : NULL;
+                em_message_free(msg);
+            }
+            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
+            const char *want = str(expected, "result");
+            if ((want == NULL) != (result == NULL) || (want && strcmp(want, result)))
+                fail("backhaul-steering", label, result ? result : em_reason_name(error));
+            else if (!frames_equal(&out, cJSON_GetObjectItemCaseSensitive(expected, "frames")))
+                fail("backhaul-steering", label, "frames differ");
+            em_frames_free(&out);
+        }
+        checks++;
+        if (!cJSON_Compare(script.handed, cJSON_GetObjectItemCaseSensitive(c, "handed_to_uplink"), 1))
+            fail("backhaul-steering", name, "moves handed to the uplink scope differ");
+        checks++;
+        cJSON *status = em_bh_status(&sessions[last]);
+        if (!cJSON_Compare(status, cJSON_GetObjectItemCaseSensitive(c, "expected_status"), 1)) {
+            fail("backhaul-steering", name, "status differs");
+            if (getenv("EMOSA_VECTORS_DEBUG")) {
+                char *text = cJSON_PrintUnformatted(status);
+                fprintf(stderr, "%s\n", text);
+                free(text);
+            }
+        }
+        cJSON_Delete(status);
+        cJSON_Delete(script.handed);
+        for (int i = 0; i < 4; i++)
+            cJSON_Delete(sessions[i].last);
+    }
+    cJSON_Delete(doc);
+}
+
+/* -- scope-writes.json: the scopes' guarded OVSDB writes ------------------------------------ */
+
+static void scope_writes_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "scope-writes.json");
+    const char *serial = str(doc, "serial");
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name"), *scope = str(c, "scope");
+        em_ovsdb *ovs = em_ovsdb_fixed(cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables"), 1, "conformance");
+        const cJSON *intent = cJSON_GetObjectItemCaseSensitive(c, "intent");
+        cJSON *sent = cJSON_CreateArray(), *attempt = cJSON_CreateObject();
+        cJSON_AddStringToObject(attempt, "attempt_id", "a");
+        cJSON_AddStringToObject(attempt, "transaction_id", "t");
+        cJSON_AddNumberToObject(attempt, "session_generation", 1);
+        em_backend backend;
+        void *ctx = NULL;
+        em_telemetry_scope telemetry = {0};
+        em_watch_scope watch = {0};
+        em_steering_scope steering = {0};
+        if (!strcmp(scope, "telemetry")) {
+            em_reason why;
+            em_telemetry_intent_from(str(intent, "pod_id"), serial, intent, &telemetry.intent, &why);
+            telemetry.ovs = ovs;
+            telemetry.serial = serial;
+            telemetry.transact = record;
+            telemetry.transact_ctx = sent;
+            backend = em_telemetry_backend();
+            ctx = &telemetry;
+        } else if (!strcmp(scope, "probe-watch")) {
+            watch = (em_watch_scope){.ovs = ovs, .serial = serial, .pod_id = str(intent, "pod_id"),
+                                     .transact = record, .transact_ctx = sent};
+            backend = em_watch_backend();
+            ctx = &watch;
+        } else {
+            steering = (em_steering_scope){.ovs = ovs, .serial = serial, .pod_id = str(intent, "pod_id"),
+                                           .transact = record, .transact_ctx = sent};
+            backend = em_steering_backend();
+            ctx = &steering;
+        }
+        const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
+        em_reason why = EM_OK;
+        cJSON *plan = backend.plan(ctx, intent, &why);
+        checks++;
+        if (!plan) {
+            const char *want = str(expected, "refusal");
+            if (!want || strcmp(want, em_reason_name(why)))
+                fail("scope-writes", name, em_reason_name(why));
+        } else {
+            em_submit_out out = {0};
+            backend.submit(ctx, intent, attempt, &out);
+            const char *want = str(expected, "status");
+            if (!want || strcmp(want, out.status))
+                fail("scope-writes", name, out.status);
+            cJSON_Delete(out.evidence);
+        }
+        checks++;
+        if (!cJSON_Compare(sent, cJSON_GetObjectItemCaseSensitive(expected, "transactions"), 1)) {
+            fail("scope-writes", name, "transactions differ");
+            if (getenv("EMOSA_VECTORS_DEBUG")) {
+                char *text = cJSON_PrintUnformatted(sent);
+                fprintf(stderr, "%s got %s\n", name, text);
+                free(text);
+            }
+        }
+        cJSON_Delete(plan);
+        cJSON_Delete(sent);
+        cJSON_Delete(attempt);
+        em_snapshot_clear(&telemetry.last);
+        em_snapshot_clear(&watch.last);
+        em_snapshot_clear(&steering.last);
+        em_ovsdb_close(ovs);
+    }
+    cJSON_Delete(doc);
+}
+
+/* -- engine.json: the operation lifecycle over a scripted pod -------------------------------- */
+
+typedef struct {
+    char config[256], observed[256];
+    bool fresh, ready;
+    char plan_error[32], result[16];
+    jmp_buf crash;
+} scripted_pod;
+
+static double engine_clock_value;
+static double engine_clock(void) { return engine_clock_value; }
+
+static bool scripted_snapshot(void *ctx, em_snapshot *out)
+{
+    scripted_pod *p = ctx;
+    memset(out, 0, sizeof(*out));
+    out->config = cJSON_CreateObject();
+    cJSON_AddStringToObject(out->config, "watched", p->config);
+    cJSON *values = cJSON_CreateObject();
+    cJSON_AddStringToObject(values, "watched", p->observed);
+    out->observed = em_observation("pod-1", "probe-watch", values, "scripted", 1, p->fresh, "scripted", 1);
+    out->ready = p->ready;
+    out->generation = 1;
+    strcpy(out->schema_fingerprint, "conformance");
+    return true;
+}
+
+static cJSON *scripted_plan(void *ctx, const cJSON *intent, em_reason *why)
+{
+    scripted_pod *p = ctx;
+    (void)intent;
+    if (p->plan_error[0]) {
+        *why = em_reason_parse(p->plan_error);
+        return NULL;
+    }
+    cJSON *plan = cJSON_CreateObject();
+    cJSON_AddStringToObject(plan, "action", "scripted");
+    return plan;
+}
+
+static void scripted_submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_submit_out *out)
+{
+    scripted_pod *p = ctx;
+    (void)intent;
+    (void)attempt;
+    memset(out, 0, sizeof(*out));
+    if (!strcmp(p->result, "crash"))
+        longjmp(p->crash, 1); /* the process stops after the journal's SUBMITTED record */
+    if (!strcmp(p->result, "committed")) {
+        strcpy(out->status, "committed");
+        out->evidence = cJSON_CreateObject();
+        cJSON_AddStringToObject(out->evidence, "attribution", "reply");
+        cJSON_AddTrueToObject(out->evidence, "transaction_validated");
+    } else if (!strcmp(p->result, "conflict")) {
+        strcpy(out->status, "conflict");
+        out->reason = EM_PRECONDITION_FAILED;
+    } else if (!strcmp(p->result, "rejected")) {
+        strcpy(out->status, "rejected");
+        out->reason = EM_NOT_READY;
+    } else { /* unknown, or lost: no reply */
+        strcpy(out->status, "unknown");
+        out->reason = EM_OUTCOME_UNKNOWN;
+    }
+}
+
+static cJSON *watch_intent_of(const cJSON *stations)
+{
+    cJSON *i = cJSON_CreateObject();
+    cJSON_AddStringToObject(i, "pod_id", "pod-1");
+    cJSON_AddStringToObject(i, "if_name", "home-ap-24");
+    cJSON_AddStringToObject(i, "band", "2.4G");
+    cJSON_AddItemToObject(i, "stations", cJSON_Duplicate(stations, 1));
+    return i;
+}
+
+/* Execute, stopping where the scripted pod crashes the process (its own frame, so the
+ * caller's locals stay clear of the longjmp). */
+static void execute_or_crash(em_engine *engine, scripted_pod *pod, const char *id)
+{
+    if (!setjmp(pod->crash))
+        cJSON_Delete(em_engine_execute(engine, id));
+}
+
+static cJSON *null_or(const cJSON *v) { return v ? cJSON_Duplicate(v, 1) : cJSON_CreateNull(); }
+
+static void engine_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "engine.json");
+    char schemas_dir[600];
+    snprintf(schemas_dir, sizeof(schemas_dir), "%s/../../schemas", dir);
+    em_journal_schemas schemas = {em_schema_load(schemas_dir, "operation"), em_schema_load(schemas_dir, "event"),
+                                  em_schema_load(schemas_dir, "wsc-receipt")};
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name");
+        char path[] = "/tmp/emosa-engine-XXXXXX", sub[64];
+        if (!mkdtemp(path)) {
+            fail("engine", name, "temporary directory");
+            continue;
+        }
+        snprintf(sub, sizeof(sub), "%s/secrets", path);
+        em_vault vault;
+        em_vault_open(&vault, sub);
+        snprintf(sub, sizeof(sub), "%s/journal", path);
+        em_reason why;
+        em_journal *journal = em_journal_open(sub, &schemas, &why);
+        static scripted_pod pod;
+        memset(&pod, 0, sizeof(pod));
+        pod.fresh = pod.ready = true;
+        strcpy(pod.result, "committed");
+        em_backend backend = {"scripted", em_watch_backend().target, scripted_snapshot, scripted_plan, scripted_submit};
+        static em_engine engine;
+        engine_clock_value = 0;
+        em_engine_init(&engine, journal, &vault, "pod-1", backend, &pod, engine_clock);
+        cJSON *ids = cJSON_CreateArray();
+        long seen = 0;
+        const cJSON *step;
+        int index = 0;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+        {
+            char label[96];
+            snprintf(label, sizeof(label), "%s step %d", name, index++);
+            const cJSON *s = cJSON_GetObjectItemCaseSensitive(step, "step");
+            const char *kind = cJSON_GetArrayItem(s, 0)->valuestring;
+            const char *error = NULL;
+            if (!strcmp(kind, "request")) {
+                cJSON *intent = watch_intent_of(cJSON_GetArrayItem(s, 1));
+                cJSON *op = em_engine_request(&engine, intent, "conformance", cJSON_GetArrayItem(s, 2)->valuestring,
+                                              "run-1", cJSON_GetArrayItem(s, 3)->valuedouble, "semantic", NULL, &why);
+                if (!op) {
+                    error = em_reason_name(why);
+                } else {
+                    const char *id = str(op, "operation_id");
+                    bool known = false;
+                    const cJSON *x;
+                    cJSON_ArrayForEach(x, ids) known = known || !strcmp(x->valuestring, id);
+                    if (!known)
+                        cJSON_AddItemToArray(ids, cJSON_CreateString(id));
+                }
+                cJSON_Delete(op);
+                cJSON_Delete(intent);
+            } else if (!strcmp(kind, "execute")) {
+                const char *id = cJSON_GetArrayItem(ids, cJSON_GetArrayItem(s, 1)->valueint)->valuestring;
+                execute_or_crash(&engine, &pod, id);
+            } else if (!strcmp(kind, "pod")) {
+                snprintf(pod.config, sizeof(pod.config), "%s", cJSON_GetArrayItem(s, 1)->valuestring);
+                snprintf(pod.observed, sizeof(pod.observed), "%s", cJSON_GetArrayItem(s, 2)->valuestring);
+                pod.fresh = cJSON_IsTrue(cJSON_GetArrayItem(s, 3));
+                pod.ready = cJSON_IsTrue(cJSON_GetArrayItem(s, 4));
+            } else if (!strcmp(kind, "script")) {
+                const cJSON *e = cJSON_GetArrayItem(s, 1);
+                snprintf(pod.plan_error, sizeof(pod.plan_error), "%s", cJSON_IsString(e) ? e->valuestring : "");
+                snprintf(pod.result, sizeof(pod.result), "%s", cJSON_GetArrayItem(s, 2)->valuestring);
+            } else if (!strcmp(kind, "advance")) {
+                engine_clock_value += cJSON_GetArrayItem(s, 1)->valuedouble;
+            } else if (!strcmp(kind, "reconcile")) {
+                em_engine_reconcile(&engine);
+            } else if (!strcmp(kind, "recover")) { /* a new process on the same journal */
+                em_engine_free(&engine);
+                em_engine_init(&engine, journal, &vault, "pod-1", backend, &pod, engine_clock);
+                em_engine_recover(&engine);
+            } else if (!strcmp(kind, "cancel")) {
+                cJSON_Delete(em_engine_cancel(&engine, cJSON_GetArrayItem(ids, cJSON_GetArrayItem(s, 1)->valueint)->valuestring));
+            }
+            cJSON *got = cJSON_CreateObject(), *ops = cJSON_CreateArray();
+            cJSON_AddItemToObject(got, "error", error ? cJSON_CreateString(error) : cJSON_CreateNull());
+            const cJSON *x;
+            cJSON_ArrayForEach(x, ids)
+            {
+                cJSON *op = em_journal_get(journal, x->valuestring), *o = cJSON_CreateObject();
+                const cJSON *evidence = cJSON_GetObjectItemCaseSensitive(op, "application_evidence");
+                cJSON_AddItemToObject(o, "state", null_or(cJSON_GetObjectItemCaseSensitive(op, "state")));
+                cJSON_AddItemToObject(o, "reason", null_or(cJSON_GetObjectItemCaseSensitive(op, "reason")));
+                cJSON_AddItemToObject(o, "deadline_elapsed", null_or(cJSON_GetObjectItemCaseSensitive(op, "deadline_elapsed")));
+                cJSON_AddItemToObject(o, "original_outcome", null_or(cJSON_GetObjectItemCaseSensitive(op, "original_outcome")));
+                cJSON_AddItemToObject(o, "late_resolution", null_or(cJSON_GetObjectItemCaseSensitive(op, "late_resolution")));
+                cJSON_AddItemToObject(o, "changed", null_or(cJSON_GetObjectItemCaseSensitive(op, "changed")));
+                cJSON_AddItemToObject(o, "blocked_for_resubmission",
+                                      null_or(cJSON_GetObjectItemCaseSensitive(op, "blocked_for_resubmission")));
+                cJSON_AddBoolToObject(o, "applied_evidence", evidence && !cJSON_IsNull(evidence));
+                cJSON_AddItemToObject(o, "attribution", null_or(cJSON_GetObjectItemCaseSensitive(evidence, "attribution")));
+                cJSON_AddItemToObject(o, "commit_attribution",
+                                      null_or(cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(op, "commit_evidence"), "attribution")));
+                cJSON_AddItemToArray(ops, o);
+                cJSON_Delete(op);
+            }
+            cJSON_AddItemToObject(got, "operations", ops);
+            cJSON *owned = em_journal_ownership(journal, "pod-1");
+            cJSON_AddBoolToObject(got, "ownership", owned != NULL);
+            cJSON_Delete(owned);
+            cJSON *events = em_journal_events(journal, "run-1", seen, 500), *phases = cJSON_CreateArray(), *e;
+            cJSON_ArrayForEach(e, events)
+            {
+                cJSON_AddItemToArray(phases, cJSON_CreateString(str(e, "phase")));
+                seen = (long)num(e, "sequence");
+            }
+            cJSON_Delete(events);
+            cJSON_AddItemToObject(got, "events", phases);
+            checks++;
+            if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(step, "expected"), 1)) {
+                fail("engine", label, "lifecycle differs");
+                if (getenv("EMOSA_VECTORS_DEBUG")) {
+                    char *text = cJSON_PrintUnformatted(got);
+                    fprintf(stderr, "%s got %s\n", label, text);
+                    free(text);
+                }
+            }
+            cJSON_Delete(got);
+        }
+        em_engine_free(&engine);
+        em_journal_close(journal);
+        cJSON_Delete(ids);
+        char cmd[128];
+        snprintf(cmd, sizeof(cmd), "rm -rf %s", path);
+        if (system(cmd)) {
+        }
+    }
+    em_schema_free(schemas.operation);
+    em_schema_free(schemas.event);
+    em_schema_free(schemas.receipt);
+    cJSON_Delete(doc);
+}
+
+/* -- early-report.json: the Early AP Capability Report's delivery ---------------------------- */
+
+static void early_report_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "early-report.json");
+    const cJSON *agent = cJSON_GetObjectItemCaseSensitive(doc, "agent");
+    em_device_view *view = malloc(sizeof(*view));
+    uint8_t ruid[6], controller[6], al[6];
+    em_parse_mac(str(agent, "radio"), ruid);
+    em_parse_mac(str(agent, "controller_al"), controller);
+    em_parse_mac(str(agent, "al_mac"), al);
+    em_tlv_list caps = {0};
+    if (em_device_view_from_rows(cJSON_GetObjectItemCaseSensitive(doc, "ovsdb_tables"), view) != EM_OK ||
+        em_capability_tlvs(em_view_radio(view, ruid), 6, 5, 30, &caps) != EM_OK) {
+        fail("early-report", "rows", "capabilities");
+        free(view);
+        cJSON_Delete(doc);
+        return;
+    }
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name");
+        em_early early = {0};
+        uint16_t mid = (uint16_t)(num(agent, "first_mid") - 1), sent_mids[8];
+        size_t nsent = 0;
+        bool changed = false; /* the pod's State since the report was built */
+        const cJSON *step;
+        int index = 0;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+        {
+            char label[96];
+            snprintf(label, sizeof(label), "%s step %d", name, index++);
+            const cJSON *s = cJSON_GetObjectItemCaseSensitive(step, "step");
+            const char *kind = cJSON_GetArrayItem(s, 0)->valuestring;
+            double at = cJSON_GetArrayItem(s, 1)->valuedouble;
+            em_frames out = {0};
+            const char *result = NULL;
+            bool transmit = false;
+            if (!strcmp(kind, "notify")) {
+                em_early_start(&early, at);
+                changed = false;
+                transmit = true;
+            } else if (!strcmp(kind, "tick")) {
+                transmit = em_early_tick(&early, at, !changed);
+            } else if (!strcmp(kind, "revision")) {
+                changed = true;
+            } else {
+                const cJSON *which = cJSON_GetArrayItem(s, 2);
+                uint16_t acked = cJSON_IsNumber(which) ? sent_mids[which->valueint] : 999;
+                result = em_early_ack(&early, acked, cJSON_IsTrue(cJSON_GetArrayItem(s, 3)), at);
+            }
+            if (transmit) {
+                ++mid;
+                em_fragment(controller, al, 0x8043, mid, caps.tlvs, caps.count, false, EM_MAX_CMDU, &out);
+                em_early_sent(&early, mid, at);
+                sent_mids[nsent++ & 7] = mid;
+            }
+            checks++;
+            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
+            const char *want = str(expected, "result");
+            if ((want == NULL) != (result == NULL) || (want && strcmp(want, result)))
+                fail("early-report", label, result ? result : "none");
+            else if (!frames_equal(&out, cJSON_GetObjectItemCaseSensitive(expected, "frames")))
+                fail("early-report", label, "frames differ");
+            em_frames_free(&out);
+        }
+        checks++;
+        cJSON *counts = em_early_counts(&early);
+        if (!cJSON_Compare(counts, cJSON_GetObjectItemCaseSensitive(c, "expected_counts"), 1))
+            fail("early-report", name, "counts differ");
+        cJSON_Delete(counts);
+    }
+    em_tlv_list_free(&caps);
+    free(view);
+    cJSON_Delete(doc);
+}
+
+/* -- steering-queue.json: client steering, one window at a time with a short queue ------------ */
+
+static double steering_clock_value;
+static double steering_clock(void) { return steering_clock_value; }
+
+static void strip_operation_ids(cJSON *status)
+{
+    cJSON_DeleteItemFromObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(status, "active"), "operation_id");
+    cJSON *e;
+    cJSON_ArrayForEach(e, cJSON_GetObjectItemCaseSensitive(status, "history"))
+    cJSON_DeleteItemFromObjectCaseSensitive(e, "operation_id");
+}
+
+static void steering_queue_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "steering-queue.json");
+    char schemas_dir[600];
+    snprintf(schemas_dir, sizeof(schemas_dir), "%s/../../schemas", dir);
+    em_journal_schemas schemas = {em_schema_load(schemas_dir, "operation"), em_schema_load(schemas_dir, "event"),
+                                  em_schema_load(schemas_dir, "wsc-receipt")};
+    uint8_t source[6], target[6];
+    em_parse_mac(str(doc, "source_bssid"), source);
+    em_parse_mac(str(doc, "target"), target);
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name");
+        char path[] = "/tmp/emosa-steering-XXXXXX", sub[64];
+        if (!mkdtemp(path)) {
+            fail("steering-queue", name, "temporary directory");
+            continue;
+        }
+        snprintf(sub, sizeof(sub), "%s/secrets", path);
+        em_vault vault;
+        em_vault_open(&vault, sub);
+        em_ovsdb *ovs = em_ovsdb_fixed(cJSON_GetObjectItemCaseSensitive(doc, "ovsdb_tables"), 1, "conformance");
+        cJSON *sent = cJSON_CreateArray();
+        steering_clock_value = 0;
+        static em_steering_scope steering;
+        memset(&steering, 0, sizeof(steering));
+        steering.ovs = ovs;
+        steering.serial = str(doc, "serial");
+        steering.pod_id = "pod-1";
+        steering.run_id = "run-1";
+        steering.transact = record;
+        steering.transact_ctx = sent;
+        steering.monotonic = steering_clock;
+        if (em_steering_scope_open(&steering, path, &schemas, &vault) != EM_OK) {
+            fail("steering-queue", name, "journal");
+            continue;
+        }
+        int already = 0, index = 0;
+        const cJSON *step;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+        {
+            char label[96];
+            snprintf(label, sizeof(label), "%s step %d", name, index++);
+            const cJSON *s = cJSON_GetObjectItemCaseSensitive(step, "step");
+            steering_clock_value = cJSON_GetArrayItem(s, 1)->valuedouble;
+            const char *result = NULL;
+            if (!strcmp(cJSON_GetArrayItem(s, 0)->valuestring, "start")) {
+                em_steering_request r = {0};
+                memcpy(r.source_bssid, source, 6);
+                r.mandate = true;
+                r.disassoc_imminent = cJSON_IsTrue(cJSON_GetArrayItem(s, 5));
+                r.window = (uint16_t)cJSON_GetArrayItem(s, 4)->valueint;
+                r.nstations = r.ntargets = 1;
+                em_parse_mac(cJSON_GetArrayItem(s, 2)->valuestring, r.stations[0]);
+                memcpy(r.targets[0].bssid, target, 6);
+                r.targets[0].op_class = 81;
+                r.targets[0].channel = 6;
+                result = em_steering_start(&steering, &r, (uint16_t)cJSON_GetArrayItem(s, 3)->valueint);
+            } else {
+                em_steering_tick(&steering);
+            }
+            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
+            const char *want = str(expected, "result");
+            checks++;
+            if ((want == NULL) != (result == NULL) || (want && strcmp(want, result)))
+                fail("steering-queue", label, result ? result : "none");
+            cJSON *these = cJSON_CreateArray();
+            for (int i = already; i < cJSON_GetArraySize(sent); i++)
+                cJSON_AddItemToArray(these, cJSON_Duplicate(cJSON_GetArrayItem(sent, i), 1));
+            already = cJSON_GetArraySize(sent);
+            checks++;
+            if (!cJSON_Compare(these, cJSON_GetObjectItemCaseSensitive(expected, "transactions"), 1))
+                fail("steering-queue", label, "transactions differ");
+            cJSON_Delete(these);
+            checks++;
+            cJSON *status = em_steering_status(&steering);
+            strip_operation_ids(status);
+            if (!cJSON_Compare(status, cJSON_GetObjectItemCaseSensitive(expected, "status"), 1)) {
+                fail("steering-queue", label, "status differs");
+                if (getenv("EMOSA_VECTORS_DEBUG")) {
+                    char *text = cJSON_PrintUnformatted(status);
+                    fprintf(stderr, "%s got %s\n", label, text);
+                    free(text);
+                }
+            }
+            cJSON_Delete(status);
+        }
+        em_steering_scope_close(&steering);
+        em_ovsdb_close(ovs);
+        cJSON_Delete(sent);
+        char cmd[128];
+        snprintf(cmd, sizeof(cmd), "rm -rf %s", path);
+        if (system(cmd)) {
+        }
+    }
+    em_schema_free(schemas.operation);
+    em_schema_free(schemas.event);
+    em_schema_free(schemas.receipt);
+    cJSON_Delete(doc);
+}
+
+/* -- probe-watch.json: which stations the pod watches ----------------------------------------- */
+
+static double watch_clock_value;
+static double watch_clock(void) { return watch_clock_value; }
+
+static void probe_watch_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "probe-watch.json");
+    char schemas_dir[600];
+    snprintf(schemas_dir, sizeof(schemas_dir), "%s/../../schemas", dir);
+    em_journal_schemas schemas = {em_schema_load(schemas_dir, "operation"), em_schema_load(schemas_dir, "event"),
+                                  em_schema_load(schemas_dir, "wsc-receipt")};
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name");
+        char path[] = "/tmp/emosa-watch-XXXXXX", sub[64];
+        if (!mkdtemp(path)) {
+            fail("probe-watch", name, "temporary directory");
+            continue;
+        }
+        snprintf(sub, sizeof(sub), "%s/secrets", path);
+        em_vault vault;
+        em_vault_open(&vault, sub);
+        em_ovsdb *ovs = em_ovsdb_fixed(cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables"), 1, "conformance");
+        cJSON *sent = cJSON_CreateArray();
+        watch_clock_value = 0;
+        static em_watch_scope watch;
+        memset(&watch, 0, sizeof(watch));
+        watch.ovs = ovs;
+        watch.serial = str(doc, "serial");
+        watch.pod_id = "pod-1";
+        watch.run_id = "run-1";
+        watch.if_name = "home-ap-24";
+        watch.band = "2.4G";
+        watch.transact = record;
+        watch.transact_ctx = sent;
+        watch.monotonic = watch_clock;
+        if (em_watch_open(&watch, path, &schemas, &vault) != EM_OK) {
+            fail("probe-watch", name, "journal");
+            continue;
+        }
+        int already = 0, index = 0;
+        const cJSON *step;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+        {
+            char label[96];
+            snprintf(label, sizeof(label), "%s step %d", name, index++);
+            const cJSON *s = cJSON_GetObjectItemCaseSensitive(step, "step");
+            watch_clock_value = cJSON_GetArrayItem(s, 1)->valuedouble;
+            if (!strcmp(cJSON_GetArrayItem(s, 0)->valuestring, "ask")) {
+                const cJSON *m;
+                uint8_t stations[64][6];
+                size_t n = 0;
+                cJSON_ArrayForEach(m, cJSON_GetArrayItem(s, 2)) em_parse_mac(m->valuestring, stations[n++]);
+                em_watch_ask(&watch, (const uint8_t(*)[6])stations, n);
+            } else {
+                em_watch_tick(&watch);
+            }
+            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
+            cJSON *these = cJSON_CreateArray();
+            for (int i = already; i < cJSON_GetArraySize(sent); i++)
+                cJSON_AddItemToArray(these, cJSON_Duplicate(cJSON_GetArrayItem(sent, i), 1));
+            already = cJSON_GetArraySize(sent);
+            checks++;
+            if (!cJSON_Compare(these, cJSON_GetObjectItemCaseSensitive(expected, "transactions"), 1)) {
+                fail("probe-watch", label, "transactions differ");
+                if (getenv("EMOSA_VECTORS_DEBUG")) {
+                    char *text = cJSON_PrintUnformatted(these);
+                    fprintf(stderr, "%s got %s\n", label, text);
+                    free(text);
+                }
+            }
+            cJSON_Delete(these);
+            checks++;
+            cJSON *status = em_watch_status(&watch);
+            cJSON_DeleteItemFromObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(status, "operation"), "operation_id");
+            if (!cJSON_Compare(status, cJSON_GetObjectItemCaseSensitive(expected, "status"), 1)) {
+                fail("probe-watch", label, "status differs");
+                if (getenv("EMOSA_VECTORS_DEBUG")) {
+                    char *text = cJSON_PrintUnformatted(status);
+                    fprintf(stderr, "%s got %s\n", label, text);
+                    free(text);
+                }
+            }
+            cJSON_Delete(status);
+        }
+        em_watch_close(&watch);
+        em_ovsdb_close(ovs);
+        cJSON_Delete(sent);
+        char cmd[128];
+        snprintf(cmd, sizeof(cmd), "rm -rf %s", path);
+        if (system(cmd)) {
+        }
+    }
+    em_schema_free(schemas.operation);
+    em_schema_free(schemas.event);
+    em_schema_free(schemas.receipt);
+    cJSON_Delete(doc);
+}
+
+static void session_timing_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "session-timing.json");
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "attempts"))
+    {
+        const char *name = str(c, "name");
+        em_attempts at = {0};
+        const cJSON *step;
+        int index = 0;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+        {
+            char label[96];
+            snprintf(label, sizeof(label), "%s step %d", name, index++);
+            const cJSON *s = cJSON_GetObjectItemCaseSensitive(step, "step");
+            double t = cJSON_GetArrayItem(s, 1)->valuedouble;
+            em_attempt_step got = {0};
+            if (!strcmp(cJSON_GetArrayItem(s, 0)->valuestring, "renew")) {
+                em_attempts_renew(&at);
+            } else {
+                const cJSON *generation = cJSON_GetArrayItem(s, 2);
+                got = em_attempts_tick(&at, t, cJSON_IsNumber(generation),
+                                       cJSON_IsNumber(generation) ? generation->valueint : 0);
+            }
+            const cJSON *e = cJSON_GetObjectItemCaseSensitive(step, "expected");
+            const char *ended = str(e, "ended");
+            char seen[160];
+            snprintf(seen, sizeof(seen), "started %d searches %d ended %s discovering %d starts %u failures %u next %.3f",
+                     got.start, got.search, got.ended ? got.ended : "null", at.state == EM_SESSION_DISCOVERING,
+                     at.starts, at.failures, at.next_start);
+            checks++;
+            if (got.start != cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(e, "started")) ||
+                (int)got.search != (int)num(e, "searches") || (ended == NULL) != (got.ended == NULL) ||
+                (ended && strcmp(ended, got.ended)) ||
+                (at.state == EM_SESSION_DISCOVERING) != cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(e, "discovering")) ||
+                at.starts != (unsigned)num(e, "attempts_started") || at.failures != (unsigned)num(e, "failures") ||
+                fabs(at.next_start - num(e, "next_start")) > 1e-9)
+                fail("session-timing", label, seen);
+        }
+    }
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "renewals"))
+    {
+        const char *name = str(c, "name");
+        em_renew rules;
+        em_renew_init(&rules, 0);
+        const cJSON *step;
+        int index = 0;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+        {
+            char label[96];
+            snprintf(label, sizeof(label), "%s step %d", name, index++);
+            const cJSON *s = cJSON_GetObjectItemCaseSensitive(step, "step");
+            double t = cJSON_GetArrayItem(s, 1)->valuedouble;
+            const char *reasons[3];
+            size_t n = 0;
+            if (!strcmp(cJSON_GetArrayItem(s, 0)->valuestring, "contact"))
+                em_renew_contact(&rules, t);
+            else
+                n = em_renew_check(&rules, t, cJSON_IsTrue(cJSON_GetArrayItem(s, 2)),
+                                   cJSON_IsTrue(cJSON_GetArrayItem(s, 3)), reasons);
+            const cJSON *want = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(step, "expected"),
+                                                                 "reasons");
+            bool same = (size_t)cJSON_GetArraySize(want) == n;
+            for (size_t i = 0; same && i < n; i++)
+                same = !strcmp(cJSON_GetArrayItem(want, (int)i)->valuestring, reasons[i]);
+            checks++;
+            if (!same)
+                fail("session-timing", label, n ? reasons[0] : "no reason");
+        }
+    }
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "reannouncements"))
+    {
+        const char *name = str(c, "name");
+        em_reannounce rule = {0};
+        const cJSON *step;
+        int index = 0;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+        {
+            char label[96];
+            snprintf(label, sizeof(label), "%s step %d", name, index++);
+            const cJSON *s = cJSON_GetObjectItemCaseSensitive(step, "step");
+            unsigned responses = (unsigned)cJSON_GetArrayItem(s, 1)->valueint;
+            const cJSON *want = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(step, "expected"), "due");
+            checks++;
+            if (!strcmp(cJSON_GetArrayItem(s, 0)->valuestring, "provisioned")) {
+                em_reannounce_provisioned(&rule, responses);
+                if (!cJSON_IsNull(want))
+                    fail("session-timing", label, "provisioned has no answer");
+            } else if (em_reannounce_due(&rule, responses) != cJSON_IsTrue(want)) {
+                fail("session-timing", label, "due differs");
+            }
+        }
+    }
+    cJSON_Delete(doc);
+}
+
 int main(int argc, char **argv)
 {
+    em_init();
     const char *dir = argc > 1 ? argv[1] : "spec/conformance";
     cmdu_vectors(dir);
     onboarding_vectors(dir);
@@ -971,6 +1920,14 @@ int main(int argc, char **argv)
     uplink_vectors(dir);
     fleet_vectors(dir);
     telemetry_vectors(dir);
+    metrics_vectors(dir);
+    backhaul_steering_vectors(dir);
+    scope_writes_vectors(dir);
+    engine_vectors(dir);
+    early_report_vectors(dir);
+    steering_queue_vectors(dir);
+    probe_watch_vectors(dir);
+    session_timing_vectors(dir);
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? 1 : 0;
 }

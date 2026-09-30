@@ -23,8 +23,15 @@ different scope from the fronthaul BSS, with its own lifecycle rules.
   restarted to option 2, or will), or is rejected, or is changed by another
   manager, holds the pod on option 2. EMOSA never retries on its own. A new
   admission clears the hold, because the fleet archives the agent's state.
+- **Moved** on the controller's Backhaul Steering Request (``steer``): the station
+  is pinned to the target BSS instead, by the same switch, while the pod is on
+  its EasyMesh backhaul. The target is kept (``target.json``) for every later
+  start, as long as the configured upstream is the one it replaced. A move that
+  is not confirmed returns to the previous upstream instead of holding the pod:
+  the controller asked for it, and hears of the failure.
 """
 
+import json
 import logging
 
 from emosa.errors import EmosaError, Reason
@@ -63,6 +70,17 @@ class UplinkSwitch:
         self.engine = Engine(store, vault, {pod_id: backend}, clock, intent_type=UplinkIntent)
         self.engine.recover()
         self.waiting = None  # why no switch is being made, for status
+        # The controller's Backhaul Steering: the upstream it chose, over the configured one.
+        self.configured = bssid
+        self.moves = 0  # each move is a switch of its own, even back to an earlier upstream
+        self.move = None  # {"target", "previous", "result"} of the latest move
+        self.target_path = store.directory / "target.json"
+        try:
+            kept = json.loads(self.target_path.read_text())
+            if kept.get("configured") == bssid and kept.get("target"):
+                self.bssid, self.moves = kept["target"], int(kept.get("moves", 1))
+        except (OSError, ValueError, AttributeError):
+            pass
 
     def latest(self):
         ops = self.store.operations()
@@ -106,7 +124,8 @@ class UplinkSwitch:
                 transition(op, State.TIMED_OUT)
                 op.reason = Reason.APPLY_TIMEOUT
                 self._save(op, {"observation": self.backend.facts})
-                self.hold(op, "switch not confirmed within the deadline")
+                if not self._move_failed(op, "not confirmed within the deadline"):
+                    self.hold(op, "switch not confirmed within the deadline")
         elif op.state == State.OBSERVED_APPLIED and snap and snap.ready and snap.observed.fresh:
             target = UplinkIntent(**op.intent).target(self.engine.vault)
             same_start = self.backend.instance == op.plan.get("instance")
@@ -116,8 +135,78 @@ class UplinkSwitch:
                 self.hold(op, "the station's configuration was changed by another manager")
         elif op.state in (State.REJECTED, State.FAILED, State.OWNERSHIP_CONFLICT):
             # Only a rejection before anything was sent may be retried, on a later start.
+            if self._move_failed(op, f"{op.state.lower()}: {op.reason}"):
+                return
             if op.state != State.REJECTED or op.reason not in (Reason.NOT_READY, Reason.BUSY):
                 self.hold(op, f"switch {op.state.lower()}: {op.reason}")
+
+    def _keep_target(self):
+        if self.bssid == self.configured:
+            self.target_path.unlink(missing_ok=True)
+        else:
+            self.target_path.write_text(
+                json.dumps(
+                    {"configured": self.configured, "target": self.bssid, "moves": self.moves}
+                )
+            )
+
+    def _move_failed(self, op, reason):
+        """A move's switch failed: back to the previous upstream, no hold. False otherwise."""
+        move = self.move
+        if move is None or move["result"] is not None or op.intent.get("bssid") != move["target"]:
+            return False
+        log.warning(
+            "backhaul move to %s failed (%s): back to %s", move["target"], reason, move["previous"]
+        )
+        move["result"] = reason
+        self.bssid = move["previous"]
+        self.moves += 1
+        self._keep_target()
+        return True
+
+    def steer(self, bssid):
+        """The controller's Backhaul Steering Request: move the station to ``bssid``.
+
+        Returns None once the move is under way, or why it cannot be made now.
+        """
+        bssid = bssid.lower()
+        if self.held():
+            return "held_on_option_2"
+        if (self.backend.facts or {}).get("kind") != MULTI_AP:
+            return "not_on_easymesh_backhaul"
+        op = self.latest()
+        if op is not None and op.state in ACTIVE:
+            return "switch_in_progress"
+        if bssid in {(self.backend.facts or {}).get("mac")}:
+            return "own_station"
+        previous = self.bssid
+        self.move = {"target": bssid, "previous": previous, "result": None}
+        if bssid != previous:
+            self.bssid = bssid
+            self.moves += 1
+            self._keep_target()
+        log.info("backhaul move requested: %s -> %s", previous, bssid)
+        return None
+
+    def steering_outcome(self, bssid):
+        """None while the move to ``bssid`` is under way, True when applied, else why not."""
+        move = self.move
+        if move is None or move["target"] != bssid.lower():
+            return "no_such_move"
+        if move["result"] is not None:
+            return move["result"]
+        op = self.latest()
+        facts = self.backend.facts or {}
+        if (
+            op is not None
+            and op.state == State.OBSERVED_APPLIED
+            and op.intent.get("bssid") == move["target"]
+            and facts.get("kind") == MULTI_AP
+            and facts.get("parent") == move["target"]
+        ):
+            move["result"] = True
+            return True
+        return None
 
     def _wanted(self, op, snap):
         """The intent to request now, or None (``self.waiting`` says why)."""
@@ -174,7 +263,8 @@ class UplinkSwitch:
             return
         vault = self.engine.vault
         wanted = vault.fingerprint({**intent.record(), "target": intent.target(vault)})
-        key = f"{self.backend.instance}:{wanted[:16]}"  # one switch per start and credential
+        # one switch per start and credential, and per move of the controller's
+        key = f"{self.backend.instance}:{wanted[:16]}" + (f":{self.moves}" if self.moves else "")
         op = self.engine.request(
             intent, source=SOURCE, key=key, run_id=self.run_id, deadline=DEADLINE
         )
@@ -190,6 +280,8 @@ class UplinkSwitch:
         return {
             "station": self.backend.station,
             "bssid": self.bssid,
+            "configured_bssid": self.configured,
+            "move": self.move,
             "uplink": facts.get("kind"),
             "in_use": facts.get("in_use"),
             "parent": facts.get("parent"),

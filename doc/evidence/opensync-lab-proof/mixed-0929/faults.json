@@ -1,0 +1,51 @@
+[
+ {
+  "name": "client leave/join em-wc2",
+  "began": 1790708735.7418566,
+  "ended": 1790708776.0589128,
+  "offset": 60.0,
+  "recovered_after_s": 16.8,
+  "outage_window_s": 57.1
+ },
+ {
+  "name": "adapter process restart (pod-1)",
+  "began": 1790708826.0706866,
+  "ended": 1790708826.2947404,
+  "offset": 150.3,
+  "recovered_after_s": 0.1,
+  "outage_window_s": 0.3
+ },
+ {
+  "name": "OVSDB transport cut 20 s (pod-2)",
+  "began": 1790708915.813156,
+  "ended": 1790708935.848882,
+  "offset": 240.1,
+  "recovered_after_s": 13.7,
+  "outage_window_s": 33.7
+ },
+ {
+  "name": "backhaul loss 30 s (pod-3)",
+  "began": 1790709035.86914,
+  "ended": 1790709066.369836,
+  "offset": 360.1,
+  "acted_on": "bhaul-sta-50",
+  "recovered_after_s": 23.0,
+  "outage_window_s": 53.5
+ },
+ {
+  "name": "controller restart + policy re-entry",
+  "began": 1790709185.896632,
+  "ended": 1790709224.900321,
+  "offset": 510.2,
+  "recovered_after_s": 3.9,
+  "outage_window_s": 42.9
+ },
+ {
+  "name": "client leave/join em-wc4",
+  "began": 1790709365.929588,
+  "ended": 1790709406.254296,
+  "offset": 690.2,
+  "recovered_after_s": 18.2,
+  "outage_window_s": 58.5
+ }
+]

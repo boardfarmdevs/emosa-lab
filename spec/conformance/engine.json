@@ -1,0 +1,1737 @@
+{
+ "cases": [
+  {
+   "name": "applied",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "VALIDATED",
+       "SUBMITTED",
+       "CONFIG_COMMITTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "pod",
+      "02:00:00:00:99:99",
+      "02:00:00:00:99:99",
+      true,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "OBSERVATION",
+       "OBSERVED_APPLIED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": true,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "OBSERVED_APPLIED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "reconcile"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "already-applied",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [],
+      "ownership": false
+     },
+     "step": [
+      "pod",
+      "02:00:00:00:99:99",
+      "02:00:00:00:99:99",
+      true,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "VALIDATED",
+       "OBSERVED_APPLIED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": true,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": false,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "OBSERVED_APPLIED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "timed-out-then-late",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "VALIDATED",
+       "SUBMITTED",
+       "CONFIG_COMMITTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "advance",
+      31
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "OBSERVATION",
+       "TIMED_OUT"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": true,
+        "late_resolution": null,
+        "original_outcome": "CONFIG_COMMITTED",
+        "reason": "OWNERSHIP_CONFLICT",
+        "state": "TIMED_OUT"
+       }
+      ],
+      "ownership": true
+     },
+     "step": [
+      "reconcile"
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": true,
+        "late_resolution": null,
+        "original_outcome": "CONFIG_COMMITTED",
+        "reason": "OWNERSHIP_CONFLICT",
+        "state": "TIMED_OUT"
+       }
+      ],
+      "ownership": true
+     },
+     "step": [
+      "pod",
+      "02:00:00:00:99:99",
+      "02:00:00:00:99:99",
+      true,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "OBSERVATION",
+       "TIMED_OUT"
+      ],
+      "operations": [
+       {
+        "applied_evidence": true,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": true,
+        "late_resolution": "applied_after_deadline",
+        "original_outcome": "CONFIG_COMMITTED",
+        "reason": "APPLY_TIMEOUT",
+        "state": "TIMED_OUT"
+       }
+      ],
+      "ownership": true
+     },
+     "step": [
+      "reconcile"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "lost-reply-then-applied",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [],
+      "ownership": false
+     },
+     "step": [
+      "script",
+      null,
+      "lost"
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "VALIDATED",
+       "SUBMITTED",
+       "INDETERMINATE"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OUTCOME_UNKNOWN",
+        "state": "INDETERMINATE"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OUTCOME_UNKNOWN",
+        "state": "INDETERMINATE"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "pod",
+      "02:00:00:00:99:99",
+      "02:00:00:00:99:99",
+      true,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "OBSERVATION",
+       "OBSERVED_APPLIED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": true,
+        "attribution": "current_condition_only",
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OUTCOME_UNKNOWN",
+        "state": "OBSERVED_APPLIED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "reconcile"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "unknown-then-deadline",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [],
+      "ownership": false
+     },
+     "step": [
+      "script",
+      null,
+      "unknown"
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "VALIDATED",
+       "SUBMITTED",
+       "INDETERMINATE"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OUTCOME_UNKNOWN",
+        "state": "INDETERMINATE"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OUTCOME_UNKNOWN",
+        "state": "INDETERMINATE"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "advance",
+      31
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "OBSERVATION",
+       "TIMED_OUT"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": true,
+        "late_resolution": null,
+        "original_outcome": "INDETERMINATE",
+        "reason": "OWNERSHIP_CONFLICT",
+        "state": "TIMED_OUT"
+       }
+      ],
+      "ownership": true
+     },
+     "step": [
+      "reconcile"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "conflict",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [],
+      "ownership": false
+     },
+     "step": [
+      "script",
+      null,
+      "conflict"
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "VALIDATED",
+       "SUBMITTED",
+       "OWNERSHIP_CONFLICT"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OWNERSHIP_CONFLICT",
+        "state": "OWNERSHIP_CONFLICT"
+       }
+      ],
+      "ownership": true
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED",
+       "REJECTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OWNERSHIP_CONFLICT",
+        "state": "OWNERSHIP_CONFLICT"
+       },
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OWNERSHIP_CONFLICT",
+        "state": "REJECTED"
+       }
+      ],
+      "ownership": true
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:98:98"
+      ],
+      "k2",
+      30
+     ]
+    }
+   ]
+  },
+  {
+   "name": "rejected",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [],
+      "ownership": false
+     },
+     "step": [
+      "script",
+      null,
+      "rejected"
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "VALIDATED",
+       "SUBMITTED",
+       "FAILED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "NOT_READY",
+        "state": "FAILED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "changed-by-another-manager",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "VALIDATED",
+       "SUBMITTED",
+       "CONFIG_COMMITTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "pod",
+      "02:00:00:00:99:99",
+      "02:00:00:00:99:99",
+      true,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "OBSERVATION",
+       "OBSERVED_APPLIED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": true,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "OBSERVED_APPLIED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "reconcile"
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": true,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "OBSERVED_APPLIED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "pod",
+      "02:00:00:00:98:98",
+      "02:00:00:00:98:98",
+      true,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "OBSERVATION",
+       "OBSERVED_APPLIED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": true,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OWNERSHIP_CONFLICT",
+        "state": "OBSERVED_APPLIED"
+       }
+      ],
+      "ownership": true
+     },
+     "step": [
+      "reconcile"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "busy",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED",
+       "REJECTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       },
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "BUSY",
+        "state": "REJECTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:98:98"
+      ],
+      "k2",
+      30
+     ]
+    }
+   ]
+  },
+  {
+   "name": "plan-refused",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [],
+      "ownership": false
+     },
+     "step": [
+      "script",
+      "NOT_READY",
+      "committed"
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REJECTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "NOT_READY",
+        "state": "REJECTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pod-not-ready",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [],
+      "ownership": false
+     },
+     "step": [
+      "pod",
+      "",
+      "",
+      false,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REJECTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "NOT_READY",
+        "state": "REJECTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "same-key",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": "INVALID_INPUT",
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:98:98"
+      ],
+      "k1",
+      30
+     ]
+    }
+   ]
+  },
+  {
+   "name": "stale-observation",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "VALIDATED",
+       "SUBMITTED",
+       "CONFIG_COMMITTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "pod",
+      "02:00:00:00:99:99",
+      "02:00:00:00:99:99",
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "OBSERVATION"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "reconcile"
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "pod",
+      "02:00:00:00:99:99",
+      "02:00:00:00:99:99",
+      true,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "OBSERVATION",
+       "OBSERVED_APPLIED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": true,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": true,
+        "commit_attribution": "reply",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "OBSERVED_APPLIED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "reconcile"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "cancelled",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "CANCELLED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "CANCELLED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "cancel",
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "recovered-after-crash",
+   "steps": [
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [],
+      "ownership": false
+     },
+     "step": [
+      "script",
+      null,
+      "crash"
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "REQUESTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "not_submitted",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "REQUESTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "request",
+      [
+       "02:00:00:00:99:99"
+      ],
+      "k1",
+      30
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "VALIDATED",
+       "SUBMITTED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": null,
+        "state": "SUBMITTED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "execute",
+      0
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "INDETERMINATE"
+      ],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OUTCOME_UNKNOWN",
+        "state": "INDETERMINATE"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "recover"
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [],
+      "operations": [
+       {
+        "applied_evidence": false,
+        "attribution": null,
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OUTCOME_UNKNOWN",
+        "state": "INDETERMINATE"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "pod",
+      "02:00:00:00:99:99",
+      "02:00:00:00:99:99",
+      true,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "error": null,
+      "events": [
+       "OBSERVATION",
+       "OBSERVED_APPLIED"
+      ],
+      "operations": [
+       {
+        "applied_evidence": true,
+        "attribution": "current_condition_only",
+        "blocked_for_resubmission": false,
+        "changed": null,
+        "commit_attribution": "unknown",
+        "deadline_elapsed": false,
+        "late_resolution": null,
+        "original_outcome": null,
+        "reason": "OUTCOME_UNKNOWN",
+        "state": "OBSERVED_APPLIED"
+       }
+      ],
+      "ownership": false
+     },
+     "step": [
+      "reconcile"
+     ]
+    }
+   ]
+  }
+ ],
+ "description": "spec §5: the operation lifecycle over a scripted pod (its configured and observed watch set, whether the observation is fresh and the pod ready; the plan's refusal; the submission's outcome: committed, conflict, rejected, unknown, lost (no reply) or crash (the process stops after the journal's SUBMITTED record)). The intent is a probe-watch intent (its target: the watched stations, joined by commas). A step: request (stations, idempotency key, deadline in seconds), execute (the n-th operation), pod, script, advance (the clock, seconds), reconcile, recover (a new process on the same journal), cancel. Per step: the request's error, every operation's lifecycle fields, whether the pod's ownership is lost, and the journal events the step added (their phases)."
+}

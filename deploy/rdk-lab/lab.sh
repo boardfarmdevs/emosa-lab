@@ -4,7 +4,10 @@
 # Design: doc/architecture/rdk-lab.md.
 #
 #   EMOSA_VM=rdk-emosa EMOSA_POD_IMAGE=~/yocto/mvx-pod-work/out/mvx-pod-<stamp> deploy/rdk-lab/lab.sh stage
-#   deploy/rdk-lab/lab.sh <vm/lab.sh command> [args]   (see vm/lab.sh)
+#   deploy/rdk-lab/lab.sh <vm/lab.sh command> [args]   (see vm/lab.sh; up: the whole option)
+#
+# The RDK lab's own build turns the option on with both (meta-cmf-bananapi-vcpe
+# gen/vm/lxd/build.sh emosa, or EASYMESH_EMOSA=1 on a build).
 #
 # The adapter kit is built with uv (UV=, default .cache/opensync-lab-artifacts/uv).
 # The VM must be an RDK lab VM of its own: never the reference VMs.

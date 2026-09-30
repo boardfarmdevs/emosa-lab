@@ -18,6 +18,8 @@ typedef struct {
         const char *if_name, *role;
         int vif_radio_idx;
     } slots[8];
+    bool has_esp_be;
+    uint8_t esp_be[3]; /* ap_metrics.esp_be: the declared best-effort ESP */
 } em_profile;
 
 em_reason em_profile_load(const char *path, em_profile *out);
@@ -74,6 +76,10 @@ em_reason em_steering_kick(const char *serial, em_ovs_session *session, const ch
 em_reason em_steering_close(em_ovs_session *session, const em_steering_intent *intent,
                             const em_steering_rows *created);
 
+/* The probe watch's row (cs_mode off, cs_params {"emosa": "watch"}): a steering
+ * window replaces it. */
+bool em_is_watch_row(const cJSON *row);
+
 /* The option 1 uplink switch (spec §8.3): the station joins the EasyMesh backhaul
  * BSS `bssid` with `ssid`. On a refusal, *refusal names why (no transaction sent). */
 typedef struct {
@@ -83,6 +89,15 @@ typedef struct {
 em_reason em_uplink_submit(const char *serial, em_ovs_session *session, const em_uplink_intent *in,
                            em_secret_resolver resolve, void *resolve_ctx, em_submit_result *out,
                            const char **refusal);
+
+/* Transaction pieces (emosa.opensync.mapping): where clauses, one operation, a string
+ * array, a wait for a row's current values (guard), a wait for no matching row. */
+cJSON *em_ovs_where_uuid(const char *uuid);
+cJSON *em_ovs_where_eq(const char *column, const char *value);
+cJSON *em_ovs_op(const char *kind, const char *table, cJSON *where);
+cJSON *em_ovs_strings(const char *const *items, size_t n);
+cJSON *em_ovs_guard(const char *table, const char *uuid, const cJSON *row, const char *const *columns, size_t n);
+cJSON *em_ovs_absent(const char *table, cJSON *where, const char *column);
 
 /* check_results: every result an object without "error"; counts where >= 0. */
 em_reason em_check_results(const cJSON *results, const int *counts, size_t n);

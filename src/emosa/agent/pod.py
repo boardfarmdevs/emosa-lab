@@ -36,6 +36,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from emosa.agent.probe_watch import ProbeWatch
+from emosa.agent.renew import CONTROLLER_TIMEOUT, M2_TIMEOUT, RenewRules
 from emosa.agent.steering import ClientSteering
 from emosa.agent.telemetry import MqttSubscriber, TelemetrySetup
 from emosa.agent.uplink import UplinkSwitch, m2_backhaul
@@ -84,14 +85,12 @@ from emosa.wsc_messages import M1Device
 log = logging.getLogger("emosa.agent")
 RENEW = 0x000A  # AP-Autoconfiguration Renew
 DISCOVERY_PERIOD = 60  # IEEE 1905.1 Topology Discovery interval
-CONTROLLER_TIMEOUT = 130  # no CMDU from the controller for about two discovery periods
-# Provisioned, yet the pod does not serve the controller's BSS and nothing is being
-# applied (its configuration was lost, e.g. a write lost to an uplink move): ask
-# for the configuration again with a fresh M1 after this long.
-UNSERVED_RENEW = 60
-# M1 sent and no M2: a controller that restarted meanwhile has forgotten the M1, and
-# its other queries keep CONTROLLER_TIMEOUT from firing. Search again after this long.
-M2_TIMEOUT = 30
+# When the agent asks for a fresh attempt on its own: emosa.agent.renew
+RENEWALS = {
+    "unserved": "provisioned, but the pod serves no BSS: fresh M1",
+    "no_m2": f"no M2 for {M2_TIMEOUT}s after M1: fresh attempt",
+    "controller_silent": f"no message from the controller for {CONTROLLER_TIMEOUT}s: fresh attempt",
+}
 # The pod's State is re-read on this cadence, not on every received frame: the
 # published report lives 1.5 s, which this refreshes three times over.
 REFRESH_PERIOD = 0.5
@@ -437,6 +436,7 @@ async def serve(config, stop):
                 and not any(op.state in ACTIVE for op in store.operations())
             ),
         )
+    backhaul_steering_state = {}  # a Backhaul Steering move under way outlives a session
     telemetry = stats = subscriber = telemetry_store = watch = None
     telemetry_config = config.get("telemetry", {"mode": "off"})
     wanted = telemetry_intent(pod_id, config["serial"], telemetry_config)
@@ -505,8 +505,7 @@ async def serve(config, stop):
     # controller needs the R1 form (see emosa.wire.autoconfiguration).
     message_set = check_message_set(config.get("message_set", EASYMESH_61))
     lifecycle, last_status, last_facts, last_write = None, None, None, 0
-    next_discovery, last_contact = 0, time.monotonic()
-    unserved_since = awaiting_since = None
+    next_discovery, renewals = 0, RenewRules(time.monotonic())
     next_refresh, ready = 0, False
     channels = reporting = None
 
@@ -586,6 +585,9 @@ async def serve(config, stop):
                     pod_metrics=pod_metrics,
                     probes=stats,
                     watch=watch.ask if watch else None,
+                    backhaul_steering_executor=switch.steer if switch else None,
+                    backhaul_steering_outcome=switch.steering_outcome if switch else None,
+                    backhaul_steering_state=backhaul_steering_state,
                 )
 
             channels = ChannelPolicyStore(state_dir / "channel-policy.sqlite")
@@ -623,31 +625,16 @@ async def serve(config, stop):
                     and report.facts.get("ssid") is None
                     and not any(op.state in ACTIVE for op in store.operations())
                 )
-                unserved_since = (unserved_since or now) if unserved else None
-                if unserved_since is not None and now - unserved_since > UNSERVED_RENEW:
-                    log.info("provisioned, but the pod serves no BSS: fresh M1")
-                    lifecycle.renew()
-                    unserved_since = None
                 awaiting = (
                     lifecycle.session is not None and lifecycle.session.state == "awaiting_m2"
                 )
-                awaiting_since = (awaiting_since or now) if awaiting else None
-                if awaiting_since is not None and now - awaiting_since > M2_TIMEOUT:
-                    log.info("no M2 for %ds after M1: fresh attempt", M2_TIMEOUT)
+                for reason in renewals.check(now, unserved=unserved, awaiting=awaiting):
+                    log.info(RENEWALS[reason])
                     lifecycle.renew()
-                    awaiting_since = None
-                if now - last_contact > CONTROLLER_TIMEOUT:
-                    # Like a native agent's controller connectivity check: a silent
-                    # controller is lost; onboard again when it answers a Search.
-                    log.info(
-                        "no message from the controller for %ds: fresh attempt", CONTROLLER_TIMEOUT
-                    )
-                    lifecycle.renew()
-                    last_contact = now
                 frame = await timed("receive", asyncio.to_thread(endpoint.receive))
                 kind = from_controller(frame, controller) if frame is not None else None
                 if kind is not None:
-                    last_contact = time.monotonic()
+                    renewals.contact(time.monotonic())
                 if kind == RENEW:
                     log.info("AP-Autoconfiguration Renew from the controller: fresh M1")
                     lifecycle.renew()

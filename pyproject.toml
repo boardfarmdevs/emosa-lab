@@ -49,6 +49,7 @@ markers = [
   "wire: selected normative protocol prerequisites required",
   "hardware: qualified physical target required",
   "external: independent controller required",
+  "box: the agent binary in a private network namespace with a real ovsdb-server (lab in a box)",
 ]
 
 [tool.ruff]

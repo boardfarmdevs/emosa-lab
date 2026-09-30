@@ -1,61 +1,70 @@
-# EMOSA Lab documentation
+# EMOSA documentation
 
-EMOSA is the **EasyMesh to OpenSync Adapter**. EMOSA Lab contains the adapter,
-simulators and experiments used to evaluate it. Start with the
-[team manual](guides/team-manual.md) for setup, exercises and demonstrations, or
-the [architecture overview](architecture/overview.md) for the main building blocks.
-New team members should follow the [learning sequence](guides/learning-path.md):
-model → real database → persistent service → authenticated TLS → fleet/recovery
-measurements → clean LXD reproduction → wire envelope/discovery/reports → read-only report coordination →
-discovery-to-topology lifecycle → durable WSC handoff → Ethernet WSC driving
-hwsim and independent clients → eventual native-controller-to-physical-pod proof.
+EMOSA, the **EasyMesh to OpenSync Adapter**, is one of the two core components
+of the [EasyMesh labs](https://boardfarmdevs.github.io/easymesh-labs/): it makes
+each unchanged OpenSync pod a complete EasyMesh agent under a local EasyMesh
+controller, with no OpenSync cloud. This page maps the documents by what they
+are for. **Reference** documents are normative and kept current; **guides** say
+how to run things and are kept current; **records** are dated and not edited
+afterwards; **learning** material shows how the project got here and may
+describe older code.
 
-## Current status and next integration
+## Start here: the contract (reference)
 
-Start with [current status](project/current-status.md), then the
-[OpenSync integration plan](project/opensync-lab-integration-plan.md),
-[frozen baseline](project/integration-baseline.md) and
-[separate acceptance levels](project/integration-acceptance.md).
-The actual OpenSync container integration has not been executed.
+A team that builds or takes over EMOSA needs these, in this order; none of them
+needs a lab.
 
-## Guides: learn, run and demonstrate
+| Document | What it fixes |
+| --- | --- |
+| [Specification](../spec/README.md) | what EMOSA does on each interface (MUST/SHOULD) |
+| [Component design](../spec/design.md) | processes, interfaces, concurrency, state, timing and resource budgets |
+| [Conformance vectors](../spec/conformance/README.md) | exact outputs for recorded inputs; an implementation conforms when it reproduces them |
+| [Schemas](../schemas) | the configuration, status and record files |
+| [The Python reference](../src/emosa) and [the C implementation](../c/README.md) | two implementations of the contract, interchangeable (the C's state and known differences are in its README) |
+| [The C's production bar](../c/QUALITY.md) | the coding standard (CERT C) and the gates the C must meet, and where each stands |
+| [The target system](architecture/target-system.md) | what EMOSA and the router must do for unchanged pods without the OpenSync cloud: what is shown, what is missing, whether the design scales |
+| [Decisions](architecture/decisions.md) | recorded choices and qualification boundaries |
 
-[Browse guides](guides/README.md) for the full team manual, the simulated extender
-that connects to EMOSA, and read-only physical-pod preparation.
+Where the specification and any other document disagree, the specification
+wins.
 
-## Architecture: understand the implementation
+## Run it (guides)
 
-[Browse architecture](architecture/README.md) for the overview, authoritative
-requirements, OpenSync operation mapping, recovery behavior and design decisions.
+| Guide | For |
+| --- | --- |
+| [The adapter kit](../deploy/adapter/README.md) | installing EMOSA into an EasyMesh lab (both implementations) |
+| [The reference lab](../deploy/opensync-lab/README.md) | EMOSA with a prplMesh controller on the OpenSync lab: several pods, the fault workload (`lab.sh workload`), the Wi-Fi backhaul |
+| [EMOSA in the RDK lab](architecture/rdk-lab.md) | the RDK lab's EMOSA option: its design, how to run it, pods in the lab's rooms, the room suite with them |
+| [Repository README](../README.md) | what EMOSA does today, how to develop and test it |
 
-## Protocol: specifications and procedure boundaries
+## Architecture background (reference)
 
-[Browse protocol documentation](protocol/README.md) for selected specification
-inputs, the acquisition checklist, the protocol matrix and WSC components.
+| Document | Covers |
+| --- | --- |
+| [Data plane](architecture/data-plane.md) | how the pods' client traffic reaches the LAN: GRE termination or the Multi-AP Wi-Fi backhaul |
+| [OpenSync pods as EasyMesh agents](architecture/opensync-easymesh-mapping.md) | the fleet and the OVSDB ↔ EasyMesh translation |
+| [Recovery semantics](architecture/recovery.md), [operation mappings](architecture/operation-mappings.md) | operations, idempotency, lost replies, restarts |
+| [Architecture overview](architecture/overview.md), [requirements](architecture/requirements.md) | the original architecture and requirements (version 3.6) the specification grew from |
 
-## Evaluation: interpret experiments and profiles
+## Records
 
-[Browse evaluation](evaluation/README.md) for native controller/agent baseline
-results, OVSDB/hwsim integration, dependency qualification and pod profile scope.
+- [Evidence](evidence/README.md): dated reports, captures and results; each
+  keeps its date and scope. The latest: the reference workload with Python, C
+  and mixed agents ([opensync-lab-proof](evidence/opensync-lab-proof/README.md)),
+  and EMOSA's way into the RDK lab up to the room suite on either agent
+  ([rdk-lab](evidence/rdk-lab/README.md)).
+- [Project records](project/README.md): the plans, status pages and handoff
+  of the development up to September 2026. The current plan and status of all
+  the labs are the easymesh-labs
+  [alignment plan](https://github.com/boardfarmdevs/easymesh-labs/blob/main/docs/alignment-plan.md).
 
-## Project: implementation plan and current gaps
+## Learning
 
-[Browse project records](project/README.md) for the coding handoff, delivery
-status, viability roadmap, open inputs, traceability and third-party notices.
+- [Protocol](protocol/README.md): specification inputs, the protocol matrix, WSC.
+- [Evaluation](evaluation/README.md): native controller and agent baselines,
+  OVSDB and hwsim observations, dependency qualification.
+- [Guides](guides/README.md): the team manual, the learning path and the
+  experiment guides from the prototype phase.
 
-## Evidence: inspect retained results
-
-[Browse evidence](evidence/README.md) for reviewed reports, captures, test results
-and artifact hashes. Historical evidence keeps its original dates and scope.
-
-## Other entry points
-
-- [Interactive explorer](https://boardfarmdevs.github.io/emosa-lab/): architecture,
-  experiment modes, retained results and searchable references.
-- [Deployment entry point](../deploy/README.md): VM/container preparation and
-  links to the specialized native and radio harnesses.
-- [Repository README](../README.md): quick start and implementation status.
-
-The acceptance goal remains **real EasyMesh messages → EMOSA → unchanged physical
-pod → independently observed behavior**. A simulator pass or local diagnostic
-agent record does not complete wire onboarding or physical-pod qualification.
+The [interactive explorer](https://boardfarmdevs.github.io/emosa-lab/) presents
+the architecture and results in a browser.

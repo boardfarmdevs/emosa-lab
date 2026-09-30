@@ -483,6 +483,39 @@ patch.
   21 s after the write. Its clients kept internet access; `cm` used
   `bhaul-sta-50` as the uplink, with no GRE.
 
+## Python and C agents interchangeable (runs python-0929, c-0929, mixed-0929)
+
+The same 900-second workload on the same lab (`emosa-osl-0925`, three pods on
+the fleet, emosa-lab `2391bad` and later), once per agent implementation, picked
+with `lab.sh implementation python|c [POD...]`. The summaries record which
+implementation each pod's agent ran at the start and the end (the C agent's
+status says `c-lab-prototype`). Serials are redacted in the evidence.
+
+| Fault (offset) | python-0929 | c-0929 | mixed-0929 (pod-1 on C) |
+| --- | ---: | ---: | ---: |
+| client leave/join em-wc2 (60 s) | 16.8 s | 17.5 s | 16.8 s |
+| adapter process restart, pod-1 (150 s) | 5.5 s | 6.6 s | 0.1 s |
+| OVSDB transport cut 20 s, pod-2 (240 s) | 13.0 s | 3.6 s | 13.7 s |
+| backhaul loss 30 s, pod-3 (360 s) | 27.8 s | 24.8 s | 23.0 s |
+| controller restart + policy re-entry (510 s) | 3.3 s | 0.9 s | 3.9 s |
+| client leave/join em-wc4 (690 s) | 17.6 s | 15.7 s | 18.2 s |
+| verdict | passed | passed | passed |
+
+- **All three passed** every check (healthy at the end, every fault recovered,
+  no unresolved operation, every client passing at the end, agent memory
+  bounded) with the same client outages: the two clients that leave and join,
+  and pod-3's two clients while its backhaul is down. Evidence:
+  [python-0929](python-0929/summary.json), [c-0929](c-0929/summary.json),
+  [mixed-0929](mixed-0929/summary.json).
+- The C agent holds about 12 MB resident against the Python agent's 58 MB.
+- The transport cut is where they differ: while the pod's OVSDB endpoint is
+  gone, every OVSDB call of the Python agent's scopes waits out its 2 s timeout
+  in turn ("slow uplink/telemetry/probe_watch: 2.0 s"), so its loop sees the
+  pod back later (13 s against C's 3.6 s). The Python agent is the reference;
+  the difference is its loop's, not a rule's.
+- `writes` counts the AP scope's M2 writes since each agent process started, so
+  it differs with when the agents were last restarted, not with the run.
+
 ## Changes made during the run
 
 - `pod_profile.py`: the observed 6.6 encoding (`wpa-psk` + RSN, `key` slot);

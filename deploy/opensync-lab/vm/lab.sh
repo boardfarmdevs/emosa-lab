@@ -28,6 +28,9 @@
 #                                     POD's EMOSA agent switches its uplink to the controller's
 #                                     backhaul BSS itself (em-gtp, 5 GHz), and keeps it switched;
 #                                     credentials from its config, or from the controller's M2 set
+#   lab.sh implementation python|c [POD...]
+#                                     the agent implementation for every pod, or for the PODs
+#                                     named (EMOSA_AGENT, deploy/adapter); their agents restart
 #   lab.sh status
 #   lab.sh workload LABEL             900 s recovery workload under faults (vm/workload.py)
 set -euo pipefail
@@ -122,6 +125,10 @@ emosa() {
             export DEBIAN_FRONTEND=noninteractive; apt-get -qq update
             apt-get -qq install -y build-essential iproute2 tcpdump >/dev/null'
     fi
+    # what the kit's installer needs to build the C agent (deploy/adapter/install.sh)
+    cx emosa sh -ec 'dpkg -s cmake pkg-config libcjson-dev libssl-dev libsqlite3-dev >/dev/null 2>&1 || {
+            export DEBIAN_FRONTEND=noninteractive; apt-get -qq update
+            apt-get -qq install -y cmake pkg-config libcjson-dev libssl-dev libsqlite3-dev >/dev/null; }'
     lxc info emosa | grep -q '^Status: RUNNING' || lxc start emosa    # e.g. after a VM reboot
     # one trunk NIC on the EasyMesh LAN; each virtual agent adds its own macvlan
     # (emN, MAC = its AL). LXD allows one NIC per managed network per instance.
@@ -594,7 +601,8 @@ for c in sorted(glob.glob("/etc/emosa/*.json")):
     s = json.load(open(f)); p = s.get("pod") or {}
     print(s["pod_id"], "agent", s["agent_al"], "session", (s.get("session") or {}).get("state"),
           "ssid", p.get("ssid"), "stations", len(p.get("stations") or []),
-          "last ops", [(o["state"], o["ssid"]) for o in s["operations"][-2:]])' 2>/dev/null || true
+          "last ops", [(o["state"], o["ssid"]) for o in s["operations"][-2:]],
+          "implementation", s.get("implementation", "python-reference"))' 2>/dev/null || true
     docker exec local-noc noc-ctl redirects 2>/dev/null || true
     if cx emosa systemctl is-active -q emosa-fleet 2>/dev/null; then
         fleet_agents | python3 -c '
@@ -604,9 +612,44 @@ for serial, a in sorted(json.load(sys.stdin).items()):
     fi
 }
 
+# The agent implementation (deploy/adapter: EMOSA_AGENT): for every pod in
+# /etc/default/emosa, for one pod in /etc/default/emosa-<its agent>. A pod's agent is
+# named after the pod (lab.sh agent) or its serial (the fleet).
+implementation() {    # implementation python|c [POD...]
+    local bin pod name names
+    case ${1:-} in
+        python) bin=/opt/emosa-adapter/venv/bin/emosa-agent ;;
+        c) bin=/opt/emosa-adapter/bin/emosa-agent-c ;;
+        *) die "usage: lab.sh implementation python|c [POD...]" ;;
+    esac
+    shift
+    exists emosa || die "run: lab.sh emosa"
+    cx emosa test -x "$bin" || die "$bin is not installed (lab.sh stage, then lab.sh emosa)"
+    names=$(cx emosa sh -c 'for f in /etc/emosa/*.json; do [ -e "$f" ] && basename "$f" .json; done')
+    if [ $# -eq 0 ]; then
+        cx emosa sh -ec "sed -i '/^EMOSA_AGENT=/d' /etc/default/emosa; echo EMOSA_AGENT=$bin >> /etc/default/emosa"
+        for name in $names; do
+            cx emosa rm -f "/etc/default/emosa-$name"
+            cx emosa systemctl try-restart "emosa-agent@$name"
+        done
+        log "implementation: every agent runs $bin"
+        return
+    fi
+    for pod; do
+        name=
+        for n in "$pod" "$(pod_serial "$pod" 2>/dev/null)"; do
+            [ -n "$n" ] && grep -qx "$n" <<<"$names" && { name=$n; break; }
+        done
+        [ -n "$name" ] || die "$pod: no EMOSA agent configured (lab.sh status lists them)"
+        cx emosa sh -c "echo EMOSA_AGENT=$bin > /etc/default/emosa-$name"
+        cx emosa systemctl try-restart "emosa-agent@$name"
+        log "implementation: $pod ($name) runs $bin"
+    done
+}
+
 cmd=${1:-}; shift || true
 case $cmd in
-    bridge|controller|emosa|agent|fleet|admit|release|policy|client|topology|ui|telemetry|provision|gtp|uplink|option1|status) "$cmd" "$@" ;;
+    bridge|controller|emosa|agent|fleet|admit|release|policy|client|topology|ui|telemetry|provision|gtp|uplink|option1|implementation|status) "$cmd" "$@" ;;
     workload) exec python3 "$HERE/vm/workload.py" "$@" ;;
-    *) sed -n '2,26p' "$0"; exit 2 ;;
+    *) sed -n '2,35p' "$0"; exit 2 ;;
 esac

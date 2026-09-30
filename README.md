@@ -10,13 +10,21 @@ software.
 
 **[See how it works: the interactive guide](https://boardfarmdevs.github.io/emosa-lab/)**
 
-<!-- labs block: the same in the five lab repositories -->
-**Site:** <https://boardfarmdevs.github.io/emosa-lab/>. Part of the boardfarmdevs labs, which serve three
-goals: the EasyMesh optimizer ([RDK EasyMesh](https://boardfarmdevs.github.io/meta-cmf-bananapi-vcpe/),
-[prplMesh](https://boardfarmdevs.github.io/prplmesh-lab/)), the OpenSync adapter
-([EMOSA](https://boardfarmdevs.github.io/emosa-lab/), [OpenSync](https://boardfarmdevs.github.io/opensync-lab/))
-and EasyMesh on physical hardware ([Protocol lab](https://boardfarmdevs.github.io/easymesh-lab/)),
-on the way to one EasyMesh system on wmediumd with native agents and OpenSync pods together.
+<!-- labs block: the same in every repository of the EasyMesh labs, but for the Site line -->
+**Site:** <https://boardfarmdevs.github.io/emosa-lab/>.
+The [EasyMesh labs](https://boardfarmdevs.github.io/easymesh-labs/) serve three
+goals: EasyMesh optimizer development in a rich virtual lab, on both stacks
+([RDK EasyMesh](https://boardfarmdevs.github.io/meta-cmf-bananapi-vcpe/),
+[prplMesh](https://boardfarmdevs.github.io/prplmesh-lab/)); unchanged OpenSync
+pods as EasyMesh agents under a local controller, without the OpenSync cloud
+([EMOSA](https://boardfarmdevs.github.io/emosa-lab/), with the
+[OpenSync lab](https://boardfarmdevs.github.io/opensync-lab/)'s pods); and
+EasyMesh on physical hardware
+([Protocol lab](https://boardfarmdevs.github.io/easymesh-lab/)). Two core
+components carry them: the RF medium
+([easymesh-medium](https://github.com/boardfarmdevs/easymesh-medium)) and EMOSA's
+OVSDB ⇄ EasyMesh conversion. The rest is infrastructure and learning around them.
+<!-- /labs block -->
 
 ```text
 EasyMesh controller (prplMesh, RDK, ...)
@@ -30,27 +38,36 @@ Unchanged OpenSync pods
 
 ## What it does today
 
-Verified in the lab with six unchanged OpenSync 6.6.1 pods on simulated radios
-and a prplMesh 6.0 controller:
+Shown in two labs, with unchanged OpenSync 6.6.1 pods on simulated radios: the
+OpenSync lab under a prplMesh 6.0 controller, and the RDK lab under RDK-B's
+unified-wifi-mesh, where the pods are part of the lab's rooms and its full room
+suite passes with them.
 
 - **Onboards every pod automatically.** Each pod handed to EMOSA gets its own
-  agent. The agent's identity is derived from the pod's serial number.
-- **Applies the controller's network.** The SSID and WPA2 passphrase arrive in
-  WSC M2. EMOSA writes them to the pod as one guarded change, and counts them
-  as applied only when the pod reports them running.
-- **Reports the live topology.** Radios, BSSes, channel and associated clients
-  come from the pod's own state tables. Client joins and leaves are reported as
-  they happen.
+  agent, whose identity is derived from the pod's serial number.
+- **Applies the controller's network.** The SSIDs and passphrases arrive in WSC
+  M2; EMOSA writes them to the pod as one guarded change and counts them applied
+  only when the pod reports them running.
+- **Reports the pod as an agent.** Topology, radios, BSSes and clients from the
+  pod's own state; AP metrics from the pod's statistics; unassociated station
+  metrics from the probe requests the pod hears; Link Metric and AP Metrics
+  answers.
+- **Carries out the controller's decisions.** Client steering through the pod's
+  own band steering (BTM), and Backhaul Steering: the pod's Wi-Fi backhaul moves
+  to the parent the controller picks.
+- **Carries the pods' client traffic.** Through the pod's GRE to EMOSA's
+  termination point, or natively over a Multi-AP Wi-Fi backhaul.
 - **Recovers without help** from an adapter restart, a pod connection cut, a lost
-  pod backhaul and a controller restart. It passed a 900-second fault workload.
+  pod backhaul and a controller restart (a 900-second fault workload).
+- **Two implementations, one behaviour.** The Python reference and a C
+  implementation pass the same conformance vectors and the same lab suites, with
+  either or both in one lab. The C is being taken to production quality.
 
-Not yet supported:
-- 5 and 6 GHz radios, and WPA3;
-- AP and station metrics;
-- physical pods, which need EMOSA to be trusted by the pod's TLS.
-
-The RDK controller accepts EMOSA's configuration, but bringing up its full
-network is still being verified.
+Not yet: TLS on the pod connections with a trust anchor an unchanged field pod
+accepts; 5 and 6 GHz radios, several radios per pod and WPA3; channel and power
+changes applied; pods on Ethernet; backhaul metrics and pods as parents of other
+pods. [The target system](doc/architecture/target-system.md) says what each
+needs.
 
 ## Run it
 

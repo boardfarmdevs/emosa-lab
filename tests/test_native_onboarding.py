@@ -16,7 +16,7 @@ from test_wsc_operation_bridge import rig as rig
 pytestmark = pytest.mark.unit
 
 
-def lifecycle(rig):
+def lifecycle(rig, **options):
     bridge, engine, backend, clock = rig
     _, caps, topology = fixtures()
     ruid = bridge.target.ruid
@@ -54,6 +54,7 @@ def lifecycle(rig):
         inventory,
         mids=MidSequence(500),
         clock=clock.monotonic,
+        **options,
     )
     return session, source, sent
 
@@ -634,6 +635,148 @@ def test_backhaul_steering_is_acknowledged_and_refused(rig):
     asyncio.run(scenario())
 
 
+def backhaul_steering_rig(rig, outcome, started=None, state=None):
+    """A provisioned session whose pod has a backhaul station; moves go to ``started``."""
+    moves = [] if started is None else started
+    session, source, sent = lifecycle(
+        rig,
+        backhaul_steering_executor=lambda bssid: moves.append(bssid),
+        backhaul_steering_outcome=lambda bssid: outcome[0],
+        backhaul_steering_state=state,
+    )
+    snap = source.current()
+    ruid, sta = bytes.fromhex("020000001500"), bytes.fromhex("020000001501")
+    source.publish(
+        (1, 2),
+        snap.capabilities,
+        replace(snap.topology, backhaul_stations=((ruid, sta),)),
+        observed_at=snap.stamp.observed_at,
+    )
+    return session, source, sent, moves, sta
+
+
+def last_of(sent, message_type):
+    return [m for m in (assemble((f,)) for f in sent) if m.message_type == message_type][-1]
+
+
+def steering_request(sta, target, mid=714):
+    request = Tlv(0x9E, sta + target + bytes([115, 36]))
+    return fragment_message(BINDING.local_al, BINDING.controller_al, 0x8019, mid, (request,))[0]
+
+
+def test_backhaul_steering_moves_the_station_and_answers_with_the_outcome(rig):
+    async def scenario():
+        outcome = [None]
+        session, _, sent, moves, sta = backhaul_steering_rig(rig, outcome)
+        await session.tick()
+        await receive(session, response())
+        count = len(sent)
+        target = bytes.fromhex("020000002901")
+        assert await receive(session, steering_request(sta, target)) == "backhaul_steering_started"
+        (ack,) = (assemble((f,)) for f in sent[count:])
+        assert (ack.message_type, ack.mid, ack.tlvs) == (0x8000, 714, ())
+        assert moves == ["02:00:00:00:29:01"]
+        await session.tick()
+        assert not [f for f in sent[count:] if assemble((f,)).message_type == 0x801A]  # under way
+        outcome[0] = True
+        await session.tick()
+        reply = last_of(sent, 0x801A)
+        assert (reply.message_type, reply.mid) == (0x801A, 714)
+        assert reply.tlvs == (Tlv(0x9F, sta + target + b"\x00"),)  # result: success
+        assert session.status()["backhaul_steering"]["last"]["result"] == "succeeded"
+        session.close()
+
+    asyncio.run(scenario())
+
+
+def test_a_move_under_way_is_answered_by_the_next_session(rig):
+    # the move changes the pod's reported topology and the agent renews its session over it:
+    # the next session's coordinator, on the agent's shared state, gives the answer
+    from emosa.wire.backhaul_steering import BackhaulSteeringCoordinator
+
+    async def scenario():
+        outcome, state = [None], {}
+        first, source, _, moves, sta = backhaul_steering_rig(rig, outcome, state=state)
+        await first.tick()
+        await receive(first, response())
+        target = bytes.fromhex("020000002901")
+        assert await receive(first, steering_request(sta, target)) == "backhaul_steering_started"
+        first.close()
+        sent = []
+        _, _, _, clock = rig
+        second = BackhaulSteeringCoordinator(
+            source,
+            sent.append,
+            moves.append,
+            lambda bssid: outcome[0],
+            clock=clock.monotonic,
+            shared=state,
+        )
+        assert second.tick() is None  # still under way
+        outcome[0] = True
+        assert second.tick() == "backhaul_steering_succeeded"
+        reply = last_of(sent, 0x801A)
+        assert (reply.mid, reply.tlvs) == (714, (Tlv(0x9F, sta + target + b"\x00"),))
+        assert moves == ["02:00:00:00:29:01"] and state["pending"] is None
+
+    asyncio.run(scenario())
+
+
+def test_a_backhaul_move_that_fails_is_answered_with_a_failure_and_its_reason(rig):
+    async def scenario():
+        outcome = [None]
+        session, _, sent, moves, sta = backhaul_steering_rig(rig, outcome)
+        await session.tick()
+        await receive(session, response())
+        target = bytes.fromhex("020000002901")
+        await receive(session, steering_request(sta, target))
+        outcome[0] = "not confirmed within the deadline"
+        await session.tick()
+        reply = last_of(sent, 0x801A)
+        assert (reply.message_type, reply.mid) == (0x801A, 714)
+        assert reply.tlvs == (Tlv(0x9F, sta + target + b"\x01"), Tlv(0xA3, b"\x06" + sta))
+        # a request for another station is answered at once, and not handed over
+        other = bytes.fromhex("020000001599")
+        assert await receive(session, steering_request(other, target, 715)) == (
+            "backhaul_steering_refused_not_backhaul_station"
+        )
+        reply = last_of(sent, 0x801A)
+        assert reply.mid == 715 and reply.tlvs[0] == Tlv(0x9F, other + target + b"\x01")
+        assert moves == ["02:00:00:00:29:01"]
+        session.close()
+
+    asyncio.run(scenario())
+
+
+def test_a_backhaul_move_the_agent_cannot_start_is_refused_at_once(rig):
+    async def scenario():
+        _, _, _, clock = rig
+        session, source, sent = lifecycle(
+            rig,
+            backhaul_steering_executor=lambda bssid: "not_on_easymesh_backhaul",
+            backhaul_steering_outcome=lambda bssid: None,
+        )
+        snap = source.current()
+        sta = bytes.fromhex("020000001501")
+        source.publish(
+            (1, 2),
+            snap.capabilities,
+            replace(snap.topology, backhaul_stations=((bytes.fromhex("020000001500"), sta),)),
+            observed_at=snap.stamp.observed_at,
+        )
+        await session.tick()
+        await receive(session, response())
+        target = bytes.fromhex("020000002901")
+        assert await receive(session, steering_request(sta, target)) == (
+            "backhaul_steering_refused_not_on_easymesh_backhaul"
+        )
+        reply = last_of(sent, 0x801A)
+        assert reply.tlvs == (Tlv(0x9F, sta + target + b"\x01"), Tlv(0xA3, b"\x06" + sta))
+        session.close()
+
+    asyncio.run(scenario())
+
+
 def test_bound_policy_receipt_does_not_claim_reporting_or_create_config_operation(rig, tmp_path):
     from emosa.wire.reporting_policy import ReportingPolicyStore
 
@@ -692,7 +835,8 @@ def test_clients_are_announced_again_once_the_controller_knows_the_bss(rig):
         await session.tick()  # the early join, possibly before the controller knows the BSS
         count = len(sent)
         # M2 created the operation; the controller has not asked for topology yet.
-        session.state, session.topology_mark = "provisioning", 0
+        session.state = "provisioning"
+        session.reannounce.provisioned(0)
         session.reports.counts["topology_response_sent"] = 0
         await session.tick()
         assert len(sent) == count

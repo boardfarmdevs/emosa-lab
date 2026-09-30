@@ -10,6 +10,8 @@ for navigation and commands.
 
 | Collection | Entry point |
 | --- | --- |
+| EMOSA in the RDK lab, 25 to 29 Sep 2026 | [The first pod, the 24-room qualification, the room suite with Python, C and mixed agents](rdk-lab/README.md) |
+| The reference workload with a prplMesh controller | [Several pods, the fault workload, option 1; Python, C and mixed agents](opensync-lab-proof/README.md) |
 | Native sparse ESP parser | [Baseline SIGSEGV, 240 compiled cases and 16 live packet/inventory cases](ap-esp/README.md) |
 | Live disconnect reasons and recovery | [Online raw session joins, bounded clocks, native receipt and preserved failures](session-reasons/README.md) |
 | Native lifecycle and 15-minute recovery | [Actual C++ library comparison, restoration fault, measured neighbor replies and clean main-process exits](native-lifecycle/README.md) |

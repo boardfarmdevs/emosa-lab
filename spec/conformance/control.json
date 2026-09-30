@@ -9,6 +9,7 @@
  },
  "cases": [
   {
+   "channel_policy": null,
    "handed_to_pod": [],
    "name": "channel-preference-query",
    "steps": [
@@ -24,6 +25,25 @@
    ]
   },
   {
+   "channel_policy": {
+    "controller": "020000e00001",
+    "ignored": [],
+    "local_al": "0272f97f0785",
+    "mid": 12,
+    "power_limit_dbm": null,
+    "preferences": [
+     {
+      "channels": [
+       6
+      ],
+      "class": 81,
+      "preference": 14,
+      "reason": 0
+     }
+    ],
+    "ruid": "020000000100",
+    "status": "accepted_no_adjustment"
+   },
    "handed_to_pod": [],
    "name": "channel-selection-accepted",
    "steps": [
@@ -40,6 +60,50 @@
    ]
   },
   {
+   "channel_policy": {
+    "controller": "020000e00001",
+    "ignored": [
+     {
+      "channels": [
+       6
+      ],
+      "class": 83
+     }
+    ],
+    "local_al": "0272f97f0785",
+    "mid": 14,
+    "power_limit_dbm": 30,
+    "preferences": [
+     {
+      "channels": [
+       1,
+       11
+      ],
+      "class": 81,
+      "preference": 5,
+      "reason": 0
+     }
+    ],
+    "ruid": "020000000100",
+    "status": "accepted_no_adjustment"
+   },
+   "handed_to_pod": [],
+   "name": "channel-selection-accepted-with-limit",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008007000e00808e000702000000010000000000",
+       "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e000000"
+      ],
+      "result": "channel_selection_accepted"
+     },
+     "request": "0272f97f0785020000e00001893a00008006000e00808b0010020000000100025102010b50530106e08d00070200000001001e000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
    "handed_to_pod": [],
    "name": "channel-selection-rdk-declined",
    "steps": [
@@ -56,6 +120,7 @@
    ]
   },
   {
+   "channel_policy": null,
    "handed_to_pod": [],
    "name": "policy-rdk",
    "steps": [
@@ -71,6 +136,7 @@
    ]
   },
   {
+   "channel_policy": null,
    "handed_to_pod": [],
    "name": "channel-scan",
    "steps": [
@@ -87,6 +153,7 @@
    ]
   },
   {
+   "channel_policy": null,
    "handed_to_pod": [
     {
      "abridged": true,
@@ -131,6 +198,7 @@
    ]
   },
   {
+   "channel_policy": null,
    "handed_to_pod": [],
    "name": "steering-station-not-on-source",
    "steps": [
@@ -146,6 +214,7 @@
    ]
   },
   {
+   "channel_policy": null,
    "handed_to_pod": [],
    "name": "steering-opportunity",
    "steps": [
@@ -162,6 +231,7 @@
    ]
   },
   {
+   "channel_policy": null,
    "handed_to_pod": [],
    "name": "steering-agent-selected-target",
    "steps": [
@@ -177,6 +247,7 @@
    ]
   },
   {
+   "channel_policy": null,
    "handed_to_pod": [],
    "name": "unassociated-query-refused",
    "steps": [
@@ -192,6 +263,7 @@
    ]
   },
   {
+   "channel_policy": null,
    "handed_to_pod": [],
    "name": "unassociated-query-measured",
    "probes": {
@@ -234,7 +306,7 @@
    ]
   }
  ],
- "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00 on class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller request frame and the frames the agent sends in answer, in order; the agent's own messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. 'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), as decoded from the request. A case with 'probes' gives the pod's last probe request per station (spec §3.9); probe_wall is the agent's clock for their ages.",
+ "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00 on class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller request frame and the frames the agent sends in answer, in order; the agent's own messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. 'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), as decoded from the request; 'channel_policy' is the accepted channel policy's durable record (spec §3.4) without its context, or null when none was accepted. A case with 'probes' gives the pod's last probe request per station (spec §3.9); probe_wall is the agent's clock for their ages.",
  "ovsdb_tables": {
   "AWLAN_Node": {
    "96bc1650-4197-4cd8-9036-f9eb854e87ec": {

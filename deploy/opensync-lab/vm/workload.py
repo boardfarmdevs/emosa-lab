@@ -67,6 +67,8 @@ for f in sorted(glob.glob("/var/lib/emosa/*/status.json")):
         "writes": s["writes"], "pid": pid, "rss_kib": rss,
         "stations": len((s.get("pod") or {}).get("stations") or []),
         "updated": s["updated"],
+        # the C agent names itself; the Python reference writes no such field
+        "implementation": s.get("implementation", "python-reference"),
     }
 try:
     fleet = json.load(open("/var/lib/emosa/fleet.json"))
@@ -362,6 +364,10 @@ def main():
         "operations": ops,
         "writes": {p: last["agents"].get(p, {}).get("writes") for p in PODS},
         "agents": AGENT_OF,
+        # which agent implementation each pod ran, at the start and at the end
+        "implementations_start_end": {
+            p: [s["agents"].get(p, {}).get("implementation") for s in (first, last)] for p in PODS
+        },
         "fleet_handovers_start_end": [first.get("fleet_handovers"), last.get("fleet_handovers")],
         "agent_rss_kib_start_end": rss,
         "samples": len(samples),

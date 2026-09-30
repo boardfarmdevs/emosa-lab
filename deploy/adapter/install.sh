@@ -8,7 +8,7 @@
 # state and running agents' identities, and restarts running units.
 # Needs: systemd, iproute2, a C compiler (the ovs package builds an extension)
 # and network access to PyPI and python-build-standalone. With cmake, pkg-config
-# and the cJSON and OpenSSL headers it also builds the C lab prototype,
+# and the cJSON, OpenSSL and SQLite headers it also builds the C lab prototype,
 # /opt/emosa-adapter/bin/emosa-agent-c (selected with EMOSA_AGENT, see
 # /etc/default/emosa).
 set -euo pipefail
@@ -33,8 +33,10 @@ sed -i "1s|$ROOT/venv.new/|$ROOT/venv/|" "$ROOT"/venv/bin/emosa-fleet "$ROOT"/ve
 rm -rf "$ROOT/venv.old"
 install -d -m 0755 "$ROOT/share/profiles"
 install -m 0644 profiles/*.json "$ROOT/share/profiles/"
-c_agent="not built (needs cmake, pkg-config, libcjson-dev, libssl-dev)"
-if command -v cmake >/dev/null && pkg-config --exists libcjson libcrypto 2>/dev/null; then
+install -d -m 0755 "$ROOT/share/schemas"
+install -m 0644 schemas/*.schema.json "$ROOT/share/schemas/"
+c_agent="not built (needs cmake, pkg-config, libcjson-dev, libssl-dev, libsqlite3-dev)"
+if command -v cmake >/dev/null && pkg-config --exists libcjson libcrypto sqlite3 2>/dev/null; then
     rm -rf "$ROOT/c-build"
     cmake -S c -B "$ROOT/c-build" -DCMAKE_BUILD_TYPE=Release >/dev/null
     cmake --build "$ROOT/c-build" --target emosa-agent-c >/dev/null

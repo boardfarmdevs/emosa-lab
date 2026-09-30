@@ -30,7 +30,8 @@ moved between the two, and a failed switch to option 1 falls back to option 2.
 
 ## 2. How the data plane works today (opensync-lab)
 
-Everything below was read from the running lab (VM `emosa-osl-0923`, six pods).
+Everything below was read from the running reference lab on 23 September 2026
+(six pods).
 All of it is built and owned by OpenSync and opensync-lab's `local-noc`, never
 by EMOSA.
 
@@ -376,8 +377,10 @@ GRE, no GTP and no pod-backhaul SSID.
      backhaul BSS as its neighbour;
    - Backhaul STA Radio Capabilities.
 
-   It MUST handle, or explicitly refuse, Backhaul Steering Requests. The agent
-   refuses them (Backhaul Steering Response, result failure). It answers a
+   It MUST handle, or explicitly refuse, Backhaul Steering Requests. With
+   option 1 the agent moves the station to the target BSSID and answers with
+   the outcome (spec §8.3); otherwise it refuses them (Backhaul Steering
+   Response, result failure). It answers a
    Backhaul STA Capability Query with the station's Backhaul STA Radio
    Capabilities, and with none while the pod is on GRE.
 
@@ -527,7 +530,7 @@ pod-6's agent writes `bhaul-sta-50` onto the controller's backhaul BSS
   option 2. The lab no longer gives that node a backhaul BSS.
 
 **Credentials from the M2 set** (evidence
-`doc/evidence/opensync-lab-proof/option1-m2`, VM `emosa-osl-0925`). With
+`doc/evidence/opensync-lab-proof/option1-m2`, 25 September 2026). With
 `lab.sh option1 pod-2 on m2`, the controller gives pod-2's agent the backhaul
 BSS in its M2 set, so pod-2 itself runs `b-ap-24` with `emosa-mesh-bh`, and the
 agent takes its uplink credentials from the same set:
@@ -537,7 +540,7 @@ agent takes its uplink credentials from the same set:
   were flooded into the fronthaul too. The kernel's socket buffers grew by
   1.3 GB in the first second, all eight vCPUs were busy, and the VM had to be
   force-stopped. The AP-Autoconfiguration Renew storm and the out-of-memory
-  event on `emosa-osl-0923` had the same cause;
+  event in the lab of 23 September had the same cause;
 - pinned to em-gtp's backhaul BSS, the switch was applied 23 s after the
   write, with `b-ap-24` up at the same time. The clients had internet, and
   over 7 minutes, including an OpenSync restart, no pod-2 radio interface
@@ -596,12 +599,10 @@ connected Multi-AP station.
 2. **Option 1 is an agent operation** (spec §8.3, §5.6): the agent switches a
    qualifying pod, confirms it from State, holds a pod whose switch failed on
    option 2, and switches it again after every OpenSync restart. It reports
-   the backhaul STA and refuses Backhaul Steering. Still open:
-   - the upstream BSS is configured (`uplink.bssid`). The controller should
-     choose it: Backhaul Steering (target BSSID) is the EasyMesh way, and would
-     also let pods chain through each other's backhaul BSSes without a loop;
-   - Backhaul Steering, backhaul link metrics, and a 1905 neighbor on the
-     backhaul interface;
+   the backhaul STA, and moves it on the controller's Backhaul Steering
+   Request (the configured `uplink.bssid` is where it starts). Still open:
+   - backhaul link metrics, and a 1905 neighbor on the backhaul interface,
+     which a controller's own backhaul policy needs to choose a pod's parent;
    - prplMesh keeps the agent's Backhaul `LinkType` at Ethernet, because its
      1905 frames arrive on EMOSA's port.
 3. **Against prplMesh itself,** its gateway node's radio is on the 1905-only

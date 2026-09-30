@@ -1,0 +1,228 @@
+{
+ "label": "c-0929",
+ "duration_s": 901,
+ "faults": [
+  {
+   "name": "client leave/join em-wc2",
+   "began": 1790707724.1337318,
+   "ended": 1790707764.501892,
+   "offset": 60.0,
+   "recovered_after_s": 17.5,
+   "outage_window_s": 57.9
+  },
+  {
+   "name": "adapter process restart (pod-1)",
+   "began": 1790707814.5166838,
+   "ended": 1790707814.7567236,
+   "offset": 150.4,
+   "recovered_after_s": 6.6,
+   "outage_window_s": 6.8
+  },
+  {
+   "name": "OVSDB transport cut 20 s (pod-2)",
+   "began": 1790707904.2857685,
+   "ended": 1790707924.3076138,
+   "offset": 240.2,
+   "recovered_after_s": 3.6,
+   "outage_window_s": 23.6
+  },
+  {
+   "name": "backhaul loss 30 s (pod-3)",
+   "began": 1790708024.3446808,
+   "ended": 1790708054.817619,
+   "offset": 360.2,
+   "acted_on": "bhaul-sta-50",
+   "recovered_after_s": 24.8,
+   "outage_window_s": 55.2
+  },
+  {
+   "name": "controller restart + policy re-entry",
+   "began": 1790708174.351781,
+   "ended": 1790708213.361141,
+   "offset": 510.2,
+   "recovered_after_s": 0.9,
+   "outage_window_s": 40.0
+  },
+  {
+   "name": "client leave/join em-wc4",
+   "began": 1790708354.4043622,
+   "ended": 1790708394.723403,
+   "offset": 690.3,
+   "recovered_after_s": 15.7,
+   "outage_window_s": 56.0
+  }
+ ],
+ "client_outages": {
+  "em-wc1": [],
+  "em-wc2": [
+   [
+    61,
+    114
+   ]
+  ],
+  "em-wc3": [],
+  "em-wc4": [
+   [
+    691,
+    743
+   ]
+  ],
+  "em-wc5": [
+   [
+    362,
+    408
+   ]
+  ],
+  "em-wc6": [
+   [
+    362,
+    408
+   ]
+  ]
+ },
+ "operations": {
+  "pod-1": [
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ],
+  "pod-2": [
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ],
+  "pod-3": [
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ]
+ },
+ "writes": {
+  "pod-1": 0,
+  "pod-2": 0,
+  "pod-3": 0
+ },
+ "agents": {
+  "pod-1": {
+   "pod_id": "MVXPOD<serial>",
+   "unit": "emosa-agent@MVXPOD<serial>",
+   "al": "02:72:f9:7f:07:85",
+   "port": 6651
+  },
+  "pod-2": {
+   "pod_id": "MVXPOD<serial>",
+   "unit": "emosa-agent@MVXPOD<serial>",
+   "al": "02:c2:b8:31:3a:f8",
+   "port": 6652
+  },
+  "pod-3": {
+   "pod_id": "MVXPOD<serial>",
+   "unit": "emosa-agent@MVXPOD<serial>",
+   "al": "02:2d:b0:6c:a5:ea",
+   "port": 6653
+  }
+ },
+ "implementations_start_end": {
+  "pod-1": [
+   "c-lab-prototype",
+   "c-lab-prototype"
+  ],
+  "pod-2": [
+   "c-lab-prototype",
+   "c-lab-prototype"
+  ],
+  "pod-3": [
+   "c-lab-prototype",
+   "c-lab-prototype"
+  ]
+ },
+ "fleet_handovers_start_end": [
+  {
+   "MVXPOD<serial>": 2,
+   "MVXPOD<serial>": 4,
+   "MVXPOD<serial>": 3
+  },
+  {
+   "MVXPOD<serial>": 3,
+   "MVXPOD<serial>": 4,
+   "MVXPOD<serial>": 3
+  }
+ ],
+ "agent_rss_kib_start_end": {
+  "pod-1": [
+   12212,
+   12232
+  ],
+  "pod-2": [
+   12308,
+   12308
+  ],
+  "pod-3": [
+   12084,
+   12376
+  ]
+ },
+ "samples": 162,
+ "checks": {
+  "healthy_at_end": true,
+  "every_fault_recovered": true,
+  "no_unresolved_operations": true,
+  "every_client_passing_at_end": true,
+  "agent_memory_bounded": true
+ },
+ "passed": true,
+ "scope": "hwsim lab; operational recovery (plan M7), not complete sustained reporting"
+}

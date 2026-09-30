@@ -323,10 +323,68 @@ jobs:
       - run: bash scripts/build-ovsdb.sh
       - run: python3 scripts/build-wsc-registrar.py
       - run: uv run pytest -m ovsdb --junitxml=ovsdb-results.xml
+      - name: The lab in a box (both agents, a private network namespace)
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          sudo apt-get install -y cmake libcjson-dev libsqlite3-dev
+          cmake -S c -B c/build && cmake --build c/build -j
+          EMOSA_BOX_REQUIRED=1 uv run pytest -m box --junitxml=box-results.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ovsdb-evidence
           path: |
             ovsdb-results.xml
+            box-results.xml
             .cache/upstream/openvswitch-4.0.0/*-emosa.log
+  c:
+    # the C agent's bar (c/QUALITY.md): the warning set as errors on both
+    # compilers, the vectors and units, the sanitizers, the static analyzer
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: gcc, cc: gcc, flags: ""}
+          - {name: clang, cc: clang, flags: ""}
+          - {name: sanitizers, cc: gcc, flags: "-DEMOSA_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug"}
+    name: c (${{ matrix.name }})
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y cmake pkg-config clang libcjson-dev libssl-dev libsqlite3-dev
+      - run: cmake -S c -B c/build -DCMAKE_C_COMPILER=${{ matrix.cc }} -DEMOSA_STRICT=ON ${{ matrix.flags }}
+      - run: cmake --build c/build -j
+      - run: ctest --test-dir c/build --output-on-failure
+  c-analyzer:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y cmake pkg-config clang clang-tools libcjson-dev libssl-dev libsqlite3-dev
+      - run: scan-build cmake -S c -B c/build
+      - run: scan-build --status-bugs cmake --build c/build -j
+  c-fuzz:
+    # each fuzz target (c/fuzz) for a bounded time from its seed corpus, under
+    # ASan and UBSan; a crash or report fails the job
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y cmake pkg-config clang libclang-rt-18-dev libcjson-dev libssl-dev libsqlite3-dev
+      - run: cmake -S c -B c/build -DCMAKE_C_COMPILER=clang -DEMOSA_FUZZ=ON -DEMOSA_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug
+      - run: cmake --build c/build -j --target emosa-fuzz-cmdu emosa-fuzz-stats emosa-fuzz-rows emosa-fuzz-wsc
+      - name: fuzz
+        env:
+          ASAN_OPTIONS: detect_leaks=1:fast_unwind_on_malloc=0
+        run: |
+          for target in cmdu stats rows wsc; do
+            mkdir -p "fuzz-$target" && cp c/fuzz/corpus/$target/* "fuzz-$target/"
+            c/build/emosa-fuzz-$target -max_total_time=60 -print_final_stats=1 "fuzz-$target"
+          done
+  c-cert:
+    # clang-tidy's CERT checks: no finding but the deviations QUALITY.md §5 records
+    # (marked NOLINT at their lines)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y cmake pkg-config clang clang-tidy libcjson-dev libssl-dev libsqlite3-dev
+      - run: cmake -S c -B c/build -DCMAKE_C_COMPILER=clang -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - run: run-clang-tidy -quiet -p c/build -checks='-*,cert-*' -warnings-as-errors='cert-*' "$PWD/c/src/.*"

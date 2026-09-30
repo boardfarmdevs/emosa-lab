@@ -10,7 +10,7 @@
 
 static em_tlv tlv(uint8_t kind, const void *value, size_t len)
 {
-    em_tlv t = {kind, (uint16_t)len, malloc(len ? len : 1)};
+    em_tlv t = {kind, (uint16_t)len, em_malloc(len ? len : 1)};
     if (t.value && len)
         memcpy(t.value, value, len);
     return t;
@@ -205,7 +205,7 @@ em_reason em_receive_m2(const em_binding *b, const em_radio_caps *radio, const e
     unsigned max = radio->max_bss < 16 ? radio->max_bss : 16;
     if (count < 1 || count > max)
         return EM_INVALID_INPUT;
-    em_buf *messages = calloc(count, sizeof(em_buf));
+    em_buf *messages = em_calloc(count, sizeof(em_buf));
     if (!messages)
         return EM_NO_MEMORY;
     size_t k = 0;

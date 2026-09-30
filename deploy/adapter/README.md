@@ -59,7 +59,7 @@ The installer puts the adapter and its own Python 3.13.7 in
 
 Every pod's agent is the Python reference unless `EMOSA_AGENT` says otherwise:
 in `/etc/default/emosa` for all pods, or in `/etc/default/emosa-POD` for one.
-The C lab prototype (`c/README.md`) takes the same configuration and writes the
+The C agent (`c/README.md`) takes the same configuration and writes the
 same status file:
 
 ```sh
@@ -68,8 +68,9 @@ systemctl restart emosa-agent@POD
 ```
 
 The installer builds it when cmake, pkg-config and the cJSON and OpenSSL
-headers are there (Ubuntu: `cmake pkg-config libcjson-dev libssl-dev`), and
-says so. It is a lab prototype, not for production.
+headers are there (Ubuntu: `cmake pkg-config libcjson-dev libssl-dev libsqlite3-dev`), and
+says so. It is being taken to production quality (`c/README.md`); until then
+it is for the labs.
 
 ## Watch and operate
 

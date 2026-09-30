@@ -38,7 +38,7 @@ static em_reason send(em_control *c, uint16_t type, uint16_t mid, const em_tlv *
                               false, 1500, &f);
     if (r != EM_OK)
         return r;
-    em_buf *grown = realloc(out->frames, (out->count + f.count) * sizeof(em_buf));
+    em_buf *grown = em_realloc(out->frames, (out->count + f.count) * sizeof(em_buf));
     if (!grown) {
         em_frames_free(&f);
         return EM_NO_MEMORY;
@@ -58,11 +58,31 @@ static bool unicast_mac(const uint8_t *m)
 
 /* -- channel (spec §3.4) ----------------------------------------------------------- */
 
-/* The selected policy: EM_OK with *decline set when the pod cannot do it. */
-static em_reason channel_policy(const em_control *c, const em_message *m, bool *decline)
+static void add_hex(cJSON *o, const char *name, const uint8_t mac[6])
+{
+    char *hex = em_hex(mac, 6);
+    cJSON_AddStringToObject(o, name, hex);
+    free(hex);
+}
+
+static cJSON *channel_list(const uint8_t *channels, uint8_t n)
+{
+    cJSON *list = cJSON_CreateArray();
+    for (uint8_t k = 0; k < n; k++)
+        cJSON_AddItemToArray(list, cJSON_CreateNumber(channels[k]));
+    return list;
+}
+
+/* The selected policy: EM_OK with *decline set when the pod cannot do it. Fills policy
+ * with its preferences (operating class 81), power limit and the classes ignored, as
+ * emosa.wire.channel.selected_policy. */
+static em_reason channel_policy(const em_control *c, const em_message *m, bool *decline, cJSON *policy)
 {
     bool preferences = false, power = false;
     *decline = false;
+    cJSON *prefs = cJSON_AddArrayToObject(policy, "preferences");
+    cJSON_AddNullToObject(policy, "power_limit_dbm");
+    cJSON *ignored = cJSON_AddArrayToObject(policy, "ignored");
     for (size_t i = 0; i < m->ntlvs; i++) {
         const em_tlv *t = &m->tlvs[i];
         if (t->kind == 0x8B) {
@@ -85,8 +105,13 @@ static em_reason channel_policy(const em_control *c, const em_message *m, bool *
                 p += 3 + n;
                 if (score == 15 || reason > 13 || (reason >= 6 && reason <= 10))
                     return EM_INVALID_INPUT;
-                if (opclass != 81)
-                    continue; /* a class the radio does not advertise */
+                if (opclass != 81) { /* a class the radio does not advertise */
+                    cJSON *other = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(other, "class", opclass);
+                    cJSON_AddItemToObject(other, "channels", channel_list(channels, n));
+                    cJSON_AddItemToArray(ignored, other);
+                    continue;
+                }
                 bool applies[14] = {0};
                 for (int k = 0; k < n; k++) {
                     if (channels[k] < 1 || channels[k] > 13 || applies[channels[k]])
@@ -103,6 +128,12 @@ static em_reason channel_policy(const em_control *c, const em_message *m, bool *
                 }
                 if (applies[6] && score == 0)
                     *decline = true; /* forbids the sole operable channel */
+                cJSON *pref = cJSON_CreateObject();
+                cJSON_AddNumberToObject(pref, "class", opclass);
+                cJSON_AddItemToObject(pref, "channels", channel_list(channels, n));
+                cJSON_AddNumberToObject(pref, "preference", score);
+                cJSON_AddNumberToObject(pref, "reason", reason);
+                cJSON_AddItemToArray(prefs, pref);
             }
             if (p != end)
                 return EM_INVALID_INPUT;
@@ -110,6 +141,7 @@ static em_reason channel_policy(const em_control *c, const em_message *m, bool *
             if (power || t->len != 7 || memcmp(t->value, c->radio->ruid, 6))
                 return EM_INVALID_INPUT;
             power = true;
+            cJSON_ReplaceItemInObject(policy, "power_limit_dbm", cJSON_CreateNumber((int8_t)t->value[6]));
             if ((int8_t)t->value[6] < c->tx_power_dbm)
                 *decline = true; /* power actuation requires a qualified mapping */
         } else {
@@ -137,7 +169,18 @@ static const char *channel(em_control *c, const em_message *m, em_frames *out, e
         return *error == EM_OK ? "channel_preference_report_sent" : NULL;
     }
     bool decline;
-    em_reason r = channel_policy(c, m, &decline);
+    cJSON *policy = cJSON_CreateObject();
+    em_reason r = channel_policy(c, m, &decline, policy);
+    if (r == EM_OK && !decline && c->keep_channel_policy) {
+        cJSON_AddStringToObject(policy, "status", "accepted_no_adjustment");
+        cJSON_AddNumberToObject(policy, "mid", m->mid);
+        add_hex(policy, "controller", c->binding.controller_al);
+        add_hex(policy, "local_al", c->binding.local_al);
+        add_hex(policy, "ruid", c->radio->ruid);
+        if (!c->keep_channel_policy(c->keep_ctx, policy))
+            r = EM_NOT_READY; /* "channel preference persistence failed" */
+    }
+    cJSON_Delete(policy);
     if (r != EM_OK) {
         *error = r;
         return NULL;
@@ -166,9 +209,11 @@ static void system_utc(char out[40])
     struct timespec now;
     struct tm tm;
     clock_gettime(CLOCK_REALTIME, &now);
-    gmtime_r(&now.tv_sec, &tm);
-    size_t n = strftime(out, 40, "%Y-%m-%dT%H:%M:%S", &tm);
-    snprintf(out + n, 40 - n, ".%03ldZ", now.tv_nsec / 1000000);
+    /* the system clock: a year of four digits (a failure here is the platform's) */
+    size_t n = gmtime_r(&now.tv_sec, &tm) ? strftime(out, 40, "%Y-%m-%dT%H:%M:%S", &tm) : 0;
+    if (!n)
+        abort();
+    EM_FORMAT_FIXED(out + n, 40 - n, ".%03ldZ", now.tv_nsec / 1000000);
 }
 
 /* Channel Scan Request: Ack, then a report of "scan not supported" results. */
@@ -450,7 +495,7 @@ static const char *steer(em_control *c, const em_message *m, em_frames *out, em_
         return "client_steering_opportunity_completed";
     }
     if (reason) {
-        snprintf(label, sizeof(label), "client_steering_refused_%s", reason);
+        EM_FORMAT_FIXED(label, sizeof(label), "client_steering_refused_%s", reason);
         return label;
     }
     return "client_steering_started";
@@ -545,7 +590,7 @@ static const char *unassociated(em_control *c, const em_message *m, em_frames *o
         const em_probe_stats *p = NULL;
         if (!on_pod && operating && op_class == 81 && channels[i] == c->radio->channel && c->stats) {
             char mac[18];
-            snprintf(mac, sizeof(mac), "%02x:%02x:%02x:%02x:%02x:%02x", stations[i][0],
+            EM_FORMAT_FIXED(mac, sizeof(mac), "%02x:%02x:%02x:%02x:%02x:%02x", stations[i][0],
                      stations[i][1], stations[i][2], stations[i][3], stations[i][4], stations[i][5]);
             p = em_pod_stats_probe(c->stats, mac);
             const char *band = class_band(op_class);
@@ -576,6 +621,19 @@ static const char *unassociated(em_control *c, const em_message *m, em_frames *o
     if (e != EM_OK) {
         *error = e;
         return NULL;
+    }
+    if (c->watch) { /* the stations asked about on the pod's own channel: watch their probes (§3.9) */
+        static uint8_t heard[64][6];
+        size_t nheard = 0;
+        for (size_t i = 0; i < n; i++) {
+            bool on_pod = false;
+            for (size_t b = 0; b < c->radio->nbss && !on_pod; b++)
+                on_pod = associated(&c->radio->bss[b], stations[i]);
+            if (!on_pod && operating && op_class == 81 && channels[i] == c->radio->channel)
+                memcpy(heard[nheard++], stations[i], 6);
+        }
+        if (nheard)
+            c->watch(c->watch_ctx, (const uint8_t(*)[6])heard, nheard);
     }
     if (!measured)
         return "unassociated_query_refused";

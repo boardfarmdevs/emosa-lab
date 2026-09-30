@@ -1,8 +1,10 @@
 /* The agent's OVSDB session over RFC 7047 JSON-RPC. Mirrors emosa.opensync.session:
  * the pod dials the agent, the agent reads the schema, monitors its tables and keeps
  * a cache; transactions are serialized. */
-#define _GNU_SOURCE
+#define _GNU_SOURCE /* NOLINT(cert-dcl37-c,cert-dcl51-cpp): QUALITY.md §5 */
 #include "ovsdb.h"
+
+#include "canon.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -26,6 +28,8 @@ struct em_ovsdb {
     bool monitored;
     long next_id, monitor_id, pending_id;
     cJSON *tables;         /* the cache */
+    char schema_fingerprint[65]; /* sha256 of the pod's schema as compact sorted JSON */
+    bool fixed;                  /* recorded rows, no pod (vectors and tests) */
     cJSON *pending_reply;  /* the reply awaited by transact */
     char **table_names;
     size_t ntables;
@@ -44,7 +48,7 @@ em_ovsdb *em_ovsdb_open(const char *endpoint, const char *const *tables, size_t 
 {
     int port;
     char address[64];
-    if (sscanf(endpoint, "ptcp:%d:%63s", &port, address) != 2 || port < 1 || port > 65535)
+    if (sscanf(endpoint, "ptcp:%5d:%63s", &port, address) != 2 || port < 1 || port > 65535) /* NOLINT(cert-err34-c): QUALITY.md §5 */
         return NULL;
     struct sockaddr_in sa = {.sin_family = AF_INET, .sin_port = htons((uint16_t)port)};
     if (inet_pton(AF_INET, address, &sa.sin_addr) != 1)
@@ -57,13 +61,13 @@ em_ovsdb *em_ovsdb_open(const char *endpoint, const char *const *tables, size_t 
         close(fd);
         return NULL;
     }
-    em_ovsdb *s = calloc(1, sizeof(*s));
+    em_ovsdb *s = em_calloc(1, sizeof(*s));
     s->listener = fd;
     s->conn = -1;
     s->tables = cJSON_CreateObject();
-    s->table_names = calloc(ntables, sizeof(char *));
+    s->table_names = em_calloc(ntables, sizeof(char *));
     for (size_t i = 0; i < ntables; i++)
-        s->table_names[i] = strdup(tables[i]);
+        s->table_names[i] = em_strdup(tables[i]);
     s->ntables = ntables;
     return s;
 }
@@ -81,10 +85,27 @@ static void disconnect(em_ovsdb *s)
     s->pending_reply = NULL;
 }
 
+em_ovsdb *em_ovsdb_fixed(const cJSON *tables, int generation, const char *schema_fingerprint)
+{
+    em_ovsdb *s = em_calloc(1, sizeof(*s));
+    s->listener = s->conn = -1;
+    s->fixed = s->monitored = true;
+    s->generation = generation;
+    s->revision = 1;
+    s->tables = cJSON_Duplicate(tables, true);
+    EM_FORMAT_FIXED(s->schema_fingerprint, sizeof(s->schema_fingerprint), "%s", schema_fingerprint); /* SHA-256 hex */
+    return s;
+}
+
 void em_ovsdb_close(em_ovsdb *s)
 {
     if (!s)
         return;
+    if (s->fixed) {
+        cJSON_Delete(s->tables);
+        free(s);
+        return;
+    }
     disconnect(s);
     close(s->listener);
     for (size_t i = 0; i < s->ntables; i++)
@@ -105,8 +126,9 @@ size_t em_ovsdb_fds(const em_ovsdb *s, int *fds, size_t max)
     return n;
 }
 
-bool em_ovsdb_ready(const em_ovsdb *s) { return s->conn >= 0 && s->monitored; }
+bool em_ovsdb_ready(const em_ovsdb *s) { return s->fixed || (s->conn >= 0 && s->monitored); }
 int em_ovsdb_generation(const em_ovsdb *s) { return s->generation; }
+const char *em_ovsdb_schema_fingerprint(const em_ovsdb *s) { return s->schema_fingerprint; }
 unsigned long em_ovsdb_revision(const em_ovsdb *s) { return s->revision; }
 const cJSON *em_ovsdb_tables(const em_ovsdb *s) { return s->tables; }
 
@@ -246,7 +268,7 @@ static bool read_conn(em_ovsdb *s)
     for (;;) {
         if (s->cap - s->len < 65536) {
             size_t cap = s->cap ? s->cap * 2 : 131072;
-            char *grown = realloc(s->buf, cap);
+            char *grown = em_realloc(s->buf, cap);
             if (!grown)
                 return false;
             s->buf = grown;
@@ -287,6 +309,22 @@ static cJSON *await_reply(em_ovsdb *s, long id, double timeout)
 /* a new pod connection: the monitor of every table the agent uses (all columns) */
 static bool start_monitor(em_ovsdb *s)
 {
+    /* the schema first, as the reference (its fingerprint binds a scope's context) */
+    cJSON *get = cJSON_CreateArray();
+    cJSON_AddItemToArray(get, cJSON_CreateString(DATABASE));
+    long schema_id = request(s, "get_schema", get);
+    if (schema_id < 0)
+        return false;
+    cJSON *schema = await_reply(s, schema_id, 5.0);
+    const cJSON *raw = cJSON_GetObjectItemCaseSensitive(schema, "result");
+    char *text = cJSON_IsObject(raw) ? em_json_dumps(raw, EM_JSON_COMPACT, true) : NULL;
+    if (!text) {
+        cJSON_Delete(schema);
+        return false;
+    }
+    em_sha256_hex(text, strlen(text), s->schema_fingerprint);
+    free(text);
+    cJSON_Delete(schema);
     cJSON *params = cJSON_CreateArray(), *requests = cJSON_CreateObject();
     long monitor = s->generation * 1000 + 1;
     cJSON_AddItemToArray(params, cJSON_CreateString(DATABASE));

@@ -1,0 +1,4450 @@
+{
+ "cases": [
+  {
+   "name": "first-write",
+   "ovsdb_tables": {
+    "AWLAN_Node": {
+     "96bc1650-4197-4cd8-9036-f9eb854e87ec": {
+      "firmware_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+      "id": "MVXPOD023F87E628DD",
+      "model": "HWSIM_POD",
+      "serial_number": "MVXPOD023F87E628DD"
+     }
+    },
+    "Wifi_Associated_Clients": {
+     "5610f878-8aa3-40a8-95b1-76cad74d386d": {
+      "mac": "02:00:00:00:02:04",
+      "state": "active"
+     },
+     "754e678c-11a4-43ec-bda8-f655bf59b8d2": {
+      "mac": "02:00:00:00:10:00",
+      "state": "active"
+     },
+     "af38859b-bedf-41a2-bddf-98652851cbd1": {
+      "mac": "02:00:00:00:0a:00",
+      "state": "active"
+     }
+    },
+    "Wifi_Radio_Config": {
+     "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2": {
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "vif_configs": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ]
+     },
+     "bad3456e-79cc-4d17-9719-afdb2b723dc4": {
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "vif_configs": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ]
+     }
+    },
+    "Wifi_Radio_State": {
+     "6d532b35-45c2-4fb6-b7e5-a88eac97f2c1": {
+      "channel": 6,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "mac": "02:00:00:00:01:00",
+      "radio_config": [
+       "uuid",
+       "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+      ],
+      "tx_power": 30,
+      "vif_states": [
+       "uuid",
+       "46f21b59-4487-4c60-bab6-2d2874107cfa"
+      ]
+     },
+     "b4398810-4002-400c-937d-2487ede88cf5": {
+      "channel": 44,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "mac": "02:00:00:00:05:00",
+      "radio_config": [
+       "uuid",
+       "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2"
+      ],
+      "tx_power": 23,
+      "vif_states": [
+       "uuid",
+       "95d7b177-73ef-44f6-903a-3db7dbc81bfd"
+      ]
+     }
+    },
+    "Wifi_VIF_Config": {
+     "527b652b-fb37-4881-8386-a555857b77e7": {
+      "bridge": "",
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     },
+     "5e205523-2215-4670-9433-e4742fa22055": {
+      "bridge": "br-home",
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mode": "ap",
+      "multi_ap": [
+       "set",
+       []
+      ],
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     }
+    },
+    "Wifi_VIF_State": {
+     "46f21b59-4487-4c60-bab6-2d2874107cfa": {
+      "associated_clients": [
+       "set",
+       [
+        [
+         "uuid",
+         "754e678c-11a4-43ec-bda8-f655bf59b8d2"
+        ],
+        [
+         "uuid",
+         "af38859b-bedf-41a2-bddf-98652851cbd1"
+        ]
+       ]
+      ],
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mac": "82:00:00:00:01:00",
+      "mode": "ap",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "vif_config": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ],
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_pairwise_ccmp": false,
+      "wpa_pairwise_tkip": false,
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     },
+     "95d7b177-73ef-44f6-903a-3db7dbc81bfd": {
+      "associated_clients": [
+       "uuid",
+       "5610f878-8aa3-40a8-95b1-76cad74d386d"
+      ],
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mac": "02:00:00:00:05:00",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "vif_config": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ],
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     }
+    }
+   },
+   "steps": [
+    {
+     "expected": {
+      "status": {
+       "asked": 3,
+       "operation": null,
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "ask",
+      0.0,
+      [
+       "02:00:00:00:80:00",
+       "02:00:00:00:81:00",
+       "02:00:00:00:0a:00"
+      ]
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 3,
+       "operation": {
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       },
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": [
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_2g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_5g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "if_name_2g": "home-ap-24"
+         },
+         "table": "Band_Steering_Config"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:00:80:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:00:80:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:00:81:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:00:81:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      0.0
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 3,
+       "operation": {
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       },
+       "waiting": "write in progress",
+       "watched": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "tick",
+      1.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "minimum-interval",
+   "ovsdb_tables": {
+    "AWLAN_Node": {
+     "96bc1650-4197-4cd8-9036-f9eb854e87ec": {
+      "firmware_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+      "id": "MVXPOD023F87E628DD",
+      "model": "HWSIM_POD",
+      "serial_number": "MVXPOD023F87E628DD"
+     }
+    },
+    "Wifi_Associated_Clients": {
+     "5610f878-8aa3-40a8-95b1-76cad74d386d": {
+      "mac": "02:00:00:00:02:04",
+      "state": "active"
+     },
+     "754e678c-11a4-43ec-bda8-f655bf59b8d2": {
+      "mac": "02:00:00:00:10:00",
+      "state": "active"
+     },
+     "af38859b-bedf-41a2-bddf-98652851cbd1": {
+      "mac": "02:00:00:00:0a:00",
+      "state": "active"
+     }
+    },
+    "Wifi_Radio_Config": {
+     "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2": {
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "vif_configs": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ]
+     },
+     "bad3456e-79cc-4d17-9719-afdb2b723dc4": {
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "vif_configs": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ]
+     }
+    },
+    "Wifi_Radio_State": {
+     "6d532b35-45c2-4fb6-b7e5-a88eac97f2c1": {
+      "channel": 6,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "mac": "02:00:00:00:01:00",
+      "radio_config": [
+       "uuid",
+       "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+      ],
+      "tx_power": 30,
+      "vif_states": [
+       "uuid",
+       "46f21b59-4487-4c60-bab6-2d2874107cfa"
+      ]
+     },
+     "b4398810-4002-400c-937d-2487ede88cf5": {
+      "channel": 44,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "mac": "02:00:00:00:05:00",
+      "radio_config": [
+       "uuid",
+       "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2"
+      ],
+      "tx_power": 23,
+      "vif_states": [
+       "uuid",
+       "95d7b177-73ef-44f6-903a-3db7dbc81bfd"
+      ]
+     }
+    },
+    "Wifi_VIF_Config": {
+     "527b652b-fb37-4881-8386-a555857b77e7": {
+      "bridge": "",
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     },
+     "5e205523-2215-4670-9433-e4742fa22055": {
+      "bridge": "br-home",
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mode": "ap",
+      "multi_ap": [
+       "set",
+       []
+      ],
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     }
+    },
+    "Wifi_VIF_State": {
+     "46f21b59-4487-4c60-bab6-2d2874107cfa": {
+      "associated_clients": [
+       "set",
+       [
+        [
+         "uuid",
+         "754e678c-11a4-43ec-bda8-f655bf59b8d2"
+        ],
+        [
+         "uuid",
+         "af38859b-bedf-41a2-bddf-98652851cbd1"
+        ]
+       ]
+      ],
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mac": "82:00:00:00:01:00",
+      "mode": "ap",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "vif_config": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ],
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_pairwise_ccmp": false,
+      "wpa_pairwise_tkip": false,
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     },
+     "95d7b177-73ef-44f6-903a-3db7dbc81bfd": {
+      "associated_clients": [
+       "uuid",
+       "5610f878-8aa3-40a8-95b1-76cad74d386d"
+      ],
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mac": "02:00:00:00:05:00",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "vif_config": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ],
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     }
+    }
+   },
+   "steps": [
+    {
+     "expected": {
+      "status": {
+       "asked": 1,
+       "operation": null,
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "ask",
+      0.0,
+      [
+       "02:00:00:00:80:00"
+      ]
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 1,
+       "operation": {
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       },
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": [
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_2g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_5g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "if_name_2g": "home-ap-24"
+         },
+         "table": "Band_Steering_Config"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:00:80:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:00:80:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      0.0
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 1,
+       "operation": {
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       },
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": [
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_2g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_5g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "if_name_2g": "home-ap-24"
+         },
+         "table": "Band_Steering_Config"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:00:80:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:00:80:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      31.0
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 2,
+       "operation": {
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       },
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "ask",
+      32.0,
+      [
+       "02:00:00:00:81:00"
+      ]
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 2,
+       "operation": {
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       },
+       "waiting": "write in progress",
+       "watched": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "tick",
+      35.0
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 2,
+       "operation": {
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       },
+       "waiting": "write in progress",
+       "watched": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "tick",
+      42.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "at-most-32",
+   "ovsdb_tables": {
+    "AWLAN_Node": {
+     "96bc1650-4197-4cd8-9036-f9eb854e87ec": {
+      "firmware_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+      "id": "MVXPOD023F87E628DD",
+      "model": "HWSIM_POD",
+      "serial_number": "MVXPOD023F87E628DD"
+     }
+    },
+    "Wifi_Associated_Clients": {
+     "5610f878-8aa3-40a8-95b1-76cad74d386d": {
+      "mac": "02:00:00:00:02:04",
+      "state": "active"
+     },
+     "754e678c-11a4-43ec-bda8-f655bf59b8d2": {
+      "mac": "02:00:00:00:10:00",
+      "state": "active"
+     },
+     "af38859b-bedf-41a2-bddf-98652851cbd1": {
+      "mac": "02:00:00:00:0a:00",
+      "state": "active"
+     }
+    },
+    "Wifi_Radio_Config": {
+     "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2": {
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "vif_configs": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ]
+     },
+     "bad3456e-79cc-4d17-9719-afdb2b723dc4": {
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "vif_configs": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ]
+     }
+    },
+    "Wifi_Radio_State": {
+     "6d532b35-45c2-4fb6-b7e5-a88eac97f2c1": {
+      "channel": 6,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "mac": "02:00:00:00:01:00",
+      "radio_config": [
+       "uuid",
+       "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+      ],
+      "tx_power": 30,
+      "vif_states": [
+       "uuid",
+       "46f21b59-4487-4c60-bab6-2d2874107cfa"
+      ]
+     },
+     "b4398810-4002-400c-937d-2487ede88cf5": {
+      "channel": 44,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "mac": "02:00:00:00:05:00",
+      "radio_config": [
+       "uuid",
+       "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2"
+      ],
+      "tx_power": 23,
+      "vif_states": [
+       "uuid",
+       "95d7b177-73ef-44f6-903a-3db7dbc81bfd"
+      ]
+     }
+    },
+    "Wifi_VIF_Config": {
+     "527b652b-fb37-4881-8386-a555857b77e7": {
+      "bridge": "",
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     },
+     "5e205523-2215-4670-9433-e4742fa22055": {
+      "bridge": "br-home",
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mode": "ap",
+      "multi_ap": [
+       "set",
+       []
+      ],
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     }
+    },
+    "Wifi_VIF_State": {
+     "46f21b59-4487-4c60-bab6-2d2874107cfa": {
+      "associated_clients": [
+       "set",
+       [
+        [
+         "uuid",
+         "754e678c-11a4-43ec-bda8-f655bf59b8d2"
+        ],
+        [
+         "uuid",
+         "af38859b-bedf-41a2-bddf-98652851cbd1"
+        ]
+       ]
+      ],
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mac": "82:00:00:00:01:00",
+      "mode": "ap",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "vif_config": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ],
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_pairwise_ccmp": false,
+      "wpa_pairwise_tkip": false,
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     },
+     "95d7b177-73ef-44f6-903a-3db7dbc81bfd": {
+      "associated_clients": [
+       "uuid",
+       "5610f878-8aa3-40a8-95b1-76cad74d386d"
+      ],
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mac": "02:00:00:00:05:00",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "vif_config": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ],
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     }
+    }
+   },
+   "steps": [
+    {
+     "expected": {
+      "status": {
+       "asked": 20,
+       "operation": null,
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "ask",
+      0.0,
+      [
+       "02:00:00:01:00:00",
+       "02:00:00:01:01:00",
+       "02:00:00:01:02:00",
+       "02:00:00:01:03:00",
+       "02:00:00:01:04:00",
+       "02:00:00:01:05:00",
+       "02:00:00:01:06:00",
+       "02:00:00:01:07:00",
+       "02:00:00:01:08:00",
+       "02:00:00:01:09:00",
+       "02:00:00:01:0a:00",
+       "02:00:00:01:0b:00",
+       "02:00:00:01:0c:00",
+       "02:00:00:01:0d:00",
+       "02:00:00:01:0e:00",
+       "02:00:00:01:0f:00",
+       "02:00:00:01:10:00",
+       "02:00:00:01:11:00",
+       "02:00:00:01:12:00",
+       "02:00:00:01:13:00"
+      ]
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 40,
+       "operation": null,
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "ask",
+      1.0,
+      [
+       "02:00:00:01:14:00",
+       "02:00:00:01:15:00",
+       "02:00:00:01:16:00",
+       "02:00:00:01:17:00",
+       "02:00:00:01:18:00",
+       "02:00:00:01:19:00",
+       "02:00:00:01:1a:00",
+       "02:00:00:01:1b:00",
+       "02:00:00:01:1c:00",
+       "02:00:00:01:1d:00",
+       "02:00:00:01:1e:00",
+       "02:00:00:01:1f:00",
+       "02:00:00:01:20:00",
+       "02:00:00:01:21:00",
+       "02:00:00:01:22:00",
+       "02:00:00:01:23:00",
+       "02:00:00:01:24:00",
+       "02:00:00:01:25:00",
+       "02:00:00:01:26:00",
+       "02:00:00:01:27:00"
+      ]
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 40,
+       "operation": {
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       },
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": [
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_2g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_5g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "if_name_2g": "home-ap-24"
+         },
+         "table": "Band_Steering_Config"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:08:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:08:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:09:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:09:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:0a:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:0a:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:0b:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:0b:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:0c:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:0c:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:0d:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:0d:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:0e:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:0e:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:0f:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:0f:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:10:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:10:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:11:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:11:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:12:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:12:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:13:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:13:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:14:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:14:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:15:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:15:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:16:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:16:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:17:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:17:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:18:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:18:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:19:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:19:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:1a:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:1a:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:1b:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:1b:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:1c:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:1c:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:1d:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:1d:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:1e:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:1e:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:1f:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:1f:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:20:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:20:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:21:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:21:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:22:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:22:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:23:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:23:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:24:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:24:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:25:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:25:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:26:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:26:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:01:27:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:01:27:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      1.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "forgotten-after-600-s",
+   "ovsdb_tables": {
+    "AWLAN_Node": {
+     "96bc1650-4197-4cd8-9036-f9eb854e87ec": {
+      "firmware_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+      "id": "MVXPOD023F87E628DD",
+      "model": "HWSIM_POD",
+      "serial_number": "MVXPOD023F87E628DD"
+     }
+    },
+    "Wifi_Associated_Clients": {
+     "5610f878-8aa3-40a8-95b1-76cad74d386d": {
+      "mac": "02:00:00:00:02:04",
+      "state": "active"
+     },
+     "754e678c-11a4-43ec-bda8-f655bf59b8d2": {
+      "mac": "02:00:00:00:10:00",
+      "state": "active"
+     },
+     "af38859b-bedf-41a2-bddf-98652851cbd1": {
+      "mac": "02:00:00:00:0a:00",
+      "state": "active"
+     }
+    },
+    "Wifi_Radio_Config": {
+     "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2": {
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "vif_configs": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ]
+     },
+     "bad3456e-79cc-4d17-9719-afdb2b723dc4": {
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "vif_configs": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ]
+     }
+    },
+    "Wifi_Radio_State": {
+     "6d532b35-45c2-4fb6-b7e5-a88eac97f2c1": {
+      "channel": 6,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "mac": "02:00:00:00:01:00",
+      "radio_config": [
+       "uuid",
+       "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+      ],
+      "tx_power": 30,
+      "vif_states": [
+       "uuid",
+       "46f21b59-4487-4c60-bab6-2d2874107cfa"
+      ]
+     },
+     "b4398810-4002-400c-937d-2487ede88cf5": {
+      "channel": 44,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "mac": "02:00:00:00:05:00",
+      "radio_config": [
+       "uuid",
+       "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2"
+      ],
+      "tx_power": 23,
+      "vif_states": [
+       "uuid",
+       "95d7b177-73ef-44f6-903a-3db7dbc81bfd"
+      ]
+     }
+    },
+    "Wifi_VIF_Config": {
+     "527b652b-fb37-4881-8386-a555857b77e7": {
+      "bridge": "",
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     },
+     "5e205523-2215-4670-9433-e4742fa22055": {
+      "bridge": "br-home",
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mode": "ap",
+      "multi_ap": [
+       "set",
+       []
+      ],
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     }
+    },
+    "Wifi_VIF_State": {
+     "46f21b59-4487-4c60-bab6-2d2874107cfa": {
+      "associated_clients": [
+       "set",
+       [
+        [
+         "uuid",
+         "754e678c-11a4-43ec-bda8-f655bf59b8d2"
+        ],
+        [
+         "uuid",
+         "af38859b-bedf-41a2-bddf-98652851cbd1"
+        ]
+       ]
+      ],
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mac": "82:00:00:00:01:00",
+      "mode": "ap",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "vif_config": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ],
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_pairwise_ccmp": false,
+      "wpa_pairwise_tkip": false,
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     },
+     "95d7b177-73ef-44f6-903a-3db7dbc81bfd": {
+      "associated_clients": [
+       "uuid",
+       "5610f878-8aa3-40a8-95b1-76cad74d386d"
+      ],
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mac": "02:00:00:00:05:00",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "vif_config": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ],
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     }
+    }
+   },
+   "steps": [
+    {
+     "expected": {
+      "status": {
+       "asked": 1,
+       "operation": null,
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "ask",
+      0.0,
+      [
+       "02:00:00:00:80:00"
+      ]
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 2,
+       "operation": null,
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "ask",
+      500.0,
+      [
+       "02:00:00:00:81:00"
+      ]
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 2,
+       "operation": {
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       },
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": [
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_2g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_5g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "if_name_2g": "home-ap-24"
+         },
+         "table": "Band_Steering_Config"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:00:81:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:00:81:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      601.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "another-row-blocks",
+   "ovsdb_tables": {
+    "AWLAN_Node": {
+     "96bc1650-4197-4cd8-9036-f9eb854e87ec": {
+      "firmware_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+      "id": "MVXPOD023F87E628DD",
+      "model": "HWSIM_POD",
+      "serial_number": "MVXPOD023F87E628DD"
+     }
+    },
+    "Band_Steering_Clients": {
+     "00000000-0000-4000-8000-0000000000d1": {
+      "cs_mode": "away",
+      "cs_params": [
+       "map",
+       [
+        [
+         "cs_enforce_period",
+         "15"
+        ]
+       ]
+      ],
+      "mac": "02:00:00:00:82:00"
+     }
+    },
+    "Band_Steering_Config": {
+     "00000000-0000-4000-8000-0000000000b1": {
+      "if_name_2g": "home-ap-24"
+     }
+    },
+    "Wifi_Associated_Clients": {
+     "5610f878-8aa3-40a8-95b1-76cad74d386d": {
+      "mac": "02:00:00:00:02:04",
+      "state": "active"
+     },
+     "754e678c-11a4-43ec-bda8-f655bf59b8d2": {
+      "mac": "02:00:00:00:10:00",
+      "state": "active"
+     },
+     "af38859b-bedf-41a2-bddf-98652851cbd1": {
+      "mac": "02:00:00:00:0a:00",
+      "state": "active"
+     }
+    },
+    "Wifi_Radio_Config": {
+     "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2": {
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "vif_configs": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ]
+     },
+     "bad3456e-79cc-4d17-9719-afdb2b723dc4": {
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "vif_configs": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ]
+     }
+    },
+    "Wifi_Radio_State": {
+     "6d532b35-45c2-4fb6-b7e5-a88eac97f2c1": {
+      "channel": 6,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "2.4G",
+      "if_name": "phy1",
+      "mac": "02:00:00:00:01:00",
+      "radio_config": [
+       "uuid",
+       "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+      ],
+      "tx_power": 30,
+      "vif_states": [
+       "uuid",
+       "46f21b59-4487-4c60-bab6-2d2874107cfa"
+      ]
+     },
+     "b4398810-4002-400c-937d-2487ede88cf5": {
+      "channel": 44,
+      "country": "US",
+      "enabled": true,
+      "freq_band": "5G",
+      "if_name": "phy5",
+      "mac": "02:00:00:00:05:00",
+      "radio_config": [
+       "uuid",
+       "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2"
+      ],
+      "tx_power": 23,
+      "vif_states": [
+       "uuid",
+       "95d7b177-73ef-44f6-903a-3db7dbc81bfd"
+      ]
+     }
+    },
+    "Wifi_VIF_Config": {
+     "527b652b-fb37-4881-8386-a555857b77e7": {
+      "bridge": "",
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     },
+     "5e205523-2215-4670-9433-e4742fa22055": {
+      "bridge": "br-home",
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mode": "ap",
+      "multi_ap": [
+       "set",
+       []
+      ],
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_oftags": [
+       "map",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     }
+    },
+    "Wifi_VIF_State": {
+     "46f21b59-4487-4c60-bab6-2d2874107cfa": {
+      "associated_clients": [
+       "set",
+       [
+        [
+         "uuid",
+         "754e678c-11a4-43ec-bda8-f655bf59b8d2"
+        ],
+        [
+         "uuid",
+         "af38859b-bedf-41a2-bddf-98652851cbd1"
+        ]
+       ]
+      ],
+      "enabled": true,
+      "if_name": "home-ap-24",
+      "mac": "82:00:00:00:01:00",
+      "mode": "ap",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": true,
+      "security": [
+       "map",
+       []
+      ],
+      "ssid": "emosa-mesh",
+      "vif_config": [
+       "uuid",
+       "5e205523-2215-4670-9433-e4742fa22055"
+      ],
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "wpa_pairwise_ccmp": false,
+      "wpa_pairwise_tkip": false,
+      "wpa_psks": [
+       "map",
+       [
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ]
+     },
+     "95d7b177-73ef-44f6-903a-3db7dbc81bfd": {
+      "associated_clients": [
+       "uuid",
+       "5610f878-8aa3-40a8-95b1-76cad74d386d"
+      ],
+      "enabled": true,
+      "if_name": "bhaul-sta-50",
+      "mac": "02:00:00:00:05:00",
+      "mode": "sta",
+      "multi_ap": "none",
+      "rsn_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "security": [
+       "map",
+       [
+        [
+         "encryption",
+         "WPA-PSK"
+        ],
+        [
+         "key",
+         "fixture-psk"
+        ]
+       ]
+      ],
+      "ssid": "opensync-lab-bhaul",
+      "vif_config": [
+       "uuid",
+       "527b652b-fb37-4881-8386-a555857b77e7"
+      ],
+      "wpa": [
+       "set",
+       []
+      ],
+      "wpa_key_mgmt": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_ccmp": [
+       "set",
+       []
+      ],
+      "wpa_pairwise_tkip": [
+       "set",
+       []
+      ],
+      "wpa_psks": [
+       "map",
+       []
+      ]
+     }
+    }
+   },
+   "steps": [
+    {
+     "expected": {
+      "status": {
+       "asked": 2,
+       "operation": null,
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "ask",
+      0.0,
+      [
+       "02:00:00:00:82:00",
+       "02:00:00:00:83:00"
+      ]
+     ]
+    },
+    {
+     "expected": {
+      "status": {
+       "asked": 2,
+       "operation": {
+        "reason": null,
+        "state": "CONFIG_COMMITTED"
+       },
+       "waiting": null,
+       "watched": []
+      },
+      "transactions": [
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "if_name_2g"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "if_name_2g": "home-ap-24"
+          }
+         ],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000b1"
+           ]
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:00:83:00"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "off",
+          "cs_params": [
+           "map",
+           [
+            [
+             "emosa",
+             "watch"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:00:83:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0
+         },
+         "table": "Band_Steering_Clients"
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      0.0
+     ]
+    }
+   ]
+  }
+ ],
+ "description": "spec §3.9: the probe watch on the recorded pod rows (the case's), its rows on the fronthaul home-ap-24 (2.4G): the stations asked about (never one associated with the pod or with another manager's client row), at most the 32 asked most recently, dropped 600 s after they were last asked, written at most every 10 s, one write at a time (applied when the pod shows it, else timed out after 30 s). The recorded rows do not change with a write. A step: ask (at, stations) or tick (at), the clock in seconds. Per step: the transactions sent and the watch's status (without the operation ID). Inserts are answered with the UUID 00000000-0000-4000-8000-0000000000ff.",
+ "serial": "MVXPOD023F87E628DD"
+}

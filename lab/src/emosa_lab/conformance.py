@@ -11,6 +11,7 @@ harness: the files, not this module, are the contract.
 
 import argparse
 import asyncio
+import contextlib
 import copy
 import dataclasses
 import json
@@ -20,7 +21,7 @@ from pathlib import Path
 
 from emosa.agent.fleet import Fleet, agent_config, derive_al
 from emosa.easymesh_payloads import encode_value
-from emosa.errors import EmosaError
+from emosa.errors import EmosaError, Reason
 from emosa.model import ACTIVE, Intent
 from emosa.opensync.easymesh_view import (
     backhaul,
@@ -210,12 +211,43 @@ def northbound_case(name, raw, ages):
     }
 
 
+def aged_at_response():
+    """Station ages as of each Topology Response, from the association times (a suite
+    finding: ages taken when membership changed went stale for the controller)."""
+    raw = pod_rows()
+    view = device_view(decode(raw))
+    radio = view.radio(mac(RUID))
+    associated_at = {"02:00:00:00:0a:00": 100.0, "02:00:00:00:10:00": 40.25}
+    facts = topology(
+        agent_al=mac(AGENT),
+        controller_al=mac(CONTROLLER),
+        radio=radio,
+        channel=6,
+        bsses=radio.bsses,
+        ages={mac(m): 0 for m in associated_at},
+        associated_at={mac(m): t for m, t in associated_at.items()},
+    )
+    binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
+    return {
+        "ovsdb_tables": raw,
+        "associated_at": associated_at,
+        "responses": [
+            {"now": now, "topology_tlvs": tlvs(_topology(facts, binding, EASYMESH_61, now=now))}
+            for now in (100.0, 112.7, 65700.0)
+        ],
+    }
+
+
 def northbound_vectors():
     ages = {"02:00:00:00:0a:00": 12, "02:00:00:00:10:00": 70000}
     return {
         "description": "spec §2.6, §3.3: pod OVSDB rows (raw RFC 7047 JSON) to the device view, "
-        "and the view to 1905 TLVs. 'value' is the TLV value in hex, without type and length.",
+        "and the view to 1905 TLVs. 'value' is the TLV value in hex, without type and length. "
+        "aged_at_response: the recorded rows' stations associated at the given times "
+        "(monotonic seconds); per response time, the EasyMesh 6.1 Topology Response TLVs, each "
+        "station's age taken as of the response (whole seconds, at most 65535).",
         "cases": [northbound_case(name, make(), ages) for name, make in POD_CASES.items()],
+        "aged_at_response": aged_at_response(),
     }
 
 
@@ -581,10 +613,30 @@ PROBE_WALL = 1790313745.0  # the agent's wall clock for probe ages (epoch second
 # before, heard 200 s before (too old), a 5 GHz probe, and one on the station
 # queried on another channel
 PROBES = {
-    "02:00:00:00:99:99": {"band": "2.4G", "ifname": "wl0.1", "snr_db": 34, "measured_at": PROBE_WALL - 30},
-    "02:00:00:00:96:96": {"band": "2.4G", "ifname": "wl0.1", "snr_db": 30, "measured_at": PROBE_WALL - 200},
-    "02:00:00:00:95:95": {"band": "5G", "ifname": "wl1.1", "snr_db": 40, "measured_at": PROBE_WALL - 5},
-    "02:00:00:00:98:98": {"band": "2.4G", "ifname": "wl0.1", "snr_db": 28, "measured_at": PROBE_WALL - 10},
+    "02:00:00:00:99:99": {
+        "band": "2.4G",
+        "ifname": "wl0.1",
+        "snr_db": 34,
+        "measured_at": PROBE_WALL - 30,
+    },
+    "02:00:00:00:96:96": {
+        "band": "2.4G",
+        "ifname": "wl0.1",
+        "snr_db": 30,
+        "measured_at": PROBE_WALL - 200,
+    },
+    "02:00:00:00:95:95": {
+        "band": "5G",
+        "ifname": "wl1.1",
+        "snr_db": 40,
+        "measured_at": PROBE_WALL - 5,
+    },
+    "02:00:00:00:98:98": {
+        "band": "2.4G",
+        "ifname": "wl0.1",
+        "snr_db": 28,
+        "measured_at": PROBE_WALL - 10,
+    },
 }
 
 
@@ -650,6 +702,21 @@ def control_vectors():
         (
             "channel-selection-accepted",
             [request(0x8006, 12, (Tlv(0x8B, ruid + bytes.fromhex("01510106e0")),))],
+        ),
+        (
+            # class 81 channels 1 and 11 less preferred, a 40 MHz class ignored, the
+            # pod's own 30 dBm as the power limit
+            "channel-selection-accepted-with-limit",
+            [
+                request(
+                    0x8006,
+                    14,
+                    (
+                        Tlv(0x8B, ruid + bytes.fromhex("025102010b50530106e0")),
+                        Tlv(0x8D, ruid + bytes([30])),
+                    ),
+                )
+            ],
         ),
         (
             "channel-selection-rdk-declined",  # RDK's request: 40 MHz classes, 0 dBm power limit
@@ -780,20 +847,30 @@ def control_vectors():
                         "expected": {"result": result, "frames": [f.hex() for f in sent[before:]]},
                     }
                 )
+            kept = handlers[0].store.read()
+            kept.pop("context", None)
             for handler in handlers:
                 handler.close()
-            case = {"name": name, "steps": steps, "handed_to_pod": handed}
+            case = {
+                "name": name,
+                "steps": steps,
+                "handed_to_pod": handed,
+                "channel_policy": kept if kept["status"] == "accepted_no_adjustment" else None,
+            }
             if name in measured:
                 case["probes"] = PROBES
             cases.append(case)
     return {
-        "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded pod rows "
+        "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded "
+        "pod rows "
         "(stations " + ", ".join(stations) + " on 82:00:00:00:01:00, radio " + RUID + " on "
         "class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller "
         "request frame and the frames the agent sends in answer, in order; the agent's own "
         "messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. "
         "'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), "
-        "as decoded from the request. A case with 'probes' gives the pod's last probe "
+        "as decoded from the request; 'channel_policy' is the accepted channel policy's "
+        "durable record (spec §3.4) without its context, or null when none was accepted. "
+        "A case with 'probes' gives the pod's last probe "
         "request per station (spec §3.9); probe_wall is the agent's clock for their ages.",
         "agent": {
             "al_mac": AGENT,
@@ -1128,7 +1205,11 @@ def telemetry_vectors():
         # an event without its required offset: incomplete
         (
             topic,
-            bs_report(int(now * 1000), [("02:00:00:00:92:92", ((0, "wl0.1", ((0, 0, 30),)),))], complete=False),
+            bs_report(
+                int(now * 1000),
+                [("02:00:00:00:92:92", ((0, "wl0.1", ((0, 0, 30),)),))],
+                complete=False,
+            ),
             False,
         ),
     ]
@@ -1150,12 +1231,1398 @@ def telemetry_vectors():
         "reports every 10 s, topic " + topic + "), then a repeated, a retained and a foreign "
         "publish, then a raw on-channel survey (spec §3.8) and one lacking its required "
         "channel, then band-steering reports with probe requests (spec §3.9), the last "
-        "lacking an event's required offset; the clock stands at " + str(now) + " throughout. Per step: whether the "
+        "lacking an event's required offset; the clock stands at "
+        + str(now)
+        + " throughout. Per step: whether the "
         "report is used, and the agent's statistics status after it.",
         "topic": topic,
         "reporting_interval": 10,
         "clock": now,
         "steps": steps,
+    }
+
+
+def client_report(timestamp_ms, clients, *, channel=6):
+    """A raw client report publish (spec §3.6): clients as (mac, rssi, tx_rate, rx_rate,
+    counters or None), each connected for the whole period."""
+    from emosa.opensync.stats import Report
+
+    report = Report(nodeID="")
+    radio = report.clients.add(band=0, channel=channel, timestamp_ms=timestamp_ms)
+    for station, rssi, tx_rate, rx_rate, counters in clients:
+        client = radio.client_list.add(
+            mac_address=station, ssid="private_ssid", connected=True, duration_ms=5000
+        )
+        client.stats.rssi = rssi
+        client.stats.tx_rate = tx_rate
+        client.stats.rx_rate = rx_rate
+        for name, value in (counters or {}).items():
+            setattr(client.stats, name, value)
+    return report.SerializePartialToString().hex()
+
+
+METRICS_WALL = 1790313745.0  # the agent's wall clock for statistic ages (epoch seconds), fixed
+COUNTERS_FULL = {
+    "tx_bytes": 123456,
+    "rx_bytes": 65432,
+    "tx_frames": 1000,
+    "rx_frames": 800,
+    "tx_retries": 12,
+    "rx_retries": 3,
+    "tx_errors": 2,
+    "rx_errors": 1,
+}
+
+
+def metrics_vectors():
+    """The Multi-AP Policy kept, and AP Metrics Responses from the pod's statistics."""
+    from emosa.opensync.stats import PodStats
+    from emosa.wire.channel import OperatingRadio
+    from emosa.wire.cmdu import MidSequence, Reassembler, Tlv, fragment_message
+    from emosa.wire.coordinator import ReportSource
+    from emosa.wire.pod_metrics import PodMetricReporter
+    from emosa.wire.reporting_policy import ReportingPolicyCoordinator, ReportingPolicyStore
+
+    raw = pod_rows()
+    stations = ["02:00:00:00:0a:00", "02:00:00:00:10:00"]
+    bssid = mac("82:00:00:00:01:00")
+    ruid = mac(RUID)
+    topic = f"emosa/stats/{SERIAL}"
+    wall = METRICS_WALL
+
+    def request(message_type, mid, items):
+        return fragment_message(mac(AGENT), mac(CONTROLLER), message_type, mid, items)[0]
+
+    def query(mid, bssids):
+        return request(0x800B, mid, (Tlv(0x93, bytes([len(bssids)]) + b"".join(bssids)),))
+
+    # RDK's Metric Reporting Policy (captured): 5 s, RCPI 0x78, hysteresis 5, utilization
+    # 0x3c, traffic and link metrics included; its other companions are kept, not applied
+    policy = request(
+        0x8003,
+        14,
+        (
+            Tlv(0x89, bytes.fromhex("000001") + ruid + bytes.fromhex("023c78")),
+            Tlv(0x8A, bytes.fromhex("0501") + ruid + bytes.fromhex("78053cc0")),
+            Tlv(0x0B, bytes.fromhex("d89c8e00")),
+        ),
+    )
+    survey = survey_report(int(wall * 1000) - 2000)
+    clients = client_report(
+        int(wall * 1000) - 1000,
+        [
+            (stations[0], 40, 144.4, 72.2, COUNTERS_FULL),
+            (stations[1], 30, 65.0, 58.5, None),
+            ("02:00:00:00:77:77", 25, 6.0, 6.0, None),  # measured, not on the pod's BSS
+        ],
+    )
+    old_survey = survey_report(int(wall * 1000) - 60000)
+    cases = [
+        (
+            "policy-then-query",
+            [survey, clients],
+            [(0.0, "frame", policy), (0.0, "frame", query(30, [bssid]))],
+        ),
+        (
+            "query-unknown-bss",
+            [survey, clients],
+            [(0.0, "frame", query(31, [mac("02:00:00:00:66:66")]))],
+        ),
+        ("query-all-bss", [survey, clients], [(0.0, "frame", query(32, []))]),
+        (
+            # due every 5 s: one report per due tick, and one (not three) after missed periods
+            "periodic",
+            [survey, clients],
+            [
+                (0.0, "frame", policy),
+                (4.9, "tick", None),
+                (5.0, "tick", None),
+                (17.5, "tick", None),
+            ],
+        ),
+        (
+            # the survey is older than three reporting periods and the publish interval
+            "stale-survey",
+            [old_survey, clients],
+            [(0.0, "frame", policy), (0.0, "frame", query(33, [bssid])), (5.0, "tick", None)],
+        ),
+        (
+            "no-statistics",
+            [],
+            [(0.0, "frame", policy), (0.0, "frame", query(34, [bssid])), (5.0, "tick", None)],
+        ),
+        (
+            # the same policy again (a new MID) does not postpone the due report
+            "policy-redelivered",
+            [survey, clients],
+            [
+                (0.0, "frame", policy),
+                (3.0, "frame", request(0x8003, 15, Reassembler().feed(policy).tlvs)),
+                (5.0, "tick", None),
+            ],
+        ),
+    ]
+    view = device_view(decode(raw))
+    radio = view.radio(ruid)
+    caps = radio_capabilities(radio, channel=6, max_bss=5, max_eirp=30)
+    facts = topology(
+        agent_al=mac(AGENT),
+        controller_al=mac(CONTROLLER),
+        radio=radio,
+        channel=6,
+        bsses=radio.bsses,
+        ages={mac(m): 10 for m in stations},
+    )
+    binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
+    out = []
+    for name, publishes, steps in cases:
+        now = [0.0]
+        clock = lambda now=now: now[0]  # noqa: E731
+        # the report source is refreshed at every step's time, as the agent refreshes it
+        source = ReportSource(binding, "pod-1", "c" * 64, clock=clock)
+        stats = PodStats(topic, interval=5, clock=lambda: wall)
+        for payload in publishes:
+            stats.receive(topic, bytes.fromhex(payload))
+        sent = []
+        mids = MidSequence(499)
+        with tempfile.TemporaryDirectory() as directory:
+            coordinator = None
+            reporter = PodMetricReporter(
+                source,
+                stats,
+                sent.append,
+                mids,
+                admitted=lambda: True,
+                # the coordinator is created below, in this iteration
+                policy=lambda: coordinator.value["policy"] if coordinator.value else {},  # noqa: B023
+                esp_be=bytes.fromhex("3fff00"),
+                freshness=3 * 5 + 5,
+                clock=clock,
+                wall=lambda: wall,
+            )
+            coordinator = ReportingPolicyCoordinator(
+                source,
+                sent.append,
+                ReportingPolicyStore(Path(directory) / "policy.sqlite", boot_id="conformance"),
+                reporter=reporter,
+                clock=clock,
+            )
+            recorded = []
+            for index, (at, kind, frame) in enumerate(steps):
+                now[0] = at
+                source.publish(
+                    (1, 1 + index),
+                    caps,
+                    facts,
+                    observed_at=at,
+                    lifetime=1.5,
+                    operating_radios=(OperatingRadio(ruid, 81, 6, radio.tx_power),),
+                )
+                before = len(sent)
+                if kind == "tick":
+                    coordinator.tick()
+                    result = None
+                else:
+                    message = Reassembler().feed(frame)
+                    result = coordinator.handle(message, at)
+                    if result is None:
+                        result = reporter.handle(message, at, ingress="conformance", generation=1)
+                recorded.append(
+                    {
+                        "at": at,
+                        **({"request": frame.hex()} if frame is not None else {"tick": True}),
+                        "expected": {"result": result, "frames": [f.hex() for f in sent[before:]]},
+                    }
+                )
+            value = coordinator.value
+            coordinator.close()
+        out.append(
+            {
+                "name": name,
+                "publishes": publishes,
+                "steps": recorded,
+                "expected_counts": {
+                    "policy": dict(coordinator.counts),
+                    "reporter": dict(reporter.counts),
+                },
+                "expected_policy": plain(
+                    {k: v for k, v in (value or {}).items() if k not in ("boot_id",)}
+                )
+                if value
+                else None,
+            }
+        )
+    return {
+        "description": "spec §3.8, §10: the Multi-AP Policy kept and the AP metrics reported "
+        "from the pod's own statistics. The recorded pod rows (stations "
+        + ", ".join(stations)
+        + " on 82:00:00:00:01:00, radio "
+        + RUID
+        + "); the pod's statistics from the case's "
+        "publishes (topic " + topic + ", reporting every 5 s) at the wall clock; the declared "
+        "best-effort ESP 3fff00; a statistic is fresh for 20 s (three periods and the 5 s "
+        "publish interval). Each step is a controller frame or a tick at a time 'at' "
+        "(seconds): the agent's result and the frames it sends; its own messages take MIDs "
+        "from 500. expected_policy is the kept record (without the boot identity).",
+        "agent": {
+            "al_mac": AGENT,
+            "controller_al": CONTROLLER,
+            "radio": RUID,
+            "first_mid": 500,
+            "wall": wall,
+            "topic": topic,
+            "reporting_interval": 5,
+            "freshness": 20,
+            "esp_be": "3fff00",
+        },
+        "ovsdb_tables": raw,
+        "stations": stations,
+        "cases": out,
+    }
+
+
+def backhaul_steering_vectors():
+    """Backhaul Steering (spec §9): the move handed to the uplink scope and answered."""
+    from emosa.wire.backhaul_steering import BackhaulSteeringCoordinator
+    from emosa.wire.cmdu import Reassembler, Tlv, fragment_message
+    from emosa.wire.coordinator import ReportSource
+
+    raw = json.loads(UPLINK_ROWS["multi-ap"].read_text())["tables"]
+    station = "bhaul-sta-24"
+    rows = decode(raw)
+    view = device_view(rows)
+    link = backhaul(view, station)
+    radio = view.radio(link.ruid)
+    caps = radio_capabilities(radio, channel=radio.channel, max_bss=5, max_eirp=30)
+    facts = topology(
+        agent_al=mac(AGENT),
+        controller_al=mac(CONTROLLER),
+        radio=radio,
+        channel=radio.channel,
+        bsses=radio.bsses,
+        ages={m: 0 for b in radio.bsses for m in b.stations},
+        uplink=link,
+    )
+    sta = facts.backhaul_stations[0][1]
+    target = mac("02:00:00:00:09:00")
+    binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
+
+    def request(mid, station_mac=sta, bssid=target):
+        value = station_mac + bssid + bytes((115, 36))
+        return fragment_message(mac(AGENT), mac(CONTROLLER), 0x8019, mid, (Tlv(0x9E, value),))[0]
+
+    other = mac("02:00:00:00:77:77")
+    multicast = bytes.fromhex("030000000001")
+    # a step: (session, at, kind, detail); kind "frame" (detail: request frame, executor's
+    # answer), "tick" (detail: the move's outcome, whether the pod's State is available),
+    # "close" (the session ends)
+    cases = [
+        (
+            "move-succeeds",
+            [
+                (0, 0.0, "frame", (request(40), None)),
+                (0, 1.0, "tick", (None, True)),
+                (0, 20.0, "tick", (True, True)),
+            ],
+        ),
+        (
+            "move-fails",
+            [
+                (0, 0.0, "frame", (request(41), None)),
+                (0, 30.0, "tick", ("not confirmed within the deadline", True)),
+            ],
+        ),
+        ("not-the-backhaul-station", [(0, 0.0, "frame", (request(42, station_mac=other), None))]),
+        ("multicast-target", [(0, 0.0, "frame", (request(43, bssid=multicast), None))]),
+        ("executor-refuses", [(0, 0.0, "frame", (request(44), "held_on_option_2"))]),
+        (
+            "move-in-progress",
+            [(0, 0.0, "frame", (request(45), None)), (0, 1.0, "frame", (request(46), None))],
+        ),
+        (
+            "repeated-request",
+            [
+                (0, 0.0, "frame", (request(47), None)),
+                (0, 0.5, "frame", (request(47), None)),
+                (0, 10.0, "tick", (True, True)),
+                (0, 11.0, "frame", (request(47), None)),
+            ],
+        ),
+        (
+            "deadline",
+            [
+                (0, 0.0, "frame", (request(48), None)),
+                (0, 119.0, "tick", (None, True)),
+                (0, 120.0, "tick", (None, True)),
+            ],
+        ),
+        # the move changes the pod's topology and the agent renews its session: the next
+        # session answers the move the previous one began
+        (
+            "answered-by-next-session",
+            [
+                (0, 0.0, "frame", (request(49), None)),
+                (0, 2.0, "close", None),
+                (1, 8.0, "frame", (request(50), None)),
+                (1, 9.0, "tick", (True, True)),
+            ],
+        ),
+        # the pod's State is away when the outcome is known: answered on a later tick,
+        # unless it stays away past the deadline and 30 s
+        (
+            "source-away",
+            [
+                (0, 0.0, "frame", (request(51), None)),
+                (0, 5.0, "tick", (True, False)),
+                (0, 6.0, "tick", (True, True)),
+            ],
+        ),
+        (
+            "source-away-too-long",
+            [
+                (0, 0.0, "frame", (request(52), None)),
+                (0, 120.0, "tick", (None, False)),
+                (0, 151.0, "tick", (None, False)),
+            ],
+        ),
+    ]
+    out = []
+    for name, steps in cases:
+        now = [0.0]
+        source = ReportSource(binding, "pod-1", "c" * 64, clock=lambda now=now: now[0])
+        shared, sessions, sent, handed = {}, {}, [], []
+        state = {"reply": None, "outcome": None}
+        recorded = []
+        for index, (session, at, kind, detail) in enumerate(steps):
+            now[0] = at
+            available = kind != "tick" or detail[1]
+            if available:
+                source.publish((1, 1 + index), caps, facts, observed_at=at, lifetime=1.5)
+            else:
+                source.invalidate()
+            if session not in sessions:
+                sessions[session] = BackhaulSteeringCoordinator(
+                    source,
+                    sent.append,
+                    lambda bssid, handed=handed, state=state: (
+                        handed.append(bssid),
+                        state["reply"],
+                    )[1],
+                    lambda bssid, state=state: state["outcome"],
+                    clock=lambda now=now: now[0],
+                    shared=shared,
+                )
+            coordinator, before = sessions[session], len(sent)
+            step = {"session": session, "at": at}
+            if kind == "close":
+                coordinator.close()
+                step["close"] = True
+                result = None
+            elif kind == "tick":
+                state["outcome"] = detail[0]
+                result = coordinator.tick()
+                step.update({"tick": True, "outcome": detail[0], "source_available": detail[1]})
+            else:
+                frame, reply = detail
+                state["reply"] = reply
+                result = coordinator.handle(Reassembler().feed(frame), at)
+                step.update({"request": frame.hex(), "executor": reply})
+            step["expected"] = {"result": result, "frames": [f.hex() for f in sent[before:]]}
+            recorded.append(step)
+        last = max(sessions)
+        out.append(
+            {
+                "name": name,
+                "steps": recorded,
+                "handed_to_uplink": handed,
+                "expected_status": plain(sessions[last].status()),
+            }
+        )
+    return {
+        "description": "spec §9: Backhaul Steering. The recorded pod rows with a Multi-AP "
+        "backhaul station (" + station + ", " + sta.hex(":") + "), so the agent reports it; the "
+        "controller's Backhaul Steering Requests, and ticks. A step names its session (a "
+        "renewed session shares the move under way); a request step gives the uplink scope's "
+        "answer to the hand-over ('executor': null, or why not), a tick step the move's "
+        "outcome (null under way, true applied, or why it failed) and whether the pod's State "
+        "is available. Per step: the result and the frames sent. handed_to_uplink lists the "
+        "moves handed over (target BSSIDs); expected_status is the last session's status.",
+        "agent": {"al_mac": AGENT, "controller_al": CONTROLLER},
+        "backhaul_stations": [s.hex(":") for _, s in facts.backhaul_stations],
+        "ovsdb_tables": raw,
+        "cases": out,
+    }
+
+
+def scope_write_case(name, raw, backend, intent):
+    """A scope's plan and its one guarded transaction on the recorded rows."""
+
+    async def run():
+        await backend.snapshot()
+        try:
+            await backend.plan(intent)
+        except EmosaError as exc:
+            return None, exc.code.value
+        attempt = {"attempt_id": "a", "transaction_id": "t", "session_generation": 1}
+        return (await backend.submit(intent, attempt)).status, None
+
+    status, refusal = asyncio.run(run())
+    expected = {"status": status, "transactions": backend.session.sent}
+    if refusal:
+        expected["refusal"] = refusal
+    return {"name": name, "ovsdb_tables": raw, "intent": intent.record(), "expected": expected}
+
+
+def scope_writes_vectors():
+    """The telemetry scope, the probe watch and a steering window over a watch row."""
+    from emosa.opensync.probe_watch import WatchBackend, WatchIntent
+    from emosa.opensync.steering import SteeringBackend, SteeringIntent
+    from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent
+
+    def rows(**extra):
+        return {**pod_rows(), **copy.deepcopy(extra)}
+
+    telemetry = TelemetryIntent(
+        "pod-1", "10.101.0.40", 8883, f"emosa/stats/{SERIAL}", "2.4G", 5, 5, 5, True
+    )
+    node_uuid, node = next(iter(pod_rows()["AWLAN_Node"].items()))
+    ours = {
+        "Wifi_Stats_Config": {
+            "00000000-0000-4000-8000-0000000000c1": {
+                "stats_type": "client",
+                "radio_type": "2.4G",
+                "report_type": "raw",
+                "reporting_interval": 5,
+                "sampling_interval": 5,
+            },
+            "00000000-0000-4000-8000-0000000000c2": {
+                "stats_type": "survey",
+                "radio_type": "2.4G",
+                "survey_type": "on-chan",
+                "report_type": "raw",
+                "reporting_interval": 5,
+                "sampling_interval": 5,
+            },
+        },
+    }
+    cloud = {
+        "AWLAN_Node": {
+            node_uuid: {
+                **node,
+                "mqtt_settings": ["map", [["broker", "cloud.example"], ["port", "443"]]],
+            }
+        }
+    }
+    watch_marker = ["map", [["emosa", "watch"]]]
+    s1, s2 = "02:00:00:00:99:99", "02:00:00:00:98:98"
+    group = {
+        "Band_Steering_Config": {
+            "00000000-0000-4000-8000-0000000000b1": {"if_name_2g": "home-ap-24"}
+        }
+    }
+    watching_s1 = {
+        **group,
+        "Band_Steering_Clients": {
+            "00000000-0000-4000-8000-0000000000d1": {
+                "mac": s1,
+                "cs_mode": "off",
+                "cs_params": watch_marker,
+            },
+        },
+    }
+    steered_s1 = {
+        **group,
+        "Band_Steering_Clients": {
+            "00000000-0000-4000-8000-0000000000d1": {
+                "mac": s1,
+                "cs_mode": "away",
+                "cs_params": ["map", [["cs_enforce_period", "15"]]],
+            },
+        },
+    }
+    steer = SteeringIntent(
+        "pod-1", "02:00:00:00:0a:00", "82:00:00:00:01:00", "02:00:00:12:75:2c", 81, 6, True, 15, 900
+    )
+    watched_station = {
+        **group,
+        "Band_Steering_Clients": {
+            "00000000-0000-4000-8000-0000000000d2": {
+                "mac": "02:00:00:00:0a:00",
+                "cs_mode": "off",
+                "cs_params": watch_marker,
+            },
+        },
+    }
+    cases = []
+    for name, extra in (
+        ("telemetry-fresh-pod", {}),
+        ("telemetry-rows-present", ours),
+        ("telemetry-another-broker", cloud),
+    ):
+        raw = rows(**extra)
+        backend = TelemetryBackend(
+            "pod-1", Recorder(copy.deepcopy(raw)), serial=SERIAL, radio_type="2.4G", survey=True
+        )
+        cases.append({"scope": "telemetry", **scope_write_case(name, raw, backend, telemetry)})
+    for name, extra, stations in (
+        ("watch-new-group", {}, (s1, s2)),
+        ("watch-add-and-remove", watching_s1, (s2,)),
+        ("watch-station-steered", steered_s1, (s1,)),
+    ):
+        raw = rows(**extra)
+        backend = WatchBackend("pod-1", Recorder(copy.deepcopy(raw)), serial=SERIAL)
+        cases.append(
+            {
+                "scope": "probe-watch",
+                **scope_write_case(
+                    name, raw, backend, WatchIntent("pod-1", "home-ap-24", "2.4G", stations)
+                ),
+            }
+        )
+    raw = rows(**watched_station)
+    backend = SteeringBackend("pod-1", Recorder(copy.deepcopy(raw)), serial=SERIAL)
+    cases.append(
+        {
+            "scope": "steering",
+            **scope_write_case("steering-replaces-watch-row", raw, backend, steer),
+        }
+    )
+    return {
+        "description": "spec §3.6, §3.7, §3.9: the scopes' guarded OVSDB writes on the recorded "
+        "pod rows (with the case's additional rows): the telemetry scope's statistics "
+        "publishing, the probe watch's rows, and a steering window that replaces the "
+        "station's watch row. Per case: the plan's refusal (a Reason), or the submission's "
+        "status and every transaction sent. The server replies to every insert with the UUID "
+        "00000000-0000-4000-8000-0000000000ff.",
+        "serial": SERIAL,
+        "cases": cases,
+    }
+
+
+class Crash(BaseException):
+    """The process stops (after the journal's SUBMITTED record, before the reply)."""
+
+
+def engine_vectors():
+    """The operation lifecycle (spec §5): request, execute, reconcile, recover."""
+    from emosa.backends.base import Snapshot, SubmitResult
+    from emosa.clock import ManualClock
+    from emosa.model import Observation
+    from emosa.opensync.probe_watch import WatchIntent
+    from emosa.reconcile import Engine
+    from emosa.store import Store
+
+    class Scripted:
+        mode = "scripted"
+
+        def __init__(self):
+            self.pod = {"config": "", "observed": "", "fresh": True, "ready": True}
+            self.plan_error = None
+            self.result = "committed"
+
+        async def snapshot(self):
+            return Snapshot(
+                {"watched": self.pod["config"]},
+                Observation(
+                    "pod-1",
+                    "probe-watch",
+                    {"watched": self.pod["observed"]},
+                    "ovsdb",
+                    self.mode,
+                    1,
+                    "2026-01-01T00:00:00Z",
+                    self.pod["fresh"],
+                    "scripted",
+                    revision=1,
+                ),
+                self.pod["ready"],
+                1,
+                "conformance",
+            )
+
+        async def plan(self, intent):
+            if self.plan_error:
+                raise EmosaError(Reason(self.plan_error), "scripted refusal")
+            return {"action": "scripted"}
+
+        async def submit(self, intent, attempt):
+            if self.result == "crash":
+                raise Crash()
+            if self.result == "lost":
+                raise ConnectionError("the reply was lost")
+            return {
+                "committed": SubmitResult(
+                    "committed", {"attribution": "reply", "transaction_validated": True}
+                ),
+                "conflict": SubmitResult("conflict", {}, Reason.PRECONDITION_FAILED),
+                "rejected": SubmitResult("rejected", {}, Reason.NOT_READY),
+                "unknown": SubmitResult(
+                    "unknown", {"attribution": "unknown"}, Reason.OUTCOME_UNKNOWN
+                ),
+            }[self.result]
+
+    a, b = "02:00:00:00:99:99", "02:00:00:00:98:98"
+    # steps: ("request", stations, key, deadline), ("execute", n), ("pod", config, observed,
+    # fresh, ready), ("script", plan_error, submit), ("advance", seconds), ("reconcile",),
+    # ("recover",), ("cancel", n); a watched value is ",".join(stations)
+    cases = [
+        (
+            "applied",
+            [("request", [a], "k1", 30), ("execute", 0), ("pod", a, a, True, True), ("reconcile",)],
+        ),
+        (
+            "already-applied",
+            [("pod", a, a, True, True), ("request", [a], "k1", 30), ("execute", 0)],
+        ),
+        (
+            "timed-out-then-late",
+            [
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("advance", 31),
+                ("reconcile",),
+                ("pod", a, a, True, True),
+                ("reconcile",),
+            ],
+        ),
+        (
+            "lost-reply-then-applied",
+            [
+                ("script", None, "lost"),
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("pod", a, a, True, True),
+                ("reconcile",),
+            ],
+        ),
+        (
+            "unknown-then-deadline",
+            [
+                ("script", None, "unknown"),
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("advance", 31),
+                ("reconcile",),
+            ],
+        ),
+        (
+            "conflict",
+            [
+                ("script", None, "conflict"),
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("request", [b], "k2", 30),
+            ],
+        ),
+        ("rejected", [("script", None, "rejected"), ("request", [a], "k1", 30), ("execute", 0)]),
+        (
+            "changed-by-another-manager",
+            [
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("pod", a, a, True, True),
+                ("reconcile",),
+                ("pod", b, b, True, True),
+                ("reconcile",),
+            ],
+        ),
+        ("busy", [("request", [a], "k1", 30), ("request", [b], "k2", 30)]),
+        (
+            "plan-refused",
+            [("script", "NOT_READY", "committed"), ("request", [a], "k1", 30), ("execute", 0)],
+        ),
+        (
+            "pod-not-ready",
+            [("pod", "", "", False, False), ("request", [a], "k1", 30), ("execute", 0)],
+        ),
+        (
+            "same-key",
+            [("request", [a], "k1", 30), ("request", [a], "k1", 30), ("request", [b], "k1", 30)],
+        ),
+        (
+            "stale-observation",
+            [
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("pod", a, a, False, True),
+                ("reconcile",),
+                ("pod", a, a, True, True),
+                ("reconcile",),
+            ],
+        ),
+        ("cancelled", [("request", [a], "k1", 30), ("cancel", 0)]),
+        (
+            "recovered-after-crash",
+            [
+                ("script", None, "crash"),
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("recover",),
+                ("pod", a, a, True, True),
+                ("reconcile",),
+            ],
+        ),
+    ]
+    out = []
+    for name, steps in cases:
+        with tempfile.TemporaryDirectory() as directory:
+            store = Store(Path(directory) / "journal")
+            vault = SecretStore(Path(directory) / "secrets")
+            clock = ManualClock()
+            backend = Scripted()
+            engine = Engine(store, vault, {"pod-1": backend}, clock, intent_type=WatchIntent)
+            ids, recorded, seen = [], [], 0
+            for step in steps:
+                kind, error = step[0], None
+                if kind == "request":
+                    intent = WatchIntent("pod-1", "home-ap-24", "2.4G", tuple(step[1]))
+                    try:
+                        op = engine.request(
+                            intent,
+                            source="conformance",
+                            key=step[2],
+                            run_id="run-1",
+                            deadline=step[3],
+                        )
+                        if op.operation_id not in ids:
+                            ids.append(op.operation_id)
+                    except EmosaError as exc:
+                        error = exc.code.value
+                elif kind == "execute":
+                    with contextlib.suppress(Crash):
+                        asyncio.run(engine.execute(ids[step[1]]))
+                elif kind == "pod":
+                    backend.pod = {
+                        "config": step[1],
+                        "observed": step[2],
+                        "fresh": step[3],
+                        "ready": step[4],
+                    }
+                elif kind == "script":
+                    backend.plan_error, backend.result = step[1], step[2]
+                elif kind == "advance":
+                    clock.advance(step[1])
+                elif kind == "reconcile":
+                    asyncio.run(engine.reconcile("pod-1"))
+                elif kind == "recover":
+                    engine = Engine(
+                        store, vault, {"pod-1": backend}, clock, intent_type=WatchIntent
+                    )
+                    engine.recover()
+                elif kind == "cancel":
+                    engine.cancel(ids[step[1]])
+                events = store.events("run-1", after=seen, limit=500)
+                seen = events[-1]["sequence"] if events else seen
+                recorded.append(
+                    {
+                        "step": list(step),
+                        "expected": {
+                            "error": error,
+                            "operations": [
+                                {
+                                    "state": o.state.value,
+                                    "reason": o.reason,
+                                    "deadline_elapsed": o.deadline_elapsed,
+                                    "original_outcome": o.original_outcome,
+                                    "late_resolution": o.late_resolution,
+                                    "changed": o.changed,
+                                    "blocked_for_resubmission": o.blocked_for_resubmission,
+                                    "applied_evidence": o.application_evidence is not None,
+                                    "attribution": (o.application_evidence or {}).get(
+                                        "attribution"
+                                    ),
+                                    "commit_attribution": o.commit_evidence.get("attribution"),
+                                }
+                                for o in (store.get(i) for i in ids)
+                            ],
+                            "ownership": store.ownership("pod-1") is not None,
+                            "events": [e["phase"] for e in events],
+                        },
+                    }
+                )
+            store.close()
+        out.append({"name": name, "steps": recorded})
+    return {
+        "description": "spec §5: the operation lifecycle over a scripted pod (its configured and "
+        "observed watch set, whether the observation is fresh and the pod ready; the plan's "
+        "refusal; the submission's outcome: committed, conflict, rejected, unknown, lost (no "
+        "reply) or crash (the process stops after the journal's SUBMITTED record)). The "
+        "intent is a probe-watch intent (its target: the watched stations, joined by commas). "
+        "A step: request (stations, idempotency key, deadline in seconds), execute (the n-th "
+        "operation), pod, script, advance (the clock, seconds), reconcile, recover (a new "
+        "process on the same journal), cancel. Per step: the request's error, every "
+        "operation's lifecycle fields, whether the pod's ownership is lost, and the journal "
+        "events the step added (their phases).",
+        "cases": out,
+    }
+
+
+def early_report_vectors():
+    """The Early AP Capability Report's delivery: retransmissions and Acks (EasyMesh 6.1)."""
+    from emosa.wire.cmdu import MidSequence, Tlv, fragment_message
+    from emosa.wire.coordinator import ReportCoordinator, ReportSource
+
+    raw = pod_rows()
+    view = device_view(decode(raw))
+    radio = view.radio(mac(RUID))
+    caps = radio_capabilities(radio, channel=6, max_bss=5, max_eirp=30)
+    facts = topology(
+        agent_al=mac(AGENT),
+        controller_al=mac(CONTROLLER),
+        radio=radio,
+        channel=6,
+        bsses=radio.bsses,
+        ages={m: 10 for b in radio.bsses for m in b.stations},
+    )
+    binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
+
+    def ack(mid, error=False):
+        tlvs = (Tlv(0xA3, bytes([1]) + mac("02:00:00:00:0a:00")),) if error else ()
+        return fragment_message(mac(AGENT), mac(CONTROLLER), 0x8000, mid, tlvs)[0]
+
+    # steps: ("notify", at), ("tick", at), ("ack", at, n or None (a foreign MID), error),
+    # ("revision", at): the pod's State published anew with a new revision
+    cases = [
+        ("acknowledged-at-once", [("notify", 0.0), ("ack", 0.1, 0, False)]),
+        (
+            "retransmitted-then-acknowledged",
+            [("notify", 0.0), ("tick", 0.1), ("tick", 0.25), ("tick", 0.5), ("ack", 0.6, 1, False)],
+        ),
+        (
+            "three-then-timeout",
+            [("notify", 0.0), ("tick", 0.25), ("tick", 0.5), ("tick", 0.75), ("tick", 1.0)],
+        ),
+        ("foreign-ack", [("notify", 0.0), ("ack", 0.1, None, False), ("tick", 0.25)]),
+        (
+            "ack-with-error-code",
+            [("notify", 0.0), ("ack", 0.1, 0, True), ("tick", 0.25), ("ack", 0.3, 1, False)],
+        ),
+        ("late-ack", [("notify", 0.0), ("ack", 1.2, 0, False)]),
+        (
+            "source-changed",
+            [
+                ("notify", 0.0),
+                ("tick", 0.25),
+                ("revision", 0.3),
+                ("tick", 0.5),
+                ("ack", 0.6, 0, False),
+            ],
+        ),
+    ]
+    out = []
+    for name, steps in cases:
+        now = [0.0]
+        source = ReportSource(binding, "pod-1", "c" * 64, clock=lambda now=now: now[0])
+        source.publish((1, 1), caps, facts, observed_at=0.0, lifetime=1.5)
+        sent = []
+        coordinator = ReportCoordinator(
+            source, sent.append, mids=MidSequence(499), clock=lambda now=now: now[0]
+        )
+        recorded, early_mids, revision = [], [], 1
+        for step in steps:
+            kind, at = step[0], step[1]
+            now[0] = at
+            before = len(sent)
+            result = None
+            if kind == "notify":
+                coordinator.notify_early()
+            elif kind == "tick":
+                coordinator.tick()
+            elif kind == "revision":
+                revision += 1
+                source.publish((1, revision), caps, facts, observed_at=at, lifetime=1.5)
+            else:
+                which, error = step[2], step[3]
+                mid = early_mids[which] if which is not None else 999
+                result = coordinator.receive(ack(mid, error), ingress="conformance", generation=1)
+            for frame in sent[before:]:
+                early_mids.append(int.from_bytes(frame[18:20], "big"))
+            recorded.append(
+                {
+                    "step": list(step),
+                    "expected": {"result": result, "frames": [f.hex() for f in sent[before:]]},
+                }
+            )
+        out.append({"name": name, "steps": recorded, "expected_counts": dict(coordinator.counts)})
+    return {
+        "description": "EasyMesh 6.1 §5.2.2 (the Early AP Capability Report before M1): its "
+        "delivery. The report is the recorded pod's capability TLVs (radio " + RUID + ", "
+        "channel 6, five BSSes, max EIRP 30), sent at once, then every 250 ms with a new MID, "
+        "three transmissions at most, until an Ack names one of its MIDs within one second. "
+        "A step: notify (the report is due), tick, or ack (of the n-th transmission's MID, or "
+        "of a foreign MID when n is null; with an Error Code companion when error), or "
+        "revision (the pod's State published anew with a new revision: a pending report is "
+        "dropped on the next tick), at a time 'at' in seconds. Per step: the Ack's result "
+        "and the frames sent; the agent's MIDs start at 500.",
+        "agent": {"al_mac": AGENT, "controller_al": CONTROLLER, "radio": RUID, "first_mid": 500},
+        "ovsdb_tables": raw,
+        "cases": out,
+    }
+
+
+def steering_queue_vectors():
+    """Client steering on the pod: one window at a time, a short queue (spec §3.7)."""
+    from emosa.agent.steering import ClientSteering
+    from emosa.clock import ManualClock
+    from emosa.opensync.steering import SteeringBackend
+    from emosa.store import Store
+    from emosa.wire.steering import SteeringRequest
+
+    raw = pod_rows()
+    source = "82:00:00:00:01:00"
+    s0, s1, away = "02:00:00:00:0a:00", "02:00:00:00:10:00", "02:00:00:00:55:55"
+    target = "02:00:00:12:75:2c"
+    extra = [f"02:00:00:00:6{i}:00" for i in range(9)]  # stations queued behind a window
+
+    def request(station, window=15, imminent=True):
+        return SteeringRequest(
+            mac(source), True, imminent, False, window, 0, (mac(station),), ((mac(target), 81, 6),)
+        )
+
+    # steps: ("start", at, station, mid, window, imminent), ("tick", at)
+    cases = [
+        (
+            "one-window-not-applied",
+            [("start", 0.0, s0, 900, 15, True), ("tick", 0.0), ("tick", 5.0), ("tick", 10.5)],
+        ),
+        (
+            "queued-then-started",
+            [
+                ("start", 0.0, s0, 900, 15, True),
+                ("start", 0.0, s1, 901, 15, True),
+                ("tick", 0.0),
+                ("start", 5.0, s1, 902, 20, False),
+                ("tick", 10.5),
+                ("tick", 21.0),
+            ],
+        ),
+        (
+            "queue-expires",
+            [
+                ("start", 0.0, s0, 900, 15, True),
+                ("start", 0.0, s1, 901, 15, True),
+                ("tick", 0.0),
+                ("tick", 10.5),
+            ],
+        ),
+        (
+            "moved-while-queued",
+            [
+                ("start", 0.0, s0, 900, 15, True),
+                ("start", 1.0, away, 901, 15, True),
+                ("tick", 1.0),
+                ("tick", 10.5),
+            ],
+        ),
+        (
+            "full-queue",
+            [("start", 0.0, s0, 900, 15, True)]
+            + [("start", 0.0, m, 901 + i, 15, True) for i, m in enumerate(extra)],
+        ),
+        ("station-not-on-source", [("start", 0.0, away, 900, 15, True), ("tick", 0.0)]),
+    ]
+    out = []
+    for name, steps in cases:
+        with tempfile.TemporaryDirectory() as directory:
+            session = Recorder(copy.deepcopy(raw))
+            clock = ManualClock()
+            steering = ClientSteering(
+                "pod-1",
+                SteeringBackend("pod-1", session, serial=SERIAL),
+                Store(Path(directory) / "steering"),
+                SecretStore(Path(directory) / "secrets"),
+                run_id="run-1",
+                clock=clock,
+            )
+            recorded, sent = [], 0
+            for step in steps:
+                at = step[1]
+                clock.advance(at - clock.monotonic())
+                result = None
+                if step[0] == "start":
+                    result = steering.start(request(step[2], step[4], step[5]), step[3])
+                else:
+                    asyncio.run(steering.tick())
+                status = copy.deepcopy(steering.status())
+                if status["active"]:
+                    status["active"].pop("operation_id")
+                for entry in status["history"]:
+                    entry.pop("operation_id")
+                recorded.append(
+                    {
+                        "step": list(step),
+                        "expected": {
+                            "result": result,
+                            "transactions": session.sent[sent:],
+                            "status": status,
+                        },
+                    }
+                )
+                sent = len(session.sent)
+            steering.store.close()
+        out.append({"name": name, "steps": recorded})
+    return {
+        "description": "spec §3.7: the agent's client steering on the recorded pod rows "
+        "(stations " + s0 + " and " + s1 + " on " + source + "; " + away + " is not the pod's), "
+        "each mandate one window steering the station to " + target + " (class 81, channel "
+        "6): one window at a time, a queue of eight that a newer mandate for a queued station "
+        "replaces, a queued mandate dropped when it waited over 10 s or its station left the "
+        "source. The recorded rows never show owm steering, so a window is not applied (10 "
+        "s) and is closed. A step: start (at, station, the request's MID, window, "
+        "disassociation imminent) or tick (at), the clock in seconds. Per step: start's "
+        "refusal (null when started or queued), the transactions sent, and the steering "
+        "status (without operation IDs). Inserts are answered with the UUID "
+        "00000000-0000-4000-8000-0000000000ff.",
+        "source_bssid": source,
+        "target": target,
+        "serial": SERIAL,
+        "ovsdb_tables": raw,
+        "cases": out,
+    }
+
+
+def probe_watch_vectors():
+    """Which stations the pod watches for probe requests (spec §3.9)."""
+    from emosa.agent.probe_watch import ProbeWatch
+    from emosa.clock import ManualClock
+    from emosa.opensync.probe_watch import WatchBackend
+    from emosa.store import Store
+
+    raw = pod_rows()
+    associated = "02:00:00:00:0a:00"  # on the pod: never watched
+    heard = [f"02:00:00:00:8{i:x}:00" for i in range(16)]
+    many = [f"02:00:00:01:{i:02x}:00" for i in range(40)]
+    steered = {
+        "Band_Steering_Config": {
+            "00000000-0000-4000-8000-0000000000b1": {"if_name_2g": "home-ap-24"}
+        },
+        "Band_Steering_Clients": {
+            "00000000-0000-4000-8000-0000000000d1": {
+                "mac": heard[2],
+                "cs_mode": "away",
+                "cs_params": ["map", [["cs_enforce_period", "15"]]],
+            },
+        },
+    }
+    # steps: ("ask", at, stations), ("tick", at)
+    cases = [
+        (
+            "first-write",
+            {},
+            [("ask", 0.0, [heard[0], heard[1], associated]), ("tick", 0.0), ("tick", 1.0)],
+        ),
+        (
+            "minimum-interval",
+            {},
+            [
+                ("ask", 0.0, [heard[0]]),
+                ("tick", 0.0),
+                ("tick", 31.0),
+                ("ask", 32.0, [heard[1]]),
+                ("tick", 35.0),
+                ("tick", 42.0),
+            ],
+        ),
+        ("at-most-32", {}, [("ask", 0.0, many[:20]), ("ask", 1.0, many[20:]), ("tick", 1.0)]),
+        (
+            "forgotten-after-600-s",
+            {},
+            [("ask", 0.0, [heard[0]]), ("ask", 500.0, [heard[1]]), ("tick", 601.0)],
+        ),
+        ("another-row-blocks", steered, [("ask", 0.0, [heard[2], heard[3]]), ("tick", 0.0)]),
+    ]
+    out = []
+    for name, extra, steps in cases:
+        rows = {**raw, **copy.deepcopy(extra)}
+        with tempfile.TemporaryDirectory() as directory:
+            session = Recorder(copy.deepcopy(rows))
+            clock = ManualClock()
+            watch = ProbeWatch(
+                "pod-1",
+                WatchBackend("pod-1", session, serial=SERIAL),
+                Store(Path(directory) / "probe-watch"),
+                SecretStore(Path(directory) / "secrets"),
+                if_name="home-ap-24",
+                band="2.4G",
+                run_id="run-1",
+                clock=clock,
+                monotonic=clock.monotonic,
+            )
+            recorded, sent = [], 0
+            for step in steps:
+                clock.advance(step[1] - clock.monotonic())
+                if step[0] == "ask":
+                    watch.ask(step[2])
+                else:
+                    asyncio.run(watch.tick())
+                status = copy.deepcopy(watch.status())
+                if status["operation"]:
+                    status["operation"].pop("operation_id")
+                recorded.append(
+                    {
+                        "step": list(step),
+                        "expected": {"transactions": session.sent[sent:], "status": status},
+                    }
+                )
+                sent = len(session.sent)
+            watch.store.close()
+        out.append({"name": name, "ovsdb_tables": rows, "steps": recorded})
+    return {
+        "description": "spec §3.9: the probe watch on the recorded pod rows (the case's), its "
+        "rows on the fronthaul home-ap-24 (2.4G): the stations asked about (never one "
+        "associated with the pod or with another manager's client row), at most the 32 "
+        "asked most recently, dropped 600 s after they were last asked, written at most "
+        "every 10 s, one write at a time (applied when the pod shows it, else timed out after "
+        "30 s). The recorded rows do not change with a write. A step: ask (at, stations) or "
+        "tick (at), the clock in seconds. Per step: the transactions sent and the watch's "
+        "status (without the operation ID). Inserts are answered with the UUID "
+        "00000000-0000-4000-8000-0000000000ff.",
+        "serial": SERIAL,
+        "cases": out,
+    }
+
+
+def session_timing_vectors():
+    """The agent's onboarding attempts and its own renewals (spec §2.5)."""
+    from emosa.agent.renew import RenewRules
+    from emosa.easymesh_payloads import DeviceInventory, InventoryRadio
+    from emosa.wire.cmdu import MidSequence
+    from emosa.wire.coordinator import ReportSource
+    from emosa.wire.onboarding import ClientReannouncement, OnboardingRecovery, OnboardingSession
+
+    raw = pod_rows()
+    view = device_view(decode(raw))
+    radio = view.radio(mac(RUID))
+    caps = radio_capabilities(radio, channel=6, max_bss=5, max_eirp=30)
+    facts = topology(
+        agent_al=mac(AGENT),
+        controller_al=mac(CONTROLLER),
+        radio=radio,
+        channel=6,
+        bsses=radio.bsses,
+        ages={m: 10 for b in radio.bsses for m in b.stations},
+    )
+    binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
+    inventory = DeviceInventory(
+        b"owned", b"0.1.0", b"model", (InventoryRadio(mac(RUID), b"model"),)
+    )
+
+    def refused(*_):
+        raise AssertionError("no controller answers in these cases")
+
+    def timeouts(first, count, *, generation=1):
+        """Attempts that no controller answers: each tick a second apart, from ``first``."""
+        return [("tick", first + i, generation) for i in range(count)]
+
+    # steps: ("tick", at, database generation or None: the pod's State lost), ("renew", at)
+    attempts = [
+        ("discovery-then-timeout", timeouts(0.0, 7)),
+        ("backoff-doubles-to-30", timeouts(0.0, 160)),
+        (
+            "source-lost-while-discovering",
+            [
+                ("tick", 0.0, 1),
+                ("tick", 1.0, 1),
+                ("tick", 2.0, None),
+                ("tick", 3.0, 1),
+                ("tick", 4.0, 1),
+                ("tick", 5.0, 1),
+            ],
+        ),
+        (
+            "new-generation-while-discovering",
+            [("tick", 0.0, 1), ("tick", 1.0, 2), ("tick", 2.0, 2), ("tick", 3.0, 2)],
+        ),
+        ("no-start-without-source", [("tick", 0.0, None), ("tick", 1.0, None), ("tick", 2.0, 1)]),
+        (
+            "renew-starts-at-once",
+            [*timeouts(0.0, 16), ("renew", 16.0), ("tick", 16.0, 1), ("tick", 17.0, 1)],
+        ),
+        (
+            "renew-while-discovering",
+            [
+                ("tick", 0.0, 1),
+                ("tick", 0.5, 1),
+                ("renew", 0.7),
+                ("tick", 0.7, 1),
+                ("tick", 1.2, 1),
+                ("tick", 1.7, 1),
+            ],
+        ),
+    ]
+    out_attempts = []
+    for name, steps in attempts:
+        now = [0.0]
+        clock = lambda now=now: now[0]  # noqa: E731
+        source = ReportSource(binding, "pod-1", "c" * 64, clock=clock)
+        sent = []
+        recovery = OnboardingRecovery(
+            source,
+            lambda source=source, sent=sent, clock=clock: OnboardingSession(
+                source, sent.append, refused, inventory, mids=MidSequence(499), clock=clock
+            ),
+            clock=clock,
+        )
+        revision, recorded = [0, 0], []
+        for step in steps:
+            now[0] = step[1]
+            before_sent, before_history, before_starts = (
+                len(sent),
+                len(recovery.history),
+                recovery.starts,
+            )
+            if step[0] == "renew":
+                recovery.renew()
+            else:
+                generation = step[2]
+                if generation is None:
+                    source.invalidate()
+                else:
+                    revision = [generation, revision[1] + 1]
+                    source.publish(tuple(revision), caps, facts, observed_at=now[0], lifetime=2)
+                asyncio.run(recovery.tick())
+            ended = None
+            for entry in list(recovery.history)[before_history:]:
+                if entry["event"] == "source_lost":
+                    ended = "source_lost"
+                elif entry["event"] == "failed":
+                    events = entry["session"]["events"]
+                    ended = (
+                        "discovery_timeout"
+                        if events and events[-1] == "discovery_timeout"
+                        else "failed"
+                    )
+            searches = [f for f in sent[before_sent:] if int.from_bytes(f[16:18], "big") == 0x0007]
+            recorded.append(
+                {
+                    "step": list(step),
+                    "expected": {
+                        "started": recovery.starts > before_starts,
+                        "searches": len(searches),
+                        "ended": ended,
+                        "discovering": recovery.session is not None
+                        and recovery.session.state == "discovering",
+                        "attempts_started": recovery.starts,
+                        "failures": recovery.failures,
+                        "next_start": recovery.next_start,
+                    },
+                }
+            )
+        recovery.close()
+        out_attempts.append({"name": name, "steps": recorded})
+
+    # steps: ("contact", at), ("check", at, unserved, awaiting)
+    renewals = [
+        (
+            "controller-silent-in-any-state",
+            [
+                ("check", 100.0, False, False),
+                ("check", 131.0, False, False),
+                ("check", 200.0, False, False),
+                ("check", 262.0, False, False),
+            ],
+        ),
+        (
+            "contact-defers-silence",
+            [("contact", 100.0), ("check", 131.0, False, False), ("check", 231.0, False, False)],
+        ),
+        (
+            "no-m2-after-30-s",
+            [
+                ("contact", 0.0),
+                ("check", 1.0, False, True),
+                ("check", 31.0, False, True),
+                ("contact", 31.5),
+                ("check", 31.5, False, True),
+                ("check", 32.0, False, True),
+                ("check", 62.5, False, True),
+            ],
+        ),
+        (
+            "m2-arrives-in-time",
+            [
+                ("check", 1.0, False, True),
+                ("check", 20.0, False, False),
+                ("check", 40.0, False, True),
+                ("check", 60.0, False, True),
+            ],
+        ),
+        (
+            "unserved-after-60-s",
+            [
+                ("check", 1.0, True, False),
+                ("contact", 30.0),
+                ("check", 61.0, True, False),
+                ("contact", 61.5),
+                ("check", 61.5, True, False),
+                ("check", 100.0, False, False),
+            ],
+        ),
+        (
+            "unserved-served-again",
+            [
+                ("check", 1.0, True, False),
+                ("check", 50.0, False, False),
+                ("check", 60.0, True, False),
+                ("check", 110.0, True, False),
+            ],
+        ),
+        (
+            "all-three-at-once",
+            [
+                ("check", 0.0, True, True),
+                ("check", 131.0, True, True),
+                ("check", 162.0, True, True),
+            ],
+        ),
+    ]
+    out_renewals = []
+    for name, steps in renewals:
+        rules, recorded = RenewRules(0.0), []
+        for step in steps:
+            if step[0] == "contact":
+                rules.contact(step[1])
+                reasons = []
+            else:
+                reasons = rules.check(step[1], unserved=step[2], awaiting=step[3])
+            recorded.append({"step": list(step), "expected": {"reasons": reasons}})
+        out_renewals.append({"name": name, "steps": recorded})
+    # steps: ("provisioned", Topology Responses sent), ("tick", Topology Responses sent)
+    reannouncements = [
+        ("after-the-next-query", [("provisioned", 0), ("tick", 0), ("tick", 1), ("tick", 2)]),
+        ("not-before-m2", [("tick", 3), ("provisioned", 3), ("tick", 3), ("tick", 4)]),
+        ("the-first-m2-marks", [("provisioned", 0), ("provisioned", 2), ("tick", 1), ("tick", 3)]),
+    ]
+    out_reannouncements = []
+    for name, steps in reannouncements:
+        rule, recorded = ClientReannouncement(), []
+        for kind, responses in steps:
+            due = None
+            if kind == "provisioned":
+                rule.provisioned(responses)
+            else:
+                due = rule.due(responses)
+            recorded.append({"step": [kind, responses], "expected": {"due": due}})
+        out_reannouncements.append({"name": name, "steps": recorded})
+    return {
+        "description": "spec §2.5: when the agent starts an onboarding attempt and ends it, "
+        "when it renews one on its own, and when it announces its clients again. attempts: "
+        "the reference's OnboardingRecovery over OnboardingSession on a published pod State "
+        "that no controller answers; the clock "
+        "starts at 0 s. A step: tick (at, the pod's database generation, or null: its State "
+        "lost; otherwise the State is published anew at that time) or renew (at: an "
+        "AP-Autoconfiguration Renew). Per step: whether an attempt started, how many "
+        "AP-Autoconfiguration Searches were sent, how the attempt ended (discovery_timeout, "
+        "source_lost or null), whether one is discovering, and the attempts started, failures "
+        "and next start time after it. renewals: emosa.agent.renew.RenewRules created at 0 s. "
+        "A step: contact (at: a frame from the controller) or check (at, unserved, awaiting): "
+        "the reasons to renew, in order. reannouncements: "
+        "emosa.wire.onboarding.ClientReannouncement of one session. A step: provisioned (M2 "
+        "accepted) or tick, with the Topology Responses the session has sent: whether every "
+        "client is announced again now (null for provisioned).",
+        "attempts": out_attempts,
+        "renewals": out_renewals,
+        "reannouncements": out_reannouncements,
     }
 
 
@@ -1171,6 +2638,14 @@ VECTOR_SETS = {
     "steering.json": steering_vectors,
     "onboarding.json": onboarding_vectors,
     "telemetry.json": telemetry_vectors,
+    "metrics.json": metrics_vectors,
+    "backhaul-steering.json": backhaul_steering_vectors,
+    "scope-writes.json": scope_writes_vectors,
+    "engine.json": engine_vectors,
+    "early-report.json": early_report_vectors,
+    "steering-queue.json": steering_queue_vectors,
+    "probe-watch.json": probe_watch_vectors,
+    "session-timing.json": session_timing_vectors,
 }
 
 

@@ -93,7 +93,7 @@ Sent by the agent:
 | `0x800C` | AP Metrics Response | in answer to an AP Metrics Query, and unsolicited at the controller's AP metrics reporting interval, from the pod's statistics (§3.8) |
 | `0x8010` | Unassociated STA Link Metrics Response | after the Ack of an Unassociated STA Link Metrics Query: the stations the pod heard recently (§3.9) |
 | `0x8017` | Steering Completed | after the Ack of a steering opportunity: EMOSA steers nothing on its own account (§3.7) |
-| `0x801A` | Backhaul Steering Response | after its Ack: result code `0x01` (failure). EMOSA refuses backhaul steering |
+| `0x801A` | Backhaul Steering Response | the request's MID, once the move is known: result `0x00` (success) when the pod's State shows its station on the target, else `0x01` with an Error Code TLV (`0xA3`, reason `0x06`, the station); at once for a request it cannot carry out (§8.3) |
 | `0x801C` | Channel Scan Report | after the Ack of a Channel Scan Request: a Timestamp TLV (`0xA8`) and one Channel Scan Result TLV (`0xA7`) per requested channel of the pod's radio, status `0x01` (scan not supported) (§3.4) |
 | `0x8022` | Client Disassociation Stats | after an observed client departure, only with qualified statistics |
 | `0x8028` | Backhaul STA Capability Report | in answer to a Backhaul STA Capability Query: one Backhaul STA Radio Capabilities TLV (`0xCB`) for the pod's EasyMesh backhaul STA (§8.3), none over GRE |
@@ -116,7 +116,7 @@ Received by the agent:
 | `0x800B` | AP Metrics Query | answered from the pod's statistics (§3.8) |
 | `0x800F` | Unassociated STA Link Metrics Query | acknowledged, with an Error Code TLV for every station the pod cannot report (§3.9) |
 | `0x8014` | Client Steering Request | acknowledged; a mandate for one station and one target is carried out by the pod (§3.7) |
-| `0x8019` | Backhaul Steering Request | acknowledged and refused (`0x801A`) |
+| `0x8019` | Backhaul Steering Request | acknowledged; with option 1 on, for the pod's backhaul station, the station is re-pinned to the target (§8.3), else refused (`0x801A`) |
 | `0x801B` | Channel Scan Request | acknowledged and reported as not supported (§3.4) |
 | `0x8027` | Backhaul STA Capability Query | answered |
 
@@ -137,13 +137,25 @@ Any other message is ignored and counted as `unsupported_message_<type>`.
 | `closed` | the session ended |
 
 Rules:
-- A session that fails, loses its source, or receives a Renew is replaced by a
-  new one. Restarts after failures back off by `min(30, 2^failures)` seconds.
-- If nothing arrives from the controller for 130 s, the agent MUST start
-  onboarding again.
+- A session starts while the pod's State is available. Discovery sends a
+  Search at once and then every second, three at most, and fails when no
+  Response is admitted within 5 s.
+- A session that fails, loses its source (the pod's State lost, or a new
+  database generation), or receives a Renew is replaced by a new one. Restarts
+  after failures back off by `min(30, 2^failures)` seconds; a Renew restarts at
+  once, and provisioning resets the failures.
+- With EasyMesh 6.1, the Early AP Capability Report goes out before M1 and is
+  sent again with a new MID every 250 ms, three transmissions at most, until
+  an Ack names one of its MIDs within 1 s. It is dropped when the pod's State
+  changes or lapses before then.
+- If nothing arrives from the controller for 130 s, in any state, the agent
+  MUST start onboarding again.
 - If no M2 arrives within 30 s of M1, the agent MUST start onboarding again. A
   controller that restarted in between has forgotten the M1, and its other
   queries keep the silence rule from firing (seen with RDK).
+- If the agent is `provisioning` but the pod serves none of the controller's
+  BSSes and no write is under way for 60 s, the agent MUST start onboarding
+  again: its configuration was lost (e.g. a write lost to an uplink move).
 - Once the agent is `provisioning` and the controller has sent its next
   Topology Query, the agent MUST announce every current client again, once.
   A controller that restarted may otherwise never learn clients that joined
@@ -507,6 +519,9 @@ Timers:
 | Topology Discovery interval | 60 s |
 | Controller silence before onboarding again | 130 s |
 | M1 without M2 before onboarding again | 30 s |
+| Provisioned but serving no BSS before onboarding again | 60 s |
+| Discovery window (three Searches, 1 s apart) | 5 s |
+| Early AP Capability Report: retransmission, window | 250 ms, 1 s |
 | Pod State re-read and reconcile | 0.5 s |
 | Published report lifetime | 1.5 s |
 | Operation deadline | 120 s |
@@ -619,14 +634,21 @@ The agent makes the switch itself when its configuration has
   configuration another manager changes on the same start. A new admission
   (§4 `forget`) clears the hold.
 - **Reported:** while the switch is applied, the backhaul is reported as in
-  §3.3. Backhaul Steering Requests are refused (§2.4).
+  §3.3.
+- **Moved:** a Backhaul Steering Request (§2.4) for the pod's backhaul station
+  pins the station to the target BSSID instead, by the same switch, while the
+  pod is on its EasyMesh backhaul and no switch is under way; the answer
+  (`0x801A`) follows once the pod's State shows the station on the target. The
+  target is kept for the pod's later starts while the configured upstream is
+  the one it replaced. A move not applied within the switch's deadline, or
+  rejected, returns to the previous upstream without a hold, and is answered
+  with a failure. Both agents.
 
 ## 9. Not covered yet
 
 - 5 and 6 GHz radios, and WPA3;
 - more than one radio per agent;
-- Backhaul Steering (refused), backhaul link metrics, and a 1905 neighbor on
-  the backhaul interface;
+- backhaul link metrics, and a 1905 neighbor on the backhaul interface;
 - EasyMesh AP and station metrics. The pod's station measurements are
   collected (§3.6), but a complete metric needs more than a hwsim pod reports:
   RCPI needs the noise floor, traffic statistics need retries and errors, and

@@ -1,5 +1,10 @@
 # Current EMOSA status
 
+> **Record.** The development's plans and status up to September 2026, not kept
+> current. EMOSA's current state is the [repository README](../../README.md); the plan
+> and status of all the labs are the easymesh-labs
+> [alignment plan](https://github.com/boardfarmdevs/easymesh-labs/blob/main/docs/alignment-plan.md).
+
 > **Update 2026-09-24: real OpenSync pods onboarded.** A native prplMesh
 > controller onboarded three unchanged OpenSync 6.6.1.0 pods (opensync-lab, hwsim)
 > as EasyMesh agents through EMOSA virtual agents.

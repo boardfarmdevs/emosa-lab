@@ -41,13 +41,13 @@ and `MVX_CLIENT_SSID`), then the EasyMesh side. The run record is in
 
 ```sh
 # in opensync-lab
-export MVX_VM=emosa-osl-0923 MVX_NOC_UI_PORT=8650 MVX_HWSIM_POOL=32 \
-       MVX_POD_IMAGE=$HOME/yocto/mvx-pod-work/out/mvx-pod-20260923124229
+export MVX_VM=emosa-osl-$(date +%m%d) MVX_NOC_UI_PORT=8650 MVX_HWSIM_POOL=32 \
+       MVX_POD_IMAGE=$HOME/yocto/mvx-pod-work/out/mvx-pod-<stamp>   # the pod image easymesh-labs manifest.json pins
 ./setup-vm.sh all
 ./deploy-mvx.sh all && ./deploy-mvx.sh mesh
 
 # in emosa-lab
-export EMOSA_VM=emosa-osl-0923
+export EMOSA_VM=$MVX_VM
 deploy/opensync-lab/lab.sh stage
 deploy/opensync-lab/lab.sh emosa
 deploy/opensync-lab/lab.sh controller
@@ -90,7 +90,7 @@ explicitly: opensync-lab's `local.conf` may name another VM.
 
 ```sh
 # in opensync-lab
-MVX_VM=emosa-osl-0923 MVX_POD_IMAGE=$HOME/yocto/mvx-pod-work/out/mvx-pod-20260923124229 \
+MVX_VM=$EMOSA_VM MVX_POD_IMAGE=$HOME/yocto/mvx-pod-work/out/mvx-pod-<stamp> \
     ./deploy-mvx.sh pod pod-4
 # in emosa-lab
 deploy/opensync-lab/lab.sh admit pod-4
@@ -125,7 +125,7 @@ applies the platform patch for the Multi-AP link state.
 ```sh
 # in opensync-lab: build the image and relaunch a pod from it
 ./build-pod.sh sources && ./build-pod.sh build && ./build-pod.sh image
-MVX_VM=emosa-osl-0923 MVX_POD_IMAGE=$HOME/yocto/mvx-pod-work/out/mvx-pod-<stamp> ./deploy-mvx.sh pod pod-6
+MVX_VM=$EMOSA_VM MVX_POD_IMAGE=$HOME/yocto/mvx-pod-work/out/mvx-pod-<stamp> ./deploy-mvx.sh pod pod-6
 # in emosa-lab
 deploy/opensync-lab/lab.sh release pod-6 && deploy/opensync-lab/lab.sh admit pod-6
 deploy/opensync-lab/lab.sh gtp                  # the controller's backhaul BSS on em-gtp

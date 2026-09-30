@@ -202,7 +202,7 @@ void em_pod_stats_init(em_pod_stats *s, const char *topic, unsigned interval,
                        double (*clock)(void *), void *clock_ctx)
 {
     memset(s, 0, sizeof(*s));
-    snprintf(s->topic, sizeof(s->topic), "%s", topic);
+    EM_FORMAT_FIXED(s->topic, sizeof(s->topic), "%s", topic); /* a validated topic: 128 at most */
     s->interval = interval;
     s->lifetime = 3.0 * interval + QM_BATCH;
     s->clock = clock;
@@ -269,10 +269,11 @@ static const char *client_report(em_pod_stats *s, const pb_client_report *cr)
         bool same = old && !broken && !events && !now_known && !strcmp(old->band, BANDS[band]) &&
                     end - old->measured_at <= 1.5 * s->interval;
         em_station_stats next_state = {0};
-        snprintf(next_state.mac, sizeof(next_state.mac), "%s", mac);
+        EM_FORMAT_FIXED(next_state.mac, sizeof(next_state.mac), "%s", mac);
         size_t ssid_len = c.ssid_len < 64 ? c.ssid_len : 64;
-        memcpy(next_state.ssid, c.ssid, ssid_len);
-        snprintf(next_state.band, sizeof(next_state.band), "%s", BANDS[band]);
+        if (ssid_len) /* no SSID in the report: c.ssid is NULL */
+            memcpy(next_state.ssid, c.ssid, ssid_len);
+        EM_FORMAT_FIXED(next_state.band, sizeof(next_state.band), "%s", BANDS[band]);
         next_state.channel = (unsigned)cr->channel;
         next_state.measured_at = end;
         if (same) {
@@ -359,7 +360,7 @@ static bool survey(em_pod_stats *s, const uint8_t *d, size_t n, bool apply, bool
         *slot = (em_survey_stats){.channel = (unsigned)channel, .busy_percent = (unsigned)busy,
                                   .duration_ms = (unsigned)duration, .has_duration = has_duration,
                                   .measured_at = at};
-        snprintf(slot->band, sizeof(slot->band), "%s", BANDS[band]);
+        EM_FORMAT_FIXED(slot->band, sizeof(slot->band), "%s", BANDS[band]);
     }
     return !error;
 }
@@ -393,8 +394,15 @@ static bool band_report(em_pod_stats *s, const char *mac, uint64_t stamp, const 
     char ifname[17] = "";
     while (next(&r, &f, &error)) {
         if (f.field == 1 && f.wire == 0) { band = f.varint; has_band = true; }
-        else if (f.field == 16 && f.wire == 2)
-            snprintf(ifname, sizeof(ifname), "%.*s", (int)f.len, (const char *)f.data);
+        else if (f.field == 16 && f.wire == 2) {
+            /* the pod's interface name: Linux allows 15 bytes; a longer one is no name, not a cut one */
+            if (f.len < sizeof(ifname) && !memchr(f.data, 0, f.len)) {
+                memcpy(ifname, f.data, f.len);
+                ifname[f.len] = 0;
+            } else {
+                ifname[0] = 0;
+            }
+        }
     }
     if (error)
         return false;
@@ -435,9 +443,9 @@ static bool band_report(em_pod_stats *s, const char *mac, uint64_t stamp, const 
             slot = &s->probes[s->nprobes++];
         }
         *slot = (em_probe_stats){.snr_db = (unsigned)rssi, .measured_at = at};
-        snprintf(slot->mac, sizeof(slot->mac), "%s", mac);
-        snprintf(slot->band, sizeof(slot->band), "%s", BANDS[band]);
-        snprintf(slot->ifname, sizeof(slot->ifname), "%s", ifname);
+        EM_FORMAT_FIXED(slot->mac, sizeof(slot->mac), "%s", mac);
+        EM_FORMAT_FIXED(slot->band, sizeof(slot->band), "%s", BANDS[band]);
+        EM_FORMAT_FIXED(slot->ifname, sizeof(slot->ifname), "%s", ifname);
     }
     return !error;
 }
@@ -505,9 +513,9 @@ bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *pay
     reader r = {payload, payload + len};
     pb_field f = {0};
     bool error = false, node = false;
-    reports = calloc(len, sizeof(*reports));
-    surveys = calloc(len, sizeof(*surveys));
-    bs = calloc(len, sizeof(*bs));
+    reports = em_calloc(len, sizeof(*reports));
+    surveys = em_calloc(len, sizeof(*surveys));
+    bs = em_calloc(len, sizeof(*bs));
     while (reports && surveys && bs && next(&r, &f, &error)) {
         if (f.field == 1 && f.wire == 2)
             node = true;
@@ -561,7 +569,7 @@ bool em_pod_stats_receive(em_pod_stats *s, const char *topic, const uint8_t *pay
         reason = "incomplete report";
         goto done;
     }
-    qsort(reports, nreports, sizeof(*reports), by_timestamp);
+    em_sort(reports, nreports, sizeof(*reports), by_timestamp);
     for (size_t i = 0; i < nreports && !reason; i++)
         reason = client_report(s, &reports[i]);
     for (size_t i = 0; i < nsurveys && !reason; i++)
@@ -574,7 +582,7 @@ done:
     free(bs);
     if (reason) {
         s->rejected++;
-        snprintf(s->last_error, sizeof(s->last_error), "%s", reason);
+        (void)em_copy(s->last_error, sizeof(s->last_error), reason); /* a message */
         s->has_error = true;
         return false;
     }
@@ -625,7 +633,7 @@ cJSON *em_pod_stats_status(em_pod_stats *s)
         cJSON_AddNumberToObject(o, "last_report_at", s->last_report_at);
     else
         cJSON_AddNullToObject(o, "last_report_at");
-    qsort(s->stations, s->nstations, sizeof(em_station_stats), by_mac);
+    em_sort(s->stations, s->nstations, sizeof(em_station_stats), by_mac);
     for (size_t i = 0; i < s->nstations; i++) {
         const em_station_stats *st = &s->stations[i];
         cJSON *x = cJSON_CreateObject();
@@ -665,7 +673,7 @@ cJSON *em_pod_stats_status(em_pod_stats *s)
         const em_survey_stats *sv = &s->surveys[order[i]];
         cJSON *x = cJSON_CreateObject();
         char key[12];
-        snprintf(key, sizeof(key), "%u", sv->channel);
+        EM_FORMAT_FIXED(key, sizeof(key), "%u", sv->channel);
         cJSON_AddStringToObject(x, "band", sv->band);
         cJSON_AddNumberToObject(x, "channel", sv->channel);
         cJSON_AddNumberToObject(x, "busy_percent", sv->busy_percent);

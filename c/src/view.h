@@ -73,6 +73,10 @@ typedef struct {
     long seconds;
 } em_station_age;
 
+/* A station's age as of now (a Topology Response's time), from its association time:
+ * whole seconds, 0 to 65535. */
+long em_age_at(double now, double associated_at);
+
 /* The pod's EasyMesh backhaul (data plane option 1): its station on which radio. */
 typedef struct {
     uint8_t ruid[6];

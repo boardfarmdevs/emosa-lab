@@ -10,12 +10,10 @@ bool em_derive_al(const char *serial, const char *const *taken, size_t ntaken, c
     for (int n = 0; n < 256; n++) {
         char seed[160];
         uint8_t digest[32];
-        int len = snprintf(seed, sizeof(seed), "emosa-agent-al:%s:%d", serial, n);
-        if (len < 0 || (size_t)len >= sizeof(seed))
+        if (!em_format(seed, sizeof(seed), "emosa-agent-al:%s:%d", serial, n))
             return false;
-        SHA256((const uint8_t *)seed, (size_t)len, digest);
-        snprintf(out, 18, "02:%02x:%02x:%02x:%02x:%02x", digest[0], digest[1], digest[2],
-                 digest[3], digest[4]);
+        SHA256((const uint8_t *)seed, strlen(seed), digest);
+        EM_FORMAT_FIXED(out, 18, "02:%02x:%02x:%02x:%02x:%02x", digest[0], digest[1], digest[2], digest[3], digest[4]);
         bool used = false;
         for (size_t i = 0; i < ntaken && !used; i++)
             used = !strcmp(taken[i], out);
@@ -53,14 +51,15 @@ em_fleet_entry *em_registry_assign(em_registry *r, const char *serial, const cha
         if (!em_derive_al(serial, taken, ntaken, e->al_mac))
             return NULL;
         r->count++;
-        snprintf(e->pod_id, sizeof(e->pod_id), "%s", serial);
+        EM_FORMAT_FIXED(e->pod_id, sizeof(e->pod_id), "%s", serial); /* at most 64, checked above */
         e->port = port;
-        snprintf(e->interface, sizeof(e->interface), "em%d", port - r->port_low + 1);
+        EM_FORMAT_FIXED(e->interface, sizeof(e->interface), "em%d", port - r->port_low + 1);
         e->first_seen = now;
     }
-    snprintf(e->node_id, sizeof(e->node_id), "%s", node_id ? node_id : "");
-    snprintf(e->model, sizeof(e->model), "%s", model ? model : "");
-    snprintf(e->firmware, sizeof(e->firmware), "%s", firmware ? firmware : "");
+    /* the pod's own identity, kept for display: a cut value only shortens what is shown */
+    (void)em_copy(e->node_id, sizeof(e->node_id), node_id ? node_id : "");
+    (void)em_copy(e->model, sizeof(e->model), model ? model : "");
+    (void)em_copy(e->firmware, sizeof(e->firmware), firmware ? firmware : "");
     e->last_seen = now;
     e->handovers++;
     return e;
@@ -91,10 +90,10 @@ static cJSON *mode_off(void)
 cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet)
 {
     cJSON *c = cJSON_CreateObject();
-    char text[160];
+    char text[512];
     cJSON_AddStringToObject(c, "pod_id", e->pod_id);
     cJSON_AddStringToObject(c, "serial", e->pod_id);
-    snprintf(text, sizeof(text), "ptcp:%d:127.0.0.1", e->port);
+    EM_FORMAT_FIXED(text, sizeof(text), "ptcp:%d:127.0.0.1", e->port);
     cJSON_AddStringToObject(c, "ovsdb", text);
     cJSON_AddStringToObject(c, "interface", e->interface);
     cJSON_AddStringToObject(c, "al_mac", e->al_mac);
@@ -107,17 +106,21 @@ cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet)
     cJSON_AddItemToObject(c, "uplink", setting(fleet, e->pod_id, "uplink", mode_off()));
     cJSON_AddItemToObject(c, "telemetry", setting(fleet, e->pod_id, "telemetry", mode_off()));
     const char *root = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(fleet, "state_root"));
-    snprintf(text, sizeof(text), "%s/%s", root ? root : "", e->pod_id);
-    cJSON_AddStringToObject(c, "state_dir", text);
+    /* a state directory that does not fit is left out, and the agent refuses its
+     * configuration, rather than given a cut path, which would be another directory */
+    if (em_format(text, sizeof(text), "%s/%s", root ? root : "", e->pod_id))
+        cJSON_AddStringToObject(c, "state_dir", text);
     cJSON_AddStringToObject(c, "run_id", e->pod_id);
     return c;
 }
 
 cJSON *em_manager_update(const em_fleet_entry *e, const cJSON *fleet)
 {
-    char target[128];
-    snprintf(target, sizeof(target), "tcp:%s:%d",
-             cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(fleet, "advertise")), e->port);
+    char target[320];
+    const char *advertise = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(fleet, "advertise"));
+    /* a host name is at most 253 characters; an address that does not fit is not written */
+    if (!advertise || !em_format(target, sizeof(target), "tcp:%s:%d", advertise, e->port))
+        return NULL;
     cJSON *o = cJSON_CreateObject(), *row = cJSON_CreateObject();
     cJSON_AddStringToObject(o, "op", "update");
     cJSON_AddStringToObject(o, "table", "AWLAN_Node");

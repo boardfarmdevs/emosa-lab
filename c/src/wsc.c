@@ -174,7 +174,7 @@ static bool message(const uint8_t *data, size_t len, int type, attrs *a, const a
         return false;
     if (found[F_TYPE]->value[0] != type)
         return false;
-    subelements *v = malloc(sizeof(*v));
+    subelements *v = em_malloc(sizeof(*v));
     if (!v || !vendor_subelements(a, v)) {
         free(v);
         return false;
@@ -284,7 +284,7 @@ static bool derive(const em_m1 *m1, const uint8_t peer[192], const uint8_t enonc
 static bool verify_message(const session_keys *k, const em_buf *previous, const uint8_t *current,
                            size_t len)
 {
-    attrs *a = malloc(sizeof(*a));
+    attrs *a = em_malloc(sizeof(*a));
     bool ok = a && decode_attrs(current, len, a) && a->count &&
               a->items[a->count - 1].kind == AUTHENTICATOR && a->items[a->count - 1].len == 8;
     for (size_t i = 0; ok && i + 1 < a->count; i++)
@@ -308,7 +308,7 @@ static bool decrypt_settings(const session_keys *k, const uint8_t *enc, size_t l
     if (len < 32 || len > 0xFFFF || len % 16)
         return false;
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    uint8_t *plain = malloc(len);
+    uint8_t *plain = em_malloc(len);
     int n1 = 0, n2 = 0;
     bool ok = ctx && plain &&
               EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, k->key_wrap_key, enc) &&
@@ -317,7 +317,7 @@ static bool decrypt_settings(const session_keys *k, const uint8_t *enc, size_t l
     EVP_CIPHER_CTX_free(ctx);
     if (ok) {
         size_t n = (size_t)(n1 + n2);
-        attrs *a = malloc(sizeof(*a));
+        attrs *a = em_malloc(sizeof(*a));
         ok = a && decode_attrs(plain, n, a) && a->count &&
              a->items[a->count - 1].kind == KEY_WRAP_AUTHENTICATOR &&
              a->items[a->count - 1].len == 8;
@@ -403,7 +403,7 @@ em_reason em_m1_create(const em_m1_device *d, const em_wsc_entropy *entropy, em_
               put_attr(m, 0x1009, U16(d->configuration_error), 2) &&
               put_attr(m, 0x102D, os, 4) && put_attr(m, VENDOR_EXTENSION, vendor, 6);
 #undef U16
-    attrs *a = malloc(sizeof(*a));
+    attrs *a = em_malloc(sizeof(*a));
     const attr *found[F_COUNT];
     ok = ok && a && message(m->data, m->len, 4, a, found);
     free(a);
@@ -425,7 +425,7 @@ typedef struct {
 
 static em_reason authenticate(const em_m1 *m1, const em_buf *m2, envelope *e)
 {
-    attrs *a1 = malloc(sizeof(*a1)), *a2 = malloc(sizeof(*a2));
+    attrs *a1 = em_malloc(sizeof(*a1)), *a2 = em_malloc(sizeof(*a2));
     const attr *f1[F_COUNT], *f2[F_COUNT];
     em_reason r = EM_INVALID_INPUT;
     session_keys k;
@@ -446,8 +446,8 @@ static em_reason authenticate(const em_m1 *m1, const em_buf *m2, envelope *e)
     memset(&e->config, 0, sizeof(e->config));
     if (!decrypt_settings(&k, f2[F_ENCRYPTED]->value, f2[F_ENCRYPTED]->len, &e->config))
         goto done;
-    attrs *c = malloc(sizeof(*c));
-    subelements *v = malloc(sizeof(*v));
+    attrs *c = em_malloc(sizeof(*c));
+    subelements *v = em_malloc(sizeof(*v));
     bool ok = c && v && decode_attrs(e->config.data, e->config.len, c) && vendor_subelements(c, v);
     /* The Multi-AP role must be inside the encrypted ConfigData, exactly once. */
     int roles = 0;
@@ -457,7 +457,7 @@ static em_reason authenticate(const em_m1 *m1, const em_buf *m2, envelope *e)
             ok = v->items[i].len == 1;
             e->role = v->items[i].value[0] & 0xFC;
         }
-    subelements *outer = malloc(sizeof(*outer));
+    subelements *outer = em_malloc(sizeof(*outer));
     ok = ok && outer && vendor_subelements(a2, outer);
     for (size_t i = 0; ok && i < outer->count; i++)
         ok = outer->items[i].kind != 0x06;
@@ -483,7 +483,7 @@ done:
 static em_reason psk_candidate(const envelope *e, uint16_t m1_auth, uint16_t m1_encr,
                                em_bss_candidate *out)
 {
-    attrs *a = malloc(sizeof(*a));
+    attrs *a = em_malloc(sizeof(*a));
     const attr *f[8];
     field_rule rules[8] = {
         {0x1045, 0, 32, true}, {0x1003, 2, 2, true}, {0x100F, 2, 2, true},
@@ -537,7 +537,7 @@ em_reason em_m2_decode(const em_m1 *m1, const em_buf *messages, size_t count, un
     memset(out, 0, sizeof(*out));
     if (max_bss < 1 || max_bss > MAX_M2 || count < 1 || count > max_bss)
         return EM_INVALID_INPUT;
-    envelope *e = calloc(count, sizeof(envelope));
+    envelope *e = em_calloc(count, sizeof(envelope));
     if (!e)
         return EM_NO_MEMORY;
     em_reason r = EM_OK;
@@ -574,7 +574,7 @@ em_reason em_m2_decode(const em_m1 *m1, const em_buf *messages, size_t count, un
         }
     uint16_t auth = 0, encr = 0;
     {
-        attrs *a = malloc(sizeof(*a));
+        attrs *a = em_malloc(sizeof(*a));
         const attr *f[F_COUNT];
         if (!a || !message(m1->message.data, m1->message.len, 4, a, f)) {
             free(a);

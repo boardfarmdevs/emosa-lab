@@ -83,7 +83,7 @@ em_reason em_fragment(const uint8_t destination[6], const uint8_t source[6],
     }
     chunks[nchunks++] = current;
     memset(&current, 0, sizeof(current));
-    out->frames = calloc(nchunks, sizeof(em_buf));
+    out->frames = em_calloc(nchunks, sizeof(em_buf));
     if (!out->frames) {
         reason = EM_NO_MEMORY;
         goto fail;
@@ -152,10 +152,10 @@ em_reassembler *em_reassembler_new(em_clock clock, void *clock_ctx, double timeo
         max_fragments < 1 || max_fragments > 256 || max_message_bytes < 1 ||
         max_message_bytes > max_bytes || max_bytes > 16777216)
         return NULL;
-    em_reassembler *r = calloc(1, sizeof(*r));
+    em_reassembler *r = em_calloc(1, sizeof(*r));
     if (!r)
         return NULL;
-    r->contexts = calloc(max_contexts, sizeof(context));
+    r->contexts = em_calloc(max_contexts, sizeof(context));
     if (!r->contexts) {
         free(r);
         return NULL;
@@ -240,7 +240,7 @@ static em_reason parse_tlvs(const uint8_t *p, size_t n, bool final, em_tlv **out
             goto invalid;
         if (*count == cap) {
             cap = cap ? cap * 2 : 8;
-            em_tlv *grown = realloc(tlvs, cap * sizeof(em_tlv));
+            em_tlv *grown = em_realloc(tlvs, cap * sizeof(em_tlv));
             if (!grown)
                 goto invalid;
             tlvs = grown;
@@ -248,7 +248,7 @@ static em_reason parse_tlvs(const uint8_t *p, size_t n, bool final, em_tlv **out
         em_tlv *t = &tlvs[(*count)++];
         t->kind = kind;
         t->len = len;
-        t->value = malloc(len ? len : 1);
+        t->value = em_malloc(len ? len : 1);
         if (!t->value) {
             (*count)--;
             goto invalid;
@@ -374,7 +374,7 @@ em_reason em_reassembler_feed(em_reassembler *r, const uint8_t *frame, size_t le
     for (unsigned i = 0; i <= c->last; i++)
         if (!c->parts[i].present)
             return EM_OK;
-    em_message *m = calloc(1, sizeof(*m));
+    em_message *m = em_calloc(1, sizeof(*m));
     if (!m)
         return EM_NO_MEMORY;
     memcpy(m->destination, frame, 6);
@@ -385,7 +385,7 @@ em_reason em_reassembler_feed(em_reassembler *r, const uint8_t *frame, size_t le
     m->fragments = c->last + 1;
     for (unsigned i = 0; i <= c->last; i++)
         m->ntlvs += c->parts[i].ntlvs;
-    m->tlvs = calloc(m->ntlvs ? m->ntlvs : 1, sizeof(em_tlv));
+    m->tlvs = em_calloc(m->ntlvs ? m->ntlvs : 1, sizeof(em_tlv));
     if (!m->tlvs) {
         free(m);
         return EM_NO_MEMORY;

@@ -8,6 +8,7 @@ After=network-online.target
 # /opt/emosa-adapter/bin/emosa-agent-c; both take the same configuration.
 Environment=EMOSA_AGENT=/opt/emosa-adapter/venv/bin/emosa-agent
 Environment=EMOSA_PROFILES=/opt/emosa-adapter/share/profiles
+Environment=EMOSA_SCHEMAS=/opt/emosa-adapter/share/schemas
 EnvironmentFile=-/etc/default/emosa
 EnvironmentFile=-/etc/default/emosa-%i
 ExecStartPre=/usr/local/sbin/emosa-agent-link %i

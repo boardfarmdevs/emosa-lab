@@ -1,5 +1,10 @@
 # Project plan, status and provenance
 
+> **Record.** The development's plans and status up to September 2026, not kept
+> current. EMOSA's current state is the [repository README](../../README.md); the plan
+> and status of all the labs are the easymesh-labs
+> [alignment plan](https://github.com/boardfarmdevs/easymesh-labs/blob/main/docs/alignment-plan.md).
+
 [Documentation index](../README.md)
 
 | Document | Scope |

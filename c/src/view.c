@@ -106,12 +106,12 @@ em_reason em_device_view_from_rows(const cJSON *tables, em_device_view *out)
                     if (!em_parse_mac(cmac, b->stations[b->nstations++]))
                         return EM_INVALID_INPUT;
                 }
-                qsort(b->stations, b->nstations, 6, cmp_mac);
+                em_sort(b->stations, b->nstations, 6, cmp_mac);
             }
         }
-        qsort(r->bss, r->nbss, sizeof(em_bss_view), cmp_bss);
+        em_sort(r->bss, r->nbss, sizeof(em_bss_view), cmp_bss);
     }
-    qsort(out->radios, out->nradios, sizeof(em_radio_view), cmp_radio);
+    em_sort(out->radios, out->nradios, sizeof(em_radio_view), cmp_radio);
     return EM_OK;
 }
 
@@ -213,7 +213,7 @@ static bool append(em_tlv_list *l, uint8_t kind, em_buf *value)
     }
     if (!value->data && !em_buf_put(value, "", 0))
         return false;
-    l->tlvs[l->count++] = (em_tlv){kind, (uint16_t)value->len, value->data ? value->data : calloc(1, 1)};
+    l->tlvs[l->count++] = (em_tlv){kind, (uint16_t)value->len, value->data ? value->data : em_calloc(1, 1)};
     memset(value, 0, sizeof(*value));
     return true;
 }
@@ -277,6 +277,13 @@ em_reason em_inventory_tlv(const em_device_view *d, const em_radio_view *r, cons
     }
     *out = (em_tlv){0xD4, (uint16_t)b.len, b.data};
     return EM_OK;
+}
+
+long em_age_at(double now, double associated_at)
+{
+    double seconds = now - associated_at;
+    long whole = seconds > 0 ? (long)seconds : 0;
+    return whole > 65535 ? 65535 : whole;
 }
 
 static long age_of(const em_station_age *ages, size_t n, const uint8_t mac[6], bool *found)

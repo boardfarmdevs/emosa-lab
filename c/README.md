@@ -1,9 +1,14 @@
-# EMOSA in C: a lab prototype
+# EMOSA in C
 
-A second implementation of the EMOSA agent, in C, for the RDK EasyMesh lab
-(`doc/architecture/rdk-lab.md`). It is a **lab prototype**, written with an AI
-assistant: it is not production code, and the board proposal's rule (no
-AI-written production code) applies to it.
+The second implementation of the EMOSA agent, interchangeable with the Python
+reference, written with an AI assistant. It is being taken to production
+quality so that it can be evaluated in full and owned by a team without access
+to the labs (the easymesh-labs
+[alignment plan](https://github.com/boardfarmdevs/easymesh-labs/blob/main/docs/alignment-plan.md),
+phase 8: the bar, CI with a lab in a box, a basic adapter with the fleet in C,
+then feature by feature). The bar is [QUALITY.md](QUALITY.md): the coding
+standard (CERT C), the gates and where each stands. Until every gate is met it
+is not production code; its status file still says `c-lab-prototype`.
 
 What makes it interchangeable with the Python reference (`src/emosa`):
 - the **same contract**: the specification (`spec/README.md`) and its
@@ -19,49 +24,77 @@ What makes it interchangeable with the Python reference (`src/emosa`):
 | --- | --- | --- | --- |
 | 1905 envelope | `emosa.wire.cmdu` | `cmdu.json` | done |
 | WSC M1/M2, onboarding | `emosa.wsc`, `emosa.wsc_messages`, `emosa.wire.autoconfiguration` | `onboarding.json` | done |
+| Onboarding attempts, discovery, back-off, renewals | `emosa.wire.onboarding.OnboardingRecovery`, `emosa.agent.renew` | `session-timing.json` | done (`lifecycle.c`) |
+| Early AP Capability Report retries | `emosa.wire.coordinator.ReportCoordinator` | `early-report.json` | done (`early.c`) |
 | Pod view and 1905 TLVs | `emosa.opensync.easymesh_view`, `emosa.wire.reports` | `translation-northbound.json` | done |
-| Control plane (channel, policy, steering) | `emosa.wire.channel`, `.reporting_policy`, `.steering` | `control.json` | done |
-| OVSDB writes (M2, steering, uplink) | `emosa.opensync.pod_profile`, `.steering`, `.uplink` | `translation-southbound.json`, `steering.json`, `uplink.json` | done |
+| Control plane (channel, policy, steering, unassociated) | `emosa.wire.channel`, `.reporting_policy`, `.steering`, `.unassociated` | `control.json` | done |
+| Link Metric and AP Metrics answers, periodic AP metrics | `emosa.wire.link_metrics`, `.ap_metrics`, `.pod_metrics` | `metrics.json` | done (`reporting.c`) |
+| Backhaul Steering across sessions | `emosa.wire.backhaul_steering` | `backhaul-steering.json` | done (`bhsteer.c`) |
+| OVSDB writes (M2, steering, uplink, telemetry, probe watch) | `emosa.opensync.pod_profile`, `.steering`, `.uplink`, `.telemetry`, `.probe_watch` | `translation-southbound.json`, `steering.json`, `uplink.json`, `scope-writes.json` | done |
+| Operation engine and durable journal | `emosa.reconcile`, `emosa.store`, `emosa.secrets` | `engine.json`, `operation-transitions.json` | done (`engine.c`, `journal.c`, `vault.c`) |
+| Client steering queue | `emosa.agent.steering` | `steering-queue.json` | done (`scope_steering.c`) |
+| Probe watch | `emosa.agent.probe_watch` | `probe-watch.json` | done (`scope_watch.c`) |
 | Pod statistics | `emosa.opensync.stats` | `telemetry.json` | done |
-| Agent runtime (config, OVSDB session, Ethernet, status) | `emosa.agent.pod` | live in `rdk-emosa` | done, gaps below |
+| Agent runtime (config, OVSDB session, Ethernet, status) | `emosa.agent.pod` | live in the RDK lab | done |
 | Yocto recipe for the RDK lab image | | | |
 
 ## The agent runtime
 
 `emosa-agent-c CONFIG.json [--profiles DIR]` takes the Python agent's
 configuration and writes the same status file, marked
-`"implementation": "c-lab-prototype"`. Profiles come from `--profiles`, else
+`"implementation": "c-lab-prototype"`. Both are validated against the schemas
+(`schemas/agent-config.schema.json`, `agent-status.schema.json`), found in
+`EMOSA_SCHEMAS`, else `/opt/emosa-adapter/share/schemas`; an invalid
+configuration is refused. Profiles come from `--profiles`, else
 `EMOSA_PROFILES`, else `/usr/share/emosa/profiles`. One owner thread runs a poll
 loop over the pod's OVSDB connection (`ovsdb.c`: the pod dials in, as it does to
-the Python agent) and the 1905 socket (`ethernet.c`: AF_PACKET, ethertype
-`0x893A`); the pod state is refreshed every 0.5 s under a 1.5 s lease.
+the Python agent), the 1905 socket (`ethernet.c`: AF_PACKET, ethertype
+`0x893A`) and, with telemetry, the MQTT broker (`mqtt.c`); the pod state is
+refreshed every 0.5 s under a 1.5 s lease.
 
-Checked live in `rdk-emosa` against RDK's controller, in place of the Python
-agent for `pod-1`: search, M1, the five-BSS M2 set applied to the pod, the
-controller configuring the pod's radio, a steering mandate from `steer.sh`
-carried out by the pod (the station left the source BSS).
+It keeps the Python agent's state directory, file for file, so either can take
+over a pod from the other: the journal (`journal.db`: operations, events,
+ownership, WSC receipts), the secret store (`secrets/`, keyed fingerprints), the
+kept Multi-AP policy (`reporting-policy.sqlite`), the accepted channel policy
+(`channel-policy.sqlite`), the uplink target (`target.json`) and the telemetry
+scope's records.
 
-Not in the C runtime yet (the Python agent has them):
-- the durable operation journal: a restart forgets what was submitted, and
-  steering windows a previous process left open are not closed;
-- the uplink (EasyMesh backhaul STA) and telemetry scopes, and with them the AP
-  metrics from the pod's statistics (spec §3.8; the statistics decoder, survey
-  and band-steering probe requests included, is here and checked by the
-  vectors);
-- Link Metric and AP Metrics answers (the queries are counted, not answered);
-- the probe watch (spec §3.9: the pod's `Band_Steering_Clients` watch rows). The
-  Unassociated STA Link Metrics answer measures a station from its last probe
-  request (`control.c`, vector `unassociated-query-measured`), but without the
-  telemetry scope the runtime has no probes, so it refuses every station;
-- retries of the Early AP Capability Report;
-- schema validation of the configuration and status.
+Scopes, as in the Python agent: the AP (the M2's BSSes), telemetry (the pod's
+statistics over MQTT, with them AP metrics, probe requests and the Unassociated
+STA Link Metrics answer), client steering (a queue of eight, one window at a
+time), the probe watch, and the uplink (the pod's EasyMesh backhaul station,
+reported in the Topology Response and the Backhaul STA Capability Report, and
+moved by Backhaul Steering, whose move survives a session renewal).
+
+Checked in the RDK lab (`doc/architecture/rdk-lab.md`), in place of the
+Python agent: onboarding and the journal taken over from Python, telemetry,
+periodic AP metrics, the probe watch, the uplink on the EasyMesh backhaul,
+Backhaul Steering (the move and its `0x801A` answer), and the lab's room suite
+with both pods on C and with one pod on each implementation (the record
+`doc/evidence/rdk-lab/README.md` §3).
+The reference workload (`deploy/opensync-lab`, `lab.sh workload`) passed alike
+with every agent on Python, on C, and mixed
+(`doc/evidence/opensync-lab-proof`).
+
+Known differences from the Python agent:
+- the report source: Python correlates a report with its source by a token
+  (instance, epoch, database generation and revision); C by the database
+  generation and revision it last refreshed. The channel policy's `context`
+  differs accordingly (C: the journal's process ID and the generation);
+- the fleet, the GTP, the controller-side tools and the lab are in Python
+  only (the fleet and the GTP move to C in plan step 8.3). The adapter
+  kit installs both agents; `EMOSA_AGENT` in `/etc/default/emosa` (every pod)
+  or `/etc/default/emosa-POD` (one pod) picks the one `emosa-agent@POD` runs
+  (in the RDK lab: `lab.sh agent POD python|c`).
 
 ## Build and check
 
 ```sh
-cmake -S c -B c/build && cmake --build c/build
-c/build/emosa-vectors spec/conformance
+cmake -S c -B c/build -DEMOSA_STRICT=ON && cmake --build c/build && ctest --test-dir c/build
 ```
 
-Needs cJSON and, from the WSC part on, OpenSSL (libcrypto). Both are in the
-RDK-B images.
+`ctest` runs `emosa-vectors spec/conformance` and `emosa-units`. The
+sanitizer and analyzer runs are in [QUALITY.md](QUALITY.md) §4; CI runs all of
+them (`.github/workflows/checks.yml`, jobs `c`, `c-analyzer` and `c-fuzz`).
+
+Needs cJSON, OpenSSL (libcrypto) and SQLite 3, all in the RDK-B images.

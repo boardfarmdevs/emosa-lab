@@ -431,3 +431,96 @@ def test_a_multi_ap_uplink_configuration_needs_the_upstream_bssid():
         with pytest.raises(EmosaError) as exc:
             uplink_bssid(config)
         assert exc.value.code == Reason.INVALID_INPUT
+
+
+# The controller's Backhaul Steering (emosa.wire.backhaul_steering): an extender's backhaul BSS.
+NEXT = "02:00:00:00:29:01"
+
+
+def on_easymesh(tmp_path, **options):
+    switch, pod, clock, store = rig(tmp_path, **options)
+    asyncio.run(switch.tick())
+    pod.adopt()
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED
+    return switch, pod, clock, store
+
+
+def test_the_controller_moves_the_backhaul_station_to_another_upstream_bss(tmp_path):
+    switch, pod, clock, _ = on_easymesh(tmp_path)
+    assert switch.steer(NEXT.upper()) is None
+    assert switch.steering_outcome(NEXT) is None
+    asyncio.run(switch.tick())
+    assert (
+        len(pod.sent) == 2 and pod.sent[1][2]["row"]["bssid"] == NEXT
+    )  # the same switch, re-pinned
+    assert switch.steering_outcome(NEXT) is None  # not on the target yet
+    pod.adopt(parent=NEXT)
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED and switch.steering_outcome(NEXT) is True
+    status = switch.status()
+    assert (status["bssid"], status["configured_bssid"], status["parent"]) == (NEXT, PARENT, NEXT)
+    # and back to the gateway: a switch of its own, although that upstream was used on this start
+    assert switch.steer(PARENT) is None
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == 3 and pod.sent[2][2]["row"]["bssid"] == PARENT
+    pod.adopt()
+    asyncio.run(switch.tick())
+    assert switch.steering_outcome(PARENT) is True and not switch.held()
+
+
+def test_a_move_to_the_current_upstream_is_done_at_once(tmp_path):
+    switch, pod, _, _ = on_easymesh(tmp_path)
+    assert switch.steer(PARENT) is None and switch.steering_outcome(PARENT) is True
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == 1
+
+
+def test_a_move_that_is_not_confirmed_returns_to_the_previous_upstream_without_a_hold(tmp_path):
+    switch, pod, clock, _ = on_easymesh(tmp_path)
+    assert switch.steer(NEXT) is None
+    asyncio.run(switch.tick())
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())
+    assert switch.steering_outcome(NEXT) == "not confirmed within the deadline"
+    assert not switch.held() and switch.status()["bssid"] == PARENT
+    # the pod lost its uplink and restarted to its bootstrap: its next start goes back
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    asyncio.run(switch.tick())
+    assert pod.sent[-1][2]["row"]["bssid"] == PARENT
+
+
+def test_no_move_off_the_gtp_path_or_while_held_or_switching(tmp_path):
+    switch, pod, clock, store = rig(tmp_path)
+    asyncio.run(switch.backend.snapshot())
+    assert switch.steer(NEXT) == "not_on_easymesh_backhaul"  # still on its bootstrap GRE
+    switch, pod, clock, store = on_easymesh(tmp_path / "held")
+    store.conflict("pod-1", {"reason": "test"})
+    assert switch.steer(NEXT) == "held_on_option_2"
+    switch, pod, clock, store = on_easymesh(tmp_path / "busy")
+    assert switch.steer(NEXT) is None
+    asyncio.run(switch.tick())  # the move's switch is under way
+    assert switch.steer("02:00:00:00:39:01") == "switch_in_progress"
+
+
+def test_the_moved_upstream_is_kept_for_later_starts_while_the_configuration_is_unchanged(tmp_path):
+    switch, pod, clock, store = on_easymesh(tmp_path)
+    switch.steer(NEXT)
+    asyncio.run(switch.tick())
+    pod.adopt(parent=NEXT)
+    asyncio.run(switch.tick())
+
+    def again(bssid):  # the agent restarted, with this configured upstream
+        return UplinkSwitch(
+            "pod-1",
+            switch.backend,
+            store,
+            switch.engine.vault,
+            lambda: ("emosa-mesh-bh", "backhaul"),
+            bssid=bssid,
+            run_id="pod-1",
+            clock=clock,
+        )
+
+    assert again(PARENT).bssid == NEXT
+    assert again("02:00:00:00:33:01").bssid == "02:00:00:00:33:01"  # the operator pinned another

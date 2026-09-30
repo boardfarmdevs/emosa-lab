@@ -1,0 +1,3826 @@
+{
+ "attempts": [
+  {
+   "name": "discovery-then-timeout",
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      2.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      3.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      4.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": "discovery_timeout",
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      5.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      6.0,
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "backoff-doubles-to-30",
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      2.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      3.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      4.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": "discovery_timeout",
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      5.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      6.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      7.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      8.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      9.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      10.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": false,
+      "ended": "discovery_timeout",
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      11.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": false,
+      "ended": null,
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      12.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": true,
+      "ended": null,
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      13.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": true,
+      "ended": null,
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      14.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": true,
+      "ended": null,
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      15.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": true,
+      "ended": null,
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      16.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": true,
+      "ended": null,
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      17.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": false,
+      "ended": "discovery_timeout",
+      "failures": 3,
+      "next_start": 22.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      18.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": false,
+      "ended": null,
+      "failures": 3,
+      "next_start": 22.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      19.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": false,
+      "ended": null,
+      "failures": 3,
+      "next_start": 22.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      20.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": false,
+      "ended": null,
+      "failures": 3,
+      "next_start": 22.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      21.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": true,
+      "ended": null,
+      "failures": 3,
+      "next_start": 22.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      22.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": true,
+      "ended": null,
+      "failures": 3,
+      "next_start": 22.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      23.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": true,
+      "ended": null,
+      "failures": 3,
+      "next_start": 22.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      24.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": true,
+      "ended": null,
+      "failures": 3,
+      "next_start": 22.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      25.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": true,
+      "ended": null,
+      "failures": 3,
+      "next_start": 22.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      26.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": false,
+      "ended": "discovery_timeout",
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      27.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": false,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      28.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": false,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      29.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": false,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      30.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": false,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      31.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": false,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      32.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": false,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      33.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": false,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      34.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": true,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      35.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": true,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      36.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": true,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      37.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": true,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      38.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": true,
+      "ended": null,
+      "failures": 4,
+      "next_start": 35.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      39.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": "discovery_timeout",
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      40.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      41.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      42.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      43.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      44.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      45.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      46.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      47.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      48.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      49.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      50.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      51.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      52.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      53.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      54.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 5,
+      "discovering": false,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      55.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": true,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      56.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": true,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      57.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": true,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      58.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": true,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      59.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": true,
+      "ended": null,
+      "failures": 5,
+      "next_start": 56.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      60.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": "discovery_timeout",
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      61.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      62.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      63.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      64.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      65.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      66.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      67.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      68.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      69.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      70.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      71.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      72.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      73.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      74.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      75.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      76.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      77.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      78.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      79.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      80.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      81.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      82.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      83.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      84.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      85.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      86.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      87.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      88.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      89.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 6,
+      "discovering": false,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      90.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": true,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      91.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": true,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      92.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": true,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      93.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": true,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      94.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": true,
+      "ended": null,
+      "failures": 6,
+      "next_start": 91.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      95.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": "discovery_timeout",
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      96.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      97.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      98.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      99.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      100.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      101.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      102.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      103.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      104.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      105.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      106.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      107.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      108.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      109.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      110.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      111.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      112.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      113.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      114.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      115.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      116.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      117.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      118.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      119.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      120.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      121.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      122.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      123.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      124.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 7,
+      "discovering": false,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      125.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": true,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      126.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": true,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      127.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": true,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      128.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": true,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      129.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": true,
+      "ended": null,
+      "failures": 7,
+      "next_start": 126.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      130.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": "discovery_timeout",
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      131.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      132.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      133.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      134.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      135.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      136.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      137.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      138.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      139.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      140.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      141.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      142.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      143.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      144.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      145.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      146.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      147.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      148.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      149.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      150.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      151.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      152.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      153.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      154.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      155.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      156.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      157.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      158.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 8,
+      "discovering": false,
+      "ended": null,
+      "failures": 8,
+      "next_start": 161.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      159.0,
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "source-lost-while-discovering",
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": "source_lost",
+      "failures": 1,
+      "next_start": 3.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      2.0,
+      null
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 3.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      3.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 3.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      4.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 3.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      5.0,
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "new-generation-while-discovering",
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": "source_lost",
+      "failures": 1,
+      "next_start": 2.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      2
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 2.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      2.0,
+      2
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 2.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      3.0,
+      2
+     ]
+    }
+   ]
+  },
+  {
+   "name": "no-start-without-source",
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 0,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      0.0,
+      null
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 0,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      null
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      2.0,
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "renew-starts-at-once",
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      2.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      3.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      4.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": "discovery_timeout",
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      5.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      6.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      7.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      8.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      9.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "next_start": 6.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      10.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": false,
+      "ended": "discovery_timeout",
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      11.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": false,
+      "ended": null,
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      12.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": true,
+      "ended": null,
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      13.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": true,
+      "ended": null,
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      14.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": true,
+      "ended": null,
+      "failures": 2,
+      "next_start": 13.0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      15.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 3,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "renew",
+      16.0
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      16.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 4,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      17.0,
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "renew-while-discovering",
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      0.5,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "renew",
+      0.7
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.7,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.2,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "next_start": 0,
+      "searches": 1,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.7,
+      1
+     ]
+    }
+   ]
+  }
+ ],
+ "description": "spec §2.5: when the agent starts an onboarding attempt and ends it, when it renews one on its own, and when it announces its clients again. attempts: the reference's OnboardingRecovery over OnboardingSession on a published pod State that no controller answers; the clock starts at 0 s. A step: tick (at, the pod's database generation, or null: its State lost; otherwise the State is published anew at that time) or renew (at: an AP-Autoconfiguration Renew). Per step: whether an attempt started, how many AP-Autoconfiguration Searches were sent, how the attempt ended (discovery_timeout, source_lost or null), whether one is discovering, and the attempts started, failures and next start time after it. renewals: emosa.agent.renew.RenewRules created at 0 s. A step: contact (at: a frame from the controller) or check (at, unserved, awaiting): the reasons to renew, in order. reannouncements: emosa.wire.onboarding.ClientReannouncement of one session. A step: provisioned (M2 accepted) or tick, with the Topology Responses the session has sent: whether every client is announced again now (null for provisioned).",
+ "reannouncements": [
+  {
+   "name": "after-the-next-query",
+   "steps": [
+    {
+     "expected": {
+      "due": null
+     },
+     "step": [
+      "provisioned",
+      0
+     ]
+    },
+    {
+     "expected": {
+      "due": false
+     },
+     "step": [
+      "tick",
+      0
+     ]
+    },
+    {
+     "expected": {
+      "due": true
+     },
+     "step": [
+      "tick",
+      1
+     ]
+    },
+    {
+     "expected": {
+      "due": false
+     },
+     "step": [
+      "tick",
+      2
+     ]
+    }
+   ]
+  },
+  {
+   "name": "not-before-m2",
+   "steps": [
+    {
+     "expected": {
+      "due": false
+     },
+     "step": [
+      "tick",
+      3
+     ]
+    },
+    {
+     "expected": {
+      "due": null
+     },
+     "step": [
+      "provisioned",
+      3
+     ]
+    },
+    {
+     "expected": {
+      "due": false
+     },
+     "step": [
+      "tick",
+      3
+     ]
+    },
+    {
+     "expected": {
+      "due": true
+     },
+     "step": [
+      "tick",
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "name": "the-first-m2-marks",
+   "steps": [
+    {
+     "expected": {
+      "due": null
+     },
+     "step": [
+      "provisioned",
+      0
+     ]
+    },
+    {
+     "expected": {
+      "due": null
+     },
+     "step": [
+      "provisioned",
+      2
+     ]
+    },
+    {
+     "expected": {
+      "due": true
+     },
+     "step": [
+      "tick",
+      1
+     ]
+    },
+    {
+     "expected": {
+      "due": false
+     },
+     "step": [
+      "tick",
+      3
+     ]
+    }
+   ]
+  }
+ ],
+ "renewals": [
+  {
+   "name": "controller-silent-in-any-state",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      100.0,
+      false,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "controller_silent"
+      ]
+     },
+     "step": [
+      "check",
+      131.0,
+      false,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      200.0,
+      false,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "controller_silent"
+      ]
+     },
+     "step": [
+      "check",
+      262.0,
+      false,
+      false
+     ]
+    }
+   ]
+  },
+  {
+   "name": "contact-defers-silence",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      100.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      131.0,
+      false,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "controller_silent"
+      ]
+     },
+     "step": [
+      "check",
+      231.0,
+      false,
+      false
+     ]
+    }
+   ]
+  },
+  {
+   "name": "no-m2-after-30-s",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      0.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      1.0,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      31.0,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      31.5
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "no_m2"
+      ]
+     },
+     "step": [
+      "check",
+      31.5,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      32.0,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "no_m2"
+      ]
+     },
+     "step": [
+      "check",
+      62.5,
+      false,
+      true
+     ]
+    }
+   ]
+  },
+  {
+   "name": "m2-arrives-in-time",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      1.0,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      20.0,
+      false,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      40.0,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      60.0,
+      false,
+      true
+     ]
+    }
+   ]
+  },
+  {
+   "name": "unserved-after-60-s",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      1.0,
+      true,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      30.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      61.0,
+      true,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      61.5
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "unserved"
+      ]
+     },
+     "step": [
+      "check",
+      61.5,
+      true,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      100.0,
+      false,
+      false
+     ]
+    }
+   ]
+  },
+  {
+   "name": "unserved-served-again",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      1.0,
+      true,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      50.0,
+      false,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      60.0,
+      true,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      110.0,
+      true,
+      false
+     ]
+    }
+   ]
+  },
+  {
+   "name": "all-three-at-once",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      0.0,
+      true,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "unserved",
+       "controller_silent"
+      ]
+     },
+     "step": [
+      "check",
+      131.0,
+      true,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      162.0,
+      true,
+      true
+     ]
+    }
+   ]
+  }
+ ]
+}

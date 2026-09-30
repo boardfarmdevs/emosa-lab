@@ -1,0 +1,5 @@
+# LeakSanitizer suppressions for the C tests (c/CMakeLists.txt).
+# The conformance harness simulates a process crash inside the operation engine
+# (longjmp out of em_engine_execute); the memory in flight stays behind, as it
+# would in a real crash. Nothing else is suppressed.
+leak:execute_or_crash

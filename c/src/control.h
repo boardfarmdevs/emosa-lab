@@ -4,6 +4,8 @@
 #ifndef EMOSA_CONTROL_H
 #define EMOSA_CONTROL_H
 
+#include <cjson/cJSON.h>
+
 #include "autoconf.h"
 #include "stats.h"
 #include "view.h"
@@ -36,6 +38,11 @@ typedef struct {
     uint32_t recent[64];
     /* the stored channel and reporting policy, as receipt only */
     bool channel_policy_declined;
+    /* keeps an accepted channel policy's record before it is answered
+     * (emosa.wire.channel.ChannelPolicyStore); false: it could not be kept, and the
+     * request is refused unanswered (NOT_READY). NULL: not kept. */
+    bool (*keep_channel_policy)(void *ctx, const cJSON *record);
+    void *keep_ctx;
     /* the Channel Scan Report's time, RFC 3339 UTC; NULL: the system clock */
     void (*utc)(char out[40]);
     /* the pod's statistics, whose probe requests answer an Unassociated STA Link
@@ -43,6 +50,9 @@ typedef struct {
     const em_pod_stats *stats;
     /* epoch seconds, for probe ages; NULL: the system clock */
     double (*wall)(void);
+    /* told the stations queried on the pod's own channel (emosa.agent.probe_watch.ask) */
+    void (*watch)(void *ctx, const uint8_t (*stations)[6], size_t n);
+    void *watch_ctx;
 } em_control;
 
 /* Handle one complete message. Returns the result label, or NULL when the

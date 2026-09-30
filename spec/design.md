@@ -16,8 +16,11 @@ The specification has four parts:
 Where this document and the specification disagree, the specification wins.
 Section numbers such as "spec §3.7" refer to [spec/README.md](README.md).
 
-Two implementations exist: the Python reference (`src/emosa`, complete) and a
-C lab prototype (`c/`, in progress, not production code).
+Two implementations exist, and they are interchangeable (the conformance
+vectors, and the reference workload and the RDK room suite with either, both or
+one of each): the Python reference (`src/emosa`) and the C implementation
+(`c/`), which is being taken to production quality (easymesh-labs alignment plan,
+phase 8). The fleet and the GTP exist in Python only.
 
 ## 1. Context
 
@@ -78,7 +81,10 @@ own backhaul BSS, spec §8.3).
 
 Process isolation is a requirement, not an optimization: a fault, restart or
 resource exhaustion in one pod's agent MUST NOT affect another pod's agent.
-The fleet never holds a pod's session after the handover.
+The fleet never holds a pod's session after the handover. One process hosting
+every pod's agent is a later memory optimization for small routers
+(`doc/architecture/target-system.md` §4); it would have to keep that isolation
+of faults and resources.
 
 Placement. The reference runs all units in one Linux container (the lab's
 `emosa` container) with a trunk interface on the controller's LAN bridge. On a
@@ -488,16 +494,16 @@ facts when they change, warnings for failed scope ticks and slow loop steps.
 
 ## 12. Dependencies
 
-| Dependency | Python reference | C prototype | Used for |
+| Dependency | Python reference | C | Used for |
 | --- | --- | --- | --- |
 | Linux | packet sockets (`AF_PACKET`), macvlan, `iproute2` | same | I3 |
 | supervisor | systemd | same | §2 |
 | OVSDB client | `ovs` 4.0.0 (JSON-RPC, streams) | own JSON-RPC over cJSON | I1, I2 |
 | JSON | stdlib, `jsonschema` 4.26 | cJSON 1.7 | files, OVSDB |
 | cryptography | `cryptography` 50 (DH, AES, HMAC) | OpenSSL libcrypto 3 | WSC |
-| MQTT | `paho-mqtt` 2.1 | libmosquitto (planned) | I4 |
-| protobuf | `protobuf` 6 | protobuf-c (planned) | I4 |
-| journal | SQLite 3 (stdlib) | SQLite 3 (planned) | §6 |
+| MQTT | `paho-mqtt` 2.1 | own MQTT 3.1.1 subscriber (`mqtt.c`) | I4 |
+| protobuf | `protobuf` 6 | own decoder of the pinned `sts.Report` (`stats.c`) | I4 |
+| journal | SQLite 3 (stdlib) | SQLite 3 | §6 |
 | GTP | dnsmasq, iproute2 (gretap, bridge) | same | I6 |
 
 All C dependencies are in the RDK-B images (meta-cmf-bananapi-vcpe build).
@@ -514,13 +520,17 @@ External assumptions:
 
 An implementation is conformant when:
 1. its harness reproduces every file in `spec/conformance` (the reference's
-   `tests/test_conformance.py`; the C prototype's `emosa-vectors`). Harnesses
+   `tests/test_conformance.py`; the C's `emosa-vectors`). Harnesses
    compare exact frames and exact transactions;
 2. it passes the live acceptance in an RDK lab VM
    (`doc/architecture/rdk-lab.md` §5): an unchanged pod is onboarded by the
    RDK controller, appears in its topology, serves a client with internet, and
-   is steered by the controller's `steer.sh`;
-3. it reads the same configuration and writes the same status as §3.5, so the
+   is steered by the controller's `steer.sh`; and the RDK lab's room suite
+   with the pods on it (the same §5);
+3. it passes the reference workload with a prplMesh controller
+   (`deploy/opensync-lab`, `lab.sh workload`), alone and with the other
+   implementation on the other pods (`doc/evidence/opensync-lab-proof`);
+4. it reads the same configuration and writes the same status as §3.5, so the
    fleet can start it for any pod.
 
 Timing (§8) is checked by the reference's tests and the live acceptance, not

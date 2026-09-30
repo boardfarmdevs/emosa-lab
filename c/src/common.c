@@ -1,9 +1,54 @@
-/* EMOSA C lab prototype: shared helpers. */
+/* EMOSA C: shared helpers. */
 #include "common.h"
 
+#include <cjson/cJSON.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+static void out_of_memory(size_t size)
+{
+    (void)fprintf(stderr, "emosa: out of memory (%zu bytes)\n", size);
+    abort();
+}
+
+void *em_malloc(size_t size)
+{
+    void *p = malloc(size ? size : 1);
+    if (!p)
+        out_of_memory(size);
+    return p;
+}
+
+void *em_calloc(size_t n, size_t size)
+{
+    void *p = calloc(n ? n : 1, size ? size : 1);
+    if (!p)
+        out_of_memory(n * size);
+    return p;
+}
+
+void *em_realloc(void *p, size_t size)
+{
+    void *grown = realloc(p, size ? size : 1);
+    if (!grown)
+        out_of_memory(size);
+    return grown;
+}
+
+char *em_strdup(const char *s)
+{
+    size_t n = strlen(s) + 1;
+    return memcpy(em_malloc(n), s, n);
+}
+
+void em_init(void)
+{
+    cJSON_Hooks hooks = {em_malloc, free};
+    cJSON_InitHooks(&hooks);
+}
 
 const char *em_reason_name(em_reason reason)
 {
@@ -17,8 +62,20 @@ const char *em_reason_name(em_reason reason)
     case EM_OUTCOME_UNKNOWN: return "OUTCOME_UNKNOWN";
     case EM_OWNERSHIP_CONFLICT: return "OWNERSHIP_CONFLICT";
     case EM_NO_MEMORY: return "NO_MEMORY";
+    case EM_SCHEMA_MISMATCH: return "SCHEMA_MISMATCH";
+    case EM_APPLY_TIMEOUT: return "APPLY_TIMEOUT";
+    case EM_MISSING_PREREQUISITE: return "MISSING_PREREQUISITE";
+    case EM_NOT_FOUND: return "NOT_FOUND";
     }
     return "UNKNOWN";
+}
+
+em_reason em_reason_parse(const char *name)
+{
+    for (int r = EM_INVALID_INPUT; name && r <= EM_NOT_FOUND; r++)
+        if (!strcmp(em_reason_name((em_reason)r), name))
+            return (em_reason)r;
+    return EM_OK;
 }
 
 void em_buf_free(em_buf *b)
@@ -34,7 +91,7 @@ bool em_buf_put(em_buf *b, const void *data, size_t len)
         size_t cap = b->cap ? b->cap : 64;
         while (cap < b->len + len)
             cap *= 2;
-        uint8_t *grown = realloc(b->data, cap);
+        uint8_t *grown = em_realloc(b->data, cap);
         if (!grown)
             return false;
         b->data = grown;
@@ -62,20 +119,20 @@ bool em_buf_u32(em_buf *b, uint32_t v)
 
 char *em_hex(const uint8_t *data, size_t len)
 {
-    char *text = malloc(len * 2 + 1);
+    char *text = em_malloc(len * 2 + 1);
     if (!text)
         return NULL;
     for (size_t i = 0; i < len; i++)
-        sprintf(text + 2 * i, "%02x", data[i]);
+        EM_FORMAT_FIXED(text + 2 * i, 3, "%02x", data[i]);
     text[len * 2] = 0;
     return text;
 }
 
 char *em_mac_str(const uint8_t mac[6])
 {
-    char *text = malloc(18);
+    char *text = em_malloc(18);
     if (text)
-        sprintf(text, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4],
+        EM_FORMAT_FIXED(text, 18, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4],
                 mac[5]);
     return text;
 }
@@ -112,4 +169,104 @@ bool em_parse_mac(const char *text, uint8_t mac[6])
         mac[i] = (uint8_t)(hi << 4 | lo);
     }
     return true;
+}
+
+void em_sort(void *base, size_t n, size_t size, int (*compare)(const void *, const void *))
+{
+    if (n > 1)
+        qsort(base, n, size, compare);
+}
+
+char *em_read_file(const char *path, size_t max, size_t *len)
+{
+    FILE *f = fopen(path, "rb");
+    if (!f)
+        return NULL;
+    size_t size = 0, cap = 4096;
+    char *text = em_malloc(cap);
+    bool ok = true;
+    for (;;) {
+        if (cap - size < 2) {
+            if (cap > max) {
+                ok = false;
+                break;
+            }
+            cap *= 2;
+            text = em_realloc(text, cap);
+        }
+        size_t got = fread(text + size, 1, cap - size - 1, f);
+        size += got;
+        if (got == 0) {
+            ok = !ferror(f);
+            break;
+        }
+    }
+    (void)fclose(f); /* read only: nothing is lost if closing fails */
+    if (!ok || size > max) {
+        free(text);
+        return NULL;
+    }
+    text[size] = 0;
+    if (len)
+        *len = size;
+    return text;
+}
+
+bool em_write_file(const char *path, const char *text, bool durable)
+{
+    size_t n = strlen(path) + 5;
+    char *tmp = em_malloc(n);
+    int written = snprintf(tmp, n, "%s.tmp", path);
+    FILE *f = written > 0 && (size_t)written < n ? fopen(tmp, "w") : NULL;
+    bool ok = f != NULL;
+    if (f) {
+        ok = fputs(text, f) >= 0 && fflush(f) == 0 && (!durable || fsync(fileno(f)) == 0);
+        ok = fclose(f) == 0 && ok;
+        ok = ok && rename(tmp, path) == 0;
+        if (!ok)
+            (void)unlink(tmp);
+    }
+    free(tmp);
+    return ok;
+}
+
+bool em_copy(char *dst, size_t size, const char *src)
+{
+    if (!size)
+        return false;
+    size_t n = strlen(src);
+    bool fits = n < size;
+    if (!fits)
+        n = size - 1;
+    memcpy(dst, src, n);
+    dst[n] = 0;
+    return fits;
+}
+
+static bool vformat(char *dst, size_t size, const char *fmt, va_list ap) __attribute__((format(printf, 3, 0)));
+static bool vformat(char *dst, size_t size, const char *fmt, va_list ap)
+{
+    int n = vsnprintf(dst, size, fmt, ap);
+    return n >= 0 && (size_t)n < size;
+}
+
+bool em_format(char *dst, size_t size, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    bool ok = vformat(dst, size, fmt, ap);
+    va_end(ap);
+    return ok;
+}
+
+void em_format_fixed(const char *where, char *dst, size_t size, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    bool ok = vformat(dst, size, fmt, ap);
+    va_end(ap);
+    if (!ok) {
+        (void)fprintf(stderr, "emosa: %s: text longer than its buffer (%zu bytes)\n", where, size);
+        abort();
+    }
 }

@@ -18,6 +18,7 @@ from emosa.wire.autoconfiguration import (
     DiscoveryExchange,
     check_message_set,
 )
+from emosa.wire.backhaul_steering import BackhaulSteeringCoordinator
 from emosa.wire.channel import ChannelCoordinator
 from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, decode_frame, fragment_message
 from emosa.wire.coordinator import ReportCoordinator
@@ -35,6 +36,31 @@ R3_CONTROLLER_FIELDS = (
     "kib_mib_support_absent",
     "early_ap_capability_bit_absent_for_non_dpp_search",
 )
+
+
+class ClientReannouncement:
+    """When a provisioned session announces every current client again (spec §2.5).
+
+    Once, after the controller's first Topology Query answered since M2 was
+    accepted: before that the controller may not know the BSS yet and can drop the
+    announcements (seen with a restarted prplMesh). Counted in Topology Responses
+    sent by the session.
+    """
+
+    def __init__(self):
+        self.mark, self.done = None, False
+
+    def provisioned(self, responses):
+        """M2 accepted, with ``responses`` Topology Responses sent so far."""
+        if self.mark is None:
+            self.mark = responses
+
+    def due(self, responses):
+        """True once: the clients are to be announced again now."""
+        if self.done or self.mark is None or responses <= self.mark:
+            return False
+        self.done = True
+        return True
 
 
 def non_dpp_admission(advertisement, *, message_set=EASYMESH_61):
@@ -86,6 +112,9 @@ class OnboardingSession:
         pod_metrics=None,
         probes=None,
         watch=None,
+        backhaul_steering_executor=None,
+        backhaul_steering_outcome=None,
+        backhaul_steering_state=None,
     ):
         self.message_set = check_message_set(message_set)
         if type(inventory) is not DeviceInventory:
@@ -102,10 +131,7 @@ class OnboardingSession:
         self.discovery = self.reports = self.provisioning = None
         self.context = self.capabilities = self.last_topology = None
         self.last_clients = set()
-        # Clients are announced again once the controller has configured this
-        # agent (M2) and fetched its topology: before that it may not know the
-        # BSS yet and can drop the announcements (seen with a restarted prplMesh).
-        self.topology_mark, self.clients_reannounced = None, False
+        self.reannounce = ClientReannouncement()  # every client again, once, after M2
         self.next_search = 0
         self.counts, self.events = {}, deque(maxlen=64)
         self.tokens, self.token_time = 32.0, clock()
@@ -141,6 +167,12 @@ class OnboardingSession:
         # Client steering mandates go to the pod through this (emosa.agent.steering).
         self.steering_executor = steering_executor
         self.steering = None
+        # Backhaul Steering moves go to the pod's uplink scope (emosa.agent.uplink): an
+        # agent whose pod has a Multi-AP backhaul station; without one they are refused.
+        self.backhaul_steering_executor = backhaul_steering_executor
+        self.backhaul_steering_outcome = backhaul_steering_outcome
+        self.backhaul_steering_state = backhaul_steering_state  # the agent's, across sessions
+        self.backhaul_steering = None
 
     def _record(self, event):
         self.counts[event] = self.counts.get(event, 0) + 1
@@ -210,6 +242,8 @@ class OnboardingSession:
             self.reporting_policy.tick()
         if self.link_metrics and self.state == "provisioning":
             self.link_metrics.tick()
+        if self.backhaul_steering:
+            self.backhaul_steering.tick()
         if self.disassociations:
             self.disassociations.tick()
         self.departures = {key: at for key, at in self.departures.items() if self.clock() < at + 2}
@@ -229,13 +263,8 @@ class OnboardingSession:
                     self.send_frame(frame)
                 self.last_topology = snapshot.topology.operational
                 self._record("observed_topology_notification")
-            if (
-                not self.clients_reannounced
-                and self.topology_mark is not None
-                and self.reports.counts.get("topology_response_sent", 0) > self.topology_mark
-            ):
+            if self.reannounce.due(self.reports.counts.get("topology_response_sent", 0)):
                 self.last_clients = set()
-                self.clients_reannounced = True
                 self._record("clients_reannounced")
             if snapshot.topology.inventory_complete:
                 clients = {
@@ -302,8 +331,10 @@ class OnboardingSession:
                 )
                 if result["status"] == "operation":
                     self.state = "provisioning"
-                    if self.topology_mark is None and self.reports:
-                        self.topology_mark = self.reports.counts.get("topology_response_sent", 0)
+                    if self.reports:
+                        self.reannounce.provisioned(
+                            self.reports.counts.get("topology_response_sent", 0)
+                        )
                 return self._record("wsc_" + result["status"])
             if fragment.message_type in (2, 0x8000) and self.reports:
                 if fragment.message_type == 0x8000 and self.disassociations:
@@ -393,6 +424,15 @@ class OnboardingSession:
                         self.mids,
                         clock=self.clock,
                     )
+                if self.backhaul_steering_executor is not None:
+                    self.backhaul_steering = BackhaulSteeringCoordinator(
+                        self.source,
+                        self.send_frame,
+                        self.backhaul_steering_executor,
+                        self.backhaul_steering_outcome,
+                        clock=self.clock,
+                        shared=self.backhaul_steering_state,
+                    )
                 if self.reporting_policy_store is not None:
                     self.reporting_policy = ReportingPolicyCoordinator(
                         self.source,
@@ -454,6 +494,11 @@ class OnboardingSession:
                     return self._record(result)
             if self.steering and self.state == "provisioning":
                 result = self.steering.handle(message, now)
+                if result:
+                    return self._record(result)
+            if self.backhaul_steering and self.provisioning:
+                # as the refusal below: the executor decides whether the pod can move now
+                result = self.backhaul_steering.handle(message, now)
                 if result:
                     return self._record(result)
             if self.unassociated and self.state == "provisioning":
@@ -518,9 +563,9 @@ class OnboardingSession:
                 response.send(self.send_frame, self._stamp, clock=self.clock)
                 return self._record("backhaul_sta_capability_report_sent")
             if message.message_type == 0x8019 and self.provisioning:
-                # Backhaul Steering is refused: EMOSA does not move the pod's backhaul
-                # station on the controller's request. 1905 ACK, then a Backhaul
-                # Steering Response with result code 0x01 (failure).
+                # Without an uplink scope (no Multi-AP backhaul station) Backhaul
+                # Steering is refused: 1905 ACK, then a Backhaul Steering Response
+                # with result code 0x01 (failure).
                 requests = [t for t in message.tlvs if t.kind == 0x9E]
                 if len(requests) != 1 or len(requests[0].value) != 14:
                     raise EmosaError(Reason.INVALID_INPUT, "one Backhaul Steering Request TLV")
@@ -570,6 +615,7 @@ class OnboardingSession:
             self.link_metrics,
             self.ap_metrics,
             self.steering,
+            self.backhaul_steering,
             self.unassociated,
         ):
             if component:
@@ -596,6 +642,9 @@ class OnboardingSession:
             "physical_pod_proven": False,
             "reporting_policy": self.reporting_policy.status() if self.reporting_policy else None,
             "steering": self.steering.status() if self.steering else None,
+            "backhaul_steering": self.backhaul_steering.status()
+            if self.backhaul_steering
+            else None,
             "unassociated_metrics": self.unassociated.status() if self.unassociated else None,
             "ap_metrics": (
                 self.ap_metrics.status()

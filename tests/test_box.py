@@ -1,0 +1,54 @@
+"""The lab in a box (emosa_lab.box): each implementation's real agent binary against
+the recorded pod and a scripted controller, in a private network namespace."""
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.box
+
+ROOT = Path(__file__).resolve().parents[1]
+C_AGENT = Path(os.environ.get("EMOSA_C_AGENT", ROOT / "c/build/emosa-agent-c"))
+
+
+def box(scenario, agent, directory):
+    command = [sys.executable, "-m", "emosa_lab.box", scenario, "--agent", agent]
+    command += ["--directory", str(directory)]
+    if agent == "c":
+        command += ["--binary", str(C_AGENT)]
+    result = subprocess.run(command, capture_output=True, text=True, timeout=180)
+    assert result.returncode == 0, result.stdout + result.stderr + _log(directory)
+    return json.loads(result.stdout)
+
+
+def _log(directory):
+    log = Path(directory) / "agent.log"
+    return log.read_text()[-2000:] if log.exists() else ""
+
+
+def unavailable(reason):
+    # CI sets EMOSA_BOX_REQUIRED: there a missing prerequisite fails instead of skipping
+    if os.environ.get("EMOSA_BOX_REQUIRED"):
+        pytest.fail(reason)
+    pytest.skip(reason)
+
+
+@pytest.fixture(params=["python", "c"])
+def agent(request):
+    if not shutil.which("unshare"):
+        unavailable("unshare is required")
+    if request.param == "c" and not C_AGENT.exists():
+        unavailable(f"no C agent at {C_AGENT}: cmake -S c -B c/build && cmake --build c/build")
+    return request.param
+
+
+def test_the_agent_takes_the_pod_and_searches_for_its_controller(agent, tmp_path):
+    result = box("boot", agent, tmp_path / "box")
+    assert result["searched"]
+    assert "0x0007" in result["messages"]  # AP-Autoconfiguration Search
+    assert result["exit"] is None  # still running when it was stopped

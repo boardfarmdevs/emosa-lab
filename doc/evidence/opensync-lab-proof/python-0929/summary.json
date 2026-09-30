@@ -1,0 +1,220 @@
+{
+ "label": "python-0929",
+ "duration_s": 901,
+ "faults": [
+  {
+   "name": "client leave/join em-wc2",
+   "began": 1790706795.5906222,
+   "ended": 1790706835.9463181,
+   "offset": 60.0,
+   "recovered_after_s": 16.8,
+   "outage_window_s": 57.1
+  },
+  {
+   "name": "adapter process restart (pod-1)",
+   "began": 1790706885.9573846,
+   "ended": 1790706886.2884796,
+   "offset": 150.4,
+   "recovered_after_s": 5.5,
+   "outage_window_s": 5.8
+  },
+  {
+   "name": "OVSDB transport cut 20 s (pod-2)",
+   "began": 1790706975.80866,
+   "ended": 1790706995.8659482,
+   "offset": 240.2,
+   "recovered_after_s": 13.0,
+   "outage_window_s": 33.1
+  },
+  {
+   "name": "backhaul loss 30 s (pod-3)",
+   "began": 1790707095.8887055,
+   "ended": 1790707126.3094203,
+   "offset": 360.3,
+   "acted_on": "bhaul-sta-50",
+   "recovered_after_s": 27.8,
+   "outage_window_s": 58.3
+  },
+  {
+   "name": "controller restart + policy re-entry",
+   "began": 1790707245.84363,
+   "ended": 1790707285.0328119,
+   "offset": 510.3,
+   "recovered_after_s": 3.3,
+   "outage_window_s": 42.5
+  },
+  {
+   "name": "client leave/join em-wc4",
+   "began": 1790707426.0766735,
+   "ended": 1790707466.4465563,
+   "offset": 690.5,
+   "recovered_after_s": 17.6,
+   "outage_window_s": 58.0
+  }
+ ],
+ "client_outages": {
+  "em-wc1": [],
+  "em-wc2": [
+   [
+    62,
+    112
+   ]
+  ],
+  "em-wc3": [],
+  "em-wc4": [
+   [
+    692,
+    744
+   ]
+  ],
+  "em-wc5": [
+   [
+    362,
+    406
+   ]
+  ],
+  "em-wc6": [
+   [
+    362,
+    406
+   ]
+  ]
+ },
+ "operations": {
+  "pod-1": [
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ],
+  "pod-2": [
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ],
+  "pod-3": [
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED",
+   "OBSERVED_APPLIED"
+  ]
+ },
+ "writes": {
+  "pod-1": 0,
+  "pod-2": 1,
+  "pod-3": 0
+ },
+ "agents": {
+  "pod-1": {
+   "pod_id": "MVXPOD<serial>",
+   "unit": "emosa-agent@MVXPOD<serial>",
+   "al": "02:72:f9:7f:07:85",
+   "port": 6651
+  },
+  "pod-2": {
+   "pod_id": "MVXPOD<serial>",
+   "unit": "emosa-agent@MVXPOD<serial>",
+   "al": "02:c2:b8:31:3a:f8",
+   "port": 6652
+  },
+  "pod-3": {
+   "pod_id": "MVXPOD<serial>",
+   "unit": "emosa-agent@MVXPOD<serial>",
+   "al": "02:2d:b0:6c:a5:ea",
+   "port": 6653
+  }
+ },
+ "implementations_start_end": {
+  "pod-1": [
+   "python-reference",
+   "python-reference"
+  ],
+  "pod-2": [
+   "python-reference",
+   "python-reference"
+  ],
+  "pod-3": [
+   "python-reference",
+   "python-reference"
+  ]
+ },
+ "fleet_handovers_start_end": [
+  {
+   "MVXPOD<serial>": 2,
+   "MVXPOD<serial>": 4,
+   "MVXPOD<serial>": 3
+  },
+  {
+   "MVXPOD<serial>": 2,
+   "MVXPOD<serial>": 4,
+   "MVXPOD<serial>": 3
+  }
+ ],
+ "agent_rss_kib_start_end": {
+  "pod-1": [
+   57940,
+   57912
+  ],
+  "pod-2": [
+   58192,
+   61868
+  ],
+  "pod-3": [
+   57780,
+   61092
+  ]
+ },
+ "samples": 163,
+ "checks": {
+  "healthy_at_end": true,
+  "every_fault_recovered": true,
+  "no_unresolved_operations": true,
+  "every_client_passing_at_end": true,
+  "agent_memory_bounded": true
+ },
+ "passed": true,
+ "scope": "hwsim lab; operational recovery (plan M7), not complete sustained reporting"
+}
