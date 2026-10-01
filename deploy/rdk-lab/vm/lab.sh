@@ -70,12 +70,11 @@ else
 fi
 LOCK=/run/easymesh-hwsim-allocator.lock                     # the RDK lab's own allocator lock
 UPSTREAM=${EMOSA_POD_UPSTREAM:-bpibroadband/wifi1.1}          # the backhaul BSS a pod on Wi-Fi joins
-
-log() { printf '\033[1;36m[emosa-rdk %s]\033[0m %s\n' "$(date +%H:%M:%S)" "$*"; }
-die() { printf '\033[1;31m[emosa-rdk %s] FATAL\033[0m %s\n' "$(date +%H:%M:%S)" "$*" >&2; exit 1; }
-exists() { lxc info "$1" >/dev/null 2>&1; }
-running() { [ "$(lxc list "^$1\$" -c s -f csv)" = RUNNING ]; }
-has_device() { lxc config device list "$1" | grep -x "$2" >/dev/null; }
+LOG_TAG=emosa-rdk
+# the pods' telemetry: 5 s client reports and survey, published every 5 s
+TELEMETRY_OPTIONS='"reporting_interval": 5, "sampling_interval": 5, "publish_interval": 5, "survey": true'
+# shellcheck source-path=SCRIPTDIR source=../../lib/emosa-vm.sh
+source "$(cd "$(dirname "$0")/../.." && pwd)/lib/emosa-vm.sh"    # EMOSA's steps shared with the OpenSync lab
 
 lan_bridge() {    # the bridge of the RDK lab's wired LAN port (meta-cmf gen/wired-extender.sh lanport)
     local d n
@@ -88,11 +87,6 @@ lan_bridge() {    # the bridge of the RDK lab's wired LAN port (meta-cmf gen/wir
         [ "$(lxc network get "$n" user.easymesh.lanport 2>/dev/null)" = true ] && { echo "$n"; return; }
     done
     echo br-emosa    # this script's own port, before the RDK lab owned one
-}
-cx() { local c=$1; shift; lxc exec "$c" -- "$@"; }
-wait_net() {
-    for _ in $(seq 60); do cx "$1" getent hosts archive.ubuntu.com >/dev/null 2>&1 && return; sleep 2; done
-    die "$1 has no network"
 }
 
 # --- radios: the RDK lab's allocator contract (gen/gen-util.sh) ---------------------------
@@ -279,20 +273,7 @@ EOF
 }
 
 emosa() {
-    if ! exists emosa; then
-        lxc init "$IMAGE" emosa --network lxdbr0 >/dev/null
-        lxc config set emosa user.emosa.role adapter
-        lxc start emosa
-        wait_net emosa
-        cx emosa sh -ec 'systemctl mask --now apt-daily.timer apt-daily-upgrade.timer >/dev/null 2>&1
-            export DEBIAN_FRONTEND=noninteractive; apt-get -qq update
-            apt-get -qq install -y iproute2 tcpdump isc-dhcp-client mosquitto mosquitto-clients >/dev/null'
-    fi
-    # the kit builds the C lab prototype when these are there
-    cx emosa sh -ec 'dpkg -s cmake pkg-config gcc libcjson-dev libssl-dev libsqlite3-dev >/dev/null 2>&1 || {
-            export DEBIAN_FRONTEND=noninteractive; apt-get -qq update
-            apt-get -qq install -y cmake pkg-config gcc libcjson-dev libssl-dev libsqlite3-dev >/dev/null; }'
-    running emosa || lxc start emosa
+    adapter_container isc-dhcp-client mosquitto mosquitto-clients
     has_device emosa emlan ||
         lxc config device add emosa emlan nic nictype=bridged parent="$(lan_bridge)" name=emlan >/dev/null
     # The pods' redirector: the VM owns br-wan101 (10.101.0.1); add .40 and forward the
@@ -312,120 +293,31 @@ WantedBy=multi-user.target
 EOF
     systemctl daemon-reload
     systemctl enable -q --now emosa-lab-wan-address
-    has_device emosa front ||
-        lxc config device add emosa front proxy bind=host listen="tcp:$WAN_HOST:$FLEET_PORT" \
-            connect="tcp:127.0.0.1:$FLEET_PORT" >/dev/null
-    has_device emosa agents ||
-        lxc config device add emosa agents proxy bind=host listen="tcp:$WAN_HOST:${AGENTS[0]}-${AGENTS[1]}" \
-            connect="tcp:127.0.0.1:${AGENTS[0]}-${AGENTS[1]}" >/dev/null
-    lxc file push -q "$ART/adapter-kit.tar.gz" emosa/root/adapter-kit.tar.gz
-    cx emosa sh -ec 'rm -rf /root/adapter-kit && mkdir /root/adapter-kit
-        tar -C /root/adapter-kit --strip-components=1 -xzf /root/adapter-kit.tar.gz
-        /root/adapter-kit/install.sh'
-    cx emosa sh -c 'sed -i "s/^EMOSA_TRUNK=.*/EMOSA_TRUNK=emlan/" /etc/default/emosa'
-    log "emosa: $(cx emosa cat /root/adapter-kit/VERSION) in /opt/emosa-adapter; front $WAN_HOST:$FLEET_PORT"
+    proxy emosa front "$FLEET_PORT"
+    proxy emosa agents "${AGENTS[0]}-${AGENTS[1]}"
+    adapter_kit
+    log "emosa: front $WAN_HOST:$FLEET_PORT"
 }
 
-pod_serial() { cx "$1" /usr/opensync/tools/ovsh -r s AWLAN_Node serial_number 2>/dev/null | tr -d '[:space:]'; }
-
-telemetry_json() {    # the fleet's telemetry setting: 5 s reports and survey, published every 5 s
-    if [ -f /opt/emosa-lab/telemetry ]; then
-        printf '{"mode": "mqtt", "broker": "%s", "port": 8883, "reporting_interval": 5, "sampling_interval": 5, "publish_interval": 5, "survey": true}' "$WAN_HOST"
-    else
-        printf '{"mode": "off"}'
-    fi
+telemetry() {    # telemetry [POD...]: the pods' own statistics (by default every running pod)
+    local pods
+    [ $# -gt 0 ] || { mapfile -t pods < <(pods_running); set -- "${pods[@]}"; }
+    telemetry_on "$@"
 }
 
-provision() {   # lab device certificate for POD, where OpenSync expects it (/var/certs)
-    local pod=$1 serial t
-    serial=$(pod_serial "$pod")
-    [ -n "$serial" ] || die "$pod: no serial yet (OpenSync not up)"
-    t=$(mktemp -d)
-    cx emosa sh -ec "cd /var/lib/emosa/pki; [ -f $serial.pem ] || { openssl req -newkey rsa:2048 -nodes \
-            -subj /CN=$serial -keyout $serial.key -out $serial.csr 2>/dev/null
-        openssl x509 -req -in $serial.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 3650 \
-            -out $serial.pem 2>/dev/null; }"
-    lxc file pull -q "emosa/var/lib/emosa/pki/ca.pem" "$t/ca.pem"
-    lxc file pull -q "emosa/var/lib/emosa/pki/$serial.pem" "$t/client.pem"
-    lxc file pull -q "emosa/var/lib/emosa/pki/$serial.key" "$t/client_dec.key"
-    for f in ca.pem client.pem client_dec.key; do lxc file push -q --mode 0600 "$t/$f" "$pod/var/certs/$f"; done
-    rm -rf "$t"
-    log "provision: $pod ($serial) lab device certificate in /var/certs (EMOSA lab CA)"
-}
-
-telemetry() {   # telemetry [POD...]: MQTT broker for the pods' own statistics (mutual TLS)
-    local pod
-    cx emosa sh -ec 'command -v mosquitto >/dev/null || { export DEBIAN_FRONTEND=noninteractive
-            apt-get -qq update; apt-get -qq install -y mosquitto mosquitto-clients openssl >/dev/null; }
-        P=/var/lib/emosa/pki; install -d -m 700 $P; cd $P
-        [ -f ca.pem ] || openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=EMOSA lab CA" \
-            -keyout ca.key -out ca.pem 2>/dev/null
-        [ -f broker.pem ] || { openssl req -newkey rsa:2048 -nodes -subj "/CN='"$WAN_HOST"'" -keyout broker.key \
-                -out broker.csr 2>/dev/null
-            printf "subjectAltName=IP:'"$WAN_HOST"',IP:127.0.0.1\n" > broker.ext
-            openssl x509 -req -in broker.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 3650 \
-                -extfile broker.ext -out broker.pem 2>/dev/null; }
-        C=/etc/mosquitto/certs; install -d -o mosquitto -m 750 $C
-        install -o mosquitto -m 644 ca.pem broker.pem $C/; install -o mosquitto -m 600 broker.key $C/
-        printf "%s\n" "per_listener_settings true" "listener 8883 127.0.0.1" "cafile $C/ca.pem" \
-            "certfile $C/broker.pem" "keyfile $C/broker.key" "require_certificate true" \
-            "use_identity_as_username true" "listener 1883 127.0.0.1" "allow_anonymous true" \
-            > /etc/mosquitto/conf.d/emosa.conf
-        systemctl restart mosquitto'
-    has_device emosa mqtt ||
-        lxc config device add emosa mqtt proxy bind=host listen="tcp:$WAN_HOST:8883" \
-            connect=tcp:127.0.0.1:8883 >/dev/null
-    touch /opt/emosa-lab/telemetry    # lab.sh fleet and pod keep it on
-    for pod in ${*:-$(pods_running)}; do provision "$pod"; done
-    # the fleet writes an agent's configuration when its pod is handed over;
-    # the running agents get the setting directly
-    cx emosa python3 - "$(telemetry_json)" <<'EOF'
-import glob, json, sys
-telemetry = json.loads(sys.argv[1])
-for path in ["/etc/emosa-fleet.json", *glob.glob("/etc/emosa/*.json")]:
-    with open(path) as f:
-        config = json.load(f)
-    config["telemetry"] = telemetry
-    with open(path, "w") as f:
-        json.dump(config, f, indent=2)
-        f.write("\n")
-EOF
-    cx emosa sh -c 'systemctl restart emosa-fleet
-        for u in $(systemctl list-units --plain --no-legend "emosa-agent@*" | cut -d" " -f1); do
-            systemctl restart "$u"; done'
-    log "telemetry: broker tcp:$WAN_HOST:8883 (mutual TLS, lab CA) -> emosa; pods publish to emosa/stats/<serial>"
-}
-
-agent_binary() {    # python|c -> the agent the kit installed for it
-    case ${1:-} in
-        python) echo /opt/emosa-adapter/venv/bin/emosa-agent ;;
-        c) echo /opt/emosa-adapter/bin/emosa-agent-c ;;
-        *) return 1 ;;
-    esac
-}
-
-agent() {
+agent() {    # agent POD python|c: the implementation of POD's agent
     local pod=${1:?usage: lab.sh agent POD python|c} bin
     bin=$(agent_binary "${2:-}") || die "usage: lab.sh agent POD python|c"
     exists emosa || die "run: lab.sh emosa"
     cx emosa test -f "/etc/emosa/$pod.json" || die "no agent for $pod (lab.sh status lists them)"
-    cx emosa test -x "$bin" || die "$bin is not installed (lab.sh emosa)"
-    cx emosa sh -c "echo EMOSA_AGENT=$bin > /etc/default/emosa-$pod"
-    cx emosa systemctl restart "emosa-agent@$pod"
+    implementation_one "$pod" "$bin"
     log "agent: $pod runs $bin"
 }
 
 implementation() {    # implementation python|c: every pod's agent
-    local bin name
+    local bin
     bin=$(agent_binary "${1:-}") || die "usage: lab.sh implementation python|c"
-    exists emosa || die "run: lab.sh emosa"
-    cx emosa test -x "$bin" || die "$bin is not installed (lab.sh emosa)"
-    cx emosa sh -ec "sed -i '/^EMOSA_AGENT=/d' /etc/default/emosa; echo EMOSA_AGENT=$bin >> /etc/default/emosa"
-    for name in $(cx emosa sh -c 'for f in /etc/emosa/*.json; do [ -e "$f" ] && basename "$f" .json; done'); do
-        cx emosa rm -f "/etc/default/emosa-$name"
-        cx emosa systemctl try-restart "emosa-agent@$name"
-    done
-    log "implementation: every agent runs $bin"
+    implementation_all "$bin"
 }
 
 controller_al() {    # the RDK controller's AL MAC, from the lab's own topology API
@@ -436,28 +328,9 @@ controller_al() {    # the RDK controller's AL MAC, from the lab's own topology 
 }
 
 fleet() {
-    exists emosa || die "run: lab.sh emosa"
     local al
     al=$(controller_al) || die "the lab's topology names no single controller"
-    cx emosa sh -c "cat > /etc/emosa-fleet.json" <<EOF
-{
-  "listen": "ptcp:$FLEET_PORT:127.0.0.1",
-  "advertise": "$WAN_HOST",
-  "ports": [${AGENTS[0]}, ${AGENTS[1]}],
-  "controller_al": "$al",
-  "message_set": "${EMOSA_MESSAGE_SET:-r1}",
-  "multi_bss": ${EMOSA_MULTI_BSS:-true},
-  "m2_session": "${EMOSA_M2_SESSION:-shared}",
-  "profile": "${EMOSA_POD_PROFILE:-opensync-lab-hwsim-6.6.1-v1}",
-  "state_root": "/var/lib/emosa",
-  "config_dir": "/etc/emosa",
-  "admit": "*",
-  "telemetry": $(telemetry_json),
-  "pods": $(pods_json)
-}
-EOF
-    cx emosa systemctl enable -q emosa-fleet
-    cx emosa systemctl restart emosa-fleet
+    fleet_config "$FLEET_PORT" "${AGENTS[0]}" "${AGENTS[1]}" "$al" r1 true shared "$(pods_json)"
     log "fleet: front $WAN_HOST:$FLEET_PORT, agents ${AGENTS[0]}-${AGENTS[1]}, controller $al (r1, multi-BSS)"
 }
 
@@ -491,37 +364,9 @@ wpa_key_mgmt=WPA-PSK
 rsn_pairwise=CCMP
 wpa_passphrase=$BHAUL_KEY
 EOF
-    cx em-gtp sh -c 'cat > /etc/systemd/system/emosa-lab-bridges.service' <<'EOF'
-[Unit]
-Description=Lab bridges for em-gtp: podbh (underlay) and br-gtp (LAN), before hostapd
-Before=hostapd.service emosa-gtp.service
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/bin/sh -c 'for b in podbh br-gtp; do ip link show $b >/dev/null 2>&1 || ip link add $b type bridge; ip link set $b up; done'
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    cx em-gtp sh -ec "systemctl daemon-reload; systemctl enable -q --now emosa-lab-bridges
-        sed -i '/^DAEMON_CONF=/d' /etc/default/hostapd 2>/dev/null || true
-        echo DAEMON_CONF=/etc/hostapd/hostapd.conf >> /etc/default/hostapd
-        systemctl unmask hostapd >/dev/null 2>&1; systemctl enable -q hostapd; systemctl restart hostapd"
-    lxc file push -q "$ART/adapter-kit.tar.gz" em-gtp/root/adapter-kit.tar.gz
-    cx em-gtp sh -ec 'rm -rf /root/adapter-kit && mkdir /root/adapter-kit
-        tar -C /root/adapter-kit --strip-components=1 -xzf /root/adapter-kit.tar.gz
-        /root/adapter-kit/install.sh >/dev/null'
-    cx em-gtp sh -c 'cat > /etc/emosa-gtp.json' <<'EOF'
-{
-  "underlay": {"interface": "podbh", "address": "169.254.2.1/25", "mtu": 1600,
-               "dhcp_range": ["169.254.2.10", "169.254.2.126"], "lease_time": "1h"},
-  "lan": {"bridge": "br-gtp", "ports": ["eth1"]},
-  "tunnel_mtu": 1562,
-  "state_dir": "/var/lib/emosa-gtp"
-}
-EOF
-    cx em-gtp sh -c 'systemctl enable -q emosa-gtp; systemctl restart emosa-gtp'
+    gtp_bridges
+    gtp_hostapd
+    gtp_termination
     log "em-gtp: '$BHAUL_SSID' on channel $channel, GRE into br-gtp, LAN leg on $(lan_bridge)"
 }
 
@@ -787,7 +632,16 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         wait_agents
         medium    # pins the pods' backhaul links now that their stations exist
         room_manifest "$1"
-        systemctl reset-failed "$ROOM"; systemctl start "$ROOM"
+        if [ -x "$LABREPO/gen/lab-bringup.sh" ]; then
+            # The pods' radios restarted the medium, which drops the extenders' Wi-Fi
+            # backhauls: the lab's own bring-up then (OneWifi where a station is down, the
+            # controller, every agent, the room settled), twice when an agent came back
+            # not ready for candidate queries (rdk-emosa-1001, 1 Oct).
+            "$LABREPO/gen/lab-bringup.sh" up || "$LABREPO/gen/lab-bringup.sh" up ||
+                die "the lab did not settle after two bring-ups ($LABREPO/gen/lab-bringup.sh status)"
+        else
+            systemctl reset-failed "$ROOM"; systemctl start "$ROOM"
+        fi
         log "rooms: $1 ($n pods); suite: EASYMESH_ROOM_WORLDS_ROOT=$MEDIUM_CONFIGURATOR/worlds-$1" ;;
     native)
         systemctl stop "$ROOM"
@@ -799,6 +653,19 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         log "rooms: the lab's own$(exists bpiap-004 && echo ', with the wired extender') (pods stopped, their controller rows removed)" ;;
     *) die "usage: lab.sh rooms pods|native" ;;
     esac
+}
+
+uplinks_applied() {    # every running pod's agent on its Wi-Fi uplink (EMOSA's option 1 applied)
+    cx emosa python3 -c '
+import glob, json, sys
+for path in glob.glob("/var/lib/emosa/*/status.json"):
+    uplink = json.load(open(path)).get("uplink") or {}
+    if uplink.get("uplink") != "multi-ap" or (uplink.get("operation") or {}).get("state") != "OBSERVED_APPLIED":
+        sys.exit(1)'
+}
+wait_uplinks() {    # the pods' Wi-Fi uplinks applied (at most 3 minutes)
+    for _ in $(seq 36); do uplinks_applied && return; sleep 5; done
+    return 1
 }
 
 up() {    # up [python|c]: the EMOSA option of the RDK lab, every step in order (each completes a partial run)
@@ -819,6 +686,16 @@ up() {    # up [python|c]: the EMOSA option of the RDK lab, every step in order 
     wait_agents    # the pods bound to their agents over the GTP path, then onto Wi-Fi
     backhaul wifi
     rooms pods
+    # A pod whose first switch was not confirmed in time is held on the GTP path (seen on
+    # rdk-emosa-1001 after an in-place redeploy, 1 Oct, the medium restarting under it):
+    # once more on the settled lab, rather than report an option that is not on Wi-Fi.
+    if ! wait_uplinks; then
+        log "a pod's Wi-Fi uplink did not apply (held on the GTP path): switching again"
+        backhaul wifi
+        rooms pods
+        wait_uplinks || die "the pods' Wi-Fi uplinks did not apply (lab.sh status)"
+    fi
+    log "uplinks: every pod on its Wi-Fi backhaul"
     status
 }
 

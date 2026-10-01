@@ -165,6 +165,13 @@ class Controller:
             mid = self.mid
         for frame in fragment_message(self.agent, self.al, message_type, mid, tuple(tlvs)):
             self.socket.send(frame)
+        return mid
+
+    def reply(self, message_type, mid):
+        """The agent's message of this type for our request mid (a response or an ACK)."""
+        return next(
+            (m for m in self.messages if m.message_type == message_type and m.mid == mid), None
+        )
 
     def close(self):
         self.socket.close()
@@ -315,9 +322,18 @@ async def onboard(box):
     """The controller answers: the Response, then an M2 from hostap's registrar for the
     agent's own M1. The agent writes the credentials to the pod, the pod's manager
     applies them, and the agent sees them applied."""
+    state = await onboarded(box)
+    if "failed" in state:
+        return box.result(passed=False, failed=state["failed"])
+    return box.result(passed=state["applied"], wrote=True, operations=state["operations"])
+
+
+async def onboarded(box):
+    """onboard's steps, which other scenarios start from: the agent's radio (its RUID) and
+    whether the credentials were applied, or what failed."""
     search = await box.until(lambda: box.controller.latest(AUTOCONFIG_SEARCH))
     if not search:
-        return box.result(passed=False, failed="no search")
+        return {"failed": "no search"}
     # an EasyMesh 6.1 Response: registrar, 2.4 GHz, the controller service, Profile 1, and
     # Controller Capability with KiB/MiB counters and the Early AP Capability Report
     response = (
@@ -330,7 +346,7 @@ async def onboard(box):
     box.controller.send(AUTOCONFIG_RESPONSE, response, mid=search.mid)
     m1 = await box.until(lambda: box.controller.latest(AUTOCONFIG_WSC))
     if not m1:
-        return box.result(passed=False, failed="no M1")
+        return {"failed": "no M1"}
     wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
     ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)  # AP Radio Basic Capabilities
     m2 = await asyncio.to_thread(registrar_reply, REGISTRAR, wsc)
@@ -347,7 +363,7 @@ async def onboard(box):
         wrote = await written()
         await asyncio.sleep(0.3)
     if not wrote:
-        return box.result(passed=False, failed="the credentials never reached the pod")
+        return {"failed": "the credentials never reached the pod"}
     await apply_configuration(box.db)  # the pod's managers apply the new configuration
 
     def applied():
@@ -358,8 +374,86 @@ async def onboard(box):
         )
 
     done = await box.until(applied, seconds=60)
+    return {
+        "ruid": ruid,
+        "applied": bool(done),
+        "operations": (box.status() or {}).get("operations"),
+    }
+
+
+def operational_bssid(topology):
+    """The first BSSID in a Topology Response's AP Operational BSS TLV."""
+    value = next((t.value for t in topology.tlvs if t.kind == 0x83), b"")
+    # radios(1), then per radio: RUID(6), BSSes(1), per BSS: BSSID(6), SSID length(1), SSID
+    if len(value) >= 14 and value[0] and value[7]:
+        return value[8:14]
+    return None
+
+
+async def answers(box):
+    """After onboarding, the controller's requests: each gets its response (or its 1905
+    ACK) with the request's message ID, except the two that report the pod's statistics
+    (spec 3.8): with no telemetry in the box there are none, and the agent withholds the
+    Link Metric and AP Metrics Responses and records why instead of inventing values."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed=state.get("failed", "credentials not applied"))
+    ruid, stranger = state["ruid"], bytes.fromhex("02aabbccddee")
+
+    async def ask(message_type, tlvs, expected, seconds=15):
+        mid = box.controller.send(message_type, tlvs)
+        return await box.until(lambda: box.controller.reply(expected, mid), seconds=seconds)
+
+    topology = await ask(0x0002, (Tlv(0xB3, b"\x01"),), 0x0003)
+    bssid = operational_bssid(topology) if topology else None
+    requests = {
+        "topology": None,  # asked above; its BSSID names the BSS for the queries below
+        "ap_capability": (0x8001, (), 0x8002),
+        "channel_preference": (0x8004, (), 0x8005),
+        "client_capability": (0x8009, (Tlv(0x90, (bssid or bytes(6)) + stranger),), 0x800A),
+        "backhaul_sta_capability": (0x8027, (), 0x8028),
+        "unassociated_sta_metrics": (0x800F, (Tlv(0x97, bytes((81, 1, 6, 1)) + stranger),), 0x8000),
+        "policy_config": (0x8003, (Tlv(0x8A, b"\x00\x01" + ruid + bytes(4)),), 0x8000),
+    }
+    answered = {"topology": "0x0003" if topology else None}
+    for name, request in requests.items():
+        if request is None:
+            continue
+        message_type, tlvs, expected = request
+        reply = await ask(message_type, tlvs, expected)
+        answered[name] = f"0x{expected:04x}" if reply else None
+    # withheld without statistics: no response, and the reason in the session's counts
+    withheld = {
+        "link_metric": (
+            (0x0005, (Tlv(0x08, b"\x00\x02"),), 0x0006),
+            "neighbor_measurement_unavailable",
+        ),
+        "ap_metrics": (
+            (0x800B, (Tlv(0x93, b"\x01" + (bssid or bytes(6))),), 0x800C),
+            "ap_measurements_unavailable",
+        ),
+    }
+    abstained = {}
+    for name, ((message_type, tlvs, expected), reason) in withheld.items():
+        reply = await ask(message_type, tlvs, expected, seconds=5)
+        counts = ((box.status() or {}).get("session") or {}).get("counts") or {}
+        abstained[name] = reason if reply is None and counts.get(reason) else None
+    session = (box.status() or {}).get("session") or {}
+    # where the agent records its replies, the same in both implementations
+    recorded = {
+        "policy_receipt_ack_sent": (session.get("counts") or {}).get("policy_receipt_ack_sent"),
+        "topology_response_sent": ((session.get("reports") or {}).get("counts") or {}).get(
+            "topology_response_sent"
+        ),
+        "topology_response_in_session_counts": "topology_response_sent"
+        in (session.get("counts") or {}),
+    }
     return box.result(
-        passed=bool(done), wrote=wrote, operations=(box.status() or {}).get("operations")
+        passed=bool(bssid) and all(answered.values()) and all(abstained.values()),
+        bssid=bssid.hex(":") if bssid else None,
+        answered=answered,
+        abstained=abstained,
+        recorded=recorded,
     )
 
 
@@ -384,7 +478,7 @@ async def refuse(box):
     return box.result(passed=bool(session) and m1 is None, admission_issues=issues)
 
 
-SCENARIOS = {"boot": boot, "onboard": onboard, "refuse": refuse}
+SCENARIOS = {"boot": boot, "onboard": onboard, "refuse": refuse, "answers": answers}
 
 
 async def run(scenario, agent, directory, *, binary=None):

@@ -144,5 +144,9 @@ The design and the results are in
 `artifacts.sha256` by `lab.sh stage`: the prplMesh install/runtime archives
 and EMOSA's bwl/hostap overlays and controller candidate, copied from the
 `emosa-lab` VM on rev150 (the same hashes as `deploy/peer-baseline/reference.json`),
-uv 0.11.17, and prplmesh-lab `e1fd7cd`'s controller UI binary and topology
-adapter (`controller-ui/`, built with Go on rev140).
+and uv 0.11.17. `lab.sh stage` also builds prplmesh-lab's controller UI and
+topology adapter (`controller-ui/`, with Go) at the commit
+[controller-ui.env](controller-ui.env) pins, from a prplmesh-lab checkout
+(`PRPLMESH_LAB`, default the sibling in an easymesh-labs workspace); its page is
+the medium's topology page, the one both optimizer labs serve. `SOURCE` beside
+the binary names the commits; a stage at the same pin reuses it.

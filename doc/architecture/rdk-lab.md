@@ -131,7 +131,11 @@ The option is split between the repositories:
 `deploy/rdk-lab/` is the driver, like `deploy/opensync-lab/`: a host-side
 wrapper that stages this repository into the VM (`/opt/emosa-lab`) and a
 VM-side `lab.sh` that reuses the same components (the adapter kit, `emosa-gtp`,
-the fleet). `lab.sh up [python|c]` runs every step in order and completes a
+the fleet). The steps both drivers take, the adapter container and kit, the
+fleet's configuration, the pods' telemetry and certificates, the agent
+implementation and the GTP's services, are one copy in
+[deploy/lib/emosa-vm.sh](../../deploy/lib/emosa-vm.sh); each driver keeps what
+its lab differs in (the EasyMesh LAN, the controller, the pods and their radios). `lab.sh up [python|c]` runs every step in order and completes a
 partial run; after a reboot it brings the pods back:
 
 | Step | What it does |
@@ -146,6 +150,7 @@ partial run; after a reboot it brings the pods back:
 | `telemetry` | the MQTT broker for the pods' statistics (§6) |
 | `backhaul wifi` | both pods on option 1 |
 | `rooms pods` | the room service on the pods' room set |
+| (check) | every pod's Wi-Fi uplink applied; a pod held on the GTP path is switched once more, else `up` fails |
 
 By hand: `lab.sh agent POD python|c` (one pod's implementation), `lab.sh move
 POD TARGET` (the controller moves a pod's backhaul: a mesh node's container,

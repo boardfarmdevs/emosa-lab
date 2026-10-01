@@ -380,10 +380,18 @@ jobs:
         env:
           ASAN_OPTIONS: detect_leaks=1:fast_unwind_on_malloc=0
         run: |
+          mkdir -p fuzz-artifacts
           for target in cmdu stats rows wsc; do
             mkdir -p "fuzz-$target" && cp c/fuzz/corpus/$target/* "fuzz-$target/"
-            c/build/emosa-fuzz-$target -max_total_time=60 -print_final_stats=1 "fuzz-$target"
+            c/build/emosa-fuzz-$target -max_total_time=60 -print_final_stats=1 \
+              -artifact_prefix="fuzz-artifacts/$target-" "fuzz-$target"
           done
+      # a crash, leak or timeout input, to reproduce: emosa-fuzz-TARGET fuzz-artifacts/FILE
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: fuzz-artifacts
+          path: fuzz-artifacts/
   c-cert:
     # clang-tidy's CERT checks: no finding but the deviations QUALITY.md §5 records
     # (marked NOLINT at their lines)

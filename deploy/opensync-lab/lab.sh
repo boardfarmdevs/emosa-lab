@@ -8,6 +8,7 @@
 # Artifacts (.cache/opensync-lab-artifacts): prplMesh 6.0.0 install/runtime from
 # prplmesh-lab, EMOSA's bwl/hostap overlays and controller candidate
 # candidate-ap-esp-02, uv 0.11.17. Hashes: deploy/opensync-lab/artifacts.sha256.
+# The controller UI is built from prplmesh-lab at a pin (controller-ui.sh, controller-ui.env).
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 VM=${EMOSA_VM:-emosa-osl-$(date +%m%d)}
@@ -15,10 +16,12 @@ ART=$ROOT/.cache/opensync-lab-artifacts
 
 stage() {
     (cd "$ART" && sha256sum -c --quiet "$ROOT/deploy/opensync-lab/artifacts.sha256")
+    "$ROOT/deploy/opensync-lab/controller-ui.sh"
     lxc exec "$VM" -- sh -c 'rm -rf /opt/emosa-lab/source /opt/emosa-lab/deploy; mkdir -p /opt/emosa-lab/artifacts /opt/emosa-lab/source'
     tar -C "$ROOT" --exclude=.git --exclude=.cache --exclude=.lab --exclude=.venv --exclude=__pycache__ \
         --exclude=.pytest_cache --exclude=.ruff_cache -czf - . | lxc exec "$VM" -- tar -C /opt/emosa-lab/source -xzf -
-    lxc exec "$VM" -- sh -c 'mkdir -p /opt/emosa-lab/deploy && cp -a /opt/emosa-lab/source/deploy/opensync-lab /opt/emosa-lab/deploy/'
+    lxc exec "$VM" -- sh -c 'mkdir -p /opt/emosa-lab/deploy &&
+        cp -a /opt/emosa-lab/source/deploy/opensync-lab /opt/emosa-lab/source/deploy/lib /opt/emosa-lab/deploy/'
     tar -C "$ART" -cf - . | lxc exec "$VM" -- tar -C /opt/emosa-lab/artifacts -xf -
     # the adapter itself goes in as the kit any other lab would use (deploy/adapter)
     kit=$(UV="$ART/uv" "$ROOT/deploy/adapter/build.sh" "$ROOT/.cache/adapter-kit" | tail -1)

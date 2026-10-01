@@ -856,8 +856,7 @@ static void handle_message(agent *a, const em_message *m)
         if (topology_tlvs(a, a->r1, &list) == EM_OK) {
             reply(a, 0x0003, m->mid, list.tlvs, list.count);
             em_tlv_list_free(&list);
-            a->topology_responses++;
-            count(&a->counts, "topology_response_sent");
+            a->topology_responses++; /* the reports' counter, as the reference's coordinator */
         }
         return;
     }
@@ -1258,7 +1257,10 @@ static cJSON *status(agent *a)
                           a->reporting_live ? em_reporting_metrics_status(&a->reporting, &source) : cJSON_CreateNull());
     cJSON_AddItemToObject(session, "backhaul_steering", a->bh_live ? em_bh_status(&a->bh) : cJSON_CreateNull());
     cJSON *reports = cJSON_AddObjectToObject(session, "reports");
-    cJSON_AddItemToObject(reports, "counts", em_early_counts(&a->early));
+    cJSON *report_counts = em_early_counts(&a->early);
+    if (a->topology_responses)
+        cJSON_AddNumberToObject(report_counts, "topology_response_sent", a->topology_responses);
+    cJSON_AddItemToObject(reports, "counts", report_counts);
     cJSON_AddBoolToObject(reports, "early_pending", a->early.pending);
     cJSON_AddItemToObject(o, "session", session);
     cJSON *journal = em_journal_operations(a->journal, NULL), *op;
