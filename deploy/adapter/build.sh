@@ -8,7 +8,7 @@
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 OUT=$(realpath -m "${1:-$ROOT/dist}")
-UV=${UV:-$(command -v uv || echo "$ROOT/.cache/opensync-lab-artifacts/uv")}
+UV=${UV:-$(command -v uv || command -v "$HOME/.local/bin/uv" || echo "$ROOT/.cache/opensync-lab-artifacts/uv")}
 [ -x "$UV" ] || { echo "uv not found (set UV=)" >&2; exit 1; }
 VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' "$ROOT/pyproject.toml" | head -1)
 KIT=$OUT/emosa-adapter-$VERSION

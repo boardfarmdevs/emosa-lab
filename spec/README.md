@@ -137,6 +137,20 @@ Any other message is ignored and counted as `unsupported_message_<type>`.
 | `closed` | the session ended |
 
 Rules:
+- A Response is dropped (the session keeps discovering) unless its MID is one of
+  the session's Searches, it names the 2.4 GHz band and, with EasyMesh 6.1, it
+  carries a Multi-AP Profile TLV that is not Profile 2 or 3. A Response that is
+  not dropped is admitted only if it has no issue; any issue makes the session
+  `incompatible`, which only a renewal (a Renew, or the silence rule below) ends.
+  The issues, in this order: with EasyMesh 6.1, `controller_capability_absent`
+  (no Controller Capability TLV `0xDD`), else `kib_mib_support_absent` (its bit 7
+  clear) and `early_ap_capability_bit_absent_for_non_dpp_search` (its bit 6
+  clear); `security_capability_length_invalid` or
+  `security_capability_reserved_algorithm` for a 1905 Security Capability TLV
+  `0xA9` that is not three zero octets (one that is absent is no issue); and
+  `outside_profile1_24ghz_contract` when, with EasyMesh 6.1, the profile is not 1
+  (a reserved value), or the band is not 2.4 GHz. The status names them
+  (`session.admission_issues`). The vectors: `onboarding.json`, `admission`.
 - A session starts while the pod's State is available. Discovery sends a
   Search at once and then every second, three at most, and fails when no
   Response is admitted within 5 s.

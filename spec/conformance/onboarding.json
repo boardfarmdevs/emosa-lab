@@ -1,4 +1,260 @@
 {
+ "admission": [
+  {
+   "expected": {
+    "dropped": false,
+    "issues": [
+     "controller_capability_absent"
+    ]
+   },
+   "message_set": "easymesh-6.1",
+   "name": "no_controller_capability",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": []
+   },
+   "message_set": "easymesh-6.1",
+   "name": "controller_capability",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd0001c0000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": [
+     "early_ap_capability_bit_absent_for_non_dpp_search"
+    ]
+   },
+   "message_set": "easymesh-6.1",
+   "name": "kib_mib_only",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd000180000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": [
+     "kib_mib_support_absent"
+    ]
+   },
+   "message_set": "easymesh-6.1",
+   "name": "early_ap_capability_only",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd000140000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": []
+   },
+   "message_set": "easymesh-6.1",
+   "name": "security_capability_zero",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd0001c0a90003000000000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": [
+     "security_capability_reserved_algorithm"
+    ]
+   },
+   "message_set": "easymesh-6.1",
+   "name": "security_capability_reserved",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd0001c0a90003000001000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": [
+     "security_capability_length_invalid"
+    ]
+   },
+   "message_set": "easymesh-6.1",
+   "name": "security_capability_short",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd0001c0a900020000000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": true
+   },
+   "message_set": "easymesh-6.1",
+   "name": "profile_2",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000102dd0001c0000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": [
+     "outside_profile1_24ghz_contract"
+    ]
+   },
+   "message_set": "easymesh-6.1",
+   "name": "profile_reserved_4",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000104dd0001c0000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": true
+   },
+   "message_set": "easymesh-6.1",
+   "name": "band_5ghz",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001018000020100b3000101dd0001c0000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": true
+   },
+   "message_set": "easymesh-6.1",
+   "name": "no_profile",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": []
+   },
+   "message_set": "r1",
+   "name": "no_controller_capability",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": []
+   },
+   "message_set": "r1",
+   "name": "controller_capability",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd0001c0000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": []
+   },
+   "message_set": "r1",
+   "name": "kib_mib_only",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd000180000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": []
+   },
+   "message_set": "r1",
+   "name": "early_ap_capability_only",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd000140000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": []
+   },
+   "message_set": "r1",
+   "name": "security_capability_zero",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd0001c0a90003000000000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": [
+     "security_capability_reserved_algorithm"
+    ]
+   },
+   "message_set": "r1",
+   "name": "security_capability_reserved",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd0001c0a90003000001000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": [
+     "security_capability_length_invalid"
+    ]
+   },
+   "message_set": "r1",
+   "name": "security_capability_short",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000101dd0001c0a900020000000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": []
+   },
+   "message_set": "r1",
+   "name": "profile_2",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000102dd0001c0000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": []
+   },
+   "message_set": "r1",
+   "name": "profile_reserved_4",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100b3000104dd0001c0000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": true
+   },
+   "message_set": "r1",
+   "name": "band_5ghz",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001018000020100b3000101dd0001c0000000"
+   ]
+  },
+  {
+   "expected": {
+    "dropped": false,
+    "issues": []
+   },
+   "message_set": "r1",
+   "name": "no_profile",
+   "response_frames": [
+    "020000000001020000000002893a00000008ffff00800f000100100001008000020100000000"
+   ]
+  }
+ ],
  "agent": {
   "al_mac": "02:00:00:00:00:01",
   "controller_al": "02:00:00:00:00:02",

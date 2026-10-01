@@ -1093,6 +1093,76 @@ def onboarding_vectors():
                 "expected_tampered": {"error": rejected},
             }
         )
+    # The session's admission of a Response (non_dpp_admission): Responses that are
+    # dropped (a band or profile that does not match the Search), and the issues that
+    # make a session incompatible, for both message sets.
+    from emosa.wire.autoconfiguration import EASYMESH_61 as SET_61
+    from emosa.wire.onboarding import non_dpp_admission
+
+    base = (Tlv(0x0F, b"\0"), Tlv(0x10, b"\0"), Tlv(0x80, b"\x01\0"))
+    variants = {
+        "no_controller_capability": (*base, Tlv(0xB3, b"\x01")),
+        "controller_capability": (*base, Tlv(0xB3, b"\x01"), Tlv(0xDD, b"\xc0")),
+        "kib_mib_only": (*base, Tlv(0xB3, b"\x01"), Tlv(0xDD, b"\x80")),
+        "early_ap_capability_only": (*base, Tlv(0xB3, b"\x01"), Tlv(0xDD, b"\x40")),
+        "security_capability_zero": (
+            *base,
+            Tlv(0xB3, b"\x01"),
+            Tlv(0xDD, b"\xc0"),
+            Tlv(0xA9, bytes(3)),
+        ),
+        "security_capability_reserved": (
+            *base,
+            Tlv(0xB3, b"\x01"),
+            Tlv(0xDD, b"\xc0"),
+            Tlv(0xA9, b"\0\0\x01"),
+        ),
+        "security_capability_short": (
+            *base,
+            Tlv(0xB3, b"\x01"),
+            Tlv(0xDD, b"\xc0"),
+            Tlv(0xA9, bytes(2)),
+        ),
+        "profile_2": (*base, Tlv(0xB3, b"\x02"), Tlv(0xDD, b"\xc0")),
+        "profile_reserved_4": (*base, Tlv(0xB3, b"\x04"), Tlv(0xDD, b"\xc0")),
+        "band_5ghz": (
+            Tlv(0x0F, b"\0"),
+            Tlv(0x10, b"\x01"),
+            Tlv(0x80, b"\x01\0"),
+            Tlv(0xB3, b"\x01"),
+            Tlv(0xDD, b"\xc0"),
+        ),
+        "no_profile": base,
+    }
+    admission = []
+    for message_set in (SET_61, R1):
+        for name, tlvs in variants.items():
+            discovery = DiscoveryExchange(
+                binding,
+                band=0,
+                profile=1,
+                profile2=profile2,
+                mids=MidSequence(65534),
+                message_set=message_set,
+            )
+            discovery.request()
+            response = fragment_message(local, controller, 0x0008, 65535, tlvs)
+            try:
+                advertisement = discovery.receive(
+                    feed(response), ingress="conformance", generation=1
+                )
+                issues = non_dpp_admission(advertisement, message_set=message_set)
+                expected = {"dropped": False, "issues": list(issues)}
+            except EmosaError:
+                expected = {"dropped": True}
+            admission.append(
+                {
+                    "name": name,
+                    "message_set": message_set,
+                    "response_frames": [f.hex() for f in response],
+                    "expected": expected,
+                }
+            )
     return {
         "description": "spec §2.5: the agent's Search, a controller Response and its admission, "
         "the agent's M1, and a controller M2 decrypted to the BSS settings, for each message "
@@ -1116,6 +1186,7 @@ def onboarding_vectors():
             "enrollee_private": fixture["enrollee_private"],
         },
         "cases": cases,
+        "admission": admission,
     }
 
 

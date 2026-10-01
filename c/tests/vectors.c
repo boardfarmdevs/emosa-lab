@@ -335,6 +335,30 @@ static void onboarding_vectors(const char *dir)
         em_message_free(tampered);
         em_m1_free(&m1);
     }
+    /* the session's admission of a Response: dropped, or its issues (non_dpp_admission) */
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "admission"))
+    {
+        const char *name = str(c, "name");
+        em_message_set set = !strcmp(str(c, "message_set"), "r1") ? EM_SET_R1 : EM_SET_61;
+        const cJSON *want = cJSON_GetObjectItemCaseSensitive(c, "expected");
+        em_message *response = assemble(cJSON_GetObjectItemCaseSensitive(c, "response_frames"));
+        em_advertisement adv;
+        bool dropped = !response || em_parse_response(response, set, &adv) != EM_OK || !em_response_usable(&adv, set);
+        checks++;
+        if (dropped != cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(want, "dropped"))) {
+            fail("admission", name, dropped ? "dropped" : "not dropped");
+        } else if (!dropped) {
+            const char *issues[8];
+            size_t n = em_admission_issues(&adv, set, issues);
+            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(want, "issues");
+            bool same = (int)n == cJSON_GetArraySize(expected);
+            for (size_t i = 0; same && i < n; i++)
+                same = !strcmp(issues[i], cJSON_GetArrayItem(expected, (int)i)->valuestring);
+            if (!same)
+                fail("admission", name, "issues differ");
+        }
+        em_message_free(response);
+    }
     em_test_agent_free(&fixture);
     cJSON_Delete(doc);
 }

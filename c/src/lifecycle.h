@@ -20,6 +20,7 @@ typedef enum {
     EM_SESSION_PROVISIONING,
     EM_SESSION_FAILED,
     EM_SESSION_SOURCE_LOST,
+    EM_SESSION_INCOMPATIBLE, /* the controller's Response refused: until a renewal */
 } em_session_state;
 
 typedef struct {

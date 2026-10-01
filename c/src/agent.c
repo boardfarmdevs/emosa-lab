@@ -130,7 +130,9 @@ static cJSON *counters_json(const counters *c, const char *prefix)
 #define S_PROVISIONING EM_SESSION_PROVISIONING
 #define S_FAILED EM_SESSION_FAILED
 #define S_SOURCE_LOST EM_SESSION_SOURCE_LOST
-static const char *const SESSION_NAMES[] = {"recovering", "discovering", "awaiting_m2", "provisioning", "failed", "source_lost"};
+#define S_INCOMPATIBLE EM_SESSION_INCOMPATIBLE
+static const char *const SESSION_NAMES[] = {"recovering",   "discovering", "awaiting_m2", "provisioning",
+                                            "failed",       "source_lost", "incompatible"};
 
 
 typedef struct {
@@ -163,6 +165,8 @@ typedef struct {
     } first_seen[256];
     /* the session: its attempts and the agent's own renewals (lifecycle.c) */
     em_attempts at;
+    const char *admission_issues[8]; /* why the controller's Response was refused */
+    size_t nadmission_issues;
     em_renew renewals;
     em_reassembler *assembly;
     uint16_t search_mids[3];
@@ -619,6 +623,7 @@ static void renew(agent *a, const char *why)
 
 static void start_session(agent *a)
 {
+    a->nadmission_issues = 0;
     a->op_of_session[0] = 0;
     a->nclients = 0;
     a->last_topology[0] = 0;
@@ -802,9 +807,18 @@ static void handle_message(agent *a, const em_message *m)
         bool mid_ok = false;
         for (unsigned i = 0; i < a->at.searches && i < 3; i++)
             mid_ok = mid_ok || a->search_mids[i] == m->mid;
-        if (em_parse_response(m, a->r1 ? EM_SET_R1 : EM_SET_61, &adv) != EM_OK || !mid_ok || adv.band != 0 ||
-            (!a->r1 && adv.profile >= 1 && adv.profile <= 3 && adv.profile != 1)) {
+        em_message_set set = a->r1 ? EM_SET_R1 : EM_SET_61;
+        if (em_parse_response(m, set, &adv) != EM_OK || !mid_ok || !em_response_usable(&adv, set)) {
             count(&a->counts, "rejected_INVALID_INPUT");
+            return;
+        }
+        /* the session's admission (non_dpp_admission): a Response outside the contract
+         * ends it as incompatible, until a renewal */
+        a->nadmission_issues = em_admission_issues(&adv, set, a->admission_issues);
+        if (a->nadmission_issues) {
+            a->at.state = S_INCOMPATIBLE;
+            count(&a->counts, "response_incompatible");
+            LOG("controller incompatible: %s", a->admission_issues[0]);
             return;
         }
         admitted(a);
@@ -1012,7 +1026,8 @@ static void receive_frame(agent *a, const uint8_t *frame, size_t len)
         renew(a, "AP-Autoconfiguration Renew from the controller");
         return;
     }
-    if (a->at.state == S_NONE || a->at.state == S_FAILED || a->at.state == S_SOURCE_LOST)
+    if (a->at.state == S_NONE || a->at.state == S_FAILED || a->at.state == S_SOURCE_LOST ||
+        a->at.state == S_INCOMPATIBLE)
         return;
     /* not from this agent's controller to this agent: dropped before the rate budget */
     if (memcmp(frame, a->al, 6) || !from_controller) {
@@ -1228,6 +1243,9 @@ static cJSON *status(agent *a)
     cJSON_AddItemToObject(o, "pod", pod_facts(a));
     cJSON_AddBoolToObject(o, "report_source_available", source_current(a));
     cJSON_AddStringToObject(session, "state", SESSION_NAMES[a->at.state]);
+    cJSON *issues = cJSON_AddArrayToObject(session, "admission_issues");
+    for (size_t i = 0; i < a->nadmission_issues; i++)
+        cJSON_AddItemToArray(issues, cJSON_CreateString(a->admission_issues[i]));
     cJSON_AddItemToObject(session, "counts", counters_json(&a->counts, ""));
     cJSON *steering = cJSON_AddObjectToObject(session, "steering");
     cJSON_AddItemToObject(steering, "counts", counters_json(&a->counts, "client_steering_"));

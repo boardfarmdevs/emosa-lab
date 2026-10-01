@@ -18,6 +18,8 @@ static void end(em_attempts *a, double now)
 em_attempt_step em_attempts_tick(em_attempts *a, double now, bool source_ok, int generation)
 {
     em_attempt_step step = {0};
+    if (a->state == EM_SESSION_INCOMPATIBLE)
+        return step; /* terminal: only a renewal starts again (OnboardingRecovery) */
     if (a->state == EM_SESSION_FAILED || a->state == EM_SESSION_SOURCE_LOST) {
         /* ended between ticks (a refused admission): the back-off begins now */
         step.ended = a->state == EM_SESSION_FAILED ? "failed" : "source_lost";

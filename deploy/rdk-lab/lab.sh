@@ -9,7 +9,7 @@
 # The RDK lab's own build turns the option on with both (meta-cmf-bananapi-vcpe
 # gen/vm/lxd/build.sh emosa, or EASYMESH_EMOSA=1 on a build).
 #
-# The adapter kit is built with uv (UV=, default .cache/opensync-lab-artifacts/uv).
+# The adapter kit is built with uv (UV=, else uv on PATH, ~/.local/bin/uv or .cache/opensync-lab-artifacts/uv).
 # The VM must be an RDK lab VM of its own: never the reference VMs.
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
@@ -18,8 +18,7 @@ VM=${EMOSA_VM:-rdk-emosa}
 stage() {
     local pod=${EMOSA_POD_IMAGE:?set EMOSA_POD_IMAGE to the pod image (out/mvx-pod-<stamp>)} kit
     [ -f "$pod.rootfs.tar.gz" ] && [ -f "$pod.metadata.tar.gz" ] || { echo "no pod image at $pod" >&2; exit 1; }
-    kit=$(UV="${UV:-$ROOT/.cache/opensync-lab-artifacts/uv}" "$ROOT/deploy/adapter/build.sh" \
-        "$ROOT/.cache/adapter-kit" | tail -1)
+    kit=$("$ROOT/deploy/adapter/build.sh" "$ROOT/.cache/adapter-kit" | tail -1)
     lxc exec "$VM" -- sh -c 'rm -rf /opt/emosa-lab/pod; mkdir -p /opt/emosa-lab/pod /opt/emosa-lab/vm'
     lxc file push -q "$kit" "$VM/opt/emosa-lab/adapter-kit.tar.gz"
     lxc file push -q "$pod.metadata.tar.gz" "$pod.rootfs.tar.gz" "$VM/opt/emosa-lab/pod/"

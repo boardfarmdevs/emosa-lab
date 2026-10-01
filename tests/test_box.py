@@ -49,6 +49,22 @@ def agent(request):
 
 def test_the_agent_takes_the_pod_and_searches_for_its_controller(agent, tmp_path):
     result = box("boot", agent, tmp_path / "box")
-    assert result["searched"]
+    assert result["passed"]
     assert "0x0007" in result["messages"]  # AP-Autoconfiguration Search
     assert result["exit"] is None  # still running when it was stopped
+
+
+def test_an_easymesh_61_controller_onboards_the_pod(agent, tmp_path):
+    # the Response, a real M2 from hostap's registrar for the agent's own M1, the
+    # credentials written to the pod, applied by its managers, observed applied
+    result = box("onboard", agent, tmp_path / "box")
+    assert result["session"] == "provisioning"
+    assert [op["state"] for op in result["operations"]] == ["OBSERVED_APPLIED"]
+    assert "0x8043" in result["messages"]  # the Early AP Capability Report, before M1
+
+
+def test_a_controller_without_controller_capability_is_refused(agent, tmp_path):
+    result = box("refuse", agent, tmp_path / "box")
+    assert result["session"] == "incompatible"
+    assert result["admission_issues"] == ["controller_capability_absent"]
+    assert "0x0009" not in result["messages"]  # no M1

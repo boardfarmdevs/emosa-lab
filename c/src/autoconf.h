@@ -33,6 +33,8 @@ typedef struct {
     int band, profile;
     int controller_flags;             /* -1 when absent */
     bool security_capability_present;
+    size_t security_capability_len;   /* the 1905 Security Capability TLV's length */
+    bool security_capability_zero;    /* its value is three zero octets */
 } em_advertisement;
 
 /* The Search message's TLVs, sent as a relayed multicast. */
@@ -41,6 +43,16 @@ em_reason em_search_frames(const em_binding *b, int band, int profile, const uin
 
 /* A controller's Response, checked like parse_response; the caller matches MID and band. */
 em_reason em_parse_response(const em_message *m, em_message_set set, em_advertisement *out);
+
+/* A parsed Response the session can use at all: the Search's band (2.4 GHz) and, with
+ * EasyMesh 6.1, not another defined profile (a reserved one is left to admission).
+ * One it cannot use is dropped, as the reference's DiscoveryExchange does. */
+bool em_response_usable(const em_advertisement *adv, em_message_set set);
+
+/* The session's admission of a Response it did not drop (spec §2.5), as the
+ * reference's non_dpp_admission: its issues, in the reference's order and names, at
+ * most 8; none admits, any makes the session incompatible. */
+size_t em_admission_issues(const em_advertisement *adv, em_message_set set, const char *out[8]);
 
 /* Check a message against the binding (destination, source). */
 bool em_binding_accepts(const em_binding *b, const em_message *m);

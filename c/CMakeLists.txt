@@ -54,8 +54,11 @@ endif()
 
 # Fuzz targets for the parsers of untrusted input (QUALITY.md §2). With
 # EMOSA_FUZZ (clang) they are libFuzzer binaries; otherwise each is linked with a
-# replay driver and ctest runs it over its seed corpus.
+# replay driver and ctest runs it over its seed corpus. Not in the adapter kit either.
 set(EMOSA_FUZZ_TARGETS cmdu stats rows wsc)
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/fuzz/replay.c)
+    set(EMOSA_FUZZ_TARGETS)
+endif()
 foreach(target ${EMOSA_FUZZ_TARGETS})
     if(EMOSA_FUZZ)
         add_executable(emosa-fuzz-${target} fuzz/${target}.c tests/fixture.c)

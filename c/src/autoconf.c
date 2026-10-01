@@ -119,7 +119,7 @@ em_reason em_parse_response(const em_message *m, em_message_set set, em_advertis
     if (!controller)
         return EM_INVALID_INPUT;
     int profiles = 0, flags = 0, security = 0;
-    const em_tlv *profile = NULL, *flag = NULL;
+    const em_tlv *profile = NULL, *flag = NULL, *capability = NULL;
     for (size_t i = 0; i < m->ntlvs; i++) {
         if (m->tlvs[i].kind == 0xB3) {
             profiles++;
@@ -129,6 +129,7 @@ em_reason em_parse_response(const em_message *m, em_message_set set, em_advertis
             flag = &m->tlvs[i];
         } else if (m->tlvs[i].kind == 0xA9) {
             security++;
+            capability = &m->tlvs[i];
         }
     }
     if (set == EM_SET_R1 && !profiles) {
@@ -143,7 +144,41 @@ em_reason em_parse_response(const em_message *m, em_message_set set, em_advertis
     out->band = band;
     out->controller_flags = flags ? flag->value[0] : -1;
     out->security_capability_present = security == 1;
+    out->security_capability_len = capability ? capability->len : 0;
+    out->security_capability_zero =
+        capability && capability->len == 3 && !capability->value[0] && !capability->value[1] && !capability->value[2];
     return EM_OK;
+}
+
+bool em_response_usable(const em_advertisement *adv, em_message_set set)
+{
+    return adv->band == 0 && (set == EM_SET_R1 || !(adv->profile >= 1 && adv->profile <= 3 && adv->profile != 1));
+}
+
+size_t em_admission_issues(const em_advertisement *adv, em_message_set set, const char *out[8])
+{
+    size_t n = 0;
+    /* ControllerAdvertisement.selected_response_issues; R1 has no Controller Capability */
+    if (set != EM_SET_R1) {
+        if (adv->controller_flags < 0) {
+            out[n++] = "controller_capability_absent";
+        } else {
+            if (!(adv->controller_flags & 0x80))
+                out[n++] = "kib_mib_support_absent";
+            if (!(adv->controller_flags & 0x40))
+                out[n++] = "early_ap_capability_bit_absent_for_non_dpp_search";
+        }
+    }
+    /* an absent Security Capability is allowed (no DPP); a present one is checked */
+    if (adv->security_capability_present) {
+        if (adv->security_capability_len != 3)
+            out[n++] = "security_capability_length_invalid";
+        else if (!adv->security_capability_zero)
+            out[n++] = "security_capability_reserved_algorithm";
+    }
+    if ((set != EM_SET_R1 && adv->profile != 1) || adv->band != 0)
+        out[n++] = "outside_profile1_24ghz_contract";
+    return n;
 }
 
 static bool basic_caps(const em_radio_caps *r, em_buf *v)

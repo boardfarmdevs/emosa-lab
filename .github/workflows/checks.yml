@@ -329,6 +329,11 @@ jobs:
           sudo apt-get install -y cmake libcjson-dev libsqlite3-dev
           cmake -S c -B c/build && cmake --build c/build -j
           EMOSA_BOX_REQUIRED=1 uv run pytest -m box --junitxml=box-results.xml
+      - name: The adapter kit's C agent builds from what the kit carries
+        run: |
+          kit=$(deploy/adapter/build.sh "$RUNNER_TEMP/kit" | tail -1)
+          cmake -S "${kit%.tar.gz}/c" -B "$RUNNER_TEMP/kit-c-build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$RUNNER_TEMP/kit-c-build" -j
       - uses: actions/upload-artifact@v4
         if: always()
         with:

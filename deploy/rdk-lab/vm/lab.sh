@@ -58,6 +58,9 @@ AGENTS=(6651 "${EMOSA_FLEET_LAST_PORT:-6690}")
 BHAUL_SSID=${EMOSA_PODBH_SSID:-opensync-lab-bhaul}          # also from the pod image
 BHAUL_KEY=${EMOSA_PODBH_KEY:-opensync-lab-bhaul-psk}
 LABREPO=${EMOSA_RDK_LAB_REPO:-/home/easymesh/git/meta-cmf-bananapi-vcpe}
+# the lab's room service: easymesh-room-service with its rooms in gen/rooms, or in a VM built
+# before meta-cmf-bananapi-vcpe f7316fb, easymesh-room-demo with gen/demo
+if [ -d "$LABREPO/gen/rooms" ]; then ROOM=easymesh-room-service ROOMS=gen/rooms; else ROOM=easymesh-room-demo ROOMS=gen/demo; fi
 # The lab's RF medium: easymesh-medium as the gen/medium submodule, or, in a lab
 # built before it, its own gen/wmediumd.
 if [ -d "$LABREPO/gen/medium/wmediumd" ]; then
@@ -713,7 +716,7 @@ client() {    # client NAME SSID KEY [BSSID]: pinned to BSSID when given (every 
 
 medium() {
     # the lab's own generator (as root: it reads LXD), with guests (user.wmediumd.guest=true).
-    # The room demo drives wmediumd live: it stops for the restart and starts again.
+    # The room service drives wmediumd live: it stops for the restart and starts again.
     # A restart drops every Wi-Fi backhaul (the extenders lost their APs with it until OneWifi
     # and em_agent were restarted): only when the generated configuration differs.
     local room= cfg=/run/meta-cmf-wmediumd/wmediumd.cfg
@@ -722,9 +725,9 @@ medium() {
         log "medium: already current"
         return
     fi
-    systemctl is-active --quiet easymesh-room-demo && room=1 && systemctl stop easymesh-room-demo
+    systemctl is-active --quiet "$ROOM" && room=1 && systemctl stop "$ROOM"
     (cd "$LABREPO" && bash "$MEDIUM_WMEDIUMD/wmediumd-up.sh" up) | tail -2
-    [ -z "$room" ] || systemctl start easymesh-room-demo
+    [ -z "$room" ] || systemctl start "$ROOM"
 }
 
 pods_running() { lxc list -c n -f csv | grep -E '^pod-[0-9]+$' || true; }
@@ -752,10 +755,10 @@ forget_pods() {    # remove the EMOSA agents' rows from the controller's model (
 }
 
 room_manifest() {    # the room service's manifest: the standard rooms with the pods, or the lab's own
-    local dropin=/etc/systemd/system/easymesh-room-demo.service.d/90-emosa-pods.conf
+    local dropin=/etc/systemd/system/$ROOM.service.d/90-emosa-pods.conf
     if [ "$1" = pods ]; then
         mkdir -p "${dropin%/*}"
-        printf '[Service]\nEnvironment=EASYMESH_ROOM_MANIFEST=gen/demo/manifests/private-client-room-walk-%s.json\n' "$1" > "$dropin"
+        printf '[Service]\nEnvironment=EASYMESH_ROOM_MANIFEST=%s/manifests/private-client-room-walk-%s.json\n' "$ROOMS" "$1" > "$dropin"
     else
         rm -f "$dropin"
     fi
@@ -772,27 +775,27 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         [ "$(lxc config get bpiap-004 user.easymesh.backhaul 2>/dev/null)" = wired ] && running bpiap-004 ||
             die "no wired extender bpiap-004 (meta-cmf gen/wired-extender.sh up 4)"
     elif [ "${1:-}" = native ] && exists bpiap-004 &&
-            [ ! -e /etc/systemd/system/easymesh-room-demo.service.d/80-wired-extender.conf ]; then
+            [ ! -e "/etc/systemd/system/$ROOM.service.d/80-wired-extender.conf" ]; then
         die "bpiap-004 is present but the room service has no rooms with it (meta-cmf gen/wired-extender.sh up 4)"
     fi
     case ${1:-} in
     pods)
-        systemctl stop easymesh-room-demo
+        systemctl stop "$ROOM"
         for pod in $(lxc list -c n -f csv | grep -E '^pod-[0-9]+$'); do start_guarded "$pod"; done
         cx emosa systemctl start emosa-fleet
         n=$(pods_running | wc -l)
         wait_agents
         medium    # pins the pods' backhaul links now that their stations exist
         room_manifest "$1"
-        systemctl reset-failed easymesh-room-demo; systemctl start easymesh-room-demo
+        systemctl reset-failed "$ROOM"; systemctl start "$ROOM"
         log "rooms: $1 ($n pods); suite: EASYMESH_ROOM_WORLDS_ROOT=$MEDIUM_CONFIGURATOR/worlds-$1" ;;
     native)
-        systemctl stop easymesh-room-demo
+        systemctl stop "$ROOM"
         cx emosa sh -c 'systemctl stop emosa-fleet "emosa-agent@*"'
         for pod in $(pods_running); do lxc stop "$pod"; done
         forget_pods
         room_manifest native
-        systemctl reset-failed easymesh-room-demo; systemctl start easymesh-room-demo
+        systemctl reset-failed "$ROOM"; systemctl start "$ROOM"
         log "rooms: the lab's own$(exists bpiap-004 && echo ', with the wired extender') (pods stopped, their controller rows removed)" ;;
     *) die "usage: lab.sh rooms pods|native" ;;
     esac
