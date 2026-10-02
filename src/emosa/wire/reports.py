@@ -2,7 +2,7 @@
 
 Facts and freshness tokens must come from a qualified coordinator. Synthetic
 callers exercise this component; creating one does not qualify a profile, trust
-an Ethernet peer or authorize pod operations. See doc/protocol/reports.md.
+an Ethernet peer or authorize pod operations. See docs/reference/protocol/reports.md.
 """
 
 import math

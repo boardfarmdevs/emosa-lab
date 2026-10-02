@@ -79,7 +79,8 @@ for name in ('em-baseline-controller','em-baseline-agent','em-baseline-wired','e
         bundle.add(
             REPO / "deploy/peer-baseline/reference.json", arcname="peer-baseline/reference.json"
         )
-        bundle.add(REPO / "doc/protocol/protocol-matrix.json", arcname="protocol-matrix.json")
+        matrix = REPO / "docs/reference/protocol/protocol-matrix.json"
+        bundle.add(matrix, arcname="protocol-matrix.json")
     vm("mkdir", "-p", "-m", "700", TARGET)
     command(
         "lxc",

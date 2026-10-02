@@ -6,7 +6,7 @@ wpa_supplicant client containers. It does not send EasyMesh messages or run
 OpenSync firmware. The upstream OpenSync schema remains a simulation reference.
 
 For the separate native-controller experiment's optional service calibration,
-see [virtual-link capacity](../../doc/protocol/virtual-link-capacity.md).
+see [virtual-link capacity](../../docs/reference/protocol/virtual-link-capacity.md).
 `calibrate-link.py`, `link-traffic.py` and `virtual-link.py` operate only in the
 idle owned lab; the native harness can opt into the same temporary shaper with
 `--virtual-link`. Neither path targets physical pods.
@@ -113,7 +113,7 @@ lxc file pull --recursive --quiet \
 
 ## WSC packet-driven component and the next boundary
 
-The separate [WSC radio walkthrough](../../doc/protocol/wsc-wire-radio.md) adds
+The separate [WSC radio walkthrough](../../docs/reference/protocol/wsc-wire-radio.md) adds
 `stage.py --wsc` and `run-wsc.py --label LABEL [--lost-reply]`. It connects
 authenticated M2 over actual Ethernet to the operation engine and this manager,
 with independent clients, withholding and wrong-key rejection. It starts at the
@@ -124,8 +124,8 @@ runner above retains its separate 13-case contract.
 Next join compatible native-controller discovery/Early/capability admission and
 controller-owned inventory to that packet-driven path. Both IEEE editions are
 now obtained; remaining normative dependencies and profile questions are in the
-[acquisition checklist](../../doc/protocol/specification-acquisition.md) and
-[protocol matrix](../../doc/protocol/protocol-matrix.json).
+[acquisition checklist](../../docs/reference/protocol/specification-acquisition.md) and
+[protocol matrix](../../docs/reference/protocol/protocol-matrix.json).
 
 Once a private pod connection path arrives, collect its read-only profile and
 qualify the physical mapping. The eventual acceptance path remains real EasyMesh
@@ -138,7 +138,7 @@ VM history, the publication command for the recorded final selection is:
 ```sh
 python3 scripts/curate-radio-manager.py \
   --private-root .lab/radio-manager \
-  --output doc/evidence/radio-manager \
+  --output docs/records/evidence/radio-manager \
   --selected qualified-04 qualified-05 qualified-06
 ```
 

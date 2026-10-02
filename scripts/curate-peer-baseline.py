@@ -166,7 +166,7 @@ def main():
         "schema_version": 2,
         "status": "bounded_native_onboarding_observed_with_recorded_defects",
         "date": "2026-09-16",
-        "source_base_revision": "2fcd99132251a9395035f4e5c2910659945e8964",
+        "source_base_revision": "4b476831d0a021114dcb8d7eebbd0ab95f74e581",
         "profile": "deploy/peer-baseline/reference.json",
         "final_procedure_matrix": selected,
         "negative_controls": negatives,

@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-CAPTURE = ROOT / "doc/evidence/native-compatibility/ethernet.pcap"
+CAPTURE = ROOT / "docs/records/evidence/native-compatibility/ethernet.pcap"
 EXPECTED_SHA256 = "331e9f4a58cc78e5c84036d3e24087ebad31891f03c5cb2c45173e145dd2997f"
 EXPECTED_WIFI6 = "020000ec020002040000004003221212d0440000004003221212d0"
 

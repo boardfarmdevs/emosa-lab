@@ -1,7 +1,7 @@
 """Selected EasyMesh 6.1 TLV *values*, without TLV headers or IEEE 1905 frames.
 
 Selected fields in sections 3.1.2 and 17.2 define this component. SSID octets use
-IEEE 802.11-2024 section 9.4.2.2. See doc/protocol/easymesh-payloads.md.
+IEEE 802.11-2024 section 9.4.2.2. See docs/reference/protocol/easymesh-payloads.md.
 These objects establish neither trusted identities nor a qualified profile.
 """
 

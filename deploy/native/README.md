@@ -2,9 +2,9 @@
 
 The pinned OpenSync OWM/OW/OSW stack now builds and runs in an isolated Ubuntu
 24.04 container. **The backend remains disabled: recovery test N03 fails.**
-See the [qualification record](../../doc/evidence/native/qualification.json),
-[39 upstream unit results](../../doc/evidence/native/unit-summary.json), and
-[end-to-end component probe](../../doc/evidence/native/path-summary.json).
+See the [qualification record](../../docs/records/evidence/native/qualification.json),
+[39 upstream unit results](../../docs/records/evidence/native/unit-summary.json), and
+[end-to-end component probe](../../docs/records/evidence/native/path-summary.json).
 These are semantic, simulated-device results. No EasyMesh frames, Wi-Fi link,
 physical pod or independent controller participate in this experiment.
 
@@ -97,7 +97,7 @@ measurements, not pod resource requirements.
    component container; their binary hashes are in `runtime.txt`.
 5. Install EMOSA at `/opt/emosa` using Python 3.13.7 and `uv sync --frozen` as in
    the deployment manual. This run reused the VM's Python/venv and extracted
-   EMOSA revision `e853ecc`; a fresh complete runtime image rebuild/export remains
+   EMOSA as of 15 September 2026; a fresh complete runtime image rebuild/export remains
    pending. The native build's Python 3.12 venv is a separate build dependency.
 6. Inside the candidate, run:
 
@@ -119,5 +119,5 @@ measurements, not pod resource requirements.
 This experiment satisfies the bounded R0 investigation with a concrete recovery
 blocker. It must not delay an available physical experiment. Actual acceptance
 still requires **real EasyMesh messages → EMOSA → unchanged physical pod →
-independently observed behavior**. The [specification acquisition checklist](../../doc/protocol/specification-acquisition.md)
-and [private pod connection instructions](../../doc/guides/pod-qualification.md) remain applicable.
+independently observed behavior**. The [specification acquisition checklist](../../docs/reference/protocol/specification-acquisition.md)
+and [private pod connection instructions](../../docs/guides/pod-qualification.md) remain applicable.

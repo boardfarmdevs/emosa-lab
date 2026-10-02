@@ -15,9 +15,9 @@ with kernel 6.8.0-139-generic and inner LXD 5.21.7 (snap revision 40585).
 The station reached WPA2-PSK `COMPLETED`, all three interface-bound pings passed,
 and 112 virtual-medium packets were captured. The initial package-started
 supplicant conflict and its retest are also retained. See
-[qualification evidence](../../doc/evidence/hwsim/qualification-summary.json),
-[result](../../doc/evidence/hwsim/result.json) and
-[station observation](../../doc/evidence/hwsim/station-status.txt).
+[qualification evidence](../../docs/records/evidence/hwsim/qualification-summary.json),
+[result](../../docs/records/evidence/hwsim/result.json) and
+[station observation](../../docs/records/evidence/hwsim/station-status.txt).
 
 ## Setup
 

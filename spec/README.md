@@ -559,7 +559,7 @@ Timers:
 
 EMOSA carries a pod's control. A pod's clients also need a data path to the
 gateway LAN. The design and its reasoning are in
-[`doc/architecture/data-plane.md`](../doc/architecture/data-plane.md). Any
+[`docs/concepts/data-plane.md`](../docs/concepts/data-plane.md). Any
 integration MUST meet the following.
 
 ### 8.1 Requirements
@@ -610,7 +610,7 @@ The agent keeps reporting a declared Ethernet attachment.
 Only for pods whose platform qualifies (data plane document §7): the platform
 MUST report `multi_ap=backhaul_sta` in `Wifi_VIF_State` for a Multi-AP link.
 OpenSync 6.6's cfg80211 platform does so for MediaTek drivers only;
-opensync-lab's pod image patches it for every driver (`d1dc985`). The pod then
+opensync-lab's pod image patches it for every driver. The pod then
 joins as a 4-address Multi-AP backhaul station bridged into `br-home`, without
 GRE.
 

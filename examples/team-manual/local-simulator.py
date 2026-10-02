@@ -1,4 +1,4 @@
-"""Disposable OVSDB fixture for doc/guides/team-manual.md; no radio or physical endpoint.
+"""Disposable OVSDB fixture for docs/guides/team-manual.md; no radio or physical endpoint.
 
 Run from the checkout with uv run. Leave this process running while starting
 emosa serve in another terminal. Creating DIRECTORY/withhold pauses simulated

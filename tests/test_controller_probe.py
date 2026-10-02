@@ -21,7 +21,8 @@ class Rig:
         return self.probe.receive(frame, **({"ingress": "fixture", "generation": 1} | kwargs))
 
     def response(self, *, mid=65535, source=CONTROLLER):
-        native = list(packets(Path("doc/evidence/peer-baseline/samples/wired/ethernet.pcap")))
+        sample = Path("docs/records/evidence/peer-baseline/samples/wired/ethernet.pcap")
+        native = list(packets(sample))
         tlvs = Reassembler().feed(native[1][2]).tlvs
         return fragment_message(AGENT, source, 8, mid, tlvs)[0]
 

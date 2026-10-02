@@ -1,32 +1,33 @@
-# EMOSA Lab
+# emosa-lab: EMOSA, unchanged OpenSync pods as EasyMesh agents
 
 ![EMOSA — エモさ — Emotional resonance: a Japanese riverside at sunset](assets/emosa-banner.png)
 
-**EMOSA (EasyMesh to OpenSync Adapter)** puts unchanged OpenSync pods into an
-EasyMesh network. It runs next to an EasyMesh controller. Every pod handed to it
-shows up at the controller as a standard EasyMesh agent. The controller
-configures it and sees its clients, and the pod keeps running its own OpenSync
-software.
-
-**[See how it works: the interactive guide](https://boardfarmdevs.github.io/emosa-lab/)**
-
 <!-- labs block: the same in every repository of the EasyMesh labs, but for the Site line -->
-**Site:** <https://boardfarmdevs.github.io/emosa-lab/>.
-The [EasyMesh labs](https://boardfarmdevs.github.io/easymesh-labs/) serve three
+**Site:** <https://vcpe.dev/emosa-lab/>
+The [EasyMesh labs](https://mesh.vcpe.dev/) serve three
 goals: EasyMesh optimizer development
-([easymesh-optimizer](https://github.com/boardfarmdevs/easymesh-optimizer)) in a rich
+([easymesh-optimizer](https://vcpe.dev/easymesh-optimizer/)) in a rich
 virtual lab, on both stacks
-([RDK EasyMesh](https://boardfarmdevs.github.io/meta-cmf-bananapi-vcpe/),
-[prplMesh](https://boardfarmdevs.github.io/prplmesh-lab/)); unchanged OpenSync
+([RDK EasyMesh](https://vcpe.dev/meta-cmf-bananapi-vcpe/),
+[prplMesh](https://vcpe.dev/prplmesh-lab/)); unchanged OpenSync
 pods as EasyMesh agents under a local controller, without the OpenSync cloud
-([EMOSA](https://boardfarmdevs.github.io/emosa-lab/), with the
-[OpenSync lab](https://boardfarmdevs.github.io/opensync-lab/)'s pods); and
+([EMOSA](https://vcpe.dev/emosa-lab/), with the
+[OpenSync lab](https://vcpe.dev/opensync-lab/)'s pods); and
 EasyMesh on physical hardware
-([Protocol lab](https://boardfarmdevs.github.io/easymesh-lab/)). Two core
+([Protocol lab](https://vcpe.dev/easymesh-lab/)). Two core
 components carry them: the RF medium
-([easymesh-medium](https://github.com/boardfarmdevs/easymesh-medium)) and EMOSA's
-OVSDB ⇄ EasyMesh conversion. The rest is infrastructure and learning around them.
+([easymesh-medium](https://vcpe.dev/easymesh-medium/)) and EMOSA's
+OVSDB ⇄ EasyMesh conversion. The rest is infrastructure, tools (the
+[room builder](https://vcpe.dev/easymesh-room-builder/)) and learning
+around them.
 <!-- /labs block -->
+
+**EMOSA (EasyMesh to OpenSync Adapter)** puts unchanged OpenSync pods into an EasyMesh
+network. It runs next to an EasyMesh controller; every pod handed to it shows up at the
+controller as a standard EasyMesh agent, which the controller configures and whose
+clients it sees, while the pod keeps running its own OpenSync software. The name also
+echoes **エモさ (*emosa*)**, a Japanese word for emotional resonance
+([Sanseido on エモい](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html)).
 
 ```text
 EasyMesh controller (prplMesh, RDK, ...)
@@ -37,8 +38,6 @@ EMOSA: fleet · one virtual agent per pod · OVSDB ⇄ EasyMesh translation
         ▼
 Unchanged OpenSync pods
 ```
-
-## What it does today
 
 Shown in two labs, with unchanged OpenSync 6.6.1 pods on simulated radios: the
 OpenSync lab under a prplMesh 6.0 controller, and the RDK lab under RDK-B's
@@ -68,18 +67,29 @@ suite passes with them.
 Not yet: TLS on the pod connections with a trust anchor an unchanged field pod
 accepts; 5 and 6 GHz radios, several radios per pod and WPA3; channel and power
 changes applied; pods on Ethernet; backhaul metrics and pods as parents of other
-pods. [The target system](doc/architecture/target-system.md) says what each
+pods. [The target system](docs/concepts/target-system.md) says what each
 needs.
 
-## Run it
+## Components
 
-To add EMOSA to an EasyMesh lab you already have (RDK, prplMesh or another),
-use the [adapter kit](deploy/adapter/README.md). It is a single tarball with
-an install script, and it states what the lab must provide.
+| Part | What it is |
+| --- | --- |
+| [spec/](spec/README.md) | the specification, the component design and the conformance vectors: the contract |
+| [schemas/](schemas) | the configuration, status and record files |
+| [src/emosa/](src/emosa) | the adapter, the Python reference: `emosa-fleet`, `emosa-agent`; runtime dependencies `ovs`, `cryptography`, `jsonschema` |
+| [c/](c/README.md) | the C implementation, interchangeable with the reference, and [its production bar](c/QUALITY.md) |
+| [lab/](lab) | `emosa-lab`: simulators, evaluation and experiment tooling; it depends on the adapter, never the other way round |
+| [deploy/](deploy/README.md) | the adapter kit for any EasyMesh lab, and the drivers for the OpenSync lab and the RDK lab |
+| [scenarios/](scenarios), [tests/](tests) | the experiment scenarios and the tests |
+| [site/](site) | the interactive guide |
 
-The reference lab runs on one Linux host with LXD. The gateway, pods and clients come from
-[opensync-lab](https://github.com/boardfarmdevs/opensync-lab). Every step is in
-the [lab manual](deploy/opensync-lab/README.md); in short:
+## Getting started
+
+To add EMOSA to an EasyMesh lab you already have (RDK, prplMesh or another), use the
+[adapter kit](deploy/adapter/README.md): one tarball with an install script, which states
+what the lab must provide. The reference lab runs on one Linux host with LXD, with the
+gateway, pods and clients of the [OpenSync lab](https://vcpe.dev/opensync-lab/); every
+step is in the [lab manual](deploy/opensync-lab/README.md):
 
 ```sh
 deploy/opensync-lab/lab.sh stage && deploy/opensync-lab/lab.sh emosa
@@ -89,17 +99,8 @@ deploy/opensync-lab/lab.sh policy emosa-mesh 'EmosaMesh2026!'
 deploy/opensync-lab/lab.sh admit pod-1 pod-2 pod-3
 ```
 
-## Develop
-
-The repository is a `uv` workspace with two packages:
-
-| Package | Where | What |
-| --- | --- | --- |
-| `emosa` | `src/emosa` | The adapter. Runtime dependencies: `ovs`, `cryptography`, `jsonschema`. Commands: `emosa-fleet`, `emosa-agent`. |
-| `emosa-lab` | `lab/src/emosa_lab` | Simulators, evaluation and experiment tooling. It depends on the adapter, never the other way round (`tests/test_adapter_boundary.py`). |
-
-`uv sync --frozen --no-dev` installs the adapter alone. A development sync
-installs both.
+To develop: the repository is a `uv` workspace (`uv sync --frozen --no-dev` installs
+the adapter alone):
 
 ```sh
 uv sync --frozen
@@ -109,18 +110,14 @@ bash scripts/build-ovsdb.sh && python3 scripts/build-wsc-registrar.py
 uv run pytest -m ovsdb            # real ovsdb-server and WSC registrar
 ```
 
-Start reading the code with these three modules:
-- `src/emosa/agent/fleet.py`: an agent for every pod;
-- `src/emosa/opensync/easymesh_view.py`: the translation;
-- `src/emosa/agent/pod.py`: the virtual agent.
+Start reading the code at `src/emosa/agent/fleet.py` (an agent for every pod),
+`src/emosa/opensync/easymesh_view.py` (the translation) and `src/emosa/agent/pod.py`
+(the virtual agent); the design is in
+[OpenSync pods as EasyMesh agents](docs/concepts/opensync-easymesh-mapping.md).
 
-The design is in
-[OpenSync pods as EasyMesh agents](doc/architecture/opensync-easymesh-mapping.md).
-The [documentation index](doc/README.md) lists everything else, including run
-records and history.
+## Documentation
 
-## The name
-
-*EMOSA* also echoes **エモさ (*emosa*)**, a Japanese word for emotional
-resonance, often with a nostalgic feeling. See
-[Sanseido on エモい (*emoi*)](https://dictionary.sanseido-publ.co.jp/topic/shingo2016/2016Best10.html).
+The [site](https://vcpe.dev/emosa-lab/) shows how it works, one message at a time. The
+documents are indexed in [docs/README.md](docs/README.md): the contract (the
+specification first), the concepts, the guides, the protocol reference, the project's
+plans and status, and the run records and their evidence.

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Inside an RDK EasyMesh lab VM (meta-cmf-bananapi-vcpe, root): EMOSA and an
 # unchanged OpenSync pod next to the RDK lab. Staged by ../lab.sh into /opt/emosa-lab.
-# Design: doc/architecture/rdk-lab.md.
+# Design: docs/concepts/rdk-lab.md.
 #
 #   lab.sh lanport                    the RDK lab's wired LAN port, a VM bridge that is a port of
 #                                     the controller's brlan0 (bpibroadband eth2): the EasyMesh LAN
@@ -59,7 +59,7 @@ BHAUL_SSID=${EMOSA_PODBH_SSID:-opensync-lab-bhaul}          # also from the pod 
 BHAUL_KEY=${EMOSA_PODBH_KEY:-opensync-lab-bhaul-psk}
 LABREPO=${EMOSA_RDK_LAB_REPO:-/home/easymesh/git/meta-cmf-bananapi-vcpe}
 # the lab's room service: easymesh-room-service with its rooms in gen/rooms, or in a VM built
-# before meta-cmf-bananapi-vcpe f7316fb, easymesh-room-demo with gen/demo
+# before meta-cmf-bananapi-vcpe of 30 September, easymesh-room-demo with gen/demo
 if [ -d "$LABREPO/gen/rooms" ]; then ROOM=easymesh-room-service ROOMS=gen/rooms; else ROOM=easymesh-room-demo ROOMS=gen/demo; fi
 # The lab's RF medium: easymesh-medium as the gen/medium submodule, or, in a lab
 # built before it, its own gen/wmediumd.

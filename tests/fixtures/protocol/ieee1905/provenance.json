@@ -1,7 +1,7 @@
 {
-  "normative_sources": "doc/protocol/ieee1905-envelope.md",
+  "normative_sources": "docs/reference/protocol/ieee1905-envelope.md",
   "scope": "Complete native Ethernet/CMDU headers and TLV boundaries only; no full procedure conformance",
-  "capture": "doc/evidence/peer-baseline/samples/wired/ethernet.pcap",
+  "capture": "docs/records/evidence/peer-baseline/samples/wired/ethernet.pcap",
   "capture_sha256": "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964",
   "extractor": "scripts/check-ieee1905-reference.py",
   "extractor_sha256": "2316d27ddcdb89932942c7503b162cfcca8b6569449c146313b604110bb3a8f0",

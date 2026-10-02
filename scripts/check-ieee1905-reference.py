@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests/fixtures/protocol/ieee1905"
-CAPTURE = ROOT / "doc/evidence/peer-baseline/samples/wired/ethernet.pcap"
+CAPTURE = ROOT / "docs/records/evidence/peer-baseline/samples/wired/ethernet.pcap"
 CAPTURE_SHA = "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964"
 
 

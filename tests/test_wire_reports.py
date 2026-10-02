@@ -444,7 +444,8 @@ def test_offline_learning_command_and_native_diagnostic_boundaries(tmp_path):
         if "report_review" in msg:
             assert not msg["report_review"]["missing_required_tlvs"]
             assert not msg["report_review"]["invalid_or_unsupported_value_tlvs"]
-    native = inspect_capture(Path("doc/evidence/peer-baseline/samples/wired/ethernet.pcap"))
+    sample = Path("docs/records/evidence/peer-baseline/samples/wired/ethernet.pcap")
+    native = inspect_capture(sample)
     early = next(m for m in native["messages"] if m["message_type"] == "0x8043")["report_review"]
     topo = next(m for m in native["messages"] if m["message_type"] == "0x0003")["report_review"]
     assert "0xed" in early["missing_required_tlvs"]

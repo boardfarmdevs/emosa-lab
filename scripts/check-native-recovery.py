@@ -237,7 +237,7 @@ def check(directory, tshark, *, minimum_seconds=900):
             "reporting policy and qualified metrics measurements",
             "IEEE 1905 neighbor link metrics",
             "final disassociation statistics and reason",
-            "complete acceptance criteria in doc/protocol/sustained-operation.md",
+            "complete acceptance criteria in docs/reference/protocol/sustained-operation.md",
         ],
     }
 

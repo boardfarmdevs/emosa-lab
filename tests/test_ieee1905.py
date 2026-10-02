@@ -238,7 +238,7 @@ def test_bad_capture_formats(tmp_path, payload):
 
 
 def test_retained_native_capture_has_real_headers_and_discovery():
-    path = Path("doc/evidence/peer-baseline/samples/wired/ethernet.pcap")
+    path = Path("docs/records/evidence/peer-baseline/samples/wired/ethernet.pcap")
     result = inspect_capture(path)
     found = next(m for m in result["messages"] if m["completed_at_frame"] == 4)
     assert found["message_type"] == "0x0000"
@@ -248,7 +248,7 @@ def test_retained_native_capture_has_real_headers_and_discovery():
 
 
 def test_all_native_headers_and_completed_tlv_boundaries_match_independent_tshark():
-    capture = Path("doc/evidence/peer-baseline/samples/wired/ethernet.pcap")
+    capture = Path("docs/records/evidence/peer-baseline/samples/wired/ethernet.pcap")
     references = json.loads(
         Path("tests/fixtures/protocol/ieee1905/native-envelope.json").read_text()
     )

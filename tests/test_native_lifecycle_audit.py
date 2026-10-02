@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 pytestmark = pytest.mark.unit
-EVIDENCE = Path("doc/evidence/native-lifecycle/native-lifecycle-soak-01")
+EVIDENCE = Path("docs/records/evidence/native-lifecycle/native-lifecycle-soak-01")
 CHECK = runpy.run_path("scripts/check-native-lifecycle.py")["check"]
 CANDIDATE = runpy.run_path("scripts/check-native-onboarding.py")["candidate_inputs"]
 FILES = (

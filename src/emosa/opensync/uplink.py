@@ -1,6 +1,6 @@
 """The pod's uplink as an EMOSA scope: switch a backhaul station to EasyMesh (option 1).
 
-Data plane option 1 (doc/architecture/data-plane.md §5): the pod's own backhaul
+Data plane option 1 (docs/concepts/data-plane.md §5): the pod's own backhaul
 station joins the gateway's Multi-AP backhaul BSS as a 4-address backhaul STA,
 bridged into ``br-home``, with no GRE. OpenSync 6.6 expresses it in OVSDB
 (``ow_ovsdb_cconf.c``, ``cm2_ovsdb.c``):

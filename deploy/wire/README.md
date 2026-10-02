@@ -1,6 +1,6 @@
 # Isolated IEEE 1905 Ethernet endpoint check
 
-Read the [envelope learning exercise](../../doc/protocol/ieee1905-envelope.md)
+Read the [envelope learning exercise](../../docs/reference/protocol/ieee1905-envelope.md)
 first. Default mode tests packet transport with empty Queries. The optional
 `--reports` mode exchanges restricted capability/topology reports using synthetic
 facts. Neither mode starts a native controller or writes pod configuration.
@@ -69,7 +69,7 @@ existing EMOSA protocol components and their installed dependencies.
    with the same MID and the fixture RUID/BSSID. This uses synthetic, explicitly
    complete facts; it does not attach the running adapter service or real pod.
    Left receives one frame; right receives two. Read the
-   [report walkthrough](../../doc/protocol/reports.md) for source-freshness and
+   [report walkthrough](../../docs/reference/protocol/reports.md) for source-freshness and
    one-second response-deadline checks.
 
 4. Retain and inspect the result on HOST:
@@ -90,11 +90,11 @@ existing EMOSA protocol components and their installed dependencies.
    Keep a failed worker log and the command tuple before correcting a run.
 
 For controller-facing acceptance continue with the
-[first complete wire experiment](../../doc/guides/first-wire-experiment.md).
+[first complete wire experiment](../../docs/guides/first-wire-experiment.md).
 
 ## Database-backed report coordinator
 
-Read the [coordinator walkthrough](../../doc/protocol/report-coordinator.md)
+Read the [coordinator walkthrough](../../docs/reference/protocol/report-coordinator.md)
 first. Stage the full bundle from step 2; it includes the pinned schema needed by
 the disposable database. This mode needs the selected OVSDB 4.0.0 tools and the
 existing installed Python dependencies. It needs no hwsim PHY or native controller.
@@ -116,7 +116,7 @@ lxc exec emosa-lab -- env PYTHONPATH=/opt/emosa-wire-check/src \
 ```
 
 On a fresh VM those retained paths may not exist. Build the selected tools using
-[manual chapter 5](../../doc/guides/team-manual.md#5-build-and-exercise-the-real-ovsdb-simulator)
+[manual chapter 5](../../docs/guides/team-manual.md#5-build-and-exercise-the-real-ovsdb-simulator)
 in that environment and point `EMOSA_OVS_BIN` to their directory. Do not assume the
 binaries are included in a Git clone. Use a new staging name if `bin` already
 exists; do not replace another experiment's links.
@@ -139,7 +139,7 @@ fixture administrator/manager explicitly perform the simulated changes.
 ## Discovery before read-only topology
 
 Use the same full source/schema bundle and OVSDB tools as above. Read the
-[discovery-session walkthrough](../../doc/protocol/discovery-session.md) first.
+[discovery-session walkthrough](../../docs/reference/protocol/discovery-session.md) first.
 From HOST, use an unused output directory in your existing owned staging area:
 
 ```bash
@@ -170,7 +170,7 @@ exchange that creates a durable operation and changes owned OVSDB. Optional
 seven M2 frames at the adapter and two fresh M1s at the synthetic peer. It does
 not join the discovery mode above or activate native-controller admission.
 
-Use the [WSC packet/radio walkthrough](../../doc/protocol/wsc-wire-radio.md) for
+Use the [WSC packet/radio walkthrough](../../docs/reference/protocol/wsc-wire-radio.md) for
 build, provenance-checked staging, commands, negative controls and interpretation.
 Its `stage.py --wsc` route supplies the compiled helper as well as the Python
 source. The same packet driver is used by the ownership-checked radio runner to

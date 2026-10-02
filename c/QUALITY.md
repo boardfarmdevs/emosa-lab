@@ -2,7 +2,7 @@
 
 **Reference.** What the C implementation must meet to be production code, and
 where it stands. It is step 8.1 of the easymesh-labs
-[alignment plan](https://github.com/boardfarmdevs/easymesh-labs/blob/main/docs/alignment-plan.md)
+alignment plan (in [easymesh-labs](https://mesh.vcpe.dev/))
 (phase 8: the C to production quality, owned afterwards by a team without
 access to the labs). The C is production code when every gate in §3 is met.
 

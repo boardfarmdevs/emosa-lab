@@ -11,7 +11,7 @@ synthetic simulator:
   NOC historically wrote ``key--1``; this profile replaces whatever single slot
   it finds with ``key``.
 - ``tx_chainmask`` is never written: on hwsim osw confsync then never settles
-  and aborts ``owm`` after 180 s (opensync-lab fa3a1cc).
+  and aborts ``owm`` after 180 s (opensync-lab, 23 September).
 
 One backend binds one fronthaul AP VIF (by name) on the radio of one band of one
 pod serial, and changes only that VIF's SSID and PSK, guarded atomically against

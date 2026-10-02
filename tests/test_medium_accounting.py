@@ -11,7 +11,9 @@ audit = runpy.run_path(
     str(Path(__file__).resolve().parents[1] / "scripts/check-medium-accounting.py")
 )
 pytestmark = pytest.mark.unit
-EVIDENCE = Path(__file__).resolve().parents[1] / "doc/evidence/medium-loss/native-medium-loss-05"
+EVIDENCE = (
+    Path(__file__).resolve().parents[1] / "docs/records/evidence/medium-loss/native-medium-loss-05"
+)
 
 
 def test_retained_corpus_preserves_retry_gap_separately_from_failure_accounting():

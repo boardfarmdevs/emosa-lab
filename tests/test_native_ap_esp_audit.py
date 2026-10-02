@@ -7,7 +7,7 @@ import pytest
 
 pytestmark = pytest.mark.unit
 AUDIT = runpy.run_path("scripts/check-native-ap-esp.py")
-ROOT = Path("doc/evidence/ap-esp/native-ap-esp-new-01")
+ROOT = Path("docs/records/evidence/ap-esp/native-ap-esp-new-01")
 
 
 @pytest.mark.parametrize("index", range(16))

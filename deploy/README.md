@@ -4,7 +4,7 @@ The runnable local simulator uses the same session/mapping code in unprivileged
 processes. It has been tested on the inspected Ubuntu 22.04 host and in the
 dedicated Ubuntu 24.04 nested-LXD environment: 69 unit and 13 OVSDB tests passed,
 and VM-driven component provisioning/lost-reply scenarios completed. See
-[the retained runtime evidence](../doc/evidence/peer/qualification-summary.json).
+[the retained runtime evidence](../docs/records/evidence/peer/qualification-summary.json).
 Full wire/hardware deployment remains unqualified. `images.lock.json` records
 the base image and its retained split export; wire/physical procedure reruns
 remain pending. A newer, separately scoped
@@ -88,7 +88,7 @@ unprivileged containers and three hwsim PHYs, removes setup Ethernet, and checks
 wired/wireless onboarding and independent client traffic. Run it separately from
 the two-radio smoke harness; both require exclusive ownership of hwsim in the VM.
 
-Copy `doc/project/emosa-input-manifest.example.json` to the ignored local manifest and
+Copy `docs/project/emosa-input-manifest.example.json` to the ignored local manifest and
 complete M0 with actual pod/build, schema, trusted endpoint/direction, resource
 bindings, writer controls and recovery/client evidence. Hardware configuration
 currently rejects writes because no such target has been qualified. Do not use

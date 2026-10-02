@@ -1,0 +1,47 @@
+# Operator and team guides
+
+[Documentation index](../README.md)
+
+| Guide | Use it to |
+| --- | --- |
+| [New learning sequence](learning-path.md) | Progress from architecture and a first model result through TLS, fleet/recovery measurements, clean reproduction and the remaining proof boundaries |
+| [Beginner’s team and operator manual](team-manual.md) | Learn the concepts and purpose of each step, establish a checkout, interpret results, operate every supported experiment and deliver scoped demos |
+| [Secure fleet and repeated recovery](secure-fleet.md) | Authenticate connecting pods, measure 4/8/16/32 real sessions, repeat faults and interpret resource/latency evidence |
+| [Clean nested-LXD reproduction](../../deploy/reliability/README.md) | Build and retain a runtime image, repeat priorities 1–3 from an installed wheel and clean up only owned resources |
+| [Connecting-pod walkthrough](connecting-pod.md) | Run a simulated extender that initiates OVSDB to EMOSA, inspect its diagnostic virtual agent, apply configuration and demonstrate recovery |
+| [Service integration walkthrough](service-integration.md) | Exercise two pods, restore owned radios after reboot, test the actual service with hwsim clients, and prepare the live controller trial |
+| [Onboarding readiness checks](onboarding-readiness.md) | Check complete radio/BSS scope and review the native controller's captured profiles and WSC payload set |
+| [Isolated native compatibility trial](native-compatibility.md) | Rebuild and test the HE-length fix, observe a one-BSS controller policy, and restore the pinned runtime |
+| [EMOSA-to-native-controller discovery](native-discovery.md) | Send EMOSA's Profile-1 Search, independently capture the native Response and distinguish a discovered device entry from completed radio/BSS onboarding |
+| [Isolated controller capability fix](controller-counter-candidate.md) | Build the native counter-flag fix, exercise exception recovery, compare captures and restore the baseline |
+| [First complete wire experiment](first-wire-experiment.md) | Follow the declared target, causal acceptance evidence, remaining implementation sequence and physical-pod handoff |
+| [Authenticated WSC handoff](../reference/protocol/wsc-provisioning.md) | Follow independent hostap M2 into a durable operation and real owned OVSDB, including duplicate, lost-reply and real process-crash recovery |
+| [Ethernet WSC to observed Wi-Fi](../reference/protocol/wsc-wire-radio.md) | Drive one packet-originated operation through OVSDB, hwsim and independent clients; compare normal and lost-reply outcomes |
+| [Offline EasyMesh payload exercise](../reference/protocol/easymesh-payloads.md) | Decode/build selected values and reproduce their independent native-capture checks without a VM or pod |
+| [Stable identities and observed topology](observed-topology.md) | Bind every simulated radio/VIF, inspect a complete State-derived AP value, and test reconnect/row recreation/service restart |
+| [Radio capability inputs](radio-capabilities.md) | Supply explicit evidence-backed synthetic limits, inspect per-radio values, and test withdrawal on changed inputs or observations |
+| [Profile-readiness walkthrough](../reference/protocol/profile-readiness.md) | Distinguish a working component from a qualified profile, audit feature conditions and inspect feature/counter-unit values offline |
+| [Technology and Device Inventory](technology-inventory.md) | Map explicit HT/VHT and inventory claims through two simulated pods; understand opaque HE and separate readiness results |
+| [HE MCS and Wi-Fi 6 capability values](he-wifi6.md) | Inspect direction/width/role fields, reproduce a native negative case and understand remaining report/peer gaps |
+| [Wi-Fi 6 role inputs through the service](wifi6-inputs.md) | Map explicit AP/STA capabilities, inspect separate readiness, and test two-pod withdrawal/isolation/crash recovery |
+| [Read-only physical-pod qualification](pod-qualification.md) | Prepare private local connection inputs, collect an actual schema/inventory and supply useful root-pod/cloud captures |
+| [Physical pods in the labs](physical-pods.md) | Bring an operator-provisioned pod, including a years-old one, into opensync-lab and then EMOSA: provisioning asks, Ethernet attachment, cloud trust, profile and data plane |
+
+For the distinction between the adapter, its virtual-agent role and the native
+prplMesh peers, read [manual §2.5](team-manual.md#25-languages-and-upstream-reuse).
+It also identifies the actual Python service, upstream C/C++ components, where
+native binaries come from, and which experiments require those artifacts.
+
+For deployment design, see [one service managing several pods](team-manual.md#26-one-adapter-service-several-represented-pods)
+and [cloud, EasyMesh, EMOSA and ODH flows](team-manual.md#27-compare-cloud-easymesh-and-emosa-connection-flows),
+including the [visual comparison](../concepts/connection-flows.svg). ODH is the
+data lake in the network center; its ingestion contract remains an input to define.
+
+Start on the development host. The model and ordinary OVSDB exercises need no
+LXD or radio. Follow the team manual's explicit HOST/VM/CONTAINER labels before
+using the prepared native or radio lab. Private pod credentials and raw physical
+captures belong outside the repository.
+
+The [IEEE 1905 envelope exercise](../reference/protocol/ieee1905-envelope.md) is the next
+wire-learning step after the semantic service: acquired specifications, native
+frame inspection, bounded fragment tests and isolated VM packet delivery.

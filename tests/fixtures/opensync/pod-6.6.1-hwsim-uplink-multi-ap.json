@@ -1,5 +1,5 @@
 {
- "source": "opensync-lab pod-6 (OpenSync 6.6.1.0 with the opensync-lab platform patch d1dc985, mac80211_hwsim) on a Multi-AP backhaul (bhaul-sta-24 on em-gtp emosa-lab-bh), 2026-09-24; the monitored columns of emosa.agent.pod.MONITOR, every key replaced",
+ "source": "opensync-lab pod-6 (OpenSync 6.6.1.0 with the opensync-lab platform patch of 24 September, mac80211_hwsim) on a Multi-AP backhaul (bhaul-sta-24 on em-gtp emosa-lab-bh), 2026-09-24; the monitored columns of emosa.agent.pod.MONITOR, every key replaced",
  "tables": {
   "AWLAN_Node": {
    "6351605e-c99d-4701-b4c7-a6a9d9860ffd": {

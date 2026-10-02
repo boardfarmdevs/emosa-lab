@@ -4,7 +4,7 @@ The second implementation of the EMOSA agent, interchangeable with the Python
 reference, written with an AI assistant. It is being taken to production
 quality so that it can be evaluated in full and owned by a team without access
 to the labs (the easymesh-labs
-[alignment plan](https://github.com/boardfarmdevs/easymesh-labs/blob/main/docs/alignment-plan.md),
+alignment plan (in [easymesh-labs](https://mesh.vcpe.dev/)),
 phase 8: the bar, CI with a lab in a box, a basic adapter with the fleet in C,
 then feature by feature). The bar is [QUALITY.md](QUALITY.md): the coding
 standard (CERT C), the gates and where each stands. Until every gate is met it
@@ -66,15 +66,15 @@ time), the probe watch, and the uplink (the pod's EasyMesh backhaul station,
 reported in the Topology Response and the Backhaul STA Capability Report, and
 moved by Backhaul Steering, whose move survives a session renewal).
 
-Checked in the RDK lab (`doc/architecture/rdk-lab.md`), in place of the
+Checked in the RDK lab (`docs/concepts/rdk-lab.md`), in place of the
 Python agent: onboarding and the journal taken over from Python, telemetry,
 periodic AP metrics, the probe watch, the uplink on the EasyMesh backhaul,
 Backhaul Steering (the move and its `0x801A` answer), and the lab's room suite
 with both pods on C and with one pod on each implementation (the record
-`doc/evidence/rdk-lab/README.md` §3).
+`docs/records/evidence/rdk-lab/README.md` §3).
 The reference workload (`deploy/opensync-lab`, `lab.sh workload`) passed alike
 with every agent on Python, on C, and mixed
-(`doc/evidence/opensync-lab-proof`).
+(`docs/records/evidence/opensync-lab-proof`).
 
 Known differences from the Python agent:
 - the report source: Python correlates a report with its source by a token

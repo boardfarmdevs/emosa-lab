@@ -14,7 +14,7 @@ from emosa_lab.simulation.forwarding import ForwardingSource, updates
 from emosa_lab.simulation.radio import MONITOR, seed_radio_database
 from test_forwarding import observation as forwarding_observation
 
-DATA = Path("doc/evidence/backhaul-accounting/backhaul-loss-02/result.json")
+DATA = Path("docs/records/evidence/backhaul-accounting/backhaul-loss-02/result.json")
 BOOT = "30e207c8-ed45-444b-a5ac-dcc6a44ef820"
 COLLECTOR = "30e207c8-ed45-444b-a5ac-dcc6a44ef821"
 ADDRESS = "00:16:3e:b2:d2:c4"

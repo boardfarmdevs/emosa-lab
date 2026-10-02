@@ -1,6 +1,6 @@
 {
   "scope": "Selected fields from existing synthetic native-peer traffic; not normative vectors or EMOSA traffic",
-  "source_capture": "doc/evidence/peer-baseline/samples/wired/ethernet.pcap",
+  "source_capture": "docs/records/evidence/peer-baseline/samples/wired/ethernet.pcap",
   "capture": {
     "sha256": "6cf3010c059058c6c8a9abeb39bc6eedf46c68cca65c8e8e0010694c0c36b964",
     "bytes": 10255

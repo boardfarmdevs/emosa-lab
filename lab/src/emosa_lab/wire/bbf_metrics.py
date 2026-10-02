@@ -3,7 +3,7 @@
 This bridge requires already qualified DataElements values, not raw kernel or
 OpenSync counters. BBF is the stated source; equivalence to the WFA DEr3 package
 is still pending. It opens no connection and enables no runtime report source.
-See doc/protocol/bbf-data-elements.md for the exact namespaces and limitations.
+See docs/reference/protocol/bbf-data-elements.md for the exact namespaces and limitations.
 """
 
 import struct

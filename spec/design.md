@@ -83,7 +83,7 @@ Process isolation is a requirement, not an optimization: a fault, restart or
 resource exhaustion in one pod's agent MUST NOT affect another pod's agent.
 The fleet never holds a pod's session after the handover. One process hosting
 every pod's agent is a later memory optimization for small routers
-(`doc/architecture/target-system.md` §4); it would have to keep that isolation
+(`docs/concepts/target-system.md` §4); it would have to keep that isolation
 of faults and resources.
 
 Placement. The reference runs all units in one Linux container (the lab's
@@ -191,7 +191,7 @@ implementation: switching implementations for a pod starts a new journal.
 | Underlay | `.1` of a link-local subnet on the interface where the pod-backhaul SSID lands; DHCP (dnsmasq) with the tunnel MTU (option 26), no router, no DNS |
 | Tunnels | one gretap per leased pod, created on the lease event, bridged into the LAN bridge; removed when the lease ends or the pod's address changes |
 | Rule | the underlay is never bridged into the LAN |
-| Spec | §8.2; design in `doc/architecture/data-plane.md` |
+| Spec | §8.2; design in `docs/concepts/data-plane.md` |
 
 ### 3.7 I7: command line
 
@@ -396,7 +396,7 @@ idempotent (`reconcile` makes the tunnels equal to the current leases).
 | statistics epochs | memory | no | a new counter epoch |
 | registry | fleet file | yes | the same agent (AL MAC, port, interface) for a returning pod |
 
-Recovery rules (spec §5, `doc/architecture/recovery.md`):
+Recovery rules (spec §5, `docs/concepts/recovery.md`):
 - idempotency keys make a repeated request return the existing operation;
 - a lost transaction reply is never retried blindly: the operation stays
   `INDETERMINATE` until the pod's State confirms or its deadline passes;
@@ -412,7 +412,7 @@ Specified elsewhere; listed here so that nothing is missed:
 | onboarding session | spec §2.5 (states `waiting_source` … `closed`) |
 | operation | spec §5; `operation-transitions.json` |
 | fleet handover | §3.1 |
-| uplink switch (option 1) | spec §8.3; `doc/architecture/data-plane.md` §5 |
+| uplink switch (option 1) | spec §8.3; `docs/concepts/data-plane.md` §5 |
 | telemetry, once per start | spec §3.6 |
 | steering window | spec §3.7 |
 | reassembly context | spec §2.1; `cmdu.json` |
@@ -523,13 +523,13 @@ An implementation is conformant when:
    `tests/test_conformance.py`; the C's `emosa-vectors`). Harnesses
    compare exact frames and exact transactions;
 2. it passes the live acceptance in an RDK lab VM
-   (`doc/architecture/rdk-lab.md` §5): an unchanged pod is onboarded by the
+   (`docs/concepts/rdk-lab.md` §5): an unchanged pod is onboarded by the
    RDK controller, appears in its topology, serves a client with internet, and
    is steered by the controller's `steer.sh`; and the RDK lab's room suite
    with the pods on it (the same §5);
 3. it passes the reference workload with a prplMesh controller
    (`deploy/opensync-lab`, `lab.sh workload`), alone and with the other
-   implementation on the other pods (`doc/evidence/opensync-lab-proof`);
+   implementation on the other pods (`docs/records/evidence/opensync-lab-proof`);
 4. it reads the same configuration and writes the same status as §3.5, so the
    fleet can start it for any pod.
 

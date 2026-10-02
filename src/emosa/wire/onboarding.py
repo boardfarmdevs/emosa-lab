@@ -2,7 +2,7 @@
 
 This is an experimental lifecycle for the owned sole-radio fixture. It does not
 qualify a complete EasyMesh profile or accept a physical backend. See the explicit
-feature/interpretation contract in doc/protocol/native-onboarding.md.
+feature/interpretation contract in docs/reference/protocol/native-onboarding.md.
 """
 
 import time

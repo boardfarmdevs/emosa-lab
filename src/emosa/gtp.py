@@ -12,7 +12,7 @@ link-local address, and builds a gretap to the first host of that subnet
   removes it when the lease ends or the pod's address changes.
 
 It never bridges the underlay itself into the LAN. The design is in
-doc/architecture/data-plane.md §4; the contract is spec §8.
+docs/concepts/data-plane.md §4; the contract is spec §8.
 
     emosa-gtp setup CONFIG            addresses, bridge, dnsmasq configuration, reconcile
     emosa-gtp lease CONFIG ACTION MAC IP [HOST]    (dnsmasq --dhcp-script: add, old, del)

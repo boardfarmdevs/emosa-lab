@@ -13,5 +13,5 @@ headers and completed boundaries against that independent projection.
 
 The hand-derived literal discovery vector and malformed/fragment cases are in
 `tests/test_ieee1905.py`. Normative authority is the
-[reviewed IEEE/WFA contract](../../../../doc/protocol/ieee1905-envelope.md), not
+[reviewed IEEE/WFA contract](../../../../docs/reference/protocol/ieee1905-envelope.md), not
 tshark or the native peer. Full WSC/profile/procedure conformance is not asserted.

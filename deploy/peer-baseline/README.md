@@ -5,18 +5,18 @@ prplMesh agent, without EMOSA or OpenSync in their protocol/data path. It is an
 observed interoperability baseline for these builds, not certification or an
 assertion that every EasyMesh device always works.
 
-The [retained report](../../doc/evaluation/peer-baseline.md) records 14 selected functional
+The [retained report](../../docs/records/peer-baseline.md) records 14 selected functional
 passes per backhaul mode under acceptance version 2. Earlier traffic checks
 missed an agent reset loop; the final selections use the native HAL fix and
 stricter operational/stability checks described below. Preliminary passes and
 failed attempts remain in the history. This baseline still aborts at shutdown.
-The separate [lifecycle candidate](../../doc/protocol/native-lifecycle.md) fixes
+The separate [lifecycle candidate](../../docs/reference/protocol/native-lifecycle.md) fixes
 the selected controller-container BPL owner and verifies normal main-process
 exits after a 15-minute EMOSA recovery workload. It is optional and the original
 baseline is restored afterward.
 
 For the separate candidate HAL experiment and a wired sole-fronthaul policy,
-follow [native compatibility](../../doc/guides/native-compatibility.md). It uses
+follow [native compatibility](../../docs/guides/native-compatibility.md). It uses
 isolated build directories and temporary libraries with restoration. The pinned
 baseline artifacts and the default two-BSS policy remain the reference above.
 
@@ -63,7 +63,7 @@ and review before publication. The final report must identify package/image,
 kernel, native binary and harness revisions. Clean process exit is a separate
 result: this native build repeatedly aborts on SIGTERM, even when functional
 restart recovery succeeds. The selected IEEE 1905 documents are now available;
-see the [protocol matrix](../../doc/protocol/protocol-matrix.json) for implemented
+see the [protocol matrix](../../docs/reference/protocol/protocol-matrix.json) for implemented
 procedures and remaining qualification boundaries. This existing-peer experiment
 does not establish EMOSA conformance.
 
@@ -238,7 +238,7 @@ complete version 2 suites and retain all earlier failures and preliminary passes
 ```sh
 python3 scripts/curate-peer-baseline.py \
   --private-root .lab/peer-baseline/runs \
-  --output doc/evidence/peer-baseline/summary.json \
+  --output docs/records/evidence/peer-baseline/summary.json \
   --wired-suite wired-stable-suite-01 \
   --wireless-suite wireless-stable-suite-01 \
   --wired-negative wired-stable-suite-negatives-01 \
@@ -257,7 +257,7 @@ The curator rejects running, missing or weakly validated selections. It retains
 raw artifact hashes and reviewed synthetic observations. The published report
 also includes reviewed representative synthetic captures; the complete captures,
 configuration files and native logs stay in private storage. Inspect all public
-artifacts before adding their hashes to `doc/evidence/manifest.json`.
+artifacts before adding their hashes to `docs/records/evidence/manifest.json`.
 
 Hostap source licensing and the patch's retained upstream code are covered by
 [LICENSE.hostap](LICENSE.hostap). Preserve that notice with any distributed

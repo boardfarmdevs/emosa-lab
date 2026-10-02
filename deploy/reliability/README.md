@@ -1,7 +1,7 @@
 # Reproduce the secure fleet in a clean nested-LXD runtime
 
-[Learning sequence](../../doc/guides/learning-path.md) ·
-[TLS/fleet/recovery concepts](../../doc/guides/secure-fleet.md)
+[Learning sequence](../../docs/guides/learning-path.md) ·
+[TLS/fleet/recovery concepts](../../docs/guides/secure-fleet.md)
 
 This is priority 4: reproduce priorities 1–3 without relying on the developer's
 editable checkout or existing radio lab. All commands in this guide are issued
@@ -156,5 +156,5 @@ start the VM with `lxc start emosa-reliability`, choose a new host evidence
 directory and run the `run` command again. The new run generates fresh test keys.
 
 For a demo, prepare/publish beforehand and show a short two-pod HOST run alongside
-the reviewed clean-environment results. See the [learning sequence](../../doc/guides/learning-path.md)
+the reviewed clean-environment results. See the [learning sequence](../../docs/guides/learning-path.md)
 for the step from these component observations to radio and eventual wire proof.

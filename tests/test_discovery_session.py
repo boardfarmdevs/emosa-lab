@@ -62,7 +62,7 @@ def test_search_response_then_topology_without_early_or_m1_or_operation():
 def test_native_response_missing_security_and_kib_is_rejected():
     from pathlib import Path
 
-    native = list(packets(Path("doc/evidence/peer-baseline/samples/wired/ethernet.pcap")))
+    native = list(packets(Path("docs/records/evidence/peer-baseline/samples/wired/ethernet.pcap")))
     response = Reassembler().feed(native[1][2])
     assert response.message_type == 8
     rig = Rig()

@@ -169,7 +169,7 @@ def test_discovery_repeated_response_cannot_change_bound_advertisement():
 
 def test_native_discovery_fields_are_independent_inputs_with_unqualified_profiles():
     parser = Reassembler()
-    capture = Path("doc/evidence/peer-baseline/samples/wired/ethernet.pcap")
+    capture = Path("docs/records/evidence/peer-baseline/samples/wired/ethernet.pcap")
     decoded = []
     for _number, _timestamp, frame, truncated in packets(capture):
         assert not truncated

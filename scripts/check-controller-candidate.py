@@ -20,7 +20,7 @@ def digest(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--directory", type=Path, default=ROOT / "doc/evidence/native-controller-counter"
+        "--directory", type=Path, default=ROOT / "docs/records/evidence/native-controller-counter"
     )
     parser.add_argument("--tshark", default="tshark")
     args = parser.parse_args()
@@ -33,7 +33,7 @@ def main():
         ROOT / "deploy/peer-baseline/patches/0004-controller-counter-capability.patch"
     )
     assert build["candidate_sha256"] != baseline
-    before = check(args.tshark, ROOT / "doc/evidence/native-discovery/run-07")
+    before = check(args.tshark, ROOT / "docs/records/evidence/native-discovery/run-07")
     assert before["controller_flags_hex"] == "40"
     results = []
     for name in ("candidate-01", "candidate-02"):

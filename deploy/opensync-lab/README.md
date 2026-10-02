@@ -1,6 +1,6 @@
 # EMOSA on an opensync-lab VM
 
-The EasyMesh side of the [proof plan](../../doc/project/proof-plan.md): a native
+The EasyMesh side of the [proof plan](../../docs/project/proof-plan.md): a native
 prplMesh controller and EMOSA's virtual agents, added next to an unchanged
 [opensync-lab](https://github.com/boardfarmdevs/opensync-lab) stack (RDK-B
 gateway `mv3`, OpenSync 6.6.1.0 pods, wireless clients, `local-noc`).
@@ -37,7 +37,7 @@ pod-N ──5 GHz backhaul + GRE── mv3 ── WAN      clients ──2.4 GHz
 
 opensync-lab VM first (opensync-lab `main`, which carries the `--redirect`
 and `MVX_CLIENT_SSID`), then the EasyMesh side. The run record is in
-[doc/evidence/opensync-lab-proof](../../doc/evidence/opensync-lab-proof/README.md).
+[docs/records/evidence/opensync-lab-proof](../../docs/records/evidence/opensync-lab-proof/README.md).
 
 ```sh
 # in opensync-lab
@@ -119,7 +119,7 @@ M2 set, and the pod also runs the backhaul BSS itself (`b-ap-24`); unpinned,
 its station joined that BSS and looped `br-home` until the VM locked up. `lab.sh uplink POD gtp|multi-ap|restore|show` still moves an uplink by
 hand.
 
-Option 1 needs a pod image built by opensync-lab `d1dc985` or later, which
+Option 1 needs a pod image built by opensync-lab from 24 September 2026 or later, which
 applies the platform patch for the Multi-AP link state.
 
 ```sh
@@ -136,7 +136,7 @@ A pod whose switch was not confirmed is held on option 2, and its agent status
 says why. `lab.sh release` followed by `lab.sh admit` starts over.
 
 The design and the results are in
-[the data plane document](../../doc/architecture/data-plane.md).
+[the data plane document](../../docs/concepts/data-plane.md).
 
 ## Artifacts
 

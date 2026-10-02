@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-EVIDENCE = ROOT / "doc/evidence/telemetry-freshness/native-telemetry-gap-01"
+EVIDENCE = ROOT / "docs/records/evidence/telemetry-freshness/native-telemetry-gap-01"
 audit = runpy.run_path(str(ROOT / "scripts/check-telemetry-gap.py"))
 pytestmark = pytest.mark.unit
 

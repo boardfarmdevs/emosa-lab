@@ -2,7 +2,7 @@
 
 The caller supplies a trusted-link/peer binding; neither MAC matching nor WSC
 authentication establishes that trust. No backend, secret store or operation
-engine is called here. See doc/protocol/autoconfiguration.md for the contract.
+engine is called here. See docs/reference/protocol/autoconfiguration.md for the contract.
 """
 
 from __future__ import annotations

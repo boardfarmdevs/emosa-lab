@@ -25,5 +25,5 @@ python3 -m http.server 8000 --directory dist/site
   if the page links to a repository path that does not exist on `main`.
 - `.github/workflows/pages.yml`, the same in the five lab repositories, runs
   `pages/build` and `pages/finish-site.py` on pull requests and pushes, and
-  deploys from `main` to <https://boardfarmdevs.github.io/emosa-lab/>. The
+  deploys from `main` to <https://vcpe.dev/emosa-lab/>. The
   repository's Pages source must be **GitHub Actions**.

@@ -61,5 +61,5 @@ Not covered by vectors yet, but by the reference implementation's tests:
 - the Topology, AP Capability and Client Capability answers as whole
   messages, whose TLVs `translation-northbound.json` covers;
 - the AP scope's M2 writes over a live pod (a Wifi_VIF_Config row changing
-  under a write), which the RDK lab's room suite exercises (`doc/architecture/rdk-lab.md` §5);
+  under a write), which the RDK lab's room suite exercises (`docs/concepts/rdk-lab.md` §5);
 - the fleet's supervision of agent processes.

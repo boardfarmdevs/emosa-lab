@@ -10,7 +10,7 @@ steps (no I/O, no clock):
    a view -> the EasyMesh payloads the agent sends (AP Radio Basic
    Capabilities, Device Inventory, Topology Response contents).
 
-The mapping (see doc/architecture/opensync-easymesh-mapping.md):
+The mapping (see docs/concepts/opensync-easymesh-mapping.md):
 
 =========================================  ======================================
 OpenSync (State tables)                    EasyMesh / 1905.1

@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 audit = runpy.run_path(str(ROOT / "scripts/check-tx-status-accounting.py"))
 collector = runpy.run_path(str(ROOT / "deploy/radio-manager/tx-status-trace.py"))
 pytestmark = pytest.mark.unit
-EVIDENCE = ROOT / "doc/evidence/tx-status/native-tx-status-01"
+EVIDENCE = ROOT / "docs/records/evidence/tx-status/native-tx-status-01"
 
 
 def test_retained_trace_explains_the_retry_delta_without_qualifying_passthrough():

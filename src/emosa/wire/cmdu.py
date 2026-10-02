@@ -1,6 +1,6 @@
 """Bounded IEEE 1905.1-2013 + 1905.1a-2014 / EasyMesh 6.1 envelope.
 
-See doc/protocol/ieee1905-envelope.md for normative rules and local limits.
+See docs/reference/protocol/ieee1905-envelope.md for normative rules and local limits.
 This layer preserves TLV occurrences; only a message-specific interpreter can
 decide aggregation, required fields, supported values and application authority.
 """

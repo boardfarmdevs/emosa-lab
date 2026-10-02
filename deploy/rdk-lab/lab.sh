@@ -1,7 +1,7 @@
 #!/bin/bash
 # EMOSA and an OpenSync pod in an RDK EasyMesh lab VM (host side). Stages the
 # adapter kit, the pod image and vm/lab.sh into the VM, then runs vm/lab.sh there.
-# Design: doc/architecture/rdk-lab.md. In the VM, vm/lab.sh and the steps it shares with
+# Design: docs/concepts/rdk-lab.md. In the VM, vm/lab.sh and the steps it shares with
 # the OpenSync lab (deploy/lib) are in /opt/emosa-lab/deploy, as in this repository.
 #
 #   EMOSA_VM=rdk-emosa EMOSA_POD_IMAGE=~/yocto/mvx-pod-work/out/mvx-pod-<stamp> deploy/rdk-lab/lab.sh stage

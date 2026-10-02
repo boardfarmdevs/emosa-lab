@@ -28,7 +28,7 @@ retain it but ignore it as a role; encoder tests require rejection under EasyMes
 Only already public synthetic MAC identities and SSIDs are included; no WSC
 settings or credential fields are extracted.
 
-See the [component contract and exercise](../../../../doc/protocol/easymesh-payloads.md)
+See the [component contract and exercise](../../../../docs/reference/protocol/easymesh-payloads.md)
 for exact normative references and limitations. Additional hand-derived table
 examples in `tests/test_easymesh_payloads.py` exercise empty counts, multi-radio
 structure and opaque SSID bytes without pretending they came from a peer.
