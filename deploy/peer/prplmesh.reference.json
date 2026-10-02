@@ -5,7 +5,7 @@
   "upstream_repository": "https://gitlab.com/prpl-foundation/prplmesh/prplMesh.git",
   "upstream_commit": "2e153c7e00cbcab6b8ee35082f494a364e23f018",
   "build_repository": "https://github.com/boardfarmdevs/prplmesh-lab",
-  "build_repository_commit": "aef560d244814ffc9f6ce1f77ec2b2b9a367c190",
+  "build_repository_commit": "fcb0b97910e0e9d164578565b970c130d766e88e",
   "patchset_sha256": "09b8e3b0a4ad0bf12a8df59e6a316b8fc8897fab878adce867f958f2c6e4543f",
   "archives": {
     "prpl-install-nl80211-6.0.0.tar.gz": "a98a6903fb9db1494ece0c292dd85c7d4d8ff2f570b5b85768ed6f299f72fb1f",
