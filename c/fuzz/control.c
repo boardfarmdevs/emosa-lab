@@ -160,5 +160,9 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     cJSON_Delete(em_reporting_status(&reporting));
     em_bh_close(&bh);
     em_reporting_close(&reporting);
+    /* what the agent frees when the next session reuses these (em_*_start), as each input
+     * here is a session of its own */
+    cJSON_Delete(bh.last);
+    cJSON_Delete(reporting.value);
     return 0;
 }
