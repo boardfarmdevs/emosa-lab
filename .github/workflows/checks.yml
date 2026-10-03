@@ -363,13 +363,14 @@ jobs:
       - run: uv sync --frozen
       - run: >-
           sudo apt-get update && sudo apt-get install -y build-essential pkg-config libssl-dev
-          cmake libcjson-dev libsqlite3-dev mosquitto
+          cmake libcjson-dev libsqlite3-dev mosquitto dnsmasq-base
       - run: bash scripts/build-ovsdb.sh
       - run: python3 scripts/build-wsc-registrar.py
       - run: cmake -S c -B c/build && cmake --build c/build -j
       - name: The scenarios
         run: |
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          sudo modprobe ip_gre    # the GTP's gretaps, created in the box's own namespace
           EMOSA_BOX_REQUIRED=1 EMOSA_BOX_AGENTS=${{ matrix.agent }} \
             uv run pytest -m box --durations=10 --junitxml=box-results-${{ matrix.agent }}.xml
       - uses: actions/upload-artifact@v4
@@ -410,13 +411,13 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y cmake pkg-config clang libclang-rt-18-dev libcjson-dev libssl-dev libsqlite3-dev
       - run: cmake -S c -B c/build -DCMAKE_C_COMPILER=clang -DEMOSA_FUZZ=ON -DEMOSA_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug
-      - run: cmake --build c/build -j --target emosa-fuzz-cmdu emosa-fuzz-stats emosa-fuzz-rows emosa-fuzz-wsc
+      - run: cmake --build c/build -j --target emosa-fuzz-cmdu emosa-fuzz-stats emosa-fuzz-rows emosa-fuzz-wsc emosa-fuzz-fleet emosa-fuzz-gtp
       - name: fuzz
         env:
           ASAN_OPTIONS: detect_leaks=1:fast_unwind_on_malloc=0
         run: |
           mkdir -p fuzz-artifacts
-          for target in cmdu stats rows wsc; do
+          for target in cmdu stats rows wsc fleet gtp; do
             mkdir -p "fuzz-$target" && cp c/fuzz/corpus/$target/* "fuzz-$target/"
             c/build/emosa-fuzz-$target -max_total_time=60 -print_final_stats=1 \
               -artifact_prefix="fuzz-artifacts/$target-" "fuzz-$target"

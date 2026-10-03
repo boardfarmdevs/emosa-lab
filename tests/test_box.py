@@ -18,17 +18,17 @@ C_AGENT = Path(os.environ.get("EMOSA_C_AGENT", ROOT / "c/build/emosa-agent-c"))
 
 def box(scenario, agent, directory, timeout=180):
     command = [sys.executable, "-m", "emosa_lab.box", scenario, "--agent", agent]
-    command += ["--directory", str(directory)]
-    if agent == "c":
-        command += ["--binary", str(C_AGENT)]
+    # the C agent's directory also has the C fleet and GTP (a takeover runs both fleets)
+    command += ["--directory", str(directory), "--binary", str(C_AGENT)]
     result = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
     assert result.returncode == 0, result.stdout + result.stderr + _log(directory)
     return json.loads(result.stdout)
 
 
 def _log(directory):
-    log = Path(directory) / "agent.log"
-    return log.read_text()[-2000:] if log.exists() else ""
+    logs = [Path(directory) / name for name in ("agent.log", "fleet.log", "gtp.log")]
+    logs += sorted((Path(directory) / "units").glob("*.log"))
+    return "".join(f"\n--- {p.name}\n{p.read_text()[-2000:]}" for p in logs if p.exists())
 
 
 def unavailable(reason):
@@ -239,4 +239,62 @@ def test_a_restarted_agent_takes_the_pod_back_without_writing_again(agent, tmp_p
 
 def test_a_cut_pod_connection_is_onboarded_again_when_the_pod_returns(agent, tmp_path):
     result = box("transport-cut", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
+# -- the adapter around the agents (plan 8.3): the fleet and the GTP, either implementation
+
+
+def adapter(agent, *programs):
+    """The C programs next to the C agent (built with it), for the C runs; and for a
+    takeover, also when the other implementation is the C."""
+    for program in programs:
+        if not (C_AGENT.parent / program).exists():
+            unavailable(f"no {program} next to {C_AGENT}: cmake --build c/build")
+
+
+def test_a_pod_handed_to_the_fleet_gets_its_agent_and_is_onboarded(agent, tmp_path):
+    if agent == "c":
+        adapter(agent, "emosa-fleet-c")
+    result = box("fleet-handover", agent, tmp_path / "box")
+    assert result["passed"], result
+    assert result["units"][:2] == ["enable", "start"]
+    assert result["entry"]["interface"] == "em1"
+
+
+def test_a_returning_pod_gets_the_same_agent_never_restarted(agent, tmp_path):
+    if agent == "c":
+        adapter(agent, "emosa-fleet-c")
+    result = box("fleet-return", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert "restart" not in result["units"] and result["same_process"]
+
+
+def test_pods_the_fleet_must_not_take_are_left_unchanged(agent, tmp_path):
+    if agent == "c":
+        adapter(agent, "emosa-fleet-c")
+    result = box("fleet-refusals", agent, tmp_path / "box")
+    assert result["passed"], result
+    assert result["units"] == [] and result["configs"] == []
+
+
+def test_either_fleet_takes_over_from_the_other(agent, tmp_path):
+    adapter(agent, "emosa-fleet-c")  # the C fleet runs first or second
+    result = box("fleet-takeover", agent, tmp_path / "box")
+    assert result["passed"], result
+    assert result["listed_alike"] and result["same_process"]
+
+
+def test_a_released_pod_is_archived_and_handed_over_anew(agent, tmp_path):
+    if agent == "c":
+        adapter(agent, "emosa-fleet-c")
+    result = box("fleet-forget", agent, tmp_path / "box")
+    assert result["passed"], result
+    assert result["archived"].startswith(result["released"] + ".released-")
+
+
+def test_the_gtp_keeps_one_gretap_per_lease_in_the_lan_bridge(agent, tmp_path):
+    if agent == "c":
+        adapter(agent, "emosa-gtp-c")
+    result = box("gtp", agent, tmp_path / "box")
     assert result["passed"], result

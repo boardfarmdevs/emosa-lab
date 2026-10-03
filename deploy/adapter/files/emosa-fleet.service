@@ -3,8 +3,13 @@ Description=EMOSA fleet: a virtual EasyMesh agent for every OpenSync pod handed 
 After=network-online.target
 
 [Service]
+# The implementation: EMOSA_FLEET from /etc/default/emosa-implementation (the
+# installer's), overridden in /etc/default/emosa. Both take the same arguments and files.
+Environment=EMOSA_FLEET=/opt/emosa-adapter/venv/bin/emosa-fleet
+Environment=EMOSA_SCHEMAS=/opt/emosa-adapter/share/schemas
+EnvironmentFile=-/etc/default/emosa-implementation
 EnvironmentFile=-/etc/default/emosa
-ExecStart=/opt/emosa-adapter/venv/bin/emosa-fleet serve /etc/emosa-fleet.json
+ExecStart=/bin/sh -c 'exec "$$EMOSA_FLEET" serve /etc/emosa-fleet.json'
 Restart=on-failure
 RestartSec=3
 

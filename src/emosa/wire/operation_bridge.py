@@ -187,7 +187,7 @@ class WscComponentBridge:
                 )
                 if existing is None:
                     for name in refs:
-                        (self.engine.vault.directory / name).unlink(missing_ok=True)
+                        self.engine.vault.forget(name)
                 else:
                     self.operation_id = existing.operation_id
             if authenticated and self.operation_id is None:

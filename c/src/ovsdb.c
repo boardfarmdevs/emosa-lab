@@ -5,6 +5,7 @@
 #include "ovsdb.h"
 
 #include "canon.h"
+#include "jsonrpc.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -199,12 +200,8 @@ static void on_message(em_ovsdb *s, cJSON *m)
     const cJSON *method = cJSON_GetObjectItemCaseSensitive(m, "method");
     const cJSON *id = cJSON_GetObjectItemCaseSensitive(m, "id");
     if (cJSON_IsString(method)) {
-        if (!strcmp(method->valuestring, "echo") && id && !cJSON_IsNull(id)) {
-            cJSON *reply = cJSON_CreateObject();
-            cJSON_AddItemToObject(reply, "result",
-                                  cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(m, "params"), 1));
-            cJSON_AddNullToObject(reply, "error");
-            cJSON_AddItemToObject(reply, "id", cJSON_Duplicate(id, 1));
+        cJSON *reply = em_rpc_echo_reply(m);
+        if (reply) {
             send_json(s, reply);
             cJSON_Delete(reply);
         } else if (!strcmp(method->valuestring, "update")) {
@@ -226,37 +223,17 @@ static bool drain(em_ovsdb *s)
 {
     size_t start = 0;
     while (start < s->len) {
-        int depth = 0;
-        bool string = false, escape = false;
-        size_t i = start, end = 0;
-        while (i < s->len && (s->buf[i] == ' ' || s->buf[i] == '\n' || s->buf[i] == '\r' || s->buf[i] == '\t'))
-            i++;
-        start = i;
-        for (; i < s->len; i++) {
-            char c = s->buf[i];
-            if (string) {
-                if (escape) escape = false;
-                else if (c == '\\') escape = true;
-                else if (c == '"') string = false;
-            } else if (c == '"') {
-                string = true;
-            } else if (c == '{' || c == '[') {
-                depth++;
-            } else if (c == '}' || c == ']') {
-                if (--depth == 0) {
-                    end = i + 1;
-                    break;
-                }
-            }
-        }
-        if (!end)
+        size_t at, end;
+        bool complete = em_json_next(s->buf + start, s->len - start, &at, &end);
+        start += at;
+        if (!complete)
             break;
-        cJSON *m = cJSON_ParseWithLength(s->buf + start, end - start);
+        cJSON *m = cJSON_ParseWithLength(s->buf + start, end - at);
         if (!m)
             return false;
         on_message(s, m);
         cJSON_Delete(m);
-        start = end;
+        start += end - at;
     }
     memmove(s->buf, s->buf + start, s->len - start);
     s->len -= start;

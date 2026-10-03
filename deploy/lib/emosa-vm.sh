@@ -48,11 +48,22 @@ adapter_container() {    # adapter_container PACKAGE...: container emosa, runnin
 }
 
 install_kit() {    # install_kit CT: the adapter kit, installed in CT
+    # EMOSA_IMPLEMENTATION=python|c chooses the adapter's (c: no Python); unset, the
+    # installer keeps the one CT has
     lxc file push -q "$KIT" "$1/root/adapter-kit.tar.gz"
-    cx "$1" sh -ec 'rm -rf /root/adapter-kit && mkdir /root/adapter-kit
+    cx "$1" env EMOSA_IMPLEMENTATION="${EMOSA_IMPLEMENTATION:-}" sh -ec 'rm -rf /root/adapter-kit && mkdir /root/adapter-kit
         tar -C /root/adapter-kit --strip-components=1 -xzf /root/adapter-kit.tar.gz
         /root/adapter-kit/install.sh'
 }
+
+fleet_cli() {    # fleet_cli COMMAND [ARGS...]: the installed fleet's command (list, forget)
+    cx emosa sh -c 'set -a; . /etc/default/emosa-implementation 2>/dev/null || true
+        . /etc/default/emosa 2>/dev/null || true
+        exec "${EMOSA_FLEET:-/opt/emosa-adapter/venv/bin/emosa-fleet}" "$1" /etc/emosa-fleet.json ${2:+"$2"}' \
+        sh "$1" "${2:-}"
+}
+
+python_adapter() { cx emosa test -x /opt/emosa-adapter/venv/bin/python; }
 
 adapter_kit() {    # the kit in emosa, its agents' trunk the EasyMesh LAN NIC emlan
     install_kit emosa
@@ -221,7 +232,10 @@ gtp_hostapd() {    # gtp_hostapd: hostapd (re)started on /etc/hostapd/hostapd.co
 }
 
 gtp_termination() {    # gtp_termination: the kit's GTP on podbh, tunnels into br-gtp with eth1
-    install_kit em-gtp >/dev/null
+    # the adapter's implementation (the emosa container's) unless EMOSA_IMPLEMENTATION says
+    local impl=${EMOSA_IMPLEMENTATION:-}
+    [ -n "$impl" ] || impl=$(cx emosa sed -n 's/^EMOSA_IMPLEMENTATION=//p' /etc/default/emosa-implementation 2>/dev/null || true)
+    EMOSA_IMPLEMENTATION=$impl install_kit em-gtp >/dev/null
     cx em-gtp sh -c 'cat > /etc/emosa-gtp.json' <<'EOF'
 {
   "underlay": {"interface": "podbh", "address": "169.254.2.1/25", "mtu": 1600,

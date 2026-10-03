@@ -1,0 +1,1077 @@
+{
+ "checks": [
+  {
+   "config": {
+    "lan": {
+     "bridge": "br-gtp",
+     "ports": [
+      "eth1"
+     ]
+    },
+    "state_dir": "/var/lib/emosa-gtp",
+    "tunnel_mtu": 1562,
+    "underlay": {
+     "address": "169.254.2.1/25",
+     "dhcp_range": [
+      "169.254.2.10",
+      "169.254.2.126"
+     ],
+     "interface": "podbh",
+     "lease_time": "1h",
+     "mtu": 1600
+    }
+   },
+   "error": null
+  },
+  {
+   "config": {
+    "lan": {
+     "bridge": "br-gtp",
+     "ports": [
+      "eth1"
+     ]
+    },
+    "state_dir": "/var/lib/emosa-gtp",
+    "tunnel_mtu": 1562,
+    "underlay": {
+     "address": "169.254.2.2/25",
+     "dhcp_range": [
+      "169.254.2.10",
+      "169.254.2.126"
+     ],
+     "interface": "podbh",
+     "lease_time": "1h",
+     "mtu": 1600
+    }
+   },
+   "error": "the GTP must be the first host (.1) of the underlay subnet: OpenSync's GRE remote"
+  },
+  {
+   "config": {
+    "lan": {
+     "bridge": "br-gtp",
+     "ports": [
+      "eth1"
+     ]
+    },
+    "state_dir": "/var/lib/emosa-gtp",
+    "tunnel_mtu": 1562,
+    "underlay": {
+     "address": "169.254.2.129/25",
+     "dhcp_range": [
+      "169.254.2.10",
+      "169.254.2.126"
+     ],
+     "interface": "podbh",
+     "lease_time": "1h",
+     "mtu": 1600
+    }
+   },
+   "error": "the DHCP range must lie in the underlay subnet, above .1"
+  },
+  {
+   "config": {
+    "lan": {
+     "bridge": "br-gtp",
+     "ports": [
+      "eth1"
+     ]
+    },
+    "state_dir": "/var/lib/emosa-gtp",
+    "tunnel_mtu": 1562,
+    "underlay": {
+     "address": "169.254.0.1/16",
+     "dhcp_range": [
+      "169.254.0.10",
+      "169.254.255.254"
+     ],
+     "interface": "podbh",
+     "lease_time": "1h",
+     "mtu": 1600
+    }
+   },
+   "error": null
+  },
+  {
+   "config": {
+    "lan": {
+     "bridge": "br-gtp",
+     "ports": [
+      "eth1"
+     ]
+    },
+    "state_dir": "/var/lib/emosa-gtp",
+    "tunnel_mtu": 1562,
+    "underlay": {
+     "address": "169.254.2.1/25",
+     "dhcp_range": [
+      "169.254.2.1",
+      "169.254.2.126"
+     ],
+     "interface": "podbh",
+     "lease_time": "1h",
+     "mtu": 1600
+    }
+   },
+   "error": "the DHCP range must lie in the underlay subnet, above .1"
+  },
+  {
+   "config": {
+    "lan": {
+     "bridge": "br-gtp",
+     "ports": [
+      "eth1"
+     ]
+    },
+    "state_dir": "/var/lib/emosa-gtp",
+    "tunnel_mtu": 1562,
+    "underlay": {
+     "address": "169.254.2.1/25",
+     "dhcp_range": [
+      "169.254.2.10",
+      "169.254.3.10"
+     ],
+     "interface": "podbh",
+     "lease_time": "1h",
+     "mtu": 1600
+    }
+   },
+   "error": "the DHCP range must lie in the underlay subnet, above .1"
+  },
+  {
+   "config": {
+    "lan": {
+     "bridge": "br-gtp",
+     "ports": [
+      "eth1"
+     ]
+    },
+    "state_dir": "/var/lib/emosa-gtp",
+    "tunnel_mtu": 1562,
+    "underlay": {
+     "address": "169.254.2.1/25",
+     "dhcp_range": [
+      "169.254.2.100",
+      "169.254.2.10"
+     ],
+     "interface": "podbh",
+     "lease_time": "1h",
+     "mtu": 1600
+    }
+   },
+   "error": "the DHCP range must lie in the underlay subnet, above .1"
+  },
+  {
+   "config": {
+    "lan": {
+     "bridge": "br-gtp",
+     "ports": [
+      "eth1"
+     ]
+    },
+    "state_dir": "/var/lib/emosa-gtp",
+    "tunnel_mtu": 1580,
+    "underlay": {
+     "address": "169.254.2.1/25",
+     "dhcp_range": [
+      "169.254.2.10",
+      "169.254.2.126"
+     ],
+     "interface": "podbh",
+     "lease_time": "1h",
+     "mtu": 1600
+    }
+   },
+   "error": "underlay MTU too small for the tunnel MTU plus 38 bytes of gretap"
+  },
+  {
+   "config": {
+    "lan": {
+     "bridge": "br-gtp",
+     "ports": [
+      "eth1"
+     ]
+    },
+    "state_dir": "/var/lib/emosa-gtp",
+    "tunnel_mtu": 1562,
+    "underlay": {
+     "address": "169.254.2.1/25",
+     "dhcp_range": [
+      "169.254.2.10",
+      "169.254.2.126"
+     ],
+     "interface": "podbh",
+     "lease_time": "1h",
+     "mtu": 1600
+    }
+   },
+   "error": null
+  },
+  {
+   "config": {
+    "lan": {
+     "bridge": "br-gtp",
+     "ports": [
+      "eth1"
+     ]
+    },
+    "state_dir": "/var/lib/emosa-gtp",
+    "tunnel_mtu": 1562,
+    "underlay": {
+     "address": "169.254.2.1/24",
+     "dhcp_range": [
+      "169.254.2.2",
+      "169.254.2.254"
+     ],
+     "interface": "podbh",
+     "lease_time": "1h",
+     "mtu": 1600
+    }
+   },
+   "error": null
+  }
+ ],
+ "config": {
+  "lan": {
+   "bridge": "br-gtp",
+   "ports": [
+    "eth1"
+   ]
+  },
+  "state_dir": "/var/lib/emosa-gtp",
+  "tunnel_mtu": 1562,
+  "underlay": {
+   "address": "169.254.2.1/25",
+   "dhcp_range": [
+    "169.254.2.10",
+    "169.254.2.126"
+   ],
+   "interface": "podbh",
+   "lease_time": "1h",
+   "mtu": 1600
+  }
+ },
+ "description": "spec §8.2: the GRE termination point, as emosa.gtp. checks: the rules beyond the schema (error: the refusal, null: accepted). tunnel_names: an underlay address and its gretap. dnsmasq: the configuration setup writes for config (its dhcp-script runs the implementation's own lease command). sessions: commands on a host whose links and dnsmasq lease file are given, the session's state_dir its own directory: every iproute2 call in order (its arguments after ip, whether a failure stops the command, and the output it gave), and the command's result (the tunnels listed) or its refusal.",
+ "dnsmasq": "# generated by emosa-gtp setup; do not edit\ninterface=podbh\nbind-dynamic\nexcept-interface=lo\nport=0\ndhcp-range=169.254.2.10,169.254.2.126,255.255.255.128,1h\ndhcp-option=option:mtu,1600\ndhcp-option=option:router\ndhcp-option=option:dns-server\ndhcp-leasefile=/var/lib/emosa-gtp/leases\ndhcp-script=/var/lib/emosa-gtp/hook\nscript-on-renewal\nuser=root\npid-file=/var/lib/emosa-gtp/dnsmasq.pid\n",
+ "sessions": [
+  {
+   "leases": "",
+   "links": {
+    "eth1": {},
+    "podbh": {},
+    "wlan0": {
+     "master": "podbh"
+    }
+   },
+   "name": "setup-lease-renew-release",
+   "steps": [
+    {
+     "calls": [
+      [
+       [
+        "-br",
+        "link",
+        "show",
+        "dev",
+        "podbh"
+       ],
+       false,
+       "podbh UP\n"
+      ],
+      [
+       [
+        "-o",
+        "link",
+        "show",
+        "master",
+        "podbh"
+       ],
+       false,
+       "2: wlan0: <UP> mtu 1500 master podbh\n"
+      ],
+      [
+       [
+        "link",
+        "set",
+        "wlan0",
+        "mtu",
+        "1600"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "podbh",
+        "mtu",
+        "1600",
+        "up"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "addr",
+        "replace",
+        "169.254.2.1/25",
+        "dev",
+        "podbh"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "-br",
+        "link",
+        "show",
+        "dev",
+        "br-gtp"
+       ],
+       false,
+       ""
+      ],
+      [
+       [
+        "link",
+        "add",
+        "br-gtp",
+        "type",
+        "bridge"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "br-gtp",
+        "up"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "-br",
+        "link",
+        "show",
+        "dev",
+        "eth1"
+       ],
+       false,
+       "eth1 UP\n"
+      ],
+      [
+       [
+        "link",
+        "set",
+        "eth1",
+        "master",
+        "br-gtp",
+        "up"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       ""
+      ],
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       ""
+      ]
+     ],
+     "command": [
+      "setup"
+     ],
+     "error": null,
+     "result": {}
+    },
+    {
+     "calls": [
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       ""
+      ],
+      [
+       [
+        "link",
+        "add",
+        "gtp2_57",
+        "type",
+        "gretap",
+        "local",
+        "169.254.2.1",
+        "remote",
+        "169.254.2.57"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "gtp2_57",
+        "mtu",
+        "1562"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "gtp2_57",
+        "master",
+        "br-gtp",
+        "up"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 ttl inherit\n"
+      ]
+     ],
+     "command": [
+      "lease",
+      "add",
+      "02:00:00:00:05:00",
+      "169.254.2.57",
+      "pod-1"
+     ],
+     "error": null,
+     "result": {
+      "gtp2_57": {
+       "mac": null,
+       "remote": "169.254.2.57"
+      }
+     }
+    },
+    {
+     "calls": [
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 ttl inherit\n"
+      ],
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 ttl inherit\n"
+      ]
+     ],
+     "command": [
+      "lease",
+      "old",
+      "02:00:00:00:05:00",
+      "169.254.2.57"
+     ],
+     "error": null,
+     "result": {
+      "gtp2_57": {
+       "mac": null,
+       "remote": "169.254.2.57"
+      }
+     }
+    },
+    {
+     "calls": [
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 ttl inherit\n"
+      ],
+      [
+       [
+        "link",
+        "add",
+        "gtp2_60",
+        "type",
+        "gretap",
+        "local",
+        "169.254.2.1",
+        "remote",
+        "169.254.2.60"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "gtp2_60",
+        "mtu",
+        "1562"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "gtp2_60",
+        "master",
+        "br-gtp",
+        "up"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 ttl inherit\n7: gtp2_60@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.60 local 169.254.2.1 ttl inherit\n"
+      ]
+     ],
+     "command": [
+      "lease",
+      "add",
+      "02:00:00:00:06:00",
+      "169.254.2.60"
+     ],
+     "error": null,
+     "result": {
+      "gtp2_57": {
+       "mac": null,
+       "remote": "169.254.2.57"
+      },
+      "gtp2_60": {
+       "mac": null,
+       "remote": "169.254.2.60"
+      }
+     }
+    },
+    {
+     "calls": [
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 ttl inherit\n7: gtp2_60@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.60 local 169.254.2.1 ttl inherit\n"
+      ],
+      [
+       [
+        "link",
+        "del",
+        "gtp2_57"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_60@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.60 local 169.254.2.1 ttl inherit\n"
+      ]
+     ],
+     "command": [
+      "lease",
+      "del",
+      "02:00:00:00:05:00",
+      "169.254.2.57"
+     ],
+     "error": null,
+     "result": {
+      "gtp2_60": {
+       "mac": null,
+       "remote": "169.254.2.60"
+      }
+     }
+    },
+    {
+     "calls": [],
+     "command": [
+      "lease",
+      "add",
+      "02:00:00:00:05:00",
+      "169.254.1.57"
+     ],
+     "error": "lease outside the underlay",
+     "result": null
+    },
+    {
+     "calls": [],
+     "command": [
+      "lease",
+      "add",
+      "02-00-00-00-05-00",
+      "169.254.2.57"
+     ],
+     "error": "lease outside the underlay",
+     "result": null
+    },
+    {
+     "calls": [
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_60@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.60 local 169.254.2.1 ttl inherit\n"
+      ]
+     ],
+     "command": [
+      "list"
+     ],
+     "error": null,
+     "result": {
+      "gtp2_60": {
+       "mac": null,
+       "remote": "169.254.2.60"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "leases": "0 02:00:00:00:05:00 169.254.2.57 pod-1 *\n4102444800 02:00:00:00:06:00 169.254.2.60 pod-2 01:02:00:00:00:06:00\n1000 02:00:00:00:07:00 169.254.2.61 gone *\n",
+   "links": {
+    "eth1": {},
+    "gtp2_57": {
+     "dev": "if31",
+     "local": "169.254.2.1",
+     "remote": "169.254.2.57",
+     "type": "gretap"
+    },
+    "gtp2_99": {
+     "local": "169.254.2.1",
+     "remote": "169.254.2.99",
+     "type": "gretap"
+    },
+    "podbh": {}
+   },
+   "name": "reconcile-to-the-leases",
+   "steps": [
+    {
+     "calls": [
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_99@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.99 local 169.254.2.1 ttl inherit\n7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 dev if31 ttl inherit\n"
+      ],
+      [
+       [
+        "link",
+        "del",
+        "gtp2_99"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 dev if31 ttl inherit\n"
+      ],
+      [
+       [
+        "link",
+        "del",
+        "gtp2_57"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "add",
+        "gtp2_57",
+        "type",
+        "gretap",
+        "local",
+        "169.254.2.1",
+        "remote",
+        "169.254.2.57"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "gtp2_57",
+        "mtu",
+        "1562"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "gtp2_57",
+        "master",
+        "br-gtp",
+        "up"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 ttl inherit\n"
+      ],
+      [
+       [
+        "link",
+        "add",
+        "gtp2_60",
+        "type",
+        "gretap",
+        "local",
+        "169.254.2.1",
+        "remote",
+        "169.254.2.60"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "gtp2_60",
+        "mtu",
+        "1562"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "gtp2_60",
+        "master",
+        "br-gtp",
+        "up"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 ttl inherit\n7: gtp2_60@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.60 local 169.254.2.1 ttl inherit\n"
+      ]
+     ],
+     "command": [
+      "reconcile"
+     ],
+     "error": null,
+     "result": {
+      "gtp2_57": {
+       "mac": "02:00:00:00:05:00",
+       "remote": "169.254.2.57"
+      },
+      "gtp2_60": {
+       "mac": "02:00:00:00:06:00",
+       "remote": "169.254.2.60"
+      }
+     }
+    },
+    {
+     "calls": [
+      [
+       [
+        "-d",
+        "-o",
+        "link",
+        "show",
+        "type",
+        "gretap"
+       ],
+       false,
+       "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 ttl inherit\n7: gtp2_60@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.60 local 169.254.2.1 ttl inherit\n"
+      ]
+     ],
+     "command": [
+      "list"
+     ],
+     "error": null,
+     "result": {
+      "gtp2_57": {
+       "mac": "02:00:00:00:05:00",
+       "remote": "169.254.2.57"
+      },
+      "gtp2_60": {
+       "mac": "02:00:00:00:06:00",
+       "remote": "169.254.2.60"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "leases": "",
+   "links": {
+    "eth1": {}
+   },
+   "name": "setup-without-its-interfaces",
+   "steps": [
+    {
+     "calls": [
+      [
+       [
+        "-br",
+        "link",
+        "show",
+        "dev",
+        "podbh"
+       ],
+       false,
+       ""
+      ]
+     ],
+     "command": [
+      "setup"
+     ],
+     "error": "underlay interface podbh does not exist",
+     "result": null
+    }
+   ]
+  },
+  {
+   "leases": "",
+   "links": {
+    "podbh": {}
+   },
+   "name": "setup-without-the-lan-port",
+   "steps": [
+    {
+     "calls": [
+      [
+       [
+        "-br",
+        "link",
+        "show",
+        "dev",
+        "podbh"
+       ],
+       false,
+       "podbh UP\n"
+      ],
+      [
+       [
+        "-o",
+        "link",
+        "show",
+        "master",
+        "podbh"
+       ],
+       false,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "podbh",
+        "mtu",
+        "1600",
+        "up"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "addr",
+        "replace",
+        "169.254.2.1/25",
+        "dev",
+        "podbh"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "-br",
+        "link",
+        "show",
+        "dev",
+        "br-gtp"
+       ],
+       false,
+       ""
+      ],
+      [
+       [
+        "link",
+        "add",
+        "br-gtp",
+        "type",
+        "bridge"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "link",
+        "set",
+        "br-gtp",
+        "up"
+       ],
+       true,
+       ""
+      ],
+      [
+       [
+        "-br",
+        "link",
+        "show",
+        "dev",
+        "eth1"
+       ],
+       false,
+       ""
+      ]
+     ],
+     "command": [
+      "setup"
+     ],
+     "error": "LAN port eth1 does not exist",
+     "result": null
+    }
+   ]
+  }
+ ],
+ "tunnel_names": [
+  [
+   "169.254.2.57",
+   "gtp2_57"
+  ],
+  [
+   "169.254.2.126",
+   "gtp2_126"
+  ],
+  [
+   "169.254.255.1",
+   "gtp255_1"
+  ]
+ ]
+}

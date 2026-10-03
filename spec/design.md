@@ -171,12 +171,12 @@ The broker's trust configuration is a deployment matter.
 | File | Writer | Readers | Schema | Rules |
 | --- | --- | --- | --- | --- |
 | fleet configuration (`/etc/emosa-fleet.json`) | operator | fleet | `fleet-config` | read at start |
-| registry (`<state_root>/fleet-registry.json`) | fleet | fleet, `emosa-fleet list` | `fleet-registry` (per entry) | rewritten atomically (write + rename) on every change |
+| registry (`<state_root>/fleet.json`) | fleet | fleet, `emosa-fleet list` | `fleet-registry` (per entry) | rewritten atomically (write + rename) on every change; read again for each pod (another process may have changed it: `forget`) |
 | agent configuration (`<config_dir>/<serial>.json`) | fleet | agent, link script | `agent-config` | written before the agent starts; the agent reads it once |
 | agent status (`<state_dir>/status.json`) | agent | operators, lab tools | `agent-status` | rewritten atomically when its summary changes, at most once per second otherwise |
 | operation journals (`<state_dir>/journal`, `uplink`, `telemetry`, `steering`: one store per scope) | agent | agent | `operation`, `event` (records) | SQLite, WAL, `synchronous=FULL`; the operation record is committed before its transaction is sent |
 | channel and reporting policy (`channel-policy.sqlite`, `reporting-policy.sqlite`) | agent | agent | none | one record each |
-| secrets (`<state_dir>/secrets/`) | agent | agent | none | directory 0700, files 0600; a passphrase never appears in a log, status, event or vector |
+| secrets (`<state_dir>/secrets/`, the files backend) | agent | agent | none | directory 0700, files 0600; a passphrase never appears in a log, status, event or vector; the store's interface lets a platform's secure storage keep them instead (spec §6) |
 | GTP configuration and leases | operator, dnsmasq | `emosa-gtp` | `gtp-config` | spec §8.2 |
 
 A second implementation MUST read and write these files in the same formats,

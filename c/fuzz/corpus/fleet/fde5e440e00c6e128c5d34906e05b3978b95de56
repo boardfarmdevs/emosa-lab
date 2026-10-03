@@ -1,0 +1,1 @@
+{"method": "echo", "params": [], "id": "echo"}{"id": 1, "result": [{"rows": [{"id": "bad serial", "model": "HWSIM_POD", "serial_number": "bad serial"}]}], "error": null}

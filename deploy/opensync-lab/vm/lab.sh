@@ -4,7 +4,8 @@
 #
 #   lab.sh bridge                     LXD network em-1905 (no IP): the EasyMesh LAN
 #   lab.sh controller                 container em-ctl: prplMesh controller + colocated agent
-#   lab.sh emosa                      container emosa: the adapter kit (deploy/adapter) installed
+#   lab.sh emosa [python|c]           container emosa: the adapter kit (deploy/adapter) installed,
+#                                     the Python reference or the C (no Python); none: as installed
 #   lab.sh agent POD N                EMOSA virtual agent N for opensync-lab pod POD:
 #                                     macvlan emN (MAC = AL) on em-1905, OVSDB 10.101.0.1:665N,
 #                                     service, then local-noc hands the pod over
@@ -108,7 +109,8 @@ controller() {
     log "em-ctl: controller running (AL $CTL_AL)"
 }
 
-emosa() {
+emosa() {       # emosa [python|c]: the adapter kit, its implementation (c: no Python) or as installed
+    case ${1:-} in python|c) export EMOSA_IMPLEMENTATION=$1 ;; "") ;; *) die "usage: lab.sh emosa [python|c]" ;; esac
     bridge
     adapter_container build-essential
     # one trunk NIC on the EasyMesh LAN; each virtual agent adds its own macvlan
@@ -167,7 +169,7 @@ fleet() {
     log "fleet: pods handed to tcp:$WAN_HOST:$FLEET_PORT get agents on ports $((FLEET_PORT + 1))-$FLEET_LAST"
 }
 
-fleet_agents() { cx emosa /opt/emosa-adapter/venv/bin/emosa-fleet list /etc/emosa-fleet.json; }
+fleet_agents() { fleet_cli list; }    # either implementation's fleet
 
 fleet_al() {    # fleet_al SERIAL: its agent's AL MAC, empty until the fleet registered it
     fleet_agents | python3 -c 'import json,sys; print(json.load(sys.stdin).get(sys.argv[1], {}).get("al_mac", ""))' "$1"
@@ -206,7 +208,7 @@ release() {     # release POD
         cx emosa systemctl disable --now "emosa-agent@$pod" >/dev/null 2>&1 || true
         cx emosa rm -f "/etc/emosa/$pod.json"
     elif [ -n "$serial" ] && cx emosa test -f "/etc/emosa/$serial.json"; then
-        cx emosa /opt/emosa-adapter/venv/bin/emosa-fleet forget /etc/emosa-fleet.json "$serial" >/dev/null
+        fleet_cli forget "$serial" >/dev/null
     fi
     log "$pod ($id) given back to local-noc"
 }
@@ -267,6 +269,8 @@ gtp() {         # GRE termination point (data plane option 2) with a pod-backhau
             export DEBIAN_FRONTEND=noninteractive; apt-get -qq update
             apt-get -qq install -y build-essential iproute2 iw hostapd dnsmasq-base tcpdump >/dev/null'
     fi
+    # what the kit's installer needs to build the C GTP (deploy/adapter/install.sh)
+    apt_install em-gtp cmake pkg-config libcjson-dev libssl-dev libsqlite3-dev
     if ! lxc config device show em-gtp | grep -q '^wlan0:'; then
         # shellcheck source=/dev/null
         radio=$(source "$OSL/guest/common.sh"; hwsim_free | head -1)

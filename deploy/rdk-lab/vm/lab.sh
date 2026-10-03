@@ -43,7 +43,9 @@
 #   lab.sh up [python|c]              the EMOSA option of the RDK lab, every step in order: lanport,
 #                                     emosa, (implementation), fleet, gtp, pod-1 and pod-2, medium,
 #                                     telemetry, backhaul wifi, rooms pods (meta-cmf
-#                                     gen/vm/lxd/build.sh emosa runs it, with EASYMESH_EMOSA_AGENT)
+#                                     gen/vm/lxd/build.sh emosa runs it, with EASYMESH_EMOSA_AGENT).
+#                                     python or c: the adapter's implementation, its fleet, GTP and
+#                                     agents (c: the kits install no Python); none: as installed
 #   lab.sh status
 set -euo pipefail
 exec </dev/null
@@ -364,6 +366,8 @@ wpa_key_mgmt=WPA-PSK
 rsn_pairwise=CCMP
 wpa_passphrase=$BHAUL_KEY
 EOF
+    # what the kit's installer needs to build the C GTP (deploy/adapter/install.sh)
+    apt_install em-gtp cmake pkg-config gcc libcjson-dev libssl-dev libsqlite3-dev
     gtp_bridges
     gtp_hostapd
     gtp_termination
@@ -423,6 +427,13 @@ pods_json() {    # the fleet's per-pod settings: a pod on Wi-Fi backhaul, pinned
 agent_reconfigure() {    # rewrite a bound pod's agent configuration from the fleet's, restart it
     # and release its uplink hold (EMOSA's option 2 after a failed switch): choosing the pod's
     # backhaul is the operator's decision a hold waits for. Prints "released" if it held.
+    if ! python_adapter; then
+        # The C adapter: the fleet writes the pod's new configuration (and restarts its
+        # agent) when the pod comes back to it, its OpenSync restarted by the caller. An
+        # uplink hold is released by the Python reference only, for now (plan 8.4).
+        echo handover
+        return
+    fi
     cx emosa systemctl stop "emosa-agent@$1"
     cx emosa /opt/emosa-adapter/venv/bin/python - "$1" <<'PY'
 import json, sys
@@ -462,9 +473,10 @@ backhaul() {    # backhaul wired|wifi [POD...]: the pods' uplink
         serial=$(pod_serial "$pod")
         released=$(agent_reconfigure "$serial")
         # EMOSA never switches a pod back: an OpenSync restart returns it to its bootstrap (GTP)
-        # path. A released hold switches on the pod's next start: one switch per start.
+        # path. A released hold switches on the pod's next start: one switch per start. With
+        # the C adapter ("handover") the restart also brings the pod's new configuration.
         if [ "$mode" = wired ] || [ -n "$released" ]; then
-            [ -z "$released" ] || log "$pod: uplink hold released"
+            [ "$released" != released ] || log "$pod: uplink hold released"
             cx "$pod" systemctl restart opensync
         fi
     done
@@ -589,8 +601,7 @@ wait_agents() {    # every running pod's agent provisioned (at most 5 minutes)
 
 forget_pods() {    # remove the EMOSA agents' rows from the controller's model (em_ctrl stopped)
     local als
-    als=$(cx emosa sh -c '/opt/emosa-adapter/venv/bin/emosa-fleet list /etc/emosa-fleet.json 2>/dev/null' |
-        jq -r '.[].al_mac' | tr '\n' ' ')
+    als=$(fleet_cli list 2>/dev/null | jq -r '.[].al_mac' | tr '\n' ' ')
     [ -n "$als" ] || return 0
     cx bpibroadband sh -ec "systemctl stop em_ctrl
         for al in $als; do for t in PolicyList OperatingClassList BSSList RadioList DeviceList; do
@@ -671,6 +682,8 @@ wait_uplinks() {    # the pods' Wi-Fi uplinks applied (at most 3 minutes)
 up() {    # up [python|c]: the EMOSA option of the RDK lab, every step in order (each completes a partial run)
     local pod impl=${1:-}
     [ -z "$impl" ] || agent_binary "$impl" >/dev/null || die "usage: lab.sh up [python|c]"
+    # the adapter's implementation: the kits in emosa and em-gtp (c: no Python), then the agents
+    [ -z "$impl" ] || export EMOSA_IMPLEMENTATION=$impl
     [ "$(lxc config get bpiap-004 user.easymesh.backhaul 2>/dev/null)" = wired ] ||
         die "the option needs the lab's wired extender (meta-cmf EASYMESH_WIRED_EXTENDERS=1)"
     [ -f "$ART/adapter-kit.tar.gz" ] && ls "$ART"/pod/*.rootfs.tar.gz >/dev/null 2>&1 ||
@@ -705,8 +718,13 @@ status() {
     for pod in $(pods_running); do
         echo "$pod backhaul: $(lxc config get "$pod" user.emosa.backhaul | sed 's/^$/wired/')"
     done
-    exists emosa && cx emosa sh -c '/opt/emosa-adapter/venv/bin/emosa-fleet list /etc/emosa-fleet.json 2>/dev/null
-        for f in /etc/default/emosa-*; do [ -f "$f" ] && echo "${f#/etc/default/emosa-}: $(cat "$f")"; done' || true
+    if exists emosa; then
+        fleet_cli list 2>/dev/null || true
+        cx emosa sh -c 'sed -n "s/^EMOSA_IMPLEMENTATION=/adapter: /p" /etc/default/emosa-implementation 2>/dev/null
+            for f in /etc/default/emosa-*; do
+                [ -f "$f" ] && [ "$f" != /etc/default/emosa-implementation ] && echo "${f#/etc/default/emosa-}: $(cat "$f")"
+            done' || true
+    fi
     echo "regulatory: $(regdom)"
 }
 

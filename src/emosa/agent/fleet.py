@@ -70,12 +70,17 @@ def derive_al(serial, taken=()):
 
 
 class Registry:
-    """serial -> virtual agent; a JSON file rewritten atomically on every change."""
+    """serial -> virtual agent; a JSON file rewritten atomically on every change. The file
+    is the state: it is read again before each change, so a forget run by another process
+    (emosa-fleet forget while the fleet serves) takes effect at once."""
 
     def __init__(self, path, ports, *, reserved_als=()):
         self.path, self.ports = Path(path), tuple(ports)
         self.reserved = set(reserved_als)
         self.lock = threading.Lock()
+        self._load()
+
+    def _load(self):
         try:
             self.agents = json.loads(self.path.read_text())
         except FileNotFoundError:
@@ -90,6 +95,7 @@ class Registry:
         """The pod's agent entry, allocated on first sight; None when full."""
         serial = identity["serial_number"]
         with self.lock:
+            self._load()
             entry = self.agents.get(serial)
             if entry is None:
                 used = {a["port"] for a in self.agents.values()}
@@ -119,6 +125,7 @@ class Registry:
 
     def forget(self, serial):
         with self.lock:
+            self._load()
             entry = self.agents.pop(serial, None)
             self._save()
             return entry

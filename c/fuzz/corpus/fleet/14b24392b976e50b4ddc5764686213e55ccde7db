@@ -1,0 +1,26 @@
+{
+  "MVXPOD023F87E628DD": {
+    "al_mac": "02:72:f9:7f:07:85",
+    "firmware": null,
+    "first_seen": 1759500009.5,
+    "handovers": 1,
+    "interface": "em1",
+    "last_seen": 1759500009.5,
+    "model": "HWSIM_POD",
+    "node_id": "MVXPOD023F87E628DD",
+    "pod_id": "MVXPOD023F87E628DD",
+    "port": 6651
+  },
+  "MVXPOD02D7777EF0D9": {
+    "al_mac": "02:c2:b8:31:3a:f8",
+    "firmware": null,
+    "first_seen": 1759500000.5,
+    "handovers": 1,
+    "interface": "em2",
+    "last_seen": 1759500000.5,
+    "model": "HWSIM_POD",
+    "node_id": "MVXPOD02D7777EF0D9",
+    "pod_id": "MVXPOD02D7777EF0D9",
+    "port": 6652
+  }
+}

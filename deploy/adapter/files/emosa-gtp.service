@@ -3,9 +3,15 @@ Description=EMOSA GRE termination point: the gateway end of the pods' OpenSync G
 After=network-online.target hostapd.service
 
 [Service]
-ExecStartPre=/opt/emosa-adapter/venv/bin/emosa-gtp setup /etc/emosa-gtp.json
+# The implementation: EMOSA_GTP from /etc/default/emosa-implementation (the installer's),
+# overridden in /etc/default/emosa. dnsmasq's lease hook runs the one that set it up.
+Environment=EMOSA_GTP=/opt/emosa-adapter/venv/bin/emosa-gtp
+Environment=EMOSA_SCHEMAS=/opt/emosa-adapter/share/schemas
+EnvironmentFile=-/etc/default/emosa-implementation
+EnvironmentFile=-/etc/default/emosa
+ExecStartPre=/bin/sh -c 'exec "$$EMOSA_GTP" setup /etc/emosa-gtp.json'
 ExecStart=/usr/sbin/dnsmasq -k -C /var/lib/emosa-gtp/dnsmasq.conf
-ExecStopPost=/opt/emosa-adapter/venv/bin/emosa-gtp list /etc/emosa-gtp.json
+ExecStopPost=/bin/sh -c 'exec "$$EMOSA_GTP" list /etc/emosa-gtp.json'
 Restart=on-failure
 RestartSec=3
 

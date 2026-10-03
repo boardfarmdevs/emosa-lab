@@ -65,22 +65,12 @@ def in_namespace():
     os.execvpe("unshare", command + sys.argv[1:], env)
 
 
-def network():
+def network(interface=AGENT_INTERFACE):
     """lo, and the veth pair between the agent's interface and the controller's."""
     for command in (
         ["ip", "link", "set", "lo", "up"],
-        [
-            "ip",
-            "link",
-            "add",
-            AGENT_INTERFACE,
-            "type",
-            "veth",
-            "peer",
-            "name",
-            CONTROLLER_INTERFACE,
-        ],
-        ["ip", "link", "set", AGENT_INTERFACE, "up"],
+        ["ip", "link", "add", interface, "type", "veth", "peer", "name", CONTROLLER_INTERFACE],
+        ["ip", "link", "set", interface, "up"],
         ["ip", "link", "set", CONTROLLER_INTERFACE, "up"],
     ):
         subprocess.run(command, check=True)
@@ -239,10 +229,11 @@ class Box:
         self.telemetry, self.foreign_broker, self.backhaul = telemetry, foreign_broker, backhaul
         self.pod_rows = MULTI_AP_ROWS if backhaul else POD_ROWS
         self.process = self.db = self.controller = self.log = self.broker = None
+        self.interface = AGENT_INTERFACE  # the agent's 1905 interface (a fleet names its own)
 
     async def __aenter__(self):
         self.directory.mkdir(parents=True, exist_ok=True)
-        network()
+        network(self.interface)
         tables, operations = recorded_pod(self.pod_rows)
         self.serial = next(iter(tables["AWLAN_Node"].values()))["serial_number"]
         if self.foreign_broker:
@@ -270,7 +261,7 @@ class Box:
         entry = {
             "pod_id": self.serial,
             "port": AGENT_PORT,
-            "interface": AGENT_INTERFACE,
+            "interface": self.interface,
             "al_mac": derive_al(self.serial, [CONTROLLER_AL]),
         }
         self.al_mac = entry["al_mac"]
@@ -286,28 +277,29 @@ class Box:
             (secrets / "backhaul").chmod(0o600)
         config = agent_config(entry, fleet)
         # the agent's interface carries its AL MAC, as the labs' macvlan per agent does
-        subprocess.run(["ip", "link", "set", AGENT_INTERFACE, "address", self.al_mac], check=True)
+        subprocess.run(["ip", "link", "set", self.interface, "address", self.al_mac], check=True)
         state_root.mkdir(mode=0o700, exist_ok=True)  # the fleet's state_root
         self.status_path = state_root / self.serial / "status.json"
-        config_path = self.directory / "agent.json"
-        config_path.write_text(json.dumps(config, indent=2) + "\n")
         self.controller = Controller(CONTROLLER_INTERFACE, self.al_mac)
-        env = {
+        self.env = {
             **os.environ,
             "EMOSA_SCHEMAS": str(ROOT / "schemas"),
             "EMOSA_PROFILES": str(ROOT / "src/emosa/profiles"),
         }
+        await self.start(config, fleet)
+        return self
+
+    async def start(self, config, fleet):
+        """The pod's agent started with this configuration, and the pod dialing it."""
+        config_path = self.directory / "agent.json"
+        config_path.write_text(json.dumps(config, indent=2) + "\n")
         self.log = (self.directory / "agent.log").open("w")
+        self.command = agent_command(self.agent, config_path, self.binary)
         self.process = subprocess.Popen(
-            agent_command(self.agent, config_path, self.binary),
-            stdout=self.log,
-            stderr=self.log,
-            env=env,
+            self.command, stdout=self.log, stderr=self.log, env=self.env
         )
-        self.command, self.env = agent_command(self.agent, config_path, self.binary), env
         await asyncio.sleep(1)
         await dial(self.db, f"tcp:127.0.0.1:{AGENT_PORT}")
-        return self
 
     def restart_agent(self):
         """The agent started again with its configuration and state directory."""
@@ -1623,13 +1615,20 @@ OPTIONS = {  # the box each scenario needs beyond the default
 
 
 async def run(scenario, agent, directory, *, binary=None):
+    if scenario not in SCENARIOS:  # the fleet's and the GTP's (box_adapter)
+        from emosa_lab import box_adapter
+
+        return await box_adapter.run(scenario, agent, directory, binary=binary)
     async with Box(agent, directory, binary=binary, **OPTIONS.get(scenario, {})) as box:
         return await SCENARIOS[scenario](box)
 
 
 def main():
+    from emosa_lab import box_adapter
+
+    names = {*SCENARIOS, *box_adapter.SCENARIOS, *box_adapter.STANDALONE}
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("scenario", choices=sorted(SCENARIOS))
+    parser.add_argument("scenario", choices=sorted(names))
     parser.add_argument("--agent", choices=["c", "python"], required=True)
     parser.add_argument("--binary", help="the C agent (default c/build/emosa-agent-c)")
     parser.add_argument("--directory", type=Path, required=True)

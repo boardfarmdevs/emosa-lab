@@ -116,6 +116,89 @@ static void vault(const char *scratch)
     CHECK(!em_vault_resolve(&v, ref, &why), "forget removes a secret");
 }
 
+/* -- another secret backend: the store's policy over a platform's storage --------------- */
+
+typedef struct {
+    char refs[4][100];
+    char values[4][64];
+    int n, creates, removes;
+} memory_secrets;
+
+static uint8_t *memory_read(const em_vault *v, const char *ref, size_t *len)
+{
+    memory_secrets *m = v->ctx;
+    for (int i = 0; i < m->n; i++)
+        if (!strcmp(m->refs[i], ref)) {
+            *len = strlen(m->values[i]);
+            return (uint8_t *)strdup(m->values[i]);
+        }
+    return NULL;
+}
+
+static bool memory_create(const em_vault *v, const char *ref, const uint8_t *data, size_t len)
+{
+    memory_secrets *m = v->ctx;
+    m->creates++;
+    for (int i = 0; i < m->n; i++)
+        if (!strcmp(m->refs[i], ref))
+            return false;
+    if (m->n == 4 || len >= sizeof(m->values[0]))
+        return false;
+    snprintf(m->refs[m->n], sizeof(m->refs[0]), "%s", ref);
+    memcpy(m->values[m->n], data, len);
+    m->values[m->n++][len] = 0;
+    return true;
+}
+
+static void memory_remove(const em_vault *v, const char *ref)
+{
+    memory_secrets *m = v->ctx;
+    m->removes++;
+    for (int i = 0; i < m->n; i++)
+        if (!strcmp(m->refs[i], ref)) {
+            m->n--;
+            memmove(m->refs[i], m->refs[m->n], sizeof(m->refs[0]));
+            memmove(m->values[i], m->values[m->n], sizeof(m->values[0]));
+            return;
+        }
+}
+
+static bool memory_key(const em_vault *v, uint8_t out[32])
+{
+    (void)v;
+    for (int i = 0; i < 32; i++)
+        out[i] = (uint8_t)i;
+    return true;
+}
+
+static void secret_backend(void)
+{
+    memory_secrets m = {.n = 1, .refs = {"backhaul"}, .values = {"short"}};
+    em_vault v;
+    em_secret_backend backend = {"memory", memory_read, memory_create, memory_remove, memory_key};
+    CHECK(em_vault_open_backend(&v, backend, &m) == EM_OK, "another backend opens");
+    char fp[65];
+    em_vault_fingerprint_text(&v, "secret-pass", fp); /* the key above is the files test's */
+    CHECK(!strcmp(fp, "84ed201cb170309858f8577bb1c56d69f0831433f99150154798726621060576"), "fingerprint %s", fp);
+    em_reason why;
+    CHECK(!em_vault_resolve(&v, "backhaul", &why) && why == EM_INVALID_INPUT, "the policy: a short passphrase");
+    CHECK(!em_vault_resolve(&v, "../backhaul", &why) && why == EM_INVALID_INPUT && !m.creates,
+          "the policy: a reference with a path never reaches the backend");
+    const char *ref = "wsc-0123456789abcdef0123456789abcdef-1";
+    CHECK(em_vault_persist_received(&v, ref, "correct horse") == EM_OK, "persist through the backend");
+    CHECK(em_vault_persist_received(&v, ref, "correct horse") != EM_OK, "never overwritten");
+    CHECK(em_vault_persist_received(&v, ref, "bad\x01value") != EM_OK && m.creates == 2,
+          "the policy: an unprintable value never reaches the backend");
+    char *got = em_vault_resolve(&v, ref, &why);
+    CHECK(got && !strcmp(got, "correct horse"), "resolve through the backend");
+    free(got);
+    em_vault_forget(&v, "../x");
+    CHECK(m.removes == 0, "the policy: forget refuses a path");
+    em_vault_forget(&v, ref);
+    CHECK(m.removes == 1 && !em_vault_resolve(&v, ref, &why) && why == EM_MISSING_PREREQUISITE,
+          "forget through the backend");
+}
+
 /* -- a scope whose pod has one SSID ----------------------------------------------------- */
 
 typedef struct {
@@ -367,6 +450,7 @@ int main(int argc, char **argv)
     mkdir(argv[2], 0700);
     canon();
     vault(argv[2]);
+    secret_backend();
     engine(argv[2], argv[1]);
     schema(argv[1]);
     files(argv[2]);

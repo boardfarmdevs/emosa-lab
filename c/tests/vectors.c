@@ -1,11 +1,14 @@
 /* Replays the conformance vectors (spec/conformance) against the C implementation.
  * Usage: emosa-vectors <spec/conformance directory> */
 #include <cjson/cJSON.h>
+#include <dirent.h>
 #include <math.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "../src/autoconf.h"
 #include "../src/bhsteer.h"
@@ -13,6 +16,8 @@
 #include "../src/control.h"
 #include "fixture.h"
 #include "../src/fleet.h"
+#include "../src/gtp.h"
+#include "../src/proc.h"
 #include "../src/operation.h"
 #include "../src/ovs.h"
 #include "../src/early.h"
@@ -953,7 +958,318 @@ static void fleet_vectors(const char *dir)
         cJSON_Delete(update);
         cJSON_Delete(rows);
     }
+    em_registry_free(registry);
     free(registry);
+    cJSON_Delete(doc);
+}
+
+/* -- gtp.json ---------------------------------------------------------------------------- */
+
+static void remove_tree(const char *path); /* (fleet-sessions.json) */
+
+typedef struct {
+    const cJSON *calls; /* [[args], check, output] in the order the reference made them */
+    int next;
+    char problem[256];
+} ip_replay;
+
+static char *replay_ip(void *ctx, const char *const *args, size_t n, bool check)
+{
+    ip_replay *r = ctx;
+    const cJSON *call = cJSON_GetArrayItem(r->calls, r->next++);
+    const cJSON *want = cJSON_GetArrayItem(call, 0);
+    bool same = call && (size_t)cJSON_GetArraySize(want) == n &&
+                cJSON_IsTrue(cJSON_GetArrayItem(call, 1)) == check;
+    for (size_t i = 0; same && i < n; i++)
+        same = !strcmp(cJSON_GetStringValue(cJSON_GetArrayItem(want, (int)i)), args[i]);
+    if (!same && !r->problem[0]) {
+        size_t used = (size_t)snprintf(r->problem, sizeof(r->problem), "call %d: ip", r->next - 1);
+        for (size_t i = 0; i < n && used < sizeof(r->problem); i++)
+            used += (size_t)snprintf(r->problem + used, sizeof(r->problem) - used, " %s", args[i]);
+    }
+    const char *output = cJSON_GetStringValue(cJSON_GetArrayItem(call, 2));
+    return strdup(output ? output : "");
+}
+
+static void gtp_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "gtp.json");
+    const cJSON *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "checks"))
+    {
+        char why[256] = "";
+        bool ok = em_gtp_check(cJSON_GetObjectItemCaseSensitive(c, "config"), why, sizeof(why));
+        const char *error = str(c, "error");
+        checks++;
+        if (ok != !error || (error && strcmp(why, error)))
+            fail("gtp", "check", ok ? "accepted" : why);
+    }
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "tunnel_names"))
+    {
+        char name[16];
+        checks++;
+        if (!em_gtp_tunnel_name(cJSON_GetArrayItem(c, 0)->valuestring, name) ||
+            strcmp(name, cJSON_GetArrayItem(c, 1)->valuestring))
+            fail("gtp", "tunnel name", cJSON_GetArrayItem(c, 0)->valuestring);
+    }
+    char *conf = em_gtp_dnsmasq(cJSON_GetObjectItemCaseSensitive(doc, "config"));
+    checks++;
+    if (!conf || strcmp(conf, str(doc, "dnsmasq")))
+        fail("gtp", "dnsmasq", "configuration differs");
+    free(conf);
+    const cJSON *session;
+    cJSON_ArrayForEach(session, cJSON_GetObjectItemCaseSensitive(doc, "sessions"))
+    {
+        const char *name = str(session, "name");
+        char root[] = "gtp-session-XXXXXX", full[1024], path[1200];
+        if (!mkdtemp(root) || !realpath(root, full)) {
+            fail("gtp", name, "no scratch directory");
+            continue;
+        }
+        cJSON *config = cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(doc, "config"), 1);
+        cJSON_ReplaceItemInObjectCaseSensitive(config, "state_dir", cJSON_CreateString(full));
+        snprintf(path, sizeof(path), "%s/leases", full);
+        em_write_file(path, str(session, "leases"), false);
+        ip_replay replay = {0};
+        em_gtp g;
+        char why[512] = "";
+        if (!em_gtp_init(&g, config, (em_ip){replay_ip, &replay}, why, sizeof(why))) {
+            fail("gtp", name, why);
+            cJSON_Delete(config);
+            remove_tree(full);
+            continue;
+        }
+        const cJSON *step;
+        int index = 0;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(session, "steps"))
+        {
+            char where[160];
+            snprintf(where, sizeof(where), "%s step %d", name, index++);
+            const cJSON *command = cJSON_GetObjectItemCaseSensitive(step, "command");
+            const char *verb = cJSON_GetArrayItem(command, 0)->valuestring;
+            replay = (ip_replay){.calls = cJSON_GetObjectItemCaseSensitive(step, "calls")};
+            why[0] = 0;
+            cJSON *result = NULL;
+            if (!strcmp(verb, "setup")) {
+                snprintf(path, sizeof(path), "%s/gtp.json", full);
+                result = em_gtp_setup(&g, path, "/opt/emosa-adapter/bin/emosa-gtp-c", why, sizeof(why));
+            } else if (!strcmp(verb, "lease")) {
+                result = em_gtp_lease(&g, cJSON_GetArrayItem(command, 1)->valuestring,
+                                      cJSON_GetArrayItem(command, 2)->valuestring,
+                                      cJSON_GetArrayItem(command, 3)->valuestring, why, sizeof(why));
+            } else if (!strcmp(verb, "reconcile")) {
+                result = em_gtp_reconcile(&g, why, sizeof(why));
+            } else {
+                result = em_gtp_list(&g, why, sizeof(why));
+            }
+            const char *error = str(step, "error");
+            checks++;
+            if (replay.problem[0])
+                fail("gtp", where, replay.problem);
+            else if (replay.next != cJSON_GetArraySize(replay.calls))
+                fail("gtp", where, "fewer iproute2 calls");
+            else if (error ? (result || strcmp(why, error)) : !result)
+                fail("gtp", where, result ? "accepted" : why);
+            else if (result && !cJSON_Compare(result, cJSON_GetObjectItemCaseSensitive(step, "result"), 1))
+                fail("gtp", where, "the tunnels differ");
+            cJSON_Delete(result);
+        }
+        cJSON_Delete(config);
+        remove_tree(full);
+    }
+    cJSON_Delete(doc);
+}
+
+/* -- fleet-sessions.json --------------------------------------------------------------- */
+
+/* text with every `from` replaced by `to` (caller frees) */
+static char *subst(const char *text, const char *from, const char *to)
+{
+    size_t nf = strlen(from), nt = strlen(to), n = 0;
+    for (const char *p = strstr(text, from); p; p = strstr(p + nf, from))
+        n++;
+    char *out = malloc(strlen(text) + n * nt + 1), *w = out;
+    const char *r = text;
+    for (const char *p = strstr(r, from); p; p = strstr(r, from)) {
+        memcpy(w, r, (size_t)(p - r));
+        w += p - r;
+        memcpy(w, to, nt);
+        w += nt;
+        r = p + nf;
+    }
+    strcpy(w, r);
+    return out;
+}
+
+/* a JSON value with the placeholder replaced in every string */
+static cJSON *subst_json(const cJSON *value, const char *from, const char *to)
+{
+    char *text = cJSON_PrintUnformatted(value), *done = subst(text, from, to);
+    cJSON *out = cJSON_Parse(done);
+    free(text);
+    free(done);
+    return out;
+}
+
+static void remove_tree(const char *path)
+{
+    DIR *d = opendir(path);
+    struct dirent *e;
+    while (d && (e = readdir(d))) {
+        if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
+            continue;
+        char child[2048];
+        snprintf(child, sizeof(child), "%s/%s", path, e->d_name);
+        struct stat st;
+        if (!lstat(child, &st) && S_ISDIR(st.st_mode))
+            remove_tree(child);
+        else
+            unlink(child);
+    }
+    if (d)
+        closedir(d);
+    rmdir(path);
+}
+
+static char *slurp(const char *path)
+{
+    return em_read_file(path, 16 * 1024 * 1024, NULL);
+}
+
+static void record_stop(void *ctx, const char *pod_id)
+{
+    cJSON_AddItemToArray((cJSON *)ctx, cJSON_CreateString(pod_id));
+}
+
+static void fleet_session_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "fleet-sessions.json");
+    const char *placeholder = str(doc, "root"), *stamp = str(doc, "stamp");
+    const cJSON *session;
+    cJSON_ArrayForEach(session, cJSON_GetObjectItemCaseSensitive(doc, "sessions"))
+    {
+        const char *name = str(session, "name");
+        char root[] = "fleet-session-XXXXXX";
+        if (!mkdtemp(root)) {
+            fail("fleet-sessions", name, "no scratch directory");
+            continue;
+        }
+        char full[1024];
+        if (!realpath(root, full)) {
+            fail("fleet-sessions", name, "no scratch directory");
+            continue;
+        }
+        em_fleet fleet = {0};
+        bool open = false;
+        const cJSON *step;
+        int index = 0;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(session, "steps"))
+        {
+            char where[160];
+            snprintf(where, sizeof(where), "%s step %d", name, index++);
+            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
+            if (cJSON_GetObjectItemCaseSensitive(step, "fleet_config")) {
+                if (open)
+                    em_fleet_close(&fleet);
+                cJSON *config = subst_json(cJSON_GetObjectItemCaseSensitive(step, "fleet_config"), placeholder, full);
+                em_mkdirs(str(config, "state_root"), 0700);
+                em_mkdirs(str(config, "config_dir"), 0755);
+                char why[600];
+                open = em_fleet_open(&fleet, config, why, sizeof(why));
+                checks++;
+                if (!open) {
+                    fail("fleet-sessions", where, why);
+                    em_fleet_close(&fleet);
+                    break;
+                }
+            } else if (str(step, "mkdir")) {
+                char path[2048];
+                snprintf(path, sizeof(path), "%s/%s", full, str(step, "mkdir"));
+                em_mkdirs(path, 0755);
+            } else if (cJSON_GetObjectItemCaseSensitive(step, "arrival")) {
+                em_fleet_handover h;
+                em_fleet_outcome outcome = em_fleet_identify(
+                    &fleet, cJSON_GetObjectItemCaseSensitive(step, "arrival"), num(step, "now"), &h);
+                static const char *const names[] = {"handover", "refused", "invalid", "failed"};
+                cJSON *start = cJSON_CreateNull(), *update = cJSON_CreateNull();
+                if (outcome == EM_FLEET_HANDOVER) {
+                    cJSON_Delete(start);
+                    start = cJSON_CreateArray();
+                    cJSON_AddItemToArray(start, cJSON_CreateString(h.entry.pod_id));
+                    cJSON_AddItemToArray(start, cJSON_CreateBool(h.changed));
+                    cJSON_Delete(update);
+                    update = cJSON_Duplicate(h.update, 1);
+                }
+                checks++;
+                if (strcmp(names[outcome], str(expected, "outcome")))
+                    fail("fleet-sessions", where, names[outcome]);
+                else if (!cJSON_Compare(start, cJSON_GetObjectItemCaseSensitive(expected, "start"), 1))
+                    fail("fleet-sessions", where, "the agent's start differs");
+                else if (!cJSON_Compare(update, cJSON_GetObjectItemCaseSensitive(expected, "update"), 1))
+                    fail("fleet-sessions", where, "the handover differs");
+                cJSON_Delete(start);
+                cJSON_Delete(update);
+                em_fleet_handover_clear(&h);
+            } else if (str(step, "forget_elsewhere")) {
+                /* another fleet process on the same files, while this one serves */
+                em_fleet other;
+                char why[600];
+                cJSON *config = cJSON_Duplicate(fleet.config, 1);
+                cJSON *stopped = cJSON_CreateArray();
+                if (em_fleet_open(&other, config, why, sizeof(why)))
+                    cJSON_Delete(em_fleet_forget(&other, str(step, "forget_elsewhere"), stamp, record_stop, stopped));
+                em_fleet_close(&other);
+                cJSON_Delete(stopped);
+            } else if (str(step, "forget")) {
+                cJSON *stopped = cJSON_CreateArray();
+                cJSON *entry = em_fleet_forget(&fleet, str(step, "forget"), stamp, record_stop, stopped);
+                cJSON *want = subst_json(cJSON_GetObjectItemCaseSensitive(expected, "entry"), placeholder, full);
+                if (!entry)
+                    entry = cJSON_CreateNull();
+                checks++;
+                if (!cJSON_Compare(entry, want, 1))
+                    fail("fleet-sessions", where, "the released entry differs");
+                else if (!cJSON_Compare(stopped, cJSON_GetObjectItemCaseSensitive(expected, "stopped"), 1))
+                    fail("fleet-sessions", where, "the agents stopped differ");
+                cJSON_Delete(entry);
+                cJSON_Delete(want);
+                cJSON_Delete(stopped);
+            }
+        }
+        if (open) {
+            const cJSON *files = cJSON_GetObjectItemCaseSensitive(session, "files"), *config;
+            char *want = subst(str(files, "registry"), placeholder, full), *got = slurp(fleet.registry_path);
+            checks++;
+            if (!got || strcmp(got, want))
+                fail("fleet-sessions", name, "the registry file differs");
+            free(want);
+            free(got);
+            cJSON_ArrayForEach(config, cJSON_GetObjectItemCaseSensitive(files, "configs"))
+            {
+                char path[2048];
+                snprintf(path, sizeof(path), "%s/%s.json", fleet.config_dir, config->string);
+                want = subst(config->valuestring, placeholder, full);
+                got = slurp(path);
+                checks++;
+                if (!got || strcmp(got, want))
+                    fail("fleet-sessions", name, config->string);
+                free(want);
+                free(got);
+            }
+            const cJSON *archive;
+            cJSON_ArrayForEach(archive, cJSON_GetObjectItemCaseSensitive(files, "archives"))
+            {
+                char path[2048];
+                struct stat st;
+                snprintf(path, sizeof(path), "%s/%s", fleet.state_root, archive->valuestring);
+                checks++;
+                if (stat(path, &st) || !S_ISDIR(st.st_mode))
+                    fail("fleet-sessions", name, archive->valuestring);
+            }
+            em_fleet_close(&fleet);
+        }
+        remove_tree(full);
+    }
     cJSON_Delete(doc);
 }
 
@@ -1953,6 +2269,8 @@ int main(int argc, char **argv)
     southbound_vectors(dir);
     uplink_vectors(dir);
     fleet_vectors(dir);
+    fleet_session_vectors(dir);
+    gtp_vectors(dir);
     telemetry_vectors(dir);
     metrics_vectors(dir);
     backhaul_steering_vectors(dir);

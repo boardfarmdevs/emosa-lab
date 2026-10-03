@@ -1,11 +1,18 @@
 #!/bin/bash
 # emosa-agent-link POD: the agent's own 1905.1 interface, a macvlan on the
 # EasyMesh LAN trunk ($EMOSA_TRUNK, /etc/default/emosa) whose MAC is the agent's
-# AL MAC. Interface and AL MAC come from /etc/emosa/POD.json.
+# AL MAC. Interface and AL MAC come from /etc/emosa/POD.json (the fleet's, either
+# implementation; no Python needed): each read, and checked, as its schema states it.
 set -euo pipefail
 trunk=${EMOSA_TRUNK:-emlan}
-read -r ifname al < <(/opt/emosa-adapter/venv/bin/python -c \
-    'import json,sys; c=json.load(open(sys.argv[1])); print(c["interface"], c["al_mac"])' "/etc/emosa/$1.json")
+config=/etc/emosa/$1.json
+value() {    # value KEY: a top-level string member of the configuration (its keys are unique)
+    tr -d '\n' < "$config" | grep -o "\"$1\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | head -1 | sed 's/.*"\([^"]*\)"$/\1/'
+}
+ifname=$(value interface)
+al=$(value al_mac)
+[[ $ifname =~ ^[A-Za-z0-9._-]{1,15}$ ]] || { echo "$config: no usable interface" >&2; exit 1; }
+[[ $al =~ ^[0-9a-f]{2}(:[0-9a-f]{2}){5}$ ]] || { echo "$config: no usable al_mac" >&2; exit 1; }
 ip link show "$trunk" >/dev/null 2>&1 || { echo "trunk interface $trunk not found (EMOSA_TRUNK)" >&2; exit 1; }
 ip link show "$ifname" >/dev/null 2>&1 || ip link add "$ifname" link "$trunk" type macvlan mode bridge
 ip link set "$ifname" address "$al"

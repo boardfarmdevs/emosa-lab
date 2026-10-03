@@ -114,6 +114,7 @@ needs, in the order they matter:
 5. **Backhaul metrics and neighbors**, so the controller can choose parents;
    pods as parents (multi-hop).
 6. **The router side**: EMOSA next to the gateway's own 1905 stack on brlan0
-   (plan 5.1), the GTP and the fleet in C (no Python on a router), secrets in
-   the platform's secure storage when the router has one.
+   (plan 5.1); the GTP and the fleet are in C (plan 8.3: no Python on a router),
+   and the secret store has an interface for the platform's secure storage when the
+   router has one.
 7. **Memory** on small routers (§4).

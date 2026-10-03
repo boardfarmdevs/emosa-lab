@@ -1,0 +1,14 @@
+{
+  "MVXPOD023F87E628DD": {
+    "al_mac": "02:72:f9:7f:07:85",
+    "firmware": null,
+    "first_seen": 1759500002.25,
+    "handovers": 1,
+    "interface": "em1",
+    "last_seen": 1759500002.25,
+    "model": null,
+    "node_id": null,
+    "pod_id": "MVXPOD023F87E628DD",
+    "port": 6651
+  }
+}

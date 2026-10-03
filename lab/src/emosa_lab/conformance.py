@@ -18,6 +18,7 @@ import json
 import sys
 import tempfile
 from pathlib import Path
+from unittest import mock
 
 from emosa.agent.fleet import Fleet, agent_config, derive_al
 from emosa.easymesh_payloads import encode_value
@@ -480,6 +481,357 @@ def fleet_vectors():
         "configuration; timestamps are omitted.",
         "fleet_config": config,
         "cases": cases,
+    }
+
+
+FLEET_ROOT = "{root}"  # a session's directory: each implementation substitutes its own
+FLEET_STAMP = "20261003T120000"  # forget's archive suffix, as time.strftime would give it
+
+
+def fleet_session_vectors():
+    import emosa.agent.fleet as fleet_module
+
+    def node(serial, **extra):
+        return {"id": serial, "serial_number": serial, "model": "HWSIM_POD", **extra}
+
+    base = {
+        "listen": "ptcp:6650:127.0.0.1",
+        "advertise": "10.101.0.1",
+        "ports": [6651, 6653],
+        "controller_al": CONTROLLER,
+        "state_root": f"{FLEET_ROOT}/state",
+        "config_dir": f"{FLEET_ROOT}/etc",
+        "message_set": EASYMESH_61,
+    }
+    own = {
+        SERIAL: {
+            "profile": DEFAULT,
+            # keys in sorted order: the vector file is written sorted, and the configuration
+            # file's order is the order the agent configuration keeps
+            "uplink": {"bssid": "02:00:00:00:19:01", "mode": "multi-ap"},
+        }
+    }
+    sessions = {
+        "pods-arrive-and-return": [
+            {"fleet_config": base},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},
+            {
+                "arrival": [{"rows": [node("MVXPOD02D7777EF0D9", firmware_version="6.6.1.0")]}],
+                "now": 1759500001.5,
+            },
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500002.75},
+        ],
+        "own-settings-restart-the-agent": [
+            {"fleet_config": base},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},
+            {"fleet_config": {**base, "pods": own}},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500003.125},
+        ],
+        "unusable-or-unadmitted-pods-are-left-unchanged": [
+            {"fleet_config": {**base, "admit": ["MVXPOD02D7777EF0D9"]}},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},
+            {"arrival": [{"rows": []}], "now": 1759500000.5},
+            {
+                "arrival": [{"rows": [node(SERIAL), node("MVXPOD02D7777EF0D9")]}],
+                "now": 1759500000.75,
+            },
+            {"arrival": [{"rows": [node("bad serial")]}], "now": 1759500001.0},
+            {"arrival": [{"rows": [node("../x")]}], "now": 1759500001.25},
+            {"arrival": [{"rows": [{"id": "x", "model": "HWSIM_POD"}]}], "now": 1759500001.5},
+            {"arrival": [{"error": "syntax error"}], "now": 1759500001.75},
+            {"fleet_config": {**base, "ports": [6651, 6651]}},
+            {"arrival": [{"rows": [{"serial_number": SERIAL}]}], "now": 1759500002.25},
+            {"arrival": [{"rows": [node("MVXPOD02D7777EF0D9")]}], "now": 1759500002.5},
+        ],
+        "forget-releases-and-archives": [
+            {"fleet_config": base},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},
+            {"mkdir": f"state/{SERIAL}"},
+            {"forget": SERIAL},
+            {"forget": SERIAL},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500009.5},
+        ],
+        # box finding 14: emosa-fleet forget runs as its own process while the fleet serves
+        "forget-while-the-fleet-serves": [
+            {"fleet_config": base},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},
+            {"arrival": [{"rows": [node("MVXPOD02D7777EF0D9")]}], "now": 1759500000.5},
+            {"forget_elsewhere": SERIAL},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500009.5},
+        ],
+    }
+    out = []
+    for name, steps in sessions.items():
+        with tempfile.TemporaryDirectory() as directory:
+            root = str(Path(directory).resolve())
+
+            def live(value, root=root):
+                return json.loads(json.dumps(value).replace(FLEET_ROOT, root))
+
+            def placeholder(text, root=root):
+                return text.replace(root, FLEET_ROOT)
+
+            fleet, recorded = None, []
+            for step in steps:
+                done = dict(step)
+                if "fleet_config" in step:
+                    config = live(step["fleet_config"])
+                    for key in ("state_root", "config_dir"):
+                        Path(config[key]).mkdir(parents=True, exist_ok=True)
+                    starts, stops = [], []
+                    fleet = Fleet(
+                        config,
+                        starter=lambda pod, changed, starts=starts: starts.append([pod, changed]),
+                        stopper=lambda pod, stops=stops: stops.append(pod),
+                    )
+                elif "mkdir" in step:
+                    (Path(root) / step["mkdir"]).mkdir(parents=True)
+                elif "arrival" in step:
+                    updates = []
+
+                    def call(conn, method, params, deadline, step=step, updates=updates):
+                        if params[1]["op"] == "select":
+                            return step["arrival"]
+                        updates.append(params)
+                        return [{"count": 1}]
+
+                    fleet._call = call
+                    del starts[:]
+                    try:
+                        with mock.patch.object(fleet_module.time, "time", lambda s=step: s["now"]):
+                            entry = fleet.handle(None, "conformance")
+                        outcome = "handover" if entry else "refused"
+                    except ValueError:
+                        outcome = "invalid"
+                    done["expected"] = {
+                        "outcome": outcome,
+                        "start": starts[0] if starts else None,
+                        "update": updates[0] if updates else None,
+                    }
+                elif "forget_elsewhere" in step:
+                    other = Fleet(config, starter=lambda *_: None, stopper=lambda *_: None)
+                    with mock.patch.object(fleet_module.time, "strftime", lambda _f: FLEET_STAMP):
+                        other.forget(step["forget_elsewhere"])
+                elif "forget" in step:
+                    del stops[:]
+                    with mock.patch.object(fleet_module.time, "strftime", lambda _f: FLEET_STAMP):
+                        entry = fleet.forget(step["forget"])
+                    done["expected"] = {
+                        "entry": live(entry)
+                        if entry is None
+                        else json.loads(placeholder(json.dumps(entry))),
+                        "stopped": list(stops),
+                    }
+                recorded.append(done)
+            state = Path(fleet.config["state_root"])
+            configs = Path(fleet.config["config_dir"])
+            out.append(
+                {
+                    "name": name,
+                    "steps": recorded,
+                    "files": {
+                        "registry": placeholder((state / "fleet.json").read_text()),
+                        "configs": {
+                            p.stem: placeholder(p.read_text())
+                            for p in sorted(configs.glob("*.json"))
+                        },
+                        "archives": sorted(p.name for p in state.glob("*.released-*")),
+                    },
+                }
+            )
+    return {
+        "description": "spec §4: the fleet over whole sessions, as emosa.agent.fleet handles "
+        "them. A step: fleet_config (the fleet (re)started with this configuration on the same "
+        "files), arrival (a pod at the front port: the result of the fleet's AWLAN_Node "
+        "select, and the wall clock), mkdir (a directory under the session's), forget (a "
+        "serial, archived with suffix " + FLEET_STAMP + "), forget_elsewhere (the same, by "
+        "another fleet process on the same files while this one serves). Per arrival: "
+        "handover (the agent started or restarted, then the update sent), refused (not "
+        "admitted, or no free port: nothing written to the pod) or invalid (an unusable "
+        "identity: the same). files: the "
+        "registry and the agent configurations as the fleet left them, byte for byte, and "
+        "the archived state directories. " + FLEET_ROOT + " stands for the session's own "
+        "directory.",
+        "root": FLEET_ROOT,
+        "stamp": FLEET_STAMP,
+        "sessions": out,
+    }
+
+
+class RecordingIp:
+    """iproute2 over an in-memory set of links (tests/test_gtp.py's FakeIp), recording
+    every call with its check flag and output."""
+
+    def __init__(self, links):
+        self.links = copy.deepcopy(links)
+        self.calls = []
+
+    def __call__(self, *args, check=True):
+        output = self._run(args)
+        self.calls.append([list(args), check, output])
+        return output
+
+    def _run(self, args):
+        if args[:3] == ("-br", "link", "show"):
+            return f"{args[4]} UP\n" if args[4] in self.links else ""
+        if args[:5] == ("-d", "-o", "link", "show", "type"):
+            return "".join(
+                f"7: {n}@NONE: <UP> mtu 1562 \\    gretap"
+                f" remote {v['remote']} local {v['local']}"
+                + (f" dev {v['dev']}" if v.get("dev") else "")
+                + " ttl inherit\n"
+                for n, v in self.links.items()
+                if v.get("type") == "gretap"
+            )
+        if args[:4] == ("-o", "link", "show", "master"):
+            return "".join(
+                f"{i}: {n}: <UP> mtu 1500 master {args[4]}\n"
+                for i, (n, v) in enumerate(self.links.items())
+                if v.get("master") == args[4]
+            )
+        if args[:2] == ("link", "add"):
+            self.links[args[2]] = dict(zip(args[3::2], args[4::2], strict=False))
+        elif args[:2] == ("link", "del"):
+            del self.links[args[2]]
+        elif args[:2] == ("link", "set") and "master" in args:
+            self.links[args[2]]["master"] = args[args.index("master") + 1]
+        return ""
+
+
+def gtp_vectors():
+    from emosa.gtp import GTP, ConfigError, Links, check, render_dnsmasq, tunnel_name
+
+    config = {
+        "underlay": {
+            "interface": "podbh",
+            "address": "169.254.2.1/25",
+            "mtu": 1600,
+            "dhcp_range": ["169.254.2.10", "169.254.2.126"],
+            "lease_time": "1h",
+        },
+        "lan": {"bridge": "br-gtp", "ports": ["eth1"]},
+        "tunnel_mtu": 1562,
+        "state_dir": "/var/lib/emosa-gtp",
+    }
+
+    def changed(**underlay):
+        c = copy.deepcopy(config)
+        tunnel = underlay.pop("tunnel_mtu", None)
+        c["underlay"].update(underlay)
+        if tunnel:
+            c["tunnel_mtu"] = tunnel
+        return c
+
+    checks = []
+    for case in (
+        config,
+        changed(address="169.254.2.2/25"),
+        changed(address="169.254.2.129/25"),
+        changed(address="169.254.0.1/16", dhcp_range=["169.254.0.10", "169.254.255.254"]),
+        changed(dhcp_range=["169.254.2.1", "169.254.2.126"]),
+        changed(dhcp_range=["169.254.2.10", "169.254.3.10"]),
+        changed(dhcp_range=["169.254.2.100", "169.254.2.10"]),
+        changed(tunnel_mtu=1580),
+        changed(mtu=1600, tunnel_mtu=1562),
+        changed(address="169.254.2.1/24", dhcp_range=["169.254.2.2", "169.254.2.254"]),
+    ):
+        try:
+            check(copy.deepcopy(case))
+            error = None
+        except ConfigError as exc:
+            error = str(exc)
+        checks.append({"config": case, "error": error})
+
+    leases_text = (
+        "0 02:00:00:00:05:00 169.254.2.57 pod-1 *\n"
+        "4102444800 02:00:00:00:06:00 169.254.2.60 pod-2 01:02:00:00:00:06:00\n"
+        "1000 02:00:00:00:07:00 169.254.2.61 gone *\n"
+    )
+    sessions = {
+        "setup-lease-renew-release": (
+            {"podbh": {}, "eth1": {}, "wlan0": {"master": "podbh"}},
+            "",
+            [
+                ["setup"],
+                ["lease", "add", "02:00:00:00:05:00", "169.254.2.57", "pod-1"],
+                ["lease", "old", "02:00:00:00:05:00", "169.254.2.57"],
+                ["lease", "add", "02:00:00:00:06:00", "169.254.2.60"],
+                ["lease", "del", "02:00:00:00:05:00", "169.254.2.57"],
+                ["lease", "add", "02:00:00:00:05:00", "169.254.1.57"],
+                ["lease", "add", "02-00-00-00-05-00", "169.254.2.57"],
+                ["list"],
+            ],
+        ),
+        "reconcile-to-the-leases": (
+            {
+                "podbh": {},
+                "eth1": {},
+                "gtp2_99": {"type": "gretap", "local": "169.254.2.1", "remote": "169.254.2.99"},
+                "gtp2_57": {
+                    "type": "gretap",
+                    "local": "169.254.2.1",
+                    "remote": "169.254.2.57",
+                    "dev": "if31",
+                },
+            },
+            leases_text,
+            [["reconcile"], ["list"]],
+        ),
+        "setup-without-its-interfaces": (
+            {"eth1": {}},
+            "",
+            [["setup"]],
+        ),
+        "setup-without-the-lan-port": (
+            {"podbh": {}},
+            "",
+            [["setup"]],
+        ),
+    }
+    out = []
+    for name, (links, leases, steps) in sessions.items():
+        with tempfile.TemporaryDirectory() as directory:
+            live = copy.deepcopy(config)
+            live["state_dir"] = directory
+            (Path(directory) / "leases").write_text(leases)
+            fake = RecordingIp(links)
+            gtp = GTP(live, Links(fake))
+            recorded = []
+            for step in steps:
+                del fake.calls[:]
+                try:
+                    if step[0] == "setup":
+                        result = gtp.setup(Path(directory) / "gtp.json")
+                    elif step[0] == "lease":
+                        result = gtp.lease(*step[1:4])
+                    elif step[0] == "reconcile":
+                        result = gtp.reconcile()
+                    else:
+                        result = gtp.list()
+                    error = None
+                except ConfigError as exc:
+                    result, error = None, str(exc)
+                recorded.append(
+                    {"command": step, "calls": list(fake.calls), "result": result, "error": error}
+                )
+            out.append({"name": name, "links": links, "leases": leases, "steps": recorded})
+    conf, _hook = render_dnsmasq(config, "/etc/emosa-gtp.json")
+    return {
+        "description": "spec §8.2: the GRE termination point, as emosa.gtp. checks: the rules "
+        "beyond the schema (error: the refusal, null: accepted). tunnel_names: an underlay "
+        "address and its gretap. dnsmasq: the configuration setup writes for config (its "
+        "dhcp-script runs the implementation's own lease command). sessions: commands on a "
+        "host whose links and dnsmasq lease file are given, the session's state_dir its own "
+        "directory: every iproute2 call in order (its arguments after ip, whether a failure "
+        "stops the command, and the output it gave), and the command's result (the tunnels "
+        "listed) or its refusal.",
+        "config": config,
+        "checks": checks,
+        "tunnel_names": [
+            [ip, tunnel_name(ip)] for ip in ("169.254.2.57", "169.254.2.126", "169.254.255.1")
+        ],
+        "dnsmasq": conf,
+        "sessions": out,
     }
 
 
@@ -2745,6 +3097,8 @@ VECTOR_SETS = {
     "translation-northbound.json": northbound_vectors,
     "translation-southbound.json": southbound_vectors,
     "fleet.json": fleet_vectors,
+    "fleet-sessions.json": fleet_session_vectors,
+    "gtp.json": gtp_vectors,
     "uplink.json": uplink_vectors,
     "cmdu.json": cmdu_vectors,
     "control.json": control_vectors,

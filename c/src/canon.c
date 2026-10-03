@@ -101,9 +101,36 @@ static int compare_keys(const void *a, const void *b)
     return strcmp((*(const cJSON *const *)a)->string, (*(const cJSON *const *)b)->string);
 }
 
-static bool dump(em_buf *b, const cJSON *v, em_json_style style, bool sort)
+/* before an item of a container at depth: indent=2 starts it on a line of its own */
+static bool put_item_start(em_buf *b, em_json_style style, size_t depth, bool first)
 {
-    const char *item_sep = style == EM_JSON_COMPACT ? "," : ", ";
+    if (style != EM_JSON_INDENT2)
+        return first || put(b, style == EM_JSON_COMPACT ? "," : ", ");
+    if (!first && !put(b, ","))
+        return false;
+    if (!put(b, "\n"))
+        return false;
+    for (size_t i = 0; i <= depth; i++)
+        if (!put(b, "  "))
+            return false;
+    return true;
+}
+
+/* the end of a non-empty container at depth */
+static bool put_end(em_buf *b, em_json_style style, size_t depth, const char *close)
+{
+    if (style == EM_JSON_INDENT2) {
+        if (!put(b, "\n"))
+            return false;
+        for (size_t i = 0; i < depth; i++)
+            if (!put(b, "  "))
+                return false;
+    }
+    return put(b, close);
+}
+
+static bool dump(em_buf *b, const cJSON *v, em_json_style style, bool sort, size_t depth)
+{
     const char *key_sep = style == EM_JSON_COMPACT ? ":" : ": ";
     if (cJSON_IsNull(v))
         return put(b, "null");
@@ -118,18 +145,18 @@ static bool dump(em_buf *b, const cJSON *v, em_json_style style, bool sort)
     if (cJSON_IsString(v))
         return put_string(b, v->valuestring);
     if (cJSON_IsArray(v)) {
+        if (!cJSON_GetArraySize(v))
+            return put(b, "[]");
         put(b, "[");
         bool first = true;
         const cJSON *item;
         cJSON_ArrayForEach(item, v)
         {
-            if (!first)
-                put(b, item_sep);
-            first = false;
-            if (!dump(b, item, style, sort))
+            if (!put_item_start(b, style, depth, first) || !dump(b, item, style, sort, depth + 1))
                 return false;
+            first = false;
         }
-        return put(b, "]");
+        return put_end(b, style, depth, "]");
     }
     if (cJSON_IsObject(v)) {
         size_t n = (size_t)cJSON_GetArraySize(v), i = 0;
@@ -138,15 +165,17 @@ static bool dump(em_buf *b, const cJSON *v, em_json_style style, bool sort)
         cJSON_ArrayForEach(item, v) items[i++] = item;
         if (sort && n > 1)
             em_sort(items, n, sizeof(*items), compare_keys);
+        if (!n) {
+            free(items);
+            return put(b, "{}");
+        }
         put(b, "{");
         bool ok = true;
-        for (i = 0; ok && i < n; i++) {
-            if (i)
-                put(b, item_sep);
-            ok = put_string(b, items[i]->string) && put(b, key_sep) && dump(b, items[i], style, sort);
-        }
+        for (i = 0; ok && i < n; i++)
+            ok = put_item_start(b, style, depth, i == 0) && put_string(b, items[i]->string) &&
+                 put(b, key_sep) && dump(b, items[i], style, sort, depth + 1);
         free(items);
-        return ok && put(b, "}");
+        return ok && put_end(b, style, depth, "}");
     }
     return false;
 }
@@ -154,7 +183,7 @@ static bool dump(em_buf *b, const cJSON *v, em_json_style style, bool sort)
 char *em_json_dumps(const cJSON *value, em_json_style style, bool sort)
 {
     em_buf b = {0};
-    if (!dump(&b, value, style, sort) || !em_buf_u8(&b, 0)) {
+    if (!dump(&b, value, style, sort, 0) || !em_buf_u8(&b, 0)) {
         em_buf_free(&b);
         return NULL;
     }

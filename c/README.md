@@ -1,12 +1,12 @@
 # EMOSA in C
 
-The second implementation of the EMOSA agent, interchangeable with the Python
-reference, written with an AI assistant. It is being taken to production
+The second implementation of the EMOSA adapter (its agent, fleet and GTP),
+interchangeable with the Python reference, written with an AI assistant. It is being taken to production
 quality so that it can be evaluated in full and owned by a team without access
 to the labs (the easymesh-labs
 alignment plan (in [easymesh-labs](https://mesh.vcpe.dev/)),
-phase 8: the bar, CI with a lab in a box, a basic adapter with the fleet in C,
-then feature by feature). The bar is [QUALITY.md](QUALITY.md): the coding
+phase 8: the bar, CI with a lab in a box, the basic adapter with the fleet and the
+GTP in C, then feature by feature). The bar is [QUALITY.md](QUALITY.md): the coding
 standard (CERT C), the gates and where each stands. Until every gate is met it
 is not production code; its status file still says `c-lab-prototype`.
 
@@ -15,8 +15,11 @@ What makes it interchangeable with the Python reference (`src/emosa`):
   conformance vectors (`spec/conformance`), which `emosa-vectors` replays;
 - the **same interfaces**: the agent configuration
   (`schemas/agent-config.schema.json`), the status file it writes, the pod's
-  OVSDB and the controller's 1905 LAN. The fleet stays in Python and starts
-  either agent for a pod.
+  OVSDB and the controller's 1905 LAN; the fleet's files (its registry and the
+  agent configurations, byte for byte) and the GTP's links. Each program has both
+  implementations (`emosa-agent-c`, `emosa-fleet-c`, `emosa-gtp-c`); either fleet
+  takes over from the other and starts either agent, and the adapter kit installs
+  them without Python (`EMOSA_IMPLEMENTATION=c`, `deploy/adapter`).
 
 ## Scope and order
 
@@ -36,6 +39,9 @@ What makes it interchangeable with the Python reference (`src/emosa`):
 | Probe watch | `emosa.agent.probe_watch` | `probe-watch.json` | done (`scope_watch.c`) |
 | Pod statistics | `emosa.opensync.stats` | `telemetry.json` | done |
 | Agent runtime (config, OVSDB session, Ethernet, status) | `emosa.agent.pod` | live in the RDK lab | done |
+| Fleet: the front port, the registry, the agents' units, `forget` | `emosa.agent.fleet` | `fleet.json`, `fleet-sessions.json` | done (`fleet.c`, `fleetd.c`, `jsonrpc.c`, `proc.c`) |
+| GRE termination point: dnsmasq's configuration, one gretap per lease | `emosa.gtp` | `gtp.json` | done (`gtp.c`, `gtpd.c`) |
+| Secret store interface: the policy over a backend (files now, a platform's secure storage later) | `emosa.secrets` | units | done (`vault.c`) |
 | Yocto recipe for the RDK lab image | | | |
 
 ## The agent runtime

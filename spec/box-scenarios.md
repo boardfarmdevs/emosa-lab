@@ -83,6 +83,23 @@ The workload's controller restart is the controller's silence, its Renew or its 
 Topology Query: `silent-controller`, `renew` and `reannounce`. A client leaving and
 joining is `clients`.
 
+## The adapter around the agents (spec 4, 8.2; plan 8.3)
+
+Each implementation's fleet and GTP, Python or C, as each agent above
+(`lab/src/emosa_lab/box_adapter.py`). The fleet's scenarios hand the box's pod to the real
+fleet at its front port, as an operator's redirector does, and play the pod's `cm`: when the
+fleet writes `manager_addr`, the pod's database dials the agent there. The agents' units are
+a `systemctl` of the box's (plain processes, as `emosa-agent@.service` runs them).
+
+| Scenario | What it shows | Relied on by |
+| --- | --- | --- |
+| `fleet-handover` | a pod at the front port gets its agent: the registry entry (the first port, `em1`, its AL MAC), its configuration, the unit enabled and started, `manager_addr` written; the agent onboards the pod | every lab's pods (opensync-lab's local-noc, the RDK lab's redirector) |
+| `fleet-return` | the pod back at the front port (a reboot, its cloud's redirect): the same entry, one more handover, the unit started (a no-op), never restarted; the same agent provisions it again | pods that restart |
+| `fleet-refusals` | a pod not admitted, one with an unusable serial, one with no free port: nothing written to the pod, no agent configured or started | spec 4 steps 1 and 2 |
+| `fleet-takeover` | the other implementation's fleet hands the pod over first; this one, on the same registry and configurations, lists the same entry and leaves the running agent alone (its configuration's text is the same) | switching the adapter's implementation in a lab |
+| `fleet-forget` | `forget` (its own process, while the fleet serves): the agent stopped and disabled, entry and configuration gone, state archived; handed over again, a new entry and agent | finding 14; opensync-lab's `release` |
+| `gtp` | `setup` addresses the underlay (raising its port's MTU), bridges the LAN port and writes a dnsmasq configuration dnsmasq accepts; lease events through the hook setup wrote add one gretap per pod into the LAN bridge (a renewal changes nothing) and delete it; `reconcile` makes the tunnels the leases; a lease outside the underlay is refused | the RDK lab's `em-gtp`, the pods' GRE path |
+
 ## The suite findings
 
 | # | Finding | Where seen | Scenario |
@@ -100,10 +117,10 @@ joining is `clients`.
 | 11 | a pod whose OpenSync started again counted as another manager's change (an ownership conflict), so its configuration was never written again; fixed (spec 5) | the box, 3 October | `new-source` |
 | 12 | without option 1, the failure answered without its Error Code TLV; fixed | the box, 3 October | `backhaul-steering-refused` |
 | 13 | the refresh cadence counted from a refresh's end, the lease from its start: one slow refresh (0.8 s) lapsed the lease and ended the session just after provisioning; fixed (design 4.3) | the box in CI, 3 October | `onboard` |
+| 14 | `forget` run while the fleet served did not take: the serving fleet kept the registry in memory and wrote the forgotten entry back at the pod's next handover; fixed (spec 4: the registry file is the state, read for each pod) | the box, 3 October | `fleet-forget` |
 
 ## Not scenarios
 
-- The fleet (spec 4): it stays Python (`c/README.md`); its own tests cover the handover.
 - The data plane (spec 8): the GRE termination and the bridges are the labs', checked by
   their suites and the reference workload.
 - The Topology Discovery period (60 s) and Client Disassociation Stats: shown by the

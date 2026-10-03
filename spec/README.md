@@ -462,7 +462,8 @@ For each connection on the front port, the fleet:
 5. writes `manager_addr` and ends the session.
 
 The whole exchange MUST complete within 5 s. A pod returning later gets the
-same entry. The agent configuration takes the fleet's settings (`message_set`,
+same entry. The registry file is the fleet's state: a serving fleet MUST read it
+again for each pod, so a `forget` run as another process takes effect at once. The agent configuration takes the fleet's settings (`message_set`,
 `multi_bss`, `m2_session`, `profile`, `uplink`), overridden per pod by
 `pods.<serial>`: a different pod model needs its own profile, and the uplink
 switch (§8.3) is enabled per pod. `forget SERIAL` stops the agent, deletes the entry and the
@@ -521,15 +522,26 @@ Rules:
 
 Real examples from the lab are in [`examples/`](examples).
 
-Commands:
+Commands (the C names end in `-c`: `emosa-fleet-c`, `emosa-agent-c`, `emosa-gtp-c`; each
+implementation's take the same arguments, read and write the same files, and either takes
+over from the other):
 - `emosa-fleet serve|list|forget CONFIG [SERIAL]`
 - `emosa-agent CONFIG`
+- `emosa-gtp setup|lease|reconcile|list CONFIG [ACTION MAC IP [HOST]]` (§8.2)
 
-Both MUST validate their configuration and refuse an invalid one.
+Each MUST validate its configuration and refuse an invalid one.
 
 Secrets:
-- Passphrases received in M2 live only in the secret store, one file per
-  reference (`wsc-<32 hex>` plus `-1`…`-7` for extra BSSes).
+- The secret store is an interface with four operations: read a reference's value,
+  create a reference (never replacing one, durable when it returns), remove one, and
+  the fingerprint key (created once). The files backend keeps one private file per
+  reference (mode 0600, owned by the agent) in `<state_dir>/secrets` (mode 0700); a
+  platform's secure storage MAY implement the interface instead. The policy is the
+  store's, the same for every backend: references match
+  `[A-Za-z0-9][A-Za-z0-9_.-]{0,95}` (never a path), a usable passphrase is 8 to 63
+  printable ASCII bytes, and fingerprints are HMAC-SHA256 under the store's key.
+- Passphrases received in M2 live only in the secret store, one reference each
+  (`wsc-<32 hex>` plus `-1`…`-7` for extra BSSes).
 - They MUST NOT appear in logs, status, the journal or evidence. The journal
   holds keyed fingerprints only.
 

@@ -11,6 +11,7 @@
 typedef enum {
     EM_JSON_COMPACT,  /* separators=(",", ":") */
     EM_JSON_DEFAULT,  /* separators=(", ", ": "), json.dumps' default */
+    EM_JSON_INDENT2,  /* indent=2: the files the fleet writes (registry, agent configurations) */
 } em_json_style;
 
 /* json.dumps(value, sort_keys=sort, separators=style): ASCII only (non-ASCII as
