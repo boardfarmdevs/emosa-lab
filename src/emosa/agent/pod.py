@@ -603,8 +603,11 @@ async def serve(config, stop):
                     if next_refresh and late > REFRESH_PERIOD:
                         # the published report lives 1.5 s: a late refresh risks its lease
                         log.warning("pod state refresh %.1f s late", late)
+                    started = time.monotonic()
                     ready = await timed("refresh", report.refresh())
-                    next_refresh = time.monotonic() + REFRESH_PERIOD
+                    # the cadence counts from the start, as the lease does: a slow
+                    # refresh is followed at once, not 0.5 s after it ends
+                    next_refresh = started + REFRESH_PERIOD
                 facts = {k: v for k, v in (report.facts or {}).items() if k != "ovsdb_revision"}
                 if facts != last_facts:
                     log.info("pod: %s", json.dumps(facts or None, default=str))

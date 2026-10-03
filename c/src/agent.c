@@ -1622,7 +1622,7 @@ int main(int argc, char **argv)
                 WARN("pod state refresh %.1f s late", t - next_refresh);
             if (!refresh(&a))
                 a.available = a.available && t < a.refreshed_at + LEASE;
-            next_refresh = now() + REFRESH_PERIOD;
+            next_refresh = t + REFRESH_PERIOD; /* from the start, as the lease counts */
         }
         session_tick(&a);
         if (t >= a.next_discovery) {

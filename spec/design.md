@@ -276,7 +276,9 @@ flowchart TB
 ### 4.3 Data flow: northbound (pod → controller)
 
 1. The runtime refreshes every 0.5 s: one OVSDB snapshot (the monitor cache,
-   drained of queued updates), decoded with the schema.
+   drained of queued updates), decoded with the schema. The 0.5 s counts from
+   the start of the previous refresh, as its lease does: after a slow refresh
+   the next one follows at once.
 2. The pod view translates it; the runtime publishes a report snapshot
    `(generation, revision, capabilities, topology, operating radios)` with a
    1.5 s lease.

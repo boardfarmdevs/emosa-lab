@@ -213,7 +213,7 @@ class PodBackend(OpenSyncBackend):
                 ready,
                 raw["generation"],
                 raw["schema"].fingerprint,
-                start_instance(decoded),
+                self._instance(decoded),
             )
         except (EmosaError, ConnectionError, TimeoutError):
             if self.last is None:
@@ -221,6 +221,14 @@ class PodBackend(OpenSyncBackend):
             self.last.ready = False
             self.last.observed.fresh = False
         return self.last
+
+    @staticmethod
+    def _instance(decoded):
+        """Which start of the pod's OpenSync (its radio rows), or None before it has them."""
+        try:
+            return start_instance(decoded)
+        except EmosaError:
+            return None
 
     @staticmethod
     def role(row):
@@ -626,6 +634,7 @@ class PodBackend(OpenSyncBackend):
             return SubmitResult(
                 "unknown" if exc.code == Reason.OUTCOME_UNKNOWN else "rejected", {}, exc.code
             )
+        instance = self._instance(decoded)
         return SubmitResult(
             "committed",
             {
@@ -633,7 +642,7 @@ class PodBackend(OpenSyncBackend):
                 "transaction_validated": True,
                 "transaction_id": attempt["transaction_id"],
                 "session_generation": raw["generation"],
-                "instance": start_instance(decoded),
+                **({"instance": instance} if instance else {}),
                 "profile": self.profile.id,
                 "action": "create" if vif_uuid is None else "update",
                 "additional_bss_count": len(intent.additional or ()),

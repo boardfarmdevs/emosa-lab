@@ -16,7 +16,7 @@ the real agent binary, C or Python, in a private network namespace against:
 - **a broker:** `mosquitto`, for the scenarios with the pod's statistics.
 
 Both implementations run every scenario (`tests/test_box.py`, marker `box`); CI runs them
-all (`checks.yml`, job `ovsdb`). On a host without CI's toolchain (cmake, clang 18,
+all (`checks.yml`, job `box`, one run per agent). On a host without CI's toolchain (cmake, clang 18,
 Ubuntu 24.04), `scripts/run-box-in-container.sh` runs them in a container. One scenario
 alone, its result as JSON:
 
@@ -99,6 +99,7 @@ joining is `clients`.
 | 10 | a pod's station on its own backhaul BSS looped `br-home` | reference lab, 25 September | `backhaul-steering-own-bss` |
 | 11 | a pod whose OpenSync started again counted as another manager's change (an ownership conflict), so its configuration was never written again; fixed (spec 5) | the box, 3 October | `new-source` |
 | 12 | without option 1, the failure answered without its Error Code TLV; fixed | the box, 3 October | `backhaul-steering-refused` |
+| 13 | the refresh cadence counted from a refresh's end, the lease from its start: one slow refresh (0.8 s) lapsed the lease and ended the session just after provisioning; fixed (design 4.3) | the box in CI, 3 October | `onboard` |
 
 ## Not scenarios
 

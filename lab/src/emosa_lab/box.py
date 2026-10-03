@@ -504,53 +504,50 @@ async def onboard(box):
 
 async def onboarded(box):
     """onboard's steps, which other scenarios start from: the agent's radio (its RUID) and
-    whether the credentials were applied, or what failed."""
-    search = await box.until(lambda: box.controller.latest(AUTOCONFIG_SEARCH))
-    if not search:
+    whether the credentials were applied, or what failed. As a controller does, every
+    Search gets a Response and every M1 an M2 until the credentials are applied (a slow
+    agent may end a session before its answer arrives and start another)."""
+    if not await box.until(lambda: box.controller.latest(AUTOCONFIG_SEARCH)):
         return {"failed": "no search"}
-    # an EasyMesh 6.1 Response: registrar, 2.4 GHz, the controller service, Profile 1, and
-    # Controller Capability with KiB/MiB counters and the Early AP Capability Report
-    response = (
-        Tlv(0x0F, b"\0"),
-        Tlv(0x10, b"\0"),
-        Tlv(0x80, b"\x01\0"),
-        Tlv(0xB3, b"\x01"),
-        Tlv(0xDD, b"\xc0"),
-    )
-    box.controller.send(AUTOCONFIG_RESPONSE, response, mid=search.mid)
-    m1 = await box.until(lambda: box.controller.latest(AUTOCONFIG_WSC))
-    if not m1:
-        return {"failed": "no M1"}
-    wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
-    ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)  # AP Radio Basic Capabilities
-    m2 = await asyncio.to_thread(registrar_reply, REGISTRAR, wsc)
-    box.controller.send(AUTOCONFIG_WSC, (Tlv(0x82, ruid), Tlv(0x11, m2)))
-
-    async def written():
-        rows = await box.rows("Wifi_VIF_Config")
-        return any(r.get("ssid") == REGISTRAR_SSID for r in rows.values())
-
-    deadline = time.monotonic() + 60
-    wrote = False
-    while time.monotonic() < deadline and box.process.poll() is None and not wrote:
-        box.controller.poll()
-        wrote = await written()
-        await asyncio.sleep(0.3)
-    if not wrote:
-        return {"failed": "the credentials never reached the pod"}
-    await apply_configuration(box.db)  # the pod's managers apply the new configuration
+    deadline, searches, m1s, ruid, wrote = time.monotonic() + 90, 0, 0, None, False
+    pending = False  # an M2 sent whose credentials the pod's managers have not applied yet
 
     def applied():
-        status = box.status() or {}
-        operations = status.get("operations") or []
+        operations = (box.status() or {}).get("operations") or []
         return any(
             "APPLIED" in str(op.get("state", "")) for op in operations if isinstance(op, dict)
         )
 
-    done = await box.until(applied, seconds=60)
+    while time.monotonic() < deadline and box.process.poll() is None:
+        found = box.sent(AUTOCONFIG_SEARCH)
+        # an EasyMesh 6.1 Response: registrar, 2.4 GHz, the controller service, Profile 1,
+        # and Controller Capability with KiB/MiB counters and the Early AP Capability Report
+        for search in found[searches:]:
+            box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
+        searches = len(found)
+        found = box.sent(AUTOCONFIG_WSC)
+        for m1 in found[m1s:]:
+            wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
+            ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)  # AP Radio Basic Caps
+            m2 = await asyncio.to_thread(registrar_reply, REGISTRAR, wsc)
+            box.controller.send(AUTOCONFIG_WSC, (Tlv(0x82, ruid), Tlv(0x11, m2)))
+            pending = True
+        m1s = len(found)
+        if pending:
+            rows = await box.rows("Wifi_VIF_Config")
+            if any(r.get("ssid") == REGISTRAR_SSID for r in rows.values()):
+                wrote, pending = True, False
+                await apply_configuration(box.db)  # the pod's managers apply it, once
+        if wrote and applied():
+            break
+        await asyncio.sleep(0.3)
+    if ruid is None:
+        return {"failed": "no M1"}
+    if not wrote:
+        return {"failed": "the credentials never reached the pod"}
     return {
         "ruid": ruid,
-        "applied": bool(done),
+        "applied": applied(),
         "operations": (box.status() or {}).get("operations"),
     }
 
@@ -676,39 +673,40 @@ async def next_message(box, message_type, after, seconds=60):
     )
 
 
-async def provision(box, searches=0, m1s=0, *, ack_early=False):
-    """Answer the agent's next Search (beyond `searches`) and its next M1 (beyond `m1s`) with
-    a Response and a registrar's M2; True once the credentials are applied again."""
-    search = await next_message(box, AUTOCONFIG_SEARCH, searches)
-    if not search:
-        return False
-    box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
-    m1 = await next_message(box, AUTOCONFIG_WSC, m1s)
-    if not m1:
-        return False
-    if ack_early:
-        early = box.sent(EARLY_REPORT)
-        if early:
-            box.controller.send(ACK, (), mid=early[-1].mid)
-    wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
-    ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)
-    m2 = await asyncio.to_thread(registrar_reply, REGISTRAR, wsc)
-    box.controller.send(AUTOCONFIG_WSC, (Tlv(0x82, ruid), Tlv(0x11, m2)))
+async def provision(box, searches=0, m1s=0, *, seconds=90):
+    """As a controller does until the agent is provisioning again: a Response to every Search
+    beyond the first `searches`, a registrar's M2 to every M1 beyond the first `m1s`, and the
+    pod's managers applying the credentials once written. A slow agent can end a session
+    before its answer arrives and start another; it gets answered too. True once
+    provisioning after an M2."""
+    deadline = time.monotonic() + seconds
+    answered_searches, answered_m1s, m2_sent, pending = searches, m1s, False, False
 
     async def written():
         rows = await box.rows("Wifi_VIF_Config")
         return any(r.get("ssid") == REGISTRAR_SSID for r in rows.values())
 
-    deadline = time.monotonic() + 60
-    while time.monotonic() < deadline and not await written():
-        box.controller.poll()
+    while time.monotonic() < deadline and box.process.poll() is None:
+        found = box.sent(AUTOCONFIG_SEARCH)
+        for search in found[answered_searches:]:
+            box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
+        answered_searches = len(found)
+        found = box.sent(AUTOCONFIG_WSC)
+        for m1 in found[answered_m1s:]:
+            wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
+            ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)
+            m2 = await asyncio.to_thread(registrar_reply, REGISTRAR, wsc)
+            box.controller.send(AUTOCONFIG_WSC, (Tlv(0x82, ruid), Tlv(0x11, m2)))
+            m2_sent = pending = True
+        answered_m1s = len(found)
+        if pending and await written():
+            pending = False
+            await apply_configuration(box.db)  # the pod's managers apply it, once
+        session = (box.status() or {}).get("session") or {}
+        if m2_sent and not pending and session.get("state") == "provisioning":
+            return True
         await asyncio.sleep(0.3)
-    await apply_configuration(box.db)
-
-    def provisioning():
-        return ((box.status() or {}).get("session") or {}).get("state") == "provisioning"
-
-    return bool(await box.until(provisioning, seconds=60))
+    return False
 
 
 async def early_report(box):
@@ -764,20 +762,24 @@ async def renew(box):
 
 async def no_m2(box):
     """Suite finding: an M1 the controller never answers (it restarted in between). After
-    30 s without an M2 the agent starts onboarding again (spec 2.5)."""
-    search = await box.until(lambda: box.controller.latest(AUTOCONFIG_SEARCH))
-    if not search:
-        return box.result(passed=False, failed="no search")
-    box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
-    m1 = await next_message(box, AUTOCONFIG_WSC, 0)
-    if not m1:
-        return box.result(passed=False, failed="no M1")
-    searches = len(box.sent(AUTOCONFIG_SEARCH))
-    again = await next_message(box, AUTOCONFIG_SEARCH, searches, seconds=60)
-    waited = box.controller.when(again) - box.controller.when(m1) if again else None
+    30 s without an M2 the agent starts onboarding again (spec 2.5). The box answers every
+    Search, never an M1, and times the Search that follows an M1 by 25 s or more."""
+    deadline, answered, waited = time.monotonic() + 120, 0, None
+    while time.monotonic() < deadline and box.process.poll() is None and waited is None:
+        searches, m1s = box.sent(AUTOCONFIG_SEARCH), box.sent(AUTOCONFIG_WSC)
+        for search in searches[answered:]:
+            at = box.controller.when(search)
+            before = [box.controller.when(m) for m in m1s if box.controller.when(m) < at]
+            if before and at - before[-1] >= 25:
+                waited = at - before[-1]  # the no-M2 rule, not an earlier session's end
+                break
+            box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
+        answered = len(searches)
+        await asyncio.sleep(0.2)
     return box.result(
-        passed=bool(again) and 29 <= waited <= 45,
+        passed=waited is not None and 29 <= waited <= 45,
         search_after_m1_s=round(waited, 1) if waited else None,
+        m1s=len(box.sent(AUTOCONFIG_WSC)),
     )
 
 
