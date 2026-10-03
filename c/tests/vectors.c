@@ -1323,6 +1323,7 @@ static void scope_writes_vectors(const char *dir)
 typedef struct {
     char config[256], observed[256];
     bool fresh, ready;
+    char instance[17]; /* the start of the pod's OpenSync, "" for none (spec §5) */
     char plan_error[32], result[16];
     jmp_buf crash;
 } scripted_pod;
@@ -1342,6 +1343,10 @@ static bool scripted_snapshot(void *ctx, em_snapshot *out)
     out->ready = p->ready;
     out->generation = 1;
     strcpy(out->schema_fingerprint, "conformance");
+    if (p->instance[0]) {
+        snprintf(out->instance, sizeof(out->instance), "%s", p->instance);
+        out->has_instance = true;
+    }
     return true;
 }
 
@@ -1371,6 +1376,8 @@ static void scripted_submit(void *ctx, const cJSON *intent, const cJSON *attempt
         out->evidence = cJSON_CreateObject();
         cJSON_AddStringToObject(out->evidence, "attribution", "reply");
         cJSON_AddTrueToObject(out->evidence, "transaction_validated");
+        if (p->instance[0])
+            cJSON_AddStringToObject(out->evidence, "instance", p->instance);
     } else if (!strcmp(p->result, "conflict")) {
         strcpy(out->status, "conflict");
         out->reason = EM_PRECONDITION_FAILED;
@@ -1468,6 +1475,9 @@ static void engine_vectors(const char *dir)
                 snprintf(pod.observed, sizeof(pod.observed), "%s", cJSON_GetArrayItem(s, 2)->valuestring);
                 pod.fresh = cJSON_IsTrue(cJSON_GetArrayItem(s, 3));
                 pod.ready = cJSON_IsTrue(cJSON_GetArrayItem(s, 4));
+                const cJSON *instance = cJSON_GetArrayItem(s, 5);
+                snprintf(pod.instance, sizeof(pod.instance), "%s",
+                         cJSON_IsString(instance) ? instance->valuestring : "");
             } else if (!strcmp(kind, "script")) {
                 const cJSON *e = cJSON_GetArrayItem(s, 1);
                 snprintf(pod.plan_error, sizeof(pod.plan_error), "%s", cJSON_IsString(e) ? e->valuestring : "");

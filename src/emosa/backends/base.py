@@ -11,6 +11,8 @@ class Snapshot:
     ready: bool
     generation: int
     schema_fingerprint: str
+    # which start of the pod's OpenSync (emosa.opensync.uplink.start_instance), when known
+    instance: str | None = None
 
 
 @dataclass

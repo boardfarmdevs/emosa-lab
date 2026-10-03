@@ -43,6 +43,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
 from emosa.opensync.mapping import OpenSyncBackend, check_results, guard, where_uuid
 from emosa.opensync.profiles import load as load_profile
+from emosa.opensync.uplink import start_instance
 from emosa.wire.operation_bridge import ScopeContext
 
 MODE = "opensync-6.6-hwsim"
@@ -212,6 +213,7 @@ class PodBackend(OpenSyncBackend):
                 ready,
                 raw["generation"],
                 raw["schema"].fingerprint,
+                start_instance(decoded),
             )
         except (EmosaError, ConnectionError, TimeoutError):
             if self.last is None:
@@ -566,7 +568,7 @@ class PodBackend(OpenSyncBackend):
     async def submit(self, intent, attempt):
         await self.plan(intent)
         raw = await self.session.snapshot()
-        vif_uuid, radio_uuid, config, _, _ = self._binding(raw)
+        vif_uuid, radio_uuid, config, _, decoded = self._binding(raw)
         if raw["generation"] != attempt["session_generation"]:
             return SubmitResult("rejected", {}, Reason.NOT_READY)
         if vif_uuid is None:
@@ -631,6 +633,7 @@ class PodBackend(OpenSyncBackend):
                 "transaction_validated": True,
                 "transaction_id": attempt["transaction_id"],
                 "session_generation": raw["generation"],
+                "instance": start_instance(decoded),
                 "profile": self.profile.id,
                 "action": "create" if vif_uuid is None else "update",
                 "additional_bss_count": len(intent.additional or ()),

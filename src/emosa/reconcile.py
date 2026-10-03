@@ -20,6 +20,7 @@ class Engine:
         self.deadlines = {}
         self.busy = set()
         self.quiesced = False
+        self.instances = {}  # pod_id -> the start of its OpenSync in the last snapshot taken
         self.starts = {}
         self.last_observations = {}
         self.wsc_guards = {}  # Process-local authority; deliberately never recovered.
@@ -104,7 +105,7 @@ class Engine:
             transition(op, State.REJECTED)
             op.reason = Reason.BUSY
             self._save(op)
-        elif self.store.ownership(intent.pod_id):
+        elif self._owned(intent.pod_id, op.run_id):
             transition(op, State.REJECTED)
             op.reason = Reason.OWNERSHIP_CONFLICT
             self._save(op)
@@ -113,7 +114,7 @@ class Engine:
     async def plan(self, intent):
         if intent.pod_id not in self.backends:
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "unknown pod")
-        if self.store.ownership(intent.pod_id):
+        if self._owned(intent.pod_id):
             raise EmosaError(Reason.OWNERSHIP_CONFLICT, "ownership must be re-qualified")
         return await self.backends[intent.pod_id].plan(intent)
 
@@ -131,6 +132,7 @@ class Engine:
                 await self._check_wsc(op)
                 op.plan = await self.plan(intent)
                 snap = await backend.snapshot()
+                self._remember(op.pod_id, snap)
                 if not snap.ready:
                     raise EmosaError(Reason.NOT_READY, "fresh complete snapshot required")
                 await self._check_wsc(op)
@@ -205,7 +207,7 @@ class Engine:
 
     @staticmethod
     def _evidence(snap, **extra):
-        return {
+        evidence = {
             "fresh": snap.observed.fresh,
             "predicate_satisfied": True,
             "generation": snap.generation,
@@ -215,6 +217,45 @@ class Engine:
             "provenance": snap.observed.provenance,
             **extra,
         }
+        instance = getattr(snap, "instance", None)
+        if instance and "instance" not in evidence:
+            evidence["instance"] = instance  # the start of the pod's OpenSync (spec §5)
+        return evidence
+
+    def _remember(self, pod_id, snap):
+        instance = getattr(snap, "instance", None)
+        if instance:
+            self.instances[pod_id] = instance
+
+    def _current_instance(self, pod_id):
+        return self.instances.get(pod_id)
+
+    def _owned(self, pod_id, run_id=None):
+        """The pod's recorded ownership conflict, unless it was seen on an earlier start of the
+        pod's OpenSync: a new start has a new database from its template, without the
+        configuration that conflicted, and begins a new ownership period (spec §5)."""
+        owned = self.store.ownership(pod_id)
+        current = self._current_instance(pod_id)
+        if owned and owned.get("instance") and current and owned["instance"] != current:
+            self.store.release(pod_id)
+            if run_id:
+                self.store.event(
+                    run_id,
+                    "OWNERSHIP_RELEASED",
+                    {"reason": "the pod's OpenSync started again", "instance": current},
+                )
+            return None
+        return owned
+
+    @staticmethod
+    def _restarted(op, snap):
+        """The operation's configuration was written on an earlier start of the pod's OpenSync
+        than the one the snapshot shows: the pod lost it with that database (spec §5)."""
+        written = (op.application_evidence or {}).get("instance") or (op.commit_evidence or {}).get(
+            "instance"
+        )
+        current = getattr(snap, "instance", None)
+        return bool(written and current and written != current)
 
     def _expired(self, op):
         if op.operation_id not in self.deadlines:
@@ -231,6 +272,7 @@ class Engine:
 
     async def reconcile(self, pod_id):
         snap = await self.backends[pod_id].snapshot()
+        self._remember(pod_id, snap)
         all_ops = self.store.operations()
         for index, op in enumerate(all_ops):
             if op.pod_id != pod_id or op.state not in {
@@ -314,16 +356,23 @@ class Engine:
                 if snap.ready and snap.observed.fresh:
                     config_matches = self._matches(snap.config, target)
                     applied = snap.observed.satisfies(target)
-                    if not config_matches and op.state in {
-                        State.CONFIG_COMMITTED,
-                        State.OBSERVED_APPLIED,
-                        State.TIMED_OUT,
-                    }:
+                    if (
+                        not config_matches
+                        and op.state
+                        in {
+                            State.CONFIG_COMMITTED,
+                            State.OBSERVED_APPLIED,
+                            State.TIMED_OUT,
+                        }
+                        and not self._restarted(op, snap)
+                    ):
+                        instance = getattr(snap, "instance", None)
                         self.store.conflict(
                             pod_id,
                             {
                                 "operation_id": op.operation_id,
                                 "reason": "owned configuration changed",
+                                **({"instance": instance} if instance else {}),
                             },
                         )
                         if op.state == State.CONFIG_COMMITTED:

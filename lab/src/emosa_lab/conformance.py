@@ -1887,7 +1887,13 @@ def engine_vectors():
         mode = "scripted"
 
         def __init__(self):
-            self.pod = {"config": "", "observed": "", "fresh": True, "ready": True}
+            self.pod = {
+                "config": "",
+                "observed": "",
+                "fresh": True,
+                "ready": True,
+                "instance": None,
+            }
             self.plan_error = None
             self.result = "committed"
 
@@ -1909,6 +1915,7 @@ def engine_vectors():
                 self.pod["ready"],
                 1,
                 "conformance",
+                self.pod["instance"],
             )
 
         async def plan(self, intent):
@@ -1921,9 +1928,10 @@ def engine_vectors():
                 raise Crash()
             if self.result == "lost":
                 raise ConnectionError("the reply was lost")
+            instance = {"instance": self.pod["instance"]} if self.pod["instance"] else {}
             return {
                 "committed": SubmitResult(
-                    "committed", {"attribution": "reply", "transaction_validated": True}
+                    "committed", {"attribution": "reply", "transaction_validated": True, **instance}
                 ),
                 "conflict": SubmitResult("conflict", {}, Reason.PRECONDITION_FAILED),
                 "rejected": SubmitResult("rejected", {}, Reason.NOT_READY),
@@ -1934,8 +1942,9 @@ def engine_vectors():
 
     a, b = "02:00:00:00:99:99", "02:00:00:00:98:98"
     # steps: ("request", stations, key, deadline), ("execute", n), ("pod", config, observed,
-    # fresh, ready), ("script", plan_error, submit), ("advance", seconds), ("reconcile",),
-    # ("recover",), ("cancel", n); a watched value is ",".join(stations)
+    # fresh, ready[, instance]), ("script", plan_error, submit), ("advance", seconds),
+    # ("reconcile",), ("recover",), ("cancel", n); a watched value is ",".join(stations);
+    # instance: which start of the pod's OpenSync the snapshot shows (spec §5)
     cases = [
         (
             "applied",
@@ -1995,6 +2004,38 @@ def engine_vectors():
                 ("reconcile",),
                 ("pod", b, b, True, True),
                 ("reconcile",),
+            ],
+        ),
+        (
+            # its OpenSync starts again: the template without the write is no conflict
+            "pod-restarted",
+            [
+                ("pod", "", "", True, True, "start-1"),
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("pod", a, a, True, True, "start-1"),
+                ("reconcile",),
+                ("pod", "", "", True, True, "start-2"),
+                ("reconcile",),
+                ("request", [a], "k2", 30),
+                ("execute", 1),
+            ],
+        ),
+        (
+            # a conflict seen on one start no longer blocks the pod on the next
+            "conflict-then-restart",
+            [
+                ("pod", "", "", True, True, "start-1"),
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("pod", a, a, True, True, "start-1"),
+                ("reconcile",),
+                ("pod", b, b, True, True, "start-1"),
+                ("reconcile",),
+                ("request", [a], "k2", 30),
+                ("pod", "", "", True, True, "start-2"),
+                ("reconcile",),
+                ("request", [a], "k3", 30),
             ],
         ),
         ("busy", [("request", [a], "k1", 30), ("request", [b], "k2", 30)]),
@@ -2068,6 +2109,7 @@ def engine_vectors():
                         "observed": step[2],
                         "fresh": step[3],
                         "ready": step[4],
+                        "instance": step[5] if len(step) > 5 else None,
                     }
                 elif kind == "script":
                     backend.plan_error, backend.result = step[1], step[2]

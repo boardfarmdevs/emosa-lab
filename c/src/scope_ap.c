@@ -331,6 +331,8 @@ static bool snapshot(void *ctx, em_snapshot *out)
         cJSON_ReplaceItemInObjectCaseSensitive(out->observed, "fresh", cJSON_CreateFalse());
         out->generation = s->last.generation;
         memcpy(out->schema_fingerprint, s->last.schema_fingerprint, 65);
+        memcpy(out->instance, s->last.instance, sizeof(out->instance));
+        out->has_instance = s->last.has_instance;
         return true;
     }
     cJSON *configured = values(s, b.config), *observed = values(s, b.state);
@@ -345,11 +347,14 @@ static bool snapshot(void *ctx, em_snapshot *out)
     out->config = configured;
     out->observed = em_observation(s->pod_id, "bss-1", observed, MODE, out->generation, fresh, PROVENANCE,
                                    em_ovsdb_revision(s->ovs));
+    out->has_instance = em_start_instance(tables, out->instance);
     em_snapshot_clear(&s->last);
     s->last.config = cJSON_Duplicate(out->config, true);
     s->last.observed = cJSON_Duplicate(out->observed, true);
     s->last.generation = out->generation;
     memcpy(s->last.schema_fingerprint, out->schema_fingerprint, 65);
+    memcpy(s->last.instance, out->instance, sizeof(s->last.instance));
+    s->last.has_instance = out->has_instance;
     s->has_last = true;
     return true;
 }
@@ -501,6 +506,9 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         cJSON_AddTrueToObject(out->evidence, "transaction_validated");
         cJSON_AddStringToObject(out->evidence, "transaction_id", str(attempt, "transaction_id"));
         cJSON_AddNumberToObject(out->evidence, "session_generation", generation);
+        char instance[17];
+        if (em_start_instance(em_ovsdb_tables(s->ovs), instance))
+            cJSON_AddStringToObject(out->evidence, "instance", instance);
         cJSON_AddStringToObject(out->evidence, "profile", s->profile->id);
         cJSON_AddStringToObject(out->evidence, "action", create ? "create" : "update");
         cJSON_AddNumberToObject(out->evidence, "additional_bss_count", (double)in.nadditional);

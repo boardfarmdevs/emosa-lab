@@ -20,6 +20,9 @@ typedef struct {
     bool ready;
     int generation;
     char schema_fingerprint[65];
+    /* which start of the pod's OpenSync (em_start_instance), when the scope knows it */
+    char instance[17];
+    bool has_instance;
 } em_snapshot;
 
 void em_snapshot_clear(em_snapshot *s);
@@ -73,6 +76,8 @@ typedef struct {
         char id[37];
         char *signature;
     } observed[8];
+    /* the start of the pod's OpenSync in the last snapshot taken, "" while unknown */
+    char last_instance[17];
 } em_engine;
 
 void em_engine_init(em_engine *e, em_journal *journal, const em_vault *vault, const char *pod_id,

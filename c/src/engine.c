@@ -14,6 +14,8 @@ static const char *str(const cJSON *o, const char *k)
     return cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(o, k));
 }
 
+static cJSON *current_ownership(em_engine *e, const char *run_id);
+
 static void set(cJSON *o, const char *k, cJSON *v)
 {
     if (cJSON_GetObjectItemCaseSensitive(o, k))
@@ -296,7 +298,7 @@ cJSON *em_engine_request(em_engine *e, const cJSON *intent, const char *source, 
                                         strcmp(str(p, "operation_id"), id));
     }
     cJSON_Delete(ops);
-    cJSON *owned = other_active ? NULL : em_journal_ownership(e->journal, e->pod_id);
+    cJSON *owned = other_active ? NULL : current_ownership(e, str(op, "run_id"));
     if (other_active || owned) {
         em_transition(op, "REJECTED", NULL);
         em_set_reason(op, other_active ? "BUSY" : "OWNERSHIP_CONFLICT");
@@ -330,9 +332,50 @@ cJSON *em_engine_evidence(const em_snapshot *s, bool observed_noop, const char *
     cJSON_AddItemToObject(x, "provenance", cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(o, "provenance"), true));
     if (observed_noop)
         cJSON_AddTrueToObject(x, "observed_noop");
+    if (!instance && s->has_instance)
+        instance = s->instance;
     if (instance)
         cJSON_AddStringToObject(x, "instance", instance);
     return x;
+}
+
+/* The start of the pod's OpenSync the engine saw last (Engine._current_instance). */
+static void remember_instance(em_engine *e, const em_snapshot *s)
+{
+    if (s->has_instance)
+        EM_FORMAT_FIXED(e->last_instance, sizeof(e->last_instance), "%s", s->instance);
+}
+
+/* The pod's ownership conflict, unless it was seen on an earlier start of the pod's
+ * OpenSync: a new start has a new database from its template, without the configuration
+ * that conflicted, and begins a new ownership period (Engine._owned, spec §5). */
+static cJSON *current_ownership(em_engine *e, const char *run_id)
+{
+    cJSON *record = em_journal_ownership(e->journal, e->pod_id);
+    const char *seen = str(record, "instance");
+    if (record && seen && e->last_instance[0] && strcmp(seen, e->last_instance)) {
+        em_journal_release(e->journal, e->pod_id);
+        if (run_id) {
+            cJSON *payload = cJSON_CreateObject();
+            cJSON_AddStringToObject(payload, "reason", "the pod's OpenSync started again");
+            cJSON_AddStringToObject(payload, "instance", e->last_instance);
+            em_journal_event(e->journal, run_id, "OWNERSHIP_RELEASED", payload, e->pod_id);
+            cJSON_Delete(payload);
+        }
+        cJSON_Delete(record);
+        return NULL;
+    }
+    return record;
+}
+
+/* The operation's configuration was written on an earlier start of the pod's OpenSync
+ * than the snapshot shows: the pod lost it with that database (Engine._restarted). */
+static bool restarted(const cJSON *op, const em_snapshot *s)
+{
+    const char *written = str(cJSON_GetObjectItemCaseSensitive(op, "application_evidence"), "instance");
+    if (!written)
+        written = str(cJSON_GetObjectItemCaseSensitive(op, "commit_evidence"), "instance");
+    return written && s->has_instance && strcmp(written, s->instance);
 }
 
 static void reject(em_engine *e, cJSON *op, em_reason r)
@@ -358,7 +401,7 @@ cJSON *em_engine_execute(em_engine *e, const char *operation_id)
         why = EM_NOT_READY;
     } else if (!(plan = e->backend.plan(e->ctx, intent, &why))) {
         /* why set */
-    } else if (!e->backend.snapshot(e->ctx, &snap) || !snap.ready) {
+    } else if (!e->backend.snapshot(e->ctx, &snap) || (remember_instance(e, &snap), !snap.ready)) {
         why = EM_NOT_READY; /* "fresh complete snapshot required" */
     } else if (!check_wsc(e, op)) {
         why = EM_NOT_READY;
@@ -560,6 +603,7 @@ void em_engine_reconcile(em_engine *e)
     em_snapshot snap = {0};
     if (!e->backend.snapshot(e->ctx, &snap))
         return;
+    remember_instance(e, &snap);
     static const char *const eligible[] = {"CONFIG_COMMITTED", "INDETERMINATE", "TIMED_OUT", "OBSERVED_APPLIED"};
     static const char *const newer_states[] = {"SUBMITTED", "CONFIG_COMMITTED", "OBSERVED_APPLIED",
                                                "INDETERMINATE", "TIMED_OUT", "OWNERSHIP_CONFLICT"};
@@ -611,11 +655,15 @@ void em_engine_reconcile(em_engine *e)
                 bool applied = em_snapshot_satisfies(&snap, target);
                 const char *now_state = em_state_of(op);
                 bool evidence_none = cJSON_IsNull(cJSON_GetObjectItemCaseSensitive(op, "application_evidence"));
-                if (!config_matches && (!strcmp(now_state, "CONFIG_COMMITTED") || !strcmp(now_state, "OBSERVED_APPLIED") ||
-                                        !strcmp(now_state, "TIMED_OUT"))) {
+                if (!config_matches &&
+                    (!strcmp(now_state, "CONFIG_COMMITTED") || !strcmp(now_state, "OBSERVED_APPLIED") ||
+                     !strcmp(now_state, "TIMED_OUT")) &&
+                    !restarted(op, &snap)) {
                     cJSON *evidence = cJSON_CreateObject();
                     cJSON_AddStringToObject(evidence, "operation_id", str(op, "operation_id"));
                     cJSON_AddStringToObject(evidence, "reason", "owned configuration changed");
+                    if (snap.has_instance)
+                        cJSON_AddStringToObject(evidence, "instance", snap.instance);
                     em_journal_conflict(e->journal, e->pod_id, evidence);
                     cJSON_Delete(evidence);
                     if (!strcmp(now_state, "CONFIG_COMMITTED"))

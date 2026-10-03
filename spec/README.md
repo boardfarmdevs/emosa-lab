@@ -491,6 +491,13 @@ Rules:
   `REJECTED` with reason `BUSY`.
 - A configuration the pod already runs is observed as applied without writing:
   repeated M2s never cause repeated writes.
+- A written configuration belongs to the start of the pod's OpenSync it was
+  written on (the start's radio rows, as for the uplink switch, §8.3). When the
+  pod's OpenSync starts again, its database comes back from the template without
+  it: that is not another manager's change, so it is no ownership conflict, and a
+  conflict seen on an earlier start no longer blocks the pod (a new ownership
+  period). The agent configures the pod again from the controller's next M2
+  (§2.5). The operation's evidence names the start (`instance`).
 - An `INDETERMINATE` operation becomes `TIMED_OUT` once its deadline has passed
   and the pod's current Config lacks the write. It MUST NOT block the pod
   forever.
