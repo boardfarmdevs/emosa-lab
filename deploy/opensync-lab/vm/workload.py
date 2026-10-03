@@ -270,14 +270,26 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("label")
     ap.add_argument("--duration", type=int, default=900)
+    ap.add_argument(
+        "--settle",
+        type=int,
+        default=300,
+        help="seconds to wait for a healthy lab before the first fault (agents just restarted)",
+    )
     args = ap.parse_args()
     directory = ROOT / args.label
-    directory.mkdir(parents=True, exist_ok=False)
+    if directory.exists():
+        raise SystemExit(f"run {args.label} exists: {directory}")
     expected = {p: 2 for p in PODS}
     print(json.dumps(discover()), flush=True)
     first = sample(expected)
+    settle = time.time() + args.settle
+    while not first["healthy_management"] and time.time() < settle:
+        time.sleep(10)
+        first = sample(expected)
     if not first["healthy_management"]:
         raise SystemExit(f"lab not healthy at start: {json.dumps(first)}")
+    directory.mkdir(parents=True)
     start_pings(args.label)
     t0 = time.time()
     timeline = (directory / "timeline.jsonl").open("w")

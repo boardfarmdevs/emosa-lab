@@ -541,6 +541,32 @@ gtp` the same kit in `em-gtp` (the C GTP, the pods' GRE).
   the three entries, ports and AL MACs unchanged) and the running agents' configurations,
   as the box's `fleet-takeover` scenario does.
 
+## The features at the bar (run c-features-1003, plan 8.4)
+
+The same workload with the adapter in C after plan 8.4 brought its features to the bar
+(telemetry and metrics, client steering, the probe watch, the Multi-AP uplink and
+Backhaul Steering), emosa-lab of 3 October (b23b414), installed as for c-adapter-1003.
+
+| Fault (offset) | c-adapter-1003 | c-features-1003 |
+| --- | ---: | ---: |
+| client leave/join em-wc2 (60 s) | 14.1 s | 14.0 s |
+| adapter process restart, pod-1 (150 s) | 3.8 s | 3.9 s |
+| OVSDB transport cut 20 s, pod-2 (240 s) | 2.8 s | 3.0 s |
+| backhaul loss 30 s, pod-3 (360 s) | 15.1 s | 15.5 s |
+| controller restart + policy re-entry (510 s) | 4.8 s | 5.7 s |
+| client leave/join em-wc4 (690 s) | 17.7 s | 13.1 s |
+| verdict | passed | passed |
+
+- **Passed** every check, as before; agent memory about 11.6 MB resident per agent at the
+  start and the end. Evidence: [c-features-1003](c-features-1003/summary.json).
+- The first start found the lab unhealthy: the kit was installed from cache in seconds,
+  so the workload began 20 s after the agents restarted, with one pod still recovering.
+  The run that counts waited for the workload's own start criterion first (every agent
+  serving its pod, every pod connected, the controller seeing two stations per pod),
+  which held about 90 s after the restart. The workload now waits for it itself
+  (`--settle`, 300 s by default) and creates the run's directory only then, so a start
+  that fails no longer takes the label.
+
 ## Changes made during the run
 
 - `pod_profile.py`: the observed 6.6 encoding (`wpa-psk` + RSN, `key` slot);

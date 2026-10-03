@@ -83,7 +83,10 @@ no per-pod input. The pod's own identity decides its agent. `admit` re-applies
 the controller policy because prplMesh's lab policy lists credentials per AL
 MAC. With an operator's controller, that onboarding policy is the operator's.
 `workload` finds each pod's agent itself, so it runs on per-pod agents and the
-fleet alike.
+fleet alike. It starts its first fault only on a healthy lab (every agent
+serving its pod, every pod connected, the controller seeing each pod's
+stations), waiting up to `--settle` seconds (300) for one, so it can follow an
+install that just restarted the agents.
 
 More pods come from opensync-lab's own script, unchanged. Set `MVX_VM`
 explicitly: opensync-lab's `local.conf` may name another VM.
