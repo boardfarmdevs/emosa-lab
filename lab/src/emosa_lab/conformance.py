@@ -252,12 +252,18 @@ def northbound_vectors():
     }
 
 
-class Recorder:
-    """An OVSDB session over fixed rows that records every transaction."""
+INSERTED = "00000000-0000-4000-8000-0000000000ff"
 
-    def __init__(self, raw):
+
+class Recorder:
+    """An OVSDB session over fixed rows that records every transaction. With ``owm``, a
+    steering client row a transaction inserts appears in the rows as owm steering it; the
+    transactions numbered in ``lost`` (from 0) are carried out but their replies are lost."""
+
+    def __init__(self, raw, *, owm=False, lost=()):
         self.schema = Schema(json.loads(reference_path().read_text()))
         self.tables, self.sent = raw, []
+        self.owm, self.lost = owm, set(lost)
 
     async def snapshot(self):
         return {
@@ -270,10 +276,16 @@ class Recorder:
 
     async def transact(self, operations, transaction_id=None, generation=None, **_):
         self.sent.append(copy.deepcopy(operations))
+        for op in operations if self.owm else ():
+            if op["op"] == "insert" and op["table"] == "Band_Steering_Clients":
+                row = {**op["row"], "cs_state": "steering"}
+                self.tables.setdefault("Band_Steering_Clients", {})[INSERTED] = row
+        if len(self.sent) - 1 in self.lost:
+            raise ConnectionError("the reply was lost")
         replies = {
             "wait": {},
             "select": {"rows": []},
-            "insert": {"uuid": ["uuid", "00000000-0000-4000-8000-0000000000ff"]},
+            "insert": {"uuid": ["uuid", INSERTED]},
         }
         return [replies.get(op["op"], {"count": 1}) for op in operations]
 
@@ -2966,12 +2978,20 @@ def steering_queue_vectors():
     target = "02:00:00:12:75:2c"
     extra = [f"02:00:00:00:6{i}:00" for i in range(9)]  # stations queued behind a window
 
-    def request(station, window=15, imminent=True):
+    def request(station, window=15, imminent=True, channel=6):
         return SteeringRequest(
-            mac(source), True, imminent, False, window, 0, (mac(station),), ((mac(target), 81, 6),)
+            mac(source),
+            True,
+            imminent,
+            False,
+            window,
+            0,
+            (mac(station),),
+            ((mac(target), 81, channel),),
         )
 
-    # steps: ("start", at, station, mid, window, imminent), ("tick", at)
+    # steps: ("start", at, station, mid, window, imminent[, channel]), ("tick", at),
+    # ("restart", at); a case's options are the Recorder's
     cases = [
         (
             "one-window-not-applied",
@@ -3012,27 +3032,60 @@ def steering_queue_vectors():
             + [("start", 0.0, m, 901 + i, 15, True) for i, m in enumerate(extra)],
         ),
         ("station-not-on-source", [("start", 0.0, away, 900, 15, True), ("tick", 0.0)]),
+        ("invalid-target", [("start", 0.0, s0, 900, 15, True, 0)]),
+        (
+            "restart-before-sent",
+            [("start", 0.0, s0, 900, 15, True), ("restart", 1.0), ("tick", 1.0)],
+        ),
+        (
+            "kicked-then-stayed",
+            [("start", 0.0, s0, 900, 15, True), ("tick", 0.0), ("tick", 5.0), ("tick", 40.0)],
+            {"owm": True},
+        ),
+        (
+            "outcome-unknown-window-open",
+            [("start", 0.0, s0, 900, 15, True), ("tick", 0.0)],
+            {"owm": True, "lost": [0]},
+        ),
+        (
+            "kick-reply-lost",
+            [("start", 0.0, s0, 900, 15, True), ("tick", 0.0)],
+            {"owm": True, "lost": [1]},
+        ),
+        (
+            "close-reply-lost",
+            [("start", 0.0, s0, 900, 15, True), ("tick", 0.0), ("tick", 40.0)],
+            {"owm": True, "lost": [2]},
+        ),
     ]
     out = []
-    for name, steps in cases:
+    for name, steps, *options in cases:
+        options = options[0] if options else {}
         with tempfile.TemporaryDirectory() as directory:
-            session = Recorder(copy.deepcopy(raw))
+            session = Recorder(copy.deepcopy(raw), **options)
             clock = ManualClock()
-            steering = ClientSteering(
-                "pod-1",
-                SteeringBackend("pod-1", session, serial=SERIAL),
-                Store(Path(directory) / "steering"),
-                SecretStore(Path(directory) / "secrets"),
-                run_id="run-1",
-                clock=clock,
-            )
+
+            def scope(session=session, clock=clock, directory=directory):
+                return ClientSteering(
+                    "pod-1",
+                    SteeringBackend("pod-1", session, serial=SERIAL),
+                    Store(Path(directory) / "steering"),
+                    SecretStore(Path(directory) / "secrets"),
+                    run_id="run-1",
+                    clock=clock,
+                )
+
+            steering = scope()
             recorded, sent = [], 0
             for step in steps:
                 at = step[1]
                 clock.advance(at - clock.monotonic())
                 result = None
                 if step[0] == "start":
-                    result = steering.start(request(step[2], step[4], step[5]), step[3])
+                    result = steering.start(request(step[2], *step[4:]), step[3])
+                elif step[0] == "restart":
+                    steering.store.close()
+                    steering = scope()
                 else:
                     asyncio.run(steering.tick())
                 status = copy.deepcopy(steering.status())
@@ -3052,7 +3105,14 @@ def steering_queue_vectors():
                 )
                 sent = len(session.sent)
             steering.store.close()
-        out.append({"name": name, "steps": recorded})
+        out.append(
+            {
+                "name": name,
+                "owm": options.get("owm", False),
+                "lost": list(options.get("lost", ())),
+                "steps": recorded,
+            }
+        )
     return {
         "description": "spec §3.7: the agent's client steering on the recorded pod rows "
         "(stations " + s0 + " and " + s1 + " on " + source + "; " + away + " is not the pod's), "
@@ -3060,10 +3120,14 @@ def steering_queue_vectors():
         "6): one window at a time, a queue of eight that a newer mandate for a queued station "
         "replaces, a queued mandate dropped when it waited over 10 s or its station left the "
         "source. The recorded rows never show owm steering, so a window is not applied (10 "
-        "s) and is closed. A step: start (at, station, the request's MID, window, "
-        "disassociation imminent) or tick (at), the clock in seconds. Per step: start's "
-        "refusal (null when started or queued), the transactions sent, and the steering "
-        "status (without operation IDs). Inserts are answered with the UUID "
+        "s) and is closed; in a case with owm, the client row a transaction inserts appears "
+        "in the rows with that UUID and cs_state steering, so the window is applied and the "
+        "station kicked. A case's lost transactions (numbered from 0) are carried out but "
+        "their replies are lost (no reply). A step: start (at, station, the request's MID, "
+        "window, disassociation imminent, and the target's channel when not 6), tick (at) or "
+        "restart (at: the agent restarts on its journal), the clock in seconds. Per step: "
+        "start's refusal (null when started or queued), the transactions sent, and the "
+        "steering status (without operation IDs). Inserts are answered with the UUID "
         "00000000-0000-4000-8000-0000000000ff.",
         "source_bssid": source,
         "target": target,

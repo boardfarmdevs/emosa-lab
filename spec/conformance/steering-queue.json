@@ -1,7 +1,9 @@
 {
  "cases": [
   {
+   "lost": [],
    "name": "one-window-not-applied",
+   "owm": false,
    "steps": [
     {
      "expected": {
@@ -334,7 +336,9 @@
    ]
   },
   {
+   "lost": [],
    "name": "queued-then-started",
+   "owm": false,
    "steps": [
     {
      "expected": {
@@ -989,7 +993,9 @@
    ]
   },
   {
+   "lost": [],
    "name": "queue-expires",
+   "owm": false,
    "steps": [
     {
      "expected": {
@@ -1347,7 +1353,9 @@
    ]
   },
   {
+   "lost": [],
    "name": "moved-while-queued",
+   "owm": false,
    "steps": [
     {
      "expected": {
@@ -1705,7 +1713,9 @@
    ]
   },
   {
+   "lost": [],
    "name": "full-queue",
+   "owm": false,
    "steps": [
     {
      "expected": {
@@ -2208,7 +2218,9 @@
    ]
   },
   {
+   "lost": [],
    "name": "station-not-on-source",
+   "owm": false,
    "steps": [
     {
      "expected": {
@@ -2262,9 +2274,1468 @@
      ]
     }
    ]
+  },
+  {
+   "lost": [],
+   "name": "invalid-target",
+   "owm": false,
+   "steps": [
+    {
+     "expected": {
+      "result": "invalid_INVALID_INPUT",
+      "status": {
+       "active": null,
+       "counts": {},
+       "history": [],
+       "queued": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "start",
+      0.0,
+      "02:00:00:00:0a:00",
+      900,
+      15,
+      true,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "lost": [],
+   "name": "restart-before-sent",
+   "owm": false,
+   "steps": [
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": {
+        "phase": "requested",
+        "station": "02:00:00:00:0a:00",
+        "target": "02:00:00:12:75:2c"
+       },
+       "counts": {
+        "started": 1
+       },
+       "history": [],
+       "queued": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "start",
+      0.0,
+      "02:00:00:00:0a:00",
+      900,
+      15,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": null,
+       "counts": {},
+       "history": [],
+       "queued": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "restart",
+      1.0
+     ]
+    },
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": null,
+       "counts": {},
+       "history": [],
+       "queued": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "tick",
+      1.0
+     ]
+    }
+   ]
+  },
+  {
+   "lost": [],
+   "name": "kicked-then-stayed",
+   "owm": true,
+   "steps": [
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": {
+        "phase": "requested",
+        "station": "02:00:00:00:0a:00",
+        "target": "02:00:00:12:75:2c"
+       },
+       "counts": {
+        "started": 1
+       },
+       "history": [],
+       "queued": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "start",
+      0.0,
+      "02:00:00:00:0a:00",
+      900,
+      15,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": {
+        "phase": "kicked",
+        "station": "02:00:00:00:0a:00",
+        "target": "02:00:00:12:75:2c"
+       },
+       "counts": {
+        "kicked": 1,
+        "started": 1
+       },
+       "history": [],
+       "queued": []
+      },
+      "transactions": [
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:00:0a:00"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_2g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_5g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "if_name_2g": "home-ap-24"
+         },
+         "table": "Band_Steering_Config"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Wifi_VIF_Neighbors",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "bssid",
+           "==",
+           "02:00:00:12:75:2c"
+          ],
+          [
+           "if_name",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "bssid": "02:00:00:12:75:2c",
+          "channel": 6,
+          "ht_mode": "HT20",
+          "if_name": "home-ap-24",
+          "op_class": 81,
+          "priority": 1
+         },
+         "table": "Wifi_VIF_Neighbors"
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "away",
+          "cs_params": [
+           "map",
+           [
+            [
+             "cs_enforce_period",
+             "15"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:00:0a:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_btm_params": [
+           "map",
+           [
+            [
+             "bssid",
+             "02:00:00:12:75:2c"
+            ],
+            [
+             "disassoc_imminent",
+             "1"
+            ]
+           ]
+          ],
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "sc_kick_type": "btm_deauth",
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0,
+          "sticky_kick_type": "none"
+         },
+         "table": "Band_Steering_Clients"
+        }
+       ],
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "op": "update",
+         "row": {
+          "force_kick": "directed"
+         },
+         "table": "Band_Steering_Clients",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ],
+          [
+           "mac",
+           "==",
+           "02:00:00:00:0a:00"
+          ],
+          [
+           "cs_state",
+           "==",
+           "steering"
+          ]
+         ]
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      0.0
+     ]
+    },
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": {
+        "phase": "kicked",
+        "station": "02:00:00:00:0a:00",
+        "target": "02:00:00:12:75:2c"
+       },
+       "counts": {
+        "kicked": 1,
+        "started": 1
+       },
+       "history": [],
+       "queued": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "tick",
+      5.0
+     ]
+    },
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": null,
+       "counts": {
+        "kicked": 1,
+        "started": 1,
+        "stayed": 1
+       },
+       "history": [
+        {
+         "outcome": "stayed",
+         "station": "02:00:00:00:0a:00",
+         "target": "02:00:00:12:75:2c"
+        }
+       ],
+       "queued": []
+      },
+      "transactions": [
+       [
+        {
+         "op": "delete",
+         "table": "Band_Steering_Clients",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ],
+          [
+           "mac",
+           "==",
+           "02:00:00:00:0a:00"
+          ]
+         ]
+        },
+        {
+         "op": "delete",
+         "table": "Wifi_VIF_Neighbors",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ],
+          [
+           "bssid",
+           "==",
+           "02:00:00:12:75:2c"
+          ]
+         ]
+        },
+        {
+         "op": "delete",
+         "table": "Band_Steering_Config",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ]
+         ]
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      40.0
+     ]
+    }
+   ]
+  },
+  {
+   "lost": [
+    0
+   ],
+   "name": "outcome-unknown-window-open",
+   "owm": true,
+   "steps": [
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": {
+        "phase": "requested",
+        "station": "02:00:00:00:0a:00",
+        "target": "02:00:00:12:75:2c"
+       },
+       "counts": {
+        "started": 1
+       },
+       "history": [],
+       "queued": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "start",
+      0.0,
+      "02:00:00:00:0a:00",
+      900,
+      15,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": null,
+       "counts": {
+        "outcome_unknown": 1,
+        "started": 1
+       },
+       "history": [
+        {
+         "outcome": "outcome_unknown",
+         "station": "02:00:00:00:0a:00",
+         "target": "02:00:00:12:75:2c"
+        }
+       ],
+       "queued": []
+      },
+      "transactions": [
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:00:0a:00"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_2g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_5g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "if_name_2g": "home-ap-24"
+         },
+         "table": "Band_Steering_Config"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Wifi_VIF_Neighbors",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "bssid",
+           "==",
+           "02:00:00:12:75:2c"
+          ],
+          [
+           "if_name",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "bssid": "02:00:00:12:75:2c",
+          "channel": 6,
+          "ht_mode": "HT20",
+          "if_name": "home-ap-24",
+          "op_class": 81,
+          "priority": 1
+         },
+         "table": "Wifi_VIF_Neighbors"
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "away",
+          "cs_params": [
+           "map",
+           [
+            [
+             "cs_enforce_period",
+             "15"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:00:0a:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_btm_params": [
+           "map",
+           [
+            [
+             "bssid",
+             "02:00:00:12:75:2c"
+            ],
+            [
+             "disassoc_imminent",
+             "1"
+            ]
+           ]
+          ],
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "sc_kick_type": "btm_deauth",
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0,
+          "sticky_kick_type": "none"
+         },
+         "table": "Band_Steering_Clients"
+        }
+       ],
+       [
+        {
+         "op": "delete",
+         "table": "Band_Steering_Clients",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ],
+          [
+           "mac",
+           "==",
+           "02:00:00:00:0a:00"
+          ]
+         ]
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      0.0
+     ]
+    }
+   ]
+  },
+  {
+   "lost": [
+    1
+   ],
+   "name": "kick-reply-lost",
+   "owm": true,
+   "steps": [
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": {
+        "phase": "requested",
+        "station": "02:00:00:00:0a:00",
+        "target": "02:00:00:12:75:2c"
+       },
+       "counts": {
+        "started": 1
+       },
+       "history": [],
+       "queued": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "start",
+      0.0,
+      "02:00:00:00:0a:00",
+      900,
+      15,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": null,
+       "counts": {
+        "kick_failed": 1,
+        "started": 1
+       },
+       "history": [
+        {
+         "outcome": "kick_failed",
+         "station": "02:00:00:00:0a:00",
+         "target": "02:00:00:12:75:2c"
+        }
+       ],
+       "queued": []
+      },
+      "transactions": [
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:00:0a:00"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_2g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_5g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "if_name_2g": "home-ap-24"
+         },
+         "table": "Band_Steering_Config"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Wifi_VIF_Neighbors",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "bssid",
+           "==",
+           "02:00:00:12:75:2c"
+          ],
+          [
+           "if_name",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "bssid": "02:00:00:12:75:2c",
+          "channel": 6,
+          "ht_mode": "HT20",
+          "if_name": "home-ap-24",
+          "op_class": 81,
+          "priority": 1
+         },
+         "table": "Wifi_VIF_Neighbors"
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "away",
+          "cs_params": [
+           "map",
+           [
+            [
+             "cs_enforce_period",
+             "15"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:00:0a:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_btm_params": [
+           "map",
+           [
+            [
+             "bssid",
+             "02:00:00:12:75:2c"
+            ],
+            [
+             "disassoc_imminent",
+             "1"
+            ]
+           ]
+          ],
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "sc_kick_type": "btm_deauth",
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0,
+          "sticky_kick_type": "none"
+         },
+         "table": "Band_Steering_Clients"
+        }
+       ],
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "op": "update",
+         "row": {
+          "force_kick": "directed"
+         },
+         "table": "Band_Steering_Clients",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ],
+          [
+           "mac",
+           "==",
+           "02:00:00:00:0a:00"
+          ],
+          [
+           "cs_state",
+           "==",
+           "steering"
+          ]
+         ]
+        }
+       ],
+       [
+        {
+         "op": "delete",
+         "table": "Band_Steering_Clients",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ],
+          [
+           "mac",
+           "==",
+           "02:00:00:00:0a:00"
+          ]
+         ]
+        },
+        {
+         "op": "delete",
+         "table": "Wifi_VIF_Neighbors",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ],
+          [
+           "bssid",
+           "==",
+           "02:00:00:12:75:2c"
+          ]
+         ]
+        },
+        {
+         "op": "delete",
+         "table": "Band_Steering_Config",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ]
+         ]
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      0.0
+     ]
+    }
+   ]
+  },
+  {
+   "lost": [
+    2
+   ],
+   "name": "close-reply-lost",
+   "owm": true,
+   "steps": [
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": {
+        "phase": "requested",
+        "station": "02:00:00:00:0a:00",
+        "target": "02:00:00:12:75:2c"
+       },
+       "counts": {
+        "started": 1
+       },
+       "history": [],
+       "queued": []
+      },
+      "transactions": []
+     },
+     "step": [
+      "start",
+      0.0,
+      "02:00:00:00:0a:00",
+      900,
+      15,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": {
+        "phase": "kicked",
+        "station": "02:00:00:00:0a:00",
+        "target": "02:00:00:12:75:2c"
+       },
+       "counts": {
+        "kicked": 1,
+        "started": 1
+       },
+       "history": [],
+       "queued": []
+      },
+      "transactions": [
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Clients",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "mac",
+           "==",
+           "02:00:00:00:0a:00"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_2g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Band_Steering_Config",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "if_name_5g",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "if_name_2g": "home-ap-24"
+         },
+         "table": "Band_Steering_Config"
+        },
+        {
+         "columns": [
+          "_uuid"
+         ],
+         "op": "wait",
+         "rows": [],
+         "table": "Wifi_VIF_Neighbors",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "bssid",
+           "==",
+           "02:00:00:12:75:2c"
+          ],
+          [
+           "if_name",
+           "==",
+           "home-ap-24"
+          ]
+         ]
+        },
+        {
+         "op": "insert",
+         "row": {
+          "bssid": "02:00:00:12:75:2c",
+          "channel": 6,
+          "ht_mode": "HT20",
+          "if_name": "home-ap-24",
+          "op_class": 81,
+          "priority": 1
+         },
+         "table": "Wifi_VIF_Neighbors"
+        },
+        {
+         "op": "insert",
+         "row": {
+          "backoff_secs": 0,
+          "bottom_lwm": 0,
+          "cs_mode": "away",
+          "cs_params": [
+           "map",
+           [
+            [
+             "cs_enforce_period",
+             "15"
+            ]
+           ]
+          ],
+          "hwm": 0,
+          "kick_debounce_period": 0,
+          "kick_reason": 0,
+          "kick_type": "none",
+          "kick_upon_idle": false,
+          "lwm": 0,
+          "mac": "02:00:00:00:0a:00",
+          "max_rejects": 0,
+          "neighbor_list_filter_by_beacon_report": false,
+          "pre_assoc_auth_block": false,
+          "pref_5g": "never",
+          "pref_5g_pre_assoc_block_timeout_msecs": 0,
+          "pref_6g": "never",
+          "pref_6g_pre_assoc_block_timeout_msecs": 0,
+          "pref_bs_allowed": "never",
+          "reject_detection": "none",
+          "rejects_tmout_secs": 0,
+          "sc_btm_params": [
+           "map",
+           [
+            [
+             "bssid",
+             "02:00:00:12:75:2c"
+            ],
+            [
+             "disassoc_imminent",
+             "1"
+            ]
+           ]
+          ],
+          "sc_kick_debounce_period": 0,
+          "sc_kick_reason": 0,
+          "sc_kick_type": "btm_deauth",
+          "send_rrm_after_assoc": false,
+          "steering_fail_cnt": 0,
+          "steering_kick_cnt": 0,
+          "steering_success_cnt": 0,
+          "sticky_kick_cnt": 0,
+          "sticky_kick_debounce_period": 0,
+          "sticky_kick_reason": 0,
+          "sticky_kick_type": "none"
+         },
+         "table": "Band_Steering_Clients"
+        }
+       ],
+       [
+        {
+         "columns": [
+          "serial_number"
+         ],
+         "op": "wait",
+         "rows": [
+          {
+           "serial_number": "MVXPOD023F87E628DD"
+          }
+         ],
+         "table": "AWLAN_Node",
+         "timeout": 0,
+         "until": "==",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "96bc1650-4197-4cd8-9036-f9eb854e87ec"
+           ]
+          ]
+         ]
+        },
+        {
+         "op": "update",
+         "row": {
+          "force_kick": "directed"
+         },
+         "table": "Band_Steering_Clients",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ],
+          [
+           "mac",
+           "==",
+           "02:00:00:00:0a:00"
+          ],
+          [
+           "cs_state",
+           "==",
+           "steering"
+          ]
+         ]
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      0.0
+     ]
+    },
+    {
+     "expected": {
+      "result": null,
+      "status": {
+       "active": null,
+       "counts": {
+        "close_failed": 1,
+        "kicked": 1,
+        "started": 1,
+        "stayed": 1
+       },
+       "history": [
+        {
+         "outcome": "stayed",
+         "station": "02:00:00:00:0a:00",
+         "target": "02:00:00:12:75:2c"
+        }
+       ],
+       "queued": []
+      },
+      "transactions": [
+       [
+        {
+         "op": "delete",
+         "table": "Band_Steering_Clients",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ],
+          [
+           "mac",
+           "==",
+           "02:00:00:00:0a:00"
+          ]
+         ]
+        },
+        {
+         "op": "delete",
+         "table": "Wifi_VIF_Neighbors",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ],
+          [
+           "bssid",
+           "==",
+           "02:00:00:12:75:2c"
+          ]
+         ]
+        },
+        {
+         "op": "delete",
+         "table": "Band_Steering_Config",
+         "where": [
+          [
+           "_uuid",
+           "==",
+           [
+            "uuid",
+            "00000000-0000-4000-8000-0000000000ff"
+           ]
+          ]
+         ]
+        }
+       ]
+      ]
+     },
+     "step": [
+      "tick",
+      40.0
+     ]
+    }
+   ]
   }
  ],
- "description": "spec §3.7: the agent's client steering on the recorded pod rows (stations 02:00:00:00:0a:00 and 02:00:00:00:10:00 on 82:00:00:00:01:00; 02:00:00:00:55:55 is not the pod's), each mandate one window steering the station to 02:00:00:12:75:2c (class 81, channel 6): one window at a time, a queue of eight that a newer mandate for a queued station replaces, a queued mandate dropped when it waited over 10 s or its station left the source. The recorded rows never show owm steering, so a window is not applied (10 s) and is closed. A step: start (at, station, the request's MID, window, disassociation imminent) or tick (at), the clock in seconds. Per step: start's refusal (null when started or queued), the transactions sent, and the steering status (without operation IDs). Inserts are answered with the UUID 00000000-0000-4000-8000-0000000000ff.",
+ "description": "spec §3.7: the agent's client steering on the recorded pod rows (stations 02:00:00:00:0a:00 and 02:00:00:00:10:00 on 82:00:00:00:01:00; 02:00:00:00:55:55 is not the pod's), each mandate one window steering the station to 02:00:00:12:75:2c (class 81, channel 6): one window at a time, a queue of eight that a newer mandate for a queued station replaces, a queued mandate dropped when it waited over 10 s or its station left the source. The recorded rows never show owm steering, so a window is not applied (10 s) and is closed; in a case with owm, the client row a transaction inserts appears in the rows with that UUID and cs_state steering, so the window is applied and the station kicked. A case's lost transactions (numbered from 0) are carried out but their replies are lost (no reply). A step: start (at, station, the request's MID, window, disassociation imminent, and the target's channel when not 6), tick (at) or restart (at: the agent restarts on its journal), the clock in seconds. Per step: start's refusal (null when started or queued), the transactions sent, and the steering status (without operation IDs). Inserts are answered with the UUID 00000000-0000-4000-8000-0000000000ff.",
  "ovsdb_tables": {
   "AWLAN_Node": {
    "96bc1650-4197-4cd8-9036-f9eb854e87ec": {

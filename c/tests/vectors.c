@@ -1955,6 +1955,46 @@ static void early_report_vectors(const char *dir)
 static double steering_clock_value;
 static double steering_clock(void) { return steering_clock_value; }
 
+/* the case's pod: with owm, a client row a transaction inserts appears in the rows as owm
+ * steering it (the fixed view's own copy, changed here as the Recorder changes its rows);
+ * the lost transactions are carried out without a reply */
+static struct {
+    cJSON *sent;
+    em_ovsdb *ovs;
+    bool owm;
+    const cJSON *lost;
+} steering_pod;
+
+static cJSON *steering_transact(void *ctx, const cJSON *operations)
+{
+    (void)ctx;
+    int index = cJSON_GetArraySize(steering_pod.sent);
+    cJSON *results = record(steering_pod.sent, operations);
+    const cJSON *o;
+    cJSON_ArrayForEach(o, operations)
+    {
+        if (!steering_pod.owm || strcmp(str(o, "op"), "insert") || strcmp(str(o, "table"), "Band_Steering_Clients"))
+            continue;
+        cJSON *tables = (cJSON *)em_ovsdb_tables(steering_pod.ovs);
+        cJSON *table = cJSON_GetObjectItemCaseSensitive(tables, "Band_Steering_Clients");
+        if (!table)
+            table = cJSON_AddObjectToObject(tables, "Band_Steering_Clients");
+        cJSON *row = cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(o, "row"), 1);
+        cJSON_DeleteItemFromObjectCaseSensitive(row, "cs_state");
+        cJSON_AddStringToObject(row, "cs_state", "steering");
+        cJSON_DeleteItemFromObjectCaseSensitive(table, "00000000-0000-4000-8000-0000000000ff");
+        cJSON_AddItemToObject(table, "00000000-0000-4000-8000-0000000000ff", row);
+    }
+    cJSON_ArrayForEach(o, steering_pod.lost)
+    {
+        if (o->valueint == index) {
+            cJSON_Delete(results);
+            return NULL;
+        }
+    }
+    return results;
+}
+
 static void strip_operation_ids(cJSON *status)
 {
     cJSON_DeleteItemFromObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(status, "active"), "operation_id");
@@ -1987,6 +2027,10 @@ static void steering_queue_vectors(const char *dir)
         em_vault_open(&vault, sub);
         em_ovsdb *ovs = em_ovsdb_fixed(cJSON_GetObjectItemCaseSensitive(doc, "ovsdb_tables"), 1, "conformance");
         cJSON *sent = cJSON_CreateArray();
+        steering_pod.sent = sent;
+        steering_pod.ovs = ovs;
+        steering_pod.owm = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(c, "owm"));
+        steering_pod.lost = cJSON_GetObjectItemCaseSensitive(c, "lost");
         steering_clock_value = 0;
         static em_steering_scope steering;
         memset(&steering, 0, sizeof(steering));
@@ -1994,8 +2038,7 @@ static void steering_queue_vectors(const char *dir)
         steering.serial = str(doc, "serial");
         steering.pod_id = "pod-1";
         steering.run_id = "run-1";
-        steering.transact = record;
-        steering.transact_ctx = sent;
+        steering.transact = steering_transact;
         steering.monotonic = steering_clock;
         if (em_steering_scope_open(&steering, path, &schemas, &vault) != EM_OK) {
             fail("steering-queue", name, "journal");
@@ -2020,8 +2063,18 @@ static void steering_queue_vectors(const char *dir)
                 em_parse_mac(cJSON_GetArrayItem(s, 2)->valuestring, r.stations[0]);
                 memcpy(r.targets[0].bssid, target, 6);
                 r.targets[0].op_class = 81;
-                r.targets[0].channel = 6;
+                r.targets[0].channel = cJSON_GetArraySize(s) > 6 ? (uint8_t)cJSON_GetArrayItem(s, 6)->valueint : 6;
                 result = em_steering_start(&steering, &r, (uint16_t)cJSON_GetArrayItem(s, 3)->valueint);
+            } else if (!strcmp(cJSON_GetArrayItem(s, 0)->valuestring, "restart")) {
+                em_steering_scope_close(&steering);
+                em_steering_scope fresh = {.ovs = ovs, .serial = steering.serial, .pod_id = "pod-1",
+                                           .run_id = "run-1", .transact = steering_transact,
+                                           .monotonic = steering_clock};
+                steering = fresh;
+                if (em_steering_scope_open(&steering, path, &schemas, &vault) != EM_OK) {
+                    fail("steering-queue", label, "journal");
+                    break;
+                }
             } else {
                 em_steering_tick(&steering);
             }
