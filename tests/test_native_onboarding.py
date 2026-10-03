@@ -629,7 +629,8 @@ def test_backhaul_steering_is_acknowledged_and_refused(rig):
         ack, reply = (assemble((f,)) for f in sent[count:])
         assert (ack.message_type, ack.mid, ack.tlvs) == (0x8000, 714, ())
         assert (reply.message_type, reply.mid) == (0x801A, 714)
-        assert reply.tlvs == (Tlv(0x9F, sta + target + b"\x01"),)  # result: failure
+        # result: failure, with the Error Code TLV of a failure (0x06, the station)
+        assert reply.tlvs == (Tlv(0x9F, sta + target + b"\x01"), Tlv(0xA3, b"\x06" + sta))
         session.close()
 
     asyncio.run(scenario())

@@ -565,12 +565,14 @@ class OnboardingSession:
             if message.message_type == 0x8019 and self.provisioning:
                 # Without an uplink scope (no Multi-AP backhaul station) Backhaul
                 # Steering is refused: 1905 ACK, then a Backhaul Steering Response
-                # with result code 0x01 (failure).
+                # with result code 0x01 (failure) and, as with every failure, an
+                # Error Code TLV (0x06, the station).
                 requests = [t for t in message.tlvs if t.kind == 0x9E]
                 if len(requests) != 1 or len(requests[0].value) != 14:
                     raise EmosaError(Reason.INVALID_INPUT, "one Backhaul Steering Request TLV")
                 request = requests[0].value
-                for kind, tlvs in ((0x8000, ()), (0x801A, (Tlv(0x9F, request[:12] + b"\x01"),))):
+                failure = (Tlv(0x9F, request[:12] + b"\x01"), Tlv(0xA3, b"\x06" + request[:6]))
+                for kind, tlvs in ((0x8000, ()), (0x801A, failure)):
                     for piece in fragment_message(
                         self.binding.controller_al, self.binding.local_al, kind, message.mid, tlvs
                     ):

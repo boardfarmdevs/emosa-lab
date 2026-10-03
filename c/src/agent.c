@@ -995,12 +995,14 @@ static void handle_message(agent *a, const em_message *m)
             count(&a->counts, "rejected_INVALID_INPUT");
             return;
         }
-        uint8_t response[13];
+        uint8_t response[13], error_code[7];
         memcpy(response, request->value, 12);
-        response[12] = 0x01; /* failure: EMOSA does not move the pod's backhaul */
-        em_tlv t = {0x9F, 13, response};
+        response[12] = 0x01;  /* failure: EMOSA does not move the pod's backhaul */
+        error_code[0] = 0x06; /* the Error Code TLV of a failure: association failed, the station */
+        memcpy(error_code + 1, request->value, 6);
+        em_tlv t[2] = {{0x9F, 13, response}, {0xA3, 7, error_code}};
         reply(a, 0x8000, m->mid, NULL, 0);
-        reply(a, 0x801A, m->mid, &t, 1);
+        reply(a, 0x801A, m->mid, t, 2);
         count(&a->counts, "backhaul_steering_refused");
     } else if (m->message_type == 0x0005) {
         count(&a->counts, "neighbor_measurement_unavailable");
