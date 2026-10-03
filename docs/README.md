@@ -21,6 +21,7 @@ needs a lab.
 | [Specification](../spec/README.md) | what EMOSA does on each interface (MUST/SHOULD) |
 | [Component design](../spec/design.md) | processes, interfaces, concurrency, state, timing and resource budgets |
 | [Conformance vectors](../spec/conformance/README.md) | exact outputs for recorded inputs; an implementation conforms when it reproduces them |
+| [The lab in a box](../spec/box-scenarios.md) | every behaviour the labs' rooms rely on and every suite finding, as a scenario both implementations run against a recorded pod, a scripted controller and a broker, with no lab |
 | [Schemas](../schemas) | the configuration, status and record files |
 | [The Python reference](../src/emosa) and [the C implementation](../c/README.md) | two implementations of the contract, interchangeable (the C's state and known differences are in its README) |
 | [The C's production bar](../c/QUALITY.md) | the coding standard (CERT C) and the gates the C must meet, and where each stands |

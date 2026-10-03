@@ -329,12 +329,6 @@ jobs:
       - run: bash scripts/build-ovsdb.sh
       - run: python3 scripts/build-wsc-registrar.py
       - run: uv run pytest -m ovsdb --junitxml=ovsdb-results.xml
-      - name: The lab in a box (both agents, a private network namespace)
-        run: |
-          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-          sudo apt-get install -y cmake libcjson-dev libsqlite3-dev
-          cmake -S c -B c/build && cmake --build c/build -j
-          EMOSA_BOX_REQUIRED=1 uv run pytest -m box --junitxml=box-results.xml
       - name: The adapter kit's C agent builds from what the kit carries
         run: |
           kit=$(deploy/adapter/build.sh "$RUNNER_TEMP/kit" | tail -1)
@@ -346,8 +340,41 @@ jobs:
           name: ovsdb-evidence
           path: |
             ovsdb-results.xml
-            box-results.xml
             .cache/upstream/openvswitch-4.0.0/*-emosa.log
+  box:
+    # the lab in a box (spec/box-scenarios.md): every scenario with one agent, C or Python,
+    # the real binary in a private network namespace with a pod, a controller and a broker
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        agent: [python, c]
+    name: box (${{ matrix.agent }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: The evidence files kept outside git
+        run: python3 scripts/fetch-evidence.py
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.17"
+      - run: uv python install 3.13.7
+      - run: uv sync --frozen
+      - run: >-
+          sudo apt-get update && sudo apt-get install -y build-essential pkg-config libssl-dev
+          cmake libcjson-dev libsqlite3-dev mosquitto
+      - run: bash scripts/build-ovsdb.sh
+      - run: python3 scripts/build-wsc-registrar.py
+      - run: cmake -S c -B c/build && cmake --build c/build -j
+      - name: The scenarios
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          EMOSA_BOX_REQUIRED=1 EMOSA_BOX_AGENTS=${{ matrix.agent }} \
+            uv run pytest -m box --durations=10 --junitxml=box-results-${{ matrix.agent }}.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: box-results-${{ matrix.agent }}
+          path: box-results-${{ matrix.agent }}.xml
   c:
     # the C agent's bar (c/QUALITY.md): the warning set as errors on both
     # compilers, the vectors and units, the sanitizers, the static analyzer

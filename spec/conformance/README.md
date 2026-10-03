@@ -63,3 +63,7 @@ Not covered by vectors yet, but by the reference implementation's tests:
 - the AP scope's M2 writes over a live pod (a Wifi_VIF_Config row changing
   under a write), which the RDK lab's room suite exercises (`docs/concepts/rdk-lab.md` §5);
 - the fleet's supervision of agent processes.
+
+The [lab in a box](../box-scenarios.md) runs both implementations end to end against a
+recorded pod, a scripted controller and a broker: every behaviour the labs' rooms rely on
+and every suite finding, with real timing and a real WSC exchange.

@@ -108,6 +108,7 @@ uv run ruff check . && uv run ruff format --check .
 uv run pytest -m unit
 bash scripts/build-ovsdb.sh && python3 scripts/build-wsc-registrar.py
 uv run pytest -m ovsdb            # real ovsdb-server and WSC registrar
+uv run pytest -m box              # the lab in a box (spec/box-scenarios.md), both agents
 ```
 
 Start reading the code at `src/emosa/agent/fleet.py` (an agent for every pod),

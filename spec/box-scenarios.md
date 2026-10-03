@@ -1,0 +1,111 @@
+# The lab in a box: its scenarios
+
+**Reference.** Every behaviour the RDK lab's rooms and the reference workload rely on,
+and every finding of the lab suites, as a scenario of the lab in a box
+(`lab/src/emosa_lab/box.py`, easymesh-labs alignment plan step 8.2). Each scenario runs
+the real agent binary, C or Python, in a private network namespace against:
+
+- **a pod:** a disposable `ovsdb-server` loaded with an unchanged OpenSync 6.6.1 pod's
+  recorded rows (`tests/fixtures/opensync/pod-6.6.1-hwsim-tables.json`, or the pod on a
+  Multi-AP backhaul, `pod-6.6.1-hwsim-uplink-multi-ap.json`), which dials the agent as a
+  pod does after its redirect. The box plays the pod's managers where a scenario needs
+  them: `wm` applying an AP's Config to its State, `owm` taking a steering window, `cm`
+  and the supplicant moving the backhaul station, `qm` publishing the pod's statistics;
+- **a controller:** the reference's wire code on the other end of a veth pair, answering
+  with an M2 from hostap's own registrar (`.cache/wsc-registrar`);
+- **a broker:** `mosquitto`, for the scenarios with the pod's statistics.
+
+Both implementations run every scenario (`tests/test_box.py`, marker `box`); CI runs them
+all (`checks.yml`, job `ovsdb`). On a host without CI's toolchain (cmake, clang 18,
+Ubuntu 24.04), `scripts/run-box-in-container.sh` runs them in a container. One scenario
+alone, its result as JSON:
+
+```sh
+python -m emosa_lab.box SCENARIO --agent c|python --directory DIR
+```
+
+The vectors (`spec/conformance`) fix exact outputs for recorded inputs; the box shows the
+same behaviour end to end, with real timing, a real OVSDB server and a real WSC exchange.
+
+## Onboarding and the session (spec 2.5)
+
+| Scenario | What it shows | Relied on by |
+| --- | --- | --- |
+| `boot` | the agent takes the pod's connection, sends Topology Discovery and searches for its controller | every room with pods |
+| `onboard` | an EasyMesh 6.1 Response, the Early AP Capability Report, M1; a registrar's M2 written to the pod as one guarded change, counted applied only when the pod's State shows it | every room with pods |
+| `refuse` | a controller without the Controller Capability TLV: incompatible, no M1 | finding 1 (below) |
+| `early-report` | the Early AP Capability Report retried with a new MID each time, three at most, until its Ack | RDK's controller |
+| `renew` | a Renew: at once a Search and a fresh M1; provisioning again with the new M2 | the controller re-onboarding a pod |
+| `no-m2` | an M1 left unanswered: onboarding again after 30 s | finding 2 |
+| `silent-controller` | nothing from the controller for 130 s: onboarding again | finding 3 |
+| `unserved-pod` | provisioned, but the pod serves no BSS of the controller's and nothing is written: onboarding again after 60 s | finding 4 |
+| `new-source` | the pod back with a new database (its OpenSync started again): a new session, and the configuration written again | findings 5 and 11 |
+
+## Reports and answers (spec 2.4, 2.6, 3.4)
+
+| Scenario | What it shows | Relied on by |
+| --- | --- | --- |
+| `answers` | every request answered with its MID (Topology, AP Capability, Channel Preference, Client Capability, Backhaul STA Capability, Unassociated STA Link Metrics, Multi-AP Policy); Link Metric and AP Metrics withheld without statistics, their reason recorded | the controller's model of the pod |
+| `clients` | a station joining and leaving: a Topology Notification with a Client Association Event each time; its age in each Topology Response as of that response | the rooms' clients on pods; finding 6 |
+| `reannounce` | at the controller's next Topology Query once provisioned, every current client announced again, once | finding 7 |
+| `channel-selection` | a request the pod can honour accepted (code 0), RDK's declined (code 2), the radio not moved; each followed by the Operating Channel Report | RDK's channel planning |
+| `channel-scan` | acknowledged, then a Channel Scan Report: each requested channel, status 1 (not supported) | RDK's controller |
+
+## The pod's statistics (spec 3.6, 3.8, 3.9)
+
+| Scenario | What it shows | Relied on by |
+| --- | --- | --- |
+| `telemetry` | the broker, the pod's topic and its reports written as one guarded change, applied once in the pod's database; reports through the broker reach the agent; a repeated one is dropped | the rooms' client signal on pods |
+| `foreign-broker` | another manager's broker in the pod's MQTT settings is not taken over: the write is refused, the settings stay | pods under an operator's cloud |
+| `metrics` | the Metric Reporting Policy kept; an AP Metrics Query answered with the channel utilization from the survey, the BSS's stations, their link metrics, and traffic statistics for the stations whose counters the pod measures; unsolicited at the policy's interval | RDK's controller, which learns a client's signal only this way; the optimizer |
+| `unassociated` | the stations asked about watched on the pod; one the pod heard reported with its RCPI; an associated one refused with reason 1, one not heard with reason 2 | the optimizer's candidate measurements for pods' clients |
+
+## Steering (spec 3.7, 8.3)
+
+| Scenario | What it shows | Relied on by |
+| --- | --- | --- |
+| `steering` | a mandate: acknowledged, a steering window opened as one write (the client row, a group, the target as a neighbor), applied when `owm` steers, the directed kick, the window closed deleting exactly its rows | the optimizer steering pods' clients |
+| `steering-refusals` | a station not on the source (Error Code, reason 2), a steering opportunity (Steering Completed at once), an agent-selected target: none opens a window | the optimizer |
+| `backhaul-capability` | on a Multi-AP backhaul: the uplink switch (option 1) applied once the pod's State shows the station on its parent; the Backhaul STA Capability Report names the station | the geometry rooms with pods; finding 8 |
+| `backhaul-steering` | the backhaul station re-pinned to the target; once the pod's State shows it there, the Backhaul Steering Response with the request's MID, success | the geometry rooms with pods |
+| `backhaul-steering-renewal` | a Renew and a new onboarding during the move: the answer still comes, with the request's MID | finding 9 |
+| `backhaul-steering-own-bss` | a target that is one of the pod's own BSSes: refused at once, failure with an Error Code; the station stays pinned | finding 10 |
+| `backhaul-steering-refused` | without option 1 (the pod on GRE): refused at once, failure with an Error Code | finding 12 |
+
+## The reference workload's faults
+
+| Scenario | What it shows | Relied on by |
+| --- | --- | --- |
+| `adapter-restart` | the agent killed and started again on its journal: onboarded again, the configuration found running, nothing written again | the workload's adapter restart |
+| `transport-cut` | the pod's management connection cut for 20 s: the source lost; when the pod dials again, onboarded anew and provisioning | the workload's transport cut and pod backhaul loss |
+
+The workload's controller restart is the controller's silence, its Renew or its new
+Topology Query: `silent-controller`, `renew` and `reannounce`. A client leaving and
+joining is `clients`.
+
+## The suite findings
+
+| # | Finding | Where seen | Scenario |
+| --- | --- | --- | --- |
+| 1 | the C admitted controllers the reference refuses | the box, 29 September | `refuse` |
+| 2 | a controller that restarted after M1 never sends M2 | RDK lab suite | `no-m2` |
+| 3 | a controller that goes silent, in any state | RDK lab suite | `silent-controller` |
+| 4 | a provisioned pod whose configuration was lost (a write lost to an uplink move) | RDK lab suite | `unserved-pod` |
+| 5 | the pod dropped with its extender and back on a new source | RDK lab suite | `new-source` |
+| 6 | stations' ages taken as of each Topology Response | RDK lab suite | `clients` |
+| 7 | clients that joined before a controller restart never re-learned | RDK lab suite | `reannounce` |
+| 8 | the uplink switch reported done before the pod's State showed it (pods held on the GRE path) | RDK lab, 1 October | `backhaul-capability` |
+| 9 | Backhaul Steering's answer lost to a session renewal during the move | RDK lab geometry rooms | `backhaul-steering-renewal` |
+| 10 | a pod's station on its own backhaul BSS looped `br-home` | reference lab, 25 September | `backhaul-steering-own-bss` |
+| 11 | a pod whose OpenSync started again counted as another manager's change (an ownership conflict), so its configuration was never written again; fixed (spec 5) | the box, 3 October | `new-source` |
+| 12 | without option 1, the failure answered without its Error Code TLV; fixed | the box, 3 October | `backhaul-steering-refused` |
+
+## Not scenarios
+
+- The fleet (spec 4): it stays Python (`c/README.md`); its own tests cover the handover.
+- The data plane (spec 8): the GRE termination and the bridges are the labs', checked by
+  their suites and the reference workload.
+- The Topology Discovery period (60 s) and Client Disassociation Stats: shown by the
+  vectors and the unit tests; no room depends on their timing.
+- Several pods under one agent process, TLS on the pod connections: not implemented
+  (spec 9).
