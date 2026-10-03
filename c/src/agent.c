@@ -1333,7 +1333,10 @@ static void write_status(agent *a)
         return;
     EM_FORMAT_FIXED(a->status_summary, sizeof(a->status_summary), "%s", summary);
     cJSON *s = status(a);
-    char *text = cJSON_Print(s), path[512];
+    /* the reference's layout (json.dumps indent=2, sorted keys): tools read either file alike */
+    char *text = em_json_dumps(s, EM_JSON_INDENT2, true), path[512];
+    if (!text) /* a pod's text that is not UTF-8: still a status, in cJSON's own layout */
+        text = cJSON_Print(s);
     size_t n = strlen(text);
     text = em_realloc(text, n + 2);
     memcpy(text + n, "\n", 2);

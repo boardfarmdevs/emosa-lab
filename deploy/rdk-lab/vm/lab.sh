@@ -590,7 +590,8 @@ medium() {
 pods_running() { lxc list -c n -f csv | grep -E '^pod-[0-9]+$' || true; }
 
 agents_provisioned() {    # the number of EMOSA agents whose session is provisioning
-    cx emosa sh -c 'grep -l "\"state\": \"provisioning\"" /var/lib/emosa/*/status.json 2>/dev/null | wc -l'
+    # either agent's file: any whitespace after the colon
+    cx emosa sh -c 'grep -lE "\"state\":[[:space:]]*\"provisioning\"" /var/lib/emosa/*/status.json 2>/dev/null | wc -l'
 }
 wait_agents() {    # every running pod's agent provisioned (at most 5 minutes)
     local n
