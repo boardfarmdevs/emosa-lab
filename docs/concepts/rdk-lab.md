@@ -156,7 +156,8 @@ By hand: `lab.sh agent POD python|c` (one pod's implementation), `lab.sh move
 POD TARGET` (the controller moves a pod's backhaul: a mesh node's container,
 its 5 GHz backhaul BSS or a BSSID), `lab.sh backhaul wired|wifi [POD...]`
 (`wired` returns a pod to the GTP path; `wifi` also releases a hold after a
-failed switch), `lab.sh repod`, `lab.sh client NAME SSID KEY`, `lab.sh rooms
+failed switch: the Python agent on a reconfiguration, the C fleet by forgetting
+the pod, whose next admission starts without the hold, spec §8.3), `lab.sh repod`, `lab.sh client NAME SSID KEY`, `lab.sh rooms
 native` (the lab's own rooms, pods stopped and their controller rows removed),
 `lab.sh status`.
 

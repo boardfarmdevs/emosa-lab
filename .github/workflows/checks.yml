@@ -411,13 +411,13 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y cmake pkg-config clang libclang-rt-18-dev libcjson-dev libssl-dev libsqlite3-dev
       - run: cmake -S c -B c/build -DCMAKE_C_COMPILER=clang -DEMOSA_FUZZ=ON -DEMOSA_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug
-      - run: cmake --build c/build -j --target emosa-fuzz-cmdu emosa-fuzz-stats emosa-fuzz-rows emosa-fuzz-wsc emosa-fuzz-fleet emosa-fuzz-gtp
+      - run: cmake --build c/build -j --target emosa-fuzz-cmdu emosa-fuzz-stats emosa-fuzz-rows emosa-fuzz-wsc emosa-fuzz-fleet emosa-fuzz-gtp emosa-fuzz-control emosa-fuzz-mqtt
       - name: fuzz
         env:
           ASAN_OPTIONS: detect_leaks=1:fast_unwind_on_malloc=0
         run: |
           mkdir -p fuzz-artifacts
-          for target in cmdu stats rows wsc fleet gtp; do
+          for target in cmdu stats rows wsc fleet gtp control mqtt; do
             mkdir -p "fuzz-$target" && cp c/fuzz/corpus/$target/* "fuzz-$target/"
             c/build/emosa-fuzz-$target -max_total_time=60 -print_final_stats=1 \
               -artifact_prefix="fuzz-artifacts/$target-" "fuzz-$target"
