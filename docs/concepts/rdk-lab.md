@@ -319,9 +319,14 @@ Both implementations run here with the same configuration, state directory and
 status file, and either takes a pod over from the other. `lab.sh agent POD
 python|c` picks one pod's (`/etc/default/emosa-POD` in the `emosa` container),
 `lab.sh implementation python|c` every pod's, and a lab built with meta-cmf
-`EASYMESH_EMOSA_AGENT=c` starts them on C. Each agent's status file names its
-implementation. The room suite passed with both pods on Python, both on C and
-one of each (the record, §3).
+`EASYMESH_EMOSA_AGENT=c` (`lab.sh up c`) installs the whole adapter in C: its fleet,
+GTP and agents, with no Python in the `emosa` and `em-gtp` containers. Each agent's
+status file names its implementation. The room suite passed with both pods on
+Python, both on C and one of each (the record, §3). With the adapter in C
+(3 October, `rdk-emosa-1002`) the pods onboarded with five BSSes each and moved to
+their Wi-Fi backhaul, the C GTP built their GRE tunnels from the GTP's DHCP leases,
+and the quick requalification passed: readiness, the five rooms with the pods,
+`backhaul-wired-parent` and `fifty-client-counter-roam`.
 
 ## 9. Open
 

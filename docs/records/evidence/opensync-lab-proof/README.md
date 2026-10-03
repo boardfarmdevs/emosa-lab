@@ -516,6 +516,31 @@ status says `c-lab-prototype`). Serials are redacted in the evidence.
 - `writes` counts the AP scope's M2 writes since each agent process started, so
   it differs with when the agents were last restarted, not with the run.
 
+## The adapter in C (run c-adapter-1003, plan 8.3)
+
+The same 900-second workload on `emosa-osl-1002` (three pods on the fleet) with the whole
+adapter in C, emosa-lab of 3 October (0032358): `lab.sh emosa c` installed the kit with
+`EMOSA_IMPLEMENTATION=c` in the adapter's container (the C fleet and agents, no Python
+under `/opt/emosa-adapter`), `lab.sh implementation c` put every agent on C, and `lab.sh
+gtp` the same kit in `em-gtp` (the C GTP, the pods' GRE).
+
+| Fault (offset) | c-adapter-1003 |
+| --- | ---: |
+| client leave/join em-wc2 (60 s) | 14.1 s |
+| adapter process restart, pod-1 (150 s) | 3.8 s |
+| OVSDB transport cut 20 s, pod-2 (240 s) | 2.8 s |
+| backhaul loss 30 s, pod-3 (360 s) | 15.1 s |
+| controller restart + policy re-entry (510 s) | 4.8 s |
+| client leave/join em-wc4 (690 s) | 17.7 s |
+| verdict | passed |
+
+- **Passed** every check: healthy at the end, every fault recovered, no unresolved
+  operation, every client passing at the end, agent memory bounded (about 11.5 MB
+  resident per agent). Evidence: [c-adapter-1003](c-adapter-1003/summary.json).
+- The C fleet took over the Python fleet's registry as it stood (`lab.sh status` listed
+  the three entries, ports and AL MACs unchanged) and the running agents' configurations,
+  as the box's `fleet-takeover` scenario does.
+
 ## Changes made during the run
 
 - `pod_profile.py`: the observed 6.6 encoding (`wpa-psk` + RSN, `key` slot);

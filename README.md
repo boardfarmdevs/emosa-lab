@@ -61,8 +61,10 @@ suite passes with them.
 - **Recovers without help** from an adapter restart, a pod connection cut, a lost
   pod backhaul and a controller restart (a 900-second fault workload).
 - **Two implementations, one behaviour.** The Python reference and a C
-  implementation pass the same conformance vectors and the same lab suites, with
-  either or both in one lab. The C is being taken to production quality.
+  implementation of every program (the agent, the fleet, the GTP) pass the same
+  conformance vectors, the same lab in a box and the same lab suites, with either or
+  both in one lab; either fleet takes over from the other, and the C installs without
+  Python. The C is being taken to production quality.
 
 Not yet: TLS on the pod connections with a trust anchor an unchanged field pod
 accepts; 5 and 6 GHz radios, several radios per pod and WPA3; channel and power
@@ -76,8 +78,8 @@ needs.
 | --- | --- |
 | [spec/](spec/README.md) | the specification, the component design and the conformance vectors: the contract |
 | [schemas/](schemas) | the configuration, status and record files |
-| [src/emosa/](src/emosa) | the adapter, the Python reference: `emosa-fleet`, `emosa-agent`; runtime dependencies `ovs`, `cryptography`, `jsonschema` |
-| [c/](c/README.md) | the C implementation, interchangeable with the reference, and [its production bar](c/QUALITY.md) |
+| [src/emosa/](src/emosa) | the adapter, the Python reference: `emosa-fleet`, `emosa-agent`, `emosa-gtp`; runtime dependencies `ovs`, `cryptography`, `jsonschema` |
+| [c/](c/README.md) | the C implementation (`emosa-fleet-c`, `emosa-agent-c`, `emosa-gtp-c`), interchangeable with the reference, and [its production bar](c/QUALITY.md) |
 | [lab/](lab) | `emosa-lab`: simulators, evaluation and experiment tooling; it depends on the adapter, never the other way round |
 | [deploy/](deploy/README.md) | the adapter kit for any EasyMesh lab, and the drivers for the OpenSync lab and the RDK lab |
 | [scenarios/](scenarios), [tests/](tests) | the experiment scenarios and the tests |
@@ -92,7 +94,7 @@ gateway, pods and clients of the [OpenSync lab](https://vcpe.dev/opensync-lab/);
 step is in the [lab manual](deploy/opensync-lab/README.md):
 
 ```sh
-deploy/opensync-lab/lab.sh stage && deploy/opensync-lab/lab.sh emosa
+deploy/opensync-lab/lab.sh stage && deploy/opensync-lab/lab.sh emosa    # emosa c: the adapter in C
 deploy/opensync-lab/lab.sh controller && deploy/opensync-lab/lab.sh ui
 deploy/opensync-lab/lab.sh fleet
 deploy/opensync-lab/lab.sh policy emosa-mesh 'EmosaMesh2026!'
@@ -108,7 +110,7 @@ uv run ruff check . && uv run ruff format --check .
 uv run pytest -m unit
 bash scripts/build-ovsdb.sh && python3 scripts/build-wsc-registrar.py
 uv run pytest -m ovsdb            # real ovsdb-server and WSC registrar
-uv run pytest -m box              # the lab in a box (spec/box-scenarios.md), both agents
+uv run pytest -m box              # the lab in a box (spec/box-scenarios.md), both implementations
 ```
 
 Start reading the code at `src/emosa/agent/fleet.py` (an agent for every pod),
