@@ -224,9 +224,16 @@ class Box:
         telemetry=False,
         foreign_broker=False,
         backhaul=False,
+        multi_bss=False,
+        uplink=None,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         self.telemetry, self.foreign_broker, self.backhaul = telemetry, foreign_broker, backhaul
+        # multi_bss: the controller answers each M1 with an M2 set, a fronthaul and a backhaul
+        # BSS (the registrar's backhaul mode); uplink: the agent's uplink setting instead of
+        # UPLINK (with backhaul)
+        self.multi_bss, self.uplink = multi_bss, uplink
+        self.m2_modes = ("configure", "backhaul") if multi_bss else ("configure",)
         self.pod_rows = MULTI_AP_ROWS if backhaul else POD_ROWS
         self.process = self.db = self.controller = self.log = self.broker = None
         self.interface = AGENT_INTERFACE  # the agent's 1905 interface (a fleet names its own)
@@ -269,8 +276,10 @@ class Box:
         fleet = {"controller_al": CONTROLLER_AL, "state_root": str(state_root)}
         if self.telemetry:
             fleet["telemetry"] = TELEMETRY
+        if self.multi_bss:
+            fleet["multi_bss"] = True
         if self.backhaul:  # option 1, its credentials from the agent's own configuration
-            fleet["uplink"] = UPLINK
+            fleet["uplink"] = self.uplink or UPLINK
             secrets = state_root / self.serial / "secrets"
             secrets.mkdir(parents=True, mode=0o700)
             (secrets / "backhaul").write_text("recorded-psk-replaced")
@@ -494,6 +503,13 @@ async def onboard(box):
     return box.result(passed=state["applied"], wrote=True, operations=state["operations"])
 
 
+async def answer_m1(box, ruid, wsc):
+    """The registrar's answer to one M1: an M2, or with multi_bss an M2 set (one per BSS,
+    each from its own registrar session: m2_session distinct)."""
+    m2s = [await asyncio.to_thread(registrar_reply, REGISTRAR, wsc, mode) for mode in box.m2_modes]
+    box.controller.send(AUTOCONFIG_WSC, (Tlv(0x82, ruid), *(Tlv(0x11, m2) for m2 in m2s)))
+
+
 async def onboarded(box):
     """onboard's steps, which other scenarios start from: the agent's radio (its RUID) and
     whether the credentials were applied, or what failed. As a controller does, every
@@ -521,8 +537,7 @@ async def onboarded(box):
         for m1 in found[m1s:]:
             wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
             ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)  # AP Radio Basic Caps
-            m2 = await asyncio.to_thread(registrar_reply, REGISTRAR, wsc)
-            box.controller.send(AUTOCONFIG_WSC, (Tlv(0x82, ruid), Tlv(0x11, m2)))
+            await answer_m1(box, ruid, wsc)
             pending = True
         m1s = len(found)
         if pending:
@@ -687,8 +702,7 @@ async def provision(box, searches=0, m1s=0, *, seconds=90):
         for m1 in found[answered_m1s:]:
             wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
             ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)
-            m2 = await asyncio.to_thread(registrar_reply, REGISTRAR, wsc)
-            box.controller.send(AUTOCONFIG_WSC, (Tlv(0x82, ruid), Tlv(0x11, m2)))
+            await answer_m1(box, ruid, wsc)
             m2_sent = pending = True
         answered_m1s = len(found)
         if pending and await written():
@@ -1615,6 +1629,12 @@ OPTIONS = {  # the box each scenario needs beyond the default
 
 
 async def run(scenario, agent, directory, *, binary=None):
+    from emosa_lab import box_features
+
+    if scenario in box_features.SCENARIOS:  # the features' faults and refusals (plan 8.4)
+        options = box_features.OPTIONS.get(scenario, {})
+        async with Box(agent, directory, binary=binary, **options) as box:
+            return await box_features.SCENARIOS[scenario](box)
     if scenario not in SCENARIOS:  # the fleet's and the GTP's (box_adapter)
         from emosa_lab import box_adapter
 
@@ -1624,9 +1644,9 @@ async def run(scenario, agent, directory, *, binary=None):
 
 
 def main():
-    from emosa_lab import box_adapter
+    from emosa_lab import box_adapter, box_features
 
-    names = {*SCENARIOS, *box_adapter.SCENARIOS, *box_adapter.STANDALONE}
+    names = {*SCENARIOS, *box_adapter.SCENARIOS, *box_adapter.STANDALONE, *box_features.SCENARIOS}
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("scenario", choices=sorted(names))
     parser.add_argument("--agent", choices=["c", "python"], required=True)

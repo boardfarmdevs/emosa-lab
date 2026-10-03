@@ -298,3 +298,49 @@ def test_the_gtp_keeps_one_gretap_per_lease_in_the_lan_bridge(agent, tmp_path):
         adapter(agent, "emosa-gtp-c")
     result = box("gtp", agent, tmp_path / "box")
     assert result["passed"], result
+
+
+# -- the features' faults and refusals (plan 8.4)
+
+
+def test_an_m2_set_writes_both_bsses_and_its_backhaul_serves_the_uplink(agent, tmp_path):
+    result = box("multi-bss", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["backhaul_bss"] == [["b-ap-24", "backhaul_bss"]]
+
+
+def test_an_uplink_switch_never_confirmed_holds_the_pod(agent, tmp_path):
+    result = box("uplink-held", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+    assert result["held"]["reason"] == "switch not confirmed within the deadline"
+
+
+def test_another_managers_change_to_the_switched_station_holds_the_pod(agent, tmp_path):
+    result = box("uplink-foreign-change", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
+def test_a_moved_upstream_is_kept_when_the_agent_starts_again(agent, tmp_path):
+    result = box("backhaul-steering-kept", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
+def test_the_agent_subscribes_again_when_the_broker_returns(agent, tmp_path):
+    result = box("telemetry-broker-restart", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_another_managers_steering_rows_are_left_alone(agent, tmp_path):
+    result = box("steering-conflict", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
+def test_a_steering_window_owm_never_takes_closes_at_its_deadline(agent, tmp_path):
+    result = box("steering-window-expired", agent, tmp_path / "box")
+    assert result["passed"], result
+    assert result["outcome"] == "not_applied"
+
+
+def test_a_steering_window_left_open_is_closed_after_the_agent_restarts(agent, tmp_path):
+    result = box("steering-restart", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result

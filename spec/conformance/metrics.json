@@ -392,6 +392,104 @@
   {
    "expected_counts": {
     "policy": {
+     "policy_receipt_ack_sent": 1
+    },
+    "reporter": {
+     "ap_metric_query_answered": 1
+    }
+   },
+   "expected_policy": {
+    "identity": {
+     "controller": "020000e00001",
+     "local_al": "0272f97f0785",
+     "ruid": "020000000100"
+    },
+    "last_unfulfilled_due": null,
+    "latest_mid": 14,
+    "latest_request": [
+     {
+      "kind": 137,
+      "value": "000001020000000100023c78"
+     },
+     {
+      "kind": 138,
+      "value": "050102000000010078053cc0"
+     },
+     {
+      "kind": 11,
+      "value": "d89c8e00"
+     }
+    ],
+    "next_due": 5.0,
+    "periods_due_without_report": 0,
+    "policy": {
+     "metrics": {
+      "interval_seconds": 5,
+      "radios": [
+       {
+        "include_link": true,
+        "include_traffic": true,
+        "include_wifi6_status": false,
+        "rcpi_hysteresis_db": 5,
+        "rcpi_threshold": 120,
+        "ruid": "020000000100",
+        "utilization_threshold": 60
+       }
+      ]
+     },
+     "not_applied": [
+      {
+       "kind": 11,
+       "length": 4
+      }
+     ],
+     "steering": {
+      "btm_disallowed": [],
+      "local_disallowed": [],
+      "radios": [
+       {
+        "policy": 2,
+        "rcpi_threshold": 120,
+        "ruid": "020000000100",
+        "utilization_threshold": 60
+       }
+      ]
+     }
+    },
+    "receipt_count": 1,
+    "schedule_rebases": 0
+   },
+   "name": "rates-not-measurements",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002a9e01080010808d8fb88d341a530a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2b0898ff0310c0c40718a00620e8072803300c380140024900000000000014c051000000000000f07f5890031a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a1449000000000000004251000000000000f87f581e2006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008000000e0080000000"
+      ],
+      "result": "policy_receipt_ack_sent"
+     },
+     "request": "0272f97f0785020000e00001893a00008003000e008089000c000001020000000100023c788a000c050102000000010078053cc00b0004d89c8e00000000"
+    },
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a0000800c0023008094000d820000000100690002803fff00a20022020000000a000001e2400000ff98000003e80000032000000002000000010000000c96001a020000000a0001820000000100000003e80000000000000000dc96001a02000000100001820000000100000003e8000000000000000058000000"
+      ],
+      "result": "ap_metric_query_answered"
+     },
+     "request": "0272f97f0785020000e00001893a0000800b0023008093000701820000000100000000"
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {
      "metric_reporting_due_without_qualified_source": 1,
      "policy_receipt_ack_sent": 1
     },
@@ -607,6 +705,354 @@
       "result": null
      },
      "tick": true
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {},
+    "reporter": {}
+   },
+   "expected_policy": null,
+   "name": "refused-policy-multicast-disallowed",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008003002800808900090101005e0000010000000000"
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {},
+    "reporter": {}
+   },
+   "expected_policy": null,
+   "name": "refused-policy-duplicate-disallowed",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a000080030029008089000f0002020000000a00020000000a0000000000"
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {},
+    "reporter": {}
+   },
+   "expected_policy": null,
+   "name": "refused-policy-steering-foreign-radio",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008003002a008089000c000001020000009900023c78000000"
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {},
+    "reporter": {}
+   },
+   "expected_policy": null,
+   "name": "refused-policy-steering-reserved-mode",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008003002b008089000c000001020000000100073c78000000"
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {},
+    "reporter": {}
+   },
+   "expected_policy": null,
+   "name": "refused-policy-metrics-reserved-threshold",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008003002c00808a000c0501020000000100ff053cc0000000"
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {},
+    "reporter": {}
+   },
+   "expected_policy": null,
+   "name": "refused-policy-qos-reserved",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008003002d0080db0015000000000000000000000000000000000000000000000000"
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {
+     "policy_receipt_ack_sent": 1
+    },
+    "reporter": {}
+   },
+   "expected_policy": {
+    "identity": {
+     "controller": "020000e00001",
+     "local_al": "0272f97f0785",
+     "ruid": "020000000100"
+    },
+    "last_unfulfilled_due": null,
+    "latest_mid": 46,
+    "latest_request": [
+     {
+      "kind": 219,
+      "value": "01020000000a00010200000010000000000000000000000000000000000000000000"
+     }
+    ],
+    "next_due": null,
+    "periods_due_without_report": 0,
+    "policy": {
+     "qos": [
+      {
+       "mscs_disallowed": [
+        "020000000a00"
+       ],
+       "scs_disallowed": [
+        "020000001000"
+       ]
+      }
+     ]
+    },
+    "receipt_count": 1,
+    "schedule_rebases": 0
+   },
+   "name": "policy-qos-lists",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008000002e0080000000"
+      ],
+      "result": "policy_receipt_ack_sent"
+     },
+     "request": "0272f97f0785020000e00001893a00008003002e0080db002201020000000a00010200000010000000000000000000000000000000000000000000000000"
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {},
+    "reporter": {}
+   },
+   "expected_policy": null,
+   "name": "refused-policy-unbound-controller",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00009893a00008003002f008089000c000001020000000100023c788a000c050102000000010078053cc00b0004d89c8e00000000"
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {
+     "policy_receipt_ack_sent": 1
+    },
+    "reporter": {}
+   },
+   "expected_policy": {
+    "identity": {
+     "controller": "020000e00001",
+     "local_al": "0272f97f0785",
+     "ruid": "020000000100"
+    },
+    "last_unfulfilled_due": null,
+    "latest_mid": 14,
+    "latest_request": [
+     {
+      "kind": 137,
+      "value": "000001020000000100023c78"
+     },
+     {
+      "kind": 138,
+      "value": "050102000000010078053cc0"
+     },
+     {
+      "kind": 11,
+      "value": "d89c8e00"
+     }
+    ],
+    "next_due": 5.0,
+    "periods_due_without_report": 0,
+    "policy": {
+     "metrics": {
+      "interval_seconds": 5,
+      "radios": [
+       {
+        "include_link": true,
+        "include_traffic": true,
+        "include_wifi6_status": false,
+        "rcpi_hysteresis_db": 5,
+        "rcpi_threshold": 120,
+        "ruid": "020000000100",
+        "utilization_threshold": 60
+       }
+      ]
+     },
+     "not_applied": [
+      {
+       "kind": 11,
+       "length": 4
+      }
+     ],
+     "steering": {
+      "btm_disallowed": [],
+      "local_disallowed": [],
+      "radios": [
+       {
+        "policy": 2,
+        "rcpi_threshold": 120,
+        "ruid": "020000000100",
+        "utilization_threshold": 60
+       }
+      ]
+     }
+    },
+    "receipt_count": 1,
+    "schedule_rebases": 0
+   },
+   "name": "refused-policy-mid-reused",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008000000e0080000000"
+      ],
+      "result": "policy_receipt_ack_sent"
+     },
+     "request": "0272f97f0785020000e00001893a00008003000e008089000c000001020000000100023c788a000c050102000000010078053cc00b0004d89c8e00000000"
+    },
+    {
+     "at": 0.5,
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008003000e00808a00020a00000000"
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {},
+    "reporter": {}
+   },
+   "expected_policy": null,
+   "name": "refused-query-two-tlvs",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000800b003000809300070182000000010093000701820000000100000000"
+    }
+   ]
+  },
+  {
+   "expected_counts": {
+    "policy": {},
+    "reporter": {}
+   },
+   "expected_policy": null,
+   "name": "refused-query-length",
+   "publishes": [
+    "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+    "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+   ],
+   "steps": [
+    {
+     "at": 0.0,
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000800b0031008093000702820000000100000000"
     }
    ]
   }

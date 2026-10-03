@@ -16,10 +16,10 @@ typedef struct {
     bool mandate, disassoc_imminent, abridged;
     uint16_t window, disassoc_timer;
     size_t nstations, ntargets;
-    uint8_t stations[32][6];
+    uint8_t stations[255][6]; /* the TLV's one-byte counts: as many as it can name */
     struct {
         uint8_t bssid[6], op_class, channel;
-    } targets[32];
+    } targets[255];
 } em_steering_request;
 
 /* Starts a mandate on the pod; NULL, or why it did not start (e.g. "busy"). */

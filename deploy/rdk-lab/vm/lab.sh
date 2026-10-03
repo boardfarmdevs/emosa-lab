@@ -429,9 +429,15 @@ agent_reconfigure() {    # rewrite a bound pod's agent configuration from the fl
     # backhaul is the operator's decision a hold waits for. Prints "released" if it held.
     if ! python_adapter; then
         # The C adapter: the fleet writes the pod's new configuration (and restarts its
-        # agent) when the pod comes back to it, its OpenSync restarted by the caller. An
-        # uplink hold is released by the Python reference only, for now (plan 8.4).
-        echo handover
+        # agent) when the pod comes back to it, its OpenSync restarted by the caller. A hold
+        # is released as spec 8.3 says, by a new admission: forget archives the pod's state
+        # (its uplink journal with it), and the restart hands the pod to the fleet anew.
+        if cx emosa cat "/var/lib/emosa/$1/status.json" 2>/dev/null | jq -e '.uplink.held != null' >/dev/null; then
+            fleet_cli forget "$1" >/dev/null
+            echo released
+        else
+            echo handover
+        fi
         return
     fi
     cx emosa systemctl stop "emosa-agent@$1"

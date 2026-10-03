@@ -20,4 +20,9 @@ void em_mqtt_pump(em_mqtt *m, double now);
 /* Subscribed on a live connection. */
 bool em_mqtt_connected(const em_mqtt *m);
 
+/* For the fuzz target and tests: bytes as if received from the broker while awaiting
+ * its CONNACK (0), its SUBACK (1) or subscribed (2); false where the agent would drop
+ * the connection. */
+bool em_mqtt_input(em_mqtt *m, int awaiting, const uint8_t *data, size_t len, double now);
+
 #endif

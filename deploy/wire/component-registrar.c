@@ -2,6 +2,11 @@
  * Reads one bounded raw M1 on stdin, emits one M2 on stdout. Uses pinned,
  * unmodified hostap 2.11 helpers/validators and fresh OpenSSL entropy.
  * The SSID/key below are intentionally PUBLIC simulation inputs.
+ *   configure  a fronthaul BSS (Multi-AP 0x20)
+ *   backhaul   a backhaul BSS whose credentials also serve the backhaul station
+ *              (0x40 | 0x80, as prplMesh sends it): with configure, an M2 set
+ *   changed    a fronthaul BSS with another SSID
+ *   teardown   the tear-down bit, no credentials
  */
 #include "includes.h"
 #include "common.h"
@@ -42,7 +47,8 @@ int main(int argc, char **argv)
     size_t size = fread(input, 1, sizeof(input), stdin);
     if (size == 0 || size > 4096 || ferror(stdin) || argc != 2 ||
         (strcmp(argv[1], "configure") && strcmp(argv[1], "changed") &&
-         strcmp(argv[1], "teardown"))) return 2;
+         strcmp(argv[1], "backhaul") && strcmp(argv[1], "teardown"))) return 2;
+    int backhaul = !strcmp(argv[1], "backhaul");
     struct wpabuf *m1 = wpabuf_alloc_copy(input, size);
     struct wps_parse_attr fields;
     if (!m1 || wps_validate_m1(m1) || wps_parse_msg(m1, &fields) ||
@@ -94,21 +100,23 @@ int main(int argc, char **argv)
     assert(wps_build_os_version(&context.dev, m2) == 0);
     assert(wps_build_wfa_ext(m2, 0, NULL, 0, 0) == 0);
     if (strcmp(argv[1], "teardown")) {
-        const char *ssid = !strcmp(argv[1], "changed") ? "Conflicting-WSC-request" : "EMOSA-WSC-component";
-        const char key[] = "OnlySimulationWscKey2026!";
+        const char *ssid = !strcmp(argv[1], "changed") ? "Conflicting-WSC-request"
+                         : backhaul ? "EMOSA-WSC-backhaul" : "EMOSA-WSC-component";
+        const char *key = backhaul ? "OnlySimulationWscBackhaul2026!" : "OnlySimulationWscKey2026!";
         const u8 auth_type[] = {0, WPS_AUTH_WPA2PSK}, encr_type[] = {0, WPS_ENCR_AES};
-        const u8 bssid[] = {2, 0, 0, 0, 0x50, 0x11};
+        const u8 bssid[] = {2, 0, 0, 0, 0x50, backhaul ? 0x12 : 0x11};
         attr(plain, ATTR_SSID, ssid, strlen(ssid));
         attr(plain, ATTR_AUTH_TYPE, auth_type, 2);
         attr(plain, ATTR_ENCR_TYPE, encr_type, 2);
-        attr(plain, ATTR_NETWORK_KEY, key, sizeof(key) - 1);
+        attr(plain, ATTR_NETWORK_KEY, key, strlen(key));
         attr(plain, ATTR_MAC_ADDR, bssid, 6);
     }
     assert(wps_build_wfa_ext(plain, 0, NULL, 0,
-        !strcmp(argv[1], "teardown") ? MULTI_AP_TEAR_DOWN : MULTI_AP_FRONTHAUL_BSS) == 0);
+        !strcmp(argv[1], "teardown") ? MULTI_AP_TEAR_DOWN
+        : backhaul ? (MULTI_AP_BACKHAUL_BSS | MULTI_AP_BACKHAUL_STA) : MULTI_AP_FRONTHAUL_BSS) == 0);
     assert(wps_build_key_wrap_auth(&registrar, plain) == 0);
     assert(wps_build_encr_settings(&registrar, m2, plain) == 0);
-    const u8 index = 1;
+    const u8 index = backhaul ? 2 : 1; /* each M2 of a set its own BSS index */
     attr(m2, 0x1bbc, &index, 1);
     assert(wps_build_authenticator(&registrar, m2) == 0);
     assert(wps_validate_m2(m2) == 0);

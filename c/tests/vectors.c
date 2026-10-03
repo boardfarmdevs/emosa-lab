@@ -623,8 +623,10 @@ static void control_vectors(const char *dir)
             const char *result = m ? em_control_handle(&control, m, &out, &error) : NULL;
             const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
             const char *want = str(expected, "result");
+            if (!result && m)
+                result = em_reason_name(error); /* refused: its reason, as the reference's */
             if (!result || !want || strcmp(result, want))
-                fail("control", name, result ? result : em_reason_name(error));
+                fail("control", name, result ? result : "no message");
             else if (!frames_equal(&out, cJSON_GetObjectItemCaseSensitive(expected, "frames")))
                 fail("control", name, "frames differ");
             em_frames_free(&out);
@@ -1395,6 +1397,8 @@ static void metrics_vectors(const char *dir)
                     result = em_reporting_policy(&r, m, at, true, &source, metrics_mid, &mid, &out, &error);
                 else if (m && m->message_type == 0x800B)
                     result = em_reporting_query(&r, m, true, &source, &out, &error);
+                if (!result && m && error != EM_OK)
+                    result = em_reason_name(error); /* refused: its reason, as the reference's */
                 em_message_free(m);
             }
             const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
@@ -1588,12 +1592,12 @@ static void scope_writes_vectors(const char *dir)
             backend = em_telemetry_backend();
             ctx = &telemetry;
         } else if (!strcmp(scope, "probe-watch")) {
-            watch = (em_watch_scope){.ovs = ovs, .serial = serial, .pod_id = str(intent, "pod_id"),
+            watch = (em_watch_scope){.ovs = ovs, .serial = serial, .pod_id = str(doc, "pod_id"),
                                      .transact = record, .transact_ctx = sent};
             backend = em_watch_backend();
             ctx = &watch;
         } else {
-            steering = (em_steering_scope){.ovs = ovs, .serial = serial, .pod_id = str(intent, "pod_id"),
+            steering = (em_steering_scope){.ovs = ovs, .serial = serial, .pod_id = str(doc, "pod_id"),
                                            .transact = record, .transact_ctx = sent};
             backend = em_steering_backend();
             ctx = &steering;

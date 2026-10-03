@@ -154,6 +154,22 @@
   },
   {
    "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "channel-scan-many",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a0000800000140080000000"
+      ],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000801b00140080a6011c00030200000001000151ff0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff020000000100015102010602000000010000000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
    "handed_to_pod": [
     {
      "abridged": true,
@@ -210,6 +226,22 @@
       "result": "client_steering_refused_station_not_associated"
      },
      "request": "0272f97f0785020000e00001893a00008014001000809b001b820000000100e000050005010200000099990102000012752c5106000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "steering-many-stations",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a0000800000150080a300070202000000a000a300070202000000a001a300070202000000a002a300070202000000a003a300070202000000a004a300070202000000a005a300070202000000a006a300070202000000a007a300070202000000a008a300070202000000a009a300070202000000a00aa300070202000000a00ba300070202000000a00ca300070202000000a00da300070202000000a00ea300070202000000a00fa300070202000000a010a300070202000000a011a300070202000000a012a300070202000000a013a300070202000000a014a300070202000000a015a300070202000000a016a300070202000000a017a300070202000000a018a300070202000000a019a300070202000000a01aa300070202000000a01ba300070202000000a01ca300070202000000a01da300070202000000a01ea300070202000000a01fa300070202000000a020a300070202000000a021a300070202000000a022a300070202000000a023a300070202000000a024a300070202000000a025a300070202000000a026a300070202000000a027000000"
+      ],
+      "result": "client_steering_refused_not_one_station"
+     },
+     "request": "0272f97f0785020000e00001893a00008014001500809b0205820000000100e0000500052802000000a00002000000a00102000000a00202000000a00302000000a00402000000a00502000000a00602000000a00702000000a00802000000a00902000000a00a02000000a00b02000000a00c02000000a00d02000000a00e02000000a00f02000000a01002000000a01102000000a01202000000a01302000000a01402000000a01502000000a01602000000a01702000000a01802000000a01902000000a01a02000000a01b02000000a01c02000000a01d02000000a01e02000000a01f02000000a02002000000a02102000000a02202000000a02302000000a02402000000a02502000000a02602000000a0272102000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c510602000012752c5106000000"
     }
    ]
   },
@@ -302,6 +334,486 @@
       "result": "unassociated_metrics_response_sent"
      },
      "request": "0272f97f0785020000e00001893a0000800f0015008097002a51020605020000000a000200000099990200000097970200000096960200000095950101020000009898000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-selection-truncated",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008006001e00808b00080200000001000151000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-selection-other-radio",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008006001f00808b000b02000000990001510106e0000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-selection-overlapping",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008006002000808b000f02000000010002510106e0510106c0000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "declined-selection-forbids-channel",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008007002100808e000702000000010002000000",
+       "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e000000"
+      ],
+      "result": "channel_selection_declined"
+     },
+     "request": "0272f97f0785020000e00001893a00008006002100808b000b0200000001000151010600000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-selection-unknown-companion",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "UNSUPPORTED_OPERATION"
+     },
+     "request": "0272f97f0785020000e00001893a00008006002200808b000b02000000010001510106e0d8000100000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-selection-power-other-radio",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008006002300808b000b02000000010001510106e08d000702000000990010000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": {
+    "controller": "020000e00001",
+    "ignored": [],
+    "local_al": "0272f97f0785",
+    "mid": 36,
+    "power_limit_dbm": null,
+    "preferences": [
+     {
+      "channels": [
+       6
+      ],
+      "class": 81,
+      "preference": 14,
+      "reason": 0
+     }
+    ],
+    "ruid": "020000000100",
+    "status": "accepted_no_adjustment"
+   },
+   "handed_to_pod": [],
+   "name": "selection-repeated",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008007002400808e000702000000010000000000",
+       "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e000000"
+      ],
+      "result": "channel_selection_accepted"
+     },
+     "request": "0272f97f0785020000e00001893a00008006002400808b000b02000000010001510106e0000000"
+    },
+    {
+     "expected": {
+      "frames": [],
+      "result": "duplicate_channel_request"
+     },
+     "request": "0272f97f0785020000e00001893a00008006002400808b000b02000000010001510106e0000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-scan-two-requests",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000801b00250080a60009000102000000010000a60009000102000000010000000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-scan-none",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000801b00260080000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-scan-truncated-radio",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000801b00270080a600050001020000000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-scan-truncated-class",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000801b00280080a6000c000102000000010001510501000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-scan-trailing",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000801b00290080a6000a000102000000010000ff000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "scan-class-81-no-channel",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008000002a0080000000",
+       "020000e000010272f97f0785893a0000801c01f40080a8001918323032362d30392d32355430303a30303a30302e3030305aa70009020000000100510601000000"
+      ],
+      "result": "channel_scan_not_supported_reported"
+     },
+     "request": "0272f97f0785020000e00001893a0000801b002a0080a6000b0001020000000100015100000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "scan-repeated",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008000002b0080000000",
+       "020000e000010272f97f0785893a0000801c01f40080a8001918323032362d30392d32355430303a30303a30302e3030305aa70009020000000100510601000000"
+      ],
+      "result": "channel_scan_not_supported_reported"
+     },
+     "request": "0272f97f0785020000e00001893a0000801b002b0080a60009000102000000010000000000"
+    },
+    {
+     "expected": {
+      "frames": [],
+      "result": "duplicate_channel_request"
+     },
+     "request": "0272f97f0785020000e00001893a0000801b002b0080a60009000102000000010000000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-policy-multicast-station",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008003002c00808900090101005e0000010000000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-policy-duplicate-station",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008003002d008089000f02020000000a00020000000a000000000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-policy-two-radios",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "UNSUPPORTED_OPERATION"
+     },
+     "request": "0272f97f0785020000e00001893a00008003002e0080890015000002020000000100003c78020000009900003c78000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-policy-two-steering",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008003002f0080890003000000890003000000000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-policy-metrics-truncated",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008003003000808a00080501020000000100000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-policy-metrics-two-radios",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "UNSUPPORTED_OPERATION"
+     },
+     "request": "0272f97f0785020000e00001893a00008003003100808a0016050202000000010078053cc002000000990078053cc0000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-policy-qos-reserved",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000800300320080db0003000000000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-steering-none",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000801400330080000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-steering-truncated",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008014003400809b0007820000000100e0000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-steering-multicast-station",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008014003500809b001b820000000100e0000500050101005e0000010102000012752c5106000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-steering-duplicate-station",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008014003600809b0021820000000100e00005000502020000000a00020000000a000102000012752c5106000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-steering-trailing",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a00008014003700809b001c820000000100e00005000501020000000a000102000012752c510600000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "steering-two-targets",
+   "steps": [
+    {
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a0000800000380080000000"
+      ],
+      "result": "client_steering_refused_not_one_target"
+     },
+     "request": "0272f97f0785020000e00001893a00008014003800809b0023820000000100e00005000501020000000a000202000012752c510602000012752c5101000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-unassociated-none",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000800f00390080000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-unassociated-truncated",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000800f003a008097000a51010602020000000a00000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-unassociated-too-many",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00001893a0000800f003b008097018a5101064102000000b00002000000b00102000000b00202000000b00302000000b00402000000b00502000000b00602000000b00702000000b00802000000b00902000000b00a02000000b00b02000000b00c02000000b00d02000000b00e02000000b00f02000000b01002000000b01102000000b01202000000b01302000000b01402000000b01502000000b01602000000b01702000000b01802000000b01902000000b01a02000000b01b02000000b01c02000000b01d02000000b01e02000000b01f02000000b02002000000b02102000000b02202000000b02302000000b02402000000b02502000000b02602000000b02702000000b02802000000b02902000000b02a02000000b02b02000000b02c02000000b02d02000000b02e02000000b02f02000000b03002000000b03102000000b03202000000b03302000000b03402000000b03502000000b03602000000b03702000000b03802000000b03902000000b03a02000000b03b02000000b03c02000000b03d02000000b03e02000000b03f02000000b040000000"
+    }
+   ]
+  },
+  {
+   "channel_policy": null,
+   "handed_to_pod": [],
+   "name": "refused-unbound-controller",
+   "steps": [
+    {
+     "expected": {
+      "frames": [],
+      "result": "INVALID_INPUT"
+     },
+     "request": "0272f97f0785020000e00009893a00008003003c008089000c000001020000000100023c788a000c050102000000010078053cc0b50003000140b60042050c707269766174655f73736964000c08696f745f73736964000e0a6c6e665f726164697573000f0d6d6573685f6261636b6861756c000d07686f7473706f740010a4000100c4000500000000000b0004d89c8e00000000"
     }
    ]
   }

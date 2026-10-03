@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Seed corpora for the C fuzz targets (c/fuzz), taken from the conformance vectors.
 
-    python3 c/fuzz/seeds.py            # writes c/fuzz/corpus/{cmdu,stats,rows,wsc,fleet,gtp}
+    python3 c/fuzz/seeds.py            # writes c/fuzz/corpus/<target>, every target's
 
 wsc: each recorded M2 and tampered M2, after a flags byte of 0 (fuzz/wsc.c). cmdu: every
 1905 frame in the vectors, and each multi-frame decode case as one
@@ -9,8 +9,11 @@ input (frames after their two-byte length, as fuzz/cmdu.c reads them). stats: ev
 recorded MQTT payload. rows: every recorded set of OVSDB tables. fleet: each pod's
 select result as the reply on its connection after an echo, and every registry file the
 fleet sessions leave. gtp: each command of the GTP sessions, its first ip output, the lease
-file and the event (fuzz/gtp.c's three parts). Files are named by their SHA-1, as
-libFuzzer names its own; rerunning replaces the corpora.
+file and the event (fuzz/gtp.c's three parts). control: each case's requests of the
+control, metrics and backhaul steering vectors, in order, as one input. mqtt: a CONNACK, a
+SUBACK and each recorded statistics payload published on the pod's topic, at QoS 0 and 1,
+from each phase. Files are named by their SHA-1, as libFuzzer names its own; rerunning
+replaces the corpora.
 """
 
 import hashlib
@@ -67,8 +70,20 @@ def tables_in(node):
             yield from tables_in(value)
 
 
+def remaining(n):
+    """MQTT's remaining length: seven bits per byte, the high bit for more."""
+    out = bytearray()
+    while True:
+        n, digit = divmod(n, 128)
+        out.append(digit | (0x80 if n else 0))
+        if not n:
+            return bytes(out)
+
+
 def main():
-    seeds = {name: set() for name in ("cmdu", "stats", "rows", "wsc", "fleet", "gtp")}
+    seeds = {
+        name: set() for name in ("cmdu", "stats", "rows", "wsc", "fleet", "gtp", "control", "mqtt")
+    }
     for case in load("cmdu.json")["decode"]:
         frames = [bytes.fromhex(f) for f in case["frames"]]
         seeds["cmdu"].add(framed(frames))
@@ -101,6 +116,20 @@ def main():
                 reply = {"id": 1, "result": step["arrival"], "error": None}
                 seeds["fleet"].add((json.dumps(echo) + json.dumps(reply)).encode())
         seeds["fleet"].add(session["files"]["registry"].encode())
+    for name in ("control.json", "metrics.json", "backhaul-steering.json"):
+        for case in load(name)["cases"]:
+            frames = list(frames_in(case))
+            if frames:
+                seeds["control"].add(framed(frames))
+    payloads = [bytes.fromhex(s["payload"]) for s in load("telemetry.json")["steps"]]
+    topic = b"emosa/stats/MVXPOD023F87E628DD"
+    for payload in payloads[:4]:
+        for qos in (0, 1):
+            body = len(topic).to_bytes(2, "big") + topic + (b"\x00\x01" if qos else b"") + payload
+            publish = bytes([0x30 | qos << 1]) + remaining(len(body)) + body
+            seeds["mqtt"].add(b"\x02" + publish)
+    seeds["mqtt"].add(b"\x00" + b"\x20\x02\x00\x00")  # CONNACK, accepted
+    seeds["mqtt"].add(b"\x01" + b"\x90\x03\x00\x01\x00")  # SUBACK, QoS 0
     for session in load("gtp.json")["sessions"]:
         for step in session["steps"]:
             outputs = [call[2] for call in step["calls"] if call[2]] or [""]

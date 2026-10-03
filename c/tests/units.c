@@ -19,6 +19,7 @@
 #include "journal.h"
 #include "jschema.h"
 #include "scope_telemetry.h"
+#include "mqtt.h"
 #include "vault.h"
 
 static int checks, failures;
@@ -114,6 +115,63 @@ static void vault(const char *scratch)
     CHECK(access(outside, F_OK) == 0, "forget refuses a path out of the vault");
     em_vault_forget(&v, ref);
     CHECK(!em_vault_resolve(&v, ref, &why), "forget removes a secret");
+}
+
+/* -- the MQTT subscriber's parser (mqtt.c), through its fuzzing entry --------------------- */
+
+static size_t mqtt_delivered;
+static char mqtt_topic[64];
+
+static void mqtt_deliver(void *ctx, const char *topic, const uint8_t *payload, size_t len, bool retained)
+{
+    (void)ctx;
+    (void)payload;
+    (void)len;
+    (void)retained;
+    mqtt_delivered++;
+    snprintf(mqtt_topic, sizeof(mqtt_topic), "%s", topic);
+}
+
+/* the broker's bytes in one phase of a fresh connection: what em_mqtt_input says */
+static bool mqtt_feed(int awaiting, const uint8_t *bytes, size_t n)
+{
+    em_mqtt *m = em_mqtt_open("127.0.0.1", 1, "emosa/stats/MVXPOD023F87E628DD", "units", mqtt_deliver, NULL);
+    bool ok = em_mqtt_input(m, awaiting, bytes, n, 1.0);
+    em_mqtt_close(m);
+    return ok;
+}
+
+static void mqtt_parser(void)
+{
+    static const uint8_t connack[] = {0x20, 2, 0, 0}, refused_connack[] = {0x20, 2, 0, 5};
+    static const uint8_t suback[] = {0x90, 3, 0, 1, 0}, refused_suback[] = {0x90, 3, 0, 1, 0x80};
+    static const uint8_t publish0[] = {0x30, 7, 0, 3, 'a', '/', 'b', 'x', 'y'};
+    static const uint8_t publish1[] = {0x32, 9, 0, 3, 'a', '/', 'b', 0, 7, 'x', 'y'};
+    static const uint8_t nul_topic[] = {0x30, 7, 0, 3, 'a', 0, 'b', 'x', 'y'};
+    static const uint8_t short_publish[] = {0x30, 1, 0};
+    static const uint8_t long_topic[] = {0x30, 4, 0, 9, 'a', 'b'};
+    static const uint8_t pingresp[] = {0xD0, 0}, other[] = {0x40, 2, 0, 1};
+    static const uint8_t partial[] = {0x30}, five_bytes[] = {0x30, 0x80, 0x80, 0x80, 0x80, 0x01};
+    static const uint8_t too_long[] = {0x30, 0xFF, 0xFF, 0xFF, 0x7F};
+    /* the CONNACK needs the SUBSCRIBE sent, which this unconnected client cannot */
+    CHECK(!mqtt_feed(0, connack, sizeof(connack)), "a CONNACK without a socket");
+    CHECK(!mqtt_feed(0, refused_connack, sizeof(refused_connack)), "a refused CONNACK");
+    CHECK(!mqtt_feed(1, connack, sizeof(connack)), "a CONNACK out of turn");
+    CHECK(mqtt_feed(1, suback, sizeof(suback)), "a SUBACK subscribes");
+    CHECK(!mqtt_feed(1, refused_suback, sizeof(refused_suback)), "a refused SUBACK");
+    CHECK(!mqtt_feed(2, suback, sizeof(suback)), "a SUBACK out of turn");
+    mqtt_delivered = 0;
+    CHECK(mqtt_feed(2, publish0, sizeof(publish0)) && mqtt_delivered == 1 && !strcmp(mqtt_topic, "a/b"),
+          "a QoS 0 PUBLISH delivered");
+    CHECK(mqtt_feed(2, publish1, sizeof(publish1)) && mqtt_delivered == 2, "a QoS 1 PUBLISH delivered");
+    CHECK(mqtt_feed(1, publish0, sizeof(publish0)) && mqtt_delivered == 2, "not delivered before the SUBACK");
+    CHECK(!mqtt_feed(2, nul_topic, sizeof(nul_topic)) && mqtt_delivered == 2, "a topic with a NUL refused");
+    CHECK(!mqtt_feed(2, short_publish, sizeof(short_publish)), "a PUBLISH without its topic length");
+    CHECK(!mqtt_feed(2, long_topic, sizeof(long_topic)), "a topic longer than its packet");
+    CHECK(mqtt_feed(2, pingresp, sizeof(pingresp)) && mqtt_feed(2, other, sizeof(other)), "others ignored");
+    CHECK(mqtt_feed(2, partial, sizeof(partial)), "an incomplete packet waits");
+    CHECK(!mqtt_feed(2, five_bytes, sizeof(five_bytes)), "a remaining length over four bytes");
+    CHECK(!mqtt_feed(2, too_long, sizeof(too_long)), "a packet over the limit");
 }
 
 /* -- another secret backend: the store's policy over a platform's storage --------------- */
@@ -451,6 +509,7 @@ int main(int argc, char **argv)
     canon();
     vault(argv[2]);
     secret_backend();
+    mqtt_parser();
     engine(argv[2], argv[1]);
     schema(argv[1]);
     files(argv[2]);

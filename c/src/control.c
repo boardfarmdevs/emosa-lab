@@ -216,7 +216,23 @@ static void system_utc(char out[40])
     EM_FORMAT_FIXED(out + n, 40 - n, ".%03ldZ", now.tv_nsec / 1000000);
 }
 
-/* Channel Scan Request: Ack, then a report of "scan not supported" results. */
+/* one "scan not supported" result (RUID, class, channel, status 0x01), appended */
+static void add_result(uint8_t (**results)[9], size_t *n, size_t *cap, const uint8_t *ruid, uint8_t op_class,
+                       uint8_t channel)
+{
+    if (*n == *cap) {
+        *cap = *cap ? *cap * 2 : 16;
+        *results = em_realloc(*results, *cap * sizeof(**results));
+    }
+    memcpy((*results)[*n], ruid, 6);
+    (*results)[*n][6] = op_class;
+    (*results)[*n][7] = channel;
+    (*results)[(*n)++][8] = 0x01; /* scan not supported */
+}
+
+/* Channel Scan Request: Ack, then a report of "scan not supported" results, as many as
+ * the request names for the pod's radio (the reference's list; the request's TLV bounds
+ * them to about 65 000). */
 static const char *scan(em_control *c, const em_message *m, em_frames *out, em_reason *error)
 {
     if (seen(c, m->message_type, m->mid))
@@ -235,10 +251,11 @@ static const char *scan(em_control *c, const em_message *m, em_frames *out, em_r
         return NULL;
     }
     const uint8_t *d = request->value;
-    size_t length = request->len, offset = 2, nresults = 0;
-    uint8_t results[256][9];
+    size_t length = request->len, offset = 2, nresults = 0, cap = 0;
+    uint8_t(*results)[9] = NULL;
     for (unsigned radio = 0; radio < d[1]; radio++) {
         if (length < offset + 7) {
+            free(results);
             *error = EM_INVALID_INPUT;
             return NULL;
         }
@@ -246,14 +263,11 @@ static const char *scan(em_control *c, const em_message *m, em_frames *out, em_r
         unsigned nclasses = d[offset + 6];
         bool ours = !memcmp(ruid, c->radio->ruid, 6);
         offset += 7;
-        if (ours && !nclasses) {
-            memcpy(results[nresults], ruid, 6);
-            results[nresults][6] = 81;
-            results[nresults][7] = (uint8_t)c->radio->channel;
-            results[nresults++][8] = 0x01;
-        }
+        if (ours && !nclasses)
+            add_result(&results, &nresults, &cap, ruid, 81, (uint8_t)c->radio->channel);
         for (unsigned k = 0; k < nclasses; k++) {
             if (length < offset + 2 || length < offset + 2 + d[offset + 1]) {
+                free(results);
                 *error = EM_INVALID_INPUT;
                 return NULL;
             }
@@ -264,16 +278,13 @@ static const char *scan(em_control *c, const em_message *m, em_frames *out, em_r
                 channels = &current;
                 n = 1;
             }
-            for (unsigned j = 0; ours && j < n && nresults < 256; j++) {
-                memcpy(results[nresults], ruid, 6);
-                results[nresults][6] = op_class;
-                results[nresults][7] = channels[j];
-                results[nresults++][8] = 0x01; /* scan not supported */
-            }
+            for (unsigned j = 0; ours && j < n; j++)
+                add_result(&results, &nresults, &cap, ruid, op_class, channels[j]);
             offset += 2 + d[offset + 1];
         }
     }
     if (offset != length) {
+        free(results);
         *error = EM_INVALID_INPUT; /* trailing octets */
         return NULL;
     }
@@ -282,16 +293,20 @@ static const char *scan(em_control *c, const em_message *m, em_frames *out, em_r
     uint8_t timestamp[41];
     timestamp[0] = (uint8_t)strlen(stamp);
     memcpy(timestamp + 1, stamp, timestamp[0]);
-    em_tlv report[257];
+    em_tlv *report = em_calloc(nresults + 1, sizeof(*report));
     report[0] = (em_tlv){0xA8, (uint16_t)(timestamp[0] + 1), timestamp};
     for (size_t i = 0; i < nresults; i++)
         report[i + 1] = (em_tlv){0xA7, 9, results[i]};
     em_reason r;
     if ((r = send(c, 0x8000, m->mid, NULL, 0, out)) != EM_OK ||
         (r = send(c, 0x801C, next_mid(c), report, nresults + 1, out)) != EM_OK) {
+        free(report);
+        free(results);
         *error = r;
         return NULL;
     }
+    free(report);
+    free(results);
     remember(c, m->message_type, m->mid);
     return "channel_scan_not_supported_reported";
 }
@@ -387,7 +402,7 @@ em_reason em_decode_steering_request(const em_message *m, em_steering_request *o
     out->window = (uint16_t)(d[7] << 8 | d[8]);
     out->disassoc_timer = (uint16_t)(d[9] << 8 | d[10]);
     size_t k = d[11], offset = 12;
-    if (k > 32 || t->len < offset + 6 * k + 1)
+    if (t->len < offset + 6 * k + 1)
         return EM_INVALID_INPUT;
     for (size_t i = 0; i < k; i++) {
         if (!unicast_mac(d + offset + 6 * i))
@@ -397,7 +412,7 @@ em_reason em_decode_steering_request(const em_message *m, em_steering_request *o
     out->nstations = k;
     offset += 6 * k;
     size_t n = d[offset++];
-    if (n > 32 || t->len != offset + 8 * n)
+    if (t->len != offset + 8 * n)
         return EM_INVALID_INPUT;
     for (size_t i = 0; i < n; i++) {
         memcpy(out->targets[i].bssid, d + offset + 8 * i, 6);
@@ -463,8 +478,8 @@ static const char *steer(em_control *c, const em_message *m, em_frames *out, em_
         return NULL;
     }
     const em_bss_view *source = bss(c, r.source_bssid);
-    em_tlv errors[32];
-    uint8_t values[32][7];
+    em_tlv errors[255];
+    uint8_t values[255][7];
     size_t nerrors = 0;
     for (size_t i = 0; i < r.nstations; i++)
         if (!associated(source, r.stations[i])) {

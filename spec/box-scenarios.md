@@ -83,6 +83,24 @@ The workload's controller restart is the controller's silence, its Renew or its 
 Topology Query: `silent-controller`, `renew` and `reannounce`. A client leaving and
 joining is `clients`.
 
+## The features' faults and refusals (plan 8.4)
+
+The paths a working lab seldom takes, each with either agent
+(`lab/src/emosa_lab/box_features.py`). The box's registrar also answers an M1 with an M2
+set: a fronthaul and a backhaul BSS (the backhaul with the Backhaul STA bit, as prplMesh
+sends it), each from its own registrar session with its own BSS index.
+
+| Scenario | What it shows | Relied on by |
+| --- | --- | --- |
+| `multi-bss` | an M2 set of two BSSes: both written as one guarded change and applied, the backhaul BSS on the profile's backhaul slot; its credentials serve the uplink switch (`credentials: m2`), pinned to the configured parent | RDK's controller (`r1`, multi-BSS) and the Wi-Fi backhaul |
+| `uplink-held` | a switch the pod never confirms: `TIMED_OUT` after 90 s, the pod held on option 2, no second switch | spec 8.3's hold; the RDK lab's `backhaul wifi` releasing it |
+| `uplink-foreign-change` | another manager changes the switched station's credential on the same start: held, the change left alone | spec 8.3 |
+| `backhaul-steering-kept` | the agent started again after a Backhaul Steering move keeps the station on the target, not the configured parent | the RDK lab's geometry rooms (the controller moves pods) |
+| `telemetry-broker-restart` | the broker gone and back: the agent notices, reconnects with its back-off, subscribes again and takes the next report | the pods' statistics in every metrics room |
+| `steering-conflict` | another manager's client row for the station: a mandate opens no steering window and leaves that row as it was | spec 3.7 |
+| `steering-window-expired` | a window the pod's owm never takes ends at its deadline: the rows it inserted deleted, the outcome `not_applied` | spec 3.7 |
+| `steering-restart` | the agent killed with a window open; started again on its journal, it closes the window it finds left over | spec 3.7, design 6 |
+
 ## The adapter around the agents (spec 4, 8.2; plan 8.3)
 
 Each implementation's fleet and GTP, Python or C, as each agent above

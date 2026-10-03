@@ -29,6 +29,7 @@ pod by topic, which only the pod's device certificate may publish to.
 """
 
 import hashlib
+import math
 import time
 from dataclasses import dataclass
 from importlib.resources import files
@@ -70,6 +71,16 @@ def report_type():
 
 Report = report_type()
 PROBE = Report.DESCRIPTOR.file.enum_types_by_name["BSEventType"].values_by_name["PROBE"].number
+
+
+def measured_rate(stats, field):
+    """A station's rate in Mbit/s, or None: absent, or not a measurement (not a finite
+    number from 0 to 2**32 - 1, which the Associated STA Link Metrics TLV's four octets hold;
+    spec 3.6)."""
+    if not stats.HasField(field):
+        return None
+    value = getattr(stats, field)
+    return value if math.isfinite(value) and 0 <= value < 2**32 else None
 
 
 @dataclass(frozen=True)
@@ -232,8 +243,8 @@ class PodStats:
                 measured_at=end,
                 periods=periods,
                 epoch_start=epoch_start,
-                tx_rate_mbps=stats.tx_rate if stats.HasField("tx_rate") else None,
-                rx_rate_mbps=stats.rx_rate if stats.HasField("rx_rate") else None,
+                tx_rate_mbps=measured_rate(stats, "tx_rate"),
+                rx_rate_mbps=measured_rate(stats, "rx_rate"),
                 snr_db=stats.rssi if stats.HasField("rssi") else None,
                 **totals,
             )

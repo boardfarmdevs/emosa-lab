@@ -195,7 +195,12 @@ static bool handle(em_mqtt *m, double now)
             int qos = (type >> 1) & 3;
             if (at + (qos ? 2 : 0) > rest)
                 return false;
-            char *topic = strndup((const char *)body + 2, tlen);
+            /* MQTT allows no NUL in a topic name: one with it would compare cut short */
+            if (memchr(body + 2, 0, tlen))
+                return false;
+            char *topic = em_malloc(tlen + 1); /* the project's allocator (QUALITY.md §2) */
+            memcpy(topic, body + 2, tlen);
+            topic[tlen] = 0;
             uint16_t pid = qos ? (uint16_t)(body[at] << 8 | body[at + 1]) : 0;
             at += qos ? 2 : 0;
             if (m->phase == M_READY)
@@ -215,6 +220,22 @@ static bool handle(em_mqtt *m, double now)
         memmove(m->in, m->in + h + rest, m->len - h - rest);
         m->len -= h + rest;
     }
+}
+
+bool em_mqtt_input(em_mqtt *m, int awaiting, const uint8_t *data, size_t len, double now)
+{
+    static const phase phases[] = {M_AWAIT_CONNACK, M_AWAIT_SUBACK, M_READY};
+    m->phase = phases[(unsigned)awaiting % 3];
+    if (len > MAX_PACKET + 65536 - m->len)
+        return false;
+    if (m->cap - m->len < len) {
+        m->cap = m->len + len;
+        m->in = em_realloc(m->in, m->cap);
+    }
+    if (len)
+        memcpy(m->in + m->len, data, len);
+    m->len += len;
+    return handle(m, now);
 }
 
 void em_mqtt_pump(em_mqtt *m, double now)

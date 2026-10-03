@@ -345,7 +345,9 @@ What it keeps, per station, is only what the pod measured:
   only together with `rx_retries`, so its absence never means zero;
 - the last rates and the SNR as reported, and the end of the last period, so
   the age of every value is known. A station is current for three periods plus
-  `qm`'s one-minute batching.
+  `qm`'s one-minute batching. A rate that is not a finite number of Mbit/s from
+  0 to 2^32 − 1 (what a Link Metrics TLV's four octets hold) is no measurement
+  and is absent; an SNR beyond the RCPI's range gives RCPI 220.
 
 These measurements are in the agent's status. EMOSA sends an EasyMesh metric
 only when it can be built completely from them; until then it sends none

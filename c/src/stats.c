@@ -2,6 +2,7 @@
  * wire decoder for the sts.Report fields EMOSA uses (the pinned opensync_stats.proto). */
 #include "stats.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +13,16 @@ static const char *const COUNTER_NAMES[EM_COUNTERS] = {
 /* Client.Stats field numbers of the counters above */
 static const int COUNTER_FIELDS[EM_COUNTERS] = {2, 1, 4, 3, 6, 5, 8, 7};
 static const char *const BANDS[7] = {"2.4G", "5G", "5GL", "5GU", "6G", "6GL", "6GU"};
+
+/* A station's rate as the reference takes it (stats.measured_rate): a finite number of
+ * Mbit/s from 0 to 2^32 - 1, the Link Metrics TLV's four octets; otherwise not a
+ * measurement, so absent (spec 3.6). */
+static bool measured_rate(double mbps) { return isfinite(mbps) && mbps >= 0 && mbps < 4294967296.0; }
+
+/* An SNR as reported (a varint), saturated at 255 dB: the RCPI it gives is 220 from 165 dB
+ * on, so nothing reported changes, and no arithmetic on it can overflow. */
+static unsigned snr_db(uint64_t value) { return value > 255 ? 255 : (unsigned)value; }
+
 #define TX_RETRIES 4 /* never implied: dppline.c sends it only together with rx_retries */
 #define MAX_PAYLOAD 65536
 #define MAX_STATIONS 64
@@ -292,12 +303,12 @@ static const char *client_report(em_pod_stats *s, const pb_client_report *cr)
             double period = c.has_duration ? (double)c.duration_ms / 1000 : 0;
             next_state.epoch_start = end - (period ? period : s->interval);
         }
-        next_state.has_tx_rate = c.stats.has[10];
+        next_state.has_tx_rate = c.stats.has[10] && measured_rate(c.stats.rate[10]);
         next_state.tx_rate = c.stats.rate[10];
-        next_state.has_rx_rate = c.stats.has[9];
+        next_state.has_rx_rate = c.stats.has[9] && measured_rate(c.stats.rate[9]);
         next_state.rx_rate = c.stats.rate[9];
         next_state.has_snr = c.stats.has[11];
-        next_state.snr = (unsigned)c.stats.v[11];
+        next_state.snr = snr_db(c.stats.v[11]);
         if (old) {
             *old = next_state;
         } else if (s->nstations < 256) {
@@ -442,7 +453,7 @@ static bool band_report(em_pod_stats *s, const char *mac, uint64_t stamp, const 
             }
             slot = &s->probes[s->nprobes++];
         }
-        *slot = (em_probe_stats){.snr_db = (unsigned)rssi, .measured_at = at};
+        *slot = (em_probe_stats){.snr_db = snr_db(rssi), .measured_at = at};
         EM_FORMAT_FIXED(slot->mac, sizeof(slot->mac), "%s", mac);
         EM_FORMAT_FIXED(slot->band, sizeof(slot->band), "%s", BANDS[band]);
         EM_FORMAT_FIXED(slot->ifname, sizeof(slot->ifname), "%s", ifname);

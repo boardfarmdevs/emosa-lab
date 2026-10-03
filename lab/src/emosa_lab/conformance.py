@@ -1080,12 +1080,53 @@ def control_vectors():
             [request(0x801B, 19, (Tlv(0xA6, b"\x00\x01" + ruid + bytes.fromhex("0151020106")),))],
         ),
         (
+            # 258 results, the last for the radio named again with no class: more than the
+            # C's former fixed 256, which that last one overflowed (found in review, 8.4)
+            "channel-scan-many",
+            [
+                request(
+                    0x801B,
+                    20,
+                    (
+                        Tlv(
+                            0xA6,
+                            b"\x00\x03"
+                            + ruid
+                            + b"\x01\x51\xff"
+                            + bytes(range(1, 256))
+                            + ruid
+                            + bytes.fromhex("0151020106")
+                            + ruid
+                            + b"\x00",
+                        ),
+                    ),
+                )
+            ],
+        ),
+        (
             "steering-mandate",
             [request(0x8014, 15, (steering_tlv([mac(stations[0])], [(target, 81, 6)]),))] * 2,
         ),
         (
             "steering-station-not-on-source",
             [request(0x8014, 16, (steering_tlv([mac("02:00:00:00:99:99")], [(target, 81, 6)]),))],
+        ),
+        (
+            # 40 stations and 33 targets: more than the C's former 32 (plan 8.4); the TLV's
+            # one-byte counts are the only limit
+            "steering-many-stations",
+            [
+                request(
+                    0x8014,
+                    21,
+                    (
+                        steering_tlv(
+                            [mac(f"02:00:00:00:a0:{i:02x}") for i in range(40)],
+                            [(target, 81, 6)] * 33,
+                        ),
+                    ),
+                )
+            ],
         ),
         (
             "steering-opportunity",
@@ -1149,6 +1190,142 @@ def control_vectors():
             ],
         ),
     ]
+    other = mac("02:00:00:00:99:00")  # another agent's radio
+    good = ruid + bytes.fromhex("01510106e0")
+    multicast = bytes.fromhex("01005e000001")
+
+    def one(name, message_type, mid, *tlvs):
+        return (name, [request(message_type, mid, tlvs)])
+
+    # what each parser refuses, one case each (plan 8.4): the reason the reference gives
+    # is the contract, and so is what was sent before the refusal
+    sequences += [
+        one("refused-selection-truncated", 0x8006, 30, Tlv(0x8B, ruid + b"\x01\x51")),
+        one("refused-selection-other-radio", 0x8006, 31, Tlv(0x8B, other + good[6:])),
+        one(
+            "refused-selection-overlapping",
+            0x8006,
+            32,
+            Tlv(0x8B, ruid + bytes.fromhex("02510106e0510106c0")),
+        ),
+        one(
+            "declined-selection-forbids-channel",
+            0x8006,
+            33,
+            Tlv(0x8B, ruid + bytes.fromhex("0151010600")),
+        ),
+        one("refused-selection-unknown-companion", 0x8006, 34, Tlv(0x8B, good), Tlv(0xD8, b"\x00")),
+        one(
+            "refused-selection-power-other-radio",
+            0x8006,
+            35,
+            Tlv(0x8B, good),
+            Tlv(0x8D, other + b"\x10"),
+        ),
+        ("selection-repeated", [request(0x8006, 36, (Tlv(0x8B, good),))] * 2),
+        one(
+            "refused-scan-two-requests",
+            0x801B,
+            37,
+            Tlv(0xA6, b"\x00\x01" + ruid + b"\x00"),
+            Tlv(0xA6, b"\x00\x01" + ruid + b"\x00"),
+        ),
+        one("refused-scan-none", 0x801B, 38),
+        one("refused-scan-truncated-radio", 0x801B, 39, Tlv(0xA6, b"\x00\x01" + ruid[:3])),
+        one(
+            "refused-scan-truncated-class",
+            0x801B,
+            40,
+            Tlv(0xA6, b"\x00\x01" + ruid + b"\x01\x51\x05\x01"),
+        ),
+        one("refused-scan-trailing", 0x801B, 41, Tlv(0xA6, b"\x00\x01" + ruid + b"\x00\xff")),
+        one(
+            "scan-class-81-no-channel", 0x801B, 42, Tlv(0xA6, b"\x00\x01" + ruid + b"\x01\x51\x00")
+        ),
+        ("scan-repeated", [request(0x801B, 43, (Tlv(0xA6, b"\x00\x01" + ruid + b"\x00"),))] * 2),
+        one(
+            "refused-policy-multicast-station",
+            0x8003,
+            44,
+            Tlv(0x89, b"\x01" + multicast + b"\x00\x00"),
+        ),
+        one(
+            "refused-policy-duplicate-station",
+            0x8003,
+            45,
+            Tlv(0x89, b"\x02" + mac(stations[0]) * 2 + b"\x00\x00"),
+        ),
+        one(
+            "refused-policy-two-radios",
+            0x8003,
+            46,
+            Tlv(0x89, b"\x00\x00\x02" + ruid + b"\x00\x3c\x78" + other + b"\x00\x3c\x78"),
+        ),
+        one(
+            "refused-policy-two-steering",
+            0x8003,
+            47,
+            Tlv(0x89, b"\x00\x00\x00"),
+            Tlv(0x89, b"\x00\x00\x00"),
+        ),
+        one("refused-policy-metrics-truncated", 0x8003, 48, Tlv(0x8A, b"\x05\x01" + ruid)),
+        one(
+            "refused-policy-metrics-two-radios",
+            0x8003,
+            49,
+            Tlv(
+                0x8A,
+                b"\x05\x02" + ruid + bytes.fromhex("78053cc0") + other + bytes.fromhex("78053cc0"),
+            ),
+        ),
+        one("refused-policy-qos-reserved", 0x8003, 50, Tlv(0xDB, b"\x00\x00\x00")),
+        one("refused-steering-none", 0x8014, 51),
+        one("refused-steering-truncated", 0x8014, 52, Tlv(0x9B, bssid + b"\xe0")),
+        one(
+            "refused-steering-multicast-station",
+            0x8014,
+            53,
+            steering_tlv([multicast], [(target, 81, 6)]),
+        ),
+        one(
+            "refused-steering-duplicate-station",
+            0x8014,
+            54,
+            steering_tlv([mac(stations[0])] * 2, [(target, 81, 6)]),
+        ),
+        one(
+            "refused-steering-trailing",
+            0x8014,
+            55,
+            Tlv(0x9B, steering_tlv([mac(stations[0])], [(target, 81, 6)]).value + b"\x00"),
+        ),
+        one(
+            "steering-two-targets",
+            0x8014,
+            56,
+            steering_tlv([mac(stations[0])], [(target, 81, 6), (target, 81, 1)]),
+        ),
+        one("refused-unassociated-none", 0x800F, 57),
+        one(
+            "refused-unassociated-truncated",
+            0x800F,
+            58,
+            Tlv(0x97, bytes((81, 1, 6, 2)) + mac(stations[0])),
+        ),
+        one(
+            "refused-unassociated-too-many",
+            0x800F,
+            59,
+            Tlv(
+                0x97,
+                bytes((81, 1, 6, 65)) + b"".join(mac(f"02:00:00:00:b0:{i:02x}") for i in range(65)),
+            ),
+        ),
+        (
+            "refused-unbound-controller",  # a request from an AL the agent is not bound to
+            [fragment_message(mac(AGENT), mac("02:00:00:e0:00:09"), 0x8003, 60, rdk_policy)[0]],
+        ),
+    ]
     measured = {"unassociated-query-measured"}
     cases = []
     for name, frames in sequences:
@@ -1190,9 +1367,13 @@ def control_vectors():
             steps = []
             for frame in frames:
                 message, before = Reassembler().feed(frame), len(sent)
-                result = next(
-                    (r for r in (h.handle(message, 0.0) for h in handlers) if r is not None), None
-                )
+                try:
+                    result = next(
+                        (r for r in (h.handle(message, 0.0) for h in handlers) if r is not None),
+                        None,
+                    )
+                except EmosaError as exc:  # refused: its reason, and what was sent before
+                    result = exc.code.value
                 steps.append(
                     {
                         "request": frame.hex(),
@@ -1721,15 +1902,12 @@ def metrics_vectors():
 
     # RDK's Metric Reporting Policy (captured): 5 s, RCPI 0x78, hysteresis 5, utilization
     # 0x3c, traffic and link metrics included; its other companions are kept, not applied
-    policy = request(
-        0x8003,
-        14,
-        (
-            Tlv(0x89, bytes.fromhex("000001") + ruid + bytes.fromhex("023c78")),
-            Tlv(0x8A, bytes.fromhex("0501") + ruid + bytes.fromhex("78053cc0")),
-            Tlv(0x0B, bytes.fromhex("d89c8e00")),
-        ),
+    rdk_like = (
+        Tlv(0x89, bytes.fromhex("000001") + ruid + bytes.fromhex("023c78")),
+        Tlv(0x8A, bytes.fromhex("0501") + ruid + bytes.fromhex("78053cc0")),
+        Tlv(0x0B, bytes.fromhex("d89c8e00")),
     )
+    policy = request(0x8003, 14, rdk_like)
     survey = survey_report(int(wall * 1000) - 2000)
     clients = client_report(
         int(wall * 1000) - 1000,
@@ -1740,6 +1918,13 @@ def metrics_vectors():
         ],
     )
     old_survey = survey_report(int(wall * 1000) - 60000)
+    bad_rates = client_report(
+        int(wall * 1000) - 1000,
+        [
+            (stations[0], 400, float("inf"), -5.0, COUNTERS_FULL),
+            (stations[1], 30, float("nan"), 2.0**33, None),
+        ],
+    )
     cases = [
         (
             "policy-then-query",
@@ -1770,6 +1955,13 @@ def metrics_vectors():
             [(0.0, "frame", policy), (0.0, "frame", query(33, [bssid])), (5.0, "tick", None)],
         ),
         (
+            # rates that cannot be measurements (infinite, negative, NaN, beyond the TLV's
+            # four octets) are absent, and an SNR beyond the RCPI's range gives 220 (8.4)
+            "rates-not-measurements",
+            [survey, bad_rates],
+            [(0.0, "frame", policy), (0.0, "frame", query(35, [bssid]))],
+        ),
+        (
             "no-statistics",
             [],
             [(0.0, "frame", policy), (0.0, "frame", query(34, [bssid])), (5.0, "tick", None)],
@@ -1783,6 +1975,84 @@ def metrics_vectors():
                 (3.0, "frame", request(0x8003, 15, Reassembler().feed(policy).tlvs)),
                 (5.0, "tick", None),
             ],
+        ),
+    ]
+    other = mac("02:00:00:00:99:00")  # another agent's radio
+    multicast = bytes.fromhex("01005e000001")
+
+    def refused(name, mid, *tlvs, controller=CONTROLLER):
+        frame = fragment_message(mac(AGENT), mac(controller), 0x8003, mid, tlvs)[0]
+        return (name, [survey, clients], [(0.0, "frame", frame)])
+
+    # what the policy and query parsers refuse, one case each (plan 8.4)
+    cases += [
+        refused(
+            "refused-policy-multicast-disallowed", 40, Tlv(0x89, b"\x01" + multicast + b"\x00\x00")
+        ),
+        refused(
+            "refused-policy-duplicate-disallowed",
+            41,
+            Tlv(0x89, b"\x00\x02" + mac(stations[0]) * 2 + b"\x00"),
+        ),
+        refused(
+            "refused-policy-steering-foreign-radio",
+            42,
+            Tlv(0x89, b"\x00\x00\x01" + other + bytes.fromhex("023c78")),
+        ),
+        refused(
+            "refused-policy-steering-reserved-mode",
+            43,
+            Tlv(0x89, b"\x00\x00\x01" + ruid + bytes.fromhex("073c78")),
+        ),
+        refused(
+            "refused-policy-metrics-reserved-threshold",
+            44,
+            Tlv(0x8A, b"\x05\x01" + ruid + bytes.fromhex("ff053cc0")),
+        ),
+        refused(
+            "refused-policy-qos-reserved",
+            45,
+            Tlv(0xDB, b"\x00\x00" + bytes(19)),
+        ),
+        refused(
+            "policy-qos-lists",
+            46,
+            Tlv(0xDB, b"\x01" + mac(stations[0]) + b"\x01" + mac(stations[1]) + bytes(20)),
+        ),
+        refused("refused-policy-unbound-controller", 47, *rdk_like, controller="02:00:00:e0:00:09"),
+        (
+            "refused-policy-mid-reused",  # the same MID with other contents
+            [survey, clients],
+            [
+                (0.0, "frame", policy),
+                (
+                    0.5,
+                    "frame",
+                    fragment_message(
+                        mac(AGENT), mac(CONTROLLER), 0x8003, 14, (Tlv(0x8A, b"\x0a\x00"),)
+                    )[0],
+                ),
+            ],
+        ),
+        (
+            "refused-query-two-tlvs",
+            [survey, clients],
+            [
+                (
+                    0.0,
+                    "frame",
+                    request(
+                        0x800B,
+                        48,
+                        (Tlv(0x93, b"\x01" + bssid), Tlv(0x93, b"\x01" + bssid)),
+                    ),
+                )
+            ],
+        ),
+        (
+            "refused-query-length",
+            [survey, clients],
+            [(0.0, "frame", request(0x800B, 49, (Tlv(0x93, b"\x02" + bssid),)))],
         ),
     ]
     view = device_view(decode(raw))
@@ -1847,9 +2117,14 @@ def metrics_vectors():
                     result = None
                 else:
                     message = Reassembler().feed(frame)
-                    result = coordinator.handle(message, at)
-                    if result is None:
-                        result = reporter.handle(message, at, ingress="conformance", generation=1)
+                    try:
+                        result = coordinator.handle(message, at)
+                        if result is None:
+                            result = reporter.handle(
+                                message, at, ingress="conformance", generation=1
+                            )
+                    except EmosaError as exc:  # refused: its reason, and what was sent before
+                        result = exc.code.value
                 recorded.append(
                     {
                         "at": at,
@@ -2202,22 +2477,74 @@ def scope_writes_vectors():
                 ),
             }
         )
-    raw = rows(**watched_station)
-    backend = SteeringBackend("pod-1", Recorder(copy.deepcopy(raw)), serial=SERIAL)
-    cases.append(
-        {
-            "scope": "steering",
-            **scope_write_case("steering-replaces-watch-row", raw, backend, steer),
-        }
+    station = "02:00:00:00:0a:00"
+    neighbor = {
+        "bssid": "02:00:00:12:75:2c",
+        "if_name": "home-ap-24",
+        "channel": 6,
+        "op_class": 81,
+        "priority": 1,
+    }
+    steering_cases = (
+        ("steering-replaces-watch-row", watched_station, steer),
+        # what the plan refuses or reuses (plan 8.4)
+        (
+            "steering-another-managers-row",
+            {
+                **group,
+                "Band_Steering_Clients": {
+                    "00000000-0000-4000-8000-0000000000d3": {"mac": station, "cs_mode": "away"}
+                },
+            },
+            steer,
+        ),
+        (
+            "steering-two-groups",
+            {
+                "Band_Steering_Config": {
+                    "00000000-0000-4000-8000-0000000000b1": {"if_name_2g": "home-ap-24"},
+                    "00000000-0000-4000-8000-0000000000b2": {"if_name_2g": "home-ap-24"},
+                }
+            },
+            steer,
+        ),
+        (
+            "steering-two-neighbors",
+            {
+                **group,
+                "Wifi_VIF_Neighbors": {
+                    "00000000-0000-4000-8000-0000000000e1": neighbor,
+                    "00000000-0000-4000-8000-0000000000e2": {**neighbor, "priority": 2},
+                },
+            },
+            steer,
+        ),
+        (
+            "steering-neighbor-present",
+            {**group, "Wifi_VIF_Neighbors": {"00000000-0000-4000-8000-0000000000e1": neighbor}},
+            steer,
+        ),
+        (
+            "steering-station-not-associated",
+            group,
+            dataclasses.replace(steer, station="02:00:00:00:99:99"),
+        ),
+        ("steering-source-not-the-pods", group, dataclasses.replace(steer, source_bssid=station)),
+        ("steering-another-pod", group, dataclasses.replace(steer, pod_id="pod-2")),
     )
+    for name, extra, intent in steering_cases:
+        raw = rows(**extra)
+        backend = SteeringBackend("pod-1", Recorder(copy.deepcopy(raw)), serial=SERIAL)
+        cases.append({"scope": "steering", **scope_write_case(name, raw, backend, intent)})
     return {
         "description": "spec §3.6, §3.7, §3.9: the scopes' guarded OVSDB writes on the recorded "
         "pod rows (with the case's additional rows): the telemetry scope's statistics "
         "publishing, the probe watch's rows, and a steering window that replaces the "
         "station's watch row. Per case: the plan's refusal (a Reason), or the submission's "
         "status and every transaction sent. The server replies to every insert with the UUID "
-        "00000000-0000-4000-8000-0000000000ff.",
+        "00000000-0000-4000-8000-0000000000ff. Every scope is bound to pod_id.",
         "serial": SERIAL,
+        "pod_id": "pod-1",
         "cases": cases,
     }
 
