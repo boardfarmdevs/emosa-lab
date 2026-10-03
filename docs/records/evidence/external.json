@@ -1,0 +1,596 @@
+{
+  "schema": "emosa.evidence.external.v1",
+  "description": "Large raw captures and recordings of the evidence records (pcap and jsonl files over 256 KB), kept in a release of this repository instead of git. scripts/fetch-evidence.py puts them back in place, checked.",
+  "release": "evidence-2026-10-02",
+  "asset": "emosa-lab-evidence-2026-10-02.tar.xz",
+  "url": "https://github.com/boardfarmdevs/emosa-lab/releases/download/evidence-2026-10-02/emosa-lab-evidence-2026-10-02.tar.xz",
+  "asset_size": 18551220,
+  "asset_sha256": "4540ea76d1edf2b87a987554c0ef3e321dde506f102e7317f4e72e1c87a4e099",
+  "files": [
+    {
+      "path": "docs/records/evidence/ap-esp/native-ap-esp-new-01/egress-observations.jsonl",
+      "size": 1010603,
+      "sha256": "8f971cbe00ee8ed4a1d39bd1c3955173bd8e31c4f2feb5c79defc7566950ec8e"
+    },
+    {
+      "path": "docs/records/evidence/ap-esp/native-ap-esp-new-01/manager.jsonl",
+      "size": 986804,
+      "sha256": "84264ca4fd5e9e2312a3ccb0babc5b5c385e26d0d33e74c15a47e3be3145ad0f"
+    },
+    {
+      "path": "docs/records/evidence/ap-esp/native-ap-esp-new-01/radio.pcap",
+      "size": 403415,
+      "sha256": "42ae9b623628585a3244aad5ec210e12730552e522551beb09c6de266a89de72"
+    },
+    {
+      "path": "docs/records/evidence/ap-esp/native-ap-esp-old-01/egress-observations.jsonl",
+      "size": 1254191,
+      "sha256": "442a2a313c9f7109a74d142f46ce2079681ce31b38c79db0c90afdae7159a44c"
+    },
+    {
+      "path": "docs/records/evidence/ap-esp/native-ap-esp-old-01/manager.jsonl",
+      "size": 1207234,
+      "sha256": "849cd39aff88febb5cfc34222e9870d74013b384fe8dcaec35a49dcaefbb54ba"
+    },
+    {
+      "path": "docs/records/evidence/ap-esp/native-ap-esp-old-01/radio.pcap",
+      "size": 504842,
+      "sha256": "be9aaa05f54345fa9e3e7e0baa3f8b9b09ebc0141440d25cd3b8e5da3330c272"
+    },
+    {
+      "path": "docs/records/evidence/ap-reporting/native-ap-report-01/egress-observations.jsonl",
+      "size": 4341362,
+      "sha256": "c2e05f665c2610e7ad74a229737417cd78c9c7e3e11033522a5ea376b712e8f8"
+    },
+    {
+      "path": "docs/records/evidence/ap-reporting/native-ap-report-01/forwarding-samples.jsonl",
+      "size": 10165448,
+      "sha256": "dbc1c83cf34e766da8328f5f1ecfbee56e12d38eb922d3957fac272cffeb2ea6"
+    },
+    {
+      "path": "docs/records/evidence/ap-reporting/native-ap-report-01/forwarding.pcap",
+      "size": 463530,
+      "sha256": "cba4e481186681245104279334aeadb37fb29be089179c6ef4dd757450ab9a8c"
+    },
+    {
+      "path": "docs/records/evidence/ap-reporting/native-ap-report-01/manager.jsonl",
+      "size": 10130778,
+      "sha256": "255972638b0da7fdca63237ea714f236c06e435556df244de1e4d609bea47762"
+    },
+    {
+      "path": "docs/records/evidence/ap-reporting/native-ap-report-01/radio.pcap",
+      "size": 2211772,
+      "sha256": "ddadd6e9cd58da549cb3ab3eadab64e5d520d649da159698055f0eb86176b5c1"
+    },
+    {
+      "path": "docs/records/evidence/ap-reporting/native-ap-report-02/egress-observations.jsonl",
+      "size": 4351150,
+      "sha256": "76b988ee1c0425dce736a77ce9c3a664049512fd793a67d2c6f490cf7697390a"
+    },
+    {
+      "path": "docs/records/evidence/ap-reporting/native-ap-report-02/forwarding-samples.jsonl",
+      "size": 10167806,
+      "sha256": "5251f844a8aafc8e659bf3866312bfca3c7b59a0bfffed717f0130fc37a85da6"
+    },
+    {
+      "path": "docs/records/evidence/ap-reporting/native-ap-report-02/forwarding.pcap",
+      "size": 463888,
+      "sha256": "8e4b80e767d5c3235b254e29d345f85b61a8ca628f60d1c948f0bd290bf8c13b"
+    },
+    {
+      "path": "docs/records/evidence/ap-reporting/native-ap-report-02/manager.jsonl",
+      "size": 10119506,
+      "sha256": "f6ef7ab0d72f5090241eb92955b08e5c60d73e42a93cc4b1d9428ec1ff50d17e"
+    },
+    {
+      "path": "docs/records/evidence/ap-reporting/native-ap-report-02/radio.pcap",
+      "size": 2211798,
+      "sha256": "d553786c74ac63faf8cd80efe51735da28f3ee53d238fa97ae4fd1dcf6905916"
+    },
+    {
+      "path": "docs/records/evidence/counter-accounting/native-counter-audit-01/radio.pcap",
+      "size": 1728598,
+      "sha256": "95ed0d8cf92371a3067f5b35b47e9a57ca3a656506f41519800592893efdeb50"
+    },
+    {
+      "path": "docs/records/evidence/egress-accounting/native-egress-01/egress-observations.jsonl",
+      "size": 1851102,
+      "sha256": "f68d30987722d67e5a20cd99fdc355ad7c645ba60695beb68f5b110141716a6e"
+    },
+    {
+      "path": "docs/records/evidence/egress-accounting/native-egress-01/forwarding-samples.jsonl",
+      "size": 2336687,
+      "sha256": "a405ca7fd03922ec5e53048d6042ea16502f45c84fa2e02e22a230b21d3ec109"
+    },
+    {
+      "path": "docs/records/evidence/egress-accounting/native-egress-01/forwarding.pcap",
+      "size": 466457,
+      "sha256": "9d58ef1c60c78026ad20b44efb16b070613aaab9a457bbbb8238f98cf8881e1c"
+    },
+    {
+      "path": "docs/records/evidence/egress-accounting/native-egress-01/manager.jsonl",
+      "size": 2606882,
+      "sha256": "af11ec2fff20149ca1a9bc512a33021a00875cdb481ab4d33a480857dfc53a59"
+    },
+    {
+      "path": "docs/records/evidence/egress-accounting/native-egress-01/radio.pcap",
+      "size": 2203685,
+      "sha256": "117ebf215ead3b8a727e3855eb9f6c50d68c5353376f565f147fc6accd167fb9"
+    },
+    {
+      "path": "docs/records/evidence/final-statistics/native-byte-counters-01/radio.pcap",
+      "size": 1642543,
+      "sha256": "b274ac6bb1aa914bf7d2af69d60a8b3eac7ed67aecd29f42d0243d1886182600"
+    },
+    {
+      "path": "docs/records/evidence/forwarding/native-forwarding-01/forwarding-samples.jsonl",
+      "size": 580619,
+      "sha256": "574c573ca34cb1f18fe0857addf736c3109557b267cd194f9c9acad84f67f471"
+    },
+    {
+      "path": "docs/records/evidence/forwarding/native-forwarding-01/forwarding.pcap",
+      "size": 475242,
+      "sha256": "9e46de48376ee8fde0f8af7838149b25b9cfcfb647512605d9ca39be96d38735"
+    },
+    {
+      "path": "docs/records/evidence/forwarding/native-forwarding-01/manager.jsonl",
+      "size": 967609,
+      "sha256": "d0fd5d106123104eddd357cda821db5ec3dceda1e6d2e5039ad3ee43c2c9b71f"
+    },
+    {
+      "path": "docs/records/evidence/forwarding/native-forwarding-01/radio.pcap",
+      "size": 2239563,
+      "sha256": "7e9794d39abbe5e5826177d93492a13c9cbd627521aca03729cb4521f07f3584"
+    },
+    {
+      "path": "docs/records/evidence/medium-loss/native-medium-loss-05/netlink.pcap",
+      "size": 11494216,
+      "sha256": "a8f44633d5062940b73dc385a5f65efe2d776e0d698b51191e52dddfdaae35f5"
+    },
+    {
+      "path": "docs/records/evidence/medium-loss/native-medium-loss-05/radio.pcap",
+      "size": 2356772,
+      "sha256": "7d1c26848d8182917baba16f927c03b0ae1ab445fc06be4a2c21e76849b450ba"
+    },
+    {
+      "path": "docs/records/evidence/native-active/run-03/radio.pcap",
+      "size": 1091243,
+      "sha256": "a8ca646dd6eeb0370f81617b41626277448b05dc32de5833a1adc76955bf9e6c"
+    },
+    {
+      "path": "docs/records/evidence/native-lifecycle/native-lifecycle-soak-01/egress-observations.jsonl",
+      "size": 16215006,
+      "sha256": "7d71ee1dffa589e8e05a9b719b332c4127066c150a8c6c0078cb1aa76762b749"
+    },
+    {
+      "path": "docs/records/evidence/native-lifecycle/native-lifecycle-soak-01/forwarding-samples.jsonl",
+      "size": 43953798,
+      "sha256": "01161e7a22bdf3bb35dbf0367060739758dee58b958bd68c1a01e9c113b67be0"
+    },
+    {
+      "path": "docs/records/evidence/native-lifecycle/native-lifecycle-soak-01/forwarding.pcap",
+      "size": 1971599,
+      "sha256": "2c07f1593a92fadd5100fc5a841f8d536b0a588b6785313951486181f080e381"
+    },
+    {
+      "path": "docs/records/evidence/native-lifecycle/native-lifecycle-soak-01/manager.jsonl",
+      "size": 40712377,
+      "sha256": "36115728a15b9727eff15f29f3ec2c2cbc7ff8392a37c5c47e8fcb061fb3f059"
+    },
+    {
+      "path": "docs/records/evidence/native-lifecycle/native-lifecycle-soak-01/radio.pcap",
+      "size": 8556084,
+      "sha256": "7984912ecfac52f1906841f520b75b8b571fea6f9df40dd9d0bb3c9d54c6d9a7"
+    },
+    {
+      "path": "docs/records/evidence/native-onboarding/run-05/radio.pcap",
+      "size": 350566,
+      "sha256": "1be5a16edf13bb032a2d0d56a3c66f0ccd1c068189f1f76a7b76f092157d8a53"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-01-limited/egress-observations.jsonl",
+      "size": 4369932,
+      "sha256": "d17748f6fd5efd55aff447d967ae2dd5b9d620d7fdf66ec1638643de81505be5"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-01-limited/forwarding-samples.jsonl",
+      "size": 10102788,
+      "sha256": "b83d3fd79482ee4e632012498303628b411247a8c720676854312bb3e009813e"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-01-limited/forwarding.pcap",
+      "size": 464322,
+      "sha256": "2297652214020807d621f9321dfb5fa9589af47653678f584700d5af53b5b4e4"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-01-limited/manager.jsonl",
+      "size": 10112622,
+      "sha256": "0d2b30c458d1de78806a6ce940cc5548f10708a308f7457857df77db3385f04b"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-01-limited/radio.pcap",
+      "size": 2220241,
+      "sha256": "b4c0fec92d5835cd5d2492703c4c92e9b32db69a1e6f5ba69846f7f2d8f05c9a"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-02-limited/egress-observations.jsonl",
+      "size": 4549446,
+      "sha256": "473234a3141f8ea62037213e744c3ca46c204117aae8af4ed04d0c5e7f8199d9"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-02-limited/forwarding-samples.jsonl",
+      "size": 10668677,
+      "sha256": "214df2bc7a40dc334f1971618ad016395cbc76c5c434101653139932011de31f"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-02-limited/forwarding.pcap",
+      "size": 463870,
+      "sha256": "6ad24e630d43e9fbf1d0914e581668e73e1f4ce8803c6cb9ce87bf1198771ba7"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-02-limited/manager.jsonl",
+      "size": 10618423,
+      "sha256": "356a2b76cf3d0473fb23d955678c1d32b3be2d7ceb9cbfd0de6682d6dfe12c21"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-02-limited/radio.pcap",
+      "size": 2293472,
+      "sha256": "a78ef527f9a8a95bb19edcf85758d607fe98fe336f02cda1469777f55275a234"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-03-limited/egress-observations.jsonl",
+      "size": 4637906,
+      "sha256": "a2c924a1e34f05bae5dacbf56d6820d97494a45400ea18bd4a482f31611e7a54"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-03-limited/forwarding-samples.jsonl",
+      "size": 10983274,
+      "sha256": "d2aba0dbfebd55d0e1b99f0062147b7f3333eed0b16594fd22b69ddffa7d58c2"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-03-limited/forwarding.pcap",
+      "size": 477767,
+      "sha256": "317c5fc328f95b953e55db6fdbdebf1540b3f8b5828db667961bd60da662cc20"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-03-limited/manager.jsonl",
+      "size": 10898340,
+      "sha256": "00da5765ae84b468225bf75fa986a894a2db383601ec140417cf52bc0ffe17b1"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-03-limited/radio.pcap",
+      "size": 2346605,
+      "sha256": "eefea98af48c5db2517f9a8559c0dad24aa003443647af60d46fb12e64a52a5d"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-04/egress-observations.jsonl",
+      "size": 4370863,
+      "sha256": "831204b597c91c1d9703f397cb363479721267895a7ca87180c2aa05a419affe"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-04/forwarding-samples.jsonl",
+      "size": 10133365,
+      "sha256": "d8ba68ff8a514ae24a8100324d447902e72b53c8fc99d23694a62d3c941ea0a0"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-04/forwarding.pcap",
+      "size": 463268,
+      "sha256": "1170bdcabc38d3e575972fc7ebd1b69dbcf0aeda051e40fb342fb7426c2fa370"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-04/manager.jsonl",
+      "size": 10112527,
+      "sha256": "6585531326e488a6b8f9a000e220b05432122b5d70d57a7b88f8b8ef5cb24a62"
+    },
+    {
+      "path": "docs/records/evidence/native-peer-metrics/native-peer-metrics-04/radio.pcap",
+      "size": 2213452,
+      "sha256": "0532a6276a37651dc08e60e7f9bf4bcd867ed1a5612ec02a3d226682ed38bcb2"
+    },
+    {
+      "path": "docs/records/evidence/native-soak/run-01/manager.jsonl",
+      "size": 686555,
+      "sha256": "692b0b0a406c58cc1a0d66125a4e50d805320909263e636a0f081dd11e21f0f0"
+    },
+    {
+      "path": "docs/records/evidence/native-soak/run-01/radio.pcap",
+      "size": 8608359,
+      "sha256": "3478b76724e51c22e149d514d21b39e8b5ae7e4ad05ac4babd794a1fa294e52a"
+    },
+    {
+      "path": "docs/records/evidence/neighbor-binding/native-link-binding-03-limited/forwarding-samples.jsonl",
+      "size": 989554,
+      "sha256": "e7d4fe8f2670b7f452866f9e98035da43ad3be3bb26e040f1fddd742a6eca94e"
+    },
+    {
+      "path": "docs/records/evidence/neighbor-binding/native-link-binding-03-limited/forwarding.pcap",
+      "size": 478692,
+      "sha256": "d0894a6ca128fbd12f671b9b6e304dcc01382e40c6ef9986bdc12b76a5dfbcc2"
+    },
+    {
+      "path": "docs/records/evidence/neighbor-binding/native-link-binding-04/forwarding-samples.jsonl",
+      "size": 1045184,
+      "sha256": "a1872b8fd04dbd4da59524e37fd27afba8e04a3ae24520b8f187b7d11b288782"
+    },
+    {
+      "path": "docs/records/evidence/neighbor-binding/native-link-binding-04/forwarding.pcap",
+      "size": 477540,
+      "sha256": "a3621bb0f5e8ded7ee5c16c625ed3a8c58bcac1fa93ad8557df22623d7a423c1"
+    },
+    {
+      "path": "docs/records/evidence/neighbor-binding/native-link-binding-04/manager.jsonl",
+      "size": 1308446,
+      "sha256": "c0a69cbbc211eff65a001b84bff2fe7922ce6623cc8ffd6b5d4c45c12700d3d5"
+    },
+    {
+      "path": "docs/records/evidence/neighbor-binding/native-link-binding-04/radio.pcap",
+      "size": 2335905,
+      "sha256": "c7a360a990dfbbe369f59d1e054f399e7a56e77a8670e36b97676fc60e0eac31"
+    },
+    {
+      "path": "docs/records/evidence/neighbor-metrics/native-neighbor-01/radio.pcap",
+      "size": 2240422,
+      "sha256": "7d620eb5634de28f5b970b26385a10623bfcc7edea6ea0184cc4c8f0ea161902"
+    },
+    {
+      "path": "docs/records/evidence/opensync-lab-proof/fleet-m7-03/timeline.jsonl",
+      "size": 283035,
+      "sha256": "6d2cd032bf7869a888a143ecefc76171d867e4486ba84fa8f6135e79810bafee"
+    },
+    {
+      "path": "docs/records/evidence/opensync-lab-proof/gtp-m7-01/timeline.jsonl",
+      "size": 360095,
+      "sha256": "695fc72e377a97e601e7a3b1d82d48bde550882131c42007c95ef9702844afd3"
+    },
+    {
+      "path": "docs/records/evidence/peer-baseline/samples/wired/radio.pcap",
+      "size": 1363555,
+      "sha256": "042c6d656e1ab5628270478a6aff8ed76a56e41d1d556c74d735c85144ee2082"
+    },
+    {
+      "path": "docs/records/evidence/peer-baseline/samples/wireless/radio.pcap",
+      "size": 1628315,
+      "sha256": "c3107c9f8580bbb906cf2a94aacc8c7b547e42716bbc244e194db7d2a37917a8"
+    },
+    {
+      "path": "docs/records/evidence/receive-accounting/native-receive-01/egress-observations.jsonl",
+      "size": 1863969,
+      "sha256": "95c7b8bd393a09f6399e0372ed4f60fae45f369ae31a0ecca895f1491710e165"
+    },
+    {
+      "path": "docs/records/evidence/receive-accounting/native-receive-01/forwarding-samples.jsonl",
+      "size": 2668302,
+      "sha256": "ba0c0e10f71743a9b7c8dccc49c89d227ebbe59082f6130ded44c643bc0bed1d"
+    },
+    {
+      "path": "docs/records/evidence/receive-accounting/native-receive-01/forwarding.pcap",
+      "size": 467073,
+      "sha256": "a1e766b112260396f535f419b3402f21352ae6109b62626dbf2c3b501e9882e7"
+    },
+    {
+      "path": "docs/records/evidence/receive-accounting/native-receive-01/manager.jsonl",
+      "size": 2618767,
+      "sha256": "84534c42bbb301a5abccffbc1da37e7d31ccd79a6ad84a023bbcba49918184ba"
+    },
+    {
+      "path": "docs/records/evidence/receive-accounting/native-receive-01/radio.pcap",
+      "size": 2213417,
+      "sha256": "ea5989da4d0e4609ad015b19860f7cb5e97bd7b3213ad479d11e1232e7d0cb26"
+    },
+    {
+      "path": "docs/records/evidence/reporting-policy/native-policy-receipt-01/radio.pcap",
+      "size": 2213443,
+      "sha256": "ad65a11b45f65bf05b065f49417b6ce83e1c6f49534abead9774cd3b1c2e1efe"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-01/egress-observations.jsonl",
+      "size": 4418298,
+      "sha256": "a8d646e863601955b92d77e7e3840a79487c7af13d3484b27055e76f85310f34"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-01/forwarding-samples.jsonl",
+      "size": 10023527,
+      "sha256": "8d0fb55ec6fa4f7f33901cae4f177e77deccb1f30e1516fdedc91f1bd24a5e29"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-01/forwarding.pcap",
+      "size": 466546,
+      "sha256": "44d1dc531775150b635b2e340ac433b71f733c4221335cd0dcde6c2d7b675525"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-01/manager.jsonl",
+      "size": 10036238,
+      "sha256": "eb3b69aa7d05080f18fe698745391fd4d3a7fc9c19ca7e67a2423746878e38dd"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-01/radio.pcap",
+      "size": 2242692,
+      "sha256": "b0faad5480ed5b6f20db48e5b279eaf2d372c72ed3bac3fd1c13d2b03417132c"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-02/egress-observations.jsonl",
+      "size": 1189546,
+      "sha256": "ce1ed5a23e6fd679f4731fa75f1b48e57780ba741816a31bcd52d63c1ee45583"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-02/forwarding-samples.jsonl",
+      "size": 1330014,
+      "sha256": "b6e9913ff496c243b0aecdfd1223b44f8e0073ac9cccbe62453b9446454614b2"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-02/manager.jsonl",
+      "size": 1877045,
+      "sha256": "d477a27e23f7cffe5b7c6568d2b3383c703b45a370c5b1a7606a5640e68b3a2b"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-02/radio.pcap",
+      "size": 488546,
+      "sha256": "518581b1f1efd631c542dd849e52ac0d07a957d26a14ff30a68e02565690f822"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-03/egress-observations.jsonl",
+      "size": 4429788,
+      "sha256": "918efd080946afa391c447e3250ce5c0e443f50404e607d95cfaea4b03012e60"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-03/forwarding-samples.jsonl",
+      "size": 10044306,
+      "sha256": "6c212778a628c5d8c7387bf3cefa438c3fdab8a8401a94d55cd07cd4bc7e25af"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-03/forwarding.pcap",
+      "size": 466540,
+      "sha256": "fc31585466cb3e0a3abdaac1e03216b478ad4f9f02384934553490e606abac82"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-03/manager.jsonl",
+      "size": 9991241,
+      "sha256": "a4e6ded0937fc7133665e1f301090f1ef2a7e9bd7ed7abcc5b25e9fbb3391109"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-03/radio.pcap",
+      "size": 2237977,
+      "sha256": "3b23167a97c3ec2a1e2a5e4b5b434cca55bed0af374e94caf77c34064282cc39"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-04/egress-observations.jsonl",
+      "size": 16450248,
+      "sha256": "1cad731e50b29a46eaa183810f70ab13e3f81d841c09069694583ea344be1f9a"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-04/forwarding-samples.jsonl",
+      "size": 43449174,
+      "sha256": "53a3d473630228e0e14b2b400c4f23de8d20b87c17473aff5531037229836722"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-04/forwarding.pcap",
+      "size": 1969224,
+      "sha256": "5811fc2a6d9cf4846376b92480f25c55cb0bb485d7f10bd3c006db14482fc35a"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-04/manager.jsonl",
+      "size": 40253655,
+      "sha256": "79378200b2e1288ad48ee4922842de7fb26cce81aef4ca74167e18ee2db1312e"
+    },
+    {
+      "path": "docs/records/evidence/session-reasons/native-reason-04/radio.pcap",
+      "size": 8646514,
+      "sha256": "5e2645ba9429b05da8f63875d6c45748b460aec96534e44695c55a5903b37dce"
+    },
+    {
+      "path": "docs/records/evidence/shaped-backhaul/native-shaped-01/egress-observations.jsonl",
+      "size": 1940490,
+      "sha256": "4db4e1bfe166a4342c873d96ae030cf0ad313d8d407cd9bff377aea819e6a16e"
+    },
+    {
+      "path": "docs/records/evidence/shaped-backhaul/native-shaped-01/forwarding-samples.jsonl",
+      "size": 3200769,
+      "sha256": "165ac68f605d9e98fb8892655d335d100b8a1d5981c653e4a07abdaab360165f"
+    },
+    {
+      "path": "docs/records/evidence/shaped-backhaul/native-shaped-01/forwarding.pcap",
+      "size": 466015,
+      "sha256": "de06d69958c77036fefc63a10c2250f738206ed43a668cc21914a9081020e38e"
+    },
+    {
+      "path": "docs/records/evidence/shaped-backhaul/native-shaped-01/manager.jsonl",
+      "size": 2682609,
+      "sha256": "13bdc21e1672d721d62feeada4a3e0e6b73d08162c9836635b4b96b32bd1c014"
+    },
+    {
+      "path": "docs/records/evidence/shaped-backhaul/native-shaped-01/radio.pcap",
+      "size": 2210456,
+      "sha256": "4bb66f6d5b052a9837e1e9e82f56f1bb6a1330f07d3d54160109bd07b226902d"
+    },
+    {
+      "path": "docs/records/evidence/shaped-backhaul/shaped-queue-02/backhaul.pcap.gz",
+      "size": 1196514,
+      "sha256": "e3f1193ac9b4c1ebb9181729a9ae3823416065e5737518937606d342dcea0ab8"
+    },
+    {
+      "path": "docs/records/evidence/shaped-backhaul/shaped-queue-02/offered.pcap.gz",
+      "size": 1509092,
+      "sha256": "8700ba1ed53cb88d3ea99f6f6b8d892c43a72e697541b1548980300af517290f"
+    },
+    {
+      "path": "docs/records/evidence/station-removal/native-final-source-01/radio.pcap",
+      "size": 1714024,
+      "sha256": "448913a19bb5a3b9797a288d2e655e6fe4d90decc66999bb8de3b41539bc6ac7"
+    },
+    {
+      "path": "docs/records/evidence/telemetry-freshness/native-telemetry-gap-01/radio.pcap",
+      "size": 2230463,
+      "sha256": "72ae3ea393ceb54af1d5831a9a28780aa8e08e16b6675d183a8516e0d6312a69"
+    },
+    {
+      "path": "docs/records/evidence/tx-status/native-tx-status-01/netlink.pcap",
+      "size": 11159512,
+      "sha256": "da06b4633b99eab0023b90cf186298453285c6820af4be9d0a1f27b1363c1888"
+    },
+    {
+      "path": "docs/records/evidence/tx-status/native-tx-status-01/radio.pcap",
+      "size": 2288134,
+      "sha256": "77210bf69717976ff8c91b2cead726b065732eab6730210da13b5ece330e9046"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/native-capacity-01-limited/egress-observations.jsonl",
+      "size": 1893704,
+      "sha256": "92299df00d400b0bb879c18921a2b00848364d2e3169b67d2e61af71db496bb2"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/native-capacity-01-limited/forwarding-samples.jsonl",
+      "size": 2415790,
+      "sha256": "070c17a694060c08f29e1891e001d4f24bf65bc224ea3588e2589177efb523f7"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/native-capacity-01-limited/forwarding.pcap",
+      "size": 465881,
+      "sha256": "0baff0ee24c140a1fa6b501905b2f3f2ad8424a71f75b461dec4b8b6bea8ba26"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/native-capacity-01-limited/manager.jsonl",
+      "size": 2657518,
+      "sha256": "9c2440ec3e638203aa6ab9b9278878def13d2dee212f118fdfa2dc1471e3f658"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/native-capacity-01-limited/radio.pcap",
+      "size": 2219046,
+      "sha256": "912cb4a4df3fb2ced570acaadf85a949cbc7af695b1e2b19da3e9a6e2da8fcbc"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/native-capacity-02/egress-observations.jsonl",
+      "size": 2073302,
+      "sha256": "14a89dc8c3838335aa5ad85ab9b519aaebe0b8950370f1ef46c11e0ce31dfcb7"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/native-capacity-02/forwarding-samples.jsonl",
+      "size": 2972219,
+      "sha256": "768ff7ae9eb5fe0d48f75fb02b6b1d38631c74acac32e908d6afc52f68698618"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/native-capacity-02/forwarding.pcap",
+      "size": 477544,
+      "sha256": "0cc8ff02205b47fc0b9ae6186fc2fbb48d8cf661443bf9ffbd9337f1e4227369"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/native-capacity-02/manager.jsonl",
+      "size": 2881890,
+      "sha256": "50d176aee9a790892ce1402ea86907001af0bcf04f554b495789872617d54dc8"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/native-capacity-02/radio.pcap",
+      "size": 2337141,
+      "sha256": "3233be4c7614c331c7b6d54896f106178cc6501adfbe325cf3b0c1254df00798"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/virtual-link-03/backhaul.pcap.gz",
+      "size": 1154290,
+      "sha256": "a6e65437f1aa21659316874c6e0a0e24a3eb0f40dddc033f77d6b81c0d2d9cea"
+    },
+    {
+      "path": "docs/records/evidence/virtual-capacity/virtual-link-03/offered.pcap.gz",
+      "size": 1135816,
+      "sha256": "d8cb704fe97a096091925b6ce29914c3d66ec65badfaa99ca24d2ff7b4b41758"
+    }
+  ]
+}

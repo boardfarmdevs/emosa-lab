@@ -8,6 +8,12 @@ changing their contents. Dates, source hashes, test counts and paths inside
 historical records describe their original executions; use the current guides
 for navigation and commands.
 
+**Raw files outside git.** The large raw captures and recordings (pcap and jsonl files over
+256 KB: 117 files, 547 MB) are kept in a release of this repository since 2 October 2026,
+not in git. [external.json](external.json) lists each with its size and SHA-256 (the
+artifact manifest above has their digests too). Put them back, checked, with
+`python3 scripts/fetch-evidence.py`; the tests and CI do this first.
+
 | Collection | Entry point |
 | --- | --- |
 | EMOSA in the RDK lab, 25 to 29 Sep 2026 | [The first pod, the 24-room qualification, the room suite with Python, C and mixed agents](rdk-lab/README.md) |
