@@ -166,7 +166,8 @@ identities when reproducing the run.
 
 Open the [wired IEEE 1905 capture](evidence/peer-baseline/samples/wired/ethernet.pcap),
 [wireless IEEE 1905 capture](evidence/peer-baseline/samples/wireless/ethernet.pcap)
-or [wireless radio capture](evidence/peer-baseline/samples/wireless/radio.pcap)
+or wireless radio capture (`evidence/peer-baseline/samples/wireless/radio.pcap`, kept outside
+git: [external.json](evidence/external.json); `python3 scripts/fetch-evidence.py` puts it back)
 in Wireshark. Their companion TSV files identify discovery, WSC, WPS and
 four-address observations; the sample indexes retain the unedited capture hashes.
 
