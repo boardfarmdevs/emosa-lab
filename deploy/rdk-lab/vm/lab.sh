@@ -40,17 +40,24 @@
 #                                     bpiap-004) with the pods (meta-cmf worlds-pods), or the lab's
 #                                     own standard rooms (pods stopped, controller rows removed;
 #                                     meta-cmf worlds-wired)
-#   lab.sh up [python|c]              the EMOSA option of the RDK lab, every step in order: lanport,
+#   lab.sh up [python|c] [gateway]    the EMOSA option of the RDK lab, every step in order: lanport,
 #                                     emosa, (implementation), fleet, gtp, pod-1 and pod-2, medium,
 #                                     telemetry, backhaul wifi, rooms pods (meta-cmf
 #                                     gen/vm/lxd/build.sh emosa runs it, with EASYMESH_EMOSA_AGENT).
 #                                     python or c: the adapter's implementation, its fleet, GTP and
-#                                     agents (c: the kits install no Python); none: as installed
+#                                     agents (c: the kits install no Python); none: as installed.
+#                                     gateway (with c): then EMOSA's fleet and agents into the
+#                                     gateway, from its image (gateway.sh on), and the rooms again
+#                                     (meta-cmf EASYMESH_EMOSA_IN=gateway). While EMOSA runs in the
+#                                     gateway, the steps that write its configuration (emosa, fleet,
+#                                     agent, implementation, telemetry, backhaul) refuse: gateway.sh
+#                                     off first
 #   lab.sh status
 # SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 exec </dev/null
 export PATH=/snap/bin:$PATH
+HERE=$(cd "$(dirname "$0")" && pwd)
 ART=/opt/emosa-lab
 IMAGE=${EMOSA_IMAGE:-ubuntu:24.04}
 CTL=${EMOSA_RDK_CONTROLLER:-bpibroadband}
@@ -73,6 +80,9 @@ else
 fi
 LOCK=/run/easymesh-hwsim-allocator.lock                     # the RDK lab's own allocator lock
 UPSTREAM=${EMOSA_POD_UPSTREAM:-bpibroadband/wifi1.1}          # the backhaul BSS a pod on Wi-Fi joins
+# RDK's controller sends each agent it knows a Topology Query every 15 s (16 s at most,
+# rdk-emosa-1002, 4 Oct); one it forgot in a restart gets none: onboarding again after 120 s
+TOPOLOGY_QUERY_WINDOW=${EMOSA_TOPOLOGY_QUERY_WINDOW:-120}
 LOG_TAG=emosa-rdk
 # the pods' telemetry: 5 s client reports and survey, published every 5 s
 TELEMETRY_OPTIONS='"reporting_interval": 5, "sampling_interval": 5, "publish_interval": 5, "survey": true'
@@ -276,6 +286,7 @@ EOF
 }
 
 emosa() {
+    in_container
     adapter_container isc-dhcp-client mosquitto mosquitto-clients
     has_device emosa emlan ||
         lxc config device add emosa emlan nic nictype=bridged parent="$(lan_bridge)" name=emlan >/dev/null
@@ -312,6 +323,7 @@ agent() {    # agent POD python|c: the implementation of POD's agent
     local pod=${1:?usage: lab.sh agent POD python|c} bin
     bin=$(agent_binary "${2:-}") || die "usage: lab.sh agent POD python|c"
     exists emosa || die "run: lab.sh emosa"
+    in_container
     cx emosa test -f "/etc/emosa/$pod.json" || die "no agent for $pod (lab.sh status lists them)"
     implementation_one "$pod" "$bin"
     log "agent: $pod runs $bin"
@@ -333,8 +345,10 @@ controller_al() {    # the RDK controller's AL MAC, from the lab's own topology 
 fleet() {
     local al
     al=$(controller_al) || die "the lab's topology names no single controller"
-    fleet_config "$FLEET_PORT" "${AGENTS[0]}" "${AGENTS[1]}" "$al" r1 true shared "$(pods_json)"
-    log "fleet: front $WAN_HOST:$FLEET_PORT, agents ${AGENTS[0]}-${AGENTS[1]}, controller $al (r1, multi-BSS)"
+    fleet_config "$FLEET_PORT" "${AGENTS[0]}" "${AGENTS[1]}" "$al" r1 true shared "$(pods_json)" \
+        "$TOPOLOGY_QUERY_WINDOW"
+    log "fleet: front $WAN_HOST:$FLEET_PORT, agents ${AGENTS[0]}-${AGENTS[1]}, controller $al (r1, multi-BSS," \
+        "onboarding again after ${TOPOLOGY_QUERY_WINDOW} s without a Topology Query)"
 }
 
 gtp() {
@@ -466,6 +480,7 @@ PY
 backhaul() {    # backhaul wired|wifi [POD...]: the pods' uplink
     local mode=${1:-} pods pod serial
     case $mode in wired|wifi) ;; *) die "usage: lab.sh backhaul wired|wifi [POD...]" ;; esac
+    in_container    # the fleet's per-pod settings change
     shift
     pods=${*:-$(pods_running)}
     [ -n "$pods" ] || die "no pod is running"
@@ -497,12 +512,20 @@ backhaul() {    # backhaul wired|wifi [POD...]: the pods' uplink
 rbus() {    # rbus GET|METHOD ARGS...: the controller's data model, CR LF stripped
     cx "$CTL" rbuscli "$@" 2>/dev/null | tr -d '\r'
 }
+agent_status() {    # agent_status SERIAL KEY...: a value of the agent's status, wherever EMOSA runs
+    local serial=$1
+    shift
+    cx "$(emosa_where)" python3 -c 'import json, sys
+value = json.load(open(sys.argv[1]))
+for key in sys.argv[2:]:
+    value = value[key]
+print(value)' "$(emosa_root)/$serial/status.json" "$@" 2>/dev/null
+}
 agent_al() {    # the AL MAC of POD's EMOSA agent
     local serial
     serial=$(pod_serial "$1")
     [ -n "$serial" ] || die "$1: no serial (OpenSync not up)"
-    cx emosa python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["agent_al"])' \
-        "/var/lib/emosa/$serial/status.json" 2>/dev/null
+    agent_status "$serial" agent_al
 }
 move() {    # move POD TARGET: the controller steers POD's backhaul station to TARGET
     local pod=${1:-} target=${2:-} bssid al n i id
@@ -533,8 +556,7 @@ move() {    # move POD TARGET: the controller steers POD's backhaul station to T
         TargetBSS string "$bssid" Channel int32 36 TimeOut int32 30 | tail -3
     for _ in $(seq 24); do
         sleep 5
-        [ "$(cx emosa python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["uplink"]["parent"])' \
-            "/var/lib/emosa/$(pod_serial "$pod")/status.json" 2>/dev/null)" = "$bssid" ] &&
+        [ "$(agent_status "$(pod_serial "$pod")" uplink parent)" = "$bssid" ] &&
             { log "move: $pod on $bssid"; return; }
     done
     die "$pod did not move to $bssid within 2 minutes"
@@ -597,8 +619,8 @@ medium() {
 pods_running() { lxc list -c n -f csv | grep -E '^pod-[0-9]+$' || true; }
 
 agents_provisioned() {    # the number of EMOSA agents whose session is provisioning
-    # either agent's file: any whitespace after the colon
-    cx emosa sh -c 'grep -lE "\"state\":[[:space:]]*\"provisioning\"" /var/lib/emosa/*/status.json 2>/dev/null | wc -l'
+    # either agent's file: any whitespace after the colon; wherever EMOSA runs
+    cx "$(emosa_where)" sh -c "grep -lE '\"state\":[[:space:]]*\"provisioning\"' '$(emosa_root)'/*/status.json 2>/dev/null | wc -l"
 }
 wait_agents() {    # every running pod's agent provisioned (at most 5 minutes)
     local n
@@ -646,7 +668,7 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
     pods)
         systemctl stop "$ROOM"
         for pod in $(lxc list -c n -f csv | grep -E '^pod-[0-9]+$'); do start_guarded "$pod"; done
-        cx emosa systemctl start emosa-fleet
+        cx "$(emosa_where)" systemctl start emosa-fleet
         n=$(pods_running | wc -l)
         wait_agents
         medium    # pins the pods' backhaul links now that their stations exist
@@ -664,7 +686,7 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         log "rooms: $1 ($n pods); suite: EASYMESH_ROOM_WORLDS_ROOT=$MEDIUM_CONFIGURATOR/worlds-$1" ;;
     native)
         systemctl stop "$ROOM"
-        cx emosa sh -c 'systemctl stop emosa-fleet "emosa-agent@*"'
+        cx "$(emosa_where)" sh -c 'systemctl stop emosa-fleet "emosa-agent@*"'
         for pod in $(pods_running); do lxc stop "$pod"; done
         forget_pods
         room_manifest native
@@ -675,27 +697,41 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
 }
 
 uplinks_applied() {    # every running pod's agent on its Wi-Fi uplink (EMOSA's option 1 applied)
-    cx emosa python3 -c '
+    cx "$(emosa_where)" python3 -c '
 import glob, json, sys
-for path in glob.glob("/var/lib/emosa/*/status.json"):
+for path in glob.glob(sys.argv[1] + "/*/status.json"):
     uplink = json.load(open(path)).get("uplink") or {}
     if uplink.get("uplink") != "multi-ap" or (uplink.get("operation") or {}).get("state") != "OBSERVED_APPLIED":
-        sys.exit(1)'
+        sys.exit(1)' "$(emosa_root)"
 }
 wait_uplinks() {    # the pods' Wi-Fi uplinks applied (at most 3 minutes)
     for _ in $(seq 36); do uplinks_applied && return; sleep 5; done
     return 1
 }
 
-up() {    # up [python|c]: the EMOSA option of the RDK lab, every step in order (each completes a partial run)
-    local pod impl=${1:-}
-    [ -z "$impl" ] || agent_binary "$impl" >/dev/null || die "usage: lab.sh up [python|c]"
+up() {    # up [python|c] [gateway]: the EMOSA option of the RDK lab, every step in order (each completes a partial run)
+    local pod impl=${1:-} place=${2:-container}
+    [ -z "$impl" ] || agent_binary "$impl" >/dev/null || die "usage: lab.sh up [python|c] [gateway]"
+    case $place in
+        container) ;;
+        gateway) [ "$impl" = c ] || die "EMOSA in the gateway is the image's C adapter: lab.sh up c gateway" ;;
+        *) die "usage: lab.sh up [python|c] [gateway]" ;;
+    esac
     # the adapter's implementation: the kits in emosa and em-gtp (c: no Python), then the agents
     [ -z "$impl" ] || export EMOSA_IMPLEMENTATION=$impl
     [ "$(lxc config get bpiap-004 user.easymesh.backhaul 2>/dev/null)" = wired ] ||
         die "the option needs the lab's wired extender (meta-cmf EASYMESH_WIRED_EXTENDERS=1)"
     [ -f "$ART/adapter-kit.tar.gz" ] && ls "$ART"/pod/*.rootfs.tar.gz >/dev/null 2>&1 ||
         die "nothing staged in $ART: deploy/rdk-lab/lab.sh stage (host side)"
+    if in_gateway; then
+        [ "$place" = gateway ] || die "EMOSA runs in $CTL: lab.sh up c gateway, or gateway.sh off first"
+        # again, e.g. after the gateway was deployed anew: its forwarding back, the rooms
+        bash "$HERE/gateway.sh" on
+        rooms pods
+        wait_uplinks || die "the pods' Wi-Fi uplinks did not apply (lab.sh status)"
+        status
+        return
+    fi
     lanport
     emosa
     [ -z "$impl" ] || implementation "$impl"    # before the fleet starts the agents
@@ -717,6 +753,14 @@ up() {    # up [python|c]: the EMOSA option of the RDK lab, every step in order 
         wait_uplinks || die "the pods' Wi-Fi uplinks did not apply (lab.sh status)"
     fi
     log "uplinks: every pod on its Wi-Fi backhaul"
+    if [ "$place" = gateway ]; then
+        # the gateway's own EMOSA (its image's package) takes the registry and the state over;
+        # the broker and the GTP stay. The rooms settle again with the agents in the gateway.
+        bash "$HERE/gateway.sh" on
+        rooms pods
+        wait_uplinks || die "the pods' Wi-Fi uplinks did not apply with EMOSA in $CTL (lab.sh status)"
+        log "gateway: EMOSA in $CTL, every pod on its Wi-Fi backhaul"
+    fi
     status
 }
 
@@ -726,7 +770,11 @@ status() {
     for pod in $(pods_running); do
         echo "$pod backhaul: $(lxc config get "$pod" user.emosa.backhaul | sed 's/^$/wired/')"
     done
-    if exists emosa; then
+    echo "EMOSA runs in: $(emosa_where)"
+    if in_gateway; then
+        fleet_cli list 2>/dev/null || true
+        echo "adapter: $(cx "$CTL" /usr/bin/emosa-agent-c --version 2>/dev/null || echo 'none in the gateway')"
+    elif exists emosa; then
         fleet_cli list 2>/dev/null || true
         cx emosa sh -c 'sed -n "s/^EMOSA_IMPLEMENTATION=/adapter: /p" /etc/default/emosa-implementation 2>/dev/null
             for f in /etc/default/emosa-*; do
@@ -748,5 +796,5 @@ case ${1:-} in
     telemetry) shift; telemetry "$@" ;;
     repod) shift; repod "$@" ;;
     client) shift; client "$@" ;;
-    *) sed -n '2,47p' "$0"; exit 1 ;;
+    *) sed -n '2,55p' "$0"; exit 1 ;;
 esac

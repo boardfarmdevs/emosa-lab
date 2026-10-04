@@ -46,12 +46,9 @@ EMOSA is licensed under the Apache License 2.0 ([LICENSE](../../LICENSE)).
 - The rest of EMOSA in the gateway (plan 9.6): the gateway image now runs EMOSA with its
   configuration and state on `/nvram` ([the rdk-lab record](../records/evidence/rdk-lab/README.md));
   still open are the GTP in the gateway (OneWifi's pod-backhaul SSID on an isolated
-  segment), a broker for the pods' statistics, EMOSA's configuration through RDK's data
-  model, and the fleet starting its registry's agents itself after an image upgrade.
-- A controller that restarts forgets the agents but keeps querying them, so spec §2.5's
-  silence rule never fires and the pods stay out of its topology until their agents
-  restart (seen with RDK, 4 October): a renewal rule for it, e.g. no Topology Query while
-  `provisioning`, in the specification, both implementations and a box scenario.
+  segment), a broker for the pods' statistics, and EMOSA's configuration through RDK's
+  data model. A lab built with `EASYMESH_EMOSA_IN=gateway` (meta-cmf) runs EMOSA in the
+  gateway from its image.
 - What the specification leaves out (spec §9) and the design's known limitations
   (design §14): among them backhaul link metrics, complete EasyMesh AP and station
   metrics from a hwsim pod, 5/6 GHz and WPA3.

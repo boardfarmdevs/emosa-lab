@@ -57,10 +57,35 @@ install_kit() {    # install_kit CT: the adapter kit, installed in CT
         /root/adapter-kit/install.sh'
 }
 
-fleet_cli() {    # fleet_cli COMMAND [ARGS...]: the installed fleet's command (list, forget)
-    cx emosa sh -c 'set -a; . /etc/default/emosa-implementation 2>/dev/null || true
+# --- where EMOSA runs: the adapter container, or the RDK lab's gateway -----------------------
+
+# The RDK lab can move EMOSA's fleet and agents into its gateway (CTL, the controller's
+# container: deploy/rdk-lab/vm/gateway.sh), which marks it with $STATE/gateway.
+in_gateway() { [ -n "${CTL:-}" ] && [ -f "$STATE/gateway" ]; }
+emosa_where() { if in_gateway; then echo "$CTL"; else echo emosa; fi; }
+# the steps that write the adapter container's EMOSA configuration: not while it runs in
+# the gateway, whose configuration is the one gateway.sh on took over
+in_container() {
+    ! in_gateway || die "EMOSA runs in $CTL: gateway.sh off first, then this, then gateway.sh on"
+}
+
+# emosa_layout CT: CT's places as its package names them in /etc/default/emosa (c/README.md),
+# or the adapter kit's: the fleet configuration, the agents' configurations, the state root
+# and the run root (none: "-")
+emosa_layout() {
+    cx "$1" sh -c '. /etc/default/emosa 2>/dev/null
+        echo "${EMOSA_FLEET_CONFIG:-/etc/emosa-fleet.json} ${EMOSA_AGENT_CONFIG_DIR:-/etc/emosa}" \
+             "${EMOSA_STATE_ROOT:-/var/lib/emosa} ${EMOSA_RUN_ROOT:--}"'
+}
+emosa_state_root() { emosa_layout "$1" | cut -d" " -f3; }
+emosa_root() { emosa_state_root "$(emosa_where)"; }    # the state root where EMOSA runs
+
+fleet_cli() {    # fleet_cli COMMAND [ARGS...]: the fleet's command (list, forget) where EMOSA runs
+    cx "$(emosa_where)" sh -c 'set -a; . /etc/default/emosa-implementation 2>/dev/null || true
         . /etc/default/emosa 2>/dev/null || true
-        exec "${EMOSA_FLEET:-/opt/emosa-adapter/venv/bin/emosa-fleet}" "$1" /etc/emosa-fleet.json ${2:+"$2"}' \
+        fleet=${EMOSA_FLEET:-/opt/emosa-adapter/venv/bin/emosa-fleet}
+        [ -x "$fleet" ] || fleet=$(command -v emosa-fleet-c)    # a gateway: its package
+        exec "$fleet" "$1" "${EMOSA_FLEET_CONFIG:-/etc/emosa-fleet.json}" ${2:+"$2"}' \
         sh "$1" "${2:-}"
 }
 
@@ -87,13 +112,16 @@ telemetry_json() {    # the fleet's telemetry setting
     fi
 }
 
-# fleet_config FRONT FIRST LAST CONTROLLER_AL MESSAGE_SET MULTI_BSS M2_SESSION [PODS_JSON]:
-# /etc/emosa-fleet.json (EMOSA_MESSAGE_SET, EMOSA_MULTI_BSS, EMOSA_M2_SESSION and
-# EMOSA_POD_PROFILE override), then the fleet (re)started
+# fleet_config FRONT FIRST LAST CONTROLLER_AL MESSAGE_SET MULTI_BSS M2_SESSION [PODS_JSON]
+# [TOPOLOGY_QUERY_WINDOW]: /etc/emosa-fleet.json (EMOSA_MESSAGE_SET, EMOSA_MULTI_BSS,
+# EMOSA_M2_SESSION and EMOSA_POD_PROFILE override), then the fleet (re)started. The window
+# (spec 2.5) only for a controller that queries its agents periodically (RDK's, not prplMesh)
 fleet_config() {
-    local pods=
+    local pods='' window=''
     exists emosa || die "run: lab.sh emosa"
+    in_container
     [ -z "${8:-}" ] || pods=$',\n  "pods": '"$8"
+    [ -z "${9:-}" ] || window=$',\n  "topology_query_window": '"$9"
     cx emosa sh -c "cat > /etc/emosa-fleet.json" <<EOF
 {
   "listen": "ptcp:$1:127.0.0.1",
@@ -107,7 +135,7 @@ fleet_config() {
   "state_root": "/var/lib/emosa",
   "config_dir": "/etc/emosa",
   "admit": "*",
-  "telemetry": $(telemetry_json)$pods
+  "telemetry": $(telemetry_json)$pods$window
 }
 EOF
     cx emosa systemctl enable -q emosa-fleet
@@ -129,6 +157,7 @@ agent_names() { cx emosa sh -c 'for f in /etc/emosa/*.json; do [ -e "$f" ] && ba
 implementation_all() {    # implementation_all BIN: every agent (a pod's own choice is dropped)
     local name
     exists emosa || die "run: lab.sh emosa"
+    in_container
     cx emosa test -x "$1" || die "$1 is not installed (lab.sh emosa)"
     cx emosa sh -ec "sed -i '/^EMOSA_AGENT=/d' /etc/default/emosa; echo EMOSA_AGENT=$1 >> /etc/default/emosa"
     for name in $(agent_names); do
@@ -140,6 +169,7 @@ implementation_all() {    # implementation_all BIN: every agent (a pod's own cho
 
 implementation_one() {    # implementation_one NAME BIN: agent NAME (a pod or its serial)
     exists emosa || die "run: lab.sh emosa"
+    in_container
     cx emosa test -x "$2" || die "$2 is not installed (lab.sh emosa)"
     cx emosa sh -c "echo EMOSA_AGENT=$2 > /etc/default/emosa-$1"
     cx emosa systemctl try-restart "emosa-agent@$1"
@@ -166,6 +196,7 @@ provision() {   # provision POD: its lab device certificate, where OpenSync expe
 
 telemetry_on() {    # telemetry_on POD...: the broker, the PODs' certificates, every agent publishing
     local pod
+    in_container
     apt_install emosa mosquitto mosquitto-clients openssl
     cx emosa sh -ec 'P=/var/lib/emosa/pki; install -d -m 700 $P; cd $P
         [ -f ca.pem ] || openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=EMOSA lab CA" \

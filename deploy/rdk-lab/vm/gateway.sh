@@ -14,7 +14,8 @@
 #                                 front and agent ports forwarded to the gateway, the agents'
 #                                 broker reached through the host; the agents' trunk is the
 #                                 package's veth pair into brlan0. Again while EMOSA runs in
-#                                 the gateway (after it was deployed anew): the forwarding back
+#                                 the gateway (after it was deployed anew): the forwarding back;
+#                                 with EMOSA_IPK, that package over the running one
 #   gateway.sh off                back into the adapter container, the state taken back; the
 #                                 package stays installed in the gateway, unconfigured (inert)
 #   gateway.sh status             where EMOSA runs, its agents, the gateway's memory
@@ -36,21 +37,11 @@ LOG_TAG=emosa-gateway
 # shellcheck source-path=SCRIPTDIR source=../../lib/emosa-vm.sh
 source "$(cd "$(dirname "$0")/../.." && pwd)/lib/emosa-vm.sh"
 
-in_gateway() { [ -f "$STATE/gateway" ]; }
-where() { if in_gateway; then echo "$CTL"; else echo emosa; fi; }
-
-# layout CT: CT's places as its package names them in /etc/default/emosa (c/README.md), or
-# the adapter kit's: the fleet configuration, the agents' configurations, the state root
-# and the run root (none: "-")
-layout() {
-    cx "$1" sh -c '. /etc/default/emosa 2>/dev/null
-        echo "${EMOSA_FLEET_CONFIG:-/etc/emosa-fleet.json} ${EMOSA_AGENT_CONFIG_DIR:-/etc/emosa}" \
-             "${EMOSA_STATE_ROOT:-/var/lib/emosa} ${EMOSA_RUN_ROOT:--}"'
-}
-state_root() { layout "$1" | cut -d" " -f3; }
+# where EMOSA runs (in_gateway, emosa_where) and a container's places (emosa_layout,
+# emosa_state_root): deploy/lib/emosa-vm.sh
 
 provisioned() {    # provisioned CT: how many agents in CT have their session provisioning
-    cx "$1" sh -c "grep -lE '\"state\":[[:space:]]*\"provisioning\"' '$(state_root "$1")'/*/status.json 2>/dev/null | wc -l"
+    cx "$1" sh -c "grep -lE '\"state\":[[:space:]]*\"provisioning\"' '$(emosa_state_root "$1")'/*/status.json 2>/dev/null | wc -l"
 }
 
 wait_provisioned() {    # wait_provisioned CT N: N agents provisioning in CT (at most 5 minutes)
@@ -73,8 +64,8 @@ stop_emosa() {    # stop_emosa CT: the fleet and every agent in CT stopped and d
 
 move_state() {    # move_state FROM TO: the registry and the agents' state, into TO's places
     local from_config to_config to_agents to_root to_run config from_root
-    read -r from_config _ _ _ <<<"$(layout "$1")"
-    read -r to_config to_agents to_root to_run <<<"$(layout "$2")"
+    read -r from_config _ _ _ <<<"$(emosa_layout "$1")"
+    read -r to_config to_agents to_root to_run <<<"$(emosa_layout "$2")"
     config=$(cx "$1" cat "$from_config")
     from_root=$(jq -r .state_root <<<"$config")
     # TO's own: gone, but for emosa's broker PKI (pki in its state root), which stays
@@ -83,7 +74,7 @@ move_state() {    # move_state FROM TO: the registry and the agents' state, into
             [ -e \"\$f\" ] && [ \"\$f\" != '$to_root/pki' ] && rm -rf \"\$f\"; done; true"
     cx "$1" sh -c "cd '$from_root' && tar -cf - \$(ls -A | grep -vx pki)" | lxc exec "$2" -- tar -xf - -C "$to_root"
     # FROM's fleet configuration with TO's places; the agents' configurations are the
-    # fleet's to write again, as the pods return through the front port
+    # fleet's to write again, for its registry's agents when it starts (spec 4)
     jq --arg root "$to_root" --arg agents "$to_agents" --arg run "$to_run" \
         '.state_root = $root | .config_dir = $agents | if $run == "-" then del(.run_root) else .run_root = $run end' \
         <<<"$config" | lxc exec "$2" -- sh -c "cat > '$to_config'"
@@ -128,23 +119,28 @@ plumbing() {    # the front and agent ports into the gateway, the agents' broker
 on() {
     running "$CTL" || die "$CTL is not running"
     if in_gateway; then    # again, e.g. after the gateway was deployed anew: its state is its own
+        if [ -n "${1:-}" ]; then    # a new package over the running one: fleet and agents restarted
+            install_package "$1"
+            stop_emosa "$CTL"
+            log "gateway: $(cx "$CTL" /usr/bin/emosa-agent-c --version) installed over"
+        fi
         cx "$CTL" test -x /usr/bin/emosa-fleet-c || die "$CTL has no EMOSA: deploy an image with it, or off"
         plumbing
         cx "$CTL" systemctl enable -q --now emosa-fleet
-        log "gateway: EMOSA in $CTL again ($(layout "$CTL"))"
+        log "gateway: EMOSA in $CTL again ($(emosa_layout "$CTL"))"
         wait_provisioned "$CTL" "$(pods_running)"
         log "gateway: $(provisioned "$CTL") agents provisioning in $CTL"
         return
     fi
-    exists emosa && cx emosa test -f "$(layout emosa | cut -d" " -f1)" || die "the EMOSA option first: lab.sh up c"
+    exists emosa && cx emosa test -f "$(emosa_layout emosa | cut -d" " -f1)" || die "the EMOSA option first: lab.sh up c"
     install_package "${1:-}"
-    log "gateway: $(cx "$CTL" /usr/bin/emosa-agent-c --version); $(cx "$CTL" sh -c '. /etc/default/emosa; echo "trunk $EMOSA_TRUNK into ${EMOSA_BRIDGE:-(none)}"'); places $(layout "$CTL")"
+    log "gateway: $(cx "$CTL" /usr/bin/emosa-agent-c --version); $(cx "$CTL" sh -c '. /etc/default/emosa; echo "trunk $EMOSA_TRUNK into ${EMOSA_BRIDGE:-(none)}"'); places $(emosa_layout "$CTL")"
     stop_emosa emosa
     move_state emosa "$CTL"
     plumbing
     touch "$STATE/gateway"
     cx "$CTL" systemctl enable -q --now emosa-fleet
-    log "gateway: fleet started in $CTL; the pods come back through the front port"
+    log "gateway: fleet started in $CTL, with its registry's agents"
     wait_provisioned "$CTL" "$(pods_running)"
     log "gateway: $(provisioned "$CTL") agents provisioning in $CTL"
 }
@@ -155,7 +151,7 @@ off() {
     move_state "$CTL" emosa
     # the gateway as it was: no configuration (the package inert), no trunk
     local config agents root run
-    read -r config agents root run <<<"$(layout "$CTL")"
+    read -r config agents root run <<<"$(emosa_layout "$CTL")"
     [ "$run" != - ] || run=
     cx "$CTL" sh -c "rm -rf '$config' '$agents' '$root' ${run:+'$run'}
         . /etc/default/emosa 2>/dev/null; [ -z \"\${EMOSA_BRIDGE:-}\" ] || ip link del \"\${EMOSA_TRUNK:-emlan}\" 2>/dev/null || true"
@@ -171,9 +167,9 @@ off() {
 
 status() {
     local ct
-    ct=$(where)
+    ct=$(emosa_where)
     echo "EMOSA runs in: $ct"
-    cx "$ct" sh -c 'for f in '"'$(state_root "$ct")'"'/*/status.json; do [ -e "$f" ] || continue
+    cx "$ct" sh -c 'for f in '"'$(emosa_state_root "$ct")'"'/*/status.json; do [ -e "$f" ] || continue
         printf "%s %s\n" "$(basename "$(dirname "$f")")" "$(grep -oE "\"state\":[[:space:]]*\"[a-z_]+\"" "$f" | head -1)"; done'
     cx "$CTL" sh -c 'printf "gateway memory: %s MiB of %s MiB\n" $(($(cat /sys/fs/cgroup/memory.current) / 1048576)) \
         $(($(cat /sys/fs/cgroup/memory.max) / 1048576))'
@@ -221,7 +217,7 @@ measure() {
     [[ $label =~ ^[A-Za-z0-9._-]+$ && $seconds =~ ^[0-9]+$ && $every =~ ^[1-9][0-9]*$ ]] || die "usage: gateway.sh measure LABEL SECONDS [INTERVAL]"
     [ ! -e "$dir" ] || die "$dir exists"
     mkdir -p "$dir"
-    ct=$(where)
+    ct=$(emosa_where)
     { echo "emosa_in=$ct"; echo "pods=$(pods_running)"; date -u +"started=%FT%TZ"
       # the agent's version where it runs (an agent from before --version answers with its usage)
       if [ "$ct" = "$CTL" ]; then cx "$CTL" /usr/bin/emosa-agent-c --version || true

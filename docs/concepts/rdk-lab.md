@@ -338,7 +338,14 @@ the package the image's recipe builds, the adapter container's registry and stat
 over, the front and agent ports forwarded there, the agents' trunk a veth pair into
 `brlan0`; `gateway.sh off` moves them back, and `gateway.sh measure LABEL SECONDS`
 samples the gateway's memory and CPU and EMOSA's processes wherever they run (the
-footprint record, §3).
+footprint record, §3). `vm/lab.sh up c gateway` is the whole option ending there, with
+the gateway image's own package, and the rooms settled again (meta-cmf's
+`EASYMESH_EMOSA_IN=gateway` runs it on a build). `lab.sh status`, `rooms`, `move` and the
+waits find EMOSA where it runs; the steps that write its configuration refuse while it
+runs in the gateway (`gateway.sh off` first). The RDK lab's fleet has
+`topology_query_window` 120 (spec §2.5): RDK's controller queries each agent it knows
+every 15 s, and one it forgot in a restart gets no Topology Query, so its agent onboards
+again.
 
 ## 9. Open
 
