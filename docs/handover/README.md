@@ -40,8 +40,9 @@ EMOSA is licensed under the Apache License 2.0 ([LICENSE](../../LICENSE)).
 
 ## What is open
 
-- Plan decisions 5.1 to 5.3: the gateway's 1905 arrangement, the GTP's role, how pods
-  find EMOSA in the field.
+- TLS on the fleet's front port and the agent ports, with operator-issued certificates
+  the unchanged pods trust (plan 5.3, decided 4 Oct: the operator redirects each pod once
+  to the gateway's front port); the labs use TCP (spec §9).
 - What the specification leaves out (spec §9) and the design's known limitations
   (design §14): among them backhaul link metrics, complete EasyMesh AP and station
   metrics from a hwsim pod, 5/6 GHz and WPA3.

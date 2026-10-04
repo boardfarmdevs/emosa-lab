@@ -46,7 +46,7 @@ later. The design must not depend on the container placement (spec/design.md
 | Function | With the OpenSync cloud | In this system | Status |
 | --- | --- | --- | --- |
 | Finding the manager | the pod's redirector, then `manager_addr` from the cloud | the pod's redirector reaches EMOSA's fleet front port; the fleet writes the agent's `manager_addr` | shown with a redirector in the pod image (RDK lab) and with local-noc's redirect (OpenSync lab) |
-| Trust | TLS with the operator's CA and the pod's device certificate | TLS on the front port and agent ports with a trust anchor the unchanged pod accepts | **gap** (TCP only in the labs, spec §9); **decision**: where an unchanged field pod's trust comes from (the operator redirecting once, operator-issued certificates for EMOSA, or pod images configured for a local manager). Plan 5.3 |
+| Trust | TLS with the operator's CA and the pod's device certificate | TLS on the front port and agent ports with a trust anchor the unchanged pod accepts | **gap** (TCP only in the labs, spec §9); **decided** (plan 5.3, 4 Oct): the operator's cloud redirects each admitted pod once to the gateway's fleet front port, and EMOSA presents operator-issued certificates the pod trusts |
 | Admission and identity | the cloud's inventory | the fleet: admit list by serial, AL MAC from the serial, registry | shown |
 | Wi-Fi configuration (SSIDs, security, VIFs) | cloud writes OVSDB | controller's M2 sets, applied by the agent's AP scope as guarded transactions | shown for one 2.4 GHz radio, WPA2-PSK, several BSSes; **gap**: 5 and 6 GHz radios, several radios per pod, WPA3 (spec §9) |
 | Channel and power | cloud optimizer | controller's Channel Selection and power limits | **gap**: the agent declines any change (spec §3.4); a real network needs them applied |
@@ -104,17 +104,18 @@ room suite).
 
 To be a full OpenSync-supporting EasyMesh system without the cloud it still
 needs, in the order they matter:
-1. **Trust without the cloud**: TLS on the OVSDB ports and a trust anchor an
-   unchanged pod accepts (plan 5.3). Without it, only pods whose images point
-   at EMOSA over TCP can join.
+1. **Trust without the cloud**: TLS on the OVSDB ports with operator-issued
+   certificates an unchanged pod accepts, the operator redirecting each pod once
+   (plan 5.3, decided). Without it, only pods whose images point at EMOSA over TCP
+   can join.
 2. **Every radio of the pod**: 5 and 6 GHz fronthaul, several radios per
    agent, WPA3.
 3. **Channel and power applied**, not declined.
 4. **Ethernet-attached pods**, qualified.
 5. **Backhaul metrics and neighbors**, so the controller can choose parents;
    pods as parents (multi-hop).
-6. **The router side**: EMOSA next to the gateway's own 1905 stack on brlan0
-   (plan 5.1); the GTP and the fleet are in C (plan 8.3: no Python on a router),
-   and the secret store has an interface for the platform's secure storage when the
-   router has one.
+6. **The router side**: EMOSA's agents next to the gateway's own 1905 stack on brlan0
+   (plan 5.1, decided), the gateway running the GTP (plan 5.2, decided); the GTP and
+   the fleet are in C (plan 8.3: no Python on a router), and the secret store has an
+   interface for the platform's secure storage when the router has one.
 7. **Memory** on small routers (§4).
