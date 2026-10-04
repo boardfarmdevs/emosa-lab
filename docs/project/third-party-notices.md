@@ -51,3 +51,13 @@ The additional patch retains upstream context; the BSD+Patent license is in
 `deploy/peer-baseline/LICENSE.prplmesh`. Keep that license and the source's
 copyright notices with redistributed artifacts. The native controller/agent
 executables and other native libraries remain the pinned companion build.
+
+The C programs (`c/`: `emosa-agent-c`, `emosa-fleet-c`, `emosa-gtp-c`) contain no
+third-party source. They link cJSON (MIT), OpenSSL's libcrypto (Apache-2.0 from 3.0,
+the OpenSSL license before) and SQLite 3 (public domain, SPDX `blessing`), and with
+`EMOSA_RDK_LOGGER` RDK's rdk-logger (Apache-2.0), all as shared libraries of the
+system they are built for; their units run systemd, iproute2's `ip` (GPL-2.0), bash
+(GPL-3.0-or-later) and, for the GTP, dnsmasq (GPL-2.0 or GPL-3.0) as separate programs.
+The package's bill of materials (`c/packaging/sbom.py`, installed as
+`share/emosa/emosa-c.spdx.json`) records each with its version where it was built.
+EMOSA's own code carries no license grant yet: that is its owner's decision.

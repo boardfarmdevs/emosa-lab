@@ -16,9 +16,13 @@
 #include "canon.h"
 #include "gtp.h"
 #include "jschema.h"
+#include "log.h"
 #include "proc.h"
+#include "version.h"
 
 #define CONFIG_MAX (1024 * 1024)
+#define WARN(...) em_log(EM_LOG_WARNING, "emosa.gtp", __VA_ARGS__)
+#define FAIL(...) em_log(EM_LOG_ERROR, "emosa.gtp", __VA_ARGS__)
 
 /* iproute2, as the reference's Links._run: output captured, a checked failure refused */
 static char *run_ip(void *ctx, const char *const *args, size_t n, bool check)
@@ -32,11 +36,12 @@ static char *run_ip(void *ctx, const char *const *args, size_t n, bool check)
     bool ran = em_run(argv, &out, &err, &status);
     free(argv);
     if (!ran) {
-        (void)fprintf(stderr, "WARNING emosa.gtp: ip could not be started\n");
+        WARN("ip could not be started");
         return check ? NULL : em_strdup("");
     }
     if (check && status != 0) { /* its own words on stderr: the reason */
-        (void)fprintf(stderr, "WARNING emosa.gtp: ip %s: %s", args[0], *err ? err : "failed\n");
+        err[strcspn(err, "\n")] = 0; /* its first line */
+        WARN("ip %s: %s", args[0], *err ? err : "failed");
         free(out);
         out = NULL;
     }
@@ -50,7 +55,7 @@ static cJSON *load(const char *path)
     cJSON *config = text ? cJSON_Parse(text) : NULL;
     free(text);
     if (!config) {
-        (void)fprintf(stderr, "%s: not a JSON GTP configuration\n", path);
+        FAIL("%s: not a JSON GTP configuration", path);
         return NULL;
     }
     em_schema *schema = em_schema_load(em_schema_directory(), "gtp-config");
@@ -58,9 +63,9 @@ static cJSON *load(const char *path)
     bool valid = schema && em_schema_valid(schema, config, why, sizeof(why));
     em_schema_free(schema);
     if (!valid) {
-        (void)fprintf(stderr, "%s: invalid GTP configuration (%s)\n", path, schema ? why : "no schema");
+        FAIL("%s: invalid GTP configuration (%s)", path, schema ? why : "no schema");
     } else if (!em_gtp_check(config, why, sizeof(why))) {
-        (void)fprintf(stderr, "%s: %s\n", path, why);
+        FAIL("%s: %s", path, why);
         valid = false;
     }
     if (!valid) {
@@ -72,19 +77,25 @@ static cJSON *load(const char *path)
 
 static int usage(void)
 {
-    (void)fprintf(stderr, "usage: emosa-gtp-c setup|lease|reconcile|list CONFIG [ACTION MAC IP [HOST]]\n");
+    (void)fprintf(stderr, "usage: emosa-gtp-c setup|lease|reconcile|list CONFIG [ACTION MAC IP [HOST]] | --version\n");
     return 2;
 }
 
 int main(int argc, char **argv)
 {
     em_init();
+    if (argc == 2 && !strcmp(argv[1], "--version")) {
+        (void)printf("emosa-gtp-c %s (%s)\n", EMOSA_VERSION, EMOSA_REVISION);
+        return 0;
+    }
     if (argc < 3)
         return usage();
     const char *command = argv[1];
     if (strcmp(command, "setup") && strcmp(command, "lease") && strcmp(command, "reconcile") &&
         strcmp(command, "list"))
         return usage();
+    if (strcmp(command, "list")) /* the service and dnsmasq's hook; list answers on the terminal */
+        em_log_open("gtp", NULL);
     if (!strcmp(command, "lease")) {
         if (argc < 6) {
             (void)fprintf(stderr, "lease needs ACTION MAC IP\n");
@@ -126,7 +137,7 @@ int main(int argc, char **argv)
             (void)printf("%s\n", text);
         free(text);
     } else {
-        (void)fprintf(stderr, "emosa-gtp: %s\n", why);
+        FAIL("%s", why);
         rc = 1;
     }
     cJSON_Delete(result);

@@ -40,7 +40,7 @@ void em_schema_free(em_schema *s)
 const char *em_schema_directory(void)
 {
     const char *d = getenv("EMOSA_SCHEMAS");
-    return d && *d ? d : "/opt/emosa-adapter/share/schemas";
+    return d && *d ? d : EMOSA_SCHEMAS_DIR; /* the build's (CMake EMOSA_SCHEMAS_DIR) */
 }
 
 typedef struct {

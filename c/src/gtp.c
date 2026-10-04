@@ -1,6 +1,7 @@
 /* The GRE termination point (spec §8.2). Mirrors emosa.gtp. */
 #include "gtp.h"
 
+#include "log.h"
 #include "proc.h"
 
 #include <regex.h>
@@ -18,9 +19,7 @@ static void info(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    (void)fputs("INFO emosa.gtp: ", stderr);
-    (void)vfprintf(stderr, fmt, ap);
-    (void)fputc('\n', stderr);
+    em_vlog(EM_LOG_INFO, "emosa.gtp", fmt, ap);
     va_end(ap);
 }
 

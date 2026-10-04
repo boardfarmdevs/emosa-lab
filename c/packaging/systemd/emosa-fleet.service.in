@@ -1,0 +1,18 @@
+# EMOSA's fleet, as a distribution's package installs it (CMake EMOSA_INSTALL_DATA).
+# Inert until configured: it starts once /etc/emosa-fleet.json exists (the example is in
+# @CMAKE_INSTALL_FULL_DATADIR@/emosa; schema fleet-config). It enables and starts an
+# emosa-agent@POD for each pod handed to its front port.
+[Unit]
+Description=EMOSA fleet: a virtual EasyMesh agent for every OpenSync pod handed to it
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/emosa-fleet.json
+
+[Service]
+EnvironmentFile=-/etc/default/emosa
+ExecStart=@EMOSA_BINDIR@/emosa-fleet-c serve /etc/emosa-fleet.json
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

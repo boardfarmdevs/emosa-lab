@@ -396,6 +396,47 @@ jobs:
       - run: cmake -S c -B c/build -DCMAKE_C_COMPILER=${{ matrix.cc }} -DEMOSA_STRICT=ON ${{ matrix.flags }}
       - run: cmake --build c/build -j
       - run: ctest --test-dir c/build --output-on-failure
+  c-i686:
+    # the 32-bit x86 target of the RDK gateway images (core2-32): the same bar there
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo dpkg --add-architecture i386 && sudo apt-get update
+          sudo apt-get install -y cmake pkg-config gcc-multilib libcjson-dev:i386 libssl-dev:i386 libsqlite3-dev:i386
+      - run: cmake -S c -B c/build -DEMOSA_STRICT=ON -DCMAKE_C_FLAGS=-m32
+        env:
+          PKG_CONFIG_LIBDIR: /usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig
+      - run: cmake --build c/build -j
+      - run: file c/build/emosa-agent-c | grep -q "ELF 32-bit"
+      - run: ctest --test-dir c/build --output-on-failure
+  c-package:
+    # a distribution's package (EMOSA_INSTALL_DATA, as the Yocto recipe builds it): the
+    # programs, data, units, helper and bill of materials where the units expect them
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y cmake pkg-config libcjson-dev libssl-dev libsqlite3-dev
+      - run: >-
+          cmake -S c -B c/build -DEMOSA_STRICT=ON -DEMOSA_INSTALL_DATA=ON -DCMAKE_INSTALL_PREFIX=/usr
+          -DCMAKE_INSTALL_SYSCONFDIR=/etc -DEMOSA_SCHEMAS_DIR=/usr/share/emosa/schemas
+          -DEMOSA_SYSTEMD_UNIT_DIR=/lib/systemd/system
+      - run: cmake --build c/build -j
+      - run: DESTDIR=$PWD/root cmake --install c/build
+      - name: the package's files
+        run: |
+          cd root
+          for f in usr/bin/emosa-agent-c usr/bin/emosa-fleet-c usr/bin/emosa-gtp-c \
+                   usr/libexec/emosa/emosa-agent-link etc/default/emosa \
+                   lib/systemd/system/emosa-fleet.service lib/systemd/system/emosa-agent@.service \
+                   lib/systemd/system/emosa-gtp.service usr/share/emosa/emosa-c.spdx.json \
+                   usr/share/emosa/schemas/agent-config.schema.json \
+                   usr/share/emosa/profiles/opensync-lab-hwsim-6.6.1-v1.json; do
+            test -e "$f" || { echo "missing: $f"; exit 1; }
+          done
+          grep -q "ExecStart=/usr/bin/emosa-agent-c /etc/emosa/%i.json" lib/systemd/system/emosa-agent@.service
+          usr/bin/emosa-agent-c --version
+          python3 -c "import json; d = json.load(open('usr/share/emosa/emosa-c.spdx.json')); assert d['spdxVersion'] == 'SPDX-2.3'"
   c-analyzer:
     runs-on: ubuntu-24.04
     steps:

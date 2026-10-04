@@ -59,3 +59,7 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# also run by the Yocto recipe, whose host Python (kirkstone) is 3.10: no datetime.UTC
+"c/packaging/sbom.py" = ["UP017"]

@@ -42,7 +42,7 @@ What makes it interchangeable with the Python reference (`src/emosa`):
 | Fleet: the front port, the registry, the agents' units, `forget` | `emosa.agent.fleet` | `fleet.json`, `fleet-sessions.json` | done (`fleet.c`, `fleetd.c`, `jsonrpc.c`, `proc.c`) |
 | GRE termination point: dnsmasq's configuration, one gretap per lease | `emosa.gtp` | `gtp.json` | done (`gtp.c`, `gtpd.c`) |
 | Secret store interface: the policy over a backend (files now, a platform's secure storage later) | `emosa.secrets` | units | done (`vault.c`) |
-| Yocto recipe for the RDK lab image | | | |
+| Packaging: logging through RDK's logger, the version, the package's layout and units, the bill of materials; the Yocto recipe (meta-cmf-bananapi-vcpe, opt-in) | | units (`log-rdk`), CI `c-package`, `c-i686` | done (`log.c`, `packaging/`) |
 
 ## The agent runtime
 
@@ -50,9 +50,9 @@ What makes it interchangeable with the Python reference (`src/emosa`):
 configuration and writes the same status file, marked
 `"implementation": "c-lab-prototype"`. Both are validated against the schemas
 (`schemas/agent-config.schema.json`, `agent-status.schema.json`), found in
-`EMOSA_SCHEMAS`, else `/opt/emosa-adapter/share/schemas`; an invalid
-configuration is refused. Profiles come from `--profiles`, else
-`EMOSA_PROFILES`, else `/usr/share/emosa/profiles`. One owner thread runs a poll
+`EMOSA_SCHEMAS`, else the build's `EMOSA_SCHEMAS_DIR` (`/opt/emosa-adapter/share/schemas`
+by default); an invalid configuration is refused. Profiles come from `--profiles`, else
+`EMOSA_PROFILES`, else the build's `EMOSA_PROFILES_DIR` (`/usr/share/emosa/profiles`). One owner thread runs a poll
 loop over the pod's OVSDB connection (`ovsdb.c`: the pod dials in, as it does to
 the Python agent), the 1905 socket (`ethernet.c`: AF_PACKET, ethertype
 `0x893A`) and, with telemetry, the MQTT broker (`mqtt.c`); the pod state is
@@ -87,11 +87,47 @@ Known differences from the Python agent:
   (instance, epoch, database generation and revision); C by the database
   generation and revision it last refreshed. The channel policy's `context`
   differs accordingly (C: the journal's process ID and the generation);
-- the fleet, the GTP, the controller-side tools and the lab are in Python
-  only (the fleet and the GTP move to C in plan step 8.3). The adapter
-  kit installs both agents; `EMOSA_AGENT` in `/etc/default/emosa` (every pod)
-  or `/etc/default/emosa-POD` (one pod) picks the one `emosa-agent@POD` runs
-  (in the RDK lab: `lab.sh agent POD python|c`).
+- the controller-side tools and the lab are in Python only. The adapter kit
+  installs either implementation of every program; `EMOSA_AGENT` in
+  `/etc/default/emosa` (every pod) or `/etc/default/emosa-POD` (one pod) picks the
+  one `emosa-agent@POD` runs (in the RDK lab: `lab.sh agent POD python|c`).
+
+## Logging, version and package
+
+**Logging** (`log.c`). Every message has a level and the reference's logger name
+(`emosa.agent.uplink`, `emosa.fleet`, ...). By default it is one line on stderr,
+`LEVEL component: text`, which systemd's journal keeps. Built with
+`-DEMOSA_RDK_LOGGER=ON`, the programs log through RDK's logger (rdk-logger:
+`rdk_logger.h`, `librdkloggers`) instead: module `LOG.RDK.EMOSA`, its level from
+`debug.ini` (`LOG.RDK.DEFAULT` unless the file names the module), each program into
+its own rolling file in `EMOSA_RDK_LOG_DIR` (`/rdklogs/logs/`): `EMOSAFleetLog.txt`,
+`EMOSAGtpLog.txt`, and per agent `EMOSA_<pod>.txt` (`EMOSAAgentLog.txt` for a pod name
+longer than 21 characters), at most `EMOSA_RDK_LOG_MAXCOUNT` files of
+`EMOSA_RDK_LOG_MAXSIZE` bytes each (2 of 256 KiB). No change to the image's
+`log4crc` is needed (`rdk_logger_ext_init`). A process opens its own file, so no two
+roll the same one. The fleet's `list` and `forget` and the GTP's `list` answer on the
+terminal (stderr).
+
+**Version.** `--version` on each program prints the release (the reference's, from
+`pyproject.toml`, or the adapter kit's `VERSION`) and the source revision (`git
+describe`, `+dirty` for a changed tree; a distribution passes `-DEMOSA_REVISION`); the
+programs' start messages carry both.
+
+**The package's layout** (`-DEMOSA_INSTALL_DATA=ON`, as the Yocto recipe builds it):
+the three programs in `bin`; the schemas and pod profiles in `EMOSA_SCHEMAS_DIR` and
+`EMOSA_PROFILES_DIR`; the units `emosa-fleet.service`, `emosa-agent@.service` and
+`emosa-gtp.service` (`packaging/systemd`) in `EMOSA_SYSTEMD_UNIT_DIR`; the agent's
+link helper in `libexec/emosa`; `/etc/default/emosa` (`EMOSA_TRUNK=brlan0`, the
+gateway's LAN); the example configurations and the bill of materials
+(`emosa-c.spdx.json`) in `share/emosa`. The fleet and the GTP are inert until their
+configuration exists (`ConditionPathExists`); the fleet enables an agent's unit for
+each pod handed to it. The GTP's unit runs `EMOSA_DNSMASQ`.
+
+**Bill of materials** (`packaging/sbom.py`, SPDX 2.3, JSON): every file of this
+repository that goes into the programs or the package with its SHA-1 and SHA-256, the
+libraries they link (versions from pkg-config where it was built), and the programs the
+units run, each with its license. EMOSA's own license is `NOASSERTION` until its owner
+grants one.
 
 ## Build and check
 
@@ -99,8 +135,11 @@ Known differences from the Python agent:
 cmake -S c -B c/build -DEMOSA_STRICT=ON && cmake --build c/build && ctest --test-dir c/build
 ```
 
-`ctest` runs `emosa-vectors spec/conformance` and `emosa-units`. The
-sanitizer and analyzer runs are in [QUALITY.md](QUALITY.md) §4; CI runs all of
-them (`.github/workflows/checks.yml`, jobs `c`, `c-analyzer` and `c-fuzz`).
+`ctest` runs `emosa-vectors spec/conformance`, `emosa-units`, the RDK logger
+backend against a stub of rdk-logger (`emosa-log-rdk`) and the fuzz targets over their
+seeds. The sanitizer and analyzer runs are in [QUALITY.md](QUALITY.md) §4; CI runs all
+of them (`.github/workflows/checks.yml`, jobs `c`, `c-analyzer`, `c-fuzz`, `c-cert`),
+the same on 32-bit x86, the gateway images' target (`c-i686`), and the package's
+layout (`c-package`).
 
 Needs cJSON, OpenSSL (libcrypto) and SQLite 3, all in the RDK-B images.

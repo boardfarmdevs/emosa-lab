@@ -1,0 +1,19 @@
+# EMOSA's agent for one pod, as a distribution's package installs it (CMake
+# EMOSA_INSTALL_DATA). The fleet writes /etc/emosa/POD.json and enables the unit; the
+# helper gives the agent its own 1905.1 interface, a macvlan on EMOSA_TRUNK
+# (/etc/default/emosa) with the agent's AL MAC.
+[Unit]
+Description=EMOSA virtual EasyMesh agent for OpenSync pod %i
+After=network-online.target
+ConditionPathExists=/etc/emosa/%i.json
+
+[Service]
+EnvironmentFile=-/etc/default/emosa
+EnvironmentFile=-/etc/default/emosa-%i
+ExecStartPre=@EMOSA_HELPERDIR@/emosa-agent-link %i
+ExecStart=@EMOSA_BINDIR@/emosa-agent-c /etc/emosa/%i.json
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -31,6 +31,8 @@
 #include "ethernet.h"
 #include "journal.h"
 #include "lifecycle.h"
+#include "log.h"
+#include "version.h"
 #include "jschema.h"
 #include "mqtt.h"
 #include "ovs.h"
@@ -76,18 +78,9 @@ static double stats_clock(void *ctx)
     return wall();
 }
 
-static void logf_(const char *level, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
-static void logf_(const char *level, const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    (void)fprintf(stderr, "%s emosa.agent: ", level);
-    (void)vfprintf(stderr, fmt, ap);
-    (void)fputc('\n', stderr);
-    va_end(ap);
-}
-#define LOG(...) logf_("INFO", __VA_ARGS__)
-#define WARN(...) logf_("WARNING", __VA_ARGS__)
+#define LOG(...) em_log(EM_LOG_INFO, "emosa.agent", __VA_ARGS__)
+#define WARN(...) em_log(EM_LOG_WARNING, "emosa.agent", __VA_ARGS__)
+#define FAIL(...) em_log(EM_LOG_ERROR, "emosa.agent", __VA_ARGS__)
 
 /* -- counters (the status file's names) ------------------------------------------- */
 
@@ -1368,7 +1361,7 @@ static bool configure(agent *a, const char *path, const char *profiles)
     bool valid = schema && c && em_schema_valid(schema, c, where, sizeof(where));
     em_schema_free(schema);
     if (!valid) {
-        (void)fprintf(stderr, "invalid agent-config contract: %s\n", schema ? where : "schema unavailable (EMOSA_SCHEMAS)");
+        FAIL("invalid agent-config contract: %s", schema ? where : "schema unavailable (EMOSA_SCHEMAS)");
         return false;
     }
     a->pod_id = cfg_str(c, "pod_id");
@@ -1391,7 +1384,7 @@ static bool configure(agent *a, const char *path, const char *profiles)
         em_reason why;
         if (strcmp(mode, "mqtt") ||
             !em_telemetry_intent_from(cfg_str(c, "pod_id"), cfg_str(c, "serial"), telemetry, &a->telemetry.intent, &why)) {
-            (void)fprintf(stderr, "telemetry: mode mqtt needs a broker and valid intervals\n");
+            FAIL("telemetry: mode mqtt needs a broker and valid intervals");
             return false;
         }
         const char *subscribe = cfg_str(telemetry, "subscribe") ? cfg_str(telemetry, "subscribe") : "127.0.0.1:1883";
@@ -1426,20 +1419,20 @@ static bool configure(agent *a, const char *path, const char *profiles)
         const char *bssid = cfg_str(uplink, "bssid");
         uint8_t mac[6];
         if (!a->uplink.station || !bssid || !em_parse_mac(bssid, mac)) {
-            (void)fprintf(stderr, "uplink: a station (profile or configuration) and bssid (the upstream backhaul BSS) are required\n");
+            FAIL("uplink: a station (profile or configuration) and bssid (the upstream backhaul BSS) are required");
             return false;
         }
         const char *credentials = cfg_str(uplink, "credentials");
         a->uplink.fixed_credentials = credentials && !strcmp(credentials, "config");
         if (a->uplink.fixed_credentials) {
             if (!cfg_str(uplink, "ssid") || !cfg_str(uplink, "secret_ref")) {
-                (void)fprintf(stderr, "uplink: config credentials need ssid and secret_ref\n");
+                FAIL("uplink: config credentials need ssid and secret_ref");
                 return false;
             }
             /* the schema counts characters: a 32-character SSID can be longer in bytes */
             if (!em_copy(a->uplink.fixed_ssid, sizeof(a->uplink.fixed_ssid), cfg_str(uplink, "ssid")) ||
                 !em_copy(a->uplink.fixed_ref, sizeof(a->uplink.fixed_ref), cfg_str(uplink, "secret_ref"))) {
-                (void)fprintf(stderr, "uplink: ssid longer than 32 octets or secret_ref too long\n");
+                FAIL("uplink: ssid longer than 32 octets or secret_ref too long");
                 return false;
             }
         }
@@ -1473,20 +1466,42 @@ static void boot_id(char out[129])
     }
 }
 
+/* the pod a configuration file is for, as its unit names it: /etc/emosa/POD.json */
+static void config_instance(const char *path, char out[64])
+{
+    const char *base = path ? strrchr(path, '/') : NULL;
+    base = base ? base + 1 : path ? path : "";
+    size_t n = strlen(base);
+    if (n > 5 && !strcmp(base + n - 5, ".json"))
+        n -= 5;
+    if (n >= 64)
+        n = 0; /* no plain pod name: the agents' shared log */
+    memcpy(out, base, n);
+    out[n] = 0;
+}
+
 int main(int argc, char **argv)
 {
     em_init();
-    const char *profiles = getenv("EMOSA_PROFILES") ? getenv("EMOSA_PROFILES") : "/usr/share/emosa/profiles";
+    const char *profiles = getenv("EMOSA_PROFILES") ? getenv("EMOSA_PROFILES") : EMOSA_PROFILES_DIR;
     const char *config = NULL;
     for (int i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "--version")) {
+            (void)printf("emosa-agent-c %s (%s)\n", EMOSA_VERSION, EMOSA_REVISION);
+            return 0;
+        }
         if (!strcmp(argv[i], "--profiles") && i + 1 < argc)
             profiles = argv[++i];
         else if (argv[i][0] != '-')
             config = argv[i];
     }
+    char instance[64];
+    config_instance(config, instance);
+    em_log_open("agent", instance);
     static agent a;
     if (!config || !configure(&a, config, profiles)) {
-        (void)fprintf(stderr, "usage: emosa-agent-c CONFIG.json [--profiles DIR] (configuration or profile unusable)\n");
+        FAIL("configuration %s or its profile unusable", config ? config : "(none)");
+        (void)fprintf(stderr, "usage: emosa-agent-c CONFIG.json [--profiles DIR] | --version\n");
         return 2;
     }
     mkdir(a.state_dir, 0700);
@@ -1494,7 +1509,7 @@ int main(int argc, char **argv)
     char dir[600];
     EM_FORMAT_FIXED(dir, sizeof(dir), "%s/secrets", a.state_dir);
     if (em_vault_open(&a.vault, dir) != EM_OK) {
-        (void)fprintf(stderr, "secret directory %s unusable (it must be 0700)\n", dir);
+        FAIL("secret directory %s unusable (it must be 0700)", dir);
         return 1;
     }
     const char *schemas = em_schema_directory();
@@ -1504,12 +1519,12 @@ int main(int argc, char **argv)
     em_reason opened;
     a.journal = em_journal_open(dir, &a.schemas, &opened);
     if (!a.journal) {
-        (void)fprintf(stderr, "journal %s: %s\n", dir, em_reason_name(opened));
+        FAIL("journal %s: %s", dir, em_reason_name(opened));
         return 1;
     }
     if (signal(SIGTERM, on_signal) == SIG_ERR || signal(SIGINT, on_signal) == SIG_ERR ||
         signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
-        (void)fprintf(stderr, "signal handlers not installed\n");
+        FAIL("signal handlers not installed");
         return 1;
     }
     static const char *const tables[] = {"AWLAN_Node", "Wifi_Radio_Config", "Wifi_Radio_State",
@@ -1518,7 +1533,7 @@ int main(int argc, char **argv)
         "Band_Steering_Clients", "Wifi_VIF_Neighbors", "Wifi_Stats_Config"};
     a.ovs = em_ovsdb_open(cfg_str(a.config, "ovsdb"), tables, sizeof(tables) / sizeof(*tables));
     if (!a.ovs) {
-        (void)fprintf(stderr, "cannot listen on %s\n", cfg_str(a.config, "ovsdb"));
+        FAIL("cannot listen on %s", cfg_str(a.config, "ovsdb"));
         return 1;
     }
     a.ap = (em_ap_scope){.ovs = a.ovs, .profile = &a.profile, .serial = a.serial, .pod_id = a.pod_id,
@@ -1542,7 +1557,7 @@ int main(int argc, char **argv)
         a.telemetry.transact_ctx = &a;
         em_reason why = em_telemetry_open(&a.telemetry, a.state_dir, &a.schemas, &a.vault, now);
         if (why != EM_OK) {
-            (void)fprintf(stderr, "telemetry journal: %s\n", em_reason_name(why));
+            FAIL("telemetry journal: %s", em_reason_name(why));
             return 1;
         }
         em_pod_stats_init(&a.stats, a.telemetry.intent.topic, (unsigned)a.telemetry.intent.reporting_interval,
@@ -1556,7 +1571,7 @@ int main(int argc, char **argv)
                                    .transact = transact, .transact_ctx = &a, .monotonic = now};
         why = em_watch_open(&a.watch, a.state_dir, &a.schemas, &a.vault);
         if (why != EM_OK) {
-            (void)fprintf(stderr, "probe watch journal: %s\n", em_reason_name(why));
+            FAIL("probe watch journal: %s", em_reason_name(why));
             return 1;
         }
     }
@@ -1565,7 +1580,7 @@ int main(int argc, char **argv)
                                          .transact = transact, .transact_ctx = &a, .monotonic = now};
         em_reason why = em_steering_scope_open(&a.steering, a.state_dir, &a.schemas, &a.vault);
         if (why != EM_OK) {
-            (void)fprintf(stderr, "steering journal: %s\n", em_reason_name(why));
+            FAIL("steering journal: %s", em_reason_name(why));
             return 1;
         }
     }
@@ -1584,12 +1599,12 @@ int main(int argc, char **argv)
         em_reason why = em_uplink_open(&a.uplink, a.state_dir, &a.schemas,
                                        cfg_str(cJSON_GetObjectItemCaseSensitive(a.config, "uplink"), "bssid"));
         if (why != EM_OK) {
-            (void)fprintf(stderr, "uplink journal: %s\n", em_reason_name(why));
+            FAIL("uplink journal: %s", em_reason_name(why));
             return 1;
         }
     }
     if (em_ethernet_open(&a.eth, a.interface, a.al) != EM_OK) {
-        (void)fprintf(stderr, "cannot open the 1905 interface %s with MAC %s\n", a.interface, cfg_str(a.config, "al_mac"));
+        FAIL("cannot open the 1905 interface %s with MAC %s", a.interface, cfg_str(a.config, "al_mac"));
         return 1;
     }
     uint16_t seed;
@@ -1598,8 +1613,9 @@ int main(int argc, char **argv)
     a.tokens = 32;
     a.token_time = now();
     em_renew_init(&a.renewals, a.token_time);
-    LOG("EMOSA C agent for %s: AL %s, controller %s, OVSDB %s, %s", a.pod_id, cfg_str(a.config, "al_mac"),
-        cfg_str(a.config, "controller_al"), cfg_str(a.config, "ovsdb"), a.r1 ? "r1" : "easymesh-6.1");
+    LOG("EMOSA C agent %s (%s) for %s: AL %s, controller %s, OVSDB %s, %s", EMOSA_VERSION, EMOSA_REVISION, a.pod_id,
+        cfg_str(a.config, "al_mac"), cfg_str(a.config, "controller_al"), cfg_str(a.config, "ovsdb"),
+        a.r1 ? "r1" : "easymesh-6.1");
     double next_refresh = 0;
     uint8_t frame[1600];
     while (!stopping) {

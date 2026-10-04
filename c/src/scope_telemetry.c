@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "log.h"
 #include "ovs.h"
 #include "scope.h"
 #include "southbound.h"
@@ -520,7 +521,7 @@ static void settle(em_telemetry_scope *t, cJSON *op, const em_snapshot *snap, bo
             cJSON_ReplaceItemInObjectCaseSensitive(op, "application_evidence", evidence);
             em_set_reason(op, NULL);
             em_engine_save(&t->engine, op, NULL);
-            (void)fprintf(stderr, "INFO emosa.agent.telemetry: statistics publishing configured on the pod (%s)\n",
+            em_log(EM_LOG_INFO, "emosa.agent.telemetry", "statistics publishing configured on the pod (%s)",
                     t->intent.topic);
         } else {
             cJSON_Delete(evidence);
@@ -588,7 +589,7 @@ void em_telemetry_tick(em_telemetry_scope *t)
         cJSON *result = em_engine_execute(&t->engine,
                                           cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(op, "operation_id")));
         const char *reason = str(result, "reason");
-        (void)fprintf(stderr, "INFO emosa.agent.telemetry: statistics publishing %s: %s %s\n", str(result, "operation_id"),
+        em_log(EM_LOG_INFO, "emosa.agent.telemetry", "statistics publishing %s: %s %s", str(result, "operation_id"),
                 em_state_of(result), reason ? reason : "");
         cJSON_Delete(result);
     }

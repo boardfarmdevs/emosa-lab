@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "canon.h"
+#include "log.h"
 #include "ovs.h"
 #include "scope.h"
 
@@ -384,7 +385,7 @@ static void history(em_steering_scope *s, const char *station, const char *to, c
     cJSON_AddItemToArray(s->history, e);
     while (cJSON_GetArraySize(s->history) > 8)
         cJSON_DeleteItemFromArray(s->history, 0);
-    (void)fprintf(stderr, "INFO emosa.agent.steering: client steering %s -> %s: %s\n", station, to, outcome);
+    em_log(EM_LOG_INFO, "emosa.agent.steering", "client steering %s -> %s: %s", station, to, outcome);
 }
 
 static void mac_text(const uint8_t m[6], char out[18])
@@ -603,7 +604,7 @@ static void close_window(em_steering_scope *s, const cJSON *op, const cJSON *int
     }
     em_ovs_session os = session(s);
     if (em_steering_close(&os, &in, &rows) != EM_OK) {
-        (void)fprintf(stderr, "WARNING emosa.agent.steering: client steering close failed\n");
+        em_log(EM_LOG_WARNING, "emosa.agent.steering", "client steering close failed");
         record(s, "close_failed");
     }
 }
@@ -673,7 +674,7 @@ static void step(em_steering_scope *s)
             const char *client = str(cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(op, "commit_evidence"), "created"), "client");
             em_ovs_session os = session(s);
             if (!client || em_steering_kick(s->serial, &os, str(s->intent, "station"), client) != EM_OK) {
-                (void)fprintf(stderr, "WARNING emosa.agent.steering: client steering kick failed\n");
+                em_log(EM_LOG_WARNING, "emosa.agent.steering", "client steering kick failed");
                 close_window(s, op, s->intent);
                 end(s, op, "kick_failed");
                 finish(s, "kick_failed");

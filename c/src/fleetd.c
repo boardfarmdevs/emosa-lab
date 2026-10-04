@@ -28,6 +28,8 @@
 #include "canon.h"
 #include "fleet.h"
 #include "jschema.h"
+#include "log.h"
+#include "version.h"
 #include "jsonrpc.h"
 #include "proc.h"
 
@@ -42,18 +44,9 @@ static void on_signal(int sig)
     stopping = 1;
 }
 
-static void logf_(const char *level, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
-static void logf_(const char *level, const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    (void)fprintf(stderr, "%s emosa.fleet: ", level);
-    (void)vfprintf(stderr, fmt, ap);
-    (void)fputc('\n', stderr);
-    va_end(ap);
-}
-#define LOG(...) logf_("INFO", __VA_ARGS__)
-#define WARN(...) logf_("WARNING", __VA_ARGS__)
+#define LOG(...) em_log(EM_LOG_INFO, "emosa.fleet", __VA_ARGS__)
+#define WARN(...) em_log(EM_LOG_WARNING, "emosa.fleet", __VA_ARGS__)
+#define FAIL(...) em_log(EM_LOG_ERROR, "emosa.fleet", __VA_ARGS__)
 
 static double monotonic(void)
 {
@@ -364,14 +357,14 @@ static int serve(server *s)
     const char *listen_name = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(s->fleet.config, "listen"));
     s->listener = listen_on(listen_name, s->unix_path, sizeof(s->unix_path));
     if (s->listener < 0) {
-        (void)fprintf(stderr, "cannot listen on %s\n", listen_name);
+        FAIL("cannot listen on %s", listen_name);
         return 1;
     }
     const cJSON *concurrency = cJSON_GetObjectItemCaseSensitive(s->fleet.config, "concurrency");
     s->concurrency = cJSON_IsNumber(concurrency) ? (size_t)concurrency->valueint : 16;
     s->conns = em_calloc(s->concurrency, sizeof(*s->conns));
     char *ports = cJSON_PrintUnformatted(cJSON_GetObjectItemCaseSensitive(s->fleet.config, "ports"));
-    LOG("fleet: %s, agents on ports %s", listen_name, ports);
+    LOG("EMOSA C fleet %s (%s): %s, agents on ports %s", EMOSA_VERSION, EMOSA_REVISION, listen_name, ports);
     free(ports);
     struct pollfd *p = em_calloc(s->concurrency + 1, sizeof(*p));
     while (!stopping) {
@@ -431,7 +424,7 @@ static int serve(server *s)
 
 static int usage(void)
 {
-    (void)fprintf(stderr, "usage: emosa-fleet-c serve|list|forget CONFIG [SERIAL]\n");
+    (void)fprintf(stderr, "usage: emosa-fleet-c serve|list|forget CONFIG [SERIAL] | --version\n");
     return 2;
 }
 
@@ -441,7 +434,7 @@ static cJSON *load_config(const char *path)
     cJSON *config = text ? cJSON_Parse(text) : NULL;
     free(text);
     if (!config) {
-        (void)fprintf(stderr, "%s: not a JSON fleet configuration\n", path);
+        FAIL("%s: not a JSON fleet configuration", path);
         return NULL;
     }
     em_schema *schema = em_schema_load(em_schema_directory(), "fleet-config");
@@ -449,7 +442,7 @@ static cJSON *load_config(const char *path)
     bool valid = schema && em_schema_valid(schema, config, where, sizeof(where));
     em_schema_free(schema);
     if (!valid) {
-        (void)fprintf(stderr, "%s: invalid fleet configuration (%s)\n", path, schema ? where : "no schema");
+        FAIL("%s: invalid fleet configuration (%s)", path, schema ? where : "no schema");
         cJSON_Delete(config);
         return NULL;
     }
@@ -467,6 +460,10 @@ static void print_json(const cJSON *value)
 int main(int argc, char **argv)
 {
     em_init();
+    if (argc == 2 && !strcmp(argv[1], "--version")) {
+        (void)printf("emosa-fleet-c %s (%s)\n", EMOSA_VERSION, EMOSA_REVISION);
+        return 0;
+    }
     if (argc < 3 || argc > 4)
         return usage();
     const char *command = argv[1];
@@ -474,6 +471,8 @@ int main(int argc, char **argv)
          forget_cmd = !strcmp(command, "forget");
     if (!serve_cmd && !list_cmd && !forget_cmd)
         return usage();
+    if (serve_cmd) /* the service's log; list and forget answer on the terminal */
+        em_log_open("fleet", NULL);
     if (forget_cmd && argc != 4) {
         (void)fprintf(stderr, "forget needs a SERIAL\n");
         return 2;
@@ -486,12 +485,12 @@ int main(int argc, char **argv)
     const char *state_root = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(config, "state_root"));
     const char *config_dir = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(config, "config_dir"));
     if (!em_mkdirs(state_root, 0700) || !em_mkdirs(config_dir, 0755)) {
-        (void)fprintf(stderr, "%s or %s cannot be created\n", state_root, config_dir);
+        FAIL("%s or %s cannot be created", state_root, config_dir);
         cJSON_Delete(config);
         return 1;
     }
     if (!em_fleet_open(&s.fleet, config, why, sizeof(why))) {
-        (void)fprintf(stderr, "%s\n", why);
+        FAIL("%s", why);
         em_fleet_close(&s.fleet);
         return 1;
     }
@@ -515,7 +514,7 @@ int main(int argc, char **argv)
         cJSON_Delete(entry);
     } else if (signal(SIGTERM, on_signal) == SIG_ERR || signal(SIGINT, on_signal) == SIG_ERR ||
                signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
-        (void)fprintf(stderr, "signal handlers not installed\n");
+        FAIL("signal handlers not installed");
         rc = 1;
     } else {
         rc = serve(&s);

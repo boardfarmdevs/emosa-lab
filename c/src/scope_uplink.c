@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "canon.h"
+#include "log.h"
 #include "ovs.h"
 #include "scope.h"
 #include "southbound.h"
@@ -353,7 +354,7 @@ static void keep_target(em_uplink_scope *u)
     char *text = em_json_dumps(o, EM_JSON_DEFAULT, false);
     cJSON_Delete(o);
     if (!em_write_file(path, text, true))
-        (void)fprintf(stderr, "emosa.agent.uplink: the target not kept in %s\n", path);
+        em_log(EM_LOG_WARNING, "emosa.agent.uplink", "the target not kept in %s", path);
     free(text);
 }
 
@@ -413,7 +414,7 @@ static void hold(em_uplink_scope *u, const cJSON *op, const char *reason)
 {
     if (held(u))
         return;
-    (void)fprintf(stderr, "WARNING emosa.agent.uplink: uplink held on option 2: %s\n", reason);
+    em_log(EM_LOG_WARNING, "emosa.agent.uplink", "uplink held on option 2: %s", reason);
     cJSON *e = cJSON_CreateObject();
     cJSON_AddItemToObject(e, "operation_id", op ? cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "operation_id"), 1)
                                                 : cJSON_CreateNull());
@@ -448,7 +449,7 @@ static bool move_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
     const char *bssid = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "bssid");
     if (!u->has_move || u->move.done || !bssid || strcmp(bssid, u->move.target))
         return false;
-    (void)fprintf(stderr, "WARNING emosa.agent.uplink: backhaul move to %s failed (%s): back to %s\n", u->move.target, reason,
+    em_log(EM_LOG_WARNING, "emosa.agent.uplink", "backhaul move to %s failed (%s): back to %s", u->move.target, reason,
             u->move.previous);
     u->move.done = true;
     u->move.applied = false;
@@ -482,7 +483,7 @@ static void settle(em_uplink_scope *u, cJSON *op, const em_snapshot *snap, bool 
             cJSON_ReplaceItemInObjectCaseSensitive(op, "application_evidence", evidence);
             em_set_reason(op, NULL);
             save_with_facts(u, op);
-            (void)fprintf(stderr, "INFO emosa.agent.uplink: uplink on the EasyMesh backhaul: %s parent %s\n", u->facts.kind,
+            em_log(EM_LOG_INFO, "emosa.agent.uplink", "uplink on the EasyMesh backhaul: %s parent %s", u->facts.kind,
                     u->facts.parent);
         } else if (em_engine_expired(&u->engine, op)) {
             cJSON_ReplaceItemInObjectCaseSensitive(op, "original_outcome", cJSON_CreateString(state));
@@ -658,11 +659,11 @@ void em_uplink_tick(em_uplink_scope *u)
         EM_FORMAT_FIXED(key, sizeof(key), "%s:%.16s", u->instance, fp);
     cJSON *req = em_engine_request(&u->engine, intent, SOURCE, key, u->run_id, DEADLINE, "semantic", NULL, &why);
     if (req && !strcmp(em_state_of(req), "REQUESTED")) {
-        (void)fprintf(stderr, "INFO emosa.agent.uplink: switching %s to the EasyMesh backhaul '%s'\n", u->station,
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "switching %s to the EasyMesh backhaul '%s'", u->station,
                 str(intent, "ssid"));
         cJSON *done = em_engine_execute(&u->engine, str(req, "operation_id"));
         const char *reason = str(done, "reason");
-        (void)fprintf(stderr, "INFO emosa.agent.uplink: uplink switch %s: %s %s\n", str(done, "operation_id"),
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "uplink switch %s: %s %s", str(done, "operation_id"),
                 em_state_of(done), reason ? reason : "");
         cJSON_Delete(done);
     }
@@ -696,7 +697,7 @@ const char *em_uplink_steer(em_uplink_scope *u, const char *bssid)
         u->moves++;
         keep_target(u);
     }
-    (void)fprintf(stderr, "INFO emosa.agent.uplink: backhaul move requested: %s -> %s\n", u->move.previous, target_bssid);
+    em_log(EM_LOG_INFO, "emosa.agent.uplink", "backhaul move requested: %s -> %s", u->move.previous, target_bssid);
     return NULL;
 }
 
