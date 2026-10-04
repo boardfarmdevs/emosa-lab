@@ -327,7 +327,10 @@ Python, both on C and one of each (the record, §3). With the adapter in C
 (3 October, `rdk-emosa-1002`) the pods onboarded with five BSSes each and moved to
 their Wi-Fi backhaul, the C GTP built their GRE tunnels from the GTP's DHCP leases,
 and the quick requalification passed: readiness, the five rooms with the pods,
-`backhaul-wired-parent` and `fifty-client-counter-roam`.
+`backhaul-wired-parent` and `fifty-client-counter-roam`. After plan 8.4 (the
+features at the bar) the full room suite ran on it with the adapter in C: the
+catalog's 27 rooms (one a timing edge on no pod, passed on its reruns), the four
+geometry rooms, the RF stages and the world switch (the record, §3).
 
 ## 9. Open
 

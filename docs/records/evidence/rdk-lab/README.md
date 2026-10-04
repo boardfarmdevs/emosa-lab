@@ -649,3 +649,40 @@ With either agent, and with one of each, the suite's results are the ones the
 pods gave with Python: every stage passed, the catalog's 27 rooms and the four
 geometry rooms among them; the rooms that failed on rev120 failed on timing
 there, on no pod, and passed from rev150.
+
+### The adapter in C with the features at the bar (3 October)
+
+The suite again on `rdk-emosa-1002` (built 2 October), the whole adapter in C
+(`lab.sh up c`: its fleet, GTP and agents, no Python in the adapter's
+containers), emosa-lab after plan 8.4 (0bbcdc4; no source of the adapter changed
+up to 1b5f611), the browser on rev120. Run
+`suite-rdk-emosa-1002-c-adapter-20261003T212036Z`, with the room service and the
+topology UI through the VM's proxies on rev120's address
+(`EASYMESH_HOST_ADDRESS=192.168.2.120`, `EASYMESH_SSH_HOST=rev120`, as the runs
+of 1 October; a first run left at 127.0.0.1 failed every host-side stage in
+seconds, while its world switch, which runs inside the VM, passed all worlds).
+
+| Stage | The adapter in C |
+| --- | --- |
+| guest audit, default readiness | passed |
+| catalog (27 rooms) | 26 on rev120; the 27th passed in 4 of 4 runs after |
+| geometry (4 rooms) | 4 of 4 |
+| RF access, properties | passed |
+| RF hover | failed once (the native AP metrics 5.2 s old at its second read), then passed |
+| world switch (34 worlds, then the default), restore default | passed (and in the first run) |
+
+- The catalog room that failed, `home-a-wired-extender-loss-recovery`, is a
+  timing edge on no pod: its three clients leave the wired extender's lost
+  fronthaul (at 20 s) for the native extender_4, and the check wants no sample
+  at or after 25 s to show one on it, sampling once a second. They were last
+  seen on it at 23 to 24 s in every earlier run (29 September to 1 October,
+  Python, C and mixed), and at 25 s in the suite's run and in a rerun with the
+  adapter in C. To tell whether the implementation mattered, the same VM ran the
+  room twice with the Python adapter (installed for it, last seen at 24 s, both
+  passed) and four more times with the adapter in C installed again (last seen
+  at 23 or 24 s, all passed). A capture of the pods' 1905 traffic (2 minutes)
+  showed the controller's queries answered as the specification says: every
+  Topology Query from the controller, AP metrics at the reporting interval, the
+  other agents' Topology and Link Metric Queries to a new neighbor not answered,
+  as with the reference.
+- The VM runs the adapter in C after these runs (emosa-lab 1b5f611).
