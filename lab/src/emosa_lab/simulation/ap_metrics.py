@@ -112,8 +112,9 @@ def generate(output):
             now[0] = 130
             observe(missing_link=True)
             coordinator.tick()
-            state = store.read()
+            state = dict(coordinator.value)  # the session's accounting (spec §3.8: not written)
             assert state["reports_transmitted"] == state["periods_due_without_report"] == 1
+            assert "reports_transmitted" not in store.read()
             before = len(frames)
             coordinator.close()
             store.close()
