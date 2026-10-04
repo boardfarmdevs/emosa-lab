@@ -1,0 +1,3 @@
+fleet {'topology_query_window': 120, 'state_root': '/nvram/emosa/state', 'config_dir': '/nvram/emosa/agents', 'run_root': '/run/emosa'}
+agent 120 /run/emosa/MVXPOD<serial>
+agent 120 /run/emosa/MVXPOD<serial>

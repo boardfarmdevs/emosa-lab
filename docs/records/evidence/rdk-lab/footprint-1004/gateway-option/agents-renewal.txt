@@ -1,0 +1,4 @@
+==> /rdklogs/logs/EMOSA_MVXPOD<serial>.txt.0 <==
+261004-23:14:34.930252 [mod=EMOSA, lvl=INFO] [tid=91517] emosa.agent[MVXPOD<serial>]: provisioned, no Topology Query in topology_query_window: fresh attempt: fresh M1
+==> /rdklogs/logs/EMOSA_MVXPOD<serial>.txt.0 <==
+261004-23:14:34.901976 [mod=EMOSA, lvl=INFO] [tid=91549] emosa.agent[MVXPOD<serial>]: provisioned, no Topology Query in topology_query_window: fresh attempt: fresh M1

@@ -1,0 +1,9 @@
+gateway EMOSA: emosa-agent-c 0.1.0 (ee3488593023)
+fleet: active, since Sun 2026-10-04 14:47:21 PDT
+emosa-agent@MVXPOD<serial> enabled active since Sun 2026-10-04 14:47:27 PDT
+emosa-agent@MVXPOD<serial> enabled active since Sun 2026-10-04 14:47:28 PDT
+fleet log:
+LXD forwarding on the gateway: wired-lan 
+agents state:
+"state": "recovering"
+"state": "recovering"

@@ -1,0 +1,5 @@
+emosa_in=bpibroadband
+pods=2
+started=2026-10-04T23:22:49Z
+emosa-agent-c 0.1.0 (ee3488593023)
+finished=2026-10-04T23:53:19Z

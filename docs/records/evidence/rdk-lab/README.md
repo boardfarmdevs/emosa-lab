@@ -847,5 +847,65 @@ once a second, in RAM (`/run/emosa`, linked from the state directories; spec §6
     topology check passes without the pods. Restarting the two agents brought the pods back
     within 30 s. A renewal rule for this (no Topology Query while `provisioning`) is open.
 
-EMOSA stays in the gateway (`gateway.sh status`); `gateway.sh off` moves it back into the
-adapter container, where the lab's other EMOSA tools (`lab.sh`) expect it.
+EMOSA stayed in the gateway (`gateway.sh status`); `gateway.sh off` moved it back into the
+adapter container.
+
+### The two fixes in the gateway image, and EMOSA in the gateway as a build option (4 October)
+
+Both of the previous section's open points are fixed, and EMOSA in the gateway is now
+something a lab build does by itself. The gateway image was built with the fixes
+(meta-cmf-bananapi-vcpe 49e111f, emosa-lab ee34885; `X86EMLTRBPIBB_rdk-next_20261004213513`,
+rev140, 10 minutes from the shared state) and deployed as `rdk-emosa-1002`'s gateway with
+`gen/lab-redeploy.sh`, EMOSA running in the gateway
+([footprint-1004/gateway-option](footprint-1004/gateway-option/)).
+
+- **After an image upgrade the fleet starts its agents (spec §4):** the new gateway started
+  EMOSA's fleet at boot from `/nvram`, and the fleet started both agents 6 s later, before
+  any pod could reach them: the redeployed gateway had no port forwarding yet
+  ([upgrade.txt](footprint-1004/gateway-option/upgrade.txt)). Once `gateway.sh on` had put
+  the forwarding back, both pods were provisioning within 93 s; they had been cut off
+  through the 26-minute redeploy.
+- **The build option:** `gateway.sh off`, then the build's own step,
+  `EASYMESH_EMOSA_IN=gateway gen/vm/lxd/build.sh emosa` (meta-cmf fb84eae, emosa-lab
+  6d6895c): emosa-lab's `lab.sh up c gateway` set the option up in its adapter container
+  as usual, then moved the registry and the agents' state into the gateway with the image's
+  own package. The gateway's fleet started both agents from its registry, and they were
+  provisioning 12 s later. The rooms settled again with EMOSA in the gateway, every pod on
+  its Wi-Fi backhaul. The fleet and both agents carry `topology_query_window` 120
+  ([window.txt](footprint-1004/gateway-option/window.txt)); the VM records
+  `user.easymesh.emosa-in=gateway`.
+- **A controller that forgot the agents (spec §2.5):** RDK's controller restarted
+  (`systemctl restart em_ctrl`); the pods left its topology within 6 s and stayed out, while
+  the controller logged 11 AP-Autoconfiguration Renews, none of which brought them back.
+  120 s after their last Topology Query both agents onboarded again on their own
+  ("provisioned, no Topology Query in topology_query_window"), and both pods were back in
+  the controller's topology 119 s after its restart
+  ([controller-restart.txt](footprint-1004/gateway-option/controller-restart.txt),
+  [agents-renewal.txt](footprint-1004/gateway-option/agents-renewal.txt)). On 4 October the
+  same situation needed a manual restart of EMOSA's agents.
+- **The rooms:** readiness passed, and four of the quick requalification's five rooms; the
+  fifth, `traffic-quieter-ap`, stopped at the browser harness's screenshot timeout (45 s,
+  eight checks verified, rev120's load average near 12 from its other lab VM) and passed
+  when rerun alone ([rooms.txt](footprint-1004/gateway-option/rooms.txt)). Sampled for
+  30 minutes as before: the gateway at 522 MiB median and 543 MiB peak of its 1 GiB and
+  71.9 % of a core, an agent 4.6 MiB PSS and 0.43 % of a core, the fleet 0.7 MiB, RDK's
+  controller 34 % of a core.
+- **Found and fixed on the way (finding 16):** the build option's first run stopped at the
+  uplink check. After the long redeploy the pods' uplinks were held; the C adapter releases
+  a hold with `forget`, which archived each pod's state with its last status (the switch
+  timed out), and the lab's tools read every `*/status.json`, the archives too: the check
+  never passed and the provisioned counts counted the archives as agents. The tools count
+  current agents only (emosa-lab 6d6895c), and `forget` archives a pod's state without its
+  agent's status (emosa-lab 68515a2, spec §4): in a gateway's run directory the archive's
+  link would show the next agent's status.
+- **Seen on the way:** `gen/lab-redeploy.sh` ends with the room service failing to start
+  while EMOSA runs in the gateway ("pod-1: no operating AP radio"): the pods cannot reach
+  their agents until `gateway.sh on` puts the forwarding back, so the room service rightly
+  refuses; `lab.sh up c gateway` (or `gateway.sh on` and `lab.sh rooms pods`) then starts
+  it. EMOSA's logs in `/rdklogs/logs` were emptied by RDK's log handling during the redeploy,
+  so the fleet's start lines are not in the record; the units' start times are.
+- **Not covered:** a fresh `build.sh build` with `EASYMESH_EMOSA_IN=gateway` (this was the
+  option's step on the running lab, `build.sh emosa`); the build's image check was shown
+  on the EMOSA image (found, 16 s) and on an image without EMOSA (refused).
+
+EMOSA stays in the gateway.
