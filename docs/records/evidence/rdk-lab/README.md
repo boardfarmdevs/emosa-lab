@@ -822,13 +822,30 @@ once a second, in RAM (`/run/emosa`, linked from the state directories; spec §6
 - **Found and fixed:** the agents' link helper read `/etc/emosa/POD.json` whatever the
   package's places, so with the configuration on `/nvram` the agents never started (emosa-lab
   62740b9: it reads `EMOSA_AGENT_CONFIG_DIR`).
-- **Seen:** after an upgrade the agents start only when their pods come back through the
-  front port (their units were enabled in the old root file system); the fleet could start
-  its registry's agents itself. And `gen/lab-redeploy.sh` left the room service unable to
-  start: its recovery journal lists the pool clients an earlier interactive session paused,
-  and after the redeploy the lab's inventory no longer matches it, so the room service fails
-  closed (`recovery inventory does not match this lab`) as its guard requires. The journal
-  is kept for a decision; no room ran on the new gateway.
+- **The rooms:** readiness and the quick requalification's five rooms passed, five of five,
+  with EMOSA in the gateway from the image, sampled for 30 minutes as before
+  ([footprint-1004/gateway-image](footprint-1004/gateway-image/)): the gateway at 506 MiB
+  median and 557 MiB peak of its 1 GiB and 70.7 % of a core, an agent 4.7 MiB PSS and 0.54 %
+  of a core, the fleet 0.7 MiB, RDK's controller 33 % of a core.
+- **Seen on the way:**
+  - After an upgrade the agents start only when their pods come back through the front
+    port (their units were enabled in the old root file system); the fleet could start its
+    registry's agents itself.
+  - `gen/lab-redeploy.sh` left the room service unable to start: its recovery journal
+    listed 17 pool clients an earlier interactive session had paused, and the redeployed
+    lab's inventory no longer matched it, so the room service failed closed as its guard
+    requires. By the owner's decision the journal was retired, kept unchanged in the lab's
+    evidence (`room-recovery-retired-20261004`), and `gen/lab-bringup.sh room` started the
+    room service.
+  - RDK's controller crashed once (SIGSEGV, core dumped) while the pods' agents
+    re-onboarded, processing an extender's Topology Response; systemd restarted it, and the
+    restarted controller had forgotten every agent. The same step repeated did not crash it.
+  - After a controller restart the pods' agents stay registered only in their own view: the
+    controller keeps sending them Link Metric and other queries, so spec §2.5's silence rule
+    never fires, but no Topology Query, and the pods are not in its topology.
+    `gen/lab-bringup.sh` restarts RDK's own agents for this reason, not EMOSA's, and its
+    topology check passes without the pods. Restarting the two agents brought the pods back
+    within 30 s. A renewal rule for this (no Topology Query while `provisioning`) is open.
 
 EMOSA stays in the gateway (`gateway.sh status`); `gateway.sh off` moves it back into the
 adapter container, where the lab's other EMOSA tools (`lab.sh`) expect it.
