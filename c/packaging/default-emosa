@@ -1,8 +1,12 @@
 # EMOSA's environment (the emosa-fleet and emosa-agent@ units read it; for one pod's agent
 # also /etc/default/emosa-POD).
-# The interface on the EasyMesh controller's LAN: each agent adds a macvlan on it with its
-# own AL MAC. On an RDK-B gateway the controller's LAN is brlan0.
-EMOSA_TRUNK=brlan0
+# The agents' trunk: each agent adds a macvlan on it with its own AL MAC. On a gateway the
+# trunk is a veth pair into the controller's LAN bridge (EMOSA_BRIDGE, brlan0 on RDK-B),
+# created by the agents' link helper; on a host with an interface on the controller's LAN,
+# name that interface and leave EMOSA_BRIDGE empty.
+EMOSA_TRUNK=emlan
+EMOSA_BRIDGE=brlan0
+#EMOSA_BRIDGE_PORT=emlan-br
 # Where the programs read their data, when not the build's places:
 #EMOSA_SCHEMAS=/usr/share/emosa/schemas
 #EMOSA_PROFILES=/usr/share/emosa/profiles

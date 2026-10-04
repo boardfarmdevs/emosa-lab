@@ -25,6 +25,7 @@ stage() {
     lxc file push -q "$kit" "$VM/opt/emosa-lab/adapter-kit.tar.gz"
     lxc file push -q "$pod.metadata.tar.gz" "$pod.rootfs.tar.gz" "$VM/opt/emosa-lab/pod/"
     lxc file push -q "$ROOT/deploy/rdk-lab/vm/lab.sh" "$VM/opt/emosa-lab/deploy/rdk-lab/vm/lab.sh"
+    lxc file push -q "$ROOT/deploy/rdk-lab/vm/gateway.sh" "$VM/opt/emosa-lab/deploy/rdk-lab/vm/gateway.sh"
     lxc file push -q "$ROOT/deploy/lib/emosa-vm.sh" "$VM/opt/emosa-lab/deploy/lib/emosa-vm.sh"
     echo "staged $(git -C "$ROOT" rev-parse --short HEAD)$(git -C "$ROOT" diff --quiet || echo +dirty)" \
         "and $(basename "$pod") into $VM:/opt/emosa-lab"

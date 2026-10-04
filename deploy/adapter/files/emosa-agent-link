@@ -3,8 +3,16 @@
 # EasyMesh LAN trunk ($EMOSA_TRUNK, /etc/default/emosa) whose MAC is the agent's
 # AL MAC. Interface and AL MAC come from /etc/emosa/POD.json (the fleet's, either
 # implementation; no Python needed): each read, and checked, as its schema states it.
+#
+# With EMOSA_BRIDGE (EMOSA on the gateway itself: the controller's LAN bridge, brlan0),
+# the trunk is one end of a veth pair whose other end (EMOSA_BRIDGE_PORT, default
+# TRUNK-br) is a port of that bridge, created when missing. A macvlan on the bridge device
+# itself would not do: what it sends leaves through the bridge's ports and never reaches
+# the controller on the bridge, nor do the controller's answers reach it.
 set -euo pipefail
 trunk=${EMOSA_TRUNK:-emlan}
+bridge=${EMOSA_BRIDGE:-}
+port=${EMOSA_BRIDGE_PORT:-$trunk-br}
 config=/etc/emosa/$1.json
 value() {    # value KEY: a top-level string member of the configuration (its keys are unique)
     tr -d '\n' < "$config" | grep -o "\"$1\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | head -1 | sed 's/.*"\([^"]*\)"$/\1/'
@@ -13,6 +21,16 @@ ifname=$(value interface)
 al=$(value al_mac)
 [[ $ifname =~ ^[A-Za-z0-9._-]{1,15}$ ]] || { echo "$config: no usable interface" >&2; exit 1; }
 [[ $al =~ ^[0-9a-f]{2}(:[0-9a-f]{2}){5}$ ]] || { echo "$config: no usable al_mac" >&2; exit 1; }
+if [ -n "$bridge" ] && ! ip link show "$trunk" >/dev/null 2>&1; then
+    for name in "$trunk" "$bridge" "$port"; do
+        [[ $name =~ ^[A-Za-z0-9._-]{1,15}$ ]] || { echo "unusable interface name $name" >&2; exit 1; }
+    done
+    ip link show "$bridge" >/dev/null 2>&1 || { echo "bridge $bridge not found (EMOSA_BRIDGE)" >&2; exit 1; }
+    # another agent starting at the same time may create it first
+    ip link add "$trunk" type veth peer name "$port" 2>/dev/null || ip link show "$trunk" >/dev/null 2>&1
+    ip link set "$port" master "$bridge"
+    ip link set "$port" up
+fi
 ip link show "$trunk" >/dev/null 2>&1 || { echo "trunk interface $trunk not found (EMOSA_TRUNK)" >&2; exit 1; }
 ip link show "$ifname" >/dev/null 2>&1 || ip link add "$ifname" link "$trunk" type macvlan mode bridge
 ip link set "$ifname" address "$al"

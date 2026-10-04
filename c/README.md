@@ -117,8 +117,9 @@ programs' start messages carry both.
 the three programs in `bin`; the schemas and pod profiles in `EMOSA_SCHEMAS_DIR` and
 `EMOSA_PROFILES_DIR`; the units `emosa-fleet.service`, `emosa-agent@.service` and
 `emosa-gtp.service` (`packaging/systemd`) in `EMOSA_SYSTEMD_UNIT_DIR`; the agent's
-link helper in `libexec/emosa`; `/etc/default/emosa` (`EMOSA_TRUNK=brlan0`, the
-gateway's LAN); the example configurations and the bill of materials
+link helper in `libexec/emosa`; `/etc/default/emosa` (`EMOSA_TRUNK=emlan` with
+`EMOSA_BRIDGE=brlan0`: the helper makes the trunk a veth pair into the gateway's LAN
+bridge); the example configurations and the bill of materials
 (`emosa-c.spdx.json`) in `share/emosa`. The fleet and the GTP are inert until their
 configuration exists (`ConditionPathExists`); the fleet enables an agent's unit for
 each pod handed to it. The GTP's unit runs `EMOSA_DNSMASQ`.
