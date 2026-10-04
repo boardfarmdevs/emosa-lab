@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Two-pod, read-only capability-input demonstration on disposable OVSDB servers."""
 
 import argparse

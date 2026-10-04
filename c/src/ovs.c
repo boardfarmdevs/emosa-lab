@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* RFC 7047 values of OVSDB rows, read without the schema (the columns EMOSA uses). */
 #include "ovs.h"
 

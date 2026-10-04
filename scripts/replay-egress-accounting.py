@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Replay retained collector observations through the production accounting source.
 
 This is component replay, not evidence of a live OVSDB/native-controller session.

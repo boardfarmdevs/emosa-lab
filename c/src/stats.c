@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The pod's own statistics (spec §3.6). Mirrors emosa.opensync.stats, with a proto2
  * wire decoder for the sts.Report fields EMOSA uses (the pinned opensync_stats.proto). */
 #include "stats.h"

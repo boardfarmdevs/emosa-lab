@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Restricted authenticated-WSC handoff, currently used only by owned simulation.
 
 This module does not grant profile or controller admission. The normal service

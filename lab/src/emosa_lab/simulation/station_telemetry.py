@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Owned lab MQTT transport and measured OpenSync-format station publisher.
 
 Unix socket permissions provide isolation here, not physical pod authentication.

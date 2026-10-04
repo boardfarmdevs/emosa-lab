@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """WPS 2.0.10 M1/M2 payloads, without IEEE transport or configuration authority.
 
 See docs/reference/protocol/wsc-messages.md for the selected rules and remaining procedure checks.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Selected sole-radio channel procedures (EasyMesh 6.1 §§8.1–2, 15.1).
 
 The initial radio profile supports only class 81/channel 6. Compatible requests

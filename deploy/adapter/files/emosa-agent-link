@@ -9,6 +9,7 @@
 # TRUNK-br) is a port of that bridge, created when missing. A macvlan on the bridge device
 # itself would not do: what it sends leaves through the bridge's ports and never reaches
 # the controller on the bridge, nor do the controller's answers reach it.
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 trunk=${EMOSA_TRUNK:-emlan}
 bridge=${EMOSA_BRIDGE:-}

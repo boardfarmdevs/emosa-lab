@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Audit exact-runtime kernel accounting against loss-checked radio captures.
 
 This tests the observed Linux counter meanings, not an EasyMesh conversion.

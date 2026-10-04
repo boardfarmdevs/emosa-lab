@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Owned WSC-to-OVSDB experiment; no physical endpoint or service activation.
 
 Ethernet frames pass through the real decoder in memory. A separate executable

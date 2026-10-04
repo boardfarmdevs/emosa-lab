@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* IEEE 1905.1 envelope (spec §2.1), as the reference emosa.wire.cmdu. */
 #ifndef EMOSA_CMDU_H
 #define EMOSA_CMDU_H

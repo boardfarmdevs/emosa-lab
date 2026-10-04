@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Fuzz target: what reaches the GTP from outside (gtp.c): a lease event's arguments
  * (dnsmasq passes on what a DHCP client sent), dnsmasq's lease file, and iproute2's
  * output. The input is three parts split by NUL bytes: the output every ip call gives,

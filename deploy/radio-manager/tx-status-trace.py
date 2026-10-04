@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Passive TX-status observation on the exact owned Ubuntu hwsim kernel.
 
 Owns one tracefs instance and one named probe. Does not change radio/packet

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* AP-Autoconfiguration Search/Response/WSC (spec §2.5), as emosa.wire.autoconfiguration. */
 #ifndef EMOSA_AUTOCONF_H
 #define EMOSA_AUTOCONF_H

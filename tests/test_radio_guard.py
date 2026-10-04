@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Safety boundaries, without creating radios, namespaces or LXD resources."""
 
 import importlib.util

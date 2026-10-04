@@ -127,8 +127,8 @@ each pod handed to it. The GTP's unit runs `EMOSA_DNSMASQ`.
 **Bill of materials** (`packaging/sbom.py`, SPDX 2.3, JSON): every file of this
 repository that goes into the programs or the package with its SHA-1 and SHA-256, the
 libraries they link (versions from pkg-config where it was built), and the programs the
-units run, each with its license. EMOSA's own license is `NOASSERTION` until its owner
-grants one.
+units run, each with its license; EMOSA's own is Apache-2.0 ([LICENSE](../LICENSE)), also
+installed with the package (`share/doc/emosa-c`).
 
 ## Build and check
 

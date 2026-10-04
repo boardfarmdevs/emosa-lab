@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent Wireshark projection of synthetic final-session wire vectors.
 
 No EMOSA imports. Literal expected values come from the reviewed vectors and

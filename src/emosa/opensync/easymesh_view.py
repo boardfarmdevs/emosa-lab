@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The OpenSync OVSDB model as the EasyMesh / IEEE 1905.1 model: one pure translation.
 
 EMOSA's virtual agent tells an EasyMesh controller what an OpenSync pod is and

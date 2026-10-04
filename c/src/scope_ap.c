@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The AP scope (emosa.opensync.pod_profile.PodBackend). */
 #include "scope_ap.h"
 

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The provisioned agent's control procedures (spec §2.4, §3.4, §3.7): channel,
  * Multi-AP policy and client steering, as emosa.wire.channel, .reporting_policy
  * and .steering. */

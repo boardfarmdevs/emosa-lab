@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The native freshness regression must reject stale facts and changed authority."""
 
 import json

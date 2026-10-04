@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent tshark validation of the native-controller discovery trial.
 
 No EMOSA imports and no network transmission. A passing check establishes a

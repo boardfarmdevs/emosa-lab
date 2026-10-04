@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* RFC 7047 JSON-RPC framing and messages (see jsonrpc.h). */
 #include "jsonrpc.h"
 

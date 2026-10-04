@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The pod's statistics publishing as an EMOSA scope (the telemetry scope).
 
 OpenSync 6.6 publishes its statistics when ``AWLAN_Node.mqtt_settings`` names

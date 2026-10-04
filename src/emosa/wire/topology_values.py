@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Selected IEEE 1905 topology values, with no inferred links or bridge state.
 
 IEEE 1905.1-2013 6.4.5-9, 1905.1a-2014 and EasyMesh 6.1 Table 14.

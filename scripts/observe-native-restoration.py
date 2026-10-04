@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Read-only post-trial baseline and idle observation from the owned VM."""
 
 import argparse

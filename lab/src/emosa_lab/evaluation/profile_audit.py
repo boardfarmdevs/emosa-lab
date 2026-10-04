@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Planning audit of the proposed EasyMesh 6.1 Profile-1 subset.
 
 An input declares conditions to inspect, not device or profile qualification.

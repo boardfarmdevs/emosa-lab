@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent live reason join audit against kernel events and a separate pcap.
 
 No publisher/adapter imports. This proves raw acquisition/correlation, never the

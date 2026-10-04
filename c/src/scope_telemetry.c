@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The telemetry scope (emosa.opensync.telemetry, emosa.agent.telemetry). */
 #include "scope_telemetry.h"
 

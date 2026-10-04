@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The pod's statistics topic on the local broker (emosa.agent.telemetry.MqttSubscriber):
  * a minimal MQTT 3.1.1 subscriber, clean session, QoS 0, keepalive 30 s, reconnecting
  * after 1 s doubling to 30 s. Never blocks; the agent polls its descriptor. */

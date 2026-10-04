@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Client steering requests from the controller (EasyMesh §11, Client Steering Request).
 
 A Client Steering Request (``0x8014``) carries one Steering Request TLV (``0x9B``):

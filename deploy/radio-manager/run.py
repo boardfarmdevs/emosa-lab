@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Semantic EMOSA → real OVSDB → independent hostapd/hwsim → client experiment."""
 
 import argparse

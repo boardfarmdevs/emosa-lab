@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Copy an explicit synthetic native-run allowlist from the owned VM for review.
 
 Read-only in the VM. Creates a new private local directory; does not publish it

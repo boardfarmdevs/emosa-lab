@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bind pod forwarding identities to passively observed native peer discovery.
 
 Bounded owned-lab profile, not authentication or a generic topology database.

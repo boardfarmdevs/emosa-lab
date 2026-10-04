@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Pod profiles: how one kind of OpenSync pod lays out what EMOSA manages.
 
 A profile is data (``src/emosa/profiles/*.json``, schema

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independently reconcile station TX counters with captured hwsim status.
 
 This audits a simulated failure/status path, not RF attempts, airtime, successful

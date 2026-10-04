@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The probe watch, as emosa.opensync.probe_watch.WatchBackend and
  * emosa.agent.probe_watch.ProbeWatch: the stations the controller asks to be measured
  * get a watch row on the pod (client steering off, marked {"emosa": "watch"}) so that

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Selected OpenSync client-report decoding; no implied physical qualification.
 
 The owned lab profile binds one MQTT topic and nodeID to one radio/BSS. Its

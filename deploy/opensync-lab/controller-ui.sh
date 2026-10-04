@@ -8,6 +8,7 @@
 #
 # PRPLMESH_LAB is a prplmesh-lab checkout (default: the sibling in an easymesh-labs
 # workspace); a missing commit is fetched, the medium from its submodule or cloned. Needs Go.
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 source "$ROOT/deploy/opensync-lab/controller-ui.env"

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """IEEE 802.11-2024 Supported HE-MCS And NSS Set field, not a complete IE.
 
 Sections 9.2.2 and 9.4.2.247.4, Figure 9-901, Tables 9-377/378: Rx then Tx,

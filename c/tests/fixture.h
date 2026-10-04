@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The onboarding vectors' agent (spec/conformance/onboarding.json, "agent"): its
  * binding, radio, M1 device and fixed entropy, for the conformance harness and the
  * WSC fuzz target. */

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The lab in a box for the features' faults and refusals (easymesh-labs alignment plan 8.4):
 an M2 set of several BSSes, the uplink switch held, a moved upstream kept, the broker gone
 and back, another manager's steering rows. Each runs with either agent, C or Python, in

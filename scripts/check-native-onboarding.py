@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independently correlate native wire, durable receipt, inventory and clients.
 
 No EMOSA imports or secret material. Inputs are a reviewed per-run file allowlist.

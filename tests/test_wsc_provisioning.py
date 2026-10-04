@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Fresh independent hostap M2 → component operation → real owned OVSDB."""
 
 import asyncio

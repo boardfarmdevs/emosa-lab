@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* EMOSA C: shared types and helpers (see c/README.md). */
 #ifndef EMOSA_COMMON_H
 #define EMOSA_COMMON_H

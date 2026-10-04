@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent egress source audit; no EMOSA imports or inferred PHY values."""
 
 import argparse

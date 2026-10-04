@@ -9,6 +9,7 @@
 # prplmesh-lab, EMOSA's bwl/hostap overlays and controller candidate
 # candidate-ap-esp-02, uv 0.11.17. Hashes: deploy/opensync-lab/artifacts.sha256.
 # The controller UI is built from prplmesh-lab at a pin (controller-ui.sh, controller-ui.env).
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 VM=${EMOSA_VM:-emosa-osl-$(date +%m%d)}

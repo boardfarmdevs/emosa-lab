@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Optional standalone Wi-Fi smoke lab. Never connects to a physical pod."""
 
 import argparse

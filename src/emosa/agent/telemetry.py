@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The agent has its pod publish its own statistics, and subscribes to them.
 
 - ``TelemetrySetup`` writes the pod's MQTT settings and client report once per

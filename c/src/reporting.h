@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The controller's Multi-AP Policy and the AP metrics the agent reports, as
  * emosa.wire.reporting_policy (ReportingPolicyStore, ReportingPolicyCoordinator) and
  * emosa.wire.pod_metrics (PodMetricReporter):

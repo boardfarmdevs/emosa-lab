@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Publish reviewed synthetic observations; reject incomplete/weak final matrices."""
 
 import argparse

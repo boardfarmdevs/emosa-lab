@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Measured successful TX and disjoint egress losses in the owned veth profile.
 
 No PHY/capacity estimate, RX loss qualification or complete wire metric is implied.

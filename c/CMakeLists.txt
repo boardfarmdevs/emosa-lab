@@ -129,6 +129,7 @@ if(EMOSA_INSTALL_DATA)
     install(PROGRAMS ${kit}/emosa-agent-link DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/emosa)
     install(FILES packaging/default-emosa DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/default RENAME emosa)
     install(FILES ${kit}/fleet.example.json ${kit}/gtp.example.json DESTINATION ${CMAKE_INSTALL_DATADIR}/emosa)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
     # the bill of materials (packaging/sbom.py, SPDX 2.3): the package's files, the
     # libraries as pkg-config reports them here, the programs the units run
     find_package(Python3 COMPONENTS Interpreter REQUIRED)

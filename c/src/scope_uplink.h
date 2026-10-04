@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The uplink scope, as emosa.opensync.uplink.UplinkBackend and emosa.agent.uplink.
  * UplinkSwitch: the pod's backhaul station joins the EasyMesh backhaul BSS (data plane
  * option 1), pinned to one upstream BSSID, once per OpenSync start; a failed switch holds

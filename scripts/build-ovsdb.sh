@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Explicit, unprivileged test dependency build. No install, daemon or datapath.
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 cd "$(dirname "$0")/.."
 version=4.0.0

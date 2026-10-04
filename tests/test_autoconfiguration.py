@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Complete Ethernet inputs plus independent hostap WSC payloads; no pod writes."""
 
 from dataclasses import replace

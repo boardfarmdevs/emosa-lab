@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The OVSDB -> EasyMesh translation, on a real OpenSync 6.6.1.0 pod's rows."""
 
 import asyncio

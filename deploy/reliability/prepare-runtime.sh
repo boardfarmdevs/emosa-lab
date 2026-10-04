@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Run as root only inside the dedicated, disposable runtime-build container.
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 test "$(id -u)" = 0
 test -d /root/emosa-bundle

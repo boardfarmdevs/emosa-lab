@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Readable descriptions of decoded EasyMesh TLV values (pure; no I/O)."""
 
 from emosa.easymesh_payloads import (

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Reproduce the exact Ubuntu kernel source subset used for counter review.
 
 Downloads pinned public source archives (about 239 MB) into a reusable cache.

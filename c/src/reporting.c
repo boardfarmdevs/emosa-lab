@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The Multi-AP policy, the due-report schedule and the pod's AP metrics
  * (emosa.wire.reporting_policy, emosa.wire.pod_metrics). */
 #include "reporting.h"

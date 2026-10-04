@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independently audit raw pod forwarding observations, OVSDB handoff and capture.
 
 Standard library only. This does not qualify per-neighbor counters, capacity,

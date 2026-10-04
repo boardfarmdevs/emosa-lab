@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Fixed, bounded UDP traffic endpoints inside the owned wired lab containers."""
 
 import argparse

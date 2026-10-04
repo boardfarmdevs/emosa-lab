@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The agent's 1905 packet endpoint. Mirrors emosa.wire.ethernet. */
 #include "ethernet.h"
 

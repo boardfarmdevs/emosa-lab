@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* A minimal MQTT 3.1.1 subscriber (the reference uses paho-mqtt). */
 #define _GNU_SOURCE /* NOLINT(cert-dcl37-c,cert-dcl51-cpp): QUALITY.md §5 */
 #include "mqtt.h"

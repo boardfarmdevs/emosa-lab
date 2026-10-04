@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Reproduce the selected veth/TC source from the actual Ubuntu kernel package.
 
 Reuses pinned upstream archives; does not build, install or modify a kernel.

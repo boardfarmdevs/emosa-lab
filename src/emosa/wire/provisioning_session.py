@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bounded packet receiver for the owned WSC experiment, not service admission.
 
 The caller constructs an explicitly bound component exchange. This does not

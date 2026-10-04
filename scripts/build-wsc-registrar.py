@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Build the owned synthetic payload peer using pinned unmodified hostap sources."""
 
 import argparse

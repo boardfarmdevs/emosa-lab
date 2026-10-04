@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bounded non-DPP discovery → Early Report → authenticated WSC simulation.
 
 This is an experimental lifecycle for the owned sole-radio fixture. It does not

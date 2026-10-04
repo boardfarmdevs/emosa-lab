@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Fuzz target: a controller's WSC M2 (autoconf.c em_receive_m2, wsc.c), parsed as
  * far as its authenticator and, for the recorded M2s, beyond. The agent and its M1
  * are the onboarding vectors' (spec/conformance/onboarding.json, found through

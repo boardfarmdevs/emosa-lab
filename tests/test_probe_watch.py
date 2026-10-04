@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The pod watches the probe requests of the stations the controller asks about (spec §3.9)."""
 
 import asyncio

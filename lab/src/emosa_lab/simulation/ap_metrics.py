@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Synthetic AP report composition/scheduling vectors; no native measurement claim."""
 
 import argparse

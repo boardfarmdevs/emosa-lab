@@ -9,6 +9,7 @@
 #                                     (AL+bh: that agent also gets the backhaul BSS "SSID-bh")
 #   em-ctl-node.sh stop
 #   em-ctl-node.sh topology [DEPTH]   the controller's own Device.WiFi.DataElements.Network
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 INSTALL=/opt/prpl-install-nl80211
 ROOT=/opt/emosa-baseline
@@ -161,5 +162,5 @@ case ${1:-} in
     stop) stop ;;
     policy) shift; policy "$@" ;;
     topology) shift; topology "$@" ;;
-    *) sed -n '2,12p' "$0"; exit 2 ;;
+    *) sed -n '2,11p' "$0"; exit 2 ;;
 esac

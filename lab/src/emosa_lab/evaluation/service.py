@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Control an actual adapter child process through its public local API."""
 
 import asyncio

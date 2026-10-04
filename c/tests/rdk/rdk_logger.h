@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* A stub of rdk-logger's interface (rdk_logger.h of rdk-logger 2.4.0, the part log.c
  * uses), for c/tests/log_rdk.c: the same names, types and values; the calls are recorded
  * by the test, which defines the functions. */

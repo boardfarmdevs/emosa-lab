@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Joint receive/transmit accounting for the selected owned veth/TC path.
 
 RX packets are interface arrivals, not client deliveries. TC ingress drops are

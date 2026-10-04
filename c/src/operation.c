@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Operation states and their legal transitions (spec §5). Mirrors emosa.operations. */
 #include "operation.h"
 

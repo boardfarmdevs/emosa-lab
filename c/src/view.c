@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The pod as EasyMesh sees it (spec §3.3). Mirrors emosa.opensync.easymesh_view and the
  * capability and topology builders of emosa.wire.reports. */
 #include "view.h"

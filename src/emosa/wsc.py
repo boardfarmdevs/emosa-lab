@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """WPS 2.0.10 cryptographic component; NOT a complete M1/M2 procedure.
 
 See docs/reference/protocol/wsc-component.md. There is deliberately no network or OVSDB dependency.

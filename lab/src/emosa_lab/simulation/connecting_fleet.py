@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Two explicitly bound simulated pods, one real adapter service; no EasyMesh wire."""
 
 import argparse

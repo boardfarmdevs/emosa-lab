@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Check retained tcpdump statistics against complete native pcap records.
 
 This detects collector/kernel loss and file truncation. It cannot establish

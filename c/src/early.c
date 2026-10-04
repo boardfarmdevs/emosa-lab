@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The Early AP Capability Report's delivery (emosa.wire.coordinator.ReportCoordinator). */
 #include "early.h"
 

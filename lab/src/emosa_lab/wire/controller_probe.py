@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bounded, non-provisioning native-controller compatibility measurement.
 
 The only emitted procedure is a Profile-1 Autoconfiguration Search. A correlated

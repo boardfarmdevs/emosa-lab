@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The log's RDK backend (log.c built with EMOSA_RDK_LOGGER) against a stub of rdk-logger
  * (tests/rdk/rdk_logger.h): which file each program logs to, the module, the levels, the
  * pod shown with each message, a long message cut, stderr when the logger refuses.

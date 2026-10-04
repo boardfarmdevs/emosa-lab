@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Fuzz target: the pod's statistics over MQTT (stats.c: the pinned sts.Report
  * protobuf, as the broker delivers it). Each input is one message on the pod's
  * topic, given twice so a report following another is exercised too. */

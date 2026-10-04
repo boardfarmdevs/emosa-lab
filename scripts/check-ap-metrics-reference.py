@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent byte/layout audit of explicit synthetic AP reporting vectors.
 
 No EMOSA imports. Literal values check complete policy-dependent composition,

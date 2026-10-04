@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """docs/handover/traceability.md from docs/handover/traceability.json.
 
 python3 scripts/handover-traceability.py           write it

@@ -1,5 +1,8 @@
 # Third-party material
 
+EMOSA is licensed under the Apache License 2.0 ([LICENSE](../../LICENSE)). What follows
+is the material in or around it that is not EMOSA's own.
+
 `tests/fixtures/opensync/opensync.ovsschema` is the unmodified schema from
 plume-design/opensync commit `78d8a7194d5e77635877cc456231e7be5cf03d68`.
 The original license is retained as `tests/fixtures/opensync/LICENSE.opensync`;
@@ -60,4 +63,6 @@ system they are built for; their units run systemd, iproute2's `ip` (GPL-2.0), b
 (GPL-3.0-or-later) and, for the GTP, dnsmasq (GPL-2.0 or GPL-3.0) as separate programs.
 The package's bill of materials (`c/packaging/sbom.py`, installed as
 `share/emosa/emosa-c.spdx.json`) records each with its version where it was built.
-EMOSA's own code carries no license grant yet: that is its owner's decision.
+EMOSA itself is licensed under the Apache License 2.0 ([LICENSE](../../LICENSE)); its
+C, Python and shell sources say so in an `SPDX-License-Identifier` line. Third-party
+material in the repository keeps its own license, as listed above.

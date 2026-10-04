@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Offline WFA inclusion review using an independent tshark dissector; no wire endpoint."""
 
 import argparse

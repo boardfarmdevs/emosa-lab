@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The secret store (emosa.secrets.SecretStore): the policy here, the storage in a backend;
  * the files backend below. */
 #include "vault.h"

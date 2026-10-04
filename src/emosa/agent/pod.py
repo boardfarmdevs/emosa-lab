@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """EMOSA virtual EasyMesh agent for one real OpenSync pod.
 
 The pod is unchanged. Its own ``cm`` dials EMOSA (the lab NOC's redirector hands

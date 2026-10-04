@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent selected native-library lifetime and graceful-stop audit.
 
 Checks observed process mappings, unrelaxed systemd stop policy, actual unit

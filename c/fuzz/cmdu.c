@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Fuzz target: IEEE 1905 frames from the LAN, which any host on it can send
  * (cmdu.c reassembly, autoconf.c Response parsing). The input is a sequence of
  * frames, each after its length (two bytes, big endian), fed to one reassembler

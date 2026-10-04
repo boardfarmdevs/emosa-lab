@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Autonomous radio manager in the dedicated VM; no operation-engine imports."""
 
 import argparse

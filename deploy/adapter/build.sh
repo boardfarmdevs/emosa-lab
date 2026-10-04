@@ -5,6 +5,7 @@
 #    requirements (with hashes), uv, install.sh, units and helper, the C lab
 #    prototype's sources, the pod profiles and the JSON schemas (the C agent validates
 #    with them), SHA256SUMS.
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 OUT=$(realpath -m "${1:-$ROOT/dist}")
@@ -25,6 +26,7 @@ cp -r "$ROOT/c/CMakeLists.txt" "$ROOT/c/src" "$KIT/c/"
 cp "$ROOT"/src/emosa/profiles/*.json "$KIT/profiles/"
 cp "$ROOT"/schemas/*.schema.json "$KIT/schemas/"
 cp "$ROOT/deploy/adapter/README.md" "$KIT/README.md"
+cp "$ROOT/LICENSE" "$KIT/LICENSE"
 echo "$VERSION $(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)$(git -C "$ROOT" diff --quiet 2>/dev/null || echo +dirty)" > "$KIT/VERSION"
 (cd "$KIT" && find . -type f ! -name SHA256SUMS -printf '%P\n' | sort | xargs sha256sum > SHA256SUMS)
 tar -C "$OUT" -czf "$KIT.tar.gz" "$(basename "$KIT")"

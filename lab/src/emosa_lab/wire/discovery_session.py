@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Restricted discovery-to-report lifecycle; never a configuration authority.
 
 Only the owned simulator supplies facts today. The Table 117 ambiguity and

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The agent performs the option-1 uplink switch itself (data-plane.md §5.3).
 
 One ``UplinkSwitch`` per agent, with its own operation journal: the uplink is a

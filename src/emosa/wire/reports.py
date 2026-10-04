@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Complete bounded report construction and guarded delivery, without a daemon.
 
 Facts and freshness tokens must come from a qualified coordinator. Synthetic

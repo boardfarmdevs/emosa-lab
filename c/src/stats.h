@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The pod's own statistics (spec §3.6): sts.Report client reports summed per counter
  * epoch, as emosa.opensync.stats. */
 #ifndef EMOSA_STATS_H

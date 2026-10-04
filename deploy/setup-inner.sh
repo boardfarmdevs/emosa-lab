@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Run explicitly inside the dedicated emosa-lab VM, with an initialized inner LXD daemon.
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 cd "$(dirname "$0")/.."
 if [[ $(hostname) != emosa-lab ]]; then

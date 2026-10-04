@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The agent's OVSDB session over RFC 7047 JSON-RPC. Mirrors emosa.opensync.session:
  * the pod dials the agent, the agent reads the schema, monitors its tables and keeps
  * a cache; transactions are serialized. */

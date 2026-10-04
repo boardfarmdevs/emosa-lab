@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* emosa-gtp-c: the GRE termination point (spec §8.2) in C, as emosa.gtp's main.
  *
  *   emosa-gtp-c setup CONFIG                       addresses, bridge, dnsmasq configuration, reconcile

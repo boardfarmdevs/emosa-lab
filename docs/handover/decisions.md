@@ -13,7 +13,7 @@ status are in the easymesh-labs alignment plan ([mesh.vcpe.dev](https://mesh.vcp
 | 3 Oct 2026 | The GTP is a package of its own, its unit disabled | whether the gateway serves the pods' onboarding and ends their GRE is plan 5.2's decision, still open | the recipe |
 | 3 Oct 2026 | Logging through RDK's logger with `rdk_logger_ext_init`: a rolling file per program in `/rdklogs/logs`, module `LOG.RDK.EMOSA`; stderr otherwise | no change to the image's `log4crc`; no two processes roll one file | `c/src/log.c`, c/README.md |
 | 3 Oct 2026 | The package carries an SPDX 2.3 bill of materials generated at build time | the dependencies' versions are those of the build, not the repository's | `c/packaging/sbom.py` |
-| 3 Oct 2026 | EMOSA's own license: none granted yet (`LICENSE = "CLOSED"`, SBOM `NOASSERTION`) | the owner's decision, open | `docs/project/third-party-notices.md` |
+| 3 Oct 2026 | EMOSA is licensed under the Apache License 2.0: `LICENSE`, SPDX identifiers in its C, Python and shell sources, the recipe's `LICENSE` and the bill of materials say so | the owner's decision; the license of RDK-B's components and of rdk-logger | `LICENSE`, `docs/project/third-party-notices.md` |
 | 3 Oct 2026 | A rate that is not a finite number of Mbit/s in 0 .. 2^32 − 1 is no measurement and is absent; an SNR beyond the RCPI's range gives RCPI 220 | found by the CERT review (FLP34-C, INT32-C on the pod's statistics); the reference failed on them too | spec §3.6 |
 | 3 Oct 2026 | An uplink hold is released by a new admission (`forget`) | the operator's way to let EMOSA switch a pod again after a failed switch | spec §8.3 |
 | 3 Oct 2026 | The fleet reads its registry file for each arriving pod | a `forget` run while the fleet served was undone at the pod's next handover (box finding 14) | spec §4 |
@@ -35,7 +35,6 @@ status are in the easymesh-labs alignment plan ([mesh.vcpe.dev](https://mesh.vcp
 
 | Decision | Why it matters | Where |
 | --- | --- | --- |
-| EMOSA's license | the recipe, the bill of materials and any redistribution | above |
 | 1905 on the router: EMOSA's virtual agents next to the gateway's own 1905 daemon and agent on `brlan0` | the gateway integration; the lab's `gateway.sh` assumes it | plan 5.1 |
 | The GTP role: the router serves the pods' onboarding and ends their GRE, or supports only Wi-Fi backhaul and Ethernet pods | whether `emosa-gtp` is installed | plan 5.2 |
 | How pods find EMOSA: the fleet's front port and the redirect on the router's LAN | the pods' handover in the field | plan 5.3 |

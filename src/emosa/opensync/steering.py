@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Client steering on an OpenSync 6.6 pod as an EMOSA scope (the steering scope).
 
 ``owm``'s band steering steers one station away from its BSS when it has:

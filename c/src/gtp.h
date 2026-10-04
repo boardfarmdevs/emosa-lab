@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The GRE termination point (spec §8.2), as emosa.gtp: the gateway end of every pod's
  * OpenSync GRE. It owns .1 of a link-local underlay, serves DHCP there with dnsmasq
  * (whose lease events run it), and keeps one gretap per leased pod, bridged into the

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Persistent upstream OVS JSON-RPC transport, isolated in a bounded worker.
 
 Only basic RFC 7047 monitor is used. No custom JSON-RPC codec or pod database.

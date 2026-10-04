@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """IEEE 1905.1-2013 neighbor metrics with the 1905.1a-2014 field rules.
 
 Measurements are explicit publisher inputs, never inferred from traffic success

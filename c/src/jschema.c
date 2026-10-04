@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* A JSON Schema subset validator for the repository's own schemas. */
 #include "jschema.h"
 

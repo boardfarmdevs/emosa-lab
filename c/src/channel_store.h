@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The accepted channel policy, one durable record per agent, as the reference's
  * emosa.wire.channel.ChannelPolicyStore (state_dir/channel-policy.sqlite): a receipt,
  * kept before the Channel Selection Response is sent, never read back as evidence that

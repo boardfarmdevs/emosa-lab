@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The telemetry scope, as emosa.opensync.telemetry.TelemetryBackend and
  * emosa.agent.telemetry.TelemetrySetup: the pod publishes its own statistics to the
  * broker (AWLAN_Node.mqtt_settings and a client report, with the survey when asked),

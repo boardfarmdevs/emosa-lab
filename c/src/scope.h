@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* What every pod scope reads the same way (emosa.opensync.mapping, .uplink): the bound
  * pod (one AWLAN_Node with the configured serial), which start of its OpenSync, and the
  * row tests the scopes share. Tables are the monitor cache, {table: {uuid: row}}. */

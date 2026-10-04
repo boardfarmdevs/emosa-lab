@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent packet/byte interval audit and controlled pre-driver loss review.
 
 No EMOSA imports. Counter reconciliation does not qualify loss, capacity or a

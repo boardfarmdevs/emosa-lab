@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Synthetic registrar payload exerciser, not an EasyMesh controller.
  * Reads one bounded raw M1 on stdin, emits one M2 on stdout. Uses pinned,
  * unmodified hostap 2.11 helpers/validators and fresh OpenSSL entropy.

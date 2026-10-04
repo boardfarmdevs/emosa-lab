@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Owned Linux-bridge observations carried by the pinned OpenSync OVSDB schema.
 
 These are whole-interface rtnetlink counters, NOT IEEE 1905 link metrics.

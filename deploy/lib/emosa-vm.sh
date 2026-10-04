@@ -7,6 +7,7 @@
 # address the pods reach EMOSA on); TELEMETRY_OPTIONS optionally adds settings to the
 # fleet's telemetry (JSON members, e.g. reporting intervals).
 # shellcheck shell=bash disable=SC2016    # commands for the containers expand there
+# SPDX-License-Identifier: Apache-2.0
 
 KIT=${KIT:-/opt/emosa-lab/adapter-kit.tar.gz}    # the adapter kit (deploy/adapter), staged by lab.sh stage
 STATE=${STATE:-/opt/emosa-lab}                   # the lab's markers: telemetry, policy

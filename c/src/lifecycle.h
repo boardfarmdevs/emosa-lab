@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The agent's attempts at onboarding, as emosa.wire.onboarding.OnboardingRecovery with
  * the session's discovery (spec §2.5), and when it asks for a fresh attempt on its own,
  * as emosa.agent.renew.RenewRules:

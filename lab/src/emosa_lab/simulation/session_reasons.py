@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Live reason/removal join for the owned sole-client hwsim observation profile.
 
 These are raw kernel counters, NOT qualified EasyMesh TrafficCounters. No wire

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independently check native policy receipt/Ack and expose missing reports.
 
 This is deliberately not a complete policy/reporting acceptance checker.

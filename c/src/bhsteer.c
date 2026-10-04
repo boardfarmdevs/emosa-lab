@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Backhaul Steering (emosa.wire.backhaul_steering). */
 #include "bhsteer.h"
 

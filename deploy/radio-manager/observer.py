@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent interface-bound client probes; no OVSDB or adapter imports."""
 
 import argparse

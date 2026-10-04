@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """All lifecycle transitions pass these guards before any asynchronous side effect."""
 
 from emosa.errors import EmosaError, Reason

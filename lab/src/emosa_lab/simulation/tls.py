@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Disposable synthetic trust for TLS experiments; never a physical-pod bootstrap."""
 
 import hashlib

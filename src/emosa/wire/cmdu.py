@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bounded IEEE 1905.1-2013 + 1905.1a-2014 / EasyMesh 6.1 envelope.
 
 See docs/reference/protocol/ieee1905-envelope.md for normative rules and local limits.

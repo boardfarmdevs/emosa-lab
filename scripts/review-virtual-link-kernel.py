@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Reconstruct the exact owned Ubuntu scheduler/framing source; no kernel changes."""
 
 import argparse

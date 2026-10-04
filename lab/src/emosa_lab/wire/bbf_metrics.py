@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Selected BBF TR-181 2.17.0 representations for internal report publishers.
 
 This bridge requires already qualified DataElements values, not raw kernel or

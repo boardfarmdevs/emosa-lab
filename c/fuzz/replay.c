@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Runs a fuzz target over files, for builds without libFuzzer (gcc): each
  * argument is a file or a directory of files, each file one input. CI replays the
  * seed corpora this way under the sanitizers; libFuzzer builds (clang,

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Fixed single-AP hostapd actuator/reader inside the owned hwsim container."""
 
 import argparse

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bounded read-only report coordination; no discovery admission or pod writes.
 
 A caller supplies an established peer binding and complete, qualified facts.

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Fuzz target: the pod's OVSDB rows (JSON from the pod, over its management
  * connection), as the agent turns them into its view of the pod (view.c) and its
  * uplink state. The input is the tables object as JSON text. */

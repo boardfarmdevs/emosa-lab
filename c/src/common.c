@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* EMOSA C: shared helpers. */
 #include "common.h"
 

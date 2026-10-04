@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Read-only Linux observation framing, presence and corruption boundaries."""
 
 import runpy

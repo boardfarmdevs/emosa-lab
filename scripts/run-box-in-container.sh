@@ -7,6 +7,7 @@
 #   scripts/run-box-in-container.sh [PYTEST ARGUMENTS...]     e.g. -k steering -x
 #   scripts/run-box-in-container.sh -- COMMAND...             e.g. -- python -m emosa_lab.box
 #                                                                  onboard --agent c --directory /tmp/b
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 image=emosa-box:24.04

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Evidence-bound synthetic radio capability mapping; no wire admission.
 
 Hashes establish which operator-supplied claims were used, not their truth.

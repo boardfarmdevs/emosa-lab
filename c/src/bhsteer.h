@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Backhaul Steering from the controller, as emosa.wire.backhaul_steering: a Backhaul
  * Steering Request (0x8019) is acknowledged (1905 Ack), handed to the uplink scope, and
  * answered with a Backhaul Steering Response (0x801A, the request's MID) once the move

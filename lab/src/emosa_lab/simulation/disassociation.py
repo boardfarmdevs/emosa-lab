@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Generate explicitly synthetic final-statistics encoding vectors; no pod use."""
 
 import argparse

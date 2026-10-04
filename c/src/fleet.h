@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The fleet (spec §4), as emosa.agent.fleet: AL MAC derivation, the registry, the agent
  * configuration, identifying a pod at the front port and handing it over, and releasing
  * it. The files it keeps are the reference's, byte for byte (STATE_ROOT/fleet.json,

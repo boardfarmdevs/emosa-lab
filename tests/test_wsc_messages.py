@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent payload vectors and authenticated hostile inputs; no wire or pod I/O."""
 
 import json

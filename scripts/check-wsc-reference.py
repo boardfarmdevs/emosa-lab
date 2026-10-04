@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Rebuild synthetic WSC vectors with pinned upstream hostap, independently of EMOSA.
 
 Needs a C compiler and OpenSSL development headers. No daemon or radio is started.

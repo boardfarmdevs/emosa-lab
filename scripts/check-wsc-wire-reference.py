@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independently inspect the owned WSC packet experiment and its public receipt.
 
 Uses tshark for Ethernet/CMDU headers, then a small standalone PCAP/TLV reader

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* AP-Autoconfiguration (spec §2.5). Mirrors emosa.wire.autoconfiguration. */
 #include "autoconf.h"
 

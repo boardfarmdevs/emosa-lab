@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent common service/loss audit for the owned shaped backhaul.
 
 No EMOSA imports. Whole-interface reconciliation is not peer qualification or

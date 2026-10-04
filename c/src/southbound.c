@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The pod scopes' OVSDB writes. Mirrors emosa.opensync.pod_profile (AP scope) and
  * emosa.opensync.steering (client steering scope): the same guards, operations
  * and order, so the transactions equal the reference's (translation-southbound.json,

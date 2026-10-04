@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The operation lifecycle, as emosa.reconcile.Engine and emosa.operations.transition:
  * one engine and journal per scope (the AP BSS, the uplink, telemetry, client steering,
  * the probe watch). A scope supplies its backend: the intent's target, a snapshot of

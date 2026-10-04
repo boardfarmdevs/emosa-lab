@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """VM-local LXD invocation; application containers never receive the admin socket."""
 
 import subprocess

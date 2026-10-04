@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Offline synthetic report exercise. No sockets, radio, controller or pod I/O."""
 
 import argparse

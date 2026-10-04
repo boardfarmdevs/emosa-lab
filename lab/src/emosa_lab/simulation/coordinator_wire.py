@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Two synthetic peers for the ownership-guarded isolated AF_PACKET driver.
 
 Readiness/fault markers synchronize the lab fixture, not an EasyMesh protocol.

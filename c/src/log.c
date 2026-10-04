@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* EMOSA C: the programs' log (log.h). */
 #include "log.h"
 

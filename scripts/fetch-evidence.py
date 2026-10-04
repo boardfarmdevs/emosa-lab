@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Put back the evidence files kept outside git, checked.
 
 The large raw captures and recordings of the evidence records (pcap and jsonl files over

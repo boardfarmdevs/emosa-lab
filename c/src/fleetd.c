@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* emosa-fleet-c: the fleet (spec §4) in C, as emosa.agent.fleet's main.
  *
  *   emosa-fleet-c serve CONFIG          the front port: every pod handed over to its agent

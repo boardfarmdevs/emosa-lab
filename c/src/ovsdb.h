@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The agent's OVSDB session (spec §3.2 I2): the pod connects to the agent's listener and
  * the agent is the JSON-RPC client (get_schema, monitor, transact), as
  * emosa.opensync.session. One connection at a time; a new one is a new generation. */

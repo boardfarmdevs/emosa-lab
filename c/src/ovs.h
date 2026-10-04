@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* RFC 7047 values of OVSDB rows ({table: {uuid: row}}), read without the schema. */
 #ifndef EMOSA_OVS_H
 #define EMOSA_OVS_H

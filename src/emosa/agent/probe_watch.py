@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Which stations the pod watches for probe requests (spec §3.9).
 
 The controller's Unassociated STA Link Metrics Queries name the stations it

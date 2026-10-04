@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Fuzz target: what the broker sends the agent (mqtt.c: MQTT 3.1.1 framing, CONNACK,
  * SUBACK, PUBLISH at any QoS, the topic). The input's first byte chooses the connection's
  * phase (awaiting the CONNACK, the SUBACK, or subscribed); the rest arrives as one read,

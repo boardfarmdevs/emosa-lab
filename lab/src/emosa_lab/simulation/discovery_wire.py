@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Owned AF_PACKET discovery/report lifecycle and synthetic controller peer."""
 
 import asyncio

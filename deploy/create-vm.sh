@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Run explicitly on an LXD host. Only creates the named project-owned VM.
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 cd "$(dirname "$0")/.."
 if lxc info emosa-lab >/dev/null 2>&1; then

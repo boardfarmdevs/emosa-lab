@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Read-only collection of actual pod evidence; never enables a writable mapping."""
 
 import hashlib

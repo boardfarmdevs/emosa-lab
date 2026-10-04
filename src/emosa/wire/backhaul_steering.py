@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Backhaul Steering from the controller (EasyMesh §9, Backhaul Steering Request).
 
 A Backhaul Steering Request (``0x8019``) carries one Backhaul Steering Request

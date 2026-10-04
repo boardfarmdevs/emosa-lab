@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The pod as EasyMesh sees it (spec §3.3), as emosa.opensync.easymesh_view. */
 #ifndef EMOSA_VIEW_H
 #define EMOSA_VIEW_H

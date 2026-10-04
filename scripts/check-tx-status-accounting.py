@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Explain the medium/kernel retry delta using passively captured status flags.
 
 No EMOSA or collector implementation is imported. A match explains this kernel's

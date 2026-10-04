@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent simulated manager process, explicitly triggered at device boundaries.
 
 Observes Config via real OVSDB. Only this test process publishes synthetic State.

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The Early AP Capability Report's delivery (EasyMesh 6.1), as the reference's
  * ReportCoordinator (emosa.wire.coordinator): sent before M1, retransmitted with a new
  * MID every 250 ms, three transmissions at most, until an Ack names one of its MIDs

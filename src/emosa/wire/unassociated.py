@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Unassociated STA Link Metrics (EasyMesh §11, spec §3.9).
 
 An Unassociated STA Link Metrics Query (``0x800F``) carries one query TLV

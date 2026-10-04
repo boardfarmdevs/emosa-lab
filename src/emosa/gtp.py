@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """EMOSA GRE termination point (GTP): the gateway end of every pod's OpenSync GRE.
 
 An OpenSync 6.6 pod joins its uplink as a 3-address station, leases a

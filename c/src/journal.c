@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The durable operation journal (emosa.store.Store). */
 #include "journal.h"
 

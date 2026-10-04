@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Fuzz target: a controller's requests after onboarding, which any host on the LAN can
  * send: the control plane (control.c: channel, policy, steering, unassociated stations,
  * scans and the capability queries), the reporting policy and AP Metrics Query

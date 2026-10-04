@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent neighbor-metric wire vectors and optional native unavailable-source audit.
 
 No EMOSA imports. Wire correctness and explicit native refusal do not establish

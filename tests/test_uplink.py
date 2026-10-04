@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Data plane option 1 performed by the agent: the uplink switch as an operation."""
 
 import asyncio

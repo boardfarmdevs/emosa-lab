@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent active-client pilot review, never a complete sustained verdict.
 
 Standard library and tshark only; no EMOSA imports. Reuses the separate bounded

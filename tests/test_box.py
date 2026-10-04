@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The lab in a box (emosa_lab.box): each implementation's real agent binary against
 the recorded pod and a scripted controller, in a private network namespace."""
 

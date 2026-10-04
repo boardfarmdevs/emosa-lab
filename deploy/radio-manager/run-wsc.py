@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Actual Ethernet WSC component → OVSDB → hwsim → independent client probes.
 
 Uses the existing owned radio lab and synthetic payload peer, not a native

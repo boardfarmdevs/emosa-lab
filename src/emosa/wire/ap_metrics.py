@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Guarded AP/radio/STA report assembly for the selected non-MLD radio.
 
 EasyMesh 6.1 §10.2.1 and Tables 44/45/47/58/83/84/85/96 define

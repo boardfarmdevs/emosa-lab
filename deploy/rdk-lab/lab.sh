@@ -12,6 +12,7 @@
 #
 # The adapter kit is built with uv (UV=, else uv on PATH, ~/.local/bin/uv or .cache/opensync-lab-artifacts/uv).
 # The VM must be an RDK lab VM of its own: never the reference VMs.
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 VM=${EMOSA_VM:-rdk-emosa}

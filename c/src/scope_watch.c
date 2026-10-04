@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The probe watch (emosa.opensync.probe_watch, emosa.agent.probe_watch). */
 #include "scope_watch.h"
 

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Counter suppression and trace corruption must remain visible."""
 
 import json

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* RFC 7047 JSON-RPC framing: messages are JSON objects back to back on a stream, with
  * no length prefix. Shared by the agent's OVSDB session (ovsdb.c) and the fleet's front
  * port (fleetd.c); both read from a pod, so this parser is fuzzed (c/fuzz/jsonrpc.c). */

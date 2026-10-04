@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The pod's own statistics: the telemetry scope's write, and the report cache."""
 
 import asyncio

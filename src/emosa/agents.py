@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Local diagnostic representations, never evidence of EasyMesh wire onboarding."""
 
 import copy

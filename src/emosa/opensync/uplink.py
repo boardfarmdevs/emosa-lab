@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The pod's uplink as an EMOSA scope: switch a backhaul station to EasyMesh (option 1).
 
 Data plane option 1 (docs/concepts/data-plane.md §5): the pod's own backhaul

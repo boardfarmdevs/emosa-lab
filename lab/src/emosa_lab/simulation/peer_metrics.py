@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Qualified *owned-lab* Ethernet service profile feeding actual IEEE 1905 reports.
 
 This opt-in profile requires observed isolation, one discovered peer, disabled

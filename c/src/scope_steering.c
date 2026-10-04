@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The client steering scope (emosa.opensync.steering, emosa.agent.steering). */
 #include "scope_steering.h"
 

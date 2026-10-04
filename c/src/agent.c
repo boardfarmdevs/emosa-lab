@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* emosa-agent-c: the EMOSA virtual EasyMesh agent for one OpenSync pod (see c/README.md
  * and spec/design.md). Same configuration and status file as the Python
  * agent (emosa.agent.pod); one owner thread, a poll loop (spec/design.md §5.1).

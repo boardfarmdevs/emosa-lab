@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Stage the radio experiment in the existing dedicated VM without host installs."""
 
 import argparse

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The adapter's external contracts: schemas, the spec examples, and what the code writes."""
 
 import json

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """The bill of materials of EMOSA's C programs as an SPDX 2.3 document (JSON).
 
     c/packaging/sbom.py OUT.spdx.json [--revision REV] [--rdk-logger VERSION]
@@ -7,9 +8,9 @@ It lists every file of this repository that goes into the programs or their pack
 (the sources, the build file, the units and helper, the schemas and pod profiles), each
 with its SHA-1 and SHA-256; the libraries the programs link, with the versions
 pkg-config reports where they are built (PKG_CONFIG names another pkg-config); and the
-programs the package's units run. EMOSA's own license is NOASSERTION until its owner
-grants one. The document is deterministic: its time is SOURCE_DATE_EPOCH, else the
-revision's commit time.
+programs the package's units run. EMOSA itself is Apache-2.0 (LICENSE); a file that
+says so (an SPDX-License-Identifier line) is listed with it. The document is
+deterministic: its time is SOURCE_DATE_EPOCH, else the revision's commit time.
 """
 
 import argparse
@@ -26,6 +27,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 # what goes into the programs and their package (CMake EMOSA_INSTALL_DATA)
 FILES = (
+    "LICENSE",
     "c/CMakeLists.txt",
     "c/src/*.c",
     "c/src/*.h",
@@ -111,6 +113,7 @@ def files():
             path.relative_to(ROOT).as_posix(),
             hashlib.sha1(data).hexdigest(),
             hashlib.sha256(data).hexdigest(),
+            b"SPDX-License-Identifier: Apache-2.0" in data[:400],
         )
 
 
@@ -122,7 +125,7 @@ def document(revision, rdk_logger=None, created=None):
     version = release()
     listed = list(files())
     # SPDX 2.3 §7.9: SHA-1 of the sorted file SHA-1s
-    code = hashlib.sha1("".join(sorted(sha1 for _, sha1, _ in listed)).encode()).hexdigest()
+    code = hashlib.sha1("".join(sorted(sha1 for _, sha1, _, _ in listed)).encode()).hexdigest()
     package = "SPDXRef-Package-emosa-c"
     packages = [
         {
@@ -133,8 +136,8 @@ def document(revision, rdk_logger=None, created=None):
             "downloadLocation": f"git+https://github.com/boardfarmdevs/emosa-lab.git@{revision}",
             "filesAnalyzed": True,
             "packageVerificationCode": {"packageVerificationCodeValue": code},
-            "licenseConcluded": "NOASSERTION",
-            "licenseDeclared": "NOASSERTION",
+            "licenseConcluded": "Apache-2.0",
+            "licenseDeclared": "Apache-2.0",
             "copyrightText": "NOASSERTION",
             "primaryPackagePurpose": "APPLICATION",
             "summary": "EMOSA: OpenSync pods as EasyMesh agents (the agent, the fleet, the GTP)",
@@ -148,7 +151,7 @@ def document(revision, rdk_logger=None, created=None):
         }
     ]
     spdx_files = []
-    for name, sha1, sha256 in listed:
+    for name, sha1, sha256, tagged in listed:
         ident = "SPDXRef-File-" + spdx_id(name)
         spdx_files.append(
             {
@@ -158,7 +161,9 @@ def document(revision, rdk_logger=None, created=None):
                     {"algorithm": "SHA1", "checksumValue": sha1},
                     {"algorithm": "SHA256", "checksumValue": sha256},
                 ],
-                "licenseConcluded": "NOASSERTION",
+                # every listed file is EMOSA's own, under its LICENSE; some say so themselves
+                "licenseConcluded": "Apache-2.0",
+                "licenseInfoInFiles": ["Apache-2.0"] if tagged else ["NONE"],
                 "copyrightText": "NOASSERTION",
             }
         )

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* WPS 2.0.10 M1/M2 as EMOSA uses it (spec §2.5), mirroring emosa.wsc,
  * emosa.wsc_messages and emosa.wsc_radio. */
 #ifndef EMOSA_WSC_H

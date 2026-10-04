@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent native AP reporting schedule/withholding regression, not delivery.
 
 The real controller keeps every inclusion flag enabled. No qualified AP source

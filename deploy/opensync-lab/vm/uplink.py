@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Move one pod's uplink for the data plane experiments (docs/concepts/data-plane.md).
 
 Inside the lab VM (root): python3 uplink.py POD MODE [--ssid S --key K ...]

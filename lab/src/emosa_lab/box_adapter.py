@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The lab in a box for the adapter around the agents (easymesh-labs alignment plan 8.3):
 the fleet (spec §4) and the GRE termination point (spec §8.2), each run by either
 implementation, Python or C, as the agent scenarios run either agent.

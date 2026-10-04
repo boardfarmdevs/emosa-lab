@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The reference implementation reproduces every conformance vector in spec/conformance."""
 
 import pytest

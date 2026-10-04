@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Read-only discovery capture on the owned simulated pod's actual backhaul.
 
 Only packet sockets, multicast memberships and local evidence files are used.

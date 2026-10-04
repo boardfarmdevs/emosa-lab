@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """EasyMesh 6.1 (default) versus R1 message sets for Profile-1 onboarding."""
 
 import pytest

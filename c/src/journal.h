@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The durable operation journal, as emosa.store.Store: <directory>/journal.db (SQLite,
  * WAL, synchronous FULL) with the same tables and JSON records, and <directory>/
  * writer.lock held while open. Either implementation reads the other's journal: an

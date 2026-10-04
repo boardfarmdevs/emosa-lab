@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Packet worker for the owned native-controller/hwsim onboarding experiment.
 
 It accepts only a marked local run directory, no desired SSID/key or pod address.

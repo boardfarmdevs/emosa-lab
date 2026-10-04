@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent tshark field/value projection for the new report components.
 
 Reads the hash-pinned native capture and optional public --reports traces.

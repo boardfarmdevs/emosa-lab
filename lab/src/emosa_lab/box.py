@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The lab in a box (easymesh-labs alignment plan 8.2): the real agent, C or Python,
 against a fake pod and a scripted controller in a private network namespace, with no
 lab VM.

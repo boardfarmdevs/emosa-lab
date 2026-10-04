@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The AP scope, as emosa.opensync.pod_profile.PodBackend: the pod's bound fronthaul BSS
  * (and, multi-BSS, the managed slot BSSes) as the engine's backend. Its operations come
  * from authenticated M2 sets (the WSC component handoff, agent.c). */

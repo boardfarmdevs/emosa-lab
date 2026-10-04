@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Generate synthetic neighbor-metric vectors; never claim measured link values."""
 
 import argparse

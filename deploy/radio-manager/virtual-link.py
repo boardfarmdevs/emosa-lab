@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Owned simulated Ethernet service, with explicit framing and reversible shaping.
 
 Only the existing isolated pod/controller lab is supported. This is an emulated

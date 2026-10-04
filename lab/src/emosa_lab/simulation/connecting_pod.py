@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Pod-initiated OVSDB and a diagnostic virtual agent; no EasyMesh wire exchange."""
 
 import argparse

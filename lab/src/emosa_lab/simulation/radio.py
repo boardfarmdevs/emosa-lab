@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent OVSDB-to-radio lab manager, with State derived from driver reads.
 
 This is a simulation manager, not OpenSync firmware or an EasyMesh endpoint.

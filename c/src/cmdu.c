@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* IEEE 1905.1 envelope (spec §2.1): encoding, TLV-boundary fragmentation, reassembly.
  * Mirrors the reference emosa.wire.cmdu: the same budgets, rejections and reasons. */
 #include "cmdu.h"

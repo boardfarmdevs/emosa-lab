@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Passive counters and configuration epochs for the owned pod's eth1 egress.
 
 Route/TC multicast loss invalidates the collector. No interfaces, filters or

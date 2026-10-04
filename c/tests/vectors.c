@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Replays the conformance vectors (spec/conformance) against the C implementation.
  * Usage: emosa-vectors <spec/conformance directory> */
 #include <cjson/cJSON.h>

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Unit checks of the C implementation's own machinery (not the conformance vectors, which
  * c/tests/vectors.c replays): canonical JSON, the secret store, the journal, the
  * operation engine, the schema validator, the file helpers. Expected values come from the reference

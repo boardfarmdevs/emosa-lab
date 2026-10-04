@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* EMOSA C: the programs' log (QUALITY.md §2: secrets never reach it).
  *
  * Every message has a level and a component (the reference's logger name, e.g.

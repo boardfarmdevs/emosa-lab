@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The handover documents (docs/handover) stay true to the repository: every section of the
 specification has its entry in the traceability map, everything the map names exists,
 every vector set and box scenario is in it, the generated page is current, and the

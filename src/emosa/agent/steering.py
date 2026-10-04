@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The agent carries out the controller's client steering mandates on its pod.
 
 One ``ClientSteering`` per agent, with its own operation journal (the steering

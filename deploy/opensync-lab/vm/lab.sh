@@ -34,6 +34,7 @@
 #                                     named (EMOSA_AGENT, deploy/adapter); their agents restart
 #   lab.sh status
 #   lab.sh workload LABEL             900 s recovery workload under faults (vm/workload.py)
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 exec </dev/null
 export PATH=/snap/bin:$PATH
@@ -494,5 +495,5 @@ cmd=${1:-}; shift || true
 case $cmd in
     bridge|controller|emosa|agent|fleet|admit|release|policy|client|topology|ui|telemetry|provision|gtp|uplink|option1|implementation|status) "$cmd" "$@" ;;
     workload) exec python3 "$HERE/vm/workload.py" "$@" ;;
-    *) sed -n '2,35p' "$0"; exit 2 ;;
+    *) sed -n '2,36p' "$0"; exit 2 ;;
 esac

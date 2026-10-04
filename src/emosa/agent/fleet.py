@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """EMOSA fleet: one virtual EasyMesh agent for every OpenSync pod that appears.
 
 The fleet is a manager front port in the style of the OpenSync redirector. A

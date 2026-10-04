@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The pod scopes' OVSDB writes (spec §3.2, §3.4, §3.7): the AP scope (M2 → VIF rows,
  * as emosa.opensync.pod_profile) and the steering window (emosa.opensync.steering). */
 #ifndef EMOSA_SOUTHBOUND_H

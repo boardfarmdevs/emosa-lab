@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 import json
 from functools import lru_cache
 from importlib.resources import files

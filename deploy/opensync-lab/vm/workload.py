@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Recovery workload (proof plan M7): the EasyMesh lab under faults, in one run.
 
 Inside the lab VM (root): python3 workload.py LABEL [--duration 900]

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The client steering scope, as emosa.opensync.steering.SteeringBackend and
  * emosa.agent.steering.ClientSteering: the controller's steering mandates as windows on
  * the pod (owm's band steering), one at a time with a short queue, each an operation

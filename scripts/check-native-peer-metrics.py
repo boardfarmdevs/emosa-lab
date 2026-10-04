@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent native peer metrics: observed path/counters -> wire -> controller.
 
 No EMOSA imports. Qualifies only the declared isolated software Ethernet profile,

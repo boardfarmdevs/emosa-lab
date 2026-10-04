@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The bill of materials of the C programs (c/packaging/sbom.py) is a complete SPDX 2.3
 document: every source and data file of the package with its checksums, the libraries the
 programs link, the programs the units run, and every relationship between known elements."""
@@ -59,7 +60,11 @@ def test_verification_code(doc):
     expected = hashlib.sha1("".join(sha1s).encode()).hexdigest()
     assert main["packageVerificationCode"]["packageVerificationCodeValue"] == expected
     assert main["versionInfo"].endswith("+0123456789ab")
-    assert main["licenseDeclared"] == "NOASSERTION"  # until the owner grants a license
+    assert main["licenseDeclared"] == "Apache-2.0"
+    files = {f["fileName"]: f for f in doc["files"]}
+    assert files["./LICENSE"]["licenseConcluded"] == "Apache-2.0"
+    assert files["./c/src/agent.c"]["licenseInfoInFiles"] == ["Apache-2.0"]  # it says so itself
+    assert files["./schemas/agent-config.schema.json"]["licenseInfoInFiles"] == ["NONE"]
 
 
 def test_libraries_and_runtime(doc):

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The pod scopes' shared reads. */
 #include "scope.h"
 

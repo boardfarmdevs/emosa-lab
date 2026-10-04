@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Offline inspection of selected TLV values, with no runtime or pod connection."""
 
 import hashlib

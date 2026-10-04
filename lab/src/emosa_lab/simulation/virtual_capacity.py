@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Service-work estimate for the explicitly shaped owned Ethernet simulation.
 
 This is not a PHY measurement or a complete IEEE 1905 per-neighbor metric.

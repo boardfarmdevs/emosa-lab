@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Restore missing hwsim radios after a reboot of the already owned lab VM."""
 
 import argparse

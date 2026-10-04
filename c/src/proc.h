@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Other programs, without a shell (CERT ENV33-C): the fleet's systemctl and the GTP's
  * iproute2. Arguments are passed as given, never interpreted. */
 #ifndef EMOSA_PROC_H

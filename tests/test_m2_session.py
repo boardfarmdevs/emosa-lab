@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Set-level registrar-session rule for one M2 set (per-M2 authentication stubbed)."""
 
 import pytest

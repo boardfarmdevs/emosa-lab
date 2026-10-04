@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Exercise read-only report coordination against an owned real OVSDB database.
 
 Messages are serialized Ethernet frames delivered in memory. For AF_PACKET use

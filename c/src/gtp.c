@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The GRE termination point (spec §8.2). Mirrors emosa.gtp. */
 #include "gtp.h"
 

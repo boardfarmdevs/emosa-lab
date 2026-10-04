@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Calibrate the owned simulated Ethernet service against independent packets.
 
 Installs only a temporary owned qdisc, preserves failures and restores the idle

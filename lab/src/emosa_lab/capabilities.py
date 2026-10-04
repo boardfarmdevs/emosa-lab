@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 def capabilities(ready, ownership_conflict=False):
     return {
         "bss-set": {

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """OpenSync 6.6 pods: the VIF encoding and the guarded writes EMOSA makes.
 
 The pod layout (VIF names, rows, band, channel, extra slots) is data: a pod

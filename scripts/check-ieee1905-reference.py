@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent tshark envelope projection of the retained native Ethernet capture.
 
 No EMOSA imports and no raw TLV values are published. The selected versions are

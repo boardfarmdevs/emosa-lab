@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Fuzz target: what a pod sends the fleet's front port (fleetd.c), and the fleet's
  * registry file. The input is a byte stream as it arrives on the connection: JSON-RPC
  * messages back to back (jsonrpc.c framing), each answered if an echo, and a reply to the

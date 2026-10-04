@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent tshark check of owned discovery-to-topology socket captures.
 
 No EMOSA imports. Packet fields and received bytes are cross-checks, not native

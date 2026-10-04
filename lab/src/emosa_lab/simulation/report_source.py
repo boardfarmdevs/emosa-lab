@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Owned OVSDB fixture feeding the report coordinator, never a physical profile.
 
 The database initiates a local Unix-socket connection to a read-only monitor.

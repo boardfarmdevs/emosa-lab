@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Conformance vectors for the EMOSA adapter specification (spec/conformance).
 
 Every vector is computed by the reference implementation (package ``emosa``)

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent native pod-side discovery, topology-identity and observation-loss audit.
 
 No adapter imports. The retained Ethernet media values remain simulator fixtures;

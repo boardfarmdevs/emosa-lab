@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Selected EasyMesh 6.1 TLV *values*, without TLV headers or IEEE 1905 frames.
 
 Selected fields in sections 3.1.2 and 17.2 define this component. SSID octets use

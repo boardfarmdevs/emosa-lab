@@ -124,3 +124,9 @@ The [site](https://vcpe.dev/emosa-lab/) shows how it works, one message at a tim
 documents are indexed in [docs/README.md](docs/README.md): the contract (the
 specification first), the concepts, the guides, the protocol reference, the project's
 plans and status, and the run records and their evidence.
+
+## License
+
+EMOSA is licensed under the [Apache License 2.0](LICENSE). Third-party material in the
+repository keeps its own license: see
+[third-party notices](docs/project/third-party-notices.md).

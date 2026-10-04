@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Selected synthetic capability inputs, after the Basic input/topology gate.
 
 No driver inference or physical qualification. The Wi-Fi 6 companion has its

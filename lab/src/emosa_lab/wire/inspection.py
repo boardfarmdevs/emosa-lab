@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Read-only Ethernet/PCAP inspection. Never print TLV values or decrypt WSC."""
 
 import hashlib

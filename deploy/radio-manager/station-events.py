@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Read-only nl80211 station-removal observations in the owned hwsim AP.
 
 Only CTRL_CMD_GETFAMILY and multicast membership are used. No radio command,

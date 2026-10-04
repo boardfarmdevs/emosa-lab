@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The fleet (spec §4). Mirrors emosa.agent.fleet. */
 #include "fleet.h"
 

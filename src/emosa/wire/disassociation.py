@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Qualified final-session reports (EasyMesh 6.1 §§6.3, 15.1, 17.1.41).
 
 Internal measurement-to-wire component, not an endpoint or qualification tool.

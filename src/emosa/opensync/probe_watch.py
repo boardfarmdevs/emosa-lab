@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Watching stations' probe requests on the pod (spec §3.9).
 
 OpenSync 6.6's ``owm`` records a probe request, with its SNR, only for a

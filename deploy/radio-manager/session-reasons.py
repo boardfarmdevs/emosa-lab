@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Passive live hwsim reason + AP removal-event join in the owned VM.
 
 Reads the already-created hwsim monitor and owned AP event log. No interface,

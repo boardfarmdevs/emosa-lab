@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Pod-initiated OVSDB → actual EMOSA process → hwsim AP and independent clients."""
 
 import argparse

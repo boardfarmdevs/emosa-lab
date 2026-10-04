@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Discovery-to-topology exercise with an owned real database and synthetic peer.
 
 Ethernet is serialized and delivered in memory. No automatic Early Report, M1,

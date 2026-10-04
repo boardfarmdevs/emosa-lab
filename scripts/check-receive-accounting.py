@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent common-window receive/transmit accounting and ingress-loss audit.
 
 No EMOSA imports. Complete link metrics and physical-pod qualification are not

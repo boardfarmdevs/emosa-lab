@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Conservative sole-BSS checks; neither a physical qualification nor WSC authority."""
 
 from emosa.errors import EmosaError, Reason

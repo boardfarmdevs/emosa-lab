@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Unassociated station measurements from the pod's probe requests (spec §3.9)."""
 
 import struct

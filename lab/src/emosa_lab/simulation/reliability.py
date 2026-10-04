@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bounded TLS fleet and recovery experiment using the actual adapter service.
 
 Synthetic databases and independent State publishers; no radio or EasyMesh wire.

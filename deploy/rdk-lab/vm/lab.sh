@@ -47,6 +47,7 @@
 #                                     python or c: the adapter's implementation, its fleet, GTP and
 #                                     agents (c: the kits install no Python); none: as installed
 #   lab.sh status
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 exec </dev/null
 export PATH=/snap/bin:$PATH

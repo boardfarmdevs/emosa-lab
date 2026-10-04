@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """opensync-lab-hwsim-6.6.1-v1: the real OpenSync 6.6 VIF encoding, offline."""
 
 import asyncio

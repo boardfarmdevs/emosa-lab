@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Single-interface Linux packet endpoint, with explicit lifetime and no pod writes.
 
 The caller supplies an isolated lab interface and owns link authentication,

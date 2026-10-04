@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* JSON text exactly as the reference writes it (Python's json.dumps), for the values
  * that are hashed or compared as text: fingerprints (sort_keys, "," and ":"), the start
  * instance (default separators) and journal records. */

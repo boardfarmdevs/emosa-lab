@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The agent's onboarding attempts and its own renewals. */
 #include "lifecycle.h"
 

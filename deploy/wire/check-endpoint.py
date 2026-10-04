@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Exercise actual AF_PACKET endpoints in fresh, isolated VM network namespaces.
 
 The default exercise exchanges empty IEEE Topology Queries. With --reports,

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Validation against the repository's JSON Schemas (schemas/NAME.schema.json), the ones the
  * reference validates with jsonschema: the agent configuration at start, journal records
  * and the status. The keywords those schemas use: type, enum, const, properties,

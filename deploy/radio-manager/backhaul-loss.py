@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Owned idle-lab counter qualification: selected wired ICMP egress/ingress loss.
 
 Adds one temporary clsact/filter only to the owned simulated pod, preserves each

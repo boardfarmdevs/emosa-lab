@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """AP metrics from the pod's own statistics (spec §3.8).
 
 With telemetry the agent knows, from the pod's own reports (``PodStats``):

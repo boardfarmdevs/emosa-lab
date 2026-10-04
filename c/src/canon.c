@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* JSON text as the reference writes it, hashes and time stamps. */
 #include "canon.h"
 

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independently check native sparse ESP receipt or the retained baseline crash.
 
 No adapter imports. Literal Ethernet/TLV fields and later native data-model reads

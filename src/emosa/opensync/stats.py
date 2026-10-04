@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The pod's own statistics: OpenSync client reports over MQTT (``sts.Report``).
 
 OpenSync 6.6 publishes them from ``owm`` (its OSW stats layer) through ``qm``

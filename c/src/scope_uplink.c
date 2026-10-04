@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The uplink scope (emosa.opensync.uplink, emosa.agent.uplink). */
 #include "scope_uplink.h"
 

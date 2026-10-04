@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Audited subset of IEEE 802.11-2024 Table E-4 (printed pp. 5658–5660).
 
 These channel sets are not regulatory permission or hardware capability. No

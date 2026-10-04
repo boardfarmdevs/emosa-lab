@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Owned Ethernet WSC component exercise and synthetic hostap payload peer.
 
 This starts explicitly at the M1 component boundary. Discovery/profile admission

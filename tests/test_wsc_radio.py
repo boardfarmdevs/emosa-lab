@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Authenticated radio payload semantics; no IEEE procedure or pod authority."""
 
 import pytest

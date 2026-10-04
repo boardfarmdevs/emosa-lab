@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Common interface/loss/service intervals for the owned shaped backhaul.
 
 Root scheduler drops include child FIFO drops; use the root exactly once.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independently compare the retained native controller counter candidate captures."""
 
 import argparse

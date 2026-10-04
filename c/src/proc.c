@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Other programs, without a shell (see proc.h). */
 #include "proc.h"
 

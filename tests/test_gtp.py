@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The GRE termination point: OpenSync's rules, dnsmasq, and one gretap per lease."""
 
 import copy

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Component checks against independent hostap output; no wire/OVSDB side effects."""
 
 import json

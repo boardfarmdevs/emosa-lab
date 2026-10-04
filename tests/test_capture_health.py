@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 import runpy
 import struct
 from pathlib import Path

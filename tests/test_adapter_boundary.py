@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The adapter (package emosa) stands alone: no lab code, only its declared dependencies."""
 
 import ast

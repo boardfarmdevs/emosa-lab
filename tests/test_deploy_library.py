@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The labs' VM scripts and the EMOSA steps they share (deploy/lib/emosa-vm.sh): both
 scripts parse and source the library, and the fleet and telemetry configuration it
 writes is what each lab asks for (lxc mocked: no VM)."""

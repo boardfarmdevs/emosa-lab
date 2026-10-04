@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Owned clean VM/container reproduction. Run on the development LXD host."""
 
 import argparse

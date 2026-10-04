@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Client steering: the Client Steering Request on the wire, and the pod's steering window."""
 
 import asyncio

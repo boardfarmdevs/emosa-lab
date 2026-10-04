@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """The secret store: its policy over any backend (spec §6), the files backend's privacy."""
 
 import os

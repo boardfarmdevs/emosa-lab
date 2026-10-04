@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Validate completed semantic radio runs and publish reviewed synthetic evidence."""
 
 import argparse

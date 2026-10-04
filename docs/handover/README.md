@@ -6,6 +6,7 @@ Python reference (`src/emosa`), which generates the conformance vectors, and the
 implementation (`c/`), taken to production quality so that it can be evaluated in full
 and carried by an RDK-B gateway. This is what a team taking it over needs, without
 access to the labs it was developed in (the easymesh-labs alignment plan's step 8.6).
+EMOSA is licensed under the Apache License 2.0 ([LICENSE](../../LICENSE)).
 
 ## Read in this order
 
@@ -38,7 +39,6 @@ access to the labs it was developed in (the easymesh-labs alignment plan's step 
 
 ## What is open
 
-- EMOSA's own license (the owner's decision; [decisions.md](decisions.md)).
 - Plan decisions 5.1 to 5.3: the gateway's 1905 arrangement, the GTP's role, how pods
   find EMOSA in the field.
 - Six modules of the agent's core below 85 % line coverage, and two inputs not fuzzed

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent packet, framing and bounded service-work review. No EMOSA imports.
 
 The simulated service estimate is distinct from complete neighbor reporting and

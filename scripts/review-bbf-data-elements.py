@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Pin and compare selected public BBF 2.17.0 definitions; no device access.
 
 Full publisher XML stays in the caller's cache outside Git. Output contains

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Source-derived asymmetric cases; native negative is independently extracted."""
 
 import json

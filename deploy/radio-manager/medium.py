@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Optional owned-lab frame loss; never a qualified radio measurement source.
 
 The unmodified pinned wmediumd probability model uses one random choice per

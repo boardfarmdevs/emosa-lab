@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent operational-soak checks; incomplete policy/metrics remain gaps.
 
 Only stdlib/tshark, never imports EMOSA. Correlates captures, public receipts,

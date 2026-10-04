@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """When the agent asks for a fresh attempt on its own (the agent loop's timeouts).
 
 - **No M2:** an M1 sent and no M2 for ``M2_TIMEOUT``: a controller that restarted

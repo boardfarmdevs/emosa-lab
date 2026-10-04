@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Check an owned telemetry-only outage without importing EMOSA implementation.
 
 Correlates worker availability with manager observations, captured wire messages,

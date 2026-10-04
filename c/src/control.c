@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The provisioned agent's control procedures. Mirrors emosa.wire.channel,
  * emosa.wire.reporting_policy and emosa.wire.steering. */
 #include "control.h"

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The agent's secret store, as emosa.secrets.SecretStore: references to secrets kept by a
  * backend, and a keyed fingerprint of values (HMAC-SHA256 over the compact sorted JSON),
  * so a journal records which credential without it. The policy is the vault's, the same

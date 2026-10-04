@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bounded TLS accept boundary for the pinned upstream OVS JSON-RPC session.
 
 Only authenticated streams reach ovs.jsonrpc.Connection. Framing, parsing,

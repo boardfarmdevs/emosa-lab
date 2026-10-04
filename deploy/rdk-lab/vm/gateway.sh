@@ -18,6 +18,7 @@
 #                                 the gateway's memory and CPU, and EMOSA's and the
 #                                 controller's processes (wherever EMOSA runs), every INTERVAL
 #                                 seconds (60) -> /var/lib/emosa-lab/footprint/LABEL
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 exec </dev/null
 export PATH=/snap/bin:$PATH

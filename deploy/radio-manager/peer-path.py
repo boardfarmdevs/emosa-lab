@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Owned VM bridge isolation and passive path evidence for native link metrics.
 
 Only the lab orchestrator changes isolation/offloads. The separate manager

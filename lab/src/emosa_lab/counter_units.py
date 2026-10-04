@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """EasyMesh 6.1 section 9.1's counter-unit choice with explicit peer facts.
 
 No observed peer, negotiation, telemetry conversion or ODH transport is provided.

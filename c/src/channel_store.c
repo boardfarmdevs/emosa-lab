@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The accepted channel policy's durable record (emosa.wire.channel.ChannelPolicyStore). */
 #include "channel_store.h"
 

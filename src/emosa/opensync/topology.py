@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Complete graph projection for explicitly bound upstream-schema simulations.
 
 Config establishes references only. Radio/VIF operational facts come from State.

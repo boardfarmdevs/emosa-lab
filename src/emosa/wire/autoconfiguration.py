@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bounded discovery and WSC exchange components, not a qualified agent endpoint.
 
 The caller supplies a trusted-link/peer binding; neither MAC matching nor WSC

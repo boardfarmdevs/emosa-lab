@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Admission observations for the bounded native policy; no LXD calls."""
 
 import importlib.util

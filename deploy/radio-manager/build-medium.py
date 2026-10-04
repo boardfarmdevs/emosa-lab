@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Build the pinned, unmodified optional loss simulator in the owned VM.
 
 No download, install, service start or radio change. Preserve the fresh output

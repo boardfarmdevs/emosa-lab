@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Selected EasyMesh 6.1 section 7.1 semantics of one radio's M2 payload set.
 
 No IEEE framing, controller trust, radio identity binding, external TLV parsing,

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Independent raw kernel-event/radio/EasyMesh leave correlation.
 
 Standard library plus tshark, with no collector or EMOSA imports. This verifies

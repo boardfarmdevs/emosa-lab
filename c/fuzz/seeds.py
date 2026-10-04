@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Seed corpora for the C fuzz targets (c/fuzz), taken from the conformance vectors.
 
     python3 c/fuzz/seeds.py            # writes c/fuzz/corpus/<target>, every target's

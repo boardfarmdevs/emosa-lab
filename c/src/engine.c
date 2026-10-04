@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* The operation lifecycle (emosa.reconcile.Engine, emosa.operations). */
 #include "engine.h"
 

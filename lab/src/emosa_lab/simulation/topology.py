@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Read-only adapter topology demo; owned database fixtures supply simulated facts.
 
 Two pod-initiated sessions, two radios/four interfaces per pod. No host networking,

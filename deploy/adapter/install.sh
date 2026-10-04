@@ -16,6 +16,7 @@
 # Python adapter installed before is removed. Both need systemd and iproute2. The choice
 # is kept in /etc/default/emosa-implementation, which the installer owns; settings in
 # /etc/default/emosa override it.
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 cd "$(dirname "$0")"
 test "$(id -u)" = 0 || { echo "run as root" >&2; exit 1; }

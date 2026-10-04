@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Durable selected policy receipt and conservative periodic report accounting.
 
 EasyMesh 6.1 §§7.3, 10.2.1, 15.1, 17.1.8/32 and Tables 34, 35, 115.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Synthetic Config and device state are separate stores with explicit device steps."""
 
 from copy import deepcopy

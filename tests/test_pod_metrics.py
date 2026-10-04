@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """AP metrics from the pod's statistics (spec §3.8)."""
 
 import struct

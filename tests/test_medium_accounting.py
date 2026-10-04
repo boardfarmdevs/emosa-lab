@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Reject evidence corruption rather than converting plausible raw counters."""
 
 import json

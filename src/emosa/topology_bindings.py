@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Explicit synthetic identity bindings; no enrollment or physical attestation."""
 
 import copy
