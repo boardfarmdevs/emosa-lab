@@ -621,7 +621,7 @@
    ]
   }
  ],
- "description": "spec §9: Backhaul Steering. The recorded pod rows with a Multi-AP backhaul station (bhaul-sta-24, 02:00:00:00:14:00), so the agent reports it; the controller's Backhaul Steering Requests, and ticks. A step names its session (a renewed session shares the move under way); a request step gives the uplink scope's answer to the hand-over ('executor': null, or why not), a tick step the move's outcome (null under way, true applied, or why it failed) and whether the pod's State is available. Per step: the result and the frames sent. handed_to_uplink lists the moves handed over (target BSSIDs); expected_status is the last session's status.",
+ "description": "spec §8.3: Backhaul Steering. The recorded pod rows with a Multi-AP backhaul station (bhaul-sta-24, 02:00:00:00:14:00), so the agent reports it; the controller's Backhaul Steering Requests, and ticks. A step names its session (a renewed session shares the move under way); a request step gives the uplink scope's answer to the hand-over ('executor': null, or why not), a tick step the move's outcome (null under way, true applied, or why it failed) and whether the pod's State is available. Per step: the result and the frames sent. handed_to_uplink lists the moves handed over (target BSSIDs); expected_status is the last session's status.",
  "ovsdb_tables": {
   "AWLAN_Node": {
    "6351605e-c99d-4701-b4c7-a6a9d9860ffd": {

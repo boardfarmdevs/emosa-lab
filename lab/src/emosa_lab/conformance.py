@@ -2163,7 +2163,7 @@ def metrics_vectors():
             }
         )
     return {
-        "description": "spec §3.8, §10: the Multi-AP Policy kept and the AP metrics reported "
+        "description": "spec §2.4, §3.8: the Multi-AP Policy kept and the AP metrics reported "
         "from the pod's own statistics. The recorded pod rows (stations "
         + ", ".join(stations)
         + " on 82:00:00:00:01:00, radio "
@@ -2349,7 +2349,7 @@ def backhaul_steering_vectors():
             }
         )
     return {
-        "description": "spec §9: Backhaul Steering. The recorded pod rows with a Multi-AP "
+        "description": "spec §8.3: Backhaul Steering. The recorded pod rows with a Multi-AP "
         "backhaul station (" + station + ", " + sta.hex(":") + "), so the agent reports it; the "
         "controller's Backhaul Steering Requests, and ticks. A step names its session (a "
         "renewed session shares the move under way); a request step gives the uplink scope's "

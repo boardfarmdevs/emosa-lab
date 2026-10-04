@@ -1,0 +1,51 @@
+{
+  "bpibroadband": {
+    "cpu_percent_of_one_core": 80.0,
+    "memory_current_mib": {
+      "max": 592,
+      "median": 506,
+      "min": 497
+    },
+    "memory_max_mib": 1024,
+    "processes": {
+      "emosa-agent-c (each)": {
+        "cpu_percent_of_one_core": 2.84,
+        "processes_seen": 2,
+        "pss_kib": {
+          "max": 4988,
+          "median": 4985
+        },
+        "rss_kib_max": 9672
+      },
+      "emosa-fleet-c": {
+        "cpu_percent_of_one_core": 0.01,
+        "processes_seen": 1,
+        "pss_kib": {
+          "max": 742,
+          "median": 741
+        },
+        "rss_kib_max": 3588
+      },
+      "onewifi_em_agen": {
+        "cpu_percent_of_one_core": 0.73,
+        "processes_seen": 1,
+        "pss_kib": {
+          "max": 33517,
+          "median": 31383
+        },
+        "rss_kib_max": 40836
+      },
+      "onewifi_em_ctrl": {
+        "cpu_percent_of_one_core": 34.57,
+        "processes_seen": 1,
+        "pss_kib": {
+          "max": 55763,
+          "median": 33584
+        },
+        "rss_kib_max": 63188
+      }
+    },
+    "samples": 60,
+    "seconds": 1799
+  }
+}

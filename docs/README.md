@@ -56,6 +56,8 @@ wins.
   and mixed agents ([opensync-lab-proof](records/evidence/opensync-lab-proof/README.md)),
   and EMOSA's way into the RDK lab up to the room suite on either agent
   ([rdk-lab](records/evidence/rdk-lab/README.md)).
+- [Handover](handover/README.md): for the team taking EMOSA over: architecture, module
+  guide, coding standard, test guide, traceability, decision log
 - [Project records](project/README.md): the plans, status pages and handoff
   of the development up to September 2026. The current plan and status of all
   the labs are the easymesh-labs

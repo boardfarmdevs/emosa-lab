@@ -1,0 +1,5 @@
+{"lab":"rdk","room":"home-a-one-client-handover","passed":true,"loaded":true,"played":true,"final":true,"verified":1,"errors":[]}
+{"lab":"rdk","room":"band-upgrade-24-5","passed":true,"loaded":true,"played":true,"final":true,"verified":7,"errors":[]}
+{"lab":"rdk","room":"received-same-band-roam","passed":true,"loaded":true,"played":true,"final":true,"verified":2,"errors":[]}
+{"lab":"rdk","room":"large-room-perimeter-counter-roam","passed":true,"loaded":true,"played":true,"final":true,"verified":10,"errors":[]}
+{"lab":"rdk","room":"traffic-quieter-ap","passed":false,"loaded":true,"verified":10,"errors":["page.screenshot: Timeout 45000ms exceeded."]}

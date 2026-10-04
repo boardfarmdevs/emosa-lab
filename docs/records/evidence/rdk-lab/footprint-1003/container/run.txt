@@ -1,0 +1,5 @@
+emosa_in=emosa
+pods=2
+started=2026-10-04T02:52:44Z
+agent /opt/emosa-adapter/bin/emosa-agent-c
+finished=2026-10-04T03:23:08Z

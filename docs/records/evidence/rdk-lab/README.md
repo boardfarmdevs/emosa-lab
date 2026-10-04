@@ -686,3 +686,56 @@ seconds, while its world switch, which runs inside the VM, passed all worlds).
   other agents' Topology and Link Metric Queries to a new neighbor not answered,
   as with the reference.
 - The VM runs the adapter in C after these runs (emosa-lab 1b5f611).
+
+### EMOSA in the gateway container: its footprint (3 October, plans 5.4 and 8.6)
+
+EMOSA's fleet and both pods' agents ran inside the RDK controller's own container
+(`bpibroadband`: 2 CPUs, 1 GiB, no swap) on `rdk-emosa-1002`, as on a gateway that
+carries the adapter: `deploy/rdk-lab/vm/gateway.sh on` installed the package the image's
+recipe builds (emosa-lab d11fc1d; the image of 3 October differs from the running one of
+2 October only by that package), took over the adapter container's registry,
+configurations and state, and forwarded the front and agent ports to the gateway; the
+broker stayed in the adapter container. The pods came back through the gateway's front
+port 47 s after its fleet started, with the same AL MACs and ports; RDK's controller
+onboarded both agents again (their M2s written and applied) through the agents' trunk, a
+veth pair into `brlan0` (`EMOSA_BRIDGE`; a macvlan on the bridge device itself would not
+reach the controller, found here and fixed in the package's defaults). The agents logged
+through RDK's logger into `/rdklogs/logs/EMOSA_<pod>.txt` and `EMOSAFleetLog.txt`.
+`gateway.sh off` moved everything back (provisioning in the adapter container 58 s later).
+
+The same 30 minutes in both arrangements, sampled every 30 s (`gateway.sh measure`), with
+readiness and the quick requalification's five rooms run from rev120 meanwhile:
+
+| | EMOSA in its own container | EMOSA in the gateway |
+| --- | --- | --- |
+| gateway memory (cgroup), median / max | 487 / 498 MiB | 506 / 592 MiB |
+| gateway CPU, of one core | 75.6 % | 80.0 % |
+| an agent: PSS / RSS / CPU | 7.6 / 13.5 MiB / 2.4 % (x86-64) | 5.0 / 9.7 MiB / 2.8 % (the image: 32-bit) |
+| the fleet: PSS / CPU | 1.1 MiB / 0.0 % | 0.7 MiB / 0.0 % |
+| RDK's controller (`onewifi_em_ctrl`): PSS median / max, CPU | 35.8 / 48.2 MiB, 35.4 % | 33.6 / 55.8 MiB, 34.6 % |
+| the rooms | 4 of 5 | 4 of 5 |
+
+- **Memory fits.** EMOSA adds about 10.7 MiB of its own (two agents and the fleet) and
+  about 19 MiB to the gateway's median with page cache; the gateway peaked at 592 MiB of
+  its 1024 MiB during the rooms (its controller at 55.8 MiB). An agent costs about 5 MiB
+  in the image.
+- **CPU is what limits the number of pods.** An idle agent takes 2.4 to 2.8 % of a core.
+  A profile of one (`perf`, 60 s) puts 66 % of its time in `malloc`/`free` and 17 % in
+  cJSON: the agent parses its whole journal again several times a second, all of its 67
+  operations (172 KB of JSON) on each 0.5 s refresh for the engine's reconcile and again
+  for the uplink's tick, the latest operation on every loop for the status, the secret
+  files on each uplink tick; a regular expression is compiled for each MAC checked. The
+  reference does the same. The cost grows with the journal, and the journal keeps every
+  operation; the reconcile's search for a newer operation is quadratic in it. Remedy
+  (open): the journal's operations parsed once and kept, the search linear, the status
+  checked once a second, prepared statements kept, and a bound on what the journal
+  retains (the specification has none yet).
+- The room that failed in both runs, `traffic-quieter-ap`, failed on the browser's
+  screenshot timing (`page.screenshot: Timeout 45000ms exceeded`) on rev120, at load 11 to
+  14 with the lab VM and the browser on the one host. A first run of the same rooms (no
+  samples: the measurement stopped on an agent without `--version`) passed 3 of 5:
+  `traffic-quieter-ap` on the screenshot again, and `band-upgrade-24-5` on a check it
+  passed in both measured runs.
+
+Evidence: [footprint-1003](footprint-1003/) (each arrangement's samples, summary, run and
+rooms).

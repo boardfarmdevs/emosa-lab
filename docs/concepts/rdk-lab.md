@@ -332,6 +332,14 @@ features at the bar) the full room suite ran on it with the adapter in C: the
 catalog's 27 rooms (one a timing edge on no pod, passed on its reruns), the four
 geometry rooms, the RF stages and the world switch (the record, §3).
 
+**EMOSA in the gateway.** `vm/gateway.sh on [PACKAGE]` moves the fleet and the agents
+into the controller's own container, as a gateway carrying the adapter would run them:
+the package the image's recipe builds, the adapter container's registry and state taken
+over, the front and agent ports forwarded there, the agents' trunk a veth pair into
+`brlan0`; `gateway.sh off` moves them back, and `gateway.sh measure LABEL SECONDS`
+samples the gateway's memory and CPU and EMOSA's processes wherever they run (the
+footprint record, §3).
+
 ## 9. Open
 
 - A pod's session across a short loss of its OVSDB connection: EMOSA could

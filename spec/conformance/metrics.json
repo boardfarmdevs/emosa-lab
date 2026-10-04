@@ -1057,7 +1057,7 @@
    ]
   }
  ],
- "description": "spec §3.8, §10: the Multi-AP Policy kept and the AP metrics reported from the pod's own statistics. The recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00); the pod's statistics from the case's publishes (topic emosa/stats/MVXPOD023F87E628DD, reporting every 5 s) at the wall clock; the declared best-effort ESP 3fff00; a statistic is fresh for 20 s (three periods and the 5 s publish interval). Each step is a controller frame or a tick at a time 'at' (seconds): the agent's result and the frames it sends; its own messages take MIDs from 500. expected_policy is the kept record (without the boot identity).",
+ "description": "spec §2.4, §3.8: the Multi-AP Policy kept and the AP metrics reported from the pod's own statistics. The recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00); the pod's statistics from the case's publishes (topic emosa/stats/MVXPOD023F87E628DD, reporting every 5 s) at the wall clock; the declared best-effort ESP 3fff00; a statistic is fresh for 20 s (three periods and the 5 s publish interval). Each step is a controller frame or a tick at a time 'at' (seconds): the agent's result and the frames it sends; its own messages take MIDs from 500. expected_policy is the kept record (without the boot identity).",
  "ovsdb_tables": {
   "AWLAN_Node": {
    "96bc1650-4197-4cd8-9036-f9eb854e87ec": {

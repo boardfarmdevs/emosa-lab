@@ -1,0 +1,143 @@
+{
+  "description": "Specification to tests: each section of spec/README.md (and the design's normative sections) with the tests that check it. vectors: spec/conformance (the reference generates them, both implementations replay them); box: the lab in a box's scenarios (spec/box-scenarios.md, both implementations in CI); python: tests/; units: c/tests/units.c functions; fuzz: c/fuzz targets; lab: the records under docs/records/evidence. tests/test_handover.py checks it against the specification and the repository, and docs/handover/traceability.md is generated from it (scripts/handover-traceability.py).",
+  "sections": {
+    "README 1. What EMOSA is": {
+      "python": ["test_adapter_boundary.py", "test_contracts.py"],
+      "lab": ["rdk-lab", "opensync-lab-proof"]
+    },
+    "README 2.1 Transport": {
+      "vectors": ["cmdu.json"],
+      "box": ["boot"],
+      "python": ["test_ieee1905.py"],
+      "fuzz": ["cmdu"]
+    },
+    "README 2.2 Identity: the AL MAC": {
+      "vectors": ["al-mac.json"],
+      "box": ["fleet-handover"],
+      "python": ["test_fleet.py"]
+    },
+    "README 2.3 Message sets": {
+      "vectors": ["onboarding.json"],
+      "box": ["onboard", "early-report"],
+      "python": ["test_message_sets.py", "test_m2_session.py"],
+      "lab": ["rdk-lab", "opensync-lab-proof"]
+    },
+    "README 2.4 Messages": {
+      "vectors": ["control.json", "translation-northbound.json"],
+      "box": ["answers", "clients", "channel-scan", "steering-refusals"],
+      "python": ["test_report_coordinator.py", "test_channel_procedures.py"],
+      "fuzz": ["control"]
+    },
+    "README 2.5 Onboarding": {
+      "vectors": ["onboarding.json", "session-timing.json", "early-report.json"],
+      "box": ["boot", "onboard", "refuse", "early-report", "renew", "no-m2", "silent-controller", "unserved-pod", "new-source"],
+      "python": ["test_autoconfiguration.py", "test_provisioning_session.py", "test_discovery_session.py", "test_wsc.py"],
+      "fuzz": ["wsc"]
+    },
+    "README 2.6 What the agent reports": {
+      "vectors": ["translation-northbound.json"],
+      "box": ["clients", "reannounce"],
+      "python": ["test_wire_reports.py", "test_easymesh_view.py"]
+    },
+    "README 3.1 Connections": {
+      "box": ["boot", "transport-cut", "adapter-restart"],
+      "python": ["test_ovsdb.py", "test_tls_listener.py"],
+      "lab": ["opensync-lab-proof"]
+    },
+    "README 3.2 What EMOSA reads and writes": {
+      "vectors": ["translation-southbound.json", "scope-writes.json"],
+      "python": ["test_pod_profile.py", "test_radio_scope.py"]
+    },
+    "README 3.3 Translation: OVSDB → EasyMesh": {
+      "vectors": ["translation-northbound.json", "uplink.json"],
+      "python": ["test_easymesh_view.py"],
+      "fuzz": ["rows"]
+    },
+    "README 3.4 Translation: EasyMesh → OVSDB": {
+      "vectors": ["translation-southbound.json", "control.json"],
+      "box": ["onboard", "multi-bss", "channel-selection"],
+      "python": ["test_pod_profile.py", "test_channel_procedures.py"]
+    },
+    "README 3.5 Pod profiles": {
+      "vectors": ["translation-southbound.json"],
+      "box": ["onboard", "multi-bss"],
+      "python": ["test_pod_profile.py", "test_profile_audit.py"]
+    },
+    "README 3.6 The pod's own statistics": {
+      "vectors": ["telemetry.json", "scope-writes.json", "metrics.json"],
+      "box": ["telemetry", "foreign-broker", "telemetry-broker-restart"],
+      "python": ["test_pod_telemetry.py", "test_station_telemetry.py"],
+      "units": ["mqtt_parser", "telemetry_limits"],
+      "fuzz": ["stats", "mqtt"]
+    },
+    "README 3.7 Client steering": {
+      "vectors": ["control.json", "steering.json", "steering-queue.json", "scope-writes.json"],
+      "box": ["steering", "steering-refusals", "steering-conflict", "steering-window-expired", "steering-restart"],
+      "python": ["test_client_steering.py"],
+      "fuzz": ["control"]
+    },
+    "README 3.8 AP metrics from the pod's statistics": {
+      "vectors": ["metrics.json"],
+      "box": ["metrics"],
+      "python": ["test_pod_metrics.py", "test_ap_metrics.py", "test_reporting_policy.py"],
+      "fuzz": ["control"]
+    },
+    "README 3.9 Unassociated station measurements": {
+      "vectors": ["probe-watch.json", "control.json", "scope-writes.json"],
+      "box": ["unassociated"],
+      "python": ["test_unassociated.py", "test_probe_watch.py"]
+    },
+    "README 4. The fleet": {
+      "vectors": ["fleet.json", "fleet-sessions.json"],
+      "box": ["fleet-handover", "fleet-return", "fleet-refusals", "fleet-takeover", "fleet-forget"],
+      "python": ["test_fleet.py"],
+      "fuzz": ["fleet"],
+      "lab": ["rdk-lab", "opensync-lab-proof"]
+    },
+    "README 5. Operations": {
+      "vectors": ["engine.json", "operation-transitions.json"],
+      "box": ["adapter-restart", "steering-restart"],
+      "units": ["engine"],
+      "python": ["test_conformance.py"]
+    },
+    "README 6. Management and state": {
+      "box": ["adapter-restart", "fleet-takeover", "fleet-forget"],
+      "units": ["canon", "vault", "secret_backend", "files", "schema"],
+      "python": ["test_secret_store.py", "test_contracts.py"]
+    },
+    "README 7. Dependencies": {
+      "python": ["test_adapter_boundary.py", "test_sbom.py"]
+    },
+    "README 8.1 Requirements": {
+      "lab": ["rdk-lab", "opensync-lab-proof"]
+    },
+    "README 8.2 GRE termination point (GTP), the baseline": {
+      "vectors": ["gtp.json"],
+      "box": ["gtp"],
+      "python": ["test_gtp.py"],
+      "fuzz": ["gtp"],
+      "lab": ["rdk-lab", "opensync-lab-proof"]
+    },
+    "README 8.3 EasyMesh backhaul, optional": {
+      "vectors": ["uplink.json", "backhaul-steering.json"],
+      "box": ["backhaul-capability", "backhaul-steering", "backhaul-steering-renewal", "backhaul-steering-own-bss", "backhaul-steering-refused", "multi-bss", "uplink-held", "uplink-foreign-change", "backhaul-steering-kept"],
+      "python": ["test_uplink.py"],
+      "fuzz": ["control", "rows"],
+      "lab": ["rdk-lab"]
+    },
+    "README 9. Not covered yet": {
+      "note": "not implemented, so not tested: the list is what EMOSA does not do"
+    },
+    "design 8. Timing (normative)": {
+      "vectors": ["session-timing.json", "early-report.json", "steering-queue.json"],
+      "box": ["no-m2", "silent-controller", "unserved-pod", "early-report", "uplink-held", "steering-window-expired"],
+      "lab": ["opensync-lab-proof"]
+    },
+    "design 9. Resource budgets (normative upper bounds)": {
+      "vectors": ["cmdu.json", "fleet-sessions.json"],
+      "python": ["test_ieee1905.py"],
+      "fuzz": ["cmdu", "fleet"],
+      "lab": ["opensync-lab-proof"]
+    }
+  }
+}
