@@ -1,17 +1,17 @@
 # EMOSA's GRE termination point (spec 8.2), as a distribution's package installs it (CMake
-# EMOSA_INSTALL_DATA). Inert until configured (/etc/emosa-gtp.json; the example is in
+# EMOSA_INSTALL_DATA). Inert until configured (@EMOSA_GTP_CONFIG@; the example is in
 # @CMAKE_INSTALL_FULL_DATADIR@/emosa; schema gtp-config). Its own dnsmasq serves the pods'
 # onboarding SSID and runs the GTP's lease hook.
 [Unit]
 Description=EMOSA GRE termination point: the gateway end of the pods' OpenSync GRE
 After=network-online.target
-ConditionPathExists=/etc/emosa-gtp.json
+ConditionPathExists=@EMOSA_GTP_CONFIG@
 
 [Service]
 EnvironmentFile=-/etc/default/emosa
-ExecStartPre=@EMOSA_BINDIR@/emosa-gtp-c setup /etc/emosa-gtp.json
+ExecStartPre=@EMOSA_BINDIR@/emosa-gtp-c setup @EMOSA_GTP_CONFIG@
 ExecStart=@EMOSA_DNSMASQ@ -k -C /var/lib/emosa-gtp/dnsmasq.conf
-ExecStopPost=@EMOSA_BINDIR@/emosa-gtp-c list /etc/emosa-gtp.json
+ExecStopPost=@EMOSA_BINDIR@/emosa-gtp-c list @EMOSA_GTP_CONFIG@
 Restart=on-failure
 RestartSec=3
 

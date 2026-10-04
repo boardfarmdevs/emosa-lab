@@ -472,7 +472,7 @@ For each connection on the front port, the fleet:
 
 The whole exchange MUST complete within 5 s. A pod returning later gets the
 same entry. The registry file is the fleet's state: a serving fleet MUST read it
-again for each pod, so a `forget` run as another process takes effect at once. The agent configuration takes the fleet's settings (`message_set`,
+again for each pod, so a `forget` run as another process takes effect at once. With `run_root` each agent's configuration has `run_dir` `<run_root>/<pod_id>`. The agent configuration takes the fleet's settings (`message_set`,
 `multi_bss`, `m2_session`, `profile`, `uplink`), overridden per pod by
 `pods.<serial>`: a different pod model needs its own profile, and the uplink
 switch (§8.3) is enabled per pod. `forget SERIAL` stops the agent, deletes the entry and the
@@ -525,7 +525,7 @@ Rules:
 | Fleet configuration | [`fleet-config.schema.json`](../schemas/fleet-config.schema.json) | e.g. `/etc/emosa-fleet.json` |
 | Agent configuration | [`agent-config.schema.json`](../schemas/agent-config.schema.json) | `<config_dir>/<pod_id>.json` |
 | Fleet registry | [`fleet-registry.schema.json`](../schemas/fleet-registry.schema.json) | `<state_root>/fleet.json` |
-| Agent status | [`agent-status.schema.json`](../schemas/agent-status.schema.json) | `<state_dir>/status.json`, rewritten on change, at most once a second |
+| Agent status | [`agent-status.schema.json`](../schemas/agent-status.schema.json) | `<state_dir>/status.json`, rewritten on change, at most once a second; with a `run_dir` (a RAM disk on a gateway) the file is `<run_dir>/status.json` and `<state_dir>/status.json` a link to it, so the state directory is not written once a second |
 | Pod profile | [`pod-profile.schema.json`](../schemas/pod-profile.schema.json) | bundled, or a path |
 | Operation journal, secrets | implementation-private | `<state_dir>/journal`, `<state_dir>/uplink` (the uplink scope), `<state_dir>/secrets` |
 

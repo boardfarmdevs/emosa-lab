@@ -32,7 +32,7 @@ FILES = (
     "c/src/*.c",
     "c/src/*.h",
     "c/src/*.in",
-    "c/packaging/default-emosa",
+    "c/packaging/default-emosa.in",
     "c/packaging/systemd/*.in",
     "deploy/adapter/files/emosa-agent-link",
     "deploy/adapter/files/fleet.example.json",

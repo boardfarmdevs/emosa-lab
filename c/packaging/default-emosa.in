@@ -10,3 +10,12 @@ EMOSA_BRIDGE=brlan0
 # Where the programs read their data, when not the build's places:
 #EMOSA_SCHEMAS=/usr/share/emosa/schemas
 #EMOSA_PROFILES=/usr/share/emosa/profiles
+# Where this package's units read the configurations (the build's places), and the places a
+# fleet configuration names on this platform: its config_dir EMOSA_AGENT_CONFIG_DIR, its
+# state_root EMOSA_STATE_ROOT and its run_root EMOSA_RUN_ROOT (a RAM disk; none when empty).
+# For tools that configure EMOSA; the programs read their configuration files.
+EMOSA_FLEET_CONFIG=@EMOSA_FLEET_CONFIG@
+EMOSA_AGENT_CONFIG_DIR=@EMOSA_AGENT_CONFIG_DIR@
+EMOSA_GTP_CONFIG=@EMOSA_GTP_CONFIG@
+EMOSA_STATE_ROOT=@EMOSA_STATE_ROOT@
+EMOSA_RUN_ROOT=@EMOSA_RUN_ROOT@

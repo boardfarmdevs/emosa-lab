@@ -148,6 +148,24 @@ def write(path, value):
     os.replace(tmp, path)
 
 
+def status_path(config, state_dir):
+    """Where the agent writes its status (spec §6): <run_dir>/status.json when the
+    configuration names a run directory (a RAM disk on a gateway), with
+    <state_dir>/status.json a link to it, so readers keep one path and the state
+    directory is not written once a second; else <state_dir>/status.json."""
+    if not config.get("run_dir"):
+        return state_dir / "status.json"
+    run_dir = Path(config["run_dir"])
+    run_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+    target, link = run_dir / "status.json", state_dir / "status.json"
+    if not (link.is_symlink() and os.readlink(link) == str(target)):
+        tmp = state_dir / "status.json.link"
+        tmp.unlink(missing_ok=True)
+        tmp.symlink_to(target)
+        os.replace(tmp, link)
+    return target
+
+
 class PodReportSource:
     """What the agent reports about its pod: the bound BSS (and managed slot BSSes).
 
@@ -392,6 +410,7 @@ def uplink_bssid(uplink_config):
 async def serve(config, stop):
     state_dir = Path(config["state_dir"])
     state_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+    status_file = status_path(config, state_dir)
     pod_id = config["pod_id"]
     agent, controller = mac(config["al_mac"]), mac(config["controller_al"])
     session = OvsSession(config["ovsdb"], monitor_columns=MONITOR, timeout=2)
@@ -696,11 +715,11 @@ async def serve(config, stop):
                     last_status = summary
                     last_write = 0
                 if time.monotonic() - last_write >= 1:
-                    write(state_dir / "status.json", value)
+                    write(status_file, value)
                     last_write = time.monotonic()
     finally:
         if lifecycle:
-            write(state_dir / "status.json", status())
+            write(status_file, status())
             lifecycle.close()
         store.close()
         if subscriber is not None:

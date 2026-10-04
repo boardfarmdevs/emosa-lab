@@ -38,6 +38,7 @@
 #include "mqtt.h"
 #include "ovs.h"
 #include "ovsdb.h"
+#include "proc.h"
 #include "reporting.h"
 #include "scope.h"
 #include "scope_ap.h"
@@ -133,6 +134,7 @@ typedef struct {
     /* configuration */
     cJSON *config;
     const char *pod_id, *serial, *interface, *state_dir, *profile_id;
+    const char *status_dir; /* run_dir when configured (a RAM disk), else state_dir */
     uint8_t al[6], controller[6];
     bool r1, multi_bss, shared_session, steering_on;
     em_profile profile;
@@ -1333,11 +1335,33 @@ static void write_status(agent *a)
     size_t n = strlen(text);
     text = em_realloc(text, n + 2);
     memcpy(text + n, "\n", 2);
-    if (!em_format(path, sizeof(path), "%s/status.json", a->state_dir) || !em_write_file(path, text, false))
-        LOG("status: not written to %s", a->state_dir);
+    if (!em_format(path, sizeof(path), "%s/status.json", a->status_dir) || !em_write_file(path, text, false))
+        LOG("status: not written to %s", a->status_dir);
     free(text);
     cJSON_Delete(s);
     a->status_written = now();
+}
+
+/* With a run directory (spec §6): the status is written there, and <state_dir>/status.json
+ * is a link to it, so readers keep one path and the state directory is not written once a
+ * second. The link is made again only when it names something else. */
+static bool status_link(const agent *a)
+{
+    char target[EM_STATE_DIR_MAX + 16], link[EM_STATE_DIR_MAX + 16], tmp[EM_STATE_DIR_MAX + 24],
+        now[EM_STATE_DIR_MAX + 16];
+    EM_FORMAT_FIXED(target, sizeof(target), "%s/status.json", a->status_dir); /* EM_STATE_DIR_MAX */
+    EM_FORMAT_FIXED(link, sizeof(link), "%s/status.json", a->state_dir);
+    EM_FORMAT_FIXED(tmp, sizeof(tmp), "%s/status.json.link", a->state_dir);
+    if (!em_mkdirs(a->status_dir, 0700))
+        return false;
+    ssize_t n = readlink(link, now, sizeof(now) - 1);
+    if (n >= 0) {
+        now[n] = 0;
+        if (!strcmp(now, target))
+            return true;
+    }
+    (void)unlink(tmp);
+    return !symlink(target, tmp) && !rename(tmp, link);
 }
 
 /* -- configuration and main --------------------------------------------------------- */
@@ -1369,6 +1393,7 @@ static bool configure(agent *a, const char *path, const char *profiles)
     a->serial = cfg_str(c, "serial");
     a->interface = cfg_str(c, "interface");
     a->state_dir = cfg_str(c, "state_dir");
+    a->status_dir = cfg_str(c, "run_dir") ? cfg_str(c, "run_dir") : a->state_dir;
     a->profile_id = cfg_str(c, "profile") ? cfg_str(c, "profile") : "opensync-lab-hwsim-6.6.1-v1";
     const char *set = cfg_str(c, "message_set"), *m2 = cfg_str(c, "m2_session");
     a->r1 = set && !strcmp(set, "r1");
@@ -1403,6 +1428,7 @@ static bool configure(agent *a, const char *path, const char *profiles)
         a->freshness = 3.0 * a->telemetry.intent.reporting_interval + publish;
     }
     if (!a->pod_id || !a->serial || !a->interface || !a->state_dir || strlen(a->state_dir) > EM_STATE_DIR_MAX ||
+        !a->status_dir || strlen(a->status_dir) > EM_STATE_DIR_MAX ||
         !em_parse_mac(cfg_str(c, "al_mac") ? cfg_str(c, "al_mac") : "", a->al) ||
         !em_parse_mac(cfg_str(c, "controller_al") ? cfg_str(c, "controller_al") : "", a->controller))
         return false;
@@ -1505,6 +1531,10 @@ int main(int argc, char **argv)
         return 2;
     }
     mkdir(a.state_dir, 0700);
+    if (a.status_dir != a.state_dir && !status_link(&a)) {
+        FAIL("run directory %s unusable", a.status_dir);
+        return 1;
+    }
     /* the AP scope's secrets and journal (a second writer is refused: one agent per pod) */
     char dir[600];
     EM_FORMAT_FIXED(dir, sizeof(dir), "%s/secrets", a.state_dir);

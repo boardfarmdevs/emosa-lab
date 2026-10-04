@@ -435,8 +435,19 @@ jobs:
             test -e "$f" || { echo "missing: $f"; exit 1; }
           done
           grep -q "ExecStart=/usr/bin/emosa-agent-c /etc/emosa/%i.json" lib/systemd/system/emosa-agent@.service
+          grep -qx "EMOSA_STATE_ROOT=/var/lib/emosa" etc/default/emosa
           usr/bin/emosa-agent-c --version
           python3 -c "import json; d = json.load(open('usr/share/emosa/emosa-c.spdx.json')); assert d['spdxVersion'] == 'SPDX-2.3'"
+      - name: a gateway's places (the Yocto recipe's), in the units and /etc/default/emosa
+        run: |
+          cmake -S c -B c/build-gateway -DEMOSA_INSTALL_DATA=ON -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_INSTALL_SYSCONFDIR=/etc -DEMOSA_FLEET_CONFIG=/nvram/emosa/fleet-config.json \
+            -DEMOSA_AGENT_CONFIG_DIR=/nvram/emosa/agents -DEMOSA_GTP_CONFIG=/nvram/emosa/gtp-config.json \
+            -DEMOSA_STATE_ROOT=/nvram/emosa/state -DEMOSA_RUN_ROOT=/run/emosa
+          grep -qx "ExecStart=/usr/bin/emosa-fleet-c serve /nvram/emosa/fleet-config.json" c/build-gateway/units/emosa-fleet.service
+          grep -qx "ConditionPathExists=/nvram/emosa/agents/%i.json" c/build-gateway/units/emosa-agent@.service
+          grep -qx "ConditionPathExists=/nvram/emosa/gtp-config.json" c/build-gateway/units/emosa-gtp.service
+          grep -qx "EMOSA_RUN_ROOT=/run/emosa" c/build-gateway/default-emosa
   c-analyzer:
     runs-on: ubuntu-24.04
     steps:

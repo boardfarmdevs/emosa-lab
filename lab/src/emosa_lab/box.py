@@ -278,7 +278,13 @@ class Box:
         }
         self.al_mac = entry["al_mac"]
         state_root = self.directory / "state"
-        fleet = {"controller_al": CONTROLLER_AL, "state_root": str(state_root)}
+        # a run root, as on a gateway (a RAM disk there): the status in the run directory
+        self.run_root = self.directory / "run"
+        fleet = {
+            "controller_al": CONTROLLER_AL,
+            "state_root": str(state_root),
+            "run_root": str(self.run_root),
+        }
         if self.telemetry:
             fleet["telemetry"] = TELEMETRY
         if self.multi_bss:
@@ -493,9 +499,17 @@ async def apply_configuration(db):
 
 
 async def boot(box):
-    """The agent takes the pod's connection and searches for its controller."""
+    """The agent takes the pod's connection and searches for its controller. Its status is
+    in its run directory, the state directory's status.json a link to it (spec §6)."""
     searched = await box.until(lambda: box.controller.latest(AUTOCONFIG_SEARCH))
-    return box.result(passed=bool(searched))
+    await box.until(lambda: box.status() is not None)
+    target = box.run_root / box.serial / "status.json"
+    linked = (
+        box.status_path.is_symlink()
+        and os.readlink(box.status_path) == str(target)
+        and target.is_file()
+    )
+    return box.result(passed=bool(searched) and linked, status_linked=linked)
 
 
 async def onboard(box):

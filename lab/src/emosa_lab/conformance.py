@@ -534,6 +534,11 @@ def fleet_session_vectors():
             },
             {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500002.75},
         ],
+        # a run root (a RAM disk on a gateway): each agent's run_dir, where its status goes
+        "run-root-gives-each-agent-a-run-directory": [
+            {"fleet_config": {**base, "run_root": f"{FLEET_ROOT}/run"}},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},
+        ],
         "own-settings-restart-the-agent": [
             {"fleet_config": base},
             {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},

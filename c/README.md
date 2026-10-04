@@ -130,6 +130,17 @@ bridge); the example configurations and the bill of materials
 configuration exists (`ConditionPathExists`); the fleet enables an agent's unit for
 each pod handed to it. The GTP's unit runs `EMOSA_DNSMASQ`.
 
+**Where the configuration and state go** (CMake, written into `/etc/default/emosa` for the
+tools that configure EMOSA): the units read `EMOSA_FLEET_CONFIG`, `EMOSA_AGENT_CONFIG_DIR`
+(the fleet configuration's `config_dir`) and `EMOSA_GTP_CONFIG`; a fleet configuration
+names `EMOSA_STATE_ROOT` as its `state_root` and `EMOSA_RUN_ROOT`, a RAM disk, as its
+`run_root`, where each agent writes its status once a second (spec §6). By default
+`/etc/emosa-fleet.json`, `/etc/emosa`, `/etc/emosa-gtp.json`, `/var/lib/emosa` and no run
+root. A gateway keeps the configuration and state on its persistent storage, which survives
+an image upgrade, and the status in RAM: meta-cmf-bananapi-vcpe's recipe builds with
+`/nvram/emosa/fleet-config.json`, `/nvram/emosa/agents`, `/nvram/emosa/gtp-config.json`,
+`/nvram/emosa/state` and `/run/emosa`.
+
 **Bill of materials** (`packaging/sbom.py`, SPDX 2.3, JSON): every file of this
 repository that goes into the programs or the package with its SHA-1 and SHA-256, the
 libraries they link (versions from pkg-config where it was built), and the programs the

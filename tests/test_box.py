@@ -55,6 +55,7 @@ def agent(request):
 def test_the_agent_takes_the_pod_and_searches_for_its_controller(agent, tmp_path):
     result = box("boot", agent, tmp_path / "box")
     assert result["passed"]
+    assert result["status_linked"]  # the status in the run directory (spec 6)
     assert "0x0007" in result["messages"]  # AP-Autoconfiguration Search
     assert "0x0000" in result["messages"]  # Topology Discovery, on start (spec 2.4)
     assert result["exit"] is None  # still running when it was stopped

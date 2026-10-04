@@ -148,6 +148,11 @@ def agent_config(entry, fleet):
         "controller_al": fleet["controller_al"],
         **{k: own.get(k, fleet.get(k, v)) for k, v in AGENT_DEFAULTS.items()},
         "state_dir": str(Path(fleet["state_root"]) / entry["pod_id"]),
+        **(
+            {"run_dir": str(Path(fleet["run_root"]) / entry["pod_id"])}
+            if "run_root" in fleet
+            else {}
+        ),
         "run_id": entry["pod_id"],
     }
 

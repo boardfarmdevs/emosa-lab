@@ -296,6 +296,10 @@ cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet)
      * configuration, rather than given a cut path, which would be another directory */
     if (em_format(text, sizeof(text), "%s/%s", root ? root : "", e->pod_id))
         cJSON_AddStringToObject(c, "state_dir", text);
+    /* the status's place (a RAM disk on a gateway), left out the same way when too long */
+    const char *run = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(fleet, "run_root"));
+    if (run && em_format(text, sizeof(text), "%s/%s", run, e->pod_id))
+        cJSON_AddStringToObject(c, "run_dir", text);
     cJSON_AddStringToObject(c, "run_id", e->pod_id);
     return c;
 }
