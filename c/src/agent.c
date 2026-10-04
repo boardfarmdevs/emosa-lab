@@ -409,10 +409,9 @@ static em_reason topology_tlvs(agent *a, bool r1, em_tlv_list *out)
 /* the pod has an operation in an active state (the fronthaul write in flight) */
 static bool active_op(agent *a)
 {
-    cJSON *ops = em_journal_operations(a->journal, NULL), *op;
+    const cJSON *op;
     bool active = false;
-    cJSON_ArrayForEach(op, ops) active = active || em_state_active(em_state_of(op));
-    cJSON_Delete(ops);
+    cJSON_ArrayForEach(op, em_journal_operations_view(a->journal)) active = active || em_state_active(em_state_of(op));
     return active;
 }
 
@@ -1259,8 +1258,8 @@ static cJSON *status(agent *a)
     cJSON_AddItemToObject(reports, "counts", report_counts);
     cJSON_AddBoolToObject(reports, "early_pending", a->early.pending);
     cJSON_AddItemToObject(o, "session", session);
-    cJSON *journal = em_journal_operations(a->journal, NULL), *op;
-    cJSON_ArrayForEach(op, journal)
+    const cJSON *op;
+    cJSON_ArrayForEach(op, em_journal_operations_view(a->journal))
     {
         cJSON *x = cJSON_CreateObject();
         const cJSON *intent = cJSON_GetObjectItemCaseSensitive(op, "intent");
@@ -1274,7 +1273,6 @@ static cJSON *status(agent *a)
                               cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "application_evidence"), 1));
         cJSON_AddItemToArray(ops, x);
     }
-    cJSON_Delete(journal);
     cJSON_AddItemToObject(o, "operations", ops);
     if (a->uplink_on) {
         cJSON_AddItemToObject(o, "uplink", em_uplink_status(&a->uplink));
@@ -1316,10 +1314,9 @@ static cJSON *status(agent *a)
 static void write_status(agent *a)
 {
     char summary[512];
-    cJSON *latest = em_journal_latest(a->journal);
+    const cJSON *latest = em_journal_latest_view(a->journal);
     EM_FORMAT_FIXED(summary, sizeof(summary), "%s %d %zu %s", SESSION_NAMES[a->at.state], source_current(a),
              em_journal_count(a->journal), latest ? em_state_of(latest) : "");
-    cJSON_Delete(latest);
     bool changed = strcmp(summary, a->status_summary) != 0;
     if (changed)
         LOG("state: %s", summary);

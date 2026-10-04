@@ -3,7 +3,6 @@
 #include "scope_steering.h"
 
 #include <math.h>
-#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,12 +43,7 @@ static const char *record(em_steering_scope *s, const char *event)
 
 static bool mac_ok(const char *m)
 {
-    regex_t re;
-    if (!m || regcomp(&re, "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$", REG_EXTENDED | REG_NOSUB))
-        return false;
-    bool ok = regexec(&re, m, 0, NULL, 0) == 0;
-    regfree(&re);
-    return ok;
+    return em_mac_text_ok(m);
 }
 
 /* SteeringIntent.target: {station: "<target>/steering"} */

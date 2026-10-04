@@ -14,7 +14,7 @@
 typedef struct {
     em_ovsdb *ovs;
     const char *serial, *pod_id, *run_id, *station;
-    const em_vault *vault;
+    em_vault *vault;
     cJSON *(*transact)(void *ctx, const cJSON *operations);
     void *transact_ctx;
     double (*monotonic)(void);

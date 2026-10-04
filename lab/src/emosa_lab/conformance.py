@@ -2566,6 +2566,92 @@ class Crash(BaseException):
     """The process stops (after the journal's SUBMITTED record, before the reply)."""
 
 
+def journal_retention_vectors():
+    """The journal's retention (spec §6): what stays when operations are added."""
+    from emosa.model import Intent, Operation
+    from emosa.store import RETAINED_RECENT, Store
+
+    intent = Intent("pod-1", "02:00:00:00:01:00", "02:00:00:00:01:01", "home", "wsc-ref").record()
+    template = Operation(
+        "00000000-0000-4000-8000-000000000000",
+        "run-1",
+        "fleet",
+        "semantic",
+        intent,
+        "0" * 64,
+        "key-0",
+        "2026-10-03T00:00:00Z",
+        "2026-10-03T00:00:00Z",
+        "2026-10-03T00:02:00Z",
+    ).to_dict()
+
+    def record(n, pod, state):
+        """the template, numbered n, for pod, in state (both harnesses build it so)"""
+        op = copy.deepcopy(template)
+        op["operation_id"] = f"00000000-0000-4000-8000-{n:012d}"
+        op["idempotency_key"] = f"key-{n}"
+        op["intent"]["pod_id"] = pod
+        op["state"] = state
+        return Operation.from_dict(op)
+
+    filler = RETAINED_RECENT + 6
+    # steps: ("add" | "save", n, pod, state); a checkpoint after each step listed in checks
+    cases = [
+        ("recent-only", [("add", n, "pod-1", "REJECTED") for n in range(1, filler + 1)]),
+        (
+            "active-kept",
+            [("add", 1, "pod-1", "REQUESTED")]
+            + [("add", n, "pod-1", "CANCELLED") for n in range(2, filler + 2)],
+        ),
+        (
+            "reconciled-kept-until-superseded",
+            [("add", 1, "pod-1", "OBSERVED_APPLIED")]
+            + [("add", n, "pod-1", "REJECTED") for n in range(2, filler + 2)]
+            + [("add", filler + 2, "pod-1", "TIMED_OUT")],
+        ),
+        (
+            "each-pod",
+            [("add", 1, "pod-1", "OBSERVED_APPLIED"), ("add", 2, "pod-2", "OWNERSHIP_CONFLICT")]
+            + [("add", n, "pod-3", "FAILED") for n in range(3, filler + 3)],
+        ),
+        (
+            "finished-after-save",
+            [("add", 1, "pod-1", "SUBMITTED")]
+            + [("add", n, "pod-1", "REJECTED") for n in range(2, filler + 2)]
+            + [("save", 1, "pod-1", "FAILED"), ("add", filler + 2, "pod-1", "REJECTED")],
+        ),
+    ]
+    out = []
+    for name, steps in cases:
+        with tempfile.TemporaryDirectory() as directory:
+            store = Store(Path(directory) / "journal")
+            recorded = []
+            for index, (kind, n, pod, state) in enumerate(steps):
+                op = record(n, pod, state)
+                if kind == "add":
+                    store.add(op)
+                else:
+                    store.save(op)
+                step = {"step": [kind, n, pod, state]}
+                if index >= RETAINED_RECENT - 1:  # the window is full from here on
+                    step["kept"] = [int(o.operation_id[-12:]) for o in store.operations()]
+                recorded.append(step)
+            store.close()
+        out.append({"name": name, "steps": recorded})
+    return {
+        "description": "spec §6: the journal's retention. Each case adds operations to an empty "
+        "journal (and saves one in another state): every operation is the template with "
+        "operation_id 00000000-0000-4000-8000-<n as 12 digits>, idempotency_key key-<n>, "
+        "intent.pod_id and state from the step. A step: [add|save, n, pod, state]; once "
+        "the journal holds retained_recent operations, 'kept' lists the numbers of the "
+        "operations it holds after the step, oldest first: every active one, each pod's "
+        "latest in a state reconciliation follows, and the retained_recent most recent.",
+        "retained_recent": RETAINED_RECENT,
+        "template": template,
+        "cases": out,
+    }
+
+
 def engine_vectors():
     """The operation lifecycle (spec §5): request, execute, reconcile, recover."""
     from emosa.backends.base import Snapshot, SubmitResult
@@ -3501,6 +3587,7 @@ VECTOR_SETS = {
     "backhaul-steering.json": backhaul_steering_vectors,
     "scope-writes.json": scope_writes_vectors,
     "engine.json": engine_vectors,
+    "journal-retention.json": journal_retention_vectors,
     "early-report.json": early_report_vectors,
     "steering-queue.json": steering_queue_vectors,
     "probe-watch.json": probe_watch_vectors,

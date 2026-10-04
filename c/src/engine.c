@@ -608,21 +608,23 @@ void em_engine_reconcile(em_engine *e)
     static const char *const eligible[] = {"CONFIG_COMMITTED", "INDETERMINATE", "TIMED_OUT", "OBSERVED_APPLIED"};
     static const char *const newer_states[] = {"SUBMITTED", "CONFIG_COMMITTED", "OBSERVED_APPLIED",
                                                "INDETERMINATE", "TIMED_OUT", "OWNERSHIP_CONFLICT"};
-    cJSON *ops = em_journal_operations(e->journal, NULL);
+    /* The reference considers each of the pod's eligible operations that no later one in
+     * newer_states follows. Every eligible state is one of newer_states, so that is at most
+     * one: the pod's latest operation in newer_states, when it is eligible. Found in one
+     * pass over the journal's kept operations; reconciled on a copy (it may be saved). */
+    const cJSON *p, *last = NULL;
+    cJSON_ArrayForEach(p, em_journal_operations_view(e->journal))
+    {
+        const char *pp = str(cJSON_GetObjectItemCaseSensitive(p, "intent"), "pod_id");
+        if (pp && !strcmp(pp, e->pod_id) && in(em_state_of(p), newer_states, 6))
+            last = p;
+    }
+    cJSON *ops = cJSON_CreateArray();
+    if (last && in(em_state_of(last), eligible, 4))
+        cJSON_AddItemToArray(ops, cJSON_Duplicate(last, true));
     int count = cJSON_GetArraySize(ops);
     for (int index = 0; index < count; index++) {
         cJSON *op = cJSON_GetArrayItem(ops, index);
-        const char *pod = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "pod_id");
-        if (!pod || strcmp(pod, e->pod_id) || !in(em_state_of(op), eligible, 4))
-            continue;
-        bool newer = false;
-        for (int k = index + 1; k < count && !newer; k++) {
-            cJSON *p = cJSON_GetArrayItem(ops, k);
-            const char *pp = str(cJSON_GetObjectItemCaseSensitive(p, "intent"), "pod_id");
-            newer = pp && !strcmp(pp, e->pod_id) && in(em_state_of(p), newer_states, 6);
-        }
-        if (newer)
-            continue;
         bool expired = em_engine_expired(e, op), changed = false;
         const char *state = em_state_of(op);
         if (expired && (!strcmp(state, "CONFIG_COMMITTED") || !strcmp(state, "INDETERMINATE"))) {

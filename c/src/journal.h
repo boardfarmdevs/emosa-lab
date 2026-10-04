@@ -29,6 +29,13 @@ void em_journal_close(em_journal *j);
 const char *em_journal_directory(const em_journal *j);
 const char *em_journal_process_id(const em_journal *j);
 
+/* The journal's operations, oldest first, as stored: kept parsed after the first read
+ * and updated by this process's writes (it is the journal's only writer). Borrowed: valid
+ * until the next write; never modified by the caller. */
+const cJSON *em_journal_operations_view(em_journal *j);
+/* The most recent operation, borrowed as above; NULL when there is none. */
+const cJSON *em_journal_latest_view(em_journal *j);
+
 /* Owned results (cJSON_Delete); NULL when absent. */
 cJSON *em_journal_get(em_journal *j, const char *operation_id);
 cJSON *em_journal_lookup(em_journal *j, const char *source, const char *pod, const char *key);

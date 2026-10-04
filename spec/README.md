@@ -547,6 +547,16 @@ Secrets:
 - They MUST NOT appear in logs, status, the journal or evidence. The journal
   holds keyed fingerprints only.
 
+Journal:
+- Each journal (the AP scope's and every other scope's) keeps every active operation
+  (`REQUESTED`, `VALIDATED`, `SUBMITTED`, `CONFIG_COMMITTED`, `INDETERMINATE`), each
+  pod's latest operation in `SUBMITTED`, `CONFIG_COMMITTED`, `OBSERVED_APPLIED`,
+  `INDETERMINATE`, `TIMED_OUT` or `OWNERSHIP_CONFLICT` (the one reconciliation follows,
+  §5), and the 16 most recent. When an operation is added, every other operation is
+  removed, with its WSC receipt, in the same transaction. Events are kept per run up to
+  the 10 000 most recent. A journal so stays bounded, and a new operation is never
+  refused for the journal's size.
+
 Timers:
 
 | Timer | Value |

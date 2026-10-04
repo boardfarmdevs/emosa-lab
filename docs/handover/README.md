@@ -25,7 +25,7 @@ EMOSA is licensed under the Apache License 2.0 ([LICENSE](../../LICENSE)).
 ## Where it stands
 
 - **Contract:** the specification, the schemas (`schemas/`) and the vectors
-  (`spec/conformance`, 21 sets). Both implementations reproduce every vector.
+  (`spec/conformance`, 22 sets). Both implementations reproduce every vector.
 - **The C's gates** ([c/QUALITY.md](../../c/QUALITY.md) §3): warnings as errors on gcc
   and clang and on 32-bit x86, sanitizer-clean tests, the clang analyzer and
   clang-tidy's CERT checks without findings, a fuzz target per parser of untrusted input,

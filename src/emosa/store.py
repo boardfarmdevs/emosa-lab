@@ -9,9 +9,23 @@ from pathlib import Path
 from emosa.clock import utc_now
 from emosa.config import validate
 from emosa.errors import EmosaError, Reason
-from emosa.model import Operation
+from emosa.model import ACTIVE, Operation, State
 from emosa.secrets import redact
 from emosa.topology_bindings import REGISTRY_KEY, merge_registry
+
+# Spec §6, the journal's retention: besides every active operation and each pod's latest
+# one in a state reconciliation follows (the one it acts on), the most recent operations.
+RETAINED_RECENT = 16
+RECONCILED = frozenset(
+    {
+        State.SUBMITTED,
+        State.CONFIG_COMMITTED,
+        State.OBSERVED_APPLIED,
+        State.INDETERMINATE,
+        State.TIMED_OUT,
+        State.OWNERSHIP_CONFLICT,
+    }
+)
 
 
 class Store:
@@ -160,6 +174,28 @@ class Store:
                     "INSERT INTO wsc_receipts VALUES (?,?)",
                     (op.operation_id, json.dumps(wsc_receipt)),
                 )
+            self._prune()
+
+    def _prune(self):
+        """Spec §6: keep every active operation, each pod's latest one in a state
+        reconciliation follows, and the RETAINED_RECENT most recent; remove the others,
+        with their WSC receipts (inside the caller's transaction)."""
+        rows = self.db.execute("SELECT id, pod, record FROM operations ORDER BY rowid").fetchall()
+        if len(rows) <= RETAINED_RECENT:
+            return
+        keep = {row["id"] for row in rows[-RETAINED_RECENT:]}
+        latest = {}
+        for row in rows:
+            state = State(json.loads(row["record"])["state"])
+            if state in ACTIVE:
+                keep.add(row["id"])
+            if state in RECONCILED:
+                latest[row["pod"]] = row["id"]
+        keep |= set(latest.values())
+        for row in rows:
+            if row["id"] not in keep:
+                self.db.execute("DELETE FROM operations WHERE id=?", (row["id"],))
+                self.db.execute("DELETE FROM wsc_receipts WHERE operation_id=?", (row["id"],))
 
     def wsc_receipt(self, operation_id):
         """Private journal correlation, not an admission or controller verdict."""

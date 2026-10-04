@@ -46,6 +46,8 @@ char *em_hex(const uint8_t *data, size_t len);
 char *em_mac_str(const uint8_t mac[6]);
 bool em_unhex(const char *text, em_buf *out);
 bool em_parse_mac(const char *text, uint8_t mac[6]);
+/* A MAC as the reference writes it: ^[0-9a-f]{2}(:[0-9a-f]{2}){5}$ (lower case). */
+bool em_mac_text_ok(const char *text);
 
 /* Allocation. A failed allocation ends the process (a message, then abort()): the
  * agent is supervised and its journal makes a restart safe (spec/design.md §6), so

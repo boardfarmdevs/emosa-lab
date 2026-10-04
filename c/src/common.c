@@ -159,6 +159,19 @@ bool em_unhex(const char *text, em_buf *out)
     return true;
 }
 
+bool em_mac_text_ok(const char *text)
+{
+    if (!text || strlen(text) != 17)
+        return false;
+    for (size_t i = 0; i < 17; i++) {
+        char c = text[i];
+        bool ok = i % 3 == 2 ? c == ':' : (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+        if (!ok)
+            return false;
+    }
+    return true;
+}
+
 bool em_parse_mac(const char *text, uint8_t mac[6])
 {
     if (strlen(text) != 17)

@@ -101,6 +101,7 @@
       "python": ["test_conformance.py"]
     },
     "README 6. Management and state": {
+      "vectors": ["journal-retention.json"],
       "box": ["adapter-restart", "fleet-takeover", "fleet-forget"],
       "units": ["canon", "vault", "secret_backend", "files", "schema"],
       "python": ["test_secret_store.py", "test_contracts.py"]
@@ -134,7 +135,7 @@
       "lab": ["opensync-lab-proof"]
     },
     "design 9. Resource budgets (normative upper bounds)": {
-      "vectors": ["cmdu.json", "fleet-sessions.json"],
+      "vectors": ["cmdu.json", "fleet-sessions.json", "journal-retention.json"],
       "python": ["test_ieee1905.py"],
       "fuzz": ["cmdu", "fleet"],
       "lab": ["opensync-lab-proof"]

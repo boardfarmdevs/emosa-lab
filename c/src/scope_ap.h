@@ -14,7 +14,7 @@ typedef struct {
     const em_profile *profile;
     const char *serial, *pod_id;
     bool multi_bss;
-    const em_vault *vault;
+    em_vault *vault;
     cJSON *(*transact)(void *ctx, const cJSON *operations);
     void *transact_ctx;
     /* the last binding (identity: the bound radio's State, with a MAC) */

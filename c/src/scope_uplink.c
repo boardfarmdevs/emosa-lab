@@ -3,7 +3,6 @@
 #include "scope_uplink.h"
 
 #include <ctype.h>
-#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,12 +26,7 @@ static const char *str(const cJSON *o, const char *k)
 
 static bool bssid_ok(const char *m)
 {
-    regex_t re;
-    if (!m || regcomp(&re, "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$", REG_EXTENDED | REG_NOSUB))
-        return false;
-    bool ok = regexec(&re, m, 0, NULL, 0) == 0;
-    regfree(&re);
-    return ok;
+    return em_mac_text_ok(m);
 }
 
 /* UplinkIntent.target */
@@ -54,12 +48,9 @@ static cJSON *target(void *ctx, const cJSON *intent, em_reason *why)
         return NULL;
     if (bssid && !cJSON_IsNull(bssid) && !bssid_ok(cJSON_GetStringValue(bssid)))
         return NULL;
-    char *key = em_vault_resolve(u->vault, str(intent, "secret_ref"), why);
-    if (!key)
-        return NULL;
     char fp[65];
-    em_vault_fingerprint_text(u->vault, key, fp);
-    free(key);
+    if (!em_vault_fingerprint_ref(u->vault, str(intent, "secret_ref"), fp, why))
+        return NULL;
     cJSON *t = cJSON_CreateObject();
     cJSON_AddStringToObject(t, "uplink", "multi-ap");
     cJSON_AddStringToObject(t, "station", str(intent, "station"));
@@ -528,10 +519,10 @@ static void wait_for(em_uplink_scope *u, const char *why)
 /* the backhaul BSS (SSID, secret reference) of the AP scope's applied M2 set */
 static bool m2_backhaul(em_uplink_scope *u, char ssid[33], char ref[97])
 {
-    cJSON *ops = em_journal_operations(u->ap_journal, NULL);
+    const cJSON *ops = em_journal_operations_view(u->ap_journal);
     bool found = false;
     for (int i = cJSON_GetArraySize(ops) - 1; i >= 0; i--) {
-        cJSON *op = cJSON_GetArrayItem(ops, i);
+        const cJSON *op = cJSON_GetArrayItem(ops, i);
         if (strcmp(em_state_of(op), "OBSERVED_APPLIED"))
             continue;
         const cJSON *b;
@@ -547,7 +538,6 @@ static bool m2_backhaul(em_uplink_scope *u, char ssid[33], char ref[97])
         }
         break; /* the latest applied set decides */
     }
-    cJSON_Delete(ops);
     return found;
 }
 

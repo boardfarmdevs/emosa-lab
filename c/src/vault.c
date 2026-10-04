@@ -6,7 +6,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <openssl/rand.h>
-#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,17 +14,31 @@
 
 #include "canon.h"
 
-#define REFERENCE "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$"
-#define RECEIVED "^wsc-[a-f0-9]{32}(-[1-7])?$"
+static bool alnum(char c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'); }
+static bool lower_hex(char c) { return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'); }
 
-static bool matches(const char *pattern, const char *text)
+/* a reference: ^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$ (the reference's pattern) */
+static bool reference_ok(const char *s)
 {
-    regex_t re;
-    if (regcomp(&re, pattern, REG_EXTENDED | REG_NOSUB))
+    size_t n = strlen(s);
+    if (n < 1 || n > 96 || !alnum(s[0]))
         return false;
-    bool ok = regexec(&re, text, 0, NULL, 0) == 0;
-    regfree(&re);
-    return ok;
+    for (size_t i = 1; i < n; i++)
+        if (!alnum(s[i]) && s[i] != '_' && s[i] != '.' && s[i] != '-')
+            return false;
+    return true;
+}
+
+/* a received M2 credential: ^wsc-[a-f0-9]{32}(-[1-7])?$ */
+static bool received_ok(const char *s)
+{
+    size_t n = strlen(s);
+    if ((n != 36 && n != 38) || strncmp(s, "wsc-", 4))
+        return false;
+    for (size_t i = 4; i < 36; i++)
+        if (!lower_hex(s[i]))
+            return false;
+    return n == 36 || (s[36] == '-' && s[37] >= '1' && s[37] <= '7');
 }
 
 /* -- the files backend: one private file per reference ------------------------------- */
@@ -129,6 +142,8 @@ em_reason em_vault_open_backend(em_vault *v, em_secret_backend backend, void *ct
 {
     v->backend = backend;
     v->ctx = ctx;
+    memset(v->fingerprints, 0, sizeof(v->fingerprints));
+    v->next_fingerprint = 0;
     return backend.key(v, v->key) ? EM_OK : EM_INVALID_INPUT;
 }
 
@@ -145,7 +160,7 @@ static bool printable_ascii(const uint8_t *data, size_t n)
 char *em_vault_resolve(const em_vault *v, const char *ref, em_reason *why)
 {
     *why = EM_INVALID_INPUT;
-    if (!ref || !matches(REFERENCE, ref))
+    if (!ref || !reference_ok(ref))
         return NULL;
     size_t n = 0;
     uint8_t *data = v->backend.read(v, ref, &n);
@@ -185,14 +200,39 @@ bool em_vault_fingerprint_text(const em_vault *v, const char *text, char out[65]
 em_reason em_vault_persist_received(const em_vault *v, const char *ref, const char *value)
 {
     size_t n = value ? strlen(value) : 0;
-    if (!ref || !matches(RECEIVED, ref) || n < 8 || n > 63 || !printable_ascii((const uint8_t *)value, n))
+    if (!ref || !received_ok(ref) || n < 8 || n > 63 || !printable_ascii((const uint8_t *)value, n))
         return EM_INVALID_INPUT;
     return v->backend.create(v, ref, (const uint8_t *)value, n) ? EM_OK : EM_INVALID_INPUT;
 }
 
-void em_vault_forget(const em_vault *v, const char *ref)
+bool em_vault_fingerprint_ref(em_vault *v, const char *ref, char out[65], em_reason *why)
+{
+    for (size_t i = 0; ref && i < EM_VAULT_FINGERPRINTS; i++)
+        if (v->fingerprints[i].ref[0] && !strcmp(v->fingerprints[i].ref, ref)) {
+            memcpy(out, v->fingerprints[i].fp, 65);
+            *why = EM_OK;
+            return true;
+        }
+    char *key = em_vault_resolve(v, ref, why);
+    if (!key)
+        return false;
+    bool ok = em_vault_fingerprint_text(v, key, out);
+    free(key);
+    unsigned slot = v->next_fingerprint++ % EM_VAULT_FINGERPRINTS;
+    if (ok && em_copy(v->fingerprints[slot].ref, sizeof(v->fingerprints[slot].ref), ref)) /* 96 at most */
+        memcpy(v->fingerprints[slot].fp, out, 65);
+    else
+        v->fingerprints[slot].ref[0] = 0;
+    return ok;
+}
+
+void em_vault_forget(em_vault *v, const char *ref)
 {
     /* the same names as the rest of the vault: never a path out of its directory */
-    if (ref && matches(REFERENCE, ref))
-        v->backend.remove(v, ref);
+    if (!ref || !reference_ok(ref))
+        return;
+    for (size_t i = 0; i < EM_VAULT_FINGERPRINTS; i++)
+        if (!strcmp(v->fingerprints[i].ref, ref))
+            v->fingerprints[i].ref[0] = 0;
+    v->backend.remove(v, ref);
 }

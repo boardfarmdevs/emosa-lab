@@ -31,11 +31,20 @@ typedef struct {
     bool (*key)(const em_vault *v, uint8_t out[32]);
 } em_secret_backend;
 
+#define EM_VAULT_FINGERPRINTS 16
+
 struct em_vault {
     em_secret_backend backend;
     void *ctx;              /* a platform backend's own */
     char directory[512];    /* the files backend's */
     uint8_t key[32];
+    /* the fingerprints of references resolved before: a reference's value never changes
+     * (backends create, never replace), so each is read and hashed once */
+    struct {
+        char ref[97];
+        char fp[65];
+    } fingerprints[EM_VAULT_FINGERPRINTS];
+    unsigned next_fingerprint;
 };
 
 /* The files backend in directory: created (0700) when absent, refused otherwise unless
@@ -47,6 +56,10 @@ em_reason em_vault_open_backend(em_vault *v, em_secret_backend backend, void *ct
 /* A stored passphrase (8..63 printable ASCII) by reference; NULL with *why set. */
 char *em_vault_resolve(const em_vault *v, const char *ref, em_reason *why);
 
+/* The fingerprint of a stored passphrase by reference (the value itself never leaves
+ * the vault), kept after the first time; false with *why set as em_vault_resolve. */
+bool em_vault_fingerprint_ref(em_vault *v, const char *ref, char out[65], em_reason *why);
+
 /* HMAC fingerprint of any JSON value (65 bytes out). */
 bool em_vault_fingerprint(const em_vault *v, const cJSON *value, char out[65]);
 /* ... of one string. */
@@ -55,6 +68,6 @@ bool em_vault_fingerprint_text(const em_vault *v, const char *text, char out[65]
 /* A received M2 credential: "wsc-<32 hex>[-1..7]", never overwritten, durable. */
 em_reason em_vault_persist_received(const em_vault *v, const char *ref, const char *value);
 /* Removes a reference (a credential whose operation was never journaled). */
-void em_vault_forget(const em_vault *v, const char *ref);
+void em_vault_forget(em_vault *v, const char *ref);
 
 #endif

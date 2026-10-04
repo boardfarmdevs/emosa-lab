@@ -74,13 +74,8 @@ static em_reason validate(const cJSON *intent)
 
 static cJSON *credential(const em_ap_scope *s, const char *ref, em_reason *why)
 {
-    char *key = em_vault_resolve(s->vault, ref, why);
-    if (!key)
-        return NULL;
     char fp[65];
-    em_vault_fingerprint_text(s->vault, key, fp);
-    free(key);
-    return cJSON_CreateString(fp);
+    return em_vault_fingerprint_ref(s->vault, ref, fp, why) ? cJSON_CreateString(fp) : NULL;
 }
 
 /* Python's list ordering of [role, ssid, fingerprint] (strings throughout) */

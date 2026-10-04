@@ -16,6 +16,9 @@
 
 #define MAX_OPERATIONS 10000
 #define MAX_EVENTS 10000
+/* spec §6, the journal's retention: besides every active operation and each pod's latest
+ * one in a state reconciliation follows, the most recent operations */
+#define RETAINED_RECENT 16
 
 struct em_journal {
     char directory[512];
@@ -23,6 +26,7 @@ struct em_journal {
     int lock;
     sqlite3 *db;
     em_journal_schemas schemas;
+    cJSON *ops; /* every operation, oldest first, parsed once (NULL: not read yet) */
 };
 
 static const char *const SENSITIVE[] = {"psk", "password", "wpa_psks", "security", "private_key",
@@ -127,6 +131,7 @@ void em_journal_close(em_journal *j)
         sqlite3_close(j->db);
     if (j->lock >= 0)
         close(j->lock);
+    cJSON_Delete(j->ops);
     free(j);
 }
 
@@ -158,10 +163,38 @@ static cJSON *first(cJSON *array)
     return r;
 }
 
+const cJSON *em_journal_operations_view(em_journal *j)
+{
+    if (!j->ops)
+        j->ops = records(j, "SELECT record FROM operations ORDER BY rowid", NULL, 0);
+    return j->ops;
+}
+
+const cJSON *em_journal_latest_view(em_journal *j)
+{
+    const cJSON *ops = em_journal_operations_view(j);
+    int n = cJSON_GetArraySize(ops);
+    return n ? cJSON_GetArrayItem(ops, n - 1) : NULL;
+}
+
+/* the journal's own copy of an operation (callers get duplicates) */
+static cJSON *cached(em_journal *j, const char *id)
+{
+    (void)em_journal_operations_view(j); /* read once */
+    cJSON *op;
+    cJSON_ArrayForEach(op, j->ops)
+    {
+        const char *oid = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(op, "operation_id"));
+        if (oid && id && !strcmp(oid, id))
+            return op;
+    }
+    return NULL;
+}
+
 cJSON *em_journal_get(em_journal *j, const char *id)
 {
-    const char *a[] = {id};
-    return first(records(j, "SELECT record FROM operations WHERE id=?", a, 1));
+    const cJSON *op = cached(j, id);
+    return op ? cJSON_Duplicate(op, true) : NULL;
 }
 
 cJSON *em_journal_lookup(em_journal *j, const char *source, const char *pod, const char *key)
@@ -172,27 +205,26 @@ cJSON *em_journal_lookup(em_journal *j, const char *source, const char *pod, con
 
 cJSON *em_journal_operations(em_journal *j, const char *run_id)
 {
-    const char *a[] = {run_id};
-    return run_id ? records(j, "SELECT record FROM operations WHERE run=? ORDER BY rowid", a, 1)
-                  : records(j, "SELECT record FROM operations ORDER BY rowid", NULL, 0);
+    if (!run_id)
+        return cJSON_Duplicate(em_journal_operations_view(j), true);
+    cJSON *out = cJSON_CreateArray();
+    const cJSON *op;
+    cJSON_ArrayForEach(op, em_journal_operations_view(j))
+    {
+        const char *run = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(op, "run_id"));
+        if (run && !strcmp(run, run_id))
+            cJSON_AddItemToArray(out, cJSON_Duplicate(op, true));
+    }
+    return out;
 }
 
 cJSON *em_journal_latest(em_journal *j)
 {
-    return first(records(j, "SELECT record FROM operations ORDER BY rowid DESC LIMIT 1", NULL, 0));
+    const cJSON *op = em_journal_latest_view(j);
+    return op ? cJSON_Duplicate(op, true) : NULL;
 }
 
-size_t em_journal_count(em_journal *j)
-{
-    sqlite3_stmt *st;
-    size_t n = 0;
-    if (sqlite3_prepare_v2(j->db, "SELECT count(*) FROM operations", -1, &st, NULL) == SQLITE_OK) {
-        if (sqlite3_step(st) == SQLITE_ROW)
-            n = (size_t)sqlite3_column_int64(st, 0);
-        sqlite3_finalize(st);
-    }
-    return n;
-}
+size_t em_journal_count(em_journal *j) { return (size_t)cJSON_GetArraySize(em_journal_operations_view(j)); }
 
 cJSON *em_journal_wsc_receipt(em_journal *j, const char *id)
 {
@@ -287,6 +319,61 @@ static bool event(em_journal *j, const char *run, const char *op_id, const char 
 
 static cJSON *state_of(const cJSON *op) { return cJSON_GetObjectItemCaseSensitive(op, "state"); }
 
+static bool named(const char *s, const char *const *set, size_t n)
+{
+    for (size_t i = 0; s && i < n; i++)
+        if (!strcmp(s, set[i]))
+            return true;
+    return false;
+}
+
+/* Spec §6: with `added` appended to the kept operations, delete (in the caller's
+ * transaction) every operation that is not active, not its pod's latest in a state
+ * reconciliation follows and not among the RETAINED_RECENT most recent, with its WSC
+ * receipt. The deleted operations' IDs go into `dropped` (owned by the caller). */
+static bool prune(em_journal *j, const cJSON *added, cJSON *dropped)
+{
+    static const char *const active[] = {"REQUESTED", "VALIDATED", "SUBMITTED", "CONFIG_COMMITTED", "INDETERMINATE"};
+    static const char *const reconciled[] = {"SUBMITTED", "CONFIG_COMMITTED", "OBSERVED_APPLIED",
+                                             "INDETERMINATE", "TIMED_OUT", "OWNERSHIP_CONFLICT"};
+    const cJSON *kept = em_journal_operations_view(j);
+    int n = cJSON_GetArraySize(kept) + 1;
+    if (n <= RETAINED_RECENT)
+        return true;
+    const cJSON **ops = em_calloc((size_t)n, sizeof(*ops));
+    const char **seen = em_calloc((size_t)n, sizeof(*seen)); /* pods whose latest is found */
+    size_t nseen = 0, i = 0;
+    const cJSON *op;
+    cJSON_ArrayForEach(op, kept) ops[i++] = op;
+    ops[i] = added;
+    bool ok = true;
+    for (int k = n - 1; ok && k >= 0; k--) { /* newest first: the first of a pod is its latest */
+        const char *state = cJSON_GetStringValue(state_of(ops[k]));
+        const char *pod = str(cJSON_GetObjectItemCaseSensitive(ops[k], "intent"), "pod_id");
+        bool keep = k >= n - RETAINED_RECENT || named(state, active, 5);
+        if (named(state, reconciled, 6) && pod) {
+            bool latest = true;
+            for (size_t s = 0; s < nseen && latest; s++)
+                latest = strcmp(seen[s], pod) != 0;
+            if (latest) {
+                seen[nseen++] = pod;
+                keep = true;
+            }
+        }
+        if (keep)
+            continue;
+        const char *id = str(ops[k], "operation_id");
+        const char *a[] = {id};
+        ok = id && run_sql(j, "DELETE FROM operations WHERE id=?", a, 1) &&
+             run_sql(j, "DELETE FROM wsc_receipts WHERE operation_id=?", a, 1);
+        if (ok)
+            cJSON_AddItemToArray(dropped, cJSON_CreateString(id));
+    }
+    free(ops);
+    free(seen);
+    return ok;
+}
+
 em_reason em_journal_add(em_journal *j, const cJSON *op, const cJSON *receipt)
 {
     if (!valid(j->schemas.operation, op) || (receipt && !valid(j->schemas.receipt, receipt)))
@@ -308,6 +395,7 @@ em_reason em_journal_add(em_journal *j, const cJSON *op, const cJSON *receipt)
     } else if (!strcmp(interface, "wsc-component")) {
         return EM_INVALID_INPUT;
     }
+    /* (the kept operations are read here, before the transaction: prune() adds this one) */
     if (em_journal_count(j) >= MAX_OPERATIONS)
         return EM_BUSY;
     char *text = cJSON_PrintUnformatted(op);
@@ -324,9 +412,21 @@ em_reason em_journal_add(em_journal *j, const cJSON *op, const cJSON *receipt)
         ok = run_sql(j, "INSERT INTO wsc_receipts VALUES (?,?)", b, 2);
         free(rt);
     }
-    ok = ok && exec(j, "COMMIT");
-    if (!ok)
+    cJSON *dropped = cJSON_CreateArray();
+    ok = ok && prune(j, op, dropped) && exec(j, "COMMIT");
+    if (!ok) {
         exec(j, "ROLLBACK");
+    } else if (j->ops) {
+        cJSON_AddItemToArray(j->ops, cJSON_Duplicate(op, true));
+        const cJSON *id;
+        cJSON_ArrayForEach(id, dropped)
+        {
+            cJSON *gone = cached(j, id->valuestring);
+            if (gone)
+                cJSON_Delete(cJSON_DetachItemViaPointer(j->ops, gone));
+        }
+    }
+    cJSON_Delete(dropped);
     free(text);
     return ok ? EM_OK : EM_NOT_READY;
 }
@@ -347,8 +447,13 @@ em_reason em_journal_save(em_journal *j, const cJSON *op, const cJSON *payload)
               event(j, str(op, "run_id"), str(op, "operation_id"), str(intent, "pod_id"),
                     state_of(op)->valuestring, p, str(op, "updated_at")) &&
               exec(j, "COMMIT");
-    if (!ok)
+    if (!ok) {
         exec(j, "ROLLBACK");
+    } else if (j->ops) {
+        cJSON *mine = cached(j, str(op, "operation_id"));
+        if (mine) /* the stored record replaces the kept one */
+            cJSON_ReplaceItemViaPointer(j->ops, mine, cJSON_Duplicate(op, true));
+    }
     cJSON_Delete(p);
     free(text);
     return ok ? EM_OK : EM_NOT_READY;

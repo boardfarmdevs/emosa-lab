@@ -2316,6 +2316,102 @@ static void session_timing_vectors(const char *dir)
     cJSON_Delete(doc);
 }
 
+/* -- journal-retention.json: what the journal keeps as operations are added ---------------- */
+
+/* the numbers (the last 12 digits of operation_id) of the operations the journal holds */
+static cJSON *kept_numbers(em_journal *j)
+{
+    cJSON *out = cJSON_CreateArray();
+    const cJSON *op;
+    cJSON_ArrayForEach(op, em_journal_operations_view(j))
+    {
+        const char *id = str(op, "operation_id");
+        size_t n = id ? strlen(id) : 0;
+        cJSON_AddItemToArray(out, cJSON_CreateNumber(n >= 12 ? strtod(id + n - 12, NULL) : -1));
+    }
+    return out;
+}
+
+static void journal_retention_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "journal-retention.json");
+    char schemas_dir[600];
+    snprintf(schemas_dir, sizeof(schemas_dir), "%s/../../schemas", dir);
+    em_journal_schemas schemas = {em_schema_load(schemas_dir, "operation"), em_schema_load(schemas_dir, "event"),
+                                  em_schema_load(schemas_dir, "wsc-receipt")};
+    const cJSON *template = cJSON_GetObjectItemCaseSensitive(doc, "template"), *c;
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+    {
+        const char *name = str(c, "name");
+        char path[] = "/tmp/emosa-retention-XXXXXX", journal_dir[64];
+        if (!mkdtemp(path)) {
+            fail("journal-retention", name, "temporary directory");
+            continue;
+        }
+        snprintf(journal_dir, sizeof(journal_dir), "%s/journal", path);
+        em_reason why;
+        em_journal *j = em_journal_open(journal_dir, &schemas, &why);
+        if (!j) {
+            fail("journal-retention", name, "journal");
+            continue;
+        }
+        const cJSON *step, *last = NULL;
+        int index = 0;
+        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+        {
+            char label[96], id[40], key[24];
+            snprintf(label, sizeof(label), "%s step %d", name, index++);
+            const cJSON *s = cJSON_GetObjectItemCaseSensitive(step, "step");
+            int n = cJSON_GetArrayItem(s, 1)->valueint;
+            /* the template, numbered n, for the step's pod, in its state */
+            cJSON *op = cJSON_Duplicate(template, true);
+            snprintf(id, sizeof(id), "00000000-0000-4000-8000-%012d", n);
+            snprintf(key, sizeof(key), "key-%d", n);
+            cJSON_ReplaceItemInObjectCaseSensitive(op, "operation_id", cJSON_CreateString(id));
+            cJSON_ReplaceItemInObjectCaseSensitive(op, "idempotency_key", cJSON_CreateString(key));
+            cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(op, "intent"), "pod_id",
+                                                   cJSON_CreateString(cJSON_GetArrayItem(s, 2)->valuestring));
+            cJSON_ReplaceItemInObjectCaseSensitive(op, "state", cJSON_CreateString(cJSON_GetArrayItem(s, 3)->valuestring));
+            em_reason r = strcmp(cJSON_GetArrayItem(s, 0)->valuestring, "add") ? em_journal_save(j, op, NULL)
+                                                                                : em_journal_add(j, op, NULL);
+            cJSON_Delete(op);
+            checks++;
+            if (r != EM_OK)
+                fail("journal-retention", label, em_reason_name(r));
+            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "kept");
+            if (!expected)
+                continue;
+            last = expected;
+            cJSON *kept = kept_numbers(j);
+            checks++;
+            if (!cJSON_Compare(kept, expected, true))
+                fail("journal-retention", label, "kept operations differ");
+            cJSON_Delete(kept);
+        }
+        /* what was removed is gone from the file too: the journal read again */
+        em_journal_close(j);
+        j = em_journal_open(journal_dir, &schemas, &why);
+        checks++;
+        if (!j) {
+            fail("journal-retention", name, "journal again");
+        } else {
+            cJSON *kept = kept_numbers(j);
+            if (last && !cJSON_Compare(kept, last, true))
+                fail("journal-retention", name, "kept operations differ after reopening");
+            cJSON_Delete(kept);
+            em_journal_close(j);
+        }
+        char cmd[128];
+        snprintf(cmd, sizeof(cmd), "rm -rf %s", path);
+        if (system(cmd)) {
+        }
+    }
+    em_schema_free(schemas.operation);
+    em_schema_free(schemas.event);
+    em_schema_free(schemas.receipt);
+    cJSON_Delete(doc);
+}
+
 int main(int argc, char **argv)
 {
     em_init();
@@ -2336,6 +2432,7 @@ int main(int argc, char **argv)
     engine_vectors(dir);
     early_report_vectors(dir);
     steering_queue_vectors(dir);
+    journal_retention_vectors(dir);
     probe_watch_vectors(dir);
     session_timing_vectors(dir);
     printf("%d checks, %d failures\n", checks, failures);

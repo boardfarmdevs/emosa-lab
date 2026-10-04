@@ -455,6 +455,8 @@ Specified elsewhere; listed here so that nothing is missed:
 | concurrent fleet handovers | `concurrency` (default 16) |
 | agents per fleet | the configured port range |
 | retained status events | 64 per session |
+| journal operations | every active one, each pod's latest one reconciliation follows, and the 16 most recent (spec §6) |
+| journal events | the 10 000 most recent per run |
 
 ## 10. Security
 
