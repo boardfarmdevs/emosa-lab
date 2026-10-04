@@ -46,9 +46,5 @@ EMOSA is licensed under the Apache License 2.0 ([LICENSE](../../LICENSE)).
 - What the specification leaves out (spec §9) and the design's known limitations
   (design §14): among them backhaul link metrics, complete EasyMesh AP and station
   metrics from a hwsim pod, 5/6 GHz and WPA3.
-- The reporting policy's record is written durably twice per periodic AP metrics report
-  (the period reserved before sending): some 140 MB a day per pod at RDK's 5 s
-  interval on the gateway's storage. Whether a gateway on flash wants fewer durable
-  writes there ([the footprint record](../records/evidence/rdk-lab/README.md)).
 - The status file still names the C `c-lab-prototype` (the labs read it); rename it with
   the labs' tools when the C is released.

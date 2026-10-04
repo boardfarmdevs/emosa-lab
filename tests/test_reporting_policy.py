@@ -87,23 +87,26 @@ def test_native_policy_stored_before_correlated_receipt_ack(rig):
     assert policy["qos"] == [{"mscs_disallowed": [], "scs_disallowed": []}]
 
 
-def test_deadlines_survive_identical_new_mid_reconnect_and_process_restart(rig):
+def test_redelivery_keeps_the_deadline_and_a_new_session_starts_the_schedule(rig):
     rig.request()
     rig.now = 50
     rig.publish()
+    rig.request(mid=24)  # the same policy, a new MID: the deadline stays
+    assert rig.coordinator.value["next_due"] == 60
     rig.coordinator.close()
-    rig.coordinator = rig.restart()
-    rig.request(mid=24)
-    assert rig.store.read()["next_due"] == 60
     rig.store.close()
     rig.store = ReportingPolicyStore(rig.path, boot_id="boot-1")
-    rig.coordinator = rig.restart()
+    rig.coordinator = rig.restart()  # a new session, or process: the schedule starts again
+    value = rig.coordinator.value
+    assert value["next_due"] == 110 and value["receipt_count"] == 2
+    assert value["schedule_rebases"] == 1
     rig.now = 181
     rig.publish()
     rig.coordinator.tick()
-    result = rig.store.read()
-    assert result["periods_due_without_report"] == 3 and result["next_due"] == 240
-    assert result["receipt_count"] == 2
+    result = rig.coordinator.value
+    assert result["periods_due_without_report"] == 2 and result["next_due"] == 230
+    stored = rig.store.read()  # written at the receipt only, never by a tick
+    assert stored["next_due"] == 60 and stored["periods_due_without_report"] == 0
     assert len(rig.sent) == 2
 
 
@@ -119,7 +122,7 @@ def test_changed_interval_replaces_schedule_but_omitted_metrics_preserve_it(rig)
     assert rig.store.read()["next_due"] is None
 
 
-def test_reboot_preserves_intent_and_explicitly_rebases_monotonic_schedule(rig):
+def test_a_reboot_keeps_the_intent_and_starts_the_schedule_again(rig):
     rig.request()
     rig.coordinator.close()
     rig.store.boot_id = "boot-2"
@@ -127,8 +130,10 @@ def test_reboot_preserves_intent_and_explicitly_rebases_monotonic_schedule(rig):
     rig.publish()
     rig.coordinator = rig.restart()
     rig.coordinator.tick()
-    assert rig.store.read()["schedule_rebases"] == 1
-    assert rig.store.read()["next_due"] == 65
+    value = rig.coordinator.value
+    assert value["schedule_rebases"] == 1 and value["next_due"] == 65
+    assert value["boot_id"] == "boot-2"
+    assert rig.store.read()["policy"]["metrics"]["interval_seconds"] == 60
 
 
 def test_same_mid_can_reack_but_cannot_change_policy(rig):
@@ -169,10 +174,10 @@ def test_source_loss_stops_active_work_and_recovery_accounts_elapsed_periods(rig
     rig.source.invalidate()
     rig.now = 121
     rig.coordinator.tick()
-    assert rig.store.read()["periods_due_without_report"] == 0
+    assert rig.coordinator.value["periods_due_without_report"] == 0
     rig.publish()
     rig.coordinator.tick()
-    assert rig.store.read()["periods_due_without_report"] == 2
+    assert rig.coordinator.value["periods_due_without_report"] == 2
 
 
 @pytest.mark.parametrize(

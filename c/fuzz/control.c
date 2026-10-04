@@ -123,7 +123,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     control.utc = fixed_utc;
     control.wall = fixed_wall;
     em_reporting reporting = {0};
-    em_reporting_start(&reporting, store, binding.controller_al, binding.local_al, ruid);
+    em_reporting_start(&reporting, store, binding.controller_al, binding.local_al, ruid, 1000.0); /* the requests come at 1000 */
     em_bh_shared shared = {0};
     em_bh_coordinator bh = {0};
     em_bh_start(&bh, &shared, binding.controller_al, binding.local_al, bh_move, bh_outcome, NULL);

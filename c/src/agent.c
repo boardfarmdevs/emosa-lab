@@ -768,7 +768,7 @@ static void admitted(agent *a)
     if (em_m1_frames(&b, &caps, &a->m1, a->r1 ? EM_SET_R1 : EM_SET_61, next_mid(a), &f) == EM_OK)
         send_frames(a, &f);
     a->at.state = S_AWAITING_M2;
-    em_reporting_start(&a->reporting, a->policy_store, a->controller, a->al, a->represented.ruid);
+    em_reporting_start(&a->reporting, a->policy_store, a->controller, a->al, a->represented.ruid, now());
     a->reporting_live = a->policy_store != NULL;
     if (a->uplink_on) /* Backhaul Steering: the pod has a Multi-AP backhaul station to move */
         em_bh_start(&a->bh, &a->bh_shared, a->controller, a->al, bh_executor, bh_outcome, a);

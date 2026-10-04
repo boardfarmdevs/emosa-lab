@@ -401,6 +401,13 @@ in answer to an AP Metrics Query and, when the controller's Metric Reporting
 Policy sets an AP metrics reporting interval, unsolicited at that interval.
 RDK's controller learns a client's signal only this way.
 
+The received policy is kept durably: written when it is received, before its
+1905 Ack, and only then. The schedule of unsolicited reports is the session's:
+it starts with each session (so with each start of the agent), the first report
+due one interval after, and its accounting (reports sent, periods without one)
+is the session's too, in the agent's status. A report that is due is accounted
+before it is sent, so a failed send never repeats a period.
+
 Telemetry configures two reports on the pod: the raw client report and a raw
 on-channel survey of the represented radio, both at the reporting interval.
 

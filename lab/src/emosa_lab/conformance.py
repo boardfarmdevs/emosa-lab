@@ -2193,6 +2193,19 @@ def metrics_vectors():
             [(0.0, "frame", policy), (0.0, "frame", query(34, [bssid])), (5.0, "tick", None)],
         ),
         (
+            # a new session on the kept policy (spec 3.8): the schedule starts again, its
+            # first report one interval after the session's start; no tick writes the record
+            "new-session",
+            [survey, clients],
+            [
+                (0.0, "frame", policy),
+                (5.0, "tick", None),
+                (7.0, "session", None),
+                (10.0, "tick", None),
+                (12.0, "tick", None),
+            ],
+        ),
+        (
             # the same policy again (a new MID) does not postpone the due report
             "policy-redelivered",
             [survey, clients],
@@ -2305,27 +2318,32 @@ def metrics_vectors():
         sent = []
         mids = MidSequence(499)
         with tempfile.TemporaryDirectory() as directory:
-            coordinator = None
-            reporter = PodMetricReporter(
-                source,
-                stats,
-                sent.append,
-                mids,
-                admitted=lambda: True,
-                # the coordinator is created below, in this iteration
-                policy=lambda: coordinator.value["policy"] if coordinator.value else {},  # noqa: B023
-                esp_be=bytes.fromhex("3fff00"),
-                freshness=3 * 5 + 5,
-                clock=clock,
-                wall=lambda: wall,
-            )
-            coordinator = ReportingPolicyCoordinator(
-                source,
-                sent.append,
-                ReportingPolicyStore(Path(directory) / "policy.sqlite", boot_id="conformance"),
-                reporter=reporter,
-                clock=clock,
-            )
+            store = ReportingPolicyStore(Path(directory) / "policy.sqlite", boot_id="conformance")
+
+            def session(source=source, stats=stats, sent=sent, mids=mids, clock=clock, store=store):
+                """The reporter and the policy coordinator of one session, as the agent
+                creates them at each session's start."""
+                holder = {}
+                reporter = PodMetricReporter(
+                    source,
+                    stats,
+                    sent.append,
+                    mids,
+                    admitted=lambda: True,
+                    policy=lambda: (
+                        holder["policy"].value["policy"] if holder["policy"].value else {}
+                    ),
+                    esp_be=bytes.fromhex("3fff00"),
+                    freshness=3 * 5 + 5,
+                    clock=clock,
+                    wall=lambda: wall,
+                )
+                holder["policy"] = ReportingPolicyCoordinator(
+                    source, sent.append, store, reporter=reporter, clock=clock
+                )
+                return reporter, holder["policy"]
+
+            reporter, coordinator = session()
             recorded = []
             for index, (at, kind, frame) in enumerate(steps):
                 now[0] = at
@@ -2341,6 +2359,10 @@ def metrics_vectors():
                 if kind == "tick":
                     coordinator.tick()
                     result = None
+                elif kind == "session":  # a new session (or agent start) on the kept record
+                    coordinator.close()
+                    reporter, coordinator = session()
+                    result = None
                 else:
                     message = Reassembler().feed(frame)
                     try:
@@ -2354,12 +2376,20 @@ def metrics_vectors():
                 recorded.append(
                     {
                         "at": at,
-                        **({"request": frame.hex()} if frame is not None else {"tick": True}),
+                        **(
+                            {"request": frame.hex()}
+                            if frame is not None
+                            else {"session": True}
+                            if kind == "session"
+                            else {"tick": True}
+                        ),
                         "expected": {"result": result, "frames": [f.hex() for f in sent[before:]]},
                     }
                 )
             value = coordinator.value
+            stored = store.read()  # written only when a policy was received
             coordinator.close()
+            store.close()
         out.append(
             {
                 "name": name,
@@ -2374,6 +2404,11 @@ def metrics_vectors():
                 )
                 if value
                 else None,
+                "expected_stored": plain(
+                    {k: v for k, v in (stored or {}).items() if k not in ("boot_id",)}
+                )
+                if stored
+                else None,
             }
         )
     return {
@@ -2385,9 +2420,12 @@ def metrics_vectors():
         + "); the pod's statistics from the case's "
         "publishes (topic " + topic + ", reporting every 5 s) at the wall clock; the declared "
         "best-effort ESP 3fff00; a statistic is fresh for 20 s (three periods and the 5 s "
-        "publish interval). Each step is a controller frame or a tick at a time 'at' "
-        "(seconds): the agent's result and the frames it sends; its own messages take MIDs "
-        "from 500. expected_policy is the kept record (without the boot identity).",
+        "publish interval). Each step is a controller frame, a tick, or a new session "
+        "('session': the agent's policy coordinator started again on the kept record, as a "
+        "new session or a start of the agent does) at a time 'at' (seconds): the agent's "
+        "result and the frames it sends; its own messages take MIDs from 500. "
+        "expected_policy is the agent's record at the end, expected_stored the record kept "
+        "on disk, written only when a policy is received (both without the boot identity).",
         "agent": {
             "al_mac": AGENT,
             "controller_al": CONTROLLER,

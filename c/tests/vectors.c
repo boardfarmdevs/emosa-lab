@@ -1438,7 +1438,7 @@ static void metrics_vectors(const char *dir)
         snprintf(db, sizeof(db), "%s/policy.sqlite", path);
         em_policy_store *store = em_policy_store_open(db, "conformance");
         em_reporting r = {0};
-        em_reporting_start(&r, store, controller, al, ruid);
+        em_reporting_start(&r, store, controller, al, ruid, 0.0);
         em_pod_stats *stats = malloc(sizeof(*stats));
         em_pod_stats_init(stats, str(agent, "topic"), (unsigned)num(agent, "reporting_interval"), stats_clock,
                           &stats_now);
@@ -1465,6 +1465,9 @@ static void metrics_vectors(const char *dir)
             const char *result = NULL;
             if (cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "tick"))) {
                 em_reporting_tick(&r, at, true, &source, metrics_mid, &mid, &out);
+            } else if (cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "session"))) {
+                em_reporting_close(&r); /* a new session (or agent start) on the kept record */
+                em_reporting_start(&r, store, controller, al, ruid, at);
             } else {
                 cJSON *frames = cJSON_CreateArray();
                 cJSON_AddItemToArray(frames, cJSON_CreateString(str(step, "request")));
@@ -1505,6 +1508,14 @@ static void metrics_vectors(const char *dir)
             }
         }
         cJSON_Delete(kept);
+        checks++;
+        cJSON *stored = em_policy_store_read(store);
+        if (!stored)
+            stored = cJSON_CreateNull();
+        cJSON_DeleteItemFromObjectCaseSensitive(stored, "boot_id");
+        if (!cJSON_Compare(stored, cJSON_GetObjectItemCaseSensitive(c, "expected_stored"), 1))
+            fail("metrics", name, "stored policy differs");
+        cJSON_Delete(stored);
         cJSON_Delete(pc);
         cJSON_Delete(rc);
         cJSON_Delete(policy_status);

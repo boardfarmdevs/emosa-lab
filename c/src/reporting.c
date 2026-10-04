@@ -295,8 +295,28 @@ invalid:
 
 /* -- the coordinator ------------------------------------------------------------------------ */
 
+static void put(cJSON *o, const char *k, cJSON *v);
+static double num(const cJSON *o, const char *k);
+static const cJSON *metrics_of(const cJSON *policy);
+
+/* The kept record at the session's start (spec §3.8): the policy and its receipts stay;
+ * the schedule starts now and its accounting is this session's, never written. */
+static void started(em_reporting *r, double now)
+{
+    if (!r->value)
+        return;
+    double interval = num(metrics_of(cJSON_GetObjectItemCaseSensitive(r->value, "policy")), "interval_seconds");
+    put(r->value, "boot_id", cJSON_CreateString(r->store->boot_id));
+    put(r->value, "next_due", interval ? cJSON_CreateNumber(now + interval) : cJSON_CreateNull());
+    put(r->value, "periods_due_without_report", cJSON_CreateNumber(0));
+    put(r->value, "last_unfulfilled_due", cJSON_CreateNull());
+    put(r->value, "schedule_rebases", cJSON_CreateNumber(num(r->value, "schedule_rebases") + 1));
+    cJSON_DeleteItemFromObjectCaseSensitive(r->value, "latest_report_attempt");
+    cJSON_DeleteItemFromObjectCaseSensitive(r->value, "reports_transmitted");
+}
+
 void em_reporting_start(em_reporting *r, em_policy_store *store, const uint8_t controller[6],
-                        const uint8_t local_al[6], const uint8_t ruid[6])
+                        const uint8_t local_al[6], const uint8_t ruid[6], double now)
 {
     cJSON_Delete(r->value);
     memset(r, 0, sizeof(*r));
@@ -305,7 +325,10 @@ void em_reporting_start(em_reporting *r, em_policy_store *store, const uint8_t c
     memcpy(r->local_al, local_al, 6);
     memcpy(r->ruid, ruid, 6);
     r->value = store ? store_read(store) : NULL;
+    started(r, now);
 }
+
+cJSON *em_policy_store_read(em_policy_store *s) { return store_read(s); }
 
 void em_reporting_close(em_reporting *r)
 {
@@ -338,14 +361,21 @@ static void put(cJSON *o, const char *k, cJSON *v)
         cJSON_AddItemToObject(o, k, v);
 }
 
-static bool persist(em_reporting *r, cJSON *value)
+/* the session's record, in memory only (ticks) */
+static void keep(em_reporting *r, const cJSON *value)
 {
-    if (!store_save(r->store, value))
-        return false;
     if (value != r->value) {
         cJSON_Delete(r->value);
         r->value = cJSON_Duplicate(value, true);
     }
+}
+
+/* a received policy: written, then kept (spec §3.8: written only then) */
+static bool persist(em_reporting *r, cJSON *value)
+{
+    if (!store_save(r->store, value))
+        return false;
+    keep(r, value);
     return true;
 }
 
@@ -388,13 +418,6 @@ void em_reporting_tick(em_reporting *r, double now, bool admitted, const em_metr
     cJSON *value = cJSON_Duplicate(r->value, true);
     const cJSON *policy = cJSON_GetObjectItemCaseSensitive(value, "policy");
     double interval = num(metrics_of(policy), "interval_seconds");
-    const char *boot = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(value, "boot_id"));
-    if (!boot || strcmp(boot, r->store->boot_id)) { /* a reboot: the schedule is rebased */
-        put(value, "boot_id", cJSON_CreateString(r->store->boot_id));
-        put(value, "next_due", interval ? cJSON_CreateNumber(now + interval) : cJSON_CreateNull());
-        put(value, "schedule_rebases", cJSON_CreateNumber(num(value, "schedule_rebases") + 1));
-        persist(r, value);
-    }
     const cJSON *due_item = cJSON_GetObjectItemCaseSensitive(value, "next_due");
     if (!cJSON_IsNumber(due_item) || now < due_item->valuedouble || interval <= 0) {
         cJSON_Delete(value);
@@ -411,8 +434,8 @@ void em_reporting_tick(em_reporting *r, double now, bool admitted, const em_metr
     cJSON_AddNumberToObject(attempt, "due", reserved);
     cJSON_AddStringToObject(attempt, "status", "reserved_outcome_unknown");
     put(value, "latest_report_attempt", attempt);
-    /* reserve before I/O: a crash overcounts one report, never replays a burst */
-    persist(r, value);
+    /* accounted before I/O: a failed send never repeats a period, no burst follows */
+    keep(r, value);
     uint16_t mid = next_mid(mid_ctx);
     if (send_metrics(r, mid, policy, NULL, 0, admitted, source, out)) {
         record(&r->reporter_counts, "periodic_ap_metric_report_transmitted");
@@ -424,7 +447,7 @@ void em_reporting_tick(em_reporting *r, double now, bool admitted, const em_metr
         cJSON_AddNumberToObject(attempt, "due", reserved);
         cJSON_AddStringToObject(attempt, "status", "transmitted_controller_receipt_unverified");
         put(value, "latest_report_attempt", attempt);
-        persist(r, value);
+        keep(r, value);
         record(&r->counts, "periodic_metric_report_transmitted");
     } else {
         attempt = cJSON_CreateObject();
@@ -432,7 +455,7 @@ void em_reporting_tick(em_reporting *r, double now, bool admitted, const em_metr
         cJSON_AddStringToObject(attempt, "status", "unavailable_or_send_incomplete");
         cJSON_AddStringToObject(attempt, "reason", "NOT_READY");
         put(value, "latest_report_attempt", attempt);
-        persist(r, value);
+        keep(r, value);
         record(&r->counts, "metric_reporting_due_without_qualified_source");
     }
     cJSON_Delete(prior_unfulfilled);

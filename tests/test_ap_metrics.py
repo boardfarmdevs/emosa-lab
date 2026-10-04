@@ -1,5 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
-import sqlite3
 import struct
 from dataclasses import replace
 
@@ -287,7 +286,7 @@ def test_query_without_valid_authority_has_no_report(rig, failure):
     assert not rig.sent
 
 
-def test_periodic_reservation_before_send_and_same_policy_preserves_deadline(rig):
+def test_periodic_report_accounted_before_send_and_same_policy_preserves_deadline(rig):
     rig.request_policy()
     rig.now = 70
     rig.observe()
@@ -295,24 +294,27 @@ def test_periodic_reservation_before_send_and_same_policy_preserves_deadline(rig
     original = rig.reporter.send_frame
 
     def send(frame):
-        saved = rig.store.read()
-        assert saved["next_due"] == 130 and saved["periods_due_without_report"] == 1
-        assert saved["latest_report_attempt"]["status"] == "reserved_outcome_unknown"
+        value = rig.policy.value
+        assert value["next_due"] == 130 and value["periods_due_without_report"] == 1
+        assert value["latest_report_attempt"]["status"] == "reserved_outcome_unknown"
         original(frame)
 
     rig.reporter.send_frame = send
     rig.policy.tick()
-    saved = rig.store.read()
-    assert saved["reports_transmitted"] == 1 and saved["periods_due_without_report"] == 0
-    assert saved["last_unfulfilled_due"] is None
+    value = rig.policy.value
+    assert value["reports_transmitted"] == 1 and value["periods_due_without_report"] == 0
+    assert value["last_unfulfilled_due"] is None
+    assert rig.store.read()["next_due"] == 70  # a tick writes nothing (spec §3.8)
     assert messages(rig.sent)[-1].message_type == 0x800C
     rig.request_policy(mid=12)
-    assert rig.store.read()["next_due"] == 130
+    assert rig.policy.value["next_due"] == 130 and rig.store.read()["next_due"] == 130
     assert not rig.policy.status()["required_reporting_proven"]
 
 
-@pytest.mark.parametrize("failure", ["missing", "partial_io", "after_send_crash", "expired_due"])
-def test_periodic_failure_is_durable_and_does_not_replay_after_restart(rig, failure, monkeypatch):
+@pytest.mark.parametrize("failure", ["missing", "partial_io", "expired_due"])
+def test_periodic_failure_is_accounted_and_a_new_session_does_not_replay_it(
+    rig, failure, monkeypatch
+):
     rig.request_policy()
     rig.now = 70 if failure != "expired_due" else 71.01
     stations = tuple(bytes.fromhex("0200000050") + bytes((x,)) for x in range(1, 33))
@@ -326,40 +328,38 @@ def test_periodic_failure_is_durable_and_does_not_replay_after_restart(rig, fail
             raise OSError("injected incomplete send")
 
         rig.reporter.send_frame = fail
-    if failure == "after_send_crash":
-        original = rig.store.save
 
-        def crash(value):
-            if value.get("reports_transmitted"):
-                raise sqlite3.OperationalError("injected post-send persistence loss")
-            original(value)
+    def written(value):
+        raise AssertionError("a tick wrote the policy record")
 
-        monkeypatch.setattr(rig.store, "save", crash)
-        with pytest.raises(EmosaError):
-            rig.policy.tick()
-    else:
-        rig.policy.tick()
-    saved = rig.store.read()
-    assert saved["periods_due_without_report"] == 1 and saved["next_due"] == 130
-    assert saved.get("reports_transmitted", 0) == 0
+    monkeypatch.setattr(rig.store, "save", written)
+    rig.policy.tick()
+    value = rig.policy.value
+    assert value["periods_due_without_report"] == 1 and value["next_due"] == 130
+    assert value.get("reports_transmitted", 0) == 0
     sent = len(rig.sent)
     rig.policy.close()
     rig.policy = rig.restart_policy()
     rig.policy.tick()
     assert len(rig.sent) == sent
+    assert rig.policy.value["periods_due_without_report"] == 0
 
 
-def test_delayed_restart_sends_at_most_one_current_report_and_counts_old_periods(rig):
+def test_a_late_new_session_starts_the_schedule_and_sends_no_old_reports(rig):
     rig.request_policy()
     rig.now = 190.2
     rig.observe()
     rig.publish()
     rig.policy = rig.restart_policy()
     rig.policy.tick()
-    saved = rig.store.read()
-    assert saved["next_due"] == 250 and saved["periods_due_without_report"] == 2
-    assert saved["reports_transmitted"] == 1 and saved["last_unfulfilled_due"] == 130
-    assert len(messages(rig.sent)) == 2  # Receipt Ack plus one current report.
+    value = rig.policy.value
+    assert value["next_due"] == pytest.approx(250.2) and value["periods_due_without_report"] == 0
+    assert len(messages(rig.sent)) == 1  # the receipt's Ack only
+    rig.now = 250.3
+    rig.observe()
+    rig.publish()
+    rig.policy.tick()
+    assert len(messages(rig.sent)) == 2 and rig.policy.value["reports_transmitted"] == 1
 
 
 def test_source_change_during_fragmented_send_stops_later_fragments(rig):

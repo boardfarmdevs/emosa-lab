@@ -25,6 +25,8 @@ typedef struct em_policy_store em_policy_store;
 em_policy_store *em_policy_store_open(const char *path, const char *boot_id);
 void em_policy_store_close(em_policy_store *s);
 const char *em_policy_store_boot_id(const em_policy_store *s);
+/* The record as kept on disk (written only when a policy is received), or NULL. */
+cJSON *em_policy_store_read(em_policy_store *s);
 
 /* What a report is built from: the represented radio (its BSSes and stations), the
  * pod's statistics and the declared ESP. NULL stats: no pod metrics. */
@@ -56,9 +58,10 @@ typedef struct {
     bool closed;
 } em_reporting;
 
-/* One per session, over the agent's store (the stored policy is read again). */
+/* One per session, over the agent's store (spec §3.8): the kept policy is read again
+ * and the schedule starts at now, its first report one interval after. */
 void em_reporting_start(em_reporting *r, em_policy_store *store, const uint8_t controller[6],
-                        const uint8_t local_al[6], const uint8_t ruid[6]);
+                        const uint8_t local_al[6], const uint8_t ruid[6], double now);
 void em_reporting_close(em_reporting *r);
 
 /* Frames the caller sends; mid is the agent's next MID for its own messages. */

@@ -7,6 +7,7 @@ status are in the easymesh-labs alignment plan ([mesh.vcpe.dev](https://mesh.vcp
 
 | Date | Decision | Why | Where |
 | --- | --- | --- | --- |
+| 4 Oct 2026 | The reporting policy is written only when one is received; the schedule of unsolicited reports and its accounting are the session's, starting again with each session | written twice per periodic report it took some 140 MB a day per pod at RDK's 5 s interval on a gateway's storage; starting the schedule with a session delays a report by at most one interval | spec §3.8, vectors `metrics.json` (`new-session`, `expected_stored`) |
 | 4 Oct 2026 | 1905 on the router: each pod is an EasyMesh agent of its own (its AL MAC) on the gateway's LAN bridge `brlan0`, through the package's veth trunk, next to the gateway's own 1905 stack and colocated agent | as built and measured in the RDK gateway's container (3 Oct: RDK's controller onboarded both pods' agents, five rooms of five); nothing changes in RDK's agent, and each pod keeps its own topology and backhaul steering | plan 5.1, `c/packaging/default-emosa` |
 | 4 Oct 2026 | The gateway runs the GTP: it serves the pods' onboarding SSID and ends their GRE; the image's EMOSA opt-in brings `emosa-gtp`, its unit enabled and inert until configured | every OpenSync start returns a pod to its GRE bootstrap (spec §8.2), so without it no Wi-Fi pod could onboard or recover; the EasyMesh backhaul then moves qualifying pods off GRE | plan 5.2, meta-cmf-bananapi-vcpe `recipes-emosa/emosa` |
 | 4 Oct 2026 | Pods find EMOSA through the operator: the operator's cloud redirects each admitted pod once to the gateway's fleet front port, and EMOSA presents operator-issued certificates the unchanged pod trusts | the pods stay unchanged (D3) and trust stays the operator's; a redirect on the router's LAN gives an unchanged pod no TLS trust | plan 5.3, spec §9 (TLS still to do) |
@@ -38,6 +39,5 @@ status are in the easymesh-labs alignment plan ([mesh.vcpe.dev](https://mesh.vcp
 
 ## Open decisions
 
-| Decision | Why it matters | Where |
-| --- | --- | --- |
-| How durably the reporting policy's schedule is kept: today written twice per periodic report | some 140 MB a day per pod at RDK's 5 s interval on a gateway's storage | the footprint record |
+None: the last ones (plan 5.1 to 5.3, and how the reporting policy is kept) were taken on
+4 October 2026, above. What remains open is work, not a decision ([README](README.md)).

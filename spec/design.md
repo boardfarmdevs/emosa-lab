@@ -392,7 +392,7 @@ idempotent (`reconcile` makes the tunnels equal to the current leases).
 | State | Where | Survives agent restart | On restart |
 | --- | --- | --- | --- |
 | operations | journals (SQLite) | yes | `SUBMITTED` becomes `INDETERMINATE` (outcome unknown, confirmed only by observation); `VALIDATED` and unsent WSC requests are cancelled; the steering scope closes windows a previous process left open, once the pod is reachable |
-| channel and reporting policy | SQLite, one record each | yes | the channel policy resets on the first session of a process |
+| channel and reporting policy | SQLite, one record each, the reporting policy written only when one is received | yes | the channel policy resets on the first session of a process; the reporting schedule starts again with each session (spec §3.8) |
 | secrets (passphrases by reference) | secret directory | yes | none |
 | controller session, WSC transcript, snapshots | memory | no | a new onboarding (Search, M1) |
 | statistics epochs | memory | no | a new counter epoch |

@@ -109,17 +109,16 @@ def decode_policy(tlvs, ruid):
 
 
 class ReportingPolicyStore:
-    """One bounded policy record; persistent intent and due-work accounting.
+    """One bounded policy record, written when a policy is received (spec §3.8).
 
-    The caller supplies the OS boot identity because monotonic timestamps can
-    survive process restart, but must be rebased after a machine reboot.
+    The schedule of unsolicited reports and its accounting are the session's
+    (ReportingPolicyCoordinator), never written per report: at a 5 s interval that
+    was about 140 MB of WAL a day per pod on a gateway's storage. The record keeps
+    the OS boot identity it was written under.
 
-    Commits survive a process crash but are not synced to disk one by one
-    (WAL, synchronous=NORMAL): the record is written twice per reporting
-    period on the agent's loop, and a synced commit took up to 0.9 s on a
-    loaded lab host, long enough for the pod's report lease to lapse. An OS
-    crash can lose the latest accounting; the schedule is rebased after a
-    reboot anyway.
+    Commits survive a process crash but are not synced to disk one by one (WAL,
+    synchronous=NORMAL): the receipt is written before its Ack, which is due
+    within 1 s, and a synced commit took up to 0.9 s on a loaded lab host.
     """
 
     def __init__(self, path, *, boot_id):
@@ -154,10 +153,12 @@ class ReportingPolicyStore:
 
 
 class ReportingPolicyCoordinator:
-    """Persist receipt and reserve due work before optional guarded transmission.
+    """Persist receipt and account due work before optional guarded transmission.
 
-    Due intervals become persistent missing-report counts, never fake telemetry
-    or a retry flood. This intentionally does not claim §10 reporting compliance.
+    One per session (spec §3.8): the kept policy is read at its start and the
+    schedule starts again, the first report due one interval after. Due intervals
+    become the session's missing-report counts, never fake telemetry or a retry
+    flood. This intentionally does not claim §10 reporting compliance.
     """
 
     def __init__(self, source, send_frame, store, *, reporter=None, clock=time.monotonic):
@@ -166,8 +167,26 @@ class ReportingPolicyCoordinator:
         self.closed = False
         self.recent = {}
         self.counts = {}
-        self.value = store.read()
+        self.value = self._started(store.read())
         self.reporter = reporter
+
+    def _started(self, value):
+        """The kept record at the session's start: the policy and its receipts stay; the
+        schedule starts now and its accounting is this session's (not written)."""
+        if value is None:
+            return None
+        interval = value["policy"].get("metrics", {}).get("interval_seconds", 0)
+        value = {
+            **value,
+            "boot_id": self.store.boot_id,
+            "next_due": self.clock() + interval if interval else None,
+            "periods_due_without_report": 0,
+            "last_unfulfilled_due": None,
+            "schedule_rebases": value["schedule_rebases"] + 1,
+        }
+        value.pop("latest_report_attempt", None)
+        value.pop("reports_transmitted", None)
+        return value
 
     def record(self, key):
         self.counts[key] = self.counts.get(key, 0) + 1
@@ -208,11 +227,6 @@ class ReportingPolicyCoordinator:
             return  # Old intent cannot become another pod/controller's policy.
         value = dict(self.value)
         interval = value["policy"].get("metrics", {}).get("interval_seconds", 0)
-        if value["boot_id"] != self.store.boot_id:
-            value["boot_id"] = self.store.boot_id
-            value["next_due"] = now + interval if interval else None
-            value["schedule_rebases"] += 1
-            self.persist(value)
         due = value["next_due"]
         if due is not None and now >= due:
             periods = int((now - due) // interval) + 1
@@ -225,10 +239,9 @@ class ReportingPolicyCoordinator:
                     "due": value["last_unfulfilled_due"],
                     "status": "reserved_outcome_unknown",
                 }
-            # Reserve before I/O. A crash can overcount one missing report, but
-            # cannot postpone the deadline, falsely prove a send, or replay a
-            # burst of old reports. A send is not independent controller receipt.
-            self.persist(value)
+            # Account before I/O: a failed send never repeats a period, and no burst
+            # of old reports follows. A send is not independent controller receipt.
+            self.value = value
             if self.reporter is not None:
                 try:
                     self.reporter.periodic(value["policy"], value["last_unfulfilled_due"])
@@ -241,7 +254,7 @@ class ReportingPolicyCoordinator:
                             "reason": exc.code.value if isinstance(exc, EmosaError) else "IO_ERROR",
                         },
                     }
-                    self.persist(value)
+                    self.value = value
                 else:
                     value = {
                         **value,
@@ -255,7 +268,7 @@ class ReportingPolicyCoordinator:
                             "status": "transmitted_controller_receipt_unverified",
                         },
                     }
-                    self.persist(value)
+                    self.value = value
                     self.record("periodic_metric_report_transmitted")
                     return
             self.record("metric_reporting_due_without_qualified_source")

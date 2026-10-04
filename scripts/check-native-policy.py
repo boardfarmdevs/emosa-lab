@@ -4,6 +4,10 @@
 This is deliberately not a complete policy/reporting acceptance checker.
 It joins the actual native request bytes, timely wire Acks, durable policy
 status and recovery snapshots without importing the implementation.
+
+It checks the recorded runs as their agent behaved: the reporting schedule kept across
+faults. Since spec §3.8 (4 October 2026) the schedule is the session's and starts again
+with each session; a new run is checked against that, not here.
 """
 
 import argparse
