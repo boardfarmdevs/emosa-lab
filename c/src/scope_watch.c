@@ -322,7 +322,8 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         return;
     }
     const char *node;
-    int generation = (int)cJSON_GetNumberValue(cJSON_GetObjectItemCaseSensitive(attempt, "session_generation"));
+    int generation = 0; /* none or no int: another session */
+    (void)em_json_int(cJSON_GetObjectItemCaseSensitive(attempt, "session_generation"), &generation);
     if (!bound(w, &node) || em_ovsdb_generation(w->ovs) != generation) {
         cJSON_Delete(p);
         strcpy(out->status, "rejected");

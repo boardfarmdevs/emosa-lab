@@ -10,6 +10,7 @@
 #include "ovs.h"
 #include "scope.h"
 #include "southbound.h"
+#include "canon.h"
 
 #define MODE "opensync-6.6-telemetry"
 #define PROVENANCE "opensync:AWLAN_Node.mqtt_settings+Wifi_Stats_Config"
@@ -384,7 +385,8 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         return;
     }
     cJSON_Delete(p);
-    int generation = (int)cJSON_GetNumberValue(cJSON_GetObjectItemCaseSensitive(attempt, "session_generation"));
+    int generation = 0; /* none or no int: another session */
+    (void)em_json_int(cJSON_GetObjectItemCaseSensitive(attempt, "session_generation"), &generation);
     const char *node_uuid;
     const cJSON *node = bind(t, &node_uuid);
     if (!node || em_ovsdb_generation(t->ovs) != generation) {

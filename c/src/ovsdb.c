@@ -212,12 +212,12 @@ static void on_message(em_ovsdb *s, cJSON *m)
         } else if (!strcmp(method->valuestring, "update")) {
             const cJSON *params = cJSON_GetObjectItemCaseSensitive(m, "params");
             const cJSON *which = cJSON_GetArrayItem(params, 0);
-            if (cJSON_IsNumber(which) && (long)which->valuedouble == s->monitor_id)
+            if (cJSON_IsNumber(which) && which->valuedouble == (double)s->monitor_id) /* as numbers: FLP34-C */
                 apply(s, cJSON_GetArrayItem(params, 1));
         }
         return;
     }
-    if (cJSON_IsNumber(id) && (long)id->valuedouble == s->pending_id) {
+    if (cJSON_IsNumber(id) && id->valuedouble == (double)s->pending_id) {
         cJSON_Delete(s->pending_reply);
         s->pending_reply = cJSON_Duplicate(m, 1);
     }
@@ -318,7 +318,7 @@ static bool start_monitor(em_ovsdb *s)
     free(text);
     cJSON_Delete(schema);
     cJSON *params = cJSON_CreateArray(), *requests = cJSON_CreateObject();
-    long monitor = s->generation * 1000 + 1;
+    long monitor = (long)(s->generation % 1000000) * 1000 + 1; /* no overflow however many sessions (INT32-C) */
     cJSON_AddItemToArray(params, cJSON_CreateString(DATABASE));
     cJSON_AddItemToArray(params, cJSON_CreateNumber((double)monitor));
     for (size_t i = 0; i < s->ntables; i++)

@@ -2,7 +2,9 @@
 /* JSON text as the reference writes it, hashes and time stamps. */
 #include "canon.h"
 
+#include <limits.h>
 #include <math.h>
+#include <openssl/crypto.h>
 #include <openssl/hmac.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>
@@ -297,4 +299,30 @@ bool em_utc_add(const char *a, double seconds, char out[40])
     else
         EM_FORMAT_FIXED(out, 40, "%.20s+00:00", base);
     return true;
+}
+
+bool em_json_long(const cJSON *v, long *out)
+{
+    if (!cJSON_IsNumber(v) || !isfinite(v->valuedouble) || v->valuedouble < (double)LONG_MIN ||
+        v->valuedouble >= -(double)LONG_MIN)
+        return false;
+    *out = (long)v->valuedouble;
+    return true;
+}
+
+bool em_json_int(const cJSON *v, int *out)
+{
+    long l;
+    if (!em_json_long(v, &l) || l < INT_MIN || l > INT_MAX)
+        return false;
+    *out = (int)l;
+    return true;
+}
+
+void em_free_secret(char *secret)
+{
+    if (!secret)
+        return;
+    OPENSSL_cleanse(secret, strlen(secret));
+    free(secret);
 }

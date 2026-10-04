@@ -25,7 +25,12 @@ static const char *str(const cJSON *o, const char *k)
     return cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(o, k));
 }
 
-static int num(const cJSON *o, const char *k) { return (int)cJSON_GetNumberValue(cJSON_GetObjectItemCaseSensitive(o, k)); }
+static int num(const cJSON *o, const char *k)
+{
+    int n = 0; /* absent or no int: 0, which the plan's checks refuse */
+    (void)em_json_int(cJSON_GetObjectItemCaseSensitive(o, k), &n);
+    return n;
+}
 
 static const char *record(em_steering_scope *s, const char *event)
 {
@@ -321,7 +326,9 @@ static bool closed_ops(em_steering_scope *s, const char *id)
             if (op && !strcmp(op, id) &&
                 cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(e, "payload"), "window_closed"))
                 found = true;
-            after = (long)cJSON_GetNumberValue(cJSON_GetObjectItemCaseSensitive(e, "sequence"));
+            long sequence;
+            if (em_json_long(cJSON_GetObjectItemCaseSensitive(e, "sequence"), &sequence))
+                after = sequence;
         }
         cJSON_Delete(events);
         if (found)

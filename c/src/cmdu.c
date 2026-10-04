@@ -304,6 +304,8 @@ em_reason em_reassembler_feed(em_reassembler *r, const uint8_t *frame, size_t le
     if (version != 0)
         return EM_UNSUPPORTED_OPERATION; /* reserved CMDU version; no dispatch */
     const char *in = ingress ? ingress : "offline";
+    if (strlen(in) >= sizeof(((context *)0)->ingress))
+        return EM_INVALID_INPUT; /* an ingress (an interface name) longer than a context keeps */
     context *c = NULL, *spare = NULL;
     unsigned used = 0;
     for (unsigned i = 0; i < r->max_contexts; i++) {
@@ -314,7 +316,7 @@ em_reason em_reassembler_feed(em_reassembler *r, const uint8_t *frame, size_t le
             continue;
         }
         used++;
-        if (!strncmp(x->ingress, in, sizeof(x->ingress)) && !memcmp(x->source, frame + 6, 6) &&
+        if (!strcmp(x->ingress, in) && !memcmp(x->source, frame + 6, 6) &&
             !memcmp(x->destination, frame, 6) && x->message_type == message_type &&
             x->mid == mid)
             c = x;
@@ -325,7 +327,7 @@ em_reason em_reassembler_feed(em_reassembler *r, const uint8_t *frame, size_t le
         c = spare;
         memset(c, 0, sizeof(*c));
         c->used = true;
-        strncpy(c->ingress, in, sizeof(c->ingress) - 1);
+        (void)em_copy(c->ingress, sizeof(c->ingress), in); /* fits: checked above */
         memcpy(c->source, frame + 6, 6);
         memcpy(c->destination, frame, 6);
         c->message_type = message_type;

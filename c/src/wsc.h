@@ -57,5 +57,7 @@ typedef struct {
  * nonce and public key over the set (RDK). */
 em_reason em_m2_decode(const em_m1 *m1, const em_buf *messages, size_t count, unsigned max_bss,
                        bool multi_bss, bool shared_session, em_m2_result *out);
+/* The result cleared, its passphrases with it, once the caller has used it (MEM03-C). */
+void em_m2_result_clear(em_m2_result *r);
 
 #endif

@@ -273,7 +273,7 @@ static const char *resolve(void *ctx, const char *ref)
 {
     resolver *r = ctx;
     em_reason why;
-    free(r->key);
+    em_free_secret(r->key);
     r->key = em_vault_resolve(r->vault, ref, &why);
     return r->key;
 }
@@ -290,7 +290,8 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         return;
     }
     cJSON_Delete(p);
-    int generation = (int)cJSON_GetNumberValue(cJSON_GetObjectItemCaseSensitive(attempt, "session_generation"));
+    int generation = 0; /* none or no int: another session */
+    (void)em_json_int(cJSON_GetObjectItemCaseSensitive(attempt, "session_generation"), &generation);
     if (em_ovsdb_generation(u->ovs) != generation) {
         strcpy(out->status, "rejected");
         out->reason = EM_NOT_READY;
@@ -302,10 +303,7 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     em_submit_result result;
     const char *refusal;
     em_reason e = em_uplink_submit(u->serial, &session, &in, resolve, &r, &result, &refusal);
-    if (r.key) {
-        memset(r.key, 0, strlen(r.key));
-        free(r.key);
-    }
+    em_free_secret(r.key);
     if (e != EM_OK) {
         strcpy(out->status, "unknown");
         out->reason = EM_OUTCOME_UNKNOWN;

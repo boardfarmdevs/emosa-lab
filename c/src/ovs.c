@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "canon.h"
+
 static const cJSON *column(const cJSON *row, const char *name)
 {
     return cJSON_GetObjectItemCaseSensitive(row, name);
@@ -31,11 +33,7 @@ const char *ovs_str(const cJSON *row, const char *name)
 
 bool ovs_int(const cJSON *row, const char *name, long *out)
 {
-    const cJSON *v = scalar(column(row, name));
-    if (!cJSON_IsNumber(v))
-        return false;
-    *out = (long)v->valuedouble;
-    return true;
+    return em_json_long(scalar(column(row, name)), out); /* a number a long cannot hold: none */
 }
 
 bool ovs_true(const cJSON *row, const char *name)
@@ -54,15 +52,19 @@ size_t ovs_uuids(const cJSON *row, const char *name, const char **out, size_t ma
     size_t n = 0;
     if (!cJSON_IsArray(v) || cJSON_GetArraySize(v) != 2)
         return 0;
+    /* only ["uuid", text] counts: the pod's other shapes are no UUIDs (EXP34-C) */
     const char *tag = cJSON_GetArrayItem(v, 0)->valuestring;
+    const cJSON *one = cJSON_GetArrayItem(v, 1);
     if (tag && !strcmp(tag, "uuid")) {
-        out[n++] = cJSON_GetArrayItem(v, 1)->valuestring;
+        if (max && cJSON_IsString(one))
+            out[n++] = one->valuestring;
     } else if (tag && !strcmp(tag, "set")) {
         const cJSON *item;
-        cJSON_ArrayForEach(item, cJSON_GetArrayItem(v, 1))
+        cJSON_ArrayForEach(item, one)
         {
-            if (n < max && cJSON_IsArray(item) && cJSON_GetArraySize(item) == 2)
-                out[n++] = cJSON_GetArrayItem(item, 1)->valuestring;
+            const cJSON *x = cJSON_GetArrayItem(item, 1);
+            if (n < max && cJSON_IsArray(item) && cJSON_GetArraySize(item) == 2 && cJSON_IsString(x))
+                out[n++] = x->valuestring;
         }
     }
     em_sort(out, n, sizeof(*out), cmp);

@@ -27,7 +27,11 @@ static void set(cJSON *o, const char *k, cJSON *v)
 
 static void set_str(cJSON *o, const char *k, const char *v) { set(o, k, v ? cJSON_CreateString(v) : cJSON_CreateNull()); }
 
-const char *em_state_of(const cJSON *op) { return str(op, "state"); }
+const char *em_state_of(const cJSON *op)
+{
+    const char *state = str(op, "state");
+    return state ? state : ""; /* never NULL: every caller compares it (EXP34-C) */
+}
 
 void em_set_reason(cJSON *op, const char *reason) { set_str(op, "reason", reason); }
 

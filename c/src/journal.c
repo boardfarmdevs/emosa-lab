@@ -3,6 +3,7 @@
 #include "journal.h"
 
 #include <errno.h>
+#include <limits.h>
 #include <fcntl.h>
 #include <sqlite3.h>
 #include <stdio.h>
@@ -13,6 +14,7 @@
 #include <unistd.h>
 
 #include "canon.h"
+#include "log.h"
 
 #define MAX_OPERATIONS 10000
 #define MAX_EVENTS 10000
@@ -111,7 +113,8 @@ em_journal *em_journal_open(const char *directory, const em_journal_schemas *sch
     bool version = false;
     if (sqlite3_prepare_v2(j->db, "SELECT value FROM metadata WHERE key='schema_version'", -1, &st, NULL) ==
         SQLITE_OK) {
-        version = sqlite3_step(st) == SQLITE_ROW && !strcmp((const char *)sqlite3_column_text(st, 0), "1");
+        const char *value = sqlite3_step(st) == SQLITE_ROW ? (const char *)sqlite3_column_text(st, 0) : NULL;
+        version = value && !strcmp(value, "1"); /* NULL in a journal another writer made: no version */
         sqlite3_finalize(st);
     }
     if (!version) {
@@ -145,9 +148,10 @@ static cJSON *records(em_journal *j, const char *sql, const char *const *args, s
     cJSON *out = cJSON_CreateArray();
     if (sqlite3_prepare_v2(j->db, sql, -1, &st, NULL) != SQLITE_OK)
         return out;
+    bool bound = true; /* a parameter not bound is no query (EXP12-C) */
     for (size_t i = 0; i < nargs; i++)
-        sqlite3_bind_text(st, (int)i + 1, args[i], -1, SQLITE_TRANSIENT);
-    while (sqlite3_step(st) == SQLITE_ROW) {
+        bound = bound && sqlite3_bind_text(st, (int)i + 1, args[i], -1, SQLITE_TRANSIENT) == SQLITE_OK;
+    while (bound && sqlite3_step(st) == SQLITE_ROW) {
         cJSON *r = cJSON_Parse((const char *)sqlite3_column_text(st, 0));
         if (r)
             cJSON_AddItemToArray(out, r);
@@ -163,10 +167,29 @@ static cJSON *first(cJSON *array)
     return r;
 }
 
+/* Records read back are checked as they were when written: one altered on disk, or a
+ * stranger's, is skipped, so no caller meets a record without its required fields. */
+static bool valid(em_schema *schema, const cJSON *value);
+
+static cJSON *valid_operations(em_journal *j, cJSON *list)
+{
+    cJSON *op = list ? list->child : NULL;
+    while (op) {
+        cJSON *next = op->next;
+        if (!valid(j->schemas.operation, op)) {
+            em_log(EM_LOG_WARNING, "emosa.store", "journal %s: an operation record not valid, skipped",
+                   j->directory);
+            cJSON_Delete(cJSON_DetachItemViaPointer(list, op));
+        }
+        op = next;
+    }
+    return list;
+}
+
 const cJSON *em_journal_operations_view(em_journal *j)
 {
     if (!j->ops)
-        j->ops = records(j, "SELECT record FROM operations ORDER BY rowid", NULL, 0);
+        j->ops = valid_operations(j, records(j, "SELECT record FROM operations ORDER BY rowid", NULL, 0));
     return j->ops;
 }
 
@@ -200,7 +223,7 @@ cJSON *em_journal_get(em_journal *j, const char *id)
 cJSON *em_journal_lookup(em_journal *j, const char *source, const char *pod, const char *key)
 {
     const char *a[] = {source, pod, key};
-    return first(records(j, "SELECT record FROM operations WHERE source=? AND pod=? AND idem=?", a, 3));
+    return first(valid_operations(j, records(j, "SELECT record FROM operations WHERE source=? AND pod=? AND idem=?", a, 3)));
 }
 
 cJSON *em_journal_operations(em_journal *j, const char *run_id)
@@ -252,9 +275,10 @@ static bool run_sql(em_journal *j, const char *sql, const char *const *args, siz
     sqlite3_stmt *st;
     if (sqlite3_prepare_v2(j->db, sql, -1, &st, NULL) != SQLITE_OK)
         return false;
+    bool ok = true;
     for (size_t i = 0; i < nargs; i++)
-        sqlite3_bind_text(st, (int)i + 1, args[i], -1, SQLITE_TRANSIENT);
-    bool ok = sqlite3_step(st) == SQLITE_DONE;
+        ok = ok && sqlite3_bind_text(st, (int)i + 1, args[i], -1, SQLITE_TRANSIENT) == SQLITE_OK;
+    ok = ok && sqlite3_step(st) == SQLITE_DONE;
     sqlite3_finalize(st);
     return ok;
 }
@@ -275,14 +299,17 @@ static bool event(em_journal *j, const char *run, const char *op_id, const char 
                   const cJSON *payload, const char *timestamp)
 {
     sqlite3_stmt *st;
-    long seq = 1;
+    long seq = 0;
     if (sqlite3_prepare_v2(j->db, "SELECT COALESCE(MAX(seq),0)+1 FROM events WHERE run=?", -1, &st, NULL) !=
         SQLITE_OK)
         return false;
-    sqlite3_bind_text(st, 1, run, -1, SQLITE_TRANSIENT);
-    if (sqlite3_step(st) == SQLITE_ROW)
-        seq = (long)sqlite3_column_int64(st, 0);
+    if (sqlite3_bind_text(st, 1, run, -1, SQLITE_TRANSIENT) == SQLITE_OK && sqlite3_step(st) == SQLITE_ROW) {
+        sqlite3_int64 next = sqlite3_column_int64(st, 0);
+        seq = next >= 1 && next <= LONG_MAX ? (long)next : 0; /* one a long holds (INT31-C) */
+    }
     sqlite3_finalize(st);
+    if (!seq)
+        return false;
     const cJSON *reason = cJSON_GetObjectItemCaseSensitive(payload, "reason");
     const char *reason_text = cJSON_IsString(reason)   ? reason->valuestring
                               : cJSON_IsObject(reason) ? (str(reason, "code") ? str(reason, "code") : "NOT_READY")

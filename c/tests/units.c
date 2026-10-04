@@ -434,6 +434,46 @@ static void engine(const char *scratch, const char *schemas)
     em_schema_free(s.receipt);
 }
 
+/* a record altered on disk is skipped as the journal reads it back, never handed on */
+static void journal_tampered(const char *scratch, const char *schemas)
+{
+    char dir[600], vdir[600], db[700];
+    snprintf(dir, sizeof(dir), "%s/journal-t", scratch);
+    snprintf(vdir, sizeof(vdir), "%s/secrets-t", scratch);
+    snprintf(db, sizeof(db), "%s/journal.db", dir);
+    em_journal_schemas s = {em_schema_load(schemas, "operation"), em_schema_load(schemas, "event"),
+                            em_schema_load(schemas, "wsc-receipt")};
+    em_reason why;
+    em_journal *j = em_journal_open(dir, &s, &why);
+    em_vault v;
+    em_vault_open(&v, vdir);
+    fake_pod pod = {"old", "old", false, 1};
+    em_backend backend = {"fake", fake_target, fake_snapshot, fake_plan, fake_submit};
+    em_engine e;
+    em_engine_init(&e, j, &v, "pod-1", backend, &pod, fake_clock);
+    cJSON *intent = intent_for("home");
+    cJSON *op = em_engine_request(&e, intent, "unit", "key-t", "run-t", 30, "semantic", NULL, &why);
+    CHECK(op != NULL, "a valid operation");
+    em_engine_free(&e);
+    em_journal_close(j);
+    sqlite3 *raw = NULL;
+    if (sqlite3_open(db, &raw) == SQLITE_OK)
+        sqlite3_exec(raw, "INSERT INTO operations VALUES ('x','unit','pod-1','key-x','f','run-t',"
+                          "'{\"operation_id\":\"x\"}')", NULL, NULL, NULL);
+    sqlite3_close(raw);
+    j = em_journal_open(dir, &s, &why);
+    CHECK(j && em_journal_count(j) == 1, "the altered record skipped: %zu", j ? em_journal_count(j) : 0);
+    cJSON *found = j ? em_journal_lookup(j, "unit", "pod-1", "key-x") : NULL;
+    CHECK(!found, "nor found by its key");
+    cJSON_Delete(found);
+    em_journal_close(j);
+    cJSON_Delete(op);
+    cJSON_Delete(intent);
+    em_schema_free(s.operation);
+    em_schema_free(s.event);
+    em_schema_free(s.receipt);
+}
+
 static void files(const char *scratch)
 {
     char path[512], tmp[520], big[512];
@@ -789,6 +829,7 @@ int main(int argc, char **argv)
     ethernet();
     schema_keywords(argv[2]);
     helpers(argv[2]);
+    journal_tampered(argv[2], argv[1]);
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;
 }

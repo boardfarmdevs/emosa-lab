@@ -108,7 +108,7 @@ bool em_engine_fingerprint(em_engine *e, const cJSON *intent, const cJSON *targe
 /* emosa.operations.transition: false (the record unchanged) when not permitted. */
 bool em_transition(cJSON *op, const char *target, const cJSON *evidence);
 bool em_state_active(const char *state);
-const char *em_state_of(const cJSON *op);
+const char *em_state_of(const cJSON *op); /* "" when it has none */
 void em_set_reason(cJSON *op, const char *reason); /* NULL: null */
 
 #endif

@@ -73,8 +73,7 @@ static bool store_save(em_policy_store *s, const cJSON *value)
     if (sqlite3_prepare_v2(s->db,
                            "INSERT INTO reporting_policy VALUES(1,?) ON CONFLICT(id) DO UPDATE SET value=excluded.value",
                            -1, &st, NULL) == SQLITE_OK) {
-        sqlite3_bind_text(st, 1, text, -1, SQLITE_TRANSIENT);
-        ok = sqlite3_step(st) == SQLITE_DONE;
+        ok = sqlite3_bind_text(st, 1, text, -1, SQLITE_TRANSIENT) == SQLITE_OK && sqlite3_step(st) == SQLITE_DONE;
         sqlite3_finalize(st);
     }
     free(text);

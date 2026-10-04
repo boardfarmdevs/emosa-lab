@@ -38,4 +38,13 @@ bool em_utc_diff(const char *a, const char *b, double *seconds);
  * (datetime.fromisoformat(now) + timedelta): "...T12:34:56.789000+00:00". */
 bool em_utc_add(const char *a, double seconds, char out[40]);
 
+/* A JSON number as a long or an int: false unless it is a finite number in the type's
+ * range (truncated toward zero, as a cast), so no conversion is undefined (FLP34-C). */
+bool em_json_long(const cJSON *v, long *out);
+bool em_json_int(const cJSON *v, int *out);
+
+/* A secret string (a passphrase) cleared, then freed: OPENSSL_cleanse, which the compiler
+ * keeps where a memset before free may be dropped (MEM03-C, MSC06-C). NULL is ignored. */
+void em_free_secret(char *secret);
+
 #endif

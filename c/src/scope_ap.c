@@ -461,7 +461,8 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
 {
     em_ap_scope *s = ctx;
     memset(out, 0, sizeof(*out));
-    int generation = (int)cJSON_GetNumberValue(cJSON_GetObjectItemCaseSensitive(attempt, "session_generation"));
+    int generation = 0; /* none or no int: another session */
+    (void)em_json_int(cJSON_GetObjectItemCaseSensitive(attempt, "session_generation"), &generation);
     if (!em_ovsdb_ready(s->ovs) || em_ovsdb_generation(s->ovs) != generation) {
         strcpy(out->status, "rejected");
         out->reason = EM_NOT_READY;
@@ -486,8 +487,7 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     em_submit_result result;
     em_reason e = em_ap_submit(s->profile, s->serial, s->multi_bss, &session, &in, resolve, &r, &result);
     for (size_t i = 0; i < r.n; i++) {
-        memset(r.keys[i], 0, strlen(r.keys[i]));
-        free(r.keys[i]);
+        em_free_secret(r.keys[i]);
     }
     if (e != EM_OK) { /* the plan failed at submission: the reference raises, the engine records unknown */
         strcpy(out->status, "unknown");

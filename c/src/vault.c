@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -175,6 +176,7 @@ char *em_vault_resolve(const em_vault *v, const char *ref, em_reason *why)
         value[n] = 0;
         *why = EM_OK;
     }
+    OPENSSL_cleanse(data, n); /* the stored passphrase (MEM03-C) */
     free(data);
     return value;
 }
@@ -185,7 +187,7 @@ bool em_vault_fingerprint(const em_vault *v, const cJSON *value, char out[65])
     if (!text)
         return false;
     em_hmac_hex(v->key, sizeof(v->key), text, strlen(text), out);
-    free(text);
+    em_free_secret(text); /* a passphrase as JSON */
     return true;
 }
 
@@ -217,7 +219,7 @@ bool em_vault_fingerprint_ref(em_vault *v, const char *ref, char out[65], em_rea
     if (!key)
         return false;
     bool ok = em_vault_fingerprint_text(v, key, out);
-    free(key);
+    em_free_secret(key);
     unsigned slot = v->next_fingerprint++ % EM_VAULT_FINGERPRINTS;
     if (ok && em_copy(v->fingerprints[slot].ref, sizeof(v->fingerprints[slot].ref), ref)) /* 96 at most */
         memcpy(v->fingerprints[slot].fp, out, 65);

@@ -829,9 +829,11 @@ static void handle_message(agent *a, const em_message *m)
         if (r != EM_OK || result.teardown) {
             LOG("M2 rejected: %s", r != EM_OK ? em_reason_name(r) : "teardown");
             count(&a->counts, "wsc_rejected");
+            em_m2_result_clear(&result);
             return;
         }
         const char *outcome = operate(a, m, &result);
+        em_m2_result_clear(&result); /* the passphrases are in the vault now, or refused */
         count(&a->counts, outcome);
         if (!strcmp(outcome, "wsc_operation") && a->at.state != S_PROVISIONING) {
             a->at.state = S_PROVISIONING;
@@ -1315,8 +1317,8 @@ static void write_status(agent *a)
 {
     char summary[512];
     const cJSON *latest = em_journal_latest_view(a->journal);
-    EM_FORMAT_FIXED(summary, sizeof(summary), "%s %d %zu %s", SESSION_NAMES[a->at.state], source_current(a),
-             em_journal_count(a->journal), latest ? em_state_of(latest) : "");
+    EM_FORMAT_FIXED(summary, sizeof(summary), "%s %d %zu %.32s", SESSION_NAMES[a->at.state], source_current(a),
+             em_journal_count(a->journal), latest ? em_state_of(latest) : ""); /* a state: 32 at most here */
     bool changed = strcmp(summary, a->status_summary) != 0;
     if (changed)
         LOG("state: %s", summary);

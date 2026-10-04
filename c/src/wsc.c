@@ -338,6 +338,14 @@ static bool decrypt_settings(const session_keys *k, const uint8_t *enc, size_t l
     return ok;
 }
 
+/* Decrypted ConfigData holds the network key: cleared before it is freed (MEM03-C). */
+static void free_config(em_buf *b)
+{
+    if (b->data)
+        OPENSSL_cleanse(b->data, b->cap);
+    em_buf_free(b);
+}
+
 /* -- M1 ---------------------------------------------------------------------------- */
 
 void em_m1_free(em_m1 *m1)
@@ -366,17 +374,23 @@ em_reason em_m1_create(const em_m1_device *d, const em_wsc_entropy *entropy, em_
         out->private_len = 192;
         /* x uniform in [1, q-1]: 1535 random bits, never zero. */
         do {
-            if (RAND_priv_bytes(out->private_key, 192) != 1)
+            if (RAND_priv_bytes(out->private_key, 192) != 1) {
+                em_m1_free(out); /* the key drawn so far cleared */
                 return EM_NOT_READY;
+            }
             out->private_key[0] &= 0x3F;
         } while (!out->private_key[0]);
     }
     if (entropy && entropy->enrollee_nonce)
         memcpy(nonce, entropy->enrollee_nonce, 16);
-    else if (RAND_bytes(nonce, 16) != 1)
+    else if (RAND_bytes(nonce, 16) != 1) {
+        em_m1_free(out);
         return EM_NOT_READY;
-    if (!modexp(NULL, out->private_key, out->private_len, out->public_key))
+    }
+    if (!modexp(NULL, out->private_key, out->private_len, out->public_key)) {
+        em_m1_free(out);
         return EM_NOT_READY;
+    }
     uint8_t os[4] = {(uint8_t)(d->os_version >> 24 | 0x80), (uint8_t)(d->os_version >> 16),
                      (uint8_t)(d->os_version >> 8), (uint8_t)d->os_version};
     uint8_t u16[2];
@@ -466,7 +480,7 @@ static em_reason authenticate(const em_m1 *m1, const em_buf *m2, envelope *e)
     free(c);
     free(v);
     if (!ok || roles != 1) {
-        em_buf_free(&e->config);
+        free_config(&e->config);
         goto done;
     }
     memcpy(e->registrar_nonce, f2[F_RNONCE]->value, 16);
@@ -609,9 +623,14 @@ em_reason em_m2_decode(const em_m1 *m1, const em_buf *messages, size_t count, un
         out->count = count;
 out:
     for (size_t i = 0; i <= done && i < count; i++)
-        em_buf_free(&e[i].config);
+        free_config(&e[i].config);
     free(e);
     if (r != EM_OK)
         memset(out, 0, sizeof(*out));
     return r;
+}
+
+void em_m2_result_clear(em_m2_result *r)
+{
+    OPENSSL_cleanse(r, sizeof(*r));
 }

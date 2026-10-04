@@ -91,6 +91,8 @@ Known differences from the Python agent:
   checks it (RFC 3339); the reference's jsonschema checks it only with the optional
   `rfc3339-validator`, which it does not install, so it accepts any string there. Both
   write RFC 3339 timestamps, so only a record altered on disk is judged differently;
+- a journal operation record that is not valid against its schema (one altered on
+  disk): the C skips it as it reads the journal and logs it; the reference raises;
 - the controller-side tools and the lab are in Python only. The adapter kit
   installs either implementation of every program; `EMOSA_AGENT` in
   `/etc/default/emosa` (every pod) or `/etc/default/emosa-POD` (one pod) picks the
