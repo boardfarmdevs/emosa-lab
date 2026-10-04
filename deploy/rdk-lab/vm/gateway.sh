@@ -184,7 +184,10 @@ measure() {
     mkdir -p "$dir"
     ct=$(where)
     { echo "emosa_in=$ct"; echo "pods=$(pods_running)"; date -u +"started=%FT%TZ"
-      cx "$CTL" /usr/bin/emosa-agent-c --version 2>/dev/null || cx emosa sh -c '. /etc/default/emosa-implementation; "$EMOSA_AGENT" --version'
+      # the agent's version where it runs (an agent from before --version answers with its usage)
+      if [ "$ct" = "$CTL" ]; then cx "$CTL" /usr/bin/emosa-agent-c --version || true
+      else cx emosa sh -c '. /etc/default/emosa-implementation; echo "agent $EMOSA_AGENT"; "$EMOSA_AGENT" --version 2>/dev/null' || true
+      fi
     } > "$dir/run.txt"
     end=$((SECONDS + seconds))
     while :; do
