@@ -97,6 +97,9 @@ static void start_agent(void *ctx, const char *pod_id, bool changed)
     int status;
     if (!em_run(enable, NULL, NULL, &status) || status != 0 || !em_run(start, NULL, NULL, &status) || status != 0)
         WARN("%s not started", unit);
+    else
+        LOG("pod %s: its agent %s from the registry", pod_id,
+            changed ? "restarted, its configuration changed," : "started");
 }
 
 /* -- the front port ----------------------------------------------------------------- */

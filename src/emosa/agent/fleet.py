@@ -263,7 +263,8 @@ class Fleet:
 
     def bind(self, entry):
         """The entry's agent configuration written when new or changed, and its agent
-        started, or restarted when the configuration changed (spec §4 step 4)."""
+        started, or restarted when the configuration changed (spec §4 step 4). Whether it
+        changed."""
         path = self.config_dir / f"{entry['pod_id']}.json"
         text = json.dumps(agent_config(entry, self.config), indent=2) + "\n"
         changed = path.exists() and path.read_text() != text
@@ -272,6 +273,7 @@ class Fleet:
             tmp.write_text(text)
             os.replace(tmp, path)
         self.starter(entry["pod_id"], changed)
+        return changed
 
     def start_registered(self):
         """At the fleet's start, every admitted pod's agent in the registry, as step 4
@@ -286,9 +288,15 @@ class Fleet:
             if self.admit is not None and entry["pod_id"] not in self.admit:
                 continue
             try:
-                self.bind(entry)
+                changed = self.bind(entry)
             except (OSError, subprocess.SubprocessError) as exc:
                 log.warning("pod %s: its agent not started: %s", entry["pod_id"], exc)
+                continue
+            log.info(
+                "pod %s: its agent %s from the registry",
+                entry["pod_id"],
+                "restarted, its configuration changed," if changed else "started",
+            )
 
     def _serve_one(self, stream):
         conn = ovs.jsonrpc.Connection(stream)
