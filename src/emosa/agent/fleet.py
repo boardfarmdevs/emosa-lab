@@ -147,6 +147,13 @@ def agent_config(entry, fleet):
         "al_mac": entry["al_mac"],
         "controller_al": fleet["controller_al"],
         **{k: own.get(k, fleet.get(k, v)) for k, v in AGENT_DEFAULTS.items()},
+        # a property of the controller, so the fleet's only, and only when set: the
+        # configurations of a fleet without it stay as they were
+        **(
+            {"topology_query_window": fleet["topology_query_window"]}
+            if "topology_query_window" in fleet
+            else {}
+        ),
         "state_dir": str(Path(fleet["state_root"]) / entry["pod_id"]),
         **(
             {"run_dir": str(Path(fleet["run_root"]) / entry["pod_id"])}
@@ -232,14 +239,7 @@ class Fleet:
         if entry is None:
             log.warning("pod %s (%s): no free agent port, left unchanged", serial, peer)
             return None
-        path = self.config_dir / f"{entry['pod_id']}.json"
-        text = json.dumps(agent_config(entry, self.config), indent=2) + "\n"
-        changed = path.exists() and path.read_text() != text
-        if not path.exists() or changed:
-            tmp = path.with_suffix(".tmp")
-            tmp.write_text(text)
-            os.replace(tmp, path)
-        self.starter(entry["pod_id"], changed)
+        self.bind(entry)
         target = f"tcp:{self.config['advertise']}:{entry['port']}"
         update = {
             "op": "update",
@@ -260,6 +260,35 @@ class Fleet:
             target,
         )
         return entry
+
+    def bind(self, entry):
+        """The entry's agent configuration written when new or changed, and its agent
+        started, or restarted when the configuration changed (spec §4 step 4)."""
+        path = self.config_dir / f"{entry['pod_id']}.json"
+        text = json.dumps(agent_config(entry, self.config), indent=2) + "\n"
+        changed = path.exists() and path.read_text() != text
+        if not path.exists() or changed:
+            tmp = path.with_suffix(".tmp")
+            tmp.write_text(text)
+            os.replace(tmp, path)
+        self.starter(entry["pod_id"], changed)
+
+    def start_registered(self):
+        """At the fleet's start, every admitted pod's agent in the registry, as step 4
+        does, without waiting for the pod to come back through the front port: an image
+        upgrade keeps the registry and the configurations (on /nvram), not the agents'
+        enabled units. In the registry's order (by serial); a failed start is logged."""
+        with self.registry.lock:
+            self.registry._load()
+            agents = self.registry.agents
+            entries = [dict(agents[serial]) for serial in sorted(agents)]
+        for entry in entries:
+            if self.admit is not None and entry["pod_id"] not in self.admit:
+                continue
+            try:
+                self.bind(entry)
+            except (OSError, subprocess.SubprocessError) as exc:
+                log.warning("pod %s: its agent not started: %s", entry["pod_id"], exc)
 
     def _serve_one(self, stream):
         conn = ovs.jsonrpc.Connection(stream)
@@ -292,6 +321,7 @@ class Fleet:
 
     def serve(self, pstream=None, ready=None):
         pstream = pstream or self.listen()
+        self.start_registered()
         if ready is not None:
             ready.set()
         log.info("fleet: %s, agents on ports %s", self.config["listen"], self.config["ports"])

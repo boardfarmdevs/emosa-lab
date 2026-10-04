@@ -3314,7 +3314,7 @@
    ]
   }
  ],
- "description": "spec §2.5: when the agent starts an onboarding attempt and ends it, when it renews one on its own, and when it announces its clients again. attempts: the reference's OnboardingRecovery over OnboardingSession on a published pod State that no controller answers; the clock starts at 0 s. A step: tick (at, the pod's database generation, or null: its State lost; otherwise the State is published anew at that time) or renew (at: an AP-Autoconfiguration Renew). Per step: whether an attempt started, how many AP-Autoconfiguration Searches were sent, how the attempt ended (discovery_timeout, source_lost or null), whether one is discovering, and the attempts started, failures and next start time after it. renewals: emosa.agent.renew.RenewRules created at 0 s. A step: contact (at: a frame from the controller) or check (at, unserved, awaiting): the reasons to renew, in order. reannouncements: emosa.wire.onboarding.ClientReannouncement of one session. A step: provisioned (M2 accepted) or tick, with the Topology Responses the session has sent: whether every client is announced again now (null for provisioned).",
+ "description": "spec §2.5: when the agent starts an onboarding attempt and ends it, when it renews one on its own, and when it announces its clients again. attempts: the reference's OnboardingRecovery over OnboardingSession on a published pod State that no controller answers; the clock starts at 0 s. A step: tick (at, the pod's database generation, or null: its State lost; otherwise the State is published anew at that time) or renew (at: an AP-Autoconfiguration Renew). Per step: whether an attempt started, how many AP-Autoconfiguration Searches were sent, how the attempt ended (discovery_timeout, source_lost or null), whether one is discovering, and the attempts started, failures and next start time after it. renewals: emosa.agent.renew.RenewRules created at 0 s, with the case's topology_query_window when it has one (none: that rule is off). A step: contact (at: a frame from the controller), topology_query (at: a Topology Query from the controller) or check (at, unserved, awaiting, and provisioning: false when absent): the reasons to renew, in order. reannouncements: emosa.wire.onboarding.ClientReannouncement of one session. A step: provisioned (M2 accepted) or tick, with the Topology Responses the session has sent: whether every client is announced again now (null for provisioned).",
  "reannouncements": [
   {
    "name": "after-the-next-query",
@@ -3821,6 +3821,434 @@
      ]
     }
    ]
+  },
+  {
+   "name": "no-topology-query-while-provisioning",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      0.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "topology_query",
+      20.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      50.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      79.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      80.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "no_topology_query"
+      ]
+     },
+     "step": [
+      "check",
+      81.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      82.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      130.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      141.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "topology_query",
+      141.5
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      200.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "no_topology_query"
+      ]
+     },
+     "step": [
+      "check",
+      202.0,
+      false,
+      false,
+      true
+     ]
+    }
+   ],
+   "topology_query_window": 60
+  },
+  {
+   "name": "topology-query-rule-off-without-a-window",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      0.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      100.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      200.0,
+      false,
+      false,
+      true
+     ]
+    }
+   ]
+  },
+  {
+   "name": "topology-query-window-from-m2",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      0.0,
+      false,
+      false,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "topology_query",
+      30.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      60.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      70.0,
+      false,
+      false,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      71.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      120.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      130.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "no_topology_query"
+      ]
+     },
+     "step": [
+      "check",
+      131.5,
+      false,
+      false,
+      true
+     ]
+    }
+   ],
+   "topology_query_window": 60
+  },
+  {
+   "name": "topology-query-window-restarts-on-a-new-m2",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      0.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      50.0,
+      false,
+      true,
+      false
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      55.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      100.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      110.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "no_topology_query"
+      ]
+     },
+     "step": [
+      "check",
+      115.5,
+      false,
+      false,
+      true
+     ]
+    }
+   ],
+   "topology_query_window": 60
+  },
+  {
+   "name": "unserved-ends-provisioning",
+   "steps": [
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      0.0,
+      true,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "contact",
+      61.0
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "unserved"
+      ]
+     },
+     "step": [
+      "check",
+      61.0,
+      true,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      62.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": []
+     },
+     "step": [
+      "check",
+      121.0,
+      false,
+      false,
+      true
+     ]
+    },
+    {
+     "expected": {
+      "reasons": [
+       "no_topology_query"
+      ]
+     },
+     "step": [
+      "check",
+      122.5,
+      false,
+      false,
+      true
+     ]
+    }
+   ],
+   "topology_query_window": 60
   }
  ]
 }

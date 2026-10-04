@@ -82,15 +82,19 @@ bool em_reannounce_due(em_reannounce *r, unsigned responses)
     return true;
 }
 
-void em_renew_init(em_renew *r, double now)
+void em_renew_init(em_renew *r, double now, double topology_query_window)
 {
-    r->last_contact = now;
-    r->has_unserved = r->has_awaiting = false;
+    r->last_contact = r->last_query = now;
+    r->has_unserved = r->has_awaiting = r->has_provisioning = false;
+    r->topology_query_window = topology_query_window;
 }
 
 void em_renew_contact(em_renew *r, double now) { r->last_contact = now; }
 
-size_t em_renew_check(em_renew *r, double now, bool unserved, bool awaiting, const char *reasons[3])
+void em_renew_topology_query(em_renew *r, double now) { r->last_query = now; }
+
+size_t em_renew_check(em_renew *r, double now, bool unserved, bool awaiting, bool provisioning,
+                      const char *reasons[4])
 {
     size_t n = 0;
     if (unserved) {
@@ -104,7 +108,7 @@ size_t em_renew_check(em_renew *r, double now, bool unserved, bool awaiting, con
     if (r->has_unserved && now - r->unserved_since > UNSERVED_RENEW) {
         reasons[n++] = "unserved";
         r->has_unserved = false;
-        awaiting = false; /* the renewal ended the session */
+        awaiting = provisioning = false; /* the renewal ended the session */
     }
     if (awaiting) {
         if (!r->has_awaiting) {
@@ -117,6 +121,22 @@ size_t em_renew_check(em_renew *r, double now, bool unserved, bool awaiting, con
     if (r->has_awaiting && now - r->awaiting_since > M2_TIMEOUT) {
         reasons[n++] = "no_m2";
         r->has_awaiting = false;
+    }
+    /* a controller that restarted and forgot the agent may keep sending its other
+     * queries, but no Topology Query (RDK) */
+    if (provisioning && r->topology_query_window > 0) {
+        if (!r->has_provisioning) {
+            r->provisioning_since = now;
+            r->has_provisioning = true;
+        }
+    } else {
+        r->has_provisioning = false;
+    }
+    if (r->has_provisioning &&
+        now - (r->provisioning_since > r->last_query ? r->provisioning_since : r->last_query) >
+            r->topology_query_window) {
+        reasons[n++] = "no_topology_query";
+        r->has_provisioning = false;
     }
     if (now - r->last_contact > CONTROLLER_TIMEOUT) {
         reasons[n++] = "controller_silent";

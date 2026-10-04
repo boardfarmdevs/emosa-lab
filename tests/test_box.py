@@ -133,6 +133,12 @@ def test_a_silent_controller_starts_onboarding_again_after_130_s(agent, tmp_path
     assert result["passed"], result
 
 
+def test_a_controller_that_forgot_the_agent_has_it_onboard_again(agent, tmp_path):
+    result = box("forgotten-agent", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["stayed_while_queried"], result
+
+
 def test_a_pod_serving_none_of_the_controllers_bsses_asks_again_after_60_s(agent, tmp_path):
     result = box("unserved-pod", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result
@@ -271,6 +277,14 @@ def test_a_returning_pod_gets_the_same_agent_never_restarted(agent, tmp_path):
     result = box("fleet-return", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result
     assert "restart" not in result["units"] and result["same_process"]
+
+
+def test_a_started_fleet_starts_its_registrys_agents_before_any_pod_returns(agent, tmp_path):
+    if agent == "c":
+        adapter(agent, "emosa-fleet-c")
+    result = box("fleet-upgrade", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["units_after_start"] == ["enable", "start"], result
 
 
 def test_pods_the_fleet_must_not_take_are_left_unchanged(agent, tmp_path):

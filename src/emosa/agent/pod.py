@@ -85,11 +85,13 @@ from emosa.wsc_messages import M1Device
 
 log = logging.getLogger("emosa.agent")
 RENEW = 0x000A  # AP-Autoconfiguration Renew
+TOPOLOGY_QUERY = 0x0002
 DISCOVERY_PERIOD = 60  # IEEE 1905.1 Topology Discovery interval
 # When the agent asks for a fresh attempt on its own: emosa.agent.renew
 RENEWALS = {
     "unserved": "provisioned, but the pod serves no BSS: fresh M1",
     "no_m2": f"no M2 for {M2_TIMEOUT}s after M1: fresh attempt",
+    "no_topology_query": "provisioned, no Topology Query in topology_query_window: fresh attempt",
     "controller_silent": f"no message from the controller for {CONTROLLER_TIMEOUT}s: fresh attempt",
 }
 # The pod's State is re-read on this cadence, not on every received frame: the
@@ -525,7 +527,10 @@ async def serve(config, stop):
     # controller needs the R1 form (see emosa.wire.autoconfiguration).
     message_set = check_message_set(config.get("message_set", EASYMESH_61))
     lifecycle, last_status, last_facts, last_write = None, None, None, 0
-    next_discovery, renewals = 0, RenewRules(time.monotonic())
+    next_discovery = 0
+    renewals = RenewRules(
+        time.monotonic(), topology_query_window=config.get("topology_query_window")
+    )
     next_refresh, ready = 0, False
     channels = reporting = None
 
@@ -651,13 +656,20 @@ async def serve(config, stop):
                 awaiting = (
                     lifecycle.session is not None and lifecycle.session.state == "awaiting_m2"
                 )
-                for reason in renewals.check(now, unserved=unserved, awaiting=awaiting):
+                provisioning = (
+                    lifecycle.session is not None and lifecycle.session.state == "provisioning"
+                )
+                for reason in renewals.check(
+                    now, unserved=unserved, awaiting=awaiting, provisioning=provisioning
+                ):
                     log.info(RENEWALS[reason])
                     lifecycle.renew()
                 frame = await timed("receive", asyncio.to_thread(endpoint.receive))
                 kind = from_controller(frame, controller) if frame is not None else None
                 if kind is not None:
                     renewals.contact(time.monotonic())
+                if kind == TOPOLOGY_QUERY:
+                    renewals.topology_query(time.monotonic())
                 if kind == RENEW:
                     log.info("AP-Autoconfiguration Renew from the controller: fresh M1")
                     lifecycle.renew()

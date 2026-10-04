@@ -231,8 +231,10 @@ class Box:
         backhaul=False,
         multi_bss=False,
         uplink=None,
+        topology_query_window=None,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
+        self.topology_query_window = topology_query_window
         self.telemetry, self.foreign_broker, self.backhaul = telemetry, foreign_broker, backhaul
         # multi_bss: the controller answers each M1 with an M2 set, a fronthaul and a backhaul
         # BSS (the registrar's backhaul mode); uplink: the agent's uplink setting instead of
@@ -289,6 +291,8 @@ class Box:
             fleet["telemetry"] = TELEMETRY
         if self.multi_bss:
             fleet["multi_bss"] = True
+        if self.topology_query_window:
+            fleet["topology_query_window"] = self.topology_query_window
         if self.backhaul:  # option 1, its credentials from the agent's own configuration
             fleet["uplink"] = self.uplink or UPLINK
             secrets = state_root / self.serial / "secrets"
@@ -833,6 +837,40 @@ async def silent_controller(box):
     return box.result(
         passed=bool(again) and 128 <= waited <= 150,
         search_after_silence_s=round(waited, 1) if waited else None,
+    )
+
+
+async def forgotten_agent(box):
+    """Suite finding: RDK's controller restarted and forgot the agent, yet kept sending it
+    its other queries, so the silence rule never fired. With topology_query_window (20 s
+    here), a provisioned agent that gets no Topology Query for that long onboards again
+    (spec 2.5). The box queries as RDK's controller does, every 5 s: for 30 s a Topology
+    Query with the others (the agent stays), then the others only (it searches)."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+
+    def others():
+        box.controller.send(0x8001, ())  # AP Capability Query
+        box.controller.send(0x0005, (Tlv(0x08, b"\x00\x02"),))  # Link Metric Query
+
+    for _ in range(6):  # known: 30 s with a Topology Query every 5 s
+        box.controller.send(TOPOLOGY_QUERY, (Tlv(0xB3, b"\x01"),))
+        last_query = time.monotonic()
+        others()
+        await asyncio.sleep(5)
+    stayed = len(box.sent(AUTOCONFIG_SEARCH)) == searches
+    again, deadline = None, time.monotonic() + 60
+    while again is None and time.monotonic() < deadline and box.process.poll() is None:
+        others()  # forgotten: the other queries only
+        again = await next_message(box, AUTOCONFIG_SEARCH, searches, seconds=5)
+    waited = box.controller.when(again) - last_query if again else None
+    provisioned = await provision(box, searches, m1s) if again else False
+    return box.result(
+        passed=stayed and bool(again) and 19 <= waited <= 30 and provisioned,
+        stayed_while_queried=stayed,
+        search_after_last_topology_query_s=round(waited, 1) if waited else None,
+        provisioning_again=provisioned,
     )
 
 
@@ -1629,6 +1667,7 @@ SCENARIOS = {
     "renew": renew,
     "no-m2": no_m2,
     "silent-controller": silent_controller,
+    "forgotten-agent": forgotten_agent,
     "unserved-pod": unserved_pod,
     "new-source": new_source,
     "clients": clients,
@@ -1650,6 +1689,7 @@ SCENARIOS = {
     "transport-cut": transport_cut,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
+    "forgotten-agent": {"topology_query_window": 20},
     "telemetry": {"telemetry": True},
     "foreign-broker": {"telemetry": True, "foreign_broker": True},
     "metrics": {"telemetry": True},

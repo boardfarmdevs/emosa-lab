@@ -38,6 +38,7 @@ same behaviour end to end, with real timing, a real OVSDB server and a real WSC 
 | `renew` | a Renew: at once a Search and a fresh M1; provisioning again with the new M2 | the controller re-onboarding a pod |
 | `no-m2` | an M1 left unanswered: onboarding again after 30 s | finding 2 |
 | `silent-controller` | nothing from the controller for 130 s: onboarding again | finding 3 |
+| `forgotten-agent` | with `topology_query_window` (20 s in the box): kept while the controller sends a Topology Query every 5 s with its other queries; onboarding again once only the others come, and provisioning again | finding 15 |
 | `unserved-pod` | provisioned, but the pod serves no BSS of the controller's and nothing is written: onboarding again after 60 s | finding 4 |
 | `new-source` | the pod back with a new database (its OpenSync started again): a new session, and the configuration written again | findings 5 and 11 |
 
@@ -113,6 +114,7 @@ a `systemctl` of the box's (plain processes, as `emosa-agent@.service` runs them
 | --- | --- | --- |
 | `fleet-handover` | a pod at the front port gets its agent: the registry entry (the first port, `em1`, its AL MAC), its configuration, the unit enabled and started, `manager_addr` written; the agent onboards the pod | every lab's pods (opensync-lab's local-noc, the RDK lab's redirector) |
 | `fleet-return` | the pod back at the front port (a reboot, its cloud's redirect): the same entry, one more handover, the unit started (a no-op), never restarted; the same agent provisions it again | pods that restart |
+| `fleet-upgrade` | an image upgrade: the agent gone with its unit, the fleet started again on the kept files starts the registry's agent at once (enabled, started), with no pod at the front port; the pod, still dialing the agent's port, provisioned again | EMOSA in the gateway image (4 October: after an upgrade the agents waited for each pod to come back through the front port) |
 | `fleet-refusals` | a pod not admitted, one with an unusable serial, one with no free port: nothing written to the pod, no agent configured or started | spec 4 steps 1 and 2 |
 | `fleet-takeover` | the other implementation's fleet hands the pod over first; this one, on the same registry and configurations, lists the same entry and leaves the running agent alone (its configuration's text is the same) | switching the adapter's implementation in a lab |
 | `fleet-forget` | `forget` (its own process, while the fleet serves): the agent stopped and disabled, entry and configuration gone, state archived; handed over again, a new entry and agent | finding 14; opensync-lab's `release` |
@@ -136,6 +138,7 @@ a `systemctl` of the box's (plain processes, as `emosa-agent@.service` runs them
 | 12 | without option 1, the failure answered without its Error Code TLV; fixed | the box, 3 October | `backhaul-steering-refused` |
 | 13 | the refresh cadence counted from a refresh's end, the lease from its start: one slow refresh (0.8 s) lapsed the lease and ended the session just after provisioning; fixed (design 4.3) | the box in CI, 3 October | `onboard` |
 | 14 | `forget` run while the fleet served did not take: the serving fleet kept the registry in memory and wrote the forgotten entry back at the pod's next handover; fixed (spec 4: the registry file is the state, read for each pod) | the box, 3 October | `fleet-forget` |
+| 15 | after a controller restart the pods stayed unregistered: the controller forgot the agents but kept sending them its other queries (no Topology Query), so the silence rule never fired; fixed with `topology_query_window` (spec 2.5) | RDK lab, EMOSA in the gateway, 4 October | `forgotten-agent` |
 
 ## Not scenarios
 

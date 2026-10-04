@@ -31,7 +31,7 @@
     },
     "README 2.5 Onboarding": {
       "vectors": ["onboarding.json", "wsc-m2.json", "session-timing.json", "early-report.json"],
-      "box": ["boot", "onboard", "refuse", "early-report", "renew", "no-m2", "silent-controller", "unserved-pod", "new-source"],
+      "box": ["boot", "onboard", "refuse", "early-report", "renew", "no-m2", "silent-controller", "forgotten-agent", "unserved-pod", "new-source"],
       "python": ["test_autoconfiguration.py", "test_provisioning_session.py", "test_discovery_session.py", "test_wsc.py"],
       "fuzz": ["wsc"]
     },
@@ -92,7 +92,7 @@
     },
     "README 4. The fleet": {
       "vectors": ["fleet.json", "fleet-sessions.json"],
-      "box": ["fleet-handover", "fleet-return", "fleet-refusals", "fleet-takeover", "fleet-forget"],
+      "box": ["fleet-handover", "fleet-return", "fleet-upgrade", "fleet-refusals", "fleet-takeover", "fleet-forget"],
       "python": ["test_fleet.py"],
       "fuzz": ["fleet"],
       "lab": ["rdk-lab", "opensync-lab-proof"]
@@ -135,7 +135,7 @@
     },
     "design 8. Timing (normative)": {
       "vectors": ["session-timing.json", "early-report.json", "steering-queue.json"],
-      "box": ["no-m2", "silent-controller", "unserved-pod", "early-report", "uplink-held", "steering-window-expired"],
+      "box": ["no-m2", "silent-controller", "forgotten-agent", "unserved-pod", "early-report", "uplink-held", "steering-window-expired"],
       "lab": ["opensync-lab-proof"]
     },
     "design 9. Resource budgets (normative upper bounds)": {

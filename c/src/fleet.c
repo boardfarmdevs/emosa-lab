@@ -291,6 +291,10 @@ cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet)
     cJSON_AddItemToObject(c, "profile", setting(fleet, e->pod_id, "profile", cJSON_CreateString("opensync-lab-hwsim-6.6.1-v1")));
     cJSON_AddItemToObject(c, "uplink", setting(fleet, e->pod_id, "uplink", mode_off()));
     cJSON_AddItemToObject(c, "telemetry", setting(fleet, e->pod_id, "telemetry", mode_off()));
+    /* a property of the controller, so the fleet's only, and only when set */
+    const cJSON *window = cJSON_GetObjectItemCaseSensitive(fleet, "topology_query_window");
+    if (window)
+        cJSON_AddItemToObject(c, "topology_query_window", cJSON_Duplicate(window, 1));
     const char *root = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(fleet, "state_root"));
     /* a state directory that does not fit is left out, and the agent refuses its
      * configuration, rather than given a cut path, which would be another directory */
@@ -485,6 +489,30 @@ em_fleet_outcome em_fleet_identify(em_fleet *f, const cJSON *select_result, doub
     cJSON_AddItemToArray(out->update, cJSON_CreateString(f->database));
     cJSON_AddItemToArray(out->update, update);
     return EM_FLEET_HANDOVER;
+}
+
+size_t em_fleet_start_registered(em_fleet *f, void (*start)(void *ctx, const char *pod_id, bool changed),
+                                 void *ctx)
+{
+    if (!reload(f))
+        return SIZE_MAX;
+    size_t failed = 0;
+    for (size_t i = 0; i < f->registry.count; i++) {
+        const em_fleet_entry *e = &f->registry.entries[i];
+        if (!admitted(f->config, e->pod_id))
+            continue;
+        char path[600];
+        bool changed = false;
+        char *config = em_agent_config_text(e, f->config);
+        bool written = config && em_format(path, sizeof(path), "%s/%s.json", f->config_dir, e->pod_id) &&
+                       write_if_changed(path, config, &changed);
+        free(config);
+        if (written)
+            start(ctx, e->pod_id, changed);
+        else
+            failed++;
+    }
+    return failed;
 }
 
 bool em_fleet_update_ok(const cJSON *result)

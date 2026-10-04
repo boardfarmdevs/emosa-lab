@@ -340,6 +340,43 @@ async def fleet_return(box):
     )
 
 
+async def fleet_upgrade(box):
+    """An image upgrade (spec §4): the gateway's persistent storage keeps the registry and
+    the configurations, not the agents' enabled units. The agent and the fleet stopped, the
+    fleet started again: it starts the registry's agent at once (enabled, started, not
+    restarted), with no pod at its front port; the pod, still dialing the agent's port, is
+    provisioned again."""
+    first = await onboarded(box)
+    before = box.registry().get(box.serial, {})
+    pid = box.process.pid()
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.stop_fleet()
+    box.process.terminate()  # the old image's agent, gone with its unit link
+    box.process.wait(15)
+    (box.units / f"{box.serial}.pid").unlink(missing_ok=True)
+    logged = len(box.systemctl())
+    await box.restart_fleet()
+    started = await box.until(lambda: box.process.pid(), seconds=15)
+    actions = unit_actions(box.systemctl()[logged:], box.serial)
+    again = await provision(box, searches, m1s) if started else False
+    after = box.registry().get(box.serial, {})
+    passed = (
+        bool(first.get("applied"))
+        and bool(started)
+        and started != pid
+        and actions == ["enable", "start"]
+        and after.get("handovers") == before.get("handovers")
+        and again
+    )
+    return box.result(
+        passed=passed,
+        units_after_start=actions,
+        new_process=bool(started) and started != pid,
+        handovers=[before.get("handovers"), after.get("handovers")],
+        provisioning_again=again,
+    )
+
+
 OTHER_POD = "MVXPOD0000000000AA"
 
 
@@ -610,6 +647,7 @@ async def gtp(directory, implementation, binary=None):
 SCENARIOS = {
     "fleet-handover": fleet_handover,
     "fleet-return": fleet_return,
+    "fleet-upgrade": fleet_upgrade,
     "fleet-refusals": fleet_refusals,
     "fleet-takeover": fleet_takeover,
     "fleet-forget": fleet_forget,

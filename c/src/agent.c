@@ -137,6 +137,7 @@ typedef struct {
     const char *status_dir; /* run_dir when configured (a RAM disk), else state_dir */
     uint8_t al[6], controller[6];
     bool r1, multi_bss, shared_session, steering_on;
+    double topology_query_window; /* 0: the renewal rule is off */
     em_profile profile;
     /* I/O */
     em_ovsdb *ovs;
@@ -1019,6 +1020,8 @@ static void receive_frame(agent *a, const uint8_t *frame, size_t len)
     bool from_controller = !memcmp(frame + 6, a->controller, 6);
     if (from_controller)
         em_renew_contact(&a->renewals, now());
+    if (from_controller && type == 0x0002)
+        em_renew_topology_query(&a->renewals, now());
     if (from_controller && type == 0x000A) {
         count(&a->counts, "renew_received");
         renew(a, "AP-Autoconfiguration Renew from the controller");
@@ -1399,6 +1402,8 @@ static bool configure(agent *a, const char *path, const char *profiles)
     a->r1 = set && !strcmp(set, "r1");
     a->multi_bss = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(c, "multi_bss"));
     a->shared_session = m2 && !strcmp(m2, "shared");
+    const cJSON *window = cJSON_GetObjectItemCaseSensitive(c, "topology_query_window");
+    a->topology_query_window = cJSON_IsNumber(window) ? window->valuedouble : 0;
     const char *steer = cfg_str(cJSON_GetObjectItemCaseSensitive(c, "steering"), "mode");
     a->steering_on = !steer || strcmp(steer, "off");
     /* telemetry: the pod publishes to the broker, the agent reads the local one */
@@ -1642,7 +1647,7 @@ int main(int argc, char **argv)
     a.mid = seed;
     a.tokens = 32;
     a.token_time = now();
-    em_renew_init(&a.renewals, a.token_time);
+    em_renew_init(&a.renewals, a.token_time, a.topology_query_window);
     LOG("EMOSA C agent %s (%s) for %s: AL %s, controller %s, OVSDB %s, %s", EMOSA_VERSION, EMOSA_REVISION, a.pod_id,
         cfg_str(a.config, "al_mac"), cfg_str(a.config, "controller_al"), cfg_str(a.config, "ovsdb"),
         a.r1 ? "r1" : "easymesh-6.1");
@@ -1680,12 +1685,15 @@ int main(int argc, char **argv)
             a.next_discovery = t + DISCOVERY_PERIOD;
         }
         bool unserved = a.at.state == S_PROVISIONING && source_current(&a) && !a.has_primary && !active_op(&a);
-        const char *reasons[3];
-        size_t nreasons = em_renew_check(&a.renewals, t, unserved, a.at.state == S_AWAITING_M2, reasons);
+        const char *reasons[4];
+        size_t nreasons = em_renew_check(&a.renewals, t, unserved, a.at.state == S_AWAITING_M2,
+                                         a.at.state == S_PROVISIONING, reasons);
         for (size_t i = 0; i < nreasons; i++)
             renew(&a, !strcmp(reasons[i], "unserved") ? "provisioned, but the pod serves no BSS: fresh M1"
                       : !strcmp(reasons[i], "no_m2") ? "no M2 for 30s after M1: fresh attempt"
-                                                     : "no message from the controller for 130s: fresh attempt");
+                      : !strcmp(reasons[i], "no_topology_query")
+                          ? "provisioned, no Topology Query in topology_query_window: fresh attempt"
+                          : "no message from the controller for 130s: fresh attempt");
         size_t len;
         while ((len = em_ethernet_receive(&a.eth, frame, sizeof(frame))) > 0)
             receive_frame(&a, frame, len);

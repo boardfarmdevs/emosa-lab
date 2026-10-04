@@ -94,6 +94,14 @@ typedef struct {
 em_fleet_outcome em_fleet_identify(em_fleet *f, const cJSON *select_result, double now,
                                    em_fleet_handover *out);
 void em_fleet_handover_clear(em_fleet_handover *h);
+/* At the fleet's start: each admitted entry of the registry, in its order (by serial), its
+ * agent configuration written when new or changed and start(ctx, pod_id, changed) called,
+ * as step 4 does, without waiting for the pod at the front port (an image upgrade keeps
+ * the files, not the agents' enabled units). The number of entries whose configuration
+ * could not be written (their agents not started); SIZE_MAX when the registry is
+ * unreadable. */
+size_t em_fleet_start_registered(em_fleet *f, void (*start)(void *ctx, const char *pod_id, bool changed),
+                                 void *ctx);
 
 /* The handover's update succeeded: one row changed, no error. */
 bool em_fleet_update_ok(const cJSON *result);

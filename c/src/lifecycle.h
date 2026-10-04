@@ -45,15 +45,19 @@ void em_attempts_renew(em_attempts *a);
 
 /* emosa.agent.renew.RenewRules */
 typedef struct {
-    double last_contact, unserved_since, awaiting_since;
-    bool has_unserved, has_awaiting;
+    double last_contact, last_query, unserved_since, awaiting_since, provisioning_since;
+    bool has_unserved, has_awaiting, has_provisioning;
+    double topology_query_window; /* 0: the rule is off */
 } em_renew;
 
-void em_renew_init(em_renew *r, double now);
+/* topology_query_window: the agent configuration's, 0 when absent */
+void em_renew_init(em_renew *r, double now, double topology_query_window);
 void em_renew_contact(em_renew *r, double now);
-/* The reasons to renew now, in order ("unserved", "no_m2", "controller_silent"); returns
- * how many (at most three). */
-size_t em_renew_check(em_renew *r, double now, bool unserved, bool awaiting, const char *reasons[3]);
+void em_renew_topology_query(em_renew *r, double now);
+/* The reasons to renew now, in order ("unserved", "no_m2", "no_topology_query",
+ * "controller_silent"); returns how many (at most four). */
+size_t em_renew_check(em_renew *r, double now, bool unserved, bool awaiting, bool provisioning,
+                      const char *reasons[4]);
 
 /* emosa.wire.onboarding.ClientReannouncement: a provisioned session announces every
  * current client again, once, after the controller's first Topology Query answered since

@@ -539,6 +539,23 @@ def fleet_session_vectors():
             {"fleet_config": {**base, "run_root": f"{FLEET_ROOT}/run"}},
             {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},
         ],
+        # a fleet started again (a reboot, an image upgrade that kept its files): the
+        # registry's agents at once, in the registry's order; only the admitted ones
+        "a-started-fleet-starts-its-registrys-agents": [
+            {"fleet_config": base},
+            {"arrival": [{"rows": [node("MVXPOD02D7777EF0D9")]}], "now": 1759500000.25},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.5},
+            {"fleet_config": base},
+            {"fleet_config": {**base, "admit": ["MVXPOD02D7777EF0D9"]}},
+        ],
+        # the controller's Topology Query cadence (spec 2.5): the fleet's to every agent;
+        # set later, the agent's configuration changes, so it restarts
+        "topology-query-window-goes-to-every-agent": [
+            {"fleet_config": base},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},
+            {"fleet_config": {**base, "topology_query_window": 120}},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500001.25},
+        ],
         "own-settings-restart-the-agent": [
             {"fleet_config": base},
             {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},
@@ -602,6 +619,8 @@ def fleet_session_vectors():
                         starter=lambda pod, changed, starts=starts: starts.append([pod, changed]),
                         stopper=lambda pod, stops=stops: stops.append(pod),
                     )
+                    fleet.start_registered()  # serving: the registry's agents first
+                    done["expected"] = {"started": list(starts)}
                 elif "mkdir" in step:
                     (Path(root) / step["mkdir"]).mkdir(parents=True)
                 elif "arrival" in step:
@@ -660,7 +679,9 @@ def fleet_session_vectors():
     return {
         "description": "spec §4: the fleet over whole sessions, as emosa.agent.fleet handles "
         "them. A step: fleet_config (the fleet (re)started with this configuration on the same "
-        "files), arrival (a pod at the front port: the result of the fleet's AWLAN_Node "
+        "files; it starts the agents its registry has, in the registry's order: each [pod, "
+        "configuration changed]), arrival (a pod at the front port: the result of the fleet's "
+        "AWLAN_Node "
         "select, and the wall clock), mkdir (a directory under the session's), forget (a "
         "serial, archived with suffix " + FLEET_STAMP + "), forget_elsewhere (the same, by "
         "another fleet process on the same files while this one serves). Per arrival: "
@@ -3796,7 +3817,8 @@ def session_timing_vectors():
         recovery.close()
         out_attempts.append({"name": name, "steps": recorded})
 
-    # steps: ("contact", at), ("check", at, unserved, awaiting)
+    # steps: ("contact", at), ("topology_query", at), ("check", at, unserved, awaiting[,
+    # provisioning]); a case's third member, when given, is its topology_query_window
     renewals = [
         (
             "controller-silent-in-any-state",
@@ -3860,18 +3882,94 @@ def session_timing_vectors():
                 ("check", 162.0, True, True),
             ],
         ),
+        (
+            "no-topology-query-while-provisioning",
+            [
+                ("check", 0.0, False, False, True),
+                ("topology_query", 20.0),
+                ("contact", 50.0),
+                ("check", 79.0, False, False, True),
+                ("contact", 80.0),
+                ("check", 81.0, False, False, True),
+                ("check", 82.0, False, False, True),
+                ("contact", 130.0),
+                ("check", 141.0, False, False, True),
+                ("topology_query", 141.5),
+                ("check", 200.0, False, False, True),
+                ("check", 202.0, False, False, True),
+            ],
+            60,
+        ),
+        (
+            "topology-query-rule-off-without-a-window",
+            [
+                ("check", 0.0, False, False, True),
+                ("contact", 100.0),
+                ("check", 200.0, False, False, True),
+            ],
+        ),
+        (
+            "topology-query-window-from-m2",
+            [
+                ("check", 0.0, False, False, False),
+                ("topology_query", 30.0),
+                ("contact", 60.0),
+                ("check", 70.0, False, False, False),
+                ("check", 71.0, False, False, True),
+                ("contact", 120.0),
+                ("check", 130.0, False, False, True),
+                ("check", 131.5, False, False, True),
+            ],
+            60,
+        ),
+        (
+            "topology-query-window-restarts-on-a-new-m2",
+            [
+                ("check", 0.0, False, False, True),
+                ("check", 50.0, False, True, False),
+                ("check", 55.0, False, False, True),
+                ("contact", 100.0),
+                ("check", 110.0, False, False, True),
+                ("check", 115.5, False, False, True),
+            ],
+            60,
+        ),
+        (
+            "unserved-ends-provisioning",
+            [
+                ("check", 0.0, True, False, True),
+                ("contact", 61.0),
+                ("check", 61.0, True, False, True),
+                ("check", 62.0, False, False, True),
+                ("check", 121.0, False, False, True),
+                ("check", 122.5, False, False, True),
+            ],
+            60,
+        ),
     ]
     out_renewals = []
-    for name, steps in renewals:
-        rules, recorded = RenewRules(0.0), []
+    for name, steps, *window in renewals:
+        rules = RenewRules(0.0, topology_query_window=window[0] if window else None)
+        recorded = []
         for step in steps:
             if step[0] == "contact":
                 rules.contact(step[1])
                 reasons = []
+            elif step[0] == "topology_query":
+                rules.topology_query(step[1])
+                reasons = []
             else:
-                reasons = rules.check(step[1], unserved=step[2], awaiting=step[3])
+                reasons = rules.check(
+                    step[1],
+                    unserved=step[2],
+                    awaiting=step[3],
+                    provisioning=step[4] if len(step) > 4 else False,
+                )
             recorded.append({"step": list(step), "expected": {"reasons": reasons}})
-        out_renewals.append({"name": name, "steps": recorded})
+        case = {"name": name, "steps": recorded}
+        if window:
+            case["topology_query_window"] = window[0]
+        out_renewals.append(case)
     # steps: ("provisioned", Topology Responses sent), ("tick", Topology Responses sent)
     reannouncements = [
         ("after-the-next-query", [("provisioned", 0), ("tick", 0), ("tick", 1), ("tick", 2)]),
@@ -3899,9 +3997,11 @@ def session_timing_vectors():
         "AP-Autoconfiguration Renew). Per step: whether an attempt started, how many "
         "AP-Autoconfiguration Searches were sent, how the attempt ended (discovery_timeout, "
         "source_lost or null), whether one is discovering, and the attempts started, failures "
-        "and next start time after it. renewals: emosa.agent.renew.RenewRules created at 0 s. "
-        "A step: contact (at: a frame from the controller) or check (at, unserved, awaiting): "
-        "the reasons to renew, in order. reannouncements: "
+        "and next start time after it. renewals: emosa.agent.renew.RenewRules created at 0 s, "
+        "with the case's topology_query_window when it has one (none: that rule is off). "
+        "A step: contact (at: a frame from the controller), topology_query (at: a Topology "
+        "Query from the controller) or check (at, unserved, awaiting, and provisioning: false "
+        "when absent): the reasons to renew, in order. reannouncements: "
         "emosa.wire.onboarding.ClientReannouncement of one session. A step: provisioned (M2 "
         "accepted) or tick, with the Topology Responses the session has sent: whether every "
         "client is announced again now (null for provisioned).",

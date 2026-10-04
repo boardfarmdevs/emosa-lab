@@ -1220,6 +1220,14 @@ static void record_stop(void *ctx, const char *pod_id)
     cJSON_AddItemToArray((cJSON *)ctx, cJSON_CreateString(pod_id));
 }
 
+static void record_start(void *ctx, const char *pod_id, bool changed)
+{
+    cJSON *start = cJSON_CreateArray();
+    cJSON_AddItemToArray(start, cJSON_CreateString(pod_id));
+    cJSON_AddItemToArray(start, cJSON_CreateBool(changed));
+    cJSON_AddItemToArray((cJSON *)ctx, start);
+}
+
 static void fleet_session_vectors(const char *dir)
 {
     cJSON *doc = load(dir, "fleet-sessions.json");
@@ -1261,6 +1269,15 @@ static void fleet_session_vectors(const char *dir)
                     em_fleet_close(&fleet);
                     break;
                 }
+                /* the fleet starts serving: its registry's agents */
+                cJSON *started = cJSON_CreateArray();
+                size_t failed = em_fleet_start_registered(&fleet, record_start, started);
+                checks++;
+                if (failed)
+                    fail("fleet-sessions", where, "an agent configuration not written");
+                else if (!cJSON_Compare(started, cJSON_GetObjectItemCaseSensitive(expected, "started"), 1))
+                    fail("fleet-sessions", where, "the agents started differ");
+                cJSON_Delete(started);
             } else if (str(step, "mkdir")) {
                 char path[2048];
                 snprintf(path, sizeof(path), "%s/%s", full, str(step, "mkdir"));
@@ -2391,7 +2408,8 @@ static void session_timing_vectors(const char *dir)
     {
         const char *name = str(c, "name");
         em_renew rules;
-        em_renew_init(&rules, 0);
+        const cJSON *window = cJSON_GetObjectItemCaseSensitive(c, "topology_query_window");
+        em_renew_init(&rules, 0, cJSON_IsNumber(window) ? window->valuedouble : 0);
         const cJSON *step;
         int index = 0;
         cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
@@ -2400,13 +2418,16 @@ static void session_timing_vectors(const char *dir)
             snprintf(label, sizeof(label), "%s step %d", name, index++);
             const cJSON *s = cJSON_GetObjectItemCaseSensitive(step, "step");
             double t = cJSON_GetArrayItem(s, 1)->valuedouble;
-            const char *reasons[3];
+            const char *reasons[4];
             size_t n = 0;
             if (!strcmp(cJSON_GetArrayItem(s, 0)->valuestring, "contact"))
                 em_renew_contact(&rules, t);
+            else if (!strcmp(cJSON_GetArrayItem(s, 0)->valuestring, "topology_query"))
+                em_renew_topology_query(&rules, t);
             else
                 n = em_renew_check(&rules, t, cJSON_IsTrue(cJSON_GetArrayItem(s, 2)),
-                                   cJSON_IsTrue(cJSON_GetArrayItem(s, 3)), reasons);
+                                   cJSON_IsTrue(cJSON_GetArrayItem(s, 3)), cJSON_IsTrue(cJSON_GetArrayItem(s, 4)),
+                                   reasons);
             const cJSON *want = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(step, "expected"),
                                                                  "reasons");
             bool same = (size_t)cJSON_GetArraySize(want) == n;

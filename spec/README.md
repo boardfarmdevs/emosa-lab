@@ -167,6 +167,13 @@ Rules:
 - If no M2 arrives within 30 s of M1, the agent MUST start onboarding again. A
   controller that restarted in between has forgotten the M1, and its other
   queries keep the silence rule from firing (seen with RDK).
+- With `topology_query_window` in its configuration, if the agent is
+  `provisioning` and no Topology Query has arrived from the controller for that
+  many seconds since M2 was accepted or since the last one, the agent MUST start
+  onboarding again. A controller that restarted and forgot the agent may keep
+  sending its other queries, but no Topology Query (seen with RDK, which queries
+  each agent it knows about every 15 s). Set it only for a controller that queries
+  its agents periodically: prplMesh queries on events only. Absent: the rule is off.
 - If the agent is `provisioning` but the pod serves none of the controller's
   BSSes and no write is under way for 60 s, the agent MUST start onboarding
   again: its configuration was lost (e.g. a write lost to an uplink move).
@@ -471,10 +478,14 @@ For each connection on the front port, the fleet:
 5. writes `manager_addr` and ends the session.
 
 The whole exchange MUST complete within 5 s. A pod returning later gets the
-same entry. The registry file is the fleet's state: a serving fleet MUST read it
+same entry. When it starts, the fleet MUST do step 4 for each admitted entry its
+registry has, in the registry's order, without waiting for the pod: an image
+upgrade keeps the registry and the configurations on persistent storage but not
+the agents' enabled units. The registry file is the fleet's state: a serving fleet MUST read it
 again for each pod, so a `forget` run as another process takes effect at once. With `run_root` each agent's configuration has `run_dir` `<run_root>/<pod_id>`. The agent configuration takes the fleet's settings (`message_set`,
 `multi_bss`, `m2_session`, `profile`, `uplink`), overridden per pod by
-`pods.<serial>`: a different pod model needs its own profile, and the uplink
+`pods.<serial>`, and the fleet's `topology_query_window` (§2.5), a property of the
+controller, when it has one: a different pod model needs its own profile, and the uplink
 switch (§8.3) is enabled per pod. `forget SERIAL` stops the agent, deletes the entry and the
 configuration, and archives the agent's state directory. A pod handed over
 again starts a new ownership period, so conflicts recorded before its release

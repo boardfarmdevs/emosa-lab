@@ -85,6 +85,20 @@ static void stop_agent(void *ctx, const char *pod_id)
         WARN("systemctl not started for %s", unit);
 }
 
+/* at the fleet's start, an agent of the registry: enabled, then started (restarted when
+ * its configuration changed), each waited for; as the reference, a failure only logged */
+static void start_agent(void *ctx, const char *pod_id, bool changed)
+{
+    (void)ctx;
+    char unit[96];
+    EM_FORMAT_FIXED(unit, sizeof(unit), "emosa-agent@%s", pod_id);
+    const char *enable[] = {"systemctl", "enable", "-q", unit, NULL};
+    const char *start[] = {"systemctl", changed ? "restart" : "start", unit, NULL};
+    int status;
+    if (!em_run(enable, NULL, NULL, &status) || status != 0 || !em_run(start, NULL, NULL, &status) || status != 0)
+        WARN("%s not started", unit);
+}
+
 /* -- the front port ----------------------------------------------------------------- */
 
 typedef enum { SELECTING, ENABLING, STARTING, HANDING_OVER } stage;
@@ -368,6 +382,12 @@ static int serve(server *s)
     char *ports = cJSON_PrintUnformatted(cJSON_GetObjectItemCaseSensitive(s->fleet.config, "ports"));
     LOG("EMOSA C fleet %s (%s): %s, agents on ports %s", EMOSA_VERSION, EMOSA_REVISION, listen_name, ports);
     free(ports);
+    /* the agents the registry already has, before the first pod (an upgraded image) */
+    size_t unstarted = em_fleet_start_registered(&s->fleet, start_agent, NULL);
+    if (unstarted == SIZE_MAX)
+        WARN("the fleet registry is unreadable: no agent started");
+    else if (unstarted)
+        WARN("%zu agents not started: their configurations not written", unstarted);
     struct pollfd *p = em_calloc(s->concurrency + 1, sizeof(*p));
     while (!stopping) {
         nfds_t n = 0;

@@ -1,5 +1,5 @@
 {
- "description": "spec §4: the fleet over whole sessions, as emosa.agent.fleet handles them. A step: fleet_config (the fleet (re)started with this configuration on the same files), arrival (a pod at the front port: the result of the fleet's AWLAN_Node select, and the wall clock), mkdir (a directory under the session's), forget (a serial, archived with suffix 20261003T120000), forget_elsewhere (the same, by another fleet process on the same files while this one serves). Per arrival: handover (the agent started or restarted, then the update sent), refused (not admitted, or no free port: nothing written to the pod) or invalid (an unusable identity: the same). files: the registry and the agent configurations as the fleet left them, byte for byte, and the archived state directories. {root} stands for the session's own directory.",
+ "description": "spec §4: the fleet over whole sessions, as emosa.agent.fleet handles them. A step: fleet_config (the fleet (re)started with this configuration on the same files; it starts the agents its registry has, in the registry's order: each [pod, configuration changed]), arrival (a pod at the front port: the result of the fleet's AWLAN_Node select, and the wall clock), mkdir (a directory under the session's), forget (a serial, archived with suffix 20261003T120000), forget_elsewhere (the same, by another fleet process on the same files while this one serves). Per arrival: handover (the agent started or restarted, then the update sent), refused (not admitted, or no free port: nothing written to the pod) or invalid (an unusable identity: the same). files: the registry and the agent configurations as the fleet left them, byte for byte, and the archived state directories. {root} stands for the session's own directory.",
  "root": "{root}",
  "sessions": [
   {
@@ -14,6 +14,9 @@
    "name": "pods-arrive-and-return",
    "steps": [
     {
+     "expected": {
+      "started": []
+     },
      "fleet_config": {
       "advertise": "10.101.0.1",
       "config_dir": "{root}/etc",
@@ -137,6 +140,9 @@
    "name": "run-root-gives-each-agent-a-run-directory",
    "steps": [
     {
+     "expected": {
+      "started": []
+     },
      "fleet_config": {
       "advertise": "10.101.0.1",
       "config_dir": "{root}/etc",
@@ -189,13 +195,161 @@
    "files": {
     "archives": [],
     "configs": {
-     "MVXPOD023F87E628DD": "{\n  \"pod_id\": \"MVXPOD023F87E628DD\",\n  \"serial\": \"MVXPOD023F87E628DD\",\n  \"ovsdb\": \"ptcp:6651:127.0.0.1\",\n  \"interface\": \"em1\",\n  \"al_mac\": \"02:72:f9:7f:07:85\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"bssid\": \"02:00:00:00:19:01\",\n    \"mode\": \"multi-ap\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/MVXPOD023F87E628DD\",\n  \"run_id\": \"MVXPOD023F87E628DD\"\n}\n"
+     "MVXPOD023F87E628DD": "{\n  \"pod_id\": \"MVXPOD023F87E628DD\",\n  \"serial\": \"MVXPOD023F87E628DD\",\n  \"ovsdb\": \"ptcp:6652:127.0.0.1\",\n  \"interface\": \"em2\",\n  \"al_mac\": \"02:72:f9:7f:07:85\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/MVXPOD023F87E628DD\",\n  \"run_id\": \"MVXPOD023F87E628DD\"\n}\n",
+     "MVXPOD02D7777EF0D9": "{\n  \"pod_id\": \"MVXPOD02D7777EF0D9\",\n  \"serial\": \"MVXPOD02D7777EF0D9\",\n  \"ovsdb\": \"ptcp:6651:127.0.0.1\",\n  \"interface\": \"em1\",\n  \"al_mac\": \"02:c2:b8:31:3a:f8\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/MVXPOD02D7777EF0D9\",\n  \"run_id\": \"MVXPOD02D7777EF0D9\"\n}\n"
     },
-    "registry": "{\n  \"MVXPOD023F87E628DD\": {\n    \"al_mac\": \"02:72:f9:7f:07:85\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.25,\n    \"handovers\": 2,\n    \"interface\": \"em1\",\n    \"last_seen\": 1759500003.125,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"MVXPOD023F87E628DD\",\n    \"pod_id\": \"MVXPOD023F87E628DD\",\n    \"port\": 6651\n  }\n}\n"
+    "registry": "{\n  \"MVXPOD023F87E628DD\": {\n    \"al_mac\": \"02:72:f9:7f:07:85\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.5,\n    \"handovers\": 1,\n    \"interface\": \"em2\",\n    \"last_seen\": 1759500000.5,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"MVXPOD023F87E628DD\",\n    \"pod_id\": \"MVXPOD023F87E628DD\",\n    \"port\": 6652\n  },\n  \"MVXPOD02D7777EF0D9\": {\n    \"al_mac\": \"02:c2:b8:31:3a:f8\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.25,\n    \"handovers\": 1,\n    \"interface\": \"em1\",\n    \"last_seen\": 1759500000.25,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"MVXPOD02D7777EF0D9\",\n    \"pod_id\": \"MVXPOD02D7777EF0D9\",\n    \"port\": 6651\n  }\n}\n"
    },
-   "name": "own-settings-restart-the-agent",
+   "name": "a-started-fleet-starts-its-registrys-agents",
    "steps": [
     {
+     "expected": {
+      "started": []
+     },
+     "fleet_config": {
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "MVXPOD02D7777EF0D9",
+         "model": "HWSIM_POD",
+         "serial_number": "MVXPOD02D7777EF0D9"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "MVXPOD02D7777EF0D9",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6651"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.25
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "MVXPOD023F87E628DD",
+         "model": "HWSIM_POD",
+         "serial_number": "MVXPOD023F87E628DD"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "MVXPOD023F87E628DD",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6652"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.5
+    },
+    {
+     "expected": {
+      "started": [
+       [
+        "MVXPOD023F87E628DD",
+        false
+       ],
+       [
+        "MVXPOD02D7777EF0D9",
+        false
+       ]
+      ]
+     },
+     "fleet_config": {
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "expected": {
+      "started": [
+       [
+        "MVXPOD02D7777EF0D9",
+        false
+       ]
+      ]
+     },
+     "fleet_config": {
+      "admit": [
+       "MVXPOD02D7777EF0D9"
+      ],
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    }
+   ]
+  },
+  {
+   "files": {
+    "archives": [],
+    "configs": {
+     "MVXPOD023F87E628DD": "{\n  \"pod_id\": \"MVXPOD023F87E628DD\",\n  \"serial\": \"MVXPOD023F87E628DD\",\n  \"ovsdb\": \"ptcp:6651:127.0.0.1\",\n  \"interface\": \"em1\",\n  \"al_mac\": \"02:72:f9:7f:07:85\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"topology_query_window\": 120,\n  \"state_dir\": \"{root}/state/MVXPOD023F87E628DD\",\n  \"run_id\": \"MVXPOD023F87E628DD\"\n}\n"
+    },
+    "registry": "{\n  \"MVXPOD023F87E628DD\": {\n    \"al_mac\": \"02:72:f9:7f:07:85\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.25,\n    \"handovers\": 2,\n    \"interface\": \"em1\",\n    \"last_seen\": 1759500001.25,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"MVXPOD023F87E628DD\",\n    \"pod_id\": \"MVXPOD023F87E628DD\",\n    \"port\": 6651\n  }\n}\n"
+   },
+   "name": "topology-query-window-goes-to-every-agent",
+   "steps": [
+    {
+     "expected": {
+      "started": []
+     },
      "fleet_config": {
       "advertise": "10.101.0.1",
       "config_dir": "{root}/etc",
@@ -242,6 +396,130 @@
      "now": 1759500000.25
     },
     {
+     "expected": {
+      "started": [
+       [
+        "MVXPOD023F87E628DD",
+        true
+       ]
+      ]
+     },
+     "fleet_config": {
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state",
+      "topology_query_window": 120
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "MVXPOD023F87E628DD",
+         "model": "HWSIM_POD",
+         "serial_number": "MVXPOD023F87E628DD"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "MVXPOD023F87E628DD",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6651"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500001.25
+    }
+   ]
+  },
+  {
+   "files": {
+    "archives": [],
+    "configs": {
+     "MVXPOD023F87E628DD": "{\n  \"pod_id\": \"MVXPOD023F87E628DD\",\n  \"serial\": \"MVXPOD023F87E628DD\",\n  \"ovsdb\": \"ptcp:6651:127.0.0.1\",\n  \"interface\": \"em1\",\n  \"al_mac\": \"02:72:f9:7f:07:85\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"bssid\": \"02:00:00:00:19:01\",\n    \"mode\": \"multi-ap\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/MVXPOD023F87E628DD\",\n  \"run_id\": \"MVXPOD023F87E628DD\"\n}\n"
+    },
+    "registry": "{\n  \"MVXPOD023F87E628DD\": {\n    \"al_mac\": \"02:72:f9:7f:07:85\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.25,\n    \"handovers\": 2,\n    \"interface\": \"em1\",\n    \"last_seen\": 1759500003.125,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"MVXPOD023F87E628DD\",\n    \"pod_id\": \"MVXPOD023F87E628DD\",\n    \"port\": 6651\n  }\n}\n"
+   },
+   "name": "own-settings-restart-the-agent",
+   "steps": [
+    {
+     "expected": {
+      "started": []
+     },
+     "fleet_config": {
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "MVXPOD023F87E628DD",
+         "model": "HWSIM_POD",
+         "serial_number": "MVXPOD023F87E628DD"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "MVXPOD023F87E628DD",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6651"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.25
+    },
+    {
+     "expected": {
+      "started": [
+       [
+        "MVXPOD023F87E628DD",
+        true
+       ]
+      ]
+     },
      "fleet_config": {
       "advertise": "10.101.0.1",
       "config_dir": "{root}/etc",
@@ -280,7 +558,7 @@
       "outcome": "handover",
       "start": [
        "MVXPOD023F87E628DD",
-       true
+       false
       ],
       "update": [
        "Open_vSwitch",
@@ -309,6 +587,9 @@
    "name": "unusable-or-unadmitted-pods-are-left-unchanged",
    "steps": [
     {
+     "expected": {
+      "started": []
+     },
      "fleet_config": {
       "admit": [
        "MVXPOD02D7777EF0D9"
@@ -451,6 +732,9 @@
      "now": 1759500001.75
     },
     {
+     "expected": {
+      "started": []
+     },
      "fleet_config": {
       "advertise": "10.101.0.1",
       "config_dir": "{root}/etc",
@@ -528,6 +812,9 @@
    "name": "forget-releases-and-archives",
    "steps": [
     {
+     "expected": {
+      "started": []
+     },
      "fleet_config": {
       "advertise": "10.101.0.1",
       "config_dir": "{root}/etc",
@@ -650,6 +937,9 @@
    "name": "forget-while-the-fleet-serves",
    "steps": [
     {
+     "expected": {
+      "started": []
+     },
      "fleet_config": {
       "advertise": "10.101.0.1",
       "config_dir": "{root}/etc",
