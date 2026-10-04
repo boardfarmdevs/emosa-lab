@@ -80,6 +80,18 @@ emosa_layout() {
 emosa_state_root() { emosa_layout "$1" | cut -d" " -f3; }
 emosa_root() { emosa_state_root "$(emosa_where)"; }    # the state root where EMOSA runs
 
+# agents_provisioned_in CT: how many of CT's agents have their session provisioning. A
+# released pod's archived state (<pod>.released-<stamp>, from forget) keeps its last status
+# and is no agent's.
+agents_provisioned_in() {
+    cx "$1" sh -c 'n=0
+        for f in "$1"/*/status.json; do
+            case $f in *.released-*) continue ;; esac
+            grep -qE "\"state\":[[:space:]]*\"provisioning\"" "$f" 2>/dev/null && n=$((n + 1))
+        done
+        echo "$n"' sh "$(emosa_state_root "$1")"
+}
+
 fleet_cli() {    # fleet_cli COMMAND [ARGS...]: the fleet's command (list, forget) where EMOSA runs
     cx "$(emosa_where)" sh -c 'set -a; . /etc/default/emosa-implementation 2>/dev/null || true
         . /etc/default/emosa 2>/dev/null || true

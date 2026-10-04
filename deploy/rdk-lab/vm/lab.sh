@@ -618,10 +618,7 @@ medium() {
 
 pods_running() { lxc list -c n -f csv | grep -E '^pod-[0-9]+$' || true; }
 
-agents_provisioned() {    # the number of EMOSA agents whose session is provisioning
-    # either agent's file: any whitespace after the colon; wherever EMOSA runs
-    cx "$(emosa_where)" sh -c "grep -lE '\"state\":[[:space:]]*\"provisioning\"' '$(emosa_root)'/*/status.json 2>/dev/null | wc -l"
-}
+agents_provisioned() { agents_provisioned_in "$(emosa_where)"; }    # wherever EMOSA runs
 wait_agents() {    # every running pod's agent provisioned (at most 5 minutes)
     local n
     n=$(pods_running | wc -l)
@@ -700,6 +697,8 @@ uplinks_applied() {    # every running pod's agent on its Wi-Fi uplink (EMOSA's 
     cx "$(emosa_where)" python3 -c '
 import glob, json, sys
 for path in glob.glob(sys.argv[1] + "/*/status.json"):
+    if ".released-" in path:    # the archived state of a released pod: no agent
+        continue
     uplink = json.load(open(path)).get("uplink") or {}
     if uplink.get("uplink") != "multi-ap" or (uplink.get("operation") or {}).get("state") != "OBSERVED_APPLIED":
         sys.exit(1)' "$(emosa_root)"

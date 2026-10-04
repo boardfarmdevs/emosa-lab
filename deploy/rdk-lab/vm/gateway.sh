@@ -40,9 +40,7 @@ source "$(cd "$(dirname "$0")/../.." && pwd)/lib/emosa-vm.sh"
 # where EMOSA runs (in_gateway, emosa_where) and a container's places (emosa_layout,
 # emosa_state_root): deploy/lib/emosa-vm.sh
 
-provisioned() {    # provisioned CT: how many agents in CT have their session provisioning
-    cx "$1" sh -c "grep -lE '\"state\":[[:space:]]*\"provisioning\"' '$(emosa_state_root "$1")'/*/status.json 2>/dev/null | wc -l"
-}
+provisioned() { agents_provisioned_in "$1"; }    # provisioned CT: agents provisioning in CT
 
 wait_provisioned() {    # wait_provisioned CT N: N agents provisioning in CT (at most 5 minutes)
     local i
@@ -170,6 +168,7 @@ status() {
     ct=$(emosa_where)
     echo "EMOSA runs in: $ct"
     cx "$ct" sh -c 'for f in '"'$(emosa_state_root "$ct")'"'/*/status.json; do [ -e "$f" ] || continue
+        case $f in *.released-*) continue ;; esac
         printf "%s %s\n" "$(basename "$(dirname "$f")")" "$(grep -oE "\"state\":[[:space:]]*\"[a-z_]+\"" "$f" | head -1)"; done'
     cx "$CTL" sh -c 'printf "gateway memory: %s MiB of %s MiB\n" $(($(cat /sys/fs/cgroup/memory.current) / 1048576)) \
         $(($(cat /sys/fs/cgroup/memory.max) / 1048576))'
