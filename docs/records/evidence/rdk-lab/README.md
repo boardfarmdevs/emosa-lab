@@ -783,3 +783,17 @@ gateway's container the same way, with the same 30 minutes, readiness and five r
 
 Evidence: [footprint-1003/gateway-2](footprint-1003/gateway-2/) (samples, summary, run and
 rooms).
+
+### The reporting policy written only when received (4 October)
+
+The writes seen above, decided away (spec §3.8, emosa-lab f2e5264): the reporting policy's
+record is written when a policy is received, before its Ack, and only then; the schedule of
+unsolicited reports and its accounting are the session's. On `rdk-emosa-1002` with the
+adapter kit at 2a2d009 (the pin of meta-cmf-bananapi-vcpe 57d8336), after both pods'
+onboarding (two policy receipts each), over 5 minutes: each agent sent 60 periodic AP
+Metrics Responses, one every 5 s as before, and wrote its reporting policy's file not once
+(its WAL last written 336 s before the end, at the receipts). Before, with the kit at
+d5e577a, each wrote it every 5 s (the WAL last written 4 s before a sample; about 99 KB a
+minute). The gateway image built with this package (rev140,
+`controller-emosa-20261004T154344Z`) has the same packages as the previous EMOSA image.
+
