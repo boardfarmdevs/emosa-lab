@@ -281,3 +281,26 @@ def test_all_native_headers_and_completed_tlv_boundaries_match_independent_tshar
         if result is not None:
             assert messages[number]["tlvs"] == expected["tlvs"]
     assert len(references) == 59 and len(messages) == 58
+
+
+def test_the_endpoint_drops_frames_that_are_not_for_the_agent():
+    # any host on the link can send a runt or a frame to another address: dropped, and
+    # the agent's loop keeps receiving (the lab in a box's scenario `answers`)
+    from emosa.wire.ethernet import EthernetEndpoint
+
+    local, controller = bytes.fromhex("0272f97f0785"), bytes.fromhex("00602fda68d4")
+    good = fragment_message(local, controller, 0x0002, 1, ())[0]
+    broadcast = fragment_message(b"\xff" * 6, controller, 0x0002, 2, ())[0]
+    runt = local + controller + b"\x89\x3a\x00\x00\x00"
+
+    class Socket:
+        def __init__(self, frames):
+            self.frames = list(frames)
+
+        def recvfrom(self, size):
+            return self.frames.pop(0)[:size], ("em2", 0x893A, 0, 1, controller)
+
+    endpoint = EthernetEndpoint.__new__(EthernetEndpoint)
+    endpoint.local_mac = local
+    endpoint.socket = Socket([runt, broadcast, good + bytes(1600), good])
+    assert [endpoint.receive() for _ in range(4)] == [None, None, None, good]

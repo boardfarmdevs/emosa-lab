@@ -852,7 +852,7 @@ def gtp_vectors():
 
 
 def cmdu_vectors():
-    from emosa.wire.cmdu import Reassembler, Tlv, fragment_message
+    from emosa.wire.cmdu import Fragment, Reassembler, Tlv, fragment_message
 
     agent, controller = mac(AGENT), mac(CONTROLLER)
     encode = []
@@ -896,17 +896,49 @@ def cmdu_vectors():
                 "expected_frames": [f.hex() for f in frames],
             }
         )
+    # what the agent refuses to send: an end marker given as a TLV, a TLV that no fragment
+    # holds, more than 64 fragments or 256 TLVs, an MTU below the header
+    for name, items, mtu in (
+        ("end-marker-as-tlv", (Tlv(0x00, b""),), 1500),
+        ("tlv-over-mtu", (Tlv(0x80, b"\x05" * 60),), 64),
+        ("over-64-fragments", tuple(Tlv(0x80, b"\x05" * 40) for _ in range(65)), 64),
+        ("over-256-tlvs", tuple(Tlv(0x80, b"") for _ in range(257)), 1500),
+        ("mtu-below-header", (), 13),
+    ):
+        try:
+            fragment_message(controller, agent, 0x8002, 9, items, mtu=mtu)
+            error = None
+        except EmosaError as exc:
+            error = str(exc.code)
+        encode.append(
+            {
+                "name": name,
+                "input": {
+                    "destination": CONTROLLER,
+                    "source": AGENT,
+                    "message_type": "0x8002",
+                    "mid": 9,
+                    "relay": False,
+                    "mtu": mtu,
+                    "tlvs": tlvs(items),
+                },
+                "expected_error": error,
+            }
+        )
     decode = []
     good = fragment_message(agent, controller, 0x8014, 900, (Tlv(0x9B, bytes(13)),))[0]
     header = 14 + 8  # Ethernet + 1905 header
 
-    def case(name, frames):
-        parser, result, error = Reassembler(), None, None
-        try:
-            for frame in frames:
+    def case(name, frames, times=None):
+        now = [0.0]
+        parser = Reassembler(clock=lambda: now[0])
+        for index, frame in enumerate(frames):
+            now[0] = times[index] if times else 0.0
+            result = error = None
+            try:
                 result = parser.feed(frame)
-        except EmosaError as exc:
-            error = str(exc.code)
+            except EmosaError as exc:
+                error = str(exc.code)
         expected = (
             {"error": error}
             if error
@@ -923,7 +955,13 @@ def cmdu_vectors():
                 }
             }
         )
-        decode.append({"name": name, "frames": [f.hex() for f in frames], "expected": expected})
+        entry = {"name": name, "frames": [f.hex() for f in frames], "expected": expected}
+        if times:
+            entry["times"] = times
+        decode.append(entry)
+
+    def fragment(mid, fid, last, payload, relay=False, message_type=0x0009):
+        return Fragment(controller, agent, message_type, mid, fid, last, relay, payload).encode()
 
     case("single", [good])
     large = tuple(Tlv(0x11, bytes([i]) * 600) for i in range(3))
@@ -933,13 +971,188 @@ def cmdu_vectors():
     case("truncated-tlv", [good[: header + 5]])
     case("missing-end-of-message", [good[: header + 16]])
     case("ethernet-padding-after-end", [good + bytes(20)])
+    # the refusals: frames that are not 1905, fragments that conflict, budgets, the deadline
+    f0, f1, f2 = fragment_message(agent, controller, 0x0009, 44, large, mtu=700)
+    altered = f0[:-10] + bytes([f0[-10] ^ 1]) + f0[-9:]
+    relayed = fragment_message(agent, controller, 0x0009, 44, large, relay=True, mtu=700)
+    pair = fragment_message(agent, controller, 0x0009, 44, large[:2], mtu=700)
+    single = fragment_message(agent, controller, 0x0009, 44, large[:1], mtu=700)
+    case("wrong-ethertype", [good[:12] + b"\x88\x8e" + good[14:]])
+    case("shorter-than-header", [good[: header - 1]])
+    case("duplicate-fragment", [f0, f0, f1, f2])
+    case("conflicting-duplicate", [f0, altered])
+    case("quarantined-after-conflict", [f0, altered, f1])
+    case("relay-mismatch", [f0, relayed[1]])
+    case("fragment-index-over-budget", [fragment(45, 64, True, b"\x00\x00\x00")])
+    case("fragment-after-final", [pair[1], f2])
+    case("final-before-stored", [f1, single[0]])
+    case("empty-non-final-fragment", [fragment(46, 0, False, b"")])
+    case("non-final-end-marker", [fragment(47, 0, False, b"\x00\x00\x00")])
+    many = Tlv(0x11, b"").encode()
+    case(
+        "tlv-count-over-budget",
+        [fragment(48, 0, False, many * 200), fragment(48, 1, True, many * 60 + b"\x00\x00\x00")],
+    )
+    case("context-budget", [fragment(mid, 0, False, many) for mid in range(100, 165)])
+    case("deadline-expired", [f0, f1, f2], times=[0.0, 5.0, 5.0])
+    case("within-deadline", [f0, f1, f2], times=[0.0, 4.9, 4.9])
     return {
         "description": "spec §2.1: the IEEE 1905.1 envelope. 'encode': a message to the "
-        "Ethernet frames the agent transmits (fragmented at TLV boundaries within the MTU). "
-        "'decode': received frames, fed in order, to the reassembled message, none while "
-        "incomplete, or the reason code of the rejection.",
+        "Ethernet frames the agent transmits (fragmented at TLV boundaries within the MTU), "
+        "or the reason code it refuses with. 'decode': received frames, fed in order to one "
+        "reassembler (timeout 5 s, 64 contexts, 64 fragments, 64 KiB a message, 2 MiB in "
+        "all), each rejection dropping only its frame, 'times' the clock at each frame "
+        "(0 when absent); expected is the last frame's outcome: the reassembled message, "
+        "none while incomplete, or the reason code of the rejection.",
         "encode": encode,
         "decode": decode,
+    }
+
+
+def wsc_m2_vectors():
+    """The M2's authentication and mapping (spec §2.5): what a controller's M2 for the
+    fixture's M1 gives, or the reason it is refused, built as the reference's tests build
+    them (an attribute changed or removed, the settings encrypted and the message signed
+    again with the exchange's keys)."""
+    from cryptography.hazmat.primitives.asymmetric import dh
+
+    from emosa import wsc
+    from emosa.wsc import (
+        MODP_1536,
+        KeyPair,
+        SessionKeys,
+        authenticate_message,
+        decode_attributes,
+        encode_attribute,
+        encrypt_settings,
+    )
+    from emosa.wsc_messages import WFA_ID, M1Transcript
+    from emosa.wsc_radio import decode_radio_payloads
+
+    fixture = json.loads(WSC_FIXTURE.read_text())["cases"][0]
+
+    def raw(name):
+        return bytes.fromhex(fixture[name])
+
+    def transcript():
+        parameters = dh.DHParameterNumbers(MODP_1536, 2, (MODP_1536 - 1) // 2)
+        public = dh.DHPublicNumbers(int.from_bytes(raw("enrollee_public"), "big"), parameters)
+        private = int.from_bytes(raw("enrollee_private"), "big")
+        return M1Transcript(raw("m1"), KeyPair(dh.DHPrivateNumbers(private, public).private_key()))
+
+    keys = SessionKeys(*(raw(name) for name in ("auth_key", "key_wrap_key", "emsk")))
+    body = raw("m2")[:-12]  # without its Authenticator
+    settings = raw("ap_settings")
+
+    def rewrite(data, kind, value):
+        return b"".join(
+            encode_attribute(a.kind, value if a.kind == kind else a.value)
+            for a in decode_attributes(data)
+            if a.kind != kind or value is not None
+        )
+
+    def signed(changed):
+        return authenticate_message(keys, raw("m1"), changed)
+
+    def with_settings(plain):
+        # a fixed IV (00..0f), as the fixture's public entropy: the vectors reproduce
+        with mock.patch.object(wsc.secrets, "token_bytes", lambda n: bytes(range(n))):
+            return signed(rewrite(body, 0x1018, encrypt_settings(keys, plain)))
+
+    def role(flags):
+        return with_settings(rewrite(settings, 0x1049, WFA_ID + bytes([6, 1, flags])))
+
+    altered = raw("m2")[:-1] + bytes([raw("m2")[-1] ^ 1])
+    cases = [
+        ("baseline", raw("m2")),
+        ("teardown", raw("teardown_m2")),
+        ("backhaul-role-alone", role(0x40)),
+        ("combined-role", role(0x60)),
+        ("authenticator-altered", altered),
+        ("no-encrypted-settings", signed(rewrite(body, 0x1018, None))),
+        ("another-enrollee-nonce", signed(rewrite(body, 0x101A, bytes(16)))),
+        ("nonce-twice", signed(encode_attribute(0x101A, bytes(range(16))) + body)),
+        (
+            "bss-index-first",
+            signed(encode_attribute(0x1BBC, b"\x01") + rewrite(body, 0x1BBC, None)),
+        ),
+        ("bss-index-two-octets", signed(rewrite(body, 0x1BBC, b"\x01\x02"))),
+        ("version-twice", signed(rewrite(body, 0x1049, b"\x00\x37\x2a\x00\x01\x20\x00\x01\x20"))),
+        ("version-two-octets", signed(rewrite(body, 0x1049, b"\x00\x37\x2a\x00\x02\x20"))),
+        ("version-absent", signed(rewrite(body, 0x1049, None))),
+        ("registrar-key-zero", signed(rewrite(body, 0x1032, bytes(192)))),
+        ("settings-key-twice", with_settings(settings + encode_attribute(0x1027, b"another-key"))),
+        ("ssid-33-octets", with_settings(rewrite(settings, 0x1045, bytes(33)))),
+        ("key-65-octets", with_settings(rewrite(settings, 0x1027, bytes(65)))),
+        ("network-key-index", with_settings(settings + encode_attribute(0x1028, bytes(2)))),
+        (
+            "wfa-subelement-overruns",
+            with_settings(rewrite(settings, 0x1049, b"\x00\x37\x2a\x06\x02\x20")),
+        ),
+        (
+            "password-change",
+            with_settings(
+                settings
+                + encode_attribute(0x102A, b"new-public-password")
+                + encode_attribute(0x1012, b"\x00\x00")
+            ),
+        ),
+        (
+            "legacy-passphrase-terminator",
+            with_settings(rewrite(settings, 0x1027, b"public-vector-passphrase\0")),
+        ),
+        ("ssid-terminator", with_settings(rewrite(settings, 0x1045, b"private_ssid\0"))),
+        ("ssid-two-terminators", with_settings(rewrite(settings, 0x1045, b"private_ssid\0\0"))),
+        ("ssid-empty", with_settings(rewrite(settings, 0x1045, b""))),
+        ("ssid-embedded-nul", with_settings(rewrite(settings, 0x1045, b"embedded\0ssid"))),
+        ("ssid-not-utf8", with_settings(rewrite(settings, 0x1045, b"\xff"))),
+        ("passphrase-short", with_settings(rewrite(settings, 0x1027, b"short"))),
+        (
+            "passphrase-control-character",
+            with_settings(rewrite(settings, 0x1027, b"public\x01vector-pass")),
+        ),
+        ("authentication-open", with_settings(rewrite(settings, 0x1003, b"\x00\x01"))),
+        ("encryption-tkip", with_settings(rewrite(settings, 0x100F, b"\x00\x04"))),
+    ]
+    cases += [
+        (f"m2-without-{kind:04x}", signed(rewrite(body, kind, None)))
+        for kind in (0x1022, 0x1039, 0x1048, 0x1032, 0x1004, 0x1010, 0x1011, 0x102D)
+    ]
+    cases += [
+        (f"settings-without-{kind:04x}", with_settings(rewrite(settings, kind, None)))
+        for kind in (0x1045, 0x1003, 0x100F, 0x1027, 0x1020)
+    ]
+    out = []
+    for name, message in cases:
+        try:
+            radio = decode_radio_payloads(transcript(), (message,), max_bss=1)
+            if radio.action == "teardown":
+                expected = {"teardown": True, "bss": []}
+            else:
+                candidate = radio.existing_fronthaul_candidate()
+                expected = {
+                    "teardown": False,
+                    "bss": [
+                        {
+                            "role": "fronthaul",
+                            "ssid": candidate.ssid,
+                            "passphrase": candidate.passphrase,
+                            "bss_index": candidate.bss_index,
+                        }
+                    ],
+                }
+        except EmosaError as exc:
+            expected = {"error": str(exc.code)}
+        out.append({"name": name, "m2": [message.hex()], "expected": expected})
+    return {
+        "description": "spec §2.5: one radio's M2 for the M1 below (the WSC payload fixture's, "
+        "its enrollee keys public test values), authenticated and mapped to the BSS it "
+        "configures: one fronthaul BSS (max_bss 1, not multi-BSS), a teardown, or the reason "
+        "it is refused. Passphrases are public test values.",
+        "m1": fixture["m1"],
+        "enrollee_private": fixture["enrollee_private"],
+        "enrollee_public": fixture["enrollee_public"],
+        "cases": out,
     }
 
 
@@ -2369,8 +2582,8 @@ def scope_write_case(name, raw, backend, intent):
     """A scope's plan and its one guarded transaction on the recorded rows."""
 
     async def run():
-        await backend.snapshot()
         try:
+            await backend.snapshot()  # the AP scope binds the pod here, and may refuse
             await backend.plan(intent)
         except EmosaError as exc:
             return None, exc.code.value
@@ -2549,17 +2762,103 @@ def scope_writes_vectors():
         raw = rows(**extra)
         backend = SteeringBackend("pod-1", Recorder(copy.deepcopy(raw)), serial=SERIAL)
         cases.append({"scope": "steering", **scope_write_case(name, raw, backend, intent)})
+    cases.extend(ap_scope_cases())
     return {
-        "description": "spec §3.6, §3.7, §3.9: the scopes' guarded OVSDB writes on the recorded "
-        "pod rows (with the case's additional rows): the telemetry scope's statistics "
-        "publishing, the probe watch's rows, and a steering window that replaces the "
-        "station's watch row. Per case: the plan's refusal (a Reason), or the submission's "
+        "description": "spec §3.4, §3.6, §3.7, §3.9: the scopes' guarded OVSDB writes on the "
+        "recorded pod rows (with the case's changes): the AP scope's M2 intents (with the "
+        "case's profile, multi_bss and passphrases by reference), the telemetry scope's "
+        "statistics publishing, the probe watch's rows, and a steering window that replaces "
+        "the station's watch row. Per case: the plan's refusal (a Reason), or the submission's "
         "status and every transaction sent. The server replies to every insert with the UUID "
         "00000000-0000-4000-8000-0000000000ff. Every scope is bound to pod_id.",
         "serial": SERIAL,
         "pod_id": "pod-1",
         "cases": cases,
     }
+
+
+def ap_scope_cases():
+    """The AP scope's plan (spec §3.4): its refusals, and its writes for an update and a
+    cold pod's create, as PodBackend decides them on the recorded rows."""
+    primary = Intent("pod-1", "radio-1", "bss-1", "emosa-mesh-2", "ref-primary")
+    iot = {"role": "fronthaul", "ssid": "emosa-iot", "secret_ref": "ref-extra-1"}
+    backhaul = {"role": "backhaul", "ssid": "emosa-bh", "secret_ref": "ref-extra-3"}
+    replace = dataclasses.replace
+
+    def changed(table, column, value, where=None):
+        raw = pod_rows()
+        for row in raw[table].values():
+            if where is None or all(row.get(k) == v for k, v in where.items()):
+                row[column] = value
+        return raw
+
+    def without_vif_state():
+        raw = pod_rows()
+        raw["Wifi_VIF_State"] = {
+            u: r for u, r in raw["Wifi_VIF_State"].items() if r["if_name"] != "home-ap-24"
+        }
+        return raw
+
+    home = {"if_name": "home-ap-24"}
+    cases = (
+        ("ap-update", pod_rows(), primary, False),
+        ("ap-cold-create", cold(pod_rows()), primary, False),
+        ("ap-ssid-too-long", pod_rows(), replace(primary, ssid="x" * 33), False),
+        ("ap-security-unsupported", pod_rows(), replace(primary, security_mode="wpa3-sae"), False),
+        ("ap-disabled", pod_rows(), replace(primary, enabled=False), False),
+        ("ap-no-secret-ref", pod_rows(), replace(primary, secret_ref=""), False),
+        ("ap-unknown-secret", pod_rows(), replace(primary, secret_ref="ref-unknown"), False),
+        ("ap-additional-on-one-bss-radio", pod_rows(), replace(primary, additional=(iot,)), False),
+        (
+            "ap-additional-role-unknown",
+            pod_rows(),
+            replace(primary, additional=({**iot, "role": "mesh"},)),
+            True,
+        ),
+        ("ap-eight-additional", pod_rows(), replace(primary, additional=(iot,) * 8), True),
+        (
+            "ap-more-of-a-role-than-slots",
+            pod_rows(),
+            replace(primary, additional=(backhaul, backhaul)),
+            True,
+        ),
+        ("ap-another-bss", pod_rows(), replace(primary, bss_id="bss-2"), False),
+        (
+            "ap-another-pod",
+            changed("AWLAN_Node", "serial_number", "MVXPOD0000000000"),
+            primary,
+            False,
+        ),
+        ("ap-no-radio-of-band", changed("Wifi_Radio_Config", "freq_band", "5G"), primary, False),
+        (
+            "ap-vif-on-another-radio",
+            changed("Wifi_Radio_Config", "vif_configs", ["set", []], {"freq_band": "2.4G"}),
+            primary,
+            False,
+        ),
+        ("ap-vif-state-absent", without_vif_state(), primary, False),
+        ("ap-vif-not-an-ap", changed("Wifi_VIF_Config", "mode", "sta", home), primary, False),
+    )
+    out = []
+    for name, raw, intent, multi_bss in cases:
+        with tempfile.TemporaryDirectory() as directory:
+            vault = SecretStore(Path(directory) / "secrets")
+            for ref, passphrase in PASSPHRASES.items():
+                vault.write_simulated(ref, passphrase)
+            backend = PodBackend(
+                "pod-1", Recorder(copy.deepcopy(raw)), vault, serial=SERIAL, multi_bss=multi_bss
+            )
+            case = scope_write_case(name, raw, backend, intent)
+        out.append(
+            {
+                "scope": "ap",
+                "profile": DEFAULT,
+                "multi_bss": multi_bss,
+                "passphrases": PASSPHRASES,
+                **case,
+            }
+        )
+    return out
 
 
 class Crash(BaseException):
@@ -3579,6 +3878,7 @@ VECTOR_SETS = {
     "gtp.json": gtp_vectors,
     "uplink.json": uplink_vectors,
     "cmdu.json": cmdu_vectors,
+    "wsc-m2.json": wsc_m2_vectors,
     "control.json": control_vectors,
     "steering.json": steering_vectors,
     "onboarding.json": onboarding_vectors,

@@ -190,6 +190,10 @@ class Controller:
         self.last_sent = time.monotonic()
         return mid
 
+    def send_frame(self, frame):
+        """Raw bytes on the controller's end of the link, as any host on the LAN may."""
+        self.socket.send(frame)
+
     def reply(self, message_type, mid):
         """The agent's message of this type for our request mid (a response or an ACK)."""
         return next(
@@ -570,7 +574,8 @@ def operational_bssid(topology):
 
 
 async def answers(box):
-    """After onboarding, the controller's requests: each gets its response (or its 1905
+    """After onboarding, frames not for the agent (to the broadcast address, a runt) are
+    ignored, and the controller's requests: each gets its response (or its 1905
     ACK) with the request's message ID, except the two that report the pod's statistics
     (spec 3.8): with no telemetry in the box there are none, and the agent withholds the
     Link Metric and AP Metrics Responses and records why instead of inventing values."""
@@ -583,6 +588,18 @@ async def answers(box):
         mid = box.controller.send(message_type, tlvs)
         return await box.until(lambda: box.controller.reply(expected, mid), seconds=seconds)
 
+    # frames not for the agent: a Topology Query to the broadcast address (not the 1905
+    # multicast nor the agent), and a runt (shorter than a CMDU header); both ignored
+    box.controller.mid = (box.controller.mid + 1) & 0xFFFF
+    broadcast_mid = box.controller.mid
+    for frame in fragment_message(
+        b"\xff" * 6, box.controller.al, 0x0002, broadcast_mid, (Tlv(0xB3, b"\x01"),)
+    ):
+        box.controller.send_frame(frame)
+    runt = box.controller.agent + box.controller.al + b"\x89\x3a\x00\x00\x00\x02\x00"
+    box.controller.send_frame(runt)
+    await asyncio.sleep(2)
+    ignored = box.controller.reply(0x0003, broadcast_mid) is None and box.process.poll() is None
     topology = await ask(0x0002, (Tlv(0xB3, b"\x01"),), 0x0003)
     bssid = operational_bssid(topology) if topology else None
     requests = {
@@ -628,7 +645,8 @@ async def answers(box):
         in (session.get("counts") or {}),
     }
     return box.result(
-        passed=bool(bssid) and all(answered.values()) and all(abstained.values()),
+        passed=ignored and bool(bssid) and all(answered.values()) and all(abstained.values()),
+        ignored=ignored,
         bssid=bssid.hex(":") if bssid else None,
         answered=answered,
         abstained=abstained,

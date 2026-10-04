@@ -49,7 +49,12 @@ class EthernetEndpoint:
             return None
         if address[2] == 4:  # PACKET_OUTGOING
             return None
-        fragment = decode_frame(frame)
+        try:
+            fragment = decode_frame(frame)
+        except EmosaError:
+            # not a 1905 frame (a runt, an oversized frame): dropped, as any host on the
+            # link can send one
+            return None
         if fragment.destination not in (MULTICAST, self.local_mac):
             return None
         return frame

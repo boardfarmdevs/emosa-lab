@@ -45,7 +45,7 @@ same behaviour end to end, with real timing, a real OVSDB server and a real WSC 
 
 | Scenario | What it shows | Relied on by |
 | --- | --- | --- |
-| `answers` | every request answered with its MID (Topology, AP Capability, Channel Preference, Client Capability, Backhaul STA Capability, Unassociated STA Link Metrics, Multi-AP Policy); Link Metric and AP Metrics withheld without statistics, their reason recorded | the controller's model of the pod |
+| `answers` | frames not for the agent ignored, the agent running on (a Topology Query to the broadcast address, a runt shorter than a CMDU header); every request answered with its MID (Topology, AP Capability, Channel Preference, Client Capability, Backhaul STA Capability, Unassociated STA Link Metrics, Multi-AP Policy); Link Metric and AP Metrics withheld without statistics, their reason recorded | the controller's model of the pod; a runt on the link stopped the reference agent (3 October, fixed: the endpoint drops what it cannot decode) |
 | `clients` | a station joining and leaving: a Topology Notification with a Client Association Event each time; its age in each Topology Response as of that response | the rooms' clients on pods; finding 6 |
 | `reannounce` | at the controller's next Topology Query once provisioned, every current client announced again, once | finding 7 |
 | `channel-selection` | a request the pod can honour accepted (code 0), RDK's declined (code 2), the radio not moved; each followed by the Operating Channel Report | RDK's channel planning |

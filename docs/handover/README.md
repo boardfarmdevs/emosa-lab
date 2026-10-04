@@ -25,11 +25,12 @@ EMOSA is licensed under the Apache License 2.0 ([LICENSE](../../LICENSE)).
 ## Where it stands
 
 - **Contract:** the specification, the schemas (`schemas/`) and the vectors
-  (`spec/conformance`, 22 sets). Both implementations reproduce every vector.
+  (`spec/conformance`, 23 sets). Both implementations reproduce every vector.
 - **The C's gates** ([c/QUALITY.md](../../c/QUALITY.md) §3): warnings as errors on gcc
   and clang and on 32-bit x86, sanitizer-clean tests, the clang analyzer and
   clang-tidy's CERT checks without findings, a fuzz target per parser of untrusted input,
-  88 % line coverage, the lab in a box passed by both implementations, a package with an
+  90 % line coverage (every module of the agent's core at 85 % or more), the lab in a
+  box passed by both implementations, a package with an
   SPDX bill of materials, the gateway image's opt-in recipe.
 - **Acceptance in the labs**, recorded in the repository: the OpenSync lab's 900 s
   reference workload with the whole adapter in C
@@ -41,15 +42,15 @@ EMOSA is licensed under the Apache License 2.0 ([LICENSE](../../LICENSE)).
 
 - Plan decisions 5.1 to 5.3: the gateway's 1905 arrangement, the GTP's role, how pods
   find EMOSA in the field.
-- Six modules of the agent's core below 85 % line coverage, and two inputs not fuzzed
-  yet: the OVSDB framing and the configuration (QUALITY §3).
 - What the specification leaves out (spec §9) and the design's known limitations
   (design §14): among them backhaul link metrics, complete EasyMesh AP and station
   metrics from a hwsim pod, 5/6 GHz and WPA3.
-- An idle agent's CPU (2.4 to 2.8 % of a core per pod in the RDK lab) grows with its
-  journal: both implementations parse every operation again several times a second, and
-  the journal keeps every operation. Parse once and keep, search linearly, and bound the
-  journal's retention (the specification has no bound yet) before a gateway carries many
-  pods ([the footprint record](../records/evidence/rdk-lab/README.md)).
+- The CERT review of the rules no tool checks, done for the features' modules, not yet
+  for the agent's core, the basic adapter's modules, and the SQLite and OpenSSL calls
+  (c/QUALITY.md §3).
+- The reporting policy's record is written durably twice per periodic AP metrics report
+  (the period reserved before sending): some 140 MB a day per pod at RDK's 5 s
+  interval on the gateway's storage. Whether a gateway on flash wants fewer durable
+  writes there ([the footprint record](../records/evidence/rdk-lab/README.md)).
 - The status file still names the C `c-lab-prototype` (the labs read it); rename it with
   the labs' tools when the C is released.

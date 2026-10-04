@@ -3,6 +3,7 @@
  * Usage: emosa-vectors <spec/conformance directory> */
 #include <cjson/cJSON.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <math.h>
 #include <setjmp.h>
 #include <stdio.h>
@@ -29,6 +30,7 @@
 #include "../src/ovsdb.h"
 #include "../src/vault.h"
 #include "../src/reporting.h"
+#include "../src/scope_ap.h"
 #include "../src/scope_steering.h"
 #include "../src/scope_telemetry.h"
 #include "../src/scope_watch.h"
@@ -126,10 +128,12 @@ static cJSON *tlvs_json(const em_message *m)
     return list;
 }
 
-static double fixed_clock(void *ctx)
+static double clock_now; /* the decode cases' clock: their 'times' */
+
+static double vector_clock(void *ctx)
 {
     (void)ctx;
-    return 0.0;
+    return clock_now;
 }
 
 static void cmdu_vectors(const char *dir)
@@ -150,8 +154,12 @@ static void cmdu_vectors(const char *dir)
                                   tlvs, n, cJSON_IsTrue(cJSON_GetObjectItem(in, "relay")),
                                   (unsigned)num(in, "mtu"), &frames);
         const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected_frames");
+        const char *refused = str(c, "expected_error");
         checks++;
-        if (r != EM_OK || (int)frames.count != cJSON_GetArraySize(expected)) {
+        if (refused) {
+            if (r == EM_OK || strcmp(refused, em_reason_name(r)))
+                fail("cmdu", str(c, "name"), "expected a refusal");
+        } else if (r != EM_OK || (int)frames.count != cJSON_GetArraySize(expected)) {
             fail("cmdu", str(c, "name"), "frame count");
         } else {
             for (size_t i = 0; i < frames.count; i++) {
@@ -166,20 +174,22 @@ static void cmdu_vectors(const char *dir)
     }
     cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "decode"))
     {
-        em_reassembler *r = em_reassembler_new(fixed_clock, NULL, 5.0, 64, 2097152, 65536, 64);
+        em_reassembler *r = em_reassembler_new(vector_clock, NULL, 5.0, 64, 2097152, 65536, 64);
         em_message *m = NULL;
         em_reason reason = EM_OK;
-        const cJSON *frame;
+        const cJSON *frame, *times = cJSON_GetObjectItemCaseSensitive(c, "times");
+        int index = 0;
         cJSON_ArrayForEach(frame, cJSON_GetObjectItemCaseSensitive(c, "frames"))
         {
+            /* each frame fed whatever the one before it gave; the last one's outcome counts */
+            const cJSON *at = cJSON_GetArrayItem(times, index++);
+            clock_now = cJSON_IsNumber(at) ? at->valuedouble : 0.0;
             em_buf bytes = {0};
             em_unhex(frame->valuestring, &bytes);
             em_message_free(m);
             m = NULL;
             reason = em_reassembler_feed(r, bytes.data, bytes.len, "conformance", &m);
             em_buf_free(&bytes);
-            if (reason != EM_OK)
-                break;
         }
         const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
         const char *error = str(expected, "error");
@@ -217,6 +227,71 @@ static void cmdu_vectors(const char *dir)
     cJSON_Delete(doc);
 }
 
+/* -- wsc-m2.json: an M2's authentication and mapping ----------------------------------- */
+
+static void wsc_m2_vectors(const char *dir)
+{
+    cJSON *doc = load(dir, "wsc-m2.json");
+    em_m1 m1 = {0};
+    em_buf private_key = {0}, public_key = {0};
+    checks++;
+    if (!em_unhex(str(doc, "m1"), &m1.message) || !em_unhex(str(doc, "enrollee_private"), &private_key) ||
+        !em_unhex(str(doc, "enrollee_public"), &public_key) || private_key.len > sizeof(m1.private_key) ||
+        public_key.len != sizeof(m1.public_key)) {
+        fail("wsc-m2", "m1", "the M1 and its keys");
+    } else {
+        memcpy(m1.private_key, private_key.data, private_key.len);
+        m1.private_len = private_key.len;
+        memcpy(m1.public_key, public_key.data, public_key.len);
+        const cJSON *c;
+        cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+        {
+            const char *name = str(c, "name");
+            em_buf messages[8] = {{0}};
+            size_t count = 0;
+            const cJSON *m;
+            cJSON_ArrayForEach(m, cJSON_GetObjectItemCaseSensitive(c, "m2"))
+            {
+                if (count < 8)
+                    em_unhex(m->valuestring, &messages[count++]);
+            }
+            em_m2_result out;
+            em_reason r = em_m2_decode(&m1, messages, count, 1, false, false, &out);
+            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
+            const char *error = str(expected, "error");
+            checks++;
+            if (error) {
+                if (r == EM_OK || strcmp(error, em_reason_name(r)))
+                    fail("wsc-m2", name, r == EM_OK ? "accepted" : em_reason_name(r));
+            } else if (r != EM_OK) {
+                fail("wsc-m2", name, em_reason_name(r));
+            } else {
+                const cJSON *bss = cJSON_GetObjectItemCaseSensitive(expected, "bss"), *want;
+                bool same = out.teardown == cJSON_IsTrue(cJSON_GetObjectItem(expected, "teardown")) &&
+                            (int)out.count == cJSON_GetArraySize(bss);
+                size_t i = 0;
+                cJSON_ArrayForEach(want, bss)
+                {
+                    const cJSON *index = cJSON_GetObjectItemCaseSensitive(want, "bss_index");
+                    same = same && i < out.count && !strcmp(out.bss[i].role, str(want, "role")) &&
+                           !strcmp(out.bss[i].ssid, str(want, "ssid")) &&
+                           !strcmp(out.bss[i].passphrase, str(want, "passphrase")) &&
+                           out.bss[i].bss_index == (cJSON_IsNumber(index) ? index->valueint : -1);
+                    i++;
+                }
+                if (!same)
+                    fail("wsc-m2", name, "the mapped BSS differs");
+            }
+            for (size_t i = 0; i < count; i++)
+                em_buf_free(&messages[i]);
+        }
+    }
+    em_buf_free(&private_key);
+    em_buf_free(&public_key);
+    em_m1_free(&m1);
+    cJSON_Delete(doc);
+}
+
 /* -- onboarding.json ------------------------------------------------------------- */
 
 static bool frames_equal(const em_frames *f, const cJSON *expected)
@@ -236,7 +311,8 @@ static bool frames_equal(const em_frames *f, const cJSON *expected)
 /* Feed hex frames to a fresh reassembler; the complete message or NULL. */
 static em_message *assemble(const cJSON *frames)
 {
-    em_reassembler *r = em_reassembler_new(fixed_clock, NULL, 5.0, 64, 2097152, 65536, 64);
+    clock_now = 0.0;
+    em_reassembler *r = em_reassembler_new(vector_clock, NULL, 5.0, 64, 2097152, 65536, 64);
     em_message *m = NULL;
     const cJSON *frame;
     cJSON_ArrayForEach(frame, frames)
@@ -1583,7 +1659,42 @@ static void scope_writes_vectors(const char *dir)
         em_telemetry_scope telemetry = {0};
         em_watch_scope watch = {0};
         em_steering_scope steering = {0};
-        if (!strcmp(scope, "telemetry")) {
+        em_ap_scope ap = {0};
+        em_profile profile = {0};
+        em_vault vault;
+        char vdir[] = "/tmp/emosa-ap-XXXXXX";
+        bool have_vault = false;
+        if (!strcmp(scope, "ap")) {
+            /* the AP scope: the case's profile, and its passphrases in a vault of its own */
+            char path[1200];
+            snprintf(path, sizeof(path), "%s/../../src/emosa/profiles/%s.json", dir, str(c, "profile"));
+            if (em_profile_load(path, &profile) != EM_OK || !mkdtemp(vdir)) {
+                fail("scope-writes", name, "profile or temporary directory");
+                em_ovsdb_close(ovs);
+                cJSON_Delete(sent);
+                cJSON_Delete(attempt);
+                continue;
+            }
+            have_vault = true;
+            snprintf(path, sizeof(path), "%s/secrets", vdir);
+            em_vault_open(&vault, path);
+            const cJSON *secret;
+            cJSON_ArrayForEach(secret, cJSON_GetObjectItemCaseSensitive(c, "passphrases"))
+            {
+                char file[1300];
+                snprintf(file, sizeof(file), "%s/%s", path, secret->string);
+                int fd = open(file, O_WRONLY | O_CREAT | O_EXCL, 0600);
+                if (fd < 0 || write(fd, secret->valuestring, strlen(secret->valuestring)) < 0)
+                    fail("scope-writes", name, "passphrase");
+                if (fd >= 0)
+                    close(fd);
+            }
+            ap = (em_ap_scope){.ovs = ovs, .profile = &profile, .serial = serial, .pod_id = str(doc, "pod_id"),
+                               .multi_bss = cJSON_IsTrue(cJSON_GetObjectItem(c, "multi_bss")), .vault = &vault,
+                               .transact = record, .transact_ctx = sent};
+            backend = em_ap_backend();
+            ctx = &ap;
+        } else if (!strcmp(scope, "telemetry")) {
             em_reason why;
             em_telemetry_intent_from(str(intent, "pod_id"), serial, intent, &telemetry.intent, &why);
             telemetry.ovs = ovs;
@@ -1634,6 +1745,11 @@ static void scope_writes_vectors(const char *dir)
         em_snapshot_clear(&telemetry.last);
         em_snapshot_clear(&watch.last);
         em_snapshot_clear(&steering.last);
+        em_snapshot_clear(&ap.last);
+        if (have_vault) {
+            em_profile_free(&profile);
+            remove_tree(vdir);
+        }
         em_ovsdb_close(ovs);
     }
     cJSON_Delete(doc);
@@ -2418,6 +2534,7 @@ int main(int argc, char **argv)
     const char *dir = argc > 1 ? argv[1] : "spec/conformance";
     cmdu_vectors(dir);
     onboarding_vectors(dir);
+    wsc_m2_vectors(dir);
     northbound_vectors(dir);
     control_vectors(dir);
     southbound_vectors(dir);

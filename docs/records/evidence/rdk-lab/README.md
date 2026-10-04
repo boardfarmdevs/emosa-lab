@@ -739,3 +739,47 @@ readiness and the quick requalification's five rooms run from rev120 meanwhile:
 
 Evidence: [footprint-1003](footprint-1003/) (each arrangement's samples, summary, run and
 rooms).
+
+### The journal bounded: the gateway again (3 October)
+
+The open remedy above, done in both implementations (spec §6, vectors
+`journal-retention.json`): the journal keeps every active operation, each pod's latest
+operation in a reconciled state and the 16 most recent, pruning the rest with their WSC
+receipts as operations are added; the operations are parsed once and kept, the
+reconcile's search is linear, the secret fingerprints are kept, and MACs are checked
+without regular expressions (emosa-lab f4011e8). The image recipe's package at that
+commit (built on rev140 with the image, the Apache-2.0 license file checked) ran in the
+gateway's container the same way, with the same 30 minutes, readiness and five rooms:
+
+| | before (d11fc1d) | after (f4011e8) |
+| --- | --- | --- |
+| an agent: CPU of one core | 2.84 % | 0.46 % |
+| an agent: PSS / RSS | 4.9 / 9.4 MiB | 6.5 / 11.0 MiB |
+| the fleet: PSS | 0.7 MiB | 0.7 MiB |
+| gateway CPU, of one core | 80.0 % | 75.5 % |
+| gateway memory (cgroup), median / max | 506 / 592 MiB | 526 / 538 MiB |
+| RDK's controller: CPU, PSS median / max | 34.6 %, 33.6 / 55.8 MiB | 34.7 %, 38.2 / 50.4 MiB |
+| the rooms | 4 of 5 | 5 of 5 |
+
+- **An idle agent's CPU is a sixth of what it was**, and no longer grows with the
+  journal: each journal held 16 operations after the pods' onboarding in the gateway
+  (67 before), with 16 WSC receipts.
+- **Memory:** the agents in the gateway started on the 67-operation journals they took
+  over, parsed once before the first new operation pruned them, which likely explains
+  their higher PSS there (not measured further). Restarted afterwards on the pruned
+  journals in the adapter container, the agents used 7.2 MiB PSS, against 7.6 MiB before
+  (x86-64).
+- **Seen: the reporting policy's writes.** Each agent writes its reporting policy's record
+  twice per periodic AP metrics report (the period reserved before sending, then its
+  outcome, so a crash overcounts one report and never replays a burst:
+  `src/emosa/wire/reporting_policy.py`, `c/src/reporting.c`), each a synchronous SQLite
+  commit.
+  With RDK's controller asking every 5 s that is about 99 KB a minute of WAL per agent
+  (24 page writes), some 140 MB a day per pod on the gateway's storage; SQLite's
+  checkpoint keeps the file bounded. The reference does the same. Open: whether a
+  gateway on flash wants fewer durable writes there.
+- `gateway.sh on` had ignored the package it was given while an earlier run's package
+  was installed (fixed: emosa-lab be4beea).
+
+Evidence: [footprint-1003/gateway-2](footprint-1003/gateway-2/) (samples, summary, run and
+rooms).

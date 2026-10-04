@@ -87,6 +87,10 @@ Known differences from the Python agent:
   (instance, epoch, database generation and revision); C by the database
   generation and revision it last refreshed. The channel policy's `context`
   differs accordingly (C: the journal's process ID and the generation);
+- `format: date-time` in the schemas (operation and event records, the status): C
+  checks it (RFC 3339); the reference's jsonschema checks it only with the optional
+  `rfc3339-validator`, which it does not install, so it accepts any string there. Both
+  write RFC 3339 timestamps, so only a record altered on disk is judged differently;
 - the controller-side tools and the lab are in Python only. The adapter kit
   installs either implementation of every program; `EMOSA_AGENT` in
   `/etc/default/emosa` (every pod) or `/etc/default/emosa-POD` (one pod) picks the

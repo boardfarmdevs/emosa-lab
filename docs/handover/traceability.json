@@ -9,6 +9,7 @@
       "vectors": ["cmdu.json"],
       "box": ["boot"],
       "python": ["test_ieee1905.py"],
+      "units": ["ethernet"],
       "fuzz": ["cmdu"]
     },
     "README 2.2 Identity: the AL MAC": {
@@ -29,7 +30,7 @@
       "fuzz": ["control"]
     },
     "README 2.5 Onboarding": {
-      "vectors": ["onboarding.json", "session-timing.json", "early-report.json"],
+      "vectors": ["onboarding.json", "wsc-m2.json", "session-timing.json", "early-report.json"],
       "box": ["boot", "onboard", "refuse", "early-report", "renew", "no-m2", "silent-controller", "unserved-pod", "new-source"],
       "python": ["test_autoconfiguration.py", "test_provisioning_session.py", "test_discovery_session.py", "test_wsc.py"],
       "fuzz": ["wsc"]
@@ -42,6 +43,7 @@
     "README 3.1 Connections": {
       "box": ["boot", "transport-cut", "adapter-restart"],
       "python": ["test_ovsdb.py", "test_tls_listener.py"],
+      "units": ["framing"],
       "fuzz": ["ovsdb"],
       "lab": ["opensync-lab-proof"]
     },
@@ -55,7 +57,7 @@
       "fuzz": ["rows"]
     },
     "README 3.4 Translation: EasyMesh → OVSDB": {
-      "vectors": ["translation-southbound.json", "control.json"],
+      "vectors": ["translation-southbound.json", "control.json", "scope-writes.json"],
       "box": ["onboard", "multi-bss", "channel-selection"],
       "python": ["test_pod_profile.py", "test_channel_procedures.py"]
     },
@@ -104,7 +106,7 @@
     "README 6. Management and state": {
       "vectors": ["journal-retention.json"],
       "box": ["adapter-restart", "fleet-takeover", "fleet-forget"],
-      "units": ["canon", "vault", "secret_backend", "files", "schema", "channel_store"],
+      "units": ["canon", "vault", "secret_backend", "files", "schema", "schema_keywords", "helpers", "channel_store"],
       "python": ["test_secret_store.py", "test_contracts.py"],
       "fuzz": ["config"]
     },

@@ -81,6 +81,7 @@ def test_the_onboarded_agent_answers_the_controllers_requests(agent, tmp_path):
     # their reason recorded, while the box has no telemetry (spec 3.8)
     result = box("answers", agent, tmp_path / "box")
     assert result["session"] == "provisioning"
+    assert result["ignored"]  # a broadcast query and a runt: no answer, the agent runs on
     assert all(result["answered"].values()), result["answered"]
     assert set(result["answered"]) == {
         "topology",

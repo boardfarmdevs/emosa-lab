@@ -7,6 +7,8 @@ status are in the easymesh-labs alignment plan ([mesh.vcpe.dev](https://mesh.vcp
 
 | Date | Decision | Why | Where |
 | --- | --- | --- | --- |
+| 3 Oct 2026 | The journal keeps every active operation, each pod's latest operation in a reconciled state and the 16 most recent, pruning the rest with their WSC receipts as operations are added; both implementations keep its operations parsed in memory | an idle agent parsed its whole journal several times a second, and the journal kept every operation, so its CPU grew with its age (2.4 to 2.8 % of a core per pod in the RDK gateway); now 0.34 % | spec §6, vectors `journal-retention.json`, `c/src/journal.c`, `src/emosa/store.py` |
+| 3 Oct 2026 | A JSON-RPC stream is scanned once: the scan resumes where it stopped (`em_json_scan`) | the `ovsdb` fuzz target found each piece of a message read in pieces scanning the message again from its start, quadratic in its length (up to 16 MiB on the OVSDB session) | `c/src/jsonrpc.c`, c/QUALITY.md §3 |
 | 3 Oct 2026 | On a gateway the agents' trunk is a veth pair whose other end is a port of the controller's LAN bridge (`EMOSA_BRIDGE=brlan0`), not a macvlan on the bridge device | what a macvlan on the bridge device sends leaves through the bridge's ports and never reaches the controller on that bridge; nor do the answers come back | `deploy/adapter/files/emosa-agent-link`, `c/packaging/default-emosa` |
 | 3 Oct 2026 | EMOSA in the gateway image is opt-in through an image variable (`EMOSA_ADAPTER = "1"`, `EMOSA_GTP` for the GTP), not a `DISTRO_FEATURES` entry; the default image is unchanged | a distro feature changes nearly every recipe's signature; the variable changes only the image's package list | meta-cmf-bananapi-vcpe `recipes-emosa/emosa`, plan 5.5 |
 | 3 Oct 2026 | One pin of emosa-lab for the RDK lab's EMOSA option and the image's recipe (`gen/vm/lxd/emosa-lab.env`) | the lab and the image deploy the same adapter | meta-cmf-bananapi-vcpe |
@@ -38,4 +40,4 @@ status are in the easymesh-labs alignment plan ([mesh.vcpe.dev](https://mesh.vcp
 | 1905 on the router: EMOSA's virtual agents next to the gateway's own 1905 daemon and agent on `brlan0` | the gateway integration; the lab's `gateway.sh` assumes it | plan 5.1 |
 | The GTP role: the router serves the pods' onboarding and ends their GRE, or supports only Wi-Fi backhaul and Ethernet pods | whether `emosa-gtp` is installed | plan 5.2 |
 | How pods find EMOSA: the fleet's front port and the redirect on the router's LAN | the pods' handover in the field | plan 5.3 |
-| What the journal retains (operations, events) and for how long | an agent's CPU and disk grow with its journal | spec §6, the footprint record |
+| How durably the reporting policy's schedule is kept: today written twice per periodic report | some 140 MB a day per pod at RDK's 5 s interval on a gateway's storage | the footprint record |

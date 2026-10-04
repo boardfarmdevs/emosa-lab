@@ -4,20 +4,20 @@
 
     python3 c/fuzz/seeds.py            # writes c/fuzz/corpus/<target>, every target's
 
-wsc: each recorded M2 and tampered M2, after a flags byte of 0 (fuzz/wsc.c). cmdu: every
-1905 frame in the vectors, and each multi-frame decode case as one
-input (frames after their two-byte length, as fuzz/cmdu.c reads them). stats: every
-recorded MQTT payload. rows: every recorded set of OVSDB tables. fleet: each pod's
-select result as the reply on its connection after an echo, and every registry file the
-fleet sessions leave. gtp: each command of the GTP sessions, its first ip output, the lease
-file and the event (fuzz/gtp.c's three parts). control: each case's requests of the
-control, metrics and backhaul steering vectors, in order, as one input. mqtt: a CONNACK, a
-SUBACK and each recorded statistics payload published on the pod's topic, at QoS 0 and 1,
-from each phase. ovsdb: each recorded set of OVSDB tables as one monitor update (monitor 0)
-after an echo request, in chunks of 1 and of 4081 bytes. config: the adapter kit's example
-fleet and GTP configurations and an agent configuration (with and without telemetry).
-Files are named by their SHA-1, as libFuzzer names its own; rerunning
-replaces the corpora.
+wsc: each recorded M2 and tampered M2, and each M2 of wsc-m2.json in the same frame,
+after a flags byte of 0 (fuzz/wsc.c). cmdu: every 1905 frame in the vectors, and each
+multi-frame decode case as one input (frames after their two-byte length, as fuzz/cmdu.c
+reads them). stats: every recorded MQTT payload. rows: every recorded set of OVSDB
+tables. fleet: each pod's select result as the reply on its connection after an echo,
+and every registry file the fleet sessions leave. gtp: each command of the GTP sessions,
+its first ip output, the lease file and the event (fuzz/gtp.c's three parts). control:
+each case's requests of the control, metrics and backhaul steering vectors, in order, as
+one input. mqtt: a CONNACK, a SUBACK and each recorded statistics payload published on
+the pod's topic, at QoS 0 and 1, from each phase. ovsdb: each recorded set of OVSDB
+tables as one monitor update (monitor 0) after an echo request, in chunks of 1 and of
+4081 bytes. config: the adapter kit's example fleet and GTP configurations and an agent
+configuration (with and without telemetry). Files are named by their SHA-1, as libFuzzer
+names its own; rerunning replaces the corpora.
 """
 
 import hashlib
@@ -117,6 +117,15 @@ def main():
             frames = [bytes.fromhex(f) for f in case.get(key) or []]
             if frames:
                 seeds["wsc"].add(b"\x00" + framed(frames))
+    # each M2 of wsc-m2.json (for the same M1) in the onboarding M2's frame: its header and
+    # Radio Identifier TLV, the M2 in the WSC TLV, the end of message
+    template = bytes.fromhex(load("onboarding.json")["cases"][0]["m2_frames"][0])
+    radio_tlv = template[22 : 25 + int.from_bytes(template[23:25], "big")]
+    for case in load("wsc-m2.json")["cases"]:
+        for m2 in case["m2"]:
+            value = bytes.fromhex(m2)
+            frame = template[:22] + radio_tlv + b"\x11" + len(value).to_bytes(2, "big") + value
+            seeds["wsc"].add(b"\x00" + framed([frame + bytes(3)]))
     for step in load("telemetry.json")["steps"]:
         seeds["stats"].add(bytes.fromhex(step["payload"]))
     for case in load("metrics.json")["cases"]:

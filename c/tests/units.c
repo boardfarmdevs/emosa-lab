@@ -585,6 +585,151 @@ static void ethernet(void)
     CHECK(em_ethernet_send(&e, frame, sizeof(frame)) == EM_INVALID_INPUT, "another source address");
 }
 
+static void schema_keywords(const char *scratch)
+{
+    /* every keyword's refusal, as JSON Schema 2020-12 (the reference's jsonschema) decides
+     * it, and the location named; format date-time as RFC 3339 (c/README.md: the reference
+     * checks it only with rfc3339-validator, which it does not install) */
+    const char *probe =
+        "{\"$defs\":{\"mac\":{\"type\":\"string\",\"pattern\":\"^[0-9a-f]{2}(:[0-9a-f]{2}){5}$\"}},\"type\":\"object\","
+        "\"properties\":{\"c\":{\"const\":3},\"e\":{\"enum\":[\"a\",\"b\"]},\"s\":{\"type\":\"string\",\"minLength\":2,"
+        "\"maxLength\":4},\"t\":{\"type\":\"string\",\"format\":\"date-time\"},\"n\":{\"type\":\"number\",\"minimum\":1,"
+        "\"maximum\":10},\"x\":{\"type\":\"number\",\"exclusiveMinimum\":0,\"exclusiveMaximum\":11},"
+        "\"a\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":3,\"uniqueItems\":true,\"items\":{\"type\":\"integer\"}},"
+        "\"m\":{\"$ref\":\"#/$defs/mac\"},\"r\":{\"$ref\":\"#/$defs/missing\"},\"all\":{\"allOf\":[{\"type\":\"integer\"},"
+        "{\"minimum\":0}]},\"any\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]},"
+        "\"one\":{\"oneOf\":[{\"type\":\"integer\"},{\"type\":\"number\",\"minimum\":100}]},"
+        "\"cond\":{\"if\":{\"type\":\"integer\"},\"then\":{\"minimum\":0},\"else\":{\"type\":\"string\"}},"
+        "\"no\":{\"not\":{\"type\":\"null\"}},\"f\":false,\"names\":{\"type\":\"object\","
+        "\"propertyNames\":{\"pattern\":\"^[a-z]+$\"}},\"closed\":{\"type\":\"object\",\"additionalProperties\":false},"
+        "\"w\":{\"type\":\"weird\"}}}";
+    static const struct {
+        const char *value, *where; /* "" when valid */
+    } cases[] = {
+        {"{\"c\": 3, \"e\": \"a\", \"s\": \"ab\", \"t\": \"2026-10-03T05:00:00.5Z\", \"n\": 1, \"x\": 10.5, \"a\": [1, 2], \"m\": \"02:00:00:00:00:01\", \"all\": 0, \"any\": \"z\", \"one\": 7, \"cond\": 1, \"no\": 0, \"names\": {\"ok\": 1}, \"closed\": {}}",
+         ""},
+        {"{\"c\": 4}",
+         "/c: const"},
+        {"{\"e\": \"c\"}",
+         "/e: enum"},
+        {"{\"s\": \"x\"}",
+         "/s: minLength"},
+        {"{\"s\": \"xxxxx\"}",
+         "/s: maxLength"},
+        {"{\"t\": \"2026-13-01T00:00:00Z\"}",
+         "/t: format"},
+        {"{\"t\": \"2026-10-03T00:00:00.Z\"}",
+         "/t: format"},
+        {"{\"n\": 0.5}",
+         "/n: minimum"},
+        {"{\"n\": 10.5}",
+         "/n: maximum"},
+        {"{\"x\": 0}",
+         "/x: exclusiveMinimum"},
+        {"{\"x\": 11}",
+         "/x: exclusiveMaximum"},
+        {"{\"a\": []}",
+         "/a: minItems"},
+        {"{\"a\": [1, 2, 3, 4]}",
+         "/a: maxItems"},
+        {"{\"a\": [1, 1]}",
+         "/a: uniqueItems"},
+        {"{\"a\": [1.5]}",
+         "/a/0: type"},
+        {"{\"m\": \"zz\"}",
+         "/m: pattern"},
+        {"{\"all\": -1}",
+         "/all: minimum"},
+        {"{\"any\": 1.5}",
+         "/any: anyOf"},
+        {"{\"one\": 150}",
+         "/one: oneOf"},
+        {"{\"cond\": -1}",
+         "/cond: minimum"},
+        {"{\"cond\": true}",
+         "/cond: type"},
+        {"{\"no\": null}",
+         "/no: not"},
+        {"{\"f\": 1}",
+         "/f: false schema"},
+        {"{\"names\": {\"A\": 1}}",
+         "/names/A: pattern"},
+        {"{\"closed\": {\"k\": 1}}",
+         "/closed/k: additionalProperties"},
+        /* a schema's own faults, which the reference refuses when it loads the schema: a
+         * reference to nothing, a type that does not exist; the value is refused */
+        {"{\"r\": 1}", "/r: $ref"},
+        {"{\"w\": 1}", "/w: type"},
+    };
+    char path[512];
+    snprintf(path, sizeof(path), "%s/probe.schema.json", scratch);
+    CHECK(em_write_file(path, probe, false), "the probe schema written");
+    em_schema *s = em_schema_load(scratch, "probe");
+    CHECK(s != NULL, "the probe schema");
+    for (size_t i = 0; s && i < sizeof(cases) / sizeof(cases[0]); i++) {
+        cJSON *v = cJSON_Parse(cases[i].value);
+        char where[256];
+        bool ok = em_schema_valid(s, v, where, sizeof(where));
+        CHECK(ok == !*cases[i].where && !strcmp(where, cases[i].where), "%s: %s, not %s", cases[i].value,
+              ok ? "valid" : where, *cases[i].where ? cases[i].where : "valid");
+        cJSON_Delete(v);
+    }
+    em_schema_free(s);
+    /* what cannot be loaded, and no schema at all */
+    CHECK(em_write_file(path, "{not json", false), "a broken schema written");
+    CHECK(em_schema_load(scratch, "probe") == NULL, "a schema that is not JSON: NULL");
+    CHECK(em_schema_load(scratch, "absent") == NULL, "an absent schema: NULL");
+    char where[8];
+    CHECK(!em_schema_valid(NULL, NULL, where, sizeof(where)) && !*where, "no schema: invalid");
+}
+
+static void helpers(const char *scratch)
+{
+    /* the reasons by name and back, as the reference's Reason values */
+    static const char *const names[] = {"OK", "INVALID_INPUT", "UNSUPPORTED_OPERATION", "BUSY", "NOT_READY",
+                                        "PRECONDITION_FAILED", "OUTCOME_UNKNOWN", "OWNERSHIP_CONFLICT", "NO_MEMORY",
+                                        "SCHEMA_MISMATCH", "APPLY_TIMEOUT", "MISSING_PREREQUISITE", "NOT_FOUND"};
+    for (int r = EM_OK; r <= EM_NOT_FOUND; r++) {
+        CHECK(!strcmp(em_reason_name((em_reason)r), names[r]), "reason %d: %s", r, em_reason_name((em_reason)r));
+        CHECK(em_reason_parse(names[r]) == (em_reason)r || r == EM_OK, "parse %s", names[r]);
+    }
+    CHECK(!strcmp(em_reason_name((em_reason)99), "UNKNOWN"), "a reason out of range");
+    CHECK(em_reason_parse("NO_SUCH_REASON") == EM_OK && em_reason_parse(NULL) == EM_OK, "an unknown name");
+    /* hex: either case in, refused when odd or not hex */
+    em_buf b = {0};
+    CHECK(em_unhex("0aFf", &b) && b.len == 2 && b.data[0] == 0x0a && b.data[1] == 0xff, "hex in either case");
+    em_buf_free(&b);
+    CHECK(!em_unhex("abc", &b), "an odd length");
+    em_buf_free(&b);
+    CHECK(!em_unhex("0g", &b), "not hex");
+    em_buf_free(&b);
+    /* MAC text: the canonical form only (lower case, colons) */
+    uint8_t mac[6];
+    CHECK(em_mac_text_ok("02:72:f9:7f:07:85"), "a MAC");
+    CHECK(!em_mac_text_ok("02:72:F9:7f:07:85") && !em_mac_text_ok("02-72-f9-7f-07-85") && !em_mac_text_ok("02:72") &&
+              !em_mac_text_ok(NULL),
+          "upper case, dashes, short, none: refused");
+    CHECK(em_parse_mac("02:72:F9:7f:07:85", mac) && mac[2] == 0xf9, "parsed in either case");
+    CHECK(!em_parse_mac("02:72:f9:7f:07", mac) && !em_parse_mac("02:72:f9:7f:07:8x", mac) &&
+              !em_parse_mac("02-72-f9-7f-07-85", mac),
+          "short, not hex, dashes: not parsed");
+    /* bounded copies; a file over its limit while it is read; a write that cannot land */
+    char small[4];
+    CHECK(!em_copy(small, 0, "x") && !em_copy(small, sizeof(small), "toolong") && em_copy(small, sizeof(small), "abc"),
+          "copies that fit, and that do not");
+    char path[512];
+    snprintf(path, sizeof(path), "%s/large", scratch);
+    char *blob = em_malloc(10001);
+    memset(blob, 'y', 10000);
+    blob[10000] = 0;
+    CHECK(em_write_file(path, blob, false), "a 10000-byte file");
+    free(blob);
+    CHECK(em_read_file(path, 5000, NULL) == NULL, "over its limit while it is read: refused");
+    snprintf(path, sizeof(path), "%s/target-dir", scratch);
+    mkdir(path, 0700);
+    CHECK(!em_write_file(path, "x", false), "a write over a directory: false");
+}
+
 static void telemetry_limits(void)
 {
     /* the reference refuses a topic over 128 and a broker over 253 characters; a value
@@ -642,6 +787,8 @@ int main(int argc, char **argv)
     framing();
     channel_store(argv[2]);
     ethernet();
+    schema_keywords(argv[2]);
+    helpers(argv[2]);
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;
 }
