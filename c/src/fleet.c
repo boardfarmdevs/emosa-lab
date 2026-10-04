@@ -543,8 +543,14 @@ cJSON *em_fleet_forget(em_fleet *f, const char *serial, const char *stamp,
     struct stat st;
     if (em_format(path, sizeof(path), "%s/%s", f->state_root, e.pod_id) && !stat(path, &st) &&
         S_ISDIR(st.st_mode) && em_format(archive, sizeof(archive), "%s.released-%s", path, stamp) &&
-        !rename(path, archive))
+        !rename(path, archive)) {
         cJSON_AddStringToObject(out, "archived_state", archive);
+        /* not the status: a running agent's (in the run directory, its link would show
+         * the next agent's) */
+        char status[720];
+        if (em_format(status, sizeof(status), "%s/status.json", archive))
+            (void)unlink(status); /* missing_ok */
+    }
     em_fleet_entry_clear(&e);
     return out;
 }

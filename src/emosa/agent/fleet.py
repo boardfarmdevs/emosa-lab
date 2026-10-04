@@ -356,7 +356,8 @@ class Fleet:
         """Release a pod: stop its agent, drop its entry and configuration, and
         archive its state. A pod handed over again starts a new ownership period;
         conflicts recorded in the old one (someone else changed the pod after the
-        release) must not block it. The archive keeps the history."""
+        release) must not block it. The archive keeps the history, not the status: that
+        is a running agent's (in the run directory, its link would show the next agent's)."""
         entry = self.registry.forget(serial)
         if entry is not None:
             self.stopper(entry["pod_id"])
@@ -365,6 +366,7 @@ class Fleet:
             if state.is_dir():
                 archive = state.with_name(f"{state.name}.released-{time.strftime('%Y%m%dT%H%M%S')}")
                 state.rename(archive)
+                (archive / "status.json").unlink(missing_ok=True)
                 entry["archived_state"] = str(archive)
         return entry
 

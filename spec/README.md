@@ -487,7 +487,9 @@ again for each pod, so a `forget` run as another process takes effect at once. W
 `pods.<serial>`, and the fleet's `topology_query_window` (§2.5), a property of the
 controller, when it has one: a different pod model needs its own profile, and the uplink
 switch (§8.3) is enabled per pod. `forget SERIAL` stops the agent, deletes the entry and the
-configuration, and archives the agent's state directory. A pod handed over
+configuration, and archives the agent's state directory as
+`<pod_id>.released-<stamp>`, without the agent's status (a running agent's: in its run
+directory, its link would show the next agent's). A pod handed over
 again starts a new ownership period, so conflicts recorded before its release
 don't block it.
 

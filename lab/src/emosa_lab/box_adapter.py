@@ -479,8 +479,9 @@ async def fleet_takeover(box):
 
 async def fleet_forget(box):
     """forget releases a pod (spec §4): its agent stopped and disabled, its entry and
-    configuration gone, its state directory archived; handed over again, it starts a new
-    entry with a new agent."""
+    configuration gone, its state directory archived without the agent's status (its link
+    into the run directory would show the next agent's); handed over again, it starts a
+    new entry with a new agent."""
     first = await onboarded(box)
     pid = box.process.pid()
     out = subprocess.run(
@@ -495,6 +496,7 @@ async def fleet_forget(box):
         await asyncio.sleep(0.2)
     stopped = bool(pid) and not alive(pid)
     archived = Path(released.get("archived_state") or "/nonexistent")
+    status = archived / "status.json"
     gone = box.serial not in box.registry() and not (box.config_dir / f"{box.serial}.json").exists()
     back = await box.return_to_fleet()
     after = box.registry().get(box.serial, {})
@@ -504,6 +506,7 @@ async def fleet_forget(box):
         "released": released.get("pod_id") == box.serial,
         "stopped": stopped,
         "archived": archived.is_dir(),
+        "archived_without_status": not status.exists() and not status.is_symlink(),
         "entry_and_configuration_gone": gone,
         "handed_over_again": back,
         "a_new_entry": after.get("first_seen", 0) > released.get("first_seen", 0),
