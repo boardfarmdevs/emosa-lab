@@ -32,6 +32,10 @@ const char *em_ovsdb_schema_fingerprint(const em_ovsdb *s);
 unsigned long em_ovsdb_revision(const em_ovsdb *s);
 /* The monitor cache, {table: {uuid: row}} in RFC 7047 form. */
 const cJSON *em_ovsdb_tables(const em_ovsdb *s);
+/* Bytes from the pod, as the connection delivers them: each complete JSON-RPC message
+ * handled (echoes answered, monitor updates applied to the rows); false when the stream is
+ * not JSON-RPC or more than a message's budget waits. The socket path reads through it. */
+bool em_ovsdb_input(em_ovsdb *s, const char *data, size_t len);
 
 /* One transaction, waiting at most `timeout` seconds for its reply (updates keep being
  * applied meanwhile). Returns the results array (caller owns), or NULL on loss/timeout. */

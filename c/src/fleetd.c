@@ -99,6 +99,7 @@ typedef struct {
     em_fleet_handover handover;
     char *in, *out;
     size_t in_len, in_cap, out_len, out_off;
+    em_json_scanner scan; /* where the scan of in stopped */
 } conn;
 
 typedef struct {
@@ -231,7 +232,7 @@ static const char *on_input(server *s, conn *c, char *problem, size_t size)
     const char *verdict = NULL;
     while (!verdict && start < c->in_len) {
         size_t at, end;
-        bool complete = em_json_next(c->in + start, c->in_len - start, &at, &end);
+        bool complete = em_json_scan(&c->scan, c->in + start, c->in_len - start, &at, &end);
         start += at;
         if (!complete)
             break;

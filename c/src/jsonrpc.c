@@ -4,38 +4,55 @@
 
 #include <string.h>
 
-bool em_json_next(const char *buf, size_t len, size_t *start, size_t *end)
+bool em_json_scan(em_json_scanner *sc, const char *buf, size_t len, size_t *start, size_t *end)
 {
-    size_t i = 0;
-    while (i < len && (buf[i] == ' ' || buf[i] == '\n' || buf[i] == '\r' || buf[i] == '\t'))
-        i++;
-    *start = i;
-    size_t depth = 0;
-    bool string = false, escape = false;
+    size_t i = sc->at;
+    if (!sc->started) {
+        while (i < len && (buf[i] == ' ' || buf[i] == '\n' || buf[i] == '\r' || buf[i] == '\t'))
+            i++;
+        if (i == len) {
+            *start = len; /* only whitespace so far */
+            sc->at = 0;
+            return false;
+        }
+        sc->started = true;
+        sc->start = i;
+    }
     for (; i < len; i++) {
         char c = buf[i];
-        if (string) {
-            if (escape)
-                escape = false;
+        if (sc->string) {
+            if (sc->escape)
+                sc->escape = false;
             else if (c == '\\')
-                escape = true;
+                sc->escape = true;
             else if (c == '"')
-                string = false;
+                sc->string = false;
         } else if (c == '"') {
-            string = true;
+            sc->string = true;
         } else if (c == '{' || c == '[') {
-            depth++;
+            sc->depth++;
         } else if (c == '}' || c == ']') {
             /* a closing bracket before any opening one is not a message: it ends here,
              * and the caller's parser refuses it */
-            if (depth <= 1) {
+            if (sc->depth <= 1) {
+                *start = sc->start;
                 *end = i + 1;
+                *sc = (em_json_scanner){0};
                 return true;
             }
-            depth--;
+            sc->depth--;
         }
     }
+    *start = sc->start; /* the caller drops the leading whitespace */
+    sc->at = i - sc->start;
+    sc->start = 0;
     return false;
+}
+
+bool em_json_next(const char *buf, size_t len, size_t *start, size_t *end)
+{
+    em_json_scanner sc = {0};
+    return em_json_scan(&sc, buf, len, start, end);
 }
 
 cJSON *em_rpc_request(const char *method, cJSON *params, long id)

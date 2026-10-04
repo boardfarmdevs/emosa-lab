@@ -174,7 +174,7 @@ endif()
 # Fuzz targets for the parsers of untrusted input (QUALITY.md §2). With
 # EMOSA_FUZZ (clang) they are libFuzzer binaries; otherwise each is linked with a
 # replay driver and ctest runs it over its seed corpus. Not in the adapter kit either.
-set(EMOSA_FUZZ_TARGETS cmdu stats rows wsc fleet gtp control mqtt)
+set(EMOSA_FUZZ_TARGETS cmdu stats rows wsc fleet gtp control mqtt ovsdb config)
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/fuzz/replay.c)
     set(EMOSA_FUZZ_TARGETS)
 endif()
@@ -190,7 +190,7 @@ foreach(target ${EMOSA_FUZZ_TARGETS})
     if(NOT EMOSA_FUZZ)
         add_test(NAME fuzz-${target} COMMAND emosa-fuzz-${target} ${CMAKE_CURRENT_SOURCE_DIR}/fuzz/corpus/${target})
         set_tests_properties(fuzz-${target} PROPERTIES ENVIRONMENT
-            "ASAN_OPTIONS=detect_leaks=1:fast_unwind_on_malloc=0;EMOSA_VECTORS=${CMAKE_CURRENT_SOURCE_DIR}/../spec/conformance")
+            "ASAN_OPTIONS=detect_leaks=1:fast_unwind_on_malloc=0;EMOSA_VECTORS=${CMAKE_CURRENT_SOURCE_DIR}/../spec/conformance;EMOSA_SCHEMAS=${CMAKE_CURRENT_SOURCE_DIR}/../schemas")
     endif()
 endforeach()
 

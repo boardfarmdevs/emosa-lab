@@ -37,6 +37,7 @@ struct em_ovsdb {
     size_t ntables;
     char *buf;
     size_t len, cap;
+    em_json_scanner scan; /* where the scan of buf stopped */
 };
 
 static double now(void)
@@ -81,6 +82,7 @@ static void disconnect(em_ovsdb *s)
     s->conn = -1;
     s->monitored = false;
     s->len = 0;
+    s->scan = (em_json_scanner){0};
     cJSON_Delete(s->tables);
     s->tables = cJSON_CreateObject();
     cJSON_Delete(s->pending_reply);
@@ -105,6 +107,8 @@ void em_ovsdb_close(em_ovsdb *s)
         return;
     if (s->fixed) {
         cJSON_Delete(s->tables);
+        cJSON_Delete(s->pending_reply);
+        free(s->buf); /* what em_ovsdb_input kept */
         free(s);
         return;
     }
@@ -225,7 +229,7 @@ static bool drain(em_ovsdb *s)
     size_t start = 0;
     while (start < s->len) {
         size_t at, end;
-        bool complete = em_json_next(s->buf + start, s->len - start, &at, &end);
+        bool complete = em_json_scan(&s->scan, s->buf + start, s->len - start, &at, &end);
         start += at;
         if (!complete)
             break;
@@ -241,24 +245,34 @@ static bool drain(em_ovsdb *s)
     return s->len <= MAX_MESSAGE;
 }
 
+bool em_ovsdb_input(em_ovsdb *s, const char *data, size_t len)
+{
+    if (len > MAX_MESSAGE || s->len + len > MAX_MESSAGE + 65536)
+        return false; /* more than a message's budget waiting: the connection is refused */
+    if (s->cap - s->len < len) {
+        size_t cap = s->cap ? s->cap : 131072;
+        while (cap - s->len < len)
+            cap *= 2;
+        s->buf = em_realloc(s->buf, cap);
+        s->cap = cap;
+    }
+    memcpy(s->buf + s->len, data, len);
+    s->len += len;
+    return drain(s);
+}
+
 static bool read_conn(em_ovsdb *s)
 {
+    char chunk[65536];
     for (;;) {
-        if (s->cap - s->len < 65536) {
-            size_t cap = s->cap ? s->cap * 2 : 131072;
-            char *grown = em_realloc(s->buf, cap);
-            if (!grown)
-                return false;
-            s->buf = grown;
-            s->cap = cap;
-        }
-        ssize_t r = recv(s->conn, s->buf + s->len, s->cap - s->len, MSG_DONTWAIT);
+        ssize_t r = recv(s->conn, chunk, sizeof(chunk), MSG_DONTWAIT);
         if (r > 0) {
-            s->len += (size_t)r;
+            if (!em_ovsdb_input(s, chunk, (size_t)r))
+                return false;
             continue;
         }
         if (r < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR))
-            return drain(s);
+            return true;
         return false; /* closed or failed */
     }
 }

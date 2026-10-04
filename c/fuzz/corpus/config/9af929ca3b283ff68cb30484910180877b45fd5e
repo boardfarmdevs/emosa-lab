@@ -1,0 +1,1 @@
+{"pod_id": "MVXPOD023F87E628DD", "serial": "MVXPOD023F87E628DD", "interface": "em1", "al_mac": "02:72:f9:7f:07:85", "controller_al": "02:00:00:e0:00:01", "ovsdb": "ptcp:6651:127.0.0.1", "state_dir": "/var/lib/emosa/MVXPOD023F87E628DD", "message_set": "r1", "multi_bss": true, "m2_session": "shared"}

@@ -1,13 +1,15 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /* Unit checks of the C implementation's own machinery (not the conformance vectors, which
  * c/tests/vectors.c replays): canonical JSON, the secret store, the journal, the
- * operation engine, the schema validator, the file helpers. Expected values come from the reference
+ * operation engine, the schema validator, the file helpers, the stream framing, the channel
+ * policy's record, the packet endpoint's refusals. Expected values come from the reference
  * (Python's json, hmac and datetime).
  *
  *   emosa-units SCHEMAS_DIR SCRATCH_DIR
  *
  * Leaves SCRATCH_DIR/journal-c (a journal the reference's tests read back). */
 #include <cjson/cJSON.h>
+#include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,8 +18,11 @@
 #include <unistd.h>
 
 #include "canon.h"
+#include "channel_store.h"
 #include "engine.h"
+#include "ethernet.h"
 #include "journal.h"
+#include "jsonrpc.h"
 #include "jschema.h"
 #include "scope_telemetry.h"
 #include "mqtt.h"
@@ -461,6 +466,125 @@ static void files(const char *scratch)
     free(blob);
 }
 
+/* the messages of stream, scanned as it arrives in pieces of `piece` bytes (0: whole),
+ * joined by '|', as ovsdb.c and fleetd.c frame them */
+static void scanned(const char *stream, size_t piece, char *out, size_t size)
+{
+    em_json_scanner sc = {0};
+    char buf[256];
+    size_t len = 0, total = strlen(stream), fed = 0;
+    out[0] = 0;
+    while (fed < total) {
+        size_t n = piece && total - fed > piece ? piece : total - fed;
+        memcpy(buf + len, stream + fed, n);
+        len += n;
+        fed += n;
+        size_t start = 0;
+        while (start < len) {
+            size_t at, end;
+            bool complete = em_json_scan(&sc, buf + start, len - start, &at, &end);
+            start += at;
+            if (!complete)
+                break;
+            snprintf(out + strlen(out), size - strlen(out), "%s%.*s", out[0] ? "|" : "", (int)(end - at), buf + start);
+            start += end - at;
+        }
+        memmove(buf, buf + start, len - start);
+        len -= start;
+    }
+}
+
+static void framing(void)
+{
+    /* brackets and quotes inside strings, escapes, whitespace between messages */
+    const char *stream = " {\"id\":1,\"s\":\"a}\\\"[\"}\n\t[1,[2,{}]]\r\n{\"e\":\"\\\\\"}  {\"open\":";
+    const char *expected = "{\"id\":1,\"s\":\"a}\\\"[\"}|[1,[2,{}]]|{\"e\":\"\\\\\"}";
+    char whole[256], piecewise[256];
+    scanned(stream, 0, whole, sizeof(whole));
+    CHECK(!strcmp(whole, expected), "whole: %s", whole);
+    for (size_t piece = 1; piece <= 7; piece++) {
+        scanned(stream, piece, piecewise, sizeof(piecewise));
+        CHECK(!strcmp(piecewise, expected), "in pieces of %zu: %s", piece, piecewise);
+    }
+    /* whitespace alone is dropped as it comes; a stray closing bracket ends a message the
+     * parser then refuses */
+    em_json_scanner sc = {0};
+    size_t at = 0, end = 0;
+    CHECK(!em_json_scan(&sc, " \n ", 3, &at, &end) && at == 3, "whitespace dropped: %zu", at);
+    CHECK(em_json_next(" x]", 3, &at, &end) && at == 1 && end == 3, "stray bracket: %zu %zu", at, end);
+}
+
+static void channel_store(const char *scratch)
+{
+    char path[512];
+    snprintf(path, sizeof(path), "%s/channel-policy.sqlite", scratch);
+    em_channel_store *s = em_channel_store_open(path);
+    CHECK(s != NULL, "a new store");
+    cJSON *none = em_channel_store_read(s);
+    CHECK(none == NULL, "nothing accepted yet");
+    cJSON *first = cJSON_Parse("{\"radios\":[{\"ruid\":\"02:00:00:00:01:00\",\"preferences\":[]}],\"generation\":1}");
+    cJSON *second = cJSON_Parse("{\"radios\":[],\"generation\":2}");
+    CHECK(em_channel_store_save(s, first), "the first policy kept");
+    cJSON *back = em_channel_store_read(s);
+    CHECK(back && cJSON_Compare(back, first, true), "read back");
+    cJSON_Delete(back);
+    CHECK(em_channel_store_save(s, second), "a later policy replaces it");
+    /* over the 8 KiB budget: refused, the record kept as it was */
+    cJSON *big = cJSON_CreateObject();
+    char *filler = em_malloc(8200);
+    memset(filler, 'x', 8199);
+    filler[8199] = 0;
+    cJSON_AddStringToObject(big, "filler", filler);
+    free(filler);
+    CHECK(!em_channel_store_save(s, big), "a record over its budget refused");
+    cJSON_Delete(big);
+    em_channel_store_close(s);
+    s = em_channel_store_open(path);
+    back = s ? em_channel_store_read(s) : NULL;
+    CHECK(back && cJSON_Compare(back, second, true), "the later policy, after reopening");
+    cJSON_Delete(back);
+    em_channel_store_close(s);
+    /* a record that is not JSON reads as none; a store that cannot be made is NULL */
+    sqlite3 *db = NULL;
+    if (sqlite3_open(path, &db) == SQLITE_OK)
+        sqlite3_exec(db, "UPDATE channel_policy SET value='{' WHERE id=1", NULL, NULL, NULL);
+    sqlite3_close(db);
+    s = em_channel_store_open(path);
+    back = s ? em_channel_store_read(s) : NULL;
+    CHECK(s && !back, "an unparsable record: none");
+    cJSON_Delete(back);
+    em_channel_store_close(s);
+    snprintf(path, sizeof(path), "%s/missing/channel-policy.sqlite", scratch);
+    CHECK(em_channel_store_open(path) == NULL, "an unusable path: NULL");
+    em_channel_store_close(NULL);
+    cJSON_Delete(first);
+    cJSON_Delete(second);
+}
+
+static void ethernet(void)
+{
+    /* what is refused before any packet socket (the box opens real ones) */
+    const uint8_t local[6] = {0x02, 0x72, 0xf9, 0x7f, 0x07, 0x85}, group[6] = {0x01, 0x80, 0xc2, 0x00, 0x00, 0x13};
+    em_ethernet e;
+    CHECK(em_ethernet_open(&e, "no-such-if0", local) == EM_INVALID_INPUT && e.fd == -1, "no such interface");
+    CHECK(em_ethernet_open(&e, "lo", group) == EM_INVALID_INPUT, "a multicast local address");
+    em_reason r = em_ethernet_open(&e, "lo", local);
+    CHECK(r == EM_NOT_READY || r == EM_INVALID_INPUT, "lo: no packet socket unprivileged, not Ethernet with it: %d", r);
+    em_ethernet_close(&e);
+    CHECK(e.fd == -1, "closed");
+    uint8_t frame[64] = {0};
+    memcpy(frame, group, 6);
+    memcpy(frame + 6, local, 6);
+    frame[12] = 0x89;
+    frame[13] = 0x3a;
+    CHECK(em_ethernet_send(&e, frame, 21) == EM_INVALID_INPUT, "shorter than a CMDU header");
+    frame[14] = 1;
+    CHECK(em_ethernet_send(&e, frame, sizeof(frame)) == EM_INVALID_INPUT, "a message version other than 0");
+    frame[14] = 0;
+    frame[11] ^= 1;
+    CHECK(em_ethernet_send(&e, frame, sizeof(frame)) == EM_INVALID_INPUT, "another source address");
+}
+
 static void telemetry_limits(void)
 {
     /* the reference refuses a topic over 128 and a broker over 253 characters; a value
@@ -515,6 +639,9 @@ int main(int argc, char **argv)
     schema(argv[1]);
     files(argv[2]);
     telemetry_limits();
+    framing();
+    channel_store(argv[2]);
+    ethernet();
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;
 }

@@ -13,7 +13,10 @@ fleet sessions leave. gtp: each command of the GTP sessions, its first ip output
 file and the event (fuzz/gtp.c's three parts). control: each case's requests of the
 control, metrics and backhaul steering vectors, in order, as one input. mqtt: a CONNACK, a
 SUBACK and each recorded statistics payload published on the pod's topic, at QoS 0 and 1,
-from each phase. Files are named by their SHA-1, as libFuzzer names its own; rerunning
+from each phase. ovsdb: each recorded set of OVSDB tables as one monitor update (monitor 0)
+after an echo request, in chunks of 1 and of 4081 bytes. config: the adapter kit's example
+fleet and GTP configurations and an agent configuration (with and without telemetry).
+Files are named by their SHA-1, as libFuzzer names its own; rerunning
 replaces the corpora.
 """
 
@@ -83,7 +86,19 @@ def remaining(n):
 
 def main():
     seeds = {
-        name: set() for name in ("cmdu", "stats", "rows", "wsc", "fleet", "gtp", "control", "mqtt")
+        name: set()
+        for name in (
+            "cmdu",
+            "stats",
+            "rows",
+            "wsc",
+            "fleet",
+            "gtp",
+            "control",
+            "mqtt",
+            "ovsdb",
+            "config",
+        )
     }
     for case in load("cmdu.json")["decode"]:
         frames = [bytes.fromhex(f) for f in case["frames"]]
@@ -136,6 +151,32 @@ def main():
             outputs = [call[2] for call in step["calls"] if call[2]] or [""]
             event = " ".join(step["command"][1:4]) if step["command"][0] == "lease" else ""
             seeds["gtp"].add(b"\0".join(s.encode() for s in (outputs[0], session["leases"], event)))
+    echo = json.dumps({"method": "echo", "params": [], "id": "echo"}).encode()
+    for name in ("translation-northbound.json", "uplink.json"):
+        for text in tables_in(load(name)):  # the tables as JSON text
+            tables = json.loads(text)
+            rows = {t: {u: {"new": r} for u, r in table.items()} for t, table in tables.items()}
+            update = json.dumps({"method": "update", "params": [0, rows], "id": None}).encode()
+            for size_byte in (0, 255):  # chunks of 1 and of 4081 bytes
+                seeds["ovsdb"].add(bytes([size_byte]) + echo + update)
+    kit = ROOT / "deploy" / "adapter" / "files"
+    seeds["config"].add((kit / "fleet.example.json").read_bytes())
+    seeds["config"].add((kit / "gtp.example.json").read_bytes())
+    agent = {
+        "pod_id": "MVXPOD023F87E628DD",
+        "serial": "MVXPOD023F87E628DD",
+        "interface": "em1",
+        "al_mac": "02:72:f9:7f:07:85",
+        "controller_al": "02:00:00:e0:00:01",
+        "ovsdb": "ptcp:6651:127.0.0.1",
+        "state_dir": "/var/lib/emosa/MVXPOD023F87E628DD",
+        "message_set": "r1",
+        "multi_bss": True,
+        "m2_session": "shared",
+    }
+    seeds["config"].add(json.dumps(agent).encode())
+    telemetry = {"mode": "mqtt", "broker": "10.101.0.40", "port": 8883, "reporting_interval": 5}
+    seeds["config"].add(json.dumps({**agent, "telemetry": telemetry}).encode())
     for target, inputs in seeds.items():
         directory = CORPUS / target
         shutil.rmtree(directory, ignore_errors=True)
