@@ -5,8 +5,9 @@
 # plan 5.4). The broker and the GTP stay where vm/lab.sh put them.
 #
 #   gateway.sh on [EMOSA_IPK]     the fleet and agents into the controller container: the
-#                                 package emosa (from EMOSA_IPK, built with the image's
-#                                 recipe, unless the image has it), the adapter container's
+#                                 package emosa (EMOSA_IPK, built with the image's recipe,
+#                                 over what the gateway has; without it, the package the
+#                                 image or an earlier run put there), the adapter container's
 #                                 registry, agent configurations and state taken over, the
 #                                 front and agent ports forwarded to the gateway, the agents'
 #                                 broker reached through the host; the agents' trunk is the
@@ -78,13 +79,13 @@ forward() {    # forward CT: the front and agent ports into CT (from the other c
     proxy "$1" agents "${AGENTS[0]}-${AGENTS[1]}"
 }
 
-install_package() {    # install_package [IPK]: the package emosa in the gateway
+install_package() {    # install_package [IPK]: the package emosa in the gateway, IPK over what is there
     local ipk=${1:-} d
-    if cx "$CTL" test -x /usr/bin/emosa-fleet-c; then
-        [ -z "$ipk" ] || log "gateway: the package is in the image, $ipk not installed"
+    if [ -z "$ipk" ]; then
+        cx "$CTL" test -x /usr/bin/emosa-fleet-c || die "the gateway has no EMOSA: give the package (emosa_*.ipk)"
         return 0
     fi
-    [ -n "$ipk" ] && [ -f "$ipk" ] || die "the gateway has no EMOSA: give the package (emosa_*.ipk)"
+    [ -f "$ipk" ] || die "$ipk: no such package"
     d=$(mktemp -d)
     (cd "$d" && ar x "$ipk" && mkdir root && tar -xf data.tar.* -C root)
     tar -C "$d/root" -cf - . | lxc exec "$CTL" -- tar -xf - -C /
