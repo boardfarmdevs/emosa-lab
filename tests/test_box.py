@@ -292,7 +292,7 @@ def test_pods_the_fleet_must_not_take_are_left_unchanged(agent, tmp_path):
         adapter(agent, "emosa-fleet-c")
     result = box("fleet-refusals", agent, tmp_path / "box")
     assert result["passed"], result
-    assert result["units"] == [] and result["configs"] == []
+    assert result["units"] == [] and f"{result['serial']}.json" not in result["configs"]
 
 
 def test_either_fleet_takes_over_from_the_other(agent, tmp_path):

@@ -383,7 +383,8 @@ OTHER_POD = "MVXPOD0000000000AA"
 async def fleet_refusals(box):
     """Pods the fleet leaves unchanged (spec §4, steps 1 and 2): one not admitted, one with
     an unusable serial, one for which no port is free. manager_addr is not written, no
-    agent configured or started."""
+    agent configured or started for it. The registry's own pod, which holds the port, gets
+    its agent when the fleet starts (spec §4)."""
     not_admitted = not box.handed
     await box.transact(
         [
@@ -426,9 +427,11 @@ async def fleet_refusals(box):
     full = not await box.hand_over(6)
     listed = box.registry()
     configs = sorted(p.name for p in box.config_dir.glob("*.json"))
-    actions = box.systemctl()
+    actions = unit_actions(box.systemctl(), box.serial)
+    registered = unit_actions(box.systemctl(), OTHER_POD)
     passed = not_admitted and unusable and full and list(listed) == [OTHER_POD]
-    passed = passed and not configs and not actions
+    passed = passed and configs == [f"{OTHER_POD}.json"] and not actions
+    passed = passed and registered == ["enable", "start"]
     return box.result(
         passed=passed,
         not_admitted=not_admitted,
@@ -437,6 +440,7 @@ async def fleet_refusals(box):
         registry=sorted(listed),
         configs=configs,
         units=actions,
+        registered_units=registered,
     )
 
 
