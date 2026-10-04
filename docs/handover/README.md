@@ -43,6 +43,11 @@ EMOSA is licensed under the Apache License 2.0 ([LICENSE](../../LICENSE)).
 - TLS on the fleet's front port and the agent ports, with operator-issued certificates
   the unchanged pods trust (plan 5.3, decided 4 Oct: the operator redirects each pod once
   to the gateway's front port); the labs use TCP (spec §9).
+- The rest of EMOSA in the gateway (plan 9.6): the gateway image now runs EMOSA with its
+  configuration and state on `/nvram` ([the rdk-lab record](../records/evidence/rdk-lab/README.md));
+  still open are the GTP in the gateway (OneWifi's pod-backhaul SSID on an isolated
+  segment), a broker for the pods' statistics, EMOSA's configuration through RDK's data
+  model, and the fleet starting its registry's agents itself after an image upgrade.
 - What the specification leaves out (spec §9) and the design's known limitations
   (design §14): among them backhaul link metrics, complete EasyMesh AP and station
   metrics from a hwsim pod, 5/6 GHz and WPA3.

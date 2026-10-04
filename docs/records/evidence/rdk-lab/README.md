@@ -797,3 +797,38 @@ d5e577a, each wrote it every 5 s (the WAL last written 4 s before a sample; abou
 minute). The gateway image built with this package (rev140,
 `controller-emosa-20261004T154344Z`) has the same packages as the previous EMOSA image.
 
+
+### EMOSA from the gateway image, its state on /nvram (4 October)
+
+The step after `gateway.sh` copying a package into the default image: the gateway image
+built with EMOSA (meta-cmf-bananapi-vcpe 827eb0f, `EMOSA_ADAPTER = "1"`, emosa-lab 62740b9;
+`X86EMLTRBPIBB_rdk-next_20261004180643`, rev140) deployed as `rdk-emosa-1002`'s gateway with
+the lab's own `gen/lab-redeploy.sh`, and EMOSA run from it. The package keeps EMOSA's
+configuration and state where a gateway keeps what an image upgrade must not lose, `/nvram`
+(`/nvram/emosa/fleet-config.json`, `agents/`, `state/`), and the agents' status, rewritten
+once a second, in RAM (`/run/emosa`, linked from the state directories; spec §6).
+
+- **Switched on from the image:** `gateway.sh on` (no package given) took the registry and
+  both pods' state from the adapter container into `/nvram/emosa` and wrote the fleet
+  configuration there; both pods were handed to the gateway's fleet and provisioning. In a
+  minute of steady state EMOSA wrote nothing to `/nvram`, only the two status files in
+  `/run`.
+- **An image upgrade kept it:** `gen/lab-redeploy.sh` with a newer build of the same image
+  replaced the gateway container. `/nvram/emosa` came through whole, and the new gateway
+  started EMOSA's fleet by itself from it at boot. Once `gateway.sh on` had put back the
+  lab's port forwarding (a redeployed container has none), both pods were provisioning
+  again within 39 s, with the same AL MACs, ports and interfaces, each handed over once
+  more, their journals intact (16 operations each).
+- **Found and fixed:** the agents' link helper read `/etc/emosa/POD.json` whatever the
+  package's places, so with the configuration on `/nvram` the agents never started (emosa-lab
+  62740b9: it reads `EMOSA_AGENT_CONFIG_DIR`).
+- **Seen:** after an upgrade the agents start only when their pods come back through the
+  front port (their units were enabled in the old root file system); the fleet could start
+  its registry's agents itself. And `gen/lab-redeploy.sh` left the room service unable to
+  start: its recovery journal lists the pool clients an earlier interactive session paused,
+  and after the redeploy the lab's inventory no longer matches it, so the room service fails
+  closed (`recovery inventory does not match this lab`) as its guard requires. The journal
+  is kept for a decision; no room ran on the new gateway.
+
+EMOSA stays in the gateway (`gateway.sh status`); `gateway.sh off` moves it back into the
+adapter container, where the lab's other EMOSA tools (`lab.sh`) expect it.
