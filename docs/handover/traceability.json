@@ -7,7 +7,7 @@
     },
     "README 2.1 Transport": {
       "vectors": ["cmdu.json"],
-      "box": ["boot"],
+      "box": ["boot", "agent-netns"],
       "python": ["test_ieee1905.py"],
       "units": ["ethernet"],
       "fuzz": ["cmdu"]

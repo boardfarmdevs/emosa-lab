@@ -304,3 +304,19 @@ def test_the_endpoint_drops_frames_that_are_not_for_the_agent():
     endpoint.local_mac = local
     endpoint.socket = Socket([runt, broadcast, good + bytes(1600), good])
     assert [endpoint.receive() for _ in range(4)] == [None, None, None, good]
+
+
+def test_the_endpoint_opens_in_the_named_namespace_or_refuses():
+    # EMOSA_NETNS: on a gateway the agents' interfaces live in a namespace of their own (RDK's
+    # controller took an agent whose AL MAC was one of its own interfaces' for its co-located
+    # agent); one that does not exist is refused, and the thread stays in its own namespace
+    import os
+
+    from emosa.wire.ethernet import EthernetEndpoint
+
+    local = bytes.fromhex("0272f97f0785")
+    before = os.readlink("/proc/thread-self/ns/net")
+    for netns in ("emosa-no-such-namespace", "/proc/0/ns/net"):
+        with pytest.raises(EmosaError, match="network namespace"):
+            EthernetEndpoint("lo", local, netns=netns)
+    assert os.readlink("/proc/thread-self/ns/net") == before

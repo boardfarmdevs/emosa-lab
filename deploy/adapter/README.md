@@ -48,7 +48,10 @@ keeps it.
 1. In `/etc/default/emosa`, set `EMOSA_TRUNK` to the trunk interface. On the
    controller's own host, where its LAN is a bridge, set `EMOSA_BRIDGE` to that bridge
    instead: the agents' link helper makes the trunk a veth pair into it (a macvlan on the
-   bridge device itself never reaches the controller).
+   bridge device itself never reaches the controller). There, also set `EMOSA_NETNS`
+   (`emosa`): the agents' interfaces then live in that network namespace, since a
+   controller that finds an agent's AL MAC on one of its host's interfaces may take it
+   for its co-located agent (spec 2.1).
 2. Edit `/etc/emosa-fleet.json` (schema: `schemas/fleet-config.schema.json`):
    - `advertise`: the address pods use to reach this host;
    - `controller_al`, `message_set`, `multi_bss` and `m2_session`: from the

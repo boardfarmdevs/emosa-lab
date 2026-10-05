@@ -572,7 +572,10 @@ async def serve(config, stop):
 
     try:
         # A frame returns at once; the timeout only paces idle wakeups (timers are >= 1 s).
-        with EthernetEndpoint(config["interface"], agent, timeout=0.2) as endpoint:
+        # EMOSA_NETNS (/etc/default/emosa): the agents' interfaces in a namespace of their own
+        with EthernetEndpoint(
+            config["interface"], agent, timeout=0.2, netns=os.environ.get("EMOSA_NETNS")
+        ) as endpoint:
 
             def factory():
                 # Called by the recovery loop only while the source is current.

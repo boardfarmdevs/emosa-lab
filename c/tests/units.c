@@ -612,6 +612,16 @@ static void ethernet(void)
     CHECK(r == EM_NOT_READY || r == EM_INVALID_INPUT, "lo: no packet socket unprivileged, not Ethernet with it: %d", r);
     em_ethernet_close(&e);
     CHECK(e.fd == -1, "closed");
+    /* in a namespace of its own: none or empty is this one; a missing one is not ready; a
+     * name that makes no path is refused (the box opens one for real) */
+    CHECK(em_ethernet_open_in(&e, NULL, "no-such-if0", local) == EM_INVALID_INPUT, "no namespace: as open");
+    CHECK(em_ethernet_open_in(&e, "", "no-such-if0", local) == EM_INVALID_INPUT, "an empty namespace: as open");
+    CHECK(em_ethernet_open_in(&e, "emosa-no-such-namespace", "lo", local) == EM_NOT_READY && e.fd == -1,
+          "a namespace that does not exist");
+    char longname[300];
+    memset(longname, 'n', sizeof(longname) - 1);
+    longname[sizeof(longname) - 1] = 0;
+    CHECK(em_ethernet_open_in(&e, longname, "lo", local) == EM_INVALID_INPUT, "a namespace name too long for a path");
     uint8_t frame[64] = {0};
     memcpy(frame, group, 6);
     memcpy(frame + 6, local, 6);

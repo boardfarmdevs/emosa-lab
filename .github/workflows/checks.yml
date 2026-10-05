@@ -443,11 +443,12 @@ jobs:
           cmake -S c -B c/build-gateway -DEMOSA_INSTALL_DATA=ON -DCMAKE_INSTALL_PREFIX=/usr \
             -DCMAKE_INSTALL_SYSCONFDIR=/etc -DEMOSA_FLEET_CONFIG=/nvram/emosa/fleet-config.json \
             -DEMOSA_AGENT_CONFIG_DIR=/nvram/emosa/agents -DEMOSA_GTP_CONFIG=/nvram/emosa/gtp-config.json \
-            -DEMOSA_STATE_ROOT=/nvram/emosa/state -DEMOSA_RUN_ROOT=/run/emosa
+            -DEMOSA_STATE_ROOT=/nvram/emosa/state -DEMOSA_RUN_ROOT=/run/emosa -DEMOSA_NETNS=emosa
           grep -qx "ExecStart=/usr/bin/emosa-fleet-c serve /nvram/emosa/fleet-config.json" c/build-gateway/units/emosa-fleet.service
           grep -qx "ConditionPathExists=/nvram/emosa/agents/%i.json" c/build-gateway/units/emosa-agent@.service
           grep -qx "ConditionPathExists=/nvram/emosa/gtp-config.json" c/build-gateway/units/emosa-gtp.service
           grep -qx "EMOSA_RUN_ROOT=/run/emosa" c/build-gateway/default-emosa
+          grep -qx "EMOSA_NETNS=emosa" c/build-gateway/default-emosa
   c-analyzer:
     runs-on: ubuntu-24.04
     steps:

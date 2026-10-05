@@ -42,6 +42,11 @@ It has three parts:
 - Every agent MUST use its own L2 interface on the controller's LAN. Its source
   MAC and 1905 AL MAC are the agent's AL MAC. The reference implementation uses
   one macvlan per agent on a shared trunk.
+- On a device that also runs the EasyMesh controller, the agents' interfaces MUST
+  NOT be interfaces of the controller's network namespace: a controller may take
+  an agent whose AL MAC is the MAC of one of its own interfaces for its co-located
+  agent (RDK's does, and roots its backhaul topology there). The reference
+  implementations open their sockets in the namespace `EMOSA_NETNS` names.
 - Frames use EtherType `0x893A`. Multicast goes to `01:80:c2:00:00:13`.
 - CMDUs are at most 1500 bytes per fragment, carry at most 256 TLVs, and hold
   TLV values up to `0x3FFF` bytes. Fragmented CMDUs MUST be reassembled.

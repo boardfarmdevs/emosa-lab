@@ -10,11 +10,20 @@
 # TRUNK-br) is a port of that bridge, created when missing. A macvlan on the bridge device
 # itself would not do: what it sends leaves through the bridge's ports and never reaches
 # the controller on the bridge, nor do the controller's answers reach it.
+#
+# With EMOSA_NETNS as well, the trunk's end and the agents' interfaces live in that network
+# namespace (created when missing), the bridge port stays: the gateway's EasyMesh controller
+# takes an agent whose AL MAC is the MAC of one of its own interfaces for its co-located
+# agent (RDK's em_ctrl, rdk-1004, 5 October 2026). The agents open their sockets there.
 # SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 trunk=${EMOSA_TRUNK:-emlan}
 bridge=${EMOSA_BRIDGE:-}
 port=${EMOSA_BRIDGE_PORT:-$trunk-br}
+ns=${EMOSA_NETNS:-}
+inns() {    # inns IP-ARGS...: ip in the agents' namespace (this one without EMOSA_NETNS)
+    if [ -n "$ns" ]; then ip -n "$ns" "$@"; else ip "$@"; fi
+}
 config=${EMOSA_AGENT_CONFIG_DIR:-/etc/emosa}/$1.json
 value() {    # value KEY: a top-level string member of the configuration (its keys are unique)
     tr -d '\n' < "$config" | grep -o "\"$1\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | head -1 | sed 's/.*"\([^"]*\)"$/\1/'
@@ -23,18 +32,31 @@ ifname=$(value interface)
 al=$(value al_mac)
 [[ $ifname =~ ^[A-Za-z0-9._-]{1,15}$ ]] || { echo "$config: no usable interface" >&2; exit 1; }
 [[ $al =~ ^[0-9a-f]{2}(:[0-9a-f]{2}){5}$ ]] || { echo "$config: no usable al_mac" >&2; exit 1; }
-if [ -n "$bridge" ] && ! ip link show "$trunk" >/dev/null 2>&1; then
+if [ -n "$ns" ]; then
+    [ -n "$bridge" ] || { echo "EMOSA_NETNS needs EMOSA_BRIDGE (the trunk a veth pair into it)" >&2; exit 1; }
+    [[ $ns =~ ^[A-Za-z0-9._-]{1,64}$ ]] || { echo "unusable namespace name $ns (EMOSA_NETNS)" >&2; exit 1; }
+    # another agent starting at the same time may create it first
+    [ -e "/run/netns/$ns" ] || ip netns add "$ns" 2>/dev/null || [ -e "/run/netns/$ns" ]
+    inns link set lo up
+    # a trunk left in this namespace (before EMOSA_NETNS): gone, with the agents' interfaces
+    # on it; each agent's start makes its own again in the namespace
+    if ip link show "$trunk" >/dev/null 2>&1; then ip link del "$trunk"; fi
+fi
+if [ -n "$bridge" ] && ! inns link show "$trunk" >/dev/null 2>&1; then
     for name in "$trunk" "$bridge" "$port"; do
         [[ $name =~ ^[A-Za-z0-9._-]{1,15}$ ]] || { echo "unusable interface name $name" >&2; exit 1; }
     done
     ip link show "$bridge" >/dev/null 2>&1 || { echo "bridge $bridge not found (EMOSA_BRIDGE)" >&2; exit 1; }
     # another agent starting at the same time may create it first
-    ip link add "$trunk" type veth peer name "$port" 2>/dev/null || ip link show "$trunk" >/dev/null 2>&1
+    if ip link add "$trunk" type veth peer name "$port" 2>/dev/null; then
+        [ -z "$ns" ] || ip link set "$trunk" netns "$ns"
+    fi
+    inns link show "$trunk" >/dev/null 2>&1 || sleep 1
     ip link set "$port" master "$bridge"
     ip link set "$port" up
 fi
-ip link show "$trunk" >/dev/null 2>&1 || { echo "trunk interface $trunk not found (EMOSA_TRUNK)" >&2; exit 1; }
-ip link show "$ifname" >/dev/null 2>&1 || ip link add "$ifname" link "$trunk" type macvlan mode bridge
-ip link set "$ifname" address "$al"
-ip link set "$trunk" up
-ip link set "$ifname" up
+inns link show "$trunk" >/dev/null 2>&1 || { echo "trunk interface $trunk not found (EMOSA_TRUNK)" >&2; exit 1; }
+inns link show "$ifname" >/dev/null 2>&1 || inns link add "$ifname" link "$trunk" type macvlan mode bridge
+inns link set "$ifname" address "$al"
+inns link set "$trunk" up
+inns link set "$ifname" up

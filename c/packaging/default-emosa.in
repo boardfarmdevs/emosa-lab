@@ -7,6 +7,11 @@
 EMOSA_TRUNK=emlan
 EMOSA_BRIDGE=brlan0
 #EMOSA_BRIDGE_PORT=emlan-br
+# The agents' interfaces in a network namespace of their own (created by the link helper,
+# the bridge port staying in the gateway's): a gateway whose EasyMesh controller runs here
+# must not see the agents' AL MACs on its own interfaces, or it takes an agent for its
+# co-located one (RDK's em_ctrl). Empty: the agents' interfaces in this namespace.
+EMOSA_NETNS=@EMOSA_NETNS@
 # Where the programs read their data, when not the build's places:
 #EMOSA_SCHEMAS=/usr/share/emosa/schemas
 #EMOSA_PROFILES=/usr/share/emosa/profiles

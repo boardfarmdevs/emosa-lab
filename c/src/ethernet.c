@@ -1,9 +1,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /* The agent's 1905 packet endpoint. Mirrors emosa.wire.ethernet. */
+#define _GNU_SOURCE /* NOLINT(cert-dcl37-c,cert-dcl51-cpp): QUALITY.md §5 (setns) */
 #include "ethernet.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <sched.h>
+#include <stdio.h>
 #include <linux/if_packet.h>
 #include <net/ethernet.h>
 #include <net/if.h>
@@ -41,6 +45,38 @@ em_reason em_ethernet_open(em_ethernet *e, const char *interface, const uint8_t 
     }
     e->fd = fd;
     return EM_OK;
+}
+
+em_reason em_ethernet_open_in(em_ethernet *e, const char *netns, const char *interface, const uint8_t local[6])
+{
+    e->fd = -1;
+    if (!netns || !*netns)
+        return em_ethernet_open(e, interface, local);
+    char path[256];
+    int n = strchr(netns, '/') ? snprintf(path, sizeof(path), "%s", netns)
+                               : snprintf(path, sizeof(path), "/run/netns/%s", netns);
+    if (n < 0 || (size_t)n >= sizeof(path))
+        return EM_INVALID_INPUT;
+    int self = open("/proc/self/ns/net", O_RDONLY | O_CLOEXEC);
+    int there = open(path, O_RDONLY | O_CLOEXEC);
+    if (self < 0 || there < 0 || setns(there, CLONE_NEWNET)) {
+        if (self >= 0)
+            close(self);
+        if (there >= 0)
+            close(there);
+        return EM_NOT_READY;
+    }
+    em_reason r = em_ethernet_open(e, interface, local);
+    /* back to the agent's own namespace (its pod connection, its broker): the socket stays
+     * in the one it was opened in */
+    bool back = setns(self, CLONE_NEWNET) == 0;
+    close(self);
+    close(there);
+    if (!back) {
+        em_ethernet_close(e);
+        return EM_NOT_READY;
+    }
+    return r;
 }
 
 void em_ethernet_close(em_ethernet *e)

@@ -122,6 +122,7 @@ set(EMOSA_AGENT_CONFIG_DIR "/etc/emosa" CACHE PATH "the agents' configurations (
 set(EMOSA_GTP_CONFIG "/etc/emosa-gtp.json" CACHE FILEPATH "the GTP's configuration")
 set(EMOSA_STATE_ROOT "/var/lib/emosa" CACHE PATH "the state root a fleet configuration names here")
 set(EMOSA_RUN_ROOT "" CACHE PATH "the run root (a RAM disk) a fleet configuration names here, or none")
+set(EMOSA_NETNS "" CACHE STRING "the agents' network namespace on a gateway whose EasyMesh controller is local, or none")
 if(EMOSA_INSTALL_DATA)
     set(EMOSA_BINDIR ${CMAKE_INSTALL_FULL_BINDIR})
     set(EMOSA_HELPERDIR ${CMAKE_INSTALL_FULL_LIBEXECDIR}/emosa)

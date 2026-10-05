@@ -133,7 +133,7 @@ on() {
     fi
     exists emosa && cx emosa test -f "$(emosa_layout emosa | cut -d" " -f1)" || die "the EMOSA option first: lab.sh up c"
     install_package "${1:-}"
-    log "gateway: $(cx "$CTL" /usr/bin/emosa-agent-c --version); $(cx "$CTL" sh -c '. /etc/default/emosa; echo "trunk $EMOSA_TRUNK into ${EMOSA_BRIDGE:-(none)}"'); places $(emosa_layout "$CTL")"
+    log "gateway: $(cx "$CTL" /usr/bin/emosa-agent-c --version); $(cx "$CTL" sh -c '. /etc/default/emosa; echo "trunk $EMOSA_TRUNK into ${EMOSA_BRIDGE:-(none)}, agents in namespace ${EMOSA_NETNS:-(the gateway'"'"'s)}"'); places $(emosa_layout "$CTL")"
     stop_emosa emosa
     move_state emosa "$CTL"
     plumbing
@@ -148,12 +148,14 @@ off() {
     in_gateway || die "EMOSA does not run in $CTL"
     stop_emosa "$CTL"
     move_state "$CTL" emosa
-    # the gateway as it was: no configuration (the package inert), no trunk
+    # the gateway as it was: no configuration (the package inert), no trunk, no agents'
+    # namespace (the trunk's end and the agents' interfaces go with it)
     local config agents root run
     read -r config agents root run <<<"$(emosa_layout "$CTL")"
     [ "$run" != - ] || run=
     cx "$CTL" sh -c "rm -rf '$config' '$agents' '$root' ${run:+'$run'}
-        . /etc/default/emosa 2>/dev/null; [ -z \"\${EMOSA_BRIDGE:-}\" ] || ip link del \"\${EMOSA_TRUNK:-emlan}\" 2>/dev/null || true"
+        . /etc/default/emosa 2>/dev/null; [ -z \"\${EMOSA_BRIDGE:-}\" ] || ip link del \"\${EMOSA_TRUNK:-emlan}\" 2>/dev/null || true
+        [ -z \"\${EMOSA_NETNS:-}\" ] || ip netns del \"\$EMOSA_NETNS\" 2>/dev/null || true"
     forward emosa
     ! has_device "$CTL" mqtt-agents || lxc config device remove "$CTL" mqtt-agents >/dev/null
     ! has_device emosa mqtt-agents || lxc config device remove emosa mqtt-agents >/dev/null

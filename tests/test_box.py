@@ -139,6 +139,12 @@ def test_a_controller_that_forgot_the_agent_has_it_onboard_again(agent, tmp_path
     assert result["stayed_while_queried"], result
 
 
+def test_an_agent_with_its_interface_in_a_namespace_of_its_own_onboards(agent, tmp_path):
+    result = box("agent-netns", agent, tmp_path / "box")
+    assert result["passed"], result
+    assert not result["al_mac_in_own_namespace"], result
+
+
 def test_a_pod_serving_none_of_the_controllers_bsses_asks_again_after_60_s(agent, tmp_path):
     result = box("unserved-pod", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result

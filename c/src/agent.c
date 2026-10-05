@@ -1638,7 +1638,8 @@ int main(int argc, char **argv)
             return 1;
         }
     }
-    if (em_ethernet_open(&a.eth, a.interface, a.al) != EM_OK) {
+    /* EMOSA_NETNS (/etc/default/emosa): the agents' interfaces in a namespace of their own */
+    if (em_ethernet_open_in(&a.eth, getenv("EMOSA_NETNS"), a.interface, a.al) != EM_OK) {
         FAIL("cannot open the 1905 interface %s with MAC %s", a.interface, cfg_str(a.config, "al_mac"));
         return 1;
     }

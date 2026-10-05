@@ -232,9 +232,13 @@ class Box:
         multi_bss=False,
         uplink=None,
         topology_query_window=None,
+        netns=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         self.topology_query_window = topology_query_window
+        # netns: the agent's interface in a namespace of its own (EMOSA_NETNS), as on a
+        # gateway whose EasyMesh controller is local
+        self.netns, self.holder, self.netns_path = netns, None, None
         self.telemetry, self.foreign_broker, self.backhaul = telemetry, foreign_broker, backhaul
         # multi_bss: the controller answers each M1 with an M2 set, a fronthaul and a backhaul
         # BSS (the registrar's backhaul mode); uplink: the agent's uplink setting instead of
@@ -302,6 +306,22 @@ class Box:
         config = agent_config(entry, fleet)
         # the agent's interface carries its AL MAC, as the labs' macvlan per agent does
         subprocess.run(["ip", "link", "set", self.interface, "address", self.al_mac], check=True)
+        if self.netns:
+            self.holder = subprocess.Popen(["unshare", "--net", "sleep", "infinity"])
+            own = os.readlink("/proc/self/ns/net")
+            self.netns_path = f"/proc/{self.holder.pid}/ns/net"
+            for _ in range(50):
+                if os.path.exists(self.netns_path) and os.readlink(self.netns_path) != own:
+                    break
+                await asyncio.sleep(0.1)
+            subprocess.run(
+                ["ip", "link", "set", self.interface, "netns", str(self.holder.pid)], check=True
+            )
+            for command in (
+                ["ip", "link", "set", "lo", "up"],
+                ["ip", "link", "set", self.interface, "up"],
+            ):
+                subprocess.run(["nsenter", f"--net={self.netns_path}", *command], check=True)
         state_root.mkdir(mode=0o700, exist_ok=True)  # the fleet's state_root
         self.status_path = state_root / self.serial / "status.json"
         self.controller = Controller(CONTROLLER_INTERFACE, self.al_mac)
@@ -309,6 +329,7 @@ class Box:
             **os.environ,
             "EMOSA_SCHEMAS": str(ROOT / "schemas"),
             "EMOSA_PROFILES": str(ROOT / "src/emosa/profiles"),
+            **({"EMOSA_NETNS": self.netns_path} if self.netns else {}),
         }
         await self.start(config, fleet)
         return self
@@ -347,6 +368,9 @@ class Box:
         if self.broker and self.broker.poll() is None:
             self.broker.terminate()
             self.broker.wait(5)
+        if self.holder and self.holder.poll() is None:
+            self.holder.terminate()  # its namespace, and the agent's end of the veth, go with it
+            self.holder.wait(5)
 
     def status(self):
         try:
@@ -871,6 +895,20 @@ async def forgotten_agent(box):
         stayed_while_queried=stayed,
         search_after_last_topology_query_s=round(waited, 1) if waited else None,
         provisioning_again=provisioned,
+    )
+
+
+async def agent_netns(box):
+    """EMOSA_NETNS: the agent's interface in a network namespace of its own, as on a gateway
+    whose EasyMesh controller runs alongside (RDK's took an agent whose AL MAC was the MAC of
+    one of its own interfaces for its co-located agent, 5 October 2026): no interface of the
+    agent's own namespace has the AL MAC, and the agent onboards through the other one."""
+    links = subprocess.run(["ip", "-o", "link"], capture_output=True, text=True).stdout
+    state = await onboarded(box)
+    return box.result(
+        passed=box.al_mac not in links and bool(state.get("applied")),
+        al_mac_in_own_namespace=box.al_mac in links,
+        onboarding=state,
     )
 
 
@@ -1668,6 +1706,7 @@ SCENARIOS = {
     "no-m2": no_m2,
     "silent-controller": silent_controller,
     "forgotten-agent": forgotten_agent,
+    "agent-netns": agent_netns,
     "unserved-pod": unserved_pod,
     "new-source": new_source,
     "clients": clients,
@@ -1690,6 +1729,7 @@ SCENARIOS = {
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "forgotten-agent": {"topology_query_window": 20},
+    "agent-netns": {"netns": True},
     "telemetry": {"telemetry": True},
     "foreign-broker": {"telemetry": True, "foreign_broker": True},
     "metrics": {"telemetry": True},

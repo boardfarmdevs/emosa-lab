@@ -141,6 +141,17 @@ an image upgrade, and the status in RAM: meta-cmf-bananapi-vcpe's recipe builds 
 `/nvram/emosa/fleet-config.json`, `/nvram/emosa/agents`, `/nvram/emosa/gtp-config.json`,
 `/nvram/emosa/state` and `/run/emosa`.
 
+**The agents' network namespace** (CMake `EMOSA_NETNS`, written into `/etc/default/emosa`;
+empty by default). Each agent's 1905 interface carries the agent's AL MAC. On a gateway whose
+EasyMesh controller runs alongside, that controller must not find those MACs on its own
+interfaces: RDK's em_ctrl takes an agent whose AL MAC is the MAC of a local interface for its
+co-located agent, and with EMOSA in the gateway it named a pod's agent so; its native
+backhaul steering then had the wrong root and measured no candidate (rdk-1004, 5 October
+2026). With `EMOSA_NETNS` the link helper puts the agents' trunk end and interfaces in that
+namespace (the bridge port stays in the gateway's), and each agent opens its socket there and
+returns to its own namespace for its pod connection and broker. meta-cmf-bananapi-vcpe's
+recipe builds with `emosa`.
+
 **Bill of materials** (`packaging/sbom.py`, SPDX 2.3, JSON): every file of this
 repository that goes into the programs or the package with its SHA-1 and SHA-256, the
 libraries they link (versions from pkg-config where it was built), and the programs the

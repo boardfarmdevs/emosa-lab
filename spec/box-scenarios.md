@@ -32,6 +32,7 @@ same behaviour end to end, with real timing, a real OVSDB server and a real WSC 
 | Scenario | What it shows | Relied on by |
 | --- | --- | --- |
 | `boot` | the agent takes the pod's connection, sends Topology Discovery and searches for its controller | every room with pods |
+| `agent-netns` | the agent's interface in a network namespace of its own (`EMOSA_NETNS`, a `/proc/PID/ns/net` path in the box): no interface of the agent's namespace has its AL MAC, and it onboards (spec 2.1) | finding 17 |
 | `onboard` | an EasyMesh 6.1 Response, the Early AP Capability Report, M1; a registrar's M2 written to the pod as one guarded change, counted applied only when the pod's State shows it | every room with pods |
 | `refuse` | a controller without the Controller Capability TLV: incompatible, no M1 | finding 1 (below) |
 | `early-report` | the Early AP Capability Report retried with a new MID each time, three at most, until its Ack | RDK's controller |
@@ -140,6 +141,7 @@ a `systemctl` of the box's (plain processes, as `emosa-agent@.service` runs them
 | 14 | `forget` run while the fleet served did not take: the serving fleet kept the registry in memory and wrote the forgotten entry back at the pod's next handover; fixed (spec 4: the registry file is the state, read for each pod) | the box, 3 October | `fleet-forget` |
 | 15 | after a controller restart the pods stayed unregistered: the controller forgot the agents but kept sending them its other queries (no Topology Query), so the silence rule never fired; fixed with `topology_query_window` (spec 2.5) | RDK lab, EMOSA in the gateway, 4 October | `forgotten-agent` |
 | 16 | a released pod's archived state kept its agent's status: the RDK lab's uplink check never passed after the C adapter released a hold (its last status said the switch timed out), and in a run directory the archive's link would show the next agent's status; fixed (spec 4: archived without the status), the lab's tools skip archives | RDK lab, the build option's first run, 4 October | `fleet-forget` |
+| 17 | RDK's native backhaul steering failed in the geometry rooms with EMOSA in the gateway: the agents' interfaces, each with its agent's AL MAC, were the gateway's own, so the controller took a pod's agent for its co-located agent and rooted the backhaul topology at it (no station rooted, no candidate queried); fixed with the agents' interfaces in a namespace of their own (spec 2.1, `EMOSA_NETNS`) | RDK lab rdk-1004, EMOSA in the gateway, 5 October | `agent-netns` |
 
 ## Not scenarios
 

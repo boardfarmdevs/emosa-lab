@@ -6,6 +6,7 @@ message policy and identity. Opening a socket does not authenticate a controller
 No bridge, VLAN, promiscuous mode, MAC, radio or interface configuration changes.
 """
 
+import os
 import socket
 import struct
 
@@ -14,7 +15,13 @@ from emosa.wire.cmdu import ETHERTYPE, MULTICAST, decode_frame, invalid, mac
 
 
 class EthernetEndpoint:
-    def __init__(self, interface, local_mac, *, timeout=1.0):
+    def __init__(self, interface, local_mac, *, timeout=1.0, netns=None):
+        """netns: the interface's network namespace (a name under /run/netns, or a path such
+        as /proc/PID/ns/net; none or empty: this one). The socket is opened there and the
+        thread returns to its own namespace: on a gateway whose EasyMesh controller is local,
+        the agents' interfaces, each with its agent's AL MAC, live in a namespace of their
+        own, since RDK's controller takes an agent whose AL MAC is the MAC of one of its own
+        interfaces for its co-located agent (rdk-1004, 5 October 2026)."""
         if not isinstance(interface, str) or not 1 <= len(interface.encode()) <= 15:
             invalid("invalid Ethernet interface name")
         mac(local_mac)
@@ -22,6 +29,33 @@ class EthernetEndpoint:
             invalid("invalid local unicast MAC or socket timeout")
         self.local_mac = local_mac
         self.socket = None
+        if netns:
+            path = netns if "/" in netns else f"/run/netns/{netns}"
+            try:
+                own = os.open("/proc/self/ns/net", os.O_RDONLY)
+                try:
+                    there = os.open(path, os.O_RDONLY)
+                    try:
+                        os.setns(there, os.CLONE_NEWNET)
+                        try:
+                            self._open(interface, local_mac, timeout)
+                        finally:
+                            # back to the agent's own namespace; the socket stays where it
+                            # was opened
+                            os.setns(own, os.CLONE_NEWNET)
+                    finally:
+                        os.close(there)
+                finally:
+                    os.close(own)
+            except OSError as exc:
+                self.close()
+                raise EmosaError(
+                    Reason.NOT_READY, f"network namespace {netns} unavailable"
+                ) from exc
+            return
+        self._open(interface, local_mac, timeout)
+
+    def _open(self, interface, local_mac, timeout):
         try:
             index = socket.if_nametoindex(interface)
             sock = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(ETHERTYPE))
