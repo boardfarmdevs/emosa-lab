@@ -125,7 +125,7 @@
     },
     "README 8.3 EasyMesh backhaul, optional": {
       "vectors": ["uplink.json", "backhaul-steering.json"],
-      "box": ["backhaul-capability", "backhaul-steering", "backhaul-steering-renewal", "backhaul-steering-own-bss", "backhaul-steering-refused", "multi-bss", "uplink-held", "uplink-foreign-change", "backhaul-steering-kept"],
+      "box": ["backhaul-capability", "backhaul-steering", "backhaul-steering-renewal", "backhaul-steering-own-bss", "backhaul-steering-refused", "multi-bss", "uplink-held", "uplink-foreign-change", "backhaul-steering-kept", "backhaul-kept-gone"],
       "python": ["test_uplink.py"],
       "fuzz": ["control", "rows"],
       "lab": ["rdk-lab"]

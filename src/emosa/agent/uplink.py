@@ -29,7 +29,9 @@ different scope from the fronthaul BSS, with its own lifecycle rules.
   its EasyMesh backhaul. The target is kept (``target.json``) for every later
   start, as long as the configured upstream is the one it replaced. A move that
   is not confirmed returns to the previous upstream instead of holding the pod:
-  the controller asked for it, and hears of the failure.
+  the controller asked for it, and hears of the failure. On a later start, a switch
+  to the kept target that fails (its BSS gone, out of reach) drops it and switches
+  to the configured upstream on the same start; only that switch holds.
 """
 
 import json
@@ -125,7 +127,8 @@ class UplinkSwitch:
                 transition(op, State.TIMED_OUT)
                 op.reason = Reason.APPLY_TIMEOUT
                 self._save(op, {"observation": self.backend.facts})
-                if not self._move_failed(op, "not confirmed within the deadline"):
+                reason = "not confirmed within the deadline"
+                if not self._move_failed(op, reason) and not self._kept_failed(op, reason):
                     self.hold(op, "switch not confirmed within the deadline")
         elif op.state == State.OBSERVED_APPLIED and snap and snap.ready and snap.observed.fresh:
             target = UplinkIntent(**op.intent).target(self.engine.vault)
@@ -138,7 +141,8 @@ class UplinkSwitch:
             # Only a rejection before anything was sent may be retried, on a later start.
             if self._move_failed(op, f"{op.state.lower()}: {op.reason}"):
                 return
-            if op.state != State.REJECTED or op.reason not in (Reason.NOT_READY, Reason.BUSY):
+            retryable = op.state == State.REJECTED and op.reason in (Reason.NOT_READY, Reason.BUSY)
+            if not retryable and not self._kept_failed(op, f"{op.state.lower()}: {op.reason}"):
                 self.hold(op, f"switch {op.state.lower()}: {op.reason}")
 
     def _keep_target(self):
@@ -162,6 +166,25 @@ class UplinkSwitch:
         move["result"] = reason
         self.bssid = move["previous"]
         self.moves += 1
+        self._keep_target()
+        return True
+
+    def _kept_failed(self, op, reason):
+        """A switch to the kept target failed on a later start: back to the configured
+        upstream on this start, no hold. False otherwise (a switch to the configured
+        upstream holds). Kept, the target held the pod on option 2 for good once its BSS
+        was gone, and a held pod takes no Backhaul Steering either (rdk-1004, 5 Oct 2026)."""
+        bssid = op.intent.get("bssid")
+        if bssid == self.configured or bssid != self.bssid:
+            return False
+        log.warning(
+            "kept backhaul target %s not reached (%s): back to the configured %s",
+            bssid,
+            reason,
+            self.configured,
+        )
+        self.bssid = self.configured
+        self.moves += 1  # a switch of its own on this start
         self._keep_target()
         return True
 

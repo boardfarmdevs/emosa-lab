@@ -199,6 +199,40 @@ async def backhaul_steering_kept(box):
     )
 
 
+GONE_PARENT = "02:00:00:00:19:03"  # a backhaul BSS of the controller's that is gone
+
+
+async def backhaul_kept_gone(box):
+    """spec 8.3: a controller's move is kept for the pod's later starts; when the kept
+    target's BSS is gone at a start, its switch times out after 90 s and the agent switches
+    to the configured upstream on the same start instead of holding the pod (finding 18)."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    tried = await until_async(lambda: pinned(box, GONE_PARENT), seconds=60)
+
+    def back():
+        status = uplink_status(box)
+        operation = status.get("operation") or {}
+        return status.get("bssid") == BACKHAUL_PARENT and operation.get("state") == (
+            "OBSERVED_APPLIED"
+        )
+
+    applied = await box.until(back, seconds=150)
+    status = uplink_status(box)
+    kept = (box.directory / "state" / box.serial / "uplink" / "target.json").exists()
+    return box.result(
+        passed=bool(tried)
+        and bool(applied)
+        and not status.get("held")
+        and not kept
+        and await pinned(box, BACKHAUL_PARENT),
+        tried_kept_target=bool(tried),
+        configured_applied=bool(applied),
+        held=status.get("held"),
+        kept_target_left=kept,
+    )
+
+
 async def telemetry_broker_restart(box):
     """spec 3.6: the broker gone and back: the agent notices, connects again with its
     back-off, subscribes to the pod's topic again, and takes the pod's next report."""
@@ -329,6 +363,7 @@ SCENARIOS = {
     "uplink-held": uplink_held,
     "uplink-foreign-change": uplink_foreign_change,
     "backhaul-steering-kept": backhaul_steering_kept,
+    "backhaul-kept-gone": backhaul_kept_gone,
     "telemetry-broker-restart": telemetry_broker_restart,
     "steering-conflict": steering_conflict,
     "steering-window-expired": steering_window_expired,
@@ -345,5 +380,6 @@ OPTIONS = {
     "uplink-held": {"backhaul": True, "uplink": {**UPLINK, "ssid": "emosa-lab-elsewhere"}},
     "uplink-foreign-change": {"backhaul": True},
     "backhaul-steering-kept": {"backhaul": True},
+    "backhaul-kept-gone": {"backhaul": True, "kept_target": GONE_PARENT},
     "telemetry-broker-restart": {"telemetry": True},
 }

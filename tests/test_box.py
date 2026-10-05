@@ -332,6 +332,11 @@ def test_an_m2_set_writes_both_bsses_and_its_backhaul_serves_the_uplink(agent, t
     assert result["backhaul_bss"] == [["b-ap-24", "backhaul_bss"]]
 
 
+def test_a_kept_backhaul_target_that_is_gone_falls_back_to_the_configured_one(agent, tmp_path):
+    result = box("backhaul-kept-gone", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_an_uplink_switch_never_confirmed_holds_the_pod(agent, tmp_path):
     result = box("uplink-held", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result

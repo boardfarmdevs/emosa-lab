@@ -450,6 +450,22 @@ static bool move_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
     return true;
 }
 
+/* a switch to the kept target failed on a later start: back to the configured upstream on
+ * this start, no hold (a switch to the configured upstream holds). Kept, the target held the
+ * pod on option 2 for good once its BSS was gone (rdk-1004, 5 Oct 2026). */
+static bool kept_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
+{
+    const char *bssid = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "bssid");
+    if (!bssid || !strcmp(bssid, u->configured) || strcmp(bssid, u->bssid))
+        return false;
+    em_log(EM_LOG_WARNING, "emosa.agent.uplink", "kept backhaul target %s not reached (%s): back to the configured %s",
+            bssid, reason, u->configured);
+    EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
+    u->moves++; /* a switch of its own on this start */
+    keep_target(u);
+    return true;
+}
+
 static void lower(const char *in, char *out, size_t n)
 {
     size_t i = 0;
@@ -481,7 +497,8 @@ static void settle(em_uplink_scope *u, cJSON *op, const em_snapshot *snap, bool 
             em_transition(op, "TIMED_OUT", NULL);
             em_set_reason(op, "APPLY_TIMEOUT");
             save_with_facts(u, op);
-            if (!move_failed(u, op, "not confirmed within the deadline"))
+            if (!move_failed(u, op, "not confirmed within the deadline") &&
+                !kept_failed(u, op, "not confirmed within the deadline"))
                 hold(u, op, "switch not confirmed within the deadline");
         }
         cJSON_Delete(t);
@@ -501,7 +518,8 @@ static void settle(em_uplink_scope *u, cJSON *op, const em_snapshot *snap, bool 
         if (move_failed(u, op, text))
             return;
         /* only a rejection before anything was sent may be retried, on a later start */
-        if (strcmp(state, "REJECTED") || !reason || (strcmp(reason, "NOT_READY") && strcmp(reason, "BUSY"))) {
+        if ((strcmp(state, "REJECTED") || !reason || (strcmp(reason, "NOT_READY") && strcmp(reason, "BUSY"))) &&
+            !kept_failed(u, op, text)) {
             (void)em_format(text, sizeof(text), "switch %s: %s", low, reason ? reason : "None");
             hold(u, op, text);
         }

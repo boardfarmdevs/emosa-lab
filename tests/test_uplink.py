@@ -504,6 +504,45 @@ def test_no_move_off_the_gtp_path_or_while_held_or_switching(tmp_path):
     assert switch.steer("02:00:00:00:39:01") == "switch_in_progress"
 
 
+def test_a_kept_upstream_not_reached_falls_back_to_the_configured_one_without_a_hold(tmp_path):
+    switch, pod, clock, store = on_easymesh(tmp_path)
+    switch.steer(NEXT)
+    asyncio.run(switch.tick())
+    pod.adopt(parent=NEXT)
+    asyncio.run(switch.tick())
+    assert switch.steering_outcome(NEXT) is True
+    # the pod started again (OpenSync to its bootstrap) where NEXT can no longer be reached
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    asyncio.run(switch.tick())
+    assert pod.sent[-1][2]["row"]["bssid"] == NEXT  # the kept upstream first
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())
+    timed_out = switch.store.operations()[-2]
+    assert timed_out.state == State.TIMED_OUT and timed_out.intent["bssid"] == NEXT
+    assert not switch.held() and switch.status()["bssid"] == PARENT
+    assert not (store.directory / "target.json").exists()
+    assert pod.sent[-1][2]["row"]["bssid"] == PARENT  # the configured one, on the same start
+    pod.adopt()
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED and not switch.held()
+
+
+def test_the_configured_upstream_not_reached_after_a_kept_one_holds(tmp_path):
+    switch, pod, clock, store = on_easymesh(tmp_path)
+    switch.steer(NEXT)
+    asyncio.run(switch.tick())
+    pod.adopt(parent=NEXT)
+    asyncio.run(switch.tick())
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    asyncio.run(switch.tick())
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())  # the kept one timed out: the configured one now
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.TIMED_OUT and switch.held()
+    assert len(pod.sent) == 4  # the first switch, the move, the kept one, the configured one
+
+
 def test_the_moved_upstream_is_kept_for_later_starts_while_the_configuration_is_unchanged(tmp_path):
     switch, pod, clock, store = on_easymesh(tmp_path)
     switch.steer(NEXT)

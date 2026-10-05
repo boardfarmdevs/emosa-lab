@@ -233,6 +233,7 @@ class Box:
         uplink=None,
         topology_query_window=None,
         netns=False,
+        kept_target=None,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         self.topology_query_window = topology_query_window
@@ -244,6 +245,9 @@ class Box:
         # BSS (the registrar's backhaul mode); uplink: the agent's uplink setting instead of
         # UPLINK (with backhaul)
         self.multi_bss, self.uplink = multi_bss, uplink
+        # kept_target (with backhaul): the upstream a controller's move left on an earlier
+        # start, kept in the agent's state for this one
+        self.kept_target = kept_target
         self.m2_modes = ("configure", "backhaul") if multi_bss else ("configure",)
         self.pod_rows = MULTI_AP_ROWS if backhaul else POD_ROWS
         self.process = self.db = self.controller = self.log = self.broker = None
@@ -303,6 +307,13 @@ class Box:
             secrets.mkdir(parents=True, mode=0o700)
             (secrets / "backhaul").write_text("recorded-psk-replaced")
             (secrets / "backhaul").chmod(0o600)
+            if self.kept_target:
+                kept = state_root / self.serial / "uplink"
+                kept.mkdir(parents=True, mode=0o700)
+                configured = (self.uplink or UPLINK)["bssid"]
+                (kept / "target.json").write_text(
+                    json.dumps({"configured": configured, "target": self.kept_target, "moves": 1})
+                )
         config = agent_config(entry, fleet)
         # the agent's interface carries its AL MAC, as the labs' macvlan per agent does
         subprocess.run(["ip", "link", "set", self.interface, "address", self.al_mac], check=True)
