@@ -932,11 +932,47 @@ The build option's first fresh build, replacing `rdk-1002b` on rev140 (the owner
   same room passed on `rdk-emosa-1002` when rerun, whose lab code is older (meta-cmf 373eefe,
   medium 61f646d, optimizer 6468492); `rdk-1004` runs the medium and optimizer pinned on
   4 October (d74a103, bd7b18e), on another host (rev140). The room service logged no error.
-  Open for the lab's room harness: the earlier qualifications ran their browsers from rev150
-  (busy with a load test that night); a rerun from there separates the code from the host.
+  Resolved the same day (next section): the harness rendered in software and starved the
+  host.
 - **The footprint**, sampled for 30 minutes as before: the gateway at 471 MiB median and
   489 MiB peak of its 1 GiB and 85.1 % of a core, an agent 4.4 MiB PSS and 0.83 % of a core,
   the fleet 0.7 MiB, RDK's controller 33 % of a core
   ([summary.json](footprint-1004/rdk-1004/summary.json)).
 - **On the way:** rev140 has no `uv`, which the adapter kit's build needs; the clone's
   `.cache/opensync-lab-artifacts/uv` took rev120's (0.11.2).
+
+### rdk-1004 as the target configuration: every room, a VM restart, hours of rooms (5 October)
+
+The owner's direction: rdk-1004 (RDK with EMOSA in the gateway) is the target configuration
+and must be stable; test more rooms and fix what fails.
+
+- **The room catalog, all 27 rooms with the pods, passed**, the browser on rev140's GPU. The
+  `traffic-quieter-ap` failures were the harness's: it rendered both pages in software
+  (SwiftShader), Chromium took up to ten of rev140's sixteen threads (load near 20) and the
+  topology page's screenshot waited past 45 s. On the GPU (Vulkan) Chromium stayed under one
+  core and the room passed. The harnesses now take the host's GPU when it has a usable one
+  (easymesh-optimizer 524357d, meta-cmf 36ce8d5).
+- **The four geometry rooms passed** on a freshly restarted controller (branch formation,
+  parent handover, isolation recovery, wired parent).
+- **A VM restart did not bring the lab back, now it does** (verified with `build.sh restart`,
+  45 minutes, no manual step): the pods' redirector address was added once at boot, before the
+  lab's runtime created its bridge, so the gateway, whose EMOSA forwards listen on that address,
+  did not start at all; `build.sh start` then waited for a room that refuses to start without
+  the pods; and the steps that bring EMOSA back missed its containers, counted stopped pods as
+  running and made the medium before the pods' stations existed (emosa-lab c8715bf, meta-cmf
+  7ee964a). On the way: `fleet_cli` printed nothing in the gateway (a POSIX sh ends at a missing
+  file sourced with "."), `rooms native` restarted the controller without the lab's bring-up,
+  and `rooms pods` returned before the restarted controller had the pods again.
+- **Open: RDK's native backhaul steering stops after hours of rooms.** After the catalog,
+  `backhaul-parent-handover` failed in both rounds of a three-hour run and on rdk-emosa-1002
+  too: the controller's native backhaul module queried no candidate at all (every observation
+  `candidate=unknown`), though the extenders' serving samples were fresh and weak enough. A
+  controller restart cures it, with or without the pods; before one it failed with EMOSA in
+  the gateway and in its container alike, so it is not EMOSA's placement. The
+  module never let its "uncertain" marks expire, but only the pods were ever marked, so that
+  is not the cause; meta-cmf's unified-wifi-mesh 0235 (local, not pushed) adds state lines that
+  say why each candidate pair is skipped, for the next run. Also seen: RDK's controller gives up
+  on EMOSA's Wi-Fi uplink moves after 15 s (EMOSA's switch takes longer), so the pods are marked
+  uncertain after each.
+- **A timing edge:** `home-a-wired-extender-loss-recovery` failed once in four runs: one sample
+  5 s into the wired extender's 40 s outage still showed a client on it.
