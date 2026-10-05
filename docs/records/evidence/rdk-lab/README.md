@@ -931,8 +931,9 @@ The build option's first fresh build, replacing `rdk-1002b` on rev140 (the owner
   from rev120's browser, an idle host ([rooms.txt](footprint-1004/rdk-1004/rooms.txt)). The
   same room passed on `rdk-emosa-1002` when rerun, whose lab code is older (meta-cmf 373eefe,
   medium 61f646d, optimizer 6468492); `rdk-1004` runs the medium and optimizer pinned on
-  4 October (d74a103, bd7b18e). The room service logged no error. Not EMOSA's: open for the
-  lab's room harness.
+  4 October (d74a103, bd7b18e), on another host (rev140). The room service logged no error.
+  Open for the lab's room harness: the earlier qualifications ran their browsers from rev150
+  (busy with a load test that night); a rerun from there separates the code from the host.
 - **The footprint**, sampled for 30 minutes as before: the gateway at 471 MiB median and
   489 MiB peak of its 1 GiB and 85.1 % of a core, an agent 4.4 MiB PSS and 0.83 % of a core,
   the fleet 0.7 MiB, RDK's controller 33 % of a core
