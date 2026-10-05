@@ -1,0 +1,14 @@
+start 2026-10-05T01:07:33Z meta-cmf d70f1c3 emosa-lab 68515a2 controller X86EMLTRBPIBB_rdk-next_20261005010026.rootfs.lxc.tar.bz2
+[phase] assets: 11s
+[phase] create: 63s
+[phase] push-inputs: 13s
+[phase] wan: 2s
+[phase] lab-host: 4s
+[phase] mesh: 704s
+[phase] clients: 959s
+[phase] wired-extenders: 455s
+[phase] runtime: 54s
+[phase] cold-boot: 963s
+[phase] acceptance: 128s
+[phase] emosa: 2144s
+end 2026-10-05T02:39:26Z exit 0

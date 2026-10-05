@@ -909,3 +909,33 @@ rev140, 10 minutes from the shared state) and deployed as `rdk-emosa-1002`'s gat
   on the EMOSA image (found, 16 s) and on an image without EMOSA (refused).
 
 EMOSA stays in the gateway.
+
+### A fresh lab built with EMOSA in the gateway: rdk-1004 (rev140, 5 October)
+
+The build option's first fresh build, replacing `rdk-1002b` on rev140 (the owner's decision):
+`EASYMESH_EMOSA=1 EASYMESH_EMOSA_IN=gateway gen/vm/lxd/build.sh build` from fresh clones
+(meta-cmf-bananapi-vcpe d70f1c3, emosa-lab 68515a2), the gateway image built at the same pin
+(`X86EMLTRBPIBB_rdk-next_20261005010026`, rev140, 8 minutes from the shared state)
+([rdk-1004](footprint-1004/rdk-1004/)).
+
+- **The build:** passed, 92 minutes: the lab 56 (its acceptance at 02:04), the EMOSA option
+  36 ([build.txt](footprint-1004/rdk-1004/build.txt)). The build checked the controller image
+  for EMOSA before it started. The option ran in the adapter container (both uplinks applied
+  at the first switch), then the gateway's own EMOSA took the registry and the state over:
+  its fleet started both agents from the registry, provisioning 13 s later, and the rooms
+  settled with every pod on its Wi-Fi backhaul. The VM records `user.easymesh.emosa-in=gateway`
+  and emosa-lab 68515a2.
+- **The rooms:** readiness passed, and four of the five quick rooms. `traffic-quieter-ap`
+  stopped three times at the browser harness's screenshot timeout (45 s, six checks
+  verified, never played): in the run, rerun alone with the browser on rev140, and rerun
+  from rev120's browser, an idle host ([rooms.txt](footprint-1004/rdk-1004/rooms.txt)). The
+  same room passed on `rdk-emosa-1002` when rerun, whose lab code is older (meta-cmf 373eefe,
+  medium 61f646d, optimizer 6468492); `rdk-1004` runs the medium and optimizer pinned on
+  4 October (d74a103, bd7b18e). The room service logged no error. Not EMOSA's: open for the
+  lab's room harness.
+- **The footprint**, sampled for 30 minutes as before: the gateway at 471 MiB median and
+  489 MiB peak of its 1 GiB and 85.1 % of a core, an agent 4.4 MiB PSS and 0.83 % of a core,
+  the fleet 0.7 MiB, RDK's controller 33 % of a core
+  ([summary.json](footprint-1004/rdk-1004/summary.json)).
+- **On the way:** rev140 has no `uv`, which the adapter kit's build needs; the clone's
+  `.cache/opensync-lab-artifacts/uv` took rev120's (0.11.2).
