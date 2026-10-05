@@ -29,7 +29,9 @@ em_reason em_ethernet_open(em_ethernet *e, const char *interface, const uint8_t 
         return EM_NOT_READY;
     struct sockaddr_ll sa = {.sll_family = AF_PACKET, .sll_protocol = htons(EM_ETHERTYPE),
                              .sll_ifindex = (int)index};
-    struct sockaddr_ll bound;
+    /* zeroed: with _GNU_SOURCE the socket calls take a transparent union the analyzer
+     * cannot follow, and it reads what getsockname and recvfrom fill as garbage */
+    struct sockaddr_ll bound = {0};
     socklen_t blen = sizeof(bound);
     if (bind(fd, (struct sockaddr *)&sa, sizeof(sa)) ||
         getsockname(fd, (struct sockaddr *)&bound, &blen) || bound.sll_hatype != 1 ||
@@ -89,7 +91,7 @@ void em_ethernet_close(em_ethernet *e)
 size_t em_ethernet_receive(em_ethernet *e, uint8_t *frame, size_t cap)
 {
     for (;;) {
-        struct sockaddr_ll from;
+        struct sockaddr_ll from = {0};
         socklen_t flen = sizeof(from);
         ssize_t n = recvfrom(e->fd, frame, cap, 0, (struct sockaddr *)&from, &flen);
         if (n < 0)
