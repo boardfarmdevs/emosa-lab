@@ -292,10 +292,25 @@ emosa() {
         lxc config device add emosa emlan nic nictype=bridged parent="$(lan_bridge)" name=emlan >/dev/null
     # The pods' redirector: the VM owns br-wan101 (10.101.0.1); add .40 and forward the
     # front port and the agent ports into the container's loopback (agents listen there only).
+    wan_address
+    proxy emosa front "$FLEET_PORT"
+    proxy emosa agents "${AGENTS[0]}-${AGENTS[1]}"
+    adapter_kit
+    log "emosa: front $WAN_HOST:$FLEET_PORT"
+}
+
+wan_address() {    # the pods' redirector address on the VM's WAN bridge, wherever EMOSA runs
+    # The lab's runtime creates the bridge at each start, just before it starts the gateway,
+    # whose EMOSA forwards listen on this address (EMOSA in the gateway): so the address
+    # follows the bridge's device, not the boot (once at boot, before the bridge existed, it
+    # failed and the gateway did not start after a VM restart, rdk-1004, 5 Oct).
+    local device
+    device=$(systemd-escape -p --suffix=device "/sys/subsystem/net/devices/$WAN_BRIDGE")
     cat > /etc/systemd/system/emosa-lab-wan-address.service <<EOF
 [Unit]
 Description=EMOSA front address $WAN_HOST on $WAN_BRIDGE (the pods' redirector)
-After=network-online.target
+BindsTo=$device
+After=$device
 
 [Service]
 Type=oneshot
@@ -303,14 +318,12 @@ RemainAfterExit=yes
 ExecStart=/bin/sh -c 'ip addr show dev $WAN_BRIDGE | grep -q " $WAN_HOST/" || ip addr add $WAN_HOST/24 dev $WAN_BRIDGE'
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=$device
 EOF
     systemctl daemon-reload
+    # an earlier unit was wanted by multi-user.target: its link goes with the re-enable
+    systemctl disable -q emosa-lab-wan-address 2>/dev/null || true
     systemctl enable -q --now emosa-lab-wan-address
-    proxy emosa front "$FLEET_PORT"
-    proxy emosa agents "${AGENTS[0]}-${AGENTS[1]}"
-    adapter_kit
-    log "emosa: front $WAN_HOST:$FLEET_PORT"
 }
 
 telemetry() {    # telemetry [POD...]: the pods' own statistics (by default every running pod)
@@ -616,9 +629,23 @@ medium() {
     [ -z "$room" ] || systemctl start "$ROOM"
 }
 
-pods_running() { lxc list -c n -f csv | grep -E '^pod-[0-9]+$' || true; }
+# the pods that run (their containers, stopped after a VM restart, do not count)
+pods_running() { lxc list -c ns -f csv | grep -E '^pod-[0-9]+,RUNNING$' | cut -d, -f1 || true; }
 
 agents_provisioned() { agents_provisioned_in "$(emosa_where)"; }    # wherever EMOSA runs
+registered() {    # how many of the fleet's agents the controller's topology has
+    local als
+    als=$(fleet_cli list 2>/dev/null | jq -r '.[].al_mac')
+    [ -n "$als" ] || { echo 0; return; }
+    curl -fsS "${EMOSA_RDK_TOPOLOGY:-http://127.0.0.1:8888/api/v1/topology}" | jq --arg als "$als" \
+        '[.nodes[].id | ascii_downcase] as $ids | [$als | split("\n")[] | select(length > 0) | select(. as $a | $ids | index($a))] | length'
+}
+wait_registered() {    # every running pod's agent in the controller's topology (at most 5 minutes)
+    local n
+    n=$(pods_running | wc -l)
+    for _ in $(seq 60); do [ "$(registered)" -ge "$n" ] && return; sleep 5; done
+    die "the controller's topology has $(registered) of the $n pods' agents (lab.sh status)"
+}
 wait_agents() {    # every running pod's agent provisioned (at most 5 minutes)
     local n
     n=$(pods_running | wc -l)
@@ -666,6 +693,12 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         systemctl stop "$ROOM"
         for pod in $(lxc list -c n -f csv | grep -E '^pod-[0-9]+$'); do start_guarded "$pod"; done
         cx "$(emosa_where)" systemctl start emosa-fleet
+        # The medium pins the pods' backhaul links to their stations, which exist once OpenSync
+        # is up: after a VM restart the medium was made with the pods stopped (rdk-1004, 5 Oct)
+        for pod in $(pods_running); do
+            for _ in $(seq 60); do [ -n "$(pod_serial "$pod")" ] && break; sleep 2; done
+        done
+        medium
         n=$(pods_running | wc -l)
         wait_agents
         medium    # pins the pods' backhaul links now that their stations exist
@@ -680,6 +713,9 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         else
             systemctl reset-failed "$ROOM"; systemctl start "$ROOM"
         fi
+        # The bring-up restarts RDK's controller, which forgets the pods' agents; they onboard
+        # again on their own (topology_query_window, spec 2.5). Done when it has them again.
+        wait_registered
         log "rooms: $1 ($n pods); suite: EASYMESH_ROOM_WORLDS_ROOT=$MEDIUM_CONFIGURATOR/worlds-$1" ;;
     native)
         systemctl stop "$ROOM"
@@ -687,7 +723,15 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         for pod in $(pods_running); do lxc stop "$pod"; done
         forget_pods
         room_manifest native
-        systemctl reset-failed "$ROOM"; systemctl start "$ROOM"
+        if [ -x "$LABREPO/gen/lab-bringup.sh" ]; then
+            # forget_pods restarted RDK's controller, which forgets every agent: the lab's own
+            # bring-up restarts them and starts the room once settled (without it the room
+            # service failed its preflight on inactive clients, rdk-1004, 5 Oct)
+            "$LABREPO/gen/lab-bringup.sh" up || "$LABREPO/gen/lab-bringup.sh" up ||
+                die "the lab did not settle after two bring-ups ($LABREPO/gen/lab-bringup.sh status)"
+        else
+            systemctl reset-failed "$ROOM"; systemctl start "$ROOM"
+        fi
         log "rooms: the lab's own$(exists bpiap-004 && echo ', with the wired extender') (pods stopped, their controller rows removed)" ;;
     *) die "usage: lab.sh rooms pods|native" ;;
     esac
@@ -724,7 +768,12 @@ up() {    # up [python|c] [gateway]: the EMOSA option of the RDK lab, every step
         die "nothing staged in $ART: deploy/rdk-lab/lab.sh stage (host side)"
     if in_gateway; then
         [ "$place" = gateway ] || die "EMOSA runs in $CTL: lab.sh up c gateway, or gateway.sh off first"
-        # again, e.g. after the gateway was deployed anew: its forwarding back, the rooms
+        # again, e.g. after a VM restart or the gateway deployed anew: what EMOSA in the
+        # gateway still uses (the pods' broker in emosa, their bootstrap path in em-gtp, whose
+        # profile does not autostart), the gateway's forwarding, the rooms
+        wan_address    # the gateway's forwards listen on it
+        running emosa || lxc start emosa
+        gtp
         bash "$HERE/gateway.sh" on
         rooms pods
         wait_uplinks || die "the pods' Wi-Fi uplinks did not apply (lab.sh status)"
@@ -784,7 +833,7 @@ status() {
 }
 
 case ${1:-} in
-    lanport|emosa|fleet|gtp|medium|status|controller_al) "$1" ;;
+    lanport|emosa|fleet|gtp|medium|status|controller_al|wan_address) "$1" ;;
     up) shift; up "$@" ;;
     implementation) shift; implementation "$@" ;;
     backhaul) shift; backhaul "$@" ;;

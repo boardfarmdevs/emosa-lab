@@ -51,7 +51,8 @@ wait_provisioned() {    # wait_provisioned CT N: N agents provisioning in CT (at
     die "$1: $(provisioned "$1") of $2 agents provisioned after 5 minutes"
 }
 
-pods_running() { lxc list -c n -f csv | grep -cE '^pod-[0-9]+$' || true; }
+# how many pods run (their containers, stopped after a VM restart, do not count)
+pods_running() { lxc list -c ns -f csv | grep -cE '^pod-[0-9]+,RUNNING$' || true; }
 
 stop_emosa() {    # stop_emosa CT: the fleet and every agent in CT stopped and disabled
     cx "$1" sh -c 'systemctl disable -q --now emosa-fleet 2>/dev/null || true

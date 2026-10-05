@@ -73,7 +73,7 @@ in_container() {
 # or the adapter kit's: the fleet configuration, the agents' configurations, the state root
 # and the run root (none: "-")
 emosa_layout() {
-    cx "$1" sh -c '. /etc/default/emosa 2>/dev/null
+    cx "$1" sh -c '[ ! -f /etc/default/emosa ] || . /etc/default/emosa
         echo "${EMOSA_FLEET_CONFIG:-/etc/emosa-fleet.json} ${EMOSA_AGENT_CONFIG_DIR:-/etc/emosa}" \
              "${EMOSA_STATE_ROOT:-/var/lib/emosa} ${EMOSA_RUN_ROOT:--}"'
 }
@@ -93,8 +93,9 @@ agents_provisioned_in() {
 }
 
 fleet_cli() {    # fleet_cli COMMAND [ARGS...]: the fleet's command (list, forget) where EMOSA runs
-    cx "$(emosa_where)" sh -c 'set -a; . /etc/default/emosa-implementation 2>/dev/null || true
-        . /etc/default/emosa 2>/dev/null || true
+    # (a POSIX sh ends at a missing file sourced with ".": the gateway has no emosa-implementation)
+    cx "$(emosa_where)" sh -c 'set -a
+        for f in /etc/default/emosa-implementation /etc/default/emosa; do [ ! -f "$f" ] || . "$f"; done
         fleet=${EMOSA_FLEET:-/opt/emosa-adapter/venv/bin/emosa-fleet}
         [ -x "$fleet" ] || fleet=$(command -v emosa-fleet-c)    # a gateway: its package
         exec "$fleet" "$1" "${EMOSA_FLEET_CONFIG:-/etc/emosa-fleet.json}" ${2:+"$2"}' \
