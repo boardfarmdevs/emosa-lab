@@ -116,7 +116,9 @@ the GTP in container `em-gtp`, both on the lab's wired LAN port.
   libwebconfig 0014 keeps out of EasyMesh, so the controller neither sees nor
   resets it; the image's pre-start makes the interface, and its `emosa-podbh`
   gives the VAP the SSID and key in `/nvram/emosa/podbh.conf` at each start of
-  OneWifi, which keeps no VAP settings across a restart. Option 1 then moves
+  OneWifi, which keeps no VAP settings across a restart. Every agent's
+  steering-disallowed lists (local and BTM) name the pods' stations
+  (`lab.sh steering`, from `rooms pods`). Option 1 then moves
   it onto the gateway's 5 GHz `mesh_backhaul` BSS, its station pinned to that
   BSSID (spec §8.3); the controller can move it to another parent with
   Backhaul Steering. `lab.sh up` puts both pods on option 1.

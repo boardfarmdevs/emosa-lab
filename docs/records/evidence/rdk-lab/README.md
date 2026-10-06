@@ -1107,6 +1107,17 @@ target configuration validated again. Three steps, on rdk-1004 (rev140).
   515 peak, of 1 GiB): each EMOSA agent 5.0 MiB PSS and 0.6 % of a core, the fleet 0.7 MiB,
   the forwarder 1.0 MiB, mosquitto 1.4 MiB, the GTP's dnsmasq 0.4 MiB; em_ctrl 38 MiB and
   41 % of a core.
+- **The pods' stations steering-disallowed** (spec 8.2). `lab.sh steering` (from `rooms
+  pods`) reads each pod's station from its agent's status (`pod.backhaul.mac`) and puts it
+  in every agent's local and BTM steering-disallowed lists through em_cli's policy API, one
+  device per request. On rdk-1004 it set all 8 (18 s): the gateway's agent, the five
+  extenders and both pods' agents list `02:00:00:00:6c:00` and `02:00:00:00:6e:00`, and
+  EMOSA stored them in each agent's reporting policy; an extender re-onboarded (its
+  em_agent restarted) had them again from the controller within 65 s. On RDK the
+  onboarding SSID is out of EasyMesh, so the controller does not see the stations there at
+  all: through a pod's bootstrap (its OpenSync restarted, on GRE after 15 s, on its Wi-Fi
+  uplink after 28 s) the controller's topology listed its station in none of 84 polls, one
+  a second.
 - **The containers removed.** `lab.sh up c gateway` is now the target configuration without
   them: on a fresh lab EMOSA, its broker and its GTP start in the gateway from the image
   (`gateway.sh on` writes the lab's fleet configuration there), and on a lab from the

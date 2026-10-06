@@ -57,6 +57,9 @@
 #                                     that write the adapter container's configuration (emosa,
 #                                     agent, implementation, telemetry) and gtp refuse; fleet and
 #                                     backhaul write the gateway's
+#   lab.sh steering                   the pods' backhaul stations (each agent's status) in every
+#                                     agent's local and BTM steering-disallowed lists, through
+#                                     em_cli's policy API (spec 8.2); rooms pods does it
 #   lab.sh retire                     delete the adapter and GTP containers (emosa, em-gtp) once
 #                                     EMOSA runs in the gateway (em-gtp's radio back to the pool);
 #                                     up c gateway does it, gateway.sh off then has none to go back to
@@ -691,6 +694,64 @@ room_manifest() {    # the room service's manifest: the standard rooms with the 
     systemctl daemon-reload
 }
 
+steering() {    # steering: the pods' backhaul stations in every agent's steering-disallowed lists
+    # The controller sends each agent its Multi-AP Policy Config with them, so that no agent
+    # steers a pod's station as a client (spec 8.2), on a backhaul BSS or on the gateway's
+    # onboarding SSID wherever its controller sees that one (RDK's does not: libwebconfig
+    # 0014). EMOSA lists each pod's station in its agent's status (pod.backhaul.mac). Through
+    # em_cli's policy API, which sets one device per request: only those that lack them.
+    local macs policy body n
+    macs=$(cx "$(emosa_where)" python3 - "$(emosa_root)" <<'EOF'
+import glob, json, sys
+macs = set()
+for path in glob.glob(sys.argv[1] + "/*/status.json"):
+    if ".released-" in path:    # a released pod's archived state: no agent
+        continue
+    try:
+        mac = ((json.load(open(path)).get("pod") or {}).get("backhaul") or {}).get("mac")
+    except (OSError, ValueError):
+        continue
+    if mac:
+        macs.add(mac.lower())
+print(" ".join(sorted(macs)))
+EOF
+)
+    [ -n "$macs" ] || die "steering: no pod's backhaul station in its agent's status yet"
+    policy=${EMOSA_RDK_POLICY:-http://127.0.0.1:8888/api/v1/wifipolicy}
+    body=$(mktemp)
+    # shellcheck disable=SC2016 # Python, not the shell
+    n=$(curl -fsS --max-time 30 "$policy" | python3 -c '
+import json, sys
+macs = set(sys.argv[2].split())
+lacking = []
+for device in json.load(sys.stdin).get("policyConfig", []):
+    lists = {key: {m.lower() for m in device.get(key) or []}
+             for key in ("localSteeringDisallowed", "btmSteeringDisallowed")}
+    if all(macs <= found for found in lists.values()):
+        continue
+    for key, found in lists.items():
+        device[key] = sorted(found | macs)
+    lacking.append(device)
+json.dump(lacking, open(sys.argv[1], "w"))
+print(len(lacking))' "$body" "$macs")
+    if [ "${n:-0}" -gt 0 ]; then
+        curl -fsS --max-time 300 -X POST -H 'Content-Type: application/json' --data @"$body" "$policy" >/dev/null ||
+            { rm -f "$body"; die "steering: the controller's policy API refused the lists"; }
+    fi
+    rm -f "$body"
+    # shellcheck disable=SC2016 # Python, not the shell
+    curl -fsS --max-time 30 "$policy" | python3 -c '
+import json, sys
+macs = set(sys.argv[1].split())
+devices = json.load(sys.stdin).get("policyConfig", [])
+short = [d["id"] for d in devices
+         if not all(macs <= {m.lower() for m in d.get(key) or []}
+                    for key in ("localSteeringDisallowed", "btmSteeringDisallowed"))]
+if short:
+    sys.exit("steering: no lists yet on " + " ".join(short))' "$macs" || die "steering: the lists did not apply"
+    log "steering: the pods' stations ($macs) steering-disallowed (local and BTM) on every agent, ${n:-0} set now"
+}
+
 rooms() {    # rooms pods|native: which rooms the lab's room service runs
     local pod n
     # The lab's wired extender (bpiap-004) is in all of its rooms: elsewhere it is an unbound
@@ -732,6 +793,7 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         # The bring-up restarts RDK's controller, which forgets the pods' agents; they onboard
         # again on their own (topology_query_window, spec 2.5). Done when it has them again.
         wait_registered
+        steering    # the controller keeps the lists: set once, checked after
         log "rooms: $1 ($n pods); suite: EASYMESH_ROOM_WORLDS_ROOT=$MEDIUM_CONFIGURATOR/worlds-$1" ;;
     native)
         systemctl stop "$ROOM"
@@ -866,7 +928,7 @@ status() {
 }
 
 case ${1:-} in
-    lanport|emosa|fleet|gtp|medium|status|controller_al|wan_address|retire) "$1" ;;
+    lanport|emosa|fleet|gtp|medium|status|controller_al|wan_address|retire|steering) "$1" ;;
     up) shift; up "$@" ;;
     implementation) shift; implementation "$@" ;;
     backhaul) shift; backhaul "$@" ;;
@@ -877,5 +939,5 @@ case ${1:-} in
     telemetry) shift; telemetry "$@" ;;
     repod) shift; repod "$@" ;;
     client) shift; client "$@" ;;
-    *) sed -n '2,63p' "$0"; exit 1 ;;
+    *) sed -n '2,66p' "$0"; exit 1 ;;
 esac

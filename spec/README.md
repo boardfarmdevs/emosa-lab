@@ -659,7 +659,12 @@ while failing. So:
 The gateway provides:
 - a fronthaul-type pod-backhaul SSID on the underlay segment, because a
   Multi-AP backhaul BSS rejects 3-address stations;
-- the steering-disallowed entries for the pods' backhaul stations.
+- the steering-disallowed entries for the pods' backhaul stations, in its
+  controller's Multi-AP Policy for every agent (local and BTM). EMOSA lists
+  each pod's station in its agent's status (`pod.backhaul.mac`). A gateway
+  whose agent keeps the pod-backhaul SSID out of EasyMesh (RDK-B with
+  OneWifi's libwebconfig 0014) shows its controller no station there at all;
+  the entries still cover the pods' stations on any backhaul BSS.
 
 The agent keeps reporting a declared Ethernet attachment.
 
