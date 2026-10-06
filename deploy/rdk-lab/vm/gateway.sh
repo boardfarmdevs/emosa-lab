@@ -312,7 +312,12 @@ EOF
     cx "$CTL" systemctl enable -q emosa-podbh
     for i in 1 2 3 4; do
         cx "$CTL" systemctl restart emosa-podbh
-        if cx "$CTL" journalctl -u emosa-podbh -n 1 -o cat --no-pager | grep -q ' set to '; then
+        # the keeper's own last line (systemd's follow it): it set them, or a new VAP map's
+        # OneWifi started without them, so the agent's copy predates them
+        # shellcheck disable=SC2016 # expanded in the gateway
+        if [ "$changed" = changed ] || cx "$CTL" sh -c 'journalctl -u emosa-podbh -n 20 -o cat --no-pager |
+                grep "^emosa-podbh:" | tail -n 1 | grep -q " set to "'; then
+            changed=
             sleep 20
             cx "$CTL" systemctl restart em_agent
             sleep 45

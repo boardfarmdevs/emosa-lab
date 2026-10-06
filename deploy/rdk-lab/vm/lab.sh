@@ -371,8 +371,8 @@ fleet() {
     al=$(controller_al) || die "the lab's topology names no single controller"
     fleet_config "$FLEET_PORT" "${AGENTS[0]}" "${AGENTS[1]}" "$al" r1 true shared "$(pods_json)" \
         "$TOPOLOGY_QUERY_WINDOW"
-    log "fleet: front $WAN_HOST:$FLEET_PORT, agents ${AGENTS[0]}-${AGENTS[1]}, controller $al (r1, multi-BSS," \
-        "onboarding again after ${TOPOLOGY_QUERY_WINDOW} s without a Topology Query)"
+    log "fleet in $(emosa_where): front port $FLEET_PORT, agents ${AGENTS[0]}-${AGENTS[1]}, controller $al" \
+        "(r1, multi-BSS, onboarding again after ${TOPOLOGY_QUERY_WINDOW} s without a Topology Query)"
 }
 
 gtp() {
@@ -734,10 +734,15 @@ for device in json.load(sys.stdin).get("policyConfig", []):
     lacking.append(device)
 json.dump(lacking, open(sys.argv[1], "w"))
 print(len(lacking))' "$body" "$macs")
-    if [ "${n:-0}" -gt 0 ]; then
-        curl -fsS --max-time 300 -X POST -H 'Content-Type: application/json' --data @"$body" "$policy" >/dev/null ||
+    # one device per request, 10 s apart: em_ctrl logs each policy it applies, all of them at
+    # once passed its journal's cap (1000 lines per 30 s; rdk-1004, 6 October)
+    local device first=1
+    while IFS= read -r device; do
+        [ "$first" = 1 ] || sleep 10
+        first=0
+        curl -fsS --max-time 120 -X POST -H 'Content-Type: application/json' --data "$device" "$policy" >/dev/null ||
             { rm -f "$body"; die "steering: the controller's policy API refused the lists"; }
-    fi
+    done < <(python3 -c 'import json, sys; [print(json.dumps([d])) for d in json.load(open(sys.argv[1]))]' "$body")
     rm -f "$body"
     # shellcheck disable=SC2016 # Python, not the shell
     curl -fsS --max-time 30 "$policy" | python3 -c '
@@ -793,7 +798,7 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         # The bring-up restarts RDK's controller, which forgets the pods' agents; they onboard
         # again on their own (topology_query_window, spec 2.5). Done when it has them again.
         wait_registered
-        steering    # the controller keeps the lists: set once, checked after
+        steering    # again where the controller lacks them: a gateway deployed anew has none
         log "rooms: $1 ($n pods); suite: EASYMESH_ROOM_WORLDS_ROOT=$MEDIUM_CONFIGURATOR/worlds-$1" ;;
     native)
         systemctl stop "$ROOM"
@@ -853,24 +858,30 @@ up() {    # up [python|c] [gateway]: the EMOSA option of the RDK lab, every step
         for pod in $(lxc list -c n -f csv | grep -E '^pod-[0-9]+$'); do pod_links "$pod"; done
         bash "$HERE/gateway.sh" on
         retire
-        rooms pods    # the medium again, without the containers' radios
-        wait_uplinks || die "the pods' Wi-Fi uplinks did not apply (lab.sh status)"
-        status
-        return
-    fi
-    lanport
-    if [ "$place" = gateway ]; then
-        # EMOSA, the pods' broker and their GTP in the gateway, from its image (gateway.sh on):
-        # an adapter container's state taken over if the lab has one, else the lab's fleet
-        # configuration written there; no adapter or GTP container once the pods are up (retire)
-        touch "$STATE/telemetry"    # the pods' statistics, to the gateway's broker
-        wan_address    # the operator's redirect listens on it
-        bash "$HERE/gateway.sh" on
+        if pods_on_wifi; then
+            rooms pods    # the medium again, without the containers' radios
+            wait_uplinks || die "the pods' Wi-Fi uplinks did not apply (lab.sh status)"
+            status
+            return
+        fi
+        # a run that stopped before the pods were set on their Wi-Fi uplinks: the rest of it
+        log "the pods are not all set on their Wi-Fi uplinks: the rest of the option"
     else
-        emosa
-        [ -z "$impl" ] || implementation "$impl"    # before the fleet starts the agents
-        fleet
-        gtp
+        lanport
+        if [ "$place" = gateway ]; then
+            # EMOSA, the pods' broker and their GTP in the gateway, from its image (gateway.sh
+            # on): an adapter container's state taken over if the lab has one, else the lab's
+            # fleet configuration written there; no adapter or GTP container once the pods are
+            # up (retire)
+            touch "$STATE/telemetry"    # the pods' statistics, to the gateway's broker
+            wan_address    # the operator's redirect listens on it
+            bash "$HERE/gateway.sh" on
+        else
+            emosa
+            [ -z "$impl" ] || implementation "$impl"    # before the fleet starts the agents
+            fleet
+            gtp
+        fi
     fi
     for pod in pod-1 pod-2; do pod "$pod"; done
     medium
@@ -890,6 +901,15 @@ up() {    # up [python|c] [gateway]: the EMOSA option of the RDK lab, every step
     fi
     log "uplinks: every pod on its Wi-Fi backhaul"
     status
+}
+
+pods_on_wifi() {    # the option's pods all there and set on their Wi-Fi uplinks (backhaul wifi)
+    local pod
+    for pod in pod-1 pod-2; do
+        if ! exists "$pod" || [ "$(lxc config get "$pod" user.emosa.backhaul)" != wifi ]; then
+            return 1
+        fi
+    done
 }
 
 retire() {    # retire: the adapter and GTP containers, which EMOSA in the gateway replaced
