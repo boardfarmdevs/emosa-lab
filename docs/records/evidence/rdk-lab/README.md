@@ -1158,6 +1158,43 @@ target configuration validated again. Three steps, on rdk-1004 (rev140).
   under. Seen there, not EMOSA's: the gateway's agent and the wired extender send their
   first Topology Responses without a profile TLV and em_ctrl refuses them (17.2.4, 17.2.47,
   17.2.75).
+- **em_ctrl's starts under the cap too** (meta-cmf 8f1522e,
+  `X86EMLTRBPIBB_rdk-next_20261006175821`). unified-wifi-mesh 0241 takes the rest of the
+  onboarding to the debug channel: each step of each radio's em_config (WSC, the topology
+  sync, AP capability, channel preference and selection, the policy, their
+  acknowledgements), the data model's nodes and the command candidates cancelled, 912 of
+  the 1,386 lines of the restart captured on the image before. rdk-1004, redeployed: no
+  em_ctrl line dropped in the whole run (the redeploy, three controller starts, the
+  catalog); through the catalog 101 lines per 30 s on average, 459 at most. A bring-up's
+  restart with all eight agents, measured on its own (`lab-bringup.sh up`, em_ctrl's
+  journal followed throughout): 2,240 lines, 708 in the busiest 30 s, where the image
+  before had passed 1,479. The catalog passed 26 of 27: `fifty-client-counter-roam` missed
+  its initial convergence while another session's build held rev140 at load 25 to 30, and
+  passed 3 of 3 alone afterwards. Open, seen at that restart: the gateway's em_agent passes
+  its own cap (526, 2,030 and 618 lines dropped).
+- **rdk-emosa-1005 on the same image** (redeployed in place with the lab's own redeploy, the
+  option run again from the pinned emosa-lab cdfaddc; no emosa or em-gtp container): its
+  suite passed whole, readiness, the catalog 27 of 27 (`home-a-wired-extender-loss-recovery`
+  included) and the four geometry rooms with their recovery. No em_ctrl line dropped through
+  the redeploy (three controller starts) and the suite. rdk-emosa-1002, which shared rev120,
+  was stopped by its owner before the suite (rev120's load from about 9.5 to 4).
+- **The wired extender's outage room, measured** (rdk-emosa-1005 on the image before, three
+  runs, all passed; each client that leaves the extender followed with `iw event -t` in its
+  container, read only). `home-a-wired-extender-loss-recovery` wants the extender's clients
+  gone from it 5 s into its outage, sampled once a second. Its 2.4 and 5 GHz clients
+  associate elsewhere 1.0 to 4.6 s after the cut (a scan of their known frequencies, or of
+  both bands). Its 6 GHz client, STA-13 (PMF required), every time: beacon loss 0.7 to 1.4 s
+  after the cut, a scan of all 50 6 GHz channels (1.9 to 2.0 s), then the target AP refuses
+  the association once with a 1000 TU comeback (1.0 to 1.1 s): connected 3.7 to 4.5 s after
+  the cut, seen by the room at the next sample. The comeback is 802.11w working as
+  specified: the AP still holds STA-13's earlier association, because a roam drops it
+  locally without sending a deauth (the client's `disconnected (local request)` with no
+  frame transmitted), so APs keep roamed-away stations until their inactivity timeout
+  (both extenders listed all three clients after they had left; an explicit
+  `wpa_cli disconnect` cleared STA-13 at once), and a protected association from a station
+  the AP believes associated starts an SA Query. rdk-1004 shows the same timing (STA-13
+  first seen gone at the 25 s sample, no earlier). The room passes or fails on one sample
+  on both labs; it is not EMOSA's, and its boundary is the owner's to set.
 - **The containers removed.** `lab.sh up c gateway` is now the target configuration without
   them: on a fresh lab EMOSA, its broker and its GTP start in the gateway from the image
   (`gateway.sh on` writes the lab's fleet configuration there), and on a lab from the
