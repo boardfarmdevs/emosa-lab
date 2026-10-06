@@ -963,16 +963,74 @@ and must be stable; test more rooms and fix what fails.
   7ee964a). On the way: `fleet_cli` printed nothing in the gateway (a POSIX sh ends at a missing
   file sourced with "."), `rooms native` restarted the controller without the lab's bring-up,
   and `rooms pods` returned before the restarted controller had the pods again.
-- **Open: RDK's native backhaul steering stops after hours of rooms.** After the catalog,
+- **RDK's native backhaul steering stopped measuring candidates.** After the catalog,
   `backhaul-parent-handover` failed in both rounds of a three-hour run and on rdk-emosa-1002
   too: the controller's native backhaul module queried no candidate at all (every observation
-  `candidate=unknown`), though the extenders' serving samples were fresh and weak enough. A
-  controller restart cures it, with or without the pods; before one it failed with EMOSA in
-  the gateway and in its container alike, so it is not EMOSA's placement. The
-  module never let its "uncertain" marks expire, but only the pods were ever marked, so that
-  is not the cause; meta-cmf's unified-wifi-mesh 0235 (local, not pushed) adds state lines that
-  say why each candidate pair is skipped, for the next run. Also seen: RDK's controller gives up
-  on EMOSA's Wi-Fi uplink moves after 15 s (EMOSA's switch takes longer), so the pods are marked
-  uncertain after each.
+  `candidate=unknown`), though the extenders' serving samples were fresh and weak enough.
+  Concluded here: not EMOSA's placement, and a matter of hours. Both wrong: it was EMOSA's
+  agents in the gateway, from the first room on (next section).
 - **A timing edge:** `home-a-wired-extender-loss-recovery` failed once in four runs: one sample
   5 s into the wired extender's 40 s outage still showed a client on it.
+
+### The native backhaul failure was EMOSA's: its agents' AL MACs on the gateway's interfaces (5 October)
+
+- **The cause.** RDK's controller takes an agent whose AL MAC is the MAC of one of its own
+  host's interfaces for its co-located agent. With EMOSA in the gateway, each agent's macvlan
+  (`em1`, `em2` on the trunk `emlan`) carried its AL MAC in the gateway's namespace, and
+  `Device.WiFi.DataElements.Network.ColocatedAgentID` was a pod's agent (`02:72:f9:7f:07:85`;
+  the gateway's own agent is `00:60:2f:da:68:e4`). The native backhaul module roots its
+  topology at the co-located agent. unified-wifi-mesh 0235's state lines showed no extender
+  with a root path and no station queried in all 43 rounds of a diagnostic run, whose first
+  room, on a restarted controller, failed as well
+  ([state-lines.txt](backhaul-1004/state-lines.txt)). The rooms that passed after a restart
+  most likely ran before the pods' agents registered again (not checked then).
+- **The fix** (emosa-lab 0a4bbcb; spec 2.1, finding 17): the agents' interfaces in a network
+  namespace of their own, `EMOSA_NETNS`. The link helper creates it and moves the trunk's end
+  of its veth pair there; the bridge port stays in `brlan0`. Both agents open their 1905
+  socket there and return to their own namespace. The gateway's package sets `EMOSA_NETNS=emosa`
+  (meta-cmf ceebf4c). Box scenario `agent-netns`; CI passed, after 345387c
+  (the analyzer's false reading under `_GNU_SOURCE`).
+- **Verified on rdk-1004** with the gateway image `X86EMLTRBPIBB_rdk-next_20261005172041`
+  (emosa-lab 0a4bbcb, unified-wifi-mesh 0235), redeployed in place: the co-located agent is
+  the gateway's again and no interface of its namespace has an agent's AL MAC. Then
+  `backhaul-parent-handover`, the room catalog (27 of 27) and the handover again passed, in
+  that order. The state lines show the gateway and the four Wi-Fi extenders with root paths
+  (43 of 45 rounds), 10 to 12 stations queried per round, and native moves verified. A long run
+  after it, two rounds of the catalog and the four geometry rooms, passed whole.
+- **Then the pods (unified-wifi-mesh 0236).** In that run the rooms moved the pods (through
+  the controller's `SteerWiFiBackhaul`), and the controller marked both pods uncertain for the
+  rest of it (61 of 102 rounds): it had never learned their backhaul stations. em_ctrl sends a
+  Backhaul STA Capability Query only after a Backhaul STA Radio Capabilities TLV arrives in a
+  Topology Response, as RDK's agents send it; EMOSA reports its station the R1 way, in Device
+  Information, and answers the query when asked. Without the station a pod had no serving
+  sample, a move of it could never be verified, and its mark never cleared. 0236 takes the
+  station the controller keeps from Device Information. With the image
+  `X86EMLTRBPIBB_rdk-next_20261005213817`: both pods rooted under the gateway with fresh
+  serving samples (RCPI 138), and a move of pod-1 to the wired extender's backhaul BSS and back
+  (`lab.sh move`) left no mark. The long run on it: the four geometry rooms in both rounds,
+  26 of 27 catalog rooms in each (below), no pod left uncertain in any of 87 captured rounds,
+  and a pod's move verified by the controller for the first time; one that took EMOSA longer
+  than the controller's 15 s check was observed late and cleared.
+- **Then the restart (finding 18).** That redeploy ended with both pods on GRE: each agent
+  switched to the backhaul BSS a room's move had left as its kept target (spec 8.3), out of
+  reach where the pods then stood; the switch timed out and held the pod, and a held pod takes
+  no Backhaul Steering. Released by hand (`forget` in the gateway's fleet, OpenSync restarted:
+  the lab's `backhaul wifi` refuses with EMOSA in the gateway). emosa-lab 948f0ec: a kept target
+  that fails falls back to the configured upstream. In the next redeploy one pod's OpenSync
+  restarted and the fallback applied on its new start; the other's `cm` reverted the station
+  to its bootstrap credential on the same start, undoing the fallback written at once, and the
+  pod was held. emosa-lab 83f4ce4: the fallback waits until the station no longer carries the
+  failed credential. Verified in the gateway (its package installed over): both pods given an
+  unreachable kept target (`02:00:00:00:19:03`) tried it, timed out after 90 s, waited 40 and
+  60 s for `cm`'s revert, then switched to the configured upstream and applied it, no hold.
+- **Seen, not failures.** The pods' default uplink is the gateway's backhaul BSS; a pod on the
+  wired extender's backhaul BSS has no root path, since the native module has no parent for a
+  wired extender, so it is not measured there. `home-a-wired-extender-loss-recovery` failed in
+  each round of the last long run: once as before these changes, one sample exactly 5 s into
+  the wired extender's 40 s outage, the check's grace, still showing a client on it (2 of 8
+  runs now); once at the harness, its page load timed out at a host load of 16 from another
+  Yocto build. em_ctrl's journal is
+  partial: the image caps it at 1000 lines per 30 s and it writes about 1600.
+- **Kept from 0235:** an agent marked uncertain after an unverified move now clears once it is
+  seen, fresh, on a known parent 30 s later. Before, the mark stayed until em_ctrl restarted
+  and left the agent and everything under it out of every root path.
