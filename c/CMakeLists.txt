@@ -106,6 +106,11 @@ add_executable(emosa-gtp-c src/gtpd.c)
 target_link_libraries(emosa-gtp-c emosa ${CJSON_LIBRARIES} ${CRYPTO_LIBRARIES})
 install(TARGETS emosa-gtp-c DESTINATION bin)
 
+# The forwarder (spec §3.1): the fleet's front and agent ports reached on its advertise address
+add_executable(emosa-forward-c src/forwardd.c)
+target_link_libraries(emosa-forward-c emosa ${CJSON_LIBRARIES} ${CRYPTO_LIBRARIES})
+install(TARGETS emosa-forward-c DESTINATION bin)
+
 # A distribution's package (EMOSA_INSTALL_DATA): with the programs, the schemas and pod
 # profiles at the places above, the systemd units (packaging/systemd: the fleet, an agent
 # per pod, the GTP), the agent's link helper and the example configurations (the adapter
@@ -130,7 +135,7 @@ if(EMOSA_INSTALL_DATA)
             FILES_MATCHING PATTERN "*.schema.json")
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../src/emosa/profiles/ DESTINATION ${EMOSA_PROFILES_DIR}
             FILES_MATCHING PATTERN "*.json")
-    foreach(unit emosa-fleet.service emosa-agent@.service emosa-gtp.service)
+    foreach(unit emosa-fleet.service emosa-agent@.service emosa-gtp.service emosa-forward.service)
         configure_file(packaging/systemd/${unit}.in ${CMAKE_CURRENT_BINARY_DIR}/units/${unit} @ONLY)
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/units/${unit} DESTINATION ${EMOSA_SYSTEMD_UNIT_DIR})
     endforeach()
@@ -173,6 +178,12 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/log_rdk.c)
                                EMOSA_RDK_LOG_MAXSIZE=4096L EMOSA_RDK_LOG_MAXCOUNT=3L)
     target_link_libraries(emosa-log-rdk ${CJSON_LIBRARIES})
     add_test(NAME log-rdk COMMAND emosa-log-rdk)
+endif()
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/forward.c)
+    # the forwarder as a program: 127.0.0.2 to 127.0.0.1, inert without "forward"
+    add_executable(emosa-forward-test tests/forward.c)
+    add_test(NAME forward COMMAND emosa-forward-test $<TARGET_FILE:emosa-forward-c>
+             ${CMAKE_CURRENT_SOURCE_DIR}/../schemas ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/units.c)
     add_executable(emosa-units tests/units.c)

@@ -1,0 +1,17 @@
+# EMOSA's forwarder (spec 3.1), as a distribution's package installs it (CMake
+# EMOSA_INSTALL_DATA): the fleet's front port and agent ports, which listen on loopback,
+# reached on the fleet's advertise address (a gateway's LAN address). Inert unless the fleet
+# configuration (@EMOSA_FLEET_CONFIG@) has "forward": true.
+[Unit]
+Description=EMOSA forwarder: the fleet's ports on its advertise address
+After=network-online.target emosa-fleet.service
+ConditionPathExists=@EMOSA_FLEET_CONFIG@
+
+[Service]
+EnvironmentFile=-/etc/default/emosa
+ExecStart=@EMOSA_BINDIR@/emosa-forward-c @EMOSA_FLEET_CONFIG@
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

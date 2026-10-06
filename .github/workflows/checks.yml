@@ -426,10 +426,11 @@ jobs:
       - name: the package's files
         run: |
           cd root
-          for f in usr/bin/emosa-agent-c usr/bin/emosa-fleet-c usr/bin/emosa-gtp-c \
+          for f in usr/bin/emosa-agent-c usr/bin/emosa-fleet-c usr/bin/emosa-gtp-c usr/bin/emosa-forward-c \
                    usr/libexec/emosa/emosa-agent-link etc/default/emosa \
                    lib/systemd/system/emosa-fleet.service lib/systemd/system/emosa-agent@.service \
-                   lib/systemd/system/emosa-gtp.service usr/share/emosa/emosa-c.spdx.json \
+                   lib/systemd/system/emosa-gtp.service lib/systemd/system/emosa-forward.service \
+                   usr/share/emosa/emosa-c.spdx.json \
                    usr/share/emosa/schemas/agent-config.schema.json \
                    usr/share/emosa/profiles/opensync-lab-hwsim-6.6.1-v1.json; do
             test -e "$f" || { echo "missing: $f"; exit 1; }
@@ -447,6 +448,7 @@ jobs:
           grep -qx "ExecStart=/usr/bin/emosa-fleet-c serve /nvram/emosa/fleet-config.json" c/build-gateway/units/emosa-fleet.service
           grep -qx "ConditionPathExists=/nvram/emosa/agents/%i.json" c/build-gateway/units/emosa-agent@.service
           grep -qx "ConditionPathExists=/nvram/emosa/gtp-config.json" c/build-gateway/units/emosa-gtp.service
+          grep -qx "ExecStart=/usr/bin/emosa-forward-c /nvram/emosa/fleet-config.json" c/build-gateway/units/emosa-forward.service
           grep -qx "EMOSA_RUN_ROOT=/run/emosa" c/build-gateway/default-emosa
           grep -qx "EMOSA_NETNS=emosa" c/build-gateway/default-emosa
   c-analyzer:

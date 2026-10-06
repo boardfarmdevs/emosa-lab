@@ -213,8 +213,10 @@ is not an EasyMesh link, and the agent reports nothing about it.
   `AWLAN_Node.manager_addr = tcp:<advertise>:<agent port>`, and MUST then end
   the session. OpenSync's connection manager acts on a new manager address only
   once disconnected.
-- **Agent port:** one per pod, listening on loopback only. A forwarder (in the
-  lab, an LXD proxy) carries the pod's connection to it. The agent keeps one
+- **Agent port:** one per pod, listening on loopback only. A forwarder carries
+  the pod's connection to it: on a gateway, the package's own (`forward` in the
+  fleet configuration: the front and agent ports on the `advertise` address); in
+  the labs' containers, an LXD proxy. The agent keeps one
   `monitor` session and reconnects with 1 to 9 s backoff. Echo probes run every
   5 s.
 - The agent MUST refuse to act on a pod whose `AWLAN_Node.serial_number` differs

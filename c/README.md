@@ -120,15 +120,20 @@ describe`, `+dirty` for a changed tree; a distribution passes `-DEMOSA_REVISION`
 programs' start messages carry both.
 
 **The package's layout** (`-DEMOSA_INSTALL_DATA=ON`, as the Yocto recipe builds it):
-the three programs in `bin`; the schemas and pod profiles in `EMOSA_SCHEMAS_DIR` and
-`EMOSA_PROFILES_DIR`; the units `emosa-fleet.service`, `emosa-agent@.service` and
-`emosa-gtp.service` (`packaging/systemd`) in `EMOSA_SYSTEMD_UNIT_DIR`; the agent's
+the four programs in `bin`; the schemas and pod profiles in `EMOSA_SCHEMAS_DIR` and
+`EMOSA_PROFILES_DIR`; the units `emosa-fleet.service`, `emosa-agent@.service`,
+`emosa-gtp.service` and `emosa-forward.service` (`packaging/systemd`) in
+`EMOSA_SYSTEMD_UNIT_DIR`; the agent's
 link helper in `libexec/emosa`; `/etc/default/emosa` (`EMOSA_TRUNK=emlan` with
 `EMOSA_BRIDGE=brlan0`: the helper makes the trunk a veth pair into the gateway's LAN
 bridge); the example configurations and the bill of materials
 (`emosa-c.spdx.json`) in `share/emosa`. The fleet and the GTP are inert until their
 configuration exists (`ConditionPathExists`); the fleet enables an agent's unit for
-each pod handed to it. The GTP's unit runs `EMOSA_DNSMASQ`.
+each pod handed to it. The GTP's unit runs `EMOSA_DNSMASQ`. The forwarder,
+`emosa-forward-c`, is spec 3.1's forwarder on the gateway itself: with `"forward": true` in
+the fleet configuration it exposes the front port and the agent ports, which listen on
+loopback, on the `advertise` address (the gateway's LAN address), each connection spliced to
+`127.0.0.1` on its port; without it, it exits at once.
 
 **Where the configuration and state go** (CMake, written into `/etc/default/emosa` for the
 tools that configure EMOSA): the units read `EMOSA_FLEET_CONFIG`, `EMOSA_AGENT_CONFIG_DIR`

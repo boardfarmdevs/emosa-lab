@@ -18,6 +18,7 @@ the C follows until `emosa-vectors` passes again ([testing.md](testing.md)).
 | `agent.c` | `emosa-agent-c CONFIG.json`: one pod's agent. Configuration (schema `agent-config`), the poll loop over the pod's OVSDB connection, the 1905 socket and the MQTT broker, the onboarding session's states, the dispatch of every received message, the counters and the status file (schema `agent-status`) | `emosa.agent.pod`, `emosa.wire.onboarding` | box (every agent scenario), the labs |
 | `fleetd.c` | `emosa-fleet-c serve\|list\|forget`: the front port's poll loop, one state machine per arriving pod, `systemctl` as reaped children | `emosa.agent.fleet` (main) | box `fleet-*`, fuzz `fleet` |
 | `gtpd.c` | `emosa-gtp-c setup\|lease\|reconcile\|list`: the GTP's command line, dnsmasq's lease hook | `emosa.gtp` (main) | box `gtp`, fuzz `gtp` |
+| `forwardd.c` | `emosa-forward-c CONFIG`: spec 3.1's forwarder on a gateway, the fleet's front and agent ports on its `advertise` address spliced to loopback; inert without `"forward": true` | none (deployment plumbing; the labs' containers use LXD proxies) | ctest `forward` |
 
 ## Wire
 

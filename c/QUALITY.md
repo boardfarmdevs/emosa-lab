@@ -107,5 +107,5 @@ Coverage: build with `-DCMAKE_C_FLAGS="--coverage -O0"`, run the tests, then
 
 | Rule | Where | Why |
 | --- | --- | --- |
-| ERR34-C (`sscanf` for integers) | `canon.c`, `jschema.c`, `ovsdb.c` | every conversion has a field width of at most five digits, so it cannot overflow an `int`, and the values are range-checked afterwards |
-| DCL37-C (reserved identifier) | `_GNU_SOURCE` in `mqtt.c`, `ovsdb.c` and `ethernet.c` (`setns`, 5 October 2026) | the C library's feature-test macro, which the program must define to get the POSIX and GNU interfaces it uses; it declares nothing of the program's own |
+| ERR34-C (`sscanf` for integers) | `canon.c`, `jschema.c`, `ovsdb.c`, `forwardd.c` | every conversion has a field width of at most five digits, so it cannot overflow an `int`, and the values are range-checked afterwards |
+| DCL37-C (reserved identifier) | `_GNU_SOURCE` in `mqtt.c`, `ovsdb.c`, `ethernet.c` (`setns`, 5 October 2026) and `forwardd.c` (`accept4`, 6 October) | the C library's feature-test macro, which the program must define to get the POSIX and GNU interfaces it uses; it declares nothing of the program's own |

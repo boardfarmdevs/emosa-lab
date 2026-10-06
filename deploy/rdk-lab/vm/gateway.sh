@@ -34,6 +34,7 @@ AGENTS=(6651 "${EMOSA_FLEET_LAST_PORT:-6690}")
 BROKER_HOST_PORT=${EMOSA_GATEWAY_BROKER_PORT:-11883}    # the agents' broker on the VM's loopback
 FOOTPRINT=/var/lib/emosa-lab/footprint
 LOG_TAG=emosa-gateway
+REDIRECT=$(cd "$(dirname "$0")" && pwd)/operator-redirect.py    # the operator's redirect (the VM's)
 # shellcheck source-path=SCRIPTDIR source=../../lib/emosa-vm.sh
 source "$(cd "$(dirname "$0")/../.." && pwd)/lib/emosa-vm.sh"
 
@@ -105,8 +106,64 @@ install_package() {    # install_package [IPK]: the package emosa in the gateway
     cx "$CTL" systemctl daemon-reload
 }
 
-plumbing() {    # the front and agent ports into the gateway, the agents' broker (in emosa) through the host
-    forward "$CTL"
+lan_address() {    # the gateway's LAN address (its LAN bridge's first IPv4 address)
+    local bridge
+    # shellcheck disable=SC2016 # expanded in the gateway
+    bridge=$(cx "$CTL" sh -c '. /etc/default/emosa 2>/dev/null; echo "${EMOSA_BRIDGE:-brlan0}"')
+    cx "$CTL" ip -4 -o addr show dev "$bridge" | awk '{split($4, a, "/"); print a[1]; exit}'
+}
+
+operator_redirect() {    # operator_redirect TARGET|off: the operator's redirect on the pods' redirector address
+    # The operator's cloud hands each pod to the gateway's fleet once (plan 5.3); in this lab
+    # the pod image's redirector is $WAN_HOST:$FLEET_PORT, on the WAN side: answered here, on
+    # the VM, outside the home (operator-redirect.py), not by EMOSA.
+    local unit=/etc/systemd/system/emosa-lab-operator-redirect.service
+    if [ "$1" = off ]; then
+        systemctl disable -q --now emosa-lab-operator-redirect 2>/dev/null || true
+        rm -f "$unit"
+        systemctl daemon-reload
+        return
+    fi
+    cat > "$unit" <<EOF
+[Unit]
+Description=The operator's redirect on $WAN_HOST:$FLEET_PORT (the pods' redirector) to $1
+After=emosa-lab-wan-address.service
+
+[Service]
+ExecStart=/usr/bin/python3 $REDIRECT $WAN_HOST $FLEET_PORT $1
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    systemctl daemon-reload
+    systemctl enable -q emosa-lab-operator-redirect
+    systemctl restart emosa-lab-operator-redirect
+}
+
+gateway_ports() {    # the front and agent ports on the gateway's LAN address, its own forwarder
+    local lan config ct dev
+    lan=$(lan_address)
+    [ -n "$lan" ] || die "$CTL has no IPv4 address on its LAN bridge"
+    for ct in "$CTL" emosa; do    # the lab's proxies from the WAN address: none
+        for dev in front agents; do
+            ! has_device "$ct" "$dev" || lxc config device remove "$ct" "$dev" >/dev/null
+        done
+    done
+    # the fleet hands pods to tcp:LAN:PORT; its forwarder (emosa-forward-c) carries them to
+    # the loopback ports the fleet and the agents listen on (spec 3.1)
+    config=$(emosa_layout "$CTL" | cut -d" " -f1)
+    cx "$CTL" cat "$config" | jq --arg lan "$lan" '.advertise = $lan | .forward = true' |
+        lxc exec "$CTL" -- sh -c "cat > '$config.new' && mv '$config.new' '$config'"
+    cx "$CTL" systemctl enable -q emosa-forward
+    cx "$CTL" systemctl restart emosa-forward
+    operator_redirect "tcp:$lan:$FLEET_PORT"
+    log "gateway: the fleet and agents on $lan, the operator's redirect on $WAN_HOST:$FLEET_PORT"
+}
+
+plumbing() {    # the front and agent ports on the gateway's LAN, the agents' broker (in emosa) through the host
+    gateway_ports
     if [ -f "$STATE/telemetry" ]; then
         has_device emosa mqtt-agents || lxc config device add emosa mqtt-agents proxy bind=host \
             listen="tcp:127.0.0.1:$BROKER_HOST_PORT" connect=tcp:127.0.0.1:1883 >/dev/null
@@ -125,7 +182,8 @@ on() {
         fi
         cx "$CTL" test -x /usr/bin/emosa-fleet-c || die "$CTL has no EMOSA: deploy an image with it, or off"
         plumbing
-        cx "$CTL" systemctl enable -q --now emosa-fleet
+        cx "$CTL" systemctl enable -q emosa-fleet
+        cx "$CTL" systemctl restart emosa-fleet    # with the advertise address plumbing wrote
         log "gateway: EMOSA in $CTL again ($(emosa_layout "$CTL"))"
         wait_provisioned "$CTL" "$(pods_running)"
         log "gateway: $(provisioned "$CTL") agents provisioning in $CTL"
@@ -138,7 +196,8 @@ on() {
     move_state emosa "$CTL"
     plumbing
     touch "$STATE/gateway"
-    cx "$CTL" systemctl enable -q --now emosa-fleet
+    cx "$CTL" systemctl enable -q emosa-fleet
+    cx "$CTL" systemctl restart emosa-fleet
     log "gateway: fleet started in $CTL, with its registry's agents"
     wait_provisioned "$CTL" "$(pods_running)"
     log "gateway: $(provisioned "$CTL") agents provisioning in $CTL"
@@ -147,7 +206,14 @@ on() {
 off() {
     in_gateway || die "EMOSA does not run in $CTL"
     stop_emosa "$CTL"
+    cx "$CTL" systemctl disable -q --now emosa-forward 2>/dev/null || true
+    operator_redirect off
     move_state "$CTL" emosa
+    # emosa's fleet is reached through the lab's proxies on the WAN address again
+    local emosa_config
+    emosa_config=$(emosa_layout emosa | cut -d" " -f1)
+    cx emosa cat "$emosa_config" | jq --arg wan "$WAN_HOST" '.advertise = $wan | del(.forward)' |
+        lxc exec emosa -- sh -c "cat > '$emosa_config.new' && mv '$emosa_config.new' '$emosa_config'"
     # the gateway as it was: no configuration (the package inert), no trunk, no agents'
     # namespace (the trunk's end and the agents' interfaces go with it)
     local config agents root run
