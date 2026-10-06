@@ -1118,6 +1118,46 @@ target configuration validated again. Three steps, on rdk-1004 (rev140).
   all: through a pod's bootstrap (its OpenSync restarted, on GRE after 15 s, on its Wi-Fi
   uplink after 28 s) the controller's topology listed its station in none of 84 polls, one
   a second.
+- **em_ctrl's journal under its cap** (meta-cmf 1d42444 to 06ca98f). The image caps it at
+  1000 lines per 30 s; through the catalog on rdk-1004 em_ctrl wrote 2,500 to 8,500 and
+  journald dropped the rest in every window, the lab's evidence with it. unified-wifi-mesh
+  0237 and 0238 print 129 statements of per-message work through em's debug channel
+  (`/nvram/emCtrlDbg`, `/nvram/emConfDbg`), the M2 line without the networks' passphrases.
+  Measuring it showed a loop too: the wired extender's radio, renewed alone, waited at the
+  Channel Preference Query and the policy request for siblings already configured, timed
+  out and was renewed again (43 times in 22 min; refusing candidate queries, the catalog
+  did not converge). rdk-emosa-1005 showed it with the earlier image too. 0239 lets it on,
+  as 0233 and 0234 at the steps before. With `X86EMLTRBPIBB_rdk-next_20261006124653`,
+  redeployed: the catalog 27 of 27; em_ctrl 109 lines per 30 s on average, 635 at most,
+  no window over the cap but one while `lab.sh steering` set eight devices at once (22
+  over: now one a request, 10 s apart); no renewal in 50 min.
+- **A fresh lab: rdk-emosa-1005** (rev120, beside rdk-emosa-1002, `EASYMESH_SHARED_HOST=1`),
+  built from scratch with `EASYMESH_EMOSA_IN=gateway` (meta-cmf 75462bb, emosa-lab 04189dc,
+  the gateway image of rdk-1004 then): no container but the pods from the start. Two
+  findings (emosa-lab cdfaddc): on a new VAP map the gateway's agent restarted before the
+  pods' SSID was set, the step missed that the keeper set it afterwards (it read systemd's
+  last journal line, not the keeper's), and the agent's copy put OneWifi's default SSID back:
+  no pod reached EMOSA; and `up c gateway` again on such a lab waited for uplinks never
+  asked for. With both, the pods reached their agents within 30 s of the SSID, then their
+  Wi-Fi uplinks. Redeployed with rdk-1004's image then (`X86EMLTRBPIBB_rdk-next_20261006124653`)
+  and the option run again from the pinned emosa-lab cdfaddc, its suite: readiness, the
+  catalog 26 of 27, the four geometry rooms with their recovery. The 27th,
+  `home-a-wired-extender-loss-recovery`, failed at its known boundary (one sample at 25 s,
+  5 s into the wired extender's outage, still showing a client on it). On the final image,
+  run again: 1 of 3 with the browser on rev120, 2 of 3 with it on rev140, every failure that
+  one sample at 25 s; rev120 runs two lab VMs at load 10 to 11. On rdk-1004 the room passed
+  in all four catalogs of the day. No pod is in the check.
+- **The final image, both labs** (`X86EMLTRBPIBB_rdk-next_20261006153516`, meta-cmf dad7504,
+  EMOSA's package at the pin cdfaddc): unified-wifi-mesh 0240 takes em_ctrl's data model
+  registration traces (some 800 lines at each of its starts) to the debug channel as well.
+  rdk-1004, redeployed: the catalog 27 of 27, em_ctrl 103 lines per 30 s on average and 619
+  at most, no renewal in 50 min; through the whole run (the redeploy, two bring-ups, the
+  option, the catalog) one window over the cap, at a bring-up's controller restart (479
+  lines over: every agent onboarding at once, WSC, renewals, Topology Responses), where a
+  start had dropped 1,238 before 0240. Of four controller starts on the image three stayed
+  under. Seen there, not EMOSA's: the gateway's agent and the wired extender send their
+  first Topology Responses without a profile TLV and em_ctrl refuses them (17.2.4, 17.2.47,
+  17.2.75).
 - **The containers removed.** `lab.sh up c gateway` is now the target configuration without
   them: on a fresh lab EMOSA, its broker and its GTP start in the gateway from the image
   (`gateway.sh on` writes the lab's fleet configuration there), and on a lab from the
