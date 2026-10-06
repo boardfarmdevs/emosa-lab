@@ -1034,3 +1034,83 @@ and must be stable; test more rooms and fix what fails.
 - **Kept from 0235:** an agent marked uncertain after an unverified move now clears once it is
   seen, fresh, on a known parent 30 s later. Before, the mark stayed until em_ctrl restarted
   and left the agent and everything under it out of every root path.
+
+### EMOSA wholly in the gateway: no adapter or GTP container (6 October)
+
+The goal (user, 6 October): what still ran in the containers `emosa` and `em-gtp` into the
+gateway, as a gateway carrying EMOSA would run it, then the containers removed and the
+target configuration validated again. Three steps, on rdk-1004 (rev140).
+
+- **1. The fleet and agents on the gateway's LAN** (emosa-lab 95a39da, meta-cmf 1b6a68b).
+  The package's forwarder, `emosa-forward-c` (spec 3.1), carries the front and agent ports
+  from the gateway's LAN address to the loopback ports the fleet and the agents listen on
+  (fleet configuration `"forward": true`, `advertise` the LAN address). The pods' redirector,
+  `10.101.0.40:6640` on the WAN side, is the operator's: `operator-redirect.py` on the VM
+  answers it and hands each pod to `tcp:10.0.0.1:6640` (plan 5.3), as the operator's cloud
+  would. No proxy of the lab's into the gateway any more.
+- **2. The pods' broker in the gateway** (emosa-lab cb29316, meta-cmf 165fdb5): the image's
+  mosquitto (`EMOSA_BROKER`, inert until configured), mutual TLS on `10.0.0.1:8883` for the
+  pods and plain on `127.0.0.1:1883` for the agents; the lab's CA moved to the VM
+  (`/var/lib/emosa-lab/pki`), the operator's side, which signs the pods' device certificates.
+- **3. The pods' GRE termination point in the gateway.** Their onboarding SSID
+  (`opensync-lab-bhaul`) is a VAP of the gateway's: `wifi1.4`, OneWifi's `lnf_radius_5g`
+  (index 11) on bridge `brpodbh`; the image's `emosa-gtp` serves DHCP there
+  (`169.254.2.1/25`) and ends the pods' GRE, its tunnels (`gtp2_<lease>`) in `brlan0`; the
+  gateway's firewall accepts the underlay (syscfg `GeneralPurposeFirewallRule`, kept across
+  its rebuilds). Five findings on the way, each fixed in the image (meta-cmf c5abb1d):
+  - RDK's dnsmasq bound its DHCP socket to the wildcard address and the GTP's own DHCP server
+    failed to bind beside it ("Address already in use"): utopia 0001, `bind-dynamic`.
+  - Applying the controller's settings, OneWifi's translator reset an lnf_radius VAP
+    (disabled, its default SSID and security): no EasyMesh haul type maps to lnf_radius, so
+    the controller never configures one and nothing enabled it again.
+  - The gateway's agent reported the VAP in its AP Operational BSS. RDK's controller accepts
+    a Topology Response only when every operational BSS carries one of its network SSIDs: each
+    of the gateway's failed ("SSID misconfiguration", all 22 in the captured log), its radios stayed in
+    `topo_sync_pending`, candidate queries to them were refused (`Error_Not_Ready`) and steers
+    from its BSSes ended in `association_timeout`. The room did not settle (11 of 20 clients
+    measured), twice. libwebconfig 0014: lnf_radius VAPs stay out of EasyMesh, as hotspot
+    VAPs do, in both directions, and their stations are not reported as the agent's clients.
+  - The VAP first took the 5 GHz mesh station's slot (`wifi1.3`): the single-phy build makes
+    exactly ten interfaces before OneWifi starts and removes them all when it stops, and the
+    HAL cannot create another (the VAP has no BSSID yet: `-EADDRNOTAVAIL`). Out of EasyMesh,
+    that cost the gateway one of its ten EasyMesh BSSes, which the lab's tools count
+    (`Agent-1:9`, "topology incomplete"). The gateway's pre-start now makes the interfaces its
+    VAP map names beyond the ten, each with a MAC of its own in `/nvram/mac_addresses.txt`;
+    the pods' VAP is `wifi1.4`, beside them.
+  - OneWifi keeps no VAP settings across its restarts in this build (no wifidb on `/nvram`),
+    and only the EasyMesh VAPs get theirs back, from the controller: after a restart of
+    OneWifi alone the pods' VAP came back with OneWifi's default SSID, WPA2-Enterprise and
+    hidden, out of its bridge. The image's `emosa-podbh.service` (with `emosa-gtp`, wanted by
+    and part of `onewifi.service`, before `em_agent`) gives it the SSID and key in
+    `/nvram/emosa/podbh.conf` at each start of OneWifi; inert without the file. After a
+    OneWifi restart it had them back within 5 s.
+  - Seen in the lab's step, not the image: the gateway's agent applies the controller's
+    settings with its copy of the radio's VAPs, taken when it started; `gateway.sh` restarts
+    it after the SSID and key changed.
+- **Verified at runtime on rdk-1004** (the library and the pre-start step in place, before
+  the image): every node complete (the gateway and the five extenders at 10 BSSes, the pods
+  at 5), no SSID mismatch, the pods' SSID unchanged through restarts of em_agent and em_ctrl,
+  and the room settled with 20 of 20 clients measured and converged, 4 min into the lab's
+  bring-up. A pod's bootstrap through the gateway, its OpenSync restarted: on its GRE uplink
+  (lease `169.254.2.38`, tunnel `gtp2_38` in `brlan0`) after 16 s, connected to its agent in
+  the gateway (`tcp:[10.0.0.1]:6651`) after 22 s, on its Wi-Fi uplink (the gateway's
+  `mesh_backhaul`, applied) after 27 s.
+- **Validated on rdk-1004** with the gateway image `X86EMLTRBPIBB_rdk-next_20261006083201`
+  (meta-cmf c5abb1d; its EMOSA package from emosa-lab 95a39da, whose `c/` is unchanged
+  since), redeployed in place with the lab's own redeploy. At the new gateway's first boot
+  `emosa-podbh` gave `wifi1.4` its SSID, and both pods came back through it on their own:
+  their leases from the gateway's GTP date from a minute after the gateway was up, twenty
+  before any lab step ran, and the lab's redeploy passed its bring-up with them. `lab.sh up
+  c gateway` then exited 0, and the long run passed whole: the room catalog (27 rooms) and
+  the four geometry rooms, twice, 62 of 62, `home-a-wired-extender-loss-recovery` included
+  both times (`rdk-1004-soak.sh`, 1 h 58 min). Through it the gateway held 505 MiB (median,
+  515 peak, of 1 GiB): each EMOSA agent 5.0 MiB PSS and 0.6 % of a core, the fleet 0.7 MiB,
+  the forwarder 1.0 MiB, mosquitto 1.4 MiB, the GTP's dnsmasq 0.4 MiB; em_ctrl 38 MiB and
+  41 % of a core.
+- **The containers removed.** `lab.sh up c gateway` is now the target configuration without
+  them: on a fresh lab EMOSA, its broker and its GTP start in the gateway from the image
+  (`gateway.sh on` writes the lab's fleet configuration there), and on a lab from the
+  container option `lab.sh retire` deletes `emosa` and `em-gtp` (em-gtp's radio back to the
+  pool) once EMOSA runs in the gateway. On rdk-1004 both were deleted on 6 October. The
+  lab's `fleet` and `backhaul` (the pods' uplinks, a held pod released) now work with EMOSA
+  in the gateway too.

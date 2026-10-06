@@ -13,16 +13,29 @@ LIBRARY = ROOT / "deploy/lib/emosa-vm.sh"
 SCRIPTS = [ROOT / "deploy/opensync-lab/vm/lab.sh", ROOT / "deploy/rdk-lab/vm/lab.sh"]
 
 # A stand-in for lxc: every container exists; what a step writes to a file in a
-# container (sh -c "cat > FILE") lands in $CAPTURE/<basename>; everything else succeeds.
-FAKE_LXC = """#!/bin/bash
+# container (sh -c "cat > FILE", or "cat > 'FILE.new' && mv ...") lands in
+# $CAPTURE/<basename>; a container's places (emosa_layout) are read from $FAKE_DEFAULT
+# for its /etc/default/emosa (none: the kit's defaults); its LAN bridge has 10.0.0.1;
+# everything else succeeds.
+FAKE_LXC = r"""#!/bin/bash
 for a in "$@"; do
-    case $a in "cat > "*) f=${a#cat > }; cat > "$CAPTURE/$(basename "$f")"; exit 0 ;; esac
+    case $a in
+        *EMOSA_FLEET_CONFIG*)
+            exec sh -c "${a//\/etc\/default\/emosa/${FAKE_DEFAULT:-/nonexistent}}" ;;
+        "cat > '"*)
+            f=${a#"cat > '"}; f=${f%%"'"*}
+            cat > "$CAPTURE/$(basename "${f%.new}")"; exit 0 ;;
+        "cat > "*) f=${a#cat > }; cat > "$CAPTURE/$(basename "$f")"; exit 0 ;;
+    esac
 done
+case " $* " in
+    *" ip -4 -o addr show "*) echo "5: brlan0    inet 10.0.0.1/24 scope global brlan0" ;;
+esac
 exit 0
 """
 
 
-def run(tmp_path, script, state=None):
+def run(tmp_path, script, state=None, default=None):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(exist_ok=True)
     (bin_dir / "lxc").write_text(FAKE_LXC)
@@ -35,6 +48,8 @@ def run(tmp_path, script, state=None):
         CAPTURE=str(capture),
         STATE=str(state or tmp_path / "state"),
     )
+    if default:
+        env["FAKE_DEFAULT"] = str(default)
     for name in ("EMOSA_MESSAGE_SET", "EMOSA_MULTI_BSS", "EMOSA_M2_SESSION", "EMOSA_POD_PROFILE"):
         env.pop(name, None)
     prologue = (
@@ -71,6 +86,37 @@ def test_rdk_fleet(tmp_path):
     assert (fleet["message_set"], fleet["multi_bss"], fleet["m2_session"]) == ("r1", True, "shared")
     assert fleet["telemetry"] == {"mode": "off"}
     assert fleet["pods"] == {"SERIAL": {"uplink": {"mode": "multi-ap"}}}
+    assert (fleet["state_root"], fleet["config_dir"]) == ("/var/lib/emosa", "/etc/emosa")
+    assert "forward" not in fleet and "run_root" not in fleet
+
+
+def test_rdk_fleet_in_the_gateway(tmp_path):
+    # EMOSA in the RDK lab's gateway: its package's places, the ports and the pods'
+    # broker on its LAN address, through its forwarder
+    state = tmp_path / "state"
+    state.mkdir()
+    (state / "gateway").touch()
+    (state / "telemetry").touch()
+    default = tmp_path / "default-emosa"
+    default.write_text(
+        "EMOSA_FLEET_CONFIG=/nvram/emosa/fleet-config.json\n"
+        "EMOSA_AGENT_CONFIG_DIR=/nvram/emosa/agents\n"
+        "EMOSA_STATE_ROOT=/nvram/emosa/state\n"
+        "EMOSA_RUN_ROOT=/run/emosa\n"
+    )
+    _, capture = run(
+        tmp_path,
+        "CTL=bpibroadband fleet_config 6640 6651 6690 02:00:00:00:00:01 r1 true shared",
+        state,
+        default,
+    )
+    fleet = json.loads((capture / "fleet-config.json").read_text())
+    assert fleet["advertise"] == "10.0.0.1"
+    assert fleet["forward"] is True
+    places = (fleet["state_root"], fleet["config_dir"])
+    assert places == ("/nvram/emosa/state", "/nvram/emosa/agents")
+    assert fleet["run_root"] == "/run/emosa"
+    assert fleet["telemetry"] == {"mode": "mqtt", "broker": "10.0.0.1", "port": 8883}
 
 
 def test_opensync_lab_fleet_without_pods(tmp_path):

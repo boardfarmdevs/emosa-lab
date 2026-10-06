@@ -1,27 +1,32 @@
 #!/bin/bash
-# Inside an RDK EasyMesh lab VM with the EMOSA option (vm/lab.sh up c), root: EMOSA's fleet
-# and agents in the RDK controller's own container, as on a gateway that carries the
-# adapter (meta-cmf-bananapi-vcpe's recipe emosa), and its footprint there (easymesh-labs
-# plan 5.4). The GTP stays where vm/lab.sh put it.
+# Inside an RDK EasyMesh lab VM with the EMOSA option (vm/lab.sh up c gateway), root: EMOSA's
+# fleet and agents, the pods' broker and their GRE termination point in the RDK controller's
+# own container, as on a gateway that carries the adapter (meta-cmf-bananapi-vcpe's recipe
+# emosa), and its footprint there (easymesh-labs plan 5.4).
 #
 #   gateway.sh on [EMOSA_IPK]     the fleet and agents into the controller container: the
 #                                 package emosa (EMOSA_IPK, built with the image's recipe,
 #                                 over what the gateway has; without it, the package the
-#                                 image or an earlier run put there), the adapter container's
-#                                 registry and state taken over into the places the gateway's
-#                                 package names (/etc/default/emosa: /nvram/emosa on RDK, the
-#                                 status in /run), its fleet configuration written there; the
+#                                 image or an earlier run put there); an adapter container's
+#                                 registry and state, if the lab has one, taken over into the
+#                                 places the gateway's package names (/etc/default/emosa:
+#                                 /nvram/emosa on RDK, the status in /run), else the lab's
+#                                 fleet configuration (vm/lab.sh fleet) written there; the
 #                                 front and agent ports on the gateway's LAN address through
 #                                 the package's forwarder, the pods sent there by the
 #                                 operator's redirect on the VM (operator-redirect.py, the
 #                                 pods' redirector address); the pods' broker in the gateway
-#                                 (the image's mosquitto, the lab's CA moved to the VM); the
-#                                 agents' trunk is the package's veth pair into brlan0. Again
-#                                 while EMOSA runs in the gateway (after it was deployed anew):
-#                                 all of that again; with EMOSA_IPK, that package over the
-#                                 running one
-#   gateway.sh off                back into the adapter container, the state taken back; the
-#                                 package stays installed in the gateway, unconfigured (inert)
+#                                 (the image's mosquitto, the lab's CA on the VM); their
+#                                 bootstrap SSID as a VAP of the gateway's (OneWifi's
+#                                 lnf_radius_5g on bridge brpodbh) and their GRE ended there
+#                                 (the image's emosa-gtp, tunnels into brlan0); the agents'
+#                                 trunk is the package's veth pair into brlan0. Again while
+#                                 EMOSA runs in the gateway (after it was deployed anew): all
+#                                 of that again; with EMOSA_IPK, that package over the running one
+#   gateway.sh off                back into the adapter container and the GTP container em-gtp,
+#                                 the state taken back (a lab that has them: the target
+#                                 configuration has none); the package stays installed in the
+#                                 gateway, unconfigured (inert)
 #   gateway.sh status             where EMOSA runs, its agents, the gateway's memory
 #   gateway.sh measure LABEL SECONDS [INTERVAL]
 #                                 the gateway's memory and CPU, and EMOSA's and the
@@ -37,9 +42,15 @@ FLEET_PORT=${EMOSA_FLEET_PORT:-6640}
 AGENTS=(6651 "${EMOSA_FLEET_LAST_PORT:-6690}")
 FOOTPRINT=/var/lib/emosa-lab/footprint
 LOG_TAG=emosa-gateway
-REDIRECT=$(cd "$(dirname "$0")" && pwd)/operator-redirect.py    # the operator's redirect (the VM's)
+HERE=$(cd "$(dirname "$0")" && pwd)
+REDIRECT=$HERE/operator-redirect.py    # the operator's redirect (the VM's)
 PKI=/var/lib/emosa-lab/pki    # the lab's CA on the VM (the pods' device certificates)
 MQTT_DIR=/nvram/emosa/mqtt    # the gateway's broker: its CA, certificate and key
+BHAUL_SSID=${EMOSA_PODBH_SSID:-opensync-lab-bhaul}    # the pods' bootstrap SSID (the pod image's)
+BHAUL_KEY=${EMOSA_PODBH_KEY:-opensync-lab-bhaul-psk}
+PODBH_BRIDGE=brpodbh    # the underlay: the bootstrap SSID's own bridge in the gateway
+GTP_CONFIG=/nvram/emosa/gtp-config.json    # the package's (emosa-gtp.service)
+PODBH_CONF=/nvram/emosa/podbh.conf    # the pods' SSID and key, the image's (emosa-podbh.service)
 # shellcheck source-path=SCRIPTDIR source=../../lib/emosa-vm.sh
 source "$(cd "$(dirname "$0")/../.." && pwd)/lib/emosa-vm.sh"
 
@@ -111,13 +122,6 @@ install_package() {    # install_package [IPK]: the package emosa in the gateway
     cx "$CTL" systemctl daemon-reload
 }
 
-lan_address() {    # the gateway's LAN address (its LAN bridge's first IPv4 address)
-    local bridge
-    # shellcheck disable=SC2016 # expanded in the gateway
-    bridge=$(cx "$CTL" sh -c '. /etc/default/emosa 2>/dev/null; echo "${EMOSA_BRIDGE:-brlan0}"')
-    cx "$CTL" ip -4 -o addr show dev "$bridge" | awk '{split($4, a, "/"); print a[1]; exit}'
-}
-
 operator_redirect() {    # operator_redirect TARGET|off: the operator's redirect on the pods' redirector address
     # The operator's cloud hands each pod to the gateway's fleet once (plan 5.3); in this lab
     # the pod image's redirector is $WAN_HOST:$FLEET_PORT, on the WAN side: answered here, on
@@ -152,6 +156,7 @@ gateway_ports() {    # the front and agent ports on the gateway's LAN address, i
     lan=$(lan_address)
     [ -n "$lan" ] || die "$CTL has no IPv4 address on its LAN bridge"
     for ct in "$CTL" emosa; do    # the lab's proxies from the WAN address: none
+        exists "$ct" || continue    # emosa: none in the target configuration
         for dev in front agents; do
             ! has_device "$ct" "$dev" || lxc config device remove "$ct" "$dev" >/dev/null
         done
@@ -203,6 +208,7 @@ gateway_broker() {    # gateway_broker LAN: the pods' broker in the gateway (mos
     cx "$CTL" systemctl enable -q mosquitto
     cx "$CTL" systemctl restart mosquitto
     for ct in "$CTL" emosa; do    # the lab's broker proxies: none
+        exists "$ct" || continue
         for dev in mqtt mqtt-agents; do
             ! has_device "$ct" "$dev" || lxc config device remove "$ct" "$dev" >/dev/null
         done
@@ -234,16 +240,136 @@ pods_to_broker() {    # the pods publishing elsewhere: their OpenSync again, onc
     for pod in $(lxc list -c ns -f csv | grep -E '^pod-[0-9]+,RUNNING$' | cut -d, -f1); do
         # shellcheck disable=SC2016 # expanded in the pod
         broker=$(cx "$pod" sh -c 'PATH=$PATH:/usr/opensync/tools; ovsh s AWLAN_Node mqtt_settings -r' |
-            grep -o '"broker","[^"]*"' | cut -d'"' -f4)
-        [ "$broker" != "$lan" ] || continue
+            grep -o '"broker","[^"]*"' | cut -d'"' -f4) || true
+        # none yet (not provisioned since its OpenSync started): its agent writes the gateway's
+        if [ -z "$broker" ] || [ "$broker" = "$lan" ]; then continue; fi
         cx "$pod" systemctl restart opensync
-        log "gateway: $pod published to ${broker:-no broker}: its OpenSync again, for $lan"
+        log "gateway: $pod published to $broker: its OpenSync again, for $lan"
     done
 }
 
-plumbing() {    # the front and agent ports on the gateway's LAN, the pods' broker in the gateway
+podbh_vap() {    # the pods' bootstrap SSID as one of the gateway's own VAPs (OneWifi), on its own bridge
+    # A fifth VAP on the gateway's 5 GHz radio, wifi1.4: lnf_radius_5g on the underlay
+    # bridge, run as a fronthaul-type PSK VAP (spec 8.2), beside the gateway's own ten. Not
+    # lnf_psk_5g: the controller's networks configure that one (haul type Configurator, its
+    # SSID lnf_radius). No haul type maps to lnf_radius, and with OneWifi's libwebconfig 0014
+    # (meta-cmf) lnf_radius VAPs stay out of EasyMesh: the controller never sees it (an SSID
+    # outside its networks failed the gateway's Topology Responses) and never resets it. The
+    # image's pre-start makes the interfaces the map names beyond its fixed ten (the HAL
+    # cannot: -EADDRNOTAVAIL). OneWifi reads its interface map from /nvram, which an image
+    # upgrade keeps; the gateway's own map stays in .before-podbh, for off.
+    local changed i ssid
+    cx "$CTL" grep -q 'beyond the fixed ones above' /usr/ccsp/wifi/onewifi_pre_start.sh ||
+        die "$CTL: its image makes no interface beyond its fixed ten (meta-cmf: the pods' VAP on wifi1.4)"
+    cx "$CTL" test -x /usr/libexec/emosa/podbh-onewifi ||
+        die "$CTL: its image has no emosa-podbh (meta-cmf: the pods' SSID kept across OneWifi's restarts)"
+    changed=$(cx "$CTL" python3 - "$PODBH_BRIDGE" <<'EOF'
+import json, os, shutil, sys
+path = "/nvram/InterfaceMap.json"
+if not os.path.exists(path + ".before-podbh"):
+    shutil.copy(path, path + ".before-podbh")
+# the gateway's own map (an earlier version of this step had the pods' VAP in the 5 GHz
+# mesh station's slot), with the pods' VAP beside its 5 GHz VAPs
+interface_map = json.load(open(path + ".before-podbh"))
+for phy in interface_map["PhyList"]:
+    for radio in phy["RadioList"]:
+        vaps = [v for v in radio["InterfaceList"] if v["vapName"] != "lnf_radius_5g"]
+        if any(v["vapName"].endswith("_5g") for v in vaps):
+            vaps.insert(0, {"InterfaceName": "wifi1.4", "Bridge": sys.argv[1], "vlanId": 0,
+                            "vapIndex": 11, "vapName": "lnf_radius_5g"})
+        radio["InterfaceList"] = vaps
+if interface_map == json.load(open(path)):
+    print("")
+else:
+    with open(path + ".new", "w") as f:
+        json.dump(interface_map, f, indent=4)
+    os.replace(path + ".new", path)
+    print("changed")
+EOF
+)
+    if [ "$changed" = changed ]; then
+        # OneWifi again (its pre-start makes wifi1.4), and the gateway's agent after it: the
+        # controller's settings again
+        cx "$CTL" systemctl restart onewifi
+        for i in $(seq 1 24); do
+            cx "$CTL" sh -c 'rbuscli get Device.WiFi.SSIDNumberOfEntries 2>/dev/null | grep -q Value' && break
+            sleep 5
+        done
+        cx "$CTL" systemctl restart em_agent
+        sleep 45    # the agent applies the controller's settings once onboarded: after that
+        log "gateway: OneWifi with lnf_radius_5g on wifi1.4 in $PODBH_BRIDGE, after ${i}x5 s"
+    fi
+    # its SSID and key, the pod image's bootstrap credentials, for the image's emosa-podbh,
+    # which gives them to OneWifi at each of its starts (OneWifi keeps no VAP settings across
+    # a restart); then the gateway's agent again when they changed: it applies the
+    # controller's settings with its copy of the radio's VAPs, taken when it started.
+    # Checked on the interface, and applied again while they do not show there.
+    cx "$CTL" sh -c "umask 077; cat > '$PODBH_CONF.new' && mv '$PODBH_CONF.new' '$PODBH_CONF'" <<EOF
+PODBH_VAP=lnf_radius_5g
+PODBH_SSID=$BHAUL_SSID
+PODBH_KEY=$BHAUL_KEY
+EOF
+    cx "$CTL" systemctl enable -q emosa-podbh
+    for i in 1 2 3 4; do
+        cx "$CTL" systemctl restart emosa-podbh
+        if cx "$CTL" journalctl -u emosa-podbh -n 1 -o cat --no-pager | grep -q ' set to '; then
+            sleep 20
+            cx "$CTL" systemctl restart em_agent
+            sleep 45
+        fi
+        ssid=$(cx "$CTL" sh -c "for v in \$(ls /sys/class/net/$PODBH_BRIDGE/brif 2>/dev/null); do iw dev \$v info; done" |
+            awk '$1 == "ssid" {print $2; exit}')
+        [ "$ssid" = "$BHAUL_SSID" ] && break
+    done
+    [ "$ssid" = "$BHAUL_SSID" ] || die "$CTL: the pods' SSID did not come up on $PODBH_BRIDGE (${ssid:-none})"
+    log "gateway: '$BHAUL_SSID' on $(cx "$CTL" ls "/sys/class/net/$PODBH_BRIDGE/brif" | tr '\n' ' ')in $PODBH_BRIDGE"
+}
+
+gateway_gtp() {    # the pods' GRE termination in the gateway: the image's emosa-gtp on the SSID's bridge
+    podbh_vap
+    # the underlay is the gateway's own (DHCP, GRE, ping): the firewall's syscfg rules, which
+    # it applies again at each of its restarts
+    # shellcheck disable=SC2016 # expanded in the gateway
+    cx "$CTL" sh -s "$PODBH_BRIDGE" <<'EOF'
+rule="-A INPUT -i $1 -j ACCEPT"
+n=$(syscfg get GeneralPurposeFirewallRuleCount 2>/dev/null)
+n=${n:-0}
+i=1
+while [ "$i" -le "$n" ]; do
+    [ "$(syscfg get "GeneralPurposeFirewallRule_$i")" = "$rule" ] && exit 0
+    i=$((i + 1))
+done
+n=$((n + 1))
+syscfg set "GeneralPurposeFirewallRule_$n" "$rule" && syscfg set GeneralPurposeFirewallRuleCount "$n" && syscfg commit
+sysevent set firewall-restart
+EOF
+    cx "$CTL" sh -c "cat > '$GTP_CONFIG.new' && mv '$GTP_CONFIG.new' '$GTP_CONFIG'" <<EOF
+{
+  "underlay": {
+    "interface": "$PODBH_BRIDGE",
+    "address": "169.254.2.1/25",
+    "mtu": 1600,
+    "dhcp_range": ["169.254.2.10", "169.254.2.126"],
+    "lease_time": "1h"
+  },
+  "lan": {"bridge": "brlan0", "ports": []},
+  "tunnel_mtu": 1562,
+  "state_dir": "/var/lib/emosa-gtp"
+}
+EOF
+    cx "$CTL" systemctl enable -q emosa-gtp
+    cx "$CTL" systemctl restart emosa-gtp
+    # em-gtp's SSID and GTP off: the pods' bootstrap is the gateway's now
+    if exists em-gtp && running em-gtp; then
+        cx em-gtp sh -c 'systemctl disable -q --now hostapd emosa-gtp 2>/dev/null' || true
+    fi
+    log "gateway: the pods' GRE ends in $CTL ($PODBH_BRIDGE 169.254.2.1/25, tunnels into brlan0)"
+}
+
+plumbing() {    # the front and agent ports on the gateway's LAN, the pods' broker and GRE end in the gateway
     gateway_ports
     [ ! -f "$STATE/telemetry" ] || gateway_broker "$(lan_address)"
+    gateway_gtp
 }
 
 on() {
@@ -267,7 +393,17 @@ on() {
         log "gateway: $(provisioned "$CTL") agents provisioning in $CTL"
         return
     fi
-    exists emosa && cx emosa test -f "$(emosa_layout emosa | cut -d" " -f1)" || die "the EMOSA option first: lab.sh up c"
+    if ! { exists emosa && cx emosa test -f "$(emosa_layout emosa | cut -d" " -f1)"; }; then
+        # EMOSA anew in the gateway, no adapter container before it (vm/lab.sh up c gateway):
+        # the lab's fleet configuration in the gateway's places, then all of the above
+        install_package "${1:-}"
+        touch "$STATE/gateway"
+        bash "$HERE/lab.sh" fleet || { rm -f "$STATE/gateway"; die "the gateway's fleet configuration failed"; }
+        plumbing
+        cx "$CTL" systemctl restart emosa-fleet    # with the advertise address plumbing wrote
+        log "gateway: EMOSA anew in $CTL ($(cx "$CTL" /usr/bin/emosa-agent-c --version); places $(emosa_layout "$CTL"))"
+        return
+    fi
     install_package "${1:-}"
     log "gateway: $(cx "$CTL" /usr/bin/emosa-agent-c --version); $(cx "$CTL" sh -c '. /etc/default/emosa; echo "trunk $EMOSA_TRUNK into ${EMOSA_BRIDGE:-(none)}, agents in namespace ${EMOSA_NETNS:-(the gateway'"'"'s)}"'); places $(emosa_layout "$CTL")"
     stop_emosa emosa
@@ -284,9 +420,25 @@ on() {
 
 off() {
     in_gateway || die "EMOSA does not run in $CTL"
+    # back into the containers the gateway took EMOSA and its GTP from: none in the target
+    # configuration (vm/lab.sh retire), which is built with them (EASYMESH_EMOSA_IN=container)
+    if ! exists emosa || ! exists em-gtp; then
+        die "no adapter or GTP container to take EMOSA back to (vm/lab.sh retire deleted them)"
+    fi
     stop_emosa "$CTL"
     cx "$CTL" systemctl disable -q --now emosa-forward 2>/dev/null || true
     cx "$CTL" sh -c 'systemctl disable -q --now mosquitto 2>/dev/null; rm -f /etc/mosquitto/mosquitto.conf' || true
+    # the pods' GRE back in em-gtp: the gateway's GTP off, its own VAP map again (no wifi1.4)
+    cx "$CTL" sh -c "systemctl disable -q --now emosa-gtp emosa-podbh 2>/dev/null; rm -f '$GTP_CONFIG' '$PODBH_CONF'" || true
+    if cx "$CTL" test -f /nvram/InterfaceMap.json.before-podbh; then
+        cx "$CTL" mv /nvram/InterfaceMap.json.before-podbh /nvram/InterfaceMap.json
+        cx "$CTL" systemctl restart onewifi
+        sleep 30
+        cx "$CTL" systemctl restart em_agent
+    fi
+    if exists em-gtp && running em-gtp; then
+        cx em-gtp sh -c 'systemctl enable -q --now hostapd emosa-gtp 2>/dev/null' || true
+    fi
     operator_redirect off
     move_state "$CTL" emosa
     # emosa's fleet and broker are reached through the lab's proxies on the WAN address again

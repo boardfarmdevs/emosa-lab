@@ -17,8 +17,10 @@
 #                                     choice from lab.sh agent is dropped); the agents restart
 #   lab.sh gtp                        container em-gtp: the pods' onboarding SSID (the pod image's
 #                                     backhaul credentials) and their GRE, LAN leg on the lab's wired LAN port
+#                                     (with EMOSA in the gateway, both are the gateway's: gateway.sh)
 #   lab.sh pod [NAME]                 the unchanged OpenSync pod image on two pool radios; its
-#                                     backhaul to the GTP is a fixed link (EMOSA_BACKHAUL_SNR, 45)
+#                                     backhaul to the GTP is a fixed link (EMOSA_BACKHAUL_SNR, 45;
+#                                     with EMOSA in the gateway, the gateway's 5 GHz radio, 50)
 #   lab.sh backhaul wired|wifi [POD...]
 #                                     the pods' uplink: the GTP path (wired), or the gateway's
 #                                     5 GHz mesh_backhaul (wifi: EMOSA's option 1, a fixed link
@@ -46,12 +48,18 @@
 #                                     gen/vm/lxd/build.sh emosa runs it, with EASYMESH_EMOSA_AGENT).
 #                                     python or c: the adapter's implementation, its fleet, GTP and
 #                                     agents (c: the kits install no Python); none: as installed.
-#                                     gateway (with c): then EMOSA's fleet and agents into the
-#                                     gateway, from its image (gateway.sh on), and the rooms again
-#                                     (meta-cmf EASYMESH_EMOSA_IN=gateway). While EMOSA runs in the
-#                                     gateway, the steps that write its configuration (emosa, fleet,
-#                                     agent, implementation, telemetry, backhaul) refuse: gateway.sh
-#                                     off first
+#                                     gateway (with c, meta-cmf EASYMESH_EMOSA_IN=gateway): the
+#                                     target configuration, no containers but the pods: EMOSA's
+#                                     fleet and agents, the pods' broker and their GTP in the
+#                                     gateway, from its image (gateway.sh on), in place of emosa,
+#                                     fleet, gtp and telemetry; then the pods, backhaul wifi, retire,
+#                                     rooms pods. While EMOSA runs in the gateway, the steps
+#                                     that write the adapter container's configuration (emosa,
+#                                     agent, implementation, telemetry) and gtp refuse; fleet and
+#                                     backhaul write the gateway's
+#   lab.sh retire                     delete the adapter and GTP containers (emosa, em-gtp) once
+#                                     EMOSA runs in the gateway (em-gtp's radio back to the pool);
+#                                     up c gateway does it, gateway.sh off then has none to go back to
 #   lab.sh status
 # SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
@@ -366,6 +374,7 @@ fleet() {
 
 gtp() {
     local channel=${EMOSA_PODBH_CHANNEL:-44}
+    in_container    # with EMOSA in the gateway, the pods' GTP is the gateway's (gateway.sh)
     if ! exists em-gtp; then
         guest_profile em-gtp 1
         lxc init "$IMAGE" em-gtp --network lxdbr0 -p default -p em-gtp >/dev/null
@@ -426,12 +435,19 @@ pod() {
 }
 
 pod_links() {    # the pod's fixed backhaul links on the medium (the lab's gen-config pins them)
-    # Wired-equivalent: its station to the GTP, outside any room geometry. Every OpenSync start
-    # comes up there. On Wi-Fi backhaul (EMOSA option 1) its station is also pinned to the
-    # upstream backhaul BSS's radio, as strong as the lab's own gateway-extender backhaul.
-    local links="bhaul-sta-50=em-gtp/wlan0:${EMOSA_BACKHAUL_SNR:-45}"
-    [ "$(lxc config get "$1" user.emosa.backhaul)" = wifi ] &&
-        links="$links bhaul-sta-50=$UPSTREAM:${EMOSA_WIFI_BACKHAUL_SNR:-50}"
+    # Wired-equivalent: its station to the GTP's SSID, outside any room geometry. Every
+    # OpenSync start comes up there. On Wi-Fi backhaul (EMOSA option 1) its station is also
+    # pinned to the upstream backhaul BSS's radio, as strong as the lab's own
+    # gateway-extender backhaul. With EMOSA in the gateway the GTP's SSID is a VAP on that
+    # radio, the gateway's 5 GHz one: one link, for both.
+    local links
+    if in_gateway; then
+        links="bhaul-sta-50=$UPSTREAM:${EMOSA_WIFI_BACKHAUL_SNR:-50}"
+    else
+        links="bhaul-sta-50=em-gtp/wlan0:${EMOSA_BACKHAUL_SNR:-45}"
+        [ "$(lxc config get "$1" user.emosa.backhaul)" = wifi ] &&
+            links="$links bhaul-sta-50=$UPSTREAM:${EMOSA_WIFI_BACKHAUL_SNR:-50}"
+    fi
     lxc profile set "$1" user.wmediumd.links="$links"
 }
 
@@ -460,7 +476,8 @@ agent_reconfigure() {    # rewrite a bound pod's agent configuration from the fl
         # agent) when the pod comes back to it, its OpenSync restarted by the caller. A hold
         # is released as spec 8.3 says, by a new admission: forget archives the pod's state
         # (its uplink journal with it), and the restart hands the pod to the fleet anew.
-        if cx emosa cat "/var/lib/emosa/$1/status.json" 2>/dev/null | jq -e '.uplink.held != null' >/dev/null; then
+        # Wherever EMOSA runs: the adapter container or the gateway.
+        if cx "$(emosa_where)" cat "$(emosa_root)/$1/status.json" 2>/dev/null | jq -e '.uplink.held != null' >/dev/null; then
             fleet_cli forget "$1" >/dev/null
             echo released
         else
@@ -493,7 +510,6 @@ PY
 backhaul() {    # backhaul wired|wifi [POD...]: the pods' uplink
     local mode=${1:-} pods pod serial
     case $mode in wired|wifi) ;; *) die "usage: lab.sh backhaul wired|wifi [POD...]" ;; esac
-    in_container    # the fleet's per-pod settings change
     shift
     pods=${*:-$(pods_running)}
     [ -n "$pods" ] || die "no pod is running"
@@ -768,28 +784,38 @@ up() {    # up [python|c] [gateway]: the EMOSA option of the RDK lab, every step
         die "nothing staged in $ART: deploy/rdk-lab/lab.sh stage (host side)"
     if in_gateway; then
         [ "$place" = gateway ] || die "EMOSA runs in $CTL: lab.sh up c gateway, or gateway.sh off first"
-        # again, e.g. after a VM restart or the gateway deployed anew: what EMOSA in the
-        # gateway still uses (the pods' broker in emosa, their bootstrap path in em-gtp, whose
-        # profile does not autostart), the gateway's forwarding, the rooms
-        wan_address    # the gateway's forwards listen on it
-        running emosa || lxc start emosa
-        gtp
+        # again, e.g. after a VM restart or the gateway deployed anew: the pods' links to the
+        # gateway's SSID, EMOSA, the pods' broker and their GTP in the gateway again
+        # (gateway.sh on); the containers it replaced, if any are left, deleted; the rooms
+        wan_address    # the operator's redirect listens on it
+        for pod in $(lxc list -c n -f csv | grep -E '^pod-[0-9]+$'); do pod_links "$pod"; done
         bash "$HERE/gateway.sh" on
-        rooms pods
+        retire
+        rooms pods    # the medium again, without the containers' radios
         wait_uplinks || die "the pods' Wi-Fi uplinks did not apply (lab.sh status)"
         status
         return
     fi
     lanport
-    emosa
-    [ -z "$impl" ] || implementation "$impl"    # before the fleet starts the agents
-    fleet
-    gtp
+    if [ "$place" = gateway ]; then
+        # EMOSA, the pods' broker and their GTP in the gateway, from its image (gateway.sh on):
+        # an adapter container's state taken over if the lab has one, else the lab's fleet
+        # configuration written there; no adapter or GTP container once the pods are up (retire)
+        touch "$STATE/telemetry"    # the pods' statistics, to the gateway's broker
+        wan_address    # the operator's redirect listens on it
+        bash "$HERE/gateway.sh" on
+    else
+        emosa
+        [ -z "$impl" ] || implementation "$impl"    # before the fleet starts the agents
+        fleet
+        gtp
+    fi
     for pod in pod-1 pod-2; do pod "$pod"; done
     medium
-    telemetry
+    [ "$place" = gateway ] || telemetry
     wait_agents    # the pods bound to their agents over the GTP path, then onto Wi-Fi
     backhaul wifi
+    [ "$place" = container ] || retire    # a container the gateway took over: the rooms without it
     rooms pods
     # A pod whose first switch was not confirmed in time is held on the GTP path (seen on
     # rdk-emosa-1001 after an in-place redeploy, 1 Oct, the medium restarting under it):
@@ -801,15 +827,22 @@ up() {    # up [python|c] [gateway]: the EMOSA option of the RDK lab, every step
         wait_uplinks || die "the pods' Wi-Fi uplinks did not apply (lab.sh status)"
     fi
     log "uplinks: every pod on its Wi-Fi backhaul"
-    if [ "$place" = gateway ]; then
-        # the gateway's own EMOSA (its image's package) takes the registry and the state over;
-        # the broker and the GTP stay. The rooms settle again with the agents in the gateway.
-        bash "$HERE/gateway.sh" on
-        rooms pods
-        wait_uplinks || die "the pods' Wi-Fi uplinks did not apply with EMOSA in $CTL (lab.sh status)"
-        log "gateway: EMOSA in $CTL, every pod on its Wi-Fi backhaul"
-    fi
     status
+}
+
+retire() {    # retire: the adapter and GTP containers, which EMOSA in the gateway replaced
+    local ct
+    in_gateway || die "EMOSA does not run in $CTL: the containers are its (lab.sh up c gateway first)"
+    for ct in emosa em-gtp; do
+        exists "$ct" || continue
+        lxc delete -f "$ct"
+        if lxc profile show "$ct" >/dev/null 2>&1; then    # em-gtp's radio back to the pool
+            radios_await "$ct"
+            radios_reclaim "$ct"
+            lxc profile delete "$ct" >/dev/null
+        fi
+        log "retire: $ct deleted (EMOSA, its broker and its GTP run in $CTL)"
+    done
 }
 
 status() {
@@ -833,7 +866,7 @@ status() {
 }
 
 case ${1:-} in
-    lanport|emosa|fleet|gtp|medium|status|controller_al|wan_address) "$1" ;;
+    lanport|emosa|fleet|gtp|medium|status|controller_al|wan_address|retire) "$1" ;;
     up) shift; up "$@" ;;
     implementation) shift; implementation "$@" ;;
     backhaul) shift; backhaul "$@" ;;
@@ -844,5 +877,5 @@ case ${1:-} in
     telemetry) shift; telemetry "$@" ;;
     repod) shift; repod "$@" ;;
     client) shift; client "$@" ;;
-    *) sed -n '2,55p' "$0"; exit 1 ;;
+    *) sed -n '2,63p' "$0"; exit 1 ;;
 esac

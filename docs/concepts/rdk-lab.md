@@ -58,6 +58,31 @@ meets those expectations; it does not change the pod.
 
 ## 3. Placement
 
+The target configuration (`lab.sh up c gateway`, meta-cmf `EASYMESH_EMOSA_IN=gateway`):
+everything of EMOSA's in the gateway, from its image, and no container but the pods.
+
+```
+ RDK lab VM
+ ├─ br-wan101  10.101.0.0/24 ── bpibroadband erouter0, boardfarm WAN
+ │               └─ the operator's redirect on 10.101.0.40:6640 (the pod's redirector,
+ │                  operator-redirect.py on the VM): the pod to tcp:10.0.0.1:6640
+ ├─ bpibroadband, the gateway (its image with EMOSA)
+ │   ├─ brlan0 10.0.0.1: EMOSA's forwarder (front 6640, agents 6651..) to the fleet
+ │   │     and agents on loopback; the agents' 1905 trunk, a veth pair (their
+ │   │     interfaces in netns emosa); the pods' GRE tunnels, gtp2_<lease>
+ │   ├─ brpodbh 169.254.2.1/25: wifi1.4, SSID opensync-lab-bhaul (OneWifi's
+ │   │     lnf_radius_5g, outside EasyMesh); the GTP's DHCP and GRE end (emosa-gtp)
+ │   └─ mosquitto: 10.0.0.1:8883 for the pods (mutual TLS), 127.0.0.1:1883 for the agents
+ ├─ the lab's wired LAN port (L2 only) ── bpibroadband eth2 ∈ brlan0: the wired extender
+ └─ wmediumd medium
+     ├─ each pod (two pool radios): backhaul station, its fixed link to the gateway's
+     │     5 GHz radio (the onboarding SSID and mesh_backhaul both on it)
+     └─ the lab's clients, on every AP's fronthaul, the pods' included
+```
+
+The container option (`lab.sh up python|c`): EMOSA in the adapter container `emosa`,
+the GTP in container `em-gtp`, both on the lab's wired LAN port.
+
 ```
  RDK lab VM
  ├─ br-wan101  10.101.0.0/24 ── bpibroadband erouter0 (.100), boardfarm WAN
@@ -73,18 +98,25 @@ meets those expectations; it does not change the pod.
      └─ the lab's clients, on every AP's fronthaul, the pods' included
 ```
 
-- **EMOSA on the WAN at `.40`.** The pod reaches its built-in redirector
-  through its GRE → `brlan0` → the RDK router's NAT → `br-wan101`, just as
-  opensync-lab pods reach local-noc through mv3. EMOSA's fleet answers there
-  directly: it identifies the pod, starts its agent and writes
-  `manager_addr`. In a deployment the operator's cloud hands pods to EMOSA
-  instead (its redirect). Either way the pod is not changed.
+- **The pod's redirector on the WAN at `.40`.** The pod reaches it through its
+  GRE → `brlan0` → the RDK router's NAT → `br-wan101`, just as opensync-lab
+  pods reach local-noc through mv3. With EMOSA in the gateway, the operator's
+  redirect answers there (the operator's cloud, plan 5.3) and hands the pod to
+  the gateway's fleet on its LAN address. In the container option EMOSA's fleet
+  answers there directly: it identifies the pod, starts its agent and writes
+  `manager_addr`. Either way the pod is not changed.
 - **The wired LAN port.** EMOSA's 1905 interfaces and the GTP's LAN leg need
   layer 2 with the controller; the lab's wired port gives it, and it is the
   only thing EMOSA needs from the RDK side. On a product, EMOSA runs on the
   gateway itself and uses `brlan0` directly.
 - **Data plane: both options.** Every pod starts on option 2: the GTP serves
-  its onboarding SSID and terminates its GRE (spec §8.2). Option 1 then moves
+  its onboarding SSID and terminates its GRE (spec §8.2). In the gateway the
+  SSID is a VAP of the gateway's own, `wifi1.4` on bridge `brpodbh`: OneWifi's
+  `lnf_radius_5g`, which no EasyMesh haul type maps to and which meta-cmf's
+  libwebconfig 0014 keeps out of EasyMesh, so the controller neither sees nor
+  resets it; the image's pre-start makes the interface, and its `emosa-podbh`
+  gives the VAP the SSID and key in `/nvram/emosa/podbh.conf` at each start of
+  OneWifi, which keeps no VAP settings across a restart. Option 1 then moves
   it onto the gateway's 5 GHz `mesh_backhaul` BSS, its station pinned to that
   BSSID (spec §8.3); the controller can move it to another parent with
   Backhaul Steering. `lab.sh up` puts both pods on option 1.
@@ -332,17 +364,23 @@ features at the bar) the full room suite ran on it with the adapter in C: the
 catalog's 27 rooms (one a timing edge on no pod, passed on its reruns), the four
 geometry rooms, the RF stages and the world switch (the record, §3).
 
-**EMOSA in the gateway.** `vm/gateway.sh on [PACKAGE]` moves the fleet and the agents
-into the controller's own container, as a gateway carrying the adapter would run them:
-the package the image's recipe builds, the adapter container's registry and state taken
-over, the front and agent ports forwarded there, the agents' trunk a veth pair into
-`brlan0`; `gateway.sh off` moves them back, and `gateway.sh measure LABEL SECONDS`
-samples the gateway's memory and CPU and EMOSA's processes wherever they run (the
-footprint record, §3). `vm/lab.sh up c gateway` is the whole option ending there, with
-the gateway image's own package, and the rooms settled again (meta-cmf's
-`EASYMESH_EMOSA_IN=gateway` runs it on a build). `lab.sh status`, `rooms`, `move` and the
-waits find EMOSA where it runs; the steps that write its configuration refuse while it
-runs in the gateway (`gateway.sh off` first). The RDK lab's fleet has
+**EMOSA in the gateway.** `vm/gateway.sh on [PACKAGE]` puts EMOSA in the controller's
+own container, as a gateway carrying the adapter runs it, from the package the image's
+recipe builds: the fleet and the agents (an adapter container's registry and state taken
+over if the lab has one, else the lab's fleet configuration written there), their front
+and agent ports on the gateway's LAN address through the package's forwarder, the pods
+sent there by the operator's redirect on the VM, the agents' trunk a veth pair into
+`brlan0`; the pods' broker (the image's mosquitto, the lab's CA on the VM); and their
+GTP (the onboarding SSID on `wifi1.4`, the image's `emosa-gtp` on `brpodbh`, tunnels into
+`brlan0`, the gateway's firewall opened for the underlay). `vm/lab.sh up c gateway` is
+the target configuration: all of that, the pods, and the rooms, with no adapter or GTP
+container (`lab.sh retire` deletes any left from the container option); meta-cmf's
+`EASYMESH_EMOSA_IN=gateway` runs it on a build. `gateway.sh off` moves EMOSA back into
+the containers on a lab that has them, and `gateway.sh measure LABEL SECONDS` samples
+the gateway's memory and CPU and EMOSA's processes wherever they run (the footprint
+record, §3). `lab.sh status`, `rooms`, `move`, `fleet`, `backhaul` and the waits find
+EMOSA where it runs; the steps that write the adapter container's configuration refuse
+while it runs in the gateway. The RDK lab's fleet has
 `topology_query_window` 120 (spec §2.5): RDK's controller queries each agent it knows
 every 15 s, and one it forgot in a restart gets no Topology Query, so its agent onboards
 again.

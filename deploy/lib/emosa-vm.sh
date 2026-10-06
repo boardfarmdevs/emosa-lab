@@ -80,6 +80,12 @@ emosa_layout() {
 emosa_state_root() { emosa_layout "$1" | cut -d" " -f3; }
 emosa_root() { emosa_state_root "$(emosa_where)"; }    # the state root where EMOSA runs
 
+lan_address() {    # the gateway's LAN address (its LAN bridge's first IPv4 address)
+    local bridge
+    bridge=$(cx "$CTL" sh -c '. /etc/default/emosa 2>/dev/null; echo "${EMOSA_BRIDGE:-brlan0}"')
+    cx "$CTL" ip -4 -o addr show dev "$bridge" | awk '{split($4, a, "/"); print a[1]; exit}'
+}
+
 # agents_provisioned_in CT: how many of CT's agents have their session provisioning. A
 # released pod's archived state (<pod>.released-<stamp>, from forget) keeps its last status
 # and is no agent's.
@@ -102,7 +108,7 @@ fleet_cli() {    # fleet_cli COMMAND [ARGS...]: the fleet's command (list, forge
         sh "$1" "${2:-}"
 }
 
-python_adapter() { cx emosa test -x /opt/emosa-adapter/venv/bin/python; }
+python_adapter() { ! in_gateway && cx emosa test -x /opt/emosa-adapter/venv/bin/python; }
 
 adapter_kit() {    # the kit in emosa, its agents' trunk the EasyMesh LAN NIC emlan
     install_kit emosa
@@ -117,42 +123,53 @@ proxy() {    # proxy CT DEVICE PORTS: tcp:$WAN_HOST:PORTS into CT's loopback (ag
 
 # --- the fleet -----------------------------------------------------------------------------
 
-telemetry_json() {    # the fleet's telemetry setting
+telemetry_json() {    # telemetry_json [BROKER]: the fleet's telemetry setting (the broker: WAN_HOST)
     if [ -f "$STATE/telemetry" ]; then
-        printf '{"mode": "mqtt", "broker": "%s", "port": 8883%s}' "$WAN_HOST" "${TELEMETRY_OPTIONS:+, $TELEMETRY_OPTIONS}"
+        printf '{"mode": "mqtt", "broker": "%s", "port": 8883%s}' "${1:-$WAN_HOST}" "${TELEMETRY_OPTIONS:+, $TELEMETRY_OPTIONS}"
     else
         printf '{"mode": "off"}'
     fi
 }
 
 # fleet_config FRONT FIRST LAST CONTROLLER_AL MESSAGE_SET MULTI_BSS M2_SESSION [PODS_JSON]
-# [TOPOLOGY_QUERY_WINDOW]: /etc/emosa-fleet.json (EMOSA_MESSAGE_SET, EMOSA_MULTI_BSS,
-# EMOSA_M2_SESSION and EMOSA_POD_PROFILE override), then the fleet (re)started. The window
-# (spec 2.5) only for a controller that queries its agents periodically (RDK's, not prplMesh)
+# [TOPOLOGY_QUERY_WINDOW]: the fleet configuration where EMOSA runs (EMOSA_MESSAGE_SET,
+# EMOSA_MULTI_BSS, EMOSA_M2_SESSION and EMOSA_POD_PROFILE override), then the fleet
+# (re)started. The window (spec 2.5) only for a controller that queries its agents
+# periodically (RDK's, not prplMesh). In the RDK lab's gateway: its package's places, the
+# ports and the broker on its LAN address, through its forwarder (rdk-lab/vm/gateway.sh)
 fleet_config() {
-    local pods='' window=''
-    exists emosa || die "run: lab.sh emosa"
-    in_container
+    local pods='' window='' extra='' ct advertise=$WAN_HOST config agents root run
+    ct=$(emosa_where)
+    if in_gateway; then
+        advertise=$(lan_address)
+        [ -n "$advertise" ] || die "$CTL has no IPv4 address on its LAN bridge"
+        extra=$',\n  "forward": true'
+    else
+        exists emosa || die "run: lab.sh emosa"
+    fi
+    read -r config agents root run <<<"$(emosa_layout "$ct")"
+    [ "$run" = - ] || extra=$',\n  "run_root": "'"$run"'"'"$extra"
     [ -z "${8:-}" ] || pods=$',\n  "pods": '"$8"
     [ -z "${9:-}" ] || window=$',\n  "topology_query_window": '"$9"
-    cx emosa sh -c "cat > /etc/emosa-fleet.json" <<EOF
+    cx "$ct" mkdir -p "$(dirname "$config")" "$agents" "$root"
+    cx "$ct" sh -c "cat > '$config.new' && mv '$config.new' '$config'" <<EOF
 {
   "listen": "ptcp:$1:127.0.0.1",
-  "advertise": "$WAN_HOST",
+  "advertise": "$advertise",
   "ports": [$2, $3],
   "controller_al": "$4",
   "message_set": "${EMOSA_MESSAGE_SET:-$5}",
   "multi_bss": ${EMOSA_MULTI_BSS:-$6},
   "m2_session": "${EMOSA_M2_SESSION:-$7}",
   "profile": "${EMOSA_POD_PROFILE:-opensync-lab-hwsim-6.6.1-v1}",
-  "state_root": "/var/lib/emosa",
-  "config_dir": "/etc/emosa",
+  "state_root": "$root",
+  "config_dir": "$agents",
   "admit": "*",
-  "telemetry": $(telemetry_json)$pods$window
+  "telemetry": $(telemetry_json "$advertise")$pods$window$extra
 }
 EOF
-    cx emosa systemctl enable -q emosa-fleet
-    cx emosa systemctl restart emosa-fleet
+    cx "$ct" systemctl enable -q emosa-fleet
+    cx "$ct" systemctl restart emosa-fleet
 }
 
 # --- the agent implementation (deploy/adapter: EMOSA_AGENT) --------------------------------
