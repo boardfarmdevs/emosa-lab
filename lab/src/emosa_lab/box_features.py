@@ -202,13 +202,49 @@ async def backhaul_steering_kept(box):
 GONE_PARENT = "02:00:00:00:19:03"  # a backhaul BSS of the controller's that is gone
 
 
+async def _revert_station(box):
+    """cm, its uplink failed: the station back on the pod's own credentials (none pinned to a
+    BSSID), on the same start of the pod."""
+    rows = await box.rows("Wifi_Credential_Config")
+    own = [
+        uuid
+        for uuid, row in rows.items()
+        if row.get("onboard_type") == "multi_ap" and not isinstance(row.get("bssid"), str)
+    ]
+    uuid, _ = await box.vif("Wifi_VIF_Config", UPLINK["station"])
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_VIF_Config",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "row": {"credential_configs": ["set", [["uuid", u] for u in own]]},
+            }
+        ]
+    )
+    return bool(own)
+
+
 async def backhaul_kept_gone(box):
     """spec 8.3: a controller's move is kept for the pod's later starts; when the kept
-    target's BSS is gone at a start, its switch times out after 90 s and the agent switches
-    to the configured upstream on the same start instead of holding the pod (finding 18)."""
+    target's BSS is gone at a start, its switch times out after 90 s. The agent then holds
+    nothing and writes nothing until cm has the station off the failed credential (a switch
+    written meanwhile is reverted with it), and switches to the configured upstream then, on
+    the same start (finding 18)."""
     if not (await onboarded(box)).get("applied"):
         return box.result(passed=False, failed="not onboarded")
     tried = await until_async(lambda: pinned(box, GONE_PARENT), seconds=60)
+
+    def timed_out():
+        return (uplink_status(box).get("operation") or {}).get("state") == "TIMED_OUT"
+
+    failed = await box.until(timed_out, seconds=150)
+    await asyncio.sleep(5)
+    status = uplink_status(box)
+    waited = status.get("waiting") == "the pod returning to its bootstrap uplink" and not (
+        await pinned(box, BACKHAUL_PARENT)
+    )
+    reverted = await _revert_station(box)
 
     def back():
         status = uplink_status(box)
@@ -217,16 +253,21 @@ async def backhaul_kept_gone(box):
             "OBSERVED_APPLIED"
         )
 
-    applied = await box.until(back, seconds=150)
+    applied = await box.until(back, seconds=60)
     status = uplink_status(box)
     kept = (box.directory / "state" / box.serial / "uplink" / "target.json").exists()
     return box.result(
         passed=bool(tried)
+        and bool(failed)
+        and waited
+        and reverted
         and bool(applied)
         and not status.get("held")
         and not kept
         and await pinned(box, BACKHAUL_PARENT),
         tried_kept_target=bool(tried),
+        kept_switch_timed_out=bool(failed),
+        waited_for_the_revert=waited,
         configured_applied=bool(applied),
         held=status.get("held"),
         kept_target_left=kept,

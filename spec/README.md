@@ -714,8 +714,10 @@ The agent makes the switch itself when its configuration has
   rejected, returns to the previous upstream without a hold, and is answered
   with a failure. On a later start, a switch to the kept target that is not
   applied within the deadline, or is rejected (its BSS gone or out of reach),
-  drops the target and switches to the configured upstream on the same start,
-  without a hold; only that switch holds. Both agents.
+  drops the target without a hold. The agent then switches to the configured
+  upstream once the station no longer carries the failed switch's credential
+  (`cm` reverts it on the same start, or OpenSync restarts): a switch written
+  before then is reverted with it. Only that switch holds. Both agents.
 
 ## 9. Not covered yet
 

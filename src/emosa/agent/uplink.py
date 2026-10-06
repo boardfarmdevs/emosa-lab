@@ -31,7 +31,9 @@ different scope from the fronthaul BSS, with its own lifecycle rules.
   is not confirmed returns to the previous upstream instead of holding the pod:
   the controller asked for it, and hears of the failure. On a later start, a switch
   to the kept target that fails (its BSS gone, out of reach) drops it and switches
-  to the configured upstream on the same start; only that switch holds.
+  to the configured upstream instead, once the pod is back on its bootstrap uplink
+  (``cm`` reverts the station on the same start, or OpenSync restarts); only that
+  switch holds.
 """
 
 import json
@@ -78,6 +80,8 @@ class UplinkSwitch:
         self.moves = 0  # each move is a switch of its own, even back to an earlier upstream
         self.move = None  # {"target", "previous", "result"} of the latest move
         self.target_path = store.directory / "target.json"
+        # after a kept target failed: that switch's start and intent, until the pod is off it
+        self.fallback_after = None
         try:
             kept = json.loads(self.target_path.read_text())
             if kept.get("configured") == bssid and kept.get("target"):
@@ -184,8 +188,9 @@ class UplinkSwitch:
             self.configured,
         )
         self.bssid = self.configured
-        self.moves += 1  # a switch of its own on this start
+        self.moves += 1  # a switch of its own
         self._keep_target()
+        self.fallback_after = {"instance": op.plan.get("instance"), "intent": op.intent}
         return True
 
     def steer(self, bssid):
@@ -263,6 +268,17 @@ class UplinkSwitch:
         if (self.backend.facts or {}).get("kind") is None:
             self.waiting = "no working uplink yet"
             return None
+        if self.fallback_after is not None:
+            # A switch written while cm still acts on the failed one is reverted with it
+            # (rdk-1004, 5 Oct 2026): first the station off the failed credential, or a new
+            # start. Bounded: OpenSync restarts a pod left without a working uplink.
+            failed = self.fallback_after
+            if failed["instance"] == self.backend.instance and self.engine._matches(
+                snap.config, UplinkIntent(**failed["intent"]).target(self.engine.vault)
+            ):
+                self.waiting = "the pod returning to its bootstrap uplink"
+                return None
+            self.fallback_after = None
         if not self.settled():
             self.waiting = "fronthaul not settled"
             return None

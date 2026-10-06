@@ -385,6 +385,8 @@ em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_jou
 
 void em_uplink_close(em_uplink_scope *u)
 {
+    cJSON_Delete(u->fallback_after);
+    u->fallback_after = NULL;
     em_engine_free(&u->engine);
     em_journal_close(u->journal);
     em_snapshot_clear(&u->last);
@@ -450,8 +452,8 @@ static bool move_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
     return true;
 }
 
-/* a switch to the kept target failed on a later start: back to the configured upstream on
- * this start, no hold (a switch to the configured upstream holds). Kept, the target held the
+/* a switch to the kept target failed on a later start: back to the configured upstream once the
+ * pod is off the failed switch, no hold (a switch to the configured upstream holds). Kept, the target held the
  * pod on option 2 for good once its BSS was gone (rdk-1004, 5 Oct 2026). */
 static bool kept_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
 {
@@ -461,8 +463,12 @@ static bool kept_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
     em_log(EM_LOG_WARNING, "emosa.agent.uplink", "kept backhaul target %s not reached (%s): back to the configured %s",
             bssid, reason, u->configured);
     EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
-    u->moves++; /* a switch of its own on this start */
+    u->moves++; /* a switch of its own */
     keep_target(u);
+    cJSON_Delete(u->fallback_after);
+    u->fallback_after = cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "intent"), true);
+    const char *planned = str(cJSON_GetObjectItemCaseSensitive(op, "plan"), "instance");
+    (void)em_copy(u->fallback_instance, sizeof(u->fallback_instance), planned ? planned : "");
     return true;
 }
 
@@ -626,6 +632,23 @@ static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *sna
         wait_for(u, "no working uplink yet");
         cJSON_Delete(intent);
         return NULL;
+    }
+    if (u->fallback_after) {
+        /* a switch written while cm still acts on the failed one is reverted with it (rdk-1004,
+         * 5 Oct 2026): first the station off the failed credential, or a new start. Bounded:
+         * OpenSync restarts a pod left without a working uplink. */
+        if (u->has_instance && !strcmp(u->fallback_instance, u->instance)) {
+            cJSON *failed = target(u, u->fallback_after, &why);
+            bool still = failed && em_matches(snap->config, failed);
+            cJSON_Delete(failed);
+            if (still) {
+                wait_for(u, "the pod returning to its bootstrap uplink");
+                cJSON_Delete(intent);
+                return NULL;
+            }
+        }
+        cJSON_Delete(u->fallback_after);
+        u->fallback_after = NULL;
     }
     if (u->settled && !u->settled(u->settled_ctx)) {
         wait_for(u, "fronthaul not settled");

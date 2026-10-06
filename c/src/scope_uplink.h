@@ -42,6 +42,9 @@ typedef struct {
     } move;
     char waiting[128];
     bool has_waiting;
+    /* after a kept target failed: that switch's intent and start, until the pod is off it */
+    cJSON *fallback_after;
+    char fallback_instance[17];
 } em_uplink_scope;
 
 em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_journal_schemas *schemas,

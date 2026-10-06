@@ -123,6 +123,13 @@ class Pod:
             UPLINK: {"if_name": STATION, "if_type": "vif", "is_used": True}
         }
 
+    def revert(self):
+        """cm, its uplink failed: the station back on its bootstrap credential, same start."""
+        self.generation += 1
+        fresh = bootstrap(next(iter(self.tables["Wifi_Radio_Config"])))
+        for table in ("Wifi_VIF_Config", "Wifi_VIF_State", "Connection_Manager_Uplink"):
+            self.tables[table] = fresh[table]
+
     def restart(self, start):
         """OpenSync restarts: its database from the template and the bootstrap."""
         self.generation += 1
@@ -517,11 +524,17 @@ def test_a_kept_upstream_not_reached_falls_back_to_the_configured_one_without_a_
     assert pod.sent[-1][2]["row"]["bssid"] == NEXT  # the kept upstream first
     clock.advance(DEADLINE + 1)
     asyncio.run(switch.tick())
-    timed_out = switch.store.operations()[-2]
+    timed_out = switch.latest()
     assert timed_out.state == State.TIMED_OUT and timed_out.intent["bssid"] == NEXT
     assert not switch.held() and switch.status()["bssid"] == PARENT
     assert not (store.directory / "target.json").exists()
-    assert pod.sent[-1][2]["row"]["bssid"] == PARENT  # the configured one, on the same start
+    # nothing written while the station still carries the failed credential: cm would
+    # revert a switch written now with it
+    assert pod.sent[-1][2]["row"]["bssid"] == NEXT
+    assert switch.status()["waiting"] == "the pod returning to its bootstrap uplink"
+    pod.revert()  # cm: the station back on its bootstrap credential, the same start
+    asyncio.run(switch.tick())
+    assert pod.sent[-1][2]["row"]["bssid"] == PARENT  # then the configured one
     pod.adopt()
     asyncio.run(switch.tick())
     assert switch.latest().state == State.OBSERVED_APPLIED and not switch.held()
@@ -536,7 +549,9 @@ def test_the_configured_upstream_not_reached_after_a_kept_one_holds(tmp_path):
     pod.restart("00000000-0000-4000-8000-0000000000a2")
     asyncio.run(switch.tick())
     clock.advance(DEADLINE + 1)
-    asyncio.run(switch.tick())  # the kept one timed out: the configured one now
+    asyncio.run(switch.tick())  # the kept one timed out
+    pod.restart("00000000-0000-4000-8000-0000000000a3")  # OpenSync restarted: a new start
+    asyncio.run(switch.tick())  # the configured one now
     clock.advance(DEADLINE + 1)
     asyncio.run(switch.tick())
     assert switch.latest().state == State.TIMED_OUT and switch.held()
