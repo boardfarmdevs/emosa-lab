@@ -195,13 +195,21 @@ provision() {   # provision POD: its lab device certificate, where OpenSync expe
     serial=$(pod_serial "$pod")
     [ -n "$serial" ] || die "$pod: no serial yet (OpenSync not up)"
     t=$(mktemp -d)
-    cx emosa sh -ec "cd /var/lib/emosa/pki; [ -f $serial.pem ] || { openssl req -newkey rsa:2048 -nodes \
-            -subj /CN=$serial -keyout $serial.key -out $serial.csr 2>/dev/null
-        openssl x509 -req -in $serial.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 3650 \
-            -out $serial.pem 2>/dev/null; }"
-    lxc file pull -q "emosa/var/lib/emosa/pki/ca.pem" "$t/ca.pem"
-    lxc file pull -q "emosa/var/lib/emosa/pki/$serial.pem" "$t/client.pem"
-    lxc file pull -q "emosa/var/lib/emosa/pki/$serial.key" "$t/client_dec.key"
+    if [ -f /var/lib/emosa-lab/pki/ca.key ]; then    # the lab's CA on the VM (EMOSA in the gateway)
+        (cd /var/lib/emosa-lab/pki && { [ -f "$serial.pem" ] || {
+            openssl req -newkey rsa:2048 -nodes -subj "/CN=$serial" -keyout "$serial.key" -out "$serial.csr" 2>/dev/null
+            openssl x509 -req -in "$serial.csr" -CA ca.pem -CAkey ca.key -CAcreateserial -days 3650 \
+                -out "$serial.pem" 2>/dev/null; }; } && cp ca.pem "$t/ca.pem" && cp "$serial.pem" "$t/client.pem" &&
+            cp "$serial.key" "$t/client_dec.key")
+    else
+        cx emosa sh -ec "cd /var/lib/emosa/pki; [ -f $serial.pem ] || { openssl req -newkey rsa:2048 -nodes \
+                -subj /CN=$serial -keyout $serial.key -out $serial.csr 2>/dev/null
+            openssl x509 -req -in $serial.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 3650 \
+                -out $serial.pem 2>/dev/null; }"
+        lxc file pull -q "emosa/var/lib/emosa/pki/ca.pem" "$t/ca.pem"
+        lxc file pull -q "emosa/var/lib/emosa/pki/$serial.pem" "$t/client.pem"
+        lxc file pull -q "emosa/var/lib/emosa/pki/$serial.key" "$t/client_dec.key"
+    fi
     for f in ca.pem client.pem client_dec.key; do lxc file push -q --mode 0600 "$t/$f" "$pod/var/certs/$f"; done
     rm -rf "$t"
     log "provision: $pod ($serial) lab device certificate in /var/certs (EMOSA lab CA)"

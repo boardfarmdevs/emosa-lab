@@ -2,7 +2,7 @@
 # Inside an RDK EasyMesh lab VM with the EMOSA option (vm/lab.sh up c), root: EMOSA's fleet
 # and agents in the RDK controller's own container, as on a gateway that carries the
 # adapter (meta-cmf-bananapi-vcpe's recipe emosa), and its footprint there (easymesh-labs
-# plan 5.4). The broker and the GTP stay where vm/lab.sh put them.
+# plan 5.4). The GTP stays where vm/lab.sh put it.
 #
 #   gateway.sh on [EMOSA_IPK]     the fleet and agents into the controller container: the
 #                                 package emosa (EMOSA_IPK, built with the image's recipe,
@@ -10,12 +10,16 @@
 #                                 image or an earlier run put there), the adapter container's
 #                                 registry and state taken over into the places the gateway's
 #                                 package names (/etc/default/emosa: /nvram/emosa on RDK, the
-#                                 status in /run), its fleet configuration written there, the
-#                                 front and agent ports forwarded to the gateway, the agents'
-#                                 broker reached through the host; the agents' trunk is the
-#                                 package's veth pair into brlan0. Again while EMOSA runs in
-#                                 the gateway (after it was deployed anew): the forwarding back;
-#                                 with EMOSA_IPK, that package over the running one
+#                                 status in /run), its fleet configuration written there; the
+#                                 front and agent ports on the gateway's LAN address through
+#                                 the package's forwarder, the pods sent there by the
+#                                 operator's redirect on the VM (operator-redirect.py, the
+#                                 pods' redirector address); the pods' broker in the gateway
+#                                 (the image's mosquitto, the lab's CA moved to the VM); the
+#                                 agents' trunk is the package's veth pair into brlan0. Again
+#                                 while EMOSA runs in the gateway (after it was deployed anew):
+#                                 all of that again; with EMOSA_IPK, that package over the
+#                                 running one
 #   gateway.sh off                back into the adapter container, the state taken back; the
 #                                 package stays installed in the gateway, unconfigured (inert)
 #   gateway.sh status             where EMOSA runs, its agents, the gateway's memory
@@ -31,10 +35,11 @@ CTL=${EMOSA_RDK_CONTROLLER:-bpibroadband}
 WAN_HOST=${EMOSA_WAN_HOST:-10.101.0.40}
 FLEET_PORT=${EMOSA_FLEET_PORT:-6640}
 AGENTS=(6651 "${EMOSA_FLEET_LAST_PORT:-6690}")
-BROKER_HOST_PORT=${EMOSA_GATEWAY_BROKER_PORT:-11883}    # the agents' broker on the VM's loopback
 FOOTPRINT=/var/lib/emosa-lab/footprint
 LOG_TAG=emosa-gateway
 REDIRECT=$(cd "$(dirname "$0")" && pwd)/operator-redirect.py    # the operator's redirect (the VM's)
+PKI=/var/lib/emosa-lab/pki    # the lab's CA on the VM (the pods' device certificates)
+MQTT_DIR=/nvram/emosa/mqtt    # the gateway's broker: its CA, certificate and key
 # shellcheck source-path=SCRIPTDIR source=../../lib/emosa-vm.sh
 source "$(cd "$(dirname "$0")/../.." && pwd)/lib/emosa-vm.sh"
 
@@ -162,14 +167,83 @@ gateway_ports() {    # the front and agent ports on the gateway's LAN address, i
     log "gateway: the fleet and agents on $lan, the operator's redirect on $WAN_HOST:$FLEET_PORT"
 }
 
-plumbing() {    # the front and agent ports on the gateway's LAN, the agents' broker (in emosa) through the host
-    gateway_ports
-    if [ -f "$STATE/telemetry" ]; then
-        has_device emosa mqtt-agents || lxc config device add emosa mqtt-agents proxy bind=host \
-            listen="tcp:127.0.0.1:$BROKER_HOST_PORT" connect=tcp:127.0.0.1:1883 >/dev/null
-        has_device "$CTL" mqtt-agents || lxc config device add "$CTL" mqtt-agents proxy bind=instance \
-            listen=tcp:127.0.0.1:1883 connect="tcp:127.0.0.1:$BROKER_HOST_PORT" >/dev/null
+lab_ca() {    # the lab's CA, on the VM: the operator's side, which signs the pods' device certificates
+    [ -f "$PKI/ca.key" ] && return 0
+    install -d -m 700 "$PKI"
+    if exists emosa && cx emosa test -f /var/lib/emosa/pki/ca.key; then    # the one the pods trust
+        cx emosa cat /var/lib/emosa/pki/ca.pem > "$PKI/ca.pem"
+        cx emosa cat /var/lib/emosa/pki/ca.key > "$PKI/ca.key"
+    else
+        openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=EMOSA lab CA" \
+            -keyout "$PKI/ca.key" -out "$PKI/ca.pem" 2>/dev/null
     fi
+    chmod 600 "$PKI/ca.key"
+}
+
+gateway_broker() {    # gateway_broker LAN: the pods' broker in the gateway (mosquitto, the image's)
+    # mutual TLS on the gateway's LAN address for the pods, plain on its loopback for the
+    # agents (spec 3.6); the broker's certificate from the lab's CA, for the LAN address
+    local lan=$1 t ct config agents
+    cx "$CTL" test -x /usr/sbin/mosquitto || die "$CTL has no mosquitto: a gateway image with EMOSA's broker"
+    lab_ca
+    t=$(mktemp -d)
+    openssl req -newkey rsa:2048 -nodes -subj "/CN=$lan" -keyout "$t/broker.key" -out "$t/broker.csr" 2>/dev/null
+    printf 'subjectAltName=IP:%s,IP:127.0.0.1\n' "$lan" > "$t/broker.ext"
+    openssl x509 -req -in "$t/broker.csr" -CA "$PKI/ca.pem" -CAkey "$PKI/ca.key" -CAcreateserial \
+        -days 3650 -extfile "$t/broker.ext" -out "$t/broker.pem" 2>/dev/null
+    cx "$CTL" sh -c "mkdir -p '$MQTT_DIR' && chmod 700 '$MQTT_DIR'"
+    lxc exec "$CTL" -- sh -c "cat > '$MQTT_DIR/ca.pem'" < "$PKI/ca.pem"
+    lxc exec "$CTL" -- sh -c "cat > '$MQTT_DIR/broker.pem'" < "$t/broker.pem"
+    lxc exec "$CTL" -- sh -c "umask 077; cat > '$MQTT_DIR/broker.key'" < "$t/broker.key"
+    rm -rf "$t"
+    cx "$CTL" sh -c "printf '%s\n' 'per_listener_settings true' 'user root' \
+        'listener 8883 $lan' 'cafile $MQTT_DIR/ca.pem' 'certfile $MQTT_DIR/broker.pem' \
+        'keyfile $MQTT_DIR/broker.key' 'require_certificate true' 'use_identity_as_username true' \
+        'listener 1883 127.0.0.1' 'allow_anonymous true' > /etc/mosquitto/mosquitto.conf"
+    cx "$CTL" systemctl enable -q mosquitto
+    cx "$CTL" systemctl restart mosquitto
+    for ct in "$CTL" emosa; do    # the lab's broker proxies: none
+        for dev in mqtt mqtt-agents; do
+            ! has_device "$ct" "$dev" || lxc config device remove "$ct" "$dev" >/dev/null
+        done
+    done
+    # the pods publish to the gateway's LAN address: the fleet's and the agents' setting
+    read -r config agents _ _ <<<"$(emosa_layout "$CTL")"
+    cx "$CTL" python3 - "$lan" "$config" "$agents" <<'EOF'
+import glob, json, os, sys
+lan, fleet, agents = sys.argv[1:4]
+for path in [fleet, *glob.glob(agents + "/*.json")]:
+    with open(path) as f:
+        config = json.load(f)
+    telemetry = config.get("telemetry")
+    if isinstance(telemetry, dict) and telemetry.get("mode") == "mqtt" and telemetry.get("broker") != lan:
+        telemetry["broker"] = lan
+        with open(path + ".new", "w") as f:
+            json.dump(config, f, indent=2)
+            f.write("\n")
+        os.replace(path + ".new", path)
+EOF
+    log "gateway: the pods' broker in $CTL, tcp:$lan:8883 (mutual TLS, lab CA), the agents' on 127.0.0.1:1883"
+}
+
+pods_to_broker() {    # the pods publishing elsewhere: their OpenSync again, once the agents run
+    # an agent writes the pod's broker once per start of its OpenSync (spec 3.6)
+    local lan pod broker
+    [ -f "$STATE/telemetry" ] || return 0
+    lan=$(lan_address)
+    for pod in $(lxc list -c ns -f csv | grep -E '^pod-[0-9]+,RUNNING$' | cut -d, -f1); do
+        # shellcheck disable=SC2016 # expanded in the pod
+        broker=$(cx "$pod" sh -c 'PATH=$PATH:/usr/opensync/tools; ovsh s AWLAN_Node mqtt_settings -r' |
+            grep -o '"broker","[^"]*"' | cut -d'"' -f4)
+        [ "$broker" != "$lan" ] || continue
+        cx "$pod" systemctl restart opensync
+        log "gateway: $pod published to ${broker:-no broker}: its OpenSync again, for $lan"
+    done
+}
+
+plumbing() {    # the front and agent ports on the gateway's LAN, the pods' broker in the gateway
+    gateway_ports
+    [ ! -f "$STATE/telemetry" ] || gateway_broker "$(lan_address)"
 }
 
 on() {
@@ -184,7 +258,11 @@ on() {
         plumbing
         cx "$CTL" systemctl enable -q emosa-fleet
         cx "$CTL" systemctl restart emosa-fleet    # with the advertise address plumbing wrote
+        # and the agents with the broker it wrote (the fleet starts the registry's stopped ones)
+        cx "$CTL" sh -c 'for u in $(systemctl list-units --plain --no-legend "emosa-agent@*" | cut -d" " -f1); do
+            systemctl restart "$u"; done'
         log "gateway: EMOSA in $CTL again ($(emosa_layout "$CTL"))"
+        pods_to_broker
         wait_provisioned "$CTL" "$(pods_running)"
         log "gateway: $(provisioned "$CTL") agents provisioning in $CTL"
         return
@@ -199,6 +277,7 @@ on() {
     cx "$CTL" systemctl enable -q emosa-fleet
     cx "$CTL" systemctl restart emosa-fleet
     log "gateway: fleet started in $CTL, with its registry's agents"
+    pods_to_broker
     wait_provisioned "$CTL" "$(pods_running)"
     log "gateway: $(provisioned "$CTL") agents provisioning in $CTL"
 }
@@ -207,13 +286,17 @@ off() {
     in_gateway || die "EMOSA does not run in $CTL"
     stop_emosa "$CTL"
     cx "$CTL" systemctl disable -q --now emosa-forward 2>/dev/null || true
+    cx "$CTL" sh -c 'systemctl disable -q --now mosquitto 2>/dev/null; rm -f /etc/mosquitto/mosquitto.conf' || true
     operator_redirect off
     move_state "$CTL" emosa
-    # emosa's fleet is reached through the lab's proxies on the WAN address again
+    # emosa's fleet and broker are reached through the lab's proxies on the WAN address again
     local emosa_config
     emosa_config=$(emosa_layout emosa | cut -d" " -f1)
-    cx emosa cat "$emosa_config" | jq --arg wan "$WAN_HOST" '.advertise = $wan | del(.forward)' |
+    cx emosa cat "$emosa_config" |
+        jq --arg wan "$WAN_HOST" '.advertise = $wan | del(.forward)
+            | if .telemetry.mode? == "mqtt" then .telemetry.broker = $wan else . end' |
         lxc exec emosa -- sh -c "cat > '$emosa_config.new' && mv '$emosa_config.new' '$emosa_config'"
+    [ ! -f "$STATE/telemetry" ] || proxy emosa mqtt 8883
     # the gateway as it was: no configuration (the package inert), no trunk, no agents'
     # namespace (the trunk's end and the agents' interfaces go with it)
     local config agents root run
