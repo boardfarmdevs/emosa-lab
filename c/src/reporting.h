@@ -27,6 +27,9 @@ void em_policy_store_close(em_policy_store *s);
 const char *em_policy_store_boot_id(const em_policy_store *s);
 /* The record as kept on disk (written only when a policy is received), or NULL. */
 cJSON *em_policy_store_read(em_policy_store *s);
+/* Writes a record as the agent keeps it (the vectors' records on disk before a case);
+ * false when it exceeds the budget or SQLite refuses it. */
+bool em_policy_store_save(em_policy_store *s, const cJSON *value);
 
 /* What a report is built from: the represented radio (its BSSes and stations), the
  * pod's statistics and the declared ESP. NULL stats: no pod metrics. */

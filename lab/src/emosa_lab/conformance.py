@@ -2232,6 +2232,34 @@ def metrics_vectors():
             ],
         ),
         (
+            # a record kept for another radio (a pod recreated with another radio, rdk-1004,
+            # 7 October): never reported on, and the next policy received replaces it whole
+            "stored-policy-of-another-radio",
+            [survey, clients],
+            [
+                (0.0, "tick", None),
+                (5.0, "tick", None),
+                (6.0, "frame", policy),
+                (11.0, "tick", None),
+            ],
+            {
+                "identity": {
+                    "controller": mac(CONTROLLER).hex(),
+                    "local_al": mac(AGENT).hex(),
+                    "ruid": "020000000900",
+                },
+                "policy": {"metrics": {"interval_seconds": 5, "radios": []}},
+                "latest_mid": 9,
+                "latest_request": [],
+                "receipt_count": 3,
+                "next_due": 5.0,
+                "periods_due_without_report": 0,
+                "last_unfulfilled_due": None,
+                "boot_id": "conformance",
+                "schedule_rebases": 2,
+            },
+        ),
+        (
             # the same policy again (a new MID) does not postpone the due report
             "policy-redelivered",
             [survey, clients],
@@ -2333,7 +2361,8 @@ def metrics_vectors():
     )
     binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
     out = []
-    for name, publishes, steps in cases:
+    for name, publishes, steps, *kept in cases:
+        stored_before = kept[0] if kept else None  # a record on disk when the case starts
         now = [0.0]
         clock = lambda now=now: now[0]  # noqa: E731
         # the report source is refreshed at every step's time, as the agent refreshes it
@@ -2345,6 +2374,8 @@ def metrics_vectors():
         mids = MidSequence(499)
         with tempfile.TemporaryDirectory() as directory:
             store = ReportingPolicyStore(Path(directory) / "policy.sqlite", boot_id="conformance")
+            if stored_before is not None:
+                store.save(stored_before)
 
             def session(source=source, stats=stats, sent=sent, mids=mids, clock=clock, store=store):
                 """The reporter and the policy coordinator of one session, as the agent
@@ -2419,6 +2450,7 @@ def metrics_vectors():
         out.append(
             {
                 "name": name,
+                **({"stored": plain(stored_before)} if stored_before is not None else {}),
                 "publishes": publishes,
                 "steps": recorded,
                 "expected_counts": {
@@ -2451,7 +2483,8 @@ def metrics_vectors():
         "new session or a start of the agent does) at a time 'at' (seconds): the agent's "
         "result and the frames it sends; its own messages take MIDs from 500. "
         "expected_policy is the agent's record at the end, expected_stored the record kept "
-        "on disk, written only when a policy is received (both without the boot identity).",
+        "on disk, written only when a policy is received (both without the boot identity). "
+        "A case's 'stored', when present, is the record on disk before its first step.",
         "agent": {
             "al_mac": AGENT,
             "controller_al": CONTROLLER,

@@ -416,7 +416,10 @@ Policy sets an AP metrics reporting interval, unsolicited at that interval.
 RDK's controller learns a client's signal only this way.
 
 The received policy is kept durably: written when it is received, before its
-1905 Ack, and only then. The schedule of unsolicited reports is the session's:
+1905 Ack, and only then. The record names what it was received for: the
+controller, the agent and its radio. A record of another (a pod whose radio
+changed, another controller) is never applied or reported on, and the next
+policy received replaces it whole (counted `stored_policy_superseded`). The schedule of unsolicited reports is the session's:
 it starts with each session (so with each start of the agent), the first report
 due one interval after, and its accounting (reports sent, periods without one)
 is the session's too, in the agent's status. A report that is due is accounted

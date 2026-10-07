@@ -136,6 +136,25 @@ def test_a_reboot_keeps_the_intent_and_starts_the_schedule_again(rig):
     assert rig.store.read()["policy"]["metrics"]["interval_seconds"] == 60
 
 
+def test_a_record_of_another_radio_is_superseded_by_the_next_policy(rig):
+    # rdk-1004, 7 October: a pod recreated with another radio from the lab's pool kept the
+    # record received for its old radio, and every new policy was refused (NOT_READY)
+    rig.request()
+    rig.coordinator.close()
+    stored = rig.store.read()
+    rig.store.save({**stored, "identity": {**stored["identity"], "ruid": "020000000900"}})
+    rig.coordinator = rig.restart()
+    rig.now = 61
+    rig.publish()
+    rig.coordinator.tick()  # an old intent is never reported
+    assert rig.coordinator.counts == {}
+    assert rig.request(mid=24) == "policy_receipt_ack_sent"
+    kept = rig.store.read()
+    assert kept["identity"]["ruid"] == rig.ruid.hex()
+    assert kept["receipt_count"] == 1 and kept["schedule_rebases"] == 0
+    assert rig.coordinator.counts["stored_policy_superseded"] == 1
+
+
 def test_same_mid_can_reack_but_cannot_change_policy(rig):
     rig.request()
     rig.request()
@@ -145,7 +164,9 @@ def test_same_mid_can_reack_but_cannot_change_policy(rig):
     assert rig.store.read()["policy"]["metrics"]["interval_seconds"] == 60
 
 
-@pytest.mark.parametrize("failure", ["database", "stale", "controller", "relay", "identity"])
+# (a record of another identity is superseded, not a refusal:
+# test_a_record_of_another_radio_is_superseded_by_the_next_policy)
+@pytest.mark.parametrize("failure", ["database", "stale", "controller", "relay"])
 def test_no_ack_without_live_binding_and_durable_complete_receipt(rig, monkeypatch, failure):
     changes = {}
     if failure == "database":
@@ -160,10 +181,6 @@ def test_no_ack_without_live_binding_and_durable_complete_receipt(rig, monkeypat
         changes["source"] = bytes.fromhex("020000000099")
     elif failure == "relay":
         changes["relay"] = True
-    else:
-        rig.request()
-        rig.coordinator.value["identity"]["ruid"] = "020000000099"
-        rig.sent.clear()
     with pytest.raises(EmosaError):
         rig.request(mid=24, **changes)
     assert not rig.sent

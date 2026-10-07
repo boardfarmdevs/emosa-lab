@@ -330,6 +330,8 @@ void em_reporting_start(em_reporting *r, em_policy_store *store, const uint8_t c
 
 cJSON *em_policy_store_read(em_policy_store *s) { return store_read(s); }
 
+bool em_policy_store_save(em_policy_store *s, const cJSON *value) { return store_save(s, value); }
+
 void em_reporting_close(em_reporting *r)
 {
     r->closed = true;
@@ -519,6 +521,13 @@ const char *em_reporting_policy(em_reporting *r, const em_message *m, double now
             return NULL;
         }
         cJSON *value = r->value ? cJSON_Duplicate(r->value, true) : NULL;
+        if (value && !same_identity(r, value)) {
+            /* a record kept for another controller, agent or radio (a pod whose radio
+             * changed) is never applied; the policy received now replaces it whole */
+            cJSON_Delete(value);
+            value = NULL;
+            (void)record(&r->counts, "stored_policy_superseded");
+        }
         if (!value) {
             value = cJSON_CreateObject();
             cJSON_AddItemToObject(value, "identity", identity(r));
@@ -529,13 +538,6 @@ const char *em_reporting_policy(em_reporting *r, const em_message *m, double now
             cJSON_AddNullToObject(value, "last_unfulfilled_due");
             cJSON_AddStringToObject(value, "boot_id", r->store->boot_id);
             cJSON_AddNumberToObject(value, "schedule_rebases", 0);
-        }
-        if (!same_identity(r, value)) {
-            cJSON_Delete(value);
-            cJSON_Delete(update);
-            cJSON_Delete(raw);
-            *error = EM_NOT_READY; /* "stored policy identity mismatch" */
-            return NULL;
         }
         cJSON *old = cJSON_GetObjectItemCaseSensitive(value, "policy");
         cJSON *policy = cJSON_Duplicate(old, true), *u;

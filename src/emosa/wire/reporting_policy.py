@@ -298,7 +298,13 @@ class ReportingPolicyCoordinator:
         if not prior:
             if len(self.recent) >= 64:
                 raise EmosaError(Reason.NOT_READY, "policy request budget exhausted")
-            value = self.value or {
+            value = self.value
+            if value is not None and value["identity"] != self.identity(snapshot):
+                # A record kept for another controller, agent or radio (a pod whose radio
+                # changed) is never applied; the policy received now replaces it whole.
+                value = None
+                self.record("stored_policy_superseded")
+            value = value or {
                 "identity": self.identity(snapshot),
                 "policy": {},
                 "receipt_count": 0,
@@ -308,8 +314,6 @@ class ReportingPolicyCoordinator:
                 "boot_id": self.store.boot_id,
                 "schedule_rebases": 0,
             }
-            if value["identity"] != self.identity(snapshot):
-                raise EmosaError(Reason.NOT_READY, "stored policy identity mismatch")
             policy = {**value["policy"], **update}
             due = value["next_due"]
             # Identical re-delivery (including new MIDs and process restart)

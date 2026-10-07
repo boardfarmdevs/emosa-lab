@@ -1454,6 +1454,9 @@ static void metrics_vectors(const char *dir)
         }
         snprintf(db, sizeof(db), "%s/policy.sqlite", path);
         em_policy_store *store = em_policy_store_open(db, "conformance");
+        const cJSON *stored_before = cJSON_GetObjectItemCaseSensitive(c, "stored");
+        if (stored_before && !em_policy_store_save(store, stored_before))
+            fail("metrics", name, "the stored record not written");
         em_reporting r = {0};
         em_reporting_start(&r, store, controller, al, ruid, 0.0);
         em_pod_stats *stats = malloc(sizeof(*stats));
