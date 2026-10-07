@@ -1177,7 +1177,8 @@ target configuration validated again. Three steps, on rdk-1004 (rev140).
   suite passed whole, readiness, the catalog 27 of 27 (`home-a-wired-extender-loss-recovery`
   included) and the four geometry rooms with their recovery. No em_ctrl line dropped through
   the redeploy (three controller starts) and the suite. rdk-emosa-1002, which shared rev120,
-  was stopped by its owner before the suite (rev120's load from about 9.5 to 4).
+  was stopped by its owner before the suite (rev120's load from about 9.5 to 4), and retired
+  on 7 October: rdk-emosa-1005 is its successor.
 - **em_agent's journal under its cap, the keys out** (meta-cmf 4225e97: the gateway image
   `X86EMLTRBPIBB_rdk-next_20261006231122` and the extender image
   `X86EMLTRBPIAP_rdk-next_20261006232411`, the extenders' first since 29 September).
