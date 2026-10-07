@@ -1250,7 +1250,8 @@ target configuration validated again. Three steps, on rdk-1004 (rev140).
   listed its five BSSes. Pod-1, restarted the same way a minute later, recovered on its own;
   on rdk-emosa-1005 both did. Open: why the agent did not take the pod's connection again
   (its log went to RDK's logger, which the gateway had emptied).
-- **A stored reporting policy that outlived the pod's radio** (open). The recreated pod-2
+- **A stored reporting policy that outlived the pod's radio** (fixed in 80c359b: such a record
+  is now superseded by the next policy received, counted `stored_policy_superseded`). The recreated pod-2
   came back with other radios from the lab's pool (its AP radio `02:00:00:00:6a:00` for
   `6d:00`; on rdk-emosa-1005 the same step kept the radios), and its identity stayed. Its
   agent's durable reporting policy (`state/<pod>/reporting-policy.sqlite`) still carried the
@@ -1261,6 +1262,4 @@ target configuration validated again. Three steps, on rdk-1004 (rev140).
   (a row of no BSS, with its two policy rows), the model's radios one over the room's, and
   the room service failed its preflight. Cleared by hand: the agent stopped, its stored
   policy set aside (`state/MVXPOD02D7777EF0D9.stale-ruid-20261007/`), em_ctrl stopped, the old
-  radio's rows deleted, both started. Wanted: a stored record of another identity
-  superseded by the next policy received (and the reference and the specification §3.8 to
-  agree), not a refusal that lasts until the store is removed.
+  radio's rows deleted, both started.
