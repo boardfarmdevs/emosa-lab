@@ -1178,6 +1178,25 @@ target configuration validated again. Three steps, on rdk-1004 (rev140).
   included) and the four geometry rooms with their recovery. No em_ctrl line dropped through
   the redeploy (three controller starts) and the suite. rdk-emosa-1002, which shared rev120,
   was stopped by its owner before the suite (rev120's load from about 9.5 to 4).
+- **em_agent's journal under its cap, the keys out** (meta-cmf 4225e97: the gateway image
+  `X86EMLTRBPIBB_rdk-next_20261006231122` and the extender image
+  `X86EMLTRBPIAP_rdk-next_20261006232411`, the extenders' first since 29 September).
+  em_agent passed its own cap all the time: in one bring-up the gateway's agent wrote 8,744
+  lines and a Wi-Fi extender's 20,913, most of them whole JSON documents one field to a line
+  (OneWifi's Link Reports, which the agent then drops, the unassociated-station queries and
+  responses, OneWifi's device configuration and every subdoc the agent sends it), and it
+  printed every network's passphrase on the journal, 33 to 40 lines a bring-up.
+  unified-wifi-mesh 0242 sends the documents and the per-message traces to the debug
+  channel, the two configuration documents as their name and size, and takes the keys out
+  of every line. A first image without the configuration documents fixed the agents'
+  steady state (no line dropped through a catalog) but not their onboarding (2,739 lines in
+  the gateway agent's busiest 30 s of a bring-up, 2,288 of them those two documents).
+  rdk-1004, redeployed with both images: the catalog 27 of 27; through the whole run (the
+  redeploy and its bring-up, three controller starts, the option, the catalog) no line
+  dropped by em_ctrl or by any of the six em_agents, and no passphrase in their journals.
+  rdk-emosa-1005, redeployed with both images and the option run again: its suite passed
+  whole (readiness, the catalog 27 of 27, the four geometry rooms with their recovery), no
+  line dropped by the gateway's em_ctrl or em_agent.
 - **The wired extender's outage room, measured** (rdk-emosa-1005 on the image before, three
   runs, all passed; each client that leaves the extender followed with `iw event -t` in its
   container, read only). `home-a-wired-extender-loss-recovery` wants the extender's clients
