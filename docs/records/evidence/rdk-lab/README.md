@@ -1222,3 +1222,27 @@ target configuration validated again. Three steps, on rdk-1004 (rev140).
   pool) once EMOSA runs in the gateway. On rdk-1004 both were deleted on 6 October. The
   lab's `fleet` and `backhaul` (the pods' uplinks, a held pod released) now work with EMOSA
   in the gateway too.
+
+### The physical pods, and an agent that lost its pod (7 October)
+
+- **Two physical pods on rdk-1004's controller** (opensync-rpi's Raspberry Pis, over Ethernet,
+  with their own fleet entries). The room service's health, the optimizer's observer, the
+  room and geometry acceptance, the health audit and the lab's bring-up all counted them
+  as the room's, so every room-service start failed (17:00 to 18:26 UTC), then no room could
+  load, then the bring-up looped restarting every agent. Devices the room does not own are
+  now listed in the VM's `/etc/easymesh-lab/foreign-devices` and left out by each (meta-cmf
+  790e88f, f8e12bd, 277451c, 2432a05, 715c91c; opensync-rpi keeps the file). With both Pis
+  present: the catalog 27 of 27 and the four geometry rooms with their recovery.
+- **An agent that never got its pod back.** After the lab's two pods were recreated in place
+  (easymesh-resources lab-storage W15: each stopped, cloned into the btrfs pool with its
+  files, started again by `lab.sh pod`; the same serials and AL MACs), pod-2's agent
+  (`MVXPOD02D7777EF0D9`, C) stayed `recovering` with no pod in its status
+  (`report_source_available` false, `source_lost` 6) for over 50 minutes, through the
+  bring-up's controller restarts and 10 minutes without them, while the pod's OVSDB
+  connection stood through the forwarder (both legs established) and its Manager row said
+  connected. The pod stayed on its onboarding GRE path, so the controller listed it with no
+  BSS and the bring-up never completed. `systemctl restart emosa-agent@MVXPOD02D7777EF0D9`:
+  16 s later it had the pod, the pod moved to the gateway's backhaul BSS and the controller
+  listed its five BSSes. Pod-1, restarted the same way a minute later, recovered on its own;
+  on rdk-emosa-1005 both did. Open: why the agent did not take the pod's connection again
+  (its log went to RDK's logger, which the gateway had emptied).
