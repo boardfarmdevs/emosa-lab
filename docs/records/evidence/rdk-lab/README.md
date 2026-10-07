@@ -1232,7 +1232,11 @@ target configuration validated again. Three steps, on rdk-1004 (rev140).
   load, then the bring-up looped restarting every agent. Devices the room does not own are
   now listed in the VM's `/etc/easymesh-lab/foreign-devices` and left out by each (meta-cmf
   790e88f, f8e12bd, 277451c, 2432a05, 715c91c; opensync-rpi keeps the file). With both Pis
-  present: the catalog 27 of 27 and the four geometry rooms with their recovery.
+  present: the catalog 27 of 27 and the four geometry rooms with their recovery. The Pis'
+  agents onboarded again about every 2.3 minutes (some 80 M1 each by 22:00 UTC): they accept
+  RDK's five-BSS set, but the MT7921U starts one of the five VIFs, so each apply ends in
+  APPLY_TIMEOUT and a recovery with a new M1 (9.A1, on the apply side). Meanwhile em_ctrl's
+  policy API answered 504 now and then. The Pis were stopped until A1.
 - **An agent that never got its pod back.** After the lab's two pods were recreated in place
   (easymesh-resources lab-storage W15: each stopped, cloned into the btrfs pool with its
   files, started again by `lab.sh pod`; the same serials and AL MACs), pod-2's agent
