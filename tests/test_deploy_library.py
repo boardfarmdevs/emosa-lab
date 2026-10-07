@@ -154,7 +154,11 @@ def test_pod_journal_bounded(tmp_path):
     _, capture = run(tmp_path, "pod_journal_cap pod-1")
     conf = (capture / "50-lab.conf").read_text()
     assert conf.splitlines() == [
-        "[Journal]", "SystemMaxUse=128M", "SystemMaxFileSize=16M", "RuntimeMaxUse=32M"]
+        "[Journal]",
+        "SystemMaxUse=128M",
+        "SystemMaxFileSize=16M",
+        "RuntimeMaxUse=32M",
+    ]
     _, capture = run(tmp_path, "POD_JOURNAL_MAX=64M; pod_journal_cap pod-2")
     assert "SystemMaxUse=64M" in (capture / "50-lab.conf").read_text()
 
