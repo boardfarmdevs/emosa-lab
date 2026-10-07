@@ -34,6 +34,10 @@ for a in "$@"; do
 done
 case " $* " in
     *" ip -4 -o addr show "*) echo "5: brlan0    inet 10.0.0.1/24 scope global brlan0" ;;
+    *" storage show bpi-lab "*)
+        [ -n "${FAKE_BPI_LAB:-}" ] || exit 1
+        printf 'name: bpi-lab\ndriver: %s\n' "$FAKE_BPI_LAB" ;;
+    *" profile device get default root pool "*) echo default ;;
 esac
 exit 0
 """
@@ -153,6 +157,19 @@ def test_pod_journal_bounded(tmp_path):
         "[Journal]", "SystemMaxUse=128M", "SystemMaxFileSize=16M", "RuntimeMaxUse=32M"]
     _, capture = run(tmp_path, "POD_JOURNAL_MAX=64M; pod_journal_cap pod-2")
     assert "SystemMaxUse=64M" in (capture / "50-lab.conf").read_text()
+
+
+def test_pod_pool(tmp_path):
+    """A new pod goes in a copy-on-write pool when the VM has one (lab-storage W8): the RDK
+    lab's btrfs bpi-lab; else the default profile's pool; EMOSA_POD_POOL another."""
+    out, _ = run(tmp_path, "FAKE_BPI_LAB=btrfs pod_pool")
+    assert out.strip() == "bpi-lab"
+    out, _ = run(tmp_path, "FAKE_BPI_LAB=dir pod_pool")
+    assert out.strip() == "default"
+    out, _ = run(tmp_path, "pod_pool")
+    assert out.strip() == "default"
+    out, _ = run(tmp_path, "EMOSA_POD_POOL=pods FAKE_BPI_LAB=btrfs pod_pool")
+    assert out.strip() == "pods"
 
 
 def test_telemetry_setting(tmp_path):

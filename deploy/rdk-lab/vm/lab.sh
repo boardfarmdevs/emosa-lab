@@ -423,6 +423,7 @@ pod() {
         lxc image import "$meta" "$rootfs" --alias "mvx-pod-$fp" >/dev/null
     if ! exists "$name"; then
         guest_profile "$name" 2
+        lxc profile device set "$name" root pool="$(pod_pool)"
         lxc profile set "$name" security.privileged=true security.nesting=true
         # no wired network: the pod's only way out is its Wi-Fi backhaul
         lxc init "mvx-pod-$fp" "$name" -p "$name" >/dev/null

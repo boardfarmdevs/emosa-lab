@@ -52,6 +52,22 @@ pod_journal_cap() {    # pod_journal_cap POD
     fi
 }
 
+# The pool a new pod goes in (easymesh-resources lab-storage W8): in a copy-on-write pool each
+# pod is a snapshot of its image and adds only its changes; in the VM's default dir pool each
+# is a full copy. The RDK lab's bpi-lab is btrfs. EMOSA_POD_POOL names another.
+pod_pool() {
+    local driver
+    if [ -n "${EMOSA_POD_POOL:-}" ]; then
+        echo "$EMOSA_POD_POOL"
+        return
+    fi
+    driver=$(lxc storage show bpi-lab 2>/dev/null | awk '$1 == "driver:" {print $2}') || true
+    case "$driver" in
+        btrfs|zfs) echo bpi-lab ;;
+        *) lxc profile device get default root pool ;;
+    esac
+}
+
 # --- the adapter container (emosa) -------------------------------------------------------
 
 adapter_container() {    # adapter_container PACKAGE...: container emosa, running, with them
