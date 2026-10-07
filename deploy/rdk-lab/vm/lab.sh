@@ -429,6 +429,7 @@ pod() {
     fi
     lxc config set "$name" user.emosa.role=pod user.opensync-lab.image="$fp"
     pod_links "$name"
+    pod_journal_cap "$name"
     start_guarded "$name"
     if [ -f /opt/emosa-lab/telemetry ]; then    # its lab device certificate, once OpenSync is up
         for _ in $(seq 60); do [ -n "$(pod_serial "$name")" ] && break; sleep 2; done

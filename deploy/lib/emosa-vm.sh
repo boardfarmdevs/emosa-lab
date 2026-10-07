@@ -33,6 +33,25 @@ apt_install() {    # apt_install CT PACKAGE...: the packages CT lacks
 
 pod_serial() { cx "$1" /usr/opensync/tools/ovsh -r s AWLAN_Node serial_number 2>/dev/null | tr -d '[:space:]'; }
 
+# A pod's systemd journal bounded (easymesh-resources lab-storage W3): journald keeps up to
+# 4 GiB on the lab VM's disk, and a pod reached it within a day of rooms. The drop-in goes in
+# before each start, so pod images built without it are bounded too; a running pod's journald
+# restarts to it and its journal is cut to the bound.
+POD_JOURNAL_MAX=${EMOSA_POD_JOURNAL_MAX:-128M}
+pod_journal_cap() {    # pod_journal_cap POD
+    local conf
+    conf=$(mktemp)
+    printf '[Journal]\nSystemMaxUse=%s\nSystemMaxFileSize=16M\nRuntimeMaxUse=32M\n' \
+        "$POD_JOURNAL_MAX" > "$conf"
+    lxc file push -q -p "$conf" "$1/etc/systemd/journald.conf.d/50-lab.conf"
+    rm -f "$conf"
+    if running "$1"; then
+        cx "$1" sh -c "systemctl restart systemd-journald && journalctl -q --rotate &&
+            journalctl -q --vacuum-size=$POD_JOURNAL_MAX" ||
+            log "pod: $1's journal not cut to $POD_JOURNAL_MAX (journald restart or vacuum failed)"
+    fi
+}
+
 # --- the adapter container (emosa) -------------------------------------------------------
 
 adapter_container() {    # adapter_container PACKAGE...: container emosa, running, with them

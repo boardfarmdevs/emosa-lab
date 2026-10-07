@@ -14,10 +14,14 @@ SCRIPTS = [ROOT / "deploy/opensync-lab/vm/lab.sh", ROOT / "deploy/rdk-lab/vm/lab
 
 # A stand-in for lxc: every container exists; what a step writes to a file in a
 # container (sh -c "cat > FILE", or "cat > 'FILE.new' && mv ...") lands in
-# $CAPTURE/<basename>; a container's places (emosa_layout) are read from $FAKE_DEFAULT
-# for its /etc/default/emosa (none: the kit's defaults); its LAN bridge has 10.0.0.1;
-# everything else succeeds.
+# $CAPTURE/<basename>, as does a file pushed (lxc file push ... SOURCE CT/PATH); a
+# container's places (emosa_layout) are read from $FAKE_DEFAULT for its
+# /etc/default/emosa (none: the kit's defaults); its LAN bridge has 10.0.0.1; no container
+# is running; everything else succeeds.
 FAKE_LXC = r"""#!/bin/bash
+if [ "$1 $2" = "file push" ]; then
+    cp "${@: -2:1}" "$CAPTURE/$(basename "${@: -1}")"; exit 0
+fi
 for a in "$@"; do
     case $a in
         *EMOSA_FLEET_CONFIG*)
@@ -138,6 +142,17 @@ def test_environment_overrides_a_labs_defaults(tmp_path):
     )
     fleet = json.loads((capture / "emosa-fleet.json").read_text())
     assert (fleet["message_set"], fleet["multi_bss"]) == ("easymesh-6.1", False)
+
+
+def test_pod_journal_bounded(tmp_path):
+    """A pod's journald drop-in goes in before its start (lab-storage W3): 128 MiB by default,
+    EMOSA_POD_JOURNAL_MAX another bound."""
+    _, capture = run(tmp_path, "pod_journal_cap pod-1")
+    conf = (capture / "50-lab.conf").read_text()
+    assert conf.splitlines() == [
+        "[Journal]", "SystemMaxUse=128M", "SystemMaxFileSize=16M", "RuntimeMaxUse=32M"]
+    _, capture = run(tmp_path, "POD_JOURNAL_MAX=64M; pod_journal_cap pod-2")
+    assert "SystemMaxUse=64M" in (capture / "50-lab.conf").read_text()
 
 
 def test_telemetry_setting(tmp_path):
