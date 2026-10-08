@@ -81,6 +81,9 @@ fleet must admit the serial and give it the profile `opensync-lab-hwsim-6.6.1-v1
 | `backhaul-steering` | the backhaul station re-pinned to the target; once the pod's State shows it there, the Backhaul Steering Response with the request's MID, success | the geometry rooms with pods |
 | `backhaul-steering-renewal` | a Renew and a new onboarding during the move: the answer still comes, with the request's MID | finding 9 |
 | `backhaul-steering-own-bss` | a target that is one of the pod's own BSSes: refused at once, failure with an Error Code; the station stays pinned | finding 10 |
+| `pod-child` | spec 8.5: the pod on its EasyMesh backhaul under another pod's backhaul BSS (that pod's agent in the box as the peer directory reads it: its status beside the agent's): the Topology Response names that agent as a 1905 neighbor on the backhaul station, besides the controller on Ethernet, and a Link Metric Query is answered from the parent's measurement of the station, the directions swapped | alignment plan 9.5 |
+| `pod-parent` | spec 8.5: another pod's station on this pod's backhaul BSS, that pod's parent: the Topology Response names its agent on the BSS, and a Link Metric Query for it is answered from this pod's own client report of the station | alignment plan 9.5 |
+| `pod-parent-loop` | spec 8.5: a Backhaul Steering Request whose target is the backhaul BSS of a pod hanging off this one: refused at once (failure), the station left where it is | alignment plan 9.5 |
 | `backhaul-steering-refused` | without option 1 (the pod on GRE): refused at once, failure with an Error Code | finding 12 |
 
 ## The reference workload's faults

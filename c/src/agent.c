@@ -38,6 +38,7 @@
 #include "mqtt.h"
 #include "ovs.h"
 #include "ovsdb.h"
+#include "peers.h"
 #include "proc.h"
 #include "reporting.h"
 #include "scope.h"
@@ -220,6 +221,10 @@ typedef struct {
     bool bh_live;
     em_backhaul backhaul;       /* the pod's EasyMesh backhaul, when it is one */
     bool has_backhaul;
+    bool peers_on;              /* the fleet's other agents (spec §8.5): with a run_dir */
+    em_peers peers;
+    em_backhaul_link links[16]; /* the Wi-Fi backhaul's 1905 neighbors, as of the last refresh */
+    size_t nlinks;
     em_early early; /* the Early AP Capability Report awaiting its Ack */
     int early_generation; /* the pod State it was built from */
     unsigned long early_revision;
@@ -293,6 +298,49 @@ static bool same_tlvs(const em_tlv_list *x, const em_tlv_list *y)
         same = x->tlvs[i].kind == y->tlvs[i].kind && x->tlvs[i].len == y->tlvs[i].len &&
                !memcmp(x->tlvs[i].value, y->tlvs[i].value, x->tlvs[i].len);
     return same;
+}
+
+/* The pod's 1905 neighbors on its Wi-Fi backhaul (spec §8.5): its parent pod's agent on its
+ * backhaul station, then each child pod's agent on the backhaul BSS it is on (peers' order). */
+static void backhaul_links(agent *a, double t)
+{
+    a->nlinks = 0;
+    if (!a->peers_on)
+        return;
+    em_peers_read(&a->peers, t);
+    if (a->has_backhaul) {
+        const em_peer *p = em_peers_upstream(&a->peers, a->backhaul.station.parent);
+        if (p) {
+            memcpy(a->links[0].local, a->backhaul.station.mac, 6);
+            memcpy(a->links[0].al, p->al, 6);
+            a->nlinks = 1;
+        }
+    }
+    for (size_t k = 0; k < a->peers.n && a->nlinks < 16; k++) {
+        const em_peer *p = &a->peers.peers[k];
+        for (size_t i = 0; p->has_station && i < a->represented.nbss; i++) {
+            const em_bss_view *b = &a->represented.bss[i];
+            if (!b->backhaul || memcmp(b->bssid, p->parent, 6))
+                continue;
+            bool on = false;
+            for (size_t s = 0; s < b->nstations; s++)
+                on = on || !memcmp(b->stations[s], p->station, 6);
+            if (on) {
+                memcpy(a->links[a->nlinks].local, b->bssid, 6);
+                memcpy(a->links[a->nlinks].al, p->al, 6);
+                a->nlinks++;
+            }
+            break;
+        }
+    }
+}
+
+/* spec §8.5: an upstream whose chain of pods reaches this one (the uplink scope's loop hook) */
+static bool upstream_loops(void *ctx, const uint8_t target[6], const uint8_t (*own)[6], size_t nown)
+{
+    agent *a = ctx;
+    em_peers_read(&a->peers, now());
+    return em_peers_loops(&a->peers, a->al, own, nown, target);
 }
 
 static bool refresh(agent *a)
@@ -407,6 +455,7 @@ static bool refresh(agent *a)
     free(view);
     a->represented = rep;
     a->has_primary = primary;
+    backhaul_links(a, t);
     a->channel = channel;
     a->tx_power = radio->has_tx_power ? radio->tx_power : 0;
     a->generation = em_ovsdb_generation(a->ovs);
@@ -427,7 +476,7 @@ static em_reason topology_tlvs(agent *a, bool r1, em_tlv_list *out)
         ages[i].seconds = em_age_at(t, a->first_seen[i].at); /* as of this response */
     }
     return em_topology_tlvs(a->al, a->controller, &a->represented, a->channel, ages, a->nfirst, r1,
-                            a->has_backhaul ? &a->backhaul : NULL, out);
+                            a->has_backhaul ? &a->backhaul : NULL, a->links, a->nlinks, out);
 }
 
 /* -- operations (the AP scope: emosa.reconcile.Engine over PodBackend) ----------------- */
@@ -831,6 +880,158 @@ static void reply(agent *a, uint16_t type, uint16_t mid, const em_tlv *tlvs, siz
     send_message(a, a->controller, type, mid, tlvs, n, false);
 }
 
+/* -- backhaul link metrics (spec §8.5; emosa.wire.link_metrics.BackhaulLinkMetrics) ------- */
+
+typedef struct {
+    uint8_t al[6], local[6], neighbor[6];
+    uint16_t media;
+    bool has_tx, has_rx;
+    double tx[3], rx[3]; /* (packet errors, packets, rate Mbit/s), (packet errors, packets, SNR dB) */
+} backhaul_pair;
+
+/* (packet errors, packets, value) from a station's measurement in its status form, all three known */
+static bool measured(const cJSON *seen, const char *errors, const char *packets, const char *value, double out[3])
+{
+    const char *keys[3] = {errors, packets, value};
+    for (int i = 0; i < 3; i++) {
+        const cJSON *x = cJSON_GetObjectItemCaseSensitive(seen, keys[i]);
+        if (!cJSON_IsNumber(x))
+            return false;
+        out[i] = x->valuedouble;
+    }
+    return true;
+}
+
+static const cJSON *measurement(const cJSON *stations, const uint8_t mac[6])
+{
+    char *key = em_mac_str(mac);
+    const cJSON *seen = key ? cJSON_GetObjectItemCaseSensitive(stations, key) : NULL;
+    free(key);
+    return cJSON_IsObject(seen) ? seen : NULL;
+}
+
+/* the Wi-Fi backhaul neighbors and their links' measurements: the parent's from its measurement of
+ * this pod's station (directions swapped, while current), each child's from this pod's own */
+static size_t backhaul_pairs(agent *a, backhaul_pair *out, size_t cap)
+{
+    size_t n = 0;
+    if (!a->peers_on)
+        return 0;
+    em_peers_read(&a->peers, now());
+    double freshness = a->pod_metrics_on ? a->freshness : 240;
+    if (a->has_backhaul) {
+        const em_peer *p = em_peers_upstream(&a->peers, a->backhaul.station.parent);
+        if (p && n < cap) {
+            backhaul_pair *x = &out[n++];
+            memset(x, 0, sizeof(*x));
+            memcpy(x->al, p->al, 6);
+            memcpy(x->local, a->backhaul.station.mac, 6);
+            memcpy(x->neighbor, a->backhaul.station.parent, 6);
+            x->media = strcmp(a->backhaul.band, "5G") ? 0x0103 : 0x0104;
+            const cJSON *seen = measurement(p->measured, a->backhaul.station.mac);
+            const cJSON *at = cJSON_GetObjectItemCaseSensitive(seen, "measured_at");
+            if (seen && !(wall() - (cJSON_IsNumber(at) ? at->valuedouble : 0) > freshness)) {
+                x->has_tx = measured(seen, "rx_errors", "rx_frames", "rx_rate_mbps", x->tx);
+                x->has_rx = measured(seen, "tx_errors", "tx_frames", "snr_db", x->rx);
+            }
+        }
+    }
+    cJSON *stats = a->pod_metrics_on ? em_pod_stats_status(&a->stats) : NULL;
+    const cJSON *stations = cJSON_GetObjectItemCaseSensitive(stats, "stations");
+    for (size_t k = 0; k < a->peers.n && n < cap; k++) {
+        const em_peer *p = &a->peers.peers[k];
+        for (size_t i = 0; p->has_station && i < a->represented.nbss; i++) {
+            const em_bss_view *b = &a->represented.bss[i];
+            if (!b->backhaul || memcmp(b->bssid, p->parent, 6))
+                continue;
+            bool on = false;
+            for (size_t s = 0; s < b->nstations; s++)
+                on = on || !memcmp(b->stations[s], p->station, 6);
+            if (on) {
+                backhaul_pair *x = &out[n++];
+                memset(x, 0, sizeof(*x));
+                memcpy(x->al, p->al, 6);
+                memcpy(x->local, b->bssid, 6);
+                memcpy(x->neighbor, p->station, 6);
+                x->media = 0x0103;
+                const cJSON *seen = measurement(stations, p->station);
+                x->has_tx = seen && measured(seen, "tx_errors", "tx_frames", "tx_rate_mbps", x->tx);
+                x->has_rx = seen && measured(seen, "rx_errors", "rx_frames", "snr_db", x->rx);
+            }
+            break;
+        }
+    }
+    cJSON_Delete(stats);
+    return n;
+}
+
+static uint32_t counter(double v) { return v <= 0 ? 0 : v >= 4294967295.0 ? 4294967295u : (uint32_t)v; }
+static uint16_t short_of(double v, double cap) { return v <= 0 ? 0 : v >= cap ? (uint16_t)cap : (uint16_t)v; }
+
+static void put16(uint8_t *p, uint16_t v) { p[0] = (uint8_t)(v >> 8); p[1] = (uint8_t)v; }
+static void put32(uint8_t *p, uint32_t v)
+{
+    for (int i = 0; i < 4; i++)
+        p[i] = (uint8_t)(v >> (24 - 8 * i));
+}
+
+/* A Link Metric Query for the Wi-Fi backhaul's neighbors, answered at once with the same MID; false
+ * when this cannot answer it (another neighbor, nothing measured, an invalid query): nothing sent */
+static bool backhaul_link_metrics(agent *a, const em_message *m)
+{
+    const em_tlv *q = NULL;
+    size_t nq = 0;
+    for (size_t i = 0; i < m->ntlvs; i++)
+        if (m->tlvs[i].kind == 0x08) {
+            q = &m->tlvs[i];
+            nq++;
+        }
+    if (nq != 1 || q->len < 1 || q->value[0] > 1 || q->len != (q->value[0] ? 8 : 2) || q->value[q->len - 1] > 2)
+        return false;
+    uint8_t direction = q->value[q->len - 1];
+    const uint8_t *neighbor = q->value[0] ? q->value + 1 : NULL;
+    backhaul_pair pairs[24];
+    size_t n = backhaul_pairs(a, pairs, 24), count = 0;
+    uint8_t values[48][41];
+    em_tlv tlvs[48];
+    for (size_t i = 0; i < n; i++) {
+        const backhaul_pair *p = &pairs[i];
+        if (neighbor && memcmp(p->al, neighbor, 6))
+            continue;
+        if ((direction == 0 || direction == 2) && p->has_tx) {
+            uint8_t *v = values[count];
+            memcpy(v, a->al, 6);
+            memcpy(v + 6, p->al, 6);
+            memcpy(v + 12, p->local, 6);
+            memcpy(v + 18, p->neighbor, 6);
+            put16(v + 24, p->media);
+            v[26] = 0; /* no IEEE 802.1 bridge */
+            put32(v + 27, counter(p->tx[0]));
+            put32(v + 31, counter(p->tx[1]));
+            put16(v + 35, short_of(p->tx[2], 65535));
+            put16(v + 37, 100);   /* link availability */
+            put16(v + 39, 65535); /* 1905: the PHY rate is unspecified for IEEE 802.11 */
+            tlvs[count++] = (em_tlv){0x09, 41, v};
+        }
+        if ((direction == 1 || direction == 2) && p->has_rx) {
+            uint8_t *v = values[count];
+            memcpy(v, a->al, 6);
+            memcpy(v + 6, p->al, 6);
+            memcpy(v + 12, p->local, 6);
+            memcpy(v + 18, p->neighbor, 6);
+            put16(v + 24, p->media);
+            put32(v + 26, counter(p->rx[0]));
+            put32(v + 30, counter(p->rx[1]));
+            v[34] = (uint8_t)short_of(p->rx[2], 254); /* the SNR (spec §8.5) */
+            tlvs[count++] = (em_tlv){0x0A, 35, v};
+        }
+    }
+    if (!count)
+        return false;
+    reply(a, 0x0006, m->mid, tlvs, count);
+    return true;
+}
+
 static void handle_message(agent *a, const em_message *m)
 {
     char label[48];
@@ -1039,7 +1240,10 @@ static void handle_message(agent *a, const em_message *m)
         reply(a, 0x801A, m->mid, t, 2);
         count(&a->counts, "backhaul_steering_refused");
     } else if (m->message_type == 0x0005) {
-        count(&a->counts, "neighbor_measurement_unavailable");
+        if (backhaul_link_metrics(a, m))
+            count(&a->counts, "backhaul_link_metric_response_sent");
+        else
+            count(&a->counts, "neighbor_measurement_unavailable");
     } else if (m->message_type == 0x800B) {
         count(&a->counts, "ap_measurements_unavailable");
     } else {
@@ -1260,6 +1464,17 @@ static cJSON *pod_facts(agent *a)
     } else {
         cJSON_AddNullToObject(o, "backhaul");
     }
+    cJSON *neighbors = cJSON_AddArrayToObject(o, "backhaul_neighbors");
+    for (size_t i = 0; i < a->nlinks; i++) {
+        cJSON *x = cJSON_CreateObject();
+        text = em_mac_str(a->links[i].local);
+        cJSON_AddStringToObject(x, "interface", text);
+        free(text);
+        text = em_mac_str(a->links[i].al);
+        cJSON_AddStringToObject(x, "al", text);
+        free(text);
+        cJSON_AddItemToArray(neighbors, x);
+    }
     cJSON_AddNumberToObject(o, "ovsdb_generation", a->generation);
     cJSON_AddNumberToObject(o, "ovsdb_revision", (double)em_ovsdb_revision(a->ovs));
     return o;
@@ -1435,6 +1650,10 @@ static bool configure(agent *a, const char *path, const char *profiles)
     a->interface = cfg_str(c, "interface");
     a->state_dir = cfg_str(c, "state_dir");
     a->status_dir = cfg_str(c, "run_dir") ? cfg_str(c, "run_dir") : a->state_dir;
+    if (cfg_str(c, "run_dir")) { /* the fleet's other agents, beside this one (spec §8.5) */
+        em_peers_init(&a->peers, cfg_str(c, "run_dir"), a->pod_id);
+        a->peers_on = true;
+    }
     a->profile_id = cfg_str(c, "profile") ? cfg_str(c, "profile") : "opensync-lab-hwsim-6.6.1-v1";
     const char *set = cfg_str(c, "message_set"), *m2 = cfg_str(c, "m2_session");
     a->r1 = set && !strcmp(set, "r1");
@@ -1683,6 +1902,8 @@ int main(int argc, char **argv)
         a.uplink.ap_journal = a.journal;
         a.uplink.settled = fronthaul_settled;
         a.uplink.settled_ctx = &a;
+        a.uplink.loops = a.peers_on ? upstream_loops : NULL;
+        a.uplink.loops_ctx = &a;
         em_reason why = em_uplink_open(&a.uplink, a.state_dir, &a.schemas,
                                        cfg_str(cJSON_GetObjectItemCaseSensitive(a.config, "uplink"), "bssid"));
         if (why != EM_OK) {
@@ -1796,6 +2017,7 @@ int main(int argc, char **argv)
     em_channel_store_close(a.channel_store);
     em_ethernet_close(&a.eth);
     em_ovsdb_close(a.ovs);
+    em_peers_free(&a.peers);
     LOG("stopped");
     return 0;
 }

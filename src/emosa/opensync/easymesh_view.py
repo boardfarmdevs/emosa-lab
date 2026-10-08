@@ -285,8 +285,29 @@ def inventory(device, radio, chipset=b"mac80211_hwsim"):
     )
 
 
+def neighbors_1905(agent_al, controller_al, peers):
+    """The controller on the agent's Ethernet port, then each Wi-Fi backhaul neighbor on its
+    local interface (spec 8.5; no IEEE 802.1 bridge between the two ends of a 4-address link)."""
+    by_local = {}
+    for local, al in peers:
+        by_local.setdefault(local, set()).add(al)
+    return (Neighbors1905(agent_al, (Neighbor(controller_al, False),)),) + tuple(
+        Neighbors1905(local, tuple(Neighbor(al, False) for al in sorted(by_local[local])))
+        for local in sorted(by_local)
+    )
+
+
 def topology(
-    *, agent_al, controller_al, radio, channel, bsses, ages, uplink=None, associated_at=None
+    *,
+    agent_al,
+    controller_al,
+    radio,
+    channel,
+    bsses,
+    ages,
+    uplink=None,
+    associated_at=None,
+    peers=(),
 ):
     """Topology Response contents: the agent, its BSSes and their stations.
 
@@ -298,6 +319,9 @@ def topology(
     ``uplink`` (a :class:`BackhaulView`) adds the pod's EasyMesh backhaul STA as a
     non-AP STA interface on its parent BSSID, bridged with the BSSes; the 1905
     neighbor stays on the Ethernet port, where EMOSA's frames actually go.
+    ``peers`` adds the pod's 1905 neighbors on its Wi-Fi backhaul (spec 8.5), as (local
+    interface MAC, neighbor AL MAC) pairs: its parent pod's agent on its backhaul station, a
+    child pod's on its backhaul BSS.
     """
     interfaces = (LocalInterface(agent_al, 1, b""),) + tuple(
         LocalInterface(b.bssid, IEEE_802_11N_24, b.bssid + bytes([AP_ROLE, 0x00, channel, 0x00]))
@@ -316,7 +340,7 @@ def topology(
         device=DeviceInformation(agent_al, interfaces),
         bridges=BridgingCapability((tuple(i.mac for i in interfaces),)),
         non1905=(),
-        neighbors1905=(Neighbors1905(agent_al, (Neighbor(controller_al, False),)),),
+        neighbors1905=neighbors_1905(agent_al, controller_al, peers),
         operational=APOperationalBss(
             (
                 OperationalRadio(

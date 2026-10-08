@@ -298,9 +298,32 @@ static long age_of(const em_station_age *ages, size_t n, const uint8_t mac[6], b
     return 0;
 }
 
+/* Each distinct MAC of the n `at`-th 6-octet fields of the 12-octet links, ascending: the order
+ * the reference gives them (sorted by local interface, then by AL). */
+static size_t sorted_macs(const em_backhaul_link *links, size_t n, bool al, const uint8_t *local,
+                          uint8_t out[][6], size_t cap)
+{
+    size_t count = 0;
+    for (size_t i = 0; i < n; i++) {
+        if (local && memcmp(links[i].local, local, 6))
+            continue;
+        const uint8_t *m = al ? links[i].al : links[i].local;
+        size_t at = 0;
+        while (at < count && memcmp(out[at], m, 6) < 0)
+            at++;
+        if ((at < count && !memcmp(out[at], m, 6)) || count == cap)
+            continue;
+        memmove(out[at + 1], out[at], (count - at) * 6);
+        memcpy(out[at], m, 6);
+        count++;
+    }
+    return count;
+}
+
 em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_al[6],
                            const em_radio_view *r, int channel, const em_station_age *ages,
-                           size_t nages, bool r1, const em_backhaul *uplink, em_tlv_list *out)
+                           size_t nages, bool r1, const em_backhaul *uplink,
+                           const em_backhaul_link *links, size_t nlinks, em_tlv_list *out)
 {
     size_t extra = uplink ? 1 : 0;
     memset(out, 0, sizeof(*out));
@@ -352,8 +375,20 @@ em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_a
         }
     }
     static const uint8_t services[2] = {1, 1}, profile = 1;
-    ok = ok && append(out, 0x03, &dev) && append(out, 0x04, &bridge) && append(out, 0x07, &nb) &&
-         append_bytes(out, 0x80, services, 2) && append(out, 0x83, &op) &&
+    ok = ok && append(out, 0x03, &dev) && append(out, 0x04, &bridge) && append(out, 0x07, &nb);
+    /* then each Wi-Fi backhaul neighbor on its local interface (spec §8.5), no 802.1 bridge */
+    uint8_t locals[16][6], als[16][6];
+    size_t nlocals = sorted_macs(links, nlinks, false, NULL, locals, 16);
+    for (size_t i = 0; ok && i < nlocals; i++) {
+        em_buf b = {0};
+        size_t nals = sorted_macs(links, nlinks, true, locals[i], als, 16);
+        ok = em_buf_put(&b, locals[i], 6);
+        for (size_t k = 0; ok && k < nals; k++)
+            ok = em_buf_put(&b, als[k], 6) && em_buf_u8(&b, 0);
+        ok = ok && append(out, 0x07, &b);
+        em_buf_free(&b);
+    }
+    ok = ok && append_bytes(out, 0x80, services, 2) && append(out, 0x83, &op) &&
          (r1 || append(out, 0xB7, &conf)) && (!clients || append(out, 0x84, &cl)) &&
          (r1 || append_bytes(out, 0xB3, &profile, 1));
     em_buf_free(&dev);

@@ -516,13 +516,24 @@ static void northbound_vectors(const char *dir)
             em_parse_mac(age->string, ages[nages].mac);
             ages[nages++].seconds = (long)age->valuedouble;
         }
+        /* the Wi-Fi backhaul's 1905 neighbors (spec §8.5), when the case has any */
+        em_backhaul_link links[16];
+        size_t nlinks = 0;
+        const cJSON *bl;
+        cJSON_ArrayForEach(bl, cJSON_GetObjectItemCaseSensitive(agent, "backhaul_links"))
+        {
+            if (nlinks < 16 && em_parse_mac(str(bl, "interface"), links[nlinks].local) &&
+                em_parse_mac(str(bl, "al"), links[nlinks].al))
+                nlinks++;
+        }
         const cJSON *sets = cJSON_GetObjectItemCaseSensitive(expected, "topology_tlvs");
         const cJSON *set;
         cJSON_ArrayForEach(set, sets)
         {
             checks++;
             bool r1 = !strcmp(set->string, "r1");
-            if (em_topology_tlvs(agent_al, controller_al, radio, channel, ages, nages, r1, NULL, &list) != EM_OK) {
+            if (em_topology_tlvs(agent_al, controller_al, radio, channel, ages, nages, r1, NULL, links, nlinks,
+                                 &list) != EM_OK) {
                 fail("northbound", name, "topology TLVs not built");
                 continue;
             }
@@ -564,7 +575,7 @@ static void northbound_vectors(const char *dir)
             snprintf(label, sizeof(label), "aged_at_response %.1f", t);
             em_tlv_list list;
             checks++;
-            if (!radio || em_topology_tlvs(agent_al, controller_al, radio, 6, ages, nages, false, NULL, &list) != EM_OK) {
+            if (!radio || em_topology_tlvs(agent_al, controller_al, radio, 6, ages, nages, false, NULL, NULL, 0, &list) != EM_OK) {
                 fail("northbound", label, "topology TLVs not built");
                 continue;
             }
@@ -894,7 +905,7 @@ static void uplink_vectors(const char *dir)
             em_tlv_list list;
             checks++;
             if (em_topology_tlvs(agent_al, controller_al, radio, radio->channel, ages, nages, false,
-                                 &link, &list) != EM_OK) {
+                                 &link, NULL, 0, &list) != EM_OK) {
                 fail("uplink", name, "topology TLVs not built");
             } else {
                 got = list_json(list.tlvs, list.count);

@@ -136,6 +136,11 @@
       "box": ["wired-uplink"],
       "python": ["test_wired_uplink.py"]
     },
+    "README 8.5 Pods as parents of other pods": {
+      "vectors": ["translation-northbound.json"],
+      "box": ["pod-child", "pod-parent", "pod-parent-loop"],
+      "python": ["test_peers.py"]
+    },
     "README 9. Not covered yet": {
       "note": "not implemented, so not tested: the list is what EMOSA does not do"
     },

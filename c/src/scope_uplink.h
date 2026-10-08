@@ -25,6 +25,10 @@ typedef struct {
     /* the fronthaul is served and idle */
     bool (*settled)(void *ctx);
     void *settled_ctx;
+    /* spec §8.5: true when the upstream target is a pod whose own upstream chain reaches this one
+     * (own: every MAC the pod's own VIFs and radios use); NULL: no other pods known */
+    bool (*loops)(void *ctx, const uint8_t target[6], const uint8_t (*own)[6], size_t nown);
+    void *loops_ctx;
     em_journal *journal;
     em_engine engine;
     char instance[17];

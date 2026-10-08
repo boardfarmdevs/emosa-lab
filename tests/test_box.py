@@ -354,6 +354,21 @@ def test_a_set_beyond_the_radios_slots_is_applied_in_part(agent, tmp_path):
     assert result["access_points"] == [["home-ap-24", "EMOSA-WSC-component"]]
 
 
+def test_a_pod_under_another_pod_names_it_its_backhaul_neighbor(agent, tmp_path):
+    result = box("pod-child", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_a_pod_with_a_child_pod_names_it_on_its_backhaul_bss(agent, tmp_path):
+    result = box("pod-parent", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_a_backhaul_move_under_a_child_pod_is_refused(agent, tmp_path):
+    result = box("pod-parent-loop", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_refused_close_is_swept_again_on_the_same_source(agent, tmp_path):
     result = box("steering-close-refused", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result

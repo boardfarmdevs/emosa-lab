@@ -24,7 +24,11 @@ from emosa.wire.channel import ChannelCoordinator
 from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, decode_frame, fragment_message
 from emosa.wire.coordinator import ReportCoordinator
 from emosa.wire.disassociation import DisassociationCoordinator, FinalSession
-from emosa.wire.link_metrics import LinkMetricCoordinator, LinkMetricSource
+from emosa.wire.link_metrics import (
+    BackhaulLinkMetrics,
+    LinkMetricCoordinator,
+    LinkMetricSource,
+)
 from emosa.wire.pod_metrics import PodMetricReporter
 from emosa.wire.provisioning_session import ComponentProvisioningSession
 from emosa.wire.reporting_policy import ReportingPolicyCoordinator
@@ -116,6 +120,7 @@ class OnboardingSession:
         backhaul_steering_executor=None,
         backhaul_steering_outcome=None,
         backhaul_steering_state=None,
+        backhaul_pairs=None,
     ):
         self.message_set = check_message_set(message_set)
         if type(inventory) is not DeviceInventory:
@@ -152,6 +157,14 @@ class OnboardingSession:
             else LinkMetricSource(source, clock=clock)
         )
         self.link_metrics = None
+        # the pod's Wi-Fi backhaul neighbors' link metrics (spec 8.5), when it has any
+        self.backhaul_metrics = (
+            BackhaulLinkMetrics(
+                self.binding.local_al, self.binding.controller_al, backhaul_pairs, send_frame
+            )
+            if backhaul_pairs is not None
+            else None
+        )
         if ap_metric_source is not None and ap_metric_source.reports is not source:
             raise EmosaError(Reason.INVALID_INPUT, "AP measurements use another control source")
         self.ap_metric_source = (
@@ -479,6 +492,10 @@ class OnboardingSession:
                     return self._record(result)
             if self.reporting_policy:
                 result = self.reporting_policy.handle(message, now)
+                if result:
+                    return self._record(result)
+            if self.backhaul_metrics and self.state == "provisioning":
+                result = self.backhaul_metrics.handle(message)
                 if result:
                     return self._record(result)
             if self.link_metrics and self.state == "provisioning":

@@ -20,6 +20,7 @@ import codecs
 import json
 import os
 import socket
+import struct
 import subprocess
 import sys
 import time
@@ -2012,6 +2013,221 @@ async def backhaul_steering_own_bss(box):
     )
 
 
+# Pods as parents of other pods (spec 8.5). The other pod's agent is in the box as the peer
+# directory reads it: its status beside the agent's, written as that agent writes it.
+
+PARENT_AL, CHILD_AL = "02:72:00:00:00:0a", "02:72:00:00:00:0b"
+CHILD_STATION = "02:00:00:00:0c:01"  # the child pod's backhaul station
+MEASURED = {  # a station's measurement as an agent's status gives it (spec 3.6)
+    "tx_rate_mbps": 72.2,
+    "rx_rate_mbps": 65.0,
+    "snr_db": 40,
+    "tx_frames": 1200,
+    "rx_frames": 900,
+    "tx_errors": 3,
+    "rx_errors": 1,
+}
+
+
+def peer_status(box, pod_id, *, al, backhaul_bsses=(), station=None, parent=None, stations=None):
+    """Another pod's agent in the fleet, as its status gives it (alive: the box's own process)."""
+    directory = box.run_root / pod_id
+    directory.mkdir(parents=True, exist_ok=True)
+    status = {
+        "pod_id": pod_id,
+        "agent_al": al,
+        "worker_pid": os.getpid(),
+        "updated": time.time(),
+        "pod": {
+            "bsses": [
+                {"role": "backhaul", "bssid": b, "ssid": "mesh_backhaul"} for b in backhaul_bsses
+            ],
+            "backhaul": None
+            if station is None
+            else {"station": "bhaul-sta-24", "mac": station, "parent": parent, "band": "2.4G"},
+        },
+        "telemetry": {"stations": stations or {}},
+    }
+    (directory / "status.json").write_text(json.dumps(status))
+
+
+def neighbor_tlvs(topology):
+    """(local interface, [neighbor ALs]) of each 1905 Neighbor Device TLV of a Topology Response."""
+    out = []
+    for t in topology.tlvs if topology else ():
+        if t.kind == 0x07 and len(t.value) >= 6:
+            entries = t.value[6:]
+            out.append(
+                (
+                    t.value[:6].hex(":"),
+                    [entries[i : i + 6].hex(":") for i in range(0, len(entries), 7)],
+                )
+            )
+    return out
+
+
+def link_metrics(response):
+    """The TLVs of a Link Metric Response: (kind, neighbor AL, local interface, neighbor interface,
+    values), TX values (errors, packets, throughput, availability, PHY rate), RX (errors, packets,
+    RSSI)."""
+    out = []
+    for t in response.tlvs if response else ():
+        v = t.value
+        if t.kind == 0x09 and len(v) >= 41:
+            values = struct.unpack("!IIHHH", v[27:41])
+        elif t.kind == 0x0A and len(v) >= 35:
+            values = struct.unpack("!IIB", v[26:35])
+        else:
+            continue
+        out.append((t.kind, v[6:12].hex(":"), v[12:18].hex(":"), v[18:24].hex(":"), list(values)))
+    return out
+
+
+def backhaul_neighbors(box):
+    return ((box.status() or {}).get("pod") or {}).get("backhaul_neighbors") or []
+
+
+async def pod_child(box):
+    """spec 8.5: the pod on its EasyMesh backhaul, its upstream another pod's backhaul BSS: the
+    Topology Response names that pod's agent as its 1905 neighbor on the backhaul station (the
+    controller on Ethernet as before), and a Link Metric Query is answered from the parent's
+    measurement of the station, the directions swapped."""
+    measured = {**MEASURED, "measured_at": time.time()}
+    peer_status(
+        box,
+        "PARENTPOD",
+        al=PARENT_AL,
+        backhaul_bsses=(BACKHAUL_PARENT,),
+        stations={BACKHAUL_STATION: measured},
+    )
+    if not await backhaul_on(box):
+        return box.result(passed=False, failed="uplink switch not applied")
+    linked = await box.until(lambda: backhaul_neighbors(box), seconds=15)
+    topology = await box.ask(TOPOLOGY_QUERY, (Tlv(0xB3, b"\x01"),), TOPOLOGY_RESPONSE)
+    neighbors = neighbor_tlvs(topology)
+    response = await box.ask(0x0005, (Tlv(0x08, b"\x00\x02"),), 0x0006)
+    metrics = link_metrics(response)
+    expected = [
+        (0x09, PARENT_AL, BACKHAUL_STATION, BACKHAUL_PARENT, [1, 900, 65, 100, 65535]),
+        (0x0A, PARENT_AL, BACKHAUL_STATION, BACKHAUL_PARENT, [3, 1200, 40]),
+    ]
+    return box.result(
+        passed=bool(linked)
+        and neighbors[0][1] == [box.controller.al.hex(":")]
+        and (BACKHAUL_STATION, [PARENT_AL]) in neighbors
+        and metrics == expected,
+        status_neighbors=backhaul_neighbors(box),
+        neighbors=neighbors,
+        link_metrics=metrics,
+    )
+
+
+async def pod_parent(box):
+    """spec 8.5: another pod's station on this pod's backhaul BSS, that pod's backhaul parent: the
+    Topology Response names its agent as a 1905 neighbor on the BSS, and a Link Metric Query is
+    answered from this pod's own measurement of the station (its client report, spec 3.6)."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    await attach_vifs(box.db)  # wm gives the backhaul BSS the agent created its BSSID
+    _, bss = await box.vif("Wifi_VIF_State", "b-ap-24")
+    bssid = (bss or {}).get("mac")
+    if not bssid:
+        return box.result(passed=False, failed="no backhaul BSS")
+    peer_status(box, "CHILDPOD", al=CHILD_AL, station=CHILD_STATION, parent=bssid)
+    await box.client_join(CHILD_STATION, "b-ap-24")
+    if not await telemetry_applied(box):
+        return box.result(passed=False, failed="statistics publishing not applied")
+    from emosa_lab.conformance import COUNTERS_FULL, client_report
+
+    now = int(time.time() * 1000)
+    await publish(box, client_report(now - 1000, [(CHILD_STATION, 40, 72.2, 65.0, COUNTERS_FULL)]))
+
+    def measured():
+        return CHILD_STATION in (telemetry_status(box).get("stations") or {})
+
+    reported = await box.until(measured, seconds=30)
+    linked = await box.until(lambda: backhaul_neighbors(box), seconds=15)
+    topology = await box.ask(TOPOLOGY_QUERY, (Tlv(0xB3, b"\x01"),), TOPOLOGY_RESPONSE)
+    neighbors = neighbor_tlvs(topology)
+    response = await box.ask(
+        0x0005, (Tlv(0x08, b"\x01" + bytes.fromhex(CHILD_AL.replace(":", "")) + b"\x02"),), 0x0006
+    )
+    metrics = link_metrics(response)
+    seen = (telemetry_status(box).get("stations") or {}).get(CHILD_STATION) or {}
+    expected = [
+        (
+            0x09,
+            CHILD_AL,
+            bssid,
+            CHILD_STATION,
+            [
+                seen.get("tx_errors"),
+                seen.get("tx_frames"),
+                int(seen.get("tx_rate_mbps") or 0),
+                100,
+                65535,
+            ],
+        ),
+        (
+            0x0A,
+            CHILD_AL,
+            bssid,
+            CHILD_STATION,
+            [seen.get("rx_errors"), seen.get("rx_frames"), seen.get("snr_db")],
+        ),
+    ]
+    return box.result(
+        passed=bool(reported)
+        and bool(linked)
+        and (bssid, [CHILD_AL]) in neighbors
+        and metrics == expected,
+        backhaul_bss=bssid,
+        status_neighbors=backhaul_neighbors(box),
+        neighbors=neighbors,
+        link_metrics=metrics,
+        measured=seen,
+    )
+
+
+async def pod_parent_loop(box):
+    """spec 8.5: a Backhaul Steering Request whose target is a BSS of a pod that hangs off this
+    one would put a loop into br-home: refused at once (failure, an Error Code), the station
+    left where it is."""
+    if not await backhaul_on(box):
+        return box.result(passed=False, failed="uplink switch not applied")
+    own = next(
+        r.get("mac")
+        for r in (await box.rows("Wifi_VIF_State")).values()
+        if r.get("if_name") == "home-ap-24"
+    )
+    downstream = "72:00:00:00:0d:00"  # the child pod's backhaul BSS; the child is on this pod
+    peer_status(
+        box,
+        "CHILDPOD",
+        al=CHILD_AL,
+        backhaul_bsses=(downstream,),
+        station=CHILD_STATION,
+        parent=own,
+    )
+    await asyncio.sleep(1.5)  # the agent's directory is read at most once a second
+    answered = len(box.sent(0x801A))
+    mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, target=downstream),)
+    )
+    response = await next_message(box, 0x801A, answered, seconds=10)
+    answer = steering_answer(response)
+    await asyncio.sleep(2)
+    return box.result(
+        passed=response is not None
+        and response.mid == mid
+        and answer is not None
+        and answer[2] == 1
+        and not await pinned(box, downstream)
+        and await pinned(box, BACKHAUL_PARENT),
+        answer=answer,
+    )
+
+
 # The reference workload's faults, in the box
 
 
@@ -2141,6 +2357,9 @@ SCENARIOS = {
     "backhaul-steering-renewal": backhaul_steering_renewal,
     "backhaul-steering-refused": backhaul_steering_refused,
     "backhaul-steering-own-bss": backhaul_steering_own_bss,
+    "pod-child": pod_child,
+    "pod-parent": pod_parent,
+    "pod-parent-loop": pod_parent_loop,
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
     "write-lost-unapplied": write_lost_unapplied,
@@ -2158,6 +2377,9 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "backhaul-steering": {"backhaul": True},
     "backhaul-steering-renewal": {"backhaul": True},
     "backhaul-steering-own-bss": {"backhaul": True},
+    "pod-child": {"backhaul": True},
+    "pod-parent": {"multi_bss": True, "telemetry": True},
+    "pod-parent-loop": {"backhaul": True},
 }
 
 

@@ -462,3 +462,71 @@ class LinkMetricCoordinator:
     def close(self):
         self.closed = True
         self.waiting.clear()
+
+
+COUNTER = 0xFFFFFFFF
+
+
+@dataclass(frozen=True)
+class BackhaulPair:
+    """One Wi-Fi backhaul neighbor (spec 8.5) and its link as this side sees it: ``tx`` is
+    (packet errors, transmitted packets, rate Mbit/s), ``rx`` (packet errors, received packets,
+    SNR dB), each None when not measured."""
+
+    neighbor_al: bytes
+    local_interface: bytes
+    neighbor_interface: bytes
+    media_type: int
+    tx: tuple | None
+    rx: tuple | None
+
+
+class BackhaulLinkMetrics:
+    """Link Metric Queries for the pod's Wi-Fi backhaul neighbors (spec 8.5), answered at once
+    with the same MID; a query this cannot answer (another neighbor, nothing measured) is left
+    to the rest of the agent, which sends nothing."""
+
+    def __init__(self, local_al, controller_al, pairs, send_frame):
+        self.local_al, self.controller_al = local_al, controller_al
+        self.pairs, self.send_frame = pairs, send_frame
+
+    def handle(self, message):
+        if message.message_type != 5:
+            return None
+        query = decode_query(message.tlvs)
+        tlvs = []
+        for pair in self.pairs():
+            if query.neighbor is not None and pair.neighbor_al != query.neighbor:
+                continue
+            if query.direction in (0, 2) and pair.tx is not None:
+                errors, packets, rate = pair.tx
+                link = TxLink(
+                    pair.local_interface,
+                    pair.neighbor_interface,
+                    pair.media_type,
+                    False,
+                    min(int(errors), COUNTER),
+                    min(int(packets), COUNTER),
+                    min(int(rate), 65535),
+                    100,
+                    65535,  # 1905: the PHY rate is unspecified for IEEE 802.11
+                )
+                tlvs.append(LinkMetrics(self.local_al, pair.neighbor_al, (link,)).tlv())
+            if query.direction in (1, 2) and pair.rx is not None:
+                errors, packets, snr = pair.rx
+                link = RxLink(
+                    pair.local_interface,
+                    pair.neighbor_interface,
+                    pair.media_type,
+                    min(int(errors), COUNTER),
+                    min(int(packets), COUNTER),
+                    max(0, min(int(snr), 254)),
+                )
+                tlvs.append(LinkMetrics(self.local_al, pair.neighbor_al, (link,)).tlv())
+        if not tlvs:
+            return None
+        for frame in fragment_message(
+            self.controller_al, self.local_al, 6, message.mid, tuple(tlvs)
+        ):
+            self.send_frame(frame)
+        return "backhaul_link_metric_response_sent"

@@ -166,9 +166,12 @@ class UplinkBackend:
 
     mode = MODE
 
-    def __init__(self, pod_id, session, vault, *, serial, station):
+    def __init__(self, pod_id, session, vault, *, serial, station, loop=None):
         self.pod_id, self.session, self.vault = pod_id, session, vault
         self.expected_serial, self.station = serial, station
+        # spec 8.5: (upstream BSSID, the pod's own MACs) -> True when that upstream is a pod
+        # whose own upstream chain reaches this one
+        self.loop = loop
         self.instance = None  # which start of the pod's OpenSync (its radio rows)
         self.facts = None  # uplink_state of the last read, without the raw State row
         self.last = None
@@ -277,6 +280,15 @@ class UplinkBackend:
         if decoded is not None and intent.bssid in own_bssids(decoded):
             # joining itself would bridge the pod's backhaul BSS into its own br-home
             raise EmosaError(Reason.INVALID_INPUT, "the upstream BSSID is one of the pod's own")
+        if (
+            decoded is not None
+            and self.loop is not None
+            and self.loop(intent.bssid, own_bssids(decoded))
+        ):
+            # a pod downstream of this one: its br-home would be bridged into its own
+            raise EmosaError(
+                Reason.INVALID_INPUT, "the upstream BSSID is a pod downstream of this one"
+            )
 
     async def plan(self, intent):
         self._check(intent)

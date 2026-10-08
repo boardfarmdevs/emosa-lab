@@ -36,6 +36,7 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
+from emosa.agent.peers import PeerDirectory, children, loops, mac_bytes, upstream
 from emosa.agent.probe_watch import ProbeWatch
 from emosa.agent.renew import CONTROLLER_TIMEOUT, M2_TIMEOUT, RenewRules
 from emosa.agent.steering import ClientSteering
@@ -46,6 +47,8 @@ from emosa.config import validate
 from emosa.errors import EmosaError, Reason
 from emosa.model import ACTIVE
 from emosa.opensync.easymesh_view import (
+    IEEE_802_11N_24,
+    MEDIA,
     backhaul,
     device_view,
     inventory,
@@ -81,6 +84,7 @@ from emosa.wire.channel import ChannelPolicyStore, OperatingRadio
 from emosa.wire.cmdu import MULTICAST, MidSequence, Tlv, decode_frame, fragment_message
 from emosa.wire.coordinator import ReportSource
 from emosa.wire.ethernet import EthernetEndpoint
+from emosa.wire.link_metrics import BackhaulPair
 from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession
 from emosa.wire.operation_bridge import ComponentTarget, WscComponentBridge
 from emosa.wire.reporting_policy import ReportingPolicyStore
@@ -171,6 +175,22 @@ def status_path(config, state_dir):
     return target
 
 
+FRESHNESS = 240  # a measurement's lifetime without the agent's own telemetry settings (spec 3.6)
+
+
+def direction(seen, errors, packets, value):
+    """(packet errors, packets, rate or SNR) from a station's measurement, or None when any of
+    the three is unknown (spec 3.6: an absent counter is unknown until measured)."""
+    if not isinstance(seen, dict):
+        return None
+    found = (seen.get(errors), seen.get(packets), seen.get(value))
+    return (
+        found
+        if all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in found)
+        else None
+    )
+
+
 class PodReportSource:
     """What the agent reports about its pod: the bound BSS (and managed slot BSSes).
 
@@ -178,9 +198,12 @@ class PodReportSource:
     chooses what the agent represents and keeps the report source current.
     """
 
-    def __init__(self, backend, binding, pod_id, station=None):
+    def __init__(self, backend, binding, pod_id, station=None, directory=None):
         self.backend, self.binding = backend, binding
         self.station = station  # the pod's backhaul station, reported when it is option 1
+        self.directory = directory  # the fleet's other agents (spec 8.5), or None
+        self.links = ()  # the pod's 1905 neighbors on its Wi-Fi backhaul: (interface, AL)
+        self.uplink, self.backhaul_stations = None, {}  # as of the last refresh
         self.agent = binding.local_al
         self.revision, self.last = 0, None
         self.first_seen = {}  # station MAC -> monotonic time EMOSA first saw it active
@@ -209,6 +232,64 @@ class PodReportSource:
             primary = None
         extras = [radio.bss(name) for name, _, _ in self.backend.slots]
         return primary, tuple(b for b in (primary, *extras) if b is not None)
+
+    def _backhaul_links(self, uplink, bsses):
+        """The pod's 1905 neighbors on its Wi-Fi backhaul (spec 8.5): its parent pod's agent on
+        its backhaul station, and each child pod's agent on the backhaul BSS it is on."""
+        if self.directory is None:
+            return ()
+        peers = self.directory.peers()
+        links = []
+        if uplink is not None:
+            parent = upstream(peers, uplink.station.parent)
+            if parent is not None:
+                links.append((uplink.station.mac, parent.al))
+        backhaul = {b.bssid: set(b.stations) for b in bsses if b.role == "backhaul"}
+        self.uplink, self.backhaul_stations = uplink, backhaul
+        links += [(bssid, child.al) for bssid, child in children(peers, backhaul)]
+        return tuple(links)
+
+    def backhaul_pairs(self, stats, freshness, now=None):
+        """The Wi-Fi backhaul neighbors and their links' measurements (spec 8.5): a child's
+        from this pod's own measurement of its station, the parent's from the parent's
+        measurement of this pod's station (its directions swapped), each only while current."""
+        if self.directory is None:
+            return ()
+        now = time.time() if now is None else now
+        peers = self.directory.peers()
+        pairs = []
+        uplink = self.uplink
+        if uplink is not None:
+            parent = upstream(peers, uplink.station.parent)
+            if parent is not None:
+                seen = parent.measured.get(uplink.station.mac.hex(":"))
+                if not isinstance(seen, dict) or now - (seen.get("measured_at") or 0) > freshness:
+                    seen = None
+                pairs.append(
+                    BackhaulPair(
+                        parent.al,
+                        uplink.station.mac,
+                        uplink.station.parent,
+                        MEDIA[uplink.band],
+                        direction(seen, "rx_errors", "rx_frames", "rx_rate_mbps"),
+                        direction(seen, "tx_errors", "tx_frames", "snr_db"),
+                    )
+                )
+        current = stats.current() if stats is not None else {}
+        for bssid, child in children(peers, self.backhaul_stations):
+            seen = current.get(child.station.hex(":"))
+            seen = seen.public() if seen is not None else None
+            pairs.append(
+                BackhaulPair(
+                    child.al,
+                    bssid,
+                    child.station,
+                    IEEE_802_11N_24,
+                    direction(seen, "tx_errors", "tx_frames", "tx_rate_mbps"),
+                    direction(seen, "rx_errors", "rx_frames", "snr_db"),
+                )
+            )
+        return tuple(pairs)
 
     async def refresh(self):
         started = time.monotonic()
@@ -255,6 +336,7 @@ class PodReportSource:
             now = time.monotonic()
             active = {m for b in bsses for m in b.stations}
             self.first_seen = {m: self.first_seen.get(m, now) for m in active}
+            self.links = self._backhaul_links(uplink, bsses)
             report = topology(
                 agent_al=self.agent,
                 controller_al=self.binding.controller_al,
@@ -264,6 +346,7 @@ class PodReportSource:
                 ages={m: now - t for m, t in self.first_seen.items()},
                 uplink=uplink,
                 associated_at=self.first_seen,
+                peers=self.links,
             )
             facts = (
                 raw["generation"],
@@ -271,6 +354,7 @@ class PodReportSource:
                 tuple((b.bssid, b.ssid, b.stations) for b in bsses),
                 radio.tx_power,
                 uplink,
+                self.links,
             )
             if facts != self.last:
                 self.revision += 1
@@ -297,6 +381,9 @@ class PodReportSource:
                     "band": uplink.band,
                     "channel": uplink.channel,
                 },
+                "backhaul_neighbors": [
+                    {"interface": local.hex(":"), "al": al.hex(":")} for local, al in self.links
+                ],
                 "ovsdb_generation": raw["generation"],
                 "ovsdb_revision": raw["revision"],
             }
@@ -441,6 +528,8 @@ async def serve(config, stop):
     )
     engine = Engine(store, vault, {pod_id: backend})
     engine.recover()
+    # the fleet's other agents, beside this one's run directory (spec 8.5)
+    directory = PeerDirectory(config["run_dir"], pod_id) if config.get("run_dir") else None
     uplink_config = config.get("uplink", {"mode": "off"})
     station = uplink_config.get("station") or backend.profile.uplink_station
     switch = uplink_store = None
@@ -460,7 +549,21 @@ async def serve(config, stop):
         uplink_store = Store(state_dir / "uplink")
         switch = UplinkSwitch(
             pod_id,
-            UplinkBackend(pod_id, session, vault, serial=config["serial"], station=station),
+            UplinkBackend(
+                pod_id,
+                session,
+                vault,
+                serial=config["serial"],
+                station=station,
+                loop=None
+                if directory is None
+                else lambda target, own: loops(
+                    directory.peers(),
+                    agent,
+                    {mac_bytes(b) for b in own},
+                    mac_bytes(target),
+                ),
+            ),
             uplink_store,
             vault,
             credentials,
@@ -548,7 +651,7 @@ async def serve(config, stop):
             "freshness": 3 * wanted.reporting_interval + (wanted.publish_interval or 60),
         }
     binding = PeerBinding(config["interface"], 1, agent, controller, (controller,))
-    report = PodReportSource(backend, binding, pod_id, station)
+    report = PodReportSource(backend, binding, pod_id, station, directory)
     mids = MidSequence(secrets.randbelow(65536))
     run_id = config.get("run_id", pod_id)
     # EasyMesh message set toward this controller: easymesh-6.1 unless the
@@ -650,6 +753,12 @@ async def serve(config, stop):
                     backhaul_steering_executor=switch.steer if switch else None,
                     backhaul_steering_outcome=switch.steering_outcome if switch else None,
                     backhaul_steering_state=backhaul_steering_state,
+                    backhaul_pairs=None
+                    if directory is None
+                    else lambda: report.backhaul_pairs(
+                        pod_metrics["stats"] if pod_metrics else None,
+                        pod_metrics["freshness"] if pod_metrics else FRESHNESS,
+                    ),
                 )
 
             channels = ChannelPolicyStore(state_dir / "channel-policy.sqlite")

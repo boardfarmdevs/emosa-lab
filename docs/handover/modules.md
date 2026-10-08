@@ -61,6 +61,7 @@ the C follows until `emosa-vectors` passes again ([testing.md](testing.md)).
 | `scope_watch.c` | the probe watch: the stations the controller asks about, watched for probe requests | `emosa.opensync.probe_watch`, `emosa.agent.probe_watch` | vectors `probe-watch.json`, box `unassociated` |
 | `scope_uplink.c` | the uplink (data plane option 1): the switch to the EasyMesh backhaul, its hold, Backhaul Steering's re-pin | `emosa.opensync.uplink`, `emosa.agent.uplink` | vectors `uplink.json`, box `backhaul-*`, `uplink-*` |
 | `scope_wired.c` | a wired pod's Ethernet uplink port bridged into br-home (`Connection_Manager_Uplink.bridge`, spec 8.4) | `emosa.opensync.wired`, `emosa.agent.wired` | vectors `scope-writes.json` |
+| `peers.c` | the fleet's other agents as their statuses give them (spec 8.5): the peer directory beside the run directory, a backhaul BSS's owner, the no-loop rule; the agent's backhaul 1905 neighbors and link metrics use it | `emosa.agent.peers` | vectors `translation-northbound.json`; box `pod-child`, `pod-parent`, `pod-parent-loop` |
 | `channel_store.c` | the accepted channel policy's durable record | `emosa.wire.channel.ChannelPolicyStore` | box `channel-selection` |
 
 ## The adapter around the agents

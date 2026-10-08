@@ -205,7 +205,9 @@ was written to Config:
 The agent's own 1905 interface is declared Ethernet (media type `0x0001`). Each
 BSS is an 802.11n 2.4 GHz interface (`0x0103`). The pod's own Wi-Fi uplink is
 reported only while it is an EasyMesh backhaul (§8.3). Over OpenSync's GRE it
-is not an EasyMesh link, and the agent reports nothing about it.
+is not an EasyMesh link, and the agent reports nothing about it. When that
+backhaul's upstream is another pod of the same fleet, the two agents report each
+other as 1905 neighbors on it, with its link metrics (§8.5).
 
 ## 3. Southbound: OpenSync OVSDB
 
@@ -270,7 +272,7 @@ EMOSA MUST NOT write any other table or column.
 | `Wifi_VIF_State` with `mode=ap`, `enabled=true`, a `mac`, and listed in its radio's `vif_states` | a BSS: BSSID = `mac`, SSID = `ssid` |
 | `Wifi_VIF_State.multi_ap` | BSS Configuration Report flags: `backhaul_bss` → `0x80`, anything else → `0x40` |
 | `Wifi_Associated_Clients` with `state=active`, listed in the VIF's `associated_clients` | associated clients of that BSS |
-| `Wifi_VIF_State` with `mode=sta`, `multi_ap=backhaul_sta`, `wds=true`, a `parent`, and the only `Connection_Manager_Uplink` row with `is_used=true` | the EasyMesh backhaul (§8.3): a local interface of media type `0x0103` (2.4 GHz) or `0x0104` (5 GHz) with the station's `mac`, media-specific information `parent` BSSID, role `0x40` (non-AP STA), channel; in the bridging tuple with the BSSes; and in the Backhaul STA Capability Report. The 1905 neighbor stays on the Ethernet interface, where EMOSA's frames go |
+| `Wifi_VIF_State` with `mode=sta`, `multi_ap=backhaul_sta`, `wds=true`, a `parent`, and the only `Connection_Manager_Uplink` row with `is_used=true` | the EasyMesh backhaul (§8.3): a local interface of media type `0x0103` (2.4 GHz) or `0x0104` (5 GHz) with the station's `mac`, media-specific information `parent` BSSID, role `0x40` (non-AP STA), channel; in the bridging tuple with the BSSes; and in the Backhaul STA Capability Report. The 1905 neighbor stays on the Ethernet interface, where EMOSA's frames go, unless the upstream is another pod of the fleet (§8.5) |
 | any other `Wifi_VIF_State` with `mode=sta` | not reported |
 
 The primary BSS is represented only while its State shows a WPA2-PSK AP in the
@@ -806,11 +808,59 @@ does it when its configuration has `uplink.mode = ethernet`:
 
 Both agents.
 
+### 8.5 Pods as parents of other pods
+
+A pod on its EasyMesh backhaul (§8.3) may have another pod's backhaul BSS as its
+upstream (`uplink.bssid`, or a Backhaul Steering target): the child's 4-address
+station joins the parent's backhaul BSS, and its `br-home` is bridged into the
+parent's, whatever the parent's own uplink is. EMOSA writes nothing new to either
+pod for it. The two agents, in one fleet, describe the hop to the controller:
+
+- **Peer directory.** Each agent's status (§6) already gives its AL MAC
+  (`agent_al`), its BSSes with their roles, its backhaul station (MAC, band,
+  channel, parent BSSID) and its stations' measurements (§3.6). An agent reads
+  the other agents' statuses in the fleet's run root, read-only, at most once a
+  second; the status of an agent whose process (`worker_pid`) is gone is left out.
+  It is the agent's only knowledge of other pods: no 1905 frame carries it.
+- **The child** whose backhaul's parent BSSID is a backhaul BSS of another agent
+  in the directory reports that agent's AL MAC as a 1905 neighbor on its backhaul
+  interface (the station's MAC; 1905 Neighbor Device TLV, bridge flag 0), besides
+  the controller on Ethernet, where EMOSA's frames go.
+- **The parent** reports, on each of its backhaul BSSes, every agent in the
+  directory whose backhaul's parent is that BSS and whose station is among the
+  BSS's associated clients (§3.3), as a 1905 neighbor on the BSS's interface.
+- **No loops.** EMOSA MUST refuse a switch or move (§8.3) to a BSS of a pod whose
+  own upstream chain, through the directory, reaches this pod. Like a switch to
+  the pod's own BSS, it would put a loop into `br-home`.
+- **Link metrics.** A Link Metric Query for that neighbor (or for all) is
+  answered for the pair from the parent's measurement of the child's station
+  (§3.6), current as there:
+  - the parent's Transmitter Link Metric (its BSS to the child's station) from
+    the station's transmit counters and rate, its Receiver Link Metric from the
+    receive counters and the SNR;
+  - the child's from the same measurement, the directions swapped;
+  - packet errors are the errors' sum in the counter epoch, packets the frames';
+    the MAC throughput capacity and the PHY rate are the last rate (Mbit/s); link
+    availability is 100; the RSSI field carries the SNR (a hwsim pod reports no
+    noise floor, §9);
+  - a counter that is unknown (§3.6), or a measurement that is not current,
+    leaves that direction out; with no direction known for any neighbor asked
+    about, nothing is sent.
+- **The controller** places the child under the parent by its backhaul's parent
+  BSSID, as before. It chooses or moves a pod between parents only if it knows a
+  pod's backhaul BSS for a backhaul one: the BSS Configuration Report says so
+  (§3.3) in `6.1`; in `r1` the report is profile-gated and not sent (RDK's
+  controller drops a Topology Response below Profile 3 that carries it). RDK's
+  controller takes a BSS's role only from its own vendor TLV.
+
+Both agents.
+
 ## 9. Not covered yet
 
 - 5 and 6 GHz radios, and WPA3;
 - more than one radio per agent;
-- backhaul link metrics, and a 1905 neighbor on the backhaul interface;
+- backhaul link metrics and a 1905 neighbor on the backhaul interface towards an upstream
+  that is not a pod of the fleet (an RDK or prpl node: EMOSA does not know its AL MAC);
 - EasyMesh AP and station metrics. The pod's station measurements are
   collected (§3.6), but a complete metric needs more than a hwsim pod reports:
   RCPI needs the noise floor, traffic statistics need retries and errors, and

@@ -212,6 +212,23 @@ static bool own_bssid(em_uplink_scope *u, const char *bssid)
     return false;
 }
 
+/* every MAC the pod's own VIFs and radios use (as own_bssid looks for one), at most cap */
+static size_t own_macs(em_uplink_scope *u, uint8_t out[][6], size_t cap)
+{
+    static const char *const tables[] = {"Wifi_VIF_State", "Wifi_Radio_State"};
+    size_t n = 0;
+    for (int t = 0; t < 2; t++) {
+        const cJSON *row;
+        cJSON_ArrayForEach(row, em_table(em_ovsdb_tables(u->ovs), tables[t]))
+        {
+            char mac[18];
+            if (n < cap && em_row_mac(row, "mac", mac) && em_parse_mac(mac, out[n]))
+                n++;
+        }
+    }
+    return n;
+}
+
 static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
 {
     em_uplink_scope *u = ctx;
@@ -234,6 +251,12 @@ static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
         return NULL;
     if (own_bssid(u, bssid)) {
         *why = EM_INVALID_INPUT; /* joining itself would bridge the pod's own backhaul BSS */
+        return NULL;
+    }
+    uint8_t target_mac[6], own[64][6];
+    if (u->loops && em_parse_mac(bssid, target_mac) &&
+        u->loops(u->loops_ctx, target_mac, (const uint8_t(*)[6])own, own_macs(u, own, 64))) {
+        *why = EM_INVALID_INPUT; /* a pod downstream of this one: its br-home bridged into its own */
         return NULL;
     }
     if (!vif) {

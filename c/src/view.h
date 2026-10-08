@@ -90,10 +90,19 @@ typedef struct {
 bool em_view_backhaul(const em_device_view *v, const char *station, em_backhaul *out);
 cJSON *em_backhaul_json(const em_backhaul *b);
 
-/* Topology Response TLVs for the radio's BSSes (6.1 or r1); uplink may be NULL. */
+/* A 1905 neighbor on the pod's Wi-Fi backhaul (spec §8.5): another pod's agent, on the
+ * backhaul station (its parent) or on a backhaul BSS (a child). */
+typedef struct {
+    uint8_t local[6]; /* the local interface: the station's MAC, or the BSSID */
+    uint8_t al[6];    /* the neighbor's AL MAC */
+} em_backhaul_link;
+
+/* Topology Response TLVs for the radio's BSSes (6.1 or r1); uplink may be NULL; links are the
+ * Wi-Fi backhaul's 1905 neighbors (nlinks may be 0). */
 em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_al[6],
                            const em_radio_view *r, int channel, const em_station_age *ages,
-                           size_t nages, bool r1, const em_backhaul *uplink, em_tlv_list *out);
+                           size_t nages, bool r1, const em_backhaul *uplink,
+                           const em_backhaul_link *links, size_t nlinks, em_tlv_list *out);
 
 /* How the pod reaches its gateway, from cm's and owm's State (spec §8.3). */
 typedef struct {

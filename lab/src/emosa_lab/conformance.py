@@ -173,11 +173,15 @@ def transition_vectors():
     }
 
 
-def northbound_case(name, raw, ages):
+def northbound_case(name, raw, ages, children=()):
+    """children: the ALs of child pods on the radio's backhaul BSS (spec 8.5), its 1905
+    neighbors there."""
     view = device_view(decode(raw))
     radio = view.radio(mac(RUID))
     channel = radio.channel if radio.bsses else 6
     caps = radio_capabilities(radio, channel=channel, max_bss=5, max_eirp=30)
+    backhaul = [b.bssid for b in radio.bsses if b.role == "backhaul"]
+    links = tuple((backhaul[0], mac(al)) for al in children)
     facts = topology(
         agent_al=mac(AGENT),
         controller_al=mac(CONTROLLER),
@@ -185,6 +189,7 @@ def northbound_case(name, raw, ages):
         channel=channel,
         bsses=radio.bsses,
         ages={mac(m): s for m, s in ages.items()},
+        peers=links,
     )
     binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
     inv = inventory(view, radio, b"mac80211_hwsim")
@@ -200,6 +205,11 @@ def northbound_case(name, raw, ages):
             "max_eirp": 30,
             "station_ages": ages,
             "chipset": "mac80211_hwsim",
+            **(
+                {"backhaul_links": [{"interface": b.hex(":"), "al": a.hex(":")} for b, a in links]}
+                if links
+                else {}
+            ),
         },
         "expected": {
             "device_view": plain(view),
@@ -248,7 +258,16 @@ def northbound_vectors():
         "aged_at_response: the recorded rows' stations associated at the given times "
         "(monotonic seconds); per response time, the EasyMesh 6.1 Topology Response TLVs, each "
         "station's age taken as of the response (whole seconds, at most 65535).",
-        "cases": [northbound_case(name, make(), ages) for name, make in POD_CASES.items()],
+        "cases": [northbound_case(name, make(), ages) for name, make in POD_CASES.items()]
+        + [
+            # spec 8.5: two child pods on the backhaul BSS, their agents its 1905 neighbors
+            northbound_case(
+                "backhaul-bss-with-children",
+                with_backhaul_slot(pod_rows()),
+                ages,
+                children=("02:72:00:00:00:0b", "02:72:00:00:00:0a"),
+            )
+        ],
         "aged_at_response": aged_at_response(),
     }
 
