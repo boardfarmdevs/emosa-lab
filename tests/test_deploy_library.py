@@ -202,3 +202,36 @@ def test_agent_binaries(tmp_path):
         "/opt/emosa-adapter/bin/emosa-agent-c",
         "none",
     ]
+
+
+def test_extra_pods_are_merged_in_and_the_labs_own_win(tmp_path):
+    extra = tmp_path / "emosa-pods.d"
+    extra.mkdir()
+    pi = {
+        "MVXPOD02C09EDFC1A2": {
+            "profile": "rpi-pod-mt7921u-6.6.1-v1",
+            "uplink": {"mode": "ethernet"},
+        }
+    }
+    (extra / "rpi-pi1.json").write_text(json.dumps(pi))
+    (extra / "clash.json").write_text(json.dumps({"LABPOD": {"uplink": {"mode": "off"}}}))
+    (extra / "notes.txt").write_text("not a pod")
+    own = {"LABPOD": {"uplink": {"mode": "multi-ap"}}}
+    out, _ = run(tmp_path, f"EMOSA_EXTRA_PODS={extra} with_extra_pods <<< '{json.dumps(own)}'")
+    assert json.loads(out) == {**pi, **own}
+    out, _ = run(
+        tmp_path, f"EMOSA_EXTRA_PODS={tmp_path}/none with_extra_pods <<< '{json.dumps(own)}'"
+    )
+    assert json.loads(out) == own  # no directory: the lab's own only
+
+
+def test_an_extra_pods_file_that_is_no_object_is_refused(tmp_path):
+    extra = tmp_path / "emosa-pods.d"
+    extra.mkdir()
+    (extra / "broken.json").write_text("[1, 2]")
+    out, _ = run(
+        tmp_path,
+        f"if (EMOSA_EXTRA_PODS={extra} with_extra_pods <<< '{{}}') 2>/dev/null; "
+        "then echo merged; else echo refused; fi",
+    )
+    assert out.strip() == "refused"

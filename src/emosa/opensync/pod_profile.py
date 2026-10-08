@@ -101,6 +101,8 @@ class PodBackend(OpenSyncBackend):
             radio_name="",
             expected_serial=serial,
         )
+        # multi_bss: the radio takes an M2 set (spec 3.4); its slots, the further BSSes it maps
+        self.multi_bss = multi_bss
         self.slots = self.profile.extra_slots if multi_bss else ()
         self.max_bss = 1 + len(self.slots)
         self.state_provenance = PROVENANCE
@@ -189,7 +191,10 @@ class PodBackend(OpenSyncBackend):
             raw = await self.session.snapshot()
             vif_uuid, radio_uuid, config, state, decoded = self._binding(raw)
             configured, observed = self._values(config), self._values(state)
-            if self.slots:
+            # a multi-BSS radio reports its further BSSes, none when its profile has no slot,
+            # so that an M2 set's intent (its additional BSSes fitted to the slots) matches
+            # (the C agent's PodBackend the same)
+            if self.multi_bss:
                 extras = self._extras(decoded, radio_uuid)
                 configured["additional"] = self._additional(e["config"] for e in extras.values())
                 observed["additional"] = self._additional(

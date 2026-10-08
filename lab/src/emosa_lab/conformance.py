@@ -2695,7 +2695,8 @@ def scope_write_case(name, raw, backend, intent):
 
 
 def scope_writes_vectors():
-    """The telemetry scope, the probe watch and a steering window over a watch row."""
+    """The telemetry scope, the wired uplink, the probe watch and a steering window over a watch
+    row."""
     from emosa.opensync.probe_watch import WatchBackend, WatchIntent
     from emosa.opensync.steering import SteeringBackend, SteeringIntent
     from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent
@@ -2785,6 +2786,35 @@ def scope_writes_vectors():
             "pod-1", Recorder(copy.deepcopy(raw)), serial=SERIAL, radio_type="2.4G", survey=True
         )
         cases.append({"scope": "telemetry", **scope_write_case(name, raw, backend, telemetry)})
+    # the wired uplink (spec 8.4): the pod's Ethernet uplink port into br-home
+    from emosa.opensync.wired import WiredBackend, WiredIntent
+
+    wired = WiredIntent("pod-1", "eth1", "br-home")
+    eth1 = "00000000-0000-4000-8000-0000000000e1"
+
+    def uplink(**row):
+        return {
+            "Connection_Manager_Uplink": {
+                eth1: {
+                    "if_name": "eth1",
+                    "if_type": "eth",
+                    "is_used": True,
+                    "bridge": ["set", []],
+                    **row,
+                }
+            }
+        }
+
+    for name, extra in (
+        ("wired-uplink-fresh", uplink()),
+        ("wired-uplink-already-bridged", uplink(bridge="br-home")),
+        ("wired-uplink-another-bridge", uplink(bridge="br-wan")),
+        ("wired-uplink-not-in-use", uplink(is_used=False)),
+        ("wired-uplink-wifi-uplink", uplink(if_type="vif")),
+    ):
+        raw = rows(**extra)
+        backend = WiredBackend("pod-1", Recorder(copy.deepcopy(raw)), serial=SERIAL, port="eth1")
+        cases.append({"scope": "wired-uplink", **scope_write_case(name, raw, backend, wired)})
     for name, extra, stations in (
         ("watch-new-group", {}, (s1, s2)),
         ("watch-add-and-remove", watching_s1, (s2,)),

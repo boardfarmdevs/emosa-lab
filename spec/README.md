@@ -235,7 +235,7 @@ Monitored, read-only:
 | `Wifi_VIF_State` | the Config columns above except `credential_configs`, plus `vif_config`, `mac`, `associated_clients` |
 | `Wifi_Associated_Clients` | `mac`, `state` |
 | `Wifi_Credential_Config` | `ssid`, `security`, `onboard_type`, `priority`, `enabled` |
-| `Connection_Manager_Uplink` | `if_name`, `if_type`, `is_used`, `has_L2`, `has_L3` |
+| `Connection_Manager_Uplink` | `if_name`, `if_type`, `is_used`, `has_L2`, `has_L3`, `bridge` |
 | `Wifi_Stats_Config` | `stats_type`, `radio_type`, `report_type`, `reporting_interval`, `sampling_interval` |
 
 Written, each as one guarded transaction. A cold create and a multi-BSS set are
@@ -248,6 +248,7 @@ preceded by a read-only `select` of `Wifi_Inet_Config`.
 | Cold pod: create the fronthaul | `wait` on the serial and that the VIF is absent → `insert Wifi_VIF_Config` (profile row, received SSID and PSK) → `mutate Wifi_Radio_Config vif_configs` → `update Wifi_Radio_Config channel, ht_mode, enabled` → `insert Wifi_Inet_Config` if absent |
 | Multi-BSS set | as above for the primary BSS, plus: insert, update or delete each profile slot VIF so the slots are **exactly** the received set, with the matching `vif_configs` mutations and `Wifi_Inet_Config` rows |
 | Uplink switch (§8.3) | `wait` on the AWLAN_Node row and serial, and on the station's guarded fields (`if_name`, `mode`, `enabled`, `ssid`, `credential_configs`, `multi_ap`) → `insert Wifi_Credential_Config` (the backhaul SSID and passphrase, `onboard_type=multi_ap`, `priority` 1) → `update Wifi_VIF_Config` of the station: `enabled=true`, `ssid` and `security` empty, `multi_ap` and `wds` unset, `credential_configs` = that credential only |
+| Ethernet uplink (§8.4) | `wait` on the AWLAN_Node serial, and on the port's `Connection_Manager_Uplink` row: `if_name`, `if_type=eth`, `is_used=true` and its current `bridge` → `update Connection_Manager_Uplink bridge` (the fronthaul's bridge) |
 | Statistics publishing (§3.6) | `wait` on the AWLAN_Node serial and its current `mqtt_settings` → `update AWLAN_Node mqtt_settings` (broker, port, the pod's topic, QoS 0, no compression) → `insert Wifi_Stats_Config` (a raw client report for the radio type) unless one exists |
 
 Every write MUST be guarded: if the pod's graph or guarded fields changed,
@@ -283,7 +284,12 @@ The 6.6 encoding of WPA2-PSK:
 ### 3.4 Translation: EasyMesh → OVSDB
 
 - **M2 → one intent.** The first fronthaul BSS's SSID and passphrase are the
-  primary intent. With `multi_bss`, up to 7 further BSSes follow. Each BSS's
+  primary intent. With `multi_bss`, further BSSes follow: each role fills the
+  profile's slots of that role in the order received. BSSes beyond the slots are
+  left out: not written, not reported, their passphrases not stored. A radio with
+  fewer slots than the controller's set thus serves the BSSes it has (RDK sends five
+  to every agent, whatever its maximum); a set may carry up to 16 M2s, each
+  authenticated. Each BSS's
   role comes from the WSC Multi-AP extension flags in its M2: `0x20` is
   fronthaul, `0x40` is backhaul. A backhaul BSS may also carry the Backhaul STA
   bit (`0x80`), as prplMesh sends it: the same credentials serve the agent's
@@ -292,7 +298,8 @@ The 6.6 encoding of WPA2-PSK:
   - an SSID is longer than 32 bytes or contains an embedded NUL;
   - a passphrase is outside 8 to 63 characters or is not printable ASCII;
   - authentication or encryption is not WPA2-PSK/AES;
-  - the set has more BSSes of a role than the profile has slots.
+  - an intent has more BSSes of a role than the profile has slots (one made from an
+    M2 set never has: it is fitted to the slots first).
 - **Shared M2 session.** With `m2_session=shared`, an M2 set from one
   registrar session (one nonce, one public key) is accepted, as RDK sends it.
 - **Channel selection** is answered within one second. It is accepted
@@ -728,6 +735,29 @@ The agent makes the switch itself when its configuration has
   upstream once the station no longer carries the failed switch's credential
   (`cm` reverts it on the same start, or OpenSync restarts): a switch written
   before then is reverted with it. Only that switch holds. Both agents.
+
+### 8.4 Ethernet uplink, for a wired pod
+
+A pod whose uplink is an Ethernet port (a wired pod: no backhaul station, `cm` takes the
+port once its DHCP and router checks pass) carries its clients over that port: the
+operator's cloud bridges the port into the pod's home bridge. Without the cloud, the agent
+does it when its configuration has `uplink.mode = ethernet`:
+- **Port:** `uplink.port`, `eth1` when absent. **Bridge:** the bridge of the profile's
+  fronthaul VIF (`br-home`).
+- **When:** the pod is bound and `cm` uses the port as its uplink: its
+  `Connection_Manager_Uplink` row has `if_type=eth` and `is_used=true`, and its `bridge` is
+  not already the fronthaul's. OpenSync forgets the bridge at every start, so the write is
+  made once per start of the pod's OpenSync (identified as in §8.3).
+- **Write:** one guarded transaction (§3.2): `update Connection_Manager_Uplink bridge`.
+  `cm` then adds the port to the bridge.
+- **Applied** when, on the same start, the row shows the bridge. A write not applied within
+  30 s, or rejected, is not repeated on that start; the next start tries again.
+- **Another manager:** a row that already names another bridge is left alone, and the write
+  refused.
+- **Reported:** the pod's backhaul is the Ethernet attachment the agent declares in any
+  case (§8.2), which here it is (D7). Its 1905 neighbor is on that interface.
+
+Both agents.
 
 ## 9. Not covered yet
 

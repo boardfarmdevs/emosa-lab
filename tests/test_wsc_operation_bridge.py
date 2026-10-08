@@ -292,3 +292,31 @@ def test_public_request_cannot_select_component_or_full_wire_origin(rig):
             )
         assert caught.value.code == Reason.MISSING_PREREQUISITE
     assert not engine.store.operations()
+
+
+RDK_SET = tuple((role, None) for role in ("fronthaul", "backhaul", "fronthaul", "fronthaul"))
+HWSIM_SLOTS = tuple(
+    (name, role, index)
+    for name, role, index in (
+        ("svc-d-ap-24", "fronthaul", 4),
+        ("svc-e-ap-24", "fronthaul", 5),
+        ("fh-24", "fronthaul", 6),
+        ("b-ap-24", "backhaul", 1),
+    )
+)
+
+
+@pytest.mark.parametrize(
+    "slots,kept",
+    [
+        (None, {0, 1, 2, 3}),  # a backend without a profile takes the whole set
+        (HWSIM_SLOTS, {0, 1, 2, 3}),  # the lab pods map RDK's whole set
+        ((), set()),  # a one-BSS radio (the Pis' MT7921U): the primary only
+        ((("fh-24", "fronthaul", 6),), {0}),  # the first further fronthaul BSS received
+        ((("b-ap-24", "backhaul", 1),), {1}),
+    ],
+)
+def test_a_set_beyond_the_slots_is_applied_in_part_by_role_in_received_order(slots, kept):
+    from emosa.wire.operation_bridge import fitted
+
+    assert fitted(RDK_SET, slots) == kept

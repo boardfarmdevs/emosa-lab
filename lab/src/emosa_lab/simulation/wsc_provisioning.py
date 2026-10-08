@@ -120,8 +120,10 @@ def assemble(frames):
 
 
 def registrar_reply(executable, m1, mode="configure"):
+    """One M2 for ``m1``; ``mode`` may carry the M2's BSS index: ``configure:3``."""
+    arguments = mode.split(":", 1)
     result = subprocess.run(
-        [str(executable), mode], input=m1, capture_output=True, timeout=5, check=False
+        [str(executable), *arguments], input=m1, capture_output=True, timeout=5, check=False
     )
     if result.returncode or not 1 <= len(result.stdout) <= 4096:
         raise EmosaError(Reason.NOT_READY, "independent component registrar failed")

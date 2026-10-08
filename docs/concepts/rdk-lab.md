@@ -195,6 +195,17 @@ the pod, whose next admission starts without the hold, spec §8.3), `lab.sh repo
 native` (the lab's own rooms, pods stopped and their controller rows removed),
 `lab.sh status`.
 
+**Pods beyond the lab's own** (physical pods, such as opensync-rpi's Raspberry Pis on the
+lab's wired LAN): whoever brings one writes its fleet settings to a file in the VM's
+`/etc/easymesh-lab/emosa-pods.d` (`EMOSA_EXTRA_PODS`), an object of serial to settings,
+for example `{"MVXPOD02C09EDFC1A2": {"profile": "rpi-pod-mt7921u-6.6.1-v1", "uplink":
+{"mode": "ethernet"}}}`. Every `fleet` step merges them into the fleet configuration (the
+lab's own pods win), so they survive the lab's EMOSA runs. The profile names what the
+pod's radio runs: the Pis' MT7921U one AP, so of RDK's five-BSS set the agent applies the
+primary fronthaul BSS (spec §3.4); `uplink.mode ethernet` has the agent bridge the pod's
+`eth1` into `br-home` (spec §8.4). The room leaves such pods out through the VM's
+`/etc/easymesh-lab/foreign-devices` (meta-cmf-bananapi-vcpe).
+
 **Acceptance.** An implementation of EMOSA is accepted in this lab (spec
 design §13) when, with the pods on it:
 1. each unchanged pod joins the GTP, dials `.40` and gets an agent;

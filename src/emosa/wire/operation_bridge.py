@@ -31,6 +31,28 @@ class ComponentTarget:
                 raise EmosaError(Reason.INVALID_INPUT, "component target must be unicast")
 
 
+def fitted(additional, slots):
+    """Indexes of the set's further BSSes the radio maps (spec §3.4).
+
+    ``additional`` holds (role, candidate) pairs in the order received; ``slots`` the
+    profile's extra slots as (name, role, radio index), or None for a backend without a
+    profile, which takes the whole set. Each role fills its slots in the order received;
+    BSSes beyond them are left out, so a radio with fewer slots than the controller's set
+    serves the BSSes it has (RDK sends five to every agent, whatever its maximum).
+    """
+    if slots is None:
+        return set(range(len(additional)))
+    free = {}
+    for _, role, _ in slots:
+        free[role] = free.get(role, 0) + 1
+    kept = set()
+    for index, (role, _) in enumerate(additional):
+        if free.get(role, 0) > 0:
+            free[role] -= 1
+            kept.add(index)
+    return kept
+
+
 @dataclass(frozen=True)
 class ScopeContext:
     """Opaque source binding, not a user-set qualification flag or credential."""
@@ -125,7 +147,11 @@ class WscComponentBridge:
             additional = None
             if self.exchange.multi_bss:
                 additional = []
-                for index, (role, candidate) in enumerate(result.additional, 1):
+                kept = fitted(result.additional, getattr(self.backend, "slots", None))
+                # numbered in kept order: the same references as before when all are kept
+                for index, (role, candidate) in enumerate(
+                    (pair for n, pair in enumerate(result.additional) if n in kept), 1
+                ):
                     extra = f"{ref}-{index}"
                     self.engine.vault.persist_received(extra, candidate.passphrase)
                     refs.append(extra)

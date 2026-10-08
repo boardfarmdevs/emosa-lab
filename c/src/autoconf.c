@@ -238,7 +238,9 @@ em_reason em_receive_m2(const em_binding *b, const em_radio_caps *radio, const e
         if (k == 0x11)
             count++;
     }
-    unsigned max = radio->max_bss < 16 ? radio->max_bss : 16;
+    /* a multi-BSS radio takes a set beyond its slots in part (spec §3.4: RDK sends its
+     * five BSSes whatever the agent's maximum); every payload is still authenticated */
+    unsigned max = multi_bss ? 16u : (radio->max_bss < 16 ? radio->max_bss : 16u);
     if (count < 1 || count > max)
         return EM_INVALID_INPUT;
     em_buf *messages = em_calloc(count, sizeof(em_buf));

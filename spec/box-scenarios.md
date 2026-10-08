@@ -95,6 +95,8 @@ sends it), each from its own registrar session with its own BSS index.
 | Scenario | What it shows | Relied on by |
 | --- | --- | --- |
 | `multi-bss` | an M2 set of two BSSes: both written as one guarded change and applied, the backhaul BSS on the profile's backhaul slot; its credentials serve the uplink switch (`credentials: m2`), pinned to the configured parent | RDK's controller (`r1`, multi-BSS) and the Wi-Fi backhaul |
+| `set-beyond-slots` | RDK's five-BSS M2 set to a radio whose profile has no extra slots (the Pis' MT7921U, one AP): taken, not refused; the primary fronthaul BSS written and applied, the other four left out, only the primary's passphrase stored | RDK's controller and pods with fewer BSSes than its set (alignment plan 9.A1) |
+| `wired-uplink` | a wired pod, cm using its Ethernet port eth1 as the uplink, and uplink mode ethernet: the agent bridges eth1 into br-home (`Connection_Manager_Uplink.bridge`) in one guarded write, applied, and reports the uplink as ethernet, in use | wired pods (the Pis, alignment plan 9.A1) |
 | `uplink-held` | a switch the pod never confirms: `TIMED_OUT` after 90 s, the pod held on option 2, no second switch | spec 8.3's hold; the RDK lab's `backhaul wifi` releasing it |
 | `uplink-foreign-change` | another manager changes the switched station's credential on the same start: held, the change left alone | spec 8.3 |
 | `backhaul-kept-gone` | a kept target whose BSS is gone at the agent's start: its switch `TIMED_OUT` after 90 s, nothing written while the station still carries it, then (the box playing `cm`'s revert) the configured parent switched to on the same start, applied, no hold, the kept target dropped | finding 18 |

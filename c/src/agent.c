@@ -44,6 +44,7 @@
 #include "scope_ap.h"
 #include "scope_steering.h"
 #include "scope_telemetry.h"
+#include "scope_wired.h"
 #include "scope_uplink.h"
 #include "scope_watch.h"
 #include "stats.h"
@@ -211,6 +212,8 @@ typedef struct {
     em_watch_scope watch;       /* the probe watch (emosa.agent.probe_watch), with telemetry */
     bool uplink_on;             /* the uplink scope (emosa.agent.uplink): uplink.mode multi-ap */
     em_uplink_scope uplink;
+    bool wired_on;              /* the wired uplink scope (emosa.agent.wired): uplink.mode ethernet */
+    em_wired_scope wired;
     em_bh_shared bh_shared;     /* Backhaul Steering under way: the agent's, across sessions */
     em_bh_coordinator bh;
     bool bh_live;
@@ -460,9 +463,22 @@ static const char *operate(agent *a, const em_message *m, const em_m2_result *m2
         return "wsc_rejected";
     EM_FORMAT_FIXED(refs[nrefs++], sizeof(refs[0]), "%s", ref);
     cJSON *additional = a->multi_bss ? cJSON_CreateArray() : NULL;
+    /* each role fills the profile's slots of that role in the order received; the rest
+     * are left out, their passphrases not stored (spec §3.4) */
+    size_t free_fronthaul = 0, free_backhaul = 0;
+    for (size_t k = 0; k < a->profile.nslots; k++) {
+        if (!strcmp(a->profile.slots[k].role, "fronthaul"))
+            free_fronthaul++;
+        else if (!strcmp(a->profile.slots[k].role, "backhaul"))
+            free_backhaul++;
+    }
     for (size_t i = 0, index = 1; i < m2->count && a->multi_bss; i++) {
         if (i == primary || nrefs == 8)
             continue;
+        size_t *free_slots = !strcmp(m2->bss[i].role, "fronthaul") ? &free_fronthaul : &free_backhaul;
+        if (*free_slots == 0)
+            continue; /* left out: no slot of its role */
+        (*free_slots)--;
         EM_FORMAT_FIXED(refs[nrefs], sizeof(refs[0]), "wsc-%s-%u", a->exchange_id, (unsigned)(index++ & 7));
         if (em_vault_persist_received(&a->vault, refs[nrefs], m2->bss[i].passphrase) != EM_OK)
             break;
@@ -1283,6 +1299,8 @@ static cJSON *status(agent *a)
     cJSON_AddItemToObject(o, "operations", ops);
     if (a->uplink_on) {
         cJSON_AddItemToObject(o, "uplink", em_uplink_status(&a->uplink));
+    } else if (a->wired_on) {
+        cJSON_AddItemToObject(o, "uplink", em_wired_status(&a->wired));
     } else {
         cJSON *uplink = cJSON_AddObjectToObject(o, "uplink");
         cJSON_AddItemToObject(uplink, "station", a->profile.uplink_station ? cJSON_CreateString(a->profile.uplink_station)
@@ -1468,6 +1486,20 @@ static bool configure(agent *a, const char *path, const char *profiles)
             }
         }
     }
+    /* a wired pod: its Ethernet uplink port into the fronthaul's bridge (spec §8.4) */
+    a->wired_on = umode && !strcmp(umode, "ethernet");
+    if (a->wired_on) {
+        em_reason why;
+        const char *bridge = cfg_str(a->profile.fronthaul_vif, "bridge");
+        if (!bridge) {
+            FAIL("uplink: the profile's fronthaul has no bridge");
+            return false;
+        }
+        if (!em_wired_intent_from(cfg_str(c, "pod_id"), uplink, bridge, &a->wired.intent, &why)) {
+            FAIL("uplink: the port and the bridge must be interface names");
+            return false;
+        }
+    }
     /* AP metrics from the pod's statistics: telemetry with the survey and a declared ESP */
     a->pod_metrics_on = a->telemetry_on && a->telemetry.intent.survey && a->profile.has_esp_be;
     return true;
@@ -1638,6 +1670,18 @@ int main(int argc, char **argv)
             return 1;
         }
     }
+    if (a.wired_on) {
+        a.wired.ovs = a.ovs;
+        a.wired.serial = a.serial;
+        a.wired.run_id = a.run_id;
+        a.wired.transact = transact;
+        a.wired.transact_ctx = &a;
+        em_reason why = em_wired_open(&a.wired, a.state_dir, &a.schemas, &a.vault, now);
+        if (why != EM_OK) {
+            FAIL("wired uplink journal: %s", em_reason_name(why));
+            return 1;
+        }
+    }
     /* EMOSA_NETNS (/etc/default/emosa): the agents' interfaces in a namespace of their own */
     if (em_ethernet_open_in(&a.eth, getenv("EMOSA_NETNS"), a.interface, a.al) != EM_OK) {
         FAIL("cannot open the 1905 interface %s with MAC %s", a.interface, cfg_str(a.config, "al_mac"));
@@ -1704,6 +1748,8 @@ int main(int argc, char **argv)
          * in flight times out */
         if (refreshed && a.uplink_on)
             em_uplink_tick(&a.uplink);
+        if (refreshed && a.wired_on)
+            em_wired_tick(&a.wired);
         if (refreshed && a.telemetry_on)
             em_telemetry_tick(&a.telemetry);
         if (refreshed && a.steering_on)
@@ -1724,6 +1770,8 @@ int main(int argc, char **argv)
         em_steering_scope_close(&a.steering);
     if (a.uplink_on)
         em_uplink_close(&a.uplink);
+    if (a.wired_on)
+        em_wired_close(&a.wired);
     em_policy_store_close(a.policy_store);
     em_channel_store_close(a.channel_store);
     em_ethernet_close(&a.eth);

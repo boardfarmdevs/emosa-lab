@@ -369,8 +369,9 @@ controller_al() {    # the RDK controller's AL MAC, from the lab's own topology 
 fleet() {
     local al
     al=$(controller_al) || die "the lab's topology names no single controller"
-    fleet_config "$FLEET_PORT" "${AGENTS[0]}" "${AGENTS[1]}" "$al" r1 true shared "$(pods_json)" \
-        "$TOPOLOGY_QUERY_WINDOW"
+    # the pods beyond the lab's own (EMOSA_EXTRA_PODS: physical pods) kept in, run after run
+    fleet_config "$FLEET_PORT" "${AGENTS[0]}" "${AGENTS[1]}" "$al" r1 true shared \
+        "$(pods_json | with_extra_pods)" "$TOPOLOGY_QUERY_WINDOW"
     log "fleet in $(emosa_where): front port $FLEET_PORT, agents ${AGENTS[0]}-${AGENTS[1]}, controller $al" \
         "(r1, multi-BSS, onboarding again after ${TOPOLOGY_QUERY_WINDOW} s without a Topology Query)"
 }

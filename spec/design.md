@@ -454,7 +454,7 @@ Specified elsewhere; listed here so that nothing is missed:
 | reassembly | 64 contexts, 64 KiB per message, 2 MiB in total |
 | OVSDB decoded message | 16 MiB |
 | OVSDB monitor cache | 10 000 rows |
-| M2 payloads per radio | min(`max_bss`, 16) |
+| M2 payloads per radio | 16 with `multi_bss` (a set larger than the slots is applied in part), else min(`max_bss`, 16) |
 | concurrent fleet handovers | `concurrency` (default 16) |
 | agents per fleet | the configured port range |
 | retained status events | 64 per session |

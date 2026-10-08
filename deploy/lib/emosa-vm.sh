@@ -158,6 +158,23 @@ proxy() {    # proxy CT DEVICE PORTS: tcp:$WAN_HOST:PORTS into CT's loopback (ag
 
 # --- the fleet -----------------------------------------------------------------------------
 
+# with_extra_pods: the lab's per-pod settings (stdin, a JSON object) with the pods beyond the
+# lab's own merged in: every *.json of EMOSA_EXTRA_PODS (/etc/easymesh-lab/emosa-pods.d),
+# each an object of serial -> settings (a physical pod's profile and uplink, as the fleet
+# configuration's pods takes them). Written there by whoever brings the pod, they survive
+# every rewrite of the fleet configuration. The lab's own entry wins over an extra one.
+with_extra_pods() {
+    local dir=${EMOSA_EXTRA_PODS:-/etc/easymesh-lab/emosa-pods.d} files=()
+    [ ! -d "$dir" ] || mapfile -t files < <(find "$dir" -maxdepth 1 -name '*.json' -type f | sort)
+    if [ ${#files[@]} -eq 0 ]; then
+        cat
+        return
+    fi
+    jq -cs 'if all(.[]; type == "object") then (reduce .[1:][] as $extra ({}; . + $extra)) + .[0]
+            else error("not a JSON object") end' - "${files[@]}" ||
+        die "$dir: every file must be a JSON object of serial -> settings"
+}
+
 telemetry_json() {    # telemetry_json [BROKER]: the fleet's telemetry setting (the broker: WAN_HOST)
     if [ -f "$STATE/telemetry" ]; then
         printf '{"mode": "mqtt", "broker": "%s", "port": 8883%s}' "${1:-$WAN_HOST}" "${TELEMETRY_OPTIONS:+, $TELEMETRY_OPTIONS}"

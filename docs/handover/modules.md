@@ -60,6 +60,7 @@ the C follows until `emosa-vectors` passes again ([testing.md](testing.md)).
 | `scope_steering.c` | client steering: one window at a time, a queue of eight, kick and close | `emosa.opensync.steering`, `emosa.agent.steering` | vectors `steering-queue.json`, `scope-writes.json`, box `steering*` |
 | `scope_watch.c` | the probe watch: the stations the controller asks about, watched for probe requests | `emosa.opensync.probe_watch`, `emosa.agent.probe_watch` | vectors `probe-watch.json`, box `unassociated` |
 | `scope_uplink.c` | the uplink (data plane option 1): the switch to the EasyMesh backhaul, its hold, Backhaul Steering's re-pin | `emosa.opensync.uplink`, `emosa.agent.uplink` | vectors `uplink.json`, box `backhaul-*`, `uplink-*` |
+| `scope_wired.c` | a wired pod's Ethernet uplink port bridged into br-home (`Connection_Manager_Uplink.bridge`, spec 8.4) | `emosa.opensync.wired`, `emosa.agent.wired` | vectors `scope-writes.json` |
 | `channel_store.c` | the accepted channel policy's durable record | `emosa.wire.channel.ChannelPolicyStore` | box `channel-selection` |
 
 ## The adapter around the agents

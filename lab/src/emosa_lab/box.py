@@ -234,6 +234,9 @@ class Box:
         topology_query_window=None,
         netns=False,
         kept_target=None,
+        profile=None,
+        m2_modes=None,
+        wired=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         self.topology_query_window = topology_query_window
@@ -248,7 +251,13 @@ class Box:
         # kept_target (with backhaul): the upstream a controller's move left on an earlier
         # start, kept in the agent's state for this one
         self.kept_target = kept_target
-        self.m2_modes = ("configure", "backhaul") if multi_bss else ("configure",)
+        # m2_modes: the set the controller sends instead (one registrar mode per BSS);
+        # profile: the agent's pod profile instead of the fleet's default
+        self.m2_modes = m2_modes or (("configure", "backhaul") if multi_bss else ("configure",))
+        self.profile = profile
+        # wired: a wired pod, cm using its Ethernet port eth1 as the uplink; the agent's
+        # uplink mode ethernet (spec 8.4)
+        self.wired = wired
         self.pod_rows = MULTI_AP_ROWS if backhaul else POD_ROWS
         self.process = self.db = self.controller = self.log = self.broker = None
         self.interface = AGENT_INTERFACE  # the agent's 1905 interface (a fleet names its own)
@@ -278,6 +287,22 @@ class Box:
         session = OvsSession(self.db.endpoint)
         try:
             await session.transact(operations)
+            if self.wired:
+                await session.transact(
+                    [
+                        {
+                            "op": "insert",
+                            "table": "Connection_Manager_Uplink",
+                            "row": {
+                                "if_name": "eth1",
+                                "if_type": "eth",
+                                "is_used": True,
+                                "has_L2": True,
+                                "has_L3": True,
+                            },
+                        }
+                    ]
+                )
         finally:
             await session.close()
         entry = {
@@ -299,6 +324,10 @@ class Box:
             fleet["telemetry"] = TELEMETRY
         if self.multi_bss:
             fleet["multi_bss"] = True
+        if self.profile:
+            fleet["profile"] = self.profile
+        if self.wired:
+            fleet["uplink"] = {"mode": "ethernet"}
         if self.topology_query_window:
             fleet["topology_query_window"] = self.topology_query_window
         if self.backhaul:  # option 1, its credentials from the agent's own configuration

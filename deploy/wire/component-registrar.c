@@ -8,6 +8,7 @@
  *              (0x40 | 0x80, as prplMesh sends it): with configure, an M2 set
  *   changed    a fronthaul BSS with another SSID
  *   teardown   the tear-down bit, no credentials
+ * An optional second argument sets the M2's BSS index (default 1, backhaul 2).
  */
 #include "includes.h"
 #include "common.h"
@@ -46,10 +47,18 @@ int main(int argc, char **argv)
 {
     u8 input[4097], private[32];
     size_t size = fread(input, 1, sizeof(input), stdin);
-    if (size == 0 || size > 4096 || ferror(stdin) || argc != 2 ||
+    if (size == 0 || size > 4096 || ferror(stdin) || (argc != 2 && argc != 3) ||
         (strcmp(argv[1], "configure") && strcmp(argv[1], "changed") &&
          strcmp(argv[1], "backhaul") && strcmp(argv[1], "teardown"))) return 2;
     int backhaul = !strcmp(argv[1], "backhaul");
+    /* the M2's BSS index: an optional second argument (1 to 255), for a set of several
+     * BSSes of one role, as RDK's controller sends five */
+    long chosen = backhaul ? 2 : 1;
+    if (argc == 3) {
+        char *end;
+        chosen = strtol(argv[2], &end, 10);
+        if (*argv[2] == '\0' || *end != '\0' || chosen < 1 || chosen > 255) return 2;
+    }
     struct wpabuf *m1 = wpabuf_alloc_copy(input, size);
     struct wps_parse_attr fields;
     if (!m1 || wps_validate_m1(m1) || wps_parse_msg(m1, &fields) ||
@@ -117,7 +126,7 @@ int main(int argc, char **argv)
         : backhaul ? (MULTI_AP_BACKHAUL_BSS | MULTI_AP_BACKHAUL_STA) : MULTI_AP_FRONTHAUL_BSS) == 0);
     assert(wps_build_key_wrap_auth(&registrar, plain) == 0);
     assert(wps_build_encr_settings(&registrar, m2, plain) == 0);
-    const u8 index = backhaul ? 2 : 1; /* each M2 of a set its own BSS index */
+    const u8 index = (u8)chosen; /* each M2 of a set its own BSS index */
     attr(m2, 0x1bbc, &index, 1);
     assert(wps_build_authenticator(&registrar, m2) == 0);
     assert(wps_validate_m2(m2) == 0);

@@ -58,12 +58,12 @@
     },
     "README 3.4 Translation: EasyMesh → OVSDB": {
       "vectors": ["translation-southbound.json", "control.json", "scope-writes.json"],
-      "box": ["onboard", "multi-bss", "channel-selection"],
-      "python": ["test_pod_profile.py", "test_channel_procedures.py"]
+      "box": ["onboard", "multi-bss", "set-beyond-slots", "channel-selection"],
+      "python": ["test_pod_profile.py", "test_channel_procedures.py", "test_wsc_operation_bridge.py"]
     },
     "README 3.5 Pod profiles": {
       "vectors": ["translation-southbound.json"],
-      "box": ["onboard", "multi-bss"],
+      "box": ["onboard", "multi-bss", "set-beyond-slots"],
       "python": ["test_pod_profile.py", "test_profile_audit.py"]
     },
     "README 3.6 The pod's own statistics": {
@@ -129,6 +129,11 @@
       "python": ["test_uplink.py"],
       "fuzz": ["control", "rows"],
       "lab": ["rdk-lab"]
+    },
+    "README 8.4 Ethernet uplink, for a wired pod": {
+      "vectors": ["scope-writes.json"],
+      "box": ["wired-uplink"],
+      "python": ["test_wired_uplink.py"]
     },
     "README 9. Not covered yet": {
       "note": "not implemented, so not tested: the list is what EMOSA does not do"

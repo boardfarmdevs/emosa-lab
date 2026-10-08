@@ -332,6 +332,17 @@ def test_an_m2_set_writes_both_bsses_and_its_backhaul_serves_the_uplink(agent, t
     assert result["backhaul_bss"] == [["b-ap-24", "backhaul_bss"]]
 
 
+def test_a_set_beyond_the_radios_slots_is_applied_in_part(agent, tmp_path):
+    result = box("set-beyond-slots", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["access_points"] == [["home-ap-24", "EMOSA-WSC-component"]]
+
+
+def test_a_wired_pods_ethernet_uplink_is_bridged_into_br_home(agent, tmp_path):
+    result = box("wired-uplink", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_kept_backhaul_target_that_is_gone_falls_back_to_the_configured_one(agent, tmp_path):
     result = box("backhaul-kept-gone", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result

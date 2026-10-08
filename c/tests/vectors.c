@@ -33,6 +33,7 @@
 #include "../src/scope_ap.h"
 #include "../src/scope_steering.h"
 #include "../src/scope_telemetry.h"
+#include "../src/scope_wired.h"
 #include "../src/scope_watch.h"
 #include "../src/southbound.h"
 #include "../src/stats.h"
@@ -1688,6 +1689,7 @@ static void scope_writes_vectors(const char *dir)
         em_backend backend;
         void *ctx = NULL;
         em_telemetry_scope telemetry = {0};
+        em_wired_scope wired = {0};
         em_watch_scope watch = {0};
         em_steering_scope steering = {0};
         em_ap_scope ap = {0};
@@ -1734,6 +1736,15 @@ static void scope_writes_vectors(const char *dir)
             telemetry.transact_ctx = sent;
             backend = em_telemetry_backend();
             ctx = &telemetry;
+        } else if (!strcmp(scope, "wired-uplink")) {
+            em_reason why;
+            em_wired_intent_from(str(intent, "pod_id"), intent, str(intent, "bridge"), &wired.intent, &why);
+            wired.ovs = ovs;
+            wired.serial = serial;
+            wired.transact = record;
+            wired.transact_ctx = sent;
+            backend = em_wired_backend();
+            ctx = &wired;
         } else if (!strcmp(scope, "probe-watch")) {
             watch = (em_watch_scope){.ovs = ovs, .serial = serial, .pod_id = str(doc, "pod_id"),
                                      .transact = record, .transact_ctx = sent};
@@ -1774,6 +1785,7 @@ static void scope_writes_vectors(const char *dir)
         cJSON_Delete(sent);
         cJSON_Delete(attempt);
         em_snapshot_clear(&telemetry.last);
+        em_snapshot_clear(&wired.last);
         em_snapshot_clear(&watch.last);
         em_snapshot_clear(&steering.last);
         em_snapshot_clear(&ap.last);

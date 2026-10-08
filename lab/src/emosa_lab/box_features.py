@@ -113,6 +113,71 @@ async def multi_bss(box):
     )
 
 
+# five BSSes, each with its own BSS index, as RDK sends them
+RDK_SET = ("configure", "configure:3", "backhaul", "configure:4", "configure:5")
+ONE_AP = "rpi-pod-mt7921u-6.6.1-v1"  # the Pis' MT7921U: no extra slots
+
+
+async def set_beyond_slots(box):
+    """spec 3.4 (alignment plan 9.A1): a five-BSS M2 set, as RDK's controller sends it to every
+    agent, to a radio whose profile has no extra slots (the Pis' MT7921U runs one AP): the set
+    is taken, not refused; the primary fronthaul BSS is written and applied and the other four
+    left out, no slot VIF and no backhaul BSS written, and only the primary's passphrase
+    stored."""
+    onboarding = await onboarded(box)
+    vifs = list((await box.rows("Wifi_VIF_Config")).values())
+    aps = [v for v in vifs if v.get("mode") == "ap"]
+    fronthaul = [v for v in aps if v.get("ssid") == REGISTRAR_SSID]
+    backhaul = [v for v in vifs if v.get("ssid") == BACKHAUL_SSID]
+    secrets = box.directory / "state" / box.serial / "secrets"
+    stored = sorted(p.name for p in secrets.glob("wsc-*")) if secrets.is_dir() else []
+    return box.result(
+        passed=bool(onboarding.get("applied"))
+        and len(fronthaul) == 1
+        and len(aps) == 1
+        and not backhaul
+        and len(stored) == 1,
+        onboarded=bool(onboarding.get("applied")),
+        failed=onboarding.get("failed"),
+        access_points=[(v.get("if_name"), v.get("ssid")) for v in aps],
+        backhaul_bss=bool(backhaul),
+        stored_passphrases=len(stored),
+    )
+
+
+async def wired_uplink(box):
+    """spec 8.4 (alignment plan 9.A1): a wired pod, cm using its Ethernet port eth1 as the
+    uplink, and the agent's uplink mode ethernet: the agent bridges eth1 into br-home
+    (Connection_Manager_Uplink.bridge) in one guarded write, applied on the same start, and
+    reports the uplink as ethernet, in use."""
+    onboarding = await onboarded(box)
+
+    async def bridged():
+        rows = (await box.rows("Connection_Manager_Uplink")).values()
+        return [r for r in rows if r.get("if_name") == "eth1" and r.get("bridge") == "br-home"]
+
+    written = await until_async(bridged, seconds=60)
+
+    def applied():
+        operation = ((box.status() or {}).get("uplink") or {}).get("operation") or {}
+        return operation.get("state") == "OBSERVED_APPLIED"
+
+    done = await box.until(applied, seconds=60)
+    uplink = (box.status() or {}).get("uplink") or {}
+    return box.result(
+        passed=bool(onboarding.get("applied"))
+        and bool(written)
+        and bool(done)
+        and uplink.get("mode") == "ethernet"
+        and uplink.get("in_use") == "eth1"
+        and uplink.get("bridge") == "br-home",
+        onboarded=bool(onboarding.get("applied")),
+        bridged=bool(written),
+        applied=bool(done),
+        uplink={k: uplink.get(k) for k in ("mode", "port", "bridge", "in_use", "waiting")},
+    )
+
+
 async def uplink_held(box):
     """spec 8.3: a switch the pod never confirms (here its station never joins the
     configured SSID) times out after 90 s; EMOSA then holds the pod on option 2 and does not
@@ -401,6 +466,8 @@ async def steering_restart(box):
 
 SCENARIOS = {
     "multi-bss": multi_bss,
+    "set-beyond-slots": set_beyond_slots,
+    "wired-uplink": wired_uplink,
     "uplink-held": uplink_held,
     "uplink-foreign-change": uplink_foreign_change,
     "backhaul-steering-kept": backhaul_steering_kept,
@@ -418,6 +485,8 @@ M2_UPLINK = {
 }
 OPTIONS = {
     "multi-bss": {"backhaul": True, "multi_bss": True, "uplink": M2_UPLINK},
+    "set-beyond-slots": {"multi_bss": True, "profile": ONE_AP, "m2_modes": RDK_SET},
+    "wired-uplink": {"wired": True},
     "uplink-held": {"backhaul": True, "uplink": {**UPLINK, "ssid": "emosa-lab-elsewhere"}},
     "uplink-foreign-change": {"backhaul": True},
     "backhaul-steering-kept": {"backhaul": True},

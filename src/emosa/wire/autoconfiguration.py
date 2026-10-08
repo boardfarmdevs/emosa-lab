@@ -409,6 +409,12 @@ class WscExchange(_Lifetime):
         self._additional = ()
         self._configuration = None
 
+    def _payload_budget(self):
+        """M2 payloads one set may carry: a multi-BSS radio applies a larger set in part."""
+        from emosa.wsc_messages import MAX_M2_PAYLOADS
+
+        return MAX_M2_PAYLOADS if self.multi_bss else min(self.basic.max_bss, MAX_M2_PAYLOADS)
+
     def close(self):
         super().close()
         # Drop references; Python cannot promise cryptographic memory erasure.
@@ -426,7 +432,6 @@ class WscExchange(_Lifetime):
         )
 
     def receive(self, message, *, ingress, generation):
-        from emosa.wsc_messages import MAX_M2_PAYLOADS
         from emosa.wsc_radio import decode_radio_payloads
 
         self._live()
@@ -449,7 +454,10 @@ class WscExchange(_Lifetime):
                     Reason.UNSUPPORTED_OPERATION,
                     "complete M2 request has unsupported configuration TLVs",
                 )
-            if not 1 <= len(messages) <= min(self.basic.max_bss, MAX_M2_PAYLOADS):
+            # A multi-BSS radio takes a set beyond its slots in part (spec §3.4: RDK sends
+            # its five BSSes whatever the agent's maximum); every payload is still
+            # authenticated, within the local budget.
+            if not 1 <= len(messages) <= self._payload_budget():
                 _invalid("WSC payload count exceeds advertised radio scope or local budget")
         except EmosaError:
             if self.state == "waiting":
@@ -466,7 +474,7 @@ class WscExchange(_Lifetime):
             radio = decode_radio_payloads(
                 self._transcript,
                 messages,
-                max_bss=min(self.basic.max_bss, MAX_M2_PAYLOADS),
+                max_bss=self._payload_budget(),
                 shared_session=self.shared_m2_session,
             )
             if self.multi_bss:

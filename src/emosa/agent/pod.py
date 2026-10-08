@@ -41,6 +41,7 @@ from emosa.agent.renew import CONTROLLER_TIMEOUT, M2_TIMEOUT, RenewRules
 from emosa.agent.steering import ClientSteering
 from emosa.agent.telemetry import MqttSubscriber, TelemetrySetup
 from emosa.agent.uplink import UplinkSwitch, m2_backhaul
+from emosa.agent.wired import WiredUplink
 from emosa.config import validate
 from emosa.errors import EmosaError, Reason
 from emosa.model import ACTIVE
@@ -65,6 +66,8 @@ from emosa.opensync.telemetry import MONITOR as TELEMETRY_MONITOR
 from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent
 from emosa.opensync.uplink import BSSID, MULTI_AP, UplinkBackend, uplink_state
 from emosa.opensync.uplink import MONITOR as UPLINK_MONITOR
+from emosa.opensync.wired import MONITOR as WIRED_MONITOR
+from emosa.opensync.wired import WIRED, WiredBackend, WiredIntent
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
 from emosa.store import Store
@@ -102,7 +105,7 @@ MONITOR = {
     "AWLAN_Node": [*TABLES["AWLAN_Node"], "id"],
     "Wifi_Radio_State": [*TABLES["Wifi_Radio_State"], "tx_power"],
 }
-for _scope in (UPLINK_MONITOR, TELEMETRY_MONITOR, STEERING_MONITOR, WATCH_MONITOR):
+for _scope in (UPLINK_MONITOR, TELEMETRY_MONITOR, STEERING_MONITOR, WATCH_MONITOR, WIRED_MONITOR):
     for _table, _columns in _scope.items():  # the other scopes, each column once
         MONITOR[_table] = list(dict.fromkeys([*MONITOR.get(_table, []), *_columns]))
 
@@ -370,7 +373,9 @@ def make_bridge(
         mids=mids,
         timeout=30,
         message_set=message_set,
-        multi_bss=bool(backend.slots),
+        # an M2 set is taken whatever the profile's slots: a radio with none applies its
+        # primary BSS (spec 3.4), as the C agent does from the same setting
+        multi_bss=backend.multi_bss,
         m2_session=m2_session,
     )
     return WscComponentBridge(
@@ -457,6 +462,20 @@ async def serve(config, stop):
                 (report.facts or {}).get("ssid") is not None
                 and not any(op.state in ACTIVE for op in store.operations())
             ),
+        )
+    wired = None
+    if uplink_config["mode"] == WIRED:  # a wired pod: its uplink port into br-home (spec §8.4)
+        port = uplink_config.get("port", "eth1")
+        bridge = backend.profile.fronthaul_vif.get("bridge")
+        if not bridge:
+            raise EmosaError(Reason.INVALID_INPUT, "uplink: the profile's fronthaul has no bridge")
+        wired = WiredUplink(
+            pod_id,
+            WiredBackend(pod_id, session, serial=config["serial"], port=port),
+            Store(state_dir / "wired-uplink"),
+            vault,
+            WiredIntent(pod_id, port, bridge),
+            run_id=config.get("run_id", pod_id),
         )
     backhaul_steering_state = {}  # a Backhaul Steering move under way outlives a session
     telemetry = stats = subscriber = telemetry_store = watch = None
@@ -556,7 +575,13 @@ async def serve(config, stop):
             "report_source_available": snapshot is not None,
             "session": lifecycle.status() if lifecycle else None,
             "operations": ops,
-            "uplink": switch.status() if switch else {"station": station, "mode": "off"},
+            "uplink": (
+                switch.status()
+                if switch
+                else wired.status()
+                if wired
+                else {"station": station, "mode": "off"}
+            ),
             "telemetry": (
                 {"mode": "mqtt", **telemetry.status(), "subscribed": subscriber.connected}
                 | stats.status()
@@ -700,6 +725,11 @@ async def serve(config, stop):
                         await timed("uplink", switch.tick())
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("uplink: %s", exc)
+                if refreshed and wired:
+                    try:
+                        await timed("wired uplink", wired.tick())
+                    except (EmosaError, ConnectionError, TimeoutError) as exc:
+                        log.warning("wired uplink: %s", exc)
                 if refreshed and telemetry:
                     try:
                         await timed("telemetry", telemetry.tick())

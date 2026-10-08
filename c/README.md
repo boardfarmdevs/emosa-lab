@@ -33,7 +33,7 @@ What makes it interchangeable with the Python reference (`src/emosa`):
 | Control plane (channel, policy, steering, unassociated) | `emosa.wire.channel`, `.reporting_policy`, `.steering`, `.unassociated` | `control.json` | done |
 | Link Metric and AP Metrics answers, periodic AP metrics | `emosa.wire.link_metrics`, `.ap_metrics`, `.pod_metrics` | `metrics.json` | done (`reporting.c`) |
 | Backhaul Steering across sessions | `emosa.wire.backhaul_steering` | `backhaul-steering.json` | done (`bhsteer.c`) |
-| OVSDB writes (M2, steering, uplink, telemetry, probe watch) | `emosa.opensync.pod_profile`, `.steering`, `.uplink`, `.telemetry`, `.probe_watch` | `translation-southbound.json`, `steering.json`, `uplink.json`, `scope-writes.json` | done |
+| OVSDB writes (M2, steering, uplink, wired uplink, telemetry, probe watch) | `emosa.opensync.pod_profile`, `.steering`, `.uplink`, `.wired`, `.telemetry`, `.probe_watch` | `translation-southbound.json`, `steering.json`, `uplink.json`, `scope-writes.json` | done |
 | Operation engine and durable journal | `emosa.reconcile`, `emosa.store`, `emosa.secrets` | `engine.json`, `operation-transitions.json` | done (`engine.c`, `journal.c`, `vault.c`) |
 | Client steering queue | `emosa.agent.steering` | `steering-queue.json` | done (`scope_steering.c`) |
 | Probe watch | `emosa.agent.probe_watch` | `probe-watch.json` | done (`scope_watch.c`) |
@@ -70,7 +70,8 @@ statistics over MQTT, with them AP metrics, probe requests and the Unassociated
 STA Link Metrics answer), client steering (a queue of eight, one window at a
 time), the probe watch, and the uplink (the pod's EasyMesh backhaul station,
 reported in the Topology Response and the Backhaul STA Capability Report, and
-moved by Backhaul Steering, whose move survives a session renewal).
+moved by Backhaul Steering, whose move survives a session renewal), or for a wired pod
+its Ethernet uplink port bridged into `br-home` (`scope_wired.c`, spec §8.4).
 
 Checked in the RDK lab (`docs/concepts/rdk-lab.md`), in place of the
 Python agent: onboarding and the journal taken over from Python, telemetry,

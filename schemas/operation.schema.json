@@ -301,6 +301,31 @@
             "stations"
           ],
           "additionalProperties": false
+        },
+        {
+          "title": "Bridge a wired pod's Ethernet uplink into its home bridge (the wired uplink scope, spec 8.4)",
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "port": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]{1,15}$"
+            },
+            "bridge": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]{1,15}$"
+            }
+          },
+          "required": [
+            "pod_id",
+            "port",
+            "bridge"
+          ],
+          "additionalProperties": false
         }
       ]
     },

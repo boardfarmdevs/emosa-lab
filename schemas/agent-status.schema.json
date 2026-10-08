@@ -59,12 +59,12 @@
       }
     },
     "uplink": {
-      "description": "The uplink scope (data plane option 1). mode off: the agent leaves the pod's uplink alone.",
+      "description": "The uplink scope: data plane option 1, or a wired pod's Ethernet uplink (mode ethernet). mode off: the agent leaves the pod's uplink alone.",
       "type": "object",
       "required": ["station"],
       "properties": {
         "station": {"type": ["string", "null"]},
-        "mode": {"enum": ["off"]},
+        "mode": {"enum": ["off", "ethernet"], "description": "Absent with multi-ap; ethernet: a wired pod's uplink bridged into br-home (spec §8.4)."}, "port": {"type": "string", "description": "With ethernet: the uplink port."}, "bridge": {"type": ["string", "null"], "description": "With ethernet: the bridge the port's Connection_Manager_Uplink row names."},
         "uplink": {"type": ["string", "null"], "description": "multi-ap, or the if_type of the uplink cm uses (gre, eth, vif)."},
         "in_use": {"type": ["string", "null"]},
         "bssid": {"type": ["string", "null"], "description": "The upstream backhaul BSS the station is pinned to."},
