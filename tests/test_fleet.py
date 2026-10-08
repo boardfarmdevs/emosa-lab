@@ -193,3 +193,19 @@ def test_a_connecting_ovsdb_server_is_identified_and_handed_over(tmp_path):
             await db.close()
 
     asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("command", ["serve", "forget"])
+def test_the_reference_refuses_supervised_agents(tmp_path, monkeypatch, capsys, command):
+    """spec §4: the agents as the fleet's children are the C fleet's; the reference
+    says so instead of starting systemd units the configuration did not ask for."""
+    from emosa.agent import fleet as fleet_module
+
+    path = tmp_path / "fleet.json"
+    path.write_text(json.dumps(fleet_config(tmp_path, agents="supervised")))
+    monkeypatch.setattr("sys.argv", ["emosa-fleet", command, str(path), "POD1"])
+    with pytest.raises(SystemExit) as stopped:
+        fleet_module.main()
+    assert stopped.value.code == 2
+    assert "emosa-fleet-c" in capsys.readouterr().err
+    assert not (tmp_path / "state").exists()

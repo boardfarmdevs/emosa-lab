@@ -130,7 +130,10 @@ link helper in `libexec/emosa`; `/etc/default/emosa` (`EMOSA_TRUNK=emlan` with
 bridge); the example configurations and the bill of materials
 (`emosa-c.spdx.json`) in `share/emosa`. The fleet and the GTP are inert until their
 configuration exists (`ConditionPathExists`); the fleet enables an agent's unit for
-each pod handed to it. The GTP's unit runs `EMOSA_DNSMASQ`. The forwarder,
+each pod handed to it. On a system without systemd, `"agents": "supervised"` in the fleet
+configuration (or `EMOSA_AGENTS=supervised` in `/etc/default/emosa`) makes the agents the
+fleet's own children (spec §4; `src/supervise.c`): the init system runs only
+`emosa-fleet-c serve CONFIG`, and each agent's output is in `RUN_ROOT/POD/agent.log`. The GTP's unit runs `EMOSA_DNSMASQ`. The forwarder,
 `emosa-forward-c`, is spec 3.1's forwarder on the gateway itself: with `"forward": true` in
 the fleet configuration it exposes the front port and the agent ports, which listen on
 loopback, on the `advertise` address (the gateway's LAN address), each connection spliced to

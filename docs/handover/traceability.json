@@ -92,8 +92,9 @@
     },
     "README 4. The fleet": {
       "vectors": ["fleet.json", "fleet-sessions.json"],
-      "box": ["fleet-handover", "fleet-return", "fleet-upgrade", "fleet-refusals", "fleet-takeover", "fleet-forget"],
+      "box": ["fleet-handover", "fleet-return", "fleet-upgrade", "fleet-refusals", "fleet-takeover", "fleet-forget", "fleet-supervised"],
       "python": ["test_fleet.py"],
+      "units": ["environment_files", "supervisor"],
       "fuzz": ["fleet"],
       "lab": ["rdk-lab", "opensync-lab-proof"]
     },

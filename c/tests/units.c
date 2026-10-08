@@ -9,11 +9,14 @@
  *
  * Leaves SCRATCH_DIR/journal-c (a journal the reference's tests read back). */
 #include <cjson/cJSON.h>
+#include <limits.h>
+#include <signal.h>
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -26,6 +29,8 @@
 #include "jschema.h"
 #include "scope_telemetry.h"
 #include "mqtt.h"
+#include "proc.h"
+#include "supervise.h"
 #include "vault.h"
 
 static int checks, failures;
@@ -818,6 +823,222 @@ static void schema(const char *schemas)
     em_schema_free(config);
 }
 
+static void environment_files(const char *scratch)
+{
+    char key[32], value[64];
+    CHECK(em_sup_env_line("EMOSA_TRUNK=emlan\n", key, sizeof(key), value, sizeof(value)) &&
+              !strcmp(key, "EMOSA_TRUNK") && !strcmp(value, "emlan"),
+          "a plain line");
+    CHECK(em_sup_env_line("  export EMOSA_BRIDGE=\"brlan0\"  ", key, sizeof(key), value, sizeof(value)) &&
+              !strcmp(key, "EMOSA_BRIDGE") && !strcmp(value, "brlan0"),
+          "export and quotes: %s", value);
+    CHECK(em_sup_env_line("EMPTY=", key, sizeof(key), value, sizeof(value)) && !*value, "an empty value");
+    CHECK(!em_sup_env_line("# EMOSA_TRUNK=x", key, sizeof(key), value, sizeof(value)), "a comment");
+    CHECK(!em_sup_env_line("1KEY=x", key, sizeof(key), value, sizeof(value)), "a key starting with a digit");
+    CHECK(!em_sup_env_line("KEY x", key, sizeof(key), value, sizeof(value)), "no '='");
+    char path[512];
+    snprintf(path, sizeof(path), "%s/env-file", scratch);
+    CHECK(em_write_file(path, "# a comment\nA=file\nB='two words'\nA=later\n", false), "an environment file");
+    CHECK(em_sup_file_value(path, "A", value, sizeof(value)) && !strcmp(value, "later"), "the last A: %s", value);
+    CHECK(!em_sup_file_value(path, "C", value, sizeof(value)), "a key not in the file");
+    char *base[] = {"A=base", "PATH=/bin", NULL};
+    const char *files[] = {path, "/nonexistent/emosa"};
+    const char *extra[] = {"PATH=/sbin", NULL};
+    char **env = em_sup_environment(base, files, 2, extra);
+    size_t n = 0;
+    bool a = false, b = false, p = false;
+    for (; env[n]; n++) {
+        a = a || !strcmp(env[n], "A=later");
+        b = b || !strcmp(env[n], "B=two words");
+        p = p || !strcmp(env[n], "PATH=/sbin");
+    }
+    CHECK(n == 3 && a && b && p, "the environment: base, the file over it, extra last (%zu entries)", n);
+    em_sup_env_free(env);
+}
+
+static double now_s(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
+}
+
+/* steps the supervisor until done(ctx) or seconds pass */
+static bool step_until(em_supervisor *s, double seconds, bool (*done)(void *), void *ctx)
+{
+    double end = now_s() + seconds;
+    struct timespec pause = {0, 20 * 1000 * 1000};
+    for (;;) {
+        em_sup_step(s, now_s());
+        if (done(ctx))
+            return true;
+        if (now_s() > end)
+            return false;
+        (void)nanosleep(&pause, NULL);
+    }
+}
+
+typedef struct {
+    em_supervisor *s;
+    unsigned ticket;
+    int want;
+    pid_t other;
+    pid_t tester;
+    int tester_status;
+} sup_wait;
+
+static bool ticket_is(void *ctx)
+{
+    sup_wait *w = ctx;
+    return em_sup_started(w->s, "P1", w->ticket) == w->want;
+}
+
+static bool another_agent(void *ctx)
+{
+    sup_wait *w = ctx;
+    pid_t pid = em_sup_pid(w->s, "P1");
+    return pid > 0 && pid != w->other;
+}
+
+static bool no_agent(void *ctx)
+{
+    sup_wait *w = ctx;
+    return em_sup_pid(w->s, "P1") == 0;
+}
+
+static bool tester_done(void *ctx)
+{
+    sup_wait *w = ctx;
+    return em_reaped(w->tester, &w->tester_status);
+}
+
+static bool contains(const char *path, const char *text)
+{
+    char *got = em_read_file(path, 1 << 20, NULL);
+    bool found = got && strstr(got, text);
+    free(got);
+    return found;
+}
+
+static bool executable(const char *path, const char *text)
+{
+    return em_write_file(path, text, false) && chmod(path, 0755) == 0;
+}
+
+/* the fleet's agents without systemd: a shell link helper and a shell agent as the
+ * children, each start and restart, a forgotten pod, a failing link helper, the log bound */
+static void supervisor(const char *scratch)
+{
+    /* each buffer holds the longest text the one before it can give */
+    char real[PATH_MAX], root[200], dir[256], defaults[300], config_dir[300], logs[300], link[300], agent_sh[300],
+        flag[300], config[400], log[400], pidfile[400], file[420], text[1024];
+    if (!realpath(scratch, real) || !em_copy(root, sizeof(root), real)) {
+        CHECK(false, "scratch directory %s: not found or too long", scratch);
+        return;
+    }
+    snprintf(dir, sizeof(dir), "%s/sup", root);
+    snprintf(defaults, sizeof(defaults), "%s/default", dir);
+    snprintf(config_dir, sizeof(config_dir), "%s/etc", dir);
+    snprintf(logs, sizeof(logs), "%s/run", dir);
+    snprintf(link, sizeof(link), "%s/link.sh", dir);
+    snprintf(agent_sh, sizeof(agent_sh), "%s/agent.sh", dir);
+    snprintf(flag, sizeof(flag), "%s/link-fails", dir);
+    snprintf(config, sizeof(config), "%s/P1.json", config_dir);
+    snprintf(log, sizeof(log), "%s/P1/agent.log", logs);
+    snprintf(pidfile, sizeof(pidfile), "%s/P1/agent.pid", logs);
+    CHECK(em_mkdirs(defaults, 0755) && em_mkdirs(config_dir, 0755), "the directories");
+    snprintf(text, sizeof(text), "#!/bin/sh\necho \"link $1 $EMOSA_AGENT_CONFIG_DIR\"\n[ ! -e %s ] || exit 3\n", flag);
+    CHECK(executable(link, text), "the link helper");
+    CHECK(executable(agent_sh, "#!/bin/sh\necho \"agent $1 $EMOSA_COMMON $EMOSA_OWN\"\n"
+                               "while :; do sleep 1; done\n"),
+          "the agent");
+    snprintf(file, sizeof(file), "%s/emosa", defaults);
+    snprintf(text, sizeof(text), "EMOSA_COMMON=common\nEMOSA_AGENT=%s\nEMOSA_OWN=not-this\n", agent_sh);
+    CHECK(em_write_file(file, text, false), "/etc/default/emosa");
+    snprintf(file, sizeof(file), "%s/emosa-P1", defaults);
+    CHECK(em_write_file(file, "export EMOSA_OWN=own\n", false), "/etc/default/emosa-P1");
+    CHECK(em_write_file(config, "{}\n", false), "the agent's configuration");
+
+    em_sup_config c = {.agent = "/nonexistent/emosa-agent-c", .link = link, .config_dir = config_dir,
+                       .log_root = logs, .defaults = defaults, .restart_delay = 0.5, .stop_timeout = 1.0,
+                       .log_max = 4096};
+    em_supervisor *s = em_sup_new(&c);
+    CHECK(s != NULL, "a supervisor");
+    if (!s)
+        return;
+    sup_wait w = {.s = s, .want = 1};
+    w.ticket = em_sup_start(s, "P1", false, now_s());
+    CHECK(w.ticket != 0, "a start asked for");
+    CHECK(step_until(s, 5, ticket_is, &w), "the agent started after its link helper");
+    pid_t first = em_sup_pid(s, "P1");
+    CHECK(first > 0, "its pid");
+    snprintf(text, sizeof(text), "%ld\n", (long)first);
+    CHECK(contains(pidfile, text), "its pid recorded");
+    snprintf(text, sizeof(text), "link P1 %s", config_dir);
+    CHECK(contains(log, text), "the helper given the pod and the configuration directory");
+    snprintf(text, sizeof(text), "agent %s common own", config);
+    struct timespec pause = {0, 300 * 1000 * 1000};
+    (void)nanosleep(&pause, NULL);
+    CHECK(contains(log, text), "the agent given its configuration and both files' environment");
+    CHECK(em_sup_start(s, "P1", false, now_s()) == 0, "a start of a running agent: nothing to do");
+
+    /* it ends: started again after the delay */
+    (void)kill(first, SIGKILL);
+    w.other = first;
+    CHECK(step_until(s, 5, another_agent, &w), "an agent that ended started again");
+    /* a restart: another agent, the ticket served */
+    w.other = em_sup_pid(s, "P1");
+    w.ticket = em_sup_start(s, "P1", true, now_s());
+    CHECK(w.ticket != 0 && step_until(s, 5, ticket_is, &w) && em_sup_pid(s, "P1") != w.other, "a restart");
+
+    /* the log past its bound: kept as agent.log.1, agent.log started again */
+    FILE *f = fopen(log, "a");
+    for (int i = 0; f && i < 100; i++)
+        (void)fprintf(f, "%063d\n", i);
+    if (f)
+        (void)fclose(f);
+    double until = now_s() + 1.5;
+    while (now_s() < until) {
+        em_sup_step(s, now_s());
+        (void)nanosleep(&pause, NULL);
+    }
+    snprintf(file, sizeof(file), "%s.1", log);
+    struct stat st;
+    CHECK(stat(file, &st) == 0 && st.st_size > 4096, "agent.log.1 kept");
+    CHECK(stat(log, &st) == 0 && st.st_size < 4096, "agent.log started again (%lld bytes)", (long long)st.st_size);
+
+    /* forget, from another process: the recorded agent stopped while the fleet reaps it,
+     * then its configuration removed: not started again */
+    w.tester = fork();
+    if (w.tester == 0)
+        _exit(em_sup_stop_recorded(logs, "P1", 3.0) ? 0 : 1);
+    CHECK(w.tester > 0 && step_until(s, 6, tester_done, &w) && w.tester_status == 0, "the agent stopped by forget");
+    CHECK(unlink(config) == 0, "the configuration removed");
+    until = now_s() + 2.5; /* past the restart delay and a look at the configuration */
+    while (now_s() < until) {
+        em_sup_step(s, now_s());
+        (void)nanosleep(&pause, NULL);
+    }
+    CHECK(no_agent(&w), "a forgotten pod's agent not started again");
+    CHECK(access(pidfile, F_OK) != 0, "its pid file removed");
+    CHECK(em_sup_stop_recorded(logs, "P1", 1.0), "forget without an agent");
+
+    /* a failing link helper fails the start, which succeeds once it works again */
+    CHECK(em_write_file(config, "{}\n", false) && em_write_file(flag, "", false), "the helper set to fail");
+    w.ticket = em_sup_start(s, "P1", false, now_s());
+    w.want = -1;
+    CHECK(step_until(s, 5, ticket_is, &w), "a failed link helper fails the start");
+    CHECK(unlink(flag) == 0, "the helper set to succeed");
+    w.want = 1;
+    CHECK(step_until(s, 5, ticket_is, &w), "started on the retry");
+    pid_t last = em_sup_pid(s, "P1");
+
+    /* the fleet's end stops its agents */
+    em_sup_free(s);
+    CHECK(last > 0 && kill(last, 0) != 0, "the agents stopped with the fleet");
+    CHECK(access(pidfile, F_OK) != 0, "and their pid files removed");
+}
+
 int main(int argc, char **argv)
 {
     em_init();
@@ -840,6 +1061,8 @@ int main(int argc, char **argv)
     schema_keywords(argv[2]);
     helpers(argv[2]);
     journal_tampered(argv[2], argv[1]);
+    environment_files(argv[2]);
+    supervisor(argv[2]);
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;
 }

@@ -510,6 +510,30 @@ directory, its link would show the next agent's). A pod handed over
 again starts a new ownership period, so conflicts recorded before its release
 don't block it.
 
+**The agents' processes.** With `agents` `systemd` (the default) each agent is the unit
+`emosa-agent@<pod_id>`:
+step 4 enables it and starts or restarts it, and `forget` disables and stops it. With
+`supervised`, for a system without systemd (a router's busybox init), the agents are the
+fleet's own children, run as that unit would run them:
+- Each child gets the fleet's environment, then `/etc/default/emosa` and
+  `/etc/default/emosa-<pod_id>` (`KEY=VALUE` lines; the later file wins), and
+  `EMOSA_AGENT_CONFIG_DIR` set to `config_dir`. The link helper `emosa-agent-link <pod_id>`
+  runs first, then the agent with `<config_dir>/<pod_id>.json`. `EMOSA_AGENT_LINK` and
+  `EMOSA_AGENT` name other programs.
+- Step 4 waits until the agent runs, as for a unit. If the link helper fails, the step
+  fails, and the helper is tried again 3 s later.
+- An agent that ends is started again 3 s later while its configuration exists. When its
+  configuration is removed, the agent is stopped: SIGTERM, then SIGKILL after 5 s.
+  `forget` stops the agent recorded in `<log_root>/<pod_id>/agent.pid` before it deletes
+  the configuration.
+- A fleet that ends stops its agents, and its next start starts them again (§4). A fleet
+  that is killed takes its agents with it.
+- The output of each agent and its helper goes to `<log_root>/<pod_id>/agent.log`, which
+  becomes `agent.log.1` past 256 KiB. `log_root` is `run_root`, else `state_root`.
+
+When `agents` is absent, `EMOSA_AGENTS` decides: from the fleet's environment, else from
+`/etc/default/emosa`. Only the C fleet supervises; the reference refuses `supervised`.
+
 ## 5. Operations
 
 Each accepted M2 becomes one durable operation, journalled before anything is

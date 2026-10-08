@@ -15,6 +15,7 @@ import asyncio
 import contextlib
 import json
 import os
+import shlex
 import shutil
 import signal
 import subprocess
@@ -95,6 +96,18 @@ elif action == "disable" and "--now" in sys.argv:
     stop()
 '''
 
+LINK = '''#!{python}
+"""emosa-agent-link in the lab in a box (spec §4, a supervised fleet's): the agent's
+interface given its AL MAC, as the systemctl above does."""
+import json, os, subprocess, sys
+from pathlib import Path
+
+pod = sys.argv[1]
+config = json.loads((Path(os.environ["EMOSA_AGENT_CONFIG_DIR"]) / f"{{pod}}.json").read_text())
+subprocess.run(["ip", "link", "set", config["interface"], "address", config["al_mac"]], check=True)
+print("link", pod, config["interface"], config["al_mac"], flush=True)
+'''
+
 
 def other(implementation):
     return "python" if implementation == "c" else "c"
@@ -150,12 +163,15 @@ class FleetBox(Box):
     """The box with the real fleet in front of the agent: the pod is handed to the fleet,
     which starts the agent and hands the pod over to it."""
 
-    def __init__(self, agent, directory, *, fleet=None, first=None, handover_seconds=20, **options):
+    def __init__(
+        self, agent, directory, *, fleet=None, first=None, handover_seconds=20, supervised=False, **options
+    ):
         super().__init__(agent, directory, **options)
         self.interface = FLEET_INTERFACE
         self.settings = fleet or {}
         self.implementation = first or agent  # whose fleet runs now
         self.handover_seconds = handover_seconds
+        self.supervised = supervised  # the C fleet's own children instead of units (spec §4)
         self.fleet_process = self.fleet_log = None
         self.handed = False
 
@@ -191,9 +207,32 @@ class FleetBox(Box):
             "EMOSA_BOX_AGENT": json.dumps(agent_command(self.agent, "{config}", self.binary)),
         }
         self.process = AgentProcess(self.units / f"{self.serial}.pid")
+        if self.supervised:
+            self.supervise(bin_dir)
         self.fleet_log = (self.directory / "fleet.log").open("a")
         await self.start_fleet()
         self.handed = await self.hand_over(self.handover_seconds)
+
+    def supervise(self, bin_dir):
+        """The fleet supervises the agents itself: the box's link helper and agent, its own
+        environment files' directory (empty: not the host's /etc/default), each agent's
+        output and pid file under the run root."""
+        self.run_root = self.directory / "run"
+        defaults = self.directory / "default"
+        defaults.mkdir(exist_ok=True)
+        link = bin_dir / "emosa-agent-link"
+        link.write_text(LINK.format(python=sys.executable))
+        link.chmod(0o755)
+        command = agent_command(self.agent, "{config}", self.binary)
+        words = ['"$1"' if a == "{config}" else shlex.quote(a) for a in command]
+        agent = bin_dir / "emosa-agent"
+        agent.write_text("#!/bin/sh\nexec " + " ".join(words) + "\n")
+        agent.chmod(0o755)
+        self.fleet_config.update(agents="supervised", run_root=str(self.run_root))
+        self.fleet_env.update(
+            EMOSA_DEFAULTS_DIR=str(defaults), EMOSA_AGENT=str(agent), EMOSA_AGENT_LINK=str(link)
+        )
+        self.process = AgentProcess(self.run_root / self.serial / "agent.pid")
 
     async def start_fleet(self):
         self.fleet_path.write_text(json.dumps(self.fleet_config, indent=2) + "\n")
@@ -524,6 +563,65 @@ async def fleet_forget(box):
     )
 
 
+async def new_agent(box, old, seconds=15):
+    """An agent other than old, once it runs: its pid, or None."""
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        box.controller.poll()
+        pid = box.process.pid()
+        if pid and pid != old and alive(pid):
+            return pid
+        await asyncio.sleep(0.2)
+    return None
+
+
+async def ended(pid, seconds=10):
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline and pid and alive(pid):
+        await asyncio.sleep(0.2)
+    return bool(pid) and not alive(pid)
+
+
+async def fleet_supervised(box):
+    """spec §4: the C fleet without systemd, the agents its own children. The pod is
+    handed over and onboarded with no systemctl; an agent that ends is started again and
+    provisions the pod again; the fleet stopped stops its agent, and started again starts
+    the registry's agent at once; forget, its own process, stops the agent, which is not
+    started again; the agent's output is in its log under the run root."""
+    first = await onboarded(box)
+    pid = box.process.pid()
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    if pid:
+        os.kill(pid, signal.SIGKILL)
+    restarted = await new_agent(box, pid)
+    again = await provision(box, searches, m1s) if restarted else False
+    box.stop_fleet()
+    with_the_fleet = await ended(restarted)
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    await box.restart_fleet()
+    registered = await new_agent(box, restarted)
+    after_start = await provision(box, searches, m1s) if registered else False
+    out = subprocess.run(
+        box.fleet_command("forget", box.serial), capture_output=True, text=True, env=box.fleet_env
+    )
+    forgotten = out.returncode == 0 and await ended(registered)
+    await asyncio.sleep(5)  # past the restart delay (3 s)
+    log = box.run_root / box.serial / "agent.log"
+    checks = {
+        "onboarded": bool(first.get("applied")),
+        "started_again_after_it_ended": bool(restarted),
+        "provisioned_again": again,
+        "stopped_with_the_fleet": with_the_fleet,
+        "started_from_the_registry": bool(registered),
+        "provisioned_after_the_fleet_started": after_start,
+        "stopped_by_forget": forgotten,
+        "not_started_again": box.process.pid() is None,
+        "its_log": log.is_file() and log.stat().st_size > 0,
+        "no_systemctl": not box.systemctl(),
+    }
+    return box.result(passed=all(checks.values()), checks=checks)
+
+
 # -- the GTP ------------------------------------------------------------------------------
 
 GTP_CONFIG = {
@@ -658,14 +756,20 @@ SCENARIOS = {
     "fleet-refusals": fleet_refusals,
     "fleet-takeover": fleet_takeover,
     "fleet-forget": fleet_forget,
+    "fleet-supervised": fleet_supervised,
 }
 OPTIONS = {
     "fleet-refusals": {"fleet": {"admit": [OTHER_POD]}, "handover_seconds": 6},
+    "fleet-supervised": {"supervised": True},
 }
 STANDALONE = {"gtp": gtp}  # no pod, agent or controller: links of the box's own
 
 
 def first_fleet(scenario, agent):
+    """The fleet that runs first: the other implementation's for a takeover, the C fleet
+    to supervise either agent, the agent's own otherwise."""
+    if scenario == "fleet-supervised":
+        return "c"
     return other(agent) if scenario == "fleet-takeover" else agent
 
 

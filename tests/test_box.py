@@ -316,6 +316,12 @@ def test_a_released_pod_is_archived_and_handed_over_anew(agent, tmp_path):
     assert result["archived"].startswith(result["released"] + ".released-")
 
 
+def test_a_fleet_without_systemd_supervises_its_agents(agent, tmp_path):
+    adapter(agent, "emosa-fleet-c")  # the C fleet supervises either agent
+    result = box("fleet-supervised", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_the_gtp_keeps_one_gretap_per_lease_in_the_lan_bridge(agent, tmp_path):
     if agent == "c":
         adapter(agent, "emosa-gtp-c")

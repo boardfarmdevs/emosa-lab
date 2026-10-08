@@ -381,6 +381,9 @@ def main():
         level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
     )
     config = json.loads(args.config.read_text())
+    if config.get("agents") == "supervised" and args.command != "list":
+        # spec §4: the agents as the fleet's own children are the C fleet's
+        parser.error('"agents": "supervised" is emosa-fleet-c\'s; this fleet runs systemd units')
     Path(config["state_root"]).mkdir(mode=0o700, parents=True, exist_ok=True)
     Path(config["config_dir"]).mkdir(parents=True, exist_ok=True)
     fleet = Fleet(config)

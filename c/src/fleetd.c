@@ -8,7 +8,11 @@
  * One owner thread (QUALITY.md §2): a poll loop over the front port and the pods'
  * connections, each a small state machine (identify, start the agent, hand over), with
  * systemctl run as a child the loop reaps. A pod's whole exchange has 5 s. The files
- * are the reference fleet's (fleet.c), so either fleet takes over from the other. */
+ * are the reference fleet's (fleet.c), so either fleet takes over from the other.
+ *
+ * Without systemd (a router's busybox init: "agents": "supervised" in the configuration, or
+ * EMOSA_AGENTS=supervised in the environment or /etc/default/emosa) the agents are the
+ * fleet's own children instead of emosa-agent@ units (supervise.h, spec §4). */
 #include <arpa/inet.h>
 #include <cjson/cJSON.h>
 #include <errno.h>
@@ -33,6 +37,24 @@
 #include "version.h"
 #include "jsonrpc.h"
 #include "proc.h"
+#include "supervise.h"
+
+#ifndef EMOSA_AGENT_PROGRAM
+#define EMOSA_AGENT_PROGRAM "/usr/bin/emosa-agent-c"
+#endif
+#ifndef EMOSA_LINK_PROGRAM
+#define EMOSA_LINK_PROGRAM "/usr/libexec/emosa/emosa-agent-link"
+#endif
+#define DEFAULTS_DIR "/etc/default" /* emosa and emosa-POD: the agents' environment files */
+#define DEFAULTS_SIZE 400
+#define AGENT_LOG_MAX 262144L /* bytes of a supervised agent's log, twice that kept */
+
+/* where emosa and emosa-POD are: EMOSA_DEFAULTS_DIR (the lab in a box's), else /etc/default */
+static const char *defaults_dir(void)
+{
+    const char *dir = getenv("EMOSA_DEFAULTS_DIR");
+    return dir && *dir && strlen(dir) < DEFAULTS_SIZE ? dir : DEFAULTS_DIR;
+}
 
 #define TIMEOUT 5.0              /* seconds for one pod's whole exchange (spec §4) */
 #define MESSAGE_MAX (1024 * 1024) /* a select of four columns is far smaller */
@@ -63,7 +85,66 @@ static double wall(void)
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
 }
 
-/* -- the agents' units --------------------------------------------------------------- */
+/* -- the agents: systemd's units, or the fleet's own children ------------------------- */
+
+typedef struct {
+    bool supervised;    /* the agents are the fleet's children (supervise.h) */
+    em_supervisor *sup; /* serve, supervised: its children */
+    char log_root[512]; /* supervised: each agent's log and pid file, LOG_ROOT/POD */
+} agents;
+
+/* "agents" in the configuration; else EMOSA_AGENTS from the environment, else from
+ * /etc/default/emosa; else systemd. False (*why) for a value that is neither. */
+static bool agents_mode(const cJSON *config, bool *supervised, char *why, size_t size)
+{
+    const char *mode = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(config, "agents"));
+    char value[32] = "", file[DEFAULTS_SIZE + 8];
+    if (!mode)
+        mode = getenv("EMOSA_AGENTS");
+    EM_FORMAT_FIXED(file, sizeof(file), "%s/emosa", defaults_dir()); /* the directory's length is bounded */
+    if (!mode && em_sup_file_value(file, "EMOSA_AGENTS", value, sizeof(value)))
+        mode = value;
+    if (!mode || !*mode)
+        mode = "systemd";
+    *supervised = !strcmp(mode, "supervised");
+    if (!*supervised && strcmp(mode, "systemd")) {
+        (void)em_format(why, size, "EMOSA_AGENTS=%s: neither systemd nor supervised", mode);
+        return false;
+    }
+    return true;
+}
+
+/* the agents' logs: the run root (a RAM disk), else the state root */
+static bool agents_open(agents *a, const cJSON *config, bool serving, char *why, size_t size)
+{
+    memset(a, 0, sizeof(*a));
+    if (!agents_mode(config, &a->supervised, why, size))
+        return false;
+    if (!a->supervised)
+        return true;
+    const char *run = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(config, "run_root"));
+    const char *state = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(config, "state_root"));
+    if (!em_copy(a->log_root, sizeof(a->log_root), run ? run : state)) {
+        (void)em_format(why, size, "the agents' log root is too long");
+        return false;
+    }
+    if (!serving)
+        return true;
+    em_sup_config c = {
+        .agent = EMOSA_AGENT_PROGRAM,
+        .link = EMOSA_LINK_PROGRAM,
+        .config_dir = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(config, "config_dir")),
+        .log_root = a->log_root,
+        .defaults = defaults_dir(),
+        .restart_delay = 3.0,
+        .stop_timeout = 5.0,
+        .log_max = AGENT_LOG_MAX,
+    };
+    a->sup = em_sup_new(&c);
+    if (!a->sup)
+        (void)em_format(why, size, "the agents' paths are too long");
+    return a->sup != NULL;
+}
 
 static bool unit_command(const char *action, const char *pod_id, pid_t *pid)
 {
@@ -76,7 +157,12 @@ static bool unit_command(const char *action, const char *pod_id, pid_t *pid)
 
 static void stop_agent(void *ctx, const char *pod_id)
 {
-    (void)ctx;
+    const agents *mode = ctx;
+    if (mode->supervised) { /* the serving fleet's child: the pid it recorded */
+        if (!em_sup_stop_recorded(mode->log_root, pod_id, 5.0))
+            WARN("pod %s: its agent did not stop", pod_id);
+        return;
+    }
     char unit[96];
     EM_FORMAT_FIXED(unit, sizeof(unit), "emosa-agent@%s", pod_id);
     const char *argv[] = {"systemctl", "disable", "-q", "--now", unit, NULL};
@@ -89,7 +175,13 @@ static void stop_agent(void *ctx, const char *pod_id)
  * its configuration changed), each waited for; as the reference, a failure only logged */
 static void start_agent(void *ctx, const char *pod_id, bool changed)
 {
-    (void)ctx;
+    const agents *mode = ctx;
+    if (mode->sup) { /* not waited for: the loop starts it */
+        (void)em_sup_start(mode->sup, pod_id, changed, monotonic());
+        LOG("pod %s: its agent %s from the registry", pod_id,
+            changed ? "restarted, its configuration changed," : "started");
+        return;
+    }
     char unit[96];
     EM_FORMAT_FIXED(unit, sizeof(unit), "emosa-agent@%s", pod_id);
     const char *enable[] = {"systemctl", "enable", "-q", unit, NULL};
@@ -113,6 +205,7 @@ typedef struct {
     stage stage;
     pid_t child;
     bool child_running;
+    unsigned ticket; /* supervised, STARTING: the agent's start asked for (em_sup_start) */
     em_fleet_handover handover;
     char *in, *out;
     size_t in_len, in_cap, out_len, out_off;
@@ -121,6 +214,7 @@ typedef struct {
 
 typedef struct {
     em_fleet fleet;
+    agents agents;
     int listener;
     char unix_path[sizeof(((struct sockaddr_un *)0)->sun_path)];
     conn *conns;
@@ -213,6 +307,13 @@ static bool start_child(conn *c, const char *action)
     return c->child_running;
 }
 
+/* the agent runs: the pod's manager_addr set to it */
+static void hand_over(conn *c)
+{
+    c->stage = HANDING_OVER;
+    request(c, "transact", cJSON_Duplicate(c->handover.update, 1), 2);
+}
+
 /* the reply to our request: the next step, or the problem that ends the exchange */
 static const char *on_reply(server *s, conn *c, const cJSON *result, char *problem, size_t size)
 {
@@ -225,6 +326,13 @@ static const char *on_reply(server *s, conn *c, const cJSON *result, char *probl
         if (outcome != EM_FLEET_HANDOVER) {
             (void)em_format(problem, size, "%s", c->handover.why);
             return problem;
+        }
+        if (s->agents.sup) { /* the fleet's child: nothing to enable */
+            c->stage = STARTING;
+            c->ticket = em_sup_start(s->agents.sup, c->handover.entry.pod_id, c->handover.changed, monotonic());
+            if (!c->ticket) /* it runs already */
+                hand_over(c);
+            return NULL;
         }
         c->stage = ENABLING;
         return start_child(c, "enable") ? NULL : "systemctl could not be started";
@@ -321,8 +429,20 @@ static const char *on_child(server *s, conn *c, int status)
         c->stage = STARTING;
         return start_child(c, c->handover.changed ? "restart" : "start") ? NULL : "systemctl could not be started";
     }
-    c->stage = HANDING_OVER;
-    request(c, "transact", cJSON_Duplicate(c->handover.update, 1), 2);
+    hand_over(c);
+    return NULL;
+}
+
+/* supervised: the agent this exchange asked for, once it runs or failed */
+static const char *on_supervised(server *s, conn *c)
+{
+    int started = em_sup_started(s->agents.sup, c->handover.entry.pod_id, c->ticket);
+    if (started < 0)
+        return "the agent could not be started";
+    if (started > 0) {
+        c->ticket = 0;
+        hand_over(c);
+    }
     return NULL;
 }
 
@@ -377,16 +497,18 @@ static int serve(server *s)
     s->listener = listen_on(listen_name, s->unix_path, sizeof(s->unix_path));
     if (s->listener < 0) {
         FAIL("cannot listen on %s", listen_name);
+        em_sup_free(s->agents.sup); /* none started yet */
         return 1;
     }
     const cJSON *concurrency = cJSON_GetObjectItemCaseSensitive(s->fleet.config, "concurrency");
     s->concurrency = cJSON_IsNumber(concurrency) ? (size_t)concurrency->valueint : 16;
     s->conns = em_calloc(s->concurrency, sizeof(*s->conns));
     char *ports = cJSON_PrintUnformatted(cJSON_GetObjectItemCaseSensitive(s->fleet.config, "ports"));
-    LOG("EMOSA C fleet %s (%s): %s, agents on ports %s", EMOSA_VERSION, EMOSA_REVISION, listen_name, ports);
+    LOG("EMOSA C fleet %s (%s): %s, agents on ports %s, %s", EMOSA_VERSION, EMOSA_REVISION, listen_name, ports,
+        s->agents.sup ? "supervised by the fleet" : "systemd units");
     free(ports);
     /* the agents the registry already has, before the first pod (an upgraded image) */
-    size_t unstarted = em_fleet_start_registered(&s->fleet, start_agent, NULL);
+    size_t unstarted = em_fleet_start_registered(&s->fleet, start_agent, &s->agents);
     if (unstarted == SIZE_MAX)
         WARN("the fleet registry is unreadable: no agent started");
     else if (unstarted)
@@ -403,14 +525,16 @@ static int serve(server *s)
             p[n++] = (struct pollfd){c->fd, (short)(POLLIN | (c->out_len > c->out_off ? POLLOUT : 0)), 0};
             if (c->deadline < wake)
                 wake = c->deadline;
-            if (c->child_running && now + 0.05 < wake)
-                wake = now + 0.05; /* systemctl: reaped promptly */
+            if ((c->child_running || c->ticket) && now + 0.05 < wake)
+                wake = now + 0.05; /* systemctl reaped, a supervised start seen, promptly */
         }
         int timeout = wake > now ? (int)((wake - now) * 1000) + 1 : 0;
         if (poll(p, n, timeout) < 0 && errno != EINTR) {
             WARN("poll: %s", strerror(errno));
             break;
         }
+        if (s->agents.sup)
+            em_sup_step(s->agents.sup, monotonic());
         size_t first = listening ? 1 : 0, handled = s->nconns;
         /* the connections polled, newest first, as finish() moves the last into a gap */
         for (size_t k = handled; k-- > 0;) {
@@ -423,6 +547,8 @@ static int serve(server *s)
                 verdict = read_conn(s, c, problem, sizeof(problem));
             if (!verdict && c->child_running && em_reaped(c->child, &status))
                 verdict = on_child(s, c, status);
+            if (!verdict && c->ticket && c->stage == STARTING)
+                verdict = on_supervised(s, c);
             if (!verdict && !write_conn(c))
                 verdict = "connection lost";
             if (!verdict && monotonic() > c->deadline)
@@ -436,6 +562,11 @@ static int serve(server *s)
     }
     while (s->nconns)
         finish(s, s->nconns - 1, NULL);
+    if (s->agents.sup) { /* the fleet's agents end with it; its next start starts them again */
+        LOG("stopping the agents");
+        em_sup_free(s->agents.sup);
+        s->agents.sup = NULL;
+    }
     free(p);
     free(s->conns);
     free(s->orphans);
@@ -514,7 +645,8 @@ int main(int argc, char **argv)
         cJSON_Delete(config);
         return 1;
     }
-    if (!em_fleet_open(&s.fleet, config, why, sizeof(why))) {
+    if (!em_fleet_open(&s.fleet, config, why, sizeof(why)) ||
+        ((serve_cmd || forget_cmd) && !agents_open(&s.agents, s.fleet.config, serve_cmd, why, sizeof(why)))) {
         FAIL("%s", why);
         em_fleet_close(&s.fleet);
         return 1;
@@ -531,7 +663,7 @@ int main(int argc, char **argv)
         struct tm local;
         if (!localtime_r(&t, &local) || !strftime(stamp, sizeof(stamp), "%Y%m%dT%H%M%S", &local))
             EM_FORMAT_FIXED(stamp, sizeof(stamp), "%lld", (long long)t);
-        cJSON *entry = em_fleet_forget(&s.fleet, argv[3], stamp, stop_agent, NULL);
+        cJSON *entry = em_fleet_forget(&s.fleet, argv[3], stamp, stop_agent, &s.agents);
         if (entry)
             print_json(entry);
         else

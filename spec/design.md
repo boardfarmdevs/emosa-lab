@@ -99,6 +99,10 @@ Service management (reference: systemd, `deploy/adapter/files`):
 - the fleet enables and starts `emosa-agent@<serial>`, and disables it on
   `forget`.
 
+Without systemd (a router's busybox init), the C fleet supervises the agents itself
+(`"agents": "supervised"`, spec §4). It runs the same helper and agent with the same
+environment files, and writes each agent's output to `<run_root>/<serial>/agent.log`.
+
 An implementation may use another supervisor; it MUST provide the same
 per-pod isolation, restart on failure and start ordering (interface before
 agent).

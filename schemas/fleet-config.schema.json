@@ -38,6 +38,7 @@
     "config_dir": {"type": "string", "minLength": 1},
     "admit": {"oneOf": [{"const": "*"}, {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 64}}], "default": "*"},
     "concurrency": {"type": "integer", "minimum": 1, "maximum": 256, "default": 16},
+    "agents": {"enum": ["systemd", "supervised"], "default": "systemd", "description": "How the agents run (spec §4). systemd: an emosa-agent@POD unit each, enabled and started by the fleet. supervised: the C fleet's own children, for a system without systemd (a router's busybox init): the link helper, then the agent, with /etc/default/emosa and /etc/default/emosa-POD in their environment, started again 3 s after one ends, stopped when its pod is forgotten and when the fleet ends; each one's output in LOG_ROOT/POD/agent.log (the run root, else the state root), kept to two files of 256 KiB. Absent: EMOSA_AGENTS from the fleet's environment or /etc/default/emosa, else systemd."},
     "pods": {
       "type": "object",
       "description": "Per-pod overrides of the agent settings above, by serial number.",

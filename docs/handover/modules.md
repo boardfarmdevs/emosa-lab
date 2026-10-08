@@ -70,6 +70,7 @@ the C follows until `emosa-vectors` passes again ([testing.md](testing.md)).
 | `fleet.c` | the fleet: admission, the registry (ports, interfaces, AL MACs), agent configurations, `forget` | `emosa.agent.fleet` | vectors `fleet.json`, `fleet-sessions.json`, box `fleet-*`, fuzz `fleet` |
 | `gtp.c` | the GRE termination point: dnsmasq's configuration, a gretap per lease, reconciliation | `emosa.gtp` | vectors `gtp.json`, box `gtp`, fuzz `gtp` |
 | `proc.c` | running other programs without a shell (`systemctl`, `ip`), output captured | `subprocess` in the reference | box `fleet-*`, `gtp` |
+| `supervise.c` | without systemd (`"agents": "supervised"`): each pod's link helper and agent as the fleet's children, their environment files, restarts, stops, bounded logs | none (the reference refuses it) | units `environment_files`, `supervisor`; box `fleet-supervised` |
 
 ## Shared
 
