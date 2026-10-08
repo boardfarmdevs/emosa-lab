@@ -871,7 +871,7 @@
     "procedure_gate_satisfied": false
   },
   "native_peer_observation_review": {
-    "guide": "docs/guides/onboarding-readiness.md",
+    "guide": "spec/box-scenarios.md",
     "evidence": "docs/records/evidence/onboarding-readiness/summary.json",
     "implementation": "lab/src/emosa_lab/evaluation/peer_capture.py",
     "tests": "tests/test_peer_capture.py",
@@ -887,7 +887,7 @@
     ],
     "qualification_effect": "No P0 freeze, full profile qualification, IEEE vector validation or EMOSA wire onboarding.",
     "candidate_experiment": {
-      "guide": "docs/guides/native-compatibility.md",
+      "guide": "spec/box-scenarios.md",
       "evidence": "docs/records/evidence/native-compatibility/summary.json",
       "status": "two_bounded_native_wired_passes_profile_and_ordering_gaps_remain",
       "change": "Isolated NL80211 libbwl HE length fix; sole-fronthaul policy for external native agent",
@@ -918,7 +918,7 @@
   "synthetic_radio_scope_preparation": {
     "implementation": "src/emosa/opensync/radio_scope.py",
     "tests": "tests/test_radio_scope.py",
-    "guide": "docs/guides/onboarding-readiness.md",
+    "guide": "spec/box-scenarios.md",
     "physical_qualification": false,
     "wire_admission": false
   },
@@ -958,7 +958,7 @@
   ],
   "synthetic_topology_projection": {
     "status": "implemented_simulation_diagnostic_only",
-    "guide": "docs/guides/observed-topology.md",
+    "guide": "spec/README.md",
     "implementation": [
       "src/emosa/topology_bindings.py",
       "src/emosa/opensync/topology.py",
@@ -980,7 +980,7 @@
   },
   "synthetic_radio_capability_projection": {
     "status": "implemented_simulation_diagnostic_only",
-    "guide": "docs/guides/radio-capabilities.md",
+    "guide": "spec/README.md",
     "implementation": "src/emosa/radio_capabilities.py",
     "input_schema": "schemas/radio-capabilities.schema.json",
     "catalogue": "src/emosa/operating_classes.py",
@@ -1013,7 +1013,7 @@
       "Native peer profile mismatch resolution",
       "IEEE 1905 base/amendment review and full wire exchange integration"
     ],
-    "extension_guide": "docs/guides/technology-inventory.md",
+    "extension_guide": "spec/README.md",
     "extension_scope": "Selected HT/VHT, Device Inventory and independent Wi-Fi 6 companion mapping; complete HE set pending"
   },
   "profile_readiness_audit": {
@@ -1048,7 +1048,7 @@
   },
   "synthetic_technology_inventory_projection": {
     "status": "implemented_selected_simulation_diagnostics_only",
-    "guide": "docs/guides/technology-inventory.md",
+    "guide": "spec/README.md",
     "implementation": "src/emosa/capability_extensions.py",
     "input_schema": "schemas/radio-capabilities.schema.json",
     "evidence": "docs/records/evidence/technology-inventory/summary.json",
@@ -1084,7 +1084,7 @@
   },
   "he_wifi6_component": {
     "status": "standalone_component_only",
-    "guide": "docs/guides/he-wifi6.md",
+    "guide": "spec/README.md",
     "implementation": [
       "src/emosa/he_mcs.py",
       "src/emosa/easymesh_payloads.py"
@@ -1109,11 +1109,11 @@
     "profile_advertisement_ready": false,
     "controller_onboarding_proven": false,
     "physical_pod_proven": false,
-    "service_projection": "docs/guides/wifi6-inputs.md"
+    "service_projection": "spec/README.md"
   },
   "synthetic_wifi6_role_projection": {
     "status": "implemented_selected_simulation_diagnostics_only",
-    "guide": "docs/guides/wifi6-inputs.md",
+    "guide": "spec/README.md",
     "implementation": "src/emosa/capability_extensions.py",
     "input_schema": "schemas/radio-capabilities.schema.json",
     "evidence": "docs/records/evidence/wifi6-inputs/summary.json",
@@ -1150,7 +1150,7 @@
       "Actual unchanged-pod capability evidence and independently observed behavior"
     ]
   },
-  "first_complete_experiment_contract": "docs/guides/first-wire-experiment.md",
+  "first_complete_experiment_contract": "spec/box-scenarios.md",
   "resolved_ambiguities": [
     {
       "question": "EasyMesh 6.1 section 17.1.3 points to IEEE section 6.3.8 for WSC, while its section 6.1 uses that IEEE pointer for the autoconfiguration response. Verify the WSC base clause from IEEE rather than silently correcting the reference.",
@@ -1693,7 +1693,7 @@
     ]
   },
   "native_controller_discovery_probe": {
-    "guide": "docs/guides/native-discovery.md",
+    "guide": "spec/box-scenarios.md",
     "evidence": "docs/records/evidence/native-discovery/summary.json",
     "implementation": "lab/src/emosa_lab/wire/controller_probe.py",
     "runner": "deploy/peer-baseline/discovery-trial.py",
@@ -1719,7 +1719,7 @@
     "physical_pod_proven": false
   },
   "native_controller_counter_candidate": {
-    "guide": "docs/guides/controller-counter-candidate.md",
+    "guide": "spec/box-scenarios.md",
     "evidence": "docs/records/evidence/native-controller-counter/summary.json",
     "patch": "deploy/peer-baseline/patches/0004-controller-counter-capability.patch",
     "build": "deploy/peer-baseline/compatibility/build-controller.py",

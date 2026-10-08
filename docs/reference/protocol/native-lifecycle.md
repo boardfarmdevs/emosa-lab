@@ -75,7 +75,7 @@ systemd stop policy. They do not collect process memory or credentials.
 ## 2. Build an isolated candidate — HOST
 
 Prepare the three hash-pinned native input archives and build prerequisites in
-the [controller candidate guide](../../guides/controller-counter-candidate.md).
+[the lab in a box](../../../spec/box-scenarios.md).
 Then use a new directory:
 
 ```bash

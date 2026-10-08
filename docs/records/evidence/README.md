@@ -54,4 +54,4 @@ establish EMOSA wire onboarding, physical-pod qualification or universal peer
 compatibility. See the [evaluation guides](../README.md) for context.
 
 Do not put raw lab directories, credentials or unreviewed physical captures here.
-Follow the [evidence curation procedure](../../guides/team-manual.md#173-curate-evidence-instead-of-copying-a-lab-directory).
+Follow the evidence curation procedure.

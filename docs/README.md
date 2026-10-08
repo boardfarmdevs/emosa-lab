@@ -37,6 +37,7 @@ wins.
 | --- | --- |
 | [The adapter kit](../deploy/adapter/README.md) | installing EMOSA into an EasyMesh lab (both implementations) |
 | [The reference lab](../deploy/opensync-lab/README.md) | EMOSA with a prplMesh controller on the OpenSync lab: several pods, the fault workload (`lab.sh workload`), the Wi-Fi backhaul |
+| [Physical pods](guides/physical-pods.md), [their qualification](guides/pod-qualification.md) | an operator-provisioned pod into opensync-lab and EMOSA; a pod's read-only qualification (`emosa qualify-pod`) |
 | [EMOSA in the RDK lab](concepts/rdk-lab.md) | the RDK lab's EMOSA option: its design, how to run it, pods in the lab's rooms, the room suite with them |
 | [Repository README](../README.md) | what EMOSA does today, how to develop and test it |
 
@@ -67,8 +68,6 @@ wins.
 - [Protocol](reference/protocol/README.md): specification inputs, the protocol matrix, WSC.
 - [Evaluation](records/README.md): native controller and agent baselines,
   OVSDB and hwsim observations, dependency qualification.
-- [Guides](guides/README.md): the team manual, the learning path and the
-  experiment guides from the prototype phase.
 
 The [interactive explorer](https://vcpe.dev/emosa-lab/) presents
 the architecture and results in a browser.

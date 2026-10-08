@@ -186,6 +186,6 @@ an extra semantic request must not supply the actual Config change.
 
 Run that causal path with the existing OVSDB/hwsim manager and independent
 wpa_supplicant client, including duplicate/fault/restart cases. Then qualify and
-substitute the unchanged physical pod under the [first experiment contract](../../guides/first-wire-experiment.md).
+substitute the unchanged physical pod under [the lab in a box](../../../spec/box-scenarios.md).
 No private physical connection has been supplied. The eventual proof remains
 **real EasyMesh messages → EMOSA → unchanged physical pod → independent client**.

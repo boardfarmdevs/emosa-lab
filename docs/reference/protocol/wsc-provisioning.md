@@ -50,7 +50,7 @@ association or client traffic.
 ## 2. Build the two independent native components — HOST
 
 Use the development checkout, as your normal user, after the
-[manual installation](../../guides/team-manual.md#3-set-up-a-developer-checkout).
+[the handover](../../handover/README.md).
 No LXD VM is required. On Ubuntu, install missing build prerequisites once:
 
 ```bash
@@ -174,7 +174,7 @@ physical-device enable flag. `emosa serve` does not activate this bridge.
 
 See the [protocol matrix](protocol-matrix.json),
 [retained results](../../records/evidence/wsc-provisioning/README.md) and
-[complete experiment contract](../../guides/first-wire-experiment.md).
+[the lab in a box](../../../spec/box-scenarios.md).
 The next integration needs a compatible native controller, admitted
 discovery/Early/capability sequence and controller-owned inventory evidence.
 The next [Ethernet WSC/radio exercise](wsc-wire-radio.md) already reproduces this

@@ -9,7 +9,7 @@ its working components do not yet justify advertising Profile 1.
 This guide makes that gap inspectable. It introduces an offline audit and three
 new value codecs, using the available EasyMesh 6.1 specification. Run everything
 here on **HOST**, from your development or learning checkout after
-[manual chapter 3](../../guides/team-manual.md#3-set-up-a-developer-checkout).
+[the handover](../../handover/README.md).
 No service, OVSDB server, LXD, radio, controller or physical pod is required.
 
 The [retained results](../../records/evidence/profile-audit/summary.json) distinguish tested
@@ -29,7 +29,7 @@ cannot establish all four. For example, a pod may support steering, while EMOSA
 still lacks the request, policy, timing, result and error procedures. Advertising
 the feature would promise behavior that the adapter cannot yet deliver.
 
-Similarly, the [radio-capability diagnostic](../../guides/radio-capabilities.md)
+Similarly, [the specification](../../../spec/README.md)
 checks explicit synthetic Basic Capabilities inputs. Its `ready: true` applies
 to that diagnostic. It does not mean a complete AP Capability Report or an
 advertised profile is ready.
@@ -221,9 +221,9 @@ applicable, backhaul address handling, steering and recovery. A radio feature
 that EMOSA cannot configure or observe through that interface is a compatibility
 gap to record, not a bit to advertise optimistically.
 
-The [technology/inventory exercise](../../guides/technology-inventory.md) now adds
+[The specification](../../../spec/README.md) now adds
 synthetic HT/VHT and Device Inventory mapping, plus an opaque HE value codec.
-The [HE/Wi-Fi 6 exercise](../../guides/he-wifi6.md) adds the standalone companion codec and IEEE MCS parser. The [Wi-Fi 6 input exercise](../../guides/wifi6-inputs.md) now maps explicit synthetic AP/STA declarations through the service. The separate `0x88` conversion and independently qualified feature inputs remain next. These components do not complete AP reporting. Both **IEEE 1905.1-2013 and IEEE 1905.1a-2014** are now obtained.
+[The specification](../../../spec/README.md) adds the standalone companion codec and IEEE MCS parser. [The specification](../../../spec/README.md) now maps explicit synthetic AP/STA declarations through the service. The separate `0x88` conversion and independently qualified feature inputs remain next. These components do not complete AP reporting. Both **IEEE 1905.1-2013 and IEEE 1905.1a-2014** are now obtained.
 Restricted [Early/Topology report builders](reports.md) are implemented; full AP
 Capability/profile integration and the native peer's recorded profile mismatch
 still need resolution for the chosen build/policy. Physical access remains pending.

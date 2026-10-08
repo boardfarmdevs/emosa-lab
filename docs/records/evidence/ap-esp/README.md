@@ -6,7 +6,7 @@ SIGSEGV on BE+VI. **These synthetic parser diagnostics do not qualify AP sensors
 ESP conversion, complete reporting or sustained acceptance.**
 
 Use the [reproduction guide](../../../reference/protocol/native-ap-esp.md),
-[manual §13.32](../../../guides/team-manual.md#1332-verify-that-the-native-controller-can-receive-sparse-ap-service-fields)
+manual §13.32
 and learning-path step 22. The affected code is in the C++ evaluation controller;
 EMOSA remains the separate EasyMesh-to-OpenSync adapter.
 

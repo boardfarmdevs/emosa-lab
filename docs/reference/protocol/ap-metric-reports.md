@@ -110,7 +110,7 @@ guide's required measurement or complete-report acceptance.
 
 ## Step 1 — replay independently checked frame examples on HOST
 
-Install the basic development environment from [manual chapter 3](../../guides/team-manual.md#3-set-up-a-developer-checkout)
+Install the basic development environment from [the handover](../../handover/README.md)
 and the lab's selected tshark package. No VM or root privileges are needed here:
 
 ```bash

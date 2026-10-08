@@ -3,7 +3,7 @@
 The optional owned Ethernet profile now completes **measured pod observations
 → OpenSync-schema OVSDB → EMOSA → actual IEEE 1905 reply → native controller
 interface statistics**. The [guide](../../../reference/protocol/native-peer-metrics.md) and
-[manual §13.28](../../../guides/team-manual.md#1328-deliver-the-measured-peer-report-to-the-controller)
+manual §13.28
 explain the profile, field meanings and reproduction commands.
 
 This is a short reporting/recovery regression. It does not complete the full

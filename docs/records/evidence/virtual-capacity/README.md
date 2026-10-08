@@ -97,7 +97,7 @@ metric delivery or as a complete sustained acceptance pass.
 ## Reproduction and scope
 
 See the [step-by-step guide](../../../reference/protocol/virtual-link-capacity.md) and
-[manual exercise 13.26](../../../guides/team-manual.md#1326-measure-a-declared-virtual-link-service).
+manual exercise 13.26.
 The [source provenance](source-provenance.json) pins five reconstructed scheduler
 files from the exact Ubuntu kernel package. [Runtime provenance](runtime-provenance.json)
 records the loaded-kernel version, veth/TBF modules and tool digests. No kernel

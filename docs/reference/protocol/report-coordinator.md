@@ -47,7 +47,7 @@ available in the pinned table.
 ## 2. Run the database exercise on HOST
 
 Start in the development or learning checkout after the normal installation and
-[OVSDB build](../../guides/team-manual.md#5-build-and-exercise-the-real-ovsdb-simulator).
+[the handover](../../handover/README.md).
 No root, LXD or radio is needed for this first run. Choose a new output directory.
 
 ```bash

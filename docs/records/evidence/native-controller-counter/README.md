@@ -2,7 +2,7 @@
 
 This evidence removes one measured native discovery defect. It does not establish
 controller onboarding, normative profile conformance or physical pod behavior.
-Use the [step-by-step guide](../../../guides/controller-counter-candidate.md).
+Use the step-by-step guide.
 
 | Measurement | Result |
 | --- | --- |

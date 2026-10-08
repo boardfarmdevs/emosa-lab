@@ -51,7 +51,7 @@ container hosts that endpoint here; its native controller process stays stopped.
 
 ## 2. Prepare the existing owned lab — HOST
 
-Complete [manual §3](../../guides/team-manual.md#3-set-up-a-developer-checkout), the
+Complete [the handover](../../handover/README.md), the
 [baseline resource preparation](../../../deploy/peer-baseline/README.md), and the
 [radio-manager prerequisites](../../../deploy/radio-manager/README.md#prepare-and-run).
 The dedicated `emosa-lab` VM must already have:

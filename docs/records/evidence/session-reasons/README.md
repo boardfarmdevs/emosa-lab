@@ -7,7 +7,7 @@ message is sent.** This evidence does not complete sustained acceptance or
 qualify an unchanged physical OpenSync pod.
 
 Follow the [reproduction guide](../../../reference/protocol/live-session-reasons.md),
-[manual §13.31](../../../guides/team-manual.md#1331-capture-the-actual-disconnect-reason-while-the-system-runs)
+manual §13.31
 and learning-path step 21. The observer is part of the evaluation platform;
 EMOSA remains the EasyMesh-to-OpenSync adapter.
 

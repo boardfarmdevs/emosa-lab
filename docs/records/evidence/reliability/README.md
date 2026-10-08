@@ -2,8 +2,8 @@
 
 These are synthetic OVSDB/service observations. They do **not** prove real
 EasyMesh controller onboarding, physical-pod compatibility, radio behavior or
-production capacity. Follow the [learning sequence](../../../guides/learning-path.md),
-[secure-fleet guide](../../../guides/secure-fleet.md) and
+production capacity. Follow the learning sequence,
+secure-fleet guide and
 [clean reproduction workflow](../../../../deploy/reliability/README.md) to repeat them.
 
 All final workloads passed, including twelve-cycle runs on HOST and in the

@@ -9,7 +9,7 @@ No actual endpoint or authentication material has been supplied. Physical-pod
 connection remains **pending** until the operator populates a private file and
 provides its absolute path. EMOSA does not create or infer pod credentials.
 
-The separate [radio-capability input mapper](radio-capabilities.md) now exercises
+The separate radio-capability input mapper ([the specification](../../spec/README.md)) now exercises
 explicit capacity, operating-class/channel and maximum-EIRP claims in simulation.
 This collector does not discover those supported limits automatically. A physical
 profile needs reviewed evidence for the actual model, firmware and regulatory
@@ -120,7 +120,7 @@ already authorized pod-initiated connection. It requires mutual TLS and the
 expected leaf certificate pin before admitting a session. The collector does
 not redirect a cloud endpoint, change pod settings or enroll certificates.
 The four-pending-handshake/three-second limits and invalid-client checks are
-covered by [synthetic transport tests](secure-fleet.md); physical connection
+covered by synthetic transport tests ([the specification](../../spec/README.md), §4); physical connection
 qualification remains pending until the operator supplies the private path.
 A remote plaintext TCP endpoint is rejected. Test certificates are generated
 only for local regression tests, never for a physical pod.
@@ -190,7 +190,7 @@ may require redaction; a capture must be reviewed before publication. Share only
 the local file paths through chat, not credentials or raw message bodies.
 
 The next analysis would identify the actual protocol and roles, compare observed
-columns and sequencing with the [connecting-pod simulator](connecting-pod.md),
+columns and sequencing with the [lab in a box](../../spec/box-scenarios.md)'s recorded pod,
 and derive reviewed fixtures or explicit incompatibilities. Replaying recorded
 success responses is not a substitute for a stateful simulator, pod qualification
 or independent evidence that an EMOSA-driven change actually took effect.

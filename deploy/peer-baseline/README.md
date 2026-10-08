@@ -16,7 +16,7 @@ exits after a 15-minute EMOSA recovery workload. It is optional and the original
 baseline is restored afterward.
 
 For the separate candidate HAL experiment and a wired sole-fronthaul policy,
-follow [native compatibility](../../docs/guides/native-compatibility.md). It uses
+follow [the lab in a box](../../spec/box-scenarios.md). It uses
 isolated build directories and temporary libraries with restoration. The pinned
 baseline artifacts and the default two-BSS policy remain the reference above.
 

@@ -33,4 +33,4 @@ The new native-field unit cross-check reads the existing retained native capture
 it does not generate a new live native-controller result. Known missing fields
 and the Table 117 conflict remain visible. See the
 [walkthrough](../../../reference/protocol/discovery-session.md) and
-[manual §13.11](../../../guides/team-manual.md#1311-discover-the-controller-before-reporting-the-simulated-pod).
+manual §13.11.

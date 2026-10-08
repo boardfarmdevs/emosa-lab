@@ -22,7 +22,7 @@ associate the decoded values with a trusted peer, exchange and represented pod.
 The Python implementation is [easymesh_payloads.py](../../../src/emosa/easymesh_payloads.py).
 It is a component of the EasyMesh-to-OpenSync adapter, not a separate virtual-agent
 process. Its offline inspection CLI is an evaluation tool. The running adapter
-now uses the Operational BSS codec in an optional [read-only topology report](../../guides/observed-topology.md)
+now uses the Operational BSS codec in an optional read-only topology report ([the specification](../../../spec/README.md))
 with explicit persisted bindings and a complete observed graph. It does not
 advertise those values to a controller.
 
@@ -92,7 +92,7 @@ Other deliberate boundaries:
 
 ## 1. Decode a service value
 
-Complete the [basic installation](../../guides/team-manual.md#3-set-up-a-developer-checkout),
+Complete [the handover](../../handover/README.md),
 then run:
 
 ```bash
@@ -227,15 +227,15 @@ keeps this distinction explicit.
 ## What follows this component?
 
 Stable per-pod radio/BSS identity binding and complete observed topology projection
-now have a [synthetic service exercise](../../guides/observed-topology.md). The
-[radio-capability diagnostic](../../guides/radio-capabilities.md) maps explicit
+now have a synthetic service exercise ([the specification](../../../spec/README.md)). The
+[the specification](../../../spec/README.md) maps explicit
 synthetic inputs to `0x85`, rechecking identity, evidence and current context.
 Selected AP/Profile-2/Advanced feature value codecs and an executable
 [requirement-family audit](profile-readiness.md) are now available. Physical
 capability qualification and the complete mandatory-function review remain
-pending. The [technology/inventory exercise](../../guides/technology-inventory.md)
+pending. [The specification](../../../spec/README.md)
 now maps explicit synthetic HT/VHT and Device Inventory inputs; HE conversion
-remains unfinished; a [selected Wi-Fi 6 role mapper](../../guides/wifi6-inputs.md) now provides the companion through a separate read-only service result. The [HE/Wi-Fi 6 exercise](../../guides/he-wifi6.md) now adds the standalone `0xAA` codec and IEEE MCS field parser, including the captured native zero-length negative case. Actual discovery/topology/WSC processing also
+remains unfinished; a selected Wi-Fi 6 role mapper ([the specification](../../../spec/README.md)) now provides the companion through a separate read-only service result. [The specification](../../../spec/README.md) now adds the standalone `0xAA` codec and IEEE MCS field parser, including the captured native zero-length negative case. Actual discovery/topology/WSC processing also
 needs the missing **IEEE 1905.1-2013 and IEEE 1905.1a-2014** review, independent
 full-message vectors, peer/exchange binding and recovery rules.
 

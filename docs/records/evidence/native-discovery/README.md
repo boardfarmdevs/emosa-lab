@@ -40,7 +40,7 @@ allowlist contains no native logs, hostap configurations, database or credential
 The native controller's colocated helper uses the existing hwsim radio for startup;
 no external native agent, simulated OpenSync pod or physical device participates.
 
-Follow the [step-by-step guide](../../../guides/native-discovery.md) to reproduce the
+Follow the step-by-step guide to reproduce the
 measurement. Next resolve native capability behavior and the selected procedure
 contract, then join admitted discovery to the tested WSC-to-radio path and require
 complete controller radio/BSS inventory and independent client behavior.

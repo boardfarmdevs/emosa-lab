@@ -93,7 +93,7 @@ attempt in the summary. The first packet development run reset the M1 MID
 allocator; selected captures verify the corrected sequence 101/102.
 
 Use the [step-by-step walkthrough](../../../reference/protocol/wsc-wire-radio.md) and
-[manual §13.13](../../../guides/team-manual.md#1313-drive-wi-fi-from-an-ethernet-wsc-exchange)
+manual §13.13
 to reproduce these finite cases. The next boundary is compatible native
 controller discovery/profile/capability admission and its own inventory, then a
 qualified unchanged physical pod and independently observed physical client.

@@ -40,6 +40,6 @@ There is **no native controller, Ethernet socket, radio/client observation or
 physical pod** in these runs. The separate discovery lifecycle still withholds
 automatic Early Report/M1 admission; this component does not change that gate.
 See the [walkthrough](../../../reference/protocol/wsc-provisioning.md) and
-[manual §13.12](../../../guides/team-manual.md#1312-turn-authenticated-wsc-input-into-a-durable-operation).
+manual §13.12.
 Next join admitted native-controller discovery/capabilities/WSC to this handoff,
 then the existing hwsim/client path, before substituting a qualified unchanged pod.

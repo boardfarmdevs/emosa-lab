@@ -35,7 +35,7 @@ comparison remains unavailable. The later IEEE 1905 acquisition is recorded abov
 The [2026-09-21 available-document audit](procedure-audit.md) now records WFA
 message inclusion conditions, selected field definitions and unresolved source
 ambiguities. It also distinguishes the existing independent WSC payload/crypto
-vectors from the new independent IEEE envelope vectors and still-pending complete procedure validation. The later [HE/Wi-Fi 6 review](../../guides/he-wifi6.md) promotes Data Elements 3.0
+vectors from the new independent IEEE envelope vectors and still-pending complete procedure validation. The later [specification](../../../spec/README.md) promotes Data Elements 3.0
 from a deferred telemetry dependency to the initial capability-report checklist.
 
 ## Resolve only if the selected fields require it
@@ -82,7 +82,7 @@ reviewed; record their provenance and digest in the protocol matrix.
 | EasyMesh reference [10] and Tables 58/82–85, compared with BBF 2.17 | BBF establishes CollectionInterval milliseconds and selected metric representations. Supply the exact WFA package for comparison; resolve 64-bit BBF to 32-bit wire behavior where rollover is not explicit, STA frame/byte and epoch boundaries, and the BBF SignalStrength RCPI/dBm inconsistency. Independent BBF-based encoding can proceed. |
 | EasyMesh reference [22] and §13 | Identify the applicable Security Requirements revision and provide authorized access for the selected WPA2-Personal procedure review. |
 
-The [isolated native HE-length fix](../../guides/native-compatibility.md) does not
+[The lab in a box](../../../spec/box-scenarios.md) does not
 resolve these questions. Native source and captures can cross-check an answer;
 they do not replace its normative authority.
 

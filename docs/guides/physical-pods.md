@@ -117,7 +117,7 @@ and an agent presents the pod to the EasyMesh controller. Do these in order:
    from the qualified schema and inventory: radios, bands, interface names,
    BSS limits, Multi-AP support. Take radio limits (maximum EIRP, operating
    classes) for the pod's regulatory domain from the model's documentation,
-   never from observed channels ([radio capabilities](radio-capabilities.md)).
+   never from observed channels ([the specification](../../spec/README.md), §3.3).
 3. **TLS on the front port.** The fleet listens on `ptcp:` today
    (`schemas/fleet-config.schema.json`). A physical pod needs a `pssl:` front
    port: a server certificate from the lab CA that the pod trusts, plus

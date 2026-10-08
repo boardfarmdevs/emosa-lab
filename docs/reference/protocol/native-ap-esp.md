@@ -57,7 +57,7 @@ and exact restoration. Neither treats a successful socket send as receipt.
 ## 2. Build the optional candidate on HOST
 
 Prepare the pinned native archives using the
-[controller build guide](../../guides/controller-counter-candidate.md). Substitute
+[the lab in a box](../../../spec/box-scenarios.md). Substitute
 the directory where those three archives actually reside. Use a new build path:
 
 ```bash

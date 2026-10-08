@@ -24,7 +24,7 @@ targets first requires the upstream `BUILT_SOURCES`; the supplied build script
 generates them before linking. There is no `make install`, system daemon or
 switching datapath. The original bootstrap binary had TLS disabled; those hashes
 remain historical evidence. The current build enables OpenSSL and requires
-`libssl-dev` for the [secure-fleet tests](../guides/secure-fleet.md). New host and
+`libssl-dev` for the secure-fleet tests. New host and
 clean-runtime binary hashes are retained with that experiment.
 
 The integration suite checks schema retrieval, initial monitor snapshots,
@@ -32,7 +32,7 @@ incremental update/delete/reference handling, set/map/optional values, guarded
 transactions, row counts, reconnect, independent manager application, lost
 responses, conflicts, resource exhaustion and four independent sessions.
 Both dialing via Unix sockets and database-initiated TCP to a listening manager
-are exercised. The [connecting-pod demo](../guides/connecting-pod.md) also verifies a Unix
+are exercised. The connecting-pod demo also verifies a Unix
 listener in a separate service process. Three narrow upstream compatibility
 accommodations are required:
 
@@ -63,7 +63,7 @@ Authenticated pod-initiated TLS is now tested using the bounded accept boundary
 in `src/emosa/opensync/tls_listener.py`, followed by the upstream OVS stream/session.
 It rejects invalid clients before they can replace an active connection, bounds
 pending handshakes and avoids outgoing TLS's process-global certificate settings.
-The [secure-fleet guide](../guides/secure-fleet.md) describes its explicit bindings,
+The secure-fleet guide describes its explicit bindings,
 resource limits and 4/8/16/32-session service workload. This adds a fourth narrow
 upstream compatibility boundary without modifying installed OVS package files.
 

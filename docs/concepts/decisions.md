@@ -34,7 +34,7 @@
   writes. Dialing TLS requires existing client credentials, verified CA chain
   and a trusted peer certificate pin. A bounded per-session TLS accept boundary
   now supplies authenticated streams to upstream OVS for listening-manager mode.
-  [Synthetic TLS/fleet tests](../guides/secure-fleet.md) qualify that component;
+  [the specification](../../spec/README.md) qualify that component;
   actual pod trust, direction and physical behavior remain pending.
 - Per-pod modifying queue capacity is zero in this foundation: one operation
   may be active and excess requests receive `BUSY`. This is a finite queue and
@@ -82,7 +82,7 @@
   establishes input identity, not the truth of physical claims. Limit class
   mapping to reviewed IEEE 802.11-2024 Table E-4 entries, never silently omit
   unsupported classes, and keep full profile/AP Capability Report and wire
-  admission pending. See the [input walkthrough](../guides/radio-capabilities.md).
+  admission pending. See [the specification](../../spec/README.md).
 
 - Keep profile readiness separate from component readiness. The offline
   [profile audit](../reference/protocol/profile-readiness.md) inventories mandatory
@@ -98,4 +98,4 @@ expose separate readiness results. Unknown support remains unknown. Selected
 HT/VHT claims use explicit normalized inputs; unsupported HE mapping blocks that
 extension instead of fabricating capabilities. Inventory represents the pod,
 not the adapter host. IEEE center-channel classes never validate an observed
-primary channel. See [the walkthrough](../guides/technology-inventory.md).
+primary channel. See [the specification](../../spec/README.md).

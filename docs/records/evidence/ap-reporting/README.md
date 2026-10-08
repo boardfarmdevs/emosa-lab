@@ -1,7 +1,7 @@
 # AP report assembly, durable dispatch and native recovery
 
 The [guide](../../../reference/protocol/ap-metric-reports.md),
-[manual §13.29](../../../guides/team-manual.md#1329-build-complete-ap-reports-and-preserve-reporting-deadlines)
+manual §13.29
 and learning-path step 19 explain this evidence. **Selected message composition
 and scheduling are verified; live AP measurements and native AP report delivery
 remain pending.** This milestone does not complete the integrated 15-minute

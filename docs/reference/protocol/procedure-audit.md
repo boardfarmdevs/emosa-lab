@@ -26,14 +26,14 @@ exchange: §6.1 and §7.1 explicitly require that capability TLV in relevant cas
 The retained prplMesh baseline sends a Profile-2 Search, but its corresponding
 Response carries Profile 1 in both reviewed wired/wireless captures. This is an
 observed compatibility gap against §6.1's response-profile rule, not a qualified
-profile selection for EMOSA. See the [offline capture review](../../guides/onboarding-readiness.md#5-interpret-the-actual-findings-and-act-on-them)
+profile selection for EMOSA. See [the lab in a box](../../../spec/box-scenarios.md)
 and [retained observations](../../records/evidence/onboarding-readiness/summary.json).
 The controller also sends two M2 payloads plus M8 in the selected baseline policy;
 that complete request is outside the proposed single-M2 mapping. The controller
 trial must resolve the peer/build/profile and policy intersection.
 Do not force old peer behavior into the normative matrix as an exception.
 
-The [HE/Wi-Fi 6 review](../../guides/he-wifi6.md) now traces the response mismatch
+[The specification](../../../spec/README.md) now traces the response mismatch
 to the pinned controller's fixed Profile-1 assignment. It also records a native
 Wi-Fi 6 zero-length value rejected under Table 95 and the relevant source paths.
 These findings narrow the peer-build work; they do not qualify a substitute
@@ -169,7 +169,7 @@ be used to claim that a controller message caused the Config change.
 
 ## Selected technology and Device Inventory mapping
 
-The [new walkthrough](../../guides/technology-inventory.md) records HT/VHT normalized
+[The specification](../../../spec/README.md) records HT/VHT normalized
 inputs and Device Inventory projection through the existing read-only service.
 EasyMesh 6.1 §17.2.8–10 (Tables 31–33, pp.128–131) and §17.2.76 (Table 99, p.172)
 define the new value structures. IEEE 802.11-2024 §9.4.2.54 (pp.1122–1126),
@@ -180,7 +180,7 @@ channels. No management-frame parser or driver-capability inference is added.
 
 The HE field remains opaque: normalized Tx/Rx ordering and independent asymmetric
 vectors need further work. The required Wi-Fi 6 companion now has a
-[selected synthetic role mapper](../../guides/wifi6-inputs.md) with its own readiness
+[the specification](../../../spec/README.md) with its own readiness
 result; this cannot make the complete HE technology set ready. Old
 native dissector labels are cross-check material, not authority. Inventory
 strings retain their original octets; synthetic UTF-8 input is an explicit local
@@ -216,7 +216,7 @@ in Table 95 supports the bounded `0xAA` role mapping without resolving Table 33.
 
 ## Native candidate follow-up
 
-The [isolated native compatibility trial](../../guides/native-compatibility.md) now
+[The lab in a box](../../../spec/box-scenarios.md) now
 demonstrates a rebuilt HAL whose advertised `0xAA` MCS length matches its reported
 HE width flags. Nine injected parser cases pass; the original library fails six.
 Two native wired runs with a sole-fronthaul agent policy pass client and inventory
@@ -247,7 +247,7 @@ reasons to silently change the selected edition or reopen IEEE access requests.
 
 ## Direct EMOSA Search against the native controller, 2026-09-22
 
-The [native discovery trial](../../guides/native-discovery.md) now establishes that
+[The lab in a box](../../../spec/box-scenarios.md) now establishes that
 EMOSA's Profile-1 Search receives a Profile-1 Response from the pinned controller.
 The prior standard-agent Profile-2/1 mismatch remains a baseline observation,
 not a mismatch reproduced by this particular EMOSA exchange. The native response
@@ -272,7 +272,7 @@ separate rebuild. See the retained source hashes and
 
 ## Counter-capability candidate and feature applicability review, 2026-09-22
 
-The [isolated native controller experiment](../../guides/controller-counter-candidate.md)
+[The lab in a box](../../../spec/box-scenarios.md)
 sets the existing bit-7 field in the real Search-response builder. The unchanged
 `db::recalculate_attr_to_byte_units` converts the three defined byte-counter
 units correctly for all 12 selected C++ regression inputs, including maximum

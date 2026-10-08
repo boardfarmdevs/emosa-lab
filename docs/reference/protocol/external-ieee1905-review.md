@@ -128,7 +128,7 @@ The current Python implementation has bounded wire/WSC components and an
 operation path exercised through simulated OpenSync state and hwsim clients.
 Native-controller admission and controller-owned inventory through EMOSA remain
 part of the unfinished demonstration. The
-[first experiment guide](../../guides/first-wire-experiment.md) defines that boundary;
+[the lab in a box](../../../spec/box-scenarios.md) defines that boundary;
 this review does not advance its acceptance status.
 
 ## 4. Broadband Forum meshComms

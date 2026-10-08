@@ -15,7 +15,7 @@ EMOSA is the complete Python adapter. A virtual agent is one pod's
 controller-facing representation within that service. The OpenSync mapper and
 OVSDB session implement its southbound side; the virtual-agent directory currently
 exposes local diagnostics, while the full EasyMesh wire endpoint remains pending.
-See [manual §2.5](../guides/team-manual.md#25-languages-and-upstream-reuse) for the
+See [the handover](../handover/README.md) for the
 code/process map, language ownership, native artifact provenance and the difference
 between the prplMesh baseline and the EMOSA adaptation path.
 
@@ -23,11 +23,11 @@ The initial deployment design is one adapter service per controller domain/site,
 with separate identity, session, inventory and operation state for each configured
 pod. Current configuration supports multiple entries; automatic physical enrollment,
 production capacity, multi-agent wire identity and distributed ownership remain
-unqualified. See [manual §2.6](../guides/team-manual.md#26-one-adapter-service-several-represented-pods).
+unqualified. See [the handover](../handover/README.md).
 
 The [connection-flow comparison](connection-flows.svg) shows existing OpenSync
 and gateway-controller EasyMesh side by side, then the proposed EMOSA scheme.
-[Manual §2.7](../guides/team-manual.md#27-compare-cloud-easymesh-and-emosa-connection-flows)
+[the handover](../handover/README.md)
 explains root-pod ownership, control versus telemetry and the route to ODH, the
 data lake in the network center. Telemetry ingestion/export is separate pending
 integration work; the OVSDB component results do not establish it.
@@ -62,7 +62,7 @@ The diagram describes the intended acceptance path. The semantic operation
 engine, journal, OVSDB simulator and evaluation tools are implemented. The real
 wire agent, physical mapping and independent-controller path remain gated.
 
-The [connecting-pod demonstration](../guides/connecting-pod.md) implements the local
+[The lab in a box](../../spec/box-scenarios.md) implements the local
 diagnostic representation: a simulated extender dials EMOSA, supplies observed
 identity/radio/BSS data, and appears in `emosa agents`. Its configured AL address
 survives reconnect and adapter restart. It does not yet advertise that identity
@@ -107,7 +107,7 @@ the native baseline's four containers with native peer services stopped. State
 comes from actual daemon/driver observations, while wired and wpa_supplicant
 clients independently check the data path. Three retained runs passed 13 cases
 each. EasyMesh initiation, native OpenSync firmware and physical RF remain outside
-that integration's evidence. See the [team manual](../guides/team-manual.md#11-run-emosa-through-ovsdb-to-hwsim-and-real-clients)
+that integration's evidence. See [the handover](../handover/README.md)
 for preparation, commands and demo interpretation.
 
 The later [Ethernet WSC exercise](../reference/protocol/wsc-wire-radio.md) uses the same

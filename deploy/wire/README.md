@@ -90,7 +90,7 @@ existing EMOSA protocol components and their installed dependencies.
    Keep a failed worker log and the command tuple before correcting a run.
 
 For controller-facing acceptance continue with the
-[first complete wire experiment](../../docs/guides/first-wire-experiment.md).
+[the lab in a box](../../spec/box-scenarios.md).
 
 ## Database-backed report coordinator
 
@@ -116,7 +116,7 @@ lxc exec emosa-lab -- env PYTHONPATH=/opt/emosa-wire-check/src \
 ```
 
 On a fresh VM those retained paths may not exist. Build the selected tools using
-[manual chapter 5](../../docs/guides/team-manual.md#5-build-and-exercise-the-real-ovsdb-simulator)
+[the handover](../../docs/handover/README.md)
 in that environment and point `EMOSA_OVS_BIN` to their directory. Do not assume the
 binaries are included in a Git clone. Use a new staging name if `bin` already
 exists; do not replace another experiment's links.

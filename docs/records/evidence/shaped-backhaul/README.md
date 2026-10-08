@@ -98,7 +98,7 @@ does not complete integrated 15-minute acceptance or physical-pod proof.
 ## Reproduce and inspect
 
 Use the [step-by-step guide](../../../reference/protocol/shaped-backhaul-accounting.md) and
-[manual §13.27](../../../guides/team-manual.md#1327-account-for-loss-while-the-virtual-link-is-shaped).
+manual §13.27.
 The independent checker imports no EMOSA implementation. CI replays all three
 controlled experiments through the production source and audits their captures
 plus the native recovery result. The retained suites contain **1,346 passing

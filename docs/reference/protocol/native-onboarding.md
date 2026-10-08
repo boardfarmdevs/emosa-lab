@@ -56,7 +56,7 @@ The runner restores the original executable and references after every trial.
 
 ## Establish the lab — HOST and VM
 
-Complete the [native controller candidate guide](../../guides/controller-counter-candidate.md)
+Complete [the lab in a box](../../../spec/box-scenarios.md)
 and [radio manager setup](../../../deploy/radio-manager/README.md) first. Use the
 existing owned VM and containers. Allow sufficient VM disk space for controller
 backup/restoration, private journals and captures; the development VM was expanded

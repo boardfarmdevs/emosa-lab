@@ -1,6 +1,6 @@
 # EMOSA, OVSDB and real hwsim observations
 
-The additional [service integration walkthrough](../guides/service-integration.md)
+The additional service integration walkthrough
 now tests an actual `emosa serve` process with a pod-initiated OVSDB connection,
 independent hwsim clients and recovery after `SIGKILL`. Its separate
 [evidence summary](evidence/service-integration/summary.json) complements the

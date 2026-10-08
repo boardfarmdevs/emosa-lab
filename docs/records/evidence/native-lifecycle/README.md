@@ -7,7 +7,7 @@ shutdown. This resolves the selected candidate's recorded shutdown defect.
 final-session reporting are absent. No physical OpenSync pod was contacted.
 
 Use the [step-by-step guide](../../../reference/protocol/native-lifecycle.md),
-[manual §13.30](../../../guides/team-manual.md#1330-prove-clean-native-shutdown-after-the-full-workload)
+manual §13.30
 and learning-path step 20 to reproduce it. EMOSA remains the Python
 EasyMesh-to-OpenSync adapter; this optional native patch affects the evaluation
 controller and its colocated helper's selected C++ BPL library.
