@@ -2535,6 +2535,8 @@ static void journal_retention_vectors(const char *dir)
             cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(op, "intent"), "pod_id",
                                                    cJSON_CreateString(cJSON_GetArrayItem(s, 2)->valuestring));
             cJSON_ReplaceItemInObjectCaseSensitive(op, "state", cJSON_CreateString(cJSON_GetArrayItem(s, 3)->valuestring));
+            if (cJSON_GetArraySize(s) > 4) /* the step's commit_evidence: a window's rows (finding 23) */
+                cJSON_ReplaceItemInObjectCaseSensitive(op, "commit_evidence", cJSON_Duplicate(cJSON_GetArrayItem(s, 4), true));
             em_reason r = strcmp(cJSON_GetArrayItem(s, 0)->valuestring, "add") ? em_journal_save(j, op, NULL)
                                                                                 : em_journal_add(j, op, NULL);
             cJSON_Delete(op);

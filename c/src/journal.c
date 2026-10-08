@@ -354,10 +354,20 @@ static bool named(const char *s, const char *const *set, size_t n)
     return false;
 }
 
+/* An operation whose window created rows in the pod that are not yet released (deleted, or
+ * found gone): its record is what the leftover sweep closes them by (finding 23). */
+bool em_journal_holds_rows(const cJSON *op)
+{
+    const cJSON *evidence = cJSON_GetObjectItemCaseSensitive(op, "commit_evidence");
+    const cJSON *created = cJSON_GetObjectItemCaseSensitive(evidence, "created");
+    return cJSON_IsObject(created) && created->child && !cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(evidence, "released"));
+}
+
 /* Spec §6: with `added` appended to the kept operations, delete (in the caller's
  * transaction) every operation that is not active, not its pod's latest in a state
- * reconciliation follows and not among the RETAINED_RECENT most recent, with its WSC
- * receipt. The deleted operations' IDs go into `dropped` (owned by the caller). */
+ * reconciliation follows, not holding rows in its pod and not among the RETAINED_RECENT
+ * most recent, with its WSC receipt. The deleted operations' IDs go into `dropped` (owned
+ * by the caller). */
 static bool prune(em_journal *j, const cJSON *added, cJSON *dropped)
 {
     static const char *const active[] = {"REQUESTED", "VALIDATED", "SUBMITTED", "CONFIG_COMMITTED", "INDETERMINATE"};
@@ -377,7 +387,7 @@ static bool prune(em_journal *j, const cJSON *added, cJSON *dropped)
     for (int k = n - 1; ok && k >= 0; k--) { /* newest first: the first of a pod is its latest */
         const char *state = cJSON_GetStringValue(state_of(ops[k]));
         const char *pod = str(cJSON_GetObjectItemCaseSensitive(ops[k], "intent"), "pod_id");
-        bool keep = k >= n - RETAINED_RECENT || named(state, active, 5);
+        bool keep = k >= n - RETAINED_RECENT || named(state, active, 5) || em_journal_holds_rows(ops[k]);
         if (named(state, reconciled, 6) && pod) {
             bool latest = true;
             for (size_t s = 0; s < nseen && latest; s++)

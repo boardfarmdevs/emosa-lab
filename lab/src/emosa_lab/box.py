@@ -207,13 +207,17 @@ REPLY_CUT_PORT = 6661  # the reply cut's end, which the pod dials in place of th
 
 
 class ReplyCut:
-    """Between the pod's database and its agent: every message passed on, but the database's
-    reply to the agent's first transaction carrying `marker` is dropped and both ends closed,
-    as when the pod's management link is lost while that write commits (spec 5: the outcome
-    unknown, INDETERMINATE). The pod dials again through it, and is passed on as before."""
+    """Between the pod's database and its agent: every message passed on, but the agent's first
+    transaction that `match` picks meets a fault, as when the pod's management link fails at
+    that moment:
+    - refuse=False: the database commits it, its reply is dropped and both ends closed (spec 5:
+      the outcome unknown, INDETERMINATE); the pod dials again through it;
+    - refuse=True: it never reaches the database, and the agent gets an error result for it on
+      the same connection (the write did not happen, the link stays up).
+    After that fault every message is passed on as before."""
 
-    def __init__(self, marker):
-        self.marker, self.done, self.server = marker, False, None
+    def __init__(self, match, refuse=False):
+        self.match, self.refuse, self.done, self.server = match, refuse, False, None
 
     async def start(self):
         self.server = await asyncio.start_server(self.serve, "127.0.0.1", REPLY_CUT_PORT)
@@ -229,21 +233,27 @@ class ReplyCut:
         except OSError:
             pod_writer.close()
             return
-        awaited = set()  # the ids of the marked transactions, whose replies are cut
+        awaited = set()  # the ids of the matched transactions, whose replies are cut
 
-        def from_agent(message):
-            transact = not self.done and message.get("method") == "transact"
-            if transact and self.marker in json.dumps(message):
+        def from_agent(message):  # "pass", "drop" or "cut"
+            if self.done or message.get("method") != "transact" or not self.match(message):
+                return "pass"
+            if not self.refuse:
                 awaited.add(json.dumps(message.get("id")))
-            return True
+                return "pass"
+            self.done = True
+            error = {"error": "box: refused", "details": "the reply cut refused it"}
+            reply = {"id": message.get("id"), "result": [error], "error": None}
+            agent_writer.write(json.dumps(reply).encode())
+            return "drop"
 
         def from_pod(message):
             if json.dumps(message.get("id")) in awaited and "method" not in message:
                 self.done = True
-                return False
-            return True
+                return "cut"
+            return "pass"
 
-        async def pump(reader, writer, keep):
+        async def pump(reader, writer, verdict):
             decoder, text, buffer = json.JSONDecoder(), codecs.getincrementaldecoder("utf-8")(), ""
             try:
                 while data := await reader.read(65536):
@@ -254,10 +264,13 @@ class ReplyCut:
                         except ValueError:
                             break  # the rest of the message is still to come
                         buffer = buffer.lstrip()[end:]
-                        if not keep(message):
+                        outcome = verdict(message)
+                        if outcome == "cut":
                             return
-                        writer.write(json.dumps(message).encode())
+                        if outcome == "pass":
+                            writer.write(json.dumps(message).encode())
                     await writer.drain()
+                    await agent_writer.drain()  # a refusal written back to the agent
             except (ConnectionError, OSError):
                 pass
 
@@ -270,6 +283,27 @@ class ReplyCut:
             task.cancel()
         for writer in (pod_writer, agent_writer):
             writer.close()
+
+
+def writes_registrar_ssid(message):
+    """The agent's write of the registrar's SSID (an M2's configuration)."""
+    return REGISTRAR_SSID in json.dumps(message)
+
+
+def deletes_steering_client(message):
+    """The agent's close of a steering window: a delete of a Band_Steering_Clients row."""
+    return any(
+        isinstance(op, dict)
+        and op.get("op") == "delete"
+        and op.get("table") == "Band_Steering_Clients"
+        for op in (message.get("params") or [])[1:]
+    )
+
+
+REPLY_CUTS = {  # the faults a box can put between the pod and its agent
+    "lost-write": lambda: ReplyCut(writes_registrar_ssid),
+    "refused-close": lambda: ReplyCut(deletes_steering_client, refuse=True),
+}
 
 
 async def dial(db, endpoint, *, connect=True):
@@ -434,9 +468,10 @@ class Box:
         # give it a BSSID on the radio
         self.cold = cold
         self.drop = (COLD_VIF,) if cold else ()
-        # reply_cut: the pod dials the agent through a ReplyCut, which loses the reply to the
-        # agent's first write of the registrar's SSID
-        self.reply_cut = ReplyCut(REGISTRAR_SSID) if reply_cut else None
+        # reply_cut: the pod dials the agent through a ReplyCut, one of REPLY_CUTS (lost-write:
+        # the reply to the agent's first write of the registrar's SSID lost; refused-close: the
+        # agent's first steering close refused on the same connection)
+        self.reply_cut = REPLY_CUTS[reply_cut]() if reply_cut else None
         self.pod_rows = MULTI_AP_ROWS if backhaul else POD_ROWS
         self.process = self.db = self.controller = self.log = self.broker = None
         self.interface = AGENT_INTERFACE  # the agent's 1905 interface (a fleet names its own)
@@ -1665,6 +1700,48 @@ async def steering_leftover(box):
     )
 
 
+async def steering_close_refused(box):
+    """Box finding 23: a window's close refused by the pod's database with the link up (the
+    box's reply cut answers the delete with an error), so its rows stay in the pod on the same
+    source. The sweep tries again after its back-off (30 s) and closes them by their UUIDs, and
+    a second mandate for the station is carried out, not refused as another manager's (before:
+    nothing tried again until the pod's next source, and the window's record could leave the
+    journal first, leaving the rows for good)."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    ack = await box.ask(0x8014, (steering_request(STATIONS[0]),), ACK)
+    opened = await wait_rows(box, lambda c, n, g: c and n and g)
+    if not opened:
+        return box.result(passed=False, failed="no steering window", acked=bool(ack))
+
+    def counts():
+        return ((box.status() or {}).get("steering") or {}).get("counts") or {}
+
+    # owm never takes the window: it ends unapplied, and its close is refused
+    close_failed = await box.until(lambda: counts().get("close_failed"), seconds=60)
+    left, _, _ = await steering_rows(box)
+    closed = await wait_rows(box, lambda c, n, g: not c and not n and not g, seconds=60)
+    second = await box.ask(0x8014, (steering_request(STATIONS[0]),), ACK)
+    reopened = await wait_rows(box, lambda c, n, g: c and n and g)
+    refused = counts().get("refused_ownership_conflict", 0)
+    return box.result(
+        passed=bool(close_failed)
+        and box.reply_cut.done
+        and bool(left)
+        and bool(closed)
+        and bool(second)
+        and bool(reopened)
+        and not refused,
+        close_refused=box.reply_cut.done,
+        close_failed_seen=bool(close_failed),
+        rows_left=len(left),
+        leftover_closed=bool(closed),
+        second_window=bool(reopened),
+        refused_ownership_conflict=refused,
+        counts=counts(),
+    )
+
+
 async def steering(box):
     """A steering mandate for one station and one target: acknowledged; a steering window
     opened as one write (the station's client row, a group, the target as a neighbor);
@@ -2057,6 +2134,7 @@ SCENARIOS = {
     "unassociated": unassociated,
     "steering": steering,
     "steering-leftover": steering_leftover,
+    "steering-close-refused": steering_close_refused,
     "steering-refusals": steering_refusals,
     "backhaul-capability": backhaul_capability,
     "backhaul-steering": backhaul_steering,
@@ -2068,7 +2146,8 @@ SCENARIOS = {
     "write-lost-unapplied": write_lost_unapplied,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
-    "write-lost-unapplied": {"reply_cut": True},
+    "write-lost-unapplied": {"reply_cut": "lost-write"},
+    "steering-close-refused": {"reply_cut": "refused-close"},
     "forgotten-agent": {"topology_query_window": 20},
     "agent-netns": {"netns": True},
     "telemetry": {"telemetry": True},

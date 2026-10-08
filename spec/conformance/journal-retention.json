@@ -1779,9 +1779,451 @@
      ]
     }
    ]
+  },
+  {
+   "name": "rows-kept-until-released",
+   "steps": [
+    {
+     "step": [
+      "add",
+      1,
+      "pod-1",
+      "OBSERVED_APPLIED",
+      {
+       "attribution": "reply",
+       "created": {
+        "client": "11111111-1111-4111-8111-111111111111"
+       }
+      }
+     ]
+    },
+    {
+     "step": [
+      "add",
+      2,
+      "pod-1",
+      "TIMED_OUT"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      3,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      4,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      5,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      6,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      7,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      8,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      9,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      10,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      11,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      12,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      13,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      14,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "step": [
+      "add",
+      15,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "kept": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+     ],
+     "step": [
+      "add",
+      16,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "kept": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17
+     ],
+     "step": [
+      "add",
+      17,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "kept": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "step": [
+      "add",
+      18,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "kept": [
+      1,
+      2,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+     ],
+     "step": [
+      "add",
+      19,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "kept": [
+      1,
+      2,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+     ],
+     "step": [
+      "add",
+      20,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "kept": [
+      1,
+      2,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21
+     ],
+     "step": [
+      "add",
+      21,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "kept": [
+      1,
+      2,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22
+     ],
+     "step": [
+      "add",
+      22,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "kept": [
+      1,
+      2,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+     ],
+     "step": [
+      "add",
+      23,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "kept": [
+      1,
+      2,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24
+     ],
+     "step": [
+      "add",
+      24,
+      "pod-1",
+      "REJECTED"
+     ]
+    },
+    {
+     "kept": [
+      1,
+      2,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24
+     ],
+     "step": [
+      "save",
+      1,
+      "pod-1",
+      "OBSERVED_APPLIED",
+      {
+       "attribution": "reply",
+       "created": {
+        "client": "11111111-1111-4111-8111-111111111111"
+       },
+       "released": true
+      }
+     ]
+    },
+    {
+     "kept": [
+      2,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25
+     ],
+     "step": [
+      "add",
+      25,
+      "pod-1",
+      "REJECTED"
+     ]
+    }
+   ]
   }
  ],
- "description": "spec §6: the journal's retention. Each case adds operations to an empty journal (and saves one in another state): every operation is the template with operation_id 00000000-0000-4000-8000-<n as 12 digits>, idempotency_key key-<n>, intent.pod_id and state from the step. A step: [add|save, n, pod, state]; once the journal holds retained_recent operations, 'kept' lists the numbers of the operations it holds after the step, oldest first: every active one, each pod's latest in a state reconciliation follows, and the retained_recent most recent.",
+ "description": "spec §6: the journal's retention. Each case adds operations to an empty journal (and saves one in another state): every operation is the template with operation_id 00000000-0000-4000-8000-<n as 12 digits>, idempotency_key key-<n>, intent.pod_id and state from the step, and commit_evidence when the step has one. A step: [add|save, n, pod, state[, commit_evidence]]; once the journal holds retained_recent operations, 'kept' lists the numbers of the operations it holds after the step, oldest first: every active one, each pod's latest in a state reconciliation follows, every one whose window's rows are still in the pod (commit_evidence.created and not released), and the retained_recent most recent.",
  "retained_recent": 16,
  "template": {
   "application_evidence": null,

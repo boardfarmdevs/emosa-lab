@@ -40,6 +40,7 @@ typedef struct {
     cJSON *leftover; /* operations a previous process left open (array) */
     bool swept;           /* the sweep of windows' rows left in the pod done ... */
     int swept_generation; /* ... for this pod source (OVSDB generation) */
+    double sweep_again;   /* a failed close: the time the sweep is tried again (finding 23) */
     cJSON *history;  /* the latest eight outcomes */
     struct {
         size_t n;

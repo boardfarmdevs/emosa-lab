@@ -16,6 +16,15 @@ from emosa.topology_bindings import REGISTRY_KEY, merge_registry
 # Spec §6, the journal's retention: besides every active operation and each pod's latest
 # one in a state reconciliation follows (the one it acts on), the most recent operations.
 RETAINED_RECENT = 16
+
+
+def holds_rows(record):
+    """An operation whose window created rows in the pod that are not yet released (deleted,
+    or found gone): its record is what the leftover sweep closes them by (finding 23)."""
+    evidence = record.get("commit_evidence") or {}
+    return bool(evidence.get("created")) and not evidence.get("released")
+
+
 RECONCILED = frozenset(
     {
         State.SUBMITTED,
@@ -178,16 +187,18 @@ class Store:
 
     def _prune(self):
         """Spec §6: keep every active operation, each pod's latest one in a state
-        reconciliation follows, and the RETAINED_RECENT most recent; remove the others,
-        with their WSC receipts (inside the caller's transaction)."""
+        reconciliation follows, every one still holding rows in its pod (holds_rows), and the
+        RETAINED_RECENT most recent; remove the others, with their WSC receipts (inside the
+        caller's transaction)."""
         rows = self.db.execute("SELECT id, pod, record FROM operations ORDER BY rowid").fetchall()
         if len(rows) <= RETAINED_RECENT:
             return
         keep = {row["id"] for row in rows[-RETAINED_RECENT:]}
         latest = {}
         for row in rows:
-            state = State(json.loads(row["record"])["state"])
-            if state in ACTIVE:
+            record = json.loads(row["record"])
+            state = State(record["state"])
+            if state in ACTIVE or holds_rows(record):
                 keep.add(row["id"])
             if state in RECONCILED:
                 latest[row["pod"]] = row["id"]

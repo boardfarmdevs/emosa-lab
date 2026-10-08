@@ -19,6 +19,7 @@
 #define GENTLE 8  /* < owm's 10 s deauthentication delay after a BTM request */
 #define MARGIN 5
 #define WAIT 10   /* a controller verifies a steer for about this long */
+#define SWEEP_RETRY 30 /* seconds before a sweep whose close failed is tried again on the same source */
 
 static const char *str(const cJSON *o, const char *k)
 {
@@ -566,7 +567,7 @@ static void end(em_steering_scope *s, cJSON *op, const char *outcome)
 }
 
 /* _close: delete the rows the window created (or, outcome unknown, its client row) */
-static void close_window(em_steering_scope *s, const cJSON *op, const cJSON *intent)
+static void close_window(em_steering_scope *s, cJSON *op, const cJSON *intent)
 {
     em_steering_intent in;
     intent_struct(intent, &in);
@@ -608,30 +609,52 @@ static void close_window(em_steering_scope *s, const cJSON *op, const cJSON *int
     if (em_steering_close(&os, &in, &rows) != EM_OK) {
         em_log(EM_LOG_WARNING, "emosa.agent.steering", "client steering close failed");
         record(s, "close_failed");
+        s->swept = false; /* the sweep tries it again after its back-off, on this source too */
+        s->sweep_again = clock_now(s) + SWEEP_RETRY;
+    } else if (em_journal_holds_rows(op)) { /* saved with the window's end */
+        cJSON *evidence = cJSON_GetObjectItemCaseSensitive(op, "commit_evidence");
+        cJSON_DeleteItemFromObjectCaseSensitive(evidence, "released");
+        cJSON_AddTrueToObject(evidence, "released");
     }
+}
+
+/* the window's rows are gone from the pod: its record may leave the journal (finding 23) */
+static void released(em_steering_scope *s, cJSON *op, const char *how)
+{
+    cJSON *evidence = cJSON_GetObjectItemCaseSensitive(op, "commit_evidence");
+    cJSON_DeleteItemFromObjectCaseSensitive(evidence, "released");
+    cJSON_AddTrueToObject(evidence, "released");
+    cJSON *payload = cJSON_CreateObject();
+    cJSON_AddStringToObject(payload, "rows_released", how);
+    em_engine_save(&s->engine, op, payload);
+    cJSON_Delete(payload);
 }
 
 /* Rows a window of this agent created and never deleted (its close failed, the pod away, or the
  * process ended first) are still in the pod: closed by the UUIDs the journal recorded, once per
  * pod source and only with no window under way (a group or neighbor it reuses stays). Such a row
- * would refuse every later mandate for its station as another manager's (box finding 20). */
-#define SWEEP_DEPTH 64
-static void sweep(em_steering_scope *s)
+ * would refuse every later mandate for its station as another manager's (box finding 20). The
+ * journal keeps every operation holding rows until they are released; true when a close failed,
+ * to be tried again after SWEEP_RETRY seconds on the same source (finding 23). */
+static bool sweep(em_steering_scope *s)
 {
     const cJSON *clients = em_table(em_ovsdb_tables(s->ovs), "Band_Steering_Clients");
     cJSON *ops = em_journal_operations(s->journal, NULL), *op;
-    int n = cJSON_GetArraySize(ops), i = 0;
+    bool failed = false;
     cJSON_ArrayForEach(op, ops)
     {
-        if (i++ < n - SWEEP_DEPTH)
+        if (!em_journal_holds_rows(op))
             continue;
         const cJSON *created =
             cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(op, "commit_evidence"), "created");
         const char *client = str(created, "client"), *neighbor = str(created, "neighbor"),
                    *group = str(created, "group");
         em_steering_rows rows = {0};
-        if (!client || !cJSON_GetObjectItemCaseSensitive(clients, client) ||
-            !em_copy(rows.client, sizeof(rows.client), client))
+        if (!client || !cJSON_GetObjectItemCaseSensitive(clients, client)) {
+            released(s, op, "gone");
+            continue;
+        }
+        if (!em_copy(rows.client, sizeof(rows.client), client))
             continue;
         if (!em_copy(rows.neighbor, sizeof(rows.neighbor), neighbor ? neighbor : ""))
             rows.neighbor[0] = 0;
@@ -644,12 +667,15 @@ static void sweep(em_steering_scope *s)
             em_log(EM_LOG_INFO, "emosa.agent.steering", "a window's rows left in the pod closed (station %s)",
                    in.station);
             record(s, "closed_leftover");
+            released(s, op, "closed_leftover");
         } else {
             em_log(EM_LOG_WARNING, "emosa.agent.steering", "client steering close failed (rows left in the pod)");
             record(s, "close_failed");
+            failed = true;
         }
     }
     cJSON_Delete(ops);
+    return failed;
 }
 
 static void step(em_steering_scope *s)
@@ -668,10 +694,12 @@ static void step(em_steering_scope *s)
             cJSON_Delete(op);
         }
     }
-    if (!s->active && bound(s) && (!s->swept || s->swept_generation != em_ovsdb_generation(s->ovs))) {
-        sweep(s);
-        s->swept = true;
+    if (!s->active && bound(s) && (!s->swept || s->swept_generation != em_ovsdb_generation(s->ovs)) &&
+        clock_now(s) >= s->sweep_again) {
+        bool failed = sweep(s);
+        s->swept = !failed;
         s->swept_generation = em_ovsdb_generation(s->ovs);
+        s->sweep_again = failed ? clock_now(s) + SWEEP_RETRY : 0;
     }
     dequeue(s);
     if (!s->active)

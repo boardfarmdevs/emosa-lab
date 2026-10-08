@@ -3011,17 +3011,23 @@ def journal_retention_vectors():
         "2026-10-03T00:02:00Z",
     ).to_dict()
 
-    def record(n, pod, state):
-        """the template, numbered n, for pod, in state (both harnesses build it so)"""
+    def record(n, pod, state, evidence=None):
+        """the template, numbered n, for pod, in state, with evidence as its commit_evidence
+        when given (both harnesses build it so)"""
         op = copy.deepcopy(template)
         op["operation_id"] = f"00000000-0000-4000-8000-{n:012d}"
         op["idempotency_key"] = f"key-{n}"
         op["intent"]["pod_id"] = pod
         op["state"] = state
+        if evidence is not None:
+            op["commit_evidence"] = evidence
         return Operation.from_dict(op)
 
+    rows = {"attribution": "reply", "created": {"client": "11111111-1111-4111-8111-111111111111"}}
+    released = {**rows, "released": True}
+
     filler = RETAINED_RECENT + 6
-    # steps: ("add" | "save", n, pod, state); a checkpoint after each step listed in checks
+    # steps: ("add" | "save", n, pod, state[, commit_evidence])
     cases = [
         ("recent-only", [("add", n, "pod-1", "REJECTED") for n in range(1, filler + 1)]),
         (
@@ -3046,19 +3052,30 @@ def journal_retention_vectors():
             + [("add", n, "pod-1", "REJECTED") for n in range(2, filler + 2)]
             + [("save", 1, "pod-1", "FAILED"), ("add", filler + 2, "pod-1", "REJECTED")],
         ),
+        (
+            # finding 23: a window whose rows are still in the pod stays, superseded or not,
+            # until they are released
+            "rows-kept-until-released",
+            [("add", 1, "pod-1", "OBSERVED_APPLIED", rows), ("add", 2, "pod-1", "TIMED_OUT")]
+            + [("add", n, "pod-1", "REJECTED") for n in range(3, filler + 3)]
+            + [
+                ("save", 1, "pod-1", "OBSERVED_APPLIED", released),
+                ("add", filler + 3, "pod-1", "REJECTED"),
+            ],
+        ),
     ]
     out = []
     for name, steps in cases:
         with tempfile.TemporaryDirectory() as directory:
             store = Store(Path(directory) / "journal")
             recorded = []
-            for index, (kind, n, pod, state) in enumerate(steps):
-                op = record(n, pod, state)
+            for index, (kind, n, pod, state, *evidence) in enumerate(steps):
+                op = record(n, pod, state, *evidence)
                 if kind == "add":
                     store.add(op)
                 else:
                     store.save(op)
-                step = {"step": [kind, n, pod, state]}
+                step = {"step": [kind, n, pod, state, *evidence]}
                 if index >= RETAINED_RECENT - 1:  # the window is full from here on
                     step["kept"] = [int(o.operation_id[-12:]) for o in store.operations()]
                 recorded.append(step)
@@ -3068,10 +3085,12 @@ def journal_retention_vectors():
         "description": "spec §6: the journal's retention. Each case adds operations to an empty "
         "journal (and saves one in another state): every operation is the template with "
         "operation_id 00000000-0000-4000-8000-<n as 12 digits>, idempotency_key key-<n>, "
-        "intent.pod_id and state from the step. A step: [add|save, n, pod, state]; once "
-        "the journal holds retained_recent operations, 'kept' lists the numbers of the "
-        "operations it holds after the step, oldest first: every active one, each pod's "
-        "latest in a state reconciliation follows, and the retained_recent most recent.",
+        "intent.pod_id and state from the step, and commit_evidence when the step has one. A "
+        "step: [add|save, n, pod, state[, commit_evidence]]; once the journal holds "
+        "retained_recent operations, 'kept' lists the numbers of the operations it holds after "
+        "the step, oldest first: every active one, each pod's latest in a state reconciliation "
+        "follows, every one whose window's rows are still in the pod (commit_evidence.created "
+        "and not released), and the retained_recent most recent.",
         "retained_recent": RETAINED_RECENT,
         "template": template,
         "cases": out,

@@ -40,6 +40,8 @@ const cJSON *em_journal_latest_view(em_journal *j);
 cJSON *em_journal_get(em_journal *j, const char *operation_id);
 cJSON *em_journal_lookup(em_journal *j, const char *source, const char *pod, const char *key);
 cJSON *em_journal_operations(em_journal *j, const char *run_id); /* array, oldest first */
+/* an operation whose window created rows in the pod not yet released (spec §6, finding 23) */
+bool em_journal_holds_rows(const cJSON *op);
 cJSON *em_journal_latest(em_journal *j);
 size_t em_journal_count(em_journal *j);
 cJSON *em_journal_wsc_receipt(em_journal *j, const char *operation_id);

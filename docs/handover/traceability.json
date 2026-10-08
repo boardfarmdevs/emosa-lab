@@ -75,7 +75,7 @@
     },
     "README 3.7 Client steering": {
       "vectors": ["control.json", "steering.json", "steering-queue.json", "scope-writes.json"],
-      "box": ["steering", "steering-refusals", "steering-conflict", "steering-window-expired", "steering-restart", "steering-leftover"],
+      "box": ["steering", "steering-refusals", "steering-conflict", "steering-window-expired", "steering-restart", "steering-leftover", "steering-close-refused"],
       "python": ["test_client_steering.py"],
       "fuzz": ["control"]
     },

@@ -411,9 +411,13 @@ target, from a BSS of the pod, is then carried out by the pod's band steering
 - **sweeps** the rows its windows left in the pod (a close that failed, the pod
   away, or a process that ended first): once per pod source, with no window
   under way, every row whose UUID its journal records as created by one of its
-  latest 64 windows and that is still in the pod is deleted by that UUID. A row
-  left behind would otherwise refuse every later mandate for its station as
-  another manager's.
+  windows and not yet released, and that is still in the pod, is deleted by that
+  UUID. A window's rows are **released** (`commit_evidence.released`) when its
+  close deletes them, when the sweep does, or when the sweep finds them gone (a
+  pod restart). A sweep whose close fails is tried again after 30 s on the same
+  source. A row left behind would otherwise refuse every later mandate for its
+  station as another manager's, and the agent never takes a row for its own by its
+  content: only the journal's record makes it its own.
 
 The window is 15 to 120 s (the request's opportunity window, raised to 15 s).
 One mandate at a time; a request while a window is open is acknowledged and
@@ -631,7 +635,8 @@ Journal:
   (`REQUESTED`, `VALIDATED`, `SUBMITTED`, `CONFIG_COMMITTED`, `INDETERMINATE`), each
   pod's latest operation in `SUBMITTED`, `CONFIG_COMMITTED`, `OBSERVED_APPLIED`,
   `INDETERMINATE`, `TIMED_OUT` or `OWNERSHIP_CONFLICT` (the one reconciliation follows,
-  §5), and the 16 most recent. When an operation is added, every other operation is
+  §5), every operation whose window's rows are still in the pod (`commit_evidence.created`
+  and not `released`, §3.7: the sweep's only record of them), and the 16 most recent. When an operation is added, every other operation is
   removed, with its WSC receipt, in the same transaction. Events are kept per run up to
   the 10 000 most recent. A journal so stays bounded, and a new operation is never
   refused for the journal's size.

@@ -33,9 +33,10 @@ from emosa.model import State
 from emosa.opensync.steering import WINDOW, SteeringIntent
 from emosa.operations import transition
 from emosa.reconcile import Engine
+from emosa.store import holds_rows
 
 log = logging.getLogger("emosa.agent.steering")
-SWEEP_DEPTH = 64  # the latest operations whose windows' rows the sweep looks for
+SWEEP_RETRY = 30  # seconds before a sweep whose close failed is tried again on the same source
 SOURCE = "steering-request"
 APPLY = 10  # owm takes the row within a second or two (seen live)
 GENTLE = 8  # < owm's 10 s deauthentication delay after a BTM request
@@ -81,31 +82,48 @@ class ClientSteering:
             )
         ]
         self.swept = None  # the pod source (OVSDB generation) the leftover sweep was done for
+        self.sweep_again = None  # a failed close: the monotonic time the sweep is tried again
 
     async def _sweep(self):
         """Rows a window of this agent created and never deleted (its close failed, the pod
         away, or the process ended first) are still in the pod: closed by the UUIDs the journal
         recorded, once per pod source and only with no window under way (a group or neighbor
         it reuses stays). Such a row would refuse every later mandate for its station as
-        another manager's (box finding 20)."""
+        another manager's (box finding 20). The journal keeps every operation holding rows
+        until they are released, and a failed close is tried again after SWEEP_RETRY seconds
+        on the same source (finding 23)."""
+        now = self.clock.monotonic()
+        if self.sweep_again is not None and now < self.sweep_again:
+            return
         raw = await self.backend.session.snapshot()
         if not raw.get("ready") or raw.get("generation") == self.swept:
             return
         decoded, _ = self.backend._binding(raw)
         clients = decoded.get("Band_Steering_Clients", {})
-        for op in self.store.operations()[-SWEEP_DEPTH:]:
-            created = (op.commit_evidence or {}).get("created") or {}
-            if created.get("client") not in clients:
+        failed = False
+        for op in self.store.operations():
+            if not holds_rows(op.to_dict()):
                 continue
+            created = op.commit_evidence["created"]
             intent = SteeringIntent(**op.intent)
-            try:
-                await self.backend.close(intent, created)
+            if created.get("client") in clients:
+                try:
+                    await self.backend.close(intent, created)
+                except (EmosaError, ConnectionError, TimeoutError) as exc:
+                    log.warning("client steering close (rows left in the pod): %s", exc)
+                    self._record("close_failed")
+                    failed = True
+                    continue
                 log.info("a window's rows left in the pod closed (station %s)", intent.station)
                 self._record("closed_leftover")
-            except (EmosaError, ConnectionError, TimeoutError) as exc:
-                log.warning("client steering close (rows left in the pod): %s", exc)
-                self._record("close_failed")
-        self.swept = raw.get("generation")
+            self._released(op, "closed_leftover" if created.get("client") in clients else "gone")
+        self.swept = None if failed else raw.get("generation")
+        self.sweep_again = now + SWEEP_RETRY if failed else None
+
+    def _released(self, op, how):
+        """The window's rows are gone from the pod: its record may leave the journal."""
+        op.commit_evidence = {**op.commit_evidence, "released": True}
+        self.engine._save(op, {"rows_released": how})
 
     def _closed(self):
         """Operations whose window the journal records as closed."""
@@ -239,6 +257,11 @@ class ClientSteering:
         except (EmosaError, ConnectionError, TimeoutError) as exc:
             log.warning("client steering close: %s", exc)
             self._record("close_failed")
+            # the sweep tries it again after its back-off, on this source too
+            self.swept, self.sweep_again = None, self.clock.monotonic() + SWEEP_RETRY
+            return
+        if holds_rows(op.to_dict()):  # saved with the window's end
+            op.commit_evidence = {**op.commit_evidence, "released": True}
 
     async def tick(self):
         await self._step()
