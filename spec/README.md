@@ -300,8 +300,10 @@ The 6.6 encoding of WPA2-PSK:
   backhaul station (§8.3). Combined or teardown flags are refused.
 - **The role in `multi_ap`.** Every BSS EMOSA writes carries its M2's role in
   `Wifi_VIF_Config.multi_ap`: `fronthaul_bss` or `backhaul_bss`, whatever the
-  profile row or the pod had before. The pod then advertises it in its Multi-AP
-  element, as a Multi-AP agent's AP does (hostapd's `multi_ap` 2 or 1).
+  profile row or the pod had before. The pod's AP then takes that role as a
+  Multi-AP agent's AP does (hostapd's `multi_ap` 2 or 1): hostapd sends the
+  Multi-AP element in its (Re)Association Response to a Multi-AP station, never
+  in Beacons or Probe Responses, and admits ordinary stations as before.
 - **Checked before any write.** Settings are refused when:
   - an SSID is longer than 32 bytes or contains an embedded NUL;
   - a passphrase is outside 8 to 63 characters or is not printable ASCII;

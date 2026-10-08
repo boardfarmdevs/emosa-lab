@@ -63,8 +63,8 @@ VIF_GUARDS = (
     "wpa_pairwise_tkip",
     "wpa_pairwise_ccmp",
 )
-# the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod
-# advertises it in its Multi-AP element, as a Multi-AP agent's AP does
+# the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod's
+# AP takes it as a Multi-AP agent's AP does (hostapd multi_ap 2 or 1)
 MULTI_AP = {"fronthaul": "fronthaul_bss", "backhaul": "backhaul_bss"}
 
 

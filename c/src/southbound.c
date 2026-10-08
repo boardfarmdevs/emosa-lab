@@ -433,8 +433,8 @@ static cJSON *inet_row(const em_profile *p, const char *name)
     return row;
 }
 
-/* the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec §3.4): the pod
- * advertises it in its Multi-AP element, as a Multi-AP agent's AP does */
+/* the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec §3.4): the pod's
+ * AP takes it as a Multi-AP agent's AP does (hostapd multi_ap 2 or 1) */
 static void set_role(cJSON *row, const char *role)
 {
     cJSON_DeleteItemFromObjectCaseSensitive(row, "multi_ap");
