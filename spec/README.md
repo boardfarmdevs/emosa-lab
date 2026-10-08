@@ -402,6 +402,12 @@ target, from a BSS of the pod, is then carried out by the pod's band steering
   disassociation imminent the station is to be left where it is if it
   declines: the window closes 8 s after the kick, before `owm`'s
   deauthentication fallback (10 s after its BTM request).
+- **sweeps** the rows its windows left in the pod (a close that failed, the pod
+  away, or a process that ended first): once per pod source, with no window
+  under way, every row whose UUID its journal records as created by one of its
+  latest 64 windows and that is still in the pod is deleted by that UUID. A row
+  left behind would otherwise refuse every later mandate for its station as
+  another manager's.
 
 The window is 15 to 120 s (the request's opportunity window, raised to 15 s).
 One mandate at a time; a request while a window is open is acknowledged and

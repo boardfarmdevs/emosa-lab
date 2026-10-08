@@ -155,6 +155,11 @@ def test_a_pod_back_with_a_new_database_is_onboarded_on_it(agent, tmp_path):
     assert result["passed"], result
 
 
+def test_a_windows_rows_left_in_the_pod_are_closed_and_its_station_steered_again(agent, tmp_path):
+    result = box("steering-leftover", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_a_pod_recreated_with_another_radio_is_onboarded_on_it(agent, tmp_path):
     result = box("pod-recreated", agent, tmp_path / "box")
     assert result["passed"], result

@@ -1450,6 +1450,50 @@ async def wait_rows(box, predicate, seconds=20):
     return None
 
 
+async def steering_leftover(box):
+    """Box finding 20, rdk-emosa-1005 8 October: a steering window whose close failed (the pod's
+    management link cut while it was open) left its rows in the pod, and every later mandate for
+    the station was refused as another manager's steering, for good. Once the pod is back, the
+    window's rows are closed by their UUIDs, and a second mandate for the station is carried
+    out."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    ack = await box.ask(0x8014, (steering_request(STATIONS[0]),), ACK)
+    opened = await wait_rows(box, lambda c, n, g: c and n and g)
+    if not opened:
+        return box.result(passed=False, failed="no steering window", acked=bool(ack))
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}", connect=False)  # owm never takes it
+
+    def counts():
+        return ((box.status() or {}).get("steering") or {}).get("counts") or {}
+
+    close_failed = await box.until(lambda: counts().get("close_failed"), seconds=60)
+    left, _, _ = await steering_rows(box)  # the pod's own database, the link still cut
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}")
+    again = await provision(box, searches, m1s)
+    closed = await wait_rows(box, lambda c, n, g: not c and not n and not g, seconds=30)
+    second = await box.ask(0x8014, (steering_request(STATIONS[0]),), ACK)
+    reopened = await wait_rows(box, lambda c, n, g: c and n and g)
+    refused = counts().get("refused_ownership_conflict", 0)
+    return box.result(
+        passed=bool(close_failed)
+        and bool(left)
+        and again
+        and bool(closed)
+        and bool(second)
+        and bool(reopened)
+        and not refused,
+        close_failed_seen=bool(close_failed),
+        rows_left_while_away=len(left),
+        provisioning_again=again,
+        leftover_closed=bool(closed),
+        second_window=bool(reopened),
+        refused_ownership_conflict=refused,
+        counts=counts(),
+    )
+
+
 async def steering(box):
     """A steering mandate for one station and one target: acknowledged; a steering window
     opened as one write (the station's client row, a group, the target as a neighbor);
@@ -1794,6 +1838,7 @@ SCENARIOS = {
     "metrics": metrics,
     "unassociated": unassociated,
     "steering": steering,
+    "steering-leftover": steering_leftover,
     "steering-refusals": steering_refusals,
     "backhaul-capability": backhaul_capability,
     "backhaul-steering": backhaul_steering,

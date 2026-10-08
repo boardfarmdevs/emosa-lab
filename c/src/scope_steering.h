@@ -38,6 +38,8 @@ typedef struct {
     size_t nqueue;
     em_steering_queued queue[EM_STEERING_QUEUE];
     cJSON *leftover; /* operations a previous process left open (array) */
+    bool swept;           /* the sweep of windows' rows left in the pod done ... */
+    int swept_generation; /* ... for this pod source (OVSDB generation) */
     cJSON *history;  /* the latest eight outcomes */
     struct {
         size_t n;

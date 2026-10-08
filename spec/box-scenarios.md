@@ -114,6 +114,7 @@ sends it), each from its own registrar session with its own BSS index.
 | `steering-conflict` | another manager's client row for the station: a mandate opens no steering window and leaves that row as it was | spec 3.7 |
 | `steering-window-expired` | a window the pod's owm never takes ends at its deadline: the rows it inserted deleted, the outcome `not_applied` | spec 3.7 |
 | `steering-restart` | the agent killed with a window open; started again on its journal, it closes the window it finds left over | spec 3.7, design 6 |
+| `steering-leftover` | a window's close failed (the pod's link cut while it was open), its rows left in the pod; with the pod back, the rows closed by their UUIDs (the sweep) and a second mandate for the station carried out, not refused as another manager's | finding 20 |
 
 ## The adapter around the agents (spec 4, 8.2; plan 8.3)
 
@@ -157,6 +158,7 @@ a `systemctl` of the box's (plain processes, as `emosa-agent@.service` runs them
 | 17 | RDK's native backhaul steering failed in the geometry rooms with EMOSA in the gateway: the agents' interfaces, each with its agent's AL MAC, were the gateway's own, so the controller took a pod's agent for its co-located agent and rooted the backhaul topology at it (no station rooted, no candidate queried); fixed with the agents' interfaces in a namespace of their own (spec 2.1, `EMOSA_NETNS`) | RDK lab rdk-1004, EMOSA in the gateway, 5 October | `agent-netns` |
 | 18 | after a redeploy both pods stayed on GRE: each agent switched to the backhaul BSS a room's move had left as its kept target, out of reach where the pods then stood, and the timed-out switch held the pod, which a held pod's Backhaul Steering cannot end; fixed (spec 8.3: a kept target that fails falls back to the configured upstream). A fallback written at once was reverted with the failed switch by the pod's `cm` on the same start (the redeploy after the fix): it now waits for the station to be off the failed credential | RDK lab rdk-1004, 5 October | `backhaul-kept-gone` |
 | 19 | an agent never got its recreated pod back: the pod, recreated in place, came back with another AP radio from the lab's pool, and both agents kept the first source's radio capabilities for their whole run, so every refresh of the new source was refused ("pod radio identity or channel changed") and the session stayed `recovering` until the agent was restarted; fixed (spec 2.4: the capabilities are fixed per source, a new database generation takes them again) | RDK lab rdk-1004, 7 October (finding (a)) | `pod-recreated` |
+| 20 | pods' clients that could never be steered again: both EMOSA pods held their own windows' client rows (`cs_mode` `away`, `btm_deauth`, `owm` long `expired`) for the eight stations they served, left by closes that had failed; every later mandate saw a row for the station and refused it as another manager's (61 refusals each), the optimizer's steers timed out and the room never converged; fixed (spec 3.7: the sweep of the rows a window left, by the UUIDs the journal recorded) | RDK lab rdk-emosa-1005, 8 October | `steering-leftover` |
 
 ## Not scenarios
 

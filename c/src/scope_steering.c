@@ -611,6 +611,47 @@ static void close_window(em_steering_scope *s, const cJSON *op, const cJSON *int
     }
 }
 
+/* Rows a window of this agent created and never deleted (its close failed, the pod away, or the
+ * process ended first) are still in the pod: closed by the UUIDs the journal recorded, once per
+ * pod source and only with no window under way (a group or neighbor it reuses stays). Such a row
+ * would refuse every later mandate for its station as another manager's (box finding 20). */
+#define SWEEP_DEPTH 64
+static void sweep(em_steering_scope *s)
+{
+    const cJSON *clients = em_table(em_ovsdb_tables(s->ovs), "Band_Steering_Clients");
+    cJSON *ops = em_journal_operations(s->journal, NULL), *op;
+    int n = cJSON_GetArraySize(ops), i = 0;
+    cJSON_ArrayForEach(op, ops)
+    {
+        if (i++ < n - SWEEP_DEPTH)
+            continue;
+        const cJSON *created =
+            cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(op, "commit_evidence"), "created");
+        const char *client = str(created, "client"), *neighbor = str(created, "neighbor"),
+                   *group = str(created, "group");
+        em_steering_rows rows = {0};
+        if (!client || !cJSON_GetObjectItemCaseSensitive(clients, client) ||
+            !em_copy(rows.client, sizeof(rows.client), client))
+            continue;
+        if (!em_copy(rows.neighbor, sizeof(rows.neighbor), neighbor ? neighbor : ""))
+            rows.neighbor[0] = 0;
+        if (!em_copy(rows.group, sizeof(rows.group), group ? group : ""))
+            rows.group[0] = 0;
+        em_steering_intent in;
+        intent_struct(cJSON_GetObjectItemCaseSensitive(op, "intent"), &in);
+        em_ovs_session os = session(s);
+        if (em_steering_close(&os, &in, &rows) == EM_OK) {
+            em_log(EM_LOG_INFO, "emosa.agent.steering", "a window's rows left in the pod closed (station %s)",
+                   in.station);
+            record(s, "closed_leftover");
+        } else {
+            em_log(EM_LOG_WARNING, "emosa.agent.steering", "client steering close failed (rows left in the pod)");
+            record(s, "close_failed");
+        }
+    }
+    cJSON_Delete(ops);
+}
+
 static void step(em_steering_scope *s)
 {
     if (cJSON_GetArraySize(s->leftover)) {
@@ -626,6 +667,11 @@ static void step(em_steering_scope *s)
             end(s, op, "closed_after_restart");
             cJSON_Delete(op);
         }
+    }
+    if (!s->active && bound(s) && (!s->swept || s->swept_generation != em_ovsdb_generation(s->ovs))) {
+        sweep(s);
+        s->swept = true;
+        s->swept_generation = em_ovsdb_generation(s->ovs);
     }
     dequeue(s);
     if (!s->active)

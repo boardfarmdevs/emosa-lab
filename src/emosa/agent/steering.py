@@ -35,6 +35,7 @@ from emosa.operations import transition
 from emosa.reconcile import Engine
 
 log = logging.getLogger("emosa.agent.steering")
+SWEEP_DEPTH = 64  # the latest operations whose windows' rows the sweep looks for
 SOURCE = "steering-request"
 APPLY = 10  # owm takes the row within a second or two (seen live)
 GENTLE = 8  # < owm's 10 s deauthentication delay after a BTM request
@@ -79,6 +80,32 @@ class ClientSteering:
                 State.INDETERMINATE,
             )
         ]
+        self.swept = None  # the pod source (OVSDB generation) the leftover sweep was done for
+
+    async def _sweep(self):
+        """Rows a window of this agent created and never deleted (its close failed, the pod
+        away, or the process ended first) are still in the pod: closed by the UUIDs the journal
+        recorded, once per pod source and only with no window under way (a group or neighbor
+        it reuses stays). Such a row would refuse every later mandate for its station as
+        another manager's (box finding 20)."""
+        raw = await self.backend.session.snapshot()
+        if not raw.get("ready") or raw.get("generation") == self.swept:
+            return
+        decoded, _ = self.backend._binding(raw)
+        clients = decoded.get("Band_Steering_Clients", {})
+        for op in self.store.operations()[-SWEEP_DEPTH:]:
+            created = (op.commit_evidence or {}).get("created") or {}
+            if created.get("client") not in clients:
+                continue
+            intent = SteeringIntent(**op.intent)
+            try:
+                await self.backend.close(intent, created)
+                log.info("a window's rows left in the pod closed (station %s)", intent.station)
+                self._record("closed_leftover")
+            except (EmosaError, ConnectionError, TimeoutError) as exc:
+                log.warning("client steering close (rows left in the pod): %s", exc)
+                self._record("close_failed")
+        self.swept = raw.get("generation")
 
     def _closed(self):
         """Operations whose window the journal records as closed."""
@@ -231,6 +258,11 @@ class ClientSteering:
             if op.state != State.REQUESTED:
                 await self._close(op, SteeringIntent(**op.intent))
             self._end(op, "closed_after_restart")
+        if self.job is None:
+            try:
+                await self._sweep()
+            except (EmosaError, ConnectionError, TimeoutError) as exc:
+                log.debug("steering sweep: %s", exc)  # the pod away: at its next source
         await self._dequeue()
         if self.job is None:
             return
