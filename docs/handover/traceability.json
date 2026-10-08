@@ -100,7 +100,7 @@
     },
     "README 5. Operations": {
       "vectors": ["engine.json", "operation-transitions.json"],
-      "box": ["adapter-restart", "steering-restart"],
+      "box": ["adapter-restart", "steering-restart", "write-lost-unapplied"],
       "units": ["engine"],
       "python": ["test_conformance.py"]
     },

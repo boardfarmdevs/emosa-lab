@@ -652,7 +652,10 @@ void em_engine_reconcile(em_engine *e)
         } else {
             observation_event(e, op, &snap, target);
             bool elapsed = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(op, "deadline_elapsed"));
-            if (snap.ready && !strcmp(em_state_of(op), "INDETERMINATE") && elapsed && !em_matches(snap.config, target)) {
+            /* past the deadline and not applied: the write never landed, a pod restart dropped it,
+             * or it landed and the pod never applied it (finding 22), as a committed write times out */
+            if (snap.ready && !strcmp(em_state_of(op), "INDETERMINATE") && elapsed &&
+                !(em_matches(snap.config, target) && em_snapshot_satisfies(&snap, target))) {
                 em_transition(op, "TIMED_OUT", NULL);
                 em_set_reason(op, "APPLY_TIMEOUT");
                 changed = true;

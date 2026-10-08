@@ -354,6 +354,12 @@ def test_a_set_beyond_the_radios_slots_is_applied_in_part(agent, tmp_path):
     assert result["access_points"] == [["home-ap-24", "EMOSA-WSC-component"]]
 
 
+def test_a_lost_write_the_pod_never_applies_times_out_and_frees_the_pod(agent, tmp_path):
+    result = box("write-lost-unapplied", agent, tmp_path / "box", timeout=420)
+    assert result["passed"], result
+    assert result["reply_cut"]
+
+
 def test_each_bss_written_carries_its_m2_role_in_multi_ap(agent, tmp_path):
     result = box("fronthaul-role", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result

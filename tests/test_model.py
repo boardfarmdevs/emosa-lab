@@ -127,6 +127,34 @@ def test_unknown_outcome_lost_with_a_pod_restart_stops_blocking_after_the_deadli
     asyncio.run(scenario())
 
 
+def test_unknown_outcome_whose_write_landed_unapplied_stops_blocking_after_the_deadline(rig):
+    """finding 22: the write in the pod's config, its reply lost, the pod never applying it."""
+
+    async def scenario():
+        engine, backend, intent, clock = rig
+        backend.fault = "lost-reply"
+        op = requested(engine, intent)
+        await engine.execute(op.operation_id)
+        backend.fault = "none"
+        backend.reconnect()  # the pod back, the write kept in its config
+        await engine.reconcile("pod-1")
+        assert engine.store.get(op.operation_id).state == State.INDETERMINATE
+        assert backend.config["ssid"] == "test-network"  # it landed; State still the old one
+        blocked = requested(engine, intent, key="key-2")
+        assert blocked.state == State.REJECTED and blocked.reason == Reason.BUSY
+        clock.advance(31)
+        await engine.reconcile("pod-1")
+        timed = engine.store.get(op.operation_id)
+        assert timed.state == State.TIMED_OUT and timed.reason == Reason.APPLY_TIMEOUT
+        assert requested(engine, intent, key="key-3").state == State.REQUESTED
+        backend.device_step()  # applied late: recorded, the outcome kept
+        await engine.reconcile("pod-1")
+        late = engine.store.get(op.operation_id)
+        assert late.state == State.TIMED_OUT and late.late_resolution == "applied_after_deadline"
+
+    asyncio.run(scenario())
+
+
 def test_idempotency_busy_and_scope(rig):
     engine, _, intent, _ = rig
     op = requested(engine, intent)

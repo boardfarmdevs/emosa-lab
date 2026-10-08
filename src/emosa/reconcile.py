@@ -346,11 +346,16 @@ class Engine:
                     snap.ready
                     and op.state == State.INDETERMINATE
                     and op.deadline_elapsed
-                    and not self._matches(snap.config, target)
+                    and not (
+                        self._matches(snap.config, target)
+                        and snap.observed.fresh
+                        and snap.observed.satisfies(target)
+                    )
                 ):
-                    # The current configuration, past the deadline, lacks the
-                    # write (it never landed, or a pod restart dropped it). Stop
-                    # blocking the pod; a late application is still recorded.
+                    # Past the deadline and not applied: the write never landed, a
+                    # pod restart dropped it, or it landed and the pod never applied
+                    # it (finding 22), as a committed write times out. Stop blocking
+                    # the pod; a late application is still recorded.
                     transition(op, State.TIMED_OUT)
                     op.reason = Reason.APPLY_TIMEOUT
                     changed = True

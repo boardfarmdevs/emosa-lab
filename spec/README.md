@@ -577,7 +577,9 @@ Rules:
   period). The agent configures the pod again from the controller's next M2
   (§2.5). The operation's evidence names the start (`instance`).
 - An `INDETERMINATE` operation becomes `TIMED_OUT` once its deadline has passed
-  and the pod's current Config lacks the write. It MUST NOT block the pod
+  and the pod does not show it applied: its current Config lacks the write (it
+  never landed, or a restart dropped it), or has it while a fresh State does not
+  show it, as a `CONFIG_COMMITTED` one times out. It MUST NOT block the pod
   forever.
 - After a restart, a `SUBMITTED` operation becomes `INDETERMINATE`, and an
   unsent one is cancelled.

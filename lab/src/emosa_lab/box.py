@@ -16,6 +16,7 @@ root and touches no host interface.
 
 import argparse
 import asyncio
+import codecs
 import json
 import os
 import socket
@@ -202,6 +203,75 @@ async def attach_vifs(db):
     return len(changes)
 
 
+REPLY_CUT_PORT = 6661  # the reply cut's end, which the pod dials in place of the agent
+
+
+class ReplyCut:
+    """Between the pod's database and its agent: every message passed on, but the database's
+    reply to the agent's first transaction carrying `marker` is dropped and both ends closed,
+    as when the pod's management link is lost while that write commits (spec 5: the outcome
+    unknown, INDETERMINATE). The pod dials again through it, and is passed on as before."""
+
+    def __init__(self, marker):
+        self.marker, self.done, self.server = marker, False, None
+
+    async def start(self):
+        self.server = await asyncio.start_server(self.serve, "127.0.0.1", REPLY_CUT_PORT)
+
+    async def close(self):
+        if self.server:
+            self.server.close()
+            await self.server.wait_closed()
+
+    async def serve(self, pod_reader, pod_writer):
+        try:
+            agent_reader, agent_writer = await asyncio.open_connection("127.0.0.1", AGENT_PORT)
+        except OSError:
+            pod_writer.close()
+            return
+        awaited = set()  # the ids of the marked transactions, whose replies are cut
+
+        def from_agent(message):
+            transact = not self.done and message.get("method") == "transact"
+            if transact and self.marker in json.dumps(message):
+                awaited.add(json.dumps(message.get("id")))
+            return True
+
+        def from_pod(message):
+            if json.dumps(message.get("id")) in awaited and "method" not in message:
+                self.done = True
+                return False
+            return True
+
+        async def pump(reader, writer, keep):
+            decoder, text, buffer = json.JSONDecoder(), codecs.getincrementaldecoder("utf-8")(), ""
+            try:
+                while data := await reader.read(65536):
+                    buffer += text.decode(data)
+                    while buffer.strip():
+                        try:
+                            message, end = decoder.raw_decode(buffer.lstrip())
+                        except ValueError:
+                            break  # the rest of the message is still to come
+                        buffer = buffer.lstrip()[end:]
+                        if not keep(message):
+                            return
+                        writer.write(json.dumps(message).encode())
+                    await writer.drain()
+            except (ConnectionError, OSError):
+                pass
+
+        pumps = [
+            asyncio.ensure_future(pump(agent_reader, pod_writer, from_agent)),
+            asyncio.ensure_future(pump(pod_reader, agent_writer, from_pod)),
+        ]
+        await asyncio.wait(pumps, return_when=asyncio.FIRST_COMPLETED)
+        for task in pumps:
+            task.cancel()
+        for writer in (pod_writer, agent_writer):
+            writer.close()
+
+
 async def dial(db, endpoint, *, connect=True):
     """Make the pod's database connect to the agent, as a pod does after its redirect; or,
     with connect=False, drop that connection (the pod's management link cut)."""
@@ -337,6 +407,7 @@ class Box:
         m2_modes=None,
         wired=False,
         cold=False,
+        reply_cut=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         self.topology_query_window = topology_query_window
@@ -363,6 +434,9 @@ class Box:
         # give it a BSSID on the radio
         self.cold = cold
         self.drop = (COLD_VIF,) if cold else ()
+        # reply_cut: the pod dials the agent through a ReplyCut, which loses the reply to the
+        # agent's first write of the registrar's SSID
+        self.reply_cut = ReplyCut(REGISTRAR_SSID) if reply_cut else None
         self.pod_rows = MULTI_AP_ROWS if backhaul else POD_ROWS
         self.process = self.db = self.controller = self.log = self.broker = None
         self.interface = AGENT_INTERFACE  # the agent's 1905 interface (a fleet names its own)
@@ -476,6 +550,8 @@ class Box:
             "EMOSA_PROFILES": str(ROOT / "src/emosa/profiles"),
             **({"EMOSA_NETNS": self.netns_path} if self.netns else {}),
         }
+        if self.reply_cut:
+            await self.reply_cut.start()
         await self.start(config, fleet)
         return self
 
@@ -489,7 +565,8 @@ class Box:
             self.command, stdout=self.log, stderr=self.log, env=self.env
         )
         await asyncio.sleep(1)
-        await dial(self.db, f"tcp:127.0.0.1:{AGENT_PORT}")
+        port = REPLY_CUT_PORT if self.reply_cut else AGENT_PORT
+        await dial(self.db, f"tcp:127.0.0.1:{port}")
 
     def restart_agent(self):
         """The agent started again with its configuration and state directory."""
@@ -510,6 +587,8 @@ class Box:
             self.controller.close()
         if self.db:
             await self.db.close()
+        if self.reply_cut:
+            await self.reply_cut.close()
         if self.broker and self.broker.poll() is None:
             self.broker.terminate()
             self.broker.wait(5)
@@ -1907,6 +1986,53 @@ async def transport_cut(box):
     )
 
 
+async def write_lost_unapplied(box):
+    """spec 5 (finding 22): the pod's link lost while the agent's write commits (the box's
+    ReplyCut): the write is in the pod's Config, its reply lost (INDETERMINATE), and the pod's
+    State never shows it (its managers do not apply it). Past its deadline (120 s) the
+    operation ends TIMED_OUT and no longer blocks the pod: the agent onboards again, the next
+    M2 is written, and once the pod's managers apply that one it is observed applied."""
+    deadline = time.monotonic() + 330
+    searches = m1s = 0
+    first, seen, applying = None, {}, False
+    while time.monotonic() < deadline and box.process.poll() is None:
+        found = box.sent(AUTOCONFIG_SEARCH)
+        for search in found[searches:]:
+            box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
+        searches = len(found)
+        found = box.sent(AUTOCONFIG_WSC)
+        for m1 in found[m1s:]:
+            wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
+            ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)
+            await answer_m1(box, ruid, wsc)
+        m1s = len(found)
+        for op in (box.status() or {}).get("operations") or []:
+            if isinstance(op, dict) and op.get("operation_id"):
+                seen[op["operation_id"]] = (op.get("state"), op.get("reason"))
+        if first is None:
+            first = next((i for i, (s, _) in seen.items() if s == "INDETERMINATE"), None)
+        later = {i: s for i, (s, _) in seen.items() if first and i != first}
+        if not applying and any(
+            s in ("CONFIG_COMMITTED", "OBSERVED_APPLIED") for s in later.values()
+        ):
+            applying = True
+            await apply_configuration(box.db)  # the pod's managers apply the later write
+        if "OBSERVED_APPLIED" in later.values():
+            break
+        await asyncio.sleep(0.5)
+    first_state = seen.get(first, (None, None))
+    busy = sum(1 for s, r in seen.values() if s == "REJECTED" and r == "BUSY")
+    return box.result(
+        passed=bool(first)
+        and first_state[0] == "TIMED_OUT"
+        and "OBSERVED_APPLIED" in [s for i, (s, _) in seen.items() if i != first],
+        reply_cut=box.reply_cut.done,
+        first_operation=first_state,
+        rejected_busy=busy,
+        later_applied=applying and "OBSERVED_APPLIED" in later.values(),
+    )
+
+
 SCENARIOS = {
     "boot": boot,
     "onboard": onboard,
@@ -1939,8 +2065,10 @@ SCENARIOS = {
     "backhaul-steering-own-bss": backhaul_steering_own_bss,
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
+    "write-lost-unapplied": write_lost_unapplied,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
+    "write-lost-unapplied": {"reply_cut": True},
     "forgotten-agent": {"topology_query_window": 20},
     "agent-netns": {"netns": True},
     "telemetry": {"telemetry": True},

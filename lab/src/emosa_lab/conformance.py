@@ -3190,6 +3190,22 @@ def engine_vectors():
             ],
         ),
         (
+            # finding 22: the write landed (the pod's config has it), its reply was lost, and
+            # the pod never applies it: past the deadline it no longer blocks the pod
+            "unknown-landed-unapplied-then-deadline",
+            [
+                ("script", None, "unknown"),
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("pod", a, "", True, True),
+                ("reconcile",),
+                ("request", [b], "k2", 30),
+                ("advance", 31),
+                ("reconcile",),
+                ("request", [b], "k3", 30),
+            ],
+        ),
+        (
             "conflict",
             [
                 ("script", None, "conflict"),
