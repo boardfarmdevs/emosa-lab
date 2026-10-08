@@ -2,8 +2,8 @@
 
 **Scope note:** this is the counter-advertisement component exercise. Current
 native onboarding also uses configuration-scope/lifetime fixes, and the newer
-candidate adds sparse-ESP handling. See [current status](../project/current-status.md)
-and the [frozen candidate identities](../project/integration-baseline.md).
+candidate adds sparse-ESP handling. EMOSA's current state is the
+[repository README](../../README.md).
 Current Profile-1 agent runs advertise bytes; controller KiB/MiB support is a
 separate capability.
 

@@ -1,12 +1,9 @@
 # A learning sequence from first checkout to a defensible demonstration
 
-Read [current status](../project/current-status.md) before interpreting an older
-exercise's pending gates. Bounded native simulated-pod onboarding and operational
-recovery already pass. For the next actual OpenSync-container target, review the
-[integration baseline](../project/integration-baseline.md),
-[plan](../project/opensync-lab-integration-plan.md) and
-[warm/cold/sustained acceptance levels](../project/integration-acceptance.md).
-That integration remains unexecuted; these are preparation documents.
+This sequence is from the prototype phase: read the [repository README](../../README.md)
+for today's state before interpreting an older exercise's pending gates. The
+OpenSync-container integration it prepared has run since, in the reference lab and the
+RDK lab ([evidence](../records/evidence/README.md)).
 
 [Documentation index](../README.md) · [Full team manual](team-manual.md)
 

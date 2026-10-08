@@ -12,5 +12,4 @@
 | [Supported pod profiles](supported-pods.json) | Synthetic profile scope and the currently empty physical-pod qualification list |
 
 The [evidence index](evidence/README.md) links retained observations. Use the
-[team manual](../guides/team-manual.md) for runnable procedures and the
-[viability roadmap](../project/viability-roadmap.md) for the next proof boundaries.
+[team manual](../guides/team-manual.md) for runnable procedures.

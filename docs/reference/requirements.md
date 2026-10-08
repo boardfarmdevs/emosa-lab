@@ -1045,7 +1045,7 @@ The most useful additions are the optional telemetry consumer, explicit manageme
 
 ### 21.1 Readiness and authoritative inputs
 
-Use `../project/EMOSA-CODING-HANDOFF.md` as the execution guide and `../project/emosa-input-manifest.example.json` as the input checklist. This architecture remains the behavioral baseline. The handoff selects routine implementation defaults; it cannot silently weaken a requirement. Neither document is a substitute for the selected protocol specifications or evidence from the actual pods.
+Use `../project/emosa-input-manifest.example.json` as the input checklist. This architecture remains the behavioral baseline. Implementation defaults cannot silently weaken a requirement. The checklist is no substitute for the selected protocol specifications or evidence from the actual pods.
 
 The project is ready to begin repository setup, the semantic model, state machine, journal, mock backend, scenario runner and OVSDB simulation. Three external gates remain:
 

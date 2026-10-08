@@ -3,11 +3,9 @@
 **Audience:** new developers, test engineers, lab operators and demo presenters.
 
 **Status review:** 2026-09-23. Commands describe their named component/experiment.
-Use [current status](../project/current-status.md) to distinguish today's result
-from historical milestones, and [acceptance levels](../project/integration-acceptance.md)
-to distinguish warm onboarding, cold start and complete sustained service.
-The [OpenSync integration baseline](../project/integration-baseline.md) is preserved;
-that actual-container integration has not been executed.
+Today's state is the [repository README](../../README.md); this manual is from the
+prototype phase. The actual-container integration it prepared has run since, in the
+reference lab and the RDK lab ([evidence](../records/evidence/README.md)).
 
 **Start here:** complete chapters 1–6 before using a shared radio lab.
 
@@ -285,7 +283,7 @@ For hands-on work:
 | `schemas/`, `scenarios/`, `tests/` | Versioned contracts, runnable experiments and checks |
 | `deploy/` | Dedicated VM, peer, radio, native-manager and qualification workflows |
 | `docs/records/evidence/`, `site/`, `scripts/build-site.py` | Reviewed evidence and static explorer |
-| `docs/project/coding-handoff.md`, `docs/project/traceability.json` | Requirements/handoff and implementation/evidence mapping |
+| `docs/project/traceability.json`, `docs/handover/` | Implementation/evidence mapping; the handover documents |
 
 ### 2.5 Languages and upstream reuse
 
@@ -526,8 +524,7 @@ To present the working component accurately, say: “This is the EMOSA adapter
 managing a simulated OpenSync pod. Its local virtual-agent record is ready.
 This component demo does not exercise the separate native-controller onboarding
 runner.” Use the [connecting-pod guide](connecting-pod.md) for the
-runnable demonstration and [viability roadmap](../project/viability-roadmap.md)
-for the remaining proof steps.
+runnable demonstration.
 
 Reuse is recorded in [dependency qualification](../records/dependency-qualification.md),
 [third-party notices](../project/third-party-notices.md), per-fixture provenance files and
@@ -5160,8 +5157,7 @@ path or a physical OpenSync pod.
 Physical read-only input collection can proceed alongside wire implementation
 when the operator provides access. Native R0 recovery research and prepared-image
 exports improve the lab but should not delay an available physical experiment.
-The [viability roadmap](../project/viability-roadmap.md), [open inputs](../project/open-inputs.md),
-[protocol matrix](../reference/protocol/protocol-matrix.json) and [traceability](../project/traceability.json)
+The [protocol matrix](../reference/protocol/protocol-matrix.json) and [traceability](../project/traceability.json)
 track those boundaries. The final acceptance claim must always name the actual
 controller, adapter revision, unchanged pod/build, topology, procedure, observations
 and limits; a simulator-only result cannot complete it.

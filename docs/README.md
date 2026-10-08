@@ -58,10 +58,9 @@ wins.
   ([rdk-lab](records/evidence/rdk-lab/README.md)).
 - [Handover](handover/README.md): for the team taking EMOSA over: architecture, module
   guide, coding standard, test guide, traceability, decision log
-- [Project records](project/README.md): the plans, status pages and handoff
-  of the development up to September 2026. The current plan and status of all
-  the labs are the easymesh-labs
-  alignment plan (in [easymesh-labs](https://mesh.vcpe.dev/)).
+- [Project files](project/README.md): the third-party notices, the traceability
+  matrix and the input manifest template. The current plan and status of all the labs
+  are the easymesh-labs alignment plan (in [easymesh-labs](https://mesh.vcpe.dev/)).
 
 ## Learning
 

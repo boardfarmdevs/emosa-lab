@@ -1,6 +1,6 @@
 # EMOSA on an opensync-lab VM
 
-The EasyMesh side of the [proof plan](../../docs/project/proof-plan.md): a native
+EMOSA's reference lab: a native
 prplMesh controller and EMOSA's virtual agents, added next to an unchanged
 [opensync-lab](https://github.com/boardfarmdevs/opensync-lab) stack (RDK-B
 gateway `mv3`, OpenSync 6.6.1.0 pods, wireless clients, `local-noc`).

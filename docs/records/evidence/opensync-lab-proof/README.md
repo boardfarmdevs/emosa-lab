@@ -1,7 +1,7 @@
 # Run record: EasyMesh controller onboards OpenSync pods through EMOSA
 
 2026-09-24 (VM clock, UTC), branch `claude/0923-clean`, following the
-[proof plan](../../../project/proof-plan.md). Lab VM `emosa-osl-0923` on rev140,
+proof plan (since removed; in the history). Lab VM `emosa-osl-0923` on rev140,
 built by opensync-lab branch `claude/emosa-hooks` (from `main` of 23 September) with
 pod image `mvx-pod-20260923124229`; deployment in
 [deploy/opensync-lab](../../../../deploy/opensync-lab/README.md).

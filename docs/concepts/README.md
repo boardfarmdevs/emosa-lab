@@ -15,6 +15,6 @@
 | [Recovery semantics](recovery.md) | Idempotency, lost replies, deadlines, restart and late observations |
 | [Implementation decisions](decisions.md) | Recorded choices and qualification boundaries |
 
-For the implementation order and requirement-to-evidence mapping, see the
-[coding handoff](../project/coding-handoff.md) and
-[traceability matrix](../project/traceability.json).
+For the requirement-to-evidence mapping, see the
+[traceability matrix](../project/traceability.json); for the specification-to-test map,
+the [handover's traceability](../handover/traceability.md).
