@@ -164,7 +164,15 @@ class FleetBox(Box):
     which starts the agent and hands the pod over to it."""
 
     def __init__(
-        self, agent, directory, *, fleet=None, first=None, handover_seconds=20, supervised=False, **options
+        self,
+        agent,
+        directory,
+        *,
+        fleet=None,
+        first=None,
+        handover_seconds=20,
+        supervised=False,
+        **options,
     ):
         super().__init__(agent, directory, **options)
         self.interface = FLEET_INTERFACE
