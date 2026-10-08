@@ -150,7 +150,7 @@ def test_submit_replaces_the_psk_slot_under_serial_and_graph_guards(tmp_path):
     (ops,) = pod.session.sent
     assert [op["op"] for op in ops] == ["wait", "wait", "wait", "update", "mutate"]
     assert ops[0]["rows"][0]["serial_number"] == SERIAL
-    assert ops[3]["row"] == {"ssid": "emosa-mesh"}
+    assert ops[3]["row"] == {"ssid": "emosa-mesh", "multi_ap": "fronthaul_bss"}  # the M2's role
     assert ops[4]["mutations"] == [
         ["wpa_psks", "delete", ["set", ["key--1"]]],
         ["wpa_psks", "insert", ["map", [["key", "EmosaMesh2026!"]]]],
@@ -210,6 +210,7 @@ def test_cold_pod_fronthaul_is_created_only_from_the_intent(tmp_path):
         "wpa-psk",
     )
     assert vif["wpa_psks"] == ["map", [["key", "EmosaMesh2026!"]]]
+    assert vif["multi_ap"] == "fronthaul_bss"  # the role its M2 gives it (finding 21)
     assert ops[4]["mutations"] == [["vif_configs", "insert", ["set", [["named-uuid", "fh"]]]]]
     assert ops[5]["row"] == {"channel": 6, "ht_mode": "HT20", "enabled": True}
     assert "tx_chainmask" not in json.dumps(ops)
@@ -279,6 +280,9 @@ def test_multi_bss_maps_the_rdk_set_onto_the_platform_vifs(tmp_path):
         and inserts["b-ap-24"]["vif_radio_idx"] == 1
     )
     assert inserts["fh-24"]["ssid"] == "hotspot" and inserts["fh-24"]["vif_radio_idx"] == 6
+    assert {inserts[n]["multi_ap"] for n in ("svc-d-ap-24", "svc-e-ap-24", "fh-24")} == {
+        "fronthaul_bss"
+    }
     assert inserts["svc-d-ap-24"]["wpa_psks"] == ["map", [["key", "ExtraKey0-2026"]]]
     assert "tx_chainmask" not in json.dumps(ops)
 

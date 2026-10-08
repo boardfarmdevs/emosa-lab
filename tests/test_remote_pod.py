@@ -6,8 +6,8 @@ import asyncio
 
 import pytest
 
-from emosa_lab.box import apply_configuration, dial
-from emosa_lab.remote_pod import attach_vifs, follow, rows, served, start_pod, transact, uuids
+from emosa_lab.box import apply_configuration, attach_vifs, dial, uuids
+from emosa_lab.remote_pod import follow, rows, served, start_pod, transact
 
 pytestmark = pytest.mark.ovsdb
 

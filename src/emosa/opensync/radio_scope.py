@@ -78,9 +78,13 @@ def assess(rows, *, if_name, radio_name, ready, credentials_available=False):
             selected_config.get("mode") == "ap" and selected_config.get("enabled") is True,
             "vif_not_enabled_ap",
         )
-        # Explicit "none" means an ordinary AP without a native Multi-AP role.
-        # Missing metadata is unknown. EMOSA supplies the virtual agent role externally.
-        require(selected_config.get("multi_ap") == "none", "ordinary_ap_role_not_explicit")
+        # Explicit "none" means an ordinary AP without a native Multi-AP role, and
+        # "fronthaul_bss" the fronthaul role an agent wrote from its controller's M2, as EMOSA
+        # does (spec 3.4). Missing metadata is unknown; a backhaul role is not this scope.
+        require(
+            selected_config.get("multi_ap") in ("none", "fronthaul_bss"),
+            "ordinary_ap_role_not_explicit",
+        )
         states = [(u, s) for u, s in vstates.items() if s.get("vif_config") == vif_id]
         radio_states = [s for s in rstates.values() if s.get("radio_config") == radio_id]
         require(len(states) == 1 and len(radio_states) == 1, "state_binding_not_unique")

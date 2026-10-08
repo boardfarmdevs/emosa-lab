@@ -248,8 +248,8 @@ preceded by a read-only `select` of `Wifi_Inet_Config`.
 | Change | Operations |
 | --- | --- |
 | Hand over (fleet) | `update AWLAN_Node manager_addr` |
-| Update the fronthaul | `wait` on the AWLAN_Node serial, the radio's references (`if_name`, `vif_configs`) and the VIF's guarded fields → `update Wifi_VIF_Config ssid` → `mutate wpa_psks` (the single slot becomes key `key`) |
-| Cold pod: create the fronthaul | `wait` on the serial and that the VIF is absent → `insert Wifi_VIF_Config` (profile row, received SSID and PSK) → `mutate Wifi_Radio_Config vif_configs` → `update Wifi_Radio_Config channel, ht_mode, enabled` → `insert Wifi_Inet_Config` if absent |
+| Update the fronthaul | `wait` on the AWLAN_Node serial, the radio's references (`if_name`, `vif_configs`) and the VIF's guarded fields → `update Wifi_VIF_Config ssid, multi_ap` → `mutate wpa_psks` (the single slot becomes key `key`) |
+| Cold pod: create the fronthaul | `wait` on the serial and that the VIF is absent → `insert Wifi_VIF_Config` (profile row, received SSID and PSK, `multi_ap`) → `mutate Wifi_Radio_Config vif_configs` → `update Wifi_Radio_Config channel, ht_mode, enabled` → `insert Wifi_Inet_Config` if absent |
 | Multi-BSS set | as above for the primary BSS, plus: insert, update or delete each profile slot VIF so the slots are **exactly** the received set, with the matching `vif_configs` mutations and `Wifi_Inet_Config` rows |
 | Uplink switch (§8.3) | `wait` on the AWLAN_Node row and serial, and on the station's guarded fields (`if_name`, `mode`, `enabled`, `ssid`, `credential_configs`, `multi_ap`) → `insert Wifi_Credential_Config` (the backhaul SSID and passphrase, `onboard_type=multi_ap`, `priority` 1) → `update Wifi_VIF_Config` of the station: `enabled=true`, `ssid` and `security` empty, `multi_ap` and `wds` unset, `credential_configs` = that credential only |
 | Ethernet uplink (§8.4) | `wait` on the AWLAN_Node serial, and on the port's `Connection_Manager_Uplink` row: `if_name`, `if_type=eth`, `is_used=true` and its current `bridge` → `update Connection_Manager_Uplink bridge` (the fronthaul's bridge) |
@@ -298,6 +298,10 @@ The 6.6 encoding of WPA2-PSK:
   fronthaul, `0x40` is backhaul. A backhaul BSS may also carry the Backhaul STA
   bit (`0x80`), as prplMesh sends it: the same credentials serve the agent's
   backhaul station (§8.3). Combined or teardown flags are refused.
+- **The role in `multi_ap`.** Every BSS EMOSA writes carries its M2's role in
+  `Wifi_VIF_Config.multi_ap`: `fronthaul_bss` or `backhaul_bss`, whatever the
+  profile row or the pod had before. The pod then advertises it in its Multi-AP
+  element, as a Multi-AP agent's AP does (hostapd's `multi_ap` 2 or 1).
 - **Checked before any write.** Settings are refused when:
   - an SSID is longer than 32 bytes or contains an embedded NUL;
   - a passphrase is outside 8 to 63 characters or is not printable ASCII;

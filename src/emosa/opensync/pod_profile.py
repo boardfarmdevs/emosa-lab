@@ -62,6 +62,9 @@ VIF_GUARDS = (
     "wpa_pairwise_tkip",
     "wpa_pairwise_ccmp",
 )
+# the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod
+# advertises it in its Multi-AP element, as a Multi-AP agent's AP does
+MULTI_AP = {"fronthaul": "fronthaul_bss", "backhaul": "backhaul_bss"}
 
 
 def wpa2_psk(row):
@@ -361,7 +364,7 @@ class PodBackend(OpenSyncBackend):
         return {
             **common,
             "action": "update",
-            "fields": ["ssid", "wpa_psks"],
+            "fields": ["ssid", "multi_ap", "wpa_psks"],
             "guard": "pod serial, radio/VIF references and VIF security fields",
         }
 
@@ -416,6 +419,7 @@ class PodBackend(OpenSyncBackend):
                     **self.profile.fronthaul_vif,
                     "if_name": self.if_name,
                     "ssid": intent.ssid,
+                    "multi_ap": MULTI_AP["fronthaul"],
                     "wpa_psks": ["map", [["key", key]]],
                 },
             },
@@ -507,9 +511,14 @@ class PodBackend(OpenSyncBackend):
                     )
                     counts.append(None)
             elif bss is not None:
-                base = (
-                    self.profile.backhaul_row if role == "backhaul" else self.profile.fronthaul_vif
-                )
+                base = {
+                    **(
+                        self.profile.backhaul_row
+                        if role == "backhaul"
+                        else self.profile.fronthaul_vif
+                    ),
+                    "multi_ap": MULTI_AP[role],
+                }
                 key = self.vault.resolve(bss["secret_ref"])
                 if present:
                     slots = sorted(present["config"].get("wpa_psks") or {})
@@ -599,7 +608,7 @@ class PodBackend(OpenSyncBackend):
                     "op": "update",
                     "table": "Wifi_VIF_Config",
                     "where": where_uuid(vif_uuid),
-                    "row": {"ssid": intent.ssid},
+                    "row": {"ssid": intent.ssid, "multi_ap": MULTI_AP["fronthaul"]},
                 },
                 {
                     "op": "mutate",

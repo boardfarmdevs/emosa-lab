@@ -354,6 +354,17 @@ def test_a_set_beyond_the_radios_slots_is_applied_in_part(agent, tmp_path):
     assert result["access_points"] == [["home-ap-24", "EMOSA-WSC-component"]]
 
 
+def test_each_bss_written_carries_its_m2_role_in_multi_ap(agent, tmp_path):
+    result = box("fronthaul-role", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_a_fronthaul_created_on_a_cold_pod_carries_its_m2_role(agent, tmp_path):
+    result = box("fronthaul-role-cold", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert [r[0] for r in result["roles"]] == ["home-ap-24"]
+
+
 def test_a_wired_pods_ethernet_uplink_is_bridged_into_br_home(agent, tmp_path):
     result = box("wired-uplink", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result

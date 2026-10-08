@@ -7,6 +7,7 @@ import pytest
 from emosa.errors import EmosaError, Reason
 from emosa.model import Intent
 from emosa.opensync.mapping import OpenSyncBackend
+from emosa.opensync.radio_scope import assess
 from emosa.opensync.session import OvsSession
 from emosa.secrets import SecretStore
 from emosa_lab.simulation.connecting_pod import SERIAL
@@ -282,3 +283,38 @@ def test_separate_radio_is_allowed_and_untouched(tmp_path):
             }
 
     asyncio.run(scenario())
+
+
+@pytest.mark.parametrize(
+    ("multi_ap", "explicit"),
+    [
+        ("none", True),  # an ordinary AP
+        ("fronthaul_bss", True),  # the fronthaul role an agent wrote from its M2 (finding 21)
+        (None, False),
+        ("backhaul_bss", False),
+        ("fronthaul_backhaul_bss", False),
+    ],
+)
+def test_an_aps_role_is_explicit_as_an_ordinary_ap_or_an_agents_fronthaul(multi_ap, explicit):
+    config = {"if_name": "home-ap-24", "mode": "ap", "enabled": True, "bridge": "br-home"}
+    if multi_ap:
+        config["multi_ap"] = multi_ap
+    radio = {"if_name": "wifi0", "freq_band": "2.4G", "enabled": True, "vif_configs": ["vc"]}
+    rows = {
+        "Wifi_Radio_Config": {"rc": radio},
+        "Wifi_Radio_State": {
+            "rs": {
+                "if_name": "wifi0",
+                "radio_config": "rc",
+                "vif_states": ["vs"],
+                "freq_band": "2.4G",
+            }
+        },
+        "Wifi_VIF_Config": {"vc": config},
+        "Wifi_VIF_State": {
+            "vs": {"if_name": "home-ap-24", "vif_config": "vc", "mode": "ap", "enabled": True}
+        },
+    }
+    report = assess(rows, if_name="home-ap-24", radio_name="wifi0", ready=True)
+    assert ("ordinary_ap_role_not_explicit" not in report["blockers"]) is explicit
+    assert report["topology_candidate"] is explicit

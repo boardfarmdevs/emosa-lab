@@ -19,15 +19,19 @@ opensync-lab-hwsim-6.6.1-v1 (pods.SERIAL.profile when its default is another).
 import argparse
 import asyncio
 import contextlib
-import json
 import signal
 import sys
 import time
-from pathlib import Path
 
-from emosa.opensync.schema import reference_path
-from emosa.opensync.session import OvsSession
-from emosa_lab.box import POD_ROWS, apply_configuration, dial, recorded_pod
+from emosa_lab.box import (
+    POD_ROWS,
+    apply_configuration,
+    attach_vifs,
+    dial,
+    recorded_pod,
+)
+from emosa_lab.box import db_transact as transact
+from emosa_lab.box import table_rows as rows
 from emosa_lab.simulation.database import SimDatabase
 
 RECORDED_SERIAL = "MVXPOD023F87E628DD"
@@ -36,26 +40,6 @@ PROFILE = "opensync-lab-hwsim-6.6.1-v1"
 
 def log(text):
     print(time.strftime("%H:%M:%S ") + text, flush=True)
-
-
-async def rows(db, table):
-    """One table of the pod's database, every column, decoded."""
-    schema = json.loads(Path(reference_path()).read_text())
-    columns = sorted(schema["tables"][table]["columns"])
-    session = OvsSession(db.endpoint, read_only=True, monitor_columns={table: columns})
-    try:
-        snapshot = await session.snapshot()
-    finally:
-        await session.close()
-    return snapshot["tables"].get(table, {})
-
-
-async def transact(db, operations):
-    session = OvsSession(db.endpoint)
-    try:
-        return await session.transact(operations)
-    finally:
-        await session.close()
 
 
 async def start_pod(serial, directory=None):
@@ -77,67 +61,6 @@ async def follow(db, remote):
         log(f"manager_addr {wanted}: dialing it instead of {remote}")
         return wanted
     return remote
-
-
-FIRST_OCTETS = ("82", "a2", "c2", "e2", "86", "a6", "c6", "e6")  # locally administered
-
-
-def uuids(value):
-    """The UUIDs of a raw OVSDB reference or set of references."""
-    if isinstance(value, list) and len(value) == 2 and value[0] == "uuid":
-        return [value[1]]
-    if isinstance(value, list) and len(value) == 2 and value[0] == "set":
-        return [item[1] for item in value[1] if isinstance(item, list) and item[0] == "uuid"]
-    return []
-
-
-async def attach_vifs(db):
-    """As OpenSync's wm does for a VIF a manager created: its State gets a BSSID (the radio's MAC
-    under another locally administered first octet) and joins its radio's vif_states, where an
-    agent's view of the pod finds the radio's BSSes. The number of changes made."""
-    radio_configs = await rows(db, "Wifi_Radio_Config")
-    radio_states = await rows(db, "Wifi_Radio_State")
-    vif_states = await rows(db, "Wifi_VIF_State")
-    by_config = {
-        uuids(r.get("radio_config"))[0]: (u, r)
-        for u, r in radio_states.items()
-        if uuids(r.get("radio_config"))
-    }
-    taken = {v.get("mac") for v in vif_states.values() if isinstance(v.get("mac"), str)}
-    changes = []
-    for uuid, vif in vif_states.items():
-        config = uuids(vif.get("vif_config"))
-        if vif.get("mode") != "ap" or not config:
-            continue
-        radio_config = next(
-            (u for u, r in radio_configs.items() if config[0] in uuids(r.get("vif_configs"))), None
-        )
-        if radio_config not in by_config:
-            continue
-        state, radio = by_config[radio_config]
-        if not isinstance(vif.get("mac"), str) and isinstance(radio.get("mac"), str):
-            mac = next(
-                (o + radio["mac"][2:] for o in FIRST_OCTETS if o + radio["mac"][2:] not in taken),
-                None,
-            )
-            if mac:
-                taken.add(mac)
-                where = [["_uuid", "==", ["uuid", uuid]]]
-                changes.append(
-                    {"op": "update", "table": "Wifi_VIF_State", "where": where, "row": {"mac": mac}}
-                )
-        if uuid not in uuids(radio.get("vif_states")):
-            changes.append(
-                {
-                    "op": "mutate",
-                    "table": "Wifi_Radio_State",
-                    "where": [["_uuid", "==", ["uuid", state]]],
-                    "mutations": [["vif_states", "insert", ["set", [["uuid", uuid]]]]],
-                }
-            )
-    if changes:
-        await transact(db, changes)
-    return len(changes)
 
 
 async def served(db):

@@ -145,6 +145,68 @@ async def set_beyond_slots(box):
     )
 
 
+# a fronthaul, a second fronthaul with its own SSID and a backhaul BSS, each with its own index
+ROLE_SET = ("configure", "changed:3", "backhaul")
+SECOND_SSID = "Conflicting-WSC-request"  # the registrar's changed mode
+ROLES = {
+    REGISTRAR_SSID: "fronthaul_bss",
+    SECOND_SSID: "fronthaul_bss",
+    BACKHAUL_SSID: "backhaul_bss",
+}
+
+
+async def ap_roles(box):
+    """Each AP VIF with an SSID of the controller's set: its name, SSID, and multi_ap in its
+    Config and in its State."""
+    states = {r.get("if_name"): r for r in (await box.rows("Wifi_VIF_State")).values()}
+    return sorted(
+        (
+            v.get("if_name"),
+            v.get("ssid"),
+            v.get("multi_ap"),
+            states.get(v.get("if_name"), {}).get("multi_ap"),
+        )
+        for v in (await box.rows("Wifi_VIF_Config")).values()
+        if v.get("mode") == "ap" and v.get("ssid") in ROLES
+    )
+
+
+def roles_carried(roles, expected):
+    """Every BSS of the set written once, its Config and State with the role its M2 gave it."""
+    return sorted(ssid for _, ssid, _, _ in roles) == sorted(expected) and all(
+        config == state == ROLES[ssid] for _, ssid, config, state in roles
+    )
+
+
+async def fronthaul_role(box):
+    """spec 3.2, 3.4 (finding 21): every BSS the agent writes carries in multi_ap the role its
+    M2's Multi-AP extension gives it, so the pod advertises it as a Multi-AP agent's AP does:
+    the recorded pod's fronthaul (its multi_ap unset) updated to fronthaul_bss, a second
+    fronthaul BSS created on a slot as fronthaul_bss, the backhaul BSS as backhaul_bss."""
+    onboarding = await onboarded(box)
+    roles = await ap_roles(box)
+    return box.result(
+        passed=bool(onboarding.get("applied")) and roles_carried(roles, ROLES),
+        onboarded=bool(onboarding.get("applied")),
+        failed=onboarding.get("failed"),
+        roles=roles,
+    )
+
+
+async def fronthaul_role_cold(box):
+    """spec 3.2, 3.4 (finding 21): the Pis' case: a pod whose bootstrap made its radio only
+    (one AP, no slots) gets RDK's five-BSS set; the fronthaul the agent creates carries
+    fronthaul_bss, and the pod applies it."""
+    onboarding = await onboarded(box)
+    roles = await ap_roles(box)
+    return box.result(
+        passed=bool(onboarding.get("applied")) and roles_carried(roles, [REGISTRAR_SSID]),
+        onboarded=bool(onboarding.get("applied")),
+        failed=onboarding.get("failed"),
+        roles=roles,
+    )
+
+
 async def wired_uplink(box):
     """spec 8.4 (alignment plan 9.A1): a wired pod, cm using its Ethernet port eth1 as the
     uplink, and the agent's uplink mode ethernet: the agent bridges eth1 into br-home
@@ -467,6 +529,8 @@ async def steering_restart(box):
 SCENARIOS = {
     "multi-bss": multi_bss,
     "set-beyond-slots": set_beyond_slots,
+    "fronthaul-role": fronthaul_role,
+    "fronthaul-role-cold": fronthaul_role_cold,
     "wired-uplink": wired_uplink,
     "uplink-held": uplink_held,
     "uplink-foreign-change": uplink_foreign_change,
@@ -486,6 +550,13 @@ M2_UPLINK = {
 OPTIONS = {
     "multi-bss": {"backhaul": True, "multi_bss": True, "uplink": M2_UPLINK},
     "set-beyond-slots": {"multi_bss": True, "profile": ONE_AP, "m2_modes": RDK_SET},
+    "fronthaul-role": {"multi_bss": True, "m2_modes": ROLE_SET},
+    "fronthaul-role-cold": {
+        "multi_bss": True,
+        "profile": ONE_AP,
+        "m2_modes": RDK_SET,
+        "cold": True,
+    },
     "wired-uplink": {"wired": True},
     "uplink-held": {"backhaul": True, "uplink": {**UPLINK, "ssid": "emosa-lab-elsewhere"}},
     "uplink-foreign-change": {"backhaul": True},

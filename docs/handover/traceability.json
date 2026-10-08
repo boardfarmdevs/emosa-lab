@@ -58,7 +58,7 @@
     },
     "README 3.4 Translation: EasyMesh → OVSDB": {
       "vectors": ["translation-southbound.json", "control.json", "scope-writes.json"],
-      "box": ["onboard", "multi-bss", "set-beyond-slots", "channel-selection"],
+      "box": ["onboard", "multi-bss", "set-beyond-slots", "fronthaul-role", "fronthaul-role-cold", "channel-selection"],
       "python": ["test_pod_profile.py", "test_channel_procedures.py", "test_wsc_operation_bridge.py"]
     },
     "README 3.5 Pod profiles": {

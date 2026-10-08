@@ -6776,6 +6776,7 @@
       {
        "op": "update",
        "row": {
+        "multi_ap": "fronthaul_bss",
         "ssid": "emosa-mesh-2"
        },
        "table": "Wifi_VIF_Config",
@@ -7217,6 +7218,7 @@
         "if_name": "home-ap-24",
         "mac_list_type": "none",
         "mode": "ap",
+        "multi_ap": "fronthaul_bss",
         "rrm": 1,
         "rsn_pairwise_ccmp": true,
         "security": [

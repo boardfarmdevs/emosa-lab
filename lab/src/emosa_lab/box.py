@@ -55,6 +55,7 @@ AGENT_INTERFACE, CONTROLLER_INTERFACE = "em0", "ctl0"
 AUTOCONFIG_SEARCH, AUTOCONFIG_RESPONSE, AUTOCONFIG_WSC = 0x0007, 0x0008, 0x0009
 REGISTRAR = ROOT / ".cache/wsc-registrar/component-registrar"  # scripts/build-wsc-registrar.py
 REGISTRAR_SSID = "EMOSA-WSC-component"  # deploy/wire/component-registrar.c
+COLD_VIF = "home-ap-24"  # the profiles' fronthaul VIF
 
 
 def in_namespace():
@@ -77,18 +78,31 @@ def network(interface=AGENT_INTERFACE):
         subprocess.run(command, check=True)
 
 
-def recorded_pod(rows=POD_ROWS, replace=None):
+def recorded_pod(rows=POD_ROWS, replace=None, drop=()):
     """The recorded pod's tables as one insert transaction (references by name), each
-    text in replace (a MAC, say) changed into its value."""
+    text in replace (a MAC, say) changed into its value. drop: interfaces left out, as on
+    a pod whose bootstrap made their radio only (their VIF and Inet rows, and the
+    references to them)."""
     text = Path(rows).read_text()
     for old, new in (replace or {}).items():
         text = text.replace(old, new)
     tables = json.loads(text)["tables"]
+    gone = {
+        uuid
+        for table in ("Wifi_VIF_Config", "Wifi_VIF_State", "Wifi_Inet_Config")
+        for uuid, row in tables.get(table, {}).items()
+        if row.get("if_name") in drop
+    }
+    tables = {t: {u: r for u, r in rows.items() if u not in gone} for t, rows in tables.items()}
     names = {uuid: f"row{i}" for i, uuid in enumerate(u for rows in tables.values() for u in rows)}
 
     def named(value):
         if isinstance(value, list) and len(value) == 2 and value[0] == "uuid":
+            if value[1] in gone:  # a set of one, its only member left out
+                return ["set", []]
             return ["named-uuid", names[value[1]]] if value[1] in names else value
+        if isinstance(value, list) and len(value) == 2 and value[0] == "set":
+            return ["set", [named(v) for v in value[1] if not gone.intersection(uuids(v))]]
         if isinstance(value, list):
             return [named(v) for v in value]
         return value
@@ -105,6 +119,87 @@ def recorded_pod(rows=POD_ROWS, replace=None):
                 }
             )
     return tables, operations
+
+
+async def table_rows(db, table):
+    """One table of the pod's database, every column, decoded."""
+    schema = json.loads(Path(reference_path()).read_text())
+    columns = sorted(schema["tables"][table]["columns"])
+    session = OvsSession(db.endpoint, read_only=True, monitor_columns={table: columns})
+    try:
+        snapshot = await session.snapshot()
+    finally:
+        await session.close()
+    return snapshot["tables"].get(table, {})
+
+
+async def db_transact(db, operations):
+    session = OvsSession(db.endpoint)
+    try:
+        return await session.transact(operations)
+    finally:
+        await session.close()
+
+
+FIRST_OCTETS = ("82", "a2", "c2", "e2", "86", "a6", "c6", "e6")  # locally administered
+
+
+def uuids(value):
+    """The UUIDs of a raw OVSDB reference or set of references."""
+    if isinstance(value, list) and len(value) == 2 and value[0] == "uuid":
+        return [value[1]]
+    if isinstance(value, list) and len(value) == 2 and value[0] == "set":
+        return [item[1] for item in value[1] if isinstance(item, list) and item[0] == "uuid"]
+    return []
+
+
+async def attach_vifs(db):
+    """As OpenSync's wm does for a VIF a manager created: its State gets a BSSID (the radio's MAC
+    under another locally administered first octet) and joins its radio's vif_states, where an
+    agent's view of the pod finds the radio's BSSes. The number of changes made."""
+    radio_configs = await table_rows(db, "Wifi_Radio_Config")
+    radio_states = await table_rows(db, "Wifi_Radio_State")
+    vif_states = await table_rows(db, "Wifi_VIF_State")
+    by_config = {
+        uuids(r.get("radio_config"))[0]: (u, r)
+        for u, r in radio_states.items()
+        if uuids(r.get("radio_config"))
+    }
+    taken = {v.get("mac") for v in vif_states.values() if isinstance(v.get("mac"), str)}
+    changes = []
+    for uuid, vif in vif_states.items():
+        config = uuids(vif.get("vif_config"))
+        if vif.get("mode") != "ap" or not config:
+            continue
+        radio_config = next(
+            (u for u, r in radio_configs.items() if config[0] in uuids(r.get("vif_configs"))), None
+        )
+        if radio_config not in by_config:
+            continue
+        state, radio = by_config[radio_config]
+        if not isinstance(vif.get("mac"), str) and isinstance(radio.get("mac"), str):
+            mac = next(
+                (o + radio["mac"][2:] for o in FIRST_OCTETS if o + radio["mac"][2:] not in taken),
+                None,
+            )
+            if mac:
+                taken.add(mac)
+                where = [["_uuid", "==", ["uuid", uuid]]]
+                changes.append(
+                    {"op": "update", "table": "Wifi_VIF_State", "where": where, "row": {"mac": mac}}
+                )
+        if uuid not in uuids(radio.get("vif_states")):
+            changes.append(
+                {
+                    "op": "mutate",
+                    "table": "Wifi_Radio_State",
+                    "where": [["_uuid", "==", ["uuid", state]]],
+                    "mutations": [["vif_states", "insert", ["set", [["uuid", uuid]]]]],
+                }
+            )
+    if changes:
+        await db_transact(db, changes)
+    return len(changes)
 
 
 async def dial(db, endpoint, *, connect=True):
@@ -241,6 +336,7 @@ class Box:
         profile=None,
         m2_modes=None,
         wired=False,
+        cold=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         self.topology_query_window = topology_query_window
@@ -262,6 +358,11 @@ class Box:
         # wired: a wired pod, cm using its Ethernet port eth1 as the uplink; the agent's
         # uplink mode ethernet (spec 8.4)
         self.wired = wired
+        # cold: the pod's fronthaul VIF left out, as on a pod whose bootstrap made its radio
+        # only (the Pis'): the agent creates it from the M2 (spec 3.2), and the pod's managers
+        # give it a BSSID on the radio
+        self.cold = cold
+        self.drop = (COLD_VIF,) if cold else ()
         self.pod_rows = MULTI_AP_ROWS if backhaul else POD_ROWS
         self.process = self.db = self.controller = self.log = self.broker = None
         self.interface = AGENT_INTERFACE  # the agent's 1905 interface (a fleet names its own)
@@ -269,7 +370,7 @@ class Box:
     async def __aenter__(self):
         self.directory.mkdir(parents=True, exist_ok=True)
         network(self.interface)
-        tables, operations = recorded_pod(self.pod_rows)
+        tables, operations = recorded_pod(self.pod_rows, drop=self.drop)
         self.serial = next(iter(tables["AWLAN_Node"].values()))["serial_number"]
         if self.foreign_broker:
             node = next(o for o in operations if o["table"] == "AWLAN_Node")
@@ -435,14 +536,7 @@ class Box:
 
     async def rows(self, table):
         """The pod's rows of one table, every column, decoded."""
-        schema = json.loads(Path(reference_path()).read_text())
-        columns = sorted(schema["tables"][table]["columns"])
-        session = OvsSession(self.db.endpoint, read_only=True, monitor_columns={table: columns})
-        try:
-            snapshot = await session.snapshot()
-        finally:
-            await session.close()
-        return snapshot["tables"].get(table, {})
+        return await table_rows(self.db, table)
 
     def counts(self):
         return ((self.status() or {}).get("session") or {}).get("counts") or {}
@@ -458,11 +552,7 @@ class Box:
         return await self.until(lambda: self.controller.reply(expected, mid), seconds=seconds)
 
     async def transact(self, operations):
-        session = OvsSession(self.db.endpoint)
-        try:
-            return await session.transact(operations)
-        finally:
-            await session.close()
+        return await db_transact(self.db, operations)
 
     async def vif(self, table, if_name):
         """(uuid, row) of the pod's VIF by name in Wifi_VIF_Config or Wifi_VIF_State."""
@@ -522,7 +612,7 @@ class Box:
         radios), dialing the agent again."""
         old = self.db
         await old.close()
-        tables, operations = recorded_pod(self.pod_rows, replace)
+        tables, operations = recorded_pod(self.pod_rows, replace, self.drop)
         self.db = SimDatabase()
         await self.db.start()
         await self.transact(operations)
@@ -637,6 +727,8 @@ async def onboarded(box):
             if any(r.get("ssid") == REGISTRAR_SSID for r in rows.values()):
                 wrote, pending = True, False
                 await apply_configuration(box.db)  # the pod's managers apply it, once
+                if box.cold:
+                    await attach_vifs(box.db)
         if wrote and applied():
             break
         await asyncio.sleep(0.3)

@@ -433,6 +433,14 @@ static cJSON *inet_row(const em_profile *p, const char *name)
     return row;
 }
 
+/* the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec §3.4): the pod
+ * advertises it in its Multi-AP element, as a Multi-AP agent's AP does */
+static void set_role(cJSON *row, const char *role)
+{
+    cJSON_DeleteItemFromObjectCaseSensitive(row, "multi_ap");
+    cJSON_AddStringToObject(row, "multi_ap", !strcmp(role, "backhaul") ? "backhaul_bss" : "fronthaul_bss");
+}
+
 #define PUSH(o, n) (cJSON_AddItemToArray(ops, (o)), counts[nops++] = (n))
 
 em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
@@ -505,6 +513,7 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
         cJSON_AddStringToObject(row, "if_name", p->fronthaul_if);
         cJSON_DeleteItemFromObjectCaseSensitive(row, "ssid");
         cJSON_AddStringToObject(row, "ssid", intent->ssid);
+        set_role(row, "fronthaul");
         cJSON_AddItemToObject(row, "wpa_psks", psk_map(key));
         cJSON_AddItemToObject(ins, "row", row);
         PUSH(ins, -1);
@@ -525,6 +534,7 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
         PUSH(guard("Wifi_VIF_Config", b.vif_uuid, b.config, VIF_GUARDS, 11), -1);
         cJSON *upd = op("update", "Wifi_VIF_Config", where_uuid(b.vif_uuid)), *row = cJSON_CreateObject();
         cJSON_AddStringToObject(row, "ssid", intent->ssid);
+        set_role(row, "fronthaul");
         cJSON_AddItemToObject(upd, "row", row);
         PUSH(upd, 1);
         PUSH(psk_mutate(b.vif_uuid, b.config, key), 1);
@@ -562,6 +572,7 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
                 merge(base, p->fronthaul_vif, NULL);
                 if (!strcmp(p->slots[i].role, "backhaul"))
                     merge(base, p->backhaul_vif, NULL);
+                set_role(base, p->slots[i].role);
                 const char *bkey = resolve(resolve_ctx, intent->additional[k].secret_ref);
                 if (!bkey) {
                     cJSON_Delete(base);
