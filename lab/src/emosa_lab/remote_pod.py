@@ -5,8 +5,10 @@ The lab in a box's recorded pod (an OVSDB server from recorded rows of an OpenSy
 pod) is handed to a remote fleet's front port, as an operator's redirector does, and then
 behaves as a pod's cm: when the fleet writes manager_addr, it dials the agent there instead.
 Its managers copy each AP VIF's Config into its State, so the agent's writes are observed as
-applied. Outbound TCP only, no radio and no data plane: the remote EMOSA's agent onboards it to
-its controller as it would a real pod. Runs until stopped (SIGINT, SIGTERM) or --seconds.
+applied, and give a VIF the agent created a BSSID on its radio, as wm does, so every BSS of a
+controller's set is reported. Outbound TCP only, no radio and no data plane: the remote EMOSA's
+agent onboards it to its controller as it would a real pod. Runs until stopped (SIGINT,
+SIGTERM) or --seconds.
 
   python -m emosa_lab.remote_pod --fleet HOST:PORT [--serial SERIAL] [--seconds N]
 
@@ -77,6 +79,67 @@ async def follow(db, remote):
     return remote
 
 
+FIRST_OCTETS = ("82", "a2", "c2", "e2", "86", "a6", "c6", "e6")  # locally administered
+
+
+def uuids(value):
+    """The UUIDs of a raw OVSDB reference or set of references."""
+    if isinstance(value, list) and len(value) == 2 and value[0] == "uuid":
+        return [value[1]]
+    if isinstance(value, list) and len(value) == 2 and value[0] == "set":
+        return [item[1] for item in value[1] if isinstance(item, list) and item[0] == "uuid"]
+    return []
+
+
+async def attach_vifs(db):
+    """As OpenSync's wm does for a VIF a manager created: its State gets a BSSID (the radio's MAC
+    under another locally administered first octet) and joins its radio's vif_states, where an
+    agent's view of the pod finds the radio's BSSes. The number of changes made."""
+    radio_configs = await rows(db, "Wifi_Radio_Config")
+    radio_states = await rows(db, "Wifi_Radio_State")
+    vif_states = await rows(db, "Wifi_VIF_State")
+    by_config = {
+        uuids(r.get("radio_config"))[0]: (u, r)
+        for u, r in radio_states.items()
+        if uuids(r.get("radio_config"))
+    }
+    taken = {v.get("mac") for v in vif_states.values() if isinstance(v.get("mac"), str)}
+    changes = []
+    for uuid, vif in vif_states.items():
+        config = uuids(vif.get("vif_config"))
+        if vif.get("mode") != "ap" or not config:
+            continue
+        radio_config = next(
+            (u for u, r in radio_configs.items() if config[0] in uuids(r.get("vif_configs"))), None
+        )
+        if radio_config not in by_config:
+            continue
+        state, radio = by_config[radio_config]
+        if not isinstance(vif.get("mac"), str) and isinstance(radio.get("mac"), str):
+            mac = next(
+                (o + radio["mac"][2:] for o in FIRST_OCTETS if o + radio["mac"][2:] not in taken),
+                None,
+            )
+            if mac:
+                taken.add(mac)
+                where = [["_uuid", "==", ["uuid", uuid]]]
+                changes.append(
+                    {"op": "update", "table": "Wifi_VIF_State", "where": where, "row": {"mac": mac}}
+                )
+        if uuid not in uuids(radio.get("vif_states")):
+            changes.append(
+                {
+                    "op": "mutate",
+                    "table": "Wifi_Radio_State",
+                    "where": [["_uuid", "==", ["uuid", state]]],
+                    "mutations": [["vif_states", "insert", ["set", [["uuid", uuid]]]]],
+                }
+            )
+    if changes:
+        await transact(db, changes)
+    return len(changes)
+
+
 async def served(db):
     """The SSIDs the pod's AP VIFs serve (their State)."""
     return sorted(
@@ -103,6 +166,7 @@ async def run(args):
         while not stop.is_set() and (end is None or time.monotonic() < end):
             remote = await follow(db, remote)
             await apply_configuration(db)
+            await attach_vifs(db)
             ssids = await served(db)
             if ssids != last:
                 log(f"serving {ssids or 'no SSID'}")

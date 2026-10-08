@@ -7,7 +7,7 @@ import asyncio
 import pytest
 
 from emosa_lab.box import apply_configuration, dial
-from emosa_lab.remote_pod import follow, rows, served, start_pod, transact
+from emosa_lab.remote_pod import attach_vifs, follow, rows, served, start_pod, transact, uuids
 
 pytestmark = pytest.mark.ovsdb
 
@@ -66,6 +66,51 @@ def test_the_pod_follows_manager_addr_and_applies_the_agents_writes(tmp_path):
         finally:
             for server in (fleet, agent):
                 server.close()
+            await db.stop()
+
+    asyncio.run(scenario())
+
+
+def test_a_vif_the_agent_creates_gets_a_bssid_on_its_radio(tmp_path):
+    async def scenario():
+        db = await start_pod("SIMPODTEST000002", tmp_path / "db")
+        try:
+            radio = next(
+                uuid
+                for uuid, row in (await rows(db, "Wifi_Radio_Config")).items()
+                if row.get("freq_band") == "2.4G"
+            )
+            # as EMOSA writes a slot of the controller's set: a VIF on the 2.4 GHz radio
+            await transact(
+                db,
+                [
+                    {
+                        "op": "insert",
+                        "table": "Wifi_VIF_Config",
+                        "uuid-name": "slot",
+                        "row": {"if_name": "svc-d-ap-24", "mode": "ap", "ssid": "iot_ssid"},
+                    },
+                    {
+                        "op": "mutate",
+                        "table": "Wifi_Radio_Config",
+                        "where": [["_uuid", "==", ["uuid", radio]]],
+                        "mutations": [["vif_configs", "insert", ["set", [["named-uuid", "slot"]]]]],
+                    },
+                ],
+            )
+            await apply_configuration(db)
+            assert await attach_vifs(db) == 2  # its BSSID, and its place on the radio
+            states = await rows(db, "Wifi_VIF_State")
+            slot = next(u for u, r in states.items() if r.get("if_name") == "svc-d-ap-24")
+            assert states[slot]["mac"] == "a2:00:00:00:01:00"  # 82:… is the primary's
+            radio_state = next(
+                r
+                for r in (await rows(db, "Wifi_Radio_State")).values()
+                if r.get("freq_band") == "2.4G"
+            )
+            assert slot in uuids(radio_state["vif_states"])
+            assert await attach_vifs(db) == 0  # nothing left to do
+        finally:
             await db.stop()
 
     asyncio.run(scenario())
