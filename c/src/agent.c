@@ -146,6 +146,7 @@ typedef struct {
     uint16_t mid;
     /* the report source */
     bool available, caps_fixed;
+    int caps_generation; /* the pod source (OVSDB generation) caps are fixed for */
     double refreshed_at;
     int generation;
     unsigned long revision; /* the pod database's, at the last refresh */
@@ -285,6 +286,15 @@ static bool wpa2_psk_row(const cJSON *row)
            ovs_map_size(row, "wpa_psks") == 1;
 }
 
+static bool same_tlvs(const em_tlv_list *x, const em_tlv_list *y)
+{
+    bool same = x->count == y->count;
+    for (size_t i = 0; same && i < x->count; i++)
+        same = x->tlvs[i].kind == y->tlvs[i].kind && x->tlvs[i].len == y->tlvs[i].len &&
+               !memcmp(x->tlvs[i].value, y->tlvs[i].value, x->tlvs[i].len);
+    return same;
+}
+
 static bool refresh(agent *a)
 {
     const cJSON *tables = em_ovsdb_tables(a->ovs), *row;
@@ -335,7 +345,12 @@ static bool refresh(agent *a)
             if (!strcmp(radio->bss[i].if_name, a->profile.slots[k].if_name))
                 rep.bss[rep.nbss++] = radio->bss[i];
     int channel = primary ? radio->channel : a->profile.channel;
-    int8_t max_eirp = a->caps_fixed ? a->max_eirp
+    /* the capabilities are fixed for one pod source (spec 2.4): a new OVSDB generation (the
+     * pod recreated, maybe with another radio) is a new source with a new session, and its
+     * capabilities are taken again */
+    int source = em_ovsdb_generation(a->ovs);
+    bool fresh = !a->caps_fixed || a->caps_generation != source;
+    int8_t max_eirp = !fresh ? a->max_eirp
                       : (radio->has_tx_power && radio->tx_power > 0 && radio->tx_power <= 127)
                           ? (int8_t)radio->tx_power : 20;
     em_tlv_list caps;
@@ -344,18 +359,23 @@ static bool refresh(agent *a)
         free(view);
         return false;
     }
-    if (!a->caps_fixed) {
+    if (fresh) {
+        if (a->caps_fixed) { /* the previous source's */
+            if (!same_tlvs(&caps, &a->caps))
+                LOG("a new pod source with other radio capabilities: taken for it");
+            em_tlv_list_free(&a->caps);
+            free(a->inventory.value);
+            a->inventory = (em_tlv){0};
+        }
         a->caps = caps;
         a->max_eirp = max_eirp;
         em_inventory_tlv(view, radio, "mac80211_hwsim", &a->inventory);
         a->caps_fixed = true;
+        a->caps_generation = source;
     } else {
-        bool same = caps.count == a->caps.count;
-        for (size_t i = 0; same && i < caps.count; i++)
-            same = caps.tlvs[i].kind == a->caps.tlvs[i].kind && caps.tlvs[i].len == a->caps.tlvs[i].len &&
-                   !memcmp(caps.tlvs[i].value, a->caps.tlvs[i].value, caps.tlvs[i].len);
+        bool same = same_tlvs(&caps, &a->caps);
         em_tlv_list_free(&caps);
-        if (!same) {
+        if (!same) { /* a moved radio or replaced PHY under the same source: refused */
             WARN("pod source unavailable: pod radio identity or channel changed");
             free(view);
             return false;

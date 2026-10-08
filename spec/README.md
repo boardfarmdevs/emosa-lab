@@ -159,6 +159,10 @@ Rules:
 - A session starts while the pod's State is available. Discovery sends a
   Search at once and then every second, three at most, and fails when no
   Response is admitted within 5 s.
+- The radio's capabilities are fixed for one source. If the radio's identity or channel
+  changes under the same source, the source is unavailable. A new source (a new database
+  generation: the pod recreated, maybe with another radio) has its capabilities taken
+  again, and its new session reports them.
 - A session that fails, loses its source (the pod's State lost, or a new
   database generation), or receives a Renew is replaced by a new one. Restarts
   after failures back off by `min(30, 2^failures)` seconds; a Renew restarts at

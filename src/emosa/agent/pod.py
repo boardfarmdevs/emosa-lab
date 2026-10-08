@@ -193,6 +193,7 @@ class PodReportSource:
             ).hexdigest(),
         )
         self.capabilities = self.inventory = None
+        self.capabilities_generation = None  # the pod source the capabilities are from
 
     def _represented(self, radio, bound):
         """The BSSes the agent represents: the bound one, then managed slot VIFs.
@@ -226,7 +227,11 @@ class PodReportSource:
             # channel the profile would create the BSS on, and no BSS.
             channel = radio.channel if primary else self.backend.channel
             max_eirp = radio.tx_power if radio.tx_power and 0 < radio.tx_power <= 127 else 20
-            if self.capabilities is not None:
+            # The capabilities are fixed for one pod source (spec 2.4): a new database
+            # generation (the pod recreated, maybe with another radio) is a new source with
+            # a new session, and its capabilities are taken again.
+            fresh = self.capabilities is None or raw["generation"] != self.capabilities_generation
+            if not fresh:
                 max_eirp = self.capabilities.radios[0].basic.operating_classes[0].max_eirp_dbm
             capabilities = radio_capabilities(
                 radio,
@@ -234,11 +239,15 @@ class PodReportSource:
                 max_bss=self.backend.max_bss,
                 max_eirp=max_eirp,
             )
-            if self.capabilities is None:
+            if fresh:
+                if self.capabilities is not None and capabilities != self.capabilities:
+                    log.info("a new pod source with other radio capabilities: taken for it")
                 self.capabilities = capabilities
+                self.capabilities_generation = raw["generation"]
                 self.inventory = inventory(device, radio, self.backend.profile.chipset.encode())
             elif capabilities != self.capabilities:
-                # A moved radio or replaced PHY is a different device to the controller.
+                # A moved radio or replaced PHY under the same source is a different device
+                # to the controller: refused until the source changes.
                 raise EmosaError(Reason.NOT_READY, "pod radio identity or channel changed")
             uplink = None
             if self.station and uplink_state(rows, self.station)["kind"] == MULTI_AP:

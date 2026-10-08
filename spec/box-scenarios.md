@@ -42,6 +42,7 @@ same behaviour end to end, with real timing, a real OVSDB server and a real WSC 
 | `forgotten-agent` | with `topology_query_window` (20 s in the box): kept while the controller sends a Topology Query every 5 s with its other queries; onboarding again once only the others come, and provisioning again | finding 15 |
 | `unserved-pod` | provisioned, but the pod serves no BSS of the controller's and nothing is written: onboarding again after 60 s | finding 4 |
 | `new-source` | the pod back with a new database (its OpenSync started again): a new session, and the configuration written again | findings 5 and 11 |
+| `pod-recreated` | the pod recreated in place: a new database, the same serial, another AP radio from the lab's pool; the agent takes the new pod and onboards it on the new radio | finding 19 |
 
 ## Reports and answers (spec 2.4, 2.6, 3.4)
 
@@ -147,6 +148,7 @@ a `systemctl` of the box's (plain processes, as `emosa-agent@.service` runs them
 | 16 | a released pod's archived state kept its agent's status: the RDK lab's uplink check never passed after the C adapter released a hold (its last status said the switch timed out), and in a run directory the archive's link would show the next agent's status; fixed (spec 4: archived without the status), the lab's tools skip archives | RDK lab, the build option's first run, 4 October | `fleet-forget` |
 | 17 | RDK's native backhaul steering failed in the geometry rooms with EMOSA in the gateway: the agents' interfaces, each with its agent's AL MAC, were the gateway's own, so the controller took a pod's agent for its co-located agent and rooted the backhaul topology at it (no station rooted, no candidate queried); fixed with the agents' interfaces in a namespace of their own (spec 2.1, `EMOSA_NETNS`) | RDK lab rdk-1004, EMOSA in the gateway, 5 October | `agent-netns` |
 | 18 | after a redeploy both pods stayed on GRE: each agent switched to the backhaul BSS a room's move had left as its kept target, out of reach where the pods then stood, and the timed-out switch held the pod, which a held pod's Backhaul Steering cannot end; fixed (spec 8.3: a kept target that fails falls back to the configured upstream). A fallback written at once was reverted with the failed switch by the pod's `cm` on the same start (the redeploy after the fix): it now waits for the station to be off the failed credential | RDK lab rdk-1004, 5 October | `backhaul-kept-gone` |
+| 19 | an agent never got its recreated pod back: the pod, recreated in place, came back with another AP radio from the lab's pool, and both agents kept the first source's radio capabilities for their whole run, so every refresh of the new source was refused ("pod radio identity or channel changed") and the session stayed `recovering` until the agent was restarted; fixed (spec 2.4: the capabilities are fixed per source, a new database generation takes them again) | RDK lab rdk-1004, 7 October (finding (a)) | `pod-recreated` |
 
 ## Not scenarios
 

@@ -31,7 +31,7 @@
     },
     "README 2.5 Onboarding": {
       "vectors": ["onboarding.json", "wsc-m2.json", "session-timing.json", "early-report.json"],
-      "box": ["boot", "onboard", "refuse", "early-report", "renew", "no-m2", "silent-controller", "forgotten-agent", "unserved-pod", "new-source"],
+      "box": ["boot", "onboard", "refuse", "early-report", "renew", "no-m2", "silent-controller", "forgotten-agent", "unserved-pod", "new-source", "pod-recreated"],
       "python": ["test_autoconfiguration.py", "test_provisioning_session.py", "test_discovery_session.py", "test_wsc.py"],
       "fuzz": ["wsc"]
     },

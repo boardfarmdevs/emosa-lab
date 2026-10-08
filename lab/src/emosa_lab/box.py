@@ -77,9 +77,13 @@ def network(interface=AGENT_INTERFACE):
         subprocess.run(command, check=True)
 
 
-def recorded_pod(rows=POD_ROWS):
-    """The recorded pod's tables as one insert transaction (references by name)."""
-    tables = json.loads(Path(rows).read_text())["tables"]
+def recorded_pod(rows=POD_ROWS, replace=None):
+    """The recorded pod's tables as one insert transaction (references by name), each
+    text in replace (a MAC, say) changed into its value."""
+    text = Path(rows).read_text()
+    for old, new in (replace or {}).items():
+        text = text.replace(old, new)
+    tables = json.loads(text)["tables"]
     names = {uuid: f"row{i}" for i, uuid in enumerate(u for rows in tables.values() for u in rows)}
 
     def named(value):
@@ -512,12 +516,13 @@ class Box:
             ]
         )
 
-    async def new_pod_database(self):
+    async def new_pod_database(self, replace=None):
         """The pod's OpenSync started again (its container with its extender, say): a new
-        database from the template, with new row UUIDs, dialing the agent again."""
+        database from the template, with new row UUIDs (and replace's changes: other
+        radios), dialing the agent again."""
         old = self.db
         await old.close()
-        tables, operations = recorded_pod(self.pod_rows)
+        tables, operations = recorded_pod(self.pod_rows, replace)
         self.db = SimDatabase()
         await self.db.start()
         await self.transact(operations)
@@ -981,6 +986,33 @@ async def unserved_pod(box):
     return box.result(
         passed=bool(again) and 58 <= waited <= 90,
         search_after_loss_s=round(waited, 1) if waited else None,
+    )
+
+
+RECREATED_RADIO = {"02:00:00:00:01:00": "02:00:00:00:6a:00", "82:00:00:00:01:00": "82:00:00:00:6a:00"}
+
+
+async def pod_recreated(box):
+    """Finding (a), rdk-1004 7 October: the pod recreated in place (its container cloned and
+    started again: a new database from the template, the same serial, and another AP radio
+    from the lab's pool). The agent takes the new pod's connection and onboards it, its
+    Search and M1 on the new radio."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    await box.new_pod_database(RECREATED_RADIO)
+    again = await provision(box, searches, m1s)
+    rows = await box.rows("Wifi_VIF_Config")
+    written = any(r.get("ssid") == REGISTRAR_SSID for r in rows.values())
+    status = box.status() or {}
+    radio = json.dumps(status.get("pod") or {})
+    new_radio = "02:00:00:00:6a:00" in radio and "02:00:00:00:01:00" not in radio
+    return box.result(
+        passed=again and written and new_radio,
+        provisioning_again=again,
+        credentials_on_new_pod=written,
+        new_radio_in_status=new_radio,
+        ruid=(status.get("pod") or {}).get("ruid"),
     )
 
 
@@ -1749,6 +1781,7 @@ SCENARIOS = {
     "agent-netns": agent_netns,
     "unserved-pod": unserved_pod,
     "new-source": new_source,
+    "pod-recreated": pod_recreated,
     "clients": clients,
     "reannounce": reannounce,
     "channel-selection": channel_selection,

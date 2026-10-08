@@ -1248,8 +1248,12 @@ target configuration validated again. Three steps, on rdk-1004 (rev140).
   BSS and the bring-up never completed. `systemctl restart emosa-agent@MVXPOD02D7777EF0D9`:
   16 s later it had the pod, the pod moved to the gateway's backhaul BSS and the controller
   listed its five BSSes. Pod-1, restarted the same way a minute later, recovered on its own;
-  on rdk-emosa-1005 both did. Open: why the agent did not take the pod's connection again
-  (its log went to RDK's logger, which the gateway had emptied).
+  on rdk-emosa-1005 both did. Why (found on 8 October with the box's `pod-recreated`,
+  [finding 19](../../../../spec/box-scenarios.md)): pod-2 came back with another AP radio
+  (below), and the agent had kept its first source's radio capabilities for its whole run,
+  so it refused every refresh of the new source ("pod radio identity or channel changed")
+  and stayed `recovering`; a restart forgot them. Pod-1 and 1005's pods kept their radios.
+  Fixed in both agents: the capabilities are fixed per source (spec 2.4).
 - **A stored reporting policy that outlived the pod's radio** (fixed in 80c359b: such a record
   is now superseded by the next policy received, counted `stored_policy_superseded`). The recreated pod-2
   came back with other radios from the lab's pool (its AP radio `02:00:00:00:6a:00` for
