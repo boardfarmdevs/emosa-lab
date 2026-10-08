@@ -27,6 +27,14 @@ python -m emosa_lab.box SCENARIO --agent c|python --directory DIR
 The vectors (`spec/conformance`) fix exact outputs for recorded inputs; the box shows the
 same behaviour end to end, with real timing, a real OVSDB server and a real WSC exchange.
 
+The box's pod also serves a real EMOSA elsewhere, on a router or in a lab, before a physical pod
+is there: `python -m emosa_lab.remote_pod --fleet HOST:PORT [--serial SERIAL]` hands the recorded
+pod to that fleet's front port and then behaves as a pod's `cm` and managers (it follows
+`manager_addr` to its agent and applies the agent's writes). Outbound TCP only, no radio; the
+fleet must admit the serial and give it the profile `opensync-lab-hwsim-6.6.1-v1`
+(`tests/test_remote_pod.py`). From an older host, in the container:
+`scripts/run-box-in-container.sh -- python -m emosa_lab.remote_pod --fleet HOST:PORT`.
+
 ## Onboarding and the session (spec 2.5)
 
 | Scenario | What it shows | Relied on by |
