@@ -20,6 +20,32 @@ SECURITY_COLUMNS = [
 ]
 
 
+def wpa2_psk(row):
+    """True for the 6.6 osw encoding of WPA2-PSK/CCMP with one PSK slot (spec 3.3)."""
+    return (
+        row.get("wpa") is True
+        and row.get("wpa_key_mgmt") == ["wpa-psk"]
+        and row.get("rsn_pairwise_ccmp") is True
+        and not row.get("security")
+        and not row.get("wpa_pairwise_tkip")
+        and not row.get("wpa_pairwise_ccmp")
+        and len(row.get("wpa_psks") or {}) == 1
+    )
+
+
+def simulator_wpa2_psk(row):
+    """True for the simulator's encoding of WPA2-PSK: key management wpa2-psk, slot "key"."""
+    return (
+        row.get("wpa") is True
+        and row.get("wpa_key_mgmt") == ["wpa2-psk"]
+        and row.get("rsn_pairwise_ccmp") is True
+        and row.get("wpa_pairwise_tkip") is False
+        and row.get("wpa_pairwise_ccmp") is False
+        and row.get("security") == {}
+        and set(row.get("wpa_psks", {})) == {"key"}
+    )
+
+
 def assess(rows, *, if_name, radio_name, ready, credentials_available=False):
     """Assess the observed graph without returning SSIDs, keys or fingerprints.
 
@@ -108,19 +134,7 @@ def assess(rows, *, if_name, radio_name, ready, credentials_available=False):
         credential_status = "unsupported"
         supported = selected_config is not None and selected_state is not None
         for row in (selected_config, selected_state):
-            supported = (
-                supported
-                and row is not None
-                and (
-                    row.get("wpa") is True
-                    and row.get("wpa_key_mgmt") == ["wpa2-psk"]
-                    and row.get("rsn_pairwise_ccmp") is True
-                    and row.get("wpa_pairwise_tkip") is False
-                    and row.get("wpa_pairwise_ccmp") is False
-                    and row.get("security") == {}
-                    and set(row.get("wpa_psks", {})) == {"key"}
-                )
-            )
+            supported = supported and row is not None and (simulator_wpa2_psk(row) or wpa2_psk(row))
         require(supported, "credential_layout_not_single_wpa2_psk")
         if supported:
             credential_status = "single_wpa2_psk_observed"

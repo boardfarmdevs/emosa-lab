@@ -14,7 +14,7 @@ const cJSON *em_table(const cJSON *tables, const char *name);
 const cJSON *em_bound_node(const cJSON *tables, const char *serial, const char **uuid);
 /* start_instance: sha256(json.dumps(sorted Wifi_Radio_Config UUIDs))[:16]; false without radios. */
 bool em_start_instance(const cJSON *tables, char out[17]);
-/* The 6.6 osw encoding of WPA2-PSK/CCMP with one PSK slot (pod_profile.wpa2_psk). */
+/* The 6.6 osw encoding of WPA2-PSK/CCMP with one PSK slot (radio_scope.wpa2_psk). */
 bool em_row_wpa2_psk(const cJSON *row);
 /* The row's UUID set (or single UUID) column contains uuid. */
 bool em_row_has_uuid(const cJSON *row, const char *column, const char *uuid);

@@ -44,6 +44,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
 from emosa.opensync.mapping import OpenSyncBackend, check_results, guard, where_uuid
 from emosa.opensync.profiles import load as load_profile
+from emosa.opensync.radio_scope import wpa2_psk
 from emosa.opensync.uplink import start_instance
 from emosa.wire.operation_bridge import ScopeContext
 
@@ -65,19 +66,6 @@ VIF_GUARDS = (
 # the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod
 # advertises it in its Multi-AP element, as a Multi-AP agent's AP does
 MULTI_AP = {"fronthaul": "fronthaul_bss", "backhaul": "backhaul_bss"}
-
-
-def wpa2_psk(row):
-    """True for the 6.6 osw encoding of WPA2-PSK/CCMP with one PSK slot."""
-    return (
-        row.get("wpa") is True
-        and row.get("wpa_key_mgmt") == ["wpa-psk"]
-        and row.get("rsn_pairwise_ccmp") is True
-        and not row.get("security")
-        and not row.get("wpa_pairwise_tkip")
-        and not row.get("wpa_pairwise_ccmp")
-        and len(row.get("wpa_psks") or {}) == 1
-    )
 
 
 class PodBackend(OpenSyncBackend):

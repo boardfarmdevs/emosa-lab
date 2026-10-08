@@ -285,6 +285,40 @@ def test_separate_radio_is_allowed_and_untouched(tmp_path):
     asyncio.run(scenario())
 
 
+def sole_ap(config=None, state=None):
+    """One radio, its one AP: home-ap-24 on wifi0, Config and State with the given columns."""
+    radio = {"if_name": "wifi0", "freq_band": "2.4G", "enabled": True, "vif_configs": ["vc"]}
+    return {
+        "Wifi_Radio_Config": {"rc": radio},
+        "Wifi_Radio_State": {
+            "rs": {
+                "if_name": "wifi0",
+                "radio_config": "rc",
+                "vif_states": ["vs"],
+                "freq_band": "2.4G",
+            }
+        },
+        "Wifi_VIF_Config": {
+            "vc": {
+                "if_name": "home-ap-24",
+                "mode": "ap",
+                "enabled": True,
+                "bridge": "br-home",
+                **(config or {}),
+            }
+        },
+        "Wifi_VIF_State": {
+            "vs": {
+                "if_name": "home-ap-24",
+                "vif_config": "vc",
+                "mode": "ap",
+                "enabled": True,
+                **(state or {}),
+            }
+        },
+    }
+
+
 @pytest.mark.parametrize(
     ("multi_ap", "explicit"),
     [
@@ -296,25 +330,42 @@ def test_separate_radio_is_allowed_and_untouched(tmp_path):
     ],
 )
 def test_an_aps_role_is_explicit_as_an_ordinary_ap_or_an_agents_fronthaul(multi_ap, explicit):
-    config = {"if_name": "home-ap-24", "mode": "ap", "enabled": True, "bridge": "br-home"}
-    if multi_ap:
-        config["multi_ap"] = multi_ap
-    radio = {"if_name": "wifi0", "freq_band": "2.4G", "enabled": True, "vif_configs": ["vc"]}
-    rows = {
-        "Wifi_Radio_Config": {"rc": radio},
-        "Wifi_Radio_State": {
-            "rs": {
-                "if_name": "wifi0",
-                "radio_config": "rc",
-                "vif_states": ["vs"],
-                "freq_band": "2.4G",
-            }
-        },
-        "Wifi_VIF_Config": {"vc": config},
-        "Wifi_VIF_State": {
-            "vs": {"if_name": "home-ap-24", "vif_config": "vc", "mode": "ap", "enabled": True}
-        },
-    }
+    rows = sole_ap({"multi_ap": multi_ap} if multi_ap else {})
     report = assess(rows, if_name="home-ap-24", radio_name="wifi0", ready=True)
     assert ("ordinary_ap_role_not_explicit" not in report["blockers"]) is explicit
     assert report["topology_candidate"] is explicit
+
+
+OSW_WPA2_PSK = {  # OpenSync 6.6's encoding (spec 3.3), as the Pis' AP has it
+    "wpa": True,
+    "wpa_key_mgmt": ["wpa-psk"],
+    "rsn_pairwise_ccmp": True,
+    "wpa_pairwise_tkip": False,
+    "wpa_pairwise_ccmp": False,
+    "security": {},
+    "wpa_psks": {"key--1": "a-simulation-key"},
+}
+SIMULATOR_WPA2_PSK = {**OSW_WPA2_PSK, "wpa_key_mgmt": ["wpa2-psk"], "wpa_psks": {"key": "k"}}
+
+
+@pytest.mark.parametrize(
+    ("security", "single"),
+    [
+        (OSW_WPA2_PSK, True),
+        (SIMULATOR_WPA2_PSK, True),
+        ({**OSW_WPA2_PSK, "rsn_pairwise_ccmp": False}, False),  # WPA1
+        ({**OSW_WPA2_PSK, "wpa_pairwise_tkip": True}, False),  # TKIP alongside
+        ({**OSW_WPA2_PSK, "wpa_psks": {"key--1": "a", "key-2": "b"}}, False),  # multi-PSK
+        ({**OSW_WPA2_PSK, "wpa_key_mgmt": ["wpa-psk", "sae"]}, False),  # WPA2/WPA3 mixed
+        ({**OSW_WPA2_PSK, "security": {"encryption": "WPA-PSK"}}, False),  # the legacy map
+    ],
+)
+def test_opensync_66s_wpa2_psk_encoding_is_a_single_wpa2_psk(security, single):
+    rows = sole_ap({"multi_ap": "fronthaul_bss", **security}, security)
+    report = assess(
+        rows, if_name="home-ap-24", radio_name="wifi0", ready=True, credentials_available=True
+    )
+    assert (report["credential_layout"] == "single_wpa2_psk_observed") is single
+    assert ("credential_layout_not_single_wpa2_psk" not in report["blockers"]) is single
+    assert report["synthetic_mapping_candidate"] is single
+    assert "a-simulation-key" not in str(report)
