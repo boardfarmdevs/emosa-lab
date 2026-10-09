@@ -50,6 +50,7 @@ from emosa.opensync.easymesh_view import (
     IEEE_802_11N_24,
     MEDIA,
     backhaul,
+    backhaul_radios,
     device_view,
     inventory,
     radio_capabilities,
@@ -67,7 +68,13 @@ from emosa.opensync.steering import MONITOR as STEERING_MONITOR
 from emosa.opensync.steering import SteeringBackend
 from emosa.opensync.telemetry import MONITOR as TELEMETRY_MONITOR
 from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent
-from emosa.opensync.uplink import BSSID, MULTI_AP, UplinkBackend, uplink_state
+from emosa.opensync.uplink import (
+    BSSID,
+    MULTI_AP,
+    UplinkBackend,
+    band_of_operating_class,
+    uplink_state,
+)
 from emosa.opensync.uplink import MONITOR as UPLINK_MONITOR
 from emosa.opensync.wired import MONITOR as WIRED_MONITOR
 from emosa.opensync.wired import WIRED, WiredBackend, WiredIntent
@@ -198,9 +205,11 @@ class PodReportSource:
     chooses what the agent represents and keeps the report source current.
     """
 
-    def __init__(self, backend, binding, pod_id, station=None, directory=None):
+    def __init__(self, backend, binding, pod_id, stations=(), directory=None):
         self.backend, self.binding = backend, binding
-        self.station = station  # the pod's backhaul station, reported when it is option 1
+        # the pod's backhaul stations: the one cm uses as a Multi-AP uplink is its EasyMesh
+        # backhaul (option 1); each is a backhaul STA radio of the pod (spec 8.3)
+        self.stations = tuple(s for s in stations if s)
         self.directory = directory  # the fleet's other agents (spec 8.5), or None
         self.links = ()  # the pod's 1905 neighbors on its Wi-Fi backhaul: (interface, AL)
         self.uplink, self.backhaul_stations = None, {}  # as of the last refresh
@@ -331,8 +340,13 @@ class PodReportSource:
                 # to the controller: refused until the source changes.
                 raise EmosaError(Reason.NOT_READY, "pod radio identity or channel changed")
             uplink = None
-            if self.station and uplink_state(rows, self.station)["kind"] == MULTI_AP:
-                uplink = backhaul(device, self.station)
+            for station in self.stations:
+                if uplink_state(rows, station)["kind"] == MULTI_AP:
+                    uplink = backhaul(device, station)
+                    break
+            radios_with_station = backhaul_radios(
+                rows, self.stations, uplink.station.if_name if uplink else None
+            )
             now = time.monotonic()
             active = {m for b in bsses for m in b.stations}
             self.first_seen = {m: self.first_seen.get(m, now) for m in active}
@@ -347,6 +361,7 @@ class PodReportSource:
                 uplink=uplink,
                 associated_at=self.first_seen,
                 peers=self.links,
+                backhaul_radios=radios_with_station,
             )
             facts = (
                 raw["generation"],
@@ -355,6 +370,7 @@ class PodReportSource:
                 radio.tx_power,
                 uplink,
                 self.links,
+                radios_with_station,
             )
             if facts != self.last:
                 self.revision += 1
@@ -555,6 +571,8 @@ async def serve(config, stop):
                 vault,
                 serial=config["serial"],
                 station=station,
+                stations=backend.profile.uplink_stations,
+                fixed_band=backend.profile.band,
                 loop=None
                 if directory is None
                 else lambda target, own: loops(
@@ -651,7 +669,9 @@ async def serve(config, stop):
             "freshness": 3 * wanted.reporting_interval + (wanted.publish_interval or 60),
         }
     binding = PeerBinding(config["interface"], 1, agent, controller, (controller,))
-    report = PodReportSource(backend, binding, pod_id, station, directory)
+    # every backhaul station of the pod, the one it bootstraps on first (spec 8.3)
+    stations = tuple(dict.fromkeys((station, *(s for _, s in backend.profile.uplink_stations))))
+    report = PodReportSource(backend, binding, pod_id, stations, directory)
     mids = MidSequence(secrets.randbelow(65536))
     run_id = config.get("run_id", pod_id)
     # EasyMesh message set toward this controller: easymesh-6.1 unless the
@@ -750,9 +770,21 @@ async def serve(config, stop):
                     pod_metrics=pod_metrics,
                     probes=stats,
                     watch=watch.ask if watch else None,
-                    backhaul_steering_executor=switch.steer if switch else None,
+                    backhaul_steering_executor=None
+                    if switch is None
+                    else lambda bssid, operating_class, channel: switch.steer(
+                        bssid, band_of_operating_class(operating_class), channel
+                    ),
                     backhaul_steering_outcome=switch.steering_outcome if switch else None,
                     backhaul_steering_state=backhaul_steering_state,
+                    # a successful move's answer names the backhaul STA the pod is on now
+                    backhaul_steering_associated=None
+                    if switch is None
+                    else lambda: (
+                        mac_bytes(switch.backend.facts["mac"])
+                        if (switch.backend.facts or {}).get("mac")
+                        else None
+                    ),
                     backhaul_pairs=None
                     if directory is None
                     else lambda: report.backhaul_pairs(

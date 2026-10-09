@@ -592,7 +592,10 @@ def test_client_capability_unavailable_is_explicit_specification_error(rig, asso
     asyncio.run(scenario())
 
 
-def test_backhaul_sta_capability_report_names_only_an_easymesh_backhaul(rig):
+def test_backhaul_sta_capability_report_names_every_backhaul_station_radio(rig):
+    """EasyMesh 6.1, 9.3: one Backhaul STA Radio Capabilities TLV per backhaul STA radio, the
+    one in use first; a station whose MAC is not known yet has the MAC-included flag clear."""
+
     async def scenario():
         session, source, sent = lifecycle(rig)
         await session.tick()
@@ -600,18 +603,19 @@ def test_backhaul_sta_capability_report_names_only_an_easymesh_backhaul(rig):
         query = fragment_message(BINDING.local_al, BINDING.controller_al, 0x8027, 713, ())[0]
         assert await receive(session, query) == "backhaul_sta_capability_report_sent"
         report = assemble((sent[-1],))
-        assert (report.message_type, report.mid, report.tlvs) == (0x8028, 713, ())  # GRE uplink
+        assert (report.message_type, report.mid, report.tlvs) == (0x8028, 713, ())  # no station
         snap = source.current()
         ruid, sta = bytes.fromhex("020000001500"), bytes.fromhex("020000001501")
+        other = bytes.fromhex("020000001400")
         source.publish(
             (1, 2),
             snap.capabilities,
-            replace(snap.topology, backhaul_stations=((ruid, sta),)),
+            replace(snap.topology, backhaul_radios=((ruid, sta), (other, None))),
             observed_at=snap.stamp.observed_at,
         )
         assert await receive(session, query) == "backhaul_sta_capability_report_sent"
         report = assemble((sent[-1],))
-        assert report.tlvs == (Tlv(0xCB, ruid + b"\x80" + sta),)
+        assert report.tlvs == (Tlv(0xCB, ruid + b"\x80" + sta), Tlv(0xCB, other + b"\x00"))
         session.close()
 
     asyncio.run(scenario())
@@ -642,7 +646,7 @@ def backhaul_steering_rig(rig, outcome, started=None, state=None):
     moves = [] if started is None else started
     session, source, sent = lifecycle(
         rig,
-        backhaul_steering_executor=lambda bssid: moves.append(bssid),
+        backhaul_steering_executor=lambda bssid, operating_class, channel: moves.append(bssid),
         backhaul_steering_outcome=lambda bssid: outcome[0],
         backhaul_steering_state=state,
     )
@@ -755,7 +759,7 @@ def test_a_backhaul_move_the_agent_cannot_start_is_refused_at_once(rig):
         _, _, _, clock = rig
         session, source, sent = lifecycle(
             rig,
-            backhaul_steering_executor=lambda bssid: "not_on_easymesh_backhaul",
+            backhaul_steering_executor=lambda *request: "not_on_easymesh_backhaul",
             backhaul_steering_outcome=lambda bssid: None,
         )
         snap = source.current()

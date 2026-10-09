@@ -121,6 +121,7 @@ class OnboardingSession:
         backhaul_steering_outcome=None,
         backhaul_steering_state=None,
         backhaul_pairs=None,
+        backhaul_steering_associated=None,
     ):
         self.message_set = check_message_set(message_set)
         if type(inventory) is not DeviceInventory:
@@ -185,6 +186,8 @@ class OnboardingSession:
         # agent whose pod has a Multi-AP backhaul station; without one they are refused.
         self.backhaul_steering_executor = backhaul_steering_executor
         self.backhaul_steering_outcome = backhaul_steering_outcome
+        # the backhaul STA the pod is on now (bytes), which a successful move's answer names
+        self.backhaul_steering_associated = backhaul_steering_associated
         self.backhaul_steering_state = backhaul_steering_state  # the agent's, across sessions
         self.backhaul_steering = None
 
@@ -446,6 +449,7 @@ class OnboardingSession:
                         self.backhaul_steering_outcome,
                         clock=self.clock,
                         shared=self.backhaul_steering_state,
+                        associated=self.backhaul_steering_associated,
                     )
                 if self.reporting_policy_store is not None:
                     self.reporting_policy = ReportingPolicyCoordinator(
@@ -562,12 +566,13 @@ class OnboardingSession:
                 response.send(self.send_frame, self._stamp, clock=self.clock)
                 return self._record("client_capability_unavailable_report")
             if message.message_type == 0x8027 and self.provisioning:
-                # Backhaul STA Capability Report: a Backhaul STA Radio Capabilities
-                # TLV (RUID, MAC-included flag, STA MAC) for the station that is the
-                # pod's EasyMesh backhaul; none while the pod's uplink is GRE.
+                # Backhaul STA Capability Report: one Backhaul STA Radio Capabilities TLV
+                # (RUID, MAC-included flag, STA MAC when known) for each radio of the pod
+                # with a backhaul station, enabled or not, the one in use first (EasyMesh
+                # 6.1, 9.3; spec 8.3): the bands the controller may move the pod to.
                 tlvs = tuple(
-                    Tlv(0xCB, ruid + b"\x80" + sta)
-                    for ruid, sta in snapshot.topology.backhaul_stations
+                    Tlv(0xCB, ruid + (b"\x80" + sta if sta else b"\x00"))
+                    for ruid, sta in snapshot.topology.backhaul_radios
                 )
                 response = PreparedReport(
                     0x8028,

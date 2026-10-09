@@ -41,8 +41,13 @@ REQUEST_TLV = 0x9E
 RESPONSE_TLV = 0x9F
 ERROR_CODE_TLV = 0xA3
 SUCCESS, FAILURE = 0x00, 0x01
+# Backhaul steering rejected because the backhaul STA cannot operate on the channel specified:
+# the pod has no backhaul station on the target's band, or that station's radio carries the
+# pod's BSSes on another channel (spec 8.3).
+CHANNEL_NOT_OPERABLE = 0x04
 # Backhaul steering rejected, or the association with the target failed.
 ASSOCIATION_FAILED = 0x06
+CHANNEL_REFUSALS = ("no_station_on_band", "channel_not_operable")
 # The uplink switch's own deadline (90 s), a refresh and the pod's State to show it.
 DEADLINE = 120
 
@@ -79,13 +84,17 @@ def decode_request(tlvs):
     )
 
 
-def response_tlvs(request, error):
-    """The Backhaul Steering Response's TLVs: success, or failure with its reason."""
-    tlvs = [
-        Tlv(RESPONSE_TLV, request.station + request.target + bytes([FAILURE if error else SUCCESS]))
-    ]
+def response_tlvs(request, error, station=None):
+    """The Backhaul Steering Response's TLVs: success, or failure with its reason.
+
+    It names the backhaul STA associated after the move (EasyMesh 6.1, 17.2.33): ``station``,
+    the pod's station on the target's band after a move to another band; else the one the
+    request named.
+    """
+    station = station or request.station
+    tlvs = [Tlv(RESPONSE_TLV, station + request.target + bytes([FAILURE if error else SUCCESS]))]
     if error:
-        tlvs.append(Tlv(ERROR_CODE_TLV, bytes([error]) + request.station))
+        tlvs.append(Tlv(ERROR_CODE_TLV, bytes([error]) + station))
     return tuple(tlvs)
 
 
@@ -102,15 +111,30 @@ def refusal(request, stations):
 class BackhaulSteeringCoordinator:
     """Acknowledges Backhaul Steering Requests, hands them over, answers with the outcome.
 
-    ``executor(bssid)`` starts moving the pod's backhaul station to ``bssid``
-    (lower-case text) and returns None, or a reason why it did not start.
-    ``outcome(bssid)`` is None while the move is under way, True once the pod's
-    State shows the station on ``bssid``, or the reason it failed.
+    ``executor(bssid, operating_class, channel)`` starts moving the pod's uplink to ``bssid``
+    (lower-case text), with its backhaul station on that operating class's band, and returns
+    None, or a reason why it did not start ("no_station_on_band", "channel_not_operable":
+    reason code 0x04). ``outcome(bssid)`` is None while the move is under way, True once
+    the pod's State shows the station on ``bssid``, or the reason it failed. The response
+    names the backhaul STA associated after the move.
     """
 
-    def __init__(self, source, send_frame, executor, outcome, *, clock=time.monotonic, shared=None):
+    def __init__(
+        self,
+        source,
+        send_frame,
+        executor,
+        outcome,
+        *,
+        clock=time.monotonic,
+        shared=None,
+        associated=None,
+    ):
+        """``associated()``: the MAC (bytes) of the backhaul STA the pod is on now, as the
+        uplink scope last read it, or None; a success names it."""
         self.source, self.binding, self.send_frame = source, source.binding, send_frame
         self.executor, self.outcome, self.clock = executor, outcome, clock
+        self.associated = associated
         self.counts = {}
         # the agent's, across its sessions: "pending" {"mid", "request", "deadline"} and
         # "answered", MID -> (request, error, expiry): a repeated request is answered again
@@ -156,10 +180,10 @@ class BackhaulSteeringCoordinator:
             ),
         ).send(self.send_frame, lambda: self._snapshot().stamp, clock=self.clock)
 
-    def _respond(self, mid, request, error, snapshot):
+    def _respond(self, mid, request, error, snapshot, station=None):
         now = self.clock()
-        self._send(RESPONSE, mid, response_tlvs(request, error), snapshot, now + 1)
-        self.answered[mid] = (request, error, now + 30)
+        self._send(RESPONSE, mid, response_tlvs(request, error, station), snapshot, now + 1)
+        self.answered[mid] = (request, error, now + 30, station)
 
     def handle(self, message, received_at):
         if message.message_type != REQUEST:
@@ -178,8 +202,8 @@ class BackhaulSteeringCoordinator:
         snapshot = self._snapshot()
         self._send(ACK, message.mid, (), snapshot, received_at + 1)
         if message.mid in self.answered:
-            request, error, _ = self.answered[message.mid]
-            self._respond(message.mid, request, error, snapshot)
+            request, error, _, station = self.answered[message.mid]
+            self._respond(message.mid, request, error, snapshot, station)
             return self._record("backhaul_steering_repeated_response_sent")
         if self.pending is not None and self.pending["mid"] == message.mid:
             return self._record("backhaul_steering_repeated_ack_sent")
@@ -188,10 +212,13 @@ class BackhaulSteeringCoordinator:
         if reason is None and self.pending is not None:
             reason = "move_in_progress"
         if reason is None:
-            reason = self.executor(request.target.hex(":"))
+            reason = self.executor(
+                request.target.hex(":"), request.operating_class, request.channel
+            )
         self.last = {"mid": message.mid, "request": request.record(), "refused": reason}
         if reason is not None:
-            self._respond(message.mid, request, ASSOCIATION_FAILED, snapshot)
+            code = CHANNEL_NOT_OPERABLE if reason in CHANNEL_REFUSALS else ASSOCIATION_FAILED
+            self._respond(message.mid, request, code, snapshot)
             return self._record(f"backhaul_steering_refused_{reason}")
         self.pending = {"mid": message.mid, "request": request, "deadline": now + DEADLINE}
         return self._record("backhaul_steering_started")
@@ -216,7 +243,10 @@ class BackhaulSteeringCoordinator:
             return self._record("backhaul_steering_unanswered")
         error = 0 if result is True else ASSOCIATION_FAILED
         mid, self.pending = self.pending["mid"], None
-        self._respond(mid, request, error, snapshot)
+        # the backhaul STA associated after the move: the pod's on the target's band, as the
+        # uplink scope read it when the move applied (the published report may lag behind)
+        station = self.associated() if result is True and self.associated is not None else None
+        self._respond(mid, request, error, snapshot, station)
         outcome = "succeeded" if result is True else "failed"
         self.last = {
             "mid": mid,
@@ -237,4 +267,4 @@ class BackhaulSteeringCoordinator:
 
     def close(self):
         """A closed session takes no new request; a move under way is answered by the next."""
-        self.executor = lambda bssid: "session_closed"
+        self.executor = lambda *request: "session_closed"

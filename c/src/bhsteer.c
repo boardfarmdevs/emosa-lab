@@ -12,6 +12,9 @@
 #define REQUEST_TLV 0x9E
 #define RESPONSE_TLV 0x9F
 #define ERROR_CODE_TLV 0xA3
+/* rejected: the backhaul STA cannot operate on the channel specified (no station on the band,
+ * or one whose radio carries the pod's BSSes on another channel) */
+#define CHANNEL_NOT_OPERABLE 0x04
 #define ASSOCIATION_FAILED 0x06
 #define DEADLINE 120 /* the uplink switch's own deadline (90 s), a refresh and the pod's State */
 
@@ -50,15 +53,18 @@ static void send(em_bh_coordinator *c, uint16_t type, uint16_t mid, const em_tlv
         append(out, &f);
 }
 
-static void respond(em_bh_coordinator *c, uint16_t mid, const uint8_t request[14], uint8_t error, double now,
-                    em_frames *out)
+/* the response names `station` (NULL: the request's): the backhaul STA associated after the move */
+static void respond(em_bh_coordinator *c, uint16_t mid, const uint8_t request[14], uint8_t error,
+                    const uint8_t *station, double now, em_frames *out)
 {
-    uint8_t response[13], code[7];
-    memcpy(response, request, 12);
+    uint8_t response[13], code[7], named[6];
+    memcpy(named, station ? station : request, 6);
+    memcpy(response, named, 6);
+    memcpy(response + 6, request + 6, 6);
     response[12] = error ? 0x01 : 0x00;
     em_tlv tlvs[2] = {{RESPONSE_TLV, 13, response}, {ERROR_CODE_TLV, 7, code}};
     code[0] = error;
-    memcpy(code + 1, request, 6);
+    memcpy(code + 1, named, 6);
     send(c, RESPONSE, mid, tlvs, error ? 2 : 1, out);
     em_bh_shared *s = c->shared;
     size_t slot = s->nanswered;
@@ -76,6 +82,7 @@ static void respond(em_bh_coordinator *c, uint16_t mid, const uint8_t request[14
     s->answered[slot].mid = mid;
     memcpy(s->answered[slot].request, request, 14);
     s->answered[slot].error = error;
+    memcpy(s->answered[slot].station, named, 6);
     s->answered[slot].expiry = now + 30;
 }
 
@@ -140,9 +147,10 @@ const char *em_bh_handle(em_bh_coordinator *c, const em_message *m, double now, 
     send(c, ACK, m->mid, NULL, 0, out);
     for (size_t i = 0; i < s->nanswered; i++)
         if (s->answered[i].mid == m->mid) {
-            uint8_t again[14];
+            uint8_t again[14], station[6];
             memcpy(again, s->answered[i].request, 14);
-            respond(c, m->mid, again, s->answered[i].error, now, out);
+            memcpy(station, s->answered[i].station, 6);
+            respond(c, m->mid, again, s->answered[i].error, station, now, out);
             return record(c, "backhaul_steering_repeated_response_sent");
         }
     if (s->pending && s->pending_mid == m->mid)
@@ -161,7 +169,7 @@ const char *em_bh_handle(em_bh_coordinator *c, const em_message *m, double now, 
         char bssid[18];
         EM_FORMAT_FIXED(bssid, sizeof(bssid), "%02x:%02x:%02x:%02x:%02x:%02x", request[6], request[7], request[8], request[9],
                  request[10], request[11]);
-        reason = c->closed || !c->executor ? "session_closed" : c->executor(c->ctx, bssid);
+        reason = c->closed || !c->executor ? "session_closed" : c->executor(c->ctx, bssid, request[12], request[13]);
     }
     cJSON_Delete(c->last);
     c->last = cJSON_CreateObject();
@@ -169,7 +177,8 @@ const char *em_bh_handle(em_bh_coordinator *c, const em_message *m, double now, 
     cJSON_AddItemToObject(c->last, "request", request_json(request));
     cJSON_AddItemToObject(c->last, "refused", reason ? cJSON_CreateString(reason) : cJSON_CreateNull());
     if (reason) {
-        respond(c, m->mid, request, ASSOCIATION_FAILED, now, out);
+        bool channel = !strcmp(reason, "no_station_on_band") || !strcmp(reason, "channel_not_operable");
+        respond(c, m->mid, request, channel ? CHANNEL_NOT_OPERABLE : ASSOCIATION_FAILED, NULL, now, out);
         EM_FORMAT_FIXED(label, sizeof(label), "backhaul_steering_refused_%s", reason);
         return record(c, label);
     }
@@ -180,7 +189,8 @@ const char *em_bh_handle(em_bh_coordinator *c, const em_message *m, double now, 
     return record(c, "backhaul_steering_started");
 }
 
-void em_bh_tick(em_bh_coordinator *c, double now, bool source_available, em_frames *out)
+void em_bh_tick(em_bh_coordinator *c, double now, bool source_available, const uint8_t *associated,
+                em_frames *out)
 {
     em_bh_shared *s = c->shared;
     if (!s || !s->pending)
@@ -214,7 +224,7 @@ void em_bh_tick(em_bh_coordinator *c, double now, bool source_available, em_fram
     uint16_t mid = s->pending_mid;
     s->pending = false;
     bool applied = result == 1;
-    respond(c, mid, request, applied ? 0 : ASSOCIATION_FAILED, now, out);
+    respond(c, mid, request, applied ? 0 : ASSOCIATION_FAILED, applied ? associated : NULL, now, out);
     cJSON_Delete(c->last);
     c->last = cJSON_CreateObject();
     cJSON_AddNumberToObject(c->last, "mid", mid);

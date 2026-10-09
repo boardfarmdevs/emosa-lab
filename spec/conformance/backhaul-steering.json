@@ -230,6 +230,80 @@
   {
    "expected_status": {
     "counts": {
+     "backhaul_steering_refused_no_station_on_band": 1
+    },
+    "last": {
+     "mid": 60,
+     "refused": "no_station_on_band",
+     "request": {
+      "channel": 36,
+      "operating_class": 115,
+      "station": "02:00:00:00:14:00",
+      "target": "02:00:00:00:09:00"
+     }
+    },
+    "pending": null
+   },
+   "handed_to_uplink": [
+    "02:00:00:00:09:00"
+   ],
+   "name": "no-station-on-band",
+   "steps": [
+    {
+     "at": 0.0,
+     "executor": "no_station_on_band",
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008000003c0080000000",
+       "020000e000010272f97f0785893a0000801a003c00809f000d02000000140002000000090001a3000704020000001400000000"
+      ],
+      "result": "backhaul_steering_refused_no_station_on_band"
+     },
+     "request": "0272f97f0785020000e00001893a00008019003c00809e000e0200000014000200000009007324000000",
+     "session": 0
+    }
+   ]
+  },
+  {
+   "expected_status": {
+    "counts": {
+     "backhaul_steering_refused_channel_not_operable": 1
+    },
+    "last": {
+     "mid": 61,
+     "refused": "channel_not_operable",
+     "request": {
+      "channel": 36,
+      "operating_class": 115,
+      "station": "02:00:00:00:14:00",
+      "target": "02:00:00:00:09:00"
+     }
+    },
+    "pending": null
+   },
+   "handed_to_uplink": [
+    "02:00:00:00:09:00"
+   ],
+   "name": "channel-not-operable",
+   "steps": [
+    {
+     "at": 0.0,
+     "executor": "channel_not_operable",
+     "expected": {
+      "frames": [
+       "020000e000010272f97f0785893a00008000003d0080000000",
+       "020000e000010272f97f0785893a0000801a003d00809f000d02000000140002000000090001a3000704020000001400000000"
+      ],
+      "result": "backhaul_steering_refused_channel_not_operable"
+     },
+     "request": "0272f97f0785020000e00001893a00008019003d00809e000e0200000014000200000009007324000000",
+     "session": 0
+    }
+   ]
+  },
+  {
+   "expected_status": {
+    "counts": {
      "backhaul_steering_refused_move_in_progress": 1,
      "backhaul_steering_started": 1
     },

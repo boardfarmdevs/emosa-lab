@@ -221,6 +221,10 @@ typedef struct {
     bool bh_live;
     em_backhaul backhaul;       /* the pod's EasyMesh backhaul, when it is one */
     bool has_backhaul;
+    /* the pod's radios with a backhaul station, the one in use first: the Backhaul STA
+     * Capability Report (spec §8.3), as of the last refresh */
+    em_backhaul_radio radios[EM_UPLINK_BANDS + 1];
+    size_t nradios;
     bool peers_on;              /* the fleet's other agents (spec §8.5): with a run_dir */
     em_peers peers;
     em_backhaul_link links[16]; /* the Wi-Fi backhaul's 1905 neighbors, as of the last refresh */
@@ -343,6 +347,24 @@ static bool upstream_loops(void *ctx, const uint8_t target[6], const uint8_t (*o
     return em_peers_loops(&a->peers, a->al, own, nown, target);
 }
 
+/* the pod's backhaul stations: the configured one (or the profile's) first, then the profile's
+ * station on each band, each once */
+static size_t station_names(const agent *a, const char *out[EM_UPLINK_BANDS + 1])
+{
+    size_t n = 0;
+    const char *first = a->uplink.station ? a->uplink.station : a->profile.uplink_station;
+    if (first)
+        out[n++] = first;
+    for (size_t i = 0; i < a->profile.nuplink_bands && n < EM_UPLINK_BANDS + 1; i++) {
+        bool seen = false;
+        for (size_t k = 0; k < n && !seen; k++)
+            seen = !strcmp(out[k], a->profile.uplink_band_stations[i]);
+        if (!seen)
+            out[n++] = a->profile.uplink_band_stations[i];
+    }
+    return n;
+}
+
 static bool refresh(agent *a)
 {
     const cJSON *tables = em_ovsdb_tables(a->ovs), *row;
@@ -444,13 +466,20 @@ static bool refresh(agent *a)
         }
     memcpy(a->first_seen, seen, kept * sizeof(seen[0]));
     a->nfirst = kept;
-    /* the backhaul station, reported while it is the pod's EasyMesh backhaul (option 1) */
+    /* the pod's backhaul stations: the one cm uses as a Multi-AP uplink is its EasyMesh
+     * backhaul (option 1), reported; each is a backhaul STA radio of the pod (spec §8.3) */
+    const char *names[EM_UPLINK_BANDS + 1], *in_use = NULL;
+    size_t nnames = station_names(a, names);
     a->has_backhaul = false;
-    if (a->uplink_on) {
+    for (size_t i = 0; i < nnames && !a->has_backhaul; i++) {
         em_uplink_state state;
-        em_uplink_state_of(tables, a->uplink.station, &state);
-        a->has_backhaul = !strcmp(state.kind, "multi-ap") && em_view_backhaul(view, a->uplink.station, &a->backhaul);
+        em_uplink_state_of(tables, names[i], &state);
+        if (!strcmp(state.kind, "multi-ap") && em_view_backhaul(view, names[i], &a->backhaul)) {
+            a->has_backhaul = true;
+            in_use = names[i];
+        }
     }
+    a->nradios = em_backhaul_radios(tables, names, nnames, in_use, a->radios, EM_UPLINK_BANDS + 1);
     a->view = *view;
     free(view);
     a->represented = rep;
@@ -656,10 +685,22 @@ static void watch_ask(void *ctx, const uint8_t (*stations)[6], size_t n)
 
 /* -- Backhaul Steering: the uplink scope carries the move out ------------------------ */
 
-static const char *bh_executor(void *ctx, const char *bssid)
+/* the band of an IEEE 802.11 Annex E global operating class, or NULL */
+static const char *band_of_operating_class(int operating_class)
+{
+    if (operating_class >= 81 && operating_class <= 84)
+        return "2.4G";
+    if (operating_class >= 115 && operating_class <= 130)
+        return "5G";
+    if (operating_class >= 131 && operating_class <= 137)
+        return "6G";
+    return NULL;
+}
+
+static const char *bh_executor(void *ctx, const char *bssid, int operating_class, int channel)
 {
     agent *a = ctx;
-    return em_uplink_steer(&a->uplink, bssid);
+    return em_uplink_steer(&a->uplink, bssid, band_of_operating_class(operating_class), channel);
 }
 
 static int bh_outcome(void *ctx, const char *bssid, const char **why)
@@ -1192,18 +1233,18 @@ static void handle_message(agent *a, const em_message *m)
         reply(a, 0x800A, m->mid, tlvs, 3);
         count(&a->counts, "client_capability_unavailable_report");
     } else if (m->message_type == 0x8027) {
-        /* Backhaul STA Radio Capabilities (RUID, MAC-included flag, STA MAC) of the station
-         * that is the pod's EasyMesh backhaul; none while its uplink is GRE */
-        uint8_t v[13];
-        size_t n = 0;
-        if (a->has_backhaul) {
-            memcpy(v, a->backhaul.ruid, 6);
-            v[6] = 0x80;
-            memcpy(v + 7, a->backhaul.station.mac, 6);
-            n = 1;
+        /* one Backhaul STA Radio Capabilities TLV (RUID, MAC-included flag, STA MAC when known)
+         * for each radio of the pod with a backhaul station, enabled or not, the one in use
+         * first (EasyMesh 6.1, 9.3; spec §8.3): the bands the controller may move the pod to */
+        uint8_t v[EM_UPLINK_BANDS + 1][13];
+        em_tlv t[EM_UPLINK_BANDS + 1];
+        for (size_t i = 0; i < a->nradios; i++) {
+            memcpy(v[i], a->radios[i].ruid, 6);
+            v[i][6] = a->radios[i].has_station ? 0x80 : 0x00;
+            memcpy(v[i] + 7, a->radios[i].station, 6);
+            t[i] = (em_tlv){0xCB, a->radios[i].has_station ? 13 : 7, v[i]};
         }
-        em_tlv t = {0xCB, 13, v};
-        reply(a, 0x8028, m->mid, n ? &t : NULL, n);
+        reply(a, 0x8028, m->mid, a->nradios ? t : NULL, a->nradios);
         count(&a->counts, "backhaul_sta_capability_report_sent");
     } else if (m->message_type == 0x8019 && a->bh_live) {
         /* the move goes to the uplink scope (emosa.wire.backhaul_steering) */
@@ -1393,8 +1434,13 @@ static void session_tick(agent *a)
     early_tick(a);
     if (a->bh_live || a->bh_shared.pending) { /* a started Backhaul Steering move is answered */
         em_frames out = {0};
-        if (a->bh_live)
-            em_bh_tick(&a->bh, t, source_current(a), &out);
+        if (a->bh_live) {
+            /* a success names the backhaul STA the pod is on now, as the uplink scope read it */
+            const em_uplink_state *facts = a->uplink_on ? em_uplink_facts(&a->uplink) : NULL;
+            uint8_t associated[6];
+            bool known = facts && em_parse_mac(facts->mac, associated);
+            em_bh_tick(&a->bh, t, source_current(a), known ? associated : NULL, &out);
+        }
         send_frames(a, &out);
     }
     if (a->reporting_live) { /* the due-report schedule, in every admitted state */
@@ -1704,6 +1750,14 @@ static bool configure(agent *a, const char *path, const char *profiles)
     a->uplink_on = umode && !strcmp(umode, "multi-ap");
     if (a->uplink_on) {
         a->uplink.station = cfg_str(uplink, "station") ? cfg_str(uplink, "station") : a->profile.uplink_station;
+        /* the pod's backhaul station on each band; a station on the radio of its BSSes keeps
+         * that radio's channel (spec §8.3) */
+        for (size_t i = 0; i < a->profile.nuplink_bands && i < EM_UPLINK_BANDS; i++) {
+            a->uplink.bands[i] = a->profile.uplink_bands[i];
+            a->uplink.band_stations[i] = a->profile.uplink_band_stations[i];
+            a->uplink.nbands = i + 1;
+        }
+        a->uplink.fixed_band = a->profile.band;
         const char *bssid = cfg_str(uplink, "bssid");
         uint8_t mac[6];
         if (!a->uplink.station || !bssid || !em_parse_mac(bssid, mac)) {

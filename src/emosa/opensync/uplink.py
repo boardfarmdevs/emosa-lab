@@ -97,6 +97,17 @@ def lower_mac(value):
     return value.lower() if isinstance(value, str) and value else None
 
 
+def band_of_operating_class(operating_class):
+    """The band of an IEEE 802.11 Annex E global operating class, or None."""
+    if 81 <= operating_class <= 84:
+        return "2.4G"
+    if 115 <= operating_class <= 130:
+        return "5G"
+    if 131 <= operating_class <= 137:
+        return "6G"
+    return None
+
+
 def own_bssids(decoded):
     """Every MAC address the pod's own VIFs use: none of them may be its upstream."""
     return {
@@ -162,13 +173,29 @@ def uplink_state(decoded, station):
 
 
 class UplinkBackend:
-    """The uplink scope of one pod: one backhaul station, bound by serial."""
+    """The uplink scope of one pod: its backhaul stations, bound by serial.
+
+    ``station`` is the one the pod bootstraps on; ``stations`` its backhaul station on each
+    band ((band, if_name) pairs, the profile's), which a move to a BSS on that band uses
+    (spec 8.3). A switch enables the station it names and disables the others, by updates
+    only: a band whose station the pod has no row for takes no switch. ``fixed_band`` is the
+    band of the radio that carries the pod's BSSes: a station on it stays on that radio's
+    channel, which the controller sets for the BSSes, not a move.
+    """
 
     mode = MODE
 
-    def __init__(self, pod_id, session, vault, *, serial, station, loop=None):
+    def __init__(
+        self, pod_id, session, vault, *, serial, station, stations=(), fixed_band=None, loop=None
+    ):
         self.pod_id, self.session, self.vault = pod_id, session, vault
         self.expected_serial, self.station = serial, station
+        self.stations = dict(stations)
+        self.bound = set(self.stations.values()) | {station}
+        self.fixed_band = fixed_band
+        self.present = set()  # the bound stations the pod has a row for, at the last read
+        self.radios = {}  # bound station -> its radio's (freq_band, channel), at the last read
+        self.active = station  # the station the uplink is on, at the last read
         # spec 8.5: (upstream BSSID, the pod's own MACs) -> True when that upstream is a pod
         # whose own upstream chain reaches this one
         self.loop = loop
@@ -192,19 +219,58 @@ class UplinkBackend:
         ):
             raise EmosaError(Reason.NOT_READY, "pod identity absent or not the bound serial")
         self.instance = start_instance(decoded)
-        rows = [
-            (u, r)
-            for u, r in decoded.get("Wifi_VIF_Config", {}).items()
-            if r.get("if_name") == self.station
-        ]
-        if len(rows) > 1:
-            raise EmosaError(Reason.NOT_READY, "backhaul station ambiguous")
-        vif_uuid, vif = rows[0] if rows else (None, {})
-        if vif_uuid is not None and vif.get("mode") != "sta":
-            raise EmosaError(Reason.UNSUPPORTED_OPERATION, "the bound uplink VIF is not a station")
-        return decoded, vif_uuid, vif
+        rows = {}  # bound station -> (its Wifi_VIF_Config UUID, row)
+        for u, r in decoded.get("Wifi_VIF_Config", {}).items():
+            name = r.get("if_name")
+            if name not in self.bound:
+                continue
+            if name in rows:
+                raise EmosaError(Reason.NOT_READY, "backhaul station ambiguous")
+            if r.get("mode") != "sta":
+                raise EmosaError(
+                    Reason.UNSUPPORTED_OPERATION, "the bound uplink VIF is not a station"
+                )
+            rows[name] = (u, r)
+        self.present = set(rows)
+        # each station's radio: its band, and the channel it operates on (its State's)
+        channels = {
+            r.get("if_name"): r.get("channel") for r in decoded.get("Wifi_Radio_State", {}).values()
+        }
+        self.radios = {
+            name: (radio.get("freq_band"), channels.get(radio.get("if_name")))
+            for radio in decoded.get("Wifi_Radio_Config", {}).values()
+            for name, (u, _) in rows.items()
+            if u in (radio.get("vif_configs") or [])
+        }
+        return decoded, rows
 
-    def _configured(self, decoded, vif):
+    def station_for(self, band):
+        """The pod's backhaul station on ``band`` it has a row for, at the last read, or None."""
+        station = self.stations.get(band)
+        return station if station in self.present else None
+
+    def fixed_channel(self, station):
+        """The channel ``station`` cannot leave: its radio's, when that radio carries the
+        pod's BSSes (``fixed_band``); None for a station on a radio of its own."""
+        band, channel = self.radios.get(station, (None, None))
+        if band is not None and band == self.fixed_band and type(channel) is int:
+            return channel
+        return None
+
+    def _active(self, decoded, rows):
+        """The station the uplink is on: the one in Multi-AP credential-list mode, else the
+        one ``cm`` uses, else the one the pod bootstraps on."""
+        written = [n for n, (_, r) in rows.items() if self._configured(decoded, r, n)[1]]
+        if len(written) == 1:
+            return written[0]
+        used = [
+            r.get("if_name")
+            for r in decoded.get("Connection_Manager_Uplink", {}).values()
+            if r.get("is_used") is True and r.get("if_name") in rows
+        ]
+        return used[0] if len(used) == 1 else self.station
+
+    def _configured(self, decoded, vif, station):
         """The station's configured uplink: Multi-AP credential-list mode, or not."""
         creds = decoded.get("Wifi_Credential_Config", {})
         linked = [creds[u] for u in vif.get("credential_configs") or [] if u in creds]
@@ -219,7 +285,7 @@ class UplinkBackend:
         )
         return {
             "uplink": MULTI_AP if multi_ap else "other",
-            "station": self.station,
+            "station": station,
             "ssid": sole.get("ssid") if multi_ap else vif.get("ssid"),
             "credential_fingerprint": self.vault.fingerprint(key) if multi_ap else None,
             "bssid": lower_mac(sole.get("bssid")) if multi_ap else None,
@@ -228,15 +294,17 @@ class UplinkBackend:
     async def snapshot(self):
         try:
             raw = await self.session.snapshot()
-            decoded, vif_uuid, vif = self._binding(raw)
-            configured, credential = self._configured(decoded, vif)
-            state = uplink_state(decoded, self.station)
+            decoded, rows = self._binding(raw)
+            self.active = self._active(decoded, rows)
+            vif_uuid, vif = rows.get(self.active, (None, {}))
+            configured, credential = self._configured(decoded, vif, self.active)
+            state = uplink_state(decoded, self.active)
             self.facts = {k: v for k, v in state.items() if k != "state"}
             # The key a station connected with is not in its State: the observed
             # credential is the configured one whose SSID the station is on.
             observed = {
                 "uplink": state["kind"],
-                "station": self.station,
+                "station": self.active,
                 "ssid": state["ssid"],
                 "credential_fingerprint": (
                     configured["credential_fingerprint"]
@@ -250,7 +318,7 @@ class UplinkBackend:
                 configured,
                 Observation(
                     self.pod_id,
-                    self.station,
+                    self.active,
                     observed,
                     "ovsdb",
                     self.mode,
@@ -273,8 +341,8 @@ class UplinkBackend:
 
     def _check(self, intent, decoded=None):
         intent.target(self.vault)
-        if (intent.pod_id, intent.station) != (self.pod_id, self.station):
-            raise EmosaError(Reason.UNSUPPORTED_OPERATION, "request exceeds the bound station")
+        if intent.pod_id != self.pod_id or intent.station not in self.bound:
+            raise EmosaError(Reason.UNSUPPORTED_OPERATION, "request exceeds the bound stations")
         if intent.bssid is None:
             raise EmosaError(Reason.INVALID_INPUT, "the upstream BSSID is required")
         if decoded is not None and intent.bssid in own_bssids(decoded):
@@ -290,14 +358,19 @@ class UplinkBackend:
                 Reason.INVALID_INPUT, "the upstream BSSID is a pod downstream of this one"
             )
 
+    @staticmethod
+    def _others_on(rows, station):
+        """The pod's other backhaul stations that are enabled: the switch disables them."""
+        return sorted(n for n, (_, r) in rows.items() if n != station and r.get("enabled") is True)
+
     async def plan(self, intent):
         self._check(intent)
         raw = await self.session.snapshot()
-        decoded, vif_uuid, _ = self._binding(raw)
+        decoded, rows = self._binding(raw)
         self._check(intent, decoded)
-        if not raw["ready"] or vif_uuid is None:
+        if not raw["ready"] or intent.station not in rows:
             raise EmosaError(Reason.NOT_READY, "the pod's backhaul station row is required")
-        state = uplink_state(decoded, self.station)
+        state = uplink_state(decoded, self._active(decoded, rows))
         if state["kind"] is None:
             # Start only from a working uplink: the switch moves the path EMOSA
             # itself uses, and OpenSync's restart returns the pod to this one.
@@ -305,23 +378,29 @@ class UplinkBackend:
         return {
             "mapping": MODE,
             "action": "multi-ap-uplink",
-            "station": self.station,
+            "station": intent.station,
             "ssid": intent.ssid,
             "bssid": intent.bssid,
             "secret_ref": intent.secret_ref,
             "from": {"kind": state["kind"], "in_use": state["in_use"]},
+            "disables": self._others_on(rows, intent.station),
             "instance": self.instance,
-            "fields": ["Wifi_Credential_Config", "Wifi_VIF_Config.credential_configs/ssid"],
-            "guard": "pod serial and the station's current row",
+            "fields": [
+                "Wifi_Credential_Config",
+                "Wifi_VIF_Config.credential_configs/ssid",
+                "Wifi_VIF_Config.enabled of the other backhaul stations",
+            ],
+            "guard": "pod serial and the stations' current rows",
         }
 
     async def submit(self, intent, attempt):
         await self.plan(intent)
         raw = await self.session.snapshot()
-        _, vif_uuid, _ = self._binding(raw)
-        if raw["generation"] != attempt["session_generation"]:
+        _, rows = self._binding(raw)
+        if raw["generation"] != attempt["session_generation"] or intent.station not in rows:
             return SubmitResult("rejected", {}, Reason.NOT_READY)
         node_uuid = next(iter(raw["tables"]["AWLAN_Node"]))
+        vif_uuid = rows[intent.station][0]
         vif = raw["tables"]["Wifi_VIF_Config"][vif_uuid]
         key = self.vault.resolve(intent.secret_ref)
         transaction = [
@@ -366,6 +445,23 @@ class UplinkBackend:
             },
         ]
         counts = [None, None, None, 1]
+        # The pod's other backhaul stations off in the same transaction: two stations up
+        # bridge br-home into the network twice, with no STP to stop the loop (spec 8.3).
+        for name in self._others_on(rows, intent.station):
+            other_uuid = rows[name][0]
+            other = raw["tables"]["Wifi_VIF_Config"][other_uuid]
+            transaction += [
+                guard(
+                    "Wifi_VIF_Config", other_uuid, other, [c for c in STATION_GUARDS if c in other]
+                ),
+                {
+                    "op": "update",
+                    "table": "Wifi_VIF_Config",
+                    "where": where_uuid(other_uuid),
+                    "row": {"enabled": False},
+                },
+            ]
+            counts += [None, 1]
         self.write_count += 1
         try:
             results = await self.session.transact(

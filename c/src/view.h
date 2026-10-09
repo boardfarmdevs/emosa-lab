@@ -113,4 +113,16 @@ typedef struct {
 void em_uplink_state_of(const cJSON *tables, const char *station, em_uplink_state *out);
 cJSON *em_uplink_state_json(const em_uplink_state *u);
 
+/* A radio of the pod with one of its backhaul stations, enabled or not: a backhaul STA radio
+ * of the Backhaul STA Capability Report (EasyMesh 6.1, 9.3; spec 8.3). */
+typedef struct {
+    uint8_t ruid[6], station[6];
+    bool has_station; /* the station's MAC, once owm reports its State */
+} em_backhaul_radio;
+
+/* The radios of the pod with one of `stations` (n names), the station `in_use` (may be NULL)
+ * first, then by RUID (emosa.opensync.easymesh_view.backhaul_radios); at most cap. */
+size_t em_backhaul_radios(const cJSON *tables, const char *const *stations, size_t n, const char *in_use,
+                          em_backhaul_radio *out, size_t cap);
+
 #endif

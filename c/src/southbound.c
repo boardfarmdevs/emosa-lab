@@ -36,6 +36,15 @@ em_reason em_profile_load(const char *path, em_profile *out)
     out->inet = cJSON_GetObjectItemCaseSensitive(d, "inet");
     out->uplink_station = cJSON_GetStringValue(
         cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(d, "uplink"), "station"));
+    const cJSON *band_station;
+    cJSON_ArrayForEach(band_station, cJSON_GetObjectItemCaseSensitive(
+                                         cJSON_GetObjectItemCaseSensitive(d, "uplink"), "stations"))
+    {
+        if (out->nuplink_bands < 3 && cJSON_IsString(band_station)) {
+            out->uplink_bands[out->nuplink_bands] = band_station->string;
+            out->uplink_band_stations[out->nuplink_bands++] = band_station->valuestring;
+        }
+    }
     /* the declared best-effort ESP (three octets in hex), when the profile has one */
     const char *esp = cJSON_GetStringValue(
         cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(d, "ap_metrics"), "esp_be"));
@@ -999,7 +1008,7 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
         return EM_NOT_READY;
     }
     cJSON *ops = cJSON_CreateArray();
-    int counts[4];
+    int counts[4 + 2 * EM_UPLINK_STATIONS];
     size_t nops = 0;
     {
         cJSON *o = op("wait", "AWLAN_Node", cJSON_CreateArray()), *rows = cJSON_CreateArray(),
@@ -1044,6 +1053,37 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
     cJSON_AddItemToObject(r, "credential_configs", tagged("set", links));
     cJSON_AddItemToObject(upd, "row", r);
     PUSH(upd, 1);
+    /* The pod's other backhaul stations off in the same transaction, in name order: two
+     * stations up bridge br-home into the network twice, with no STP to stop the loop. */
+    const cJSON *others[EM_UPLINK_STATIONS];
+    size_t nothers = 0;
+    cJSON_ArrayForEach(row, table(s, "Wifi_VIF_Config"))
+    {
+        const char *name = ovs_str(row, "if_name");
+        bool listed = false;
+        for (size_t i = 0; name && i < in->nstations && !listed; i++)
+            listed = in->stations[i] && !strcmp(in->stations[i], name);
+        if (!listed || !strcmp(name, in->station) || !ovs_true(row, "enabled") || nothers == EM_UPLINK_STATIONS)
+            continue;
+        size_t at = nothers++;
+        while (at > 0 && strcmp(ovs_str(others[at - 1], "if_name"), name) > 0) {
+            others[at] = others[at - 1];
+            at--;
+        }
+        others[at] = row;
+    }
+    for (size_t k = 0; k < nothers; k++) {
+        const char *ocols[6];
+        size_t onc = 0;
+        for (size_t i = 0; i < 6; i++)
+            if (cJSON_GetObjectItemCaseSensitive(others[k], station_guards[i]))
+                ocols[onc++] = station_guards[i];
+        PUSH(guard("Wifi_VIF_Config", others[k]->string, others[k], ocols, onc), -1);
+        cJSON *off = op("update", "Wifi_VIF_Config", where_uuid(others[k]->string)), *orow = cJSON_CreateObject();
+        cJSON_AddFalseToObject(orow, "enabled");
+        cJSON_AddItemToObject(off, "row", orow);
+        PUSH(off, 1);
+    }
     commit(s, ops, counts, out, NULL);
     cJSON_Delete(ops);
     return EM_OK;

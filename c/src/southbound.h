@@ -21,6 +21,10 @@ typedef struct {
     } slots[8];
     bool has_esp_be;
     uint8_t esp_be[3]; /* ap_metrics.esp_be: the declared best-effort ESP */
+    /* uplink.stations: the pod's backhaul station on each band ("2.4G", "5G", "6G"), for a move
+     * to a BSS on another band (spec 8.3) */
+    size_t nuplink_bands;
+    const char *uplink_bands[3], *uplink_band_stations[3];
 } em_profile;
 
 em_reason em_profile_load(const char *path, em_profile *out);
@@ -82,9 +86,14 @@ em_reason em_steering_close(em_ovs_session *session, const em_steering_intent *i
 bool em_is_watch_row(const cJSON *row);
 
 /* The option 1 uplink switch (spec §8.3): the station joins the EasyMesh backhaul
- * BSS `bssid` with `ssid`. On a refusal, *refusal names why (no transaction sent). */
+ * BSS `bssid` with `ssid`; each other of the pod's backhaul stations (`stations`) that is
+ * enabled is disabled in the same transaction. On a refusal, *refusal names why (no
+ * transaction sent). */
+#define EM_UPLINK_STATIONS 4
 typedef struct {
     const char *station, *ssid, *secret_ref, *bssid;
+    const char *const *stations; /* the pod's backhaul stations (any order; may hold `station`) */
+    size_t nstations;
 } em_uplink_intent;
 
 em_reason em_uplink_submit(const char *serial, em_ovs_session *session, const em_uplink_intent *in,

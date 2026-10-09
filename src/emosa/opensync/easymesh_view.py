@@ -221,6 +221,37 @@ def device_view(decoded):
     )
 
 
+def backhaul_radios(decoded, stations, in_use=None):
+    """(RUID, station MAC or None) of each of the pod's radios with one of ``stations``.
+
+    A backhaul station counts whether it is enabled or not: a disabled one is still a
+    backhaul STA radio of the pod (EasyMesh 6.1, 9.3), which a move to its band enables.
+    Its MAC is known once owm reports its State. The station ``in_use`` comes first.
+    """
+    vifs = {
+        u: r
+        for u, r in decoded.get("Wifi_VIF_Config", {}).items()
+        if r.get("if_name") in stations and r.get("mode") == "sta"
+    }
+    states = {
+        r.get("if_name"): r
+        for r in decoded.get("Wifi_VIF_State", {}).values()
+        if r.get("mode") == "sta"
+    }
+    radio_states = {r.get("if_name"): r for r in decoded.get("Wifi_Radio_State", {}).values()}
+    found = []
+    for radio in decoded.get("Wifi_Radio_Config", {}).values():
+        ruid = (radio_states.get(radio.get("if_name")) or {}).get("mac")
+        if not ruid:
+            continue
+        for uuid in radio.get("vif_configs") or []:
+            if uuid in vifs:
+                name = vifs[uuid]["if_name"]
+                station = (states.get(name) or {}).get("mac")
+                found.append((name != in_use, mac(ruid), mac(station) if station else None))
+    return tuple((ruid, station) for _, ruid, station in sorted(found, key=lambda f: f[:2]))
+
+
 def backhaul(device, station):
     """The pod's EasyMesh backhaul through ``station``, or None.
 
@@ -308,6 +339,7 @@ def topology(
     uplink=None,
     associated_at=None,
     peers=(),
+    backhaul_radios=(),
 ):
     """Topology Response contents: the agent, its BSSes and their stations.
 
@@ -321,7 +353,9 @@ def topology(
     neighbor stays on the Ethernet port, where EMOSA's frames actually go.
     ``peers`` adds the pod's 1905 neighbors on its Wi-Fi backhaul (spec 8.5), as (local
     interface MAC, neighbor AL MAC) pairs: its parent pod's agent on its backhaul station, a
-    child pod's on its backhaul BSS.
+    child pod's on its backhaul BSS. ``backhaul_radios`` ((RUID, station MAC or None), the one
+    in use first) are the pod's radios with a backhaul station, for the Backhaul STA
+    Capability Report.
     """
     interfaces = (LocalInterface(agent_al, 1, b""),) + tuple(
         LocalInterface(b.bssid, IEEE_802_11N_24, b.bssid + bytes([AP_ROLE, 0x00, channel, 0x00]))
@@ -370,5 +404,6 @@ def topology(
         l2_neighbor_records_absent=True,
         mld_backhaul_vbss_tid_policy_absent=True,
         backhaul_stations=() if uplink is None else ((uplink.ruid, uplink.station.mac),),
+        backhaul_radios=tuple(backhaul_radios),
         associated_at=tuple(sorted((associated_at or {}).items())),
     )

@@ -47,10 +47,12 @@ static bool keep_nothing(void *ctx, const cJSON *record)
     return true;
 }
 static uint16_t next_mid(void *ctx) { return ++*(uint16_t *)ctx; }
-static const char *bh_move(void *ctx, const char *bssid)
+static const char *bh_move(void *ctx, const char *bssid, int operating_class, int channel)
 {
     (void)ctx;
     (void)bssid;
+    (void)operating_class;
+    (void)channel;
     return NULL;
 }
 static int bh_outcome(void *ctx, const char *bssid, const char **why)
@@ -148,7 +150,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
                 (void)em_reporting_query(&reporting, m, true, &source, &out, &error);
             else if (m->message_type == 0x8019)
                 (void)em_bh_handle(&bh, m, 1000.0, stations, 1, &out, &error);
-            em_bh_tick(&bh, 1001.0, true, &out);
+            em_bh_tick(&bh, 1001.0, true, NULL, &out);
             em_reporting_tick(&reporting, 1002.0, true, &source, next_mid, &mid, &out);
             em_frames_free(&out);
             em_message_free(m);

@@ -98,10 +98,10 @@ Sent by the agent:
 | `0x800C` | AP Metrics Response | in answer to an AP Metrics Query, and unsolicited at the controller's AP metrics reporting interval, from the pod's statistics (§3.8) |
 | `0x8010` | Unassociated STA Link Metrics Response | after the Ack of an Unassociated STA Link Metrics Query: the stations the pod heard recently (§3.9) |
 | `0x8017` | Steering Completed | after the Ack of a steering opportunity: EMOSA steers nothing on its own account (§3.7) |
-| `0x801A` | Backhaul Steering Response | the request's MID, once the move is known: result `0x00` (success) when the pod's State shows its station on the target, else `0x01` with an Error Code TLV (`0xA3`, reason `0x06`, the station); at once for a request it cannot carry out (§8.3) |
+| `0x801A` | Backhaul Steering Response | the request's MID, once the move is known: result `0x00` (success) when the pod's State shows its station on the target, naming the backhaul STA associated after the move (EasyMesh 6.1, 17.2.33: the pod's station on the target's band, which after a move to another band is not the one the request named), else `0x01` with an Error Code TLV (`0xA3`, the station): reason `0x04` at once when the pod has no backhaul station on the target's band, or that station's radio carries the pod's BSSes on another channel; reason `0x06` otherwise, at once for a request it cannot carry out (§8.3) |
 | `0x801C` | Channel Scan Report | after the Ack of a Channel Scan Request: a Timestamp TLV (`0xA8`) and one Channel Scan Result TLV (`0xA7`) per requested channel of the pod's radio, status `0x01` (scan not supported) (§3.4) |
 | `0x8022` | Client Disassociation Stats | after an observed client departure, only with qualified statistics |
-| `0x8028` | Backhaul STA Capability Report | in answer to a Backhaul STA Capability Query: one Backhaul STA Radio Capabilities TLV (`0xCB`) for the pod's EasyMesh backhaul STA (§8.3), none over GRE |
+| `0x8028` | Backhaul STA Capability Report | in answer to a Backhaul STA Capability Query: one Backhaul STA Radio Capabilities TLV (`0xCB`) for each radio of the pod with one of its backhaul stations, enabled or not, the one in use first, then by RUID (EasyMesh 6.1, 9.3; §8.3): the radio's RUID, and the station's MAC with the MAC-included flag once `owm` reports its State; also over GRE |
 | `0x8043` | Early AP Capability Report | with M1, before configuration |
 
 Received by the agent:
@@ -121,7 +121,7 @@ Received by the agent:
 | `0x800B` | AP Metrics Query | answered from the pod's statistics (§3.8) |
 | `0x800F` | Unassociated STA Link Metrics Query | acknowledged, with an Error Code TLV for every station the pod cannot report (§3.9) |
 | `0x8014` | Client Steering Request | acknowledged; a mandate for one station and one target is carried out by the pod (§3.7) |
-| `0x8019` | Backhaul Steering Request | acknowledged; with option 1 on, for the pod's backhaul station, the station is re-pinned to the target (§8.3), else refused (`0x801A`) |
+| `0x8019` | Backhaul Steering Request | acknowledged; with option 1 on, for the pod's backhaul station, the uplink moves to the target with the pod's backhaul station on the target's band (§8.3), else refused (`0x801A`) |
 | `0x801B` | Channel Scan Request | acknowledged and reported as not supported (§3.4) |
 | `0x8027` | Backhaul STA Capability Query | answered |
 
@@ -253,7 +253,7 @@ preceded by a read-only `select` of `Wifi_Inet_Config`.
 | Update the fronthaul | `wait` on the AWLAN_Node serial, the radio's references (`if_name`, `vif_configs`) and the VIF's guarded fields → `update Wifi_VIF_Config ssid, multi_ap` → `mutate wpa_psks` (the single slot becomes key `key`) |
 | Cold pod: create the fronthaul | `wait` on the serial and that the VIF is absent → `insert Wifi_VIF_Config` (profile row, received SSID and PSK, `multi_ap`) → `mutate Wifi_Radio_Config vif_configs` → `update Wifi_Radio_Config channel, ht_mode, enabled` → `insert Wifi_Inet_Config` if absent |
 | Multi-BSS set | as above for the primary BSS, plus: insert, update or delete each profile slot VIF so the slots are **exactly** the received set, with the matching `vif_configs` mutations and `Wifi_Inet_Config` rows |
-| Uplink switch (§8.3) | `wait` on the AWLAN_Node row and serial, and on the station's guarded fields (`if_name`, `mode`, `enabled`, `ssid`, `credential_configs`, `multi_ap`) → `insert Wifi_Credential_Config` (the backhaul SSID and passphrase, `onboard_type=multi_ap`, `priority` 1) → `update Wifi_VIF_Config` of the station: `enabled=true`, `ssid` and `security` empty, `multi_ap` and `wds` unset, `credential_configs` = that credential only |
+| Uplink switch (§8.3) | `wait` on the AWLAN_Node row and serial, and on the station's guarded fields (`if_name`, `mode`, `enabled`, `ssid`, `credential_configs`, `multi_ap`) → `insert Wifi_Credential_Config` (the backhaul SSID and passphrase, `onboard_type=multi_ap`, `priority` 1) → `update Wifi_VIF_Config` of the station: `enabled=true`, `ssid` and `security` empty, `multi_ap` and `wds` unset, `credential_configs` = that credential only → for each other of the pod's backhaul stations that is enabled, in name order: `wait` on its guarded fields → `update Wifi_VIF_Config` of it: `enabled=false`. Updates only: a station without a row takes no switch |
 | Ethernet uplink (§8.4) | `wait` on the AWLAN_Node serial, and on the port's `Connection_Manager_Uplink` row: `if_name`, `if_type=eth`, `is_used=true` and its current `bridge` → `update Connection_Manager_Uplink bridge` (the fronthaul's bridge) |
 | Statistics publishing (§3.6) | `wait` on the AWLAN_Node serial and its current `mqtt_settings` → `update AWLAN_Node mqtt_settings` (broker, port, the pod's topic, QoS 0, no compression) → `insert Wifi_Stats_Config` (a raw client report for the radio type) unless one exists |
 
@@ -747,8 +747,13 @@ The agent makes the switch itself when its configuration has
   alone. EMOSA MUST refuse a switch to any of the pod's own BSSIDs. A pod given
   the backhaul BSS in its M2 set serves the backhaul SSID itself, and a station
   on its own backhaul BSS puts a loop into `br-home` (data plane document §5.6).
-- **Station:** the profile's uplink station (`uplink.station` overrides it).
-  The pod's bootstrap MUST create it.
+- **Station:** the profile's uplink station (`uplink.station` overrides it), the one the
+  pod bootstraps on. The pod's bootstrap MUST create it. The profile also names the pod's
+  backhaul station on each band (`uplink.stations`). Stock OpenSync's bootstrap creates a
+  station for every band its target lists, all enabled; opensync-lab's hwsim pods create
+  them with only the bootstrap band's enabled (hwsim radios are multi-band). Either way the
+  switch makes its station the only enabled one: two stations up bridge `br-home` into the
+  network twice, with no STP to stop the loop.
 - **When:** the pod is bound, `cm` reports a working uplink, and the station is
   not already on that backhaul. One switch per start of the pod's OpenSync. A
   start is identified by the UUIDs of its `Wifi_Radio_Config` rows: OpenSync's
@@ -757,7 +762,9 @@ The agent makes the switch itself when its configuration has
   re-onboarding, because every OpenSync restart returns the pod to its
   bootstrap uplink.
 - **Write:** one guarded transaction (§3.2): the station in credential-list
-  mode with one `multi_ap` credential, pinned to the upstream BSSID. EMOSA MUST NOT keep a lower-priority
+  mode with one `multi_ap` credential, pinned to the upstream BSSID, and each other
+  backhaul station of the pod that is enabled disabled. Updates only: EMOSA creates no
+  station row. EMOSA MUST NOT keep a lower-priority
   `gre` credential as the fallback, because osw aborts `owm` when it stays on a
   lower-priority network. The fallback is the pod's restart to its bootstrap
   (GTP) path.
@@ -774,11 +781,18 @@ The agent makes the switch itself when its configuration has
 - **Moved:** a Backhaul Steering Request (§2.4) for the pod's backhaul station
   pins the station to the target BSSID instead, by the same switch, while the
   pod is on its EasyMesh backhaul and no switch is under way; the answer
-  (`0x801A`) follows once the pod's State shows the station on the target. The
-  target is kept for the pod's later starts while the configured upstream is
-  the one it replaced. A move not applied within the switch's deadline, or
-  rejected, returns to the previous upstream without a hold, and is answered
-  with a failure. On a later start, a switch to the kept target that is not
+  (`0x801A`) follows once the pod's State shows the station on the target. A
+  target on another band (from the request's operating class: 81-84 2.4 GHz,
+  115-130 5 GHz, 131-137 6 GHz) moves the uplink to the pod's backhaul station
+  on that band, by the same switch, which disables the station in use; the
+  answer names that station (EasyMesh 6.1, 17.2.33). A band the pod has no
+  station row on takes no move: refused at once, reason `0x04`. So does a target
+  on another channel than a station's radio when that radio carries the pod's
+  BSSes: the station cannot leave the channel the controller set for them
+  (§3.4). The target and its station are kept for the pod's later starts while
+  the configured upstream is the one they replaced. A move not applied within
+  the switch's deadline, or rejected, returns to the previous upstream, with its
+  station, without a hold, and is answered with a failure. On a later start, a switch to the kept target that is not
   applied within the deadline, or is rejected (its BSS gone or out of reach),
   drops the target without a hold. The agent then switches to the configured
   upstream once the station no longer carries the failed switch's credential
@@ -851,7 +865,11 @@ pod for it. The two agents, in one fleet, describe the hop to the controller:
   pod's backhaul BSS for a backhaul one: the BSS Configuration Report says so
   (§3.3) in `6.1`; in `r1` the report is profile-gated and not sent (RDK's
   controller drops a Topology Response below Profile 3 that carries it). RDK's
-  controller takes a BSS's role only from its own vendor TLV.
+  controller takes a BSS's role from its own vendor TLV; the RDK lab's series
+  adds the BSS Configuration Report (unified-wifi-mesh 0246) and, for an agent
+  with neither, the role its own network SSID has (0247). A move to another of
+  the pod's parents is the controller's Backhaul Steering Request (§8.3), also
+  across bands.
 
 Both agents.
 

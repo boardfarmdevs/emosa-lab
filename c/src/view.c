@@ -487,6 +487,71 @@ void em_uplink_state_of(const cJSON *tables, const char *station, em_uplink_stat
     }
 }
 
+static bool listed(const char *name, const char *const *names, size_t n)
+{
+    for (size_t i = 0; name && i < n; i++)
+        if (names[i] && !strcmp(names[i], name))
+            return true;
+    return false;
+}
+
+static const cJSON *row_named(const cJSON *table, const char *name, const char *mode)
+{
+    const cJSON *row;
+    cJSON_ArrayForEach(row, table)
+    {
+        const char *n = ovs_str(row, "if_name"), *m = ovs_str(row, "mode");
+        if (n && !strcmp(n, name) && (!mode || (m && !strcmp(m, mode))))
+            return row;
+    }
+    return NULL;
+}
+
+size_t em_backhaul_radios(const cJSON *tables, const char *const *stations, size_t n, const char *in_use,
+                          em_backhaul_radio *out, size_t cap)
+{
+    const cJSON *vifs = cJSON_GetObjectItemCaseSensitive(tables, "Wifi_VIF_Config");
+    const cJSON *states = cJSON_GetObjectItemCaseSensitive(tables, "Wifi_VIF_State");
+    const cJSON *radio_states = cJSON_GetObjectItemCaseSensitive(tables, "Wifi_Radio_State");
+    bool first[16];
+    size_t count = 0;
+    const cJSON *radio;
+    cJSON_ArrayForEach(radio, cJSON_GetObjectItemCaseSensitive(tables, "Wifi_Radio_Config"))
+    {
+        const char *rname = ovs_str(radio, "if_name");
+        const cJSON *rstate = rname ? row_named(radio_states, rname, NULL) : NULL;
+        const char *ruid = rstate ? ovs_str(rstate, "mac") : NULL;
+        uint8_t ruid_mac[6];
+        if (!ruid || !em_parse_mac(ruid, ruid_mac))
+            continue;
+        const char *links[16];
+        size_t nlinks = ovs_uuids(radio, "vif_configs", links, 16);
+        for (size_t i = 0; i < nlinks && count < cap && count < 16; i++) {
+            const cJSON *vif = cJSON_GetObjectItemCaseSensitive(vifs, links[i]);
+            const char *name = vif ? ovs_str(vif, "if_name") : NULL, *mode = vif ? ovs_str(vif, "mode") : NULL;
+            if (!listed(name, stations, n) || !mode || strcmp(mode, "sta"))
+                continue;
+            em_backhaul_radio r = {0};
+            memcpy(r.ruid, ruid_mac, 6);
+            const cJSON *state = row_named(states, name, "sta");
+            const char *mac = state ? ovs_str(state, "mac") : NULL;
+            r.has_station = mac && em_parse_mac(mac, r.station);
+            bool is_first = in_use && !strcmp(name, in_use);
+            /* in use first, then by RUID: an insertion sort over at most a handful */
+            size_t at = count++;
+            while (at > 0 && (first[at - 1] < is_first ||
+                              (first[at - 1] == is_first && memcmp(out[at - 1].ruid, r.ruid, 6) > 0))) {
+                out[at] = out[at - 1];
+                first[at] = first[at - 1];
+                at--;
+            }
+            out[at] = r;
+            first[at] = is_first;
+        }
+    }
+    return count;
+}
+
 static void add_or_null(cJSON *o, const char *key, const char *value)
 {
     if (*value)

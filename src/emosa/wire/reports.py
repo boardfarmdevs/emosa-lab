@@ -224,8 +224,12 @@ class TopologyFacts:
     l2_neighbor_records_absent: bool
     mld_backhaul_vbss_tid_policy_absent: bool
     # (RUID, backhaul STA MAC) of each radio whose station is the agent's EasyMesh
-    # backhaul: the Backhaul STA Capability Report (0x8028). Empty over GRE.
+    # backhaul: the station a Backhaul Steering Request names. Empty over GRE.
     backhaul_stations: tuple = ()
+    # (RUID, backhaul STA MAC or None) of each radio of the pod with a backhaul station,
+    # enabled or not, the one in use first: the Backhaul STA Capability Report (0x8028),
+    # one TLV per backhaul STA radio (EasyMesh 6.1, 9.3).
+    backhaul_radios: tuple = ()
     # (station MAC, monotonic association time) of associated stations: a Topology
     # Response reports each station's time since association as of the response
     # (the controller compares it with the age of every link metric sample).

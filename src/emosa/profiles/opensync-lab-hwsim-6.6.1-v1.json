@@ -1,6 +1,6 @@
 {
   "id": "opensync-lab-hwsim-6.6.1-v1",
-  "description": "opensync-lab pods: OpenSync 6.6.1.0 on mac80211_hwsim (opensync-platform-cfg80211). The fronthaul row is what the lab NOC creates (local-noc mesh.py pod_step); vif_radio_idx 1 as it writes it, since index 2 left hostapd unable to add the BSS. btm and rrm are on (hostapd bss_transition, rrm_neighbor_report): an EasyMesh agent steers its clients with BTM requests. Extra slots are the VIFs the platform creates per radio (52_owm_prep.sh). The uplink station is the 5 GHz backhaul station the pod bootstrap creates (vif_radio_idx 0).",
+  "description": "opensync-lab pods: OpenSync 6.6.1.0 on mac80211_hwsim (opensync-platform-cfg80211). The fronthaul row is what the lab NOC creates (local-noc mesh.py pod_step); vif_radio_idx 1 as it writes it, since index 2 left hostapd unable to add the BSS. btm and rrm are on (hostapd bss_transition, rrm_neighbor_report): an EasyMesh agent steers its clients with BTM requests. Extra slots are the VIFs the platform creates per radio (52_owm_prep.sh). The uplink station is the 5 GHz backhaul station the pod bootstrap creates (vif_radio_idx 0); the bootstrap creates a backhaul station on every radio, only the 5 GHz one enabled (opensync-lab c872deb), and a move to a BSS on another band uses that band's (spec 8.3).",
   "opensync_version": "6.6.1.0",
   "radio": {"band": "2.4G", "channel": 6, "ht_mode": "HT20", "chipset": "mac80211_hwsim"},
   "fronthaul": {
@@ -29,7 +29,10 @@
     {"if_name": "b-ap-24", "role": "backhaul", "vif_radio_idx": 1}
   ],
   "inet": {"if_type": "vif", "enabled": true, "network": true, "NAT": false, "ip_assign_scheme": "none", "mtu": 1500},
-  "uplink": {"station": "bhaul-sta-50"},
+  "uplink": {
+    "station": "bhaul-sta-50",
+    "stations": {"2.4G": "bhaul-sta-24", "5G": "bhaul-sta-50", "6G": "bhaul-sta-60"}
+  },
   "ap_metrics": {
     "esp_be": "3fff00"
   }

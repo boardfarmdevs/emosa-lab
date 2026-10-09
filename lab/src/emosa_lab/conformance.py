@@ -27,6 +27,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.model import ACTIVE, Intent
 from emosa.opensync.easymesh_view import (
     backhaul,
+    backhaul_radios,
     device_view,
     inventory,
     radio_capabilities,
@@ -34,6 +35,7 @@ from emosa.opensync.easymesh_view import (
 )
 from emosa.opensync.pod_profile import PodBackend
 from emosa.opensync.profiles import DEFAULT
+from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.schema import Schema, reference_path
 from emosa.opensync.uplink import UplinkBackend, UplinkIntent, uplink_state
 from emosa.operations import TRANSITIONS
@@ -374,17 +376,26 @@ def southbound_vectors():
     }
 
 
-def uplink_state_case(name, raw, station):
+def uplink_state_case(name, raw, station, stations=None):
+    """``stations``: the pod's backhaul stations, every one a backhaul STA radio in the Backhaul
+    STA Capability Report, enabled or not, the one in use first (spec 8.3)."""
     rows = decode(raw)
     state = uplink_state(rows, station)
     view = device_view(rows)
+    stations = list(stations or (station,))
+    in_use = station if state["kind"] == "multi-ap" else None
     case = {
         "name": name,
         "ovsdb_tables": raw,
         "station": station,
+        "stations": stations,
         "expected": {
             "uplink": {k: v for k, v in state.items() if k != "state"},
             "backhaul": None,
+            "backhaul_sta_capability_tlvs": [
+                {"type": "0xcb", "value": (ruid + (b"\x80" + sta if sta else b"\x00")).hex()}
+                for ruid, sta in backhaul_radios(rows, stations, in_use)
+            ],
         },
     }
     link = backhaul(view, station) if state["kind"] == "multi-ap" else None
@@ -403,22 +414,22 @@ def uplink_state_case(name, raw, station):
         case["expected"]["backhaul"] = {
             "view": plain(link),
             "topology_tlvs": tlvs(_topology(facts, binding, EASYMESH_61)),
-            "backhaul_sta_capability_tlvs": [
-                {"type": "0xcb", "value": (ruid + b"\x80" + sta).hex()}
-                for ruid, sta in facts.backhaul_stations
-            ],
         }
     return case
 
 
-def uplink_switch_case(name, raw, station, ssid, bssid):
+def uplink_switch_case(name, raw, station, ssid, bssid, stations=()):
+    """``stations``: the pod's backhaul station on each band ((band, if_name) pairs): a switch
+    to one of them disables the others (spec 8.3)."""
     serial = next(iter(raw["AWLAN_Node"].values()))["serial_number"]
     with tempfile.TemporaryDirectory() as directory:
         vault = SecretStore(Path(directory) / "secrets")
         for ref, passphrase in PASSPHRASES.items():
             vault.write_simulated(ref, passphrase)
         session = Recorder(copy.deepcopy(raw))
-        backend = UplinkBackend("pod-1", session, vault, serial=serial, station=station)
+        backend = UplinkBackend(
+            "pod-1", session, vault, serial=serial, station=station, stations=stations
+        )
         intent = UplinkIntent("pod-1", station, ssid, "ref-primary", bssid=bssid)
 
         async def run():
@@ -438,6 +449,7 @@ def uplink_switch_case(name, raw, station, ssid, bssid):
         "name": name,
         "ovsdb_tables": raw,
         "intent": intent.record(),
+        "stations": [list(pair) for pair in stations],
         "passphrases": PASSPHRASES,
         "expected": expected,
     }
@@ -446,22 +458,56 @@ def uplink_switch_case(name, raw, station, ssid, bssid):
 def uplink_vectors():
     gre = json.loads(UPLINK_ROWS["gre"].read_text())["tables"]
     multi_ap = json.loads(UPLINK_ROWS["multi-ap"].read_text())["tables"]
+    # the pod's backhaul station on each band (the default profile's)
+    stations = load_profile(DEFAULT).uplink_stations
+    names = [name for _, name in stations]
     return {
         "description": "spec §8.3: data plane option 1. The pod's uplink as cm and owm report it "
         "(recorded rows), the backhaul the agent then reports (1905 TLVs, 'value' in hex "
-        "without type and length), and the exact OVSDB transaction of the switch.",
+        "without type and length), the Backhaul STA Capability Report's TLVs (every radio "
+        "with a backhaul station, the one in use first), and the exact OVSDB transaction of "
+        "the switch (the target's station enabled, the pod's other backhaul stations disabled).",
         "states": [
-            uplink_state_case("bootstrap-gre", gre, "bhaul-sta-50"),
-            uplink_state_case("multi-ap-backhaul", multi_ap, "bhaul-sta-24"),
-            uplink_state_case("multi-ap-other-station", multi_ap, "bhaul-sta-50"),
+            uplink_state_case("bootstrap-gre", gre, "bhaul-sta-50", names),
+            uplink_state_case("multi-ap-backhaul", multi_ap, "bhaul-sta-24", names),
+            uplink_state_case("multi-ap-other-station", multi_ap, "bhaul-sta-50", names),
         ],
         "switch": [
             uplink_switch_case(
-                "switch-from-gre", gre, "bhaul-sta-50", "emosa-mesh-bh", "02:00:00:00:09:00"
+                "switch-from-gre",
+                gre,
+                "bhaul-sta-50",
+                "emosa-mesh-bh",
+                "02:00:00:00:09:00",
+                stations,
             ),
             # one of the pod's own BSSes (the fixture's home-ap-24): a br-home loop
             uplink_switch_case(
-                "refused-own-bssid", gre, "bhaul-sta-50", "emosa-mesh-bh", "82:00:00:00:01:00"
+                "refused-own-bssid",
+                gre,
+                "bhaul-sta-50",
+                "emosa-mesh-bh",
+                "82:00:00:00:01:00",
+                stations,
+            ),
+            # on its 2.4 GHz station, moved to a 5 GHz BSS: its 5 GHz station enabled and
+            # pinned, the 2.4 GHz one disabled, in one transaction
+            uplink_switch_case(
+                "switch-across-bands",
+                multi_ap,
+                "bhaul-sta-50",
+                "emosa-mesh-bh",
+                "02:00:00:00:09:00",
+                stations,
+            ),
+            # no row for the station on the target's band: nothing written
+            uplink_switch_case(
+                "refused-no-station-row",
+                gre,
+                "bhaul-sta-24",
+                "emosa-mesh-bh",
+                "02:00:00:00:09:00",
+                stations,
             ),
         ],
     }
@@ -2575,6 +2621,10 @@ def backhaul_steering_vectors():
         ("not-the-backhaul-station", [(0, 0.0, "frame", (request(42, station_mac=other), None))]),
         ("multicast-target", [(0, 0.0, "frame", (request(43, bssid=multicast), None))]),
         ("executor-refuses", [(0, 0.0, "frame", (request(44), "held_on_option_2"))]),
+        # no backhaul station on the target's band, or one that cannot leave its radio's
+        # channel: reason 0x04, the backhaul STA cannot operate on the channel (spec 8.3)
+        ("no-station-on-band", [(0, 0.0, "frame", (request(60), "no_station_on_band"))]),
+        ("channel-not-operable", [(0, 0.0, "frame", (request(61), "channel_not_operable"))]),
         (
             "move-in-progress",
             [(0, 0.0, "frame", (request(45), None)), (0, 1.0, "frame", (request(46), None))],
@@ -2644,7 +2694,7 @@ def backhaul_steering_vectors():
                 sessions[session] = BackhaulSteeringCoordinator(
                     source,
                     sent.append,
-                    lambda bssid, handed=handed, state=state: (
+                    lambda bssid, operating_class, channel, handed=handed, state=state: (
                         handed.append(bssid),
                         state["reply"],
                     )[1],

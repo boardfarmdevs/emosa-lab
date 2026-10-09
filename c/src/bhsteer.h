@@ -21,12 +21,15 @@ typedef struct {
         uint16_t mid;
         uint8_t request[14];
         uint8_t error;
+        uint8_t station[6]; /* the backhaul STA the answer names */
         double expiry;
     } answered[16];
 } em_bh_shared;
 
-/* starts moving the station to bssid ("aa:.." lower case): NULL, or why not */
-typedef const char *(*em_bh_executor)(void *ctx, const char *bssid);
+/* starts moving the uplink to bssid ("aa:.." lower case), with the pod's backhaul station on
+ * that operating class's band: NULL, or why not ("no_station_on_band" and
+ * "channel_not_operable" are reason code 0x04) */
+typedef const char *(*em_bh_executor)(void *ctx, const char *bssid, int operating_class, int channel);
 /* 0 under way, 1 applied, -1 failed (*why) */
 typedef int (*em_bh_outcome)(void *ctx, const char *bssid, const char **why);
 
@@ -56,8 +59,11 @@ void em_bh_close(em_bh_coordinator *c);
  * stations now (the request's STA must be one). */
 const char *em_bh_handle(em_bh_coordinator *c, const em_message *m, double now, const uint8_t (*stations)[6],
                          size_t nstations, em_frames *out, em_reason *error);
-/* Answer a started move once its outcome is known, or at its deadline. */
-void em_bh_tick(em_bh_coordinator *c, double now, bool source_available, em_frames *out);
+/* Answer a started move once its outcome is known, or at its deadline. associated: the backhaul
+ * STA the pod is associated with now (NULL: unknown); a success names it (EasyMesh 6.1, 17.2.33:
+ * after a move to another band, the pod's station on that band). */
+void em_bh_tick(em_bh_coordinator *c, double now, bool source_available, const uint8_t *associated,
+                em_frames *out);
 cJSON *em_bh_status(const em_bh_coordinator *c);
 
 #endif

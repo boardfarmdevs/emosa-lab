@@ -1845,14 +1845,14 @@ def uplink_status(box):
     return (box.status() or {}).get("uplink") or {}
 
 
-def backhaul_steering_request(station, target=TARGET_PARENT):
+def backhaul_steering_request(station, target=TARGET_PARENT, operating_class=81, channel=6):
     """Backhaul Steering Request TLV (0x9E): the backhaul station, the target BSS and its
     operating class and channel."""
     return Tlv(
         0x9E,
         bytes.fromhex(station.replace(":", ""))
         + bytes.fromhex(target.replace(":", ""))
-        + b"\x51\x06",
+        + bytes((operating_class, channel)),
     )
 
 
@@ -1896,16 +1896,28 @@ async def backhaul_on(box):
 
 
 async def backhaul_capability(box):
-    """On a Multi-AP backhaul the Backhaul STA Capability Report names the pod's backhaul
-    station (spec 2.4, 8.3); the uplink switch pins it to the configured parent."""
+    """The Backhaul STA Capability Report names each of the pod's backhaul STA radios, the one
+    in use first: its 2.4 GHz station on the Multi-AP backhaul, then its disabled 5 GHz one
+    (EasyMesh 6.1, 9.3; spec 2.4, 8.3); the uplink switch pins the first to the configured
+    parent."""
     on = await backhaul_on(box)
     report = await box.ask(0x8027, (), 0x8028)
-    value = tlv_value(report, 0xCB) or b""
-    station = value[7:13].hex(":") if len(value) >= 13 and value[6] & 0x80 else None
+    radios = [
+        (
+            t.value[:6].hex(":"),
+            t.value[7:13].hex(":") if len(t.value) >= 13 and t.value[6] & 0x80 else None,
+        )
+        for t in (report.tlvs if report else [])
+        if t.kind == 0xCB
+    ]
+    expected = [
+        ("02:00:00:00:14:00", BACKHAUL_STATION),  # in use, on the 2.4 GHz radio
+        ("02:00:00:00:15:00", OTHER_STATION),  # disabled, on the 5 GHz radio
+    ]
     return box.result(
-        passed=on and station == BACKHAUL_STATION and await pinned(box, BACKHAUL_PARENT),
+        passed=on and radios == expected and await pinned(box, BACKHAUL_PARENT),
         uplink_applied=on,
-        station=station,
+        radios=radios,
     )
 
 
@@ -2011,6 +2023,210 @@ async def backhaul_steering_own_bss(box):
         answer=answer,
         errors=errors,
     )
+
+
+# A move to a BSS on another band (spec 8.3): the recorded pod's 5 GHz backhaul station,
+# disabled while its 2.4 GHz one is the backhaul, takes the uplink
+
+OTHER_STATION_IF, OTHER_STATION = "bhaul-sta-50", "02:00:00:00:15:00"
+TARGET_5G = "02:00:00:00:19:05"  # a 5 GHz backhaul BSS of the controller's
+
+
+async def station_config(box, if_name):
+    """(enabled, BSSID its sole credential is pinned to) of the station's Config row."""
+    _, row = await box.vif("Wifi_VIF_Config", if_name)
+    if row is None:
+        return None, None
+    links = row.get("credential_configs") or []
+    creds = await box.rows("Wifi_Credential_Config")
+    pins = [str(creds[u].get("bssid") or "").lower() for u in links if u in creds]
+    return row.get("enabled") is True, pins[0] if len(pins) == 1 else None
+
+
+async def associate(box, station, parent, channel, previous):
+    """cm and the supplicant: ``station`` associated with ``parent`` (4-address, Multi-AP),
+    its radio on ``channel``; ``previous`` off and no longer cm's uplink."""
+    creds = await box.rows("Wifi_Credential_Config")
+    _, config = await box.vif("Wifi_VIF_Config", station)
+    ssid = next(
+        (creds[u].get("ssid") for u in config.get("credential_configs") or [] if u in creds), ""
+    )
+    state, _ = await box.vif("Wifi_VIF_State", station)
+    old, _ = await box.vif("Wifi_VIF_State", previous)
+    radio = next(
+        u
+        for u, r in (await box.rows("Wifi_Radio_State")).items()
+        if state in (r.get("vif_states") or [])
+    )
+    uplinks = await box.rows("Connection_Manager_Uplink")
+    ops = [
+        {
+            "op": "update",
+            "table": "Wifi_VIF_State",
+            "where": [["_uuid", "==", ["uuid", state]]],
+            "row": {
+                "enabled": True,
+                "ssid": ssid,
+                "multi_ap": "backhaul_sta",
+                "wds": True,
+                "parent": parent,
+            },
+        },
+        {
+            "op": "update",
+            "table": "Wifi_VIF_State",
+            "where": [["_uuid", "==", ["uuid", old]]],
+            "row": {"enabled": False, "parent": ["set", []], "wds": ["set", []]},
+        },
+        {
+            "op": "update",
+            "table": "Wifi_Radio_State",
+            "where": [["_uuid", "==", ["uuid", radio]]],
+            "row": {"channel": channel},
+        },
+        {
+            "op": "update",
+            "table": "Connection_Manager_Uplink",
+            "where": [["if_name", "==", previous]],
+            "row": {"is_used": False},
+        },
+    ]
+    if not any(r.get("if_name") == station for r in uplinks.values()):
+        ops.append(
+            {
+                "op": "insert",
+                "table": "Connection_Manager_Uplink",
+                "row": {"if_name": station, "if_type": "vif", "has_L2": True, "has_L3": True},
+            }
+        )
+    ops.append(
+        {
+            "op": "update",
+            "table": "Connection_Manager_Uplink",
+            "where": [["if_name", "==", station]],
+            "row": {"is_used": True},
+        }
+    )
+    await box.transact(ops)
+
+
+def steering_errors(response):
+    return [
+        (t.value[0], t.value[1:7].hex(":"))
+        for t in (response.tlvs if response else [])
+        if t.kind == 0xA3
+    ]
+
+
+async def backhaul_steering_across_bands(box):
+    """spec 8.3: a Backhaul Steering Request to a BSS on another band moves the uplink to the
+    pod's backhaul station on that band: that station enabled and pinned to the target, the
+    station in use disabled, in one transaction. Once the pod's State shows the new station on
+    the target, the response, success, names it: the backhaul STA associated after the move
+    (EasyMesh 6.1, 17.2.33)."""
+    if not await backhaul_on(box):
+        return box.result(passed=False, failed="uplink switch not applied")
+    answered = len(box.sent(0x801A))
+    mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, TARGET_5G, 115, 36),)
+    )
+    ack = await box.until(lambda: box.controller.reply(ACK, mid), seconds=5)
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        moved = await station_config(box, OTHER_STATION_IF) == (True, TARGET_5G)
+        off = (await station_config(box, "bhaul-sta-24"))[0] is False
+        if moved and off:
+            break
+        await asyncio.sleep(0.3)
+    await associate(box, OTHER_STATION_IF, TARGET_5G, 36, "bhaul-sta-24")
+    response = await next_message(box, 0x801A, answered, seconds=60)
+    answer = steering_answer(response)
+    return box.result(
+        passed=bool(ack)
+        and moved
+        and off
+        and response is not None
+        and response.mid == mid
+        and answer == (OTHER_STATION, TARGET_5G, 0),
+        acked=bool(ack),
+        five_ghz_station_pinned=moved,
+        two_ghz_station_disabled=off,
+        answer=answer,
+    )
+
+
+async def backhaul_steering_across_bands_fails(box):
+    """spec 8.3: a move to another band's station that is not applied within the switch's
+    deadline returns to the previous upstream with the previous station (enabled and pinned
+    again, the other disabled), no hold, and is answered with a failure."""
+    if not await backhaul_on(box):
+        return box.result(passed=False, failed="uplink switch not applied")
+    answered = len(box.sent(0x801A))
+    mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, TARGET_5G, 115, 36),)
+    )
+    response = await next_message(box, 0x801A, answered, seconds=150)
+    answer = steering_answer(response)
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
+        back = await station_config(box, "bhaul-sta-24") == (True, BACKHAUL_PARENT)
+        other_off = (await station_config(box, OTHER_STATION_IF))[0] is False
+        if back and other_off:
+            break
+        await asyncio.sleep(0.5)
+    held = (uplink_status(box).get("held")) is not None
+    return box.result(
+        passed=response is not None
+        and response.mid == mid
+        and answer is not None
+        and answer[2] == 1
+        and steering_errors(response) == [(6, BACKHAUL_STATION)]
+        and back
+        and other_off
+        and not held,
+        answer=answer,
+        errors=steering_errors(response),
+        back_on_the_previous_station=back,
+        other_station_disabled=other_off,
+        held=held,
+    )
+
+
+async def refused_with_channel_code(box, operating_class, channel, target):
+    """A Backhaul Steering Request refused at once: failure, Error Code 0x04 (the backhaul STA
+    cannot operate on the channel), nothing written: the station stays pinned where it is."""
+    if not await backhaul_on(box):
+        return box.result(passed=False, failed="uplink switch not applied")
+    answered = len(box.sent(0x801A))
+    mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, target, operating_class, channel),)
+    )
+    response = await next_message(box, 0x801A, answered, seconds=10)
+    answer = steering_answer(response)
+    await asyncio.sleep(2)
+    stays = await station_config(box, "bhaul-sta-24") == (True, BACKHAUL_PARENT)
+    return box.result(
+        passed=response is not None
+        and response.mid == mid
+        and answer is not None
+        and answer[2] == 1
+        and steering_errors(response) == [(4, BACKHAUL_STATION)]
+        and stays,
+        answer=answer,
+        errors=steering_errors(response),
+        station_stays=stays,
+    )
+
+
+async def backhaul_steering_no_station_on_band(box):
+    """spec 8.3: a target on a band the pod has no backhaul station on (6 GHz)."""
+    return await refused_with_channel_code(box, 131, 37, "02:00:00:00:19:06")
+
+
+async def backhaul_steering_channel_not_operable(box):
+    """spec 8.3: a 2.4 GHz target on another channel than the radio that carries the pod's BSSes
+    (channel 6): its station cannot leave that channel."""
+    return await refused_with_channel_code(box, 81, 11, "02:00:00:00:19:0b")
 
 
 # Pods as parents of other pods (spec 8.5). The other pod's agent is in the box as the peer
@@ -2357,6 +2573,10 @@ SCENARIOS = {
     "backhaul-steering-renewal": backhaul_steering_renewal,
     "backhaul-steering-refused": backhaul_steering_refused,
     "backhaul-steering-own-bss": backhaul_steering_own_bss,
+    "backhaul-steering-across-bands": backhaul_steering_across_bands,
+    "backhaul-steering-across-bands-fails": backhaul_steering_across_bands_fails,
+    "backhaul-steering-no-station-on-band": backhaul_steering_no_station_on_band,
+    "backhaul-steering-channel-not-operable": backhaul_steering_channel_not_operable,
     "pod-child": pod_child,
     "pod-parent": pod_parent,
     "pod-parent-loop": pod_parent_loop,
@@ -2377,6 +2597,10 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "backhaul-steering": {"backhaul": True},
     "backhaul-steering-renewal": {"backhaul": True},
     "backhaul-steering-own-bss": {"backhaul": True},
+    "backhaul-steering-across-bands": {"backhaul": True},
+    "backhaul-steering-across-bands-fails": {"backhaul": True},
+    "backhaul-steering-no-station-on-band": {"backhaul": True},
+    "backhaul-steering-channel-not-operable": {"backhaul": True},
     "pod-child": {"backhaul": True},
     "pod-parent": {"multi_bss": True, "telemetry": True},
     "pod-parent-loop": {"backhaul": True},

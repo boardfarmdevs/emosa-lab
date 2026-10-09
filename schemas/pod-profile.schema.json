@@ -63,9 +63,18 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["station"],
-      "description": "The pod's backhaul station that data plane option 1 moves onto the EasyMesh backhaul (the pod's bootstrap creates it).",
+      "description": "The pod's backhaul station that data plane option 1 moves onto the EasyMesh backhaul (the pod's bootstrap creates it), and its backhaul station on each band, which a move to a BSS on that band uses (spec 8.3).",
       "properties": {
-        "station": {"$ref": "#/$defs/if_name"}
+        "station": {"$ref": "#/$defs/if_name"},
+        "stations": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "2.4G": {"$ref": "#/$defs/if_name"},
+            "5G": {"$ref": "#/$defs/if_name"},
+            "6G": {"$ref": "#/$defs/if_name"}
+          }
+        }
       }
     }
   },

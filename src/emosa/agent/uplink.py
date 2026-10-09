@@ -26,7 +26,9 @@ different scope from the fronthaul BSS, with its own lifecycle rules.
   admission clears the hold, because the fleet archives the agent's state.
 - **Moved** on the controller's Backhaul Steering Request (``steer``): the station
   is pinned to the target BSS instead, by the same switch, while the pod is on
-  its EasyMesh backhaul. The target is kept (``target.json``) for every later
+  its EasyMesh backhaul. A target on another band moves the uplink to the pod's
+  backhaul station on that band, and the switch disables the other; a band the
+  pod has no station on takes no move. The target is kept (``target.json``) for every later
   start, as long as the configured upstream is the one it replaced. A move that
   is not confirmed returns to the previous upstream instead of holding the pod:
   the controller asked for it, and hears of the failure. On a later start, a switch
@@ -75,10 +77,13 @@ class UplinkSwitch:
         self.engine = Engine(store, vault, {pod_id: backend}, clock, intent_type=UplinkIntent)
         self.engine.recover()
         self.waiting = None  # why no switch is being made, for status
-        # The controller's Backhaul Steering: the upstream it chose, over the configured one.
+        # The controller's Backhaul Steering: the upstream it chose, over the configured one,
+        # and the pod's backhaul station on that upstream's band (spec 8.3).
         self.configured = bssid
+        self.configured_station = self.station = backend.station
         self.moves = 0  # each move is a switch of its own, even back to an earlier upstream
-        self.move = None  # {"target", "previous", "result"} of the latest move
+        # {"target", "previous", "station", "previous_station", "result"} of the latest move
+        self.move = None
         self.target_path = store.directory / "target.json"
         # after a kept target failed: that switch's start and intent, until the pod is off it
         self.fallback_after = None
@@ -86,6 +91,8 @@ class UplinkSwitch:
             kept = json.loads(self.target_path.read_text())
             if kept.get("configured") == bssid and kept.get("target"):
                 self.bssid, self.moves = kept["target"], int(kept.get("moves", 1))
+                if kept.get("station") in backend.bound:
+                    self.station = kept["station"]
         except (OSError, ValueError, AttributeError):
             pass
 
@@ -150,17 +157,23 @@ class UplinkSwitch:
                 self.hold(op, f"switch {op.state.lower()}: {op.reason}")
 
     def _keep_target(self):
-        if self.bssid == self.configured:
+        if self.bssid == self.configured and self.station == self.configured_station:
             self.target_path.unlink(missing_ok=True)
         else:
             self.target_path.write_text(
                 json.dumps(
-                    {"configured": self.configured, "target": self.bssid, "moves": self.moves}
+                    {
+                        "configured": self.configured,
+                        "target": self.bssid,
+                        "station": self.station,
+                        "moves": self.moves,
+                    }
                 )
             )
 
     def _move_failed(self, op, reason):
-        """A move's switch failed: back to the previous upstream, no hold. False otherwise."""
+        """A move's switch failed: back to the previous upstream, and the station on it, no
+        hold. False otherwise."""
         move = self.move
         if move is None or move["result"] is not None or op.intent.get("bssid") != move["target"]:
             return False
@@ -168,7 +181,7 @@ class UplinkSwitch:
             "backhaul move to %s failed (%s): back to %s", move["target"], reason, move["previous"]
         )
         move["result"] = reason
-        self.bssid = move["previous"]
+        self.bssid, self.station = move["previous"], move["previous_station"]
         self.moves += 1
         self._keep_target()
         return True
@@ -187,16 +200,21 @@ class UplinkSwitch:
             reason,
             self.configured,
         )
-        self.bssid = self.configured
+        self.bssid, self.station = self.configured, self.configured_station
         self.moves += 1  # a switch of its own
         self._keep_target()
         self.fallback_after = {"instance": op.plan.get("instance"), "intent": op.intent}
         return True
 
-    def steer(self, bssid):
-        """The controller's Backhaul Steering Request: move the station to ``bssid``.
+    def steer(self, bssid, band=None, channel=None):
+        """The controller's Backhaul Steering Request: move the uplink to ``bssid``.
 
-        Returns None once the move is under way, or why it cannot be made now.
+        ``band`` is the target's ("2.4G", "5G", "6G", from its operating class): the move
+        uses the pod's backhaul station on that band, which may be another one than the
+        station in use (spec 8.3). A station on the radio that carries the pod's BSSes stays
+        on that radio's channel: a target on another ``channel`` is refused. Returns None once
+        the move is under way, or why it cannot be made now: "no_station_on_band" when the pod
+        has no backhaul station on ``band``, "channel_not_operable" for such a channel.
         """
         bssid = bssid.lower()
         if self.held():
@@ -208,13 +226,31 @@ class UplinkSwitch:
             return "switch_in_progress"
         if bssid in {(self.backend.facts or {}).get("mac")}:
             return "own_station"
-        previous = self.bssid
-        self.move = {"target": bssid, "previous": previous, "result": None}
-        if bssid != previous:
-            self.bssid = bssid
+        station = self.station if band is None else self.backend.station_for(band)
+        if station is None:
+            return "no_station_on_band"
+        fixed = self.backend.fixed_channel(station)
+        if fixed is not None and channel is not None and channel != fixed:
+            return "channel_not_operable"
+        previous, previous_station = self.bssid, self.station
+        self.move = {
+            "target": bssid,
+            "previous": previous,
+            "station": station,
+            "previous_station": previous_station,
+            "result": None,
+        }
+        if (bssid, station) != (previous, previous_station):
+            self.bssid, self.station = bssid, station
             self.moves += 1
             self._keep_target()
-        log.info("backhaul move requested: %s -> %s", previous, bssid)
+        log.info(
+            "backhaul move requested: %s (%s) -> %s (%s)",
+            previous,
+            previous_station,
+            bssid,
+            station,
+        )
         return None
 
     def steering_outcome(self, bssid):
@@ -230,7 +266,9 @@ class UplinkSwitch:
             op is not None
             and op.state == State.OBSERVED_APPLIED
             and op.intent.get("bssid") == move["target"]
+            and op.intent.get("station") == move["station"]
             and facts.get("kind") == MULTI_AP
+            and facts.get("station") == move["station"]
             and facts.get("parent") == move["target"]
         ):
             move["result"] = True
@@ -249,7 +287,7 @@ class UplinkSwitch:
         if credentials is None:
             self.waiting = "no EasyMesh backhaul credentials"
             return None
-        intent = UplinkIntent(self.pod_id, self.backend.station, *credentials, bssid=self.bssid)
+        intent = UplinkIntent(self.pod_id, self.station, *credentials, bssid=self.bssid)
         try:
             intent.target(self.engine.vault)
         except EmosaError as exc:
@@ -318,7 +356,8 @@ class UplinkSwitch:
         op = self.latest()
         facts = self.backend.facts or {}
         return {
-            "station": self.backend.station,
+            "station": self.station,
+            "active_station": self.backend.active,
             "bssid": self.bssid,
             "configured_bssid": self.configured,
             "move": self.move,

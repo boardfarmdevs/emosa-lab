@@ -33,6 +33,8 @@ class PodProfile:
     inet: dict
     uplink_station: str | None = None  # the backhaul station option 1 moves (bootstrap-created)
     esp_be: bytes | None = None  # declared best-effort ESP for AP metrics (spec §3.8)
+    # the backhaul station on each band ("2.4G", "5G", "6G"), for a move to another band (§8.3)
+    uplink_stations: tuple = ()  # ((band, if_name), ...)
 
     @property
     def backhaul_row(self):
@@ -60,4 +62,5 @@ def load(ref=DEFAULT):
         data["inet"],
         data.get("uplink", {}).get("station"),
         bytes.fromhex(data["ap_metrics"]["esp_be"]) if "ap_metrics" in data else None,
+        tuple(sorted(data.get("uplink", {}).get("stations", {}).items())),
     )

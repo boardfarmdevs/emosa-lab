@@ -229,7 +229,7 @@ def test_steering_requests_the_agent_does_not_carry_out(agent, tmp_path):
 # The pod's Wi-Fi backhaul (spec 8.3)
 
 
-def test_the_backhaul_sta_capability_names_the_pods_backhaul_station(agent, tmp_path):
+def test_the_backhaul_sta_capability_names_each_backhaul_station_radio(agent, tmp_path):
     result = box("backhaul-capability", agent, tmp_path / "box")
     assert result["passed"], result
 
@@ -251,6 +251,26 @@ def test_backhaul_steering_onto_the_pods_own_bss_is_refused(agent, tmp_path):
 
 def test_backhaul_steering_without_option_1_is_refused_at_once(agent, tmp_path):
     result = box("backhaul-steering-refused", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
+def test_backhaul_steering_to_another_band_moves_the_uplink_to_that_bands_station(agent, tmp_path):
+    result = box("backhaul-steering-across-bands", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
+def test_a_move_to_another_band_not_applied_returns_to_the_previous_station(agent, tmp_path):
+    result = box("backhaul-steering-across-bands-fails", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
+def test_backhaul_steering_to_a_band_without_a_station_is_refused_with_0x04(agent, tmp_path):
+    result = box("backhaul-steering-no-station-on-band", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
+def test_backhaul_steering_off_the_bss_radios_channel_is_refused_with_0x04(agent, tmp_path):
+    result = box("backhaul-steering-channel-not-operable", agent, tmp_path / "box")
     assert result["passed"], result
 
 

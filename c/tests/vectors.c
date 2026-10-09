@@ -914,18 +914,34 @@ static void uplink_vectors(const char *dir)
                 cJSON_Delete(got);
                 em_tlv_list_free(&list);
             }
-            uint8_t cap[13];
-            memcpy(cap, link.ruid, 6);
-            cap[6] = 0x80;
-            memcpy(cap + 7, link.station.mac, 6);
-            em_tlv t = {0xCB, 13, cap};
-            got = list_json(&t, 1);
-            checks++;
-            if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(want, "backhaul_sta_capability_tlvs"), 1))
-                fail("uplink", name, "backhaul STA capability differs");
-            cJSON_Delete(got);
         }
         free(view);
+        /* the Backhaul STA Capability Report: every radio with one of the pod's backhaul
+         * stations, enabled or not, the one in use first */
+        const char *names[8];
+        size_t nnames = 0;
+        const cJSON *s;
+        cJSON_ArrayForEach(s, cJSON_GetObjectItemCaseSensitive(c, "stations"))
+        {
+            if (nnames < 8 && cJSON_IsString(s))
+                names[nnames++] = s->valuestring;
+        }
+        em_backhaul_radio radios[8];
+        size_t nradios = em_backhaul_radios(tables, names, nnames, strcmp(state.kind, "multi-ap") ? NULL : station,
+                                            radios, 8);
+        uint8_t caps[8][13];
+        em_tlv tlvs[8];
+        for (size_t i = 0; i < nradios; i++) {
+            memcpy(caps[i], radios[i].ruid, 6);
+            caps[i][6] = radios[i].has_station ? 0x80 : 0x00;
+            memcpy(caps[i] + 7, radios[i].station, 6);
+            tlvs[i] = (em_tlv){0xCB, radios[i].has_station ? 13 : 7, caps[i]};
+        }
+        got = list_json(tlvs, nradios);
+        checks++;
+        if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(expected, "backhaul_sta_capability_tlvs"), 1))
+            fail("uplink", name, "backhaul STA capability differs");
+        cJSON_Delete(got);
     }
     cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "switch"))
     {
@@ -933,8 +949,18 @@ static void uplink_vectors(const char *dir)
         const cJSON *in = cJSON_GetObjectItemCaseSensitive(c, "intent");
         const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
         const cJSON *tables = cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables");
+        /* the pod's backhaul station on each band: [band, if_name] pairs */
+        const char *stations[EM_UPLINK_STATIONS];
+        size_t nstations = 0;
+        const cJSON *pair;
+        cJSON_ArrayForEach(pair, cJSON_GetObjectItemCaseSensitive(c, "stations"))
+        {
+            const cJSON *station = cJSON_GetArrayItem(pair, 1);
+            if (nstations < EM_UPLINK_STATIONS && cJSON_IsString(station))
+                stations[nstations++] = station->valuestring;
+        }
         em_uplink_intent intent = {str(in, "station"), str(in, "ssid"), str(in, "secret_ref"),
-                                   str(in, "bssid")};
+                                   str(in, "bssid"), stations, nstations};
         cJSON *sent = cJSON_CreateArray();
         em_ovs_session session = {tables, 1, record, sent};
         em_submit_result result;
@@ -1571,8 +1597,10 @@ typedef struct {
     cJSON *handed;
 } bh_script;
 
-static const char *bh_executor(void *ctx, const char *bssid)
+static const char *bh_executor(void *ctx, const char *bssid, int operating_class, int channel)
 {
+    (void)operating_class;
+    (void)channel;
     bh_script *s = ctx;
     cJSON_AddItemToArray(s->handed, cJSON_CreateString(bssid));
     const cJSON *reply = cJSON_GetObjectItemCaseSensitive(s->step, "executor");
@@ -1639,7 +1667,9 @@ static void backhaul_steering_vectors(const char *dir)
                 size_t n = sessions[k].counts.n;
                 for (size_t i = 0; i < n; i++)
                     before[i] = sessions[k].counts.items[i].count;
-                em_bh_tick(&sessions[k], at, cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "source_available")), &out);
+                /* the vectors' pod stays on the station the requests name: the answer names it */
+                em_bh_tick(&sessions[k], at, cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "source_available")),
+                           NULL, &out);
                 for (size_t i = 0; i < sessions[k].counts.n && !result; i++)
                     if (i >= n || sessions[k].counts.items[i].count > before[i])
                         result = sessions[k].counts.items[i].name;
