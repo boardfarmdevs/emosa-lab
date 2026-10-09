@@ -27,10 +27,13 @@
 #                                     like the lab's own backhaul, EMOSA_WIFI_BACKHAUL_SNR 50).
 #                                     Releases an uplink hold (a failed switch): the pod
 #                                     switches on its next OpenSync start, restarted here
-#   lab.sh move POD TARGET            the controller moves POD's backhaul station to TARGET (a mesh
-#                                     node's container, its 5 GHz backhaul BSS, or a BSSID): the
-#                                     controller's SteerWiFiBackhaul(), a Backhaul Steering Request
-#                                     EMOSA carries out (a pod on Wi-Fi backhaul)
+#   lab.sh move POD TARGET [CHANNEL]  the controller moves POD's backhaul to TARGET: a native mesh
+#                                     node's container (its 5 GHz backhaul BSS), another pod's
+#                                     (its 2.4 GHz backhaul BSS, which POD's 2.4 GHz station
+#                                     joins), or a BSSID; CHANNEL is the target's (read from its
+#                                     BSS, or 36 for a BSSID). The controller's
+#                                     SteerWiFiBackhaul(), a Backhaul Steering Request EMOSA
+#                                     carries out (a pod on Wi-Fi backhaul)
 #   lab.sh repod [NAME]               the pod again from the staged image (its radios are
 #                                     returned to the VM first, so they survive)
 #   lab.sh client NAME SSID KEY       a Wi-Fi client on one pool radio
@@ -562,22 +565,39 @@ agent_al() {    # the AL MAC of POD's EMOSA agent
     [ -n "$serial" ] || die "$1: no serial (OpenSync not up)"
     agent_status "$serial" agent_al
 }
-move() {    # move POD TARGET: the controller steers POD's backhaul station to TARGET
-    local pod=${1:-} target=${2:-} bssid al n i id
-    [ -n "$pod" ] && [ -n "$target" ] || die "usage: lab.sh move POD CONTAINER|BSSID"
+move() {    # move POD TARGET [CHANNEL]: the controller steers POD's backhaul to TARGET
+    local pod=${1:-} target=${2:-} channel=${3:-} bssid al n i id
+    [ -n "$pod" ] && [ -n "$target" ] || die "usage: lab.sh move POD CONTAINER|BSSID [CHANNEL]"
     running "$pod" || die "$pod is not running"
     [ "$(lxc config get "$pod" user.emosa.backhaul)" = wifi ] || die "$pod is not on Wi-Fi backhaul"
     case $target in
         *:*:*:*:*:*) bssid=$(echo "$target" | tr 'A-F' 'a-f') ;;
-        *) bssid=$(cx "$target" cat /sys/class/net/wifi1.1/address 2>/dev/null) ||
-            die "$target has no 5 GHz backhaul BSS (wifi1.1)"
+        "$pod") die "$pod cannot be its own parent" ;;
+        *) if cx "$target" test -e /sys/class/net/b-ap-24 2>/dev/null; then
+            # another pod: its 2.4 GHz backhaul BSS, which POD's 2.4 GHz station joins
+            # (spec 8.3, 8.5); POD's own 2.4 GHz radio must be on its channel
+            bssid=$(cx "$target" cat /sys/class/net/b-ap-24/address 2>/dev/null)
+            [ -n "$channel" ] || channel=$(cx "$target" iw dev b-ap-24 info 2>/dev/null |
+                awk '$1 == "channel" {print $2; exit}')
+            [ -n "$bssid" ] && [ -n "$channel" ] || die "$target's 2.4 GHz backhaul BSS (b-ap-24) is not up"
+        else
+            bssid=$(cx "$target" cat /sys/class/net/wifi1.1/address 2>/dev/null) ||
+                die "$target has no 5 GHz backhaul BSS (wifi1.1)"
             # A Wi-Fi extender starts its backhaul BSS only for a child (the RDK room forces it
             # up for its geometry rooms): up before the move, as the room does
             cx "$target" sh -c 'iw dev wifi1.1 info | grep -q ssid ||
                 rbuscli setvalues Device.WiFi.AccessPoint.14.ForceApply boolean true >/dev/null
                 for _ in $(seq 10); do iw dev wifi1.1 info | grep -q ssid && exit 0; sleep 1; done; exit 1' ||
-                die "$target's backhaul BSS did not start" ;;
+                die "$target's backhaul BSS did not start"
+            [ -n "$channel" ] || channel=$(cx "$target" iw dev wifi1.1 info 2>/dev/null |
+                awk '$1 == "channel" {print $2; exit}')
+        fi ;;
     esac
+    # the target's channel (SteerWiFiBackhaul's Channel; the controller derives the
+    # operating class from it, unified-wifi-mesh 0249): given, read from the target's BSS,
+    # or the lab's shared 5 GHz channel for a BSSID alone
+    channel=${channel:-36}
+    case $channel in *[!0-9]*|'') die "channel $channel: not a channel number" ;; esac
     al=$(agent_al "$pod") && [ -n "$al" ] || die "$pod: its agent has no status yet"
     n=$(rbus get Device.WiFi.DataElements.Network.DeviceNumberOfEntries | awk '/Value :/ {print $3}')
     for i in $(seq 1 "${n:-0}"); do
@@ -586,9 +606,9 @@ move() {    # move POD TARGET: the controller steers POD's backhaul station to T
         id=
     done
     [ -n "$id" ] || die "the controller has no device $al ($pod)"
-    log "move: $pod (agent $al, Device.$i) to $bssid"
+    log "move: $pod (agent $al, Device.$i) to $bssid, channel $channel"
     rbus method_values "Device.WiFi.DataElements.Network.Device.$i.MultiAPDevice.Backhaul.SteerWiFiBackhaul()" \
-        TargetBSS string "$bssid" Channel int32 36 TimeOut int32 30 | tail -3
+        TargetBSS string "$bssid" Channel int32 "$channel" TimeOut int32 30 | tail -3
     for _ in $(seq 24); do
         sleep 5
         [ "$(agent_status "$(pod_serial "$pod")" uplink parent)" = "$bssid" ] &&

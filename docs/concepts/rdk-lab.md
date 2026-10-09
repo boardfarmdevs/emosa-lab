@@ -187,8 +187,10 @@ partial run; after a reboot it brings the pods back:
 | (check) | every pod's Wi-Fi uplink applied; a pod held on the GTP path is switched once more, else `up` fails |
 
 By hand: `lab.sh agent POD python|c` (one pod's implementation), `lab.sh move
-POD TARGET` (the controller moves a pod's backhaul: a mesh node's container,
-its 5 GHz backhaul BSS or a BSSID), `lab.sh backhaul wired|wifi [POD...]`
+POD TARGET [CHANNEL]` (the controller moves a pod's backhaul: a native mesh
+node's container for its 5 GHz backhaul BSS, another pod's for its 2.4 GHz one,
+which the pod's 2.4 GHz station joins, or a BSSID; the channel is read from the
+target's BSS, 36 for a BSSID unless given), `lab.sh backhaul wired|wifi [POD...]`
 (`wired` returns a pod to the GTP path; `wifi` also releases a hold after a
 failed switch: the Python agent on a reconfiguration, the C fleet by forgetting
 the pod, whose next admission starts without the hold, spec §8.3), `lab.sh repod`, `lab.sh client NAME SSID KEY`, `lab.sh rooms
