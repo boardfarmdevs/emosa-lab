@@ -101,7 +101,7 @@ typedef struct {
 static const cJSON *row_of(const station_row *rows, size_t n, const char *name)
 {
     for (size_t i = 0; name && i < n; i++)
-        if (!strcmp(rows[i].name, name))
+        if (rows[i].name && !strcmp(rows[i].name, name))
             return rows[i].row;
     return NULL;
 }
