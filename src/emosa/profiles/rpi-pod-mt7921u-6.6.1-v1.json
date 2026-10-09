@@ -1,6 +1,6 @@
 {
   "id": "rpi-pod-mt7921u-6.6.1-v1",
-  "description": "opensync-rpi pods: OpenSync 6.6.1.0 (opensync-lab's pod build, target RPI_POD) on a Raspberry Pi 4 with an EDUP AX3000M (MediaTek MT7921AU, mt7921u) given to the pod as its 2.4 GHz radio. The fronthaul row is the opensync-lab pod's (the same build and VIF layout). The MT7921U runs one AP per radio, so the profile has no extra slots: of the RDK controller's five-BSS M2 set the agent applies the primary fronthaul BSS and leaves the others out (spec 3.4). No uplink station: the pod's uplink is Ethernet (eth1), which the agent bridges into br-home with uplink.mode ethernet (spec 8.4).",
+  "description": "opensync-rpi pods: OpenSync 6.6.1.0 (opensync-lab's pod build, target RPI_POD) on a Raspberry Pi 4 with an EDUP AX3000M (MediaTek MT7921AU, mt7921u) given to the pod as its 2.4 GHz radio. The fronthaul row is the opensync-lab pod's (the same build and VIF layout). min_hw_mode 11g as there (OFDM-only basic and beacon rates; the MT7921U lists BEACON_RATE_LEGACY). The MT7921U runs one AP per radio, so the profile has no extra slots: of the RDK controller's five-BSS M2 set the agent applies the primary fronthaul BSS and leaves the others out (spec 3.4). No uplink station: the pod's uplink is Ethernet (eth1), which the agent bridges into br-home with uplink.mode ethernet (spec 8.4).",
   "opensync_version": "6.6.1.0",
   "radio": {
     "band": "2.4G",
@@ -19,6 +19,7 @@
       "mac_list_type": "none",
       "btm": 1,
       "rrm": 1,
+      "min_hw_mode": "11g",
       "vif_radio_idx": 1,
       "wpa": true,
       "wpa_key_mgmt": "wpa-psk",
