@@ -158,7 +158,7 @@ The option is split between the repositories:
 | Part | Owner |
 | --- | --- |
 | The option and its entry: `EASYMESH_EMOSA=1` on `gen/vm/lxd/build.sh build`, or `build.sh emosa` on an accepted lab VM; `EASYMESH_EMOSA_AGENT=python\|c` picks the pods' agent implementation | meta-cmf-bananapi-vcpe |
-| The rooms with the pods: `worlds-pods`, the lab's standard rooms (the four Wi-Fi extenders and the wired extender `extender_5`) plus `pod_1` and `pod_2`, all 31 worlds under the standard IDs | meta-cmf-bananapi-vcpe |
+| The rooms with the pods: `worlds-pods`, the lab's standard rooms (the four Wi-Fi extenders and the wired extender `extender_5`) plus `pod_1` and `pod_2`, all 31 worlds under the standard IDs, and the rooms about the pods themselves (`backhaul-pod-chain`: `pod_2` under `pod_1` on 2.4 GHz, two hops from a native AP) | meta-cmf-bananapi-vcpe |
 | The steps: `deploy/rdk-lab/lab.sh stage` (host), then `lab.sh up [python\|c]` in the VM | emosa-lab |
 | The pod image, pinned in the easymesh-labs `manifest.json` (`EMOSA_POD_IMAGE`) | opensync-lab |
 
