@@ -759,16 +759,26 @@ json.dump(lacking, open(sys.argv[1], "w"))
 print(len(lacking))' "$body" "$macs")
     # one device per request, 10 s apart: em_ctrl logs each policy it applies, all of them at
     # once passed its journal's cap (1000 lines per 30 s; rdk-1004, 6 October)
-    local device first=1
+    # em_cli answers 504 when an agent's policy commit takes longer than its 8 s wait, though
+    # the controller deployed the policy (rdk-1004, 9 October): a device's lists are sent again,
+    # twice at most (the same lists: no change on the second), and the check below decides
+    local device first=1 attempt
     while IFS= read -r device; do
         [ "$first" = 1 ] || sleep 10
         first=0
-        curl -fsS --max-time 120 -X POST -H 'Content-Type: application/json' --data "$device" "$policy" >/dev/null ||
-            { rm -f "$body"; die "steering: the controller's policy API refused the lists"; }
+        for attempt in 1 2 3; do
+            curl -fsS --max-time 120 -X POST -H 'Content-Type: application/json' --data "$device" "$policy" \
+                >/dev/null && break
+            [ "$attempt" = 3 ] && { rm -f "$body"; die "steering: the controller's policy API refused the lists"; }
+            log "steering: the policy API did not confirm a device's lists (attempt $attempt): again in 10 s"
+            sleep 10
+        done
     done < <(python3 -c 'import json, sys; [print(json.dumps([d])) for d in json.load(open(sys.argv[1]))]' "$body")
     rm -f "$body"
-    # shellcheck disable=SC2016 # Python, not the shell
-    curl -fsS --max-time 30 "$policy" | python3 -c '
+    # every agent's lists in the controller's policy, waiting up to 30 s for the last commits
+    for attempt in 1 2 3 4; do
+        # shellcheck disable=SC2016 # Python, not the shell
+        curl -fsS --max-time 30 "$policy" | python3 -c '
 import json, sys
 macs = set(sys.argv[1].split())
 devices = json.load(sys.stdin).get("policyConfig", [])
@@ -776,7 +786,10 @@ short = [d["id"] for d in devices
          if not all(macs <= {m.lower() for m in d.get(key) or []}
                     for key in ("localSteeringDisallowed", "btmSteeringDisallowed"))]
 if short:
-    sys.exit("steering: no lists yet on " + " ".join(short))' "$macs" || die "steering: the lists did not apply"
+    sys.exit("steering: no lists yet on " + " ".join(short))' "$macs" && break
+        [ "$attempt" = 4 ] && die "steering: the lists did not apply"
+        sleep 10
+    done
     log "steering: the pods' stations ($macs) steering-disallowed (local and BTM) on every agent, ${n:-0} set now"
 }
 
