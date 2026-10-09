@@ -35,7 +35,10 @@
 #                                     SteerWiFiBackhaul(), a Backhaul Steering Request EMOSA
 #                                     carries out (a pod on Wi-Fi backhaul)
 #   lab.sh repod [NAME]               the pod again from the staged image (its radios are
-#                                     returned to the VM first, so they survive)
+#                                     returned to the VM first, so they survive; one that is
+#                                     lost is replaced, and the controller forgets the agent)
+#   lab.sh forget [POD...]            these pods' agents (all EMOSA agents without one) out of
+#                                     the controller's model, to be learned anew
 #   lab.sh client NAME SSID KEY       a Wi-Fi client on one pool radio
 #   lab.sh medium                     regenerate wmediumd's radios (guests: user.wmediumd.guest)
 #   lab.sh telemetry [POD...]         MQTT broker (mutual TLS) for the pods' own statistics; every
@@ -617,12 +620,21 @@ move() {    # move POD TARGET [CHANNEL]: the controller steers POD's backhaul to
     die "$pod did not move to $bssid within 2 minutes"
 }
 repod() {
-    local name=${1:-pod-1}
+    local name=${1:-pod-1} before
     if exists "$name"; then
         lxc delete -f "$name"
         radios_await "$name"
     fi
+    before=$(profile_radios "$name")
     pod "$name"
+    # A radio that did not come back was replaced (radios_replace_lost): the pod's agent then
+    # reports another radio under the same AL MAC, and RDK's controller keeps the old one for
+    # good, its BSSes counted and AutoConfig Renew sent to it (rdk-1004, 9 October: the lab's
+    # bring-up refused the topology on it). The controller forgets the agent and learns it anew.
+    if [ -n "$before" ] && [ "$(profile_radios "$name")" != "$before" ]; then
+        log "$name: new radios; its agent forgotten by the controller, to be learned anew"
+        forget "$name"
+    fi
 }
 
 client() {    # client NAME SSID KEY [BSSID]: pinned to BSSID when given (every RDK AP has the SSID)
@@ -695,15 +707,29 @@ wait_agents() {    # every running pod's agent provisioned (at most 5 minutes)
     die "not every pod's agent is provisioned ($(agents_provisioned) of $n)"
 }
 
-forget_pods() {    # remove the EMOSA agents' rows from the controller's model (em_ctrl stopped)
-    local als
-    als=$(fleet_cli list 2>/dev/null | jq -r '.[].al_mac' | tr '\n' ' ')
-    [ -n "$als" ] || return 0
+forget_agents() {    # forget_agents AL...: these agents' rows out of the controller's model (em_ctrl stopped)
+    [ "$#" -gt 0 ] || return 0
     cx bpibroadband sh -ec "systemctl stop em_ctrl
-        for al in $als; do for t in PolicyList OperatingClassList BSSList RadioList DeviceList; do
+        for al in $*; do for t in PolicyList OperatingClassList BSSList RadioList DeviceList; do
             mysql -N -ubpi -proot OneWifiMesh -e \"delete from \$t where ID like '%@\$al@%'\" 2>/dev/null; done; done
         systemctl start em_ctrl"
-    log "controller model: EMOSA agents $als removed"
+    log "controller model: EMOSA agents $* removed"
+}
+forget_pods() {    # every EMOSA agent's rows out of the controller's model
+    # shellcheck disable=SC2046 # one AL MAC a word
+    forget_agents $(fleet_cli list 2>/dev/null | jq -r '.[].al_mac')
+}
+forget() {    # forget [POD...]: these pods' agents (all of the fleet's without one) out of the controller
+    local pod als=()
+    [ "$#" -gt 0 ] || { forget_pods; return; }
+    for pod in "$@"; do als+=("$(agent_al "$pod")"); done
+    forget_agents "${als[@]}"
+}
+profile_radios() {    # the radios a pod's profile gives it, one parent a line
+    local d
+    for d in $(lxc profile device list "$1" 2>/dev/null); do
+        lxc profile device get "$1" "$d" parent 2>/dev/null || true
+    done | sort
 }
 
 room_manifest() {    # the room service's manifest: the standard rooms with the pods, or the lab's own
@@ -1003,6 +1029,7 @@ case ${1:-} in
     rooms) shift; rooms "$@" ;;
     telemetry) shift; telemetry "$@" ;;
     repod) shift; repod "$@" ;;
+    forget) shift; forget "$@" ;;
     client) shift; client "$@" ;;
-    *) sed -n '2,66p' "$0"; exit 1 ;;
+    *) awk 'NR > 1 && !/^#/ {exit} NR > 1' "$0"; exit 1 ;;    # the header's usage, all of it
 esac
