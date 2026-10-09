@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "canon.h"
@@ -528,6 +529,32 @@ void em_uplink_close(em_uplink_scope *u)
 
 const em_uplink_state *em_uplink_facts(const em_uplink_scope *u) { return u->has_facts ? &u->facts : NULL; }
 
+#define OWNERSHIP_HOLD "the station's configuration was changed by another manager"
+
+static double wall(const em_uplink_scope *u) { return u->wall ? u->wall() : (double)time(NULL); }
+
+/* a held switch being made again: its hold's attempt (spec 8.3), beside target.json */
+static void hold_path(const em_uplink_scope *u, char *out, size_t n)
+{
+    EM_FORMAT_FIXED(out, n, "%s/hold.json", em_journal_directory(u->journal)); /* EM_STATE_DIR_MAX */
+}
+
+/* UplinkSwitch._retry: the attempt of the hold whose switch is being made again, or 0 */
+static int retry_attempt(const em_uplink_scope *u)
+{
+    char path[700];
+    hold_path(u, path, sizeof(path));
+    char *text = em_read_file(path, 256, NULL);
+    if (!text)
+        return 0;
+    cJSON *o = cJSON_Parse(text);
+    free(text);
+    const cJSON *a = cJSON_GetObjectItemCaseSensitive(o, "attempt");
+    int attempt = cJSON_IsNumber(a) && a->valueint > 0 ? a->valueint : 0;
+    cJSON_Delete(o);
+    return attempt;
+}
+
 static bool held(em_uplink_scope *u)
 {
     cJSON *o = em_journal_ownership(u->journal, u->pod_id);
@@ -536,17 +563,71 @@ static bool held(em_uplink_scope *u)
     return h;
 }
 
+/* UplinkSwitch.hold: a failed switch's hold is bounded, the switch made again after a backoff
+ * that doubles with each held retry (spec 8.3); another manager's change holds until a new
+ * admission */
 static void hold(em_uplink_scope *u, const cJSON *op, const char *reason)
 {
     if (held(u))
         return;
-    em_log(EM_LOG_WARNING, "emosa.agent.uplink", "uplink held on option 2: %s", reason);
     cJSON *e = cJSON_CreateObject();
     cJSON_AddItemToObject(e, "operation_id", op ? cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "operation_id"), 1)
                                                 : cJSON_CreateNull());
     cJSON_AddStringToObject(e, "reason", reason);
+    if (strcmp(reason, OWNERSHIP_HOLD)) {
+        int attempt = retry_attempt(u) + 1;
+        double base = u->hold_backoff > 0 ? u->hold_backoff : EM_UPLINK_HOLD_BACKOFF;
+        double cap = u->hold_backoff_cap > 0 ? u->hold_backoff_cap : EM_UPLINK_HOLD_BACKOFF_CAP;
+        double wait = base;
+        for (int i = 1; i < attempt && wait < cap; i++)
+            wait *= 2;
+        if (wait > cap)
+            wait = cap;
+        double now = wall(u);
+        cJSON_AddNumberToObject(e, "held_at", now);
+        cJSON_AddNumberToObject(e, "attempt", attempt);
+        cJSON_AddNumberToObject(e, "retry_at", now + wait);
+        em_log(EM_LOG_WARNING, "emosa.agent.uplink", "uplink held on option 2: %s; switching again in %.0f s (hold %d)",
+               reason, wait, attempt);
+    } else {
+        em_log(EM_LOG_WARNING, "emosa.agent.uplink", "uplink held on option 2: %s", reason);
+    }
     em_journal_conflict(u->journal, u->pod_id, e);
     cJSON_Delete(e);
+}
+
+/* UplinkSwitch._hold_over: a bounded hold's backoff over, the hold released and its attempt
+ * kept in hold.json, for the next hold's backoff and the retry's switch */
+static bool hold_over(em_uplink_scope *u)
+{
+    cJSON *record = em_journal_ownership(u->journal, u->pod_id);
+    const char *reason = str(record, "reason");
+    bool over = false;
+    if (!record) {
+        over = true;
+    } else if (reason && !strcmp(reason, OWNERSHIP_HOLD)) {
+        over = false;
+    } else if (!cJSON_GetObjectItemCaseSensitive(record, "retry_at")) {
+        /* held before holds were bounded: its backoff starts now */
+        double now = wall(u);
+        cJSON_AddNumberToObject(record, "held_at", now);
+        cJSON_AddNumberToObject(record, "attempt", 1);
+        cJSON_AddNumberToObject(record, "retry_at", now + (u->hold_backoff > 0 ? u->hold_backoff : EM_UPLINK_HOLD_BACKOFF));
+        em_journal_conflict(u->journal, u->pod_id, record);
+    } else if (wall(u) >= cJSON_GetNumberValue(cJSON_GetObjectItemCaseSensitive(record, "retry_at"))) {
+        const cJSON *a = cJSON_GetObjectItemCaseSensitive(record, "attempt");
+        int attempt = cJSON_IsNumber(a) && a->valueint > 0 ? a->valueint : 1;
+        char path[700], text[64];
+        hold_path(u, path, sizeof(path));
+        EM_FORMAT_FIXED(text, sizeof(text), "{\"attempt\": %d}\n", attempt);
+        if (!em_write_file(path, text, true))
+            em_log(EM_LOG_WARNING, "emosa.agent.uplink", "the hold's attempt not kept in %s", path);
+        em_journal_release(u->journal, u->pod_id);
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "uplink hold %d over: switching again", attempt);
+        over = true;
+    }
+    cJSON_Delete(record);
+    return over;
 }
 
 static cJSON *facts_json(const em_uplink_scope *u)
@@ -633,6 +714,12 @@ static void settle(em_uplink_scope *u, cJSON *op, const em_snapshot *snap, bool 
             save_with_facts(u, op);
             em_log(EM_LOG_INFO, "emosa.agent.uplink", "uplink on the EasyMesh backhaul: %s parent %s", u->facts.kind,
                     u->facts.parent);
+            if (retry_attempt(u)) {
+                char path[700];
+                hold_path(u, path, sizeof(path));
+                unlink(path);
+                em_log(EM_LOG_INFO, "emosa.agent.uplink", "uplink switch applied on its retry: the hold's backoff cleared");
+            }
         } else if (em_engine_expired(&u->engine, op)) {
             cJSON_ReplaceItemInObjectCaseSensitive(op, "original_outcome", cJSON_CreateString(state));
             cJSON_ReplaceItemInObjectCaseSensitive(op, "deadline_elapsed", cJSON_CreateTrue());
@@ -649,7 +736,7 @@ static void settle(em_uplink_scope *u, cJSON *op, const em_snapshot *snap, bool 
         if (t && planned && u->has_instance && !strcmp(planned, u->instance) && !em_matches(snap->config, t)) {
             em_set_reason(op, "OWNERSHIP_CONFLICT");
             save_with_facts(u, op);
-            hold(u, op, "the station's configuration was changed by another manager");
+            hold(u, op, OWNERSHIP_HOLD);
         }
         cJSON_Delete(t);
     } else if (!strcmp(state, "REJECTED") || !strcmp(state, "FAILED") || !strcmp(state, "OWNERSHIP_CONFLICT")) {
@@ -714,7 +801,7 @@ static cJSON *intent_of(em_uplink_scope *u, const char *ssid, const char *ref)
 /* UplinkSwitch._wanted: the intent to request now, or NULL (waiting says why) */
 static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *snap)
 {
-    if (held(u)) {
+    if (held(u) && !hold_over(u)) {
         wait_for(u, "held on option 2");
         return NULL;
     }
@@ -823,6 +910,12 @@ void em_uplink_tick(em_uplink_scope *u)
         EM_FORMAT_FIXED(key, sizeof(key), "%s:%.16s:%u", u->instance, fp, u->moves);
     else
         EM_FORMAT_FIXED(key, sizeof(key), "%s:%.16s", u->instance, fp);
+    int retry = retry_attempt(u);
+    if (retry) { /* a held switch made again: one of its own, on the same start too */
+        char base[128];
+        EM_FORMAT_FIXED(base, sizeof(base), "%s", key);
+        EM_FORMAT_FIXED(key, sizeof(key), "%s:retry%d", base, retry);
+    }
     cJSON *req = em_engine_request(&u->engine, intent, SOURCE, key, u->run_id, DEADLINE, "semantic", NULL, &why);
     if (req && !strcmp(em_state_of(req), "REQUESTED")) {
         em_log(EM_LOG_INFO, "emosa.agent.uplink", "switching %s to the EasyMesh backhaul '%s'", u->wanted,

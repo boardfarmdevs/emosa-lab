@@ -268,6 +268,35 @@ async def uplink_held(box):
     )
 
 
+async def uplink_held_retry(box):
+    """spec 8.3: a failed switch's hold is bounded. The switch never confirmed (its station
+    never joins the configured SSID) holds the pod, hold 1; after its backoff (20 s here) the
+    switch is made again, an operation of its own; not confirmed either, the pod is held again,
+    hold 2, the backoff doubled to its cap (30 s)."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    first = await box.until(lambda: uplink_status(box).get("held"), seconds=150)
+    first = dict(first or {})
+    retried = await box.until(
+        lambda: uplink_operation(box).get("operation_id") not in (None, first.get("operation_id")),
+        seconds=60,
+    )
+    second = await box.until(
+        lambda: (uplink_status(box).get("held") or {}).get("attempt") == 2, seconds=150
+    )
+    second = dict(uplink_status(box).get("held") or {})
+    return box.result(
+        passed=first.get("attempt") == 1
+        and first.get("retry_at", 0) - first.get("held_at", 0) == 20
+        and bool(retried)
+        and bool(second)
+        and second.get("retry_at", 0) - second.get("held_at", 0) == 30,
+        first_hold=first,
+        retried=bool(retried),
+        second_hold=second,
+    )
+
+
 async def _credential_for(box, ssid):
     return [c for c in await credentials(box) if c.get("ssid") == ssid]
 
@@ -625,6 +654,7 @@ SCENARIOS = {
     "fronthaul-role-cold": fronthaul_role_cold,
     "wired-uplink": wired_uplink,
     "uplink-held": uplink_held,
+    "uplink-held-retry": uplink_held_retry,
     "uplink-foreign-change": uplink_foreign_change,
     "uplink-reswitch-parent-empty": uplink_reswitch_parent_empty,
     "uplink-reswitch-parent-other": uplink_reswitch_parent_other,
@@ -654,6 +684,15 @@ OPTIONS = {
     },
     "wired-uplink": {"wired": True},
     "uplink-held": {"backhaul": True, "uplink": {**UPLINK, "ssid": "emosa-lab-elsewhere"}},
+    "uplink-held-retry": {
+        "backhaul": True,
+        "uplink": {
+            **UPLINK,
+            "ssid": "emosa-lab-elsewhere",
+            "hold_backoff": 20,
+            "hold_backoff_cap": 30,
+        },
+    },
     "uplink-foreign-change": {"backhaul": True},
     "uplink-reswitch-parent-empty": {"backhaul": True},
     "uplink-reswitch-parent-other": {"backhaul": True},

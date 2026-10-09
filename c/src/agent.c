@@ -1758,6 +1758,11 @@ static bool configure(agent *a, const char *path, const char *profiles)
             a->uplink.nbands = i + 1;
         }
         a->uplink.fixed_band = a->profile.band;
+        /* a failed switch's hold, bounded (spec 8.3): absent, the scope's defaults */
+        const cJSON *backoff = cJSON_GetObjectItemCaseSensitive(uplink, "hold_backoff");
+        const cJSON *backoff_cap = cJSON_GetObjectItemCaseSensitive(uplink, "hold_backoff_cap");
+        a->uplink.hold_backoff = cJSON_IsNumber(backoff) ? backoff->valuedouble : 0;
+        a->uplink.hold_backoff_cap = cJSON_IsNumber(backoff_cap) ? backoff_cap->valuedouble : 0;
         const char *bssid = cfg_str(uplink, "bssid");
         uint8_t mac[6];
         if (!a->uplink.station || !bssid || !em_parse_mac(bssid, mac)) {

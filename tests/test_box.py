@@ -427,6 +427,11 @@ def test_an_uplink_switch_never_confirmed_holds_the_pod(agent, tmp_path):
     assert result["held"]["reason"] == "switch not confirmed within the deadline"
 
 
+def test_a_held_pod_switches_again_after_its_backoff(agent, tmp_path):
+    result = box("uplink-held-retry", agent, tmp_path / "box", timeout=500)
+    assert result["passed"], result
+
+
 def test_another_managers_change_to_the_switched_station_holds_the_pod(agent, tmp_path):
     result = box("uplink-foreign-change", agent, tmp_path / "box")
     assert result["passed"], result

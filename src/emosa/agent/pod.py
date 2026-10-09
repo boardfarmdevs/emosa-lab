@@ -41,7 +41,7 @@ from emosa.agent.probe_watch import ProbeWatch
 from emosa.agent.renew import CONTROLLER_TIMEOUT, M2_TIMEOUT, RenewRules
 from emosa.agent.steering import ClientSteering
 from emosa.agent.telemetry import MqttSubscriber, TelemetrySetup
-from emosa.agent.uplink import UplinkSwitch, m2_backhaul
+from emosa.agent.uplink import HOLD_BACKOFF, HOLD_BACKOFF_CAP, UplinkSwitch, m2_backhaul
 from emosa.agent.wired import WiredUplink
 from emosa.config import validate
 from emosa.errors import EmosaError, Reason
@@ -592,6 +592,8 @@ async def serve(config, stop):
                 (report.facts or {}).get("ssid") is not None
                 and not any(op.state in ACTIVE for op in store.operations())
             ),
+            hold_backoff=uplink_config.get("hold_backoff", HOLD_BACKOFF),
+            hold_backoff_cap=uplink_config.get("hold_backoff_cap", HOLD_BACKOFF_CAP),
         )
     wired = None
     if uplink_config["mode"] == WIRED:  # a wired pod: its uplink port into br-home (spec §8.4)

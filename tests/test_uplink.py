@@ -8,7 +8,7 @@ import json
 import pytest
 
 from emosa.agent.pod import uplink_bssid
-from emosa.agent.uplink import DEADLINE, UplinkSwitch, m2_backhaul
+from emosa.agent.uplink import DEADLINE, HOLD_BACKOFF, UplinkSwitch, m2_backhaul
 from emosa.clock import ManualClock
 from emosa.errors import EmosaError, Reason
 from emosa.model import State
@@ -139,7 +139,7 @@ class Pod:
 CRED = "00000000-0000-4000-8000-0000000000c1"
 
 
-def rig(tmp_path, credentials=("emosa-mesh-bh", "backhaul"), bssid=PARENT):
+def rig(tmp_path, credentials=("emosa-mesh-bh", "backhaul"), bssid=PARENT, **options):
     vault = SecretStore(tmp_path / "secrets")
     vault.write_simulated("backhaul", "EmosaMesh2026!")
     pod, clock = Pod(), ManualClock()
@@ -154,6 +154,7 @@ def rig(tmp_path, credentials=("emosa-mesh-bh", "backhaul"), bssid=PARENT):
         bssid=bssid,
         run_id="pod-1",
         clock=clock,
+        **({"wall": clock.monotonic} | options),
     )
     return switch, pod, clock, store
 
@@ -215,10 +216,63 @@ def test_an_unconfirmed_switch_times_out_and_holds_the_pod_on_option_2(tmp_path)
     op = switch.latest()
     assert op.state == State.TIMED_OUT and op.reason == Reason.APPLY_TIMEOUT
     assert switch.held() and switch.status()["option"] == 2
-    for start in ("a3", "a4"):  # never again on its own, whatever the pod does
+    for start in ("a3", "a4"):  # not again before its backoff, whatever the pod does
         pod.restart(f"00000000-0000-4000-8000-0000000000{start}")
         asyncio.run(switch.tick())
     assert len(pod.sent) == 1 and switch.status()["waiting"] == "held on option 2"
+
+
+def test_a_held_pod_switches_again_after_its_backoff_doubling_to_the_cap(tmp_path):
+    # spec 8.3: a failed switch's hold is bounded; each retry its own switch, on the same start
+    switch, pod, clock, store = rig(tmp_path, hold_backoff=600, hold_backoff_cap=1000)
+    asyncio.run(switch.tick())
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())
+    held = switch.held()
+    assert held["attempt"] == 1 and held["retry_at"] - held["held_at"] == 600 and len(pod.sent) == 1
+    clock.advance(599)
+    asyncio.run(switch.tick())
+    assert switch.held() and len(pod.sent) == 1 and switch.status()["waiting"] == "held on option 2"
+    clock.advance(2)
+    asyncio.run(switch.tick())  # the backoff over: the switch made again, same start
+    assert not switch.held() and len(pod.sent) == 2
+    assert switch.latest().state == State.CONFIG_COMMITTED
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())  # not confirmed again: held, the backoff doubled to its cap
+    held = switch.held()
+    assert held["attempt"] == 2 and held["retry_at"] - held["held_at"] == 1000
+    clock.advance(1001)
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == 3
+    pod.adopt()
+    asyncio.run(switch.tick())  # applied on its retry: the hold cleared, the backoff with it
+    assert switch.latest().state == State.OBSERVED_APPLIED
+    assert store.ownership("pod-1") is None and not switch.held()
+
+
+def test_another_managers_change_holds_until_a_new_admission_not_a_backoff(tmp_path):
+    switch, pod, clock, store = rig(tmp_path)
+    asyncio.run(switch.tick())
+    pod.adopt()
+    asyncio.run(switch.tick())
+    switch.hold(switch.latest(), "the station's configuration was changed by another manager")
+    clock.advance(10 * HOLD_BACKOFF)
+    asyncio.run(switch.tick())
+    assert switch.held() and "retry_at" not in switch.held()
+
+
+def test_a_hold_from_before_bounded_holds_gets_its_backoff(tmp_path):
+    switch, pod, clock, store = rig(tmp_path)
+    store.conflict(
+        "pod-1", {"operation_id": None, "reason": "switch not confirmed within the deadline"}
+    )
+    asyncio.run(switch.tick())
+    held = switch.held()
+    assert held["attempt"] == 1 and held["retry_at"] == clock.monotonic() + HOLD_BACKOFF
+    assert len(pod.sent) == 0
+    clock.advance(HOLD_BACKOFF)
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == 1 and not switch.held()
 
 
 def test_only_an_operator_release_lets_a_held_pod_switch_again(tmp_path):

@@ -772,10 +772,15 @@ The agent makes the switch itself when its configuration has
   station with `multi_ap=backhaul_sta` and `wds=true` on the configured SSID
   and upstream BSSID (its `parent`), and it is `cm`'s only uplink in use.
 - **Held:** a switch not applied within 90 s becomes `TIMED_OUT`. EMOSA then
-  holds the pod on option 2 and MUST NOT switch it again on its own, except
-  after a kept target (see Moved). So does a switch that fails or is rejected
-  by OVSDB, and one whose station configuration another manager changes on
-  the same start. A new admission (§4 `forget`) clears the hold.
+  holds the pod on option 2. So does a switch that fails or is rejected by
+  OVSDB, and one whose station configuration another manager changes on the
+  same start. A failed switch's hold is bounded: after a backoff
+  (`uplink.hold_backoff`, 600 s) EMOSA switches the pod again, once, on the same
+  start or a later one; held again, the backoff doubles, up to
+  `uplink.hold_backoff_cap` (9600 s). An applied switch clears the backoff. The
+  hold, its attempt and when it ends are in the agent's status. Another
+  manager's change holds until a new admission (§4 `forget`), which clears any
+  hold. A kept target is the exception: see Moved.
 - **Reported:** while the switch is applied, the backhaul is reported as in
   §3.3.
 - **Moved:** a Backhaul Steering Request (§2.4) for the pod's backhaul station

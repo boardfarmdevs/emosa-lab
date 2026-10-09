@@ -13,6 +13,9 @@
 #include "view.h"
 
 #define EM_UPLINK_BANDS 3
+/* a failed switch's hold: the first wait before the switch is made again, and the longest */
+#define EM_UPLINK_HOLD_BACKOFF 600
+#define EM_UPLINK_HOLD_BACKOFF_CAP 9600
 
 typedef struct {
     em_ovsdb *ovs;
@@ -28,6 +31,11 @@ typedef struct {
     cJSON *(*transact)(void *ctx, const cJSON *operations);
     void *transact_ctx;
     double (*monotonic)(void);
+    /* a failed switch's hold (spec 8.3): seconds before the switch is made again, doubled with
+     * each held retry up to the cap (0: EM_UPLINK_HOLD_BACKOFF, EM_UPLINK_HOLD_BACKOFF_CAP); the
+     * wall clock it is kept in (NULL: time()) */
+    double hold_backoff, hold_backoff_cap;
+    double (*wall)(void);
     /* credentials: fixed (configuration) or the AP scope's applied M2 set */
     bool fixed_credentials;
     char fixed_ssid[33], fixed_ref[97];

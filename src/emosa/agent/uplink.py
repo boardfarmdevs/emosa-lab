@@ -22,8 +22,12 @@ different scope from the fronthaul BSS, with its own lifecycle rules.
   ``cm``'s only uplink, on the same instance the switch was written to.
 - **Held:** a switch that is not confirmed within the deadline (the pod has
   restarted to option 2, or will), or is rejected, or is changed by another
-  manager, holds the pod on option 2. EMOSA never retries on its own. A new
-  admission clears the hold, because the fleet archives the agent's state.
+  manager, holds the pod on option 2. A failed switch's hold is bounded: after
+  a backoff (``hold_backoff``, 10 minutes, doubling with each held retry to
+  ``hold_backoff_cap``, 160 minutes) the switch is made again, once, and an
+  applied one clears the hold; another manager's change holds until a new
+  admission. A new admission clears any hold, because the fleet archives the
+  agent's state.
 - **Moved** on the controller's Backhaul Steering Request (``steer``): the station
   is pinned to the target BSS instead, by the same switch, while the pod is on
   its EasyMesh backhaul. A target on another band moves the uplink to the pod's
@@ -40,6 +44,7 @@ different scope from the fronthaul BSS, with its own lifecycle rules.
 
 import json
 import logging
+import time
 
 from emosa.errors import EmosaError, Reason
 from emosa.model import ACTIVE, State
@@ -50,6 +55,10 @@ from emosa.reconcile import Engine
 log = logging.getLogger("emosa.agent.uplink")
 DEADLINE = 90  # observed: adopted in 27 s; OpenSync restarts a failed uplink in 40-120 s
 SOURCE = "uplink-policy"
+# a failed switch's hold: the first wait before the switch is made again, doubled with each
+# held retry up to the cap (spec 8.3); seconds of wall time, kept in the hold's record
+HOLD_BACKOFF, HOLD_BACKOFF_CAP = 600, 9600
+OWNERSHIP_HOLD = "the station's configuration was changed by another manager"
 
 
 class UplinkSwitch:
@@ -65,12 +74,18 @@ class UplinkSwitch:
         run_id,
         settled=None,
         clock=None,
+        hold_backoff=HOLD_BACKOFF,
+        hold_backoff_cap=HOLD_BACKOFF_CAP,
+        wall=None,
     ):
         """``credentials()`` -> (ssid, secret_ref) of the EasyMesh backhaul, or None.
 
         ``bssid`` is the upstream backhaul BSS the station is pinned to.
         ``settled()`` is true while the fronthaul scope is served and idle.
+        ``wall()``: seconds of wall time, for a hold's backoff (default time.time).
         """
+        self.hold_backoff, self.hold_backoff_cap = hold_backoff, hold_backoff_cap
+        self.wall = wall or time.time
         self.pod_id, self.backend, self.store = pod_id, backend, store
         self.credentials, self.bssid, self.run_id = credentials, bssid, run_id
         self.settled = settled or (lambda: True)
@@ -85,6 +100,8 @@ class UplinkSwitch:
         # {"target", "previous", "station", "previous_station", "result"} of the latest move
         self.move = None
         self.target_path = store.directory / "target.json"
+        # a held switch being made again: its hold's attempt (spec 8.3)
+        self.hold_path = store.directory / "hold.json"
         # after a kept target failed: that switch's start and intent, until the pod is off it
         self.fallback_after = None
         try:
@@ -104,11 +121,51 @@ class UplinkSwitch:
         return self.store.ownership(self.pod_id)
 
     def hold(self, op, reason):
-        if not self.held():
-            log.warning("uplink held on option 2: %s", reason)
-            self.store.conflict(
-                self.pod_id, {"operation_id": op.operation_id if op else None, "reason": reason}
+        """Hold the pod on option 2. A failed switch's hold is bounded: the switch is made
+        again after a backoff that doubles with each held retry (spec 8.3)."""
+        if self.held():
+            return
+        evidence = {"operation_id": op.operation_id if op else None, "reason": reason}
+        if reason != OWNERSHIP_HOLD:
+            attempt = (self._retry() or 0) + 1
+            wait = min(self.hold_backoff * 2 ** (attempt - 1), self.hold_backoff_cap)
+            now = self.wall()
+            evidence.update(held_at=now, attempt=attempt, retry_at=now + wait)
+            log.warning(
+                "uplink held on option 2: %s; switching again in %d s (hold %d)",
+                reason,
+                wait,
+                attempt,
             )
+        else:
+            log.warning("uplink held on option 2: %s", reason)
+        self.store.conflict(self.pod_id, evidence)
+
+    def _hold_over(self):
+        """A bounded hold's backoff is over: the hold released, its attempt kept in hold.json
+        for the next hold's backoff and the retry's switch."""
+        record = self.held()
+        if record is None or record.get("reason") == OWNERSHIP_HOLD:
+            return record is None
+        if "retry_at" not in record:
+            # held before holds were bounded: its backoff starts now
+            now = self.wall()
+            record.update(held_at=now, attempt=1, retry_at=now + self.hold_backoff)
+            self.store.conflict(self.pod_id, record)
+            return False
+        if self.wall() < float(record["retry_at"]):
+            return False
+        self.hold_path.write_text(json.dumps({"attempt": int(record.get("attempt", 1))}) + "\n")
+        self.store.release(self.pod_id)
+        log.info("uplink hold %s over: switching again", record.get("attempt"))
+        return True
+
+    def _retry(self):
+        """The attempt of the hold whose switch is being made again, or None."""
+        try:
+            return int(json.loads(self.hold_path.read_text())["attempt"])
+        except (OSError, ValueError, KeyError, TypeError):
+            return None
 
     def _save(self, op, payload=None):
         self.engine._save(op, payload)
@@ -133,6 +190,9 @@ class UplinkSwitch:
                 op.application_evidence, op.reason = evidence, None
                 self._save(op, {"observation": self.backend.facts})
                 log.info("uplink on the EasyMesh backhaul: %s", self.backend.facts)
+                if self._retry() is not None:
+                    self.hold_path.unlink(missing_ok=True)
+                    log.info("uplink switch applied on its retry: the hold's backoff cleared")
             elif self.engine._expired(op):
                 op.original_outcome, op.deadline_elapsed = op.state, True
                 transition(op, State.TIMED_OUT)
@@ -147,7 +207,7 @@ class UplinkSwitch:
             if same_start and not self.engine._matches(snap.config, target):
                 op.reason = Reason.OWNERSHIP_CONFLICT
                 self._save(op, {"observation": self.backend.facts})
-                self.hold(op, "the station's configuration was changed by another manager")
+                self.hold(op, OWNERSHIP_HOLD)
         elif op.state in (State.REJECTED, State.FAILED, State.OWNERSHIP_CONFLICT):
             # Only a rejection before anything was sent may be retried, on a later start.
             if self._move_failed(op, f"{op.state.lower()}: {op.reason}"):
@@ -277,7 +337,7 @@ class UplinkSwitch:
 
     def _wanted(self, op, snap):
         """The intent to request now, or None (``self.waiting`` says why)."""
-        if self.held():
+        if self.held() and not self._hold_over():
             self.waiting = "held on option 2"
             return None
         if not snap.ready:
@@ -343,6 +403,9 @@ class UplinkSwitch:
         wanted = vault.fingerprint({**intent.record(), "target": intent.target(vault)})
         # one switch per start and credential, and per move of the controller's
         key = f"{self.backend.instance}:{wanted[:16]}" + (f":{self.moves}" if self.moves else "")
+        retry = self._retry()
+        if retry is not None:  # a held switch made again: one of its own, on the same start too
+            key += f":retry{retry}"
         op = self.engine.request(
             intent, source=SOURCE, key=key, run_id=self.run_id, deadline=DEADLINE
         )
