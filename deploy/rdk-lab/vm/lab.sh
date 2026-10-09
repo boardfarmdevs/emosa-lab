@@ -39,6 +39,9 @@
 #                                     lost is replaced, and the controller forgets the agent)
 #   lab.sh forget [POD...]            these pods' agents (all EMOSA agents without one) out of
 #                                     the controller's model, to be learned anew
+#   lab.sh snapshot [POD...]          each pod's EMOSA evidence (agent state and journals, logs,
+#                                     the pod's tables) into $STATE/snapshots; backhaul, repod
+#                                     and forget take one first
 #   lab.sh client NAME SSID KEY       a Wi-Fi client on one pool radio
 #   lab.sh medium                     regenerate wmediumd's radios (guests: user.wmediumd.guest)
 #   lab.sh telemetry [POD...]         MQTT broker (mutual TLS) for the pods' own statistics; every
@@ -480,6 +483,45 @@ pods_json() {    # the fleet's per-pod settings: a pod on Wi-Fi backhaul, pinned
     printf '}'
 }
 
+SNAPSHOTS=$STATE/snapshots    # snapshot's evidence, the newest 20 kept
+snapshot() {    # snapshot [POD...]: each pod's EMOSA evidence before anything resets it (every running pod without one)
+    # The agent's state (its status and journals: the operations, their reasons and
+    # evidence), its log and the fleet's, and the pod's own tables, wherever EMOSA runs.
+    # The recovery commands (backhaul, repod, forget) take one first: their agent restart or
+    # new pod loses the run that needed them (rdk-1004, 9 October: pod-1's uplink
+    # APPLY_TIMEOUT, its evidence gone with the agent's restart). Prints the directory.
+    local dir pod serial where root pods=("$@")
+    [ "${#pods[@]}" -gt 0 ] || mapfile -t pods < <(pods_running)
+    where=$(emosa_where)
+    root=$(emosa_root)
+    dir=$SNAPSHOTS/$(date -u +%Y%m%dT%H%M%SZ)-${SNAPSHOT_FOR:-snapshot}
+    mkdir -p "$dir"
+    for pod in "${pods[@]}"; do
+        serial=$(pod_serial "$pod")
+        if [ -z "$serial" ]; then
+            echo "no serial (OpenSync not up)" > "$dir/$pod-unavailable.txt"
+            continue
+        fi
+        cx "$where" tar -C "$root" -czf - "$serial" > "$dir/$pod-$serial-state.tgz" 2>/dev/null || true
+        if in_gateway; then
+            # shellcheck disable=SC2016 # expanded where EMOSA runs
+            cx "$where" sh -c 'cat /rdklogs/logs/EMOSA_"$1".txt.* 2>/dev/null' sh "$serial" \
+                > "$dir/$pod-$serial-agent.log" || true
+        else
+            cx "$where" journalctl -q --no-pager -u "emosa-agent@$serial" --since -2h \
+                > "$dir/$pod-$serial-agent.log" 2>/dev/null || true
+        fi
+        cx "$pod" ovsdb-client dump --format=json > "$dir/$pod-ovsdb.json" 2>/dev/null || true
+    done
+    if in_gateway; then
+        cx "$where" sh -c 'cat /rdklogs/logs/EMOSAFleetLog.txt.* 2>/dev/null' > "$dir/fleet.log" || true
+    else
+        cx "$where" journalctl -q --no-pager -u emosa-fleet --since -2h > "$dir/fleet.log" 2>/dev/null || true
+    fi
+    find "$SNAPSHOTS" -mindepth 1 -maxdepth 1 -type d | sort | head -n -20 | xargs -r rm -rf
+    echo "$dir"
+}
+
 agent_reconfigure() {    # rewrite a bound pod's agent configuration from the fleet's, restart it
     # and release its uplink hold (EMOSA's option 2 after a failed switch): choosing the pod's
     # backhaul is the operator's decision a hold waits for. Prints "released" if it held.
@@ -525,6 +567,8 @@ backhaul() {    # backhaul wired|wifi [POD...]: the pods' uplink
     shift
     pods=${*:-$(pods_running)}
     [ -n "$pods" ] || die "no pod is running"
+    # shellcheck disable=SC2086 # one pod a word
+    log "backhaul: evidence first, $(SNAPSHOT_FOR=backhaul snapshot $pods)"
     for pod in $pods; do
         running "$pod" || die "$pod is not running"
         lxc config set "$pod" user.emosa.backhaul "$mode"
@@ -622,6 +666,7 @@ move() {    # move POD TARGET [CHANNEL]: the controller steers POD's backhaul to
 repod() {
     local name=${1:-pod-1} before
     if exists "$name"; then
+        log "repod: evidence first, $(SNAPSHOT_FOR=repod snapshot "$name")"
         lxc delete -f "$name"
         radios_await "$name"
     fi
@@ -721,6 +766,7 @@ forget_pods() {    # every EMOSA agent's rows out of the controller's model
 }
 forget() {    # forget [POD...]: these pods' agents (all of the fleet's without one) out of the controller
     local pod als=()
+    log "forget: evidence first, $(SNAPSHOT_FOR=forget snapshot "$@")"
     [ "$#" -gt 0 ] || { forget_pods; return; }
     for pod in "$@"; do als+=("$(agent_al "$pod")"); done
     forget_agents "${als[@]}"
@@ -1030,6 +1076,7 @@ case ${1:-} in
     telemetry) shift; telemetry "$@" ;;
     repod) shift; repod "$@" ;;
     forget) shift; forget "$@" ;;
+    snapshot) shift; snapshot "$@" ;;
     client) shift; client "$@" ;;
     *) awk 'NR > 1 && !/^#/ {exit} NR > 1' "$0"; exit 1 ;;    # the header's usage, all of it
 esac
