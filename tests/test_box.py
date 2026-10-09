@@ -432,6 +432,19 @@ def test_another_managers_change_to_the_switched_station_holds_the_pod(agent, tm
     assert result["passed"], result
 
 
+@pytest.mark.parametrize("parent", ["empty", "other"])
+def test_a_switch_to_the_bss_in_use_stays_applied_whatever_the_vif_parent(agent, parent, tmp_path):
+    result = box(f"uplink-reswitch-parent-{parent}", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
+def test_a_pod_started_again_mid_switch_holds_it_as_a_failed_switch(agent, tmp_path):
+    # rdk-1004, 9 October: lab.sh up stopped on pod-1's uplink APPLY_TIMEOUT (spec 8.3)
+    result = box("uplink-instance-change", agent, tmp_path / "box", timeout=400)
+    assert result["passed"], result
+    assert result["held"]["reason"] == "switch not confirmed within the deadline"
+
+
 def test_a_moved_upstream_is_kept_when_the_agent_starts_again(agent, tmp_path):
     result = box("backhaul-steering-kept", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result

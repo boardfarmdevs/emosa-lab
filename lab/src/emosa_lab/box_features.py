@@ -14,18 +14,22 @@ from emosa_lab.box import (
     AUTOCONFIG_SEARCH,
     AUTOCONFIG_WSC,
     BACKHAUL_PARENT,
+    BACKHAUL_STATION,
     REGISTRAR_SSID,
     STATIONS,
     TARGET_PARENT,
     UPLINK,
     backhaul_on,
     backhaul_steering,
+    backhaul_steering_request,
+    next_message,
     now_ms,
     onboarded,
     pinned,
     pod_statistics,
     provision,
     publish,
+    steering_answer,
     steering_request,
     steering_rows,
     telemetry_applied,
@@ -266,6 +270,94 @@ async def uplink_held(box):
 
 async def _credential_for(box, ssid):
     return [c for c in await credentials(box) if c.get("ssid") == ssid]
+
+
+SWITCH_DEADLINE = 95  # past an uplink switch's 90 s to be confirmed (spec 8.3)
+
+
+async def _reswitch_in_use(box, vif_parent):
+    """(a) of rdk-1004's lab.sh up stopping on pod-1's uplink APPLY_TIMEOUT (9 October): a
+    Backhaul Steering Request to the BSS the station is already on, the station's
+    Wifi_VIF_Config parent empty or another BSS's: answered success, and past the switch's
+    deadline the uplink still applied, the pod not held."""
+    if not await backhaul_on(box):
+        return box.result(passed=False, failed="uplink switch not applied")
+    uuid, _ = await box.vif("Wifi_VIF_Config", UPLINK["station"])
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_VIF_Config",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "row": {"parent": vif_parent or ["set", []]},
+            }
+        ]
+    )
+    answered = len(box.sent(0x801A))
+    mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, BACKHAUL_PARENT),)
+    )
+    ack = await box.until(lambda: box.controller.reply(ACK, mid), seconds=5)
+    response = await next_message(box, 0x801A, answered, seconds=60)
+    answer = steering_answer(response)
+    await asyncio.sleep(SWITCH_DEADLINE)
+    operation = uplink_operation(box)
+    held = uplink_status(box).get("held")
+    return box.result(
+        passed=bool(ack)
+        and answer == (BACKHAUL_STATION, BACKHAUL_PARENT, 0)
+        and operation.get("state") == "OBSERVED_APPLIED"
+        and not held,
+        acked=bool(ack),
+        answer=answer,
+        operation=operation.get("state"),
+        reason=operation.get("reason"),
+        held=held,
+    )
+
+
+async def uplink_reswitch_parent_empty(box):
+    return await _reswitch_in_use(box, None)
+
+
+async def uplink_reswitch_parent_other(box):
+    return await _reswitch_in_use(box, "02:00:00:00:19:09")
+
+
+async def uplink_instance_change(box):
+    """(b) of rdk-1004's lab.sh up stopping on pod-1's uplink APPLY_TIMEOUT (9 October): the
+    pod's OpenSync starts again (a new database, a new instance) after EMOSA committed its
+    uplink switch and before the station was confirmed on it. spec 8.3 takes that for the
+    switch's failure (OpenSync restarts a pod to its bootstrap uplink when its router checks
+    fail): the switch cannot be confirmed on the new start, times out (APPLY_TIMEOUT) and holds
+    the pod on option 2, and EMOSA does not switch it again on its own. Both agents."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    written = await until_async(lambda: _credential_for(box, box.uplink["ssid"]), seconds=60)
+    if not written:
+        return box.result(passed=False, failed="uplink switch not written")
+    first = uplink_operation(box).get("operation_id")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    await box.new_pod_database()
+    again = await provision(box, searches, m1s)
+    held = await box.until(lambda: uplink_status(box).get("held"), seconds=SWITCH_DEADLINE + 40)
+    operation = uplink_operation(box)
+    await asyncio.sleep(10)
+    switched_again = bool(await _credential_for(box, box.uplink["ssid"]))
+    return box.result(
+        passed=bool(again)
+        and bool(held)
+        and operation.get("operation_id") == first
+        and operation.get("state") == "TIMED_OUT"
+        and operation.get("reason") == "APPLY_TIMEOUT"
+        and not switched_again,
+        provisioning_again=again,
+        held=held,
+        operation=operation.get("operation_id"),
+        state=operation.get("state"),
+        reason=operation.get("reason"),
+        switched_again_on_the_new_start=switched_again,
+    )
 
 
 async def uplink_foreign_change(box):
@@ -534,6 +626,9 @@ SCENARIOS = {
     "wired-uplink": wired_uplink,
     "uplink-held": uplink_held,
     "uplink-foreign-change": uplink_foreign_change,
+    "uplink-reswitch-parent-empty": uplink_reswitch_parent_empty,
+    "uplink-reswitch-parent-other": uplink_reswitch_parent_other,
+    "uplink-instance-change": uplink_instance_change,
     "backhaul-steering-kept": backhaul_steering_kept,
     "backhaul-kept-gone": backhaul_kept_gone,
     "telemetry-broker-restart": telemetry_broker_restart,
@@ -560,6 +655,12 @@ OPTIONS = {
     "wired-uplink": {"wired": True},
     "uplink-held": {"backhaul": True, "uplink": {**UPLINK, "ssid": "emosa-lab-elsewhere"}},
     "uplink-foreign-change": {"backhaul": True},
+    "uplink-reswitch-parent-empty": {"backhaul": True},
+    "uplink-reswitch-parent-other": {"backhaul": True},
+    "uplink-instance-change": {
+        "backhaul": True,
+        "uplink": {**UPLINK, "ssid": "emosa-lab-elsewhere"},
+    },
     "backhaul-steering-kept": {"backhaul": True},
     "backhaul-kept-gone": {"backhaul": True, "kept_target": GONE_PARENT},
     "telemetry-broker-restart": {"telemetry": True},
