@@ -892,6 +892,15 @@ up() {    # up [python|c] [gateway]: the EMOSA option of the RDK lab, every step
         # (gateway.sh on); the containers it replaced, if any are left, deleted; the rooms
         wan_address    # the operator's redirect listens on it
         for pod in $(lxc list -c n -f csv | grep -E '^pod-[0-9]+$'); do pod_links "$pod"; done
+        # A pod given new radios (repod: one that did not come back from its deleted container
+        # is replaced) reaches EMOSA only once the medium has them, and gateway.sh on waits for
+        # every pod's agent (rdk-1004, 9 October: 1 of 2 provisioned after 5 minutes). The
+        # medium pins the pods' links to their stations, which exist once OpenSync is up; it
+        # restarts only when its configuration changed, and the rooms below settle the lab.
+        for pod in $(pods_running); do
+            for _ in $(seq 60); do [ -n "$(pod_serial "$pod")" ] && break; sleep 2; done
+        done
+        medium
         bash "$HERE/gateway.sh" on
         retire
         if pods_on_wifi; then
