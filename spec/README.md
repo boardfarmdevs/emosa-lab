@@ -907,8 +907,15 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
 - **The parent's own uplink.** When the pod's backhaul station on that radio is its uplink in
   use (a parent that is itself a child: a radio carrying both its uplink station and the parent
   AP), the station stays: the parent AP takes the station's channel, and the station stays
-  pinned to its upstream BSSID (§8.3), so it never joins its own AP. Only a station that is not
-  the uplink in use is disabled (a wired parent: it would find only its own AP).
+  pinned to its upstream BSSID (§8.3), so it never joins its own AP. On a wired parent (the
+  uplink in use, `Connection_Manager_Uplink.is_used`, is wired) the station on the parent AP's
+  radio is kept off, and that is the pod's: its fallback (`pod-bh-fallback`, which owns the
+  `bhaul-sta-*` rows that its bootstrap creates) holds the station off while the wired uplink is
+  in use, and lifts the hold the moment it is not, when EMOSA may not reach the pod at all: the
+  station comes up at once, pinned to its upstream, a Wi-Fi uplink within about 10 to 20 s. On a
+  one-channel radio a linked station would drag the AP onto the upstream's channel, and its scans
+  pause the AP's beacons. EMOSA writes no `bhaul-sta-*` column but those the uplink switch moves
+  on the uplink station (§8.3: `credential_configs`, `multi_ap`); `enabled` is the pod's.
 - **Fallback and return.** When the uplink moves off that radio (a fallback to another band),
   the parent AP stays up at its channel and keeps its children, while the parent's own traffic
   takes the fallback. When the uplink returns on the same channel, nothing moves. On another
@@ -964,8 +971,8 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   `Wifi_Inet_Config` and every child's tunnel row, port and interface, in one guarded
   transaction; the children's `cm` then falls back to their bootstrap path.
 - **Written** (§3.2), each change one guarded transaction: the parent AP (`insert` or `update
-  Wifi_VIF_Config`, `mutate Wifi_Radio_Config vif_configs`, `update` the pod's station on that
-  radio `enabled=false`, `insert` or `update Wifi_Inet_Config` of the AP); a child's tunnel
+  Wifi_VIF_Config`, `mutate Wifi_Radio_Config vif_configs`, `insert` or `update
+  Wifi_Inet_Config` of the AP); a child's tunnel
   (`insert Wifi_Inet_Config` gre row, `insert Interface`, `insert Port`, `mutate Bridge br-home
   ports`); the withdrawal and a child's departure as the matching deletes. Read besides §3.2's:
   `DHCP_leased_IP` (`hwaddr`, `inet_addr`), `Wifi_Inet_State` (`if_name`, `inet_addr`), `Bridge`
