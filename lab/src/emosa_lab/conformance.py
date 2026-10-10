@@ -621,6 +621,18 @@ def fleet_session_vectors():
             {"fleet_config": {**base, "topology_query_window": 120}},
             {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500001.25},
         ],
+        # spec 8.6: with the site's GTP underlay, each pod's underlay as a GRE parent, kept;
+        # the GTP underlay moved onto one: allocated again as the fleet starts, before the
+        # agents; without a GTP underlay none reaches the agents, and the registry keeps them
+        "gre-parent-underlays": [
+            {"fleet_config": {**base, "gtp_underlay": "169.254.1.0/24"}},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},
+            {"arrival": [{"rows": [node("MVXPOD02D7777EF0D9")]}], "now": 1759500000.5},
+            {"fleet_config": {**base, "gtp_underlay": "169.254.2.0/25"}},
+            {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500001.25},
+            {"fleet_config": base},
+            {"fleet_config": {**base, "gtp_underlay": "169.254.2.0/25"}},
+        ],
         "own-settings-restart-the-agent": [
             {"fleet_config": base},
             {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500000.25},

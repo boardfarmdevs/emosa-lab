@@ -89,7 +89,8 @@ class Registry:
 
     With the site's GTP underlay given (fleet ``gtp_underlay``), every entry also holds the
     underlay it uses as a GRE parent (spec 8.6), allocated on first sight like its port and kept;
-    one that overlaps the GTP underlay (its configuration changed) is allocated again."""
+    one that overlaps the GTP underlay (its configuration changed) is allocated again, at the
+    pod's next arrival or the fleet's next start, whichever comes first."""
 
     def __init__(self, path, ports, *, reserved_als=(), gtp_underlay=None):
         self.path, self.ports = Path(path), tuple(ports)
@@ -105,6 +106,29 @@ class Registry:
             return mine
         used = {a["underlay"] for a in self.agents.values() if a is not entry and "underlay" in a}
         return free_underlay(self.gtp_underlay, used)
+
+    def _place(self, entry):
+        """The entry's underlay brought in line with the GTP underlay; whether it changed."""
+        underlay = self._underlay(entry)
+        if underlay is None:
+            log.warning("%s: no 169.254.N.0/24 left for its GRE parent underlay", entry["pod_id"])
+        if underlay == entry.get("underlay"):
+            return False
+        if underlay is None:
+            del entry["underlay"]
+        else:
+            entry["underlay"] = underlay
+        return True
+
+    def settle(self):
+        """At the fleet's start, before its agents start: every entry's underlay placed, in
+        the registry's order (by serial), and the registry saved when one changed."""
+        if self.gtp_underlay is None:
+            return
+        with self.lock:
+            self._load()
+            if [serial for serial in sorted(self.agents) if self._place(self.agents[serial])]:
+                self._save()
 
     def _load(self):
         try:
@@ -147,12 +171,7 @@ class Registry:
                 handovers=entry["handovers"] + 1,
             )
             if self.gtp_underlay is not None:
-                underlay = self._underlay(entry)
-                if underlay is None:
-                    entry.pop("underlay", None)
-                    log.warning("%s: no 169.254.N.0/24 left for its GRE parent underlay", serial)
-                elif underlay != entry.get("underlay"):
-                    entry["underlay"] = underlay
+                self._place(entry)
             self._save()
             return dict(entry)
 
@@ -319,6 +338,7 @@ class Fleet:
         does, without waiting for the pod to come back through the front port: an image
         upgrade keeps the registry and the configurations (on /nvram), not the agents'
         enabled units. In the registry's order (by serial); a failed start is logged."""
+        self.registry.settle()
         with self.registry.lock:
             self.registry._load()
             agents = self.registry.agents

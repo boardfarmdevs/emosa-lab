@@ -4,6 +4,8 @@
 
 #include "canon.h"
 
+#include <arpa/inet.h>
+#include <ctype.h>
 #include <errno.h>
 #include <openssl/sha.h>
 #include <stdio.h>
@@ -88,6 +90,80 @@ static em_fleet_entry *append(em_registry *r)
 
 static char *dup_or_null(const char *s) { return s ? em_strdup(s) : NULL; }
 
+/* -- the underlays of GRE parents (spec 8.6) ----------------------------------------- */
+
+static uint32_t prefix_mask(int len) { return len ? 0xffffffffu << (32 - len) : 0; }
+
+/* a.b.c.d/len as its network, host bits cleared (ipaddress.ip_network(strict=False)) */
+static bool parse_network(const char *text, uint32_t *net, int *len)
+{
+    char address[16];
+    const char *slash = strchr(text, '/');
+    if (!slash || (size_t)(slash - text) >= sizeof(address) || !isdigit((unsigned char)slash[1]))
+        return false;
+    memcpy(address, text, (size_t)(slash - text));
+    address[slash - text] = 0;
+    char *end = NULL;
+    long n = strtol(slash + 1, &end, 10);
+    struct in_addr in;
+    if (*end || n > 32 || inet_pton(AF_INET, address, &in) != 1)
+        return false;
+    *len = (int)n;
+    *net = ntohl(in.s_addr) & prefix_mask(*len);
+    return true;
+}
+
+static bool overlaps(uint32_t a, int alen, uint32_t b, int blen)
+{
+    uint32_t mask = prefix_mask(alen < blen ? alen : blen);
+    return (a & mask) == (b & mask);
+}
+
+bool em_free_underlay(const em_registry *r, const char *gtp, const em_fleet_entry *skip, char out[20])
+{
+    uint32_t g;
+    int glen;
+    if (!parse_network(gtp, &g, &glen))
+        return false;
+    for (int n = 1; n < 255; n++) {
+        char candidate[20];
+        EM_FORMAT_FIXED(candidate, sizeof(candidate), "169.254.%d.0/24", n);
+        bool used = overlaps(0xa9fe0000u | (uint32_t)n << 8, 24, g, glen);
+        for (size_t i = 0; i < r->count && !used; i++)
+            used = &r->entries[i] != skip && !strcmp(r->entries[i].underlay, candidate);
+        if (!used) {
+            memcpy(out, candidate, sizeof(candidate));
+            return true;
+        }
+    }
+    return false;
+}
+
+/* the entry's underlay brought in line with the registry's GTP underlay: kept while it does
+ * not overlap it, else the lowest free one ("" when none is left); whether it changed */
+static bool place(em_registry *r, em_fleet_entry *e)
+{
+    uint32_t g, mine;
+    int glen, mlen;
+    if (!parse_network(r->gtp_underlay, &g, &glen))
+        return false;
+    if (e->underlay[0] && parse_network(e->underlay, &mine, &mlen) && !overlaps(mine, mlen, g, glen))
+        return false;
+    char underlay[20] = "";
+    (void)em_free_underlay(r, r->gtp_underlay, e, underlay);
+    bool changed = strcmp(underlay, e->underlay) != 0;
+    memcpy(e->underlay, underlay, sizeof(underlay));
+    return changed;
+}
+
+bool em_registry_settle(em_registry *r)
+{
+    bool changed = false;
+    for (size_t i = 0; r->gtp_underlay[0] && i < r->count; i++)
+        changed = place(r, &r->entries[i]) || changed;
+    return changed;
+}
+
 static void set_identity(em_fleet_entry *e, const char *node_id, const char *model, const char *firmware)
 {
     em_fleet_entry_clear(e);
@@ -133,6 +209,8 @@ em_fleet_entry *em_registry_assign(em_registry *r, const char *serial, const cha
     set_identity(e, node_id, model, firmware);
     e->last_seen = now;
     e->handovers++;
+    if (r->gtp_underlay[0])
+        (void)place(r, e);
     return e;
 }
 
@@ -163,6 +241,8 @@ cJSON *em_fleet_entry_json(const em_fleet_entry *e)
     cJSON_AddItemToObject(o, "model", string_or_null(e->model));
     cJSON_AddItemToObject(o, "firmware", string_or_null(e->firmware));
     cJSON_AddNumberToObject(o, "last_seen", e->last_seen);
+    if (e->underlay[0])
+        cJSON_AddStringToObject(o, "underlay", e->underlay);
     return o;
 }
 
@@ -237,6 +317,11 @@ bool em_registry_load(em_registry *r, const char *text)
         if (ok && !(member_optional(item, "node_id", &e.node_id) && member_optional(item, "model", &e.model) &&
                     member_optional(item, "firmware", &e.firmware)))
             ok = false;
+        uint32_t net;
+        int len;
+        if (ok && cJSON_GetObjectItemCaseSensitive(item, "underlay") &&
+            !(member_text(item, "underlay", e.underlay, sizeof(e.underlay)) && parse_network(e.underlay, &net, &len)))
+            ok = false;
         if (!ok) {
             em_fleet_entry_clear(&e);
             break;
@@ -295,6 +380,9 @@ cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet)
     const cJSON *window = cJSON_GetObjectItemCaseSensitive(fleet, "topology_query_window");
     if (window)
         cJSON_AddItemToObject(c, "topology_query_window", cJSON_Duplicate(window, 1));
+    /* its underlay as a GRE parent (spec 8.6), while the fleet allocates them */
+    if (e->underlay[0] && cJSON_GetObjectItemCaseSensitive(fleet, "gtp_underlay"))
+        cJSON_AddStringToObject(c, "underlay", e->underlay);
     const char *root = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(fleet, "state_root"));
     /* a state directory that does not fit is left out, and the agent refuses its
      * configuration, rather than given a cut path, which would be another directory */
@@ -366,6 +454,10 @@ bool em_fleet_open(em_fleet *f, cJSON *config, char *why, size_t size)
     if (!em_copy(f->registry.reserved_al, sizeof(f->registry.reserved_al), config_text(config, "controller_al", "")) ||
         !em_format(f->registry_path, sizeof(f->registry_path), "%s/fleet.json", f->state_root)) {
         (void)em_format(why, size, "state_root or controller_al too long");
+        return false;
+    }
+    if (!em_copy(f->registry.gtp_underlay, sizeof(f->registry.gtp_underlay), config_text(config, "gtp_underlay", ""))) {
+        (void)em_format(why, size, "gtp_underlay too long");
         return false;
     }
     bool ok = reload(f);
@@ -496,6 +588,14 @@ size_t em_fleet_start_registered(em_fleet *f, void (*start)(void *ctx, const cha
 {
     if (!reload(f))
         return SIZE_MAX;
+    /* the underlays first, so the agents start with theirs: saved before any is handed out */
+    if (em_registry_settle(&f->registry)) {
+        char *registry = em_registry_dump(&f->registry);
+        bool saved = registry && em_write_file(f->registry_path, registry, true);
+        free(registry);
+        if (!saved)
+            return SIZE_MAX;
+    }
     size_t failed = 0;
     for (size_t i = 0; i < f->registry.count; i++) {
         const em_fleet_entry *e = &f->registry.entries[i];

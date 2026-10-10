@@ -134,6 +134,29 @@ def test_registry_allocates_each_pod_an_underlay_only_with_a_gtp_underlay(tmp_pa
 
 
 @pytest.mark.unit
+def test_a_restarted_fleet_places_the_underlays_before_its_agents_start(tmp_path):
+    """A registered pod's agent starts without the pod at the front port, so an underlay the
+    GTP underlay moved onto is allocated again at the fleet's start, and one is allocated to
+    an entry from before the fleet had a GTP underlay."""
+    started = []
+    fleet = make_fleet(tmp_path, started)
+    fleet.registry.assign({"serial_number": "A"})
+    fleet = make_fleet(tmp_path, started, gtp_underlay="169.254.1.0/24")
+    fleet.registry.assign({"serial_number": "B"})
+    assert fleet.registry.agents["B"]["underlay"] == "169.254.2.0/24"
+    del started[:]
+    fleet = make_fleet(tmp_path, started, gtp_underlay="169.254.2.0/25")
+    fleet.start_registered()
+    configs = {p: json.loads((tmp_path / "etc" / f"{p}.json").read_text()) for p in "AB"}
+    assert (configs["A"]["underlay"], configs["B"]["underlay"]) == (
+        "169.254.1.0/24",
+        "169.254.3.0/24",
+    )
+    saved = json.loads((tmp_path / "state" / "fleet.json").read_text())
+    assert [saved[p]["underlay"] for p in "AB"] == ["169.254.1.0/24", "169.254.3.0/24"]
+
+
+@pytest.mark.unit
 def test_every_pod_gets_its_own_agent_and_is_handed_to_its_port(tmp_path):
     started = []
     fleet = make_fleet(tmp_path, started, multi_bss=True)

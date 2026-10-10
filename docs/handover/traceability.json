@@ -142,8 +142,10 @@
       "python": ["test_peers.py"]
     },
     "README 8.6 A pod as the GRE parent of other pods (draft)": {
+      "vectors": ["fleet-sessions.json"],
       "python": ["test_fleet.py"],
-      "note": "only the fleet registry's underlay so far; the agents, vectors and box scenarios follow"
+      "units": ["fleet_underlays"],
+      "note": "only the fleet registry's underlay so far; the agents and box scenarios follow"
     },
     "README 9. Not covered yet": {
       "note": "not implemented, so not tested: the list is what EMOSA does not do"

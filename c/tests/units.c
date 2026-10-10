@@ -24,6 +24,7 @@
 #include "channel_store.h"
 #include "engine.h"
 #include "ethernet.h"
+#include "fleet.h"
 #include "journal.h"
 #include "jsonrpc.h"
 #include "jschema.h"
@@ -606,6 +607,35 @@ static void channel_store(const char *scratch)
     cJSON_Delete(second);
 }
 
+/* the GRE parents' underlays (spec 8.6), beyond the fleet session vectors: the edges */
+static void fleet_underlays(void)
+{
+    em_registry r = {.port_low = 6651, .port_high = 6653};
+    char out[20] = "";
+    CHECK(em_free_underlay(&r, "169.254.1.0/24", NULL, out) && !strcmp(out, "169.254.2.0/24"),
+          "the RDK lab's GTP: the first free /24 is .2");
+    CHECK(em_free_underlay(&r, "169.254.2.0/25", NULL, out) && !strcmp(out, "169.254.1.0/24"),
+          "a router's GTP /25: the first free /24 is .1");
+    CHECK(!em_free_underlay(&r, "169.254.0.0/16", NULL, out), "a GTP over all of 169.254: none left");
+    CHECK(!em_free_underlay(&r, "169.254.1.0", NULL, out) && !em_free_underlay(&r, "169.254.1.0/33", NULL, out) &&
+              !em_free_underlay(&r, "169.254.1.0/+4", NULL, out) && !em_free_underlay(&r, "x/24", NULL, out),
+          "a GTP underlay that is not a network: none");
+    CHECK(em_registry_load(&r, "{\"A\": {\"pod_id\": \"A\", \"al_mac\": \"02:00:00:00:00:01\", \"port\": 6651, "
+                               "\"interface\": \"em1\", \"first_seen\": 1, \"last_seen\": 1, \"handovers\": 1, "
+                               "\"underlay\": \"169.254.1.0/24\"}}"),
+          "a registry entry with an underlay loads");
+    EM_FORMAT_FIXED(r.gtp_underlay, sizeof(r.gtp_underlay), "%s", "169.254.1.0/25");
+    CHECK(em_registry_settle(&r) && !strcmp(r.entries[0].underlay, "169.254.2.0/24"),
+          "the GTP underlay moved onto it: allocated again");
+    CHECK(!em_registry_settle(&r), "settled: nothing changes the second time");
+    em_registry_free(&r);
+    CHECK(!em_registry_load(&r, "{\"A\": {\"pod_id\": \"A\", \"al_mac\": \"02:00:00:00:00:01\", \"port\": 6651, "
+                                "\"interface\": \"em1\", \"first_seen\": 1, \"last_seen\": 1, \"handovers\": 1, "
+                                "\"underlay\": \"169.254.1.0\"}}"),
+          "an underlay that is not a network: not a registry");
+    em_registry_free(&r);
+}
+
 static void ethernet(void)
 {
     /* what is refused before any packet socket (the box opens real ones) */
@@ -1057,6 +1087,7 @@ int main(int argc, char **argv)
     telemetry_limits();
     framing();
     channel_store(argv[2]);
+    fleet_underlays();
     ethernet();
     schema_keywords(argv[2]);
     helpers(argv[2]);

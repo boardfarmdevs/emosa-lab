@@ -23,11 +23,13 @@ typedef struct {
     unsigned handovers;
     char *node_id, *model, *firmware; /* the pod's AWLAN_Node values; NULL: null */
     double first_seen, last_seen;
+    char underlay[20]; /* its 169.254.N.0/24 as a GRE parent (spec 8.6); "": none */
 } em_fleet_entry;
 
 typedef struct {
     int port_low, port_high;
     char reserved_al[18]; /* the controller's AL */
+    char gtp_underlay[20]; /* the site's GTP underlay (fleet gtp_underlay); "": none */
     size_t count, cap;
     em_fleet_entry *entries;
 } em_registry;
@@ -42,6 +44,12 @@ char *em_registry_dump(const em_registry *r);
  * valid until the next assignment. */
 em_fleet_entry *em_registry_assign(em_registry *r, const char *serial, const char *node_id,
                                    const char *model, const char *firmware, double now);
+/* The lowest 169.254.N.0/24 (N 1 to 254) overlapping neither gtp nor one of the entries'
+ * except skip's (NULL: none skipped); false when none is left or gtp is not a network. */
+bool em_free_underlay(const em_registry *r, const char *gtp, const em_fleet_entry *skip, char out[20]);
+/* With a GTP underlay: every entry's underlay placed (allocated, or allocated again where
+ * the GTP underlay overlaps it), in the registry's order. Whether one changed. */
+bool em_registry_settle(em_registry *r);
 /* Removes the serial's entry into *out (the caller frees it with em_fleet_entry_clear);
  * false when there is none. */
 bool em_registry_forget(em_registry *r, const char *serial, em_fleet_entry *out);
@@ -97,9 +105,10 @@ void em_fleet_handover_clear(em_fleet_handover *h);
 /* At the fleet's start: each admitted entry of the registry, in its order (by serial), its
  * agent configuration written when new or changed and start(ctx, pod_id, changed) called,
  * as step 4 does, without waiting for the pod at the front port (an image upgrade keeps
- * the files, not the agents' enabled units). The number of entries whose configuration
- * could not be written (their agents not started); SIZE_MAX when the registry is
- * unreadable. */
+ * the files, not the agents' enabled units). The underlays are settled first and the
+ * registry saved when one changed. The number of entries whose configuration could not be
+ * written (their agents not started); SIZE_MAX when the registry is unreadable or its
+ * settled underlays cannot be saved (no agent started). */
 size_t em_fleet_start_registered(em_fleet *f, void (*start)(void *ctx, const char *pod_id, bool changed),
                                  void *ctx);
 
