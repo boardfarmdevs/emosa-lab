@@ -1,0 +1,42 @@
+{
+  "id": "opensync-lab-hwsim-6.6.1-gre-v1",
+  "description": "opensync-lab pods as GRE parents (spec 8.6, draft): opensync-lab-hwsim-6.6.1-v1 with backhaul_mode gre-parent. A backhaul BSS of the controller's M2 set is the pod's parent AP on b-ap-24: not Multi-AP, no bridge, hidden; its Inet row the pod's underlay (fleet gtp_underlay); its children reach it by 3-address joins and gretap, one tunnel each in br-home.",
+  "opensync_version": "6.6.1.0",
+  "radio": {"band": "2.4G", "channel": 6, "ht_mode": "HT20", "chipset": "mac80211_hwsim"},
+  "fronthaul": {
+    "if_name": "home-ap-24",
+    "vif": {
+      "mode": "ap",
+      "enabled": true,
+      "bridge": "br-home",
+      "ssid_broadcast": "enabled",
+      "ap_bridge": true,
+      "mac_list_type": "none",
+      "btm": 1,
+      "rrm": 1,
+      "min_hw_mode": "11g",
+      "vif_radio_idx": 1,
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "rsn_pairwise_ccmp": true,
+      "security": ["map", []]
+    }
+  },
+  "backhaul_vif": {"ssid_broadcast": "disabled", "ap_bridge": false, "multi_ap": "backhaul_bss"},
+  "backhaul_mode": "gre-parent",
+  "gre_parent": {"vif": {}, "inet": {}},
+  "extra_slots": [
+    {"if_name": "svc-d-ap-24", "role": "fronthaul", "vif_radio_idx": 4},
+    {"if_name": "svc-e-ap-24", "role": "fronthaul", "vif_radio_idx": 5},
+    {"if_name": "fh-24", "role": "fronthaul", "vif_radio_idx": 6},
+    {"if_name": "b-ap-24", "role": "backhaul", "vif_radio_idx": 1}
+  ],
+  "inet": {"if_type": "vif", "enabled": true, "network": true, "NAT": false, "ip_assign_scheme": "none", "mtu": 1500},
+  "uplink": {
+    "station": "bhaul-sta-50",
+    "stations": {"2.4G": "bhaul-sta-24", "5G": "bhaul-sta-50", "6G": "bhaul-sta-60"}
+  },
+  "ap_metrics": {
+    "esp_be": "3fff00"
+  }
+}

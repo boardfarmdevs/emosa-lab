@@ -11,7 +11,8 @@
 
 typedef struct em_ovsdb em_ovsdb;
 
-/* listen: "ptcp:PORT:ADDRESS" (the agent configuration's ovsdb) */
+/* listen: "ptcp:PORT:ADDRESS" (the agent configuration's ovsdb). tables: "Table" (all its
+ * columns monitored) or "Table:a,b" (only those). */
 em_ovsdb *em_ovsdb_open(const char *listen, const char *const *tables, size_t ntables);
 void em_ovsdb_close(em_ovsdb *s);
 /* A session over recorded rows, always ready, with no pod (vectors and tests): the

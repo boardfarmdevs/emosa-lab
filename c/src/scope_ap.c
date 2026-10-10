@@ -281,7 +281,10 @@ static cJSON *additional(const em_ap_scope *s, const cJSON *tables, bool states)
         const char *key = em_row_wpa2_psk(row) ? em_row_sole_map_value(row, "wpa_psks") : NULL;
         bool usable = mode && !strcmp(mode, "ap") && ovs_true(row, "enabled");
         cJSON *entry = cJSON_CreateArray();
-        cJSON_AddItemToArray(entry, cJSON_CreateString(multi_ap && !strcmp(multi_ap, "backhaul_bss") ? "backhaul" : "fronthaul"));
+        /* a Multi-AP backhaul BSS, or the GRE parent AP (multi_ap none, spec 8.6) */
+        bool backhaul = (multi_ap && !strcmp(multi_ap, "backhaul_bss")) ||
+                        (s->multi_bss && em_profile_parent_slot(s->profile, name));
+        cJSON_AddItemToArray(entry, cJSON_CreateString(backhaul ? "backhaul" : "fronthaul"));
         cJSON_AddItemToArray(entry, em_row_string(row, "ssid"));
         char fp[65];
         if (key && usable && em_vault_fingerprint_text(s->vault, key, fp))
@@ -485,7 +488,8 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     em_ovs_session session = {em_ovsdb_tables(s->ovs), generation, s->transact, s->transact_ctx};
     resolver r = {s->vault, {0}, 0};
     em_submit_result result;
-    em_reason e = em_ap_submit(s->profile, s->serial, s->multi_bss, &session, &in, resolve, &r, &result);
+    em_reason e = em_ap_submit(s->profile, s->serial, s->multi_bss, s->underlay, &session, &in, resolve, &r,
+                               &result);
     for (size_t i = 0; i < r.n; i++) {
         em_free_secret(r.keys[i]);
     }

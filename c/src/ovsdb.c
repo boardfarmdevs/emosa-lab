@@ -316,13 +316,37 @@ static bool start_monitor(em_ovsdb *s)
     }
     em_sha256_hex(text, strlen(text), s->schema_fingerprint);
     free(text);
-    cJSON_Delete(schema);
     cJSON *params = cJSON_CreateArray(), *requests = cJSON_CreateObject();
     long monitor = (long)(s->generation % 1000000) * 1000 + 1; /* no overflow however many sessions (INT32-C) */
     cJSON_AddItemToArray(params, cJSON_CreateString(DATABASE));
     cJSON_AddItemToArray(params, cJSON_CreateNumber((double)monitor));
-    for (size_t i = 0; i < s->ntables; i++)
-        cJSON_AddObjectToObject(requests, s->table_names[i]);
+    const cJSON *known = cJSON_GetObjectItemCaseSensitive(raw, "tables");
+    for (size_t i = 0; i < s->ntables; i++) {
+        /* "Table" monitors all its columns, "Table:a,b" only those: a table whose other columns
+         * change all the time (Interface's statistics) is not streamed in full. Only the
+         * tables and columns the pod's schema has, as the reference selects them. */
+        char name[64], column[64];
+        const char *spec = s->table_names[i], *colon = strchr(spec, ':');
+        if (!em_format(name, sizeof(name), "%.*s", (int)(colon ? colon - spec : (long)strlen(spec)), spec))
+            continue;
+        const cJSON *columns_known =
+            cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(known, name), "columns");
+        if (!columns_known)
+            continue;
+        cJSON *table = cJSON_AddObjectToObject(requests, name);
+        if (!colon)
+            continue;
+        cJSON *columns = cJSON_AddArrayToObject(table, "columns");
+        for (const char *at = colon + 1; *at;) {
+            const char *comma = strchr(at, ',');
+            size_t len = comma ? (size_t)(comma - at) : strlen(at);
+            if (em_format(column, sizeof(column), "%.*s", (int)len, at) &&
+                cJSON_GetObjectItemCaseSensitive(columns_known, column))
+                cJSON_AddItemToArray(columns, cJSON_CreateString(column));
+            at += len + (comma ? 1 : 0);
+        }
+    }
+    cJSON_Delete(schema);
     cJSON_AddItemToArray(params, requests);
     long id = request(s, "monitor", params);
     if (id < 0)

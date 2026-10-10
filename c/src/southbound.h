@@ -25,10 +25,16 @@ typedef struct {
      * to a BSS on another band (spec 8.3) */
     size_t nuplink_bands;
     const char *uplink_bands[3], *uplink_band_stations[3];
+    /* backhaul_mode: "multi-ap" (spec 8.5) or "gre-parent" (spec 8.6), and the parent AP's
+     * overrides of its VIF and Inet rows (gre_parent.vif, .inet; NULL when absent) */
+    const char *backhaul_mode;
+    const cJSON *gre_parent_vif, *gre_parent_inet;
 } em_profile;
 
 em_reason em_profile_load(const char *path, em_profile *out);
 void em_profile_free(em_profile *p);
+/* The slot VIF `name` is the pod's GRE parent AP: a gre-parent profile's backhaul slot. */
+bool em_profile_parent_slot(const em_profile *p, const char *name);
 
 /* The pod's OVSDB, as the scopes use it: a snapshot of raw tables and transact. */
 typedef struct {
@@ -57,9 +63,11 @@ typedef struct {
     em_reason reason;
 } em_submit_result;
 
-/* Plan and submit one M2 intent on the bound fronthaul (and, multi_bss, the slots). */
+/* Plan and submit one M2 intent on the bound fronthaul (and, multi_bss, the slots). A GRE
+ * parent's backhaul BSS (spec 8.6) needs the pod's `underlay` (169.254.N.0/24; NULL: none,
+ * and such a set is refused). */
 em_reason em_ap_submit(const em_profile *profile, const char *serial, bool multi_bss,
-                       em_ovs_session *session, const em_ap_intent *intent,
+                       const char *underlay, em_ovs_session *session, const em_ap_intent *intent,
                        em_secret_resolver resolve, void *resolve_ctx, em_submit_result *out);
 
 /* One steering mandate on the pod (spec §3.7). */

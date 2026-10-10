@@ -312,13 +312,21 @@ class Recorder:
         return [replies.get(op["op"], {"count": 1}) for op in operations]
 
 
-def southbound_case(name, raw, intent, *, multi_bss):
+def southbound_case(name, raw, intent, *, multi_bss, profile=DEFAULT, underlay=None):
     with tempfile.TemporaryDirectory() as directory:
         vault = SecretStore(Path(directory) / "secrets")
         for ref, passphrase in PASSPHRASES.items():
             vault.write_simulated(ref, passphrase)
         session = Recorder(copy.deepcopy(raw))
-        backend = PodBackend("pod-1", session, vault, serial=SERIAL, multi_bss=multi_bss)
+        backend = PodBackend(
+            "pod-1",
+            session,
+            vault,
+            serial=SERIAL,
+            multi_bss=multi_bss,
+            profile=load_profile(profile),
+            underlay=underlay,
+        )
 
         async def run():
             await backend.snapshot()
@@ -345,8 +353,9 @@ def southbound_case(name, raw, intent, *, multi_bss):
     return {
         "name": name,
         "ovsdb_tables": raw,
-        "profile": DEFAULT,
+        "profile": profile,
         "multi_bss": multi_bss,
+        **({"underlay": underlay} if underlay else {}),
         "intent": intent,
         "passphrases": PASSPHRASES,
         "expected": {"status": result.status, "transactions": session.sent},
@@ -362,7 +371,8 @@ def southbound_vectors():
     primary = {"ssid": "emosa-mesh-2", "secret_ref": "ref-primary"}
     return {
         "description": "spec §3.2, §3.4: an accepted M2 intent against pod rows, and the "
-        "exact OVSDB transaction(s) sent. Passphrases are public test values by reference.",
+        "exact OVSDB transaction(s) sent. Passphrases are public test values by reference. "
+        "Each case names its pod profile, and a GRE parent's case its underlay (spec 8.6).",
         "cases": [
             southbound_case("update-fronthaul", pod_rows(), primary, multi_bss=False),
             southbound_case("cold-pod-create", cold(pod_rows()), primary, multi_bss=False),
@@ -371,6 +381,15 @@ def southbound_vectors():
                 pod_rows(),
                 {**primary, "additional": rdk_set},
                 multi_bss=True,
+            ),
+            # spec 8.6: the backhaul BSS as the pod's GRE parent AP, its Inet row the underlay's
+            southbound_case(
+                "gre-parent-set",
+                pod_rows(),
+                {**primary, "additional": rdk_set},
+                multi_bss=True,
+                profile="opensync-lab-hwsim-6.6.1-gre-v1",
+                underlay="169.254.2.0/24",
             ),
         ],
     }
@@ -2896,6 +2915,92 @@ def scope_writes_vectors():
         raw = rows(**extra)
         backend = WiredBackend("pod-1", Recorder(copy.deepcopy(raw)), serial=SERIAL, port="eth1")
         cases.append({"scope": "wired-uplink", **scope_write_case(name, raw, backend, wired)})
+    # a GRE parent's tunnels (spec 8.6): its parent AP b-ap-24, a tunnel per child into br-home
+    from emosa.opensync.gre_parent import GreParentBackend, TunnelIntent
+
+    def gre_uuid(n):
+        return f"00000000-0000-4000-8000-0000000002{n:02x}"
+
+    def gre_parent(*, children, tunnels=(), address=True):
+        """children: (MAC, lease) associated to the parent AP; tunnels: (name, remote) in place."""
+        clients = {
+            gre_uuid(0x10 + i): {"mac": m, "state": "active"} for i, (m, _) in enumerate(children)
+        }
+        extra = {
+            "Wifi_VIF_State": {
+                **pod_rows()["Wifi_VIF_State"],
+                gre_uuid(1): {
+                    "if_name": "b-ap-24",
+                    "mode": "ap",
+                    "enabled": True,
+                    "associated_clients": ["set", [["uuid", u] for u in clients]],
+                },
+            },
+            "Wifi_Associated_Clients": {**pod_rows()["Wifi_Associated_Clients"], **clients},
+            "DHCP_leased_IP": {
+                gre_uuid(0x20 + i): {"hwaddr": m, "inet_addr": a}
+                for i, (m, a) in enumerate(children)
+            },
+            "Wifi_Inet_State": (
+                {gre_uuid(2): {"if_name": "b-ap-24", "inet_addr": "169.254.2.1"}} if address else {}
+            ),
+            "Wifi_Inet_Config": {},
+            "Bridge": {gre_uuid(3): {"name": "br-home", "ports": ["set", [["uuid", gre_uuid(4)]]]}},
+            "Port": {gre_uuid(4): {"name": "br-home", "interfaces": ["uuid", gre_uuid(5)]}},
+            "Interface": {gre_uuid(5): {"name": "br-home"}},
+        }
+        for i, (name, remote) in enumerate(tunnels):
+            extra["Wifi_Inet_Config"][gre_uuid(0x30 + i)] = {
+                "if_name": name,
+                "if_type": "gre",
+                "enabled": True,
+                "network": True,
+                "mtu": 1562,
+                "ip_assign_scheme": "none",
+                "gre_ifname": "b-ap-24",
+                "gre_local_inet_addr": "169.254.2.1",
+                "gre_remote_inet_addr": remote,
+            }
+            extra["Port"][gre_uuid(0x40 + i)] = {
+                "name": name,
+                "interfaces": ["uuid", gre_uuid(0x50 + i)],
+            }
+            extra["Interface"][gre_uuid(0x50 + i)] = {"name": name}
+            extra["Bridge"][gre_uuid(3)]["ports"][1].append(["uuid", gre_uuid(0x40 + i)])
+        return rows(**extra)
+
+    child, other = ("02:00:00:00:2a:01", "169.254.2.10"), ("02:00:00:00:2a:02", "169.254.2.11")
+    for name, raw, remotes in (
+        ("gre-parent-new-child", gre_parent(children=(child,)), (child[1],)),
+        (
+            "gre-parent-child-gone",
+            gre_parent(children=(), tunnels=(("pgd2_10", child[1]),)),
+            (),
+        ),
+        (
+            "gre-parent-one-in-one-out",
+            gre_parent(children=(other,), tunnels=(("pgd2_10", child[1]),)),
+            (other[1],),
+        ),
+        ("gre-parent-no-address-yet", gre_parent(children=(child,), address=False), (child[1],)),
+        ("gre-parent-outside-the-underlay", gre_parent(children=(child,)), ("169.254.3.10",)),
+    ):
+        backend = GreParentBackend(
+            "pod-1",
+            Recorder(copy.deepcopy(raw)),
+            serial=SERIAL,
+            ap="b-ap-24",
+            bridge="br-home",
+            underlay="169.254.2.0/24",
+        )
+        intent = TunnelIntent("pod-1", "b-ap-24", "br-home", remotes)
+        cases.append(
+            {
+                "scope": "gre-parent",
+                "underlay": "169.254.2.0/24",
+                **scope_write_case(name, raw, backend, intent),
+            }
+        )
     for name, extra, stations in (
         ("watch-new-group", {}, (s1, s2)),
         ("watch-add-and-remove", watching_s1, (s2,)),

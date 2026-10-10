@@ -73,7 +73,7 @@ set(EMOSA_RDK_LOG_DIR "/rdklogs/logs/" CACHE STRING "the RDK log directory (at m
 set(EMOSA_RDK_LOG_MAXSIZE 262144 CACHE STRING "bytes per RDK log file")
 set(EMOSA_RDK_LOG_MAXCOUNT 2 CACHE STRING "RDK log files kept per program")
 
-add_library(emosa STATIC src/log.c src/common.c src/cmdu.c src/wsc.c src/autoconf.c src/ovs.c src/view.c src/control.c src/southbound.c src/fleet.c src/operation.c src/stats.c src/ovsdb.c src/ethernet.c src/canon.c src/vault.c src/jschema.c src/journal.c src/engine.c src/scope.c src/scope_ap.c src/scope_telemetry.c src/mqtt.c src/reporting.c src/scope_steering.c src/scope_watch.c src/scope_uplink.c src/scope_wired.c src/bhsteer.c src/early.c src/lifecycle.c src/channel_store.c src/jsonrpc.c src/proc.c src/gtp.c src/supervise.c src/peers.c)
+add_library(emosa STATIC src/log.c src/common.c src/cmdu.c src/wsc.c src/autoconf.c src/ovs.c src/view.c src/control.c src/southbound.c src/fleet.c src/operation.c src/stats.c src/ovsdb.c src/ethernet.c src/canon.c src/vault.c src/jschema.c src/journal.c src/engine.c src/scope.c src/scope_ap.c src/scope_telemetry.c src/mqtt.c src/reporting.c src/scope_steering.c src/scope_watch.c src/scope_uplink.c src/scope_wired.c src/scope_gre_parent.c src/bhsteer.c src/early.c src/lifecycle.c src/channel_store.c src/jsonrpc.c src/proc.c src/gtp.c src/supervise.c src/peers.c)
 target_include_directories(emosa PUBLIC src ${CMAKE_CURRENT_BINARY_DIR} ${CJSON_INCLUDE_DIRS} ${CRYPTO_INCLUDE_DIRS}
                            ${SQLITE_INCLUDE_DIRS})
 target_link_libraries(emosa ${CRYPTO_LIBRARIES} ${CJSON_LIBRARIES} ${SQLITE_LIBRARIES} m)

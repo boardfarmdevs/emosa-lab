@@ -45,6 +45,7 @@
 #include "scope_ap.h"
 #include "scope_steering.h"
 #include "scope_telemetry.h"
+#include "scope_gre_parent.h"
 #include "scope_wired.h"
 #include "scope_uplink.h"
 #include "scope_watch.h"
@@ -140,6 +141,7 @@ typedef struct {
     uint8_t al[6], controller[6];
     bool r1, multi_bss, shared_session, steering_on;
     double topology_query_window; /* 0: the renewal rule is off */
+    const char *underlay;          /* the pod's underlay as a GRE parent (spec 8.6); NULL: none */
     em_profile profile;
     /* I/O */
     em_ovsdb *ovs;
@@ -216,6 +218,7 @@ typedef struct {
     em_uplink_scope uplink;
     bool wired_on;              /* the wired uplink scope (emosa.agent.wired): uplink.mode ethernet */
     em_wired_scope wired;
+    em_gre_scope *gre;          /* a GRE parent's tunnels (emosa.agent.gre_parent, spec 8.6); NULL: none */
     em_bh_shared bh_shared;     /* Backhaul Steering under way: the agent's, across sessions */
     em_bh_coordinator bh;
     bool bh_live;
@@ -391,6 +394,9 @@ static bool refresh(agent *a)
         free(view);
         return false;
     }
+    for (size_t i = 0; a->multi_bss && i < a->profile.nslots; i++) /* a GRE parent's AP (spec 8.6) */
+        if (em_profile_parent_slot(&a->profile, a->profile.slots[i].if_name))
+            em_device_view_parent_ap(view, a->profile.slots[i].if_name);
     const em_radio_view *radio = em_view_radio(view, ruid);
     if (!radio) {
         free(view);
@@ -1609,6 +1615,7 @@ static cJSON *status(agent *a)
         cJSON_Delete(x);
     }
     cJSON_AddItemToObject(o, "probe_watch", a->telemetry_on ? em_watch_status(&a->watch) : cJSON_CreateNull());
+    cJSON_AddItemToObject(o, "gre_parent", a->gre ? em_gre_status(a->gre) : cJSON_CreateNull());
     cJSON_AddNumberToObject(o, "writes", a->writes);
     cJSON_AddNumberToObject(o, "worker_pid", getpid());
     struct timespec ts;
@@ -1707,6 +1714,7 @@ static bool configure(agent *a, const char *path, const char *profiles)
     a->shared_session = m2 && !strcmp(m2, "shared");
     const cJSON *window = cJSON_GetObjectItemCaseSensitive(c, "topology_query_window");
     a->topology_query_window = cJSON_IsNumber(window) ? window->valuedouble : 0;
+    a->underlay = cfg_str(c, "underlay");
     const char *steer = cfg_str(cJSON_GetObjectItemCaseSensitive(c, "steering"), "mode");
     a->steering_on = !steer || strcmp(steer, "off");
     /* telemetry: the pod publishes to the broker, the agent reads the local one */
@@ -1795,6 +1803,24 @@ static bool configure(agent *a, const char *path, const char *profiles)
         }
         if (!em_wired_intent_from(cfg_str(c, "pod_id"), uplink, bridge, &a->wired.intent, &why)) {
             FAIL("uplink: the port and the bridge must be interface names");
+            return false;
+        }
+    }
+    /* a GRE parent (spec 8.6): a tunnel per child of its parent AP, in the fronthaul's bridge */
+    const char *parent = NULL;
+    for (size_t i = 0; a->multi_bss && i < a->profile.nslots; i++) /* the first by name, as min() */
+        if (em_profile_parent_slot(&a->profile, a->profile.slots[i].if_name) &&
+            (!parent || strcmp(a->profile.slots[i].if_name, parent) < 0))
+            parent = a->profile.slots[i].if_name;
+    if (parent && a->underlay) {
+        const char *bridge = cfg_str(a->profile.fronthaul_vif, "bridge");
+        if (!bridge) {
+            FAIL("gre parent: the profile's fronthaul has no bridge");
+            return false;
+        }
+        a->gre = em_calloc(1, sizeof(*a->gre));
+        if (!em_gre_bind(a->gre, cfg_str(c, "pod_id"), parent, bridge, a->underlay)) {
+            FAIL("gre parent: the parent AP, the bridge or the underlay is not usable");
             return false;
         }
     }
@@ -1895,14 +1921,24 @@ int main(int argc, char **argv)
     static const char *const tables[] = {"AWLAN_Node", "Wifi_Radio_Config", "Wifi_Radio_State",
         "Wifi_VIF_Config", "Wifi_VIF_State", "Wifi_Associated_Clients", "Wifi_Inet_Config",
         "Wifi_Credential_Config", "Connection_Manager_Uplink", "Band_Steering_Config",
-        "Band_Steering_Clients", "Wifi_VIF_Neighbors", "Wifi_Stats_Config"};
+        "Band_Steering_Clients", "Wifi_VIF_Neighbors", "Wifi_Stats_Config",
+        /* a GRE parent's children and tunnels (spec 8.6), their columns only */
+        "DHCP_leased_IP:hwaddr,inet_addr", "Wifi_Inet_State:if_name,inet_addr", "Bridge:name,ports",
+        "Port:name,interfaces", "Interface:name"};
     a.ovs = em_ovsdb_open(cfg_str(a.config, "ovsdb"), tables, sizeof(tables) / sizeof(*tables));
     if (!a.ovs) {
         FAIL("cannot listen on %s", cfg_str(a.config, "ovsdb"));
         return 1;
     }
-    a.ap = (em_ap_scope){.ovs = a.ovs, .profile = &a.profile, .serial = a.serial, .pod_id = a.pod_id,
-                         .multi_bss = a.multi_bss, .vault = &a.vault, .transact = transact, .transact_ctx = &a};
+    a.ap = (em_ap_scope){.ovs = a.ovs,
+                         .profile = &a.profile,
+                         .serial = a.serial,
+                         .pod_id = a.pod_id,
+                         .multi_bss = a.multi_bss,
+                         .underlay = a.underlay,
+                         .vault = &a.vault,
+                         .transact = transact,
+                         .transact_ctx = &a};
     em_engine_init(&a.ap_engine, a.journal, &a.vault, a.pod_id, em_ap_backend(), &a.ap, now);
     em_engine_recover(&a.ap_engine);
     char boot[129], path[700];
@@ -1967,6 +2003,18 @@ int main(int argc, char **argv)
                                        cfg_str(cJSON_GetObjectItemCaseSensitive(a.config, "uplink"), "bssid"));
         if (why != EM_OK) {
             FAIL("uplink journal: %s", em_reason_name(why));
+            return 1;
+        }
+    }
+    if (a.gre) {
+        a.gre->ovs = a.ovs;
+        a.gre->serial = a.serial;
+        a.gre->run_id = a.run_id;
+        a.gre->transact = transact;
+        a.gre->transact_ctx = &a;
+        em_reason why = em_gre_open(a.gre, a.state_dir, &a.schemas, &a.vault, now);
+        if (why != EM_OK) {
+            FAIL("gre parent journal: %s", em_reason_name(why));
             return 1;
         }
     }
@@ -2050,6 +2098,8 @@ int main(int argc, char **argv)
             em_uplink_tick(&a.uplink);
         if (refreshed && a.wired_on)
             em_wired_tick(&a.wired);
+        if (refreshed && a.gre)
+            em_gre_tick(a.gre);
         if (refreshed && a.telemetry_on)
             em_telemetry_tick(&a.telemetry);
         if (refreshed && a.steering_on)
@@ -2072,6 +2122,10 @@ int main(int argc, char **argv)
         em_uplink_close(&a.uplink);
     if (a.wired_on)
         em_wired_close(&a.wired);
+    if (a.gre) {
+        em_gre_close(a.gre);
+        free(a.gre);
+    }
     em_policy_store_close(a.policy_store);
     em_channel_store_close(a.channel_store);
     em_ethernet_close(&a.eth);

@@ -14,6 +14,7 @@ typedef struct {
     const em_profile *profile;
     const char *serial, *pod_id;
     bool multi_bss;
+    const char *underlay; /* the pod's underlay as a GRE parent (spec 8.6); NULL: none */
     em_vault *vault;
     cJSON *(*transact)(void *ctx, const cJSON *operations);
     void *transact_ctx;

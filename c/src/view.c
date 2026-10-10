@@ -116,6 +116,14 @@ em_reason em_device_view_from_rows(const cJSON *tables, em_device_view *out)
     return EM_OK;
 }
 
+void em_device_view_parent_ap(em_device_view *v, const char *if_name)
+{
+    for (size_t i = 0; if_name && i < v->nradios; i++)
+        for (size_t k = 0; k < v->radios[i].nbss; k++)
+            if (!strcmp(v->radios[i].bss[k].if_name, if_name))
+                v->radios[i].bss[k].backhaul = true;
+}
+
 const em_radio_view *em_view_radio(const em_device_view *v, const uint8_t ruid[6])
 {
     for (size_t i = 0; i < v->nradios; i++)

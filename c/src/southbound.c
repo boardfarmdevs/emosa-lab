@@ -36,6 +36,11 @@ em_reason em_profile_load(const char *path, em_profile *out)
     out->inet = cJSON_GetObjectItemCaseSensitive(d, "inet");
     out->uplink_station = cJSON_GetStringValue(
         cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(d, "uplink"), "station"));
+    const char *mode = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(d, "backhaul_mode"));
+    out->backhaul_mode = mode ? mode : "multi-ap";
+    const cJSON *gre = cJSON_GetObjectItemCaseSensitive(d, "gre_parent");
+    out->gre_parent_vif = cJSON_GetObjectItemCaseSensitive(gre, "vif");
+    out->gre_parent_inet = cJSON_GetObjectItemCaseSensitive(gre, "inet");
     const cJSON *band_station;
     cJSON_ArrayForEach(band_station, cJSON_GetObjectItemCaseSensitive(
                                          cJSON_GetObjectItemCaseSensitive(d, "uplink"), "stations"))
@@ -76,6 +81,16 @@ void em_profile_free(em_profile *p)
 {
     cJSON_Delete(p->doc);
     memset(p, 0, sizeof(*p));
+}
+
+bool em_profile_parent_slot(const em_profile *p, const char *name)
+{
+    if (!name || !p->backhaul_mode || strcmp(p->backhaul_mode, "gre-parent"))
+        return false;
+    for (size_t i = 0; i < p->nslots; i++)
+        if (!strcmp(p->slots[i].if_name, name) && !strcmp(p->slots[i].role, "backhaul"))
+            return true;
+    return false;
 }
 
 /* -- transaction building ----------------------------------------------------------- */
@@ -450,10 +465,87 @@ static void set_role(cJSON *row, const char *role)
     cJSON_AddStringToObject(row, "multi_ap", !strcmp(role, "backhaul") ? "backhaul_bss" : "fronthaul_bss");
 }
 
+/* the GRE parent AP's row over the backhaul row (spec 8.6, PodBackend._parent_vif): hidden unless
+ * the profile's gre_parent.vif says otherwise; never Multi-AP, bridged or bridging its stations */
+static void set_parent(cJSON *row, const em_profile *p)
+{
+    cJSON_DeleteItemFromObjectCaseSensitive(row, "ssid_broadcast");
+    cJSON_AddStringToObject(row, "ssid_broadcast", "disabled");
+    merge(row, p->gre_parent_vif, NULL);
+    const char *const fixed[3] = {"multi_ap", "bridge", "ap_bridge"};
+    for (int i = 0; i < 3; i++)
+        cJSON_DeleteItemFromObjectCaseSensitive(row, fixed[i]);
+    cJSON_AddStringToObject(row, "multi_ap", "none");
+    cJSON_AddStringToObject(row, "bridge", "");
+    cJSON_AddFalseToObject(row, "ap_bridge");
+}
+
+static void ipv4_text(uint32_t address, char out[16])
+{
+    EM_FORMAT_FIXED(out, 16, "%u.%u.%u.%u", address >> 24, (address >> 16) & 0xff, (address >> 8) & 0xff,
+                    address & 0xff);
+}
+
+/* the GRE parent AP's Inet row (PodBackend._parent_inet): the underlay's .1, its DHCP range .10 to
+ * .250, the profile's gre_parent.inet over the other columns; NULL when the underlay is not a
+ * network */
+static cJSON *parent_inet(const em_profile *p, const char *name, const char *underlay)
+{
+    /* a.b.c.d/len: four decimal octets and a prefix, nothing else */
+    uint32_t address = 0;
+    long len = -1;
+    const char *at = underlay;
+    for (int part = 0; at && part < 5; part++) {
+        if (*at < '0' || *at > '9')
+            return NULL;
+        char *end = NULL;
+        long v = strtol(at, &end, 10);
+        if (end - at > 3 || v > (part < 4 ? 255 : 32) || *end != (part < 3 ? '.' : part == 3 ? '/' : '\0'))
+            return NULL;
+        if (part < 4)
+            address = address << 8 | (uint32_t)v;
+        else
+            len = v;
+        at = end + (part < 4);
+    }
+    if (len < 0)
+        return NULL;
+    uint32_t mask = len ? 0xffffffffu << (32 - len) : 0, net = address & mask;
+    char gateway[16], netmask[16], start[16], stop[16];
+    ipv4_text(net + 1, gateway);
+    ipv4_text(mask, netmask);
+    ipv4_text(net + 10, start);
+    ipv4_text(net + 250, stop);
+    cJSON *row = cJSON_CreateObject();
+    cJSON_AddStringToObject(row, "if_type", "vif");
+    cJSON_AddTrueToObject(row, "enabled");
+    cJSON_AddTrueToObject(row, "network");
+    cJSON_AddFalseToObject(row, "NAT");
+    cJSON_AddNumberToObject(row, "mtu", 1600);
+    merge(row, p->gre_parent_inet, NULL);
+    const char *const own[5] = {"if_name", "ip_assign_scheme", "inet_addr", "netmask", "dhcpd"};
+    for (int i = 0; i < 5; i++)
+        cJSON_DeleteItemFromObjectCaseSensitive(row, own[i]);
+    cJSON_AddStringToObject(row, "if_name", name);
+    cJSON_AddStringToObject(row, "ip_assign_scheme", "static");
+    cJSON_AddStringToObject(row, "inet_addr", gateway);
+    cJSON_AddStringToObject(row, "netmask", netmask);
+    cJSON *pairs = cJSON_CreateArray();
+    const char *const keys[3] = {"start", "stop", "lease_time"}, *values[3] = {start, stop, "12h"};
+    for (int i = 0; i < 3; i++) {
+        cJSON *pair = cJSON_CreateArray();
+        cJSON_AddItemToArray(pair, cJSON_CreateString(keys[i]));
+        cJSON_AddItemToArray(pair, cJSON_CreateString(values[i]));
+        cJSON_AddItemToArray(pairs, pair);
+    }
+    cJSON_AddItemToObject(row, "dhcpd", tagged("map", pairs));
+    return row;
+}
+
 #define PUSH(o, n) (cJSON_AddItemToArray(ops, (o)), counts[nops++] = (n))
 
 em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
-                       em_ovs_session *s, const em_ap_intent *intent,
+                       const char *underlay, em_ovs_session *s, const em_ap_intent *intent,
                        em_secret_resolver resolve, void *resolve_ctx, em_submit_result *out)
 {
     memset(out, 0, sizeof(*out));
@@ -469,6 +561,9 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
     em_reason r = assign(&slots_view, intent, bss_of_slot);
     if (r != EM_OK)
         return r;
+    for (size_t i = 0; i < nslots; i++)
+        if (bss_of_slot[i] >= 0 && !underlay && em_profile_parent_slot(p, p->slots[i].if_name))
+            return EM_UNSUPPORTED_OPERATION; /* a GRE parent AP needs the pod's underlay (spec 8.6) */
     binding b;
     if ((r = bind(p, serial, s, &b)) != EM_OK)
         return r;
@@ -581,7 +676,11 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
                 merge(base, p->fronthaul_vif, NULL);
                 if (!strcmp(p->slots[i].role, "backhaul"))
                     merge(base, p->backhaul_vif, NULL);
-                set_role(base, p->slots[i].role);
+                bool parent = em_profile_parent_slot(p, name);
+                if (parent)
+                    set_parent(base, p);
+                else
+                    set_role(base, p->slots[i].role);
                 const char *bkey = resolve(resolve_ctx, intent->additional[k].secret_ref);
                 if (!bkey) {
                     cJSON_Delete(base);
@@ -617,7 +716,25 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
                     PUSH(vif_configs_mutate(b.radio_uuid, "insert", named(label)), 1);
                 }
                 cJSON_Delete(base);
-                if (!has_name(names, name)) {
+                if (parent) {
+                    /* the underlay's address and DHCP, in place of a Multi-AP slot's row */
+                    cJSON *row = parent_inet(p, name, underlay);
+                    if (!row) {
+                        cJSON_Delete(names);
+                        cJSON_Delete(ops);
+                        return EM_INVALID_INPUT;
+                    }
+                    if (has_name(names, name)) {
+                        cJSON_DeleteItemFromObjectCaseSensitive(row, "if_name");
+                        cJSON *uo = op("update", "Wifi_Inet_Config", where_eq("if_name", name));
+                        cJSON_AddItemToObject(uo, "row", row);
+                        PUSH(uo, -1);
+                    } else {
+                        cJSON *io = op("insert", "Wifi_Inet_Config", NULL);
+                        cJSON_AddItemToObject(io, "row", row);
+                        PUSH(io, -1);
+                    }
+                } else if (!has_name(names, name)) {
                     cJSON *io = op("insert", "Wifi_Inet_Config", NULL);
                     cJSON_AddItemToObject(io, "row", inet_row(p, name));
                     PUSH(io, -1);

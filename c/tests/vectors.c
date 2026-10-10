@@ -31,6 +31,7 @@
 #include "../src/vault.h"
 #include "../src/reporting.h"
 #include "../src/scope_ap.h"
+#include "../src/scope_gre_parent.h"
 #include "../src/scope_steering.h"
 #include "../src/scope_telemetry.h"
 #include "../src/scope_wired.h"
@@ -798,8 +799,9 @@ static void southbound_vectors(const char *dir)
         em_ovs_session session = {cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables"), 1, record, sent};
         em_submit_result result;
         em_reason r = em_ap_submit(&profile, "MVXPOD023F87E628DD",
-                                   cJSON_IsTrue(cJSON_GetObjectItem(c, "multi_bss")), &session,
-                                   &intent, passphrase,
+                                   cJSON_IsTrue(cJSON_GetObjectItem(c, "multi_bss")),
+                                   cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(c, "underlay")),
+                                   &session, &intent, passphrase,
                                    cJSON_GetObjectItemCaseSensitive(c, "passphrases"), &result);
         const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
         if (r != EM_OK)
@@ -1731,6 +1733,8 @@ static void scope_writes_vectors(const char *dir)
         void *ctx = NULL;
         em_telemetry_scope telemetry = {0};
         em_wired_scope wired = {0};
+        static em_gre_scope gre; /* large (its children): not on the stack */
+        memset(&gre, 0, sizeof(gre));
         em_watch_scope watch = {0};
         em_steering_scope steering = {0};
         em_ap_scope ap = {0};
@@ -1786,6 +1790,15 @@ static void scope_writes_vectors(const char *dir)
             wired.transact_ctx = sent;
             backend = em_wired_backend();
             ctx = &wired;
+        } else if (!strcmp(scope, "gre-parent")) {
+            gre.ovs = ovs;
+            gre.serial = serial;
+            gre.transact = record;
+            gre.transact_ctx = sent;
+            if (!em_gre_bind(&gre, str(intent, "pod_id"), str(intent, "ap"), str(intent, "bridge"), str(c, "underlay")))
+                fail("scope-writes", name, "gre parent binding");
+            backend = em_gre_backend();
+            ctx = &gre;
         } else if (!strcmp(scope, "probe-watch")) {
             watch = (em_watch_scope){.ovs = ovs, .serial = serial, .pod_id = str(doc, "pod_id"),
                                      .transact = record, .transact_ctx = sent};

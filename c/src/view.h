@@ -51,6 +51,9 @@ typedef struct {
 
 /* From raw RFC 7047 tables ({table: {uuid: row}}). */
 em_reason em_device_view_from_rows(const cJSON *tables, em_device_view *out);
+/* The pod's GRE parent AP `if_name` (spec 8.6: multi_ap none) is a backhaul BSS, as
+ * device_view(parent_aps=...) has it. */
+void em_device_view_parent_ap(em_device_view *v, const char *if_name);
 const em_radio_view *em_view_radio(const em_device_view *v, const uint8_t ruid[6]);
 cJSON *em_device_view_json(const em_device_view *v);
 
