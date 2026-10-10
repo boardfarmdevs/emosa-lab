@@ -890,7 +890,7 @@ gateway, and their `cm` builds its gretap to it. The recipe is what the OpenSync
 a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gre_step`).
 
 - **Which backhaul.** The pod profile (§3.5) says how the pod's radios carry a backhaul BSS:
-  `backhaul.mode` `multi-ap` (§8.5, the default) or `gre-parent` (this section). The controller
+  `backhaul_mode` `multi-ap` (§8.5, the default) or `gre-parent` (this section). The controller
   decides where backhaul BSSes are, as before: a backhaul BSS in its applied M2 set for a radio
   of a `gre-parent` pod is created as the pod's **parent AP** on that radio, not as a Multi-AP
   BSS. The agent reports it as a backhaul BSS (§3.3), so the controller can steer a child onto it
@@ -899,7 +899,7 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   moves only when the operator directs it, by the controller's Backhaul Steering Request
   (`SteerWiFiBackhaul`): RDK's controller does not choose a pod's parent by itself (the owner's
   ruling of 8 October holds).
-- **The parent AP** (profile `backhaul.gre_parent.vif` over the backhaul slot's row): `mode=ap`,
+- **The parent AP** (profile `gre_parent.vif` over the backhaul slot's row): `mode=ap`,
   the M2's backhaul SSID and passphrase (`wpa_*` columns), `multi_ap=none`, no `bridge`,
   `ap_bridge=false`. The SSID is hidden by default, as the OpenSync cloud keeps a backhaul;
   broadcasting it is the profile's choice (`ssid_broadcast`), since a child joins by its pinned
@@ -934,7 +934,8 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   uplink.
 - **The underlay** (§8.2's rules, on the pod): `169.254.N.0/24`, the AP at `.1`
   (`Wifi_Inet_Config`: `ip_assign_scheme=static`, `netmask=255.255.255.0`, `NAT=false`,
-  `mtu=1600`, `dhcpd` `start .10`, `stop .250`, `lease_time 12h`). `N` is the parent's, assigned
+  `mtu=1600`, `dhcpd` `start .10`, `stop .250`, `lease_time 12h`; the profile's
+  `gre_parent.inet` over the columns that are not the underlay's). `N` is the parent's, assigned
   by the fleet registry (§4): unique in the fleet, kept across the pod's restarts, and never one
   whose `/24` overlaps the site's own GTP underlay, which the fleet's configuration gives per
   site (`169.254.1.0/24` in the RDK lab; a router's GTP may use another, such as
