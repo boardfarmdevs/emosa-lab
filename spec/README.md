@@ -915,14 +915,18 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   channel, a radio that runs an AP and a station on one channel only (the Pis' MT7921U) cannot
   link its station beside the AP, and the AP cannot move before the station links: the pod
   **releases** the AP. While its uplink is on the fallback and the upstream BSSID is heard on
-  another control channel than the AP's, the pod takes the AP down until its station links; the
-  AP then starts on the station's channel and the children, pinned to its BSSID, re-associate
-  (about 15 to 30 s, under a child's own fallback delay). A release the station does not end
-  within 60 s brings the AP back on its old channel. One owner per column: EMOSA owns the parent
-  AP's `Wifi_VIF_Config` row and never sees the pod's scan, so the release acts below EMOSA's
-  columns, in the pod's target or hostapd layer (as the pods' channel override does), never by
-  `Wifi_VIF_Config.enabled`. EMOSA reconciles its Config rows against its M2 set, not against
-  State: an AP down in State for a release causes no write.
+  another control channel than the AP's, the pod holds the AP down for up to 30 s to let its
+  station rejoin there; the AP then starts on the station's channel and the children, pinned to
+  its BSSID, re-associate (about 15 to 30 s, under a child's own fallback delay). If the station
+  has not linked within the 30 s, the AP comes back on its last channel, and the pod tries again
+  no sooner than 5 minutes later. One owner per column: EMOSA owns the parent AP's
+  `Wifi_VIF_Config` row and never sees the pod's scan, so the release acts below EMOSA's
+  columns, in the pod's own configuration layer (a conf mutator in the pods' OpenSync core,
+  beside their channel override), never by `Wifi_VIF_Config.enabled`: the row stays as EMOSA
+  wrote it, and only `Wifi_VIF_State` shows the AP down. EMOSA reconciles its Config rows
+  against its M2 set, not against State, so it treats State and Config differing for that AP
+  during a hold as expected and writes nothing. The pod's fallback stations (`bhaul-sta-*`) stay
+  the pod's.
   A fallback that restarts the parent's OpenSync restarts the AP too, on its configured channel,
   and its children may fall back themselves: keeping the parent's fallback AP on the upstream's
   channel of that band avoids it. Withdrawing the AP on every fallback instead needs no release,
@@ -967,7 +971,7 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   (`name`, `ports`), `Port` and `Interface` (`name`).
 
 Both agents. Box scenarios: a child onto a parent and back; the parent's uplink falling back
-and returning on another channel with a child attached (the release, and its 60 s bound); the
+and returning on another channel with a child attached (the release, and its 30 s bound); the
 parent lost. Proven first on `rdk-1010`'s virtual pods with a `gre-parent` profile, then on the
 physical pods (a Pi through a Pi to the router).
 
