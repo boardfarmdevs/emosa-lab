@@ -69,6 +69,14 @@ def test_the_bss_role_comes_from_the_pods_own_multi_ap_state(multi_ap, flags):
     assert bss.report_flags == flags
 
 
+def test_a_gre_parents_ap_is_a_backhaul_bss():
+    """Spec 8.6: the parent AP is not Multi-AP (multi_ap none), and still a backhaul BSS."""
+    raw = raw_tables()
+    vif_state(raw, "home-ap-24")["multi_ap"] = "none"
+    (bss,) = device_view(decode(raw), parent_aps={"home-ap-24"}).radio(RUID_24).bsses
+    assert bss.report_flags == 0x80
+
+
 @pytest.mark.parametrize("change", ["disabled", "not-on-radio", "no-mac", "inactive-clients"])
 def test_only_what_the_pods_state_shows_is_represented(change):
     raw = raw_tables()

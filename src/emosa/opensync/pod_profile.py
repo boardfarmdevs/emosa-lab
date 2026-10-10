@@ -36,6 +36,7 @@ pods. Nothing is created before an authenticated M2 asks for it.
 """
 
 import hashlib
+import ipaddress
 import json
 
 from emosa.backends.base import Snapshot, SubmitResult
@@ -82,8 +83,11 @@ class PodBackend(OpenSyncBackend):
         serial,
         profile=None,
         multi_bss=False,
+        underlay=None,
     ):
         self.profile = profile or load_profile()
+        # the pod's 169.254.N.0/24 as a GRE parent (spec 8.6), from the fleet registry
+        self.underlay = underlay
         super().__init__(
             pod_id,
             session,
@@ -101,6 +105,13 @@ class PodBackend(OpenSyncBackend):
         self.ht_mode = self.profile.ht_mode
         self.anchor = None
         self.identity = None  # radio MAC, BSSID (None before the VIF exists), channel, radio
+
+    @property
+    def parent_aps(self):
+        """The slot VIFs a backhaul BSS takes as the pod's GRE parent AP (spec 8.6)."""
+        if self.profile.backhaul_mode != "gre-parent":
+            return frozenset()
+        return frozenset(name for name, role, _ in self.slots if role == "backhaul")
 
     def _values(self, row):
         psks = row.get("wpa_psks") or {}
@@ -227,9 +238,10 @@ class PodBackend(OpenSyncBackend):
         except EmosaError:
             return None
 
-    @staticmethod
-    def role(row):
-        return "backhaul" if row.get("multi_ap") == "backhaul_bss" else "fronthaul"
+    def role(self, row):
+        """A slot row's role: a Multi-AP backhaul BSS, or the GRE parent AP (multi_ap none)."""
+        backhaul = row.get("multi_ap") == "backhaul_bss" or row.get("if_name") in self.parent_aps
+        return "backhaul" if backhaul else "fronthaul"
 
     def _additional(self, rows):
         """Sorted [role, ssid, key fingerprint] of extra BSS rows (Config or State)."""
@@ -269,6 +281,38 @@ class PodBackend(OpenSyncBackend):
                 "state": states[0] if len(states) == 1 else {},
             }
         return found
+
+    def _parent_vif(self):
+        """The GRE parent AP's row (spec 8.6), as the OpenSync cloud writes a parent's backhaul
+        AP: no Multi-AP, no bridge, no bridging between its stations; hidden unless the
+        profile says otherwise."""
+        return {
+            **self.profile.backhaul_row,
+            "ssid_broadcast": "disabled",
+            **(self.profile.gre_parent_vif or {}),
+            "multi_ap": "none",
+            "bridge": "",
+            "ap_bridge": False,
+        }
+
+    def _parent_inet(self, name):
+        """The GRE parent AP's Inet row (spec 8.6): the underlay's .1, its DHCP range .10 to
+        .250; the profile's gre_parent.inet over the other columns."""
+        net = ipaddress.ip_network(self.underlay)
+        start, stop = net.network_address + 10, net.network_address + 250
+        return {
+            "if_type": "vif",
+            "enabled": True,
+            "network": True,
+            "NAT": False,
+            "mtu": 1600,
+            **(self.profile.gre_parent_inet or {}),
+            "if_name": name,
+            "ip_assign_scheme": "static",
+            "inet_addr": str(net.network_address + 1),
+            "netmask": str(net.netmask),
+            "dhcpd": ["map", [["start", str(start)], ["stop", str(stop)], ["lease_time", "12h"]]],
+        }
 
     def _assign(self, intent):
         """Slot for each additional BSS of the intent, by role in slot order."""
@@ -320,6 +364,10 @@ class PodBackend(OpenSyncBackend):
         ):
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "request exceeds the bound VIF")
         assigned = self._assign(intent)
+        if not self.underlay and self.parent_aps & set(assigned):
+            raise EmosaError(
+                Reason.UNSUPPORTED_OPERATION, "a GRE parent AP needs the pod's underlay (spec 8.6)"
+            )
         raw = await self.session.snapshot()
         vif_uuid, radio_uuid, config, state, decoded = self._binding(raw)
         if not raw["ready"] or not self.identity:
@@ -499,14 +547,17 @@ class PodBackend(OpenSyncBackend):
                     )
                     counts.append(None)
             elif bss is not None:
-                base = {
-                    **(
-                        self.profile.backhaul_row
-                        if role == "backhaul"
-                        else self.profile.fronthaul_vif
-                    ),
-                    "multi_ap": MULTI_AP[role],
-                }
+                if name in self.parent_aps:
+                    base = self._parent_vif()
+                else:
+                    base = {
+                        **(
+                            self.profile.backhaul_row
+                            if role == "backhaul"
+                            else self.profile.fronthaul_vif
+                        ),
+                        "multi_ap": MULTI_AP[role],
+                    }
                 key = self.vault.resolve(bss["secret_ref"])
                 if present:
                     slots = sorted(present["config"].get("wpa_psks") or {})
@@ -565,7 +616,24 @@ class PodBackend(OpenSyncBackend):
                         },
                     ]
                     counts += [None, None, 1]
-                if name not in inet_names:
+                if name in self.parent_aps:
+                    # the underlay's address and DHCP, in place of a Multi-AP slot's row
+                    parent_inet = self._parent_inet(name)
+                    if name in inet_names:
+                        ops.append(
+                            {
+                                "op": "update",
+                                "table": "Wifi_Inet_Config",
+                                "where": [["if_name", "==", name]],
+                                "row": {k: v for k, v in parent_inet.items() if k != "if_name"},
+                            }
+                        )
+                    else:
+                        ops.append(
+                            {"op": "insert", "table": "Wifi_Inet_Config", "row": parent_inet}
+                        )
+                    counts.append(None)
+                elif name not in inet_names:
                     ops.append(
                         {
                             "op": "insert",

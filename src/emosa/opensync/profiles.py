@@ -35,6 +35,11 @@ class PodProfile:
     esp_be: bytes | None = None  # declared best-effort ESP for AP metrics (spec §3.8)
     # the backhaul station on each band ("2.4G", "5G", "6G"), for a move to another band (§8.3)
     uplink_stations: tuple = ()  # ((band, if_name), ...)
+    # how a backhaul BSS of the M2 set is carried: "multi-ap" (§8.5) or "gre-parent" (§8.6),
+    # and the parent AP's overrides of its VIF and Inet rows
+    backhaul_mode: str = "multi-ap"
+    gre_parent_vif: dict | None = None
+    gre_parent_inet: dict | None = None
 
     @property
     def backhaul_row(self):
@@ -63,4 +68,7 @@ def load(ref=DEFAULT):
         data.get("uplink", {}).get("station"),
         bytes.fromhex(data["ap_metrics"]["esp_be"]) if "ap_metrics" in data else None,
         tuple(sorted(data.get("uplink", {}).get("stations", {}).items())),
+        data.get("backhaul_mode", "multi-ap"),
+        data.get("gre_parent", {}).get("vif", {}),
+        data.get("gre_parent", {}).get("inet", {}),
     )

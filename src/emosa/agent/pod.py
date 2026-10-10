@@ -308,7 +308,7 @@ class PodReportSource:
             ident = self.backend.identity
             if not raw["ready"] or not ident:
                 raise EmosaError(Reason.NOT_READY, "bound radio State unavailable")
-            device = device_view(rows)
+            device = device_view(rows, parent_aps=self.backend.parent_aps)
             radio = device.radio(mac(ident["radio_mac"]))
             if radio is None:
                 raise EmosaError(Reason.NOT_READY, "bound radio absent from the view")
@@ -541,6 +541,7 @@ async def serve(config, stop):
         serial=config["serial"],
         profile=load_profile(config.get("profile", DEFAULT_PROFILE)),
         multi_bss=config.get("multi_bss", False) is True,
+        underlay=config.get("underlay"),
     )
     engine = Engine(store, vault, {pod_id: backend})
     engine.recover()

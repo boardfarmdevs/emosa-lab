@@ -328,6 +328,129 @@ def test_extra_bsses_are_observed_from_their_own_state(tmp_path):
     assert "additional" not in asyncio.run(single.snapshot()).config
 
 
+def gre_parent(tmp_path, *, underlay="169.254.2.0/24", raw=None, **gre):
+    """A multi-BSS pod whose profile makes a backhaul BSS its GRE parent AP (spec 8.6)."""
+    from emosa.opensync import profiles
+
+    data = json.loads(
+        (Path(profiles.__file__).parents[1] / "profiles" / f"{profiles.DEFAULT}.json").read_text()
+    )
+    data.update(id="gre-parent-pod-v1", backhaul_mode="gre-parent", gre_parent=gre)
+    path = tmp_path / "gre-parent.json"
+    path.write_text(json.dumps(data))
+    _, vault = multi(tmp_path)
+    profile = profiles.load(str(path))
+    return PodBackend(
+        "pod-1",
+        Session(raw or tables()),
+        vault,
+        serial=SERIAL,
+        multi_bss=True,
+        profile=profile,
+        underlay=underlay,
+    )
+
+
+def submitted(pod, intent):
+    asyncio.run(pod.context())
+    result = asyncio.run(pod.submit(intent, {"transaction_id": "t", "session_generation": 1}))
+    assert result.status == "committed"
+    rows = {}
+    for op in pod.session.sent[-1]:
+        if op["op"] in ("insert", "update") and "if_name" in op.get("row", {}):
+            rows[op["table"], op["row"]["if_name"]] = op["row"]
+    return rows
+
+
+def test_a_gre_parent_pods_backhaul_bss_is_its_parent_ap(tmp_path):
+    pod = gre_parent(tmp_path)
+    rows = submitted(pod, rdk_intent())
+    ap = rows["Wifi_VIF_Config", "b-ap-24"]
+    assert (ap["ssid"], ap["multi_ap"], ap["bridge"], ap["ap_bridge"], ap["ssid_broadcast"]) == (
+        "mesh_backhaul",
+        "none",
+        "",
+        False,
+        "disabled",
+    )
+    assert ap["wpa_psks"] == ["map", [["key", "ExtraKey3-2026"]]] and ap["vif_radio_idx"] == 1
+    assert rows["Wifi_Inet_Config", "b-ap-24"] == {
+        "if_name": "b-ap-24",
+        "if_type": "vif",
+        "enabled": True,
+        "network": True,
+        "NAT": False,
+        "mtu": 1600,
+        "ip_assign_scheme": "static",
+        "inet_addr": "169.254.2.1",
+        "netmask": "255.255.255.0",
+        "dhcpd": [
+            "map",
+            [["start", "169.254.2.10"], ["stop", "169.254.2.250"], ["lease_time", "12h"]],
+        ],
+    }
+    # the fronthaul slots stay Multi-AP, and the parent AP is a backhaul BSS for the
+    # configured set and the view
+    assert rows["Wifi_VIF_Config", "fh-24"]["multi_ap"] == "fronthaul_bss"
+    assert pod.role({"if_name": "b-ap-24", "multi_ap": "none"}) == "backhaul"
+    assert pod.parent_aps == {"b-ap-24"}
+
+
+def test_a_gre_parent_slot_present_gets_the_underlays_inet_row(tmp_path):
+    raw = with_slot_vif("b-ap-24")
+    raw["Wifi_VIF_Config"][EXTRA].update(multi_ap="backhaul_bss", bridge="br-home")
+    pod = gre_parent(tmp_path, raw=raw)
+
+    async def inet_names(*_args, **_kwargs):
+        return [{"rows": [{"if_name": "b-ap-24"}]}]
+
+    session_transact = pod.session.transact
+
+    async def transact(operations, *args, **kwargs):
+        if operations[0]["op"] == "select" and operations[0]["table"] == "Wifi_Inet_Config":
+            return await inet_names()
+        return await session_transact(operations, *args, **kwargs)
+
+    pod.session.transact = transact
+    submitted(pod, rdk_intent())
+    update = next(
+        op
+        for op in pod.session.sent[-1]
+        if op["op"] == "update"
+        and op["table"] == "Wifi_VIF_Config"
+        and op["where"] == [["_uuid", "==", ["uuid", EXTRA]]]
+    )
+    # from a Multi-AP backhaul BSS in br-home to the parent AP
+    assert (update["row"]["multi_ap"], update["row"]["bridge"]) == ("none", "")
+    inet = next(
+        op
+        for op in pod.session.sent[-1]
+        if op["table"] == "Wifi_Inet_Config" and op.get("where") == [["if_name", "==", "b-ap-24"]]
+    )
+    assert inet["op"] == "update" and inet["row"]["inet_addr"] == "169.254.2.1"
+
+
+def test_the_profile_may_broadcast_the_parent_and_set_its_inet_columns(tmp_path):
+    pod = gre_parent(
+        tmp_path,
+        vif={"ssid_broadcast": "enabled", "multi_ap": "backhaul_bss", "bridge": "br-home"},
+        inet={"mtu": 1500, "inet_addr": "10.0.0.1"},
+    )
+    rows = submitted(pod, rdk_intent())
+    ap, inet = rows["Wifi_VIF_Config", "b-ap-24"], rows["Wifi_Inet_Config", "b-ap-24"]
+    # its choice of broadcast; never Multi-AP or bridged, and the address is the underlay's
+    assert (ap["ssid_broadcast"], ap["multi_ap"], ap["bridge"]) == ("enabled", "none", "")
+    assert (inet["mtu"], inet["inet_addr"]) == (1500, "169.254.2.1")
+
+
+def test_a_gre_parent_without_an_underlay_is_refused(tmp_path):
+    pod = gre_parent(tmp_path, underlay=None)
+    with pytest.raises(EmosaError) as error:
+        asyncio.run(pod.plan(rdk_intent()))
+    assert error.value.code == Reason.UNSUPPORTED_OPERATION
+    asyncio.run(pod.plan(rdk_intent(3)))  # a set without a backhaul BSS needs none
+
+
 def test_single_bss_radio_refuses_additional_bsses(tmp_path):
     pod, _ = backend(tmp_path)
     with pytest.raises(EmosaError) as error:

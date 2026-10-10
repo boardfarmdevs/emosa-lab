@@ -88,9 +88,10 @@ def mac(text):
     return value
 
 
-def role(multi_ap):
-    """The EasyMesh role of an AP VIF from its OpenSync ``multi_ap`` value."""
-    return BACKHAUL if multi_ap == "backhaul_bss" else FRONTHAUL
+def role(multi_ap, parent=False):
+    """The EasyMesh role of an AP VIF from its OpenSync ``multi_ap`` value; a GRE parent's AP
+    (spec 8.6, ``multi_ap`` none) is a backhaul BSS."""
+    return BACKHAUL if parent or multi_ap == "backhaul_bss" else FRONTHAUL
 
 
 @dataclass(frozen=True)
@@ -155,8 +156,9 @@ class DeviceView:
         return next((r for r in self.radios if r.ruid == ruid), None)
 
 
-def device_view(decoded):
-    """The pod as EasyMesh sees it, from schema-decoded OVSDB rows ({table: {uuid: row}})."""
+def device_view(decoded, parent_aps=frozenset()):
+    """The pod as EasyMesh sees it, from schema-decoded OVSDB rows ({table: {uuid: row}}).
+    ``parent_aps``: the VIFs that are the pod's GRE parent APs (spec 8.6), backhaul BSSes."""
     nodes = list(decoded.get("AWLAN_Node", {}).values())
     if len(nodes) != 1 or not nodes[0].get("serial_number"):
         raise EmosaError(Reason.NOT_READY, "pod identity absent")
@@ -194,7 +196,7 @@ def device_view(decoded):
                         vif["if_name"],
                         mac(vif["mac"]),
                         vif.get("ssid") or "",
-                        role(vif.get("multi_ap")),
+                        role(vif.get("multi_ap"), vif["if_name"] in parent_aps),
                         tuple(stations),
                         vif,
                     )
