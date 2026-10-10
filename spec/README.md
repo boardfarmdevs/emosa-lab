@@ -878,6 +878,66 @@ pod for it. The two agents, in one fleet, describe the hop to the controller:
 
 Both agents.
 
+### 8.6 A pod as the GRE parent of other pods (draft)
+
+*Draft for review (10 October): approved in principle on 9 October (plan 9.5, layer B); not
+implemented.*
+
+§8.5 needs a 4-address Multi-AP link between the pods, which some radios cannot carry (a USB
+adapter whose driver has no 4-address station or AP). Layer B gives a pod on such a radio the role
+the gateway's GTP has (§8.2): its children join it as 3-address stations, as they join the
+gateway, and their `cm` builds its gretap to it. The recipe is what the OpenSync cloud writes for
+a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gre_step`).
+
+- **Which backhaul.** The pod profile (§3.5) says how the pod's radios carry a backhaul BSS:
+  `backhaul.mode` `multi-ap` (§8.5, the default) or `gre-parent` (this section). The controller
+  decides where backhaul BSSes are, as before: a backhaul BSS in its applied M2 set for a radio
+  of a `gre-parent` pod is created as the pod's **parent AP** on that radio, not as a Multi-AP
+  BSS. The agent reports it as a backhaul BSS (§3.3), so the controller can steer a child onto it
+  (RDK's controller takes the role from its own backhaul SSID, unified-wifi-mesh 0247).
+- **The parent AP** (profile `backhaul.gre_parent.vif` over the backhaul slot's row): `mode=ap`,
+  the M2's backhaul SSID and passphrase (`wpa_*` columns), `multi_ap=none`, no `bridge`,
+  `ap_bridge=false`, SSID broadcast on. The pod's own backhaul station on that radio MUST be
+  disabled: it would find only its own AP.
+- **The underlay** (§8.2's rules, on the pod): `169.254.N.0/24`, the AP at `.1`
+  (`Wifi_Inet_Config`: `ip_assign_scheme=static`, `netmask=255.255.255.0`, `NAT=false`,
+  `mtu=1600`, `dhcpd` `start .10`, `stop .250`, `lease_time 12h`). `N` is the parent's, assigned
+  by the fleet registry (§4): unique in the fleet, never `1` (the gateway's GTP), and kept across
+  the pod's restarts. OpenSync 6.6 `cm` on a child takes the `.1` as its tunnel remote and
+  pings it; the pod answers ICMP itself.
+- **A tunnel per child:** for each lease on the AP (`DHCP_leased_IP`) whose MAC is associated to
+  it (`Wifi_Associated_Clients` of the AP's `Wifi_VIF_State`): a `Wifi_Inet_Config` row
+  `pgd<b3>_<b4>` (the lease's last two octets) with `if_type=gre`, `gre_ifname` the AP,
+  `gre_local_inet_addr` the AP's address (`Wifi_Inet_State`), `gre_remote_inet_addr` the lease,
+  `mtu=1562`, `ip_assign_scheme=none`, `network=true`; and its `Interface` and `Port` as a port of
+  `br-home`. Removed when the lease or the association ends. Each hop carries one GRE: a
+  child's frames leave its tunnel on the parent, in `br-home`, and ride the parent's own uplink.
+  The underlay itself MUST NOT be bridged into `br-home`.
+- **The child** of a GRE parent moves by the uplink switch (§8.3) with one difference: its
+  credential is the pod-backhaul SSID and passphrase of a 3-address join (`onboard_type=gre`),
+  pinned to the parent AP's BSSID, not a Multi-AP credential; `wds` stays unset. **Applied** when
+  its State shows the station on that BSSID and `cm`'s uplink in use is the station with its
+  gretap. Held, moved and reverted as in §8.3; the fallback is still the pod's restart to its
+  bootstrap (GTP) path.
+- **No loops**, as §8.5: EMOSA MUST refuse a move to a parent AP of a pod whose own upstream
+  chain reaches this pod.
+- **Reported** as in §8.5: the child names the parent's agent as its 1905 neighbor on its
+  backhaul, the parent names the child on the AP, and the pair's link metrics come from the
+  parent's client report of the child's station (§3.6; with telemetry off, no measurement).
+- **Withdrawn:** a backhaul BSS no longer in the M2 set removes the parent AP, its
+  `Wifi_Inet_Config` and every child's tunnel row, port and interface, in one guarded
+  transaction; the children's `cm` then falls back to their bootstrap path.
+- **Written** (§3.2), each change one guarded transaction: the parent AP (`insert` or `update
+  Wifi_VIF_Config`, `mutate Wifi_Radio_Config vif_configs`, `update` the pod's station on that
+  radio `enabled=false`, `insert` or `update Wifi_Inet_Config` of the AP); a child's tunnel
+  (`insert Wifi_Inet_Config` gre row, `insert Interface`, `insert Port`, `mutate Bridge br-home
+  ports`); the withdrawal and a child's departure as the matching deletes. Read besides §3.2's:
+  `DHCP_leased_IP` (`hwaddr`, `inet_addr`), `Wifi_Inet_State` (`if_name`, `inet_addr`), `Bridge`
+  (`name`, `ports`), `Port` and `Interface` (`name`).
+
+Both agents. Proven first on `rdk-1010`'s virtual pods with a `gre-parent` profile, then on the
+physical pods (a Pi through a Pi to the router).
+
 ## 9. Not covered yet
 
 - 5 and 6 GHz radios, and WPA3;
