@@ -908,11 +908,24 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   use (a parent that is itself a child: a radio carrying both its uplink station and the parent
   AP), the station stays: the parent AP takes the station's channel, and the station stays
   pinned to its upstream BSSID (§8.3), so it never joins its own AP. Only a station that is not
-  the uplink in use is disabled (a wired parent: it would find only its own AP). When the uplink
-  moves off that radio (a fallback to another band, a restart to the bootstrap path), the parent
-  AP stays where it is and keeps its children; when the uplink returns to that radio on another
-  channel, the AP follows the station's channel and the children, still pinned to its BSSID,
-  re-associate.
+  the uplink in use is disabled (a wired parent: it would find only its own AP).
+- **Fallback and return.** When the uplink moves off that radio (a fallback to another band),
+  the parent AP stays up at its channel and keeps its children, while the parent's own traffic
+  takes the fallback. When the uplink returns on the same channel, nothing moves. On another
+  channel, a radio that runs an AP and a station on one channel only (the Pis' MT7921U) cannot
+  link its station beside the AP, and the AP cannot move before the station links: the pod
+  **releases** the AP. While its uplink is on the fallback and the upstream BSSID is heard on
+  another control channel than the AP's, the pod takes the AP down (`Wifi_VIF_Config.enabled`
+  false) until its station links, then up again; the AP starts on the station's channel and the
+  children, pinned to its BSSID, re-associate (about 15 to 30 s, under a child's own fallback
+  delay). The release is the pod's (its fallback logic reads its station's scan results): once
+  the parent AP exists, its `enabled` is the pod's to set. EMOSA creates the AP enabled, then
+  neither writes `enabled` again nor guards it, and a release is not another manager's change.
+  A fallback that restarts the parent's OpenSync restarts the AP too, on its configured channel,
+  and its children may fall back themselves: keeping the parent's fallback AP on the upstream's
+  channel of that band avoids it. Withdrawing the AP on every fallback instead needs no release,
+  at the cost of each child's fallback and rejoin (about 2 minutes) per loss of the parent's
+  uplink.
 - **The underlay** (§8.2's rules, on the pod): `169.254.N.0/24`, the AP at `.1`
   (`Wifi_Inet_Config`: `ip_assign_scheme=static`, `netmask=255.255.255.0`, `NAT=false`,
   `mtu=1600`, `dhcpd` `start .10`, `stop .250`, `lease_time 12h`). `N` is the parent's, assigned
@@ -943,7 +956,8 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
 - **Withdrawn:** a backhaul BSS no longer in the M2 set removes the parent AP, its
   `Wifi_Inet_Config` and every child's tunnel row, port and interface, in one guarded
   transaction; the children's `cm` then falls back to their bootstrap path.
-- **Written** (§3.2), each change one guarded transaction: the parent AP (`insert` or `update
+- **Written** (§3.2), each change one guarded transaction (the parent AP's `enabled` excepted
+  after its creation, the pod's release): the parent AP (`insert` or `update
   Wifi_VIF_Config`, `mutate Wifi_Radio_Config vif_configs`, `update` the pod's station on that
   radio `enabled=false`, `insert` or `update Wifi_Inet_Config` of the AP); a child's tunnel
   (`insert Wifi_Inet_Config` gre row, `insert Interface`, `insert Port`, `mutate Bridge br-home
