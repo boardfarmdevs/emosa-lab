@@ -894,16 +894,32 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   decides where backhaul BSSes are, as before: a backhaul BSS in its applied M2 set for a radio
   of a `gre-parent` pod is created as the pod's **parent AP** on that radio, not as a Multi-AP
   BSS. The agent reports it as a backhaul BSS (§3.3), so the controller can steer a child onto it
-  (RDK's controller takes the role from its own backhaul SSID, unified-wifi-mesh 0247).
+  (RDK's controller takes the role from its own backhaul SSID, unified-wifi-mesh 0247). This is
+  standard EasyMesh, the controller configuring backhaul BSSes through M2, as in §8.5. A child
+  moves only when the operator directs it, by the controller's Backhaul Steering Request
+  (`SteerWiFiBackhaul`): RDK's controller does not choose a pod's parent by itself (the owner's
+  ruling of 8 October holds).
 - **The parent AP** (profile `backhaul.gre_parent.vif` over the backhaul slot's row): `mode=ap`,
   the M2's backhaul SSID and passphrase (`wpa_*` columns), `multi_ap=none`, no `bridge`,
-  `ap_bridge=false`, SSID broadcast on. The pod's own backhaul station on that radio MUST be
-  disabled: it would find only its own AP.
+  `ap_bridge=false`. The SSID is hidden by default, as the OpenSync cloud keeps a backhaul;
+  broadcasting it is the profile's choice (`ssid_broadcast`), since a child joins by its pinned
+  BSSID either way.
+- **The parent's own uplink.** When the pod's backhaul station on that radio is its uplink in
+  use (a parent that is itself a child: a radio carrying both its uplink station and the parent
+  AP), the station stays: the parent AP takes the station's channel, and the station stays
+  pinned to its upstream BSSID (§8.3), so it never joins its own AP. Only a station that is not
+  the uplink in use is disabled (a wired parent: it would find only its own AP). When the uplink
+  moves off that radio (a fallback to another band, a restart to the bootstrap path), the parent
+  AP stays where it is and keeps its children; when the uplink returns to that radio on another
+  channel, the AP follows the station's channel and the children, still pinned to its BSSID,
+  re-associate.
 - **The underlay** (§8.2's rules, on the pod): `169.254.N.0/24`, the AP at `.1`
   (`Wifi_Inet_Config`: `ip_assign_scheme=static`, `netmask=255.255.255.0`, `NAT=false`,
   `mtu=1600`, `dhcpd` `start .10`, `stop .250`, `lease_time 12h`). `N` is the parent's, assigned
-  by the fleet registry (§4): unique in the fleet, never `1` (the gateway's GTP), and kept across
-  the pod's restarts. OpenSync 6.6 `cm` on a child takes the `.1` as its tunnel remote and
+  by the fleet registry (§4): unique in the fleet, kept across the pod's restarts, and never one
+  whose `/24` overlaps the site's own GTP underlay, which the fleet's configuration gives per
+  site (`169.254.1.0/24` in the RDK lab; a router's GTP may use another, such as
+  `169.254.2.0/25`). The registry refuses a value that overlaps it. OpenSync 6.6 `cm` on a child takes the `.1` as its tunnel remote and
   pings it; the pod answers ICMP itself.
 - **A tunnel per child:** for each lease on the AP (`DHCP_leased_IP`) whose MAC is associated to
   it (`Wifi_Associated_Clients` of the AP's `Wifi_VIF_State`): a `Wifi_Inet_Config` row
