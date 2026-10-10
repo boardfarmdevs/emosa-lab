@@ -141,6 +141,10 @@
       "box": ["pod-child", "pod-parent", "pod-parent-loop"],
       "python": ["test_peers.py"]
     },
+    "README 8.6 A pod as the GRE parent of other pods (draft)": {
+      "python": ["test_fleet.py"],
+      "note": "only the fleet registry's underlay so far; the agents, vectors and box scenarios follow"
+    },
     "README 9. Not covered yet": {
       "note": "not implemented, so not tested: the list is what EMOSA does not do"
     },

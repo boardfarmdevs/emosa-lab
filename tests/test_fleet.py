@@ -8,7 +8,7 @@ import time
 
 import pytest
 
-from emosa.agent.fleet import Fleet, Registry, agent_config, derive_al
+from emosa.agent.fleet import Fleet, Registry, agent_config, derive_al, free_underlay
 from emosa.opensync.session import OvsSession
 from emosa_lab.simulation.database import SimDatabase
 
@@ -93,6 +93,44 @@ def test_registry_allocates_once_persists_and_reports_full(tmp_path):
     assert (again["port"], again["al_mac"], again["handovers"]) == (6651, a["al_mac"], 2)
     registry.forget("A")
     assert registry.assign({"serial_number": "C"})["port"] == 6651
+
+
+@pytest.mark.unit
+def test_free_underlay_avoids_the_gtp_underlay_and_the_used_ones():
+    assert free_underlay("169.254.1.0/24", set()) == "169.254.2.0/24"  # the RDK lab's GTP
+    assert free_underlay("169.254.2.0/25", set()) == "169.254.1.0/24"  # a router's GTP
+    assert free_underlay("169.254.2.0/25", {"169.254.1.0/24"}) == "169.254.3.0/24"
+    assert free_underlay("169.254.0.0/16", set()) is None  # every /24 overlaps it
+    every = {f"169.254.{n}.0/24" for n in range(2, 255)}
+    assert free_underlay("169.254.1.0/24", every) is None
+
+
+@pytest.mark.unit
+def test_registry_allocates_each_pod_an_underlay_only_with_a_gtp_underlay(tmp_path):
+    from emosa.config import validate
+
+    path = tmp_path / "fleet.json"
+    registry = Registry(path, range(6651, 6654), gtp_underlay="169.254.1.0/24")
+    a = registry.assign({"serial_number": "A"})
+    b = registry.assign({"serial_number": "B"})
+    assert (a["underlay"], b["underlay"]) == ("169.254.2.0/24", "169.254.3.0/24")
+    validate("fleet-registry", json.loads(path.read_text()))
+    # kept across a pod's reconnects and the fleet's restarts
+    again = Registry(path, range(6651, 6654), gtp_underlay="169.254.1.0/24")
+    assert again.assign({"serial_number": "B"})["underlay"] == "169.254.3.0/24"
+    # a site whose GTP underlay changed onto one: that pod alone gets another
+    moved = Registry(path, range(6651, 6654), gtp_underlay="169.254.3.0/25")
+    assert moved.assign({"serial_number": "B"})["underlay"] == "169.254.1.0/24"
+    assert moved.assign({"serial_number": "A"})["underlay"] == "169.254.2.0/24"
+    # without one, none is allocated and none reaches the agent
+    plain = Registry(tmp_path / "plain.json", range(6651, 6654))
+    assert "underlay" not in plain.assign({"serial_number": "C"})
+    with_gtp = fleet_config(tmp_path, gtp_underlay="169.254.1.0/24")
+    validate("fleet-config", with_gtp)
+    config = agent_config(a, with_gtp)
+    validate("agent-config", config)
+    assert config["underlay"] == "169.254.2.0/24"
+    assert "underlay" not in agent_config(a, fleet_config(tmp_path))
 
 
 @pytest.mark.unit

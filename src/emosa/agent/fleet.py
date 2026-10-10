@@ -27,6 +27,7 @@ Run: ``python -m emosa.agent.fleet serve /etc/emosa-fleet.json``
 import argparse
 import errno
 import hashlib
+import ipaddress
 import json
 import logging
 import os
@@ -70,16 +71,40 @@ def derive_al(serial, taken=()):
     raise RuntimeError("no free AL MAC")
 
 
+def free_underlay(gtp_underlay, used):
+    """The lowest 169.254.N.0/24 (N 1 to 254) that overlaps neither the site's GTP underlay nor
+    one in ``used``: a pod's underlay when it is a GRE parent (spec 8.6). None when none is left."""
+    gtp = ipaddress.ip_network(gtp_underlay, strict=False)
+    for n in range(1, 255):
+        net = ipaddress.ip_network(f"169.254.{n}.0/24")
+        if not net.overlaps(gtp) and str(net) not in used:
+            return str(net)
+    return None
+
+
 class Registry:
     """serial -> virtual agent; a JSON file rewritten atomically on every change. The file
     is the state: it is read again before each change, so a forget run by another process
-    (emosa-fleet forget while the fleet serves) takes effect at once."""
+    (emosa-fleet forget while the fleet serves) takes effect at once.
 
-    def __init__(self, path, ports, *, reserved_als=()):
+    With the site's GTP underlay given (fleet ``gtp_underlay``), every entry also holds the
+    underlay it uses as a GRE parent (spec 8.6), allocated on first sight like its port and kept;
+    one that overlaps the GTP underlay (its configuration changed) is allocated again."""
+
+    def __init__(self, path, ports, *, reserved_als=(), gtp_underlay=None):
         self.path, self.ports = Path(path), tuple(ports)
         self.reserved = set(reserved_als)
+        self.gtp_underlay = gtp_underlay
         self.lock = threading.Lock()
         self._load()
+
+    def _underlay(self, entry):
+        gtp = ipaddress.ip_network(self.gtp_underlay, strict=False)
+        mine = entry.get("underlay")
+        if mine is not None and not ipaddress.ip_network(mine).overlaps(gtp):
+            return mine
+        used = {a["underlay"] for a in self.agents.values() if a is not entry and "underlay" in a}
+        return free_underlay(self.gtp_underlay, used)
 
     def _load(self):
         try:
@@ -121,6 +146,13 @@ class Registry:
                 last_seen=time.time(),
                 handovers=entry["handovers"] + 1,
             )
+            if self.gtp_underlay is not None:
+                underlay = self._underlay(entry)
+                if underlay is None:
+                    entry.pop("underlay", None)
+                    log.warning("%s: no 169.254.N.0/24 left for its GRE parent underlay", serial)
+                elif underlay != entry.get("underlay"):
+                    entry["underlay"] = underlay
             self._save()
             return dict(entry)
 
@@ -154,6 +186,12 @@ def agent_config(entry, fleet):
             if "topology_query_window" in fleet
             else {}
         ),
+        # its underlay as a GRE parent (spec 8.6), while the fleet allocates them
+        **(
+            {"underlay": entry["underlay"]}
+            if "underlay" in entry and "gtp_underlay" in fleet
+            else {}
+        ),
         "state_dir": str(Path(fleet["state_root"]) / entry["pod_id"]),
         **(
             {"run_dir": str(Path(fleet["run_root"]) / entry["pod_id"])}
@@ -184,6 +222,7 @@ class Fleet:
             Path(config["state_root"]) / "fleet.json",
             range(low, high + 1),
             reserved_als={config["controller_al"]},
+            gtp_underlay=config.get("gtp_underlay"),
         )
         self.config_dir = Path(config["config_dir"])
         self.starter, self.stopper = starter, stopper

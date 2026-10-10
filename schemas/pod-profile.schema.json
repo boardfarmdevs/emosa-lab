@@ -46,6 +46,16 @@
       }
     },
     "inet": {"$ref": "#/$defs/row"},
+    "backhaul_mode": {"enum": ["multi-ap", "gre-parent"], "description": "How the pod's radios carry a backhaul BSS of the controller's M2 set: a Multi-AP 4-address BSS (spec 8.5, the default) or a parent AP its children reach by GRE (spec 8.6)."},
+    "gre_parent": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The parent AP (spec 8.6): its Wifi_VIF_Config overrides over the backhaul slot's row, and its Wifi_Inet_Config row (the address, netmask and DHCP range come from the pod's underlay).",
+      "properties": {
+        "vif": {"$ref": "#/$defs/row"},
+        "inet": {"$ref": "#/$defs/row"}
+      }
+    },
     "ap_metrics": {
       "type": "object",
       "additionalProperties": false,
