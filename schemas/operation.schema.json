@@ -326,6 +326,40 @@
             "bridge"
           ],
           "additionalProperties": false
+        },
+        {
+          "title": "A GRE parent AP's tunnels, one to each child address (the GRE parent scope, spec 8.6)",
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "ap": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]{1,15}$"
+            },
+            "bridge": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]{1,15}$"
+            },
+            "remotes": {
+              "type": "array",
+              "maxItems": 241,
+              "items": {
+                "type": "string",
+                "pattern": "^169\\.254\\.[0-9]{1,3}\\.[0-9]{1,3}$"
+              }
+            }
+          },
+          "required": [
+            "pod_id",
+            "ap",
+            "bridge",
+            "remotes"
+          ],
+          "additionalProperties": false
         }
       ]
     },

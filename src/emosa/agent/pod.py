@@ -36,6 +36,7 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
+from emosa.agent.gre_parent import GreTunnels
 from emosa.agent.peers import PeerDirectory, children, loops, mac_bytes, upstream
 from emosa.agent.probe_watch import ProbeWatch
 from emosa.agent.renew import CONTROLLER_TIMEOUT, M2_TIMEOUT, RenewRules
@@ -56,6 +57,8 @@ from emosa.opensync.easymesh_view import (
     radio_capabilities,
     topology,
 )
+from emosa.opensync.gre_parent import MONITOR as GRE_PARENT_MONITOR
+from emosa.opensync.gre_parent import GreParentBackend
 from emosa.opensync.pod_profile import PodBackend, wpa2_psk
 from emosa.opensync.probe_watch import MONITOR as WATCH_MONITOR
 from emosa.opensync.probe_watch import WatchBackend
@@ -116,7 +119,14 @@ MONITOR = {
     "AWLAN_Node": [*TABLES["AWLAN_Node"], "id"],
     "Wifi_Radio_State": [*TABLES["Wifi_Radio_State"], "tx_power"],
 }
-for _scope in (UPLINK_MONITOR, TELEMETRY_MONITOR, STEERING_MONITOR, WATCH_MONITOR, WIRED_MONITOR):
+for _scope in (
+    UPLINK_MONITOR,
+    TELEMETRY_MONITOR,
+    STEERING_MONITOR,
+    WATCH_MONITOR,
+    WIRED_MONITOR,
+    GRE_PARENT_MONITOR,
+):
     for _table, _columns in _scope.items():  # the other scopes, each column once
         MONITOR[_table] = list(dict.fromkeys([*MONITOR.get(_table, []), *_columns]))
 
@@ -610,6 +620,28 @@ async def serve(config, stop):
             WiredIntent(pod_id, port, bridge),
             run_id=config.get("run_id", pod_id),
         )
+    tunnels = None
+    if backend.parent_aps and config.get("underlay"):
+        # a GRE parent (spec 8.6): a tunnel per child of its parent AP, in the fronthaul's bridge
+        bridge = backend.profile.fronthaul_vif.get("bridge")
+        if not bridge:
+            raise EmosaError(
+                Reason.INVALID_INPUT, "gre parent: the profile's fronthaul has no bridge"
+            )
+        tunnels = GreTunnels(
+            pod_id,
+            GreParentBackend(
+                pod_id,
+                session,
+                serial=config["serial"],
+                ap=min(backend.parent_aps),
+                bridge=bridge,
+                underlay=config["underlay"],
+            ),
+            Store(state_dir / "gre-parent"),
+            vault,
+            run_id=config.get("run_id", pod_id),
+        )
     backhaul_steering_state = {}  # a Backhaul Steering move under way outlives a session
     telemetry = stats = subscriber = telemetry_store = watch = None
     telemetry_config = config.get("telemetry", {"mode": "off"})
@@ -725,6 +757,7 @@ async def serve(config, stop):
             ),
             "steering": {"mode": "owm", **steering.status()} if steering else {"mode": "off"},
             "probe_watch": watch.status() if watch else None,
+            "gre_parent": tunnels.status() if tunnels else None,
             "writes": backend.write_count,
             "worker_pid": os.getpid(),
             "updated": time.time(),
@@ -883,6 +916,11 @@ async def serve(config, stop):
                         await timed("wired uplink", wired.tick())
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("wired uplink: %s", exc)
+                if refreshed and tunnels:
+                    try:
+                        await timed("gre parent", tunnels.tick())
+                    except (EmosaError, ConnectionError, TimeoutError) as exc:
+                        log.warning("gre parent: %s", exc)
                 if refreshed and telemetry:
                     try:
                         await timed("telemetry", telemetry.tick())

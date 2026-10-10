@@ -207,3 +207,34 @@ def test_no_tunnel_before_the_parent_ap_has_its_address():
     with pytest.raises(EmosaError) as error:
         asyncio.run(pod.plan(intent("169.254.2.10")))
     assert error.value.code == Reason.NOT_READY
+
+
+def test_the_agent_keeps_the_tunnels_to_its_children(tmp_path):
+    from emosa.agent.gre_parent import GreTunnels
+    from emosa.clock import ManualClock
+    from emosa.model import State
+    from emosa.secrets import SecretStore
+    from emosa.store import Store
+
+    pod = backend(tables())
+    agent = GreTunnels(
+        "pod-2",
+        pod,
+        Store(tmp_path / "gre-parent"),
+        SecretStore(tmp_path / "secrets"),
+        run_id="r",
+        clock=ManualClock(),
+    )
+    asyncio.run(agent.tick())  # a child: its tunnel written once
+    asyncio.run(agent.tick())
+    assert len(pod.session.sent) == 1 and agent.latest().state == State.CONFIG_COMMITTED
+    pod.session.tables = tables(tunnels=(("pgd2_10", "169.254.2.10"),))  # nm made it
+    asyncio.run(agent.tick())
+    assert agent.latest().state == State.OBSERVED_APPLIED
+    assert agent.status()["tunnels"] == {"pgd2_10": "169.254.2.10"}
+    # the child leaves: its tunnel goes, in a write of its own
+    pod.session.tables = tables(leases=(), associated=(), tunnels=(("pgd2_10", "169.254.2.10"),))
+    asyncio.run(agent.tick())
+    assert len(pod.session.sent) == 2
+    assert {op["op"] for op in pod.session.sent[-1]} == {"wait", "delete", "mutate"}
+    assert agent.status()["children"] == []
