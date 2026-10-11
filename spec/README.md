@@ -976,7 +976,46 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   pinned to the parent AP's BSSID, not a Multi-AP credential; `wds` stays unset. **Applied** when
   its State shows the station on that BSSID and `cm`'s uplink in use is the station with its
   gretap. Held, moved and reverted as in §8.3; the fallback is still the pod's restart to its
-  bootstrap (GTP) path.
+  bootstrap (GTP) path. A pure GRE child has no configured Multi-AP upstream: it stays on its
+  bootstrap (GTP) path, writing nothing, until the controller steers it onto a parent (uplink
+  mode `gre`, the pinned BSSID set only by a steer).
+- **Which target is a GRE join.** A child learns the fleet's GRE parent APs only from the peers'
+  statuses: each GRE parent advertises its parent AP's own BSSID (`gre_parent.ap_bssid`), and a
+  child reads that set (no 1905 frame names another pod's AP). A Backhaul Steering target in that
+  set is the 3-address GRE join above; any other target is the Multi-AP (4-address) switch of
+  §8.3. A child MUST NOT try GRE onto a BSS that is not a known fleet parent.
+- **The decision, before the child leaves its uplink.** For a target that is not a fleet parent,
+  EMOSA decides from what it holds, not from the controller's word, and refuses only what is
+  positively foreign or absent (so an operator's move onto a hidden backhaul BSS, as in layer A,
+  is not refused): a target seen on air advertising the child's own backhaul SSID (from its M2
+  bSTA profile) is the Multi-AP switch; a target seen hidden (an empty SSID) and not a parent is
+  still the Multi-AP switch, with the attempt-and-revert of §8.3 (it cannot be verified, but it is
+  not foreign); a target seen with a different, non-empty SSID is refused at once, the uplink kept
+  up; a target not on air after one on-channel scan is refused ("target not found"), the uplink
+  kept up. The source of "a Multi-AP backhaul BSS" is the backhaul SSID of the child's own M2, not
+  any received flag: a child holds only its own M2, never another agent's AP Operational BSS or
+  BSS Configuration Report, so there is no received TLV that marks a peer's BSS as backhaul. A
+  hidden backhaul BSS therefore cannot be positively confirmed by a passive scan; confirming it by
+  a directed probe for the backhaul SSID (a hidden BSS answers one) is a future refinement, for
+  when the pod code exposes beacon or probe-response IEs.
+- **The on-channel scan.** When the target is not already in the scan results, EMOSA runs one
+  on-channel scan before the child leaves its uplink: it asks the pod's stats manager for a
+  neighbour scan on the target's channel and reads the result from `Wifi_Scan_State` (which
+  carries each BSS's BSSID, SSID and channel; a hidden BSS shows an empty SSID). If the target's
+  channel is not the child's current one, that scan is off channel for the uplink, a brief absence
+  before the decision; the uplink is not moved until the decision is made. *Ownership* (§3.2's one
+  writer per column): `Wifi_Stats_Config` is the cloud's table, so EMOSA's scan request is its own
+  row, identified as EMOSA's and removed by EMOSA alone; EMOSA never edits or deletes another
+  writer's row, and a cloud reconcile of the table while EMOSA's row exists does not disturb the
+  scan (the row is re-added if gone, removed when the scan is read).
+- **Refused.** A refusal is a Backhaul Steering Response with a failure result and an Error Code
+  TLV. "No station on the band" and "channel not operable" are reason `0x04` (the STA cannot
+  operate on the channel specified). A foreign or not-found target is reason `0x06`: the nearest
+  code (`0x05`–`0x07` all describe the target end refusing), read as "the association with the
+  target failed" — EMOSA declined to associate because the target could not be confirmed a
+  backhaul BSS or was not on air, which is what the RDK agents send when a backhaul steering
+  target cannot be joined. The uplink is never left for a refused target, so the refusal costs no
+  outage.
 - **No loops**, as §8.5: EMOSA MUST refuse a move to a parent AP of a pod whose own upstream
   chain reaches this pod.
 - **Reported** as in §8.5: the child names the parent's agent as its 1905 neighbor on its
