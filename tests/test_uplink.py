@@ -177,6 +177,32 @@ def test_a_bootstrap_pod_is_on_gre_and_its_station_is_not_multi_ap(tmp_path):
     assert switch.backend.facts["in_use"] == "g-bhaul-sta-50"
 
 
+def test_the_bootstrap_upstream_is_recorded_once_and_persists(tmp_path):
+    """Spec 8.6: the BSS the station is on before any EMOSA move is its bootstrap upstream,
+    recorded on first observation and persisted so a steer back to it is a revert."""
+    switch, pod, _, store = rig(tmp_path)
+    assert switch.bootstrap is None
+    asyncio.run(switch.tick())  # records from the pre-switch GRE bootstrap, before the switch
+    assert switch.bootstrap == {"bssid": "02:00:00:00:02:04", "ssid": "opensync-lab-bhaul"}
+    assert switch.status()["bootstrap"] == switch.bootstrap
+    saved = json.loads((store.directory / "bootstrap.json").read_text())
+    assert saved == {"bssid": "02:00:00:00:02:04", "ssid": "opensync-lab-bhaul"}
+    # the pod adopts the configured upstream: the recorded bootstrap is not overwritten
+    pod.adopt()
+    asyncio.run(switch.tick())
+    assert switch.bootstrap == {"bssid": "02:00:00:00:02:04", "ssid": "opensync-lab-bhaul"}
+
+
+def test_a_recorded_bootstrap_is_loaded_on_restart(tmp_path):
+    """The persisted bootstrap upstream is read back when the agent restarts (spec 8.6)."""
+    (tmp_path / "uplink").mkdir(parents=True)
+    (tmp_path / "uplink" / "bootstrap.json").write_text(
+        json.dumps({"bssid": "02:00:00:00:02:04", "ssid": "opensync-lab-bhaul"})
+    )
+    switch, *_ = rig(tmp_path)
+    assert switch.bootstrap == {"bssid": "02:00:00:00:02:04", "ssid": "opensync-lab-bhaul"}
+
+
 def test_the_switch_is_one_guarded_transaction_with_a_sole_multi_ap_credential(tmp_path):
     switch, pod, _, _ = rig(tmp_path)
     asyncio.run(switch.tick())

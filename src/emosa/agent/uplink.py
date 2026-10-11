@@ -105,6 +105,16 @@ class UplinkSwitch:
         # {"target", "previous", "station", "previous_station", "mode", "result"} of the latest move
         self.move = None
         self.target_path = store.directory / "target.json"
+        # spec 8.6: the BSS the station was on before any EMOSA move (its bootstrap upstream,
+        # cm's own association to the onboarding/GTP BSS), so a steer back to it is a revert.
+        self.bootstrap_path = store.directory / "bootstrap.json"
+        self.bootstrap = None  # {"bssid", "ssid"} once observed, persisted across restarts
+        try:
+            saved = json.loads(self.bootstrap_path.read_text())
+            if isinstance(saved, dict) and saved.get("bssid"):
+                self.bootstrap = {"bssid": saved["bssid"].lower(), "ssid": saved.get("ssid")}
+        except (OSError, ValueError, AttributeError):
+            pass
         # a held switch being made again: its hold's attempt (spec 8.3)
         self.hold_path = store.directory / "hold.json"
         # after a kept target failed: that switch's start and intent, until the pod is off it
@@ -237,6 +247,23 @@ class UplinkSwitch:
                     }
                 )
             )
+
+    def _record_bootstrap(self):
+        """The BSS the station is on before any EMOSA move is its bootstrap upstream (spec 8.6):
+        cm's own 3-address association to the onboarding/GTP BSS, over which the GRE runs. Recorded
+        once, when first observed on a working uplink with no move made, and persisted, so a later
+        steer back to it is recognised as a revert across restarts. If EMOSA first binds while the
+        pod is already on a parent (no clean bootstrap), none is recorded, and a revert then falls
+        back to the pod's onboarding SSID seen in a scan (spec 8.6)."""
+        if self.bootstrap is not None or self.moves or self.move is not None:
+            return
+        facts = self.backend.facts or {}
+        parent = facts.get("parent")
+        if not facts.get("kind") or not parent:
+            return
+        self.bootstrap = {"bssid": parent, "ssid": facts.get("ssid")}
+        self.bootstrap_path.write_text(json.dumps(self.bootstrap) + "\n")
+        log.info("bootstrap upstream recorded: %s (%s)", parent, facts.get("ssid"))
 
     def _move_failed(self, op, reason):
         """A move's switch failed: back to the previous upstream, and the station on it, no
@@ -426,6 +453,7 @@ class UplinkSwitch:
             self._settle(op, snap)
         if snap is None:
             return
+        self._record_bootstrap()
         intent = self._wanted(self.latest(), snap)
         if intent is None:
             return
@@ -453,6 +481,7 @@ class UplinkSwitch:
             "active_station": self.backend.active,
             "bssid": self.bssid,
             "configured_bssid": self.configured,
+            "bootstrap": self.bootstrap,
             "move": self.move,
             "uplink": facts.get("kind"),
             "in_use": facts.get("in_use"),
