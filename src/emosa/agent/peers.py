@@ -47,6 +47,7 @@ class Peer:
     station: bytes | None  # its backhaul station's MAC, while on its EasyMesh backhaul
     parent: bytes | None  # that station's parent BSSID
     measured: dict  # its pod's stations' measurements (spec 3.6), by lower-case MAC text
+    parent_aps: frozenset = frozenset()  # its GRE parent APs' BSSIDs (spec 8.6)
 
 
 def peer(pod_id, status):
@@ -61,6 +62,10 @@ def peer(pod_id, status):
         b for b in (mac_bytes(x.get("bssid")) for x in listed if x.get("role") == "backhaul") if b
     )
     measured = (status.get("telemetry") or {}).get("stations") or {}
+    gre = status.get("gre_parent") or {}
+    ap_bssid = gre.get("ap_bssid") if isinstance(gre, dict) else None
+    listed_aps = ap_bssid if isinstance(ap_bssid, list) else [ap_bssid]
+    parent_aps = frozenset(b for b in (mac_bytes(x) for x in listed_aps) if b)
     return Peer(
         str(status.get("pod_id") or pod_id),
         al,
@@ -68,6 +73,7 @@ def peer(pod_id, status):
         mac_bytes(backhaul.get("mac")),
         mac_bytes(backhaul.get("parent")),
         measured if isinstance(measured, dict) else {},
+        parent_aps,
     )
 
 
@@ -99,6 +105,13 @@ class PeerDirectory:
                 found.append(item)
         self.cache, self.read_at = tuple(found), now
         return self.cache
+
+
+def parent_bssids(peers):
+    """The GRE parent APs' BSSIDs across the fleet (spec 8.6), as lower-case MAC text: a
+    Backhaul Steering target among them is a 3-address GRE join, not Multi-AP. A child learns
+    its fleet's parents only this way (no 1905 frame names another pod's parent AP)."""
+    return frozenset(b.hex(":") for p in peers for b in p.parent_aps)
 
 
 def upstream(peers, parent):

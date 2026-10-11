@@ -7,7 +7,7 @@ import struct
 
 import pytest
 
-from emosa.agent.peers import PeerDirectory, children, loops, mac_bytes, upstream
+from emosa.agent.peers import PeerDirectory, children, loops, mac_bytes, parent_bssids, upstream
 from emosa.opensync.easymesh_view import neighbors_1905
 from emosa.wire.cmdu import Message, Reassembler, Tlv
 from emosa.wire.link_metrics import BackhaulLinkMetrics, BackhaulPair
@@ -20,7 +20,9 @@ PARENT_BH = mac_bytes("72:00:00:00:6a:00")  # the parent pod's backhaul BSS
 CHILD_STA = mac_bytes("02:00:00:00:6b:00")  # the child pod's backhaul station
 
 
-def status(al, *, backhaul_bss=None, station=None, parent=None, pid=111, stations=None):
+def status(
+    al, *, backhaul_bss=None, station=None, parent=None, pid=111, stations=None, parent_ap=None
+):
     bsses = [{"role": "fronthaul", "bssid": "82:00:00:00:6a:00", "ssid": "home"}]
     if backhaul_bss:
         bsses.append({"role": "backhaul", "bssid": backhaul_bss, "ssid": "mesh_backhaul"})
@@ -34,6 +36,7 @@ def status(al, *, backhaul_bss=None, station=None, parent=None, pid=111, station
             else {"station": "bhaul-sta-24", "mac": station, "parent": parent, "band": "2.4G"},
         },
         "telemetry": {"stations": stations or {}},
+        "gre_parent": None if parent_ap is None else {"ap": "b-ap-24", "ap_bssid": parent_ap},
     }
 
 
@@ -62,6 +65,27 @@ def test_the_directory_reads_the_fleets_other_live_agents(tmp_path):
     assert (child.station, child.parent) == (CHILD_STA, PARENT_BH)
     assert children(peers, {PARENT_BH: {CHILD_STA}}) == ((PARENT_BH, child),)
     assert children(peers, {PARENT_BH: set()}) == ()  # not associated: no neighbor
+
+
+def test_the_fleet_parent_set_is_read_from_the_peers_gre_parent_status(tmp_path):
+    # A GRE parent advertises its parent AP's BSSID in its status (spec 8.6); a child reads the
+    # fleet's parent set from the peers' statuses, since no 1905 frame names another pod's AP.
+    write(tmp_path, "OWN", status("02:72:00:00:00:03"))
+    write(
+        tmp_path,
+        "PARENT",
+        status(
+            "02:72:00:00:00:01", backhaul_bss="72:00:00:00:6a:00", parent_ap="72:00:00:00:6a:00"
+        ),
+    )
+    write(tmp_path, "PLAIN", status("02:72:00:00:00:02", backhaul_bss="72:00:00:00:6b:00"))
+    peers = PeerDirectory(tmp_path / "OWN", "OWN", alive=lambda pid: True).peers()
+    parent = next(p for p in peers if p.pod_id == "PARENT")
+    assert parent.parent_aps == {PARENT_BH}
+    plain = next(p for p in peers if p.pod_id == "PLAIN")
+    assert plain.parent_aps == frozenset()  # a backhaul BSS is not a GRE parent AP
+    # the switch's parents() consumes lower-case MAC text
+    assert parent_bssids(peers) == {"72:00:00:00:6a:00"}
 
 
 def test_an_upstream_whose_chain_reaches_this_pod_is_a_loop(tmp_path):

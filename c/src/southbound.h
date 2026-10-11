@@ -102,6 +102,7 @@ typedef struct {
     const char *station, *ssid, *secret_ref, *bssid;
     const char *const *stations; /* the pod's backhaul stations (any order; may hold `station`) */
     size_t nstations;
+    const char *onboard; /* the credential's onboard_type: NULL/"multi_ap" (default), or "gre" (spec 8.6) */
 } em_uplink_intent;
 
 em_reason em_uplink_submit(const char *serial, em_ovs_session *session, const em_uplink_intent *in,

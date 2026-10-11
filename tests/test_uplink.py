@@ -123,6 +123,16 @@ class Pod:
             UPLINK: {"if_name": STATION, "if_type": "vif", "is_used": True}
         }
 
+    def adopt_gre(self, parent):
+        """owm joins a GRE parent as a 3-address station (not Multi-AP); cm builds the gretap
+        and uses it as the uplink (if_type gre), spec 8.6."""
+        self.generation += 1
+        state = self.tables["Wifi_VIF_State"][VIF_STATE]
+        state.update(ssid="emosa-mesh-bh", multi_ap="none", wds=False, parent=parent, bridge="")
+        self.tables["Connection_Manager_Uplink"] = {
+            UPLINK: {"if_name": "g-" + STATION, "if_type": "gre", "is_used": True}
+        }
+
     def revert(self):
         """cm, its uplink failed: the station back on its bootstrap credential, same start."""
         self.generation += 1
@@ -529,6 +539,34 @@ def test_the_controller_moves_the_backhaul_station_to_another_upstream_bss(tmp_p
     pod.adopt()
     asyncio.run(switch.tick())
     assert switch.steering_outcome(PARENT) is True and not switch.held()
+
+
+GRE_PARENT = "72:00:00:00:6a:00"
+
+
+def test_a_gre_child_is_steered_onto_a_parent_as_a_3_address_gre_station(tmp_path):
+    # A GRE child (spec 8.6) has no Multi-AP configured upstream (bssid=None); EMOSA writes
+    # nothing until the controller steers it, then onto a fleet parent it joins 3-address.
+    switch, pod, _, _ = rig(tmp_path, bssid=None, parents=lambda: frozenset({GRE_PARENT}))
+    asyncio.run(switch.tick())  # on its GTP bootstrap (gre); no proactive switch
+    assert pod.sent == []
+    assert switch.steer(GRE_PARENT) is None
+    asyncio.run(switch.tick())
+    cred = pod.sent[-1][2]["row"]  # the inserted Wifi_Credential_Config
+    assert cred["onboard_type"] == "gre" and cred["bssid"] == GRE_PARENT
+    assert switch.steering_outcome(GRE_PARENT) is None  # not on it yet
+    pod.adopt_gre(parent=GRE_PARENT)
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED
+    assert switch.steering_outcome(GRE_PARENT) is True and switch.status()["uplink"] == "gre"
+
+
+def test_a_steer_to_a_non_parent_is_a_multi_ap_join_never_gre(tmp_path):
+    # never GRE onto a foreign AP: a target not in the fleet's parent set is a Multi-AP join.
+    switch, pod, _, _ = on_easymesh(tmp_path)  # parents default to the empty set
+    assert switch.steer(NEXT) is None
+    asyncio.run(switch.tick())
+    assert pod.sent[-1][2]["row"]["onboard_type"] == "multi_ap"
 
 
 def test_a_move_to_the_current_upstream_is_done_at_once(tmp_path):

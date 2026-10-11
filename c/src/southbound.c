@@ -1152,7 +1152,7 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
     cJSON_AddStringToObject(ins, "uuid-name", "backhaul");
     cJSON_AddStringToObject(cred, "ssid", in->ssid);
     cJSON_AddItemToObject(cred, "security", map2("encryption", "WPA-PSK", "key", key));
-    cJSON_AddStringToObject(cred, "onboard_type", "multi_ap");
+    cJSON_AddStringToObject(cred, "onboard_type", in->onboard && *in->onboard ? in->onboard : "multi_ap");
     cJSON_AddNumberToObject(cred, "priority", 1);
     cJSON_AddTrueToObject(cred, "enabled");
     cJSON_AddStringToObject(cred, "bssid", in->bssid);

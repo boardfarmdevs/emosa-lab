@@ -47,6 +47,10 @@ typedef struct {
      * (own: every MAC the pod's own VIFs and radios use); NULL: no other pods known */
     bool (*loops)(void *ctx, const uint8_t target[6], const uint8_t (*own)[6], size_t nown);
     void *loops_ctx;
+    /* spec 8.6: true when the target BSSID is a GRE parent AP of the fleet (a 3-address GRE move,
+     * not Multi-AP); NULL: no parents known, every target is Multi-AP */
+    bool (*is_parent)(void *ctx, const uint8_t bssid[6]);
+    void *is_parent_ctx;
     em_journal *journal;
     em_engine engine;
     char instance[17];
@@ -56,6 +60,8 @@ typedef struct {
     em_snapshot last;
     bool has_last;
     char bssid[18], configured[18]; /* the upstream in use, the configured one */
+    /* the current uplink's kind: "multi-ap", or "gre" after a move to a GRE parent (spec 8.6) */
+    char mode[10];
     /* the station the switch puts on that upstream, the configured one (the bootstrap station),
      * and the one the uplink is on at the last read */
     char wanted[33], configured_station[33], active[33];
@@ -63,6 +69,7 @@ typedef struct {
     bool has_move;
     struct {
         char target[18], previous[18], station[33], previous_station[33], result[96];
+        char mode[10], previous_mode[10]; /* the move's kind and the one it replaced (spec 8.6) */
         bool done, applied;
     } move;
     char waiting[128];

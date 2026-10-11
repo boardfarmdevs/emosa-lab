@@ -40,10 +40,13 @@ static cJSON *target(void *ctx, const cJSON *intent, em_reason *why)
     *why = EM_INVALID_INPUT;
     if (n < 1 || n > 32)
         return NULL;
-    if (!mode || strcmp(mode, "multi-ap")) {
-        *why = EM_UNSUPPORTED_OPERATION;
+    if (!mode || (strcmp(mode, "multi-ap") && strcmp(mode, "gre"))) {
+        *why = EM_UNSUPPORTED_OPERATION; /* only the Multi-AP or GRE-parent backhaul uplink */
         return NULL;
     }
+    bool is_gre = !strcmp(mode, "gre");
+    if (is_gre && (!bssid || cJSON_IsNull(bssid)))
+        return NULL; /* a GRE child joins by its pinned BSSID only (spec 8.6), never by SSID */
     if (!str(intent, "pod_id") || !*str(intent, "pod_id") || !str(intent, "station") || !*str(intent, "station") ||
         !str(intent, "secret_ref") || !*str(intent, "secret_ref"))
         return NULL;
@@ -53,7 +56,7 @@ static cJSON *target(void *ctx, const cJSON *intent, em_reason *why)
     if (!em_vault_fingerprint_ref(u->vault, str(intent, "secret_ref"), fp, why))
         return NULL;
     cJSON *t = cJSON_CreateObject();
-    cJSON_AddStringToObject(t, "uplink", "multi-ap");
+    cJSON_AddStringToObject(t, "uplink", mode);
     cJSON_AddStringToObject(t, "station", str(intent, "station"));
     cJSON_AddStringToObject(t, "ssid", ssid);
     cJSON_AddStringToObject(t, "credential_fingerprint", fp);
@@ -139,9 +142,13 @@ static bool bind(em_uplink_scope *u, station_row rows[MAX_ROWS], size_t *nrows, 
 
 static cJSON *text_or_null(const char *s) { return s && *s ? cJSON_CreateString(s) : cJSON_CreateNull(); }
 
-/* the station's sole Multi-AP credential when it is in credential-list mode, else NULL */
-static const cJSON *multi_ap_credential(em_uplink_scope *u, const cJSON *vif, const char **key)
+/* the station's sole credential in credential-list mode, else NULL; *kind is "multi-ap" or "gre"
+ * (spec 8.6) by its onboard_type when it is one (NULL otherwise). A GRE-parent child's credential
+ * is listed the same way (onboard_type=gre), only the kind and the applied State differ. */
+static const cJSON *listed_credential(em_uplink_scope *u, const cJSON *vif, const char **key, const char **kind)
 {
+    if (kind)
+        *kind = NULL;
     const cJSON *tables = em_ovsdb_tables(u->ovs);
     const char *links[8];
     size_t n = vif ? ovs_uuids(vif, "credential_configs", links, 8) : 0, found = 0;
@@ -158,9 +165,17 @@ static const cJSON *multi_ap_credential(em_uplink_scope *u, const cJSON *vif, co
     const char *enc = sole ? ovs_map_get(sole, "security", "encryption") : NULL;
     *key = enc && !strcmp(enc, "WPA-PSK") ? ovs_map_get(sole, "security", "key") : NULL;
     const char *vssid = vif ? ovs_str(vif, "ssid") : NULL, *onboard = sole ? ovs_str(sole, "onboard_type") : NULL;
-    bool multi_ap = vif && ovs_true(vif, "enabled") && !(vssid && *vssid) && onboard && !strcmp(onboard, "multi_ap") &&
-                    ovs_true(sole, "enabled") && *key;
-    return multi_ap ? sole : NULL;
+    bool listed = vif && ovs_true(vif, "enabled") && !(vssid && *vssid) && onboard && ovs_true(sole, "enabled") && *key;
+    const char *k = NULL;
+    if (listed && !strcmp(onboard, "multi_ap"))
+        k = "multi-ap";
+    else if (listed && !strcmp(onboard, "gre"))
+        k = "gre";
+    if (!k)
+        return NULL;
+    if (kind)
+        *kind = k;
+    return sole;
 }
 
 /* UplinkBackend._active: the station in Multi-AP credential-list mode, else the one cm uses,
@@ -170,7 +185,7 @@ static const char *active_of(em_uplink_scope *u, const station_row *rows, size_t
     const char *found = NULL, *key;
     size_t written = 0;
     for (size_t i = 0; i < n; i++)
-        if (multi_ap_credential(u, rows[i].row, &key)) {
+        if (listed_credential(u, rows[i].row, &key, NULL)) {
             written++;
             found = rows[i].name;
         }
@@ -193,13 +208,13 @@ static const char *active_of(em_uplink_scope *u, const station_row *rows, size_t
 /* UplinkBackend._configured: the station in Multi-AP credential-list mode, or not */
 static cJSON *configured(em_uplink_scope *u, const cJSON *vif, const char *station, const cJSON **credential)
 {
-    const char *key;
-    const cJSON *sole = multi_ap_credential(u, vif, &key);
+    const char *key, *kind;
+    const cJSON *sole = listed_credential(u, vif, &key, &kind);
     bool multi_ap = sole != NULL;
     const char *vssid = vif ? ovs_str(vif, "ssid") : NULL;
     *credential = sole;
     cJSON *c = cJSON_CreateObject();
-    cJSON_AddStringToObject(c, "uplink", multi_ap ? "multi-ap" : "other");
+    cJSON_AddStringToObject(c, "uplink", multi_ap ? kind : "other");
     cJSON_AddStringToObject(c, "station", station);
     if (multi_ap) {
         const char *cssid = ovs_str(sole, "ssid");
@@ -423,8 +438,14 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     em_ovs_session session = {em_ovsdb_tables(u->ovs), generation, u->transact, u->transact_ctx};
     const char *names[EM_UPLINK_BANDS + 1];
     size_t nnames = bound_names(u, names);
-    em_uplink_intent in = {str(intent, "station"), str(intent, "ssid"), str(intent, "secret_ref"),
-                           str(intent, "bssid"),    names,                nnames};
+    const char *mode = str(intent, "mode"); /* the credential's onboard_type (spec 8.6) */
+    em_uplink_intent in = {str(intent, "station"),
+                           str(intent, "ssid"),
+                           str(intent, "secret_ref"),
+                           str(intent, "bssid"),
+                           names,
+                           nnames,
+                           mode && !strcmp(mode, "gre") ? "gre" : "multi_ap"};
     resolver r = {u->vault, NULL};
     em_submit_result result;
     const char *refusal;
@@ -467,6 +488,7 @@ static void keep_target(em_uplink_scope *u)
     cJSON_AddStringToObject(o, "configured", u->configured);
     cJSON_AddStringToObject(o, "target", u->bssid);
     cJSON_AddStringToObject(o, "station", u->wanted);
+    cJSON_AddStringToObject(o, "mode", u->mode);
     cJSON_AddNumberToObject(o, "moves", u->moves);
     char *text = em_json_dumps(o, EM_JSON_DEFAULT, false);
     cJSON_Delete(o);
@@ -490,6 +512,7 @@ em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_jou
     for (size_t i = 0; bssid[i] && i < 17; i++)
         u->configured[i] = (char)tolower((unsigned char)bssid[i]);
     EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
+    EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "multi-ap"); /* a move to a GRE parent makes it gre */
     /* the configured station: the one the pod bootstraps on */
     if (!em_copy(u->configured_station, sizeof(u->configured_station), u->station))
         return EM_INVALID_INPUT;
@@ -507,6 +530,9 @@ em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_jou
         /* a file on the disk: a target that is not a MAC is not a target */
         if (configured && !strcmp(configured, u->configured) && to && em_parse_mac(to, mac)) {
             EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", to);
+            const char *kept_mode = str(kept, "mode"); /* a move to a GRE parent (spec 8.6) */
+            if (kept_mode && !strcmp(kept_mode, "gre"))
+                EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "gre");
             const cJSON *moves = cJSON_GetObjectItemCaseSensitive(kept, "moves");
             u->moves = cJSON_IsNumber(moves) ? (unsigned)moves->valueint : 1;
             const char *station = str(kept, "station");
@@ -663,6 +689,7 @@ static bool move_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
     (void)em_copy(u->move.result, sizeof(u->move.result), reason); /* a reason for the status */
     EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->move.previous);
     EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->move.previous_station);
+    EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "%s", u->move.previous_mode[0] ? u->move.previous_mode : "multi-ap");
     u->moves++;
     keep_target(u);
     return true;
@@ -680,6 +707,7 @@ static bool kept_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
             bssid, reason, u->configured);
     EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
     EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->configured_station);
+    EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "multi-ap"); /* the configured upstream's kind */
     u->moves++; /* a switch of its own */
     keep_target(u);
     cJSON_Delete(u->fallback_after);
@@ -793,7 +821,7 @@ static cJSON *intent_of(em_uplink_scope *u, const char *ssid, const char *ref)
     cJSON_AddStringToObject(i, "station", u->wanted);
     cJSON_AddStringToObject(i, "ssid", ssid);
     cJSON_AddStringToObject(i, "secret_ref", ref);
-    cJSON_AddStringToObject(i, "mode", "multi-ap");
+    cJSON_AddStringToObject(i, "mode", u->mode);
     cJSON_AddStringToObject(i, "bssid", u->bssid);
     return i;
 }
@@ -815,6 +843,12 @@ static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *sna
         EM_FORMAT_FIXED(ref, sizeof(ref), "%s", u->fixed_ref);
     } else if (!m2_backhaul(u, ssid, ref)) {
         wait_for(u, "no EasyMesh backhaul credentials");
+        return NULL;
+    }
+    if (!u->bssid[0]) {
+        /* a GRE child with no configured upstream (spec 8.6): EMOSA writes nothing until the
+         * controller steers it onto a parent; its bootstrap uplink (the GTP) stands */
+        wait_for(u, "no upstream (awaiting a Backhaul Steering Request)");
         return NULL;
     }
     cJSON *intent = intent_of(u, ssid, ref);
@@ -989,7 +1023,12 @@ const char *em_uplink_steer(em_uplink_scope *u, const char *bssid, const char *b
     lower(bssid, target_bssid, sizeof(target_bssid));
     if (held(u))
         return "held_on_option_2";
-    if (!u->has_facts || strcmp(u->facts.kind, "multi-ap"))
+    /* steer only from a working EasyMesh backhaul EMOSA manages: a Multi-AP pod on its Multi-AP
+     * backhaul, or a GRE child on its GRE path (the GTP, or a parent; spec 8.6). A Multi-AP pod
+     * still on its bootstrap GRE is NOT steered: it reaches its own backhaul first. */
+    bool on_backhaul = u->has_facts && (!strcmp(u->facts.kind, "multi-ap") ||
+                                        (!strcmp(u->facts.kind, "gre") && (!u->configured[0] || !strcmp(u->mode, "gre"))));
+    if (!on_backhaul)
         return "not_on_easymesh_backhaul";
     cJSON *op = em_journal_latest(u->journal);
     bool active = op && em_state_active(em_state_of(op));
@@ -1007,6 +1046,13 @@ const char *em_uplink_steer(em_uplink_scope *u, const char *bssid, const char *b
     int fixed = fixed_channel(u, station);
     if (fixed >= 0 && channel >= 0 && channel != fixed)
         return "channel_not_operable";
+    /* a target in the fleet's GRE parent set is a 3-address GRE join (spec 8.6); any other is a
+     * Multi-AP (4-address) join. A child must never try GRE onto a foreign AP (7f, 11 Oct). */
+    uint8_t target_mac[6];
+    const char *mode = (u->is_parent && em_parse_mac(target_bssid, target_mac) &&
+                        u->is_parent(u->is_parent_ctx, target_mac))
+                           ? "gre"
+                           : "multi-ap";
     char chosen[33];
     EM_FORMAT_FIXED(chosen, sizeof(chosen), "%s", station); /* a bound if_name */
     memset(&u->move, 0, sizeof(u->move));
@@ -1015,9 +1061,12 @@ const char *em_uplink_steer(em_uplink_scope *u, const char *bssid, const char *b
     EM_FORMAT_FIXED(u->move.previous, sizeof(u->move.previous), "%s", u->bssid);
     EM_FORMAT_FIXED(u->move.station, sizeof(u->move.station), "%s", chosen);
     EM_FORMAT_FIXED(u->move.previous_station, sizeof(u->move.previous_station), "%s", u->wanted);
-    if (strcmp(target_bssid, u->bssid) || strcmp(chosen, u->wanted)) {
+    EM_FORMAT_FIXED(u->move.mode, sizeof(u->move.mode), "%s", mode);
+    EM_FORMAT_FIXED(u->move.previous_mode, sizeof(u->move.previous_mode), "%s", u->mode);
+    if (strcmp(target_bssid, u->bssid) || strcmp(chosen, u->wanted) || strcmp(mode, u->mode)) {
         EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", target_bssid);
         EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", chosen);
+        EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "%s", mode);
         u->moves++;
         keep_target(u);
     }
@@ -1045,7 +1094,7 @@ int em_uplink_steering_outcome(em_uplink_scope *u, const char *bssid, const char
     const cJSON *intent = op ? cJSON_GetObjectItemCaseSensitive(op, "intent") : NULL;
     const char *intended = str(intent, "bssid"), *on = str(intent, "station");
     bool applied = op && !strcmp(em_state_of(op), "OBSERVED_APPLIED") && intended && !strcmp(intended, u->move.target) &&
-                   on && !strcmp(on, u->move.station) && u->has_facts && !strcmp(u->facts.kind, "multi-ap") &&
+                   on && !strcmp(on, u->move.station) && u->has_facts && !strcmp(u->facts.kind, u->move.mode) &&
                    !strcmp(u->facts.station, u->move.station) && !strcmp(u->facts.parent, u->move.target);
     cJSON_Delete(op);
     if (applied) {
@@ -1068,6 +1117,8 @@ cJSON *em_uplink_status(em_uplink_scope *u)
         cJSON_AddStringToObject(m, "previous", u->move.previous);
         cJSON_AddStringToObject(m, "station", u->move.station);
         cJSON_AddStringToObject(m, "previous_station", u->move.previous_station);
+        cJSON_AddStringToObject(m, "mode", u->move.mode);
+        cJSON_AddStringToObject(m, "previous_mode", u->move.previous_mode);
         cJSON_AddItemToObject(m, "result", !u->move.done ? cJSON_CreateNull()
                                            : u->move.applied ? cJSON_CreateTrue()
                                                              : cJSON_CreateString(u->move.result));

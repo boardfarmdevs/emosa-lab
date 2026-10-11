@@ -255,12 +255,16 @@ static void children_of(em_gre_scope *g, const cJSON *tables)
 {
     const char *macs[MAX_ROWS];
     size_t nmacs = 0;
+    g->ap_bssid[0] = 0;
     const cJSON *vif, *lease, *clients = em_table(tables, "Wifi_Associated_Clients");
     cJSON_ArrayForEach(vif, em_table(tables, "Wifi_VIF_State"))
     {
         const char *name = ovs_str(vif, "if_name"), *mode = ovs_str(vif, "mode");
         if (!name || strcmp(name, g->ap) || !mode || strcmp(mode, "ap"))
             continue;
+        char apmac[18]; /* the parent AP's own BSSID, for the fleet's parent set (spec 8.6) */
+        if (em_row_mac(vif, "mac", apmac))
+            em_copy(g->ap_bssid, sizeof(g->ap_bssid), apmac);
         const char *uuids[MAX_ROWS];
         size_t n = ovs_uuids(vif, "associated_clients", uuids, MAX_ROWS);
         for (size_t k = 0; k < n; k++) {
@@ -845,6 +849,7 @@ cJSON *em_gre_status(em_gre_scope *g)
 {
     cJSON *o = cJSON_CreateObject(), *op = em_journal_latest(g->journal);
     cJSON_AddStringToObject(o, "ap", g->ap);
+    cJSON_AddItemToObject(o, "ap_bssid", g->ap_bssid[0] ? cJSON_CreateString(g->ap_bssid) : cJSON_CreateNull());
     char net[16], underlay[24];
     ipv4_text(g->net, net);
     int len = 0;

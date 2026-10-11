@@ -121,8 +121,10 @@
             },
             "mode": {
               "enum": [
-                "multi-ap"
-              ]
+                "multi-ap",
+                "gre"
+              ],
+              "description": "multi-ap: a 4-address Multi-AP backhaul join (spec 8.3). gre: a 3-address join onto a fleet GRE parent's AP (spec 8.6); the credential is onboard_type=gre and bssid is required."
             },
             "bssid": {
               "type": [
@@ -130,7 +132,7 @@
                 "null"
               ],
               "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$",
-              "description": "The upstream backhaul BSS; required for a switch, absent in records made before it existed"
+              "description": "The upstream backhaul BSS; required for a switch (and always for a GRE move), absent in records made before it existed"
             }
           },
           "required": [

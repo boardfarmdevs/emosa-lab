@@ -350,6 +350,14 @@ static bool upstream_loops(void *ctx, const uint8_t target[6], const uint8_t (*o
     return em_peers_loops(&a->peers, a->al, own, nown, target);
 }
 
+/* spec §8.6: the target is a GRE parent AP of the fleet (the uplink scope's parent hook) */
+static bool upstream_is_parent(void *ctx, const uint8_t bssid[6])
+{
+    agent *a = ctx;
+    em_peers_read(&a->peers, now());
+    return em_peers_is_parent(&a->peers, bssid);
+}
+
 /* the pod's backhaul stations: the configured one (or the profile's) first, then the profile's
  * station on each band, each once */
 static size_t station_names(const agent *a, const char *out[EM_UPLINK_BANDS + 1])
@@ -1755,7 +1763,9 @@ static bool configure(agent *a, const char *path, const char *profiles)
     /* the uplink: option 1, the pod's backhaul station on the EasyMesh backhaul BSS */
     const cJSON *uplink = cJSON_GetObjectItemCaseSensitive(c, "uplink");
     const char *umode = cfg_str(uplink, "mode");
-    a->uplink_on = umode && !strcmp(umode, "multi-ap");
+    /* a GRE child (spec 8.6) uses the uplink scope too: mode "gre", no configured upstream */
+    bool ugre = umode && !strcmp(umode, "gre");
+    a->uplink_on = ugre || (umode && !strcmp(umode, "multi-ap"));
     if (a->uplink_on) {
         a->uplink.station = cfg_str(uplink, "station") ? cfg_str(uplink, "station") : a->profile.uplink_station;
         /* the pod's backhaul station on each band; a station on the radio of its BSSes keeps
@@ -1773,8 +1783,14 @@ static bool configure(agent *a, const char *path, const char *profiles)
         a->uplink.hold_backoff_cap = cJSON_IsNumber(backoff_cap) ? backoff_cap->valuedouble : 0;
         const char *bssid = cfg_str(uplink, "bssid");
         uint8_t mac[6];
-        if (!a->uplink.station || !bssid || !em_parse_mac(bssid, mac)) {
-            FAIL("uplink: a station (profile or configuration) and bssid (the upstream backhaul BSS) are required");
+        if (!a->uplink.station) {
+            FAIL("uplink: a station (profile or configuration) is required");
+            return false;
+        }
+        /* a GRE child is steered onto a parent by BSSID and has none configured; a Multi-AP pod
+         * needs its upstream BSSID from the start (spec 8.6) */
+        if (!ugre && (!bssid || !em_parse_mac(bssid, mac))) {
+            FAIL("uplink: bssid (the upstream backhaul BSS) is required for a multi-ap uplink");
             return false;
         }
         const char *credentials = cfg_str(uplink, "credentials");
@@ -1999,8 +2015,10 @@ int main(int argc, char **argv)
         a.uplink.settled_ctx = &a;
         a.uplink.loops = a.peers_on ? upstream_loops : NULL;
         a.uplink.loops_ctx = &a;
-        em_reason why = em_uplink_open(&a.uplink, a.state_dir, &a.schemas,
-                                       cfg_str(cJSON_GetObjectItemCaseSensitive(a.config, "uplink"), "bssid"));
+        a.uplink.is_parent = a.peers_on ? upstream_is_parent : NULL; /* spec 8.6 fleet parent set */
+        a.uplink.is_parent_ctx = &a;
+        const char *ubssid = cfg_str(cJSON_GetObjectItemCaseSensitive(a.config, "uplink"), "bssid");
+        em_reason why = em_uplink_open(&a.uplink, a.state_dir, &a.schemas, ubssid ? ubssid : "");
         if (why != EM_OK) {
             FAIL("uplink journal: %s", em_reason_name(why));
             return 1;

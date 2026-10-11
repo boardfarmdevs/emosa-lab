@@ -37,7 +37,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from emosa.agent.gre_parent import GreTunnels
-from emosa.agent.peers import PeerDirectory, children, loops, mac_bytes, upstream
+from emosa.agent.peers import PeerDirectory, children, loops, mac_bytes, parent_bssids, upstream
 from emosa.agent.probe_watch import ProbeWatch
 from emosa.agent.renew import CONTROLLER_TIMEOUT, M2_TIMEOUT, RenewRules
 from emosa.agent.steering import ClientSteering
@@ -73,6 +73,7 @@ from emosa.opensync.telemetry import MONITOR as TELEMETRY_MONITOR
 from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent
 from emosa.opensync.uplink import (
     BSSID,
+    GRE,
     MULTI_AP,
     UplinkBackend,
     band_of_operating_class,
@@ -560,10 +561,13 @@ async def serve(config, stop):
     uplink_config = config.get("uplink", {"mode": "off"})
     station = uplink_config.get("station") or backend.profile.uplink_station
     switch = uplink_store = None
-    if uplink_config["mode"] == MULTI_AP:
+    if uplink_config["mode"] in (MULTI_AP, GRE):
         if station is None:
             raise EmosaError(Reason.INVALID_INPUT, "uplink: no station (profile or configuration)")
-        bssid = uplink_bssid(uplink_config)
+        # A GRE child (spec 8.6) has no configured Multi-AP upstream: it stays on its bootstrap
+        # (the GTP) until the controller steers it onto a parent AP, by that AP's BSSID. A
+        # Multi-AP pod has its configured upstream BSSID from the start.
+        bssid = None if uplink_config["mode"] == GRE else uplink_bssid(uplink_config)
         if uplink_config.get("credentials", "m2") == "config":
             if not uplink_config.get("ssid") or not uplink_config.get("secret_ref"):
                 raise EmosaError(
@@ -603,6 +607,11 @@ async def serve(config, stop):
                 (report.facts or {}).get("ssid") is not None
                 and not any(op.state in ACTIVE for op in store.operations())
             ),
+            # the fleet's GRE parent APs (spec 8.6): a Backhaul Steering target among them is a
+            # 3-address GRE move, read from the peers' statuses (no 1905 frame names them)
+            parents=(lambda: frozenset())
+            if directory is None
+            else lambda: parent_bssids(directory.peers()),
             hold_backoff=uplink_config.get("hold_backoff", HOLD_BACKOFF),
             hold_backoff_cap=uplink_config.get("hold_backoff_cap", HOLD_BACKOFF_CAP),
         )

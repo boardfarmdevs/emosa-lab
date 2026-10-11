@@ -961,8 +961,14 @@ static void uplink_vectors(const char *dir)
             if (nstations < EM_UPLINK_STATIONS && cJSON_IsString(station))
                 stations[nstations++] = station->valuestring;
         }
-        em_uplink_intent intent = {str(in, "station"), str(in, "ssid"), str(in, "secret_ref"),
-                                   str(in, "bssid"), stations, nstations};
+        const char *imode = str(in, "mode"); /* the credential's onboard_type (spec 8.6) */
+        em_uplink_intent intent = {str(in, "station"),
+                                   str(in, "ssid"),
+                                   str(in, "secret_ref"),
+                                   str(in, "bssid"),
+                                   stations,
+                                   nstations,
+                                   imode && !strcmp(imode, "gre") ? "gre" : "multi_ap"};
         cJSON *sent = cJSON_CreateArray();
         em_ovs_session session = {tables, 1, record, sent};
         em_submit_result result;

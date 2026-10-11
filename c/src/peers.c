@@ -61,6 +61,20 @@ static bool peer(const char *pod_id, const cJSON *status, em_peer *out)
             em_parse_mac(bssid, out->backhaul[out->nbackhaul]))
             out->nbackhaul++;
     }
+    const cJSON *gre = cJSON_GetObjectItemCaseSensitive(status, "gre_parent");
+    const cJSON *ap_bssid = cJSON_GetObjectItemCaseSensitive(gre, "ap_bssid");
+    /* a GRE parent advertises its parent AP's BSSID (spec 8.6); a child reads the fleet's parent
+     * set only this way (no 1905 frame names another pod's AP). A list is tolerated too. */
+    if (cJSON_IsString(ap_bssid) && out->nparent_aps < EM_PEER_BACKHAULS &&
+        em_parse_mac(ap_bssid->valuestring, out->parent_aps[out->nparent_aps]))
+        out->nparent_aps++;
+    else if (cJSON_IsArray(ap_bssid)) {
+        const cJSON *x;
+        cJSON_ArrayForEach(x, ap_bssid)
+            if (cJSON_IsString(x) && out->nparent_aps < EM_PEER_BACKHAULS &&
+                em_parse_mac(x->valuestring, out->parent_aps[out->nparent_aps]))
+                out->nparent_aps++;
+    }
     const cJSON *backhaul = cJSON_GetObjectItemCaseSensitive(pod, "backhaul");
     const char *station = text(backhaul, "mac"), *parent = text(backhaul, "parent");
     out->has_station = station && parent && em_parse_mac(station, out->station) && em_parse_mac(parent, out->parent);
@@ -128,6 +142,14 @@ const em_peer *em_peers_upstream(const em_peers *d, const uint8_t parent[6])
         if (among((const uint8_t(*)[6])d->peers[i].backhaul, d->peers[i].nbackhaul, parent))
             return &d->peers[i];
     return NULL;
+}
+
+bool em_peers_is_parent(const em_peers *d, const uint8_t bssid[6])
+{
+    for (size_t i = 0; i < d->n; i++)
+        if (among((const uint8_t(*)[6])d->peers[i].parent_aps, d->peers[i].nparent_aps, bssid))
+            return true;
+    return false;
 }
 
 bool em_peers_loops(const em_peers *d, const uint8_t own_al[6], const uint8_t (*own)[6], size_t nown,

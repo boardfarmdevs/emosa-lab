@@ -24,6 +24,8 @@ typedef struct {
     uint8_t al[6];                               /* its agent's AL MAC */
     uint8_t backhaul[EM_PEER_BACKHAULS][6];       /* its backhaul BSSes' BSSIDs */
     size_t nbackhaul;
+    uint8_t parent_aps[EM_PEER_BACKHAULS][6];    /* its GRE parent APs' BSSIDs (spec 8.6) */
+    size_t nparent_aps;
     bool has_station;                            /* on its EasyMesh backhaul: */
     uint8_t station[6], parent[6];               /* its station, and that station's parent */
     cJSON *measured;                             /* its pod's stations' measurements, owned */
@@ -44,6 +46,9 @@ void em_peers_init(em_peers *d, const char *run_dir, const char *pod_id);
 size_t em_peers_read(em_peers *d, double now);
 /* The peer one of whose backhaul BSSes is parent, or NULL. */
 const em_peer *em_peers_upstream(const em_peers *d, const uint8_t parent[6]);
+/* True when bssid is a GRE parent AP of the fleet (spec 8.6): a Backhaul Steering target among
+ * them is a 3-address GRE join, not Multi-AP. */
+bool em_peers_is_parent(const em_peers *d, const uint8_t bssid[6]);
 /* True when an upstream target would put a loop into br-home: one of the own BSSes, or a BSS of a
  * pod whose upstream chain reaches this pod (own_al) or runs in a circle. */
 bool em_peers_loops(const em_peers *d, const uint8_t own_al[6], const uint8_t (*own)[6], size_t nown,

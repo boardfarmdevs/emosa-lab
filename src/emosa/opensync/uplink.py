@@ -39,6 +39,13 @@ from emosa.opensync.mapping import check_results, guard, where_uuid
 MODE = "opensync-6.6-uplink"
 PROVENANCE = "opensync-cm:Connection_Manager_Uplink+owm:Wifi_VIF_State"
 MULTI_AP = "multi-ap"
+# A child of a GRE parent (spec 8.6) joins its parent AP as a 3-address station
+# (onboard_type=gre, no wds), and cm builds the gretap: cm's uplink is then that
+# gretap (if_type gre), which uplink_state reports as this kind. The credential is
+# the same backhaul SSID/PSK as a Multi-AP join; only onboard_type and the applied
+# State differ. One uplink scope carries both, by the move's mode.
+GRE = "gre"
+ONBOARD = {MULTI_AP: "multi_ap", GRE: "gre"}
 BSSID = re.compile(r"^[0-9a-f]{2}(:[0-9a-f]{2}){5}$")
 STATION_GUARDS = ("if_name", "mode", "enabled", "ssid", "credential_configs", "multi_ap")
 # What the switch monitors beyond the AP scope's tables (emosa.opensync.schema.TABLES).
@@ -71,8 +78,13 @@ class UplinkIntent:
     def validate(self):
         if not 1 <= len(self.ssid.encode("utf-8")) <= 32 or "\x00" in self.ssid:
             raise EmosaError(Reason.INVALID_INPUT, "SSID must contain 1–32 UTF-8 bytes, no NUL")
-        if self.mode != MULTI_AP:
-            raise EmosaError(Reason.UNSUPPORTED_OPERATION, "only the Multi-AP backhaul uplink")
+        if self.mode not in (MULTI_AP, GRE):
+            raise EmosaError(
+                Reason.UNSUPPORTED_OPERATION, "only the Multi-AP or GRE-parent backhaul uplink"
+            )
+        if self.mode == GRE and self.bssid is None:
+            # a GRE child joins by its pinned BSSID only (spec 8.6); never by SSID
+            raise EmosaError(Reason.INVALID_INPUT, "a GRE uplink requires the parent AP's BSSID")
         if any(
             not isinstance(x, str) or not x for x in (self.pod_id, self.station, self.secret_ref)
         ):
@@ -80,10 +92,13 @@ class UplinkIntent:
         if self.bssid is not None and not BSSID.match(self.bssid):
             raise EmosaError(Reason.INVALID_INPUT, "BSSID must be a lower-case MAC address")
 
+    def onboard_type(self):
+        return ONBOARD[self.mode]
+
     def target(self, vault):
         self.validate()
         target = {
-            "uplink": MULTI_AP,
+            "uplink": self.mode,
             "station": self.station,
             "ssid": self.ssid,
             "credential_fingerprint": vault.fingerprint(vault.resolve(self.secret_ref)),
@@ -271,25 +286,29 @@ class UplinkBackend:
         return used[0] if len(used) == 1 else self.station
 
     def _configured(self, decoded, vif, station):
-        """The station's configured uplink: Multi-AP credential-list mode, or not."""
+        """The station's configured uplink: credential-list mode (Multi-AP or GRE), or not.
+
+        Both a Multi-AP (``onboard_type=multi_ap``, 4-address) and a GRE-parent child
+        (``onboard_type=gre``, 3-address, spec 8.6) station are one linked credential in
+        credential-list mode (the VIF's own ``ssid`` empty)."""
         creds = decoded.get("Wifi_Credential_Config", {})
         linked = [creds[u] for u in vif.get("credential_configs") or [] if u in creds]
         sole = linked[0] if len(linked) == 1 else {}
         key = credential_key(sole)
-        multi_ap = (
+        listed = (
             vif.get("enabled") is True
             and not vif.get("ssid")
-            and sole.get("onboard_type") == "multi_ap"
             and sole.get("enabled") is True
             and key is not None
         )
+        kind = {"multi_ap": MULTI_AP, "gre": GRE}.get(sole.get("onboard_type")) if listed else None
         return {
-            "uplink": MULTI_AP if multi_ap else "other",
+            "uplink": kind or "other",
             "station": station,
-            "ssid": sole.get("ssid") if multi_ap else vif.get("ssid"),
-            "credential_fingerprint": self.vault.fingerprint(key) if multi_ap else None,
-            "bssid": lower_mac(sole.get("bssid")) if multi_ap else None,
-        }, (sole if multi_ap else None)
+            "ssid": sole.get("ssid") if kind else vif.get("ssid"),
+            "credential_fingerprint": self.vault.fingerprint(key) if kind else None,
+            "bssid": lower_mac(sole.get("bssid")) if kind else None,
+        }, (sole if kind else None)
 
     async def snapshot(self):
         try:
@@ -421,7 +440,7 @@ class UplinkBackend:
                 "row": {
                     "ssid": intent.ssid,
                     "security": ["map", [["encryption", "WPA-PSK"], ["key", key]]],
-                    "onboard_type": "multi_ap",
+                    "onboard_type": intent.onboard_type(),
                     "priority": 1,
                     "enabled": True,
                     "bssid": intent.bssid,
@@ -429,8 +448,10 @@ class UplinkBackend:
             },
             {
                 # Credential-list mode: the station's own SSID and security empty, one
-                # linked multi_ap credential. owm then sets multi_ap, 4-address and
-                # br-home itself; the bootstrap credential stays, unlinked.
+                # linked credential. On onboard_type=multi_ap owm sets multi_ap, 4-address
+                # and br-home itself; on onboard_type=gre (a GRE parent's child, spec 8.6)
+                # it is a 3-address station and cm builds the gretap. The bootstrap
+                # credential stays, unlinked.
                 "op": "update",
                 "table": "Wifi_VIF_Config",
                 "where": where_uuid(vif_uuid),

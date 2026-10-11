@@ -22,7 +22,7 @@
       "required": ["mode"],
       "description": "Given to every agent. Data plane option 1: the agent switches the pod's backhaul station onto the EasyMesh backhaul (data-plane.md §5.3, spec §8). Mode ethernet: a wired pod's uplink port bridged into br-home (spec §8.4). Absent or mode off: the pod keeps its OpenSync uplink (option 2).",
       "properties": {
-        "mode": {"enum": ["off", "multi-ap", "ethernet"], "description": "multi-ap: option 1 (spec §8.3); ethernet: a wired pod, its Ethernet uplink bridged into the fronthaul's bridge (spec §8.4)."},
+        "mode": {"enum": ["off", "multi-ap", "ethernet", "gre"], "description": "multi-ap: option 1 (spec §8.3); ethernet: a wired pod, its Ethernet uplink bridged into the fronthaul's bridge (spec §8.4); gre: a GRE-parent child steered onto a parent AP by BSSID, no configured upstream (spec §8.6)."},
         "port": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,15}$", "default": "eth1", "description": "With mode ethernet: the pod's Ethernet uplink port."},
         "credentials": {"enum": ["m2", "config"], "default": "m2", "description": "m2: the backhaul BSS of the controller's applied M2 set (multi_bss); config: ssid and secret_ref below."},
         "ssid": {"type": "string", "minLength": 1, "maxLength": 32},

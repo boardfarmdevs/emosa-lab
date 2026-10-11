@@ -128,6 +128,7 @@ class GreTunnels:
         snap = self.backend.last
         return {
             "ap": self.backend.ap,
+            "ap_bssid": self.backend.ap_bssid,
             "underlay": str(self.backend.underlay),
             "children": list(self.backend.children),
             "tunnels": None if snap is None else snap.config.get("tunnels"),

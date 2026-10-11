@@ -48,7 +48,7 @@ import time
 
 from emosa.errors import EmosaError, Reason
 from emosa.model import ACTIVE, State
-from emosa.opensync.uplink import MULTI_AP, UplinkIntent
+from emosa.opensync.uplink import GRE, MULTI_AP, UplinkIntent
 from emosa.operations import transition
 from emosa.reconcile import Engine
 
@@ -74,6 +74,7 @@ class UplinkSwitch:
         run_id,
         settled=None,
         clock=None,
+        parents=None,
         hold_backoff=HOLD_BACKOFF,
         hold_backoff_cap=HOLD_BACKOFF_CAP,
         wall=None,
@@ -82,6 +83,8 @@ class UplinkSwitch:
 
         ``bssid`` is the upstream backhaul BSS the station is pinned to.
         ``settled()`` is true while the fronthaul scope is served and idle.
+        ``parents()`` -> the BSSIDs that are GRE parent APs of this fleet (spec 8.6): a
+        Backhaul Steering Request to one of them is a 3-address GRE move, not Multi-AP.
         ``wall()``: seconds of wall time, for a hold's backoff (default time.time).
         """
         self.hold_backoff, self.hold_backoff_cap = hold_backoff, hold_backoff_cap
@@ -89,6 +92,7 @@ class UplinkSwitch:
         self.pod_id, self.backend, self.store = pod_id, backend, store
         self.credentials, self.bssid, self.run_id = credentials, bssid, run_id
         self.settled = settled or (lambda: True)
+        self.parents = parents or (lambda: frozenset())
         self.engine = Engine(store, vault, {pod_id: backend}, clock, intent_type=UplinkIntent)
         self.engine.recover()
         self.waiting = None  # why no switch is being made, for status
@@ -96,8 +100,9 @@ class UplinkSwitch:
         # and the pod's backhaul station on that upstream's band (spec 8.3).
         self.configured = bssid
         self.configured_station = self.station = backend.station
+        self.mode = MULTI_AP  # the current uplink's kind: a move to a GRE parent makes it GRE
         self.moves = 0  # each move is a switch of its own, even back to an earlier upstream
-        # {"target", "previous", "station", "previous_station", "result"} of the latest move
+        # {"target", "previous", "station", "previous_station", "mode", "result"} of the latest move
         self.move = None
         self.target_path = store.directory / "target.json"
         # a held switch being made again: its hold's attempt (spec 8.3)
@@ -108,6 +113,7 @@ class UplinkSwitch:
             kept = json.loads(self.target_path.read_text())
             if kept.get("configured") == bssid and kept.get("target"):
                 self.bssid, self.moves = kept["target"], int(kept.get("moves", 1))
+                self.mode = GRE if kept.get("mode") == GRE else MULTI_AP
                 if kept.get("station") in backend.bound:
                     self.station = kept["station"]
         except (OSError, ValueError, AttributeError):
@@ -226,6 +232,7 @@ class UplinkSwitch:
                         "configured": self.configured,
                         "target": self.bssid,
                         "station": self.station,
+                        "mode": self.mode,
                         "moves": self.moves,
                     }
                 )
@@ -242,6 +249,7 @@ class UplinkSwitch:
         )
         move["result"] = reason
         self.bssid, self.station = move["previous"], move["previous_station"]
+        self.mode = move.get("previous_mode", MULTI_AP)
         self.moves += 1
         self._keep_target()
         return True
@@ -261,6 +269,7 @@ class UplinkSwitch:
             self.configured,
         )
         self.bssid, self.station = self.configured, self.configured_station
+        self.mode = MULTI_AP  # the configured upstream's kind (a GRE child's configured is None)
         self.moves += 1  # a switch of its own
         self._keep_target()
         self.fallback_after = {"instance": op.plan.get("instance"), "intent": op.intent}
@@ -279,7 +288,15 @@ class UplinkSwitch:
         bssid = bssid.lower()
         if self.held():
             return "held_on_option_2"
-        if (self.backend.facts or {}).get("kind") != MULTI_AP:
+        # Steer only from a working EasyMesh backhaul EMOSA manages: a Multi-AP pod on its
+        # Multi-AP backhaul, or a GRE child on its GRE path (the GTP, or a parent). A Multi-AP
+        # pod still on its bootstrap GRE (the GTP) is NOT steered: it reaches its own backhaul
+        # first (spec 8.3). A GRE child has no Multi-AP configured upstream.
+        kind = (self.backend.facts or {}).get("kind")
+        on_backhaul = kind == MULTI_AP or (
+            kind == GRE and (self.configured is None or self.mode == GRE)
+        )
+        if not on_backhaul:
             return "not_on_easymesh_backhaul"
         op = self.latest()
         if op is not None and op.state in ACTIVE:
@@ -292,16 +309,22 @@ class UplinkSwitch:
         fixed = self.backend.fixed_channel(station)
         if fixed is not None and channel is not None and channel != fixed:
             return "channel_not_operable"
-        previous, previous_station = self.bssid, self.station
+        # A target in the fleet's GRE parent set is a 3-address GRE join (spec 8.6); any
+        # other target is a Multi-AP (4-address) join. The GRE path is only ever taken for a
+        # known fleet parent: a child must never try GRE onto a foreign AP (7f, 11 Oct).
+        mode = GRE if bssid in self.parents() else MULTI_AP
+        previous, previous_station, previous_mode = self.bssid, self.station, self.mode
         self.move = {
             "target": bssid,
             "previous": previous,
             "station": station,
             "previous_station": previous_station,
+            "mode": mode,
+            "previous_mode": previous_mode,
             "result": None,
         }
-        if (bssid, station) != (previous, previous_station):
-            self.bssid, self.station = bssid, station
+        if (bssid, station, mode) != (previous, previous_station, previous_mode):
+            self.bssid, self.station, self.mode = bssid, station, mode
             self.moves += 1
             self._keep_target()
         log.info(
@@ -327,7 +350,7 @@ class UplinkSwitch:
             and op.state == State.OBSERVED_APPLIED
             and op.intent.get("bssid") == move["target"]
             and op.intent.get("station") == move["station"]
-            and facts.get("kind") == MULTI_AP
+            and facts.get("kind") == move["mode"]
             and facts.get("station") == move["station"]
             and facts.get("parent") == move["target"]
         ):
@@ -347,7 +370,14 @@ class UplinkSwitch:
         if credentials is None:
             self.waiting = "no EasyMesh backhaul credentials"
             return None
-        intent = UplinkIntent(self.pod_id, self.station, *credentials, bssid=self.bssid)
+        if self.bssid is None:
+            # a GRE child with no configured upstream: EMOSA writes nothing until the
+            # controller steers it onto a parent; its bootstrap uplink (the GTP) stands.
+            self.waiting = "no upstream (awaiting a Backhaul Steering Request)"
+            return None
+        intent = UplinkIntent(
+            self.pod_id, self.station, *credentials, mode=self.mode, bssid=self.bssid
+        )
         try:
             intent.target(self.engine.vault)
         except EmosaError as exc:

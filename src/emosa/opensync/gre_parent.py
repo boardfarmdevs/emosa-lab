@@ -97,6 +97,7 @@ class GreParentBackend:
         self.underlay = ipaddress.ip_network(underlay)
         self.instance = None
         self.children = ()  # the child addresses at the last snapshot
+        self.ap_bssid = None  # the parent AP's own BSSID, for the fleet's parent set (spec 8.6)
         self.last = None
         self.write_count = 0
 
@@ -143,6 +144,13 @@ class GreParentBackend:
                 return row["inet_addr"]
         return None
 
+    def ap_mac(self, decoded):
+        """The parent AP's own BSSID (its ``Wifi_VIF_State`` mac), lower-case, or None."""
+        for row in decoded.get("Wifi_VIF_State", {}).values():
+            if row.get("if_name") == self.ap and row.get("mode") == "ap" and row.get("mac"):
+                return row["mac"].lower()
+        return None
+
     def child_addresses(self, decoded):
         """The leases in the underlay whose MAC is associated to the AP, sorted."""
         clients = decoded.get("Wifi_Associated_Clients", {})
@@ -184,6 +192,7 @@ class GreParentBackend:
             decoded, _ = self._binding(raw)
             configured = self._configured(decoded)
             self.children = self.child_addresses(decoded)
+            self.ap_bssid = self.ap_mac(decoded)
             # nm's own table: each tunnel's interface is up once it has a State row
             up = {r.get("if_name") for r in decoded.get("Wifi_Inet_State", {}).values()}
             observed = {
