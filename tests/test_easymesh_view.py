@@ -10,7 +10,13 @@ import pytest
 
 from emosa.agent.pod import MONITOR, PodReportSource
 from emosa.errors import EmosaError
-from emosa.opensync.easymesh_view import device_view, inventory, radio_capabilities, topology
+from emosa.opensync.easymesh_view import (
+    backhaul,
+    device_view,
+    inventory,
+    radio_capabilities,
+    topology,
+)
 from emosa.opensync.pod_profile import PodBackend
 from emosa.opensync.schema import Schema, reference_path
 from emosa.secrets import SecretStore
@@ -75,6 +81,25 @@ def test_a_gre_parents_ap_is_a_backhaul_bss():
     vif_state(raw, "home-ap-24")["multi_ap"] = "none"
     (bss,) = device_view(decode(raw), parent_aps={"home-ap-24"}).radio(RUID_24).bsses
     assert bss.report_flags == 0x80
+
+
+def test_a_3address_station_under_gre_is_an_honest_wireless_backhaul():
+    """Spec 8.6: a GRE child's uplink is a 3-address station (multi_ap none) associated to the
+    parent AP. The pod reports it as its 802.11 backhaul so the controller sees the true medium,
+    but keeps multi_ap false: it is not claimed as a Multi-AP (4-address) bSTA."""
+    raw = raw_tables()
+    sta = vif_state(raw, "bhaul-sta-50")
+    sta["parent"] = "72:00:00:00:6a:00"  # associated to the parent AP b-ap
+    sta["multi_ap"] = "none"  # 3-address, not a Multi-AP backhaul STA
+    device = device_view(decode(raw))
+    bh = backhaul(device, "bhaul-sta-50")
+    assert bh is not None
+    assert (bh.band, bh.channel) == ("5G", 44)
+    assert bh.station.parent == bytes.fromhex("720000006a00")
+    assert bh.station.multi_ap is False  # honest: the medium is 802.11, the role is not Multi-AP
+    # an unassociated station (no parent) is still not a backhaul
+    sta["parent"] = ["set", []]
+    assert backhaul(device_view(decode(raw)), "bhaul-sta-50") is None
 
 
 @pytest.mark.parametrize("change", ["disabled", "not-on-radio", "no-mac", "inactive-clients"])

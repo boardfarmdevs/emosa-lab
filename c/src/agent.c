@@ -488,7 +488,11 @@ static bool refresh(agent *a)
     for (size_t i = 0; i < nnames && !a->has_backhaul; i++) {
         em_uplink_state state;
         em_uplink_state_of(tables, names[i], &state);
-        if (!strcmp(state.kind, "multi-ap") && em_view_backhaul(view, names[i], &a->backhaul)) {
+        /* a wireless backhaul station: a Multi-AP (4-address) uplink, or a 3-address station under
+         * a GRE tunnel (a GRE child, or the bootstrap/GTP path). The medium is 802.11 either way,
+         * so the pod reports it as its Wi-Fi backhaul (spec 8.6). */
+        if ((!strcmp(state.kind, "multi-ap") || !strcmp(state.kind, "gre")) &&
+            em_view_backhaul(view, names[i], &a->backhaul)) {
             a->has_backhaul = true;
             in_use = names[i];
         }

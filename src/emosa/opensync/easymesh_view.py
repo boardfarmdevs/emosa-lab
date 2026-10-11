@@ -257,14 +257,17 @@ def backhaul_radios(decoded, stations, in_use=None):
 def backhaul(device, station):
     """The pod's EasyMesh backhaul through ``station``, or None.
 
-    Only a connected Multi-AP backhaul STA on a mapped band with a known
-    channel and parent qualifies; the caller decides that ``cm`` uses it.
+    A connected backhaul STA on a mapped band with a known channel and a parent
+    qualifies: a Multi-AP (4-address) STA, or a 3-address station under a GRE
+    tunnel (spec 8.6) or on the bootstrap path. The medium is 802.11 either way;
+    the reported STA keeps its own ``multi_ap`` flag, so a GRE child is reported
+    honestly as a non-Multi-AP wireless backhaul, not as a Multi-AP bSTA. The
+    caller decides that ``cm`` uses it.
     """
     for radio in device.radios:
         for uplink in radio.uplinks:
             if (
                 uplink.if_name == station
-                and uplink.multi_ap
                 and uplink.parent is not None
                 and radio.band in MEDIA
                 and radio.channel is not None

@@ -420,7 +420,11 @@ bool em_view_backhaul(const em_device_view *v, const char *station, em_backhaul 
         const em_radio_view *r = &v->radios[i];
         for (size_t k = 0; k < r->nuplinks; k++) {
             const em_uplink_view *u = &r->uplinks[k];
-            if (strcmp(u->if_name, station) || !u->multi_ap || !u->has_parent || !r->has_channel ||
+            /* a connected backhaul STA with a parent on a mapped band: a Multi-AP (4-address) STA,
+             * or a 3-address station under a GRE tunnel (spec 8.6) / the bootstrap path. The medium
+             * is 802.11 either way; u->multi_ap is kept on the reported STA so a GRE child is
+             * reported honestly, not claimed as a Multi-AP bSTA. */
+            if (strcmp(u->if_name, station) || !u->has_parent || !r->has_channel ||
                 (strcmp(r->band, "2.4G") && strcmp(r->band, "5G")))
                 continue;
             memcpy(out->ruid, r->ruid, 6);

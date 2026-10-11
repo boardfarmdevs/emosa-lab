@@ -352,9 +352,13 @@ class PodReportSource:
                 raise EmosaError(Reason.NOT_READY, "pod radio identity or channel changed")
             uplink = None
             for station in self.stations:
-                if uplink_state(rows, station)["kind"] == MULTI_AP:
+                # a wireless backhaul station: a Multi-AP (4-address) uplink, or a 3-address
+                # station under a GRE tunnel (a GRE child, or the bootstrap/GTP path). The medium
+                # is 802.11 either way, so the pod reports it as its Wi-Fi backhaul (spec 8.6).
+                if uplink_state(rows, station)["kind"] in (MULTI_AP, GRE):
                     uplink = backhaul(device, station)
-                    break
+                    if uplink is not None:
+                        break
             radios_with_station = backhaul_radios(
                 rows, self.stations, uplink.station.if_name if uplink else None
             )
