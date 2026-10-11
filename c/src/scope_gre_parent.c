@@ -494,8 +494,12 @@ static cJSON *transaction(em_gre_scope *g, const em_gre_intent *i, const char *n
                           size_t *nops_out)
 {
     const cJSON *tables = em_ovsdb_tables(g->ovs), *inet = em_table(tables, "Wifi_Inet_Config");
-    const char *bridge_uuid;
+    const char *bridge_uuid = NULL;
     const cJSON *bridge = bridge_row(g, tables, &bridge_uuid);
+    *counts_out = NULL;
+    *nops_out = 0;
+    if (!bridge)
+        return NULL; /* plan_of guaranteed it; a race cannot happen in one tick, but never deref NULL */
     const char *local = local_address(g, tables);
     named_rows *ports = em_malloc(sizeof(*ports)), *rows = em_malloc(sizeof(*rows));
     ports_of(tables, bridge, ports);
@@ -642,6 +646,11 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     size_t nops;
     cJSON *ops = transaction(g, i, node_uuid, &counts, &nops);
     free(i);
+    if (!ops) {
+        strcpy(out->status, "rejected"); /* the bridge is gone since plan: not ready */
+        out->reason = EM_NOT_READY;
+        return;
+    }
     cJSON *results = g->transact(g->transact_ctx, ops);
     cJSON_Delete(ops);
     if (!results) {
