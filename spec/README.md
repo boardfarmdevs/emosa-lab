@@ -1016,6 +1016,29 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   backhaul BSS or was not on air, which is what the RDK agents send when a backhaul steering
   target cannot be joined. The uplink is never left for a refused target, so the refusal costs no
   outage.
+- **How the controller reaches a pod at all.** The controller sends a Backhaul Steering Request
+  only to a device it models with a backhaul STA, so EMOSA reports the pod's true medium: its
+  backhaul station, whatever its uplink's kind (Multi-AP, or a 3-address station under a GRE
+  tunnel or the bootstrap/GTP path), is reported as an 802.11 backhaul STA with its MAC, band and
+  parent BSSID, never claimed as a Multi-AP (4-address) bSTA (§8.5's reporting, now for a GRE
+  child too). The controller's own precondition for `SteerWiFiBackhaul` is a reported station-mode
+  backhaul STA; for a GRE child on `b-ap` (a backhaul-SSID BSS) that is enough, with no controller
+  change. A GTP pod's bootstrap BSS (e.g. `podbh`) is not an EasyMesh backhaul SSID, so the
+  controller models that STA's BSS as fronthaul and would not steer it; the one-line controller
+  relaxation (lab patch 0265, like 0247) accepts a reported station-mode backhaul STA as a steer
+  source regardless of its current BSS's SSID role. Applied in the labs and on the MV3, not
+  reported, as 0243–0264. The target is still validated; a pod the controller does not fully model
+  is verified by its Backhaul Steering Response and its reported parent.
+- **Moved back (to the bootstrap), one operator path.** The same `SteerWiFiBackhaul`, with the
+  target set to the pod's own bootstrap BSS (the GTP gateway BSS, or `podbh` on the MV3), returns
+  the pod to its bootstrap: EMOSA records that BSSID as the station's bootstrap upstream (the BSS
+  its station was on before any EasyMesh move) and persists it with the uplink state, so a move to
+  it is recognised as a revert — neither a parent nor a foreign AP, but home — and EMOSA restores
+  the station's bootstrap credential (removing the EasyMesh/GRE one it wrote), leaving the pod on
+  its GTP path. Persisting the bootstrap BSSID matters across a restart: `podbh`'s SSID is not a
+  backhaul SSID, so without the record EMOSA would read a steer to it as a foreign target and
+  refuse. There is no second operator path and no "drop from parent" action: onto is a steer to
+  the parent AP, back is a steer to the bootstrap BSS.
 - **No loops**, as §8.5: EMOSA MUST refuse a move to a parent AP of a pod whose own upstream
   chain reaches this pod.
 - **Reported** as in §8.5: the child names the parent's agent as its 1905 neighbor on its
