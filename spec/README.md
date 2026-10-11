@@ -1017,26 +1017,27 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   target cannot be joined. The uplink is never left for a refused target, so the refusal costs no
   outage.
 - **How the controller reaches a pod at all.** The controller sends a Backhaul Steering Request
-  only to a device it models with a station-mode backhaul BSS, so two things are needed, and they
-  are separate. (1) *The medium.* EMOSA reports the pod's backhaul station, whatever its uplink's
-  kind (Multi-AP, or a 3-address station under a GRE tunnel or the bootstrap/GTP path), as an
-  802.11 backhaul neighbour with its MAC, band and parent BSSID, never claimed as a Multi-AP
-  (4-address) bSTA (§8.5's reporting, now for a GRE child too); the controller then models the
-  device's backhaul link as Wireless LAN. (2) *The bSTA model.* The controller builds the
-  station-mode backhaul BSS that `SteerWiFiBackhaul`'s precondition scans for (its
-  `BackhaulMACAddress`) from the agent's RDK vendor-specific operational BSS TLV, which carries a
-  per-BSS `vap_mode`/`haul_type`. A native OneWifi agent sends it; EMOSA, which sends only the
-  standard AP Operational BSS (AP rows, no station mode) and the Backhaul STA Radio Capabilities,
-  does not, so the controller has no bSTA to steer even once (1) reports Wireless LAN. Confirmed on
-  `rdk-1010`: with (1) the pod reads as Wireless LAN, yet `Device.{i}.Radio.1.BackhaulSta` stays
-  empty and no request is sent. Full steerability through `SteerWiFiBackhaul` therefore needs EMOSA
-  to also emulate the vendor operational BSS (a station-mode bSTA entry) so the controller models
-  the bSTA; the one-line controller relaxation (lab patch 0265, like 0247) then lets it steer a
-  bSTA whose current BSS is not a backhaul SSID (a GTP pod on `podbh`). The alternative is an
-  EMOSA-side operator move that pins the child without the controller modelling a bSTA, the
-  controller's topology catching up from the child's reported parent; that keeps everything inside
-  EMOSA, at the cost of a second control path. Which of the two is taken is an owner decision
-  (§9).
+  only to a device it models with a station-mode backhaul BSS, so two things are needed, and both
+  are **standard** — no RDK vendor-specific TLV. (1) *The medium.* EMOSA reports the pod's backhaul
+  station, whatever its uplink's kind (Multi-AP, or a 3-address station under a GRE tunnel or the
+  bootstrap/GTP path), as an 802.11 backhaul neighbour with its MAC, band and parent BSSID, never
+  claimed as a Multi-AP (4-address) bSTA (§8.5's reporting, now for a GRE child too); the controller
+  then models the device's backhaul link as Wireless LAN. (2) *The bSTA model.* EMOSA reports the
+  station as a **non-AP (STA-role) interface in its Device Information**, on its parent's BSSID, plus
+  the standard R2 Backhaul STA Radio Capabilities TLV; the controller's `handle_topology_response`
+  builds the station-mode backhaul BSS from that interface (unified-wifi-mesh patch
+  `0216-ctrl-learn-backhaul-sta-from-device-information`, already in the lab and MV3 controller). No
+  vendor operational-BSS TLV, and no precondition relax, is required. **Proven on `rdk-1010`
+  (11 Oct):** once the agent onboards, the controller logs *"Backhaul STA learned from Device
+  Information: sta=… parent=…"* and records the association; `SteerWiFiBackhaul()` then passes its
+  precondition (*"… sta … to … queued"*), sends the Backhaul Steering Request, and the EMOSA agent
+  answers with a success result. There is one operator path, not two. *Data-model cosmetic:* when the
+  bSTA's MAC equals the pod's AP-radio id (the hwsim 2.4 GHz case, where a station shares its radio's
+  MAC), `Device.{i}.Radio.1.BackhaulSta.MACAddress` reads empty — that `Radio` row is the AP radio,
+  not the station — but `SteerWiFiBackhaul`'s precondition scans the BSS table directly, so it is
+  unaffected. The precondition scans the invoked `Device.{i}`'s own BSS table (its per-device data
+  model, `get_dm_easy_mesh(instance)`), so it names that pod's station; a fleet of several backhaul
+  children — each its own device — stays correct, each steer acting on its own device's station.
 - **Moved back (to the bootstrap), one operator path.** The same `SteerWiFiBackhaul`, with the
   target set to the pod's own bootstrap BSS (the GTP gateway BSS, or `podbh` on the MV3), returns
   the pod to its bootstrap: EMOSA records that BSSID as the station's bootstrap upstream (the BSS
@@ -1047,6 +1048,18 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   backhaul SSID, so without the record EMOSA would read a steer to it as a foreign target and
   refuse. There is no second operator path and no "drop from parent" action: onto is a steer to
   the parent AP, back is a steer to the bootstrap BSS.
+- **RDK's own autonomous steering (a known property, not used).** The controller carries a
+  native-backhaul module (`em_backhaul_ctrl.cpp`, its "Native backhaul state") that tracks each
+  backhaul station and may, from its own topology, move one between parents without an operator. It
+  does learn an EMOSA child's station from the child's Device Information and reported parent, but
+  marks it **unrooted**: `em_backhaul::root_path(...).valid` is false, so the child is skipped,
+  because EMOSA pods do not take part in the native rooted-admission probe that marks a station
+  rooted (only the real gateway uplink is rooted). This does not affect the operator
+  `SteerWiFiBackhaul` path, which models the bSTA from the standard reporting independently of
+  rootedness, and the owner has not approved the controller choosing pod parents on its own; so
+  EMOSA relies on operator-directed moves only and the unrooted state is benign. Observed on
+  `rdk-1010`: the child's station appears in the controller's "Native backhaul state" log as
+  `…/unrooted`.
 - **No loops**, as §8.5: EMOSA MUST refuse a move to a parent AP of a pod whose own upstream
   chain reaches this pod.
 - **Reported** as in §8.5: the child names the parent's agent as its 1905 neighbor on its
