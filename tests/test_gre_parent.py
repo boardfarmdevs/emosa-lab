@@ -238,3 +238,37 @@ def test_the_agent_keeps_the_tunnels_to_its_children(tmp_path):
     assert len(pod.session.sent) == 2
     assert {op["op"] for op in pod.session.sent[-1]} == {"wait", "delete", "mutate"}
     assert agent.status()["children"] == []
+
+
+def test_a_drifted_tunnel_is_re_created_while_the_child_stays(tmp_path):
+    # 7f, 11 Oct: the applied-state alone never stands in for the tunnels actually present. If an
+    # applied tunnel drifts away while its child is still an associated lease (a child re-appearing
+    # with the same lease after a backhaul bounce, or a hand delete), the scope re-writes it.
+    from emosa.agent.gre_parent import GreTunnels
+    from emosa.clock import ManualClock
+    from emosa.model import State
+    from emosa.secrets import SecretStore
+    from emosa.store import Store
+
+    pod = backend(tables())
+    agent = GreTunnels(
+        "pod-2",
+        pod,
+        Store(tmp_path / "gp"),
+        SecretStore(tmp_path / "s"),
+        run_id="r",
+        clock=ManualClock(),
+    )
+    asyncio.run(agent.tick())  # write the tunnel
+    pod.session.tables = tables(tunnels=(("pgd2_10", "169.254.2.10"),))  # nm made it
+    asyncio.run(agent.tick())
+    assert agent.latest().state == State.OBSERVED_APPLIED and agent.redo == 0
+    # the tunnel drifts away, the child (lease + association) stays: the gre row and its port gone
+    pod.session.tables = tables()
+    asyncio.run(agent.tick())  # a fresh write of its own, not blocked by the earlier applied op
+    assert len(pod.session.sent) == 2 and agent.redo == 1
+    assert any(op["op"] == "insert" for op in pod.session.sent[-1])  # the gre row written again
+    pod.session.tables = tables(tunnels=(("pgd2_10", "169.254.2.10"),))  # nm re-made it
+    asyncio.run(agent.tick())
+    assert agent.latest().state == State.OBSERVED_APPLIED
+    assert agent.status()["tunnels"] == {"pgd2_10": "169.254.2.10"}

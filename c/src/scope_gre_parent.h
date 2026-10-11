@@ -32,6 +32,7 @@ typedef struct {
     em_snapshot last;
     bool has_last;
     em_gre_intent children; /* the parent AP's children at the last snapshot, sorted */
+    unsigned redo;          /* bumped for a fresh write after an applied set of tunnels drifted */
     char waiting[128];      /* why nothing is written now, "" when nothing waits */
     bool has_waiting;
 } em_gre_scope;

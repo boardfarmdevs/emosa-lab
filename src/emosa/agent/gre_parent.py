@@ -27,6 +27,9 @@ class GreTunnels:
         self.engine = Engine(store, vault, {pod_id: backend}, clock, intent_type=TunnelIntent)
         self.engine.recover()
         self.waiting = None
+        # a fresh write after an applied set of tunnels drifted away (a child re-appearing with the
+        # same lease, a bounce, a hand delete): bumped so the write gets its own idempotency key
+        self.redo = 0
 
     def latest(self):
         ops = self.store.operations()
@@ -39,8 +42,8 @@ class GreTunnels:
         )
 
     def key(self, intent):
-        """One write per OpenSync start and set of children."""
-        return f"{self.backend.instance}:{','.join(intent.remotes)}"
+        """One write per OpenSync start, set of children, and redo (a re-write after drift)."""
+        return f"{self.backend.instance}:{','.join(intent.remotes)}:{self.redo}"
 
     def _settle(self, op, snap):
         if op.state not in (State.CONFIG_COMMITTED, State.INDETERMINATE):
@@ -83,14 +86,20 @@ class GreTunnels:
         if snap.config.get("tunnels") == intent.target()["tunnels"]:
             self.waiting = None
             return False
+        # Here the parent AP's actual tunnels (gre row, Interface, Port, and - in `observed` -
+        # the netdev) differ from what its children need: some tunnel is missing or extra. That is
+        # drift, whatever the cause (a child re-appearing with the same lease after a bounce, a
+        # hand delete), and it is re-written - the applied-state alone never stands in for the
+        # tunnels actually present (7f, 11 Oct).
         done = self.store.lookup(SOURCE, self.pod_id, self.key(intent))
-        if done is not None:
-            self.waiting = (
-                None
-                if done.state == State.OBSERVED_APPLIED
-                else f"not made for these children: {done.state} {done.reason or ''}".strip()
-            )
+        if done is not None and done.state != State.OBSERVED_APPLIED:
+            # a failed or refused write is not made again for the same children on the same start
+            # (a change in the children, the next start, or a redo after an applied set drifts)
+            self.waiting = f"not made for these children: {done.state} {done.reason or ''}".strip()
             return False
+        if done is not None and done.state == State.OBSERVED_APPLIED:
+            # the tunnels this write made have drifted away: a fresh write of its own
+            self.redo += 1
         self.waiting = None
         return True
 

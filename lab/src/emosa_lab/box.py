@@ -2739,6 +2739,103 @@ async def gre_parent_child_gone(box):
     )
 
 
+async def gre_drift_remove_tunnel(box, name):
+    """Remove a tunnel's rows as if nm or a hand delete took it (drift): its gre Wifi_Inet_Config
+    and Wifi_Inet_State, and its Port out of br-home (the Port and its Interface with it). The
+    child's lease and association are left in place."""
+
+    def delete(table, u):
+        return {"op": "delete", "table": table, "where": [["_uuid", "==", ["uuid", u]]]}
+
+    ops = [
+        delete(t, u)
+        for t in ("Wifi_Inet_Config", "Wifi_Inet_State")
+        for u, r in (await box.rows(t)).items()
+        if r.get("if_name") == name
+    ]
+    ports = await box.rows("Port")
+    port_uuid = next((u for u, r in ports.items() if r.get("name") == name), None)
+    if port_uuid is not None:
+        bridge = next(
+            (u for u, r in (await box.rows("Bridge")).items() if r.get("name") == "br-home"), None
+        )
+        if bridge is not None:
+            ops.append(
+                {
+                    "op": "mutate",
+                    "table": "Bridge",
+                    "where": [["_uuid", "==", ["uuid", bridge]]],
+                    "mutations": [["ports", "delete", ["set", [["uuid", port_uuid]]]]],
+                }
+            )
+        ops += [delete("Interface", iu) for iu in uuids(ports[port_uuid].get("interfaces"))]
+        ops.append(delete("Port", port_uuid))
+    if ops:
+        await box.transact(ops)
+
+
+async def gre_parent_child_redrift(box):
+    """spec 8.6 / 7f 11 Oct: a child's tunnel that drifts away while the child is still an
+    associated lease (a re-appearance with the same lease after a backhaul bounce, or a hand
+    delete) is re-created. The applied-state alone never stands in for the tunnels present."""
+    ap, failure = await gre_parent_up(box)
+    if failure:
+        return failure
+    await gre_parent_ready(box)
+    await box.transact(
+        [
+            {
+                "op": "insert",
+                "table": "DHCP_leased_IP",
+                "row": {"hwaddr": GRE_CHILD_MAC, "inet_addr": GRE_CHILD_IP},
+            }
+        ]
+    )
+    await box.client_join(GRE_CHILD_MAC, GRE_AP)
+    if not await gre_await_tunnel(box, "pgd2_10", present=True):
+        return box.result(passed=False, failed="the tunnel was never made")
+    await gre_nm_apply(box)
+    if not await gre_await_applied(box):
+        return box.result(passed=False, failed="the first tunnel never settled")
+    first = (((box.status() or {}).get("gre_parent") or {}).get("operation") or {}).get(
+        "operation_id"
+    )
+    # the tunnel drifts away while the child stays an associated lease (the gre row and its port
+    # are deleted). The scope re-creates it so promptly that the gone state is not reliably
+    # observable; the proof is a fresh write (a new operation), not a glimpse of the gap.
+    await gre_drift_remove_tunnel(box, "pgd2_10")
+    # the scope re-creates it in a fresh write; nm brings the new gretap up so that write settles.
+    # Poll both together (a sequential remade->nm->applied races the prompt re-create under load).
+    remade = False
+    op_id = None
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline and box.process.poll() is None:
+        await gre_nm_apply(box)
+        present = await gre_inet(box, "pgd2_10") is not None and await gre_port_in_home(
+            box, "pgd2_10"
+        )
+        operation = ((box.status() or {}).get("gre_parent") or {}).get("operation") or {}
+        op_id = operation.get("operation_id")
+        if present and op_id not in (None, first) and operation.get("state") == "OBSERVED_APPLIED":
+            remade = True
+            break
+        await asyncio.sleep(0.3)
+    row = await gre_inet(box, "pgd2_10")
+    bridged = await gre_port_in_home(box, "pgd2_10")
+    return box.result(
+        passed=remade  # a fresh write (op != first) re-made the tunnel and settled
+        and row is not None
+        and row.get("gre_remote_inet_addr") == GRE_CHILD_IP
+        and row.get("gre_ifname") == GRE_AP
+        and bridged,
+        tunnel=row,
+        in_br_home=bridged,
+        first_op=first,
+        re_created_by=op_id,
+        gre_status=(box.status() or {}).get("gre_parent"),
+    )
+
+
 async def gre_parent_withdrawn(box):
     """spec 8.6: the controller drops the backhaul BSS from the M2 set (a renew with only the
     fronthaul). EMOSA's AP scope removes the parent AP b-ap-24 and its underlay Inet row; the
@@ -2939,6 +3036,7 @@ SCENARIOS = {
     "gre-parent-create": gre_parent_create,
     "gre-parent-child": gre_parent_child,
     "gre-parent-child-gone": gre_parent_child_gone,
+    "gre-parent-child-redrift": gre_parent_child_redrift,
     "gre-parent-withdrawn": gre_parent_withdrawn,
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
@@ -2975,6 +3073,11 @@ OPTIONS = {  # the box each scenario needs beyond the default
         "underlay": GRE_UNDERLAY,
     },
     "gre-parent-child-gone": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-v1",
+        "underlay": GRE_UNDERLAY,
+    },
+    "gre-parent-child-redrift": {
         "multi_bss": True,
         "profile": "opensync-lab-hwsim-6.6.1-gre-v1",
         "underlay": GRE_UNDERLAY,

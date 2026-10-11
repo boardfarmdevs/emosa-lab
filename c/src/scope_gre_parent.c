@@ -760,14 +760,15 @@ static void settle(em_gre_scope *g, cJSON *op, const em_snapshot *snap, bool hav
     cJSON_Delete(t);
 }
 
-/* GreTunnels.key: one write per OpenSync start and set of children */
+/* GreTunnels.key: one write per OpenSync start, set of children, and redo (a re-write after drift) */
 static char *key_of(const em_gre_scope *g)
 {
-    size_t size = sizeof(g->instance) + 1 + EM_GRE_CHILDREN * 16;
+    size_t size = sizeof(g->instance) + 1 + EM_GRE_CHILDREN * 16 + 16;
     char *key = em_malloc(size), *at = key;
     at += snprintf(at, size, "%s:", g->instance);
     for (size_t k = 0; k < g->children.nremotes; k++)
         at += snprintf(at, size - (size_t)(at - key), "%s%s", k ? "," : "", g->children.remotes[k]);
+    at += snprintf(at, size - (size_t)(at - key), ":%u", g->redo);
     return key;
 }
 
@@ -797,17 +798,21 @@ void em_gre_tick(em_gre_scope *g)
     } else if (cJSON_Compare(cJSON_GetObjectItemCaseSensitive(snap.config, "tunnels"),
                              cJSON_GetObjectItemCaseSensitive(t, "tunnels"), true)) {
         wait_for(g, NULL);
-    } else if ((done = em_journal_lookup(g->journal, SOURCE, g->pod_id, key))) {
-        if (!strcmp(em_state_of(done), "OBSERVED_APPLIED")) {
-            wait_for(g, NULL);
-        } else {
-            char text[128];
-            const char *reason = str(done, "reason");
-            (void)em_format(text, sizeof(text), "not made for these children: %s%s%s", em_state_of(done), /* a message */
-                            reason ? " " : "", reason ? reason : "");
-            wait_for(g, text);
-        }
+    } else if ((done = em_journal_lookup(g->journal, SOURCE, g->pod_id, key)) &&
+               strcmp(em_state_of(done), "OBSERVED_APPLIED")) {
+        /* a failed or refused write for this key is not made again until the children change,
+           the next start, or a redo after an applied set drifts */
+        char text[128];
+        const char *reason = str(done, "reason");
+        (void)em_format(text, sizeof(text), "not made for these children: %s%s%s", em_state_of(done), /* a message */
+                        reason ? " " : "", reason ? reason : "");
+        wait_for(g, text);
     } else {
+        /* no prior op, or a prior op applied but the parent AP's actual tunnels have since
+           drifted (we reach here only when snap.config tunnels != wanted): re-create. The
+           applied-state alone never stands in for the tunnels present (7f, 11 Oct). */
+        if (done)
+            g->redo++;
         wait_for(g, NULL);
         wanted = true;
     }
@@ -817,6 +822,8 @@ void em_gre_tick(em_gre_scope *g)
     cJSON_Delete(t);
     em_snapshot_clear(&snap);
     if (wanted) {
+        free(key); /* a redo bump above changed the key for this fresh write */
+        key = key_of(g);
         cJSON *intent = record(&g->children);
         em_reason why;
         op = em_engine_request(&g->engine, intent, SOURCE, key, g->run_id, DEADLINE, "semantic", NULL, &why);
