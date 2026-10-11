@@ -403,6 +403,7 @@ def uplink_state_case(name, raw, station, stations=None):
     view = device_view(rows)
     stations = list(stations or (station,))
     in_use = station if state["kind"] == "multi-ap" else None
+    bh_radios = list(backhaul_radios(rows, stations, in_use))
     case = {
         "name": name,
         "ovsdb_tables": raw,
@@ -413,7 +414,7 @@ def uplink_state_case(name, raw, station, stations=None):
             "backhaul": None,
             "backhaul_sta_capability_tlvs": [
                 {"type": "0xcb", "value": (ruid + (b"\x80" + sta if sta else b"\x00")).hex()}
-                for ruid, sta in backhaul_radios(rows, stations, in_use)
+                for ruid, sta in bh_radios
             ],
         },
     }
@@ -428,6 +429,7 @@ def uplink_state_case(name, raw, station, stations=None):
             bsses=radio.bsses,
             ages={m: 0 for b in radio.bsses for m in b.stations},
             uplink=link,
+            backhaul_radios=bh_radios,
         )
         binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
         case["expected"]["backhaul"] = {

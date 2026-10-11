@@ -383,6 +383,15 @@ em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_a
         }
     }
     static const uint8_t services[2] = {1, 1}, profile = 1;
+    /* the pod's Backhaul STA Radio Capabilities (spec 8.6): its bSTA MAC on the radio that
+     * carries it, so the controller models a station-mode backhaul BSS and can steer it, with a
+     * standard TLV (not the RDK vendor operational BSS). Only when the pod has a Wi-Fi backhaul. */
+    uint8_t bsta[13] = {0};
+    if (uplink) {
+        memcpy(bsta, uplink->ruid, 6);
+        bsta[6] = 0x80; /* STA MAC included */
+        memcpy(bsta + 7, uplink->station.mac, 6);
+    }
     ok = ok && append(out, 0x03, &dev) && append(out, 0x04, &bridge) && append(out, 0x07, &nb);
     /* then each Wi-Fi backhaul neighbor on its local interface (spec §8.5), no 802.1 bridge */
     uint8_t locals[16][6], als[16][6];
@@ -398,6 +407,7 @@ em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_a
     }
     ok = ok && append_bytes(out, 0x80, services, 2) && append(out, 0x83, &op) &&
          (r1 || append(out, 0xB7, &conf)) && (!clients || append(out, 0x84, &cl)) &&
+         (!uplink || append_bytes(out, 0xCB, bsta, 13)) &&
          (r1 || append_bytes(out, 0xB3, &profile, 1));
     em_buf_free(&dev);
     em_buf_free(&bridge);

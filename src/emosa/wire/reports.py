@@ -334,6 +334,13 @@ def _topology(facts, binding, message_set=EASYMESH_61, now=None):
         tlvs.append(_em(facts.configuration))
     if clients:
         tlvs.append(_em(facts.clients))
+    if facts.backhaul_radios:
+        # the Backhaul STA Radio Capabilities (spec 8.6): the in-use bSTA MAC on its radio (the
+        # in-use radio comes first), reported in the Topology Response so the controller models a
+        # station-mode backhaul BSS and can steer the pod -- a standard TLV, not the RDK vendor
+        # operational BSS. The controller reads the first, matching the C's single in-use uplink.
+        ruid, mac = facts.backhaul_radios[0]
+        tlvs.append(Tlv(0xCB, ruid + (bytes([0x80]) + mac if mac else bytes([0x00]))))
     if message_set != R1:
         tlvs.append(_em(MultiAPProfile(1)))
     return tlvs
