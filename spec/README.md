@@ -1017,18 +1017,26 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   target cannot be joined. The uplink is never left for a refused target, so the refusal costs no
   outage.
 - **How the controller reaches a pod at all.** The controller sends a Backhaul Steering Request
-  only to a device it models with a backhaul STA, so EMOSA reports the pod's true medium: its
-  backhaul station, whatever its uplink's kind (Multi-AP, or a 3-address station under a GRE
-  tunnel or the bootstrap/GTP path), is reported as an 802.11 backhaul STA with its MAC, band and
-  parent BSSID, never claimed as a Multi-AP (4-address) bSTA (§8.5's reporting, now for a GRE
-  child too). The controller's own precondition for `SteerWiFiBackhaul` is a reported station-mode
-  backhaul STA; for a GRE child on `b-ap` (a backhaul-SSID BSS) that is enough, with no controller
-  change. A GTP pod's bootstrap BSS (e.g. `podbh`) is not an EasyMesh backhaul SSID, so the
-  controller models that STA's BSS as fronthaul and would not steer it; the one-line controller
-  relaxation (lab patch 0265, like 0247) accepts a reported station-mode backhaul STA as a steer
-  source regardless of its current BSS's SSID role. Applied in the labs and on the MV3, not
-  reported, as 0243–0264. The target is still validated; a pod the controller does not fully model
-  is verified by its Backhaul Steering Response and its reported parent.
+  only to a device it models with a station-mode backhaul BSS, so two things are needed, and they
+  are separate. (1) *The medium.* EMOSA reports the pod's backhaul station, whatever its uplink's
+  kind (Multi-AP, or a 3-address station under a GRE tunnel or the bootstrap/GTP path), as an
+  802.11 backhaul neighbour with its MAC, band and parent BSSID, never claimed as a Multi-AP
+  (4-address) bSTA (§8.5's reporting, now for a GRE child too); the controller then models the
+  device's backhaul link as Wireless LAN. (2) *The bSTA model.* The controller builds the
+  station-mode backhaul BSS that `SteerWiFiBackhaul`'s precondition scans for (its
+  `BackhaulMACAddress`) from the agent's RDK vendor-specific operational BSS TLV, which carries a
+  per-BSS `vap_mode`/`haul_type`. A native OneWifi agent sends it; EMOSA, which sends only the
+  standard AP Operational BSS (AP rows, no station mode) and the Backhaul STA Radio Capabilities,
+  does not, so the controller has no bSTA to steer even once (1) reports Wireless LAN. Confirmed on
+  `rdk-1010`: with (1) the pod reads as Wireless LAN, yet `Device.{i}.Radio.1.BackhaulSta` stays
+  empty and no request is sent. Full steerability through `SteerWiFiBackhaul` therefore needs EMOSA
+  to also emulate the vendor operational BSS (a station-mode bSTA entry) so the controller models
+  the bSTA; the one-line controller relaxation (lab patch 0265, like 0247) then lets it steer a
+  bSTA whose current BSS is not a backhaul SSID (a GTP pod on `podbh`). The alternative is an
+  EMOSA-side operator move that pins the child without the controller modelling a bSTA, the
+  controller's topology catching up from the child's reported parent; that keeps everything inside
+  EMOSA, at the cost of a second control path. Which of the two is taken is an owner decision
+  (§9).
 - **Moved back (to the bootstrap), one operator path.** The same `SteerWiFiBackhaul`, with the
   target set to the pod's own bootstrap BSS (the GTP gateway BSS, or `podbh` on the MV3), returns
   the pod to its bootstrap: EMOSA records that BSSID as the station's bootstrap upstream (the BSS
