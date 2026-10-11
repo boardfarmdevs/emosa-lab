@@ -389,6 +389,21 @@ def test_a_backhaul_move_under_a_child_pod_is_refused(agent, tmp_path):
     assert result["passed"], result
 
 
+def test_a_gre_parents_backhaul_bss_is_written_as_its_parent_ap(agent, tmp_path):
+    result = box("gre-parent-create", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_a_gre_parent_builds_a_tunnel_to_a_child_that_leased_in_its_underlay(agent, tmp_path):
+    result = box("gre-parent-child", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_a_gre_parent_removes_a_tunnel_when_its_child_is_gone(agent, tmp_path):
+    result = box("gre-parent-child-gone", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_refused_close_is_swept_again_on_the_same_source(agent, tmp_path):
     result = box("steering-close-refused", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result

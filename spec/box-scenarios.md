@@ -88,6 +88,9 @@ fleet must admit the serial and give it the profile `opensync-lab-hwsim-6.6.1-v1
 | `pod-child` | spec 8.5: the pod on its EasyMesh backhaul under another pod's backhaul BSS (that pod's agent in the box as the peer directory reads it: its status beside the agent's): the Topology Response names that agent as a 1905 neighbor on the backhaul station, besides the controller on Ethernet, and a Link Metric Query is answered from the parent's measurement of the station, the directions swapped | alignment plan 9.5 |
 | `pod-parent` | spec 8.5: another pod's station on this pod's backhaul BSS, that pod's parent: the Topology Response names its agent on the BSS, and a Link Metric Query for it is answered from this pod's own client report of the station | alignment plan 9.5 |
 | `pod-parent-loop` | spec 8.5: a Backhaul Steering Request whose target is the backhaul BSS of a pod hanging off this one: refused at once (failure), the station left where it is | alignment plan 9.5 |
+| `gre-parent-create` | spec 8.6 (draft): with a gre-parent profile and an underlay, a backhaul BSS of the M2 set is written as the pod's GRE parent AP `b-ap-24` (multi_ap none, no bridge, ap_bridge false, hidden), its Inet row the underlay at `.1` with DHCP `.10` to `.250`; the agent recognizes it as its parent AP | alignment plan 9.5 |
+| `gre-parent-child` | spec 8.6 (draft): a child that associated to the parent AP and took a lease in the underlay gets a `gre` Wifi_Inet_Config row `pgd2_10` (from the AP's `.1` to the lease, MTU 1562) and a port of `br-home` | alignment plan 9.5 |
+| `gre-parent-child-gone` | spec 8.6 (draft): when the child's lease and association end, its tunnel row and its `br-home` port are removed | alignment plan 9.5 |
 | `backhaul-steering-refused` | without option 1 (the pod on GRE): refused at once, failure with an Error Code | finding 12 |
 
 ## The reference workload's faults

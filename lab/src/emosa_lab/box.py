@@ -443,8 +443,12 @@ class Box:
         wired=False,
         cold=False,
         reply_cut=False,
+        underlay=None,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
+        # underlay (with a gre-parent profile): the pod's 169.254.N.0/24 as a GRE parent (spec
+        # 8.6), given to the agent as the fleet registry would; its parent AP takes the .1
+        self.underlay = underlay
         self.topology_query_window = topology_query_window
         # netns: the agent's interface in a namespace of its own (EMOSA_NETNS), as on a
         # gateway whose EasyMesh controller is local
@@ -541,6 +545,11 @@ class Box:
             fleet["multi_bss"] = True
         if self.profile:
             fleet["profile"] = self.profile
+        if self.underlay:
+            # the fleet's own GTP underlay and this pod's allocated underlay, as the registry
+            # would hand them to the agent (spec 8.6)
+            fleet["gtp_underlay"] = "169.254.1.0/24"
+            entry["underlay"] = self.underlay
         if self.wired:
             fleet["uplink"] = {"mode": "ethernet"}
         if self.topology_query_window:
@@ -2444,6 +2453,208 @@ async def pod_parent_loop(box):
     )
 
 
+# spec 8.6 (draft): a pod as the GRE parent of other pods. The box's pod runs a gre-parent
+# profile with an underlay; the controller's backhaul BSS becomes the parent AP b-ap-24, and
+# a child is a lease in the underlay whose MAC is associated to it.
+GRE_UNDERLAY = "169.254.2.0/24"
+GRE_AP = "b-ap-24"
+GRE_CHILD_MAC = "02:00:00:00:2a:01"
+GRE_CHILD_IP = "169.254.2.10"  # its tunnel is pgd2_10
+
+
+async def gre_parent_up(box):
+    """Onboard a gre-parent pod: the M2's backhaul BSS written as the parent AP. (parent AP
+    Config row, None) on success, else (None, a failed result)."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return None, box.result(passed=False, failed=state.get("failed", "not onboarded"))
+    _, ap = await box.vif("Wifi_VIF_Config", GRE_AP)
+    if not ap:
+        return None, box.result(passed=False, failed="no parent AP b-ap-24")
+    return ap, None
+
+
+async def gre_inet(box, if_name):
+    """The pod's Wifi_Inet_Config row for an interface, decoded, or None."""
+    for row in (await box.rows("Wifi_Inet_Config")).values():
+        if row.get("if_name") == if_name:
+            return row
+    return None
+
+
+async def gre_parent_create(box):
+    """spec 8.6: a backhaul BSS of the controller's M2 set is written as the pod's GRE parent AP
+    (b-ap-24): not Multi-AP, no bridge, no bridging between its stations, hidden; its Inet row the
+    pod's underlay at .1 with DHCP .10 to .250. The agent recognizes it as its parent AP."""
+    ap, failure = await gre_parent_up(box)
+    if failure:
+        return failure
+    inet = await gre_inet(box, GRE_AP)
+    dhcpd = ovsdb_map((inet or {}).get("dhcpd"))
+    status = (box.status() or {}).get("gre_parent") or {}
+    ap_ok = (
+        ap.get("multi_ap") == "none"
+        and ap.get("bridge") == ""
+        and ap.get("ap_bridge") is False
+        and ap.get("ssid_broadcast") == "disabled"
+    )
+    inet_ok = (
+        inet is not None
+        and inet.get("inet_addr") == "169.254.2.1"
+        and inet.get("netmask") == "255.255.255.0"
+        and inet.get("mtu") == 1600
+        and dhcpd.get("start") == "169.254.2.10"
+        and dhcpd.get("stop") == "169.254.2.250"
+    )
+    return box.result(
+        passed=ap_ok
+        and inet_ok
+        and status.get("ap") == GRE_AP
+        and status.get("underlay") == GRE_UNDERLAY,
+        parent_ap={
+            k: ap.get(k) for k in ("ssid", "multi_ap", "bridge", "ap_bridge", "ssid_broadcast")
+        },
+        underlay_inet=inet,
+        gre_status=status,
+    )
+
+
+async def gre_parent_ready(box):
+    """nm applies the agent's underlay to the AP's Wifi_Inet_State, and the pod's bootstrap has
+    br-home: what a tunnel needs besides the parent AP. br-home hangs from the Open_vSwitch root
+    (Open_vSwitch -> Bridge -> Port -> Interface), so it is not garbage-collected."""
+    await box.transact(
+        [
+            {
+                "op": "insert",
+                "table": "Wifi_Inet_State",
+                "row": {"if_name": GRE_AP, "if_type": "vif", "inet_addr": "169.254.2.1"},
+            },
+            {
+                "op": "insert",
+                "table": "Interface",
+                "uuid-name": "brhomeif",
+                "row": {"name": "br-home"},
+            },
+            {
+                "op": "insert",
+                "table": "Port",
+                "uuid-name": "brhomeport",
+                "row": {"name": "br-home", "interfaces": ["set", [["named-uuid", "brhomeif"]]]},
+            },
+            {
+                "op": "insert",
+                "table": "Bridge",
+                "uuid-name": "brhomebr",
+                "row": {"name": "br-home", "ports": ["set", [["named-uuid", "brhomeport"]]]},
+            },
+            {
+                "op": "insert",
+                "table": "Open_vSwitch",
+                "row": {"bridges": ["set", [["named-uuid", "brhomebr"]]]},
+            },
+        ]
+    )
+
+
+async def gre_port_in_home(box, name):
+    """The Port `name` is a member of br-home (the tunnel joined the bridge)."""
+    ports = await box.rows("Port")
+    bridge = next(
+        (r for r in (await box.rows("Bridge")).values() if r.get("name") == "br-home"), None
+    )
+    members = {ports[u]["name"] for u in uuids((bridge or {}).get("ports")) if u in ports}
+    return name in members
+
+
+async def gre_await_tunnel(box, name, present, seconds=60):
+    """Poll the pod's own rows (not the status, which lags a tick) until the tunnel `name` is
+    there (present) or gone: its gre Wifi_Inet_Config row and its br-home port both exist, or
+    both do not."""
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline and box.process.poll() is None:
+        there = await gre_inet(box, name) is not None and await gre_port_in_home(box, name)
+        if there == present:
+            return True
+        await asyncio.sleep(0.3)
+    return False
+
+
+async def gre_parent_child(box):
+    """spec 8.6: a child that associated to the parent AP and took a lease in the underlay gets a
+    gre Wifi_Inet_Config row pgd<b3>_<b4> from the AP's address to the lease, and a port of
+    br-home."""
+    ap, failure = await gre_parent_up(box)
+    if failure:
+        return failure
+    await gre_parent_ready(box)
+    await box.transact(
+        [
+            {
+                "op": "insert",
+                "table": "DHCP_leased_IP",
+                "row": {"hwaddr": GRE_CHILD_MAC, "inet_addr": GRE_CHILD_IP},
+            }
+        ]
+    )
+    await box.client_join(GRE_CHILD_MAC, GRE_AP)
+    made = await gre_await_tunnel(box, "pgd2_10", present=True)
+    row = await gre_inet(box, "pgd2_10")
+    bridged = await gre_port_in_home(box, "pgd2_10")
+    return box.result(
+        passed=bool(made)
+        and row is not None
+        and row.get("if_type") == "gre"
+        and row.get("gre_ifname") == GRE_AP
+        and row.get("gre_remote_inet_addr") == GRE_CHILD_IP
+        and row.get("gre_local_inet_addr") == "169.254.2.1"
+        and row.get("mtu") == 1562
+        and bridged,
+        tunnel=row,
+        in_br_home=bridged,
+        gre_status=(box.status() or {}).get("gre_parent"),
+    )
+
+
+async def gre_parent_child_gone(box):
+    """spec 8.6: when a child's lease or association ends, its tunnel row and its br-home port are
+    removed."""
+    ap, failure = await gre_parent_up(box)
+    if failure:
+        return failure
+    await gre_parent_ready(box)
+    await box.transact(
+        [
+            {
+                "op": "insert",
+                "table": "DHCP_leased_IP",
+                "row": {"hwaddr": GRE_CHILD_MAC, "inet_addr": GRE_CHILD_IP},
+            }
+        ]
+    )
+    await box.client_join(GRE_CHILD_MAC, GRE_AP)
+    if not await gre_await_tunnel(box, "pgd2_10", present=True):
+        return box.result(passed=False, failed="the tunnel was never made")
+    await box.client_leave(GRE_CHILD_MAC, GRE_AP)
+    lease = next(
+        u
+        for u, r in (await box.rows("DHCP_leased_IP")).items()
+        if r.get("inet_addr") == GRE_CHILD_IP
+    )
+    await box.transact(
+        [{"op": "delete", "table": "DHCP_leased_IP", "where": [["_uuid", "==", ["uuid", lease]]]}]
+    )
+    removed = await gre_await_tunnel(box, "pgd2_10", present=False)
+    row = await gre_inet(box, "pgd2_10")
+    bridged = await gre_port_in_home(box, "pgd2_10")
+    return box.result(
+        passed=bool(removed) and row is None and not bridged,
+        tunnel=row,
+        in_br_home=bridged,
+        gre_status=(box.status() or {}).get("gre_parent"),
+    )
+
+
 # The reference workload's faults, in the box
 
 
@@ -2580,6 +2791,9 @@ SCENARIOS = {
     "pod-child": pod_child,
     "pod-parent": pod_parent,
     "pod-parent-loop": pod_parent_loop,
+    "gre-parent-create": gre_parent_create,
+    "gre-parent-child": gre_parent_child,
+    "gre-parent-child-gone": gre_parent_child_gone,
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
     "write-lost-unapplied": write_lost_unapplied,
@@ -2604,6 +2818,21 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "pod-child": {"backhaul": True},
     "pod-parent": {"multi_bss": True, "telemetry": True},
     "pod-parent-loop": {"backhaul": True},
+    "gre-parent-create": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-v1",
+        "underlay": GRE_UNDERLAY,
+    },
+    "gre-parent-child": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-v1",
+        "underlay": GRE_UNDERLAY,
+    },
+    "gre-parent-child-gone": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-v1",
+        "underlay": GRE_UNDERLAY,
+    },
 }
 
 
