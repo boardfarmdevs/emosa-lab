@@ -903,7 +903,19 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   the M2's backhaul SSID and passphrase (`wpa_*` columns), `multi_ap=none`, no `bridge`,
   `ap_bridge=false`. The SSID is hidden by default, as the OpenSync cloud keeps a backhaul;
   broadcasting it is the profile's choice (`ssid_broadcast`), since a child joins by its pinned
-  BSSID either way.
+  BSSID either way. The parent AP is named `b-ap-<band>` (`b-ap-24` on the 2.4 GHz radio,
+  `b-ap-50` on 5 GHz), as the OpenSync cloud and `local-noc` name it, so the pod's own
+  fallback can find it.
+- **The parent AP's radio.** The controller decides where backhaul BSSes are, and can only do
+  that for a radio it knows, so the parent AP's radio is one EMOSA **binds and reports** (its own
+  M1 and Radio Basic Capabilities, the controller's M2 for it). Where the only radio that can
+  carry the parent AP is not the fronthaul's (a pod whose one adapter per radio allows a single
+  AP, and whose uplink station is on another band's adapter, the Pis' MT7921U), EMOSA binds that
+  second radio too (§9, more than one radio per agent): it owns `b-ap-<band>` and the tunnels on
+  it, and leaves the pod's uplink station, that radio's channel and `ht_mode`, and the pod's own
+  rows alone. A hidden parent radio the controller does not see is refused: the controller would
+  place the backhaul BSS, steer children (`SteerWiFiBackhaul`'s class and channel) and read link
+  metrics on the wrong radio.
 - **The parent's own uplink.** When the pod's backhaul station on that radio is its uplink in
   use (a parent that is itself a child: a radio carrying both its uplink station and the parent
   AP), the station stays: the parent AP takes the station's channel, and the station stays
@@ -921,12 +933,15 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   takes the fallback. When the uplink returns on the same channel, nothing moves. On another
   channel, a radio that runs an AP and a station on one channel only (the Pis' MT7921U) cannot
   link its station beside the AP, and the AP cannot move before the station links: the pod
-  **releases** the AP. While its uplink is on the fallback and the upstream BSSID is heard on
-  another control channel than the AP's, the pod holds the AP down for up to 30 s to let its
-  station rejoin there; the AP then starts on the station's channel and the children, pinned to
-  its BSSID, re-associate (about 15 to 30 s, under a child's own fallback delay). If the station
-  has not linked within the 30 s, the AP comes back on its last channel, and the pod tries again
-  no sooner than 5 minutes later. One owner per column: EMOSA owns the parent AP's
+  **releases** the AP. The trigger is the deadlock itself, not the fallback: while the station on
+  the AP's radio is enabled, pinned to its upstream BSSID (§8.3), unlinked for 30 s, and that
+  BSSID is heard on another control channel than the AP's, the pod holds the AP down to let the
+  station rejoin there (whether or not a fallback carries the pod meanwhile; it also covers a
+  2.4 GHz station beside a home AP on another channel). The AP then starts on the station's
+  channel and the children, pinned to its BSSID, re-associate (about 15 to 30 s, under a child's
+  own fallback delay). If the station has not linked within the 30 s, the AP comes back on its
+  configured channel (§8.6 writes no radio channel, so where it was), and the pod tries again no
+  sooner than 5 minutes later. One owner per column: EMOSA owns the parent AP's
   `Wifi_VIF_Config` row and never sees the pod's scan, so the release acts below EMOSA's
   columns, in the pod's own configuration layer (a conf mutator in the pods' OpenSync core,
   beside their channel override), never by `Wifi_VIF_Config.enabled`: the row stays as EMOSA
@@ -985,8 +1000,14 @@ physical pods (a Pi through a Pi to the router).
 
 ## 9. Not covered yet
 
-- 5 and 6 GHz radios, and WPA3;
-- more than one radio per agent;
+- 5 and 6 GHz radios, and WPA3 (layer B, draft, binds a 5 GHz radio as a GRE parent's AP);
+- more than one radio per agent, except the GRE parent's second radio of §8.6 (layer B, draft):
+  EMOSA binds and reports it, owns `b-ap-<band>` and its tunnels on it, and leaves alone the
+  pod's uplink station on it, its channel and `ht_mode` (the pod's channel override follows the
+  station, so a written channel would fight it; EMOSA reports the channel from `Wifi_Radio_State`
+  and declines a Channel Selection Request that moves the radio off the station's channel), and
+  the pod's own rows (`insert`/`delete` of EMOSA's own VIFs only, never a replace of
+  `vif_configs` that would drop the station);
 - backhaul link metrics and a 1905 neighbor on the backhaul interface towards an upstream
   that is not a pod of the fleet (an RDK or prpl node: EMOSA does not know its AL MAC);
 - EasyMesh AP and station metrics. The pod's station measurements are
