@@ -404,6 +404,11 @@ def test_a_gre_parent_removes_a_tunnel_when_its_child_is_gone(agent, tmp_path):
     assert result["passed"], result
 
 
+def test_a_withdrawn_backhaul_bss_removes_the_parent_ap_and_every_tunnel(agent, tmp_path):
+    result = box("gre-parent-withdrawn", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_a_refused_close_is_swept_again_on_the_same_source(agent, tmp_path):
     result = box("steering-close-refused", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result

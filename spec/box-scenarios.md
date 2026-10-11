@@ -91,6 +91,7 @@ fleet must admit the serial and give it the profile `opensync-lab-hwsim-6.6.1-v1
 | `gre-parent-create` | spec 8.6 (draft): with a gre-parent profile and an underlay, a backhaul BSS of the M2 set is written as the pod's GRE parent AP `b-ap-24` (multi_ap none, no bridge, ap_bridge false, hidden), its Inet row the underlay at `.1` with DHCP `.10` to `.250`; the agent recognizes it as its parent AP | alignment plan 9.5 |
 | `gre-parent-child` | spec 8.6 (draft): a child that associated to the parent AP and took a lease in the underlay gets a `gre` Wifi_Inet_Config row `pgd2_10` (from the AP's `.1` to the lease, MTU 1562) and a port of `br-home` | alignment plan 9.5 |
 | `gre-parent-child-gone` | spec 8.6 (draft): when the child's lease and association end, its tunnel row and its `br-home` port are removed | alignment plan 9.5 |
+| `gre-parent-withdrawn` | spec 8.6 (draft): the controller drops the backhaul BSS from the M2 set: the AP scope removes the parent AP and its underlay Inet row, then the tunnel scope removes every child's gretap and `br-home` port; the window between the two is bounded, `br-home`'s own port is untouched and the agent stays up | alignment plan 9.5 |
 | `backhaul-steering-refused` | without option 1 (the pod on GRE): refused at once, failure with an Error Code | finding 12 |
 
 ## The reference workload's faults

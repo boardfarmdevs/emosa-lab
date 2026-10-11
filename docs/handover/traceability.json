@@ -143,7 +143,7 @@
     },
     "README 8.6 A pod as the GRE parent of other pods (draft)": {
       "vectors": ["fleet-sessions.json", "translation-southbound.json", "scope-writes.json"],
-      "box": ["gre-parent-create", "gre-parent-child", "gre-parent-child-gone"],
+      "box": ["gre-parent-create", "gre-parent-child", "gre-parent-child-gone", "gre-parent-withdrawn"],
       "python": ["test_fleet.py", "test_pod_profile.py", "test_gre_parent.py"],
       "units": ["fleet_underlays"],
       "note": "a draft: the fleet's underlays, the parent AP and its tunnels in both agents, box scenarios; the second radio and the release follow"

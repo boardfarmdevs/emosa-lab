@@ -2567,6 +2567,85 @@ async def gre_port_in_home(box, name):
     return name in members
 
 
+async def gre_wm_remove_ap(box, if_name):
+    """OpenSync's wm tears down a VIF whose Config the agent deleted: its Wifi_VIF_State and the
+    clients on it go, and the radio's State drops the reference. Nothing when it is already gone."""
+    uuid, _ = await box.vif("Wifi_VIF_State", if_name)
+    if uuid is None:
+        return
+    vif = (await box.rows("Wifi_VIF_State")).get(uuid, {})
+    ops = []
+    for radio_uuid, radio in (await box.rows("Wifi_Radio_State")).items():
+        if uuid in uuids(radio.get("vif_states")):
+            ops.append(
+                {
+                    "op": "mutate",
+                    "table": "Wifi_Radio_State",
+                    "where": [["_uuid", "==", ["uuid", radio_uuid]]],
+                    "mutations": [["vif_states", "delete", ["set", [["uuid", uuid]]]]],
+                }
+            )
+    for client in uuids(vif.get("associated_clients")):
+        ops.append(
+            {
+                "op": "delete",
+                "table": "Wifi_Associated_Clients",
+                "where": [["_uuid", "==", ["uuid", client]]],
+            }
+        )
+    ops.append(
+        {"op": "delete", "table": "Wifi_VIF_State", "where": [["_uuid", "==", ["uuid", uuid]]]}
+    )
+    for state_uuid, state in (await box.rows("Wifi_Inet_State")).items():
+        if state.get("if_name") == if_name:  # nm drops the interface's address with the netdev
+            ops.append(
+                {
+                    "op": "delete",
+                    "table": "Wifi_Inet_State",
+                    "where": [["_uuid", "==", ["uuid", state_uuid]]],
+                }
+            )
+    await box.transact(ops)
+
+
+async def gre_nm_apply(box):
+    """nm brings up each gretap the agent created: it gives the gre interface a Wifi_Inet_State,
+    which is how the tunnel reconcile sees the tunnel applied (OBSERVED_APPLIED)."""
+    states = {r.get("if_name") for r in (await box.rows("Wifi_Inet_State")).values()}
+    ops = [
+        {
+            "op": "insert",
+            "table": "Wifi_Inet_State",
+            "row": {"if_name": r.get("if_name"), "if_type": "gre"},
+        }
+        for r in (await box.rows("Wifi_Inet_Config")).values()
+        if r.get("if_type") == "gre" and r.get("if_name") not in states
+    ]
+    if ops:
+        await box.transact(ops)
+
+
+async def gre_await_applied(box, seconds=30):
+    """Poll until the tunnel reconcile's latest operation is OBSERVED_APPLIED."""
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline and box.process.poll() is None:
+        operation = ((box.status() or {}).get("gre_parent") or {}).get("operation") or {}
+        if operation.get("state") == "OBSERVED_APPLIED":
+            return True
+        await asyncio.sleep(0.3)
+    return False
+
+
+async def gre_await_config_gone(box, if_name, seconds=30):
+    """Poll until the agent has deleted a VIF's Wifi_VIF_Config row."""
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline and box.process.poll() is None:
+        if (await box.vif("Wifi_VIF_Config", if_name))[1] is None:
+            return True
+        await asyncio.sleep(0.3)
+    return False
+
+
 async def gre_await_tunnel(box, name, present, seconds=60):
     """Poll the pod's own rows (not the status, which lags a tick) until the tunnel `name` is
     there (present) or gone: its gre Wifi_Inet_Config row and its br-home port both exist, or
@@ -2601,6 +2680,8 @@ async def gre_parent_child(box):
     made = await gre_await_tunnel(box, "pgd2_10", present=True)
     row = await gre_inet(box, "pgd2_10")
     bridged = await gre_port_in_home(box, "pgd2_10")
+    await gre_nm_apply(box)  # nm brings the gretap up
+    applied = await gre_await_applied(box)
     return box.result(
         passed=bool(made)
         and row is not None
@@ -2609,7 +2690,8 @@ async def gre_parent_child(box):
         and row.get("gre_remote_inet_addr") == GRE_CHILD_IP
         and row.get("gre_local_inet_addr") == "169.254.2.1"
         and row.get("mtu") == 1562
-        and bridged,
+        and bridged
+        and bool(applied),
         tunnel=row,
         in_br_home=bridged,
         gre_status=(box.status() or {}).get("gre_parent"),
@@ -2635,6 +2717,8 @@ async def gre_parent_child_gone(box):
     await box.client_join(GRE_CHILD_MAC, GRE_AP)
     if not await gre_await_tunnel(box, "pgd2_10", present=True):
         return box.result(passed=False, failed="the tunnel was never made")
+    await gre_nm_apply(box)  # the gretap up, so the create op settles before the child leaves
+    await gre_await_applied(box)
     await box.client_leave(GRE_CHILD_MAC, GRE_AP)
     lease = next(
         u
@@ -2652,6 +2736,67 @@ async def gre_parent_child_gone(box):
         tunnel=row,
         in_br_home=bridged,
         gre_status=(box.status() or {}).get("gre_parent"),
+    )
+
+
+async def gre_parent_withdrawn(box):
+    """spec 8.6: the controller drops the backhaul BSS from the M2 set (a renew with only the
+    fronthaul). EMOSA's AP scope removes the parent AP b-ap-24 and its underlay Inet row; the
+    tunnel scope, seeing the AP and its children gone, then removes every child's gretap and
+    br-home port. The window between the two transactions (the gretaps briefly in br-home with
+    their local address gone) is bounded and leaves br-home's own port untouched, the agent up and
+    its tunnel reconcile settled. NM/osw behaviour in that window is the pod's (yocto-53's twin
+    scenario 3, real OpenSync); the box has no netdevs."""
+    ap, failure = await gre_parent_up(box)
+    if failure:
+        return failure
+    await gre_parent_ready(box)
+    await box.transact(
+        [
+            {
+                "op": "insert",
+                "table": "DHCP_leased_IP",
+                "row": {"hwaddr": GRE_CHILD_MAC, "inet_addr": GRE_CHILD_IP},
+            }
+        ]
+    )
+    await box.client_join(GRE_CHILD_MAC, GRE_AP)
+    if not await gre_await_tunnel(box, "pgd2_10", present=True):
+        return box.result(passed=False, failed="the tunnel was never made")
+    await gre_nm_apply(box)  # the gretap up and the create op settled before the withdrawal
+    await gre_await_applied(box)
+    # the controller withdraws the backhaul BSS: the next M2 set has only the fronthaul
+    box.m2_modes = ("configure",)
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.controller.send(RENEW, (Tlv(0x01, box.controller.al), Tlv(0x0F, b"\0"), Tlv(0x10, b"\0")))
+    again = await provision(box, searches, m1s)
+    ap_gone = await gre_await_config_gone(box, GRE_AP)
+    ap_inet_gone = await gre_inet(box, GRE_AP) is None
+    # the AP scope's transaction is done; wm now tears down the netdev, and the window to the
+    # tunnel scope's transaction begins
+    window_start = time.monotonic()
+    await gre_wm_remove_ap(box, GRE_AP)
+    removed = await gre_await_tunnel(box, "pgd2_10", present=False)
+    window = time.monotonic() - window_start
+    settled = await gre_await_applied(box)  # the removal reconciled (settle lags the DB by a tick)
+    row = await gre_inet(box, "pgd2_10")
+    bridged = await gre_port_in_home(box, "pgd2_10")
+    home_port = await gre_port_in_home(box, "br-home")  # br-home's own port untouched
+    status = (box.status() or {}).get("gre_parent") or {}
+    return box.result(
+        passed=again
+        and ap_gone
+        and ap_inet_gone
+        and bool(removed)
+        and row is None
+        and not bridged
+        and home_port
+        and window < 10
+        and box.process.poll() is None
+        and bool(settled),
+        window_s=round(window, 1),
+        br_home_own_port=home_port,
+        gre_status=status,
     )
 
 
@@ -2794,6 +2939,7 @@ SCENARIOS = {
     "gre-parent-create": gre_parent_create,
     "gre-parent-child": gre_parent_child,
     "gre-parent-child-gone": gre_parent_child_gone,
+    "gre-parent-withdrawn": gre_parent_withdrawn,
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
     "write-lost-unapplied": write_lost_unapplied,
@@ -2829,6 +2975,11 @@ OPTIONS = {  # the box each scenario needs beyond the default
         "underlay": GRE_UNDERLAY,
     },
     "gre-parent-child-gone": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-v1",
+        "underlay": GRE_UNDERLAY,
+    },
+    "gre-parent-withdrawn": {
         "multi_bss": True,
         "profile": "opensync-lab-hwsim-6.6.1-gre-v1",
         "underlay": GRE_UNDERLAY,

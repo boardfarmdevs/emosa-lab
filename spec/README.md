@@ -982,9 +982,10 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
 - **Reported** as in §8.5: the child names the parent's agent as its 1905 neighbor on its
   backhaul, the parent names the child on the AP, and the pair's link metrics come from the
   parent's client report of the child's station (§3.6; with telemetry off, no measurement).
-- **Withdrawn:** a backhaul BSS no longer in the M2 set removes the parent AP, its
-  `Wifi_Inet_Config` and every child's tunnel row, port and interface, in one guarded
-  transaction; the children's `cm` then falls back to their bootstrap path.
+- **Withdrawn:** a backhaul BSS no longer in the M2 set removes the parent AP and its
+  `Wifi_Inet_Config` (the AP scope's guarded transaction, §3.2); the parent AP gone, its children
+  are gone, so the tunnel reconcile then removes every child's tunnel row, port and interface (its
+  own guarded transaction). The children's `cm` falls back to their bootstrap path.
 - **Written** (§3.2), each change one guarded transaction: the parent AP (`insert` or `update
   Wifi_VIF_Config`, `mutate Wifi_Radio_Config vif_configs`, `insert` or `update
   Wifi_Inet_Config` of the AP); a child's tunnel
