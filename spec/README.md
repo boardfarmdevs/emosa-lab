@@ -982,10 +982,19 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
 - **Reported** as in §8.5: the child names the parent's agent as its 1905 neighbor on its
   backhaul, the parent names the child on the AP, and the pair's link metrics come from the
   parent's client report of the child's station (§3.6; with telemetry off, no measurement).
-- **Withdrawn:** a backhaul BSS no longer in the M2 set removes the parent AP and its
-  `Wifi_Inet_Config` (the AP scope's guarded transaction, §3.2); the parent AP gone, its children
-  are gone, so the tunnel reconcile then removes every child's tunnel row, port and interface (its
-  own guarded transaction). The children's `cm` falls back to their bootstrap path.
+- **Withdrawn:** there are two distinct cases, and EMOSA treats them differently because the M2
+  set differs. (a) *Absent BSS (a true delete).* A backhaul BSS no longer in the M2 set removes
+  the parent AP and its `Wifi_Inet_Config` (the AP scope's guarded transaction, §3.2); the parent
+  AP gone, its children are gone, so the tunnel reconcile then removes every child's tunnel row,
+  port and interface (its own guarded transaction). The children's `cm` falls back to their
+  bootstrap path. (b) *Disabled BSS.* A backhaul BSS still in the M2 set but with the operator's
+  enable cleared is mirrored as a VIF disable (`enabled=false`), not a delete: the parent AP row
+  stays, so the tunnels stay as rows but go down with the AP. EMOSA does not invent a delete the
+  controller did not ask for; only an absent BSS is a delete. The nearest real-controller trigger
+  for (a) is to drop the backhaul's band (so the controller omits that band's BSS element from
+  the M2 of every device, not merely clears its enable); for (b), the controller's own
+  enable toggle on the haul profile, which keeps the BSS in the set. Case (a) is the canonical
+  spec path; case (b) is what an RDK operator UI that only toggles enable produces.
 - **Written** (§3.2), each change one guarded transaction: the parent AP (`insert` or `update
   Wifi_VIF_Config`, `mutate Wifi_Radio_Config vif_configs`, `insert` or `update
   Wifi_Inet_Config` of the AP); a child's tunnel
@@ -996,8 +1005,19 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
 
 Both agents. Box scenarios: a child onto a parent and back; the parent's uplink falling back
 and returning on another channel with a child attached (the release, and its 30 s bound); the
-parent lost. Proven first on `rdk-1010`'s virtual pods with a `gre-parent` profile, then on the
-physical pods (a Pi through a Pi to the router).
+parent lost; a child's tunnel that drifts away is re-created while the child stays. Proven first
+on `rdk-1010`'s virtual pods with a `gre-parent` profile, then on the physical pods (a Pi through
+a Pi to the router).
+
+The withdrawn case (a), the tunnel re-create, and the recovery were exercised against the real
+onewifi_em_ctrl on `rdk-1010`'s virtual pods: dropping 2.4 GHz from the backhaul band deleted the
+parent AP's `Wifi_VIF_Config` and `Wifi_Inet_Config` rows (not `enabled=false`) 2.6 s after the
+POST and the child's tunnel 2.8 s after, the child's two-hop path went down, and the controller
+omitted the BSS element network-wide (its DataElements BSS list compacted, and the real agents
+that were backhauled on 2.4 GHz re-homed to Ethernet). Restoring the band re-created the parent AP
+in 7.5 s, re-formed the child's tunnel in 12.2 s, and the child was back with a full-MTU two-hop
+path 17.5 s after the POST. A drifted tunnel (its gre row, port and interface deleted underneath a
+still-present child) was re-created by the same agent, at one process, in 1.2 s.
 
 ## 9. Not covered yet
 
