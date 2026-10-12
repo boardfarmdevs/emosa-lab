@@ -36,8 +36,25 @@ static cJSON *target(void *ctx, const cJSON *intent, em_reason *why)
     em_uplink_scope *u = ctx;
     const char *ssid = str(intent, "ssid"), *mode = str(intent, "mode");
     const cJSON *bssid = cJSON_GetObjectItemCaseSensitive(intent, "bssid");
-    size_t n = ssid ? strlen(ssid) : 0;
     *why = EM_INVALID_INPUT;
+    if (mode && !strcmp(mode, "bootstrap")) {
+        /* a revert to the bootstrap: no credential is written, so no SSID/secret; it carries the
+         * bootstrap BSSID (what the station lands on) and the snapshot to restore. Confirmed by
+         * observation, not a credential fingerprint EMOSA cannot know (spec 8.6). */
+        const cJSON *restore = cJSON_GetObjectItemCaseSensitive(intent, "restore");
+        const char *b = cJSON_GetStringValue(bssid);
+        if (!b || !bssid_ok(b) || !restore || !cJSON_IsObject(restore) || !str(restore, "ssid"))
+            return NULL;
+        if (!str(intent, "station") || !*str(intent, "station"))
+            return NULL;
+        cJSON *bt = cJSON_CreateObject();
+        cJSON_AddStringToObject(bt, "uplink", "bootstrap");
+        cJSON_AddStringToObject(bt, "station", str(intent, "station"));
+        cJSON_AddStringToObject(bt, "bssid", b);
+        *why = EM_OK;
+        return bt;
+    }
+    size_t n = ssid ? strlen(ssid) : 0;
     if (n < 1 || n > 32)
         return NULL;
     if (!mode || (strcmp(mode, "multi-ap") && strcmp(mode, "gre"))) {
@@ -436,37 +453,52 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         return;
     }
     em_ovs_session session = {em_ovsdb_tables(u->ovs), generation, u->transact, u->transact_ctx};
-    const char *names[EM_UPLINK_BANDS + 1];
-    size_t nnames = bound_names(u, names);
-    const char *mode = str(intent, "mode"); /* the credential's onboard_type (spec 8.6) */
-    em_uplink_intent in = {str(intent, "station"),
-                           str(intent, "ssid"),
-                           str(intent, "secret_ref"),
-                           str(intent, "bssid"),
-                           names,
-                           nnames,
-                           mode && !strcmp(mode, "gre") ? "gre" : "multi_ap"};
-    resolver r = {u->vault, NULL};
+    const char *mode = str(intent, "mode");
+    bool revert = mode && !strcmp(mode, "bootstrap");
     em_submit_result result;
     const char *refusal;
-    em_reason e = em_uplink_submit(u->serial, &session, &in, resolve, &r, &result, &refusal);
-    em_free_secret(r.key);
+    cJSON *restore_out = NULL; /* the pin's vconf snapshot, for the revert (NULL unless from bootstrap) */
+    em_reason e;
+    if (revert) {
+        e = em_uplink_revert(u->serial, &session, str(intent, "station"),
+                             cJSON_GetObjectItemCaseSensitive(intent, "restore"), &result, &refusal);
+    } else {
+        const char *names[EM_UPLINK_BANDS + 1];
+        size_t nnames = bound_names(u, names);
+        em_uplink_intent in = {str(intent, "station"),
+                               str(intent, "ssid"),
+                               str(intent, "secret_ref"),
+                               str(intent, "bssid"),
+                               names,
+                               nnames,
+                               mode && !strcmp(mode, "gre") ? "gre" : "multi_ap"};
+        resolver r = {u->vault, NULL};
+        e = em_uplink_submit(u->serial, &session, &in, resolve, &r, &result, &refusal, &restore_out);
+        em_free_secret(r.key);
+    }
     if (e != EM_OK) {
         strcpy(out->status, "unknown");
         out->reason = EM_OUTCOME_UNKNOWN;
+        cJSON_Delete(restore_out);
         return;
     }
     EM_FORMAT_FIXED(out->status, sizeof(out->status), "%s", result.status);
     out->reason = result.reason;
-    if (strcmp(result.status, "committed"))
+    if (strcmp(result.status, "committed")) {
+        cJSON_Delete(restore_out);
         return;
+    }
     out->evidence = cJSON_CreateObject();
     cJSON_AddStringToObject(out->evidence, "attribution", "reply");
     cJSON_AddTrueToObject(out->evidence, "transaction_validated");
     cJSON_AddStringToObject(out->evidence, "transaction_id", str(attempt, "transaction_id"));
     cJSON_AddNumberToObject(out->evidence, "session_generation", generation);
-    cJSON_AddStringToObject(out->evidence, "action", "multi-ap-uplink");
+    cJSON_AddStringToObject(out->evidence, "action", revert ? "revert" : "multi-ap-uplink");
     cJSON_AddStringToObject(out->evidence, "instance", u->instance);
+    if (restore_out)
+        cJSON_AddItemToObject(out->evidence, "restore", restore_out); /* transfers ownership */
+    else
+        cJSON_AddNullToObject(out->evidence, "restore");
 }
 
 /* -- UplinkSwitch ------------------------------------------------------------------------- */
@@ -775,8 +807,65 @@ static void lower(const char *in, char *out, size_t n)
     out[i] = 0;
 }
 
+/* A revert (spec 8.6): applied when the station is back on the bootstrap BSS in vconf mode (the
+ * move's credential-list marker gone). Confirmed by observation, not a credential fingerprint EMOSA
+ * cannot know. On a timeout EMOSA gives it up rather than loop; the pod returns to its pin on its
+ * next OpenSync restart. */
+static void settle_revert(em_uplink_scope *u, cJSON *op, const em_snapshot *snap, bool have)
+{
+    const char *state = em_state_of(op), *planned = str(cJSON_GetObjectItemCaseSensitive(op, "plan"), "instance");
+    if (strcmp(state, "CONFIG_COMMITTED") && strcmp(state, "INDETERMINATE"))
+        return;
+    bool same_start = have && snap->ready && u->has_instance && planned && !strcmp(planned, u->instance);
+    char fp[18];
+    lower(u->facts.parent, fp, sizeof(fp));
+    const char *cfg = snap ? str(snap->config, "uplink") : NULL;
+    bool back = same_start && em_snapshot_fresh(snap) && u->has_bootstrap && u->has_facts &&
+                u->facts.kind[0] && !strcmp(fp, u->bootstrap_bssid) && cfg && !strcmp(cfg, "other");
+    bool expired = em_engine_expired(&u->engine, op);
+    if (!back && !expired)
+        return;
+    if (back) {
+        cJSON *evidence = em_engine_evidence(snap, false, u->instance);
+        em_transition(op, "OBSERVED_APPLIED", evidence);
+        cJSON_ReplaceItemInObjectCaseSensitive(op, "application_evidence", evidence);
+        em_set_reason(op, NULL);
+        save_with_facts(u, op);
+        if (u->has_move && !strcmp(u->move.target, u->bootstrap_bssid)) {
+            u->move.done = true;
+            u->move.applied = true;
+        }
+    } else {
+        cJSON_ReplaceItemInObjectCaseSensitive(op, "original_outcome", cJSON_CreateString(state));
+        cJSON_ReplaceItemInObjectCaseSensitive(op, "deadline_elapsed", cJSON_CreateTrue());
+        em_transition(op, "TIMED_OUT", NULL);
+        em_set_reason(op, "APPLY_TIMEOUT");
+        save_with_facts(u, op);
+        if (u->has_move && !strcmp(u->move.target, u->bootstrap_bssid)) {
+            u->move.done = true;
+            u->move.applied = false;
+            EM_FORMAT_FIXED(u->move.result, sizeof(u->move.result), "revert not confirmed within the deadline");
+        }
+        em_log(EM_LOG_WARNING, "emosa.agent.uplink", "backhaul revert not confirmed within the deadline; given up");
+    }
+    /* the move is undone: back to no EMOSA pin, so nothing more is written */
+    EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "multi-ap");
+    EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
+    EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->configured_station);
+    u->moves++;
+    keep_target(u);
+    if (back)
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "backhaul revert applied: the station is back on the bootstrap %s",
+               u->bootstrap_bssid);
+}
+
 static void settle(em_uplink_scope *u, cJSON *op, const em_snapshot *snap, bool have)
 {
+    const char *imode = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "mode");
+    if (imode && !strcmp(imode, "bootstrap")) {
+        settle_revert(u, op, snap, have);
+        return;
+    }
     const char *state = em_state_of(op), *planned = str(cJSON_GetObjectItemCaseSensitive(op, "plan"), "instance");
     bool same_start = have && snap->ready && u->has_instance && planned && !strcmp(planned, u->instance);
     em_reason why;
@@ -877,6 +966,21 @@ static cJSON *intent_of(em_uplink_scope *u, const char *ssid, const char *ref)
 }
 
 /* UplinkSwitch._wanted: the intent to request now, or NULL (waiting says why) */
+/* The vconf snapshot taken at the move from the bootstrap (the most recent operation that captured
+ * one in its commit evidence), for the revert to restore; NULL if there is none to undo. */
+static cJSON *move_snapshot(em_uplink_scope *u)
+{
+    const cJSON *ops = em_journal_operations_view(u->journal), *op, *found = NULL;
+    cJSON_ArrayForEach(op, ops)
+    {
+        const cJSON *restore = cJSON_GetObjectItemCaseSensitive(
+            cJSON_GetObjectItemCaseSensitive(op, "commit_evidence"), "restore");
+        if (restore && !cJSON_IsNull(restore))
+            found = restore;
+    }
+    return found ? cJSON_Duplicate(found, 1) : NULL;
+}
+
 static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *snap)
 {
     if (held(u) && !hold_over(u)) {
@@ -887,21 +991,41 @@ static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *sna
         wait_for(u, "pod not bound");
         return NULL;
     }
-    char ssid[33], ref[97];
-    if (u->fixed_credentials) {
-        EM_FORMAT_FIXED(ssid, sizeof(ssid), "%s", u->fixed_ssid);
-        EM_FORMAT_FIXED(ref, sizeof(ref), "%s", u->fixed_ref);
-    } else if (!m2_backhaul(u, ssid, ref)) {
-        wait_for(u, "no EasyMesh backhaul credentials");
-        return NULL;
+    cJSON *intent;
+    if (!strcmp(u->mode, "bootstrap")) {
+        /* a revert in flight: write back the move's snapshot and drop EMOSA's credential, until
+         * the station is back on the bootstrap (then settle resets the mode and this stops) */
+        cJSON *restore = move_snapshot(u);
+        if (!restore || !u->has_bootstrap) {
+            wait_for(u, "revert without a snapshot");
+            cJSON_Delete(restore);
+            return NULL;
+        }
+        intent = cJSON_CreateObject();
+        cJSON_AddStringToObject(intent, "pod_id", u->pod_id);
+        cJSON_AddStringToObject(intent, "station", u->wanted);
+        cJSON_AddStringToObject(intent, "ssid", "");
+        cJSON_AddStringToObject(intent, "secret_ref", "");
+        cJSON_AddStringToObject(intent, "mode", "bootstrap");
+        cJSON_AddStringToObject(intent, "bssid", u->bootstrap_bssid);
+        cJSON_AddItemToObject(intent, "restore", restore);
+    } else {
+        char ssid[33], ref[97];
+        if (u->fixed_credentials) {
+            EM_FORMAT_FIXED(ssid, sizeof(ssid), "%s", u->fixed_ssid);
+            EM_FORMAT_FIXED(ref, sizeof(ref), "%s", u->fixed_ref);
+        } else if (!m2_backhaul(u, ssid, ref)) {
+            wait_for(u, "no EasyMesh backhaul credentials");
+            return NULL;
+        }
+        if (!u->bssid[0]) {
+            /* a GRE child with no configured upstream (spec 8.6): EMOSA writes nothing until the
+             * controller steers it onto a parent; its bootstrap uplink (the GTP) stands */
+            wait_for(u, "no upstream (awaiting a Backhaul Steering Request)");
+            return NULL;
+        }
+        intent = intent_of(u, ssid, ref);
     }
-    if (!u->bssid[0]) {
-        /* a GRE child with no configured upstream (spec 8.6): EMOSA writes nothing until the
-         * controller steers it onto a parent; its bootstrap uplink (the GTP) stands */
-        wait_for(u, "no upstream (awaiting a Backhaul Steering Request)");
-        return NULL;
-    }
-    cJSON *intent = intent_of(u, ssid, ref);
     em_reason why;
     cJSON *t = target(u, intent, &why);
     if (!t) {
@@ -1086,6 +1210,27 @@ const char *em_uplink_steer(em_uplink_scope *u, const char *bssid, const char *b
     cJSON_Delete(op);
     if (active)
         return "switch_in_progress";
+    if (u->has_bootstrap && !strcmp(target_bssid, u->bootstrap_bssid)) {
+        /* a steer back to the pod's own bootstrap BSS is a revert, not a pin (spec 8.6): EMOSA
+         * undoes its move and the pod's parent pin lands the station on the bootstrap */
+        if (strcmp(u->mode, "bootstrap") && !strcmp(u->bssid, u->configured))
+            return "already_on_bootstrap"; /* no EMOSA move to undo */
+        memset(&u->move, 0, sizeof(u->move));
+        u->has_move = true;
+        EM_FORMAT_FIXED(u->move.target, sizeof(u->move.target), "%s", target_bssid);
+        EM_FORMAT_FIXED(u->move.previous, sizeof(u->move.previous), "%s", u->bssid);
+        EM_FORMAT_FIXED(u->move.station, sizeof(u->move.station), "%s", u->wanted);
+        EM_FORMAT_FIXED(u->move.previous_station, sizeof(u->move.previous_station), "%s", u->wanted);
+        EM_FORMAT_FIXED(u->move.mode, sizeof(u->move.mode), "bootstrap");
+        EM_FORMAT_FIXED(u->move.previous_mode, sizeof(u->move.previous_mode), "%s", u->mode);
+        EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "bootstrap");
+        EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
+        u->moves++;
+        keep_target(u);
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "backhaul revert requested: %s -> bootstrap %s",
+               u->move.previous, target_bssid);
+        return NULL;
+    }
     char own[18];
     lower(u->facts.mac, own, sizeof(own));
     if (!strcmp(target_bssid, own))

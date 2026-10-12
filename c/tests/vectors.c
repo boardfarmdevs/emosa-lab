@@ -976,7 +976,7 @@ static void uplink_vectors(const char *dir)
         const char *serial = ovs_str_first_serial(tables);
         em_reason r = em_uplink_submit(serial, &session, &intent, passphrase,
                                        cJSON_GetObjectItemCaseSensitive(c, "passphrases"), &result,
-                                       &refusal);
+                                       &refusal, NULL);
         const char *status = r == EM_OK ? result.status : em_reason_name(r);
         checks++;
         if (strcmp(status, str(expected, "status")) ||

@@ -1055,10 +1055,12 @@ static bool same_mac(const char *a, const char *b)
 
 em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplink_intent *in,
                            em_secret_resolver resolve, void *resolve_ctx, em_submit_result *out,
-                           const char **refusal)
+                           const char **refusal, cJSON **restore)
 {
     memset(out, 0, sizeof(*out));
     *refusal = NULL;
+    if (restore)
+        *restore = NULL;
     size_t slen = in->ssid ? strlen(in->ssid) : 0;
     if (slen < 1 || slen > 32) {
         *refusal = "SSID must contain 1–32 UTF-8 bytes, no NUL";
@@ -1124,6 +1126,27 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
         *refusal = "no working uplink to switch from";
         return EM_NOT_READY;
     }
+    /* A GRE move leaves the station's multi_ap/wds as the pod set them (a 3-address station) and
+     * disables no other station (cm bridges only the in-use gretap); only a Multi-AP move clears
+     * them so owm can set backhaul_sta/4-address, and disables the others (spec 8.6). */
+    bool is_gre = in->onboard && !strcmp(in->onboard, "gre");
+    /* Moving from the bootstrap (the pre-move station in vconf mode, its own SSID set): snapshot the
+     * pod columns this move overwrites, for the revert to put back. A move from one parent to another
+     * (the station already in credential-list mode, ssid "") leaves the earlier snapshot in place. */
+    if (restore) {
+        const char *vssid = ovs_str(vif, "ssid");
+        if (vssid && *vssid) {
+            cJSON *snap = cJSON_CreateObject();
+            cJSON_AddStringToObject(snap, "ssid", vssid);
+            static const char *const cols[4] = {"security", "credential_configs", "multi_ap", "wds"};
+            for (size_t i = 0; i < (is_gre ? 2u : 4u); i++) {
+                const cJSON *v = cJSON_GetObjectItemCaseSensitive(vif, cols[i]);
+                if (v)
+                    cJSON_AddItemToObject(snap, cols[i], cJSON_Duplicate(v, 1));
+            }
+            *restore = snap;
+        }
+    }
     cJSON *ops = cJSON_CreateArray();
     int counts[4 + 2 * EM_UPLINK_STATIONS];
     size_t nops = 0;
@@ -1164,8 +1187,10 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
     cJSON_AddTrueToObject(r, "enabled");
     cJSON_AddStringToObject(r, "ssid", "");
     cJSON_AddItemToObject(r, "security", tagged("map", cJSON_CreateArray()));
-    cJSON_AddItemToObject(r, "multi_ap", tagged("set", cJSON_CreateArray()));
-    cJSON_AddItemToObject(r, "wds", tagged("set", cJSON_CreateArray()));
+    if (!is_gre) {
+        cJSON_AddItemToObject(r, "multi_ap", tagged("set", cJSON_CreateArray()));
+        cJSON_AddItemToObject(r, "wds", tagged("set", cJSON_CreateArray()));
+    }
     cJSON_AddItemToArray(links, named("backhaul"));
     cJSON_AddItemToObject(r, "credential_configs", tagged("set", links));
     cJSON_AddItemToObject(upd, "row", r);
@@ -1189,7 +1214,7 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
         }
         others[at] = row;
     }
-    for (size_t k = 0; k < nothers; k++) {
+    for (size_t k = 0; !is_gre && k < nothers; k++) {  /* a GRE move disables no other station */
         const char *ocols[6];
         size_t onc = 0;
         for (size_t i = 0; i < 6; i++)
@@ -1200,6 +1225,75 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
         cJSON_AddFalseToObject(orow, "enabled");
         cJSON_AddItemToObject(off, "row", orow);
         PUSH(off, 1);
+    }
+    commit(s, ops, counts, out, NULL);
+    cJSON_Delete(ops);
+    return EM_OK;
+}
+
+em_reason em_uplink_revert(const char *serial, em_ovs_session *s, const char *station,
+                           const cJSON *restore, em_submit_result *out, const char **refusal)
+{
+    memset(out, 0, sizeof(*out));
+    *refusal = NULL;
+    if (!restore || !cJSON_GetObjectItemCaseSensitive(restore, "ssid")) {
+        *refusal = "a revert requires the vconf snapshot";
+        return EM_INVALID_INPUT;
+    }
+    const char *node = node_uuid(s, serial);
+    if (!node) {
+        *refusal = "pod identity absent or not the bound serial";
+        return EM_NOT_READY;
+    }
+    const cJSON *row, *vif = NULL;
+    cJSON_ArrayForEach(row, table(s, "Wifi_VIF_Config"))
+    {
+        const char *name = ovs_str(row, "if_name");
+        if (name && !strcmp(name, station))
+            vif = row;
+    }
+    if (!vif) {
+        *refusal = "the pod's backhaul station row is required";
+        return EM_NOT_READY;
+    }
+    const char *now[16], *keep[16];
+    size_t nnow = ovs_uuids(vif, "credential_configs", now, 16);
+    size_t nkeep = ovs_uuids(restore, "credential_configs", keep, 16);
+    cJSON *ops = cJSON_CreateArray();
+    int counts[3 + 16];
+    size_t nops = 0;
+    {
+        cJSON *o = op("wait", "AWLAN_Node", cJSON_CreateArray()), *rows = cJSON_CreateArray(),
+              *v = cJSON_CreateObject();
+        const char *cols[2] = {"_uuid", "serial_number"};
+        cJSON_AddItemToObject(v, "_uuid", uuid_ref(node));
+        cJSON_AddStringToObject(v, "serial_number", serial);
+        cJSON_AddItemToArray(rows, v);
+        cJSON_AddItemToObject(o, "columns", strings(cols, 2));
+        cJSON_AddStringToObject(o, "until", "==");
+        cJSON_AddItemToObject(o, "rows", rows);
+        cJSON_AddNumberToObject(o, "timeout", 0);
+        PUSH(o, -1);
+    }
+    static const char *const guards[] = {"if_name", "mode", "enabled", "ssid",
+                                         "credential_configs", "multi_ap"};
+    const char *gcols[6];
+    size_t ngc = 0;
+    for (size_t i = 0; i < 6; i++)
+        if (cJSON_GetObjectItemCaseSensitive(vif, guards[i]))
+            gcols[ngc++] = guards[i];
+    PUSH(guard("Wifi_VIF_Config", vif->string, vif, gcols, ngc), -1);
+    /* put the station's vconf columns back; this unlinks EMOSA's credential */
+    cJSON *upd = op("update", "Wifi_VIF_Config", where_uuid(vif->string));
+    cJSON_AddItemToObject(upd, "row", cJSON_Duplicate(restore, 1));
+    PUSH(upd, 1);
+    /* delete each credential linked now but not kept by the snapshot (EMOSA's), now unreferenced */
+    for (size_t i = 0; i < nnow; i++) {
+        bool kept = false;
+        for (size_t j = 0; j < nkeep && !kept; j++)
+            kept = !strcmp(now[i], keep[j]);
+        if (!kept)
+            PUSH(op("delete", "Wifi_Credential_Config", where_uuid(now[i])), 1);
     }
     commit(s, ops, counts, out, NULL);
     cJSON_Delete(ops);

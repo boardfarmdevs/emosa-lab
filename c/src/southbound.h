@@ -105,9 +105,18 @@ typedef struct {
     const char *onboard; /* the credential's onboard_type: NULL/"multi_ap" (default), or "gre" (spec 8.6) */
 } em_uplink_intent;
 
+/* `restore` (optional out): when moving from the bootstrap (the pre-move station in vconf mode),
+ * the pod columns this move overwrites, for the revert to put back; NULL otherwise. The caller owns
+ * it. */
 em_reason em_uplink_submit(const char *serial, em_ovs_session *session, const em_uplink_intent *in,
                            em_secret_resolver resolve, void *resolve_ctx, em_submit_result *out,
-                           const char **refusal);
+                           const char **refusal, cJSON **restore);
+
+/* The revert (spec 8.6): put the station's snapshotted vconf columns (`restore`) back and delete the
+ * credential EMOSA inserted (the one linked now that `restore` does not keep), within EMOSA's own
+ * columns; the pod's parent pin stands. */
+em_reason em_uplink_revert(const char *serial, em_ovs_session *session, const char *station,
+                           const cJSON *restore, em_submit_result *out, const char **refusal);
 
 /* Transaction pieces (emosa.opensync.mapping): where clauses, one operation, a string
  * array, a wait for a row's current values (guard), a wait for no matching row. */
