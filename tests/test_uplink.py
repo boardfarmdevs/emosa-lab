@@ -203,6 +203,32 @@ def test_a_recorded_bootstrap_is_loaded_on_restart(tmp_path):
     assert switch.bootstrap == {"bssid": "02:00:00:00:02:04", "ssid": "opensync-lab-bhaul"}
 
 
+def test_a_gre_move_is_three_address_and_disables_no_other_station(tmp_path):
+    """Spec 8.6 ownership: a GRE move leaves the station's multi_ap/wds (3-address) and disables
+    no other station; it snapshots the pod's vconf columns (ssid, security, credential_configs)
+    for the revert to restore."""
+    switch, pod, _, _ = rig(tmp_path, bssid=None, parents=lambda: {PARENT})
+    asyncio.run(
+        switch.tick()
+    )  # observe the bootstrap first (records it); a pure GRE child writes nothing
+    assert not pod.sent
+    assert switch.steer(PARENT) is None  # steered onto the known GRE parent
+    asyncio.run(switch.tick())
+    (sent,) = pod.sent
+    updates = [op for op in sent if op["op"] == "update" and op["table"] == "Wifi_VIF_Config"]
+    assert len(updates) == 1  # only the station; no other backhaul station disabled
+    row = updates[0]["row"]
+    assert row["ssid"] == "" and row["credential_configs"] == ["set", [["named-uuid", "backhaul"]]]
+    assert "multi_ap" not in row and "wds" not in row  # left as the pod set them (3-address)
+    credential = next(op for op in sent if op["op"] == "insert")["row"]
+    assert credential["onboard_type"] == "gre" and credential["bssid"] == PARENT
+    assert switch.latest().commit_evidence["restore"] == {
+        "ssid": "opensync-lab-bhaul",
+        "security": ["map", [["encryption", "WPA-PSK"], ["key", "bootstrap-psk"]]],
+        "credential_configs": ["set", [["uuid", BOOT_CRED]]],
+    }
+
+
 def test_the_switch_is_one_guarded_transaction_with_a_sole_multi_ap_credential(tmp_path):
     switch, pod, _, _ = rig(tmp_path)
     asyncio.run(switch.tick())

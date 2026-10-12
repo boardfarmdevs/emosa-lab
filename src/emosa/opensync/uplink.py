@@ -422,6 +422,29 @@ class UplinkBackend:
         vif_uuid = rows[intent.station][0]
         vif = raw["tables"]["Wifi_VIF_Config"][vif_uuid]
         key = self.vault.resolve(intent.secret_ref)
+        # Credential-list mode: the station's own SSID and security empty, one linked credential.
+        # ssid "" is the marker that the station is under an EMOSA move (spec 8.6 ownership). On
+        # onboard_type=multi_ap owm sets multi_ap, 4-address and br-home itself; on onboard_type=gre
+        # (a GRE parent's child, spec 8.6) it is a 3-address station and cm builds the gretap. The
+        # pod's bootstrap credential stays, unlinked, and its parent pin stands (ignored in this
+        # mode). A GRE move leaves multi_ap/wds as the pod set them (none/false), within EMOSA's
+        # columns; only a Multi-AP move clears them so owm can set backhaul_sta and wds.
+        vif_row = {
+            "enabled": True,
+            "ssid": "",
+            "security": ["map", []],
+            "credential_configs": ["set", [["named-uuid", "backhaul"]]],
+        }
+        if intent.mode == MULTI_AP:
+            vif_row["multi_ap"] = ["set", []]
+            vif_row["wds"] = ["set", []]
+        # Snapshot the pod columns this move overwrites, for the revert to put back (vconf mode),
+        # but only when moving FROM the bootstrap (the pre-move station is in vconf mode, ssid set):
+        # a move from one parent to another leaves the earlier snapshot in place, so the revert
+        # always restores the bootstrap, never an EMOSA move state.
+        restore = None
+        if vif.get("ssid"):
+            restore = {k: vif.get(k) for k in vif_row if k != "enabled" and k in vif}
         transaction = [
             {
                 "op": "wait",
@@ -447,28 +470,19 @@ class UplinkBackend:
                 },
             },
             {
-                # Credential-list mode: the station's own SSID and security empty, one
-                # linked credential. On onboard_type=multi_ap owm sets multi_ap, 4-address
-                # and br-home itself; on onboard_type=gre (a GRE parent's child, spec 8.6)
-                # it is a 3-address station and cm builds the gretap. The bootstrap
-                # credential stays, unlinked.
                 "op": "update",
                 "table": "Wifi_VIF_Config",
                 "where": where_uuid(vif_uuid),
-                "row": {
-                    "enabled": True,
-                    "ssid": "",
-                    "security": ["map", []],
-                    "multi_ap": ["set", []],
-                    "wds": ["set", []],
-                    "credential_configs": ["set", [["named-uuid", "backhaul"]]],
-                },
+                "row": vif_row,
             },
         ]
         counts = [None, None, None, 1]
-        # The pod's other backhaul stations off in the same transaction: two stations up
-        # bridge br-home into the network twice, with no STP to stop the loop (spec 8.3).
-        for name in self._others_on(rows, intent.station):
+        # Only a Multi-AP move disables the pod's other backhaul stations: two 4-address uplinks
+        # bridge br-home into the network twice, with no STP (spec 8.3). A GRE move disables none
+        # (cm bridges only the in-use uplink's gretap), so the pod's fallback station stays the
+        # pod's (spec 8.6 ownership).
+        others = self._others_on(rows, intent.station) if intent.mode == MULTI_AP else []
+        for name in others:
             other_uuid = rows[name][0]
             other = raw["tables"]["Wifi_VIF_Config"][other_uuid]
             transaction += [
@@ -507,6 +521,7 @@ class UplinkBackend:
                 "action": "multi-ap-uplink",
                 "instance": self.instance,
                 "results": json.loads(json.dumps(results, default=str)),
+                "restore": restore,
             },
         )
 
