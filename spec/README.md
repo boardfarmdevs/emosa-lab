@@ -1187,7 +1187,7 @@ path is re-run. Carried with the second-radio work (§9).
   rewrites the other's BSSes and a set without a backhaul BSS removes only that radio's parent AP.
   Every bound radio is an Operational and Configured radio of the Topology Response, with no BSS
   when it carries none of EMOSA's (a child's radio). Only 5 GHz UNII-1 (opclass 115, no DFS) is
-  mapped. Done in the Python agent; the C agent's mirror is next. Open: the item-9 channel rule
+  mapped. Both agents (box `second-radio-parent`, `second-radio-withdrawn`). Open: the item-9 channel rule
   for that radio (operable only on the station's channel); and a station that moves the radio to
   another channel changes the radio's capabilities, which today ends the agent's source (a new
   session, as for a moved radio) where it should only update the reports;

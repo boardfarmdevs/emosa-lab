@@ -132,6 +132,29 @@ static cJSON *counters_json(const counters *c, const char *prefix)
 static const char *const SESSION_NAMES[] = {"recovering",   "discovering", "awaiting_m2", "provisioning",
                                             "failed",       "source_lost", "incompatible"};
 
+#define EXTRA_RADIOS 2 /* the profile's further radios (pod-profile schema: radios, at most 2) */
+
+/* A further radio of the pod (spec 9): its own write scope (journal, engine) configured by its
+ * own M2, and in a session its own WSC exchange (emosa.wire.onboarding radio_bridge_factory) */
+typedef struct {
+    const char *band;
+    em_ap_scope ap;
+    em_engine engine;
+    em_journal *journal;
+    /* as of the last refresh: the pod brought it up (in the reports), the BSSes shown on it */
+    bool bound;
+    size_t caps_index; /* its radio among the reported ones (the AP Capability Report's order) */
+    em_radio_view represented;
+    int channel;
+    /* the session's exchange: M1 sent, its M2 not yet taken; the context its M1 went in */
+    bool started, awaiting, has_m1, context_live;
+    em_m1 m1;
+    uint8_t ruid[6];
+    char exchange_id[33], m1_sha256[65], op_of_session[37];
+    int context_generation;
+    char context_schema[65], context_token[65];
+} radio_scope;
+
 
 typedef struct {
     /* configuration */
@@ -193,6 +216,15 @@ typedef struct {
     em_journal *journal;
     em_ap_scope ap;
     em_engine ap_engine;
+    /* spec 9: each further radio's scope, in the profile's order; the reported radios' max EIRP,
+     * kept for one pod source (the fronthaul first) */
+    radio_scope radio_scopes[EXTRA_RADIOS];
+    size_t nradio_scopes;
+    struct {
+        uint8_t ruid[6];
+        int8_t max_eirp;
+    } reported[1 + EXTRA_RADIOS];
+    size_t nreported;
     /* the live WSC exchange: its identity, the M1 digest and the context at M1 */
     char exchange_id[33], m1_sha256[65];
     bool context_live;
@@ -307,8 +339,21 @@ static bool same_tlvs(const em_tlv_list *x, const em_tlv_list *y)
     return same;
 }
 
+/* The radios the agent shows, the fronthaul first, then each further radio the pod has brought
+ * up (spec 9), each with the BSSes the agent represents on it, on its channel. */
+static size_t shown_radios(const agent *a, em_topology_radio out[1 + EXTRA_RADIOS])
+{
+    size_t n = 0;
+    out[n++] = (em_topology_radio){&a->represented, a->channel};
+    for (size_t k = 0; k < a->nradio_scopes; k++)
+        if (a->radio_scopes[k].bound)
+            out[n++] = (em_topology_radio){&a->radio_scopes[k].represented, a->radio_scopes[k].channel};
+    return n;
+}
+
 /* The pod's 1905 neighbors on its Wi-Fi backhaul (spec §8.5): its parent pod's agent on its
- * backhaul station, then each child pod's agent on the backhaul BSS it is on (peers' order). */
+ * backhaul station, then each child pod's agent on the backhaul BSS it is on (peers' order),
+ * on any of the pod's radios (a GRE child on a parent's b-ap-50, spec 9). */
 static void backhaul_links(agent *a, double t)
 {
     a->nlinks = 0;
@@ -323,21 +368,22 @@ static void backhaul_links(agent *a, double t)
             a->nlinks = 1;
         }
     }
+    em_topology_radio shown[1 + EXTRA_RADIOS];
+    size_t nshown = shown_radios(a, shown);
     for (size_t k = 0; k < a->peers.n && a->nlinks < 16; k++) {
         const em_peer *p = &a->peers.peers[k];
-        for (size_t i = 0; p->has_station && i < a->represented.nbss; i++) {
-            const em_bss_view *b = &a->represented.bss[i];
-            if (!b->backhaul || memcmp(b->bssid, p->parent, 6))
-                continue;
-            bool on = false;
-            for (size_t s = 0; s < b->nstations; s++)
-                on = on || !memcmp(b->stations[s], p->station, 6);
-            if (on) {
-                memcpy(a->links[a->nlinks].local, b->bssid, 6);
-                memcpy(a->links[a->nlinks].al, p->al, 6);
-                a->nlinks++;
-            }
-            break;
+        const em_bss_view *b = NULL;
+        for (size_t r = 0; p->has_station && !b && r < nshown; r++)
+            for (size_t i = 0; !b && i < shown[r].radio->nbss; i++)
+                if (shown[r].radio->bss[i].backhaul && !memcmp(shown[r].radio->bss[i].bssid, p->parent, 6))
+                    b = &shown[r].radio->bss[i];
+        bool on = false;
+        for (size_t s = 0; b && s < b->nstations; s++)
+            on = on || !memcmp(b->stations[s], p->station, 6);
+        if (on) {
+            memcpy(a->links[a->nlinks].local, b->bssid, 6);
+            memcpy(a->links[a->nlinks].al, p->al, 6);
+            a->nlinks++;
         }
     }
 }
@@ -434,12 +480,45 @@ static bool refresh(agent *a)
      * capabilities are taken again */
     int source = em_ovsdb_generation(a->ovs);
     bool fresh = !a->caps_fixed || a->caps_generation != source;
-    int8_t max_eirp = !fresh ? a->max_eirp
-                      : (radio->has_tx_power && radio->tx_power > 0 && radio->tx_power <= 127)
-                          ? (int8_t)radio->tx_power : 20;
+    /* spec 9 (bound_radios): the fronthaul, then each of the profile's further radios the pod has
+     * brought up, on its observed channel; the fronthaul carries one BSS plus its radio's slots, a
+     * further radio its own slots and at least one; each its own Operational/Configured radio,
+     * with the managed slots on it */
+    em_capability_radio reported[1 + EXTRA_RADIOS];
+    size_t nreported = 0;
+    uint8_t front_bss = (uint8_t)(1 + em_profile_slots_on(&a->profile, a->profile.band, a->multi_bss).nslots);
+    reported[nreported++] = (em_capability_radio){radio, channel, front_bss, 0};
+    for (size_t k = 0; k < a->nradio_scopes; k++) {
+        radio_scope *rs = &a->radio_scopes[k];
+        const em_radio_view *other = NULL;
+        for (size_t i = 0; i < view->nradios && !other; i++)
+            if (!strcmp(view->radios[i].band, rs->band) && memcmp(view->radios[i].ruid, radio->ruid, 6))
+                other = &view->radios[i];
+        rs->bound = other && other->has_channel;
+        if (!rs->bound)
+            continue; /* not brought up yet: reported once it appears */
+        rs->represented = *other;
+        rs->represented.nbss = 0;
+        for (size_t s = 0; a->multi_bss && s < a->profile.nslots; s++)
+            for (size_t i = 0; i < other->nbss; i++)
+                if (!strcmp(other->bss[i].if_name, a->profile.slots[s].if_name))
+                    rs->represented.bss[rs->represented.nbss++] = other->bss[i];
+        rs->channel = other->channel;
+        rs->caps_index = nreported;
+        size_t own = em_profile_slots_on(&a->profile, rs->band, a->multi_bss).nslots;
+        reported[nreported++] = (em_capability_radio){&rs->represented, other->channel, (uint8_t)(own ? own : 1), 0};
+    }
+    for (size_t k = 0; k < nreported; k++) {
+        /* its maximum EIRP: the source's own as first taken, else the pod's transmit power */
+        const em_radio_view *r = reported[k].radio;
+        reported[k].max_eirp = (r->has_tx_power && r->tx_power > 0 && r->tx_power <= 127) ? (int8_t)r->tx_power : 20;
+        for (size_t i = 0; !fresh && i < a->nreported; i++)
+            if (!memcmp(a->reported[i].ruid, r->ruid, 6))
+                reported[k].max_eirp = a->reported[i].max_eirp;
+    }
+    int8_t max_eirp = reported[0].max_eirp;
     em_tlv_list caps;
-    uint8_t max_bss = (uint8_t)(1 + (a->multi_bss ? a->profile.nslots : 0));
-    if (em_capability_tlvs(radio, channel, max_bss, max_eirp, &caps) != EM_OK) {
+    if (em_capabilities_tlvs(reported, nreported, &caps) != EM_OK) {
         free(view);
         return false;
     }
@@ -453,6 +532,11 @@ static bool refresh(agent *a)
         }
         a->caps = caps;
         a->max_eirp = max_eirp;
+        a->nreported = nreported;
+        for (size_t k = 0; k < nreported; k++) {
+            memcpy(a->reported[k].ruid, reported[k].radio->ruid, 6);
+            a->reported[k].max_eirp = reported[k].max_eirp;
+        }
         em_inventory_tlv(view, radio, "mac80211_hwsim", &a->inventory);
         a->caps_fixed = true;
         a->caps_generation = source;
@@ -465,19 +549,22 @@ static bool refresh(agent *a)
             return false;
         }
     }
-    /* station ages: since EMOSA first saw each one */
+    /* station ages: since EMOSA first saw each one, on any radio's BSSes the agent shows */
     double t = now();
     size_t kept = 0;
     struct first_seen seen[256];
-    for (size_t i = 0; i < rep.nbss; i++)
-        for (size_t k = 0; k < rep.bss[i].nstations && kept < 256; k++) {
-            double at = t;
-            for (size_t j = 0; j < a->nfirst; j++)
-                if (!memcmp(a->first_seen[j].mac, rep.bss[i].stations[k], 6))
-                    at = a->first_seen[j].at;
-            memcpy(seen[kept].mac, rep.bss[i].stations[k], 6);
-            seen[kept++].at = at;
-        }
+    for (size_t r = 0; r <= a->nradio_scopes; r++) {
+        const em_radio_view *shown = !r ? &rep : a->radio_scopes[r - 1].bound ? &a->radio_scopes[r - 1].represented : NULL;
+        for (size_t i = 0; shown && i < shown->nbss; i++)
+            for (size_t k = 0; k < shown->bss[i].nstations && kept < 256; k++) {
+                double at = t;
+                for (size_t j = 0; j < a->nfirst; j++)
+                    if (!memcmp(a->first_seen[j].mac, shown->bss[i].stations[k], 6))
+                        at = a->first_seen[j].at;
+                memcpy(seen[kept].mac, shown->bss[i].stations[k], 6);
+                seen[kept++].at = at;
+            }
+    }
     memcpy(a->first_seen, seen, kept * sizeof(seen[0]));
     a->nfirst = kept;
     /* the pod's backhaul stations: the one cm uses as a Multi-AP uplink is its EasyMesh
@@ -522,8 +609,10 @@ static em_reason topology_tlvs(agent *a, bool r1, em_tlv_list *out)
         memcpy(ages[i].mac, a->first_seen[i].mac, 6);
         ages[i].seconds = em_age_at(t, a->first_seen[i].at); /* as of this response */
     }
-    return em_topology_tlvs(a->al, a->controller, &a->represented, a->channel, ages, a->nfirst, r1,
-                            a->has_backhaul ? &a->backhaul : NULL, a->links, a->nlinks, out);
+    em_topology_radio shown[1 + EXTRA_RADIOS];
+    size_t nshown = shown_radios(a, shown);
+    return em_topology_radios_tlvs(a->al, a->controller, shown, nshown, ages, a->nfirst, r1,
+                                   a->has_backhaul ? &a->backhaul : NULL, a->links, a->nlinks, out);
 }
 
 /* -- operations (the AP scope: emosa.reconcile.Engine over PodBackend) ----------------- */
@@ -537,10 +626,25 @@ static bool active_op(agent *a)
     return active;
 }
 
+/* a write of the controller's configuration in flight on any of the pod's radios (spec 9) */
+static bool writing(agent *a)
+{
+    bool active = active_op(a);
+    for (size_t k = 0; k < a->nradio_scopes && !active; k++) {
+        const cJSON *op;
+        cJSON_ArrayForEach(op, em_journal_operations_view(a->radio_scopes[k].journal)) active =
+            active || em_state_active(em_state_of(op));
+    }
+    return active;
+}
+
 static void reconcile(agent *a)
 {
     if (em_journal_count(a->journal))
         em_engine_reconcile(&a->ap_engine);
+    for (size_t k = 0; k < a->nradio_scopes; k++) /* each further radio's own scope (spec 9) */
+        if (em_journal_count(a->radio_scopes[k].journal))
+            em_engine_reconcile(&a->radio_scopes[k].engine);
 }
 
 /* the WSC exchange's authority: the pod's scope context is the one M1 was sent in */
@@ -579,13 +683,15 @@ static const char *operate(agent *a, const em_message *m, const em_m2_result *m2
         return "wsc_rejected";
     EM_FORMAT_FIXED(refs[nrefs++], sizeof(refs[0]), "%s", ref);
     cJSON *additional = a->multi_bss ? cJSON_CreateArray() : NULL;
-    /* each role fills the profile's slots of that role in the order received; the rest
-     * are left out, their passphrases not stored (spec §3.4) */
+    /* each role fills the profile's slots of that role on this radio in the order received; the
+     * rest are left out, their passphrases not stored (spec §3.4; a slot on a further radio is
+     * that radio's own M2's, spec 9) */
+    const em_profile own = em_profile_slots_on(&a->profile, a->profile.band, true);
     size_t free_fronthaul = 0, free_backhaul = 0;
-    for (size_t k = 0; k < a->profile.nslots; k++) {
-        if (!strcmp(a->profile.slots[k].role, "fronthaul"))
+    for (size_t k = 0; k < own.nslots; k++) {
+        if (!strcmp(own.slots[k].role, "fronthaul"))
             free_fronthaul++;
-        else if (!strcmp(a->profile.slots[k].role, "backhaul"))
+        else if (!strcmp(own.slots[k].role, "backhaul"))
             free_backhaul++;
     }
     for (size_t i = 0, index = 1; i < m2->count && a->multi_bss; i++) {
@@ -683,6 +789,126 @@ static const char *operate(agent *a, const em_message *m, const em_m2_result *m2
     return "wsc_operation";
 }
 
+/* a further radio's WSC exchange authority: its radio's scope context is the one its M1 went in */
+static bool radio_wsc_bound(void *ctx)
+{
+    radio_scope *rs = ctx;
+    int generation;
+    char schema[65], token[65];
+    return rs->context_live && em_ap_context(&rs->ap, &generation, schema, token) &&
+           generation == rs->context_generation && !strcmp(schema, rs->context_schema) &&
+           !strcmp(token, rs->context_token);
+}
+
+/* A further radio's authenticated M2 set into its own scope (spec 9; operation_bridge with a
+ * RadioBackend): the set's BSSes fitted to that radio's slots, the first fronthaul with the others
+ * (only the order within a role matters), no primary BSS; a RadioIntent and its WSC receipt. */
+static const char *radio_operate(agent *a, radio_scope *rs, const em_message *m, const em_m2_result *m2)
+{
+    if (rs->op_of_session[0]) { /* the same exchange again: its operation stands */
+        cJSON_Delete(em_engine_execute(&rs->engine, rs->op_of_session));
+        return "radio_wsc_operation";
+    }
+    if (!radio_wsc_bound(rs)) {
+        rs->context_live = false;
+        return "radio_wsc_rejected";
+    }
+    const em_profile own = em_profile_slots_on(&a->profile, rs->band, a->multi_bss);
+    size_t free_fronthaul = 0, free_backhaul = 0;
+    for (size_t k = 0; k < own.nslots; k++) {
+        if (!strcmp(own.slots[k].role, "fronthaul"))
+            free_fronthaul++;
+        else if (!strcmp(own.slots[k].role, "backhaul"))
+            free_backhaul++;
+    }
+    char refs[8][64];
+    size_t nrefs = 0;
+    cJSON *additional = cJSON_CreateArray();
+    for (size_t i = 0; i < m2->count && nrefs < 8; i++) {
+        size_t *free_slots = !strcmp(m2->bss[i].role, "fronthaul") ? &free_fronthaul : &free_backhaul;
+        if (*free_slots == 0)
+            continue; /* left out: no slot of its role on this radio */
+        (*free_slots)--;
+        EM_FORMAT_FIXED(refs[nrefs], sizeof(refs[0]), "wsc-%s-%u", rs->exchange_id, (unsigned)(nrefs + 1));
+        if (em_vault_persist_received(&a->vault, refs[nrefs], m2->bss[i].passphrase) != EM_OK)
+            break;
+        cJSON *b = cJSON_CreateObject();
+        cJSON_AddStringToObject(b, "role", m2->bss[i].role);
+        cJSON_AddStringToObject(b, "ssid", m2->bss[i].ssid);
+        cJSON_AddStringToObject(b, "secret_ref", refs[nrefs++]);
+        cJSON_AddItemToArray(additional, b);
+    }
+    cJSON *intent = em_radio_intent_record(a->pod_id, rs->band, additional);
+    em_reason why = EM_OK;
+    cJSON *plan = em_ap_backend().plan(&rs->ap, intent, &why), *op = NULL;
+    if (plan && radio_wsc_bound(rs)) {
+        cJSON *wsc = cJSON_CreateArray();
+        for (size_t i = 0; i < m->ntlvs; i++)
+            if (m->tlvs[i].kind == 0x11) {
+                char *hex = em_hex(m->tlvs[i].value, m->tlvs[i].len);
+                cJSON_AddItemToArray(wsc, cJSON_CreateString(hex));
+                free(hex);
+            }
+        char request_fp[65], radio_id[16], *controller = em_hex(a->controller, 6), *local = em_hex(a->al, 6);
+        char *ruid = em_hex(rs->ruid, 6);
+        em_vault_fingerprint(&a->vault, wsc, request_fp);
+        cJSON_Delete(wsc);
+        em_radio_id(rs->band, radio_id);
+        cJSON *receipt = cJSON_CreateObject();
+        cJSON_AddStringToObject(receipt, "scope", "owned_simulation_wsc_component");
+        cJSON_AddStringToObject(receipt, "process_id", em_journal_process_id(rs->journal));
+        cJSON_AddStringToObject(receipt, "exchange_id", rs->exchange_id);
+        cJSON_AddStringToObject(receipt, "m1_sha256", rs->m1_sha256);
+        cJSON_AddStringToObject(receipt, "request_fingerprint", request_fp);
+        cJSON_AddStringToObject(receipt, "controller_al", controller);
+        cJSON_AddStringToObject(receipt, "agent_al", local);
+        cJSON_AddStringToObject(receipt, "ruid", ruid);
+        cJSON_AddStringToObject(receipt, "bssid", ruid); /* the radio: no BSS of its own */
+        cJSON_AddStringToObject(receipt, "ingress", a->interface);
+        cJSON_AddNumberToObject(receipt, "link_generation", 1);
+        cJSON_AddNumberToObject(receipt, "database_generation", rs->context_generation);
+        cJSON_AddStringToObject(receipt, "schema_fingerprint", rs->context_schema);
+        cJSON_AddNumberToObject(receipt, "first_mid", m->mid);
+        cJSON_AddNumberToObject(receipt, "bss_count", (double)m2->count);
+        cJSON_AddStringToObject(receipt, "pod_id", a->pod_id);
+        cJSON_AddStringToObject(receipt, "radio_id", radio_id);
+        cJSON_AddStringToObject(receipt, "bss_id", radio_id); /* a radio scope's receipt names the radio */
+        char source[64];
+        EM_FORMAT_FIXED(source, sizeof(source), "wsc-component:%s", controller);
+        op = em_engine_request(&rs->engine, intent, source, rs->exchange_id, a->run_id, AP_DEADLINE,
+                               "wsc-component", receipt, &why);
+        cJSON_Delete(receipt);
+        free(controller);
+        free(local);
+        free(ruid);
+    } else if (plan) {
+        why = EM_NOT_READY; /* "component source binding changed" */
+    }
+    cJSON_Delete(plan);
+    cJSON_Delete(intent);
+    if (!op) {
+        for (size_t i = 0; i < nrefs; i++) /* never journaled: the credentials go too */
+            em_vault_forget(&a->vault, refs[i]);
+        rs->context_live = false;
+        LOG("M2 of the %s radio not applied: %s", rs->band, em_reason_name(why));
+        return "radio_wsc_rejected";
+    }
+    const char *id = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(op, "operation_id"));
+    if (!id)
+        id = "";
+    EM_FORMAT_FIXED(rs->op_of_session, sizeof(rs->op_of_session), "%s", id);
+    EM_FORMAT_FIXED(rs->engine.wsc_op, sizeof(rs->engine.wsc_op), "%s", id);
+    rs->engine.wsc_guard = radio_wsc_bound;
+    rs->engine.wsc_ctx = rs;
+    cJSON *done = em_engine_execute(&rs->engine, id);
+    const cJSON *reason = cJSON_GetObjectItemCaseSensitive(done, "reason");
+    LOG("operation %s (the %s radio, %zu of its set mapped): %s %s", id, rs->band, nrefs, em_state_of(done),
+        cJSON_IsString(reason) ? reason->valuestring : "");
+    cJSON_Delete(done);
+    cJSON_Delete(op);
+    return "radio_wsc_operation";
+}
+
 /* -- client steering and the probe watch (emosa.agent.steering, .probe_watch) --------- */
 
 static const char *start_steering(void *ctx, const em_steering_request *r, uint16_t mid)
@@ -729,6 +955,8 @@ static int bh_outcome(void *ctx, const char *bssid, const char **why)
 
 /* -- the onboarding session (spec §2.5) ---------------------------------------------- */
 
+static void end_radio_exchanges(agent *a);
+
 /* the session's own state ends (the lifecycle decides what comes next) */
 static void end_session(agent *a)
 {
@@ -744,6 +972,7 @@ static void end_session(agent *a)
     if (a->has_m1)
         em_m1_free(&a->m1);
     a->has_m1 = false;
+    end_radio_exchanges(a);
     a->control_ready = false;
 }
 
@@ -824,10 +1053,16 @@ static void free_device(em_m1_device *d)
     em_buf_free(&d->device_name);
 }
 
-static em_radio_caps radio_caps(agent *a)
+/* the AP Radio Basic Capabilities of the k-th reported radio (0: the fronthaul) */
+static em_radio_caps radio_caps_at(agent *a, size_t k)
 {
     em_radio_caps r = {0};
-    const em_tlv *basic = &a->caps.tlvs[1]; /* 0x85 */
+    const em_tlv *basic = NULL;
+    for (size_t i = 0, seen = 0; i < a->caps.count && !basic; i++)
+        if (a->caps.tlvs[i].kind == 0x85 && seen++ == k)
+            basic = &a->caps.tlvs[i];
+    if (!basic)
+        return r;
     memcpy(r.ruid, basic->value, 6);
     r.max_bss = basic->value[6];
     r.nclasses = 1;
@@ -836,6 +1071,92 @@ static em_radio_caps radio_caps(agent *a)
     r.classes[0].nnon_operable = basic->value[10];
     memcpy(r.classes[0].non_operable, basic->value + 11, basic->value[10]);
     return r;
+}
+
+static em_radio_caps radio_caps(agent *a) { return radio_caps_at(a, 0); }
+
+/* a further radio's exchange ends with the session: no M1 transcript is reused */
+static void end_radio_exchanges(agent *a)
+{
+    for (size_t k = 0; k < a->nradio_scopes; k++) {
+        radio_scope *rs = &a->radio_scopes[k];
+        if (rs->has_m1)
+            em_m1_free(&rs->m1);
+        rs->has_m1 = rs->started = rs->awaiting = rs->context_live = false;
+        rs->op_of_session[0] = 0;
+        rs->engine.wsc_guard = NULL;
+    }
+}
+
+/* a further radio's M1 is out and its M2 not yet taken */
+static bool radio_awaiting(const agent *a)
+{
+    for (size_t k = 0; k < a->nradio_scopes; k++)
+        if (a->radio_scopes[k].awaiting)
+            return true;
+    return false;
+}
+
+/* Spec 9 (EasyMesh 6.1 §7.1: one M1 per radio): once the fronthaul is provisioned, each further
+ * radio the agent reports sends its own M1 in turn, one exchange awaiting an M2 at a time. A
+ * failed start ends the attempt, as a failed admission does (a fresh one follows). */
+static void next_radio(agent *a)
+{
+    if (radio_awaiting(a))
+        return;
+    radio_scope *rs = NULL;
+    for (size_t k = 0; k < a->nradio_scopes && !rs; k++)
+        if (a->radio_scopes[k].bound && !a->radio_scopes[k].started)
+            rs = &a->radio_scopes[k];
+    if (!rs)
+        return;
+    rs->started = true;
+    em_m1_device d = m1_device(a);
+    d.rf_band = strcmp(rs->band, "2.4G") ? 2 : 1; /* WSC RF Bands: 2 for 5 GHz */
+    em_reason r = em_m1_create(&d, NULL, &rs->m1);
+    free_device(&d);
+    rs->context_live = r == EM_OK && em_ap_context(&rs->ap, &rs->context_generation, rs->context_schema, rs->context_token);
+    em_radio_caps caps = radio_caps_at(a, rs->caps_index);
+    if (r != EM_OK || !rs->context_live || caps.max_bss == 0) {
+        if (r == EM_OK)
+            em_m1_free(&rs->m1);
+        close_session(a, S_FAILED);
+        count(&a->counts, "radio_m1_failed");
+        return;
+    }
+    rs->has_m1 = true;
+    memcpy(rs->ruid, caps.ruid, 6);
+    em_uuid4_hex(rs->exchange_id);
+    em_sha256_hex(rs->m1.message.data, rs->m1.message.len, rs->m1_sha256);
+    em_binding b = a->control.binding;
+    em_frames f;
+    if (em_m1_frames(&b, &caps, &rs->m1, a->r1 ? EM_SET_R1 : EM_SET_61, next_mid(a), &f) == EM_OK)
+        send_frames(a, &f);
+    rs->awaiting = true;
+    count(&a->counts, "radio_m1_sent");
+}
+
+/* A further radio's M2 (its AP Radio Identifier names it): into that radio's own scope. A set
+ * refused for good (spec 3.4) ends its wait: a fresh M1 would get the same set. */
+static void radio_m2(agent *a, radio_scope *rs, const em_message *m)
+{
+    em_binding b = a->control.binding;
+    em_radio_caps caps = radio_caps_at(a, rs->caps_index);
+    em_m2_result result;
+    em_reason r = em_receive_m2(&b, &caps, &rs->m1, m, true, a->shared_session, &result);
+    if (r != EM_OK || result.teardown) {
+        LOG("M2 of the %s radio rejected: %s", rs->band, r != EM_OK ? em_reason_name(r) : "teardown");
+        if (r == EM_OK || r == EM_INVALID_INPUT || r == EM_UNSUPPORTED_OPERATION) /* EM_OK: a teardown */
+            rs->awaiting = false;
+        count(&a->counts, "radio_wsc_rejected");
+        em_m2_result_clear(&result);
+        return;
+    }
+    const char *outcome = radio_operate(a, rs, m, &result);
+    em_m2_result_clear(&result);
+    if (!strcmp(outcome, "radio_wsc_operation"))
+        rs->awaiting = false;
+    count(&a->counts, outcome);
 }
 
 static void send_early(agent *a)
@@ -997,27 +1318,32 @@ static size_t backhaul_pairs(agent *a, backhaul_pair *out, size_t cap)
     }
     cJSON *stats = a->pod_metrics_on ? em_pod_stats_status(&a->stats) : NULL;
     const cJSON *stations = cJSON_GetObjectItemCaseSensitive(stats, "stations");
+    /* a child on a backhaul BSS of any of the pod's radios, its link of that radio's band */
+    em_topology_radio shown[1 + EXTRA_RADIOS];
+    size_t nshown = shown_radios(a, shown);
     for (size_t k = 0; k < a->peers.n && n < cap; k++) {
         const em_peer *p = &a->peers.peers[k];
-        for (size_t i = 0; p->has_station && i < a->represented.nbss; i++) {
-            const em_bss_view *b = &a->represented.bss[i];
-            if (!b->backhaul || memcmp(b->bssid, p->parent, 6))
-                continue;
-            bool on = false;
-            for (size_t s = 0; s < b->nstations; s++)
-                on = on || !memcmp(b->stations[s], p->station, 6);
-            if (on) {
-                backhaul_pair *x = &out[n++];
-                memset(x, 0, sizeof(*x));
-                memcpy(x->al, p->al, 6);
-                memcpy(x->local, b->bssid, 6);
-                memcpy(x->neighbor, p->station, 6);
-                x->media = 0x0103;
-                const cJSON *seen = measurement(stations, p->station);
-                x->has_tx = seen && measured(seen, "tx_errors", "tx_frames", "tx_rate_mbps", x->tx);
-                x->has_rx = seen && measured(seen, "rx_errors", "rx_frames", "snr_db", x->rx);
-            }
-            break;
+        const em_bss_view *b = NULL;
+        const em_radio_view *on_radio = NULL;
+        for (size_t r = 0; p->has_station && !b && r < nshown; r++)
+            for (size_t i = 0; !b && i < shown[r].radio->nbss; i++)
+                if (shown[r].radio->bss[i].backhaul && !memcmp(shown[r].radio->bss[i].bssid, p->parent, 6)) {
+                    b = &shown[r].radio->bss[i];
+                    on_radio = shown[r].radio;
+                }
+        bool on = false;
+        for (size_t s = 0; b && s < b->nstations; s++)
+            on = on || !memcmp(b->stations[s], p->station, 6);
+        if (on) {
+            backhaul_pair *x = &out[n++];
+            memset(x, 0, sizeof(*x));
+            memcpy(x->al, p->al, 6);
+            memcpy(x->local, b->bssid, 6);
+            memcpy(x->neighbor, p->station, 6);
+            x->media = strcmp(on_radio->band, "5G") ? 0x0103 : 0x0104;
+            const cJSON *seen = measurement(stations, p->station);
+            x->has_tx = seen && measured(seen, "tx_errors", "tx_frames", "tx_rate_mbps", x->tx);
+            x->has_rx = seen && measured(seen, "rx_errors", "rx_frames", "snr_db", x->rx);
         }
     }
     cJSON_Delete(stats);
@@ -1120,6 +1446,20 @@ static void handle_message(agent *a, const em_message *m)
         if (a->at.state != S_AWAITING_M2 && a->at.state != S_PROVISIONING) {
             count(&a->counts, "wsc_before_admission");
             return;
+        }
+        /* spec 9: an M2 for the radio its AP Radio Identifier names: a further radio's exchange,
+         * else the fronthaul's (whose exchange checks the radio again) */
+        for (size_t i = 0; i < m->ntlvs; i++) {
+            if (m->tlvs[i].kind != 0x82 || m->tlvs[i].len != 6)
+                continue;
+            for (size_t k = 0; k < a->nradio_scopes; k++) {
+                radio_scope *rs = &a->radio_scopes[k];
+                if (rs->has_m1 && !memcmp(rs->ruid, m->tlvs[i].value, 6)) {
+                    radio_m2(a, rs, m);
+                    return;
+                }
+            }
+            break;
         }
         em_binding b = a->control.binding;
         em_radio_caps caps = radio_caps(a);
@@ -1371,13 +1711,17 @@ static void notify(agent *a)
 {
     char topo[512] = "";
     size_t off = 0;
-    for (size_t i = 0; i < a->represented.nbss && off + 80 < sizeof(topo); i++) {
-        char *mac = em_mac_str(a->represented.bss[i].bssid);
-        /* at most 17 + 32 + 2 characters: the loop leaves 80 */
-        EM_FORMAT_FIXED(topo + off, sizeof(topo) - off, "%s/%s;", mac, a->represented.bss[i].ssid);
-        off += strlen(topo + off);
-        free(mac);
-    }
+    /* every BSS the agent shows, on any of its radios (spec 9) */
+    em_topology_radio shown[1 + EXTRA_RADIOS];
+    size_t nshown = shown_radios(a, shown);
+    for (size_t r = 0; r < nshown; r++)
+        for (size_t i = 0; i < shown[r].radio->nbss && off + 80 < sizeof(topo); i++) {
+            char *mac = em_mac_str(shown[r].radio->bss[i].bssid);
+            /* at most 17 + 32 + 2 characters: the loop leaves 80 */
+            EM_FORMAT_FIXED(topo + off, sizeof(topo) - off, "%s/%s;", mac, shown[r].radio->bss[i].ssid);
+            off += strlen(topo + off);
+            free(mac);
+        }
     if (a->has_backhaul && off + 40 < sizeof(topo)) { /* a moved backhaul is a topology change */
         char *parent = em_mac_str(a->backhaul.station.parent);
         EM_FORMAT_FIXED(topo + off, sizeof(topo) - off, "bh:%s;", parent);
@@ -1394,30 +1738,32 @@ static void notify(agent *a)
         count(&a->counts, "clients_reannounced");
     }
     /* joins, then leaves */
-    for (size_t i = 0; i < a->represented.nbss; i++)
-        for (size_t k = 0; k < a->represented.bss[i].nstations; k++) {
-            const uint8_t *bssid = a->represented.bss[i].bssid, *mac = a->represented.bss[i].stations[k];
-            bool known = false;
-            for (size_t j = 0; j < a->nclients && !known; j++)
-                known = !memcmp(a->clients[j].bssid, bssid, 6) && !memcmp(a->clients[j].mac, mac, 6);
-            if (known || a->nclients == 256)
-                continue;
-            uint8_t v[13];
-            memcpy(v, mac, 6);
-            memcpy(v + 6, bssid, 6);
-            v[12] = 0x80;
-            em_tlv tlvs[2] = {al, {0x92, 13, v}};
-            send_message(a, EM_MULTICAST, 0x0001, next_mid(a), tlvs, 2, true);
-            memcpy(a->clients[a->nclients].bssid, bssid, 6);
-            memcpy(a->clients[a->nclients++].mac, mac, 6);
-            count(&a->counts, "client_join_notification");
-        }
+    for (size_t r = 0; r < nshown; r++)
+        for (size_t i = 0; i < shown[r].radio->nbss; i++)
+            for (size_t k = 0; k < shown[r].radio->bss[i].nstations; k++) {
+                const uint8_t *bssid = shown[r].radio->bss[i].bssid, *mac = shown[r].radio->bss[i].stations[k];
+                bool known = false;
+                for (size_t j = 0; j < a->nclients && !known; j++)
+                    known = !memcmp(a->clients[j].bssid, bssid, 6) && !memcmp(a->clients[j].mac, mac, 6);
+                if (known || a->nclients == 256)
+                    continue;
+                uint8_t v[13];
+                memcpy(v, mac, 6);
+                memcpy(v + 6, bssid, 6);
+                v[12] = 0x80;
+                em_tlv tlvs[2] = {al, {0x92, 13, v}};
+                send_message(a, EM_MULTICAST, 0x0001, next_mid(a), tlvs, 2, true);
+                memcpy(a->clients[a->nclients].bssid, bssid, 6);
+                memcpy(a->clients[a->nclients++].mac, mac, 6);
+                count(&a->counts, "client_join_notification");
+            }
     for (size_t j = 0; j < a->nclients;) {
         bool present = false;
-        for (size_t i = 0; i < a->represented.nbss && !present; i++)
-            if (!memcmp(a->represented.bss[i].bssid, a->clients[j].bssid, 6))
-                for (size_t k = 0; k < a->represented.bss[i].nstations && !present; k++)
-                    present = !memcmp(a->represented.bss[i].stations[k], a->clients[j].mac, 6);
+        for (size_t r = 0; r < nshown && !present; r++)
+            for (size_t i = 0; i < shown[r].radio->nbss && !present; i++)
+                if (!memcmp(shown[r].radio->bss[i].bssid, a->clients[j].bssid, 6))
+                    for (size_t k = 0; k < shown[r].radio->bss[i].nstations && !present; k++)
+                        present = !memcmp(shown[r].radio->bss[i].stations[k], a->clients[j].mac, 6);
         if (present) {
             j++;
             continue;
@@ -1468,6 +1814,8 @@ static void session_tick(agent *a)
         send_frames(a, &out);
     }
     if (a->at.state == S_PROVISIONING)
+        next_radio(a); /* spec 9: the further radios' own M1s, in turn */
+    if (a->at.state == S_PROVISIONING)
         notify(a);
 }
 
@@ -1497,21 +1845,35 @@ static cJSON *pod_facts(agent *a)
         cJSON_AddNullToObject(o, "ssid");
     }
     cJSON_AddNumberToObject(o, "channel", a->channel);
-    for (size_t i = 0; i < a->represented.nbss; i++) {
-        const em_bss_view *b = &a->represented.bss[i];
+    /* spec 9: every radio the agent binds and reports (the fronthaul first) */
+    em_topology_radio shown[1 + EXTRA_RADIOS];
+    size_t nshown = shown_radios(a, shown);
+    cJSON *radios = cJSON_AddArrayToObject(o, "radios");
+    for (size_t r = 0; r < nshown; r++) {
         cJSON *x = cJSON_CreateObject();
-        cJSON_AddStringToObject(x, "role", b->backhaul ? "backhaul" : "fronthaul");
-        text = em_mac_str(b->bssid);
-        cJSON_AddStringToObject(x, "bssid", text);
+        text = em_mac_str(shown[r].radio->ruid);
+        cJSON_AddStringToObject(x, "ruid", text);
         free(text);
-        cJSON_AddStringToObject(x, "ssid", b->ssid);
-        cJSON_AddItemToArray(bsses, x);
-        for (size_t k = 0; k < b->nstations; k++) {
-            text = em_mac_str(b->stations[k]);
-            cJSON_AddItemToArray(stations, cJSON_CreateString(text));
-            free(text);
-        }
+        cJSON_AddStringToObject(x, "band", shown[r].radio->band);
+        cJSON_AddNumberToObject(x, "channel", shown[r].channel);
+        cJSON_AddItemToArray(radios, x);
     }
+    for (size_t r = 0; r < nshown; r++)
+        for (size_t i = 0; i < shown[r].radio->nbss; i++) {
+            const em_bss_view *b = &shown[r].radio->bss[i];
+            cJSON *x = cJSON_CreateObject();
+            cJSON_AddStringToObject(x, "role", b->backhaul ? "backhaul" : "fronthaul");
+            text = em_mac_str(b->bssid);
+            cJSON_AddStringToObject(x, "bssid", text);
+            free(text);
+            cJSON_AddStringToObject(x, "ssid", b->ssid);
+            cJSON_AddItemToArray(bsses, x);
+            for (size_t k = 0; k < b->nstations; k++) {
+                text = em_mac_str(b->stations[k]);
+                cJSON_AddItemToArray(stations, cJSON_CreateString(text));
+                free(text);
+            }
+        }
     cJSON_AddItemToObject(o, "bsses", bsses);
     cJSON_AddItemToObject(o, "stations", stations);
     if (a->has_backhaul) {
@@ -1542,6 +1904,35 @@ static cJSON *pod_facts(agent *a)
     cJSON_AddNumberToObject(o, "ovsdb_generation", a->generation);
     cJSON_AddNumberToObject(o, "ovsdb_revision", (double)em_ovsdb_revision(a->ovs));
     return o;
+}
+
+/* a journal's operations as the status gives them; a radio scope's with the SSIDs its slots map */
+static void operations_json(em_journal *journal, cJSON *ops, bool radio)
+{
+    const cJSON *op;
+    cJSON_ArrayForEach(op, em_journal_operations_view(journal))
+    {
+        cJSON *x = cJSON_CreateObject();
+        const cJSON *intent = cJSON_GetObjectItemCaseSensitive(op, "intent");
+        cJSON_AddItemToObject(x, "operation_id", cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "operation_id"), 1));
+        cJSON_AddItemToObject(x, "state", cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "state"), 1));
+        cJSON_AddItemToObject(x, "reason", cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "reason"), 1));
+        const cJSON *ssid = cJSON_GetObjectItemCaseSensitive(intent, "ssid");
+        cJSON_AddItemToObject(x, "ssid", ssid ? cJSON_Duplicate(ssid, 1) : cJSON_CreateNull());
+        cJSON_AddNumberToObject(x, "attempts", cJSON_GetArraySize(cJSON_GetObjectItemCaseSensitive(op, "attempts")));
+        cJSON_AddItemToObject(x, "application_evidence",
+                              cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "application_evidence"), 1));
+        if (radio) {
+            cJSON *bsses = cJSON_AddArrayToObject(x, "bsses");
+            const cJSON *b;
+            cJSON_ArrayForEach(b, cJSON_GetObjectItemCaseSensitive(intent, "additional"))
+            {
+                const char *s = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(b, "ssid"));
+                cJSON_AddItemToArray(bsses, cJSON_CreateString(s ? s : ""));
+            }
+        }
+        cJSON_AddItemToArray(ops, x);
+    }
 }
 
 static cJSON *status(agent *a)
@@ -1579,23 +1970,29 @@ static cJSON *status(agent *a)
         cJSON_AddNumberToObject(report_counts, "topology_response_sent", a->topology_responses);
     cJSON_AddItemToObject(reports, "counts", report_counts);
     cJSON_AddBoolToObject(reports, "early_pending", a->early.pending);
-    cJSON_AddItemToObject(o, "session", session);
-    const cJSON *op;
-    cJSON_ArrayForEach(op, em_journal_operations_view(a->journal))
-    {
+    /* spec 9: each further radio's own exchange, in the order their M1s went */
+    cJSON *exchanges = cJSON_AddArrayToObject(session, "radios");
+    for (size_t k = 0; k < a->nradio_scopes; k++) {
+        const radio_scope *rs = &a->radio_scopes[k];
+        if (!rs->started)
+            continue;
         cJSON *x = cJSON_CreateObject();
-        const cJSON *intent = cJSON_GetObjectItemCaseSensitive(op, "intent");
-        cJSON_AddItemToObject(x, "operation_id", cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "operation_id"), 1));
-        cJSON_AddItemToObject(x, "state", cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "state"), 1));
-        cJSON_AddItemToObject(x, "reason", cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "reason"), 1));
-        const cJSON *ssid = cJSON_GetObjectItemCaseSensitive(intent, "ssid");
-        cJSON_AddItemToObject(x, "ssid", ssid ? cJSON_Duplicate(ssid, 1) : cJSON_CreateNull());
-        cJSON_AddNumberToObject(x, "attempts", cJSON_GetArraySize(cJSON_GetObjectItemCaseSensitive(op, "attempts")));
-        cJSON_AddItemToObject(x, "application_evidence",
-                              cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "application_evidence"), 1));
-        cJSON_AddItemToArray(ops, x);
+        text = em_mac_str(rs->ruid);
+        cJSON_AddStringToObject(x, "ruid", text);
+        free(text);
+        cJSON_AddBoolToObject(x, "awaiting_m2", rs->awaiting);
+        cJSON_AddBoolToObject(x, "closed", !rs->has_m1);
+        cJSON_AddItemToArray(exchanges, x);
     }
+    cJSON_AddItemToObject(o, "session", session);
+    operations_json(a->journal, ops, false);
     cJSON_AddItemToObject(o, "operations", ops);
+    /* spec 9: each further radio's scope, by band: its operations, each the BSSes of the radio's
+     * own M2 set its slots map */
+    cJSON *radio_operations = cJSON_AddObjectToObject(o, "radio_operations");
+    for (size_t k = 0; k < a->nradio_scopes; k++)
+        operations_json(a->radio_scopes[k].journal,
+                        cJSON_AddArrayToObject(radio_operations, a->radio_scopes[k].band), true);
     if (a->uplink_on) {
         cJSON_AddItemToObject(o, "uplink", em_uplink_status(&a->uplink));
     } else if (a->wired_on) {
@@ -1855,11 +2252,12 @@ static void deliver(void *ctx, const char *topic, const uint8_t *payload, size_t
     em_pod_stats_receive(&a->stats, topic, payload, len, retained);
 }
 
-/* the uplink may switch: the pod serves the controller's fronthaul, nothing is being written */
+/* the uplink may switch: the pod serves the controller's fronthaul, nothing is being written on
+ * any of its radios */
 static bool fronthaul_settled(void *ctx)
 {
     agent *a = ctx;
-    return source_current(a) && a->has_primary && !active_op(a);
+    return source_current(a) && a->has_primary && !writing(a);
 }
 
 static void boot_id(char out[129])
@@ -1961,6 +2359,23 @@ int main(int argc, char **argv)
                          .transact_ctx = &a};
     em_engine_init(&a.ap_engine, a.journal, &a.vault, a.pod_id, em_ap_backend(), &a.ap, now);
     em_engine_recover(&a.ap_engine);
+    /* spec 9: each of the profile's further radios is its own scope, configured by its own M2,
+     * with its own journal (radio-<band>, as the reference's) */
+    for (size_t k = 0; k < a.profile.nradios && k < EXTRA_RADIOS; k++) {
+        radio_scope *rs = &a.radio_scopes[a.nradio_scopes];
+        rs->band = a.profile.radio_bands[k];
+        rs->ap = a.ap;
+        rs->ap.band = rs->band;
+        EM_FORMAT_FIXED(dir, sizeof(dir), "%s/radio-%s", a.state_dir, rs->band);
+        rs->journal = em_journal_open(dir, &a.schemas, &opened);
+        if (!rs->journal) {
+            FAIL("journal %s: %s", dir, em_reason_name(opened));
+            return 1;
+        }
+        em_engine_init(&rs->engine, rs->journal, &a.vault, a.pod_id, em_ap_backend(), &rs->ap, now);
+        em_engine_recover(&rs->engine);
+        a.nradio_scopes++;
+    }
     char boot[129], path[700];
     boot_id(boot);
     EM_FORMAT_FIXED(path, sizeof(path), "%s/reporting-policy.sqlite", a.state_dir);
@@ -2101,8 +2516,9 @@ int main(int argc, char **argv)
         }
         bool unserved = a.at.state == S_PROVISIONING && source_current(&a) && !a.has_primary && !active_op(&a);
         const char *reasons[4];
-        size_t nreasons = em_renew_check(&a.renewals, t, unserved, a.at.state == S_AWAITING_M2,
-                                         a.at.state == S_PROVISIONING, reasons);
+        /* an M1 out without its M2: the fronthaul's, or a further radio's (spec 9) */
+        bool awaiting = a.at.state == S_AWAITING_M2 || (a.at.state == S_PROVISIONING && radio_awaiting(&a));
+        size_t nreasons = em_renew_check(&a.renewals, t, unserved, awaiting, a.at.state == S_PROVISIONING, reasons);
         for (size_t i = 0; i < nreasons; i++)
             renew(&a, !strcmp(reasons[i], "unserved") ? "provisioned, but the pod serves no BSS: fresh M1"
                       : !strcmp(reasons[i], "no_m2") ? "no M2 for 30s after M1: fresh attempt"
@@ -2131,8 +2547,13 @@ int main(int argc, char **argv)
         write_status(&a);
     }
     write_status(&a);
+    end_radio_exchanges(&a);
     em_engine_free(&a.ap_engine);
     em_journal_close(a.journal);
+    for (size_t k = 0; k < a.nradio_scopes; k++) {
+        em_engine_free(&a.radio_scopes[k].engine);
+        em_journal_close(a.radio_scopes[k].journal);
+    }
     if (a.telemetry_on) {
         em_mqtt_close(a.mqtt);
         em_telemetry_close(&a.telemetry);

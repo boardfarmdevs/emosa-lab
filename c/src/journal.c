@@ -423,11 +423,18 @@ em_reason em_journal_add(em_journal *j, const cJSON *op, const cJSON *receipt)
         const char *al = str(receipt, "controller_al");
         if (!al || !em_format(source, sizeof(source), "wsc-component:%s", al))
             return EM_INVALID_INPUT;
-        if (strcmp(interface, "wsc-component") || strcmp(str(receipt, "process_id"), j->process_id) ||
-            strcmp(str(receipt, "exchange_id"), str(op, "idempotency_key")) ||
-            strcmp(str(receipt, "pod_id"), str(intent, "pod_id")) ||
-            strcmp(str(receipt, "radio_id"), str(intent, "radio_id")) ||
-            strcmp(str(receipt, "bss_id"), str(intent, "bss_id")) || strcmp(str(op, "request_source"), source))
+        /* a radio scope's intent (spec 9) has no BSS of its own: its receipt names the radio */
+        const char *bss_id = str(intent, "bss_id") ? str(intent, "bss_id") : str(intent, "radio_id");
+        const char *bound[6][2] = {{str(receipt, "process_id"), j->process_id},
+                                   {str(receipt, "exchange_id"), str(op, "idempotency_key")},
+                                   {str(receipt, "pod_id"), str(intent, "pod_id")},
+                                   {str(receipt, "radio_id"), str(intent, "radio_id")},
+                                   {str(receipt, "bss_id"), bss_id},
+                                   {str(op, "request_source"), source}};
+        bool differ = !interface || strcmp(interface, "wsc-component");
+        for (int i = 0; i < 6 && !differ; i++)
+            differ = !bound[i][0] || !bound[i][1] || strcmp(bound[i][0], bound[i][1]);
+        if (differ)
             return EM_INVALID_INPUT; /* "WSC receipt and operation binding differ" */
     } else if (!strcmp(interface, "wsc-component")) {
         return EM_INVALID_INPUT;

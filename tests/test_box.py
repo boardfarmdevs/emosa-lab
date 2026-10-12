@@ -429,26 +429,15 @@ def test_a_withdrawn_backhaul_bss_removes_the_parent_ap_and_every_tunnel(agent, 
     assert result["passed"], result
 
 
-def second_radio(agent, request):
-    """Spec 9's per-radio scopes are in the Python agent; the C agent's mirror is pending, and
-    strict: these start failing for the C agent the moment it passes, to be enabled then."""
-    if agent == "c":
-        request.applymarker(pytest.mark.xfail(strict=True, reason="C mirror of spec 9 pending"))
-
-
-def test_a_parent_ap_on_the_second_radio_comes_from_that_radios_own_m2(agent, tmp_path, request):
-    # one M1 and one M2 per radio; b-ap-50 written by the 5 GHz radio's own scope
-    second_radio(agent, request)
+def test_a_parent_ap_on_the_second_radio_comes_from_that_radios_own_m2(agent, tmp_path):
+    # one M1 and one M2 per radio; b-ap-50 written by the 5 GHz radio's own scope (spec 9)
     result = box("second-radio-parent", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result
     assert result["m1_ruids"][:2] == ["02:00:00:00:01:00", "02:00:00:00:05:00"]
 
 
-def test_a_second_radios_set_without_its_backhaul_bss_removes_only_its_parent_ap(
-    agent, tmp_path, request
-):
+def test_a_second_radios_set_without_its_backhaul_bss_removes_only_its_parent_ap(agent, tmp_path):
     # withdrawal by band (spec 8.6): the 5 GHz radio's scope, never the 2.4 GHz radio's
-    second_radio(agent, request)
     result = box("second-radio-withdrawn", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result
     assert result["fronthaul_unchanged"]
