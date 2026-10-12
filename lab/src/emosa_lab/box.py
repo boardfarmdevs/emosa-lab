@@ -452,6 +452,7 @@ class Box:
         cold=False,
         reply_cut=False,
         underlay=None,
+        gre_child=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         # underlay (with a gre-parent profile): the pod's 169.254.N.0/24 as a GRE parent (spec
@@ -491,6 +492,10 @@ class Box:
         # bootstrap (with backhaul): the pod on its GTP bootstrap, the agent awaiting a steer
         self.bootstrap = bootstrap
         self.pod_rows = BOOTSTRAP_ROWS if bootstrap else (MULTI_AP_ROWS if backhaul else POD_ROWS)
+        # gre_child (with backhaul): the recorded pod as it is, its 5 GHz station on its GRE uplink,
+        # with the agent's uplink setting: a GRE child of the Pis' shape (spec 8.6, 9)
+        if gre_child:
+            self.pod_rows = POD_ROWS
         self.process = self.db = self.controller = self.log = self.broker = None
         self.interface = AGENT_INTERFACE  # the agent's 1905 interface (a fleet names its own)
 
@@ -3476,6 +3481,31 @@ async def second_radio_parent(box):
     )
 
 
+async def second_radio_child_credentials(box):
+    """Spec 8.6 and 9, found by the rdk-1010 proof (12 October): a GRE child on the Pis' shape
+    (its station bhaul-sta-50 on its 5 GHz radio, its uplink credentials from the controller's M2
+    sets). Its 2.4 GHz radio maps no backhaul BSS, so the backhaul credentials are only in the
+    5 GHz radio's own set. Once both radios' sets are applied the uplink has them and waits only
+    for an upstream (a Backhaul Steering Request), not for credentials: before the fix the agent
+    looked in the fronthaul's set alone and a steer onto a parent's b-ap-50 stalled there."""
+    if await serve_radios(box, lambda: both_radios_applied(box)) is None:
+        return box.result(passed=False, failed="the two radios were not both configured")
+    radio_set = [op.get("bsses") for op in radio_operations(box, "5G")]
+    fronthaul_set = [op.get("ssid") for op in (box.status() or {}).get("operations") or []]
+    waiting = await box.until(
+        lambda: (uplink_status(box).get("waiting") or "").startswith("no upstream") or None,
+        seconds=15,
+    )
+    status = uplink_status(box)
+    return box.result(
+        passed=bool(waiting) and radio_set and radio_set[-1] == ["EMOSA-WSC-backhaul"],
+        radio_set=radio_set,
+        fronthaul_set=fronthaul_set,
+        waiting=status.get("waiting"),
+        station=status.get("station"),
+    )
+
+
 async def second_radio_withdrawn(box):
     """Spec 9 / 8.6 withdrawal by band: after a Renew the controller's 5 GHz set has no backhaul
     BSS (the operator dropped 5 GHz from the backhaul's bands). The 5 GHz radio's scope removes
@@ -3766,6 +3796,7 @@ SCENARIOS = {
     "gre-parent-withdrawn": gre_parent_withdrawn,
     "second-radio-parent": second_radio_parent,
     "second-radio-withdrawn": second_radio_withdrawn,
+    "second-radio-child-credentials": second_radio_child_credentials,
     "second-radio-moves-channel": second_radio_moves_channel,
     "gre-parent-promoted": gre_parent_promoted,
     "gre-parent-demoted": gre_parent_demoted,
@@ -3860,6 +3891,15 @@ OPTIONS = {  # the box each scenario needs beyond the default
         "multi_bss": True,
         "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
         "underlay": GRE_UNDERLAY,
+    },
+    # a GRE child of the Pis' shape, its uplink credentials from the M2 sets (spec 8.6, 9)
+    "second-radio-child-credentials": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
+        "underlay": GRE_UNDERLAY,
+        "backhaul": True,
+        "gre_child": True,
+        "uplink": {"mode": "gre", "station": "bhaul-sta-50"},
     },
     "second-radio-moves-channel": {
         "multi_bss": True,

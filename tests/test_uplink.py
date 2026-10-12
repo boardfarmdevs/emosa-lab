@@ -459,6 +459,15 @@ def test_credentials_come_from_the_applied_m2_backhaul_bss():
     assert m2_backhaul(Journal(Op(State.OBSERVED_APPLIED, [fronthaul]))) is None
     applied = Op(State.OBSERVED_APPLIED, [fronthaul, backhaul_bss])
     assert m2_backhaul(Journal(applied, Op(State.REJECTED, []))) == ("emosa-mesh-bh", "wsc-ab-1")
+    # spec 9 (the rdk-1010 proof, 12 Oct): a fronthaul radio with no backhaul slot keeps no
+    # backhaul BSS in its set; the 5 GHz radio's own set has it
+    radio_b = {"role": "backhaul", "ssid": "emosa-5g-bh", "secret_ref": "wsc-ab-3"}
+    no_backhaul = Journal(Op(State.OBSERVED_APPLIED, [fronthaul]))
+    five = Journal(Op(State.OBSERVED_APPLIED, [radio_b]))
+    assert m2_backhaul(no_backhaul, five) == ("emosa-5g-bh", "wsc-ab-3")
+    # the fronthaul's set first when it has one
+    assert m2_backhaul(Journal(applied), five) == ("emosa-mesh-bh", "wsc-ab-1")
+    assert m2_backhaul(no_backhaul, Journal()) is None
 
 
 def test_the_backhaul_is_reported_only_while_it_is_the_easymesh_uplink():

@@ -692,7 +692,9 @@ async def serve(config, stop):
             fixed = (uplink_config["ssid"], uplink_config["secret_ref"])
             credentials = lambda: fixed  # noqa: E731
         else:
-            credentials = lambda: m2_backhaul(store)  # noqa: E731
+            # the backhaul BSS of the fronthaul's set, else of a further radio's (spec 9)
+            radio_stores = tuple(e.store for _, e in radio_scopes.values())
+            credentials = lambda: m2_backhaul(store, *radio_stores)  # noqa: E731
         uplink_store = Store(state_dir / "uplink")
         switch = UplinkSwitch(
             pod_id,

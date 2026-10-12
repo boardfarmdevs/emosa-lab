@@ -929,9 +929,10 @@ static void wait_for(em_uplink_scope *u, const char *why)
 }
 
 /* the backhaul BSS (SSID, secret reference) of the AP scope's applied M2 set */
-static bool m2_backhaul(em_uplink_scope *u, char ssid[33], char ref[97])
+/* the backhaul BSS of one scope's latest applied M2 set */
+static bool set_backhaul(em_journal *journal, char ssid[33], char ref[97])
 {
-    const cJSON *ops = em_journal_operations_view(u->ap_journal);
+    const cJSON *ops = journal ? em_journal_operations_view(journal) : NULL;
     bool found = false;
     for (int i = cJSON_GetArraySize(ops) - 1; i >= 0; i--) {
         const cJSON *op = cJSON_GetArrayItem(ops, i);
@@ -951,6 +952,17 @@ static bool m2_backhaul(em_uplink_scope *u, char ssid[33], char ref[97])
         break; /* the latest applied set decides */
     }
     return found;
+}
+
+/* uplink.m2_backhaul: the fronthaul scope's set first, then each further radio's (spec 9) */
+static bool m2_backhaul(em_uplink_scope *u, char ssid[33], char ref[97])
+{
+    if (set_backhaul(u->ap_journal, ssid, ref))
+        return true;
+    for (size_t k = 0; k < u->nradio_journals; k++)
+        if (set_backhaul(u->radio_journals[k], ssid, ref))
+            return true;
+    return false;
 }
 
 static cJSON *intent_of(em_uplink_scope *u, const char *ssid, const char *ref)

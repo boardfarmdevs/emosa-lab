@@ -1224,7 +1224,10 @@ path is re-run. Carried with the second-radio work (§9).
   (b) does: the follow-up is that radio's own telemetry (its survey and client reports, a write
   scope of its own). An Unassociated STA Link Metrics Query (§3.9) is heard on any
   of the agent's radios, on its channel in a class of its band (149 in 124 or 125), and a station
-  on any radio's BSS is associated.
+  on any radio's BSS is associated. A pod's uplink takes its backhaul credentials (spec 8.3, 8.6)
+  from the backhaul BSS of an applied M2 set: the fronthaul radio's first, then each further
+  radio's, since on the Pis' shape only the 5 GHz radio's set has one (box
+  `second-radio-child-credentials`).
   Both agents (box `second-radio-parent`, `second-radio-withdrawn`, `second-radio-moves-channel`).
   Known gap, to close before V54's end soaks: V54's radio B runs VHT 80 MHz on 149/80 (centre
   155), while EMOSA reports it in the 20 MHz classes with no HT, VHT or HE capability TLVs, so

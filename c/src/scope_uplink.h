@@ -36,10 +36,14 @@ typedef struct {
      * wall clock it is kept in (NULL: time()) */
     double hold_backoff, hold_backoff_cap;
     double (*wall)(void);
-    /* credentials: fixed (configuration) or the AP scope's applied M2 set */
+    /* credentials: fixed (configuration) or the backhaul BSS of an applied M2 set: the AP scope's
+     * first, then each further radio's scope (spec 9: a pod whose fronthaul radio maps no backhaul
+     * BSS has it only in its 5 GHz radio's set) */
     bool fixed_credentials;
     char fixed_ssid[33], fixed_ref[97];
     em_journal *ap_journal;
+    size_t nradio_journals;
+    em_journal *radio_journals[2];
     /* the fronthaul is served and idle */
     bool (*settled)(void *ctx);
     void *settled_ctx;

@@ -2528,6 +2528,8 @@ int main(int argc, char **argv)
         a.uplink.transact_ctx = &a;
         a.uplink.monotonic = now;
         a.uplink.ap_journal = a.journal;
+        for (size_t k = 0; k < a.nradio_scopes && k < 2; k++) /* spec 9: a further radio's set */
+            a.uplink.radio_journals[a.uplink.nradio_journals++] = a.radio_scopes[k].journal;
         a.uplink.settled = fronthaul_settled;
         a.uplink.settled_ctx = &a;
         a.uplink.loops = a.peers_on ? upstream_loops : NULL;

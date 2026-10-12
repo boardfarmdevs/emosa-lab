@@ -606,12 +606,23 @@ class UplinkSwitch:
         }
 
 
-def m2_backhaul(store):
-    """The backhaul BSS (SSID, secret reference) of the fronthaul scope's applied M2 set."""
-    for op in reversed(store.operations()):
-        if op.state == State.OBSERVED_APPLIED:
-            for bss in op.intent.get("additional") or ():
-                if bss.get("role") == "backhaul":
-                    return bss["ssid"], bss["secret_ref"]
-            return None
+def m2_backhaul(*stores):
+    """The backhaul BSS (SSID, secret reference) of the pod's applied M2 sets: the fronthaul
+    scope's first, then each further radio's (spec 9: a pod whose fronthaul radio maps no backhaul
+    BSS, the Pis' adapter B, has it only in its 5 GHz radio's set). In each scope the latest
+    applied set decides."""
+    for store in stores:
+        for op in reversed(store.operations()):
+            if op.state == State.OBSERVED_APPLIED:
+                found = next(
+                    (
+                        (bss["ssid"], bss["secret_ref"])
+                        for bss in op.intent.get("additional") or ()
+                        if bss.get("role") == "backhaul"
+                    ),
+                    None,
+                )
+                if found:
+                    return found
+                break
     return None

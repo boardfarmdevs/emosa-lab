@@ -552,3 +552,10 @@ def test_a_demoted_gre_parent_leaves_no_dhcp_server_or_tunnel_on_its_backhaul(ag
     result = box("gre-parent-demoted", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result
     assert result["same_row"] and result["own_rows_unchanged"] and not result["dhcpd"]
+
+
+def test_a_5ghz_gre_childs_backhaul_credentials_come_from_its_5ghz_radios_set(agent, tmp_path):
+    # spec 8.6, 9 (the rdk-1010 proof): the fronthaul's set has no backhaul BSS on the Pis' shape
+    result = box("second-radio-child-credentials", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["waiting"].startswith("no upstream")
