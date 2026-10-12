@@ -56,7 +56,8 @@
         "properties": {
           "if_name": {"$ref": "#/$defs/if_name"},
           "role": {"enum": ["fronthaul", "backhaul"]},
-          "vif_radio_idx": {"type": "integer", "minimum": 0, "maximum": 15}
+          "vif_radio_idx": {"type": "integer", "minimum": 0, "maximum": 15},
+          "band": {"enum": ["2.4G", "5G", "6G"], "description": "The radio this slot's VIF is on (spec 9): omitted = the fronthaul's `radio`; otherwise one of `radios`. A parent AP b-ap-50 on the second radio sets \"5G\"."}
         }
       }
     },

@@ -416,6 +416,26 @@ def test_a_profile_without_additional_radios_has_an_empty_radios_tuple():
     from emosa.opensync import profiles
 
     assert profiles.load().radios == ()
+    assert profiles.load().slot_bands == ()  # default: every slot on the fronthaul radio
+
+
+def test_an_extra_slot_may_name_the_radio_its_vif_is_on(tmp_path):
+    """Spec 9: a slot's `band` places its VIF on a non-fronthaul radio (the parent AP on 5 GHz)."""
+    from emosa.opensync import profiles
+
+    data = json.loads(
+        (Path(profiles.__file__).parents[1] / "profiles" / f"{profiles.DEFAULT}.json").read_text()
+    )
+    data["radios"] = [{"band": "5G", "ht_mode": "HT40", "chipset": "mac80211_hwsim"}]
+    data["extra_slots"] = [
+        {"if_name": "b-ap-50", "role": "backhaul", "vif_radio_idx": 1, "band": "5G"},
+        {"if_name": "fh-24", "role": "fronthaul", "vif_radio_idx": 6},
+    ]
+    path = tmp_path / "slot-band.json"
+    path.write_text(json.dumps(data))
+    profile = profiles.load(str(path))
+    # only the banded slot is listed; fh-24 (no band) defaults to the fronthaul radio
+    assert profile.slot_bands == (("b-ap-50", "5G"),)
 
 
 def test_a_gre_parent_slot_present_gets_the_underlays_inet_row(tmp_path):
