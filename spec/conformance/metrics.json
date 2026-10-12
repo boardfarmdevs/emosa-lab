@@ -1920,6 +1920,1081 @@
   }
  ],
  "description": "spec §2.4, §3.8: the Multi-AP Policy kept and the AP metrics reported from the pod's own statistics. The recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00); the pod's statistics from the case's publishes (topic emosa/stats/MVXPOD023F87E628DD, reporting every 5 s) at the wall clock; the declared best-effort ESP 3fff00; a statistic is fresh for 20 s (three periods and the 5 s publish interval). Each step is a controller frame, a tick, or a new session ('session': the agent's policy coordinator started again on the kept record, as a new session or a start of the agent does) at a time 'at' (seconds): the agent's result and the frames it sends; its own messages take MIDs from 500. expected_policy is the agent's record at the end, expected_stored the record kept on disk, written only when a policy is received (both without the boot identity). A case's 'stored', when present, is the record on disk before its first step.",
+ "multi_radio": {
+  "cases": [
+   {
+    "expected_counts": {
+     "policy": {
+      "policy_receipt_ack_sent": 1
+     },
+     "reporter": {
+      "ap_metric_query_answered": 1
+     }
+    },
+    "expected_policy": {
+     "identity": {
+      "controller": "020000e00001",
+      "local_al": "0272f97f0785",
+      "ruid": "020000000100"
+     },
+     "last_unfulfilled_due": null,
+     "latest_mid": 16,
+     "latest_request": [
+      {
+       "kind": 137,
+       "value": "000002020000000100023c78020000000500003c78"
+      },
+      {
+       "kind": 138,
+       "value": "050202000000010078053cc002000000050078053cc0"
+      }
+     ],
+     "next_due": 5.0,
+     "periods_due_without_report": 0,
+     "policy": {
+      "metrics": {
+       "interval_seconds": 5,
+       "radios": [
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      },
+      "steering": {
+       "btm_disallowed": [],
+       "local_disallowed": [],
+       "radios": [
+        {
+         "policy": 2,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "policy": 0,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      }
+     },
+     "receipt_count": 1,
+     "schedule_rebases": 0
+    },
+    "expected_stored": {
+     "identity": {
+      "controller": "020000e00001",
+      "local_al": "0272f97f0785",
+      "ruid": "020000000100"
+     },
+     "last_unfulfilled_due": null,
+     "latest_mid": 16,
+     "latest_request": [
+      {
+       "kind": 137,
+       "value": "000002020000000100023c78020000000500003c78"
+      },
+      {
+       "kind": 138,
+       "value": "050202000000010078053cc002000000050078053cc0"
+      }
+     ],
+     "next_due": 5.0,
+     "periods_due_without_report": 0,
+     "policy": {
+      "metrics": {
+       "interval_seconds": 5,
+       "radios": [
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      },
+      "steering": {
+       "btm_disallowed": [],
+       "local_disallowed": [],
+       "radios": [
+        {
+         "policy": 2,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "policy": 0,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      }
+     },
+     "receipt_count": 1,
+     "schedule_rebases": 0
+    },
+    "name": "two-radios-each-surveyed",
+    "publishes": [
+     "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+     "0a001217080110001898858fb88d34220a082c108827281148dc0b",
+     "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006",
+     "0a002a5f080110808d8fb88d341a520a1130323a30303a30303a30303a30633a3031120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249000000000060784051cdcccccccc147b405823202c"
+    ],
+    "steps": [
+     {
+      "at": 0.0,
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800000100080000000"
+       ],
+       "result": "policy_receipt_ack_sent"
+      },
+      "request": "0272f97f0785020000e00001893a0000800300100080890015000002020000000100023c78020000000500003c788a0016050202000000010078053cc002000000050078053cc0000000"
+     },
+     {
+      "at": 0.0,
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800c003c008094000d820000000100690002803fff00a20022020000000a000001e2400000ff98000003e80000032000000002000000010000000c96001a020000000a0001820000000100000003e800000090000000486c96001a02000000100001820000000100000003e8000000410000003a5894000d8200000005002b0001803fff00a20022020000000c010001e2400000ff98000003e80000032000000002000000010000000c96001a020000000c0101820000000500000003e8000001b10000018662000000"
+       ],
+       "result": "ap_metric_query_answered"
+      },
+      "request": "0272f97f0785020000e00001893a0000800b003c008093000d02820000000100820000000500000000"
+     }
+    ]
+   },
+   {
+    "expected_counts": {
+     "policy": {
+      "policy_receipt_ack_sent": 1
+     },
+     "reporter": {
+      "ap_metric_query_answered": 1
+     }
+    },
+    "expected_policy": {
+     "identity": {
+      "controller": "020000e00001",
+      "local_al": "0272f97f0785",
+      "ruid": "020000000100"
+     },
+     "last_unfulfilled_due": null,
+     "latest_mid": 16,
+     "latest_request": [
+      {
+       "kind": 137,
+       "value": "000002020000000100023c78020000000500003c78"
+      },
+      {
+       "kind": 138,
+       "value": "050202000000010078053cc002000000050078053cc0"
+      }
+     ],
+     "next_due": 5.0,
+     "periods_due_without_report": 0,
+     "policy": {
+      "metrics": {
+       "interval_seconds": 5,
+       "radios": [
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      },
+      "steering": {
+       "btm_disallowed": [],
+       "local_disallowed": [],
+       "radios": [
+        {
+         "policy": 2,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "policy": 0,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      }
+     },
+     "receipt_count": 1,
+     "schedule_rebases": 0
+    },
+    "expected_stored": {
+     "identity": {
+      "controller": "020000e00001",
+      "local_al": "0272f97f0785",
+      "ruid": "020000000100"
+     },
+     "last_unfulfilled_due": null,
+     "latest_mid": 16,
+     "latest_request": [
+      {
+       "kind": 137,
+       "value": "000002020000000100023c78020000000500003c78"
+      },
+      {
+       "kind": 138,
+       "value": "050202000000010078053cc002000000050078053cc0"
+      }
+     ],
+     "next_due": 5.0,
+     "periods_due_without_report": 0,
+     "policy": {
+      "metrics": {
+       "interval_seconds": 5,
+       "radios": [
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      },
+      "steering": {
+       "btm_disallowed": [],
+       "local_disallowed": [],
+       "radios": [
+        {
+         "policy": 2,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "policy": 0,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      }
+     },
+     "receipt_count": 1,
+     "schedule_rebases": 0
+    },
+    "name": "two-radios-second-unsurveyed",
+    "publishes": [
+     "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+     "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+    ],
+    "steps": [
+     {
+      "at": 0.0,
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800000100080000000"
+       ],
+       "result": "policy_receipt_ack_sent"
+      },
+      "request": "0272f97f0785020000e00001893a0000800300100080890015000002020000000100023c78020000000500003c788a0016050202000000010078053cc002000000050078053cc0000000"
+     },
+     {
+      "at": 0.0,
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800c003d008094000d820000000100690002803fff00a20022020000000a000001e2400000ff98000003e80000032000000002000000010000000c96001a020000000a0001820000000100000003e800000090000000486c96001a02000000100001820000000100000003e8000000410000003a58000000"
+       ],
+       "result": "ap_metric_query_answered"
+      },
+      "request": "0272f97f0785020000e00001893a0000800b003d008093000d02820000000100820000000500000000"
+     }
+    ]
+   },
+   {
+    "expected_counts": {
+     "policy": {
+      "policy_receipt_ack_sent": 1
+     },
+     "reporter": {
+      "ap_measurements_unavailable": 1
+     }
+    },
+    "expected_policy": {
+     "identity": {
+      "controller": "020000e00001",
+      "local_al": "0272f97f0785",
+      "ruid": "020000000100"
+     },
+     "last_unfulfilled_due": null,
+     "latest_mid": 16,
+     "latest_request": [
+      {
+       "kind": 137,
+       "value": "000002020000000100023c78020000000500003c78"
+      },
+      {
+       "kind": 138,
+       "value": "050202000000010078053cc002000000050078053cc0"
+      }
+     ],
+     "next_due": 5.0,
+     "periods_due_without_report": 0,
+     "policy": {
+      "metrics": {
+       "interval_seconds": 5,
+       "radios": [
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      },
+      "steering": {
+       "btm_disallowed": [],
+       "local_disallowed": [],
+       "radios": [
+        {
+         "policy": 2,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "policy": 0,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      }
+     },
+     "receipt_count": 1,
+     "schedule_rebases": 0
+    },
+    "expected_stored": {
+     "identity": {
+      "controller": "020000e00001",
+      "local_al": "0272f97f0785",
+      "ruid": "020000000100"
+     },
+     "last_unfulfilled_due": null,
+     "latest_mid": 16,
+     "latest_request": [
+      {
+       "kind": 137,
+       "value": "000002020000000100023c78020000000500003c78"
+      },
+      {
+       "kind": 138,
+       "value": "050202000000010078053cc002000000050078053cc0"
+      }
+     ],
+     "next_due": 5.0,
+     "periods_due_without_report": 0,
+     "policy": {
+      "metrics": {
+       "interval_seconds": 5,
+       "radios": [
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      },
+      "steering": {
+       "btm_disallowed": [],
+       "local_disallowed": [],
+       "radios": [
+        {
+         "policy": 2,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "policy": 0,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      }
+     },
+     "receipt_count": 1,
+     "schedule_rebases": 0
+    },
+    "name": "two-radios-query-second-unsurveyed",
+    "publishes": [
+     "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+     "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006"
+    ],
+    "steps": [
+     {
+      "at": 0.0,
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800000100080000000"
+       ],
+       "result": "policy_receipt_ack_sent"
+      },
+      "request": "0272f97f0785020000e00001893a0000800300100080890015000002020000000100023c78020000000500003c788a0016050202000000010078053cc002000000050078053cc0000000"
+     },
+     {
+      "at": 0.0,
+      "expected": {
+       "frames": [],
+       "result": "ap_measurements_unavailable"
+      },
+      "request": "0272f97f0785020000e00001893a0000800b003e008093000701820000000500000000"
+     }
+    ]
+   },
+   {
+    "expected_counts": {
+     "policy": {
+      "periodic_metric_report_transmitted": 1,
+      "policy_receipt_ack_sent": 1
+     },
+     "reporter": {
+      "periodic_ap_metric_report_transmitted": 1
+     }
+    },
+    "expected_policy": {
+     "identity": {
+      "controller": "020000e00001",
+      "local_al": "0272f97f0785",
+      "ruid": "020000000100"
+     },
+     "last_unfulfilled_due": null,
+     "latest_mid": 16,
+     "latest_report_attempt": {
+      "due": 5.0,
+      "status": "transmitted_controller_receipt_unverified"
+     },
+     "latest_request": [
+      {
+       "kind": 137,
+       "value": "000002020000000100023c78020000000500003c78"
+      },
+      {
+       "kind": 138,
+       "value": "050202000000010078053cc002000000050078053cc0"
+      }
+     ],
+     "next_due": 10.0,
+     "periods_due_without_report": 0,
+     "policy": {
+      "metrics": {
+       "interval_seconds": 5,
+       "radios": [
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      },
+      "steering": {
+       "btm_disallowed": [],
+       "local_disallowed": [],
+       "radios": [
+        {
+         "policy": 2,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "policy": 0,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      }
+     },
+     "receipt_count": 1,
+     "reports_transmitted": 1,
+     "schedule_rebases": 0
+    },
+    "expected_stored": {
+     "identity": {
+      "controller": "020000e00001",
+      "local_al": "0272f97f0785",
+      "ruid": "020000000100"
+     },
+     "last_unfulfilled_due": null,
+     "latest_mid": 16,
+     "latest_request": [
+      {
+       "kind": 137,
+       "value": "000002020000000100023c78020000000500003c78"
+      },
+      {
+       "kind": 138,
+       "value": "050202000000010078053cc002000000050078053cc0"
+      }
+     ],
+     "next_due": 5.0,
+     "periods_due_without_report": 0,
+     "policy": {
+      "metrics": {
+       "interval_seconds": 5,
+       "radios": [
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "include_link": true,
+         "include_traffic": true,
+         "include_wifi6_status": false,
+         "rcpi_hysteresis_db": 5,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      },
+      "steering": {
+       "btm_disallowed": [],
+       "local_disallowed": [],
+       "radios": [
+        {
+         "policy": 2,
+         "rcpi_threshold": 120,
+         "ruid": "020000000100",
+         "utilization_threshold": 60
+        },
+        {
+         "policy": 0,
+         "rcpi_threshold": 120,
+         "ruid": "020000000500",
+         "utilization_threshold": 60
+        }
+       ]
+      }
+     },
+     "receipt_count": 1,
+     "schedule_rebases": 0
+    },
+    "name": "two-radios-periodic",
+    "publishes": [
+     "0a001217080010001898858fb88d34220a0806108827282948dc0b",
+     "0a001217080110001898858fb88d34220a082c108827281148dc0b",
+     "0a002adb01080010808d8fb88d341a520a1130323a30303a30303a30303a30613a3030120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249cdcccccccc0c524051cdcccccccc0c624058281a3c0a1130323a30303a30303a30303a31303a3030120c707269766174655f7373696418014088274a14490000000000404d40510000000000405040581e1a3c0a1130323a30303a30303a30303a37373a3737120c707269766174655f7373696418014088274a1449000000000000184051000000000000184058192006",
+     "0a002a5f080110808d8fb88d341a520a1130323a30303a30303a30303a30633a3031120c707269766174655f7373696418014088274a2a0898ff0310c0c40718a00620e8072803300c3801400249000000000060784051cdcccccccc147b405823202c"
+    ],
+    "steps": [
+     {
+      "at": 0.0,
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800000100080000000"
+       ],
+       "result": "policy_receipt_ack_sent"
+      },
+      "request": "0272f97f0785020000e00001893a0000800300100080890015000002020000000100023c78020000000500003c788a0016050202000000010078053cc002000000050078053cc0000000"
+     },
+     {
+      "at": 5.0,
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800c01f4008094000d820000000100690002803fff00a20022020000000a000001e2400000ff98000003e80000032000000002000000010000000c96001a020000000a0001820000000100000003e800000090000000486c96001a02000000100001820000000100000003e8000000410000003a5894000d8200000005002b0001803fff00a20022020000000c010001e2400000ff98000003e80000032000000002000000010000000c96001a020000000c0101820000000500000003e8000001b10000018662000000"
+       ],
+       "result": null
+      },
+      "tick": true
+     }
+    ]
+   }
+  ],
+  "description": "spec 9: the same agent as a GRE parent that also shows its 5 GHz radio 02:00:00:00:05:00 (class 115 channel 44), b-ap-50 on it with the child pod 02:00:00:00:0c:01 (the rows below). Each radio's BSSes carry the utilization of the survey of that radio's own channel; a radio with no fresh survey is left out of the response, and a query naming only its BSS is not answered.",
+  "ovsdb_tables": {
+   "AWLAN_Node": {
+    "96bc1650-4197-4cd8-9036-f9eb854e87ec": {
+     "firmware_version": "6.6.1.0-0-g1dad64-mods-mvx-local",
+     "id": "MVXPOD023F87E628DD",
+     "model": "HWSIM_POD",
+     "serial_number": "MVXPOD023F87E628DD"
+    }
+   },
+   "Wifi_Associated_Clients": {
+    "00000000-0000-4000-8000-0000000000c1": {
+     "mac": "02:00:00:00:0c:01",
+     "state": "active"
+    },
+    "5610f878-8aa3-40a8-95b1-76cad74d386d": {
+     "mac": "02:00:00:00:02:04",
+     "state": "active"
+    },
+    "754e678c-11a4-43ec-bda8-f655bf59b8d2": {
+     "mac": "02:00:00:00:10:00",
+     "state": "active"
+    },
+    "af38859b-bedf-41a2-bddf-98652851cbd1": {
+     "mac": "02:00:00:00:0a:00",
+     "state": "active"
+    }
+   },
+   "Wifi_Radio_Config": {
+    "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2": {
+     "enabled": true,
+     "freq_band": "5G",
+     "if_name": "phy5",
+     "vif_configs": [
+      "set",
+      [
+       [
+        "uuid",
+        "527b652b-fb37-4881-8386-a555857b77e7"
+       ],
+       [
+        "uuid",
+        "00000000-0000-4000-8000-0000000000b5"
+       ]
+      ]
+     ]
+    },
+    "bad3456e-79cc-4d17-9719-afdb2b723dc4": {
+     "enabled": true,
+     "freq_band": "2.4G",
+     "if_name": "phy1",
+     "vif_configs": [
+      "uuid",
+      "5e205523-2215-4670-9433-e4742fa22055"
+     ]
+    }
+   },
+   "Wifi_Radio_State": {
+    "6d532b35-45c2-4fb6-b7e5-a88eac97f2c1": {
+     "channel": 6,
+     "country": "US",
+     "enabled": true,
+     "freq_band": "2.4G",
+     "if_name": "phy1",
+     "mac": "02:00:00:00:01:00",
+     "radio_config": [
+      "uuid",
+      "bad3456e-79cc-4d17-9719-afdb2b723dc4"
+     ],
+     "tx_power": 30,
+     "vif_states": [
+      "uuid",
+      "46f21b59-4487-4c60-bab6-2d2874107cfa"
+     ]
+    },
+    "b4398810-4002-400c-937d-2487ede88cf5": {
+     "channel": 44,
+     "country": "US",
+     "enabled": true,
+     "freq_band": "5G",
+     "if_name": "phy5",
+     "mac": "02:00:00:00:05:00",
+     "radio_config": [
+      "uuid",
+      "5bc03887-a6e8-45d4-8b0d-9834e8ad75a2"
+     ],
+     "tx_power": 23,
+     "vif_states": [
+      "set",
+      [
+       [
+        "uuid",
+        "95d7b177-73ef-44f6-903a-3db7dbc81bfd"
+       ],
+       [
+        "uuid",
+        "00000000-0000-4000-8000-0000000000b6"
+       ]
+      ]
+     ]
+    }
+   },
+   "Wifi_VIF_Config": {
+    "00000000-0000-4000-8000-0000000000b5": {
+     "ap_bridge": false,
+     "bridge": "",
+     "enabled": true,
+     "if_name": "b-ap-50",
+     "mode": "ap",
+     "multi_ap": "none",
+     "rsn_pairwise_ccmp": true,
+     "security": [
+      "map",
+      []
+     ],
+     "ssid": "emosa-bh",
+     "ssid_broadcast": "disabled",
+     "wpa": true,
+     "wpa_key_mgmt": "wpa-psk",
+     "wpa_oftags": [
+      "map",
+      []
+     ],
+     "wpa_pairwise_ccmp": [
+      "set",
+      []
+     ],
+     "wpa_pairwise_tkip": [
+      "set",
+      []
+     ],
+     "wpa_psks": [
+      "map",
+      [
+       [
+        "key",
+        "fixture-psk"
+       ]
+      ]
+     ]
+    },
+    "527b652b-fb37-4881-8386-a555857b77e7": {
+     "bridge": "",
+     "enabled": true,
+     "if_name": "bhaul-sta-50",
+     "mode": "sta",
+     "multi_ap": "none",
+     "rsn_pairwise_ccmp": [
+      "set",
+      []
+     ],
+     "security": [
+      "map",
+      [
+       [
+        "encryption",
+        "WPA-PSK"
+       ],
+       [
+        "key",
+        "fixture-psk"
+       ]
+      ]
+     ],
+     "ssid": "opensync-lab-bhaul",
+     "wpa": [
+      "set",
+      []
+     ],
+     "wpa_key_mgmt": [
+      "set",
+      []
+     ],
+     "wpa_oftags": [
+      "map",
+      []
+     ],
+     "wpa_pairwise_ccmp": [
+      "set",
+      []
+     ],
+     "wpa_pairwise_tkip": [
+      "set",
+      []
+     ],
+     "wpa_psks": [
+      "map",
+      []
+     ]
+    },
+    "5e205523-2215-4670-9433-e4742fa22055": {
+     "bridge": "br-home",
+     "enabled": true,
+     "if_name": "home-ap-24",
+     "mode": "ap",
+     "multi_ap": [
+      "set",
+      []
+     ],
+     "rsn_pairwise_ccmp": true,
+     "security": [
+      "map",
+      []
+     ],
+     "ssid": "emosa-mesh",
+     "wpa": true,
+     "wpa_key_mgmt": "wpa-psk",
+     "wpa_oftags": [
+      "map",
+      []
+     ],
+     "wpa_pairwise_ccmp": [
+      "set",
+      []
+     ],
+     "wpa_pairwise_tkip": [
+      "set",
+      []
+     ],
+     "wpa_psks": [
+      "map",
+      [
+       [
+        "key",
+        "fixture-psk"
+       ]
+      ]
+     ]
+    }
+   },
+   "Wifi_VIF_State": {
+    "00000000-0000-4000-8000-0000000000b6": {
+     "associated_clients": [
+      "set",
+      [
+       [
+        "uuid",
+        "00000000-0000-4000-8000-0000000000c1"
+       ]
+      ]
+     ],
+     "enabled": true,
+     "if_name": "b-ap-50",
+     "mac": "82:00:00:00:05:00",
+     "mode": "ap",
+     "multi_ap": "none",
+     "rsn_pairwise_ccmp": true,
+     "security": [
+      "map",
+      []
+     ],
+     "ssid": "emosa-bh",
+     "vif_config": [
+      "uuid",
+      "00000000-0000-4000-8000-0000000000b5"
+     ],
+     "wpa": true,
+     "wpa_key_mgmt": "wpa-psk",
+     "wpa_pairwise_ccmp": false,
+     "wpa_pairwise_tkip": false,
+     "wpa_psks": [
+      "map",
+      [
+       [
+        "key",
+        "fixture-psk"
+       ]
+      ]
+     ]
+    },
+    "46f21b59-4487-4c60-bab6-2d2874107cfa": {
+     "associated_clients": [
+      "set",
+      [
+       [
+        "uuid",
+        "754e678c-11a4-43ec-bda8-f655bf59b8d2"
+       ],
+       [
+        "uuid",
+        "af38859b-bedf-41a2-bddf-98652851cbd1"
+       ]
+      ]
+     ],
+     "enabled": true,
+     "if_name": "home-ap-24",
+     "mac": "82:00:00:00:01:00",
+     "mode": "ap",
+     "multi_ap": "none",
+     "rsn_pairwise_ccmp": true,
+     "security": [
+      "map",
+      []
+     ],
+     "ssid": "emosa-mesh",
+     "vif_config": [
+      "uuid",
+      "5e205523-2215-4670-9433-e4742fa22055"
+     ],
+     "wpa": true,
+     "wpa_key_mgmt": "wpa-psk",
+     "wpa_pairwise_ccmp": false,
+     "wpa_pairwise_tkip": false,
+     "wpa_psks": [
+      "map",
+      [
+       [
+        "key",
+        "fixture-psk"
+       ]
+      ]
+     ]
+    },
+    "95d7b177-73ef-44f6-903a-3db7dbc81bfd": {
+     "associated_clients": [
+      "uuid",
+      "5610f878-8aa3-40a8-95b1-76cad74d386d"
+     ],
+     "enabled": true,
+     "if_name": "bhaul-sta-50",
+     "mac": "02:00:00:00:05:00",
+     "mode": "sta",
+     "multi_ap": "none",
+     "rsn_pairwise_ccmp": [
+      "set",
+      []
+     ],
+     "security": [
+      "map",
+      [
+       [
+        "encryption",
+        "WPA-PSK"
+       ],
+       [
+        "key",
+        "fixture-psk"
+       ]
+      ]
+     ],
+     "ssid": "opensync-lab-bhaul",
+     "vif_config": [
+      "uuid",
+      "527b652b-fb37-4881-8386-a555857b77e7"
+     ],
+     "wpa": [
+      "set",
+      []
+     ],
+     "wpa_key_mgmt": [
+      "set",
+      []
+     ],
+     "wpa_pairwise_ccmp": [
+      "set",
+      []
+     ],
+     "wpa_pairwise_tkip": [
+      "set",
+      []
+     ],
+     "wpa_psks": [
+      "map",
+      []
+     ]
+    }
+   }
+  },
+  "parent_aps": [
+   "b-ap-50"
+  ],
+  "radios": [
+   {
+    "bsses": [
+     "home-ap-24"
+    ],
+    "channel": 6,
+    "ruid": "02:00:00:00:01:00"
+   },
+   {
+    "bsses": [
+     "b-ap-50"
+    ],
+    "channel": 44,
+    "ruid": "02:00:00:00:05:00"
+   }
+  ]
+ },
  "ovsdb_tables": {
   "AWLAN_Node": {
    "96bc1650-4197-4cd8-9036-f9eb854e87ec": {

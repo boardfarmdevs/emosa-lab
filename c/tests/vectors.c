@@ -1589,12 +1589,129 @@ static cJSON *counts_of(const cJSON *status)
     return cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(status, "counts"), 1);
 }
 
+/* a session's policy coordinator on the kept record; with more than one radio, a policy's radio
+ * lists may name each (spec 9) */
+static void metrics_start(em_reporting *r, em_policy_store *store, const uint8_t controller[6], const uint8_t al[6],
+                          const em_topology_radio *radios, size_t nradios, double at)
+{
+    em_reporting_start(r, store, controller, al, radios[0].radio->ruid, at);
+    for (size_t k = 0; nradios > 1 && k < nradios && k < 4; k++)
+        memcpy(r->radio_ids[r->nradio_ids++], radios[k].radio->ruid, 6);
+}
+
+/* one case: its publishes, then each step's result and frames, the counts and the records kept */
+static void metrics_case(const cJSON *c, const cJSON *agent, const em_topology_radio *radios, size_t nradios,
+                         const uint8_t controller[6], const uint8_t al[6], const uint8_t esp[3])
+{
+    double stats_now = metrics_wall_value;
+    const char *name = str(c, "name");
+    char path[] = "/tmp/emosa-vectors-XXXXXX", db[64];
+    if (!mkdtemp(path)) {
+        fail("metrics", name, "temporary directory");
+        return;
+    }
+    snprintf(db, sizeof(db), "%s/policy.sqlite", path);
+    em_policy_store *store = em_policy_store_open(db, "conformance");
+    const cJSON *stored_before = cJSON_GetObjectItemCaseSensitive(c, "stored");
+    if (stored_before && !em_policy_store_save(store, stored_before))
+        fail("metrics", name, "the stored record not written");
+    em_reporting r = {0};
+    metrics_start(&r, store, controller, al, radios, nradios, 0.0);
+    em_pod_stats *stats = malloc(sizeof(*stats));
+    em_pod_stats_init(stats, str(agent, "topic"), (unsigned)num(agent, "reporting_interval"), stats_clock,
+                      &stats_now);
+    const cJSON *p;
+    cJSON_ArrayForEach(p, cJSON_GetObjectItemCaseSensitive(c, "publishes"))
+    {
+        em_buf payload = {0};
+        em_unhex(p->valuestring, &payload);
+        em_pod_stats_receive(stats, str(agent, "topic"), payload.data, payload.len, false);
+        em_buf_free(&payload);
+    }
+    em_metric_source source = {radios, nradios, stats, esp, num(agent, "freshness"), metrics_wall};
+    uint16_t mid = (uint16_t)(num(agent, "first_mid") - 1);
+    const cJSON *step;
+    int index = 0;
+    cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+    {
+        char label[96];
+        snprintf(label, sizeof(label), "%s step %d", name, index++);
+        checks++;
+        double at = num(step, "at");
+        em_frames out = {0};
+        em_reason error = EM_OK;
+        const char *result = NULL;
+        if (cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "tick"))) {
+            em_reporting_tick(&r, at, true, &source, metrics_mid, &mid, &out);
+        } else if (cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "session"))) {
+            em_reporting_close(&r); /* a new session (or agent start) on the kept record */
+            metrics_start(&r, store, controller, al, radios, nradios, at);
+        } else {
+            cJSON *frames = cJSON_CreateArray();
+            cJSON_AddItemToArray(frames, cJSON_CreateString(str(step, "request")));
+            em_message *m = assemble(frames);
+            cJSON_Delete(frames);
+            if (m && m->message_type == 0x8003)
+                result = em_reporting_policy(&r, m, at, true, &source, metrics_mid, &mid, &out, &error);
+            else if (m && m->message_type == 0x800B)
+                result = em_reporting_query(&r, m, true, &source, &out, &error);
+            if (!result && m && error != EM_OK)
+                result = em_reason_name(error); /* refused: its reason, as the reference's */
+            em_message_free(m);
+        }
+        const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
+        const char *want = str(expected, "result");
+        if ((want == NULL) != (result == NULL) || (want && strcmp(want, result)))
+            fail("metrics", label, result ? result : em_reason_name(error));
+        else if (!frames_equal(&out, cJSON_GetObjectItemCaseSensitive(expected, "frames")))
+            fail("metrics", label, "frames differ");
+        em_frames_free(&out);
+    }
+    const cJSON *counts = cJSON_GetObjectItemCaseSensitive(c, "expected_counts");
+    cJSON *policy_status = em_reporting_status(&r), *reporter_status = em_reporting_metrics_status(&r, &source);
+    cJSON *pc = counts_of(policy_status), *rc = counts_of(reporter_status);
+    checks++;
+    if (!cJSON_Compare(pc, cJSON_GetObjectItemCaseSensitive(counts, "policy"), 1) ||
+        !cJSON_Compare(rc, cJSON_GetObjectItemCaseSensitive(counts, "reporter"), 1))
+        fail("metrics", name, "counts differ");
+    checks++;
+    cJSON *kept = r.value ? cJSON_Duplicate(r.value, 1) : cJSON_CreateNull();
+    cJSON_DeleteItemFromObjectCaseSensitive(kept, "boot_id");
+    if (!cJSON_Compare(kept, cJSON_GetObjectItemCaseSensitive(c, "expected_policy"), 1)) {
+        fail("metrics", name, "kept policy differs");
+        if (getenv("EMOSA_VECTORS_DEBUG")) {
+            char *text = cJSON_PrintUnformatted(kept);
+            fprintf(stderr, "%s\n", text);
+            free(text);
+        }
+    }
+    cJSON_Delete(kept);
+    checks++;
+    cJSON *stored = em_policy_store_read(store);
+    if (!stored)
+        stored = cJSON_CreateNull();
+    cJSON_DeleteItemFromObjectCaseSensitive(stored, "boot_id");
+    if (!cJSON_Compare(stored, cJSON_GetObjectItemCaseSensitive(c, "expected_stored"), 1))
+        fail("metrics", name, "stored policy differs");
+    cJSON_Delete(stored);
+    cJSON_Delete(pc);
+    cJSON_Delete(rc);
+    cJSON_Delete(policy_status);
+    cJSON_Delete(reporter_status);
+    cJSON_Delete(r.value);
+    em_policy_store_close(store);
+    free(stats);
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "rm -rf %s", path);
+    if (system(cmd)) {
+    }
+}
+
 static void metrics_vectors(const char *dir)
 {
     cJSON *doc = load(dir, "metrics.json");
     const cJSON *agent = cJSON_GetObjectItemCaseSensitive(doc, "agent");
     metrics_wall_value = num(agent, "wall");
-    double stats_now = metrics_wall_value;
     em_device_view *view = malloc(sizeof(*view));
     if (em_device_view_from_rows(cJSON_GetObjectItemCaseSensitive(doc, "ovsdb_tables"), view) != EM_OK) {
         fail("metrics", "rows", "device view");
@@ -1612,110 +1729,53 @@ static void metrics_vectors(const char *dir)
     em_buf_free(&esp_hex);
     const em_radio_view *radio = em_view_radio(view, ruid);
     const cJSON *c;
+    em_topology_radio one = {radio, radio ? radio->channel : 0};
     cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
+        metrics_case(c, agent, &one, 1, controller, al, esp);
+    /* spec 9: a GRE parent that also shows its 5 GHz radio, b-ap-50 on it */
+    const cJSON *multi = cJSON_GetObjectItemCaseSensitive(doc, "multi_radio"), *r, *ap;
+    em_device_view *two = malloc(sizeof(*two));
+    em_radio_view *shown = calloc(EM_MAX_RADIOS, sizeof(*shown));
+    em_topology_radio radios[EM_MAX_RADIOS];
+    size_t nradios = 0;
+    checks++;
+    bool ok = two && shown &&
+              em_device_view_from_rows(cJSON_GetObjectItemCaseSensitive(multi, "ovsdb_tables"), two) == EM_OK;
+    cJSON_ArrayForEach(ap, cJSON_GetObjectItemCaseSensitive(multi, "parent_aps"))
     {
-        const char *name = str(c, "name");
-        char path[] = "/tmp/emosa-vectors-XXXXXX", db[64];
-        if (!mkdtemp(path)) {
-            fail("metrics", name, "temporary directory");
-            continue;
-        }
-        snprintf(db, sizeof(db), "%s/policy.sqlite", path);
-        em_policy_store *store = em_policy_store_open(db, "conformance");
-        const cJSON *stored_before = cJSON_GetObjectItemCaseSensitive(c, "stored");
-        if (stored_before && !em_policy_store_save(store, stored_before))
-            fail("metrics", name, "the stored record not written");
-        em_reporting r = {0};
-        em_reporting_start(&r, store, controller, al, ruid, 0.0);
-        em_pod_stats *stats = malloc(sizeof(*stats));
-        em_pod_stats_init(stats, str(agent, "topic"), (unsigned)num(agent, "reporting_interval"), stats_clock,
-                          &stats_now);
-        const cJSON *p;
-        cJSON_ArrayForEach(p, cJSON_GetObjectItemCaseSensitive(c, "publishes"))
-        {
-            em_buf payload = {0};
-            em_unhex(p->valuestring, &payload);
-            em_pod_stats_receive(stats, str(agent, "topic"), payload.data, payload.len, false);
-            em_buf_free(&payload);
-        }
-        em_metric_source source = {radio, stats, esp, num(agent, "freshness"), metrics_wall};
-        uint16_t mid = (uint16_t)(num(agent, "first_mid") - 1);
-        const cJSON *step;
-        int index = 0;
-        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
-        {
-            char label[96];
-            snprintf(label, sizeof(label), "%s step %d", name, index++);
-            checks++;
-            double at = num(step, "at");
-            em_frames out = {0};
-            em_reason error = EM_OK;
-            const char *result = NULL;
-            if (cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "tick"))) {
-                em_reporting_tick(&r, at, true, &source, metrics_mid, &mid, &out);
-            } else if (cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(step, "session"))) {
-                em_reporting_close(&r); /* a new session (or agent start) on the kept record */
-                em_reporting_start(&r, store, controller, al, ruid, at);
-            } else {
-                cJSON *frames = cJSON_CreateArray();
-                cJSON_AddItemToArray(frames, cJSON_CreateString(str(step, "request")));
-                em_message *m = assemble(frames);
-                cJSON_Delete(frames);
-                if (m && m->message_type == 0x8003)
-                    result = em_reporting_policy(&r, m, at, true, &source, metrics_mid, &mid, &out, &error);
-                else if (m && m->message_type == 0x800B)
-                    result = em_reporting_query(&r, m, true, &source, &out, &error);
-                if (!result && m && error != EM_OK)
-                    result = em_reason_name(error); /* refused: its reason, as the reference's */
-                em_message_free(m);
-            }
-            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
-            const char *want = str(expected, "result");
-            if ((want == NULL) != (result == NULL) || (want && strcmp(want, result)))
-                fail("metrics", label, result ? result : em_reason_name(error));
-            else if (!frames_equal(&out, cJSON_GetObjectItemCaseSensitive(expected, "frames")))
-                fail("metrics", label, "frames differ");
-            em_frames_free(&out);
-        }
-        const cJSON *counts = cJSON_GetObjectItemCaseSensitive(c, "expected_counts");
-        cJSON *policy_status = em_reporting_status(&r), *reporter_status = em_reporting_metrics_status(&r, &source);
-        cJSON *pc = counts_of(policy_status), *rc = counts_of(reporter_status);
-        checks++;
-        if (!cJSON_Compare(pc, cJSON_GetObjectItemCaseSensitive(counts, "policy"), 1) ||
-            !cJSON_Compare(rc, cJSON_GetObjectItemCaseSensitive(counts, "reporter"), 1))
-            fail("metrics", name, "counts differ");
-        checks++;
-        cJSON *kept = r.value ? cJSON_Duplicate(r.value, 1) : cJSON_CreateNull();
-        cJSON_DeleteItemFromObjectCaseSensitive(kept, "boot_id");
-        if (!cJSON_Compare(kept, cJSON_GetObjectItemCaseSensitive(c, "expected_policy"), 1)) {
-            fail("metrics", name, "kept policy differs");
-            if (getenv("EMOSA_VECTORS_DEBUG")) {
-                char *text = cJSON_PrintUnformatted(kept);
-                fprintf(stderr, "%s\n", text);
-                free(text);
-            }
-        }
-        cJSON_Delete(kept);
-        checks++;
-        cJSON *stored = em_policy_store_read(store);
-        if (!stored)
-            stored = cJSON_CreateNull();
-        cJSON_DeleteItemFromObjectCaseSensitive(stored, "boot_id");
-        if (!cJSON_Compare(stored, cJSON_GetObjectItemCaseSensitive(c, "expected_stored"), 1))
-            fail("metrics", name, "stored policy differs");
-        cJSON_Delete(stored);
-        cJSON_Delete(pc);
-        cJSON_Delete(rc);
-        cJSON_Delete(policy_status);
-        cJSON_Delete(reporter_status);
-        cJSON_Delete(r.value);
-        em_policy_store_close(store);
-        free(stats);
-        char cmd[128];
-        snprintf(cmd, sizeof(cmd), "rm -rf %s", path);
-        if (system(cmd)) {
-        }
+        if (ok)
+            em_device_view_parent_ap(two, ap->valuestring);
     }
+    cJSON_ArrayForEach(r, cJSON_GetObjectItemCaseSensitive(multi, "radios"))
+    {
+        uint8_t id[6];
+        const em_radio_view *found =
+            ok && nradios < EM_MAX_RADIOS && em_parse_mac(str(r, "ruid"), id) ? em_view_radio(two, id) : NULL;
+        if (!found) {
+            ok = false;
+            break;
+        }
+        /* the radio with only the BSSes the agent shows on it */
+        em_radio_view *v = &shown[nradios];
+        *v = *found;
+        v->nbss = 0;
+        const cJSON *bss;
+        cJSON_ArrayForEach(bss, cJSON_GetObjectItemCaseSensitive(r, "bsses"))
+        {
+            for (size_t i = 0; i < found->nbss; i++)
+                if (!strcmp(found->bss[i].if_name, bss->valuestring))
+                    v->bss[v->nbss++] = found->bss[i];
+        }
+        radios[nradios++] = (em_topology_radio){v, (int)num(r, "channel")};
+    }
+    if (!ok || nradios < 2 || !cJSON_GetArraySize(cJSON_GetObjectItemCaseSensitive(multi, "cases"))) {
+        fail("metrics", "multi_radio", "two-radio view");
+    } else {
+        cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(multi, "cases"))
+            metrics_case(c, agent, radios, nradios, controller, al, esp);
+    }
+    free(two);
+    free(shown);
     free(view);
     cJSON_Delete(doc);
 }

@@ -435,7 +435,7 @@ void em_reporting_tick(em_reporting *r, double now, bool admitted, const em_metr
         if (r->recent[i].until > now)
             r->recent[kept++] = r->recent[i];
     r->nrecent = kept;
-    if (r->closed || !r->value || !source || !source->radio)
+    if (r->closed || !r->value || !source || !source->nradios)
         return;
     if (!same_identity(r, r->value))
         return; /* an old intent cannot become another pod's or controller's policy */
@@ -492,7 +492,7 @@ const char *em_reporting_policy(em_reporting *r, const em_message *m, double now
 {
     em_reporting_tick(r, now, admitted, source, next_mid, mid_ctx, out);
     *error = EM_OK;
-    if (r->closed || !source || !source->radio) {
+    if (r->closed || !source || !source->nradios) {
         *error = EM_NOT_READY; /* "reporting policy source unavailable" */
         return NULL;
     }
@@ -669,19 +669,50 @@ static void u32(uint8_t *p, uint32_t v)
     p[3] = (uint8_t)v;
 }
 
+/* the last survey of a channel the pod reports, fresh, or NULL */
+static const em_survey_stats *survey_on(const em_metric_source *source, int channel, double now)
+{
+    for (size_t i = 0; i < source->stats->nsurveys; i++) {
+        const em_survey_stats *s = &source->stats->surveys[i];
+        if ((int)s->channel == channel)
+            return now - s->measured_at <= source->freshness ? s : NULL;
+    }
+    return NULL;
+}
+
+static void radio_metric_tlvs(const em_metric_source *source, const em_radio_view *radio, uint8_t util,
+                              const cJSON *policy, const uint8_t (*bssids)[6], size_t nbssids, double now,
+                              em_tlv_vec *out);
+
 bool em_pod_metric_tlvs(const em_metric_source *source, const cJSON *policy, const uint8_t (*bssids)[6],
                         size_t nbssids, em_tlv_vec *out)
 {
-    const em_pod_stats *stats = source->stats;
-    const em_radio_view *radio = source->radio;
     double now = source->wall();
-    if (!stats || !radio || !stats->nsurveys)
+    if (!source->stats || !source->nradios)
         return false;
-    const em_survey_stats *survey = &stats->surveys[0]; /* the first channel surveyed */
-    if (now - survey->measured_at > source->freshness)
-        return false; /* "no fresh channel survey from the pod" */
-    double scaled = rint((double)survey->busy_percent * 255.0 / 100.0); /* Python's round: ties to even */
-    uint8_t util = scaled < 0 ? 0 : scaled > 255 ? 255 : (uint8_t)scaled;
+    /* spec 9: each radio the agent shows, its utilization from the survey of its own channel; a
+     * radio without a fresh one is left out, nothing filled in */
+    bool surveyed = false;
+    for (size_t k = 0; k < source->nradios; k++) {
+        const em_survey_stats *survey = survey_on(source, source->radios[k].channel, now);
+        if (!survey)
+            continue;
+        surveyed = true;
+        double scaled = rint((double)survey->busy_percent * 255.0 / 100.0); /* Python's round: ties to even */
+        uint8_t util = scaled < 0 ? 0 : scaled > 255 ? 255 : (uint8_t)scaled;
+        radio_metric_tlvs(source, source->radios[k].radio, util, policy, bssids, nbssids, now, out);
+    }
+    if (!surveyed)
+        return false;    /* "no fresh channel survey from the pod" */
+    return out->count > 0; /* "no queried BSS of the pod" */
+}
+
+/* One radio's BSSes (all, or the queried ones): their AP Metrics and their stations'. */
+static void radio_metric_tlvs(const em_metric_source *source, const em_radio_view *radio, uint8_t util,
+                              const cJSON *policy, const uint8_t (*bssids)[6], size_t nbssids, double now,
+                              em_tlv_vec *out)
+{
+    const em_pod_stats *stats = source->stats;
     /* the radio's reporting policy: include traffic and link metrics */
     bool traffic = false, link = false;
     char *ruid = em_hex(radio->ruid, 6);
@@ -743,5 +774,4 @@ bool em_pod_metric_tlvs(const em_metric_source *source, const cJSON *policy, con
             }
         }
     }
-    return out->count > 0; /* "no queried BSS of the pod" */
 }

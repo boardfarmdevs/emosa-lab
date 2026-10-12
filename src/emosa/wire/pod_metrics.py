@@ -53,6 +53,17 @@ def unavailable(message):
     raise EmosaError(Reason.NOT_READY, message)
 
 
+def bss_channels(topology):
+    """{BSSID: channel} of the BSSes the Topology Response shows: each 802.11 interface's IEEE
+    1905.1 media-specific information (BSSID, role, band, channel centre index 1: the channel of
+    a 20 MHz BSS)."""
+    return {
+        i.mac: i.media_specific[8]
+        for i in topology.device.interfaces
+        if 0x0100 <= i.media_type <= 0x01FF and i.media_specific and len(i.media_specific) >= 10
+    }
+
+
 class PodMetricReporter:
     """AP Metrics Responses from the pod's statistics, queried and periodic."""
 
@@ -98,18 +109,30 @@ class PodMetricReporter:
         snapshot = self.source.current()
         if snapshot is None:
             unavailable("the pod's state is not available")
-        radios = snapshot.topology.operational.radios
-        if len(radios) != 1:
-            unavailable("one represented radio required")
-        radio, now = radios[0], self.wall()
+        now = self.wall()
         clients = {
             b.bssid: tuple(c.mac for c in b.clients) for b in snapshot.topology.clients.bsses
         }
-        channel = next((s.channel for s in self.stats.surveys.values()), None)
-        survey = self.stats.surveys.get(channel) if channel is not None else None
-        if survey is None or now - survey.measured_at > self.freshness:
+        # spec 9: each radio the agent shows, its utilization from the survey of its own channel
+        # (its BSSes'); a radio without a fresh one is left out
+        channels = bss_channels(snapshot.topology)
+        surveyed = []
+        for radio in snapshot.topology.operational.radios:
+            channel = next((channels[b.ap_mac] for b in radio.bsses if b.ap_mac in channels), None)
+            survey = self.stats.surveys.get(channel)
+            if survey is not None and now - survey.measured_at <= self.freshness:
+                surveyed.append((radio, utilization(survey.busy_percent)))
+        if not surveyed:
             unavailable("no fresh channel survey from the pod")
-        util = utilization(survey.busy_percent)
+        result = []
+        for radio, util in surveyed:
+            result += self._radio_tlvs(radio, util, clients, policy, bssids, now)
+        if not result:
+            unavailable("no queried BSS of the pod")
+        return result
+
+    def _radio_tlvs(self, radio, util, clients, policy, bssids, now):
+        """One radio's BSSes (all, or the queried ones): their AP Metrics and their stations'."""
         selected = self._radio_policy(policy, radio.ruid)
         result = []
         for bss in radio.bsses:
@@ -152,8 +175,6 @@ class PodMetricReporter:
                             + struct.pack("!3IB", age_ms, *rates, rcpi(station.snr_db)),
                         )
                     )
-        if not result:
-            unavailable("no queried BSS of the pod")
         return result
 
     def send(self, mid, deadline, policy, bssids=None):

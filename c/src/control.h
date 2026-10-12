@@ -44,6 +44,10 @@ typedef struct {
      * tx_power_dbm, max_eirp_dbm. */
     size_t nradios;
     em_control_radio radios[4];
+    /* the further radios the agent shows (spec 9), their BSSes and stations: a station on any of
+     * them is associated with the pod */
+    size_t nfurther;
+    const em_radio_view *further[3];
     int tx_power_dbm;           /* the operated power */
     int8_t max_eirp_dbm;        /* advertised */
     uint16_t previous_mid;      /* the agent's own messages take the next MIDs */

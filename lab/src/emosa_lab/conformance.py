@@ -1940,6 +1940,20 @@ def control_vectors():
             79,
             Tlv(0xA6, b"\x00\x02" + ruid + bytes.fromhex("0151020106") + second + b"\x00"),
         ),
+        one(  # heard on the second radio's channel 44: its 5 GHz probe measured; a station heard
+            # only on 2.4 GHz, and one asked about on 36 (no radio there), refused as not heard
+            "unassociated-query-second-radio",
+            0x800F,
+            85,
+            Tlv(
+                0x97,
+                bytes((115, 2, 44, 2))
+                + mac("02:00:00:00:95:95")
+                + mac("02:00:00:00:99:99")
+                + bytes((36, 1))
+                + mac("02:00:00:00:98:98"),
+            ),
+        ),
     ]
     # the second radio on UNII-3 channel 149 (V54's radio B): it advertises classes 115, 124
     # and 125, 149 operable in 124 and 125, and operates in 125
@@ -1970,7 +1984,14 @@ def control_vectors():
             84,
             Tlv(0xA6, b"\x00\x01" + second + b"\x00"),
         ),
+        one(  # asked in class 124 while the radio operates in 125: the same channel 149, heard
+            "unassociated-query-second-radio-149",
+            0x800F,
+            86,
+            Tlv(0x97, bytes((124, 1, 149, 1)) + mac("02:00:00:00:95:95")),
+        ),
     ]
+    measured |= {"unassociated-query-second-radio", "unassociated-query-second-radio-149"}
 
     def run(sequences, *, second_radio=None):
         return [run_case(name, frames, second_radio) for name, frames in sequences]
@@ -2411,12 +2432,13 @@ def onboarding_vectors():
 STATS_RECORDED = ROOT / "tests" / "fixtures" / "opensync" / "pod-6.6.1-hwsim-client-stats.hex"
 
 
-def survey_report(timestamp_ms, *, channel=6, busy=41):
-    """A raw on-channel survey publish (spec §3.8), built from the pinned schema."""
+def survey_report(timestamp_ms, *, channel=6, busy=41, band=0):
+    """A raw on-channel survey publish (spec §3.8), built from the pinned schema; band 0 is
+    2.4 GHz, 1 is 5 GHz."""
     from emosa.opensync.stats import Report
 
     report = Report(nodeID="")
-    survey = report.survey.add(band=0, survey_type=0, timestamp_ms=timestamp_ms)
+    survey = report.survey.add(band=band, survey_type=0, timestamp_ms=timestamp_ms)
     # sampled 1.5 s before the report's time (offset_ms = report time - sample time)
     sample = survey.survey_list.add(duration_ms=5000, busy=busy, offset_ms=1500)
     if channel is not None:
@@ -2531,13 +2553,13 @@ def telemetry_vectors():
     }
 
 
-def client_report(timestamp_ms, clients, *, channel=6):
+def client_report(timestamp_ms, clients, *, channel=6, band=0):
     """A raw client report publish (spec §3.6): clients as (mac, rssi, tx_rate, rx_rate,
     counters or None), each connected for the whole period."""
     from emosa.opensync.stats import Report
 
     report = Report(nodeID="")
-    radio = report.clients.add(band=0, channel=channel, timestamp_ms=timestamp_ms)
+    radio = report.clients.add(band=band, channel=channel, timestamp_ms=timestamp_ms)
     for station, rssi, tx_rate, rx_rate, counters in clients:
         client = radio.client_list.add(
             mac_address=station, ssid="private_ssid", connected=True, duration_ms=5000
@@ -2781,6 +2803,128 @@ def metrics_vectors():
             [(0.0, "frame", request(0x800B, 49, (Tlv(0x93, b"\x02" + bssid),)))],
         ),
     ]
+    binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
+
+    def run(cases, caps, facts, operating):
+        """Each case over the agent's reports (capabilities, topology, operating radios)."""
+        out = []
+        for name, publishes, steps, *kept in cases:
+            stored_before = kept[0] if kept else None  # a record on disk when the case starts
+            now = [0.0]
+            clock = lambda now=now: now[0]  # noqa: E731
+            # the report source is refreshed at every step's time, as the agent refreshes it
+            source = ReportSource(binding, "pod-1", "c" * 64, clock=clock)
+            stats = PodStats(topic, interval=5, clock=lambda: wall)
+            for payload in publishes:
+                stats.receive(topic, bytes.fromhex(payload))
+            sent = []
+            mids = MidSequence(499)
+            with tempfile.TemporaryDirectory() as directory:
+                store = ReportingPolicyStore(
+                    Path(directory) / "policy.sqlite", boot_id="conformance"
+                )
+                if stored_before is not None:
+                    store.save(stored_before)
+
+                def session(
+                    source=source, stats=stats, sent=sent, mids=mids, clock=clock, store=store
+                ):
+                    """The reporter and the policy coordinator of one session, as the agent
+                    creates them at each session's start."""
+                    holder = {}
+                    reporter = PodMetricReporter(
+                        source,
+                        stats,
+                        sent.append,
+                        mids,
+                        admitted=lambda: True,
+                        policy=lambda: (
+                            holder["policy"].value["policy"] if holder["policy"].value else {}
+                        ),
+                        esp_be=bytes.fromhex("3fff00"),
+                        freshness=3 * 5 + 5,
+                        clock=clock,
+                        wall=lambda: wall,
+                    )
+                    holder["policy"] = ReportingPolicyCoordinator(
+                        source, sent.append, store, reporter=reporter, clock=clock
+                    )
+                    return reporter, holder["policy"]
+
+                reporter, coordinator = session()
+                recorded = []
+                for index, (at, kind, frame) in enumerate(steps):
+                    now[0] = at
+                    source.publish(
+                        (1, 1 + index),
+                        caps,
+                        facts,
+                        observed_at=at,
+                        lifetime=1.5,
+                        operating_radios=operating,
+                    )
+                    before = len(sent)
+                    if kind == "tick":
+                        coordinator.tick()
+                        result = None
+                    elif kind == "session":  # a new session (or agent start) on the kept record
+                        coordinator.close()
+                        reporter, coordinator = session()
+                        result = None
+                    else:
+                        message = Reassembler().feed(frame)
+                        try:
+                            result = coordinator.handle(message, at)
+                            if result is None:
+                                result = reporter.handle(
+                                    message, at, ingress="conformance", generation=1
+                                )
+                        except EmosaError as exc:  # refused: its reason, and what was sent before
+                            result = exc.code.value
+                    recorded.append(
+                        {
+                            "at": at,
+                            **(
+                                {"request": frame.hex()}
+                                if frame is not None
+                                else {"session": True}
+                                if kind == "session"
+                                else {"tick": True}
+                            ),
+                            "expected": {
+                                "result": result,
+                                "frames": [f.hex() for f in sent[before:]],
+                            },
+                        }
+                    )
+                value = coordinator.value
+                stored = store.read()  # written only when a policy was received
+                coordinator.close()
+                store.close()
+            out.append(
+                {
+                    "name": name,
+                    **({"stored": plain(stored_before)} if stored_before is not None else {}),
+                    "publishes": publishes,
+                    "steps": recorded,
+                    "expected_counts": {
+                        "policy": dict(coordinator.counts),
+                        "reporter": dict(reporter.counts),
+                    },
+                    "expected_policy": plain(
+                        {k: v for k, v in (value or {}).items() if k not in ("boot_id",)}
+                    )
+                    if value
+                    else None,
+                    "expected_stored": plain(
+                        {k: v for k, v in (stored or {}).items() if k not in ("boot_id",)}
+                    )
+                    if stored
+                    else None,
+                }
+            )
+        return out
+
     view = device_view(decode(raw))
     radio = view.radio(ruid)
     caps = radio_capabilities(radio, channel=6, max_bss=5, max_eirp=30)
@@ -2792,116 +2936,70 @@ def metrics_vectors():
         bsses=radio.bsses,
         ages={mac(m): 10 for m in stations},
     )
-    binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
-    out = []
-    for name, publishes, steps, *kept in cases:
-        stored_before = kept[0] if kept else None  # a record on disk when the case starts
-        now = [0.0]
-        clock = lambda now=now: now[0]  # noqa: E731
-        # the report source is refreshed at every step's time, as the agent refreshes it
-        source = ReportSource(binding, "pod-1", "c" * 64, clock=clock)
-        stats = PodStats(topic, interval=5, clock=lambda: wall)
-        for payload in publishes:
-            stats.receive(topic, bytes.fromhex(payload))
-        sent = []
-        mids = MidSequence(499)
-        with tempfile.TemporaryDirectory() as directory:
-            store = ReportingPolicyStore(Path(directory) / "policy.sqlite", boot_id="conformance")
-            if stored_before is not None:
-                store.save(stored_before)
-
-            def session(source=source, stats=stats, sent=sent, mids=mids, clock=clock, store=store):
-                """The reporter and the policy coordinator of one session, as the agent
-                creates them at each session's start."""
-                holder = {}
-                reporter = PodMetricReporter(
-                    source,
-                    stats,
-                    sent.append,
-                    mids,
-                    admitted=lambda: True,
-                    policy=lambda: (
-                        holder["policy"].value["policy"] if holder["policy"].value else {}
-                    ),
-                    esp_be=bytes.fromhex("3fff00"),
-                    freshness=3 * 5 + 5,
-                    clock=clock,
-                    wall=lambda: wall,
-                )
-                holder["policy"] = ReportingPolicyCoordinator(
-                    source, sent.append, store, reporter=reporter, clock=clock
-                )
-                return reporter, holder["policy"]
-
-            reporter, coordinator = session()
-            recorded = []
-            for index, (at, kind, frame) in enumerate(steps):
-                now[0] = at
-                source.publish(
-                    (1, 1 + index),
-                    caps,
-                    facts,
-                    observed_at=at,
-                    lifetime=1.5,
-                    operating_radios=(OperatingRadio(ruid, 81, 6, radio.tx_power),),
-                )
-                before = len(sent)
-                if kind == "tick":
-                    coordinator.tick()
-                    result = None
-                elif kind == "session":  # a new session (or agent start) on the kept record
-                    coordinator.close()
-                    reporter, coordinator = session()
-                    result = None
-                else:
-                    message = Reassembler().feed(frame)
-                    try:
-                        result = coordinator.handle(message, at)
-                        if result is None:
-                            result = reporter.handle(
-                                message, at, ingress="conformance", generation=1
-                            )
-                    except EmosaError as exc:  # refused: its reason, and what was sent before
-                        result = exc.code.value
-                recorded.append(
-                    {
-                        "at": at,
-                        **(
-                            {"request": frame.hex()}
-                            if frame is not None
-                            else {"session": True}
-                            if kind == "session"
-                            else {"tick": True}
-                        ),
-                        "expected": {"result": result, "frames": [f.hex() for f in sent[before:]]},
-                    }
-                )
-            value = coordinator.value
-            stored = store.read()  # written only when a policy was received
-            coordinator.close()
-            store.close()
-        out.append(
-            {
-                "name": name,
-                **({"stored": plain(stored_before)} if stored_before is not None else {}),
-                "publishes": publishes,
-                "steps": recorded,
-                "expected_counts": {
-                    "policy": dict(coordinator.counts),
-                    "reporter": dict(reporter.counts),
-                },
-                "expected_policy": plain(
-                    {k: v for k, v in (value or {}).items() if k not in ("boot_id",)}
-                )
-                if value
-                else None,
-                "expected_stored": plain(
-                    {k: v for k, v in (stored or {}).items() if k not in ("boot_id",)}
-                )
-                if stored
-                else None,
-            }
-        )
+    out = run(cases, caps, facts, (OperatingRadio(ruid, 81, 6, radio.tx_power),))
+    # spec 9: a GRE parent that also shows its 5 GHz radio, b-ap-50 on it with a child pod
+    child = "02:00:00:00:0c:01"
+    two = with_child(with_parent_ap_50(raw), "b-ap-50", child)
+    view = device_view(decode(two), parent_aps=frozenset({"b-ap-50"}))
+    radio, five = view.radio(ruid), view.radio(mac(RUID_50))
+    parent_ap = five.bss("b-ap-50")
+    caps = radios_capabilities(((radio, 6, 5, 30), (five, 44, 1, 23)))
+    facts = topology(
+        agent_al=mac(AGENT),
+        controller_al=mac(CONTROLLER),
+        radio=radio,
+        channel=6,
+        bsses=radio.bsses,
+        ages={mac(m): 10 for m in (*stations, child)},
+        extra_radios=((five, (parent_ap,), 44),),
+    )
+    operating = (
+        OperatingRadio(ruid, 81, 6, radio.tx_power),
+        OperatingRadio(mac(RUID_50), 115, 44, five.tx_power),
+    )
+    second = mac(RUID_50)
+    policy_two = request(
+        0x8003,
+        16,
+        (
+            Tlv(0x89, b"\x00\x00\x02" + ruid + bytes.fromhex("023c78") + second + b"\x00\x3c\x78"),
+            Tlv(
+                0x8A,
+                b"\x05\x02" + ruid + bytes.fromhex("78053cc0") + second + bytes.fromhex("78053cc0"),
+            ),
+        ),
+    )
+    survey_50 = survey_report(int(wall * 1000) - 2000, channel=44, busy=17, band=1)
+    clients_50 = client_report(
+        int(wall * 1000) - 1000, [(child, 35, 433.3, 390.0, COUNTERS_FULL)], channel=44, band=1
+    )
+    both = [survey, survey_50, clients, clients_50]
+    each = [bssid, parent_ap.bssid]  # a query naming both radios' BSSes
+    multi = run(
+        [
+            # each radio's BSS with its own channel's utilization, its stations' metrics
+            (
+                "two-radios-each-surveyed",
+                both,
+                [(0.0, "frame", policy_two), (0.0, "frame", query(60, each))],
+            ),
+            # no survey of the 5 GHz radio's channel: its BSS is left out, nothing filled in
+            (
+                "two-radios-second-unsurveyed",
+                [survey, clients],
+                [(0.0, "frame", policy_two), (0.0, "frame", query(61, each))],
+            ),
+            (
+                "two-radios-query-second-unsurveyed",
+                [survey, clients],
+                [(0.0, "frame", policy_two), (0.0, "frame", query(62, [parent_ap.bssid]))],
+            ),
+            ("two-radios-periodic", both, [(0.0, "frame", policy_two), (5.0, "tick", None)]),
+        ],
+        caps,
+        facts,
+        operating,
+    )
     return {
         "description": "spec §2.4, §3.8: the Multi-AP Policy kept and the AP metrics reported "
         "from the pod's own statistics. The recorded pod rows (stations "
@@ -2932,6 +3030,23 @@ def metrics_vectors():
         "ovsdb_tables": raw,
         "stations": stations,
         "cases": out,
+        "multi_radio": {
+            "description": "spec 9: the same agent as a GRE parent that also shows its 5 GHz "
+            "radio "
+            + RUID_50
+            + " (class 115 channel 44), b-ap-50 on it with the child pod "
+            + child
+            + " (the rows below). Each radio's BSSes carry the utilization of the survey of "
+            "that radio's own channel; a radio with no fresh survey is left out of the response, "
+            "and a query naming only its BSS is not answered.",
+            "ovsdb_tables": two,
+            "parent_aps": ["b-ap-50"],
+            "radios": [
+                {"ruid": RUID, "channel": 6, "bsses": [b.if_name for b in radio.bsses]},
+                {"ruid": RUID_50, "channel": 44, "bsses": ["b-ap-50"]},
+            ],
+            "cases": multi,
+        },
     }
 
 

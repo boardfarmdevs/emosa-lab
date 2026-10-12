@@ -46,8 +46,9 @@ BAND_CLASSES = ((81,), (115, 124, 125))
 
 
 def advertised(operating_class):
-    """The classes a radio operating in this class advertises: every class of its band."""
-    return next(classes for classes in BAND_CLASSES if operating_class in classes)
+    """The classes a radio operating in this class advertises: every class of its band (none for
+    a class not mapped)."""
+    return next((classes for classes in BAND_CLASSES if operating_class in classes), ())
 
 
 @dataclass(frozen=True)

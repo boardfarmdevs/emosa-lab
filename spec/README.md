@@ -1199,6 +1199,13 @@ path is re-run. Carried with the second-radio work (§9).
   keeps the one it was reported on, so a move is one change). The unchanged M2 sets are observed
   applied without writing: `b-ap-<band>` moves with its radio, the pod's doing, and EMOSA neither
   recreates nor rewrites it. A moved fronthaul radio is still a different device (a new source).
+  AP metrics (§3.8) per radio: each radio's BSSes carry the utilization of the pod's survey of
+  that radio's own channel and their stations' metrics; a radio with no fresh survey is left out
+  of the response, nothing filled in. The pod's telemetry surveys and reports clients on the
+  fronthaul's band only, so today a second radio's BSS (`b-ap-<band>` and its child pods) is left
+  out: its own telemetry is open. An Unassociated STA Link Metrics Query (§3.9) is heard on any
+  of the agent's radios, on its channel in a class of its band (149 in 124 or 125), and a station
+  on any radio's BSS is associated.
   Both agents (box `second-radio-parent`, `second-radio-withdrawn`, `second-radio-moves-channel`).
   Known gap, to close before V54's end soaks: V54's radio B runs VHT 80 MHz on 149/80 (centre
   155), while EMOSA reports it in the 20 MHz classes with no HT, VHT or HE capability TLVs, so

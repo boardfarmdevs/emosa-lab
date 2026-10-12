@@ -670,9 +670,39 @@ static const char *class_band(uint8_t op_class)
 {
     if (op_class >= 81 && op_class <= 84)
         return "2.4G";
-    if ((op_class >= 115 && op_class <= 117) || op_class == 128)
+    if ((op_class >= 115 && op_class <= 117) || op_class == 124 || op_class == 125 || op_class == 128)
         return "5G";
     return NULL;
+}
+
+/* a station on a BSS of any radio the agent shows (spec 9) */
+static bool on_the_pod(const em_control *c, const uint8_t station[6])
+{
+    for (size_t r = 0; r <= c->nfurther; r++) {
+        const em_radio_view *radio = r ? c->further[r - 1] : c->radio;
+        for (size_t b = 0; b < radio->nbss; b++)
+            if (associated(&radio->bss[b], station))
+                return true;
+    }
+    return false;
+}
+
+/* a radio of the agent operates on this channel in a class of its band (spec 9: the second radio's
+ * 149 in class 124 or 125): the pod hears nothing off channel */
+static bool heard_on(const em_control *c, uint8_t op_class, uint8_t channel)
+{
+    em_control_radio radios[4];
+    size_t nradios = control_radios(c, radios);
+    for (size_t k = 0; k < nradios; k++) {
+        const uint8_t *classes;
+        size_t nclasses = advertised(radios[k].op_class, &classes);
+        bool in_band = false;
+        for (size_t i = 0; i < nclasses; i++)
+            in_band = in_band || classes[i] == op_class;
+        if (radios[k].measured && in_band && radios[k].channel == channel)
+            return true;
+    }
+    return false;
 }
 
 static double wall_now(const em_control *c)
@@ -737,19 +767,15 @@ static const char *unassociated(em_control *c, const em_message *m, em_frames *o
         *error = EM_INVALID_INPUT;
         return NULL;
     }
-    /* the represented radio's class and channel: the pod hears nothing off channel */
-    bool operating = c->radio->has_channel && !strcmp(c->radio->band, "2.4G");
     double now = wall_now(c);
     static em_tlv errors[64];
     static uint8_t values[64][7], body[2 + 64 * 12];
     size_t nerrors = 0, measured = 0;
     body[0] = op_class;
     for (size_t i = 0; i < n; i++) {
-        bool on_pod = false;
-        for (size_t b = 0; b < c->radio->nbss && !on_pod; b++)
-            on_pod = associated(&c->radio->bss[b], stations[i]);
+        bool on_pod = on_the_pod(c, stations[i]);
         const em_probe_stats *p = NULL;
-        if (!on_pod && operating && op_class == 81 && channels[i] == c->radio->channel && c->stats) {
+        if (!on_pod && heard_on(c, op_class, channels[i]) && c->stats) {
             char mac[18];
             EM_FORMAT_FIXED(mac, sizeof(mac), "%02x:%02x:%02x:%02x:%02x:%02x", stations[i][0],
                      stations[i][1], stations[i][2], stations[i][3], stations[i][4], stations[i][5]);
@@ -786,13 +812,9 @@ static const char *unassociated(em_control *c, const em_message *m, em_frames *o
     if (c->watch) { /* the stations asked about on the pod's own channel: watch their probes (§3.9) */
         static uint8_t heard[64][6];
         size_t nheard = 0;
-        for (size_t i = 0; i < n; i++) {
-            bool on_pod = false;
-            for (size_t b = 0; b < c->radio->nbss && !on_pod; b++)
-                on_pod = associated(&c->radio->bss[b], stations[i]);
-            if (!on_pod && operating && op_class == 81 && channels[i] == c->radio->channel)
+        for (size_t i = 0; i < n; i++)
+            if (!on_the_pod(c, stations[i]) && heard_on(c, op_class, channels[i]))
                 memcpy(heard[nheard++], stations[i], 6);
-        }
         if (nheard)
             c->watch(c->watch_ctx, (const uint8_t(*)[6])heard, nheard);
     }

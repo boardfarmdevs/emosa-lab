@@ -28,6 +28,7 @@ import time
 from emosa.errors import EmosaError, Reason
 from emosa.operating_classes import GLOBAL_OPERATING_CLASSES
 from emosa.wire.autoconfiguration import SECURITY_ENVELOPES
+from emosa.wire.channel import advertised
 from emosa.wire.cmdu import Tlv, fragment_message, invalid
 from emosa.wire.pod_metrics import rcpi
 from emosa.wire.reports import PreparedReport
@@ -134,11 +135,12 @@ class UnassociatedCoordinator:
             ),
         ).send(self.send_frame, lambda: self.snapshot().stamp, clock=self.clock)
 
-    def measure(self, op_class, channel, station, *, associated, operating, now):
-        """(channel, age ms, RCPI) of the station's last probe, or the refusal reason."""
+    def measure(self, op_class, channel, station, *, associated, heard, now):
+        """(channel, age ms, RCPI) of the station's last probe, or the refusal reason. ``heard``:
+        a radio of the pod operates on the class's channel."""
         if station in associated:
             return STA_ASSOCIATED
-        if operating is None or (op_class, channel) != operating:
+        if not heard:
             return STA_NOT_HEARD
         probe = self.probes.probe(station.hex(":")) if self.probes is not None else None
         if (
@@ -163,17 +165,22 @@ class UnassociatedCoordinator:
             raise EmosaError(Reason.NOT_READY, "unassociated station query Ack deadline expired")
         op_class, channels = decode_query(message.tlvs)
         snapshot = self.snapshot()
+        # a station on any BSS the agent shows, on any of its radios (spec 9)
         associated = {c.mac for b in snapshot.topology.clients.bsses for c in b.clients}
         radios = snapshot.operating_radios
-        operating = (radios[0].operating_class, radios[0].channel) if len(radios) == 1 else None
         now = self.wall()
         errors, measured, heard_here = [], [], []
         for channel, stations in channels:
-            if (op_class, channel) == operating:
+            # the pod hears nothing off channel: a radio of its own on this channel, in a class of
+            # that radio's band (spec 9: the second radio's 149 in class 124 or 125)
+            heard = any(
+                op_class in advertised(r.operating_class) and channel == r.channel for r in radios
+            )
+            if heard:
                 heard_here += [m for m in stations if m not in associated]
             for station in stations:
                 result = self.measure(
-                    op_class, channel, station, associated=associated, operating=operating, now=now
+                    op_class, channel, station, associated=associated, heard=heard, now=now
                 )
                 if isinstance(result, int):
                     errors.append(Tlv(ERROR_CODE_TLV, bytes([result]) + station))

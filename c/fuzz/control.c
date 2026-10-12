@@ -129,7 +129,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     em_bh_shared shared = {0};
     em_bh_coordinator bh = {0};
     em_bh_start(&bh, &shared, binding.controller_al, binding.local_al, bh_move, bh_outcome, NULL);
-    em_metric_source source = {radio, NULL, esp, 30.0, fixed_wall};
+    em_topology_radio shown = {radio, radio->channel};
+    em_metric_source source = {&shown, 1, NULL, esp, 30.0, fixed_wall};
     const uint8_t stations[1][6] = {{0x02, 0, 0, 0, 0x14, 0}};
     uint16_t mid = 0x2000;
     em_reassembler *r = em_reassembler_new(fixed_clock, NULL, 5.0, 8, 65536, 16384, 16);

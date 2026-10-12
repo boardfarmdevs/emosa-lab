@@ -220,6 +220,7 @@ typedef struct {
      * kept for one pod source (the fronthaul first) */
     radio_scope radio_scopes[EXTRA_RADIOS];
     size_t nradio_scopes;
+    em_topology_radio metric_radios[1 + EXTRA_RADIOS]; /* the radios of the last metric source */
     struct {
         uint8_t ruid[6];
         int8_t max_eirp;
@@ -274,10 +275,13 @@ typedef struct {
 static uint16_t next_mid(agent *a) { return ++a->mid; }
 static uint16_t next_mid_cb(void *ctx) { return next_mid(ctx); }
 
-/* what an AP Metrics Response is built from (spec §3.8) */
+static size_t shown_radios(const agent *a, em_topology_radio out[1 + EXTRA_RADIOS]);
+
+/* what an AP Metrics Response is built from (spec §3.8): every radio the agent shows (spec 9) */
 static em_metric_source metric_source(agent *a)
 {
-    return (em_metric_source){&a->represented, a->pod_metrics_on ? &a->stats : NULL, a->profile.esp_be,
+    size_t n = shown_radios(a, a->metric_radios);
+    return (em_metric_source){a->metric_radios, n, a->pod_metrics_on ? &a->stats : NULL, a->profile.esp_be,
                               a->freshness, wall};
 }
 
@@ -1472,10 +1476,13 @@ static void control_radios(agent *a)
     *f = (em_control_radio){.op_class = 81, .channel = a->represented.channel, .tx_power_dbm = a->tx_power,
                             .max_eirp_dbm = a->max_eirp, .measured = true};
     memcpy(f->ruid, a->represented.ruid, 6);
+    c->nfurther = 0;
     for (size_t k = 0; k < a->nradio_scopes && c->nradios < 4; k++) {
         const radio_scope *rs = &a->radio_scopes[k];
         if (!rs->bound)
             continue;
+        if (c->nfurther < sizeof(c->further) / sizeof(c->further[0]))
+            c->further[c->nfurther++] = &rs->represented; /* its BSSes and their stations */
         int8_t eirp = 20;
         for (size_t i = 0; i < a->nreported; i++)
             if (!memcmp(a->reported[i].ruid, rs->represented.ruid, 6))

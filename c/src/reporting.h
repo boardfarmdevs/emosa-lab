@@ -31,10 +31,12 @@ cJSON *em_policy_store_read(em_policy_store *s);
  * false when it exceeds the budget or SQLite refuses it. */
 bool em_policy_store_save(em_policy_store *s, const cJSON *value);
 
-/* What a report is built from: the represented radio (its BSSes and stations), the
- * pod's statistics and the declared ESP. NULL stats: no pod metrics. */
+/* What a report is built from: every radio the agent shows (its BSSes and stations, its channel;
+ * the fronthaul first, spec 9), the pod's statistics and the declared ESP. NULL stats: no pod
+ * metrics. Each radio's BSSes carry the utilization of the survey of its own channel. */
 typedef struct {
-    const em_radio_view *radio;
+    const em_topology_radio *radios;
+    size_t nradios;
     const em_pod_stats *stats;
     const uint8_t *esp_be; /* 3 octets */
     double freshness;      /* seconds a statistic stays current */
