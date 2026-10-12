@@ -138,8 +138,12 @@ def test_the_view_as_easymesh_payloads():
     (opclass,) = caps.radios[0].basic.operating_classes
     assert caps.radios[0].basic.ruid == RUID_24 and caps.radios[0].basic.max_bss == 1
     assert opclass.operating_class == 81 and 6 not in opclass.non_operable_channels
-    with pytest.raises(EmosaError):
-        radio_capabilities(view.radio(RUID_5), channel=44, max_bss=1, max_eirp=23)
+    # the second radio of spec 9: a 5 GHz radio is now mapped (UNII-1, opclass 115)
+    five = radio_capabilities(view.radio(RUID_5), channel=44, max_bss=1, max_eirp=23)
+    (five_opclass,) = five.radios[0].basic.operating_classes
+    assert five.radios[0].basic.ruid == RUID_5 and five_opclass.operating_class == 115
+    assert 44 not in five_opclass.non_operable_channels
+    assert set(five_opclass.non_operable_channels) == {36, 40, 48}
     assert inventory(view, radio).serial_number == SERIAL.encode()
     facts = topology(
         agent_al=AGENT,

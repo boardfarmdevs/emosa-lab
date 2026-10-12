@@ -75,7 +75,11 @@ from emosa.wire.topology_values import (
 FRONTHAUL, BACKHAUL = "fronthaul", "backhaul"
 REPORT_FLAGS = {FRONTHAUL: 0x40, BACKHAUL: 0x80}  # BSS Configuration Report
 # freq_band -> (global operating class of a 20 MHz channel, its channels)
-OPERATING_CLASSES = {"2.4G": (81, tuple(range(1, 14)))}
+# Global operating classes (802.11 Annex E / EasyMesh). The second radio of spec 9 runs on the
+# 5 GHz onboarding BSS's band, UNII-1 (opclass 115, 20 MHz, ch 36-48), which carries the pods'
+# bootstrap and the GRE parent AP b-ap-50 on rdk-1010 and V54's Pis. Wider 5 GHz sub-bands (118,
+# 121, 125) and 6 GHz are not mapped yet (spec 9).
+OPERATING_CLASSES = {"2.4G": (81, tuple(range(1, 14))), "5G": (115, (36, 40, 44, 48))}
 IEEE_802_11N_24 = 0x0103  # 1905.1 media type of an 802.11n 2.4 GHz interface
 MEDIA = {"2.4G": IEEE_802_11N_24, "5G": 0x0104}  # 802.11n per band (no HT claims beyond)
 AP_ROLE, STA_ROLE = 0x00, 0x40  # 1905.1 802.11 media-specific role: AP, non-AP STA
