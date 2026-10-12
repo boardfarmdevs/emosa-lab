@@ -105,6 +105,10 @@ class PodBackend(OpenSyncBackend):
         self.ht_mode = self.profile.ht_mode
         self.anchor = None
         self.identity = None  # radio MAC, BSSID (None before the VIF exists), channel, radio
+        # spec 9: the Wifi_Radio_Config uuid of each radio EMOSA binds, by band (the fronthaul's
+        # `band`, and each of the profile's additional radios), set by _binding for the slot
+        # rendering to place a slot on its own radio (a parent's b-ap-50 on 5 GHz)
+        self.radio_uuid_by_band = {}
 
     @property
     def parent_aps(self):
@@ -141,6 +145,20 @@ class PodBackend(OpenSyncBackend):
             raise EmosaError(Reason.NOT_READY, "no single radio of the bound band")
         radio_uuid, radio = radios[0]
         self.radio_name = radio.get("if_name")
+        # spec 9: the uuid of each radio EMOSA binds, by band - the fronthaul and each of the
+        # profile's additional radios present as a single Wifi_Radio_Config of that band, so the
+        # slot rendering can place a parent's b-ap-<band> on its own radio.
+        by_band = {self.band: radio_uuid}
+        for extra in self.profile.radios:
+            band = extra["band"]
+            of_band = [
+                u
+                for u, r in decoded.get("Wifi_Radio_Config", {}).items()
+                if r.get("freq_band") == band
+            ]
+            if len(of_band) == 1:
+                by_band[band] = of_band[0]
+        self.radio_uuid_by_band = by_band
         configs = [
             (u, r)
             for u, r in decoded.get("Wifi_VIF_Config", {}).items()

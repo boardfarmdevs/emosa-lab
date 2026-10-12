@@ -18,6 +18,7 @@ pytestmark = pytest.mark.unit
 
 NODE, RADIO, RADIO_STATE = (f"00000000-0000-4000-8000-00000000000{n}" for n in (1, 2, 3))
 VIF, VIF_STATE = "00000000-0000-4000-8000-000000000004", "00000000-0000-4000-8000-000000000005"
+RADIO_5G, RADIO_STATE_5G = (f"00000000-0000-4000-8000-00000000000{n}" for n in (6, 7))
 SERIAL = "MVXPOD0000000001"
 SECURITY = {
     "wpa": True,
@@ -68,6 +69,27 @@ def tables(**vif):
         },
         "Wifi_Associated_Clients": {},
     }
+
+
+def with_second_radio(raw, *, channel=36):
+    """Add a 5 GHz radio (spec 9's second radio) to a one-radio fixture, with no VIFs of its own."""
+    raw["Wifi_Radio_Config"][RADIO_5G] = {
+        "if_name": "wlan1",
+        "freq_band": "5G",
+        "enabled": True,
+        "vif_configs": ["set", []],
+    }
+    raw["Wifi_Radio_State"][RADIO_STATE_5G] = {
+        "if_name": "wlan1",
+        "radio_config": ["uuid", RADIO_5G],
+        "vif_states": ["set", []],
+        "freq_band": "5G",
+        "channel": channel,
+        "mac": "02:00:00:00:1b:00",
+        "enabled": True,
+        "country": "US",
+    }
+    return raw
 
 
 class Session:
@@ -417,6 +439,38 @@ def test_a_profile_without_additional_radios_has_an_empty_radios_tuple():
 
     assert profiles.load().radios == ()
     assert profiles.load().slot_bands == ()  # default: every slot on the fronthaul radio
+
+
+def test_binding_records_the_uuid_of_each_radio_by_band(tmp_path):
+    """Spec 9: _binding records the Wifi_Radio_Config uuid of the fronthaul and of each of the
+    profile's additional radios, by band, so the slot rendering can place a parent's b-ap-50 on
+    the 5 GHz radio. A single-radio profile records only the fronthaul."""
+    from emosa.opensync import profiles
+
+    data = json.loads(
+        (Path(profiles.__file__).parents[1] / "profiles" / f"{profiles.DEFAULT}.json").read_text()
+    )
+    data["radios"] = [{"band": "5G", "ht_mode": "HT40", "chipset": "mac80211_hwsim"}]
+    path = tmp_path / "two-radio.json"
+    path.write_text(json.dumps(data))
+    profile = profiles.load(str(path))
+    _, vault = multi(tmp_path)
+    pod = PodBackend(
+        "pod-1",
+        Session(with_second_radio(tables())),
+        vault,
+        serial=SERIAL,
+        multi_bss=True,
+        profile=profile,
+    )
+    asyncio.run(pod.snapshot())
+    assert pod.radio_uuid_by_band == {"2.4G": RADIO, "5G": RADIO_5G}
+    # a single-radio profile records just the fronthaul
+    single = PodBackend(
+        "pod-1", Session(tables()), vault, serial=SERIAL, multi_bss=True, profile=profiles.load()
+    )
+    asyncio.run(single.snapshot())
+    assert single.radio_uuid_by_band == {"2.4G": RADIO}
 
 
 def test_an_extra_slot_may_name_the_radio_its_vif_is_on(tmp_path):
