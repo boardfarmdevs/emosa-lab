@@ -244,6 +244,11 @@ def test_a_steer_onto_a_parent_and_back_reverts_to_the_bootstrap(agent, tmp_path
     assert result["passed"], result
 
 
+def test_a_pod_restart_during_a_move_is_reapplied_without_a_steer(agent, tmp_path):
+    result = box("restart-during-move", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_a_backhaul_steering_answer_is_kept_across_a_renewal(agent, tmp_path):
     result = box("backhaul-steering-renewal", agent, tmp_path / "box")
     assert result["passed"], result

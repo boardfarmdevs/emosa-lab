@@ -2111,6 +2111,41 @@ async def revert_by_record(box):
     )
 
 
+async def restart_during_move(box):
+    """Spec 8.6: a pod OpenSync restart during a move drops it (the DB is rebuilt and the pod
+    re-pins to its bootstrap by itself). EMOSA re-applies the active move from its persisted target
+    once the pod is back, with no new operator steer."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    await box.until(lambda: uplink_status(box).get("bootstrap"), seconds=30)
+    answered = len(box.sent(0x801A))
+    onto_mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, TARGET_PARENT),)
+    )
+    await box.until(lambda: box.controller.reply(ACK, onto_mid), seconds=5)
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline and not await pinned(box, TARGET_PARENT):
+        await asyncio.sleep(0.3)
+    await four_address(box, TARGET_PARENT)
+    onto = await next_message(box, 0x801A, answered, seconds=60)
+    onto_ok = onto is not None and steering_answer(onto) == (BACKHAUL_STATION, TARGET_PARENT, 0)
+    # the pod's OpenSync restarts: a fresh database, back on its bootstrap, the move dropped
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    await box.new_pod_database()
+    again = await provision(box, searches, m1s)
+    # EMOSA re-applies the move from its persisted target, with no new operator steer
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline and not await pinned(box, TARGET_PARENT):
+        await asyncio.sleep(0.3)
+    reapplied = await pinned(box, TARGET_PARENT)
+    return box.result(
+        passed=onto_ok and again and reapplied,
+        onto=steering_answer(onto),
+        provisioned_again=again,
+        reapplied_without_a_steer=reapplied,
+    )
+
+
 async def backhaul_steering_own_bss(box):
     """Suite finding (a pod's station on its own backhaul BSS loops br-home): a Backhaul
     Steering Request whose target is one of the pod's own BSSes is refused at once, failure
@@ -3136,6 +3171,7 @@ SCENARIOS = {
     "backhaul-capability": backhaul_capability,
     "backhaul-steering": backhaul_steering,
     "revert-by-record": revert_by_record,
+    "restart-during-move": restart_during_move,
     "backhaul-steering-renewal": backhaul_steering_renewal,
     "backhaul-steering-refused": backhaul_steering_refused,
     "backhaul-steering-own-bss": backhaul_steering_own_bss,
@@ -3167,6 +3203,17 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "backhaul-capability": {"backhaul": True},
     "backhaul-steering": {"backhaul": True},
     "revert-by-record": {
+        "backhaul": True,
+        "bootstrap": True,
+        "uplink": {
+            "mode": "gre",
+            "station": "bhaul-sta-24",
+            "credentials": "config",
+            "ssid": "emosa-lab-bh",
+            "secret_ref": "backhaul",
+        },
+    },
+    "restart-during-move": {
         "backhaul": True,
         "bootstrap": True,
         "uplink": {
