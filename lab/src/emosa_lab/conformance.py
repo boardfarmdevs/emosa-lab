@@ -24,7 +24,7 @@ from unittest import mock
 from emosa.agent.fleet import Fleet, agent_config, derive_al
 from emosa.easymesh_payloads import encode_value
 from emosa.errors import EmosaError, Reason
-from emosa.model import ACTIVE, Intent
+from emosa.model import ACTIVE, Intent, RadioIntent
 from emosa.opensync.easymesh_view import (
     backhaul,
     backhaul_radios,
@@ -33,7 +33,7 @@ from emosa.opensync.easymesh_view import (
     radio_capabilities,
     topology,
 )
-from emosa.opensync.pod_profile import PodBackend
+from emosa.opensync.pod_profile import PodBackend, RadioBackend
 from emosa.opensync.profiles import DEFAULT
 from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.schema import Schema, reference_path
@@ -52,6 +52,8 @@ UPLINK_ROWS = {  # recorded: a pod on its bootstrap GRE uplink, and one on a Mul
 }
 SERIAL = "MVXPOD023F87E628DD"
 RUID = "02:00:00:00:01:00"
+RUID_50 = "02:00:00:00:05:00"  # the recorded pod's 5 GHz radio (phy5)
+GRE_5G = "opensync-lab-hwsim-6.6.1-gre-5g-v1"  # a GRE parent's AP on its 5 GHz radio (spec 9)
 AGENT = "02:72:f9:7f:07:85"
 CONTROLLER = "02:00:00:e0:00:01"
 PASSPHRASES = {  # public test values; a real passphrase never appears in a vector
@@ -113,6 +115,43 @@ def with_backhaul_slot(raw):
     ):
         radio = next(r for r in raw[table].values() if r["freq_band"] == "2.4G")
         present = radio[column][1] if radio[column][0] == "set" else [radio[column]]
+        radio[column] = ["set", [*present, ["uuid", uuid]]]
+    return raw
+
+
+def with_parent_ap_50(raw):
+    """The recorded pod plus the GRE parent AP b-ap-50 on its 5 GHz radio (beside the pod's
+    bhaul-sta-50), as that radio's own M2 creates it (spec 9)."""
+    raw = copy.deepcopy(raw)
+    config_uuid = "00000000-0000-4000-8000-0000000000b5"
+    state_uuid = "00000000-0000-4000-8000-0000000000b6"
+    home = next(r for r in raw["Wifi_VIF_Config"].values() if r["if_name"] == "home-ap-24")
+    raw["Wifi_VIF_Config"][config_uuid] = {
+        **home,
+        "if_name": "b-ap-50",
+        "ssid": "emosa-bh",
+        "multi_ap": "none",
+        "bridge": "",
+        "ap_bridge": False,
+        "ssid_broadcast": "disabled",
+    }
+    state = next(r for r in raw["Wifi_VIF_State"].values() if r["if_name"] == "home-ap-24")
+    raw["Wifi_VIF_State"][state_uuid] = {
+        **state,
+        "if_name": "b-ap-50",
+        "vif_config": ["uuid", config_uuid],
+        "mac": "82:00:00:00:05:00",
+        "ssid": "emosa-bh",
+        "multi_ap": "none",
+        "associated_clients": ["set", []],
+    }
+    for table, uuid, column in (
+        ("Wifi_Radio_Config", config_uuid, "vif_configs"),
+        ("Wifi_Radio_State", state_uuid, "vif_states"),
+    ):
+        radio = next(r for r in raw[table].values() if r["freq_band"] == "5G")
+        value = radio.get(column, ["set", []])
+        present = value[1] if value[0] == "set" else [value]
         radio[column] = ["set", [*present, ["uuid", uuid]]]
     return raw
 
@@ -312,31 +351,39 @@ class Recorder:
         return [replies.get(op["op"], {"count": 1}) for op in operations]
 
 
-def southbound_case(name, raw, intent, *, multi_bss, profile=DEFAULT, underlay=None):
+def southbound_case(name, raw, intent, *, multi_bss, profile=DEFAULT, underlay=None, radio=None):
+    """``radio``: the band of one of the profile's further radios, whose own scope takes the
+    intent (spec 9: its M2 set's BSSes fitted to its slots, no primary BSS)."""
     with tempfile.TemporaryDirectory() as directory:
         vault = SecretStore(Path(directory) / "secrets")
         for ref, passphrase in PASSPHRASES.items():
             vault.write_simulated(ref, passphrase)
         session = Recorder(copy.deepcopy(raw))
-        backend = PodBackend(
-            "pod-1",
-            session,
-            vault,
-            serial=SERIAL,
-            multi_bss=multi_bss,
-            profile=load_profile(profile),
-            underlay=underlay,
+        common = {
+            "serial": SERIAL,
+            "multi_bss": multi_bss,
+            "profile": load_profile(profile),
+            "underlay": underlay,
+        }
+        backend = (
+            RadioBackend("pod-1", session, vault, band=radio, **common)
+            if radio
+            else PodBackend("pod-1", session, vault, **common)
         )
 
         async def run():
             await backend.snapshot()
-            value = Intent(
-                "pod-1",
-                "radio-1",
-                "bss-1",
-                intent["ssid"],
-                intent["secret_ref"],
-                additional=tuple(intent["additional"]) if intent.get("additional") else None,
+            value = (
+                RadioIntent("pod-1", backend.radio_id, tuple(intent["additional"]))
+                if radio
+                else Intent(
+                    "pod-1",
+                    "radio-1",
+                    "bss-1",
+                    intent["ssid"],
+                    intent["secret_ref"],
+                    additional=tuple(intent["additional"]) if intent.get("additional") else None,
+                )
             )
             await backend.plan(value)
             return await backend.submit(
@@ -356,6 +403,7 @@ def southbound_case(name, raw, intent, *, multi_bss, profile=DEFAULT, underlay=N
         "profile": profile,
         "multi_bss": multi_bss,
         **({"underlay": underlay} if underlay else {}),
+        **({"radio": radio} if radio else {}),
         "intent": intent,
         "passphrases": PASSPHRASES,
         "expected": {"status": result.status, "transactions": session.sent},
@@ -372,7 +420,9 @@ def southbound_vectors():
     return {
         "description": "spec §3.2, §3.4: an accepted M2 intent against pod rows, and the "
         "exact OVSDB transaction(s) sent. Passphrases are public test values by reference. "
-        "Each case names its pod profile, and a GRE parent's case its underlay (spec 8.6).",
+        "Each case names its pod profile, and a GRE parent's case its underlay (spec 8.6). "
+        "A case naming a radio (a band) goes to that further radio's own scope (spec 9): its "
+        "intent is only the BSSes of that radio's M2 set fitted to its slots.",
         "cases": [
             southbound_case("update-fronthaul", pod_rows(), primary, multi_bss=False),
             southbound_case("cold-pod-create", cold(pod_rows()), primary, multi_bss=False),
@@ -389,6 +439,36 @@ def southbound_vectors():
                 {**primary, "additional": rdk_set},
                 multi_bss=True,
                 profile="opensync-lab-hwsim-6.6.1-gre-v1",
+                underlay="169.254.2.0/24",
+            ),
+            # spec 9: the 5 GHz radio's own scope makes its set's backhaul BSS the parent AP
+            # b-ap-50 on that radio: its references only, no channel, the radio's if_name guard
+            southbound_case(
+                "second-radio-parent-ap",
+                pod_rows(),
+                {"additional": [rdk_set[2]]},
+                multi_bss=True,
+                profile=GRE_5G,
+                underlay="169.254.2.0/24",
+                radio="5G",
+            ),
+            # withdrawal by band: that radio's set without a backhaul BSS removes b-ap-50
+            southbound_case(
+                "second-radio-withdrawn",
+                with_parent_ap_50(pod_rows()),
+                {"additional": []},
+                multi_bss=True,
+                profile=GRE_5G,
+                underlay="169.254.2.0/24",
+                radio="5G",
+            ),
+            # the 2.4 GHz radio's scope owns only the slots on its radio: b-ap-50 untouched
+            southbound_case(
+                "fronthaul-leaves-second-radio",
+                with_parent_ap_50(pod_rows()),
+                {**primary, "additional": rdk_set[:2]},
+                multi_bss=True,
+                profile=GRE_5G,
                 underlay="169.254.2.0/24",
             ),
         ],

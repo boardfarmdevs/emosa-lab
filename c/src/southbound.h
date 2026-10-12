@@ -18,7 +18,12 @@ typedef struct {
     struct {
         const char *if_name, *role;
         int vif_radio_idx;
+        const char *band; /* the radio its VIF is on (spec 9); NULL: the fronthaul's `band` */
     } slots[8];
+    /* radios: the further radios EMOSA binds beyond the fronthaul's (spec 9), by band ("5G",
+     * "6G"), each its own write scope configured by its own M2 */
+    size_t nradios;
+    const char *radio_bands[2];
     bool has_esp_be;
     uint8_t esp_be[3]; /* ap_metrics.esp_be: the declared best-effort ESP */
     /* uplink.stations: the pod's backhaul station on each band ("2.4G", "5G", "6G"), for a move
@@ -33,8 +38,14 @@ typedef struct {
 
 em_reason em_profile_load(const char *path, em_profile *out);
 void em_profile_free(em_profile *p);
-/* The slot VIF `name` is the pod's GRE parent AP: a gre-parent profile's backhaul slot. */
+/* The slot VIF `name` is the pod's GRE parent AP: a gre-parent profile's backhaul slot, on any
+ * of the pod's radios. */
 bool em_profile_parent_slot(const em_profile *p, const char *name);
+/* A view of the profile whose slots are those on the radio of `band` (pod_profile.slots_on),
+ * none without multi_bss; it shares p's document and is never freed itself. */
+em_profile em_profile_slots_on(const em_profile *p, const char *band, bool multi_bss);
+/* `band` is one of the profile's further radios (spec 9). */
+bool em_profile_has_radio(const em_profile *p, const char *band);
 
 /* The pod's OVSDB, as the scopes use it: a snapshot of raw tables and transact. */
 typedef struct {
@@ -69,6 +80,14 @@ typedef struct {
 em_reason em_ap_submit(const em_profile *profile, const char *serial, bool multi_bss,
                        const char *underlay, em_ovs_session *session, const em_ap_intent *intent,
                        em_secret_resolver resolve, void *resolve_ctx, em_submit_result *out);
+
+/* A further radio's scope (spec 9, RadioBackend.submit): make its slot VIFs on the radio of
+ * `band` exactly the intent's additional BSSes (the BSSes of that radio's own M2 set fitted to
+ * its slots; intent->ssid and secret_ref unused). Guards the pod and the radio's if_name only,
+ * writes no channel or ht_mode, and inserts or deletes only its own vif_configs references. */
+em_reason em_radio_submit(const em_profile *profile, const char *serial, const char *band, bool multi_bss,
+                          const char *underlay, em_ovs_session *session, const em_ap_intent *intent,
+                          em_secret_resolver resolve, void *resolve_ctx, em_submit_result *out);
 
 /* One steering mandate on the pod (spec §3.7). */
 typedef struct {

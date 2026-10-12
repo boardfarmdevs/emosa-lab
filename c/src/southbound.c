@@ -66,11 +66,26 @@ em_reason em_profile_load(const char *path, em_profile *out)
         out->slots[out->nslots].if_name = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(slot, "if_name"));
         out->slots[out->nslots].role = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(slot, "role"));
         out->slots[out->nslots].vif_radio_idx = cJSON_GetObjectItemCaseSensitive(slot, "vif_radio_idx")->valueint;
+        out->slots[out->nslots].band = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(slot, "band"));
         out->nslots++;
     }
     if (!out->id || !out->band || !out->ht_mode || !out->fronthaul_if || !out->fronthaul_vif ||
         !out->backhaul_vif || !out->inet)
         goto invalid;
+    /* one radio per band, the further ones besides the fronthaul's (spec 9), and every slot on
+     * one of them: a slot on a radio the profile does not bind would never be served */
+    const cJSON *extra_radio;
+    cJSON_ArrayForEach(extra_radio, cJSON_GetObjectItemCaseSensitive(d, "radios"))
+    {
+        const char *band = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(extra_radio, "band"));
+        if (out->nradios == 2 || !band || !strcmp(band, out->band) || em_profile_has_radio(out, band))
+            goto invalid;
+        out->radio_bands[out->nradios++] = band;
+    }
+    for (size_t i = 0; i < out->nslots; i++)
+        if (out->slots[i].band && strcmp(out->slots[i].band, out->band) &&
+            !em_profile_has_radio(out, out->slots[i].band))
+            goto invalid;
     return EM_OK;
 invalid:
     em_profile_free(out);
@@ -81,6 +96,24 @@ void em_profile_free(em_profile *p)
 {
     cJSON_Delete(p->doc);
     memset(p, 0, sizeof(*p));
+}
+
+bool em_profile_has_radio(const em_profile *p, const char *band)
+{
+    for (size_t i = 0; band && i < p->nradios; i++)
+        if (!strcmp(p->radio_bands[i], band))
+            return true;
+    return false;
+}
+
+em_profile em_profile_slots_on(const em_profile *p, const char *band, bool multi_bss)
+{
+    em_profile view = *p;
+    view.nslots = 0;
+    for (size_t i = 0; multi_bss && i < p->nslots; i++)
+        if (!strcmp(p->slots[i].band ? p->slots[i].band : p->band, band))
+            view.slots[view.nslots++] = p->slots[i];
+    return view;
 }
 
 bool em_profile_parent_slot(const em_profile *p, const char *name)
@@ -314,7 +347,10 @@ typedef struct {
     bool identity;
 } binding;
 
-static em_reason bind(const em_profile *p, const char *serial, const em_ovs_session *s, binding *b)
+/* The pod and its one radio of `band`; on the fronthaul's band also the bound fronthaul VIF (a
+ * further radio's scope has none, spec 9). */
+static em_reason bind(const em_profile *p, const char *serial, const em_ovs_session *s, const char *band,
+                      binding *b)
 {
     memset(b, 0, sizeof(*b));
     const cJSON *nodes = table(s, "AWLAN_Node"), *row;
@@ -325,8 +361,8 @@ static em_reason bind(const em_profile *p, const char *serial, const em_ovs_sess
     int radios = 0;
     cJSON_ArrayForEach(row, table(s, "Wifi_Radio_Config"))
     {
-        const char *band = ovs_str(row, "freq_band");
-        if (band && !strcmp(band, p->band)) {
+        const char *freq_band = ovs_str(row, "freq_band");
+        if (freq_band && !strcmp(freq_band, band)) {
             radios++;
             b->radio_uuid = row->string;
             b->radio = row;
@@ -334,11 +370,12 @@ static em_reason bind(const em_profile *p, const char *serial, const em_ovs_sess
     }
     if (radios != 1)
         return EM_NOT_READY;
+    bool fronthaul = !strcmp(band, p->band);
     int configs = 0;
     cJSON_ArrayForEach(row, table(s, "Wifi_VIF_Config"))
     {
         const char *name = ovs_str(row, "if_name");
-        if (name && !strcmp(name, p->fronthaul_if)) {
+        if (fronthaul && name && !strcmp(name, p->fronthaul_if)) {
             configs++;
             b->vif_uuid = row->string;
             b->config = row;
@@ -544,28 +581,198 @@ static cJSON *parent_inet(const em_profile *p, const char *name, const char *und
 
 #define PUSH(o, n) (cJSON_AddItemToArray(ops, (o)), counts[nops++] = (n))
 
+/* Make the scope's slot VIFs on its radio exactly the intent's additional BSSes
+ * (PodBackend._extra_ops): `own` the profile's slots on that radio, `found` those present.
+ * *lost: the Inet names could not be read (the submit's outcome is unknown). */
+static em_reason slot_ops(const em_profile *p, const em_profile *own, const char *radio_uuid,
+                          const extra *found, const int *bss_of_slot, const em_ap_intent *intent,
+                          const char *underlay, em_ovs_session *s, em_secret_resolver resolve,
+                          void *resolve_ctx, cJSON *ops, int *counts, size_t *pushed, bool *lost)
+{
+    cJSON *names = cJSON_CreateArray();
+    if (!inet_names(s, names)) {
+        cJSON_Delete(names);
+        *lost = true;
+        return EM_OK;
+    }
+    size_t nops = *pushed;
+    em_reason r = EM_OK;
+    for (size_t i = 0; r == EM_OK && i < own->nslots; i++) {
+        const char *name = own->slots[i].if_name;
+        if (found[i].uuid) {
+            const char *cols[12];
+            size_t nc = 0;
+            for (size_t k = 0; k < 11; k++)
+                if (cJSON_GetObjectItemCaseSensitive(found[i].config, VIF_GUARDS[k]))
+                    cols[nc++] = VIF_GUARDS[k];
+            if (cJSON_GetObjectItemCaseSensitive(found[i].config, "multi_ap"))
+                cols[nc++] = "multi_ap";
+            PUSH(guard("Wifi_VIF_Config", found[i].uuid, found[i].config, cols, nc), -1);
+        }
+        int k = bss_of_slot[i];
+        if (k < 0 && found[i].uuid) {
+            PUSH(vif_configs_mutate(radio_uuid, "delete", uuid_ref(found[i].uuid)), 1);
+            PUSH(op("delete", "Wifi_VIF_Config", where_uuid(found[i].uuid)), 1);
+            if (has_name(names, name))
+                PUSH(op("delete", "Wifi_Inet_Config", where_eq("if_name", name)), -1);
+        } else if (k >= 0) {
+            cJSON *base = cJSON_CreateObject();
+            merge(base, p->fronthaul_vif, NULL);
+            if (!strcmp(own->slots[i].role, "backhaul"))
+                merge(base, p->backhaul_vif, NULL);
+            bool parent = em_profile_parent_slot(p, name);
+            if (parent)
+                set_parent(base, p);
+            else
+                set_role(base, own->slots[i].role);
+            const char *bkey = resolve(resolve_ctx, intent->additional[k].secret_ref);
+            if (!bkey) {
+                cJSON_Delete(base);
+                r = EM_INVALID_INPUT;
+                break;
+            }
+            if (found[i].uuid) {
+                cJSON *upd = op("update", "Wifi_VIF_Config", where_uuid(found[i].uuid)), *row = cJSON_CreateObject();
+                merge(row, base, "vif_radio_idx");
+                cJSON_DeleteItemFromObjectCaseSensitive(row, "ssid");
+                cJSON_AddStringToObject(row, "ssid", intent->additional[k].ssid);
+                cJSON_AddItemToObject(upd, "row", row);
+                PUSH(upd, 1);
+                PUSH(psk_mutate(found[i].uuid, found[i].config, bkey), 1);
+            } else {
+                char label[32];
+                EM_FORMAT_FIXED(label, sizeof(label), "extra%zu", i);
+                PUSH(absent("Wifi_VIF_Config", where_eq("if_name", name), "if_name"), -1);
+                cJSON *ins = op("insert", "Wifi_VIF_Config", NULL), *row = cJSON_CreateObject();
+                cJSON_AddStringToObject(ins, "uuid-name", label);
+                merge(row, base, NULL);
+                const char *keys[4] = {"if_name", "ssid", "vif_radio_idx", "wpa_psks"};
+                for (int x = 0; x < 4; x++)
+                    cJSON_DeleteItemFromObjectCaseSensitive(row, keys[x]);
+                cJSON_AddStringToObject(row, "if_name", name);
+                cJSON_AddStringToObject(row, "ssid", intent->additional[k].ssid);
+                cJSON_AddNumberToObject(row, "vif_radio_idx", own->slots[i].vif_radio_idx);
+                cJSON_AddItemToObject(row, "wpa_psks", psk_map(bkey));
+                cJSON_AddItemToObject(ins, "row", row);
+                PUSH(ins, -1);
+                PUSH(vif_configs_mutate(radio_uuid, "insert", named(label)), 1);
+            }
+            cJSON_Delete(base);
+            if (parent) {
+                /* the underlay's address and DHCP, in place of a Multi-AP slot's row */
+                cJSON *row = parent_inet(p, name, underlay);
+                if (!row) {
+                    r = EM_INVALID_INPUT;
+                    break;
+                }
+                if (has_name(names, name)) {
+                    cJSON_DeleteItemFromObjectCaseSensitive(row, "if_name");
+                    cJSON *uo = op("update", "Wifi_Inet_Config", where_eq("if_name", name));
+                    cJSON_AddItemToObject(uo, "row", row);
+                    PUSH(uo, -1);
+                } else {
+                    cJSON *io = op("insert", "Wifi_Inet_Config", NULL);
+                    cJSON_AddItemToObject(io, "row", row);
+                    PUSH(io, -1);
+                }
+            } else if (!has_name(names, name)) {
+                cJSON *io = op("insert", "Wifi_Inet_Config", NULL);
+                cJSON_AddItemToObject(io, "row", inet_row(p, name));
+                PUSH(io, -1);
+            }
+        }
+    }
+    cJSON_Delete(names);
+    *pushed = nops;
+    return r;
+}
+
+/* the guard that the pod is still the bound serial */
+static cJSON *node_guard(const char *node_uuid, const char *serial)
+{
+    cJSON *o = op("wait", "AWLAN_Node", cJSON_CreateArray()), *rows = cJSON_CreateArray(), *v = cJSON_CreateObject();
+    const char *cols[2] = {"_uuid", "serial_number"};
+    cJSON_AddItemToObject(v, "_uuid", uuid_ref(node_uuid));
+    cJSON_AddStringToObject(v, "serial_number", serial);
+    cJSON_AddItemToArray(rows, v);
+    cJSON_AddItemToObject(o, "columns", strings(cols, 2));
+    cJSON_AddStringToObject(o, "until", "==");
+    cJSON_AddItemToObject(o, "rows", rows);
+    cJSON_AddNumberToObject(o, "timeout", 0);
+    return o;
+}
+
+/* the intent's slots, assigned; a GRE parent AP among them needs the underlay (spec 8.6) */
+static em_reason assigned(const em_profile *p, const em_profile *own, const em_ap_intent *intent,
+                          const char *underlay, int *bss_of_slot)
+{
+    em_reason r = assign(own, intent, bss_of_slot);
+    for (size_t i = 0; r == EM_OK && i < own->nslots; i++)
+        if (bss_of_slot[i] >= 0 && !underlay && em_profile_parent_slot(p, own->slots[i].if_name))
+            r = EM_UNSUPPORTED_OPERATION; /* a GRE parent AP needs the pod's underlay (spec 8.6) */
+    return r;
+}
+
+em_reason em_radio_submit(const em_profile *p, const char *serial, const char *band, bool multi_bss,
+                          const char *underlay, em_ovs_session *s, const em_ap_intent *intent,
+                          em_secret_resolver resolve, void *resolve_ctx, em_submit_result *out)
+{
+    memset(out, 0, sizeof(*out));
+    if (!em_profile_has_radio(p, band))
+        return EM_UNSUPPORTED_OPERATION; /* request exceeds the bound radio */
+    em_profile own = em_profile_slots_on(p, band, multi_bss);
+    int bss_of_slot[8];
+    em_reason r = assigned(p, &own, intent, underlay, bss_of_slot);
+    if (r != EM_OK)
+        return r;
+    binding b;
+    if ((r = bind(p, serial, s, band, &b)) != EM_OK)
+        return r;
+    if (!b.identity)
+        return EM_NOT_READY; /* complete current references and state required */
+    extra found[8];
+    if ((r = extras(&own, s, &b, found)) != EM_OK)
+        return r;
+    cJSON *ops = cJSON_CreateArray();
+    int counts[64];
+    size_t nops = 0;
+    PUSH(node_guard(b.node_uuid, serial), -1);
+    /* the radio's identity only: its vif_configs also hold the pod's own station, which the pod
+     * may change at any time; EMOSA's insert/delete of its own references is atomic */
+    const char *radio_cols[1] = {"if_name"};
+    PUSH(guard("Wifi_Radio_Config", b.radio_uuid, b.radio, radio_cols, 1), -1);
+    bool lost = false;
+    r = slot_ops(p, &own, b.radio_uuid, found, bss_of_slot, intent, underlay, s, resolve, resolve_ctx, ops,
+                 counts, &nops, &lost);
+    if (r == EM_OK && lost) {
+        strcpy(out->status, "unknown");
+        out->reason = EM_OUTCOME_UNKNOWN;
+    } else if (r == EM_OK) {
+        commit(s, ops, counts, out, NULL);
+    }
+    cJSON_Delete(ops);
+    return r;
+}
+
 em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
                        const char *underlay, em_ovs_session *s, const em_ap_intent *intent,
                        em_secret_resolver resolve, void *resolve_ctx, em_submit_result *out)
 {
     memset(out, 0, sizeof(*out));
-    size_t nslots = multi_bss ? p->nslots : 0;
+    /* one M2 configures one radio (spec 9): the fronthaul's scope owns the slots on its radio */
+    em_profile slots_view = em_profile_slots_on(p, p->band, multi_bss);
+    size_t nslots = slots_view.nslots;
     if (intent->nadditional && !nslots)
         return EM_UNSUPPORTED_OPERATION; /* this radio maps one BSS */
-    em_profile slots_view = *p;
-    slots_view.nslots = nslots;
     const char *key = resolve(resolve_ctx, intent->secret_ref);
     if (!key)
         return EM_INVALID_INPUT;
     int bss_of_slot[8];
-    em_reason r = assign(&slots_view, intent, bss_of_slot);
+    em_reason r = assigned(p, &slots_view, intent, underlay, bss_of_slot);
     if (r != EM_OK)
         return r;
-    for (size_t i = 0; i < nslots; i++)
-        if (bss_of_slot[i] >= 0 && !underlay && em_profile_parent_slot(p, p->slots[i].if_name))
-            return EM_UNSUPPORTED_OPERATION; /* a GRE parent AP needs the pod's underlay (spec 8.6) */
     binding b;
-    if ((r = bind(p, serial, s, &b)) != EM_OK)
+    if ((r = bind(p, serial, s, p->band, &b)) != EM_OK)
         return r;
     if (!b.identity)
         return EM_NOT_READY; /* complete current references and state required */
@@ -582,20 +789,7 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
     cJSON *ops = cJSON_CreateArray();
     int counts[64];
     size_t nops = 0;
-    /* the node guard */
-    {
-        cJSON *o = op("wait", "AWLAN_Node", cJSON_CreateArray()), *rows = cJSON_CreateArray(),
-              *v = cJSON_CreateObject();
-        const char *cols[2] = {"_uuid", "serial_number"};
-        cJSON_AddItemToObject(v, "_uuid", uuid_ref(b.node_uuid));
-        cJSON_AddStringToObject(v, "serial_number", serial);
-        cJSON_AddItemToArray(rows, v);
-        cJSON_AddItemToObject(o, "columns", strings(cols, 2));
-        cJSON_AddStringToObject(o, "until", "==");
-        cJSON_AddItemToObject(o, "rows", rows);
-        cJSON_AddNumberToObject(o, "timeout", 0);
-        PUSH(o, -1);
-    }
+    PUSH(node_guard(b.node_uuid, serial), -1);
     const char *radio_cols[2] = {"if_name", "vif_configs"};
     PUSH(guard("Wifi_Radio_Config", b.radio_uuid, b.radio, radio_cols, 2), -1);
     if (!b.vif_uuid) {
@@ -645,103 +839,17 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
     }
     if (nslots && intent->has_additional) {
         /* make the managed slot VIFs exactly the intent's additional BSSes */
-        cJSON *names = cJSON_CreateArray();
-        if (!inet_names(s, names)) {
-            cJSON_Delete(names);
+        bool lost = false;
+        r = slot_ops(p, &slots_view, b.radio_uuid, found, bss_of_slot, intent, underlay, s, resolve,
+                     resolve_ctx, ops, counts, &nops, &lost);
+        if (r != EM_OK || lost) {
             cJSON_Delete(ops);
-            strcpy(out->status, "unknown");
-            out->reason = EM_OUTCOME_UNKNOWN;
-            return EM_OK;
-        }
-        for (size_t i = 0; i < nslots; i++) {
-            const char *name = p->slots[i].if_name;
-            if (found[i].uuid) {
-                const char *cols[12];
-                size_t nc = 0;
-                for (size_t k = 0; k < 11; k++)
-                    if (cJSON_GetObjectItemCaseSensitive(found[i].config, VIF_GUARDS[k]))
-                        cols[nc++] = VIF_GUARDS[k];
-                if (cJSON_GetObjectItemCaseSensitive(found[i].config, "multi_ap"))
-                    cols[nc++] = "multi_ap";
-                PUSH(guard("Wifi_VIF_Config", found[i].uuid, found[i].config, cols, nc), -1);
+            if (lost) {
+                strcpy(out->status, "unknown");
+                out->reason = EM_OUTCOME_UNKNOWN;
             }
-            int k = bss_of_slot[i];
-            if (k < 0 && found[i].uuid) {
-                PUSH(vif_configs_mutate(b.radio_uuid, "delete", uuid_ref(found[i].uuid)), 1);
-                PUSH(op("delete", "Wifi_VIF_Config", where_uuid(found[i].uuid)), 1);
-                if (has_name(names, name))
-                    PUSH(op("delete", "Wifi_Inet_Config", where_eq("if_name", name)), -1);
-            } else if (k >= 0) {
-                cJSON *base = cJSON_CreateObject();
-                merge(base, p->fronthaul_vif, NULL);
-                if (!strcmp(p->slots[i].role, "backhaul"))
-                    merge(base, p->backhaul_vif, NULL);
-                bool parent = em_profile_parent_slot(p, name);
-                if (parent)
-                    set_parent(base, p);
-                else
-                    set_role(base, p->slots[i].role);
-                const char *bkey = resolve(resolve_ctx, intent->additional[k].secret_ref);
-                if (!bkey) {
-                    cJSON_Delete(base);
-                    cJSON_Delete(names);
-                    cJSON_Delete(ops);
-                    return EM_INVALID_INPUT;
-                }
-                if (found[i].uuid) {
-                    cJSON *upd = op("update", "Wifi_VIF_Config", where_uuid(found[i].uuid)),
-                          *row = cJSON_CreateObject();
-                    merge(row, base, "vif_radio_idx");
-                    cJSON_DeleteItemFromObjectCaseSensitive(row, "ssid");
-                    cJSON_AddStringToObject(row, "ssid", intent->additional[k].ssid);
-                    cJSON_AddItemToObject(upd, "row", row);
-                    PUSH(upd, 1);
-                    PUSH(psk_mutate(found[i].uuid, found[i].config, bkey), 1);
-                } else {
-                    char label[32];
-                    EM_FORMAT_FIXED(label, sizeof(label), "extra%zu", i);
-                    PUSH(absent("Wifi_VIF_Config", where_eq("if_name", name), "if_name"), -1);
-                    cJSON *ins = op("insert", "Wifi_VIF_Config", NULL), *row = cJSON_CreateObject();
-                    cJSON_AddStringToObject(ins, "uuid-name", label);
-                    merge(row, base, NULL);
-                    const char *keys[4] = {"if_name", "ssid", "vif_radio_idx", "wpa_psks"};
-                    for (int x = 0; x < 4; x++)
-                        cJSON_DeleteItemFromObjectCaseSensitive(row, keys[x]);
-                    cJSON_AddStringToObject(row, "if_name", name);
-                    cJSON_AddStringToObject(row, "ssid", intent->additional[k].ssid);
-                    cJSON_AddNumberToObject(row, "vif_radio_idx", p->slots[i].vif_radio_idx);
-                    cJSON_AddItemToObject(row, "wpa_psks", psk_map(bkey));
-                    cJSON_AddItemToObject(ins, "row", row);
-                    PUSH(ins, -1);
-                    PUSH(vif_configs_mutate(b.radio_uuid, "insert", named(label)), 1);
-                }
-                cJSON_Delete(base);
-                if (parent) {
-                    /* the underlay's address and DHCP, in place of a Multi-AP slot's row */
-                    cJSON *row = parent_inet(p, name, underlay);
-                    if (!row) {
-                        cJSON_Delete(names);
-                        cJSON_Delete(ops);
-                        return EM_INVALID_INPUT;
-                    }
-                    if (has_name(names, name)) {
-                        cJSON_DeleteItemFromObjectCaseSensitive(row, "if_name");
-                        cJSON *uo = op("update", "Wifi_Inet_Config", where_eq("if_name", name));
-                        cJSON_AddItemToObject(uo, "row", row);
-                        PUSH(uo, -1);
-                    } else {
-                        cJSON *io = op("insert", "Wifi_Inet_Config", NULL);
-                        cJSON_AddItemToObject(io, "row", row);
-                        PUSH(io, -1);
-                    }
-                } else if (!has_name(names, name)) {
-                    cJSON *io = op("insert", "Wifi_Inet_Config", NULL);
-                    cJSON_AddItemToObject(io, "row", inet_row(p, name));
-                    PUSH(io, -1);
-                }
-            }
+            return r;
         }
-        cJSON_Delete(names);
     }
     commit(s, ops, counts, out, NULL);
     cJSON_Delete(ops);

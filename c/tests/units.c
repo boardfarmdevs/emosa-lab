@@ -29,6 +29,7 @@
 #include "jsonrpc.h"
 #include "jschema.h"
 #include "scope_telemetry.h"
+#include "southbound.h"
 #include "mqtt.h"
 #include "proc.h"
 #include "supervise.h"
@@ -1069,6 +1070,47 @@ static void supervisor(const char *scratch)
     CHECK(access(pidfile, F_OK) != 0, "and their pid files removed");
 }
 
+/* spec 9: a profile's further radios, and its slots by the radio they are on */
+static void second_radio_profile(const char *schemas, const char *scratch)
+{
+    char path[1024], variant[1024];
+    snprintf(path, sizeof(path), "%s/../src/emosa/profiles/opensync-lab-hwsim-6.6.1-gre-5g-v1.json", schemas);
+    em_profile p;
+    CHECK(em_profile_load(path, &p) == EM_OK, "the 5 GHz parent profile loads");
+    CHECK(p.nradios == 1 && !strcmp(p.radio_bands[0], "5G") && em_profile_has_radio(&p, "5G") &&
+              !em_profile_has_radio(&p, "2.4G"),
+          "one further radio, on 5 GHz");
+    em_profile on24 = em_profile_slots_on(&p, "2.4G", true), on50 = em_profile_slots_on(&p, "5G", true),
+               none = em_profile_slots_on(&p, "5G", false);
+    CHECK(on24.nslots == 3 && !strcmp(on24.slots[2].if_name, "fh-24"), "the fronthaul radio's slots");
+    CHECK(on50.nslots == 1 && !strcmp(on50.slots[0].if_name, "b-ap-50"), "the 5 GHz radio's slot");
+    CHECK(none.nslots == 0, "no slots without multi_bss");
+    CHECK(em_profile_parent_slot(&p, "b-ap-50"), "the parent AP on the 5 GHz radio");
+    /* a slot on a radio the profile does not bind, or a further radio on the fronthaul's band */
+    for (int mutation = 0; mutation < 2; mutation++) {
+        char *text = em_read_file(path, 1 << 20, NULL);
+        cJSON *doc = cJSON_Parse(text);
+        free(text);
+        if (mutation == 0)
+            cJSON_DeleteItemFromObjectCaseSensitive(doc, "radios");
+        else
+            cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(doc, "radios"), 0),
+                                                   "band", cJSON_CreateString("2.4G"));
+        snprintf(variant, sizeof(variant), "%s/profile-%d.json", scratch, mutation);
+        char *out = cJSON_Print(doc);
+        FILE *f = fopen(variant, "w");
+        if (f) {
+            fputs(out, f);
+            fclose(f);
+        }
+        free(out);
+        cJSON_Delete(doc);
+        em_profile bad;
+        CHECK(em_profile_load(variant, &bad) == EM_INVALID_INPUT, "profile variant %d refused", mutation);
+    }
+    em_profile_free(&p);
+}
+
 int main(int argc, char **argv)
 {
     em_init();
@@ -1094,6 +1136,7 @@ int main(int argc, char **argv)
     journal_tampered(argv[2], argv[1]);
     environment_files(argv[2]);
     supervisor(argv[2]);
+    second_radio_profile(argv[1], argv[2]);
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;
 }

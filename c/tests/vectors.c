@@ -798,11 +798,14 @@ static void southbound_vectors(const char *dir)
         cJSON *sent = cJSON_CreateArray();
         em_ovs_session session = {cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables"), 1, record, sent};
         em_submit_result result;
-        em_reason r = em_ap_submit(&profile, "MVXPOD023F87E628DD",
-                                   cJSON_IsTrue(cJSON_GetObjectItem(c, "multi_bss")),
-                                   cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(c, "underlay")),
-                                   &session, &intent, passphrase,
-                                   cJSON_GetObjectItemCaseSensitive(c, "passphrases"), &result);
+        bool multi_bss = cJSON_IsTrue(cJSON_GetObjectItem(c, "multi_bss"));
+        const char *underlay = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(c, "underlay"));
+        const char *radio = str(c, "radio"); /* a further radio's own scope (spec 9) */
+        const cJSON *passphrases = cJSON_GetObjectItemCaseSensitive(c, "passphrases");
+        em_reason r = radio ? em_radio_submit(&profile, "MVXPOD023F87E628DD", radio, multi_bss, underlay, &session,
+                                              &intent, passphrase, (void *)passphrases, &result)
+                            : em_ap_submit(&profile, "MVXPOD023F87E628DD", multi_bss, underlay, &session, &intent,
+                                           passphrase, (void *)passphrases, &result);
         const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
         if (r != EM_OK)
             fail("southbound", name, em_reason_name(r));
