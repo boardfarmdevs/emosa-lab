@@ -417,6 +417,11 @@ class PodReportSource:
                 "ruid": ident["radio_mac"],
                 "bssid": ident["bssid"],
                 "channel": channel,
+                # spec 9: every radio EMOSA binds and reports (the fronthaul first), for the
+                # status and the lab proofs - a second radio appears once the pod brings it up
+                "radios": [
+                    {"ruid": r.ruid.hex(":"), "band": r.band, "channel": ch} for r, ch, _ in bound
+                ],
                 "ssid": primary.ssid if primary else None,
                 "bsses": [
                     {"role": b.role, "bssid": b.bssid.hex(":"), "ssid": b.ssid} for b in bsses
