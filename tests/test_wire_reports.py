@@ -22,7 +22,7 @@ from emosa.easymesh_payloads import (
 )
 from emosa.errors import EmosaError
 from emosa.wire.cmdu import MidSequence, Reassembler, Tlv
-from emosa.wire.reports import ReportStamp, early_report, topology_response
+from emosa.wire.reports import ReportStamp, capability_tlvs, early_report, topology_response
 from emosa.wire.topology_values import (
     BridgingCapability,
     DeviceInformation,
@@ -257,6 +257,25 @@ def test_missing_inventories_and_unimplemented_capabilities_are_never_invented()
     ):
         with pytest.raises(EmosaError):
             early(replace(caps, radios=(changed,)))
+
+
+def test_a_second_radio_on_the_5ghz_unii1_channels_is_reported_and_a_dfs_class_is_not():
+    """Spec 9: a pod's second radio on 5 GHz UNII-1 (opclass 115, no DFS) is reported beside the
+    2.4 GHz fronthaul; a DFS class (118) still needs a companion report not implemented."""
+    _, caps, _ = fixtures()
+    radio = caps.radios[0]
+    ruid = bytes.fromhex("020000001b00")
+
+    def second(opclass):
+        basic = replace(
+            radio.basic, ruid=ruid, operating_classes=(BasicOperatingClass(opclass, 20, ()),)
+        )
+        return replace(radio, basic=basic, ht=False, advanced=APRadioAdvancedCapabilities(ruid, 0))
+
+    tlvs = capability_tlvs(replace(caps, radios=(radio, second(115))))
+    assert [t.value[:6] for t in tlvs if t.kind == 0x85] == [radio.basic.ruid, ruid]
+    with pytest.raises(EmosaError):
+        capability_tlvs(replace(caps, radios=(radio, second(118))))
 
 
 def test_topology_reply_preserves_mid_and_complete_ieee_and_easymesh_inventory():
