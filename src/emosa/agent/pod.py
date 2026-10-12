@@ -46,10 +46,11 @@ from emosa.agent.uplink import HOLD_BACKOFF, HOLD_BACKOFF_CAP, UplinkSwitch, m2_
 from emosa.agent.wired import WiredUplink
 from emosa.config import validate
 from emosa.errors import EmosaError, Reason
-from emosa.model import ACTIVE
+from emosa.model import ACTIVE, RadioIntent
 from emosa.opensync.easymesh_view import (
     IEEE_802_11N_24,
     MEDIA,
+    OPERATING_CLASSES,
     backhaul,
     backhaul_radios,
     bound_radios,
@@ -60,7 +61,7 @@ from emosa.opensync.easymesh_view import (
 )
 from emosa.opensync.gre_parent import MONITOR as GRE_PARENT_MONITOR
 from emosa.opensync.gre_parent import GreParentBackend
-from emosa.opensync.pod_profile import PodBackend, wpa2_psk
+from emosa.opensync.pod_profile import PodBackend, RadioBackend, wpa2_psk
 from emosa.opensync.probe_watch import MONITOR as WATCH_MONITOR
 from emosa.opensync.probe_watch import WatchBackend
 from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
@@ -116,6 +117,8 @@ RENEWALS = {
 # The pod's State is re-read on this cadence, not on every received frame: the
 # published report lives 1.5 s, which this refreshes three times over.
 REFRESH_PERIOD = 0.5
+# the band of a reported radio, by the operating class its capabilities advertise (spec 9)
+BAND_OF_OPERATING_CLASS = {opclass: band for band, (opclass, _) in OPERATING_CLASSES.items()}
 MONITOR = {
     **TABLES,
     "AWLAN_Node": [*TABLES["AWLAN_Node"], "id"],
@@ -225,6 +228,7 @@ class PodReportSource:
         self.directory = directory  # the fleet's other agents (spec 8.5), or None
         self.links = ()  # the pod's 1905 neighbors on its Wi-Fi backhaul: (interface, AL)
         self.uplink, self.backhaul_stations = None, {}  # as of the last refresh
+        self.backhaul_media = {}  # each backhaul BSS's 1905 media type (its radio's band)
         self.agent = binding.local_al
         self.revision, self.last = 0, None
         self.first_seen = {}  # station MAC -> monotonic time EMOSA first saw it active
@@ -255,9 +259,10 @@ class PodReportSource:
         extras = [radio.bss(name) for name, _, _ in self.backend.pod_slots]
         return primary, tuple(b for b in (primary, *extras) if b is not None)
 
-    def _backhaul_links(self, uplink, bsses):
+    def _backhaul_links(self, uplink, bsses, media):
         """The pod's 1905 neighbors on its Wi-Fi backhaul (spec 8.5): its parent pod's agent on
-        its backhaul station, and each child pod's agent on the backhaul BSS it is on."""
+        its backhaul station, and each child pod's agent on the backhaul BSS it is on, on any
+        of the pod's radios (``media``: each BSS's 1905 media type, by its radio's band)."""
         if self.directory is None:
             return ()
         peers = self.directory.peers()
@@ -268,6 +273,7 @@ class PodReportSource:
                 links.append((uplink.station.mac, parent.al))
         backhaul = {b.bssid: set(b.stations) for b in bsses if b.role == "backhaul"}
         self.uplink, self.backhaul_stations = uplink, backhaul
+        self.backhaul_media = {bssid: media[bssid] for bssid in backhaul}
         links += [(bssid, child.al) for bssid, child in children(peers, backhaul)]
         return tuple(links)
 
@@ -306,7 +312,7 @@ class PodReportSource:
                     child.al,
                     bssid,
                     child.station,
-                    IEEE_802_11N_24,
+                    self.backhaul_media.get(bssid, IEEE_802_11N_24),
                     direction(seen, "tx_errors", "tx_frames", "tx_rate_mbps"),
                     direction(seen, "rx_errors", "rx_frames", "snr_db"),
                 )
@@ -382,19 +388,21 @@ class PodReportSource:
             radios_with_station = backhaul_radios(
                 rows, self.stations, uplink.station.if_name if uplink else None
             )
+            # spec 9: each further bound radio is its own Operational/Configured radio, with the
+            # EMOSA BSSes it carries (a parent's b-ap-50 on 5 GHz) or none (a child's, its station
+            # only), as the capabilities list every bound radio
+            extra_radios = tuple((r, self._represented(r, True)[1], ch) for r, ch, _ in bound[1:])
+            # every BSS the agent represents, on any radio: their stations, the child pods on them
+            every = bsses + tuple(b for _, bs, _ in extra_radios for b in bs)
+            media = {
+                b.bssid: MEDIA[r.band]
+                for r, bs, _ in ((radio, bsses, channel), *extra_radios)
+                for b in bs
+            }
             now = time.monotonic()
-            active = {m for b in bsses for m in b.stations}
+            active = {m for b in every for m in b.stations}
             self.first_seen = {m: self.first_seen.get(m, now) for m in active}
-            self.links = self._backhaul_links(uplink, bsses)
-            # spec 9: each further bound radio that carries an EMOSA BSS (a parent's b-ap-50 on the
-            # 5 GHz radio) is reported as its own Operational/Configured radio, so the controller
-            # models the BSS on that radio and channel
-            extra_radios = tuple(
-                (r, represented, ch)
-                for r, ch, _ in bound[1:]
-                for represented in (self._represented(r, True)[1],)
-                if represented
-            )
+            self.links = self._backhaul_links(uplink, every, media)
             report = topology(
                 agent_al=self.agent,
                 controller_al=self.binding.controller_al,
@@ -411,7 +419,7 @@ class PodReportSource:
             facts = (
                 raw["generation"],
                 raw["revision"],
-                tuple((b.bssid, b.ssid, b.stations) for b in bsses),
+                tuple((b.bssid, b.ssid, b.stations) for b in every),
                 radio.tx_power,
                 uplink,
                 self.links,
@@ -435,7 +443,7 @@ class PodReportSource:
                 ],
                 "ssid": primary.ssid if primary else None,
                 "bsses": [
-                    {"role": b.role, "bssid": b.bssid.hex(":"), "ssid": b.ssid} for b in bsses
+                    {"role": b.role, "bssid": b.bssid.hex(":"), "ssid": b.ssid} for b in every
                 ],
                 "stations": sorted(m.hex(":") for m in active),
                 "backhaul": None
@@ -598,6 +606,37 @@ async def serve(config, stop):
     )
     engine = Engine(store, vault, {pod_id: backend})
     engine.recover()
+    # spec 9: each of the profile's further radios is its own scope, configured by its own M2:
+    # band -> (backend, engine), each with its own journal
+    radio_scopes = {}
+    for extra in backend.profile.radios:
+        radio_backend = RadioBackend(
+            pod_id,
+            session,
+            vault,
+            serial=config["serial"],
+            band=extra["band"],
+            profile=backend.profile,
+            multi_bss=backend.multi_bss,
+            underlay=config.get("underlay"),
+        )
+        radio_engine = Engine(
+            Store(state_dir / f"radio-{extra['band']}"),
+            vault,
+            {pod_id: radio_backend},
+            intent_type=RadioIntent,
+        )
+        radio_engine.recover()
+        radio_scopes[extra["band"]] = (radio_backend, radio_engine)
+
+    def writing():
+        """A write of the controller's configuration in flight, on any of the pod's radios."""
+        return any(
+            op.state in ACTIVE
+            for scope in (engine, *(e for _, e in radio_scopes.values()))
+            for op in scope.store.operations()
+        )
+
     # the fleet's other agents, beside this one's run directory (spec 8.5)
     directory = PeerDirectory(config["run_dir"], pod_id) if config.get("run_dir") else None
     uplink_config = config.get("uplink", {"mode": "off"})
@@ -644,11 +683,8 @@ async def serve(config, stop):
             credentials,
             bssid=bssid,
             run_id=config.get("run_id", pod_id),
-            # the pod serves the controller's fronthaul, and no fronthaul write is in flight
-            settled=lambda: (
-                (report.facts or {}).get("ssid") is not None
-                and not any(op.state in ACTIVE for op in store.operations())
-            ),
+            # the pod serves the controller's fronthaul, and no write is in flight on any radio
+            settled=lambda: (report.facts or {}).get("ssid") is not None and not writing(),
             # the fleet's GRE parent APs (spec 8.6): a Backhaul Steering target among them is a
             # 3-address GRE move, read from the peers' statuses (no 1905 frame names them)
             parents=(lambda: frozenset())
@@ -771,19 +807,19 @@ async def serve(config, stop):
     next_refresh, ready = 0, False
     channels = reporting = None
 
+    def summary(op):
+        return {
+            "operation_id": op.operation_id,
+            "state": op.state,
+            "reason": op.reason,
+            "ssid": op.intent.get("ssid"),
+            "attempts": len(op.attempts),
+            "application_evidence": op.application_evidence,
+        }
+
     def status():
         snapshot = report.source.current()
-        ops = [
-            {
-                "operation_id": op.operation_id,
-                "state": op.state,
-                "reason": op.reason,
-                "ssid": op.intent.get("ssid"),
-                "attempts": len(op.attempts),
-                "application_evidence": op.application_evidence,
-            }
-            for op in store.operations()
-        ]
+        ops = [summary(op) for op in store.operations()]
         return {
             "pod_id": pod_id,
             "profile": backend.profile.id,
@@ -793,6 +829,15 @@ async def serve(config, stop):
             "report_source_available": snapshot is not None,
             "session": lifecycle.status() if lifecycle else None,
             "operations": ops,
+            # spec 9: each further radio's scope, by band: its operations, each the BSSes of the
+            # radio's own M2 set its slots map
+            "radio_operations": {
+                band: [
+                    {**summary(op), "bsses": [b["ssid"] for b in op.intent["additional"]]}
+                    for op in radio_engine.store.operations()
+                ]
+                for band, (_, radio_engine) in radio_scopes.items()
+            },
             "uplink": (
                 switch.status()
                 if switch
@@ -820,6 +865,29 @@ async def serve(config, stop):
         with EthernetEndpoint(
             config["interface"], agent, timeout=0.2, netns=os.environ.get("EMOSA_NETNS")
         ) as endpoint:
+
+            def radio_bridge(snap, m, index):
+                """The exchange of a further radio (spec 9), into that radio's own scope: its
+                target is the radio (no BSS of its own), its RUID the radio's."""
+                radio = snap.capabilities.radios[index]
+                opclass = radio.basic.operating_classes[0].operating_class
+                radio_backend, radio_engine = radio_scopes[BAND_OF_OPERATING_CLASS[opclass]]
+                ruid = radio.basic.ruid
+                target = ComponentTarget(
+                    pod_id, radio_backend.radio_id, radio_backend.radio_id, ruid, ruid
+                )
+                return make_bridge(
+                    radio_engine,
+                    radio_backend,
+                    report,
+                    run_id,
+                    target,
+                    m,
+                    snap.capabilities,
+                    message_set,
+                    config.get("m2_session", "distinct"),
+                    radio_index=index,
+                )
 
             def factory():
                 # Called by the recovery loop only while the source is current.
@@ -878,6 +946,7 @@ async def serve(config, stop):
                         pod_metrics["stats"] if pod_metrics else None,
                         pod_metrics["freshness"] if pod_metrics else FRESHNESS,
                     ),
+                    radio_bridge_factory=radio_bridge if radio_scopes else None,
                 )
 
             channels = ChannelPolicyStore(state_dir / "channel-policy.sqlite")
@@ -918,9 +987,8 @@ async def serve(config, stop):
                     and report.facts.get("ssid") is None
                     and not any(op.state in ACTIVE for op in store.operations())
                 )
-                awaiting = (
-                    lifecycle.session is not None and lifecycle.session.state == "awaiting_m2"
-                )
+                # an M1 out without its M2: the fronthaul's, or a further radio's (spec 9)
+                awaiting = lifecycle.session is not None and lifecycle.session.awaiting_m2
                 provisioning = (
                     lifecycle.session is not None and lifecycle.session.state == "provisioning"
                 )
@@ -956,6 +1024,12 @@ async def serve(config, stop):
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("reconcile: %s", exc)
                         report.source.invalidate()
+                for band, (_, radio_engine) in radio_scopes.items():
+                    if refreshed and ready and radio_engine.store.operations():
+                        try:
+                            await timed(f"reconcile {band}", radio_engine.reconcile(pod_id))
+                        except (EmosaError, ConnectionError, TimeoutError) as exc:
+                            log.warning("reconcile %s: %s", band, exc)
                 if refreshed and switch:
                     # Also while the pod is away: an unconfirmed switch times out.
                     try:
@@ -1011,6 +1085,8 @@ async def serve(config, stop):
         store.close()
         if subscriber is not None:
             subscriber.stop()
+        for _, radio_engine in radio_scopes.values():
+            radio_engine.store.close()
         for extra in (channels, reporting, uplink_store, telemetry_store, steering_store):
             if extra is not None:
                 extra.close()

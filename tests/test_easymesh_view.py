@@ -11,6 +11,7 @@ import pytest
 from emosa.agent.pod import MONITOR, PodReportSource
 from emosa.errors import EmosaError
 from emosa.opensync.easymesh_view import (
+    MEDIA,
     backhaul,
     bound_radios,
     device_view,
@@ -223,6 +224,25 @@ def test_topology_reports_a_second_radios_bss():
     assert [r.ruid for r in facts.operational.radios] == [RUID_24, RUID_5]
     assert [r.ruid for r in facts.configuration.radios] == [RUID_24, RUID_5]
     assert [b.bssid for b in facts.configuration.radios[1].bsses] == [bss.bssid]
+
+
+def test_topology_reports_every_bound_radio_and_a_second_radios_bss_on_its_band():
+    """Spec 9: a child's second radio (its station only) is an Operational and Configured radio
+    with no BSS, as the capability report lists it; a parent's BSS on the 5 GHz radio is a 5 GHz
+    interface whose stations (a GRE child on b-ap-50) are associated clients."""
+    view = device_view(decode(raw_tables()))
+    fronthaul, five = view.radio(RUID_24), view.radio(RUID_5)
+    (bss,) = fronthaul.bsses
+    common = {"agent_al": AGENT, "controller_al": CONTROLLER, "radio": fronthaul, "channel": 6}
+    ages = {STATIONS[0]: 1.0, STATIONS[1]: 1.0}
+    child = topology(**common, bsses=fronthaul.bsses, ages=ages, extra_radios=((five, (), 36),))
+    assert [(r.ruid, r.bsses) for r in child.operational.radios][1] == (RUID_5, ())
+    assert [(r.ruid, r.bsses) for r in child.configuration.radios][1] == (RUID_5, ())
+    parent = topology(**common, bsses=(), ages=ages, extra_radios=((five, (bss,), 36),))
+    (interface,) = [i for i in parent.device.interfaces if i.mac == bss.bssid]
+    assert interface.media_type == MEDIA["5G"] and interface.media_specific[8] == 36
+    (clients,) = parent.clients.bsses
+    assert clients.bssid == bss.bssid and {c.mac for c in clients.clients} == set(bss.stations)
 
 
 def test_the_agent_reports_the_real_pod_through_the_view(tmp_path):

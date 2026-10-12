@@ -395,9 +395,11 @@ def topology(
 ):
     """Topology Response contents: the agent, its BSSes and their stations.
 
-    ``extra_radios`` ((radio, bsses, channel), ...) are the agent's further bound radios that carry
-    an EMOSA BSS (spec 9, a parent's b-ap-50 on 5 GHz): each adds an Operational and Configured
-    radio and its BSSes' interfaces, so the controller models the BSS on its own radio and channel.
+    ``extra_radios`` ((radio, bsses, channel), ...) are the agent's further bound radios (spec 9):
+    each is an Operational and Configured radio, with no BSS when it carries none of EMOSA's (a
+    child's radio with only its station), as every radio of the capability report must be; its
+    BSSes (a parent's b-ap-50 on 5 GHz) are interfaces of its band on its channel, and their
+    stations associated clients, so the controller models them on their own radio.
 
     ``bsses`` is the subset of the radio's BSSes the agent represents; ``ages``
     maps a station MAC to seconds since association (as far as EMOSA knows);
@@ -413,12 +415,12 @@ def topology(
     in use first) are the pod's radios with a backhaul station, for the Backhaul STA
     Capability Report.
     """
-    # the fronthaul radio and each extra radio that carries an EMOSA BSS (spec 9), each with its own
-    # channel for the BSS interfaces and its own Operational/Configured radio
-    radios = ((radio.ruid, bsses, channel),) + tuple((r.ruid, bs, ch) for r, bs, ch in extra_radios)
+    # the fronthaul radio and each further bound radio (spec 9), each with its own band and channel
+    # for its BSS interfaces and its own Operational/Configured radio
+    radios = ((radio, bsses, channel),) + tuple(extra_radios)
     interfaces = (LocalInterface(agent_al, 1, b""),) + tuple(
-        LocalInterface(b.bssid, IEEE_802_11N_24, b.bssid + bytes([AP_ROLE, 0x00, ch, 0x00]))
-        for _, bs, ch in radios
+        LocalInterface(b.bssid, MEDIA[r.band], b.bssid + bytes([AP_ROLE, 0x00, ch, 0x00]))
+        for r, bs, ch in radios
         for b in bs
     )
     if uplink is not None:
@@ -437,17 +439,19 @@ def topology(
         neighbors1905=neighbors_1905(agent_al, controller_al, peers),
         operational=APOperationalBss(
             tuple(
-                OperationalRadio(ruid, tuple(OperationalBss(b.bssid, b.ssid.encode()) for b in bs))
-                for ruid, bs, _ in radios
+                OperationalRadio(
+                    r.ruid, tuple(OperationalBss(b.bssid, b.ssid.encode()) for b in bs)
+                )
+                for r, bs, _ in radios
             )
         ),
         configuration=BssConfigurationReport(
             tuple(
                 ConfiguredRadio(
-                    ruid,
+                    r.ruid,
                     tuple(ConfiguredBss(b.bssid, b.report_flags, b.ssid.encode()) for b in bs),
                 )
-                for ruid, bs, _ in radios
+                for r, bs, _ in radios
             )
         ),
         clients=AssociatedClients(
@@ -456,7 +460,8 @@ def topology(
                     b.bssid,
                     tuple(AssociatedClient(m, min(65535, int(ages[m]))) for m in b.stations),
                 )
-                for b in bsses
+                for _, bs, _ in radios
+                for b in bs
             )
         ),
         inventory_complete=True,

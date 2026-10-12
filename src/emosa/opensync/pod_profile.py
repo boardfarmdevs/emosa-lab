@@ -788,6 +788,8 @@ class RadioBackend(PodBackend):
         self.channel = self.ht_mode = None  # never written (spec 9)
         self.slots = slots_on(self.profile, band) if multi_bss else ()
         self.max_bss = len(self.slots)
+        # its exchange takes the radio's whole M2 set, fitted to its slots (none without multi_bss)
+        self.multi_bss = True
 
     def _binding(self, snapshot):
         decoded, radio_uuid, _, radio_states = self._radio(snapshot)

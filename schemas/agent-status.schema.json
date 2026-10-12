@@ -58,6 +58,26 @@
         }
       }
     },
+    "radio_operations": {
+      "description": "Spec 9: each further radio's own scope, by band (\"5G\"): its operations, each made from that radio's own M2 set; bsses are the SSIDs its slots map (none: its slot VIFs removed). Empty for a profile with one radio.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["operation_id", "state", "reason", "attempts", "bsses"],
+          "properties": {
+            "operation_id": {"type": "string"},
+            "state": {"enum": ["REQUESTED", "VALIDATED", "SUBMITTED", "CONFIG_COMMITTED", "INDETERMINATE", "OBSERVED_APPLIED", "TIMED_OUT", "FAILED", "REJECTED", "OWNERSHIP_CONFLICT", "CANCELLED"]},
+            "reason": {"type": ["string", "null"]},
+            "ssid": {"type": "null"},
+            "attempts": {"type": "integer", "minimum": 0},
+            "application_evidence": {"type": ["object", "null"]},
+            "bsses": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      }
+    },
     "uplink": {
       "description": "The uplink scope: data plane option 1, or a wired pod's Ethernet uplink (mode ethernet). mode off: the agent leaves the pod's uplink alone.",
       "type": "object",
