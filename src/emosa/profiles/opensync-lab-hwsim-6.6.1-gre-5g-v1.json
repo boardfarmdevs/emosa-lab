@@ -1,0 +1,43 @@
+{
+  "id": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
+  "description": "opensync-lab pods as GRE parents on their 5 GHz radio (spec 8.6, 9; the Pis' adapter-B shape of V54): opensync-lab-hwsim-6.6.1-gre-v1 with a second radio. The 5 GHz radio carries the pod's uplink station bhaul-sta-50 (the pod's) and the parent AP b-ap-50 (EMOSA's), configured by that radio's own M2: its backhaul BSS is the parent AP, not Multi-AP, no bridge, hidden, its Inet row the pod's underlay. EMOSA writes no channel or ht_mode on the 5 GHz radio, which follows the station. The 2.4 GHz radio keeps the fronthaul and its fronthaul slots; its M2's backhaul BSS has no slot there and is left out.",
+  "opensync_version": "6.6.1.0",
+  "radio": {"band": "2.4G", "channel": 6, "ht_mode": "HT20", "chipset": "mac80211_hwsim"},
+  "radios": [{"band": "5G", "ht_mode": "HT20", "chipset": "mac80211_hwsim"}],
+  "fronthaul": {
+    "if_name": "home-ap-24",
+    "vif": {
+      "mode": "ap",
+      "enabled": true,
+      "bridge": "br-home",
+      "ssid_broadcast": "enabled",
+      "ap_bridge": true,
+      "mac_list_type": "none",
+      "btm": 1,
+      "rrm": 1,
+      "min_hw_mode": "11g",
+      "vif_radio_idx": 1,
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "rsn_pairwise_ccmp": true,
+      "security": ["map", []]
+    }
+  },
+  "backhaul_vif": {"ssid_broadcast": "disabled", "ap_bridge": false, "multi_ap": "backhaul_bss"},
+  "backhaul_mode": "gre-parent",
+  "gre_parent": {"vif": {}, "inet": {}},
+  "extra_slots": [
+    {"if_name": "svc-d-ap-24", "role": "fronthaul", "vif_radio_idx": 4},
+    {"if_name": "svc-e-ap-24", "role": "fronthaul", "vif_radio_idx": 5},
+    {"if_name": "fh-24", "role": "fronthaul", "vif_radio_idx": 6},
+    {"if_name": "b-ap-50", "role": "backhaul", "vif_radio_idx": 1, "band": "5G"}
+  ],
+  "inet": {"if_type": "vif", "enabled": true, "network": true, "NAT": false, "ip_assign_scheme": "none", "mtu": 1500},
+  "uplink": {
+    "station": "bhaul-sta-50",
+    "stations": {"2.4G": "bhaul-sta-24", "5G": "bhaul-sta-50", "6G": "bhaul-sta-60"}
+  },
+  "ap_metrics": {
+    "esp_be": "3fff00"
+  }
+}

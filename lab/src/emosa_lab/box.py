@@ -33,6 +33,7 @@ from emosa.agent.fleet import agent_config, derive_al
 from emosa.opensync.schema import reference_path
 from emosa.opensync.session import OvsSession
 from emosa.wire.cmdu import Reassembler, Tlv, fragment_message
+from emosa.wsc import decode_attributes
 from emosa_lab.simulation.database import SimDatabase
 from emosa_lab.simulation.manager import APPLY_COLUMNS
 from emosa_lab.simulation.wsc_provisioning import registrar_reply
@@ -471,6 +472,9 @@ class Box:
         # m2_modes: the set the controller sends instead (one registrar mode per BSS);
         # profile: the agent's pod profile instead of the fleet's default
         self.m2_modes = m2_modes or (("configure", "backhaul") if multi_bss else ("configure",))
+        # radio_m2_modes: another set for the radio of this RUID ("02:00:00:00:05:00"), as a
+        # controller configures each band (spec 9)
+        self.radio_m2_modes = {}
         self.profile = profile
         # wired: a wired pod, cm using its Ethernet port eth1 as the uplink; the agent's
         # uplink mode ethernet (spec 8.4)
@@ -821,7 +825,8 @@ async def onboard(box):
 async def answer_m1(box, ruid, wsc):
     """The registrar's answer to one M1: an M2, or with multi_bss an M2 set (one per BSS,
     each from its own registrar session: m2_session distinct)."""
-    m2s = [await asyncio.to_thread(registrar_reply, REGISTRAR, wsc, mode) for mode in box.m2_modes]
+    modes = box.radio_m2_modes.get(ruid.hex(":"), box.m2_modes)
+    m2s = [await asyncio.to_thread(registrar_reply, REGISTRAR, wsc, mode) for mode in modes]
     box.controller.send(AUTOCONFIG_WSC, (Tlv(0x82, ruid), *(Tlv(0x11, m2) for m2 in m2s)))
 
 
@@ -3166,6 +3171,174 @@ async def gre_parent_withdrawn(box):
 # The reference workload's faults, in the box
 
 
+RUID_24, RUID_50 = "02:00:00:00:01:00", "02:00:00:00:05:00"  # the recorded pod's phy1, phy5
+PARENT_AP_50 = "b-ap-50"
+
+
+def radio_operations(box, band):
+    """The operations of the agent's scope for its radio of this band (spec 9)."""
+    return ((box.status() or {}).get("radio_operations") or {}).get(band) or []
+
+
+async def radio_config(box, band):
+    """(uuid, row) of the pod's Wifi_Radio_Config of a band."""
+    for uuid, row in (await box.rows("Wifi_Radio_Config")).items():
+        if row.get("freq_band") == band:
+            return uuid, row
+    return None, None
+
+
+async def serve_radios(box, done, *, searches=0, m1s=0, seconds=90):
+    """A controller configuring each radio of the pod (spec 9): every Search gets a Response and
+    every M1 an M2 set for the radio its AP Radio Basic Capabilities name; the pod's managers
+    apply what the agent writes, until done() holds. The RUIDs of the M1s answered, in order,
+    or None at the deadline."""
+    deadline, last, ruids = time.monotonic() + seconds, None, []
+    while time.monotonic() < deadline and box.process.poll() is None:
+        found = box.sent(AUTOCONFIG_SEARCH)
+        for search in found[searches:]:
+            box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
+        searches = len(found)
+        found = box.sent(AUTOCONFIG_WSC)
+        for m1 in found[m1s:]:
+            wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
+            ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)
+            ruids.append(ruid.hex(":"))
+            await answer_m1(box, ruid, wsc)
+        m1s = len(found)
+        configs = await box.rows("Wifi_VIF_Config")
+        if configs != last:
+            last = configs
+            await apply_configuration(box.db)
+            await attach_vifs(box.db)
+        if await done():
+            return ruids
+        await asyncio.sleep(0.3)
+    return None
+
+
+def all_applied(operations):
+    return bool(operations) and all(op.get("state") == "OBSERVED_APPLIED" for op in operations)
+
+
+async def both_radios_applied(box):
+    status = box.status() or {}
+    return all_applied(status.get("operations") or []) and all_applied(radio_operations(box, "5G"))
+
+
+def operational_radios(topology):
+    """{RUID: [BSSID, ...]} of a Topology Response's AP Operational BSS TLV."""
+    value = next((t.value for t in topology.tlvs if t.kind == 0x83), b"")
+    radios, at = {}, 1
+    for _ in range(value[0] if value else 0):
+        ruid, count, at = value[at : at + 6].hex(":"), value[at + 6], at + 7
+        radios[ruid] = []
+        for _ in range(count):
+            radios[ruid].append(value[at : at + 6].hex(":"))
+            at += 7 + value[at + 6]
+    return radios
+
+
+async def second_radio_parent(box):
+    """Spec 9: a GRE parent whose parent AP is on its 5 GHz radio (the Pis' adapter B). The agent
+    sends an M1 for each radio, the 2.4 GHz one first; the 2.4 GHz radio's M2 set configures the
+    fronthaul (its backhaul BSS has no slot there and is left out), the 5 GHz radio's set makes
+    b-ap-50 the parent AP on the 5 GHz radio, through that radio's own scope. The pod's station
+    on that radio and the radio's channel are left alone; the Topology Response reports both
+    radios, b-ap-50 under the 5 GHz one."""
+    before_radio = (await radio_config(box, "5G"))[1]
+    before_station = (await box.vif("Wifi_VIF_Config", "bhaul-sta-50"))[1]
+    ruids = await serve_radios(box, lambda: both_radios_applied(box))
+    if ruids is None:
+        return box.result(passed=False, failed="the two radios were not both configured")
+    radio_uuid, radio = await radio_config(box, "5G")
+    ap_uuid, ap = await box.vif("Wifi_VIF_Config", PARENT_AP_50)
+    _, ap_state = await box.vif("Wifi_VIF_State", PARENT_AP_50)
+    _, fronthaul = await box.vif("Wifi_VIF_Config", COLD_VIF)
+    on_24 = uuids((await radio_config(box, "2.4G"))[1].get("vif_configs"))
+    inet = await gre_inet(box, PARENT_AP_50)
+    station = (await box.vif("Wifi_VIF_Config", "bhaul-sta-50"))[1]
+    status = box.status() or {}
+    topology = await box.ask(TOPOLOGY_QUERY, (Tlv(0xB3, b"\x01"),), TOPOLOGY_RESPONSE)
+    reported = operational_radios(topology) if topology else {}
+    # each M1's WSC RF Bands: 1 for the 2.4 GHz radio's, 2 for the 5 GHz radio's
+    rf_bands = [
+        next(
+            a.value[0]
+            for a in decode_attributes(next(t.value for t in m1.tlvs if t.kind == 0x11))
+            if a.kind == 0x103C
+        )
+        for m1 in box.sent(AUTOCONFIG_WSC)
+    ]
+    bssid = (ap_state or {}).get("mac")
+    unchanged = {k: v for k, v in before_radio.items() if k != "vif_configs"} == {
+        k: v for k, v in radio.items() if k != "vif_configs"
+    }
+    passed = (
+        ruids[:2] == [RUID_24, RUID_50]
+        and rf_bands[:2] == [1, 2]
+        and ap is not None
+        and ap_uuid in uuids(radio.get("vif_configs"))
+        and ap_uuid not in on_24
+        and (ap.get("ssid"), ap.get("multi_ap"), ap.get("bridge"))
+        == ("EMOSA-WSC-backhaul", "none", "")
+        and (inet or {}).get("inet_addr") == "169.254.2.1"
+        and fronthaul.get("ssid") == REGISTRAR_SSID
+        and unchanged
+        and station == before_station
+        and [op.get("bsses") for op in radio_operations(box, "5G")] == [["EMOSA-WSC-backhaul"]]
+        and (status.get("gre_parent") or {}).get("ap") == PARENT_AP_50
+        and reported.get(RUID_50) == [bssid]
+        and RUID_24 in reported
+    )
+    return box.result(
+        passed=passed,
+        m1_ruids=ruids,
+        m1_rf_bands=rf_bands,
+        parent_ap={k: (ap or {}).get(k) for k in ("ssid", "multi_ap", "bridge")},
+        radio_operations=status.get("radio_operations"),
+        reported=reported,
+        radio_unchanged=unchanged,
+        station_unchanged=station == before_station,
+    )
+
+
+async def second_radio_withdrawn(box):
+    """Spec 9 / 8.6 withdrawal by band: after a Renew the controller's 5 GHz set has no backhaul
+    BSS (the operator dropped 5 GHz from the backhaul's bands). The 5 GHz radio's scope removes
+    b-ap-50 and its underlay Inet row; the 2.4 GHz radio's configuration is not touched (its
+    unchanged M2 set is a no-op), nor the pod's station on the 5 GHz radio."""
+    if await serve_radios(box, lambda: both_radios_applied(box)) is None:
+        return box.result(passed=False, failed="the two radios were not both configured")
+    _, fronthaul = await box.vif("Wifi_VIF_Config", COLD_VIF)
+    station = (await box.vif("Wifi_VIF_Config", "bhaul-sta-50"))[1]
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.radio_m2_modes[RUID_50] = ("configure",)
+    box.controller.send(RENEW, (Tlv(0x01, box.controller.al), Tlv(0x0F, b"\0"), Tlv(0x10, b"\0")))
+
+    async def withdrawn():
+        operations = radio_operations(box, "5G")
+        gone = (await box.vif("Wifi_VIF_Config", PARENT_AP_50))[1] is None
+        return gone and len(operations) == 2 and all_applied(operations)
+
+    ruids = await serve_radios(box, withdrawn, searches=searches, m1s=m1s)
+    if ruids is None:
+        return box.result(passed=False, failed="b-ap-50 was not withdrawn")
+    _, after = await box.vif("Wifi_VIF_Config", COLD_VIF)
+    operations = radio_operations(box, "5G")
+    return box.result(
+        passed=ruids[:2] == [RUID_24, RUID_50]
+        and await gre_inet(box, PARENT_AP_50) is None
+        and after == fronthaul
+        and (await box.vif("Wifi_VIF_Config", "bhaul-sta-50"))[1] == station
+        and operations[-1].get("bsses") == []
+        and all_applied((box.status() or {}).get("operations") or []),
+        m1_ruids=ruids,
+        radio_operations=operations,
+        fronthaul_unchanged=after == fronthaul,
+    )
+
+
 async def adapter_restart(box):
     """The agent process killed and started again (its journal kept): it takes the pod back,
     onboards again and finds the configuration already running, without writing (spec 5)."""
@@ -3307,6 +3480,8 @@ SCENARIOS = {
     "gre-parent-child-gone": gre_parent_child_gone,
     "gre-parent-child-redrift": gre_parent_child_redrift,
     "gre-parent-withdrawn": gre_parent_withdrawn,
+    "second-radio-parent": second_radio_parent,
+    "second-radio-withdrawn": second_radio_withdrawn,
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
     "write-lost-unapplied": write_lost_unapplied,
@@ -3387,6 +3562,16 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "gre-parent-withdrawn": {
         "multi_bss": True,
         "profile": "opensync-lab-hwsim-6.6.1-gre-v1",
+        "underlay": GRE_UNDERLAY,
+    },
+    "second-radio-parent": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
+        "underlay": GRE_UNDERLAY,
+    },
+    "second-radio-withdrawn": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
         "underlay": GRE_UNDERLAY,
     },
 }

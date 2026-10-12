@@ -807,7 +807,7 @@ async def serve(config, stop):
     next_refresh, ready = 0, False
     channels = reporting = None
 
-    def summary(op):
+    def operation_status(op):
         return {
             "operation_id": op.operation_id,
             "state": op.state,
@@ -819,7 +819,7 @@ async def serve(config, stop):
 
     def status():
         snapshot = report.source.current()
-        ops = [summary(op) for op in store.operations()]
+        ops = [operation_status(op) for op in store.operations()]
         return {
             "pod_id": pod_id,
             "profile": backend.profile.id,
@@ -833,7 +833,7 @@ async def serve(config, stop):
             # radio's own M2 set its slots map
             "radio_operations": {
                 band: [
-                    {**summary(op), "bsses": [b["ssid"] for b in op.intent["additional"]]}
+                    {**operation_status(op), "bsses": [b["ssid"] for b in op.intent["additional"]]}
                     for op in radio_engine.store.operations()
                 ]
                 for band, (_, radio_engine) in radio_scopes.items()

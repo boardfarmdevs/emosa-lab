@@ -1065,6 +1065,20 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   a steer to the parent AP, back is a steer to the bootstrap BSS. With no record (EMOSA first bound
   while already on a parent) the revert is recognised instead by the target advertising the pod's own
   onboarding SSID in a scan.
+- **The parent AP on the second radio** (§9; the Pis' adapter B, one AP per adapter): `b-ap-50` is
+  configured by the 5 GHz radio's own M2, through that radio's own write scope, never by the
+  fronthaul radio's (whose set's backhaul BSS has no slot there and is left out, §3.4). One owner per
+  column of that radio:
+
+  | Row / column on the second radio | Owner |
+  | --- | --- |
+  | `Wifi_Radio_Config` `channel`, `ht_mode`, `enabled` and every other column but `vif_configs` | the pod (its channel override follows the station); EMOSA never writes |
+  | `vif_configs`: the references to the pod's own rows (its station `bhaul-sta-50`) | the pod |
+  | `vif_configs`: the reference to `b-ap-50` | the radio's EMOSA scope: insert and delete of its own reference only, never a replace; the transaction guards the radio's `if_name` only |
+  | `b-ap-50`'s `Wifi_VIF_Config` and `Wifi_Inet_Config` (the underlay's `.1`) | the radio's EMOSA scope, from that radio's M2 set; removed when the set has no backhaul BSS (withdrawal by band) |
+  | the fronthaul radio, `home-ap-24` and its slots | the fronthaul's EMOSA scope, from its own radio's M2 |
+  | the children's tunnels (`pgd*`) | EMOSA's GRE parent scope, by the parent AP's name on whichever radio |
+
 - **One owner per column of the backhaul station** `bhaul-sta-<band>`, agreed with the pod side
   (pod-bootstrap and pod-bh-fallback, OpenSync 6.6.1). The marker that a station is **under an EMOSA
   move** is `Wifi_VIF_Config.ssid == ""` (credential-list mode; 6.6.1 has no `other_config` column,
@@ -1164,7 +1178,19 @@ path is re-run. Carried with the second-radio work (§9).
   station, so a written channel would fight it; EMOSA reports the channel from `Wifi_Radio_State`
   and declines a Channel Selection Request that moves the radio off the station's channel), and
   the pod's own rows (`insert`/`delete` of EMOSA's own VIFs only, never a replace of
-  `vif_configs` that would drop the station);
+  `vif_configs` that would drop the station). One M1 and one M2 per radio (EasyMesh 6.1 §7.1):
+  the further radio's M1 (its own AP Radio Basic Capabilities, WSC RF Bands 2) goes once the
+  fronthaul's M2 is taken, one exchange awaiting an M2 at a time, and an M2 goes to the exchange
+  of the radio its AP Radio Identifier names. Each radio is its own write scope with its own
+  journal (`radio-<band>` in the agent's state): its M2 set is fitted to that radio's slots only,
+  with no primary BSS (the radio serves no fronthaul of its own), so a renew of one radio never
+  rewrites the other's BSSes and a set without a backhaul BSS removes only that radio's parent AP.
+  Every bound radio is an Operational and Configured radio of the Topology Response, with no BSS
+  when it carries none of EMOSA's (a child's radio). Only 5 GHz UNII-1 (opclass 115, no DFS) is
+  mapped. Done in the Python agent; the C agent's mirror is next. Open: the item-9 channel rule
+  for that radio (operable only on the station's channel); and a station that moves the radio to
+  another channel changes the radio's capabilities, which today ends the agent's source (a new
+  session, as for a moved radio) where it should only update the reports;
 - backhaul link metrics and a 1905 neighbor on the backhaul interface towards an upstream
   that is not a pod of the fleet (an RDK or prpl node: EMOSA does not know its AL MAC);
 - EasyMesh AP and station metrics. The pod's station measurements are
