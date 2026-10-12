@@ -1039,15 +1039,48 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   model, `get_dm_easy_mesh(instance)`), so it names that pod's station; a fleet of several backhaul
   children — each its own device — stays correct, each steer acting on its own device's station.
 - **Moved back (to the bootstrap), one operator path.** The same `SteerWiFiBackhaul`, with the
-  target set to the pod's own bootstrap BSS (the GTP gateway BSS, or `podbh` on the MV3), returns
-  the pod to its bootstrap: EMOSA records that BSSID as the station's bootstrap upstream (the BSS
-  its station was on before any EasyMesh move) and persists it with the uplink state, so a move to
-  it is recognised as a revert — neither a parent nor a foreign AP, but home — and EMOSA restores
-  the station's bootstrap credential (removing the EasyMesh/GRE one it wrote), leaving the pod on
-  its GTP path. Persisting the bootstrap BSSID matters across a restart: `podbh`'s SSID is not a
-  backhaul SSID, so without the record EMOSA would read a steer to it as a foreign target and
-  refuse. There is no second operator path and no "drop from parent" action: onto is a steer to
-  the parent AP, back is a steer to the bootstrap BSS.
+  target set to the pod's own bootstrap BSS (the GTP gateway BSS on `rdk-1010`, `podbh` on the MV3),
+  returns the pod to its bootstrap. EMOSA records that BSSID as the station's bootstrap upstream —
+  the BSS its station was on before any move, cm's own association, read on first observation and
+  persisted with the uplink state — so a steer to it is recognised as a revert (neither a parent nor
+  a foreign AP, but home), and a steer to `podbh`, whose SSID is not a backhaul SSID, is not mistaken
+  for a foreign target. The revert does **not** re-link the bootstrap credential: in credential-list
+  mode core builds its networks from the linked credentials' own BSSIDs and ignores
+  `Wifi_VIF_Config.parent`, and the pod's bootstrap credential carries no BSSID, so a re-link would
+  leave the station unpinned (a loop or the wrong BSS). Instead EMOSA restores the station to
+  **vconf mode** — the `ssid`, `security` and `credential_configs` it snapshotted at the move —
+  leaves `parent` (the pod's bootstrap pin) alone for the station to land on, and deletes the one
+  credential it inserted. There is no second operator path and no "drop from parent" action: onto is
+  a steer to the parent AP, back is a steer to the bootstrap BSS. With no record (EMOSA first bound
+  while already on a parent) the revert is recognised instead by the target advertising the pod's own
+  onboarding SSID in a scan.
+- **One owner per column of the backhaul station** `bhaul-sta-<band>`, agreed with the pod side
+  (pod-bootstrap and pod-bh-fallback, OpenSync 6.6.1). The marker that a station is **under an EMOSA
+  move** is `Wifi_VIF_Config.ssid == ""` (credential-list mode; 6.6.1 has no `other_config` column,
+  and a non-empty `ssid`, vconf mode, is the pod's bootstrap). A GRE move disables **no** other
+  station (cm bridges only the in-use uplink's GRE into `br-home`, so there is no double bridge);
+  only a Multi-AP move disables the others.
+
+  | Column / row of `bhaul-sta-<band>` | Owner | Under an EMOSA move | At the revert |
+  | --- | --- | --- | --- |
+  | row existence, `if_name`, `mode`, `vif_radio_idx`, `bridge`, the radio's `vif_configs` membership, its `Wifi_Inet_Config` | the pod (pod-bootstrap, at OpenSync start) | EMOSA never writes | unchanged |
+  | `parent` (the bootstrap pin, `POD_BACKHAUL_BSSID_<band>`) | the pod only | EMOSA never writes; ignored in credential-list mode | left; the station lands on it |
+  | `enabled` | the pod (true at start) | EMOSA sets true (a no-op) | left |
+  | `ssid`, `security`, `credential_configs` | the pod at start | EMOSA sets `""`, `{}`, [its own credential]; `ssid==""` is the move marker | EMOSA restores the snapshot it took at the move |
+  | `multi_ap`, `wds` | the pod (`none`/false) | a GRE move leaves them; only a Multi-AP move unsets them | restored if the move touched them |
+  | the bootstrap `Wifi_Credential_Config` (no BSSID) | the pod | EMOSA never writes; stays present | left |
+  | EMOSA's `Wifi_Credential_Config` (BSSID = target) | EMOSA | EMOSA inserts it | EMOSA deletes it |
+  | the fallback station `bhaul-sta-<POD_STA_FALLBACK>` | pod-bh-fallback | EMOSA never writes, moves or disables it | unchanged |
+
+- **A pod restart drops the move.** OpenSync rebuilds OVSDB from its template at every start
+  (pod-bootstrap writes the bootstrap rows, including the pin, before `dm`), so a move, its marker and
+  EMOSA's credential are gone after a restart and the pod returns to its pin by itself. EMOSA sees a
+  new OpenSync instance and **re-applies the active move from its persisted target** once the pod is
+  back, without the operator (as the uplink switch is re-applied after every re-onboarding, §8.3). A
+  move therefore needs no persistent pod database. **Pod-side change** (yocto-53, with the next pod
+  image after soak B; nothing on the Pis before): pod-bootstrap's `load_creds` selects only
+  credentials without a BSSID, so a fallback station brought up **during** a move cannot link or take
+  EMOSA's BSSID-pinned credential (today it takes all credentials and the first one's SSID/key).
 - **RDK's own autonomous steering (a known property, not used).** The controller carries a
   native-backhaul module (`em_backhaul_ctrl.cpp`, its "Native backhaul state") that tracks each
   backhaul station and may, from its own topology, move one between parents without an operator. It
