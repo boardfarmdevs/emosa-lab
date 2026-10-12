@@ -45,6 +45,11 @@ MULTI_AP = "multi-ap"
 # the same backhaul SSID/PSK as a Multi-AP join; only onboard_type and the applied
 # State differ. One uplink scope carries both, by the move's mode.
 GRE = "gre"
+# The operator's "back to bootstrap" (spec 8.6): not a pin but a revert. EMOSA undoes only its own
+# writes - it restores the station's snapshotted vconf columns (ssid, security, credential_configs,
+# and multi_ap/wds if a Multi-AP move touched them) and deletes the credential it inserted - and
+# leaves the pod's parent pin, so the station lands back on the bootstrap BSS the pod owns.
+BOOTSTRAP = "bootstrap"
 ONBOARD = {MULTI_AP: "multi_ap", GRE: "gre"}
 BSSID = re.compile(r"^[0-9a-f]{2}(:[0-9a-f]{2}){5}$")
 STATION_GUARDS = ("if_name", "mode", "enabled", "ssid", "credential_configs", "multi_ap")
@@ -71,11 +76,26 @@ class UplinkIntent:
     secret_ref: str
     mode: str = MULTI_AP
     bssid: str | None = None
+    # the revert's snapshot (BOOTSTRAP mode): the station's pre-move vconf columns to put back
+    restore: dict | None = None
 
     def record(self):
-        return asdict(self)
+        data = asdict(self)
+        if data.get("restore") is None:
+            del data["restore"]  # a pin carries no snapshot; keep its record as it was
+        return data
 
     def validate(self):
+        if self.mode == BOOTSTRAP:
+            # a revert to the bootstrap: no credential is written, so no SSID/secret; it carries
+            # the bootstrap BSSID (what the station lands on) and the snapshot to restore
+            if self.bssid is None or not BSSID.match(self.bssid):
+                raise EmosaError(Reason.INVALID_INPUT, "a revert requires the bootstrap BSSID")
+            if not self.restore or not self.restore.get("ssid"):
+                raise EmosaError(Reason.INVALID_INPUT, "a revert requires the vconf snapshot")
+            if not isinstance(self.station, str) or not self.station:
+                raise EmosaError(Reason.INVALID_INPUT, "explicit station required")
+            return
         if not 1 <= len(self.ssid.encode("utf-8")) <= 32 or "\x00" in self.ssid:
             raise EmosaError(Reason.INVALID_INPUT, "SSID must contain 1–32 UTF-8 bytes, no NUL")
         if self.mode not in (MULTI_AP, GRE):
@@ -97,6 +117,10 @@ class UplinkIntent:
 
     def target(self, vault):
         self.validate()
+        if self.mode == BOOTSTRAP:
+            # the revert is confirmed by observation (the station back on the bootstrap BSS in
+            # vconf mode), not by a credential fingerprint EMOSA cannot know (the pod's own PSK)
+            return {"uplink": BOOTSTRAP, "station": self.station, "bssid": self.bssid}
         target = {
             "uplink": self.mode,
             "station": self.station,
@@ -110,6 +134,20 @@ class UplinkIntent:
 
 def lower_mac(value):
     return value.lower() if isinstance(value, str) and value else None
+
+
+def credential_uuids(configs):
+    """The credential UUIDs of a ``Wifi_VIF_Config.credential_configs`` wire value.
+
+    OVSDB renders a set of one as the bare reference ``["uuid", u]`` and a larger set as
+    ``["set", [["uuid", u], ...]]``; accept both, and an empty or absent value as none."""
+    if not isinstance(configs, list) or not configs:
+        return []
+    if configs[0] == "uuid":
+        return [configs[1]]
+    if configs[0] == "set":
+        return [u for kind, u in configs[1] if kind == "uuid"]
+    return []
 
 
 def band_of_operating_class(operating_class):
@@ -421,6 +459,8 @@ class UplinkBackend:
         node_uuid = next(iter(raw["tables"]["AWLAN_Node"]))
         vif_uuid = rows[intent.station][0]
         vif = raw["tables"]["Wifi_VIF_Config"][vif_uuid]
+        if intent.mode == BOOTSTRAP:
+            return await self._submit_revert(intent, attempt, raw, node_uuid, vif_uuid, vif)
         key = self.vault.resolve(intent.secret_ref)
         # Credential-list mode: the station's own SSID and security empty, one linked credential.
         # ssid "" is the marker that the station is under an EMOSA move (spec 8.6 ownership). On
@@ -522,6 +562,67 @@ class UplinkBackend:
                 "instance": self.instance,
                 "results": json.loads(json.dumps(results, default=str)),
                 "restore": restore,
+            },
+        )
+
+    async def _submit_revert(self, intent, attempt, raw, node_uuid, vif_uuid, vif):
+        """The revert (spec 8.6): put the station's snapshotted vconf columns back and delete the
+        credential EMOSA inserted, within EMOSA's own columns. The pod's parent pin stands (vconf
+        mode honours it), so the station lands on the bootstrap BSS; the pod's bootstrap credential,
+        still present, is re-linked by the restored credential_configs. The one credential EMOSA
+        deletes is the one linked now that the snapshot does not keep."""
+        keep = set(credential_uuids(intent.restore.get("credential_configs")))
+        drop = [u for u in credential_uuids(vif.get("credential_configs")) if u not in keep]
+        transaction = [
+            {
+                "op": "wait",
+                "table": "AWLAN_Node",
+                "where": [],
+                "columns": ["_uuid", "serial_number"],
+                "until": "==",
+                "rows": [{"_uuid": ["uuid", node_uuid], "serial_number": self.expected_serial}],
+                "timeout": 0,
+            },
+            guard("Wifi_VIF_Config", vif_uuid, vif, [c for c in STATION_GUARDS if c in vif]),
+            {
+                "op": "update",
+                "table": "Wifi_VIF_Config",
+                "where": where_uuid(vif_uuid),
+                "row": dict(intent.restore),
+            },
+        ]
+        counts = [None, None, 1]
+        # The update unlinks EMOSA's credential (credential_configs back to the pod's), so it is
+        # unreferenced in the transaction's final state and the delete succeeds.
+        for uuid in drop:
+            transaction.append(
+                {"op": "delete", "table": "Wifi_Credential_Config", "where": where_uuid(uuid)}
+            )
+            counts.append(1)
+        self.write_count += 1
+        try:
+            results = await self.session.transact(
+                transaction, attempt["transaction_id"], attempt["session_generation"]
+            )
+            check_results(results, counts)
+        except (ConnectionError, TimeoutError):
+            return SubmitResult("unknown", {"attribution": "unknown"}, Reason.OUTCOME_UNKNOWN)
+        except EmosaError as exc:
+            if exc.code == Reason.PRECONDITION_FAILED:
+                return SubmitResult("conflict", {}, exc.code)
+            return SubmitResult(
+                "unknown" if exc.code == Reason.OUTCOME_UNKNOWN else "rejected", {}, exc.code
+            )
+        return SubmitResult(
+            "committed",
+            {
+                "attribution": "reply",
+                "transaction_validated": True,
+                "transaction_id": attempt["transaction_id"],
+                "session_generation": raw["generation"],
+                "action": "revert",
+                "instance": self.instance,
+                "results": json.loads(json.dumps(results, default=str)),
             },
         )
 

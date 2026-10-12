@@ -145,6 +145,50 @@
           "additionalProperties": false
         },
         {
+          "title": "Revert the pod's backhaul station to its bootstrap (back to bootstrap, the uplink scope, spec 8.6)",
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "station": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]{1,15}$"
+            },
+            "ssid": {
+              "type": "string",
+              "maxLength": 32
+            },
+            "secret_ref": {
+              "type": "string",
+              "maxLength": 96
+            },
+            "mode": {
+              "const": "bootstrap",
+              "description": "A revert, not a pin: EMOSA writes no credential, restores the station's snapshotted vconf columns and deletes the credential it inserted, and the pod's parent pin lands the station on the bootstrap BSS."
+            },
+            "bssid": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$",
+              "description": "The bootstrap BSS the station lands back on."
+            },
+            "restore": {
+              "type": "object",
+              "description": "The pre-move vconf columns to put back: ssid, security, credential_configs, and multi_ap/wds if a Multi-AP move cleared them."
+            }
+          },
+          "required": [
+            "pod_id",
+            "station",
+            "mode",
+            "bssid",
+            "restore"
+          ],
+          "additionalProperties": false
+        },
+        {
           "title": "Have the pod publish its own statistics (the telemetry scope)",
           "type": "object",
           "properties": {

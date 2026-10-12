@@ -14,7 +14,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.model import State
 from emosa.opensync.easymesh_view import backhaul, device_view, topology
 from emosa.opensync.schema import Schema, reference_path
-from emosa.opensync.uplink import UplinkBackend, UplinkIntent, uplink_state
+from emosa.opensync.uplink import BOOTSTRAP, MULTI_AP, UplinkBackend, UplinkIntent, uplink_state
 from emosa.secrets import SecretStore
 from emosa.store import Store
 from emosa.wire.autoconfiguration import PeerBinding
@@ -227,6 +227,36 @@ def test_a_gre_move_is_three_address_and_disables_no_other_station(tmp_path):
         "security": ["map", [["encryption", "WPA-PSK"], ["key", "bootstrap-psk"]]],
         "credential_configs": ["set", [["uuid", BOOT_CRED]]],
     }
+
+
+def test_a_steer_back_to_the_bootstrap_reverts_the_move(tmp_path):
+    """Spec 8.6: a steer to the recorded bootstrap BSS is a revert - EMOSA restores the station's
+    vconf snapshot and deletes the credential it inserted; the station lands on the bootstrap."""
+    switch, pod, _, _ = rig(tmp_path, bssid=None, parents=lambda: {PARENT})
+    asyncio.run(switch.tick())  # observe and record the bootstrap
+    boot = dict(switch.bootstrap)
+    assert boot["bssid"] == "02:00:00:00:02:04"
+    # onto the parent
+    assert switch.steer(PARENT) is None
+    asyncio.run(switch.tick())
+    pod.adopt_gre(PARENT)
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED
+    # back to the bootstrap: a revert, not a pin
+    assert switch.steer(boot["bssid"]) is None
+    assert switch.mode == BOOTSTRAP
+    asyncio.run(switch.tick())
+    revert = pod.sent[-1]
+    assert ("delete", "Wifi_Credential_Config") in [(o["op"], o.get("table")) for o in revert]
+    update = next(o for o in revert if o["op"] == "update" and o["table"] == "Wifi_VIF_Config")
+    assert update["row"]["ssid"] == "opensync-lab-bhaul"  # vconf restored; the move marker cleared
+    assert update["row"]["credential_configs"] == ["set", [["uuid", BOOT_CRED]]]
+    # cm takes the station back to its bootstrap BSS; the revert is confirmed by observation
+    pod.revert()
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED
+    assert switch.mode == MULTI_AP and switch.bssid is None  # back to no EMOSA pin
+    assert switch.steering_outcome(boot["bssid"]) is True
 
 
 def test_the_switch_is_one_guarded_transaction_with_a_sole_multi_ap_credential(tmp_path):

@@ -48,7 +48,7 @@ import time
 
 from emosa.errors import EmosaError, Reason
 from emosa.model import ACTIVE, State
-from emosa.opensync.uplink import GRE, MULTI_AP, UplinkIntent
+from emosa.opensync.uplink import BOOTSTRAP, GRE, MULTI_AP, UplinkIntent
 from emosa.operations import transition
 from emosa.reconcile import Engine
 
@@ -186,8 +186,69 @@ class UplinkSwitch:
     def _save(self, op, payload=None):
         self.engine._save(op, payload)
 
+    def _move_snapshot(self):
+        """The vconf snapshot taken at the move from the bootstrap (the most recent operation that
+        captured one), for the revert to restore; None if there is none to undo."""
+        for past in reversed(self.store.operations()):
+            restore = (past.commit_evidence or {}).get("restore")
+            if restore:
+                return restore
+        return None
+
+    def _settle_revert(self, op, snap):
+        """A revert (spec 8.6): applied when the station is back on the bootstrap BSS in vconf mode
+        (EMOSA's credential-list move gone). Confirmed by observation, not a credential fingerprint
+        EMOSA cannot know. On a timeout the move's credential may linger; the pod returns to its pin
+        on its next OpenSync restart, and EMOSA gives the revert up rather than loop."""
+        if op.state not in (State.CONFIG_COMMITTED, State.INDETERMINATE):
+            return
+        facts = self.backend.facts or {}
+        same_start = (
+            snap is not None and snap.ready and self.backend.instance == op.plan.get("instance")
+        )
+        back = (
+            same_start
+            and snap.observed.fresh
+            and self.bootstrap is not None
+            and facts.get("kind")
+            and facts.get("parent") == self.bootstrap["bssid"]
+            and snap.config.get("uplink") == "other"  # the move's credential-list is gone (vconf)
+        )
+        if back:
+            evidence = self.engine._evidence(snap, instance=self.backend.instance)
+            transition(op, State.OBSERVED_APPLIED, evidence=evidence)
+            op.application_evidence, op.reason = evidence, None
+            self._save(op, {"observation": self.backend.facts})
+            if self.move is not None and self.move.get("target") == self.bootstrap["bssid"]:
+                self.move["result"] = True
+            # the move is undone: back to no EMOSA pin, so nothing more is written
+            self.mode = MULTI_AP
+            self.bssid, self.station = self.configured, self.configured_station
+            self.moves += 1
+            self._keep_target()
+            log.info(
+                "backhaul revert applied: the station is back on the bootstrap %s",
+                self.bootstrap["bssid"],
+            )
+        elif self.engine._expired(op):
+            op.original_outcome, op.deadline_elapsed = op.state, True
+            transition(op, State.TIMED_OUT)
+            op.reason = Reason.APPLY_TIMEOUT
+            self._save(op, {"observation": self.backend.facts})
+            if self.move is not None and self.move.get("target") == (self.bootstrap or {}).get(
+                "bssid"
+            ):
+                self.move["result"] = "revert not confirmed within the deadline"
+            self.mode = MULTI_AP
+            self.bssid, self.station = self.configured, self.configured_station
+            self.moves += 1
+            self._keep_target()
+            log.warning("backhaul revert not confirmed within the deadline; given up")
+
     def _settle(self, op, snap):
         """Confirm or time out the latest operation; hold on failure."""
+        if op.intent.get("mode") == BOOTSTRAP:
+            return self._settle_revert(op, snap)
         if op.state in (State.CONFIG_COMMITTED, State.INDETERMINATE):
             target = UplinkIntent(**op.intent).target(self.engine.vault)
             same_start = (
@@ -328,6 +389,28 @@ class UplinkSwitch:
         op = self.latest()
         if op is not None and op.state in ACTIVE:
             return "switch_in_progress"
+        if self.bootstrap and bssid == self.bootstrap["bssid"]:
+            # a steer back to the pod's own bootstrap BSS is a revert, not a pin (spec 8.6):
+            # EMOSA undoes its move (restores the station's vconf snapshot, deletes its credential)
+            # and the pod's parent pin lands the station back on the bootstrap. (With no record the
+            # revert would be recognised by the onboarding SSID in a scan; not built yet.)
+            if self.mode != BOOTSTRAP and self.bssid == self.configured:
+                return "already_on_bootstrap"  # no EMOSA move to undo
+            previous, previous_station, previous_mode = self.bssid, self.station, self.mode
+            self.move = {
+                "target": bssid,
+                "previous": previous,
+                "station": self.station,
+                "previous_station": previous_station,
+                "mode": BOOTSTRAP,
+                "previous_mode": previous_mode,
+                "result": None,
+            }
+            self.mode, self.bssid = BOOTSTRAP, self.configured
+            self.moves += 1
+            self._keep_target()
+            log.info("backhaul revert requested: %s -> bootstrap %s", previous, bssid)
+            return None
         if bssid in {(self.backend.facts or {}).get("mac")}:
             return "own_station"
         station = self.station if band is None else self.backend.station_for(band)
@@ -393,18 +476,35 @@ class UplinkSwitch:
         if not snap.ready:
             self.waiting = "pod not bound"
             return None
-        credentials = self.credentials()
-        if credentials is None:
-            self.waiting = "no EasyMesh backhaul credentials"
-            return None
-        if self.bssid is None:
-            # a GRE child with no configured upstream: EMOSA writes nothing until the
-            # controller steers it onto a parent; its bootstrap uplink (the GTP) stands.
-            self.waiting = "no upstream (awaiting a Backhaul Steering Request)"
-            return None
-        intent = UplinkIntent(
-            self.pod_id, self.station, *credentials, mode=self.mode, bssid=self.bssid
-        )
+        if self.mode == BOOTSTRAP:
+            # a revert in flight: write back the move's snapshot and drop EMOSA's credential, until
+            # the station is back on the bootstrap (then _settle resets the mode and this stops)
+            restore = self._move_snapshot()
+            if restore is None or self.bootstrap is None:
+                self.waiting = "revert without a snapshot"
+                return None
+            intent = UplinkIntent(
+                self.pod_id,
+                self.station,
+                "",
+                "",
+                mode=BOOTSTRAP,
+                bssid=self.bootstrap["bssid"],
+                restore=restore,
+            )
+        else:
+            credentials = self.credentials()
+            if credentials is None:
+                self.waiting = "no EasyMesh backhaul credentials"
+                return None
+            if self.bssid is None:
+                # a GRE child with no configured upstream: EMOSA writes nothing until the
+                # controller steers it onto a parent; its bootstrap uplink (the GTP) stands.
+                self.waiting = "no upstream (awaiting a Backhaul Steering Request)"
+                return None
+            intent = UplinkIntent(
+                self.pod_id, self.station, *credentials, mode=self.mode, bssid=self.bssid
+            )
         try:
             intent.target(self.engine.vault)
         except EmosaError as exc:
