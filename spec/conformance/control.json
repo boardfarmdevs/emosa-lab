@@ -1339,6 +1339,73 @@
    }
   ]
  },
+ "multi_radio_unreported": {
+  "cases": [
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "channel-preference-query-power-unreported",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800500570080000000"
+       ],
+       "result": "channel_preference_report_sent"
+      },
+      "request": "0272f97f0785020000e00001893a0000800400570080000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": {
+     "controller": "020000e00001",
+     "local_al": "0272f97f0785",
+     "mid": 88,
+     "radios": [
+      {
+       "ignored": [],
+       "power_limit_dbm": null,
+       "preferences": [],
+       "ruid": "020000000500"
+      }
+     ],
+     "status": "accepted_no_adjustment"
+    },
+    "handed_to_pod": [],
+    "name": "channel-selection-power-unreported",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008007005800808e000702000000050000000000",
+        "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e8f000a02000000050001732c17000000"
+       ],
+       "result": "channel_selection_accepted"
+      },
+      "request": "0272f97f0785020000e00001893a00008006005800808b000702000000050000000000"
+     }
+    ]
+   }
+  ],
+  "description": "spec 9: as multi_radio, the pod reporting no transmit power for the 5 GHz radio (OpenSync leaves Wifi_Radio_State.tx_power unset when the radio's VIFs disagree): 'tx_power' null. The Channel Preference Query is answered from the capabilities; the Operating Channel Report gives the radio's advertised maximum EIRP (max_eirp) as its power, a bound, not a measurement.",
+  "radios": [
+   {
+    "channel": 6,
+    "class": 81,
+    "max_eirp": 30,
+    "ruid": "02:00:00:00:01:00",
+    "tx_power": 30
+   },
+   {
+    "channel": 44,
+    "class": 115,
+    "max_eirp": 23,
+    "ruid": "02:00:00:00:05:00",
+    "tx_power": null
+   }
+  ]
+ },
  "ovsdb_tables": {
   "AWLAN_Node": {
    "96bc1650-4197-4cd8-9036-f9eb854e87ec": {

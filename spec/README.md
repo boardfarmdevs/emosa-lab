@@ -1227,7 +1227,18 @@ path is re-run. Carried with the second-radio work (§9).
   on any radio's BSS is associated. A pod's uplink takes its backhaul credentials (spec 8.3, 8.6)
   from the backhaul BSS of an applied M2 set: the fronthaul radio's first, then each further
   radio's, since on the Pis' shape only the 5 GHz radio's set has one (box
-  `second-radio-child-credentials`).
+  `second-radio-child-credentials`). A radio's transmit power is the pod's
+  `Wifi_Radio_State.tx_power`, as reported. OpenSync leaves it unset when the radio's VIFs report
+  different powers (on rdk-1010's hwsim pods the 5 GHz radio's station is at 20 dBm and its
+  `b-ap-50` at 30). The channel procedures still answer such a radio: a Channel Preference Query
+  at once, from the capabilities (it needs no power), and an Operating Channel Report giving the
+  radio's advertised maximum EIRP, a bound and not a measurement, logged and counted
+  (`operating_power_bound_reported`) each time. Refused, RDK re-sent its query every second until
+  its configuration timed out and renewed the pod every minute (rdk-1010, 12 October; box
+  `second-radio-no-power`). On mt7921 (the Pis) the reported power is the channel's regulatory
+  cap given to the firmware (30 dBm on 149 and on 2.4 GHz channel 6, 23 on 36), once the Pis'
+  driver reports it (mt76 8286bbf62dcc backported to their host): before that it reads 3 dBm on
+  every radio, which is not the radio's power.
   Both agents (box `second-radio-parent`, `second-radio-withdrawn`, `second-radio-moves-channel`).
   Known gap, to close before V54's end soaks: V54's radio B runs VHT 80 MHz on 149/80 (centre
   155), while EMOSA reports it in the 20 MHz classes with no HT, VHT or HE capability TLVs, so

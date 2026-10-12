@@ -333,3 +333,27 @@ def test_a_second_radios_channel_change_retakes_its_capabilities_once(tmp_path):
     assert radio_b() == ((125, 149), {124, 125})
     tables["Wifi_Radio_State"][RADIO_STATE]["channel"] = 11
     assert not asyncio.run(report.refresh()) and report.source.current() is None
+
+
+def test_a_radio_with_no_reported_power_is_operated_at_its_advertised_bound(tmp_path):
+    """Spec 9 (rdk-1010, 12 October): OpenSync leaves a radio's Wifi_Radio_State.tx_power unset
+    when its VIFs disagree (the station 20 dBm, b-ap-50 30). The radio is still reported in the
+    Operating Channel Report, at the maximum EIRP its capabilities advertise, marked a bound; a
+    reported power is used as it is."""
+    from emosa.agent.pod import PodReportSource
+
+    fronthaul, _, _ = parent_5g(tmp_path)
+    report = PodReportSource(fronthaul, BINDING, "pod-1")
+    assert asyncio.run(report.refresh())
+    snapshot = report.source.current()
+    radio_b = snapshot.capabilities.radios[1].basic
+    (operating,) = [r for r in snapshot.operating_radios if r.ruid == radio_b.ruid]
+    advertised = radio_b.operating_classes[0].max_eirp_dbm
+    assert operating.bound and operating.tx_power_dbm == advertised == 20
+    tables = fronthaul.session.tables
+    from test_pod_profile import RADIO_STATE_5G
+
+    tables["Wifi_Radio_State"][RADIO_STATE_5G]["tx_power"] = 17
+    assert asyncio.run(report.refresh())
+    (operating,) = [r for r in report.source.current().operating_radios if r.ruid == radio_b.ruid]
+    assert not operating.bound and operating.tx_power_dbm == 17

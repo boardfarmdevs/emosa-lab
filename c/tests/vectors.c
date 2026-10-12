@@ -773,8 +773,10 @@ static void control_case(const cJSON *c, const cJSON *agent, const em_device_vie
         if (control.nradios < 4 && em_parse_mac(str(r, "ruid"), x->ruid)) {
             x->op_class = (uint8_t)num(r, "class");
             x->channel = (int)num(r, "channel");
-            x->tx_power_dbm = (int)num(r, "tx_power");
             x->max_eirp_dbm = (int8_t)num(r, "max_eirp");
+            /* tx_power null: the pod reports none, its advertised maximum is reported, a bound */
+            x->bound = cJSON_IsNull(cJSON_GetObjectItemCaseSensitive(r, "tx_power"));
+            x->tx_power_dbm = x->bound ? x->max_eirp_dbm : (int)num(r, "tx_power");
             x->measured = true;
             control.nradios++;
         }
@@ -843,7 +845,7 @@ static void control_vectors(const char *dir)
     const cJSON *c;
     cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases")) control_case(c, agent, view, ruid, NULL);
     /* spec 9: the second radio on UNII-1 channel 44, and on UNII-3 channel 149 (V54's radio B) */
-    static const char *const sets[] = {"multi_radio", "multi_radio_unii3"};
+    static const char *const sets[] = {"multi_radio", "multi_radio_unii3", "multi_radio_unreported"};
     for (size_t s = 0; s < sizeof(sets) / sizeof(sets[0]); s++) {
         const cJSON *multi = cJSON_GetObjectItemCaseSensitive(doc, sets[s]);
         checks++;

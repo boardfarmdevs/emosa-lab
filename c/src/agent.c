@@ -1466,15 +1466,18 @@ static bool backhaul_link_metrics(agent *a, const em_message *m)
 }
 
 /* the radios the control procedures answer for (spec 9), the fronthaul first: each on its one
- * operable channel at its operated power; a further radio is measured once the pod reports its
- * power, on a channel of its class */
+ * operable channel at its operated power, a further radio on a channel of its class; a radio whose
+ * power the pod does not report (OpenSync leaves it unset when the radio's VIFs disagree) at its
+ * advertised maximum EIRP, a bound (pod.operated) */
 static void control_radios(agent *a)
 {
     em_control *c = &a->control;
     c->nradios = 0;
     em_control_radio *f = &c->radios[c->nradios++];
-    *f = (em_control_radio){.op_class = 81, .channel = a->represented.channel, .tx_power_dbm = a->tx_power,
-                            .max_eirp_dbm = a->max_eirp, .measured = true};
+    bool front_bound = !a->represented.has_tx_power;
+    *f = (em_control_radio){.op_class = 81, .channel = a->represented.channel,
+                            .tx_power_dbm = front_bound ? a->max_eirp : a->tx_power,
+                            .max_eirp_dbm = a->max_eirp, .measured = true, .bound = front_bound};
     memcpy(f->ruid, a->represented.ruid, 6);
     c->nfurther = 0;
     for (size_t k = 0; k < a->nradio_scopes && c->nradios < 4; k++) {
@@ -1488,11 +1491,11 @@ static void control_radios(agent *a)
             if (!memcmp(a->reported[i].ruid, rs->represented.ruid, 6))
                 eirp = a->reported[i].max_eirp;
         uint8_t op_class = em_operating_class(rs->band, rs->channel); /* 115 for 44, 125 for 149 */
+        bool bound = !rs->represented.has_tx_power;
         em_control_radio *x = &c->radios[c->nradios++];
         *x = (em_control_radio){.op_class = op_class, .channel = rs->channel,
-                                .tx_power_dbm = rs->represented.has_tx_power ? rs->represented.tx_power : 0,
-                                .max_eirp_dbm = eirp,
-                                .measured = rs->represented.has_tx_power && op_class};
+                                .tx_power_dbm = bound ? eirp : rs->represented.tx_power,
+                                .max_eirp_dbm = eirp, .measured = op_class != 0, .bound = bound};
         memcpy(x->ruid, rs->represented.ruid, 6);
     }
 }
@@ -1629,8 +1632,20 @@ static void handle_message(agent *a, const em_message *m)
     a->control.executor_ctx = a;
     em_frames out = {0};
     em_reason error;
+    unsigned bound_before = a->control.bound_reported;
     const char *result = em_control_handle(&a->control, m, &out, &error);
     a->mid = a->control.previous_mid;
+    for (size_t k = 0; a->control.bound_reported != bound_before && k < a->control.nradios; k++) {
+        const em_control_radio *x = &a->control.radios[k];
+        if (!x->bound)
+            continue;
+        /* logged and counted each time it is used (spec 9) */
+        char *mac = em_mac_str(x->ruid);
+        LOG("radio %s: no transmit power from the pod, its advertised maximum %d dBm reported as a bound", mac,
+            x->tx_power_dbm);
+        free(mac);
+        count(&a->counts, "operating_power_bound_reported");
+    }
     if (result || error != EM_OK) {
         send_frames(a, &out);
         if (result) {

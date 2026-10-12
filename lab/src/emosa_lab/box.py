@@ -3481,6 +3481,69 @@ async def second_radio_parent(box):
     )
 
 
+async def second_radio_no_power(box):
+    """Spec 9, found on rdk-1010 (12 October): OpenSync leaves a radio's Wifi_Radio_State.tx_power
+    unset when the radio's VIFs disagree (its station at 20 dBm, b-ap-50 at 30). The agent still
+    answers the controller's channel procedures: a Channel Preference Query at once, from the
+    capabilities, and a Channel Selection Request naming that radio, whose Operating Channel
+    Report gives the radio's advertised maximum EIRP as a bound. Refused, RDK re-sent its query
+    every second and renewed the agent every minute."""
+    if await serve_radios(box, lambda: both_radios_applied(box)) is None:
+        return box.result(passed=False, failed="the two radios were not both configured")
+    uuid = next(
+        u for u, r in (await box.rows("Wifi_Radio_State")).items() if r.get("freq_band") == "5G"
+    )
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_Radio_State",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "row": {"tx_power": ["set", []]},
+            }
+        ]
+    )
+    await asyncio.sleep(2)  # the agent's refresh takes the pod's rows
+    refused = (
+        ((box.status() or {}).get("session") or {}).get("counts", {}).get("rejected_NOT_READY", 0)
+    )
+    queried = len(box.sent(0x8005))
+    preference = await box.ask(0x8004, (), 0x8005, seconds=5)
+    reported = len(box.sent(0x8008))
+    radio_b = bytes.fromhex(RUID_50.replace(":", ""))
+    selection = await box.ask(0x8006, (Tlv(0x8B, radio_b + b"\x00"),), 0x8007, seconds=5)
+    report = await next_message(box, 0x8008, reported, seconds=10)
+    responses = [t.value for t in selection.tlvs if t.kind == 0x8E] if selection else []
+    operating = [t.value for t in report.tlvs if t.kind == 0x8F] if report else []
+    radio_b_report = next((v for v in operating if v[:6] == radio_b), None)
+
+    def bound_count():
+        """operating_power_bound_reported: the reference counts its channel procedures apart,
+        the C agent with the session's; the status file follows within a second or two."""
+        session = (box.status() or {}).get("session") or {}
+        channels = (session.get("channels") or {}).get("counts") or {}
+        key = "operating_power_bound_reported"
+        return (session.get("counts") or {}).get(key) or channels.get(key)
+
+    bound = await box.until(bound_count, seconds=10)
+    status = box.status() or {}
+    counts = (status.get("session") or {}).get("counts") or {}
+    return box.result(
+        passed=preference is not None
+        and bool(bound)
+        and len(box.sent(0x8005)) - queried == 1
+        and [(v[:6], v[6]) for v in responses] == [(radio_b, 0)]
+        and radio_b_report is not None
+        and (radio_b_report[7], radio_b_report[8], radio_b_report[9]) == (115, 44, 23)
+        and counts.get("rejected_NOT_READY", 0) == refused,
+        preference_answered=preference is not None,
+        selection_codes=[v[6] for v in responses],
+        radio_b_operating=radio_b_report.hex() if radio_b_report else None,
+        not_ready_refusals=counts.get("rejected_NOT_READY", 0) - refused,
+        bound_counted=bound,
+    )
+
+
 async def second_radio_child_credentials(box):
     """Spec 8.6 and 9, found by the rdk-1010 proof (12 October): a GRE child on the Pis' shape
     (its station bhaul-sta-50 on its 5 GHz radio, its uplink credentials from the controller's M2
@@ -3797,6 +3860,7 @@ SCENARIOS = {
     "second-radio-parent": second_radio_parent,
     "second-radio-withdrawn": second_radio_withdrawn,
     "second-radio-child-credentials": second_radio_child_credentials,
+    "second-radio-no-power": second_radio_no_power,
     "second-radio-moves-channel": second_radio_moves_channel,
     "gre-parent-promoted": gre_parent_promoted,
     "gre-parent-demoted": gre_parent_demoted,
@@ -3900,6 +3964,11 @@ OPTIONS = {  # the box each scenario needs beyond the default
         "backhaul": True,
         "gre_child": True,
         "uplink": {"mode": "gre", "station": "bhaul-sta-50"},
+    },
+    "second-radio-no-power": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
+        "underlay": GRE_UNDERLAY,
     },
     "second-radio-moves-channel": {
         "multi_bss": True,

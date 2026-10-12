@@ -29,6 +29,10 @@ typedef struct {
     int channel, tx_power_dbm;
     int8_t max_eirp_dbm;
     bool measured;
+    /* the pod reports no transmit power for the radio (OpenSync leaves Wifi_Radio_State.tx_power
+     * unset when its VIFs disagree): tx_power_dbm is its advertised maximum EIRP, an upper bound,
+     * not a measurement (channel.OperatingRadio.bound, spec 9) */
+    bool bound;
 } em_control_radio;
 
 /* Starts a mandate on the pod; NULL, or why it did not start (e.g. "busy"). */
@@ -58,6 +62,9 @@ typedef struct {
     uint32_t recent[64];
     /* the stored channel and reporting policy, as receipt only */
     bool channel_policy_declined;
+    /* Operating Channel Report TLVs sent with a radio's bound for its power (counted: the agent
+     * logs and counts each, operating_power_bound_reported) */
+    unsigned bound_reported;
     /* keeps an accepted channel policy's record before it is answered
      * (emosa.wire.channel.ChannelPolicyStore); false: it could not be kept, and the
      * request is refused unanswered (NOT_READY). NULL: not kept. */

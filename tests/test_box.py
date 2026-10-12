@@ -559,3 +559,10 @@ def test_a_5ghz_gre_childs_backhaul_credentials_come_from_its_5ghz_radios_set(ag
     result = box("second-radio-child-credentials", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result
     assert result["waiting"].startswith("no upstream")
+
+
+def test_a_radio_with_no_reported_power_still_answers_the_channel_procedures(agent, tmp_path):
+    # spec 9 (rdk-1010): refused, RDK re-sent its query and renewed the pod every minute
+    result = box("second-radio-no-power", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["not_ready_refusals"] == 0 and result["bound_counted"]

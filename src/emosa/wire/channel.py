@@ -22,6 +22,7 @@ that gets no Ack retries (RDK's every few seconds).
 """
 
 import json
+import logging
 import sqlite3
 import time
 from dataclasses import dataclass, field
@@ -31,6 +32,8 @@ from emosa.errors import EmosaError, Reason
 from emosa.wire.autoconfiguration import SECURITY_ENVELOPES
 from emosa.wire.cmdu import Reassembler, Tlv, fragment_message, invalid
 from emosa.wire.reports import PreparedReport
+
+log = logging.getLogger("emosa.wire.channel")
 
 # The operating classes a reported radio may be on and their channels (emosa.opensync.easymesh_view
 # OPERATING_CLASSES): 2.4 GHz, and the non-DFS 5 GHz UNII-1 and UNII-3 classes of a pod's second
@@ -53,10 +56,16 @@ def advertised(operating_class):
 
 @dataclass(frozen=True)
 class OperatingRadio:
+    """A reported radio's operating parameters. ``bound``: the pod reports no transmit power for
+    the radio (OpenSync leaves Wifi_Radio_State.tx_power unset when the radio's VIFs disagree), so
+    tx_power_dbm is the maximum EIRP its capabilities advertise, an upper bound and not a
+    measurement (spec 9)."""
+
     ruid: bytes
     operating_class: int
     channel: int
     tx_power_dbm: int
+    bound: bool = False
 
     def __post_init__(self):
         if (
@@ -67,6 +76,7 @@ class OperatingRadio:
             or self.channel not in CLASS_CHANNELS.get(self.operating_class, ())
             or type(self.tx_power_dbm) is not int
             or not -128 <= self.tx_power_dbm <= 127
+            or type(self.bound) is not bool
         ):
             invalid("operating parameters outside the selected sole-channel contract")
 
@@ -353,10 +363,13 @@ class ChannelCoordinator:
             return self.record("channel_request_budget_exhausted")
         if self.clock() >= received_at + 1:
             raise EmosaError(Reason.NOT_READY, "channel response deadline expired")
-        if self.unmeasured(snapshot):
+        if message.message_type == 0x8006 and self.unmeasured(snapshot):
             # A controller can send these immediately after M2, before the
             # first fresh manager sample (of any of the agent's radios). Wait only within the
             # original wire deadline and control context; duplicates cannot extend either.
+            # A Channel Preference Query is answered from the capabilities at once: it needs no
+            # operating parameters (refused, a controller re-sends it until its configuration
+            # times out and it renews the agent, every minute: rdk-1010, 12 October).
             if len(self.waiting) >= 4:
                 return self.record("channel_observation_wait_budget_exhausted")
             self.waiting[key] = (message, received_at, snapshot.context_token)
@@ -364,7 +377,6 @@ class ChannelCoordinator:
         return self.answer(message, received_at, snapshot)
 
     def answer(self, message, received_at, snapshot):
-        radios = self.radios(snapshot)
         key = (message.message_type, message.mid)
         if message.message_type == 0x8004:
             if message.tlvs:
@@ -374,6 +386,7 @@ class ChannelCoordinator:
             self.send(0x8005, message.mid, (), snapshot, received_at + 1)
             self.queries[key] = self.clock() + 5
             return self.record("channel_preference_report_sent")
+        radios = self.radios(snapshot)
         policies = selected_policy(message.tlvs, radios)
         snapshot.stamp.check(self.stamp(), self.clock())
         if self.clock() >= received_at + 1:
@@ -448,7 +461,18 @@ class ChannelCoordinator:
         return self.record("channel_scan_not_supported_reported")
 
     def notify(self, snapshot, radios):
-        """The Operating Channel Report: one Operating Channel Report TLV per radio (spec 9)."""
+        """The Operating Channel Report: one Operating Channel Report TLV per radio (spec 9). A
+        radio whose power the pod does not report carries its advertised maximum EIRP, a bound:
+        logged and counted each time."""
+        for radio in radios:
+            if radio.bound:
+                log.info(
+                    "radio %s: no transmit power from the pod, its advertised maximum %d dBm "
+                    "reported as a bound",
+                    radio.ruid.hex(":"),
+                    radio.tx_power_dbm,
+                )
+                self.record("operating_power_bound_reported")
         now = self.clock()
         self.pending = PendingOperating(radios, snapshot.context_token, now + 1, now)
         self.transmit(snapshot)

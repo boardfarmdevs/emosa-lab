@@ -273,18 +273,21 @@ def test_startup_requests_wait_for_fresh_observation_with_original_mids(rig):
     rig.publish((1, 2), ())
     before = rig.store.read()
     assert rig.request(0x8006, 41) == "channel_waiting_for_observation"
-    assert rig.request(0x8004, 42) == "channel_waiting_for_observation"
-    assert not rig.sent and rig.store.read() == before
+    # a Channel Preference Query needs no operating parameters: answered from the capabilities
+    # at once (refused, RDK re-sends it and renews the agent every minute: rdk-1010, 12 Oct)
+    assert rig.request(0x8004, 42) == "channel_preference_report_sent"
+    assert [Reassembler().feed(f).mid for f in rig.sent] == [42]
+    assert rig.store.read() == before
     rig.now = 0.2
     rig.publish((1, 3))
     rig.coordinator.tick()
     replies = [Reassembler().feed(f) for f in rig.sent]
     assert [(p.message_type, p.mid) for p in replies] == [
+        (0x8005, 42),
         (0x8007, 41),
         (0x8008, 65535),
-        (0x8005, 42),
     ]
-    assert replies[1].tlvs == (rig.radio.tlv(),)
+    assert replies[2].tlvs == (rig.radio.tlv(),)
     assert rig.store.read()["status"] == "accepted_no_adjustment"
     assert not rig.coordinator.waiting
 

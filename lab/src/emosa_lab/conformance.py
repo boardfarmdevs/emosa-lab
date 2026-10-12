@@ -1538,10 +1538,11 @@ def wsc_m2_vectors():
     }
 
 
-def control_agent(raw, stations, *, second_radio=None):
+def control_agent(raw, stations, *, second_radio=None, second_power=None):
     """A provisioned agent's report source over recorded rows, at time 0. ``second_radio``: the
     channel on which it also reports the pod's 5 GHz radio (spec 9: a GRE parent's or child's
-    second radio), with no BSS of EMOSA's on it."""
+    second radio), with no BSS of EMOSA's on it; ``second_power``: its power as the pod reports it
+    (SECOND_RADIO_POWER), or "unreported": its advertised maximum (23), a bound."""
     from emosa.wire.channel import OperatingRadio
     from emosa.wire.coordinator import ReportSource
 
@@ -1577,7 +1578,8 @@ def control_agent(raw, stations, *, second_radio=None):
                     mac(RUID_50),
                     operating_class("5G", second_radio),
                     second_radio,
-                    SECOND_RADIO_POWER,
+                    23 if second_power == "unreported" else SECOND_RADIO_POWER,
+                    bound=second_power == "unreported",
                 ),
             )
             if second_radio
@@ -2071,14 +2073,26 @@ def control_vectors():
         ),
     ]
     measured |= {"unassociated-query-second-radio", "unassociated-query-second-radio-149"}
+    # the pod reports no power for the second radio (its VIFs disagree, rdk-1010, 12 Oct)
+    unreported = [
+        one("channel-preference-query-power-unreported", 0x8004, 87),
+        one(  # the Operating Channel Report gives its advertised maximum, a bound
+            "channel-selection-power-unreported",
+            0x8006,
+            88,
+            Tlv(0x8B, second + b"\x00"),
+        ),
+    ]
 
-    def run(sequences, *, second_radio=None):
-        return [run_case(name, frames, second_radio) for name, frames in sequences]
+    def run(sequences, *, second_radio=None, second_power=None):
+        return [run_case(name, frames, second_radio, second_power) for name, frames in sequences]
 
-    def run_case(name, frames, second_radio):
+    def run_case(name, frames, second_radio, second_power=None):
         with tempfile.TemporaryDirectory() as directory:
             rows = on_channel(raw, "5G", second_radio) if second_radio else copy.deepcopy(raw)
-            source, _ = control_agent(rows, stations, second_radio=second_radio)
+            source, _ = control_agent(
+                rows, stations, second_radio=second_radio, second_power=second_power
+            )
             sent, handed = [], []
             mids = MidSequence(499)
             handlers = (
@@ -2199,6 +2213,18 @@ def control_vectors():
                 },
             ],
             "cases": run(unii3, second_radio=149),
+        },
+        "multi_radio_unreported": {
+            "description": "spec 9: as multi_radio, the pod reporting no transmit power for the "
+            "5 GHz radio (OpenSync leaves Wifi_Radio_State.tx_power unset when the radio's VIFs "
+            "disagree): 'tx_power' null. The Channel Preference Query is answered from the "
+            "capabilities; the Operating Channel Report gives the radio's advertised maximum "
+            "EIRP (max_eirp) as its power, a bound, not a measurement.",
+            "radios": [
+                {"ruid": RUID, "class": 81, "channel": 6, "tx_power": radio_power, "max_eirp": 30},
+                {"ruid": RUID_50, "class": 115, "channel": 44, "tx_power": None, "max_eirp": 23},
+            ],
+            "cases": run(unreported, second_radio=44, second_power="unreported"),
         },
     }
 

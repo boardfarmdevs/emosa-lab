@@ -242,11 +242,9 @@ static const char *channel(em_control *c, const em_message *m, em_frames *out, e
         return "duplicate_channel_request";
     em_control_radio radios[4];
     size_t nradios = control_radios(c, radios);
-    for (size_t k = 0; k < nradios; k++)
-        if (!radios[k].measured || radios[k].tx_power_dbm > radios[k].max_eirp_dbm) {
-            *error = EM_NOT_READY; /* measured operating parameters unavailable */
-            return NULL;
-        }
+    /* A Channel Preference Query needs no operating parameters: answered from the capabilities at
+     * once (refused, RDK re-sends it until its configuration times out and it renews the agent,
+     * every minute: rdk-1010, 12 October) */
     if (m->message_type == 0x8004) {
         if (m->ntlvs) {
             *error = EM_INVALID_INPUT;
@@ -256,6 +254,11 @@ static const char *channel(em_control *c, const em_message *m, em_frames *out, e
         remember(c, m->message_type, m->mid);
         return *error == EM_OK ? "channel_preference_report_sent" : NULL;
     }
+    for (size_t k = 0; k < nradios; k++)
+        if (!radios[k].measured || radios[k].tx_power_dbm > radios[k].max_eirp_dbm) {
+            *error = EM_NOT_READY; /* measured operating parameters unavailable */
+            return NULL;
+        }
     named_radio named[4];
     size_t nnamed = 0;
     em_reason r = channel_policy(m, radios, nradios, named, &nnamed);
@@ -288,6 +291,7 @@ static const char *channel(em_control *c, const em_message *m, em_frames *out, e
      * TLV per radio of the agent */
     uint8_t response[4][7], report[4][10];
     em_tlv rt[4], ot[4];
+    unsigned bound = 0; /* TLVs with a radio's advertised maximum for its power, a bound */
     for (size_t i = 0; i < nnamed; i++) {
         memcpy(response[i], radios[named[i].radio].ruid, 6);
         response[i][6] = named[i].decline ? 0x02 : 0x00;
@@ -299,6 +303,8 @@ static const char *channel(em_control *c, const em_message *m, em_frames *out, e
         report[k][7] = radios[k].op_class;
         report[k][8] = (uint8_t)radios[k].channel;
         report[k][9] = (uint8_t)radios[k].tx_power_dbm;
+        if (radios[k].bound)
+            bound++;
         ot[k] = (em_tlv){0x8F, 10, report[k]};
     }
     free_named(named, nnamed);
@@ -309,6 +315,7 @@ static const char *channel(em_control *c, const em_message *m, em_frames *out, e
     }
     remember(c, m->message_type, m->mid);
     c->channel_policy_declined = declined;
+    c->bound_reported += bound;
     return declined ? "channel_selection_declined" : "channel_selection_accepted";
 }
 

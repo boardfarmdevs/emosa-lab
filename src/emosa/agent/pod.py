@@ -496,22 +496,27 @@ class PodReportSource:
             if self._clients is not None and self._clients[0] == self.revision:
                 report = replace(report, clients=self._clients[1])
             self._clients = (self.revision, report.clients)
-            # Measured operating parameters (channel procedures, Operating Channel
-            # Report) only while the BSS operates on the one supported channel.
-            operating = (
-                (OperatingRadio(radio.ruid, 81, channel, radio.tx_power),)
-                if primary
-                and channel == 6
-                and radio.tx_power is not None
-                and radio.tx_power <= max_eirp
-                else ()
-            )
+
+            def operated(r, opclass, ch, eirp):
+                """A radio's operating parameters at its reported power, within the power it
+                advertises; with no power reported (OpenSync leaves Wifi_Radio_State.tx_power
+                unset when the radio's VIFs disagree) at its advertised maximum EIRP, a bound
+                (spec 9: refused, a controller renews the agent every minute)."""
+                if r.tx_power is None:
+                    return (OperatingRadio(r.ruid, opclass, ch, eirp, bound=True),)
+                return (
+                    (OperatingRadio(r.ruid, opclass, ch, r.tx_power),) if r.tx_power <= eirp else ()
+                )
+
+            # Operating parameters (channel procedures, Operating Channel Report) only while
+            # the BSS operates on the one supported channel.
+            operating = operated(radio, 81, channel, max_eirp) if primary and channel == 6 else ()
             # spec 9: each further radio on its own observed channel (it follows the pod's
-            # station), within the power it advertises
+            # station)
             for r, ch, _ in bound[1:]:
                 opclass = operating_class(r.band, ch)
-                if r.tx_power is not None and r.tx_power <= _eirp(r) and opclass is not None:
-                    operating += (OperatingRadio(r.ruid, opclass, ch, r.tx_power),)
+                if opclass is not None:
+                    operating += operated(r, opclass, ch, _eirp(r))
             self.source.publish(
                 (raw["generation"], self.revision),
                 self.capabilities,
