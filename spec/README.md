@@ -679,6 +679,17 @@ gateway LAN. The design and its reasoning are in
 [`docs/concepts/data-plane.md`](../docs/concepts/data-plane.md). Any
 integration MUST meet the following.
 
+**Scenarios.** A production deployment runs either real EasyMesh extenders only (**(a)
+extenders-only**) or OpenSync pods only (**(b) pods-only**, EMOSA's own case and V54's physical
+shape), never both. A lab may run both (**(c) mixed**); that is not a production case and may take
+shortcuts. The design proves **(b)** first. **(a)** MUST NOT regress, since EMOSA's controller patches touch
+the controller that also serves the native extender mesh. **(c)** only needs to work, and needs no
+per-pod backhaul withdrawal that spares the extenders: §8.6's network-wide withdrawal stands. A rule
+that serves one scenario rather than all three names it as `(a)`, `(b)` or `(c)`. Both pod data-plane
+mechanisms are **(b)**: the EasyMesh backhaul move of §8.3 (layer A, pod onto pod as a 4-address
+Multi-AP station, for radios that can do it, such as hwsim) and the GRE parent/child of §8.6
+(layer B, for radios that cannot, such as the Pis' MT7921U, and for multi-hop).
+
 ### 8.1 Requirements
 
 | # | Requirement |
