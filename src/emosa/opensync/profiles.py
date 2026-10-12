@@ -40,6 +40,10 @@ class PodProfile:
     backhaul_mode: str = "multi-ap"
     gre_parent_vif: dict | None = None
     gre_parent_inet: dict | None = None
+    # additional radios EMOSA binds and reports beyond the fronthaul's radio (spec 9, the second
+    # radio of 8.6): ({"band", "ht_mode"?, "chipset"}, ...). EMOSA writes no channel/ht_mode on
+    # them (they follow the station) and reports the observed channel.
+    radios: tuple = ()
 
     @property
     def backhaul_row(self):
@@ -71,4 +75,5 @@ def load(ref=DEFAULT):
         data.get("backhaul_mode", "multi-ap"),
         data.get("gre_parent", {}).get("vif", {}),
         data.get("gre_parent", {}).get("inet", {}),
+        tuple(data.get("radios", ())),
     )

@@ -396,6 +396,28 @@ def test_a_gre_parent_pods_backhaul_bss_is_its_parent_ap(tmp_path):
     assert pod.parent_aps == {"b-ap-24"}
 
 
+def test_a_profile_may_declare_additional_radios(tmp_path):
+    """Spec 9 / 8.6 second radio: a profile may list radios EMOSA binds beyond the fronthaul's
+    `radio` (the radio carrying the uplink station, and, for a parent, the parent AP on it)."""
+    from emosa.opensync import profiles
+
+    data = json.loads(
+        (Path(profiles.__file__).parents[1] / "profiles" / f"{profiles.DEFAULT}.json").read_text()
+    )
+    data["radios"] = [{"band": "5G", "ht_mode": "HT40", "chipset": "mac80211_hwsim"}]
+    path = tmp_path / "two-radio.json"
+    path.write_text(json.dumps(data))
+    profile = profiles.load(str(path))
+    assert profile.band == "2.4G"  # the fronthaul radio is unchanged
+    assert profile.radios == ({"band": "5G", "ht_mode": "HT40", "chipset": "mac80211_hwsim"},)
+
+
+def test_a_profile_without_additional_radios_has_an_empty_radios_tuple():
+    from emosa.opensync import profiles
+
+    assert profiles.load().radios == ()
+
+
 def test_a_gre_parent_slot_present_gets_the_underlays_inet_row(tmp_path):
     raw = with_slot_vif("b-ap-24")
     raw["Wifi_VIF_Config"][EXTRA].update(multi_ap="backhaul_bss", bridge="br-home")

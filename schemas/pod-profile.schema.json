@@ -21,6 +21,21 @@
         "chipset": {"type": "string", "minLength": 1, "maxLength": 64}
       }
     },
+    "radios": {
+      "type": "array",
+      "maxItems": 2,
+      "description": "Additional radios EMOSA binds and reports beyond the fronthaul's `radio` (spec 9, the GRE parent's/child's second radio of 8.6): the radio that carries the pod's uplink station, and, for a parent, the parent AP on it. EMOSA writes no `channel` or `ht_mode` on these (they follow the station) and reports the channel observed in `Wifi_Radio_State`.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["band", "chipset"],
+        "properties": {
+          "band": {"enum": ["5G", "6G"]},
+          "ht_mode": {"type": "string", "minLength": 1, "maxLength": 16},
+          "chipset": {"type": "string", "minLength": 1, "maxLength": 64}
+        }
+      }
+    },
     "fronthaul": {
       "type": "object",
       "additionalProperties": false,
