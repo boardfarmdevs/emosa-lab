@@ -9,7 +9,7 @@ from this component retain their distinct wsc-component origin and atomic receip
 from dataclasses import dataclass
 
 from emosa.errors import EmosaError, Reason
-from emosa.model import Intent
+from emosa.model import Intent, RadioIntent
 from emosa.wire.cmdu import mac
 
 
@@ -80,6 +80,15 @@ class WscComponentBridge:
             or (exchange.basic.max_bss != 1 and not exchange.multi_bss)
         ):
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "component requires one simulated BSS")
+        # a further radio's scope (spec 9) has no primary BSS: it maps its radio's whole M2 set
+        # onto its slots, and its target names the radio as its resource
+        self.primary = getattr(backend, "primary_bss", True)
+        if not self.primary and (
+            not exchange.multi_bss
+            or target.radio_id != backend.radio_id
+            or target.bss_id != target.radio_id
+        ):
+            raise EmosaError(Reason.UNSUPPORTED_OPERATION, "a radio scope maps its radio's M2 set")
         self.engine, self.exchange, self.target = engine, exchange, target
         self.backend, self.current_context = backend, current_context
         self.run_id, self.deadline = run_id, deadline
@@ -141,29 +150,42 @@ class WscComponentBridge:
             # Invalid/unsupported packets get here only after complete-message,
             # crypto, encrypted-role and sole-M2 scope checks have all passed.
             ref = "wsc-" + self.exchange.exchange_id
-            refs.append(ref)
-            self.engine.vault.persist_received(ref, result.candidate.passphrase)
+            if self.primary:
+                refs.append(ref)
+                self.engine.vault.persist_received(ref, result.candidate.passphrase)
+            # only now: a refused persist (an existing secret) must never be cleaned up below
             created = True
             additional = None
             if self.exchange.multi_bss:
                 additional = []
-                kept = fitted(result.additional, getattr(self.backend, "slots", None))
+                # a radio scope fits the first fronthaul BSS with the others: only the order
+                # within a role matters to the fitting, and it is the first fronthaul received
+                pairs = (
+                    result.additional
+                    if self.primary
+                    else (("fronthaul", result.candidate), *result.additional)
+                )
+                kept = fitted(pairs, getattr(self.backend, "slots", None))
                 # numbered in kept order: the same references as before when all are kept
                 for index, (role, candidate) in enumerate(
-                    (pair for n, pair in enumerate(result.additional) if n in kept), 1
+                    (pair for n, pair in enumerate(pairs) if n in kept), 1
                 ):
                     extra = f"{ref}-{index}"
                     self.engine.vault.persist_received(extra, candidate.passphrase)
                     refs.append(extra)
                     additional.append({"role": role, "ssid": candidate.ssid, "secret_ref": extra})
                 additional = tuple(additional)
-            intent = Intent(
-                self.target.pod_id,
-                self.target.radio_id,
-                self.target.bss_id,
-                result.candidate.ssid,
-                ref,
-                additional=additional,
+            intent = (
+                Intent(
+                    self.target.pod_id,
+                    self.target.radio_id,
+                    self.target.bss_id,
+                    result.candidate.ssid,
+                    ref,
+                    additional=additional,
+                )
+                if self.primary
+                else RadioIntent(self.target.pod_id, self.target.radio_id, additional)
             )
             await self.backend.plan(intent)
             await self._bound()

@@ -15,6 +15,7 @@ from importlib.resources import files
 from pathlib import Path
 
 from emosa.config import validate
+from emosa.errors import EmosaError, Reason
 
 DEFAULT = "opensync-lab-hwsim-6.6.1-v1"
 
@@ -61,6 +62,16 @@ def load(ref=DEFAULT):
         text = files("emosa").joinpath(f"profiles/{ref}.json").read_text()
     data = json.loads(text)
     validate("pod-profile", data)
+    # a slot is on the fronthaul's radio or on one of the profile's further radios (spec 9),
+    # whose scope writes it; a slot on a radio the profile does not bind would never be served
+    bands = [r["band"] for r in data.get("radios", ())]
+    if len(set(bands)) != len(bands) or data["radio"]["band"] in bands:
+        raise EmosaError(Reason.INVALID_INPUT, f"pod profile {data['id']}: one radio per band")
+    for slot in data["extra_slots"]:
+        if slot.get("band", data["radio"]["band"]) not in (data["radio"]["band"], *bands):
+            raise EmosaError(
+                Reason.INVALID_INPUT, f"pod profile {data['id']}: {slot['if_name']} on no radio"
+            )
     return PodProfile(
         data["id"],
         data["radio"]["band"],

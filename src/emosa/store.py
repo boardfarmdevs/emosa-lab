@@ -154,7 +154,8 @@ class Store:
                 or wsc_receipt["exchange_id"] != op.idempotency_key
                 or wsc_receipt["pod_id"] != op.pod_id
                 or wsc_receipt["radio_id"] != op.intent["radio_id"]
-                or wsc_receipt["bss_id"] != op.intent["bss_id"]
+                # a radio scope's intent (spec 9) has no BSS of its own: its receipt names the radio
+                or wsc_receipt["bss_id"] != op.intent.get("bss_id", op.intent["radio_id"])
                 or op.request_source != "wsc-component:" + wsc_receipt["controller_al"]
             ):
                 raise EmosaError(Reason.INVALID_INPUT, "WSC receipt and operation binding differ")

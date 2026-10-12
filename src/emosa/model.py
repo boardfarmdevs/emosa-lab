@@ -56,20 +56,7 @@ class Intent:
         if not 1 <= len(self.ssid.encode("utf-8")) <= 32 or "\x00" in self.ssid:
             raise EmosaError(Reason.INVALID_INPUT, "SSID must contain 1–32 UTF-8 bytes, no NUL")
         if self.additional is not None:
-            if not isinstance(self.additional, (tuple, list)) or len(self.additional) > 7:
-                raise EmosaError(Reason.INVALID_INPUT, "at most seven additional BSSes")
-            for bss in self.additional:
-                if (
-                    not isinstance(bss, dict)
-                    or set(bss) != {"role", "ssid", "secret_ref"}
-                    or bss["role"] not in ("fronthaul", "backhaul")
-                    or not isinstance(bss["ssid"], str)
-                    or not 1 <= len(bss["ssid"].encode("utf-8")) <= 32
-                    or "\x00" in bss["ssid"]
-                    or not isinstance(bss["secret_ref"], str)
-                    or not bss["secret_ref"]
-                ):
-                    raise EmosaError(Reason.INVALID_INPUT, "invalid additional BSS")
+            check_additional(self.additional)
         if self.security_mode != "wpa2-psk" or self.enabled is not True:
             raise EmosaError(Reason.UNSUPPORTED_OPERATION, "only enabled existing WPA2-PSK APs")
         if any(
@@ -91,13 +78,68 @@ class Intent:
         } | (
             {}
             if self.additional is None
-            else {
-                "additional": sorted(
-                    [b["role"], b["ssid"], vault.fingerprint(vault.resolve(b["secret_ref"]))]
-                    for b in self.additional
-                )
-            }
+            else {"additional": additional_target(self.additional, vault)}
         )
+
+
+def check_additional(additional):
+    """An intent's further BSSes: at most seven, each a role, an SSID and a secret reference."""
+    if not isinstance(additional, (tuple, list)) or len(additional) > 7:
+        raise EmosaError(Reason.INVALID_INPUT, "at most seven additional BSSes")
+    for bss in additional:
+        if (
+            not isinstance(bss, dict)
+            or set(bss) != {"role", "ssid", "secret_ref"}
+            or bss["role"] not in ("fronthaul", "backhaul")
+            or not isinstance(bss["ssid"], str)
+            or not 1 <= len(bss["ssid"].encode("utf-8")) <= 32
+            or "\x00" in bss["ssid"]
+            or not isinstance(bss["secret_ref"], str)
+            or not bss["secret_ref"]
+        ):
+            raise EmosaError(Reason.INVALID_INPUT, "invalid additional BSS")
+
+
+def additional_target(additional, vault):
+    """Sorted [role, ssid, key fingerprint] of an intent's further BSSes, as a backend reports
+    its slot rows."""
+    return sorted(
+        [b["role"], b["ssid"], vault.fingerprint(vault.resolve(b["secret_ref"]))]
+        for b in additional
+    )
+
+
+@dataclass(frozen=True)
+class RadioIntent:
+    """The BSSes a further radio of the pod serves from its own M2 set (spec 9).
+
+    One M2 configures one radio (EasyMesh 6.1 §7.1), so each of a pod's further radios is its
+    own scope: its M2 set is fitted to that radio's slots only (a GRE parent's b-ap-50 on 5 GHz)
+    and the fronthaul's scope never writes them. There is no primary BSS: such a radio serves no
+    fronthaul of its own, so the set's fronthaul BSSes beyond its slots are left out (spec 3.4).
+    An empty ``additional``: the radio's set maps none of its slots (the controller left the
+    backhaul BSS out of this band), so its slot VIFs are removed.
+    """
+
+    pod_id: str
+    radio_id: str
+    additional: tuple = ()
+
+    def record(self):
+        return {
+            "pod_id": self.pod_id,
+            "radio_id": self.radio_id,
+            "additional": [dict(b) for b in self.additional],
+        }
+
+    def validate(self):
+        if any(not isinstance(x, str) or not x for x in (self.pod_id, self.radio_id)):
+            raise EmosaError(Reason.INVALID_INPUT, "explicit pod and radio references required")
+        check_additional(self.additional)
+
+    def target(self, vault):
+        self.validate()
+        return {"additional": additional_target(self.additional, vault)}
 
 
 @dataclass

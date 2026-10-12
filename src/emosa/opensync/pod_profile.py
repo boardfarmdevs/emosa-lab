@@ -69,6 +69,13 @@ VIF_GUARDS = (
 MULTI_AP = {"fronthaul": "fronthaul_bss", "backhaul": "backhaul_bss"}
 
 
+def slots_on(profile, band):
+    """The profile's extra slots whose VIF is on the radio of ``band`` (spec 9): a slot names its
+    radio's band in ``slot_bands``, else it is on the fronthaul's radio."""
+    bands = dict(profile.slot_bands)
+    return tuple(s for s in profile.extra_slots if bands.get(s[0], profile.band) == band)
+
+
 class PodBackend(OpenSyncBackend):
     """One fronthaul AP VIF on one real OpenSync 6.6 pod, bound by serial."""
 
@@ -96,26 +103,27 @@ class PodBackend(OpenSyncBackend):
             radio_name="",
             expected_serial=serial,
         )
-        # multi_bss: the radio takes an M2 set (spec 3.4); its slots, the further BSSes it maps
+        # multi_bss: the radio takes an M2 set (spec 3.4); its slots, the further BSSes it maps.
+        # One M2 configures one radio (spec 9): this scope owns the slots on the fronthaul's radio;
+        # a slot on another of the profile's radios is that radio's scope's (RadioBackend).
         self.multi_bss = multi_bss
-        self.slots = self.profile.extra_slots if multi_bss else ()
-        self.max_bss = 1 + len(self.slots)
-        self.state_provenance = PROVENANCE
         self.band, self.channel = self.profile.band, self.profile.channel
         self.ht_mode = self.profile.ht_mode
+        # every slot EMOSA manages on the pod, whichever radio's scope writes it (the report)
+        self.pod_slots = self.profile.extra_slots if multi_bss else ()
+        self.slots = slots_on(self.profile, self.band) if multi_bss else ()
+        self.max_bss = 1 + len(self.slots)
+        self.state_provenance = PROVENANCE
         self.anchor = None
         self.identity = None  # radio MAC, BSSID (None before the VIF exists), channel, radio
-        # spec 9: the Wifi_Radio_Config uuid of each radio EMOSA binds, by band (the fronthaul's
-        # `band`, and each of the profile's additional radios), set by _binding for the slot
-        # rendering to place a slot on its own radio (a parent's b-ap-50 on 5 GHz)
-        self.radio_uuid_by_band = {}
 
     @property
     def parent_aps(self):
-        """The slot VIFs a backhaul BSS takes as the pod's GRE parent AP (spec 8.6)."""
+        """The slot VIFs a backhaul BSS takes as the pod's GRE parent AP (spec 8.6), on any of the
+        pod's radios (a parent's b-ap-50 is on its 5 GHz radio, spec 9)."""
         if self.profile.backhaul_mode != "gre-parent":
             return frozenset()
-        return frozenset(name for name, role, _ in self.slots if role == "backhaul")
+        return frozenset(name for name, role, _ in self.pod_slots if role == "backhaul")
 
     def _values(self, row):
         psks = row.get("wpa_psks") or {}
@@ -128,7 +136,9 @@ class PodBackend(OpenSyncBackend):
             "credential_fingerprint": self.vault.fingerprint(key) if key is not None else None,
         }
 
-    def _binding(self, snapshot):
+    def _radio(self, snapshot):
+        """The bound pod and the one radio of this scope's band: (decoded rows, the radio's
+        Wifi_Radio_Config uuid and row, its Wifi_Radio_State rows)."""
         schema, tables = snapshot["schema"], snapshot["tables"]
         decoded = {
             t: {u: schema.row(t, row) for u, row in rows.items()} for t, rows in tables.items()
@@ -145,20 +155,15 @@ class PodBackend(OpenSyncBackend):
             raise EmosaError(Reason.NOT_READY, "no single radio of the bound band")
         radio_uuid, radio = radios[0]
         self.radio_name = radio.get("if_name")
-        # spec 9: the uuid of each radio EMOSA binds, by band - the fronthaul and each of the
-        # profile's additional radios present as a single Wifi_Radio_Config of that band, so the
-        # slot rendering can place a parent's b-ap-<band> on its own radio.
-        by_band = {self.band: radio_uuid}
-        for extra in self.profile.radios:
-            band = extra["band"]
-            of_band = [
-                u
-                for u, r in decoded.get("Wifi_Radio_Config", {}).items()
-                if r.get("freq_band") == band
-            ]
-            if len(of_band) == 1:
-                by_band[band] = of_band[0]
-        self.radio_uuid_by_band = by_band
+        radio_states = [
+            r
+            for r in decoded.get("Wifi_Radio_State", {}).values()
+            if r.get("radio_config") == radio_uuid
+        ]
+        return decoded, radio_uuid, radio, radio_states
+
+    def _binding(self, snapshot):
+        decoded, radio_uuid, radio, radio_states = self._radio(snapshot)
         configs = [
             (u, r)
             for u, r in decoded.get("Wifi_VIF_Config", {}).items()
@@ -169,11 +174,6 @@ class PodBackend(OpenSyncBackend):
         vif_uuid, config = configs[0] if configs else (None, {})
         if vif_uuid is not None and vif_uuid not in (radio.get("vif_configs") or []):
             raise EmosaError(Reason.NOT_READY, "bound VIF is not on the bound band's radio")
-        radio_states = [
-            r
-            for r in decoded.get("Wifi_Radio_State", {}).values()
-            if r.get("radio_config") == radio_uuid
-        ]
         states = [
             (u, r)
             for u, r in decoded.get("Wifi_VIF_State", {}).items()
@@ -215,9 +215,7 @@ class PodBackend(OpenSyncBackend):
             # so that an M2 set's intent (its additional BSSes fitted to the slots) matches
             # (the C agent's PodBackend the same)
             if self.multi_bss:
-                extras = self._extras(
-                    decoded, set(self.radio_uuid_by_band.values()) or {radio_uuid}
-                )
+                extras = self._extras(decoded, radio_uuid)
                 configured["additional"] = self._additional(e["config"] for e in extras.values())
                 observed["additional"] = self._additional(
                     e["state"] for e in extras.values() if e["state"]
@@ -279,22 +277,16 @@ class PodBackend(OpenSyncBackend):
             )
         return sorted(values, key=json.dumps)
 
-    def _extras(self, decoded, radio_uuids):
-        """Slot VIFs present on any of the pod's bound radios: if_name -> uuid, Config row, State
-        row. A slot's VIF may be on the fronthaul radio or on a second radio (spec 9), so a slot is
-        matched against the vif_configs of every bound radio."""
+    def _extras(self, decoded, radio_uuid):
+        """This scope's slot VIFs present on its radio: if_name -> uuid, Config row, State row."""
         names = {name for name, _, _ in self.slots}
-        on_a_bound_radio = set()
-        for radio_uuid in radio_uuids:
-            on_a_bound_radio.update(
-                decoded["Wifi_Radio_Config"][radio_uuid].get("vif_configs") or []
-            )
+        on_radio = set(decoded["Wifi_Radio_Config"][radio_uuid].get("vif_configs") or [])
         found = {}
         for uuid, row in decoded.get("Wifi_VIF_Config", {}).items():
             name = row.get("if_name")
             if name not in names:
                 continue
-            if name in found or uuid not in on_a_bound_radio:
+            if name in found or uuid not in on_radio:
                 raise EmosaError(Reason.NOT_READY, "slot VIF ambiguous or on another radio")
             states = [
                 r
@@ -399,7 +391,7 @@ class PodBackend(OpenSyncBackend):
         if not raw["ready"] or not self.identity:
             raise EmosaError(Reason.NOT_READY, "complete current references/state required")
         if self.slots:
-            self._extras(decoded, set(self.radio_uuid_by_band.values()) or {radio_uuid})
+            self._extras(decoded, radio_uuid)
         common = {
             "mapping": self.profile.id,
             "radio_id": self.radio_id,
@@ -520,16 +512,14 @@ class PodBackend(OpenSyncBackend):
         return transaction, counts
 
     async def _extra_ops(self, intent, raw, radio_uuid):
-        """Make the managed slot VIFs exactly the intent's additional BSSes."""
+        """Make the scope's slot VIFs on its radio exactly the intent's additional BSSes: insert
+        and delete of its own VIFs in the radio's vif_configs, never a replace that would drop
+        the pod's own rows there (its backhaul station, spec 9)."""
         decoded = {
             t: {u: raw["schema"].row(t, r) for u, r in rows.items()}
             for t, rows in raw["tables"].items()
         }
-        slot_bands = dict(
-            self.profile.slot_bands
-        )  # spec 9: a slot's radio band (else the fronthaul)
-        bound_uuids = set(self.radio_uuid_by_band.values()) or {radio_uuid}
-        extras = self._extras(decoded, bound_uuids)
+        extras = self._extras(decoded, radio_uuid)
         assigned = self._assign(intent)
         inet = await self.session.transact(
             [{"op": "select", "table": "Wifi_Inet_Config", "where": [], "columns": ["if_name"]}]
@@ -537,8 +527,6 @@ class PodBackend(OpenSyncBackend):
         inet_names = {row.get("if_name") for row in (inet[0].get("rows", []) if inet else [])}
         ops, counts = [], []
         for index, (name, role, radio_idx) in enumerate(self.slots):
-            # spec 9: the radio this slot's VIF belongs on - its band's radio, else the fronthaul's
-            slot_radio = self.radio_uuid_by_band.get(slot_bands.get(name, self.band), radio_uuid)
             present = extras.get(name)
             if present:
                 raw_row = raw["tables"]["Wifi_VIF_Config"][present["uuid"]]
@@ -557,7 +545,7 @@ class PodBackend(OpenSyncBackend):
                     {
                         "op": "mutate",
                         "table": "Wifi_Radio_Config",
-                        "where": where_uuid(slot_radio),
+                        "where": where_uuid(radio_uuid),
                         "mutations": [
                             ["vif_configs", "delete", ["set", [["uuid", present["uuid"]]]]]
                         ],
@@ -641,7 +629,7 @@ class PodBackend(OpenSyncBackend):
                         {
                             "op": "mutate",
                             "table": "Wifi_Radio_Config",
-                            "where": where_uuid(slot_radio),
+                            "where": where_uuid(radio_uuid),
                             "mutations": [
                                 ["vif_configs", "insert", ["set", [["named-uuid", named]]]]
                             ],
@@ -717,6 +705,18 @@ class PodBackend(OpenSyncBackend):
             extra_ops, extra_counts = await self._extra_ops(intent, raw, radio_uuid)
             transaction += extra_ops
             counts += extra_counts
+        return await self._commit(
+            transaction,
+            counts,
+            attempt,
+            raw,
+            decoded,
+            action="create" if vif_uuid is None else "update",
+            additional=len(intent.additional or ()),
+        )
+
+    async def _commit(self, transaction, counts, attempt, raw, decoded, *, action, additional):
+        """Send one guarded transaction and judge its reply (the submit of every radio's scope)."""
         if self.before_transaction:
             await self.before_transaction()
         discard, self.drop_next_reply = self.drop_next_reply, False
@@ -747,8 +747,145 @@ class PodBackend(OpenSyncBackend):
                 "session_generation": raw["generation"],
                 **({"instance": instance} if instance else {}),
                 "profile": self.profile.id,
-                "action": "create" if vif_uuid is None else "update",
-                "additional_bss_count": len(intent.additional or ()),
+                "action": action,
+                "additional_bss_count": additional,
                 "results": results,
             },
+        )
+
+
+class RadioBackend(PodBackend):
+    """A further radio of the pod (spec 9): the slots on it, from that radio's own M2 set.
+
+    One M2 configures one radio (EasyMesh 6.1 §7.1), so each of the profile's ``radios`` is its
+    own scope with its own operations: a GRE parent's b-ap-50 on its 5 GHz radio is written from
+    the 5 GHz radio's M2, never from the fronthaul's, and a renew of one radio leaves the other's
+    BSSes alone. The radio serves no fronthaul of its own: its intent (``RadioIntent``) is the
+    set's BSSes fitted to its slots. Of the radio it writes only its slot VIFs (insert/delete of
+    its own references in ``vif_configs``) and their Inet rows; never the channel or ``ht_mode``
+    (the radio follows the pod's station on it) nor the pod's own rows there (the station).
+    """
+
+    primary_bss = False  # the WSC bridge builds a RadioIntent: no primary fronthaul BSS
+
+    def __init__(
+        self, pod_id, session, vault, *, serial, band, profile=None, multi_bss=False, underlay=None
+    ):
+        super().__init__(
+            pod_id,
+            session,
+            vault,
+            serial=serial,
+            profile=profile,
+            multi_bss=multi_bss,
+            underlay=underlay,
+        )
+        if band == self.profile.band or band not in {r["band"] for r in self.profile.radios}:
+            raise EmosaError(Reason.INVALID_INPUT, "not one of the profile's further radios")
+        self.band = band
+        self.if_name = None  # no bound fronthaul VIF
+        self.radio_id = self.bss_id = f"radio-{band}"
+        self.channel = self.ht_mode = None  # never written (spec 9)
+        self.slots = slots_on(self.profile, band) if multi_bss else ()
+        self.max_bss = len(self.slots)
+
+    def _binding(self, snapshot):
+        decoded, radio_uuid, _, radio_states = self._radio(snapshot)
+        self.identity = (
+            {
+                "radio_mac": radio_states[0].get("mac"),
+                "bssid": None,
+                "channel": radio_states[0].get("channel"),
+                "radio_if_name": self.radio_name,
+            }
+            if len(radio_states) == 1 and radio_states[0].get("mac")
+            else None
+        )
+        return None, radio_uuid, {}, {}, decoded
+
+    async def snapshot(self):
+        """The radio's slot BSSes as the pod has them; ready once the pod and radio are bound."""
+        self.identity = None
+        try:
+            raw = await self.session.snapshot()
+            _, radio_uuid, _, _, decoded = self._binding(raw)
+            extras = self._extras(decoded, radio_uuid)
+            ready = bool(raw["ready"] and self.identity)
+            self.last = Snapshot(
+                {"additional": self._additional(e["config"] for e in extras.values())},
+                Observation(
+                    self.pod_id,
+                    self.bss_id,
+                    {
+                        "additional": self._additional(
+                            e["state"] for e in extras.values() if e["state"]
+                        )
+                    },
+                    "ovsdb",
+                    self.mode,
+                    raw["generation"],
+                    utc_now(),
+                    ready,
+                    self.state_provenance,
+                    revision=raw["revision"],
+                ),
+                ready,
+                raw["generation"],
+                raw["schema"].fingerprint,
+                self._instance(decoded),
+            )
+        except (EmosaError, ConnectionError, TimeoutError):
+            if self.last is None:
+                raise
+            self.last.ready = False
+            self.last.observed.fresh = False
+        return self.last
+
+    async def plan(self, intent):
+        intent.target(self.vault)
+        if (intent.pod_id, intent.radio_id) != (self.pod_id, self.radio_id):
+            raise EmosaError(Reason.UNSUPPORTED_OPERATION, "request exceeds the bound radio")
+        assigned = self._assign(intent)
+        if not self.underlay and self.parent_aps & set(assigned):
+            raise EmosaError(
+                Reason.UNSUPPORTED_OPERATION, "a GRE parent AP needs the pod's underlay (spec 8.6)"
+            )
+        raw = await self.session.snapshot()
+        _, radio_uuid, _, _, decoded = self._binding(raw)
+        if not raw["ready"] or not self.identity:
+            raise EmosaError(Reason.NOT_READY, "complete current references/state required")
+        self._extras(decoded, radio_uuid)
+        return {
+            "mapping": self.profile.id,
+            "radio_id": self.radio_id,
+            "bss_id": self.bss_id,
+            "action": "slots",
+            "additional_slots": {name: bss["role"] for name, bss in assigned.items()},
+            "fields": ["Wifi_VIF_Config", "Wifi_Radio_Config.vif_configs", "Inet"],
+            "guard": "pod serial, the radio, its slot VIFs",
+        }
+
+    async def submit(self, intent, attempt):
+        await self.plan(intent)
+        raw = await self.session.snapshot()
+        _, radio_uuid, _, _, decoded = self._binding(raw)
+        if raw["generation"] != attempt["session_generation"]:
+            return SubmitResult("rejected", {}, Reason.NOT_READY)
+        radio = raw["tables"]["Wifi_Radio_Config"][radio_uuid]
+        # the radio's identity only: its vif_configs also hold the pod's own station, which the
+        # pod may change at any time; EMOSA's insert/delete of its own references is atomic
+        transaction = [
+            self._node_guard(raw),
+            guard("Wifi_Radio_Config", radio_uuid, radio, ["if_name"]),
+        ]
+        counts = [None, None]
+        extra_ops, extra_counts = await self._extra_ops(intent, raw, radio_uuid)
+        return await self._commit(
+            transaction + extra_ops,
+            counts + extra_counts,
+            attempt,
+            raw,
+            decoded,
+            action="slots",
+            additional=len(intent.additional),
         )

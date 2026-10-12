@@ -251,7 +251,8 @@ class PodReportSource:
             radio.enabled and wpa2_psk(primary.vif) and radio.channel is not None
         ):
             primary = None
-        extras = [radio.bss(name) for name, _, _ in self.backend.slots]
+        # every managed slot, whichever radio's scope writes it (spec 9): those on this radio
+        extras = [radio.bss(name) for name, _, _ in self.backend.pod_slots]
         return primary, tuple(b for b in (primary, *extras) if b is not None)
 
     def _backhaul_links(self, uplink, bsses):
@@ -339,7 +340,7 @@ class PodReportSource:
                 radio,
                 channel,
                 additional=self.backend.profile.radios,
-                slots=self.backend.slots,
+                slots=self.backend.pod_slots,
                 slot_bands=self.backend.profile.slot_bands,
             )
             stored = (

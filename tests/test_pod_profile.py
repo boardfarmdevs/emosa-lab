@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from emosa.errors import EmosaError, Reason
-from emosa.model import Intent
-from emosa.opensync.pod_profile import PodBackend, wpa2_psk
+from emosa.model import Intent, RadioIntent
+from emosa.opensync.pod_profile import PodBackend, RadioBackend, wpa2_psk
 from emosa.opensync.schema import Schema, reference_path
 from emosa.secrets import SecretStore
 
@@ -441,41 +441,13 @@ def test_a_profile_without_additional_radios_has_an_empty_radios_tuple():
     assert profiles.load().slot_bands == ()  # default: every slot on the fronthaul radio
 
 
-def test_binding_records_the_uuid_of_each_radio_by_band(tmp_path):
-    """Spec 9: _binding records the Wifi_Radio_Config uuid of the fronthaul and of each of the
-    profile's additional radios, by band, so the slot rendering can place a parent's b-ap-50 on
-    the 5 GHz radio. A single-radio profile records only the fronthaul."""
-    from emosa.opensync import profiles
-
-    data = json.loads(
-        (Path(profiles.__file__).parents[1] / "profiles" / f"{profiles.DEFAULT}.json").read_text()
-    )
-    data["radios"] = [{"band": "5G", "ht_mode": "HT40", "chipset": "mac80211_hwsim"}]
-    path = tmp_path / "two-radio.json"
-    path.write_text(json.dumps(data))
-    profile = profiles.load(str(path))
-    _, vault = multi(tmp_path)
-    pod = PodBackend(
-        "pod-1",
-        Session(with_second_radio(tables())),
-        vault,
-        serial=SERIAL,
-        multi_bss=True,
-        profile=profile,
-    )
-    asyncio.run(pod.snapshot())
-    assert pod.radio_uuid_by_band == {"2.4G": RADIO, "5G": RADIO_5G}
-    # a single-radio profile records just the fronthaul
-    single = PodBackend(
-        "pod-1", Session(tables()), vault, serial=SERIAL, multi_bss=True, profile=profiles.load()
-    )
-    asyncio.run(single.snapshot())
-    assert single.radio_uuid_by_band == {"2.4G": RADIO}
+PARENT_AP_50 = "00000000-0000-4000-8000-000000000008"
+BACKHAUL_50 = {"role": "backhaul", "ssid": "mesh_backhaul", "secret_ref": "x3"}
 
 
-def test_a_parent_ap_banded_5g_is_created_on_the_second_radio(tmp_path):
-    """Spec 9: a gre-parent's b-ap-50, banded 5 GHz by slot_bands, is created on the 5 GHz radio -
-    its Wifi_VIF_Config is inserted into that radio's vif_configs, not the fronthaul's."""
+def parent_5g(tmp_path, *, raw=None, multi_bss=True):
+    """A GRE parent whose parent AP b-ap-50 is on its 5 GHz radio (spec 9, the Pis' adapter B):
+    the fronthaul's scope and the 5 GHz radio's scope over one pod."""
     from emosa.opensync import profiles
 
     data = json.loads(
@@ -484,41 +456,173 @@ def test_a_parent_ap_banded_5g_is_created_on_the_second_radio(tmp_path):
     data.update(id="gre-parent-5g", backhaul_mode="gre-parent", gre_parent={})
     data["radios"] = [{"band": "5G", "ht_mode": "HT40", "chipset": "mac80211_hwsim"}]
     data["extra_slots"] = [
-        {"if_name": "b-ap-50", "role": "backhaul", "vif_radio_idx": 1, "band": "5G"}
+        {"if_name": "b-ap-50", "role": "backhaul", "vif_radio_idx": 1, "band": "5G"},
+        {"if_name": "fh-24", "role": "fronthaul", "vif_radio_idx": 6},
     ]
     path = tmp_path / "gre-5g.json"
     path.write_text(json.dumps(data))
     profile = profiles.load(str(path))
     _, vault = multi(tmp_path)
-    pod = PodBackend(
-        "pod-1",
-        Session(with_second_radio(tables())),
-        vault,
-        serial=SERIAL,
-        multi_bss=True,
-        profile=profile,
-        underlay="169.254.2.0/24",
+    session = Session(raw or with_second_radio(tables()))
+    common = {"serial": SERIAL, "multi_bss": multi_bss, "profile": profile}
+    fronthaul = PodBackend("pod-1", session, vault, underlay="169.254.2.0/24", **common)
+    radio = RadioBackend("pod-1", session, vault, band="5G", underlay="169.254.2.0/24", **common)
+    return fronthaul, radio, vault
+
+
+def with_parent_ap_50(raw=None):
+    """The 5 GHz radio carrying b-ap-50, as an earlier M2 of that radio made it (Config + State)."""
+    raw = raw or with_second_radio(tables())
+    raw["Wifi_VIF_Config"][PARENT_AP_50] = {
+        "if_name": "b-ap-50",
+        "mode": "ap",
+        "ssid": "mesh_backhaul",
+        "enabled": True,
+        "multi_ap": "none",
+        **SECURITY,
+        "wpa_psks": ["map", [["key", "ExtraKey3-2026"]]],
+    }
+    raw["Wifi_Radio_Config"][RADIO_5G]["vif_configs"] = ["set", [["uuid", PARENT_AP_50]]]
+    raw["Wifi_VIF_State"]["00000000-0000-4000-8000-000000000009"] = {
+        **raw["Wifi_VIF_Config"][PARENT_AP_50],
+        "vif_config": ["uuid", PARENT_AP_50],
+        "mac": "72:00:00:00:1b:00",
+        "associated_clients": ["set", []],
+    }
+    return raw
+
+
+def test_each_radio_scope_owns_the_slots_on_its_own_radio(tmp_path):
+    """Spec 9: one M2 configures one radio, so each radio's scope owns the slots on that radio:
+    the fronthaul's scope fh-24, the 5 GHz radio's scope b-ap-50. The report and the GRE parent
+    see every slot of the pod."""
+    fronthaul, radio, _ = parent_5g(tmp_path)
+    assert [name for name, _, _ in fronthaul.slots] == ["fh-24"] and fronthaul.max_bss == 2
+    assert [name for name, _, _ in radio.slots] == ["b-ap-50"] and radio.max_bss == 1
+    assert {name for name, _, _ in fronthaul.pod_slots} == {"fh-24", "b-ap-50"}
+    assert fronthaul.parent_aps == radio.parent_aps == {"b-ap-50"}
+    snap = asyncio.run(radio.snapshot())
+    assert snap.ready and radio.identity["radio_mac"] == "02:00:00:00:1b:00"
+    assert radio.radio_id == "radio-5G" and radio.if_name is None
+    assert snap.config == {"additional": []}
+    # a radio the profile does not bind, or the fronthaul's own, is no radio scope
+    for band in ("2.4G", "6G"):
+        with pytest.raises(EmosaError):
+            RadioBackend(
+                "pod-1", radio.session, radio.vault, serial=SERIAL, band=band, profile=radio.profile
+            )
+
+
+def test_a_parent_ap_on_5g_is_created_by_its_radios_own_scope(tmp_path):
+    """Spec 9: the 5 GHz radio's M2 set, fitted to its slot b-ap-50, creates the parent AP on
+    that radio: inserted into its vif_configs, with the underlay's Inet row; the radio's channel
+    and ht_mode are never written (the radio follows the pod's station) and only the radio's
+    identity is guarded (the pod's own station is in its vif_configs too)."""
+    _, radio, _ = parent_5g(tmp_path)
+    rows = submitted(radio, RadioIntent("pod-1", "radio-5G", (BACKHAUL_50,)))
+    ap = rows["Wifi_VIF_Config", "b-ap-50"]
+    assert (ap["ssid"], ap["multi_ap"], ap["bridge"], ap["vif_radio_idx"]) == (
+        "mesh_backhaul",
+        "none",
+        "",
+        1,
     )
-    # the M2's backhaul BSS, assigned to the one backhaul slot b-ap-50 (no fronthaul slots here)
-    intent = Intent(
-        "pod-1",
-        "radio-1",
-        "bss-1",
-        "private_ssid",
-        "new",
-        additional=({"role": "backhaul", "ssid": "mesh_backhaul", "secret_ref": "x3"},),
-    )
-    rows = submitted(pod, intent)
-    assert ("Wifi_VIF_Config", "b-ap-50") in rows  # the parent AP VIF was created
-    radio_inserts = [
-        op
-        for op in pod.session.sent[-1]
-        if op["op"] == "mutate"
-        and op["table"] == "Wifi_Radio_Config"
-        and any(m[1] == "insert" for m in op["mutations"])
+    assert rows["Wifi_Inet_Config", "b-ap-50"]["inet_addr"] == "169.254.2.1"
+    ops = radio.session.sent[-1]
+    radio_ops = [op for op in ops if op["table"] == "Wifi_Radio_Config"]
+    assert [op["op"] for op in radio_ops] == ["wait", "mutate"]
+    assert radio_ops[0]["columns"] == ["if_name"]
+    assert radio_ops[1]["where"] == [["_uuid", "==", ["uuid", RADIO_5G]]]
+    assert radio_ops[1]["mutations"] == [
+        ["vif_configs", "insert", ["set", [["named-uuid", "extra0"]]]]
     ]
-    assert radio_inserts  # b-ap-50 was added to a radio
-    assert all(op["where"] == [["_uuid", "==", ["uuid", RADIO_5G]]] for op in radio_inserts)
+    assert not any(
+        op["table"] == "Wifi_VIF_Config" and op.get("row", {}).get("if_name") == "fh-24"
+        for op in ops
+    )
+
+
+def test_the_fronthauls_scope_leaves_the_second_radios_slots_alone(tmp_path):
+    """Spec 9: the 2.4 GHz radio's M2 set never writes b-ap-50: its backhaul BSS has no slot on
+    that radio (left out, spec 3.4), and b-ap-50 on the 5 GHz radio is not one of its slots."""
+    fronthaul, _, _ = parent_5g(tmp_path, raw=with_parent_ap_50())
+    snap = asyncio.run(fronthaul.snapshot())
+    assert snap.config["additional"] == []  # fh-24 absent; b-ap-50 is the other scope's
+    submitted(fronthaul, Intent("pod-1", "radio-1", "bss-1", "emosa-mesh", "new", additional=()))
+    assert not any(
+        PARENT_AP_50 in json.dumps(op) or RADIO_5G in json.dumps(op)
+        for op in fronthaul.session.sent[-1]
+    )
+
+
+def test_a_radio_set_without_its_backhaul_bss_removes_the_parent_ap(tmp_path):
+    """Spec 9 / 8.6 withdrawal by band: the 5 GHz radio's M2 set without a backhaul BSS fits none
+    of its slots, so its scope deletes b-ap-50 from that radio (and the 2.4 GHz radio is not
+    touched)."""
+    _, radio, vault = parent_5g(tmp_path, raw=with_parent_ap_50())
+    snap = asyncio.run(radio.snapshot())
+    applied = [["backhaul", "mesh_backhaul", vault.fingerprint("ExtraKey3-2026")]]
+    assert snap.config["additional"] == snap.observed.values["additional"] == applied
+    asyncio.run(radio.context())
+    asyncio.run(
+        radio.submit(
+            RadioIntent("pod-1", "radio-5G", ()), {"transaction_id": "t", "session_generation": 1}
+        )
+    )
+    ops = radio.session.sent[-1]
+    assert {
+        "op": "delete",
+        "table": "Wifi_VIF_Config",
+        "where": [["_uuid", "==", ["uuid", PARENT_AP_50]]],
+    } in ops
+    removal = [op for op in ops if op["op"] == "mutate" and op["table"] == "Wifi_Radio_Config"]
+    assert removal == [
+        {
+            "op": "mutate",
+            "table": "Wifi_Radio_Config",
+            "where": [["_uuid", "==", ["uuid", RADIO_5G]]],
+            "mutations": [["vif_configs", "delete", ["set", [["uuid", PARENT_AP_50]]]]],
+        }
+    ]
+    assert RADIO not in json.dumps(ops)
+
+
+def test_a_radio_scope_journals_its_own_operations(tmp_path):
+    """Spec 9: a radio scope's engine takes RadioIntents through the journal (the operation
+    schema's radio-scope variant) to the pod, and finds an applied set applied."""
+    from emosa.reconcile import Engine
+    from emosa.store import Store
+
+    _, radio, _ = parent_5g(tmp_path, raw=with_parent_ap_50())
+    engine = Engine(
+        Store(tmp_path / "radio-5G"), radio.vault, {"pod-1": radio}, intent_type=RadioIntent
+    )
+
+    async def run(intent, key):
+        op = engine.request(intent, source="test", key=key, run_id="r")
+        return await engine.execute(op.operation_id)
+
+    same = asyncio.run(run(RadioIntent("pod-1", "radio-5G", (BACKHAUL_50,)), "k1"))
+    assert same.state == "OBSERVED_APPLIED" and same.changed is False
+    withdrawn = asyncio.run(run(RadioIntent("pod-1", "radio-5G", ()), "k2"))
+    assert withdrawn.state == "CONFIG_COMMITTED" and withdrawn.intent["additional"] == []
+    with pytest.raises(EmosaError):  # a fronthaul intent is not this scope's
+        asyncio.run(radio.plan(Intent("pod-1", "radio-1", "bss-1", "a", "new", additional=())))
+
+
+def test_a_slot_on_a_radio_the_profile_does_not_bind_is_refused(tmp_path):
+    from emosa.opensync import profiles
+
+    data = json.loads(
+        (Path(profiles.__file__).parents[1] / "profiles" / f"{profiles.DEFAULT}.json").read_text()
+    )
+    data["extra_slots"] = [
+        {"if_name": "b-ap-50", "role": "backhaul", "vif_radio_idx": 1, "band": "5G"}
+    ]
+    path = tmp_path / "no-5g.json"
+    path.write_text(json.dumps(data))
+    with pytest.raises(EmosaError):
+        profiles.load(str(path))
 
 
 def test_an_extra_slot_may_name_the_radio_its_vif_is_on(tmp_path):
