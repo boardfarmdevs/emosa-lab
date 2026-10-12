@@ -45,6 +45,8 @@ MULTI_AP_ROWS = ROOT / "tests/fixtures/opensync/pod-6.6.1-hwsim-uplink-multi-ap.
 # For the operator steer onto a parent and back (spec 8.6 revert); the agent awaits a steer.
 BOOTSTRAP_ROWS = ROOT / "tests/fixtures/opensync/pod-6.6.1-hwsim-bootstrap.json"
 BOOTSTRAP_BSS = "02:00:00:00:1b:01"
+# a fleet GRE parent AP (spec 8.6): a steer onto it is a 3-address GRE join, not a Multi-AP switch
+GRE_PARENT_AP = "72:00:00:00:0a:01"
 BACKHAUL_PARENT, BACKHAUL_STATION = "02:00:00:00:19:01", "02:00:00:00:14:00"
 UPLINK = {
     "mode": "multi-ap",
@@ -1956,6 +1958,52 @@ async def on_gtp_bootstrap(box):
     )
 
 
+async def gre_join(box, parent):
+    """cm and owm complete a 3-address GRE join onto `parent`: the station associated (not
+    Multi-AP), cm using the gretap it built (spec 8.6)."""
+    uuid, _ = await box.vif("Wifi_VIF_State", "bhaul-sta-24")
+    cm = next(iter(await box.rows("Connection_Manager_Uplink")))
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_VIF_State",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "row": {
+                    "parent": parent,
+                    "ssid": "emosa-lab-bh",
+                    "multi_ap": "none",
+                    "wds": False,
+                },
+            },
+            {
+                "op": "update",
+                "table": "Connection_Manager_Uplink",
+                "where": [["_uuid", "==", ["uuid", cm]]],
+                "row": {"if_name": "g-bhaul-sta-24", "if_type": "gre", "is_used": True},
+            },
+        ]
+    )
+
+
+async def fallback_station(box):
+    """The pod's fallback station (bhaul-sta-50) as pod-bh-fallback leaves it: enabled, its own
+    credential and parent. Returns the columns EMOSA must never touch, to compare after a move."""
+    uuid, row = await box.vif("Wifi_VIF_Config", "bhaul-sta-50")
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_VIF_Config",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "row": {"enabled": True, "parent": "02:00:00:00:1c:01"},
+            }
+        ]
+    )
+    _, now = await box.vif("Wifi_VIF_Config", "bhaul-sta-50")
+    return {k: now.get(k) for k in ("enabled", "ssid", "credential_configs", "parent")}
+
+
 async def backhaul_on(box):
     """Onboarded, and the uplink switch (option 1) applied: the station pinned to its parent."""
     if not (await onboarded(box)).get("applied"):
@@ -2143,6 +2191,63 @@ async def restart_during_move(box):
         onto=steering_answer(onto),
         provisioned_again=again,
         reapplied_without_a_steer=reapplied,
+    )
+
+
+async def fallback_during_move(box):
+    """Spec 8.6 (EMOSA's half): a GRE move and its revert leave the pod's fallback station exactly
+    as pod-bh-fallback set it - enabled, its own credential, its own parent. EMOSA writes only the
+    moved station's columns, never the fallback's (a GRE move disables no other station). The other
+    half (the fallback not taking EMOSA's credential) is the pod side: yocto-53's load_creds and the
+    Pi soak, not the box."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    # a fleet GRE parent peer (so a steer onto it is a GRE join), and the fallback station up
+    peer_status(box, "RPIPOD0FALLBACKPARENT", al=PARENT_AL, gre_parent_ap=GRE_PARENT_AP)
+    fallback = await fallback_station(box)
+    await box.until(lambda: uplink_status(box).get("bootstrap"), seconds=30)
+    await asyncio.sleep(2.5)  # the agent's peer directory (1 s cache) picks up the GRE parent
+    # onto the GRE parent: a 3-address GRE move
+    answered = len(box.sent(0x801A))
+    onto_mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, GRE_PARENT_AP),)
+    )
+    await box.until(lambda: box.controller.reply(ACK, onto_mid), seconds=5)
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline and not await pinned(box, GRE_PARENT_AP):
+        await asyncio.sleep(0.3)
+    creds = [
+        r
+        for r in (await box.rows("Wifi_Credential_Config")).values()
+        if str(r.get("bssid") or "").lower() == GRE_PARENT_AP
+    ]
+    is_gre = bool(creds) and creds[0].get("onboard_type") == "gre"
+    await gre_join(box, GRE_PARENT_AP)
+    onto = await next_message(box, 0x801A, answered, seconds=60)
+    onto_ok = onto is not None and steering_answer(onto) == (BACKHAUL_STATION, GRE_PARENT_AP, 0)
+    _, onto_fb = await box.vif("Wifi_VIF_Config", "bhaul-sta-50")
+    kept_onto = {k: onto_fb.get(k) for k in fallback} == fallback
+    # back to the bootstrap: the revert
+    answered2 = len(box.sent(0x801A))
+    back_mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, BOOTSTRAP_BSS),)
+    )
+    await box.until(lambda: box.controller.reply(ACK, back_mid), seconds=5)
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline and await pinned(box, GRE_PARENT_AP):
+        await asyncio.sleep(0.3)
+    await on_gtp_bootstrap(box)
+    back = await next_message(box, 0x801A, answered2, seconds=60)
+    back_ok = back is not None and steering_answer(back) == (BACKHAUL_STATION, BOOTSTRAP_BSS, 0)
+    _, back_fb = await box.vif("Wifi_VIF_Config", "bhaul-sta-50")
+    kept_back = {k: back_fb.get(k) for k in fallback} == fallback
+    return box.result(
+        passed=is_gre and onto_ok and kept_onto and back_ok and kept_back,
+        gre_move=is_gre,
+        onto=steering_answer(onto),
+        fallback_kept_through_move=kept_onto,
+        back=steering_answer(back),
+        fallback_kept_through_revert=kept_back,
     )
 
 
@@ -2401,8 +2506,20 @@ MEASURED = {  # a station's measurement as an agent's status gives it (spec 3.6)
 }
 
 
-def peer_status(box, pod_id, *, al, backhaul_bsses=(), station=None, parent=None, stations=None):
-    """Another pod's agent in the fleet, as its status gives it (alive: the box's own process)."""
+def peer_status(
+    box,
+    pod_id,
+    *,
+    al,
+    backhaul_bsses=(),
+    station=None,
+    parent=None,
+    stations=None,
+    gre_parent_ap=None,
+):
+    """Another pod's agent in the fleet, as its status gives it (alive: the box's own process).
+    gre_parent_ap: the BSSID of this peer's GRE parent AP (spec 8.6), so the agent reads it as a
+    fleet parent and a steer onto it is a 3-address GRE join, not a Multi-AP switch."""
     directory = box.run_root / pod_id
     directory.mkdir(parents=True, exist_ok=True)
     status = {
@@ -2420,6 +2537,8 @@ def peer_status(box, pod_id, *, al, backhaul_bsses=(), station=None, parent=None
         },
         "telemetry": {"stations": stations or {}},
     }
+    if gre_parent_ap is not None:
+        status["gre_parent"] = {"ap_bssid": gre_parent_ap}
     (directory / "status.json").write_text(json.dumps(status))
 
 
@@ -3172,6 +3291,7 @@ SCENARIOS = {
     "backhaul-steering": backhaul_steering,
     "revert-by-record": revert_by_record,
     "restart-during-move": restart_during_move,
+    "fallback-during-move": fallback_during_move,
     "backhaul-steering-renewal": backhaul_steering_renewal,
     "backhaul-steering-refused": backhaul_steering_refused,
     "backhaul-steering-own-bss": backhaul_steering_own_bss,
@@ -3214,6 +3334,17 @@ OPTIONS = {  # the box each scenario needs beyond the default
         },
     },
     "restart-during-move": {
+        "backhaul": True,
+        "bootstrap": True,
+        "uplink": {
+            "mode": "gre",
+            "station": "bhaul-sta-24",
+            "credentials": "config",
+            "ssid": "emosa-lab-bh",
+            "secret_ref": "backhaul",
+        },
+    },
+    "fallback-during-move": {
         "backhaul": True,
         "bootstrap": True,
         "uplink": {

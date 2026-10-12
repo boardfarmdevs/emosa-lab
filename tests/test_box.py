@@ -249,6 +249,11 @@ def test_a_pod_restart_during_a_move_is_reapplied_without_a_steer(agent, tmp_pat
     assert result["passed"], result
 
 
+def test_a_gre_move_and_its_revert_leave_the_fallback_station_untouched(agent, tmp_path):
+    result = box("fallback-during-move", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_a_backhaul_steering_answer_is_kept_across_a_renewal(agent, tmp_path):
     result = box("backhaul-steering-renewal", agent, tmp_path / "box")
     assert result["passed"], result
