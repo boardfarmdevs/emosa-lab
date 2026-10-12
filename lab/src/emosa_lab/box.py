@@ -3534,8 +3534,9 @@ async def second_radio_moves_channel(box):
     """Spec 9's channel rule in V54's shape (radio B on UNII-3 channel 149). With both radios
     configured, the pod's 5 GHz station roams to a parent on 149 and the radio, b-ap-50 on it,
     moves from 44 with it: the pod's doing, its State channel-less for a moment, then 149. The
-    agent takes the radio's new capabilities in exactly one fresh session (one Search, an M1 per
-    radio, the 5 GHz one advertising 115, 124 and 125 with 149 operable in 124 and 125); both
+    agent takes the radio's new capabilities in exactly one fresh session (its recovery starts one,
+    with an M1 per radio, the 5 GHz one advertising 115, 124 and 125 with 149 operable in 124 and
+    125; a Search answered late may be sent again within it); both
     radios' unchanged M2 sets are observed applied without writing, so b-ap-50, the fronthaul
     and the radio's Config are left as they were, and no further session follows."""
     if await serve_radios(box, lambda: both_radios_applied(box)) is None:
@@ -3576,8 +3577,15 @@ async def second_radio_moves_channel(box):
         return box.result(passed=False, failed="the radio's new capabilities were not taken")
     await asyncio.sleep(10)  # no further session follows
     status = box.status() or {}
-    new_m1s = box.sent(AUTOCONFIG_WSC)[m1s:]
-    classes = advertised_classes(new_m1s[1]) if len(new_m1s) > 1 else {}
+    radio_b_m1 = next(
+        (
+            m1
+            for m1 in box.sent(AUTOCONFIG_WSC)[m1s:]
+            if next(t.value[:6] for t in m1.tlvs if t.kind == 0x85).hex(":") == RUID_50
+        ),
+        None,
+    )
+    classes = advertised_classes(radio_b_m1) if radio_b_m1 else {}
     noop = [
         bool((ops[-1].get("application_evidence") or {}).get("observed_noop"))
         for ops in (status.get("operations") or [{}], radio_operations(box, "5G") or [{}])
@@ -3590,10 +3598,12 @@ async def second_radio_moves_channel(box):
     sessions = recovery_starts(box) - starts
     radios = (status.get("pod") or {}).get("radios") or []
     reported = {r.get("band"): r.get("channel") for r in radios}
+    # one session: the agent's recovery started exactly one, its radios' M1s in order. Within it a
+    # Search or an M1 may go again when its answer is late (the box under load answered a Search
+    # after more than the agent's 1 s, 12 Oct): a retransmission, not another session.
     return box.result(
-        passed=len(box.sent(AUTOCONFIG_SEARCH)) - searches == 1
-        and sessions == 1
-        and ruids == [RUID_24, RUID_50]
+        passed=sessions == 1
+        and list(dict.fromkeys(ruids)) == [RUID_24, RUID_50]
         and classes
         == {
             115: [36, 40, 44, 48],
