@@ -1,0 +1,76 @@
+{
+  "id": "rpi-pod-mt7921u-6.6.1-gre-5g-v1",
+  "description": "opensync-rpi pods as GRE parents on adapter B (spec 8.6, 9; V54's pods-only shape): rpi-pod-mt7921u-6.6.1-v1 with a second radio. Adapter A (MT7921AU, the pod's 2.4 GHz radio) keeps the fronthaul home-ap-24; it runs one AP, so the 2.4 GHz radio's M2 set maps the fronthaul alone and its backhaul BSS has no slot there. Adapter B (MT7921AU, 5 GHz) carries the pod's uplink station bhaul-sta-50 (the pod's: it keeps the phy's MAC) and the parent AP b-ap-50 (EMOSA's), configured by that radio's own M2: its backhaul BSS is the parent AP, not Multi-AP, no bridge, hidden, its Inet row the pod's underlay. EMOSA writes no channel or ht_mode on adapter B, which follows the station (V54: VHT 80 MHz on 149/80; EMOSA reports it in the 20 MHz classes, a known gap in spec 9). The interface names are the ones 52_owm_prep creates on both adapters; b-ap-50's vif_radio_idx is 1, 52_owm_prep's order on the real Pis (bhaul-sta 0, b-ap 1), unique on adapter B's radio, whose other VIF is the pod's station at 0 (read on pi1, image 084736, 12 October). A pod on Ethernet only keeps rpi-pod-mt7921u-6.6.1-v1.",
+  "opensync_version": "6.6.1.0",
+  "radio": {
+    "band": "2.4G",
+    "channel": 6,
+    "ht_mode": "HT20",
+    "chipset": "mt7921u"
+  },
+  "radios": [
+    {
+      "band": "5G",
+      "ht_mode": "HT80",
+      "chipset": "mt7921u"
+    }
+  ],
+  "fronthaul": {
+    "if_name": "home-ap-24",
+    "vif": {
+      "mode": "ap",
+      "enabled": true,
+      "bridge": "br-home",
+      "ssid_broadcast": "enabled",
+      "ap_bridge": true,
+      "mac_list_type": "none",
+      "btm": 1,
+      "rrm": 1,
+      "min_hw_mode": "11g",
+      "vif_radio_idx": 1,
+      "wpa": true,
+      "wpa_key_mgmt": "wpa-psk",
+      "rsn_pairwise_ccmp": true,
+      "security": [
+        "map",
+        []
+      ]
+    }
+  },
+  "backhaul_vif": {
+    "ssid_broadcast": "disabled",
+    "ap_bridge": false,
+    "multi_ap": "backhaul_bss"
+  },
+  "backhaul_mode": "gre-parent",
+  "gre_parent": {
+    "vif": {},
+    "inet": {}
+  },
+  "extra_slots": [
+    {
+      "if_name": "b-ap-50",
+      "role": "backhaul",
+      "vif_radio_idx": 1,
+      "band": "5G"
+    }
+  ],
+  "inet": {
+    "if_type": "vif",
+    "enabled": true,
+    "network": true,
+    "NAT": false,
+    "ip_assign_scheme": "none",
+    "mtu": 1500
+  },
+  "uplink": {
+    "station": "bhaul-sta-50",
+    "stations": {
+      "2.4G": "bhaul-sta-24",
+      "5G": "bhaul-sta-50"
+    }
+  },
+  "ap_metrics": {
+    "esp_be": "3fff00"
+  }
+}

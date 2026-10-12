@@ -742,3 +742,17 @@ def test_a_pod_whose_database_was_rebuilt_is_the_same_pod(tmp_path):
     pod.session.tables = rebuilt
     second = asyncio.run(pod.context())
     assert second.binding_token != first.binding_token  # a new graph, accepted
+
+
+def test_the_pis_adapter_b_profile_puts_the_parent_ap_beside_the_station():
+    """V54 (spec 8.6, 9): the Pis' adapter B carries the pod's station bhaul-sta-50 (index 0) and
+    the parent AP b-ap-50 at 52_owm_prep's index 1; adapter A runs one AP, the fronthaul, so no
+    slot is on the 2.4 GHz radio. The Ethernet-only Pi keeps its own profile."""
+    from emosa.opensync import profiles
+
+    pi = profiles.load("rpi-pod-mt7921u-6.6.1-gre-5g-v1")
+    assert pi.backhaul_mode == "gre-parent" and pi.chipset == "mt7921u"
+    assert [r["band"] for r in pi.radios] == ["5G"]
+    assert pi.extra_slots == (("b-ap-50", "backhaul", 1),) and pi.slot_bands == (("b-ap-50", "5G"),)
+    assert pi.uplink_station == "bhaul-sta-50"
+    assert profiles.load("rpi-pod-mt7921u-6.6.1-v1").backhaul_mode != "gre-parent"

@@ -85,8 +85,14 @@ box scenario.
    `b-ap-50` and back + the right-device steer + the layer-A regression, with times. Relaunch the
    pods from **`rpi-pod-amd64-20261012084755`** (yocto-53's credential fix: pod-bootstrap takes only
    bssid-less credentials) so the virtual proof runs V54's exact Pi pod code. Fewer soaks during
-   dev: box + units + the lab proof are the evidence; full soaks at the end. Also make the Pis'
-   profile `rpi-pod-mt7921u-6.6.1-v1` take the same adapter-B role.
+   dev: box + units + the lab proof are the evidence; full soaks at the end. Before each
+   `SteerWiFiBackhaul`, show that the controller's model holds the child's 5 GHz backhaul station:
+   0216's "Backhaul STA learned ... sta=<bhaul-sta-50's MAC>" log line and the station-mode row on
+   its Device.N (7f, 12 October: the MV3 shows pods unrooted with no backhaul MACs today; this
+   proof is the evidence V54 fixes it). The Pis' adapter-B role is its own profile,
+   `rpi-pod-mt7921u-6.6.1-gre-5g-v1` (done; 7f: profile ids are contracts, an Ethernet-only Pi
+   keeps `rpi-pod-mt7921u-6.6.1-v1`), with `b-ap-50` at 52_owm_prep's index 1 (yocto-53, read
+   on pi1).
 6. **Deferred: the layer-A pods-only check.** A pod onto a POD serving a Multi-AP backhaul BSS (not
    an extender) and back, pods-only, before the end soaks (the box already proves the move+revert
    [c]). `b-ap-24`/02:00:00:01:ca:c0 were only example targets.

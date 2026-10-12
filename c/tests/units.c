@@ -1086,6 +1086,17 @@ static void second_radio_profile(const char *schemas, const char *scratch)
     CHECK(on50.nslots == 1 && !strcmp(on50.slots[0].if_name, "b-ap-50"), "the 5 GHz radio's slot");
     CHECK(none.nslots == 0, "no slots without multi_bss");
     CHECK(em_profile_parent_slot(&p, "b-ap-50"), "the parent AP on the 5 GHz radio");
+    /* the Pis' adapter B (V54): the parent AP alone on the 5 GHz radio, none on adapter A's */
+    char pi[1024];
+    snprintf(pi, sizeof(pi), "%s/../src/emosa/profiles/rpi-pod-mt7921u-6.6.1-gre-5g-v1.json", schemas);
+    em_profile rpi;
+    CHECK(em_profile_load(pi, &rpi) == EM_OK, "the Pis' adapter-B profile loads");
+    em_profile pi24 = em_profile_slots_on(&rpi, "2.4G", true), pi50 = em_profile_slots_on(&rpi, "5G", true);
+    CHECK(rpi.nradios == 1 && em_profile_has_radio(&rpi, "5G") && pi24.nslots == 0 && pi50.nslots == 1 &&
+              !strcmp(pi50.slots[0].if_name, "b-ap-50") && pi50.slots[0].vif_radio_idx == 1 &&
+              em_profile_parent_slot(&rpi, "b-ap-50"),
+          "the Pis' parent AP b-ap-50 on adapter B, index 1");
+    em_profile_free(&rpi);
     /* a slot on a radio the profile does not bind, or a further radio on the fronthaul's band */
     for (int mutation = 0; mutation < 2; mutation++) {
         char *text = em_read_file(path, 1 << 20, NULL);
