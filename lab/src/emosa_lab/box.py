@@ -1899,6 +1899,63 @@ async def move_station(box, bssid):
     )
 
 
+async def four_address(box, parent):
+    """cm and owm complete the Multi-AP (4-address) join: the station on `parent`, cm using it
+    (for a pod that started on a GTP bootstrap, so move_station's parent change alone isn't the
+    4-address State the uplink switch waits for)."""
+    uuid, _ = await box.vif("Wifi_VIF_State", "bhaul-sta-24")
+    cm = next(iter(await box.rows("Connection_Manager_Uplink")))
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_VIF_State",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "row": {
+                    "parent": parent,
+                    "ssid": "emosa-lab-bh",
+                    "multi_ap": "backhaul_sta",
+                    "wds": True,
+                },
+            },
+            {
+                "op": "update",
+                "table": "Connection_Manager_Uplink",
+                "where": [["_uuid", "==", ["uuid", cm]]],
+                "row": {"if_name": "bhaul-sta-24", "if_type": "vif", "is_used": True},
+            },
+        ]
+    )
+
+
+async def on_gtp_bootstrap(box):
+    """cm takes the station back to its GTP bootstrap: vconf on the bootstrap BSS, the gretap uplink
+    (the state the pod returns to once EMOSA's credential is gone)."""
+    uuid, _ = await box.vif("Wifi_VIF_State", "bhaul-sta-24")
+    cm = next(iter(await box.rows("Connection_Manager_Uplink")))
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_VIF_State",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "row": {
+                    "parent": BOOTSTRAP_BSS,
+                    "ssid": "opensync-lab-bhaul",
+                    "multi_ap": "none",
+                    "wds": False,
+                },
+            },
+            {
+                "op": "update",
+                "table": "Connection_Manager_Uplink",
+                "where": [["_uuid", "==", ["uuid", cm]]],
+                "row": {"if_name": "g-bhaul-sta-24", "if_type": "gre", "is_used": True},
+            },
+        ]
+    )
+
+
 async def backhaul_on(box):
     """Onboarded, and the uplink switch (option 1) applied: the station pinned to its parent."""
     if not (await onboarded(box)).get("applied"):
@@ -2007,15 +2064,50 @@ async def backhaul_steering_refused(box):
 
 
 async def revert_by_record(box):
-    """Spec 8.6: a pod on its GTP bootstrap, the agent awaiting a steer, records its bootstrap
-    upstream (the BSS its station is on) before any move. (Grown next: steer onto a parent, then
-    a steer back to this BSS reverts the move.)"""
+    """Spec 8.6: a pod on its GTP bootstrap, steered onto a parent and then back to its recorded
+    bootstrap BSS. The agent records its bootstrap upstream before any move; a steer onto
+    TARGET_PARENT pins the station there (a Multi-AP move here: the box has no GRE parent peer);
+    a steer back to the bootstrap BSS is a revert - the agent restores the station's vconf snapshot,
+    deletes the credential it inserted, and the station lands back on the bootstrap. Both answered
+    success."""
     if not (await onboarded(box)).get("applied"):
         return box.result(passed=False, failed="not onboarded")
     recorded = await box.until(lambda: uplink_status(box).get("bootstrap"), seconds=30)
+    if not recorded or recorded.get("bssid") != BOOTSTRAP_BSS:
+        return box.result(passed=False, failed="bootstrap not recorded", bootstrap=recorded)
+    # onto the parent
+    answered = len(box.sent(0x801A))
+    onto_mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, TARGET_PARENT),)
+    )
+    await box.until(lambda: box.controller.reply(ACK, onto_mid), seconds=5)
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline and not await pinned(box, TARGET_PARENT):
+        await asyncio.sleep(0.3)
+    onto_pinned = await pinned(box, TARGET_PARENT)
+    await four_address(box, TARGET_PARENT)
+    onto = await next_message(box, 0x801A, answered, seconds=60)
+    onto_ok = onto is not None and steering_answer(onto) == (BACKHAUL_STATION, TARGET_PARENT, 0)
+    # back to the bootstrap: a revert
+    answered2 = len(box.sent(0x801A))
+    back_mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, BOOTSTRAP_BSS),)
+    )
+    await box.until(lambda: box.controller.reply(ACK, back_mid), seconds=5)
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline and await pinned(box, TARGET_PARENT):
+        await asyncio.sleep(0.3)
+    deleted = not await pinned(box, TARGET_PARENT)  # the agent removed its own credential
+    await on_gtp_bootstrap(box)
+    back = await next_message(box, 0x801A, answered2, seconds=60)
+    back_ok = back is not None and steering_answer(back) == (BACKHAUL_STATION, BOOTSTRAP_BSS, 0)
     return box.result(
-        passed=bool(recorded) and recorded.get("bssid") == BOOTSTRAP_BSS,
+        passed=onto_pinned and onto_ok and deleted and back_ok,
         bootstrap=recorded,
+        onto_pinned=onto_pinned,
+        onto=steering_answer(onto),
+        credential_deleted=deleted,
+        back=steering_answer(back),
     )
 
 
