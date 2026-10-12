@@ -68,6 +68,18 @@ void em_tlv_list_free(em_tlv_list *l);
 /* AP Capability Report contents for one radio on one channel (spec §3.3). */
 em_reason em_capability_tlvs(const em_radio_view *r, int channel, uint8_t max_bss, int8_t max_eirp,
                              em_tlv_list *out);
+
+/* One radio the agent reports (spec 9, easymesh_view.radios_capabilities): on its channel, the
+ * BSSes it may carry, its maximum EIRP. 2.4 GHz (opclass 81) or 5 GHz UNII-1 (opclass 115). */
+typedef struct {
+    const em_radio_view *radio;
+    int channel;
+    uint8_t max_bss;
+    int8_t max_eirp;
+} em_capability_radio;
+
+/* AP Capability Report contents for every radio the agent reports, the fronthaul first. */
+em_reason em_capabilities_tlvs(const em_capability_radio *radios, size_t n, em_tlv_list *out);
 /* The Device Inventory TLV. */
 em_reason em_inventory_tlv(const em_device_view *d, const em_radio_view *r, const char *chipset,
                            em_tlv *out);
@@ -106,6 +118,20 @@ em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_a
                            const em_radio_view *r, int channel, const em_station_age *ages,
                            size_t nages, bool r1, const em_backhaul *uplink,
                            const em_backhaul_link *links, size_t nlinks, em_tlv_list *out);
+
+/* A radio of the Topology Response (spec 9): its represented BSSes (radio->bss) on its channel. */
+typedef struct {
+    const em_radio_view *radio;
+    int channel;
+} em_topology_radio;
+
+/* Topology Response TLVs for every radio the agent reports, the fronthaul first: each an
+ * Operational and Configured radio (none of its BSSes for a child's second radio), its BSSes
+ * interfaces of its band on its channel, and their stations associated clients. */
+em_reason em_topology_radios_tlvs(const uint8_t agent_al[6], const uint8_t controller_al[6],
+                                  const em_topology_radio *radios, size_t nradios, const em_station_age *ages,
+                                  size_t nages, bool r1, const em_backhaul *uplink, const em_backhaul_link *links,
+                                  size_t nlinks, em_tlv_list *out);
 
 /* How the pod reaches its gateway, from cm's and owm's State (spec §8.3). */
 typedef struct {

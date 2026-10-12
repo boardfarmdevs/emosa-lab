@@ -546,6 +546,98 @@ static void northbound_vectors(const char *dir)
         }
         free(view);
     }
+    /* spec 9: agents reporting more than one radio, each with the BSSes it represents */
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "multi_radio"))
+    {
+        const char *name = str(c, "name");
+        const cJSON *agent = cJSON_GetObjectItemCaseSensitive(c, "agent");
+        const cJSON *expected = cJSON_GetObjectItemCaseSensitive(c, "expected");
+        em_device_view *view = malloc(sizeof(*view));
+        em_radio_view *shown = calloc(EM_MAX_RADIOS, sizeof(*shown));
+        em_capability_radio caps[EM_MAX_RADIOS];
+        em_topology_radio radios[EM_MAX_RADIOS];
+        size_t nradios = 0;
+        checks++;
+        bool ok = view && shown && em_device_view_from_rows(cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables"), view) == EM_OK;
+        const cJSON *ap, *r;
+        cJSON_ArrayForEach(ap, cJSON_GetObjectItemCaseSensitive(agent, "parent_aps"))
+        {
+            if (ok)
+                em_device_view_parent_ap(view, ap->valuestring);
+        }
+        cJSON_ArrayForEach(r, cJSON_GetObjectItemCaseSensitive(agent, "radios"))
+        {
+            uint8_t ruid[6];
+            const em_radio_view *radio = ok && nradios < EM_MAX_RADIOS && em_parse_mac(str(r, "ruid"), ruid)
+                                             ? em_view_radio(view, ruid)
+                                             : NULL;
+            if (!radio) {
+                ok = false;
+                break;
+            }
+            /* the radio with only the BSSes the agent represents on it, in the case's order */
+            em_radio_view *v = &shown[nradios];
+            *v = *radio;
+            v->nbss = 0;
+            const cJSON *bss;
+            cJSON_ArrayForEach(bss, cJSON_GetObjectItemCaseSensitive(r, "bsses"))
+            {
+                for (size_t i = 0; i < radio->nbss; i++)
+                    if (!strcmp(radio->bss[i].if_name, bss->valuestring))
+                        v->bss[v->nbss++] = radio->bss[i];
+            }
+            caps[nradios] = (em_capability_radio){v, (int)num(r, "channel"), (uint8_t)num(r, "max_bss"),
+                                                  (int8_t)num(r, "max_eirp")};
+            radios[nradios] = (em_topology_radio){v, (int)num(r, "channel")};
+            nradios++;
+        }
+        if (!ok) {
+            fail("northbound", name, "multi-radio view");
+            free(view);
+            free(shown);
+            continue;
+        }
+        em_tlv_list list;
+        checks++;
+        if (em_capabilities_tlvs(caps, nradios, &list) != EM_OK) {
+            fail("northbound", name, "capability TLVs not built");
+        } else {
+            cJSON *got = list_json(list.tlvs, list.count);
+            if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(expected, "capability_tlvs"), 1))
+                fail("northbound", name, "capability TLVs differ");
+            cJSON_Delete(got);
+            em_tlv_list_free(&list);
+        }
+        uint8_t agent_al[6], controller_al[6];
+        em_parse_mac(str(agent, "al_mac"), agent_al);
+        em_parse_mac(str(agent, "controller_al"), controller_al);
+        em_station_age ages[64];
+        size_t nages = 0;
+        const cJSON *age;
+        cJSON_ArrayForEach(age, cJSON_GetObjectItemCaseSensitive(agent, "station_ages"))
+        {
+            if (nages < 64 && em_parse_mac(age->string, ages[nages].mac))
+                ages[nages++].seconds = (long)age->valuedouble;
+        }
+        const cJSON *set;
+        cJSON_ArrayForEach(set, cJSON_GetObjectItemCaseSensitive(expected, "topology_tlvs"))
+        {
+            checks++;
+            bool r1 = !strcmp(set->string, "r1");
+            if (em_topology_radios_tlvs(agent_al, controller_al, radios, nradios, ages, nages, r1, NULL, NULL, 0,
+                                        &list) != EM_OK) {
+                fail("northbound", name, "topology TLVs not built");
+                continue;
+            }
+            cJSON *got = list_json(list.tlvs, list.count);
+            if (!cJSON_Compare(got, set, 1))
+                fail("northbound", name, r1 ? "topology r1 differs" : "topology 6.1 differs");
+            cJSON_Delete(got);
+            em_tlv_list_free(&list);
+        }
+        free(view);
+        free(shown);
+    }
     /* the stations' ages as of each Topology Response */
     const cJSON *aged = cJSON_GetObjectItemCaseSensitive(doc, "aged_at_response");
     em_device_view *view = malloc(sizeof(*view));

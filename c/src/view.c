@@ -233,37 +233,77 @@ static bool append_bytes(em_tlv_list *l, uint8_t kind, const void *data, size_t 
     return em_buf_put(&b, data, len) && append(l, kind, &b);
 }
 
-em_reason em_capability_tlvs(const em_radio_view *r, int channel, uint8_t max_bss, int8_t max_eirp,
-                             em_tlv_list *out)
+/* OPERATING_CLASSES: the global operating class of a band and its channels (2.4 GHz; the 5 GHz
+ * UNII-1 channels of a pod's second radio, spec 9); false for a band not mapped */
+static bool operating_class(const char *band, uint8_t *opclass, const uint8_t **channels, size_t *n)
+{
+    static const uint8_t ch24[13] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, ch50[4] = {36, 40, 44, 48};
+    if (!strcmp(band, "2.4G")) {
+        *opclass = 81;
+        *channels = ch24;
+        *n = 13;
+    } else if (!strcmp(band, "5G")) {
+        *opclass = 115;
+        *channels = ch50;
+        *n = 4;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+em_reason em_capabilities_tlvs(const em_capability_radio *radios, size_t n, em_tlv_list *out)
 {
     memset(out, 0, sizeof(*out));
-    if (strcmp(r->band, "2.4G"))
-        return EM_UNSUPPORTED_OPERATION; /* the only mapped band */
-    if (!max_bss)
+    if (!n || 1 + 3 * n + 3 > sizeof(out->tlvs) / sizeof(out->tlvs[0]))
         return EM_INVALID_INPUT;
-    uint8_t zero = 0, ruid_flags[7];
-    memcpy(ruid_flags, r->ruid, 6);
-    ruid_flags[6] = 0;
-    em_buf basic = {0};
-    bool ok = append_bytes(out, 0xA1, &zero, 1) && em_buf_put(&basic, r->ruid, 6) &&
-              em_buf_u8(&basic, max_bss) && em_buf_u8(&basic, 1) && em_buf_u8(&basic, 81) &&
-              em_buf_u8(&basic, (uint8_t)max_eirp) &&
-              em_buf_u8(&basic, (uint8_t)(channel >= 1 && channel <= 13 ? 12 : 13));
-    for (int c = 1; ok && c <= 13; c++)
-        if (c != channel)
-            ok = em_buf_u8(&basic, (uint8_t)c);
+    uint8_t opclass[EM_MAX_RADIOS] = {0};
+    const uint8_t *channels[EM_MAX_RADIOS] = {0};
+    size_t nchannels[EM_MAX_RADIOS] = {0};
+    for (size_t i = 0; i < n; i++) {
+        if (i >= EM_MAX_RADIOS || !operating_class(radios[i].radio->band, &opclass[i], &channels[i], &nchannels[i]))
+            return EM_UNSUPPORTED_OPERATION; /* radio band not mapped */
+        if (!radios[i].max_bss)
+            return EM_INVALID_INPUT; /* a radio advertises at least one BSS */
+    }
+    uint8_t zero = 0;
+    bool ok = append_bytes(out, 0xA1, &zero, 1);
+    for (size_t i = 0; ok && i < n; i++) {
+        /* only the current channel is operable: EMOSA does not move the pod's radio */
+        const em_radio_view *r = radios[i].radio;
+        uint8_t ruid_flags[7], non_operable = 0;
+        memcpy(ruid_flags, r->ruid, 6);
+        ruid_flags[6] = 0;
+        for (size_t c = 0; c < nchannels[i]; c++)
+            non_operable += channels[i][c] != radios[i].channel;
+        em_buf basic = {0};
+        ok = em_buf_put(&basic, r->ruid, 6) && em_buf_u8(&basic, radios[i].max_bss) && em_buf_u8(&basic, 1) &&
+             em_buf_u8(&basic, opclass[i]) && em_buf_u8(&basic, (uint8_t)radios[i].max_eirp) &&
+             em_buf_u8(&basic, non_operable);
+        for (size_t c = 0; ok && c < nchannels[i]; c++)
+            if (channels[i][c] != radios[i].channel)
+                ok = em_buf_u8(&basic, channels[i][c]);
+        ok = ok && append(out, 0x85, &basic) && append_bytes(out, 0x86, ruid_flags, 7) &&
+             append_bytes(out, 0xBE, ruid_flags, 7);
+        em_buf_free(&basic);
+    }
     static const uint8_t akm[6] = {0x00, 0x01, 0x00, 0x0f, 0xac, 0x02};
     static const uint8_t profile2[4] = {0, 0, 0, 0};
     static const uint8_t ciphers[5] = {0x01, 0x00, 0x0f, 0xac, 0x04};
-    ok = ok && append(out, 0x85, &basic) && append_bytes(out, 0x86, ruid_flags, 7) &&
-         append_bytes(out, 0xBE, ruid_flags, 7) && append_bytes(out, 0xCC, akm, 6) &&
-         append_bytes(out, 0xB4, profile2, 4) && append_bytes(out, 0xED, ciphers, 5);
-    em_buf_free(&basic);
+    ok = ok && append_bytes(out, 0xCC, akm, 6) && append_bytes(out, 0xB4, profile2, 4) &&
+         append_bytes(out, 0xED, ciphers, 5);
     if (!ok) {
         em_tlv_list_free(out);
         return EM_NO_MEMORY;
     }
     return EM_OK;
+}
+
+em_reason em_capability_tlvs(const em_radio_view *r, int channel, uint8_t max_bss, int8_t max_eirp,
+                             em_tlv_list *out)
+{
+    em_capability_radio one = {r, channel, max_bss, max_eirp};
+    return em_capabilities_tlvs(&one, 1, out);
 }
 
 static bool inventory_string(em_buf *b, const char *s, size_t max)
@@ -328,22 +368,29 @@ static size_t sorted_macs(const em_backhaul_link *links, size_t n, bool al, cons
     return count;
 }
 
-em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_al[6],
-                           const em_radio_view *r, int channel, const em_station_age *ages,
-                           size_t nages, bool r1, const em_backhaul *uplink,
-                           const em_backhaul_link *links, size_t nlinks, em_tlv_list *out)
+em_reason em_topology_radios_tlvs(const uint8_t agent_al[6], const uint8_t controller_al[6],
+                                  const em_topology_radio *radios, size_t nradios, const em_station_age *ages,
+                                  size_t nages, bool r1, const em_backhaul *uplink, const em_backhaul_link *links,
+                                  size_t nlinks, em_tlv_list *out)
 {
-    size_t extra = uplink ? 1 : 0;
+    size_t extra = uplink ? 1 : 0, nbss = 0;
     memset(out, 0, sizeof(*out));
+    for (size_t k = 0; k < nradios; k++)
+        nbss += radios[k].radio->nbss;
+    if (!nradios || nradios > EM_MAX_RADIOS || 1 + nbss + extra > 255)
+        return EM_INVALID_INPUT;
     em_buf dev = {0}, bridge = {0}, nb = {0}, op = {0}, conf = {0}, cl = {0};
     size_t clients = 0;
-    /* Device Information: the agent's own port, then one AP interface per BSS */
-    bool ok = em_buf_put(&dev, agent_al, 6) && em_buf_u8(&dev, (uint8_t)(1 + r->nbss + extra)) &&
+    /* Device Information: the agent's own port, then one AP interface per BSS, each of its
+     * radio's band (802.11n 2.4 or 5 GHz) on its radio's channel */
+    bool ok = em_buf_put(&dev, agent_al, 6) && em_buf_u8(&dev, (uint8_t)(1 + nbss + extra)) &&
               em_buf_put(&dev, agent_al, 6) && em_buf_u16(&dev, 0x0001) && em_buf_u8(&dev, 0);
-    for (size_t i = 0; ok && i < r->nbss; i++) {
-        uint8_t media[4] = {0x00, 0x00, (uint8_t)channel, 0x00};
-        ok = em_buf_put(&dev, r->bss[i].bssid, 6) && em_buf_u16(&dev, 0x0103) &&
-             em_buf_u8(&dev, 10) && em_buf_put(&dev, r->bss[i].bssid, 6) && em_buf_put(&dev, media, 4);
+    for (size_t k = 0; ok && k < nradios; k++) {
+        const em_radio_view *r = radios[k].radio;
+        uint8_t media[4] = {0x00, 0x00, (uint8_t)radios[k].channel, 0x00};
+        for (size_t i = 0; ok && i < r->nbss; i++)
+            ok = em_buf_put(&dev, r->bss[i].bssid, 6) && em_buf_u16(&dev, strcmp(r->band, "5G") ? 0x0103 : 0x0104) &&
+                 em_buf_u8(&dev, 10) && em_buf_put(&dev, r->bss[i].bssid, 6) && em_buf_put(&dev, media, 4);
     }
     if (ok && uplink) {
         /* the backhaul STA: a non-AP STA interface on its parent BSSID */
@@ -353,33 +400,39 @@ em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_a
              em_buf_put(&dev, uplink->station.parent, 6) && em_buf_put(&dev, media, 4);
     }
     /* Bridging Capability: every interface in one tuple */
-    ok = ok && em_buf_u8(&bridge, 1) && em_buf_u8(&bridge, (uint8_t)(1 + r->nbss + extra)) &&
+    ok = ok && em_buf_u8(&bridge, 1) && em_buf_u8(&bridge, (uint8_t)(1 + nbss + extra)) &&
          em_buf_put(&bridge, agent_al, 6);
-    for (size_t i = 0; ok && i < r->nbss; i++)
-        ok = em_buf_put(&bridge, r->bss[i].bssid, 6);
+    for (size_t k = 0; ok && k < nradios; k++)
+        for (size_t i = 0; ok && i < radios[k].radio->nbss; i++)
+            ok = em_buf_put(&bridge, radios[k].radio->bss[i].bssid, 6);
     if (ok && uplink)
         ok = em_buf_put(&bridge, uplink->station.mac, 6);
     /* 1905 Neighbor Device: the controller, on the agent's port */
     ok = ok && em_buf_put(&nb, agent_al, 6) && em_buf_put(&nb, controller_al, 6) && em_buf_u8(&nb, 0);
-    ok = ok && em_buf_u8(&op, 1) && em_buf_put(&op, r->ruid, 6) && em_buf_u8(&op, (uint8_t)r->nbss);
-    ok = ok && em_buf_u8(&conf, 1) && em_buf_put(&conf, r->ruid, 6) && em_buf_u8(&conf, (uint8_t)r->nbss);
-    ok = ok && em_buf_u8(&cl, (uint8_t)r->nbss);
-    for (size_t i = 0; ok && i < r->nbss; i++) {
-        const em_bss_view *b = &r->bss[i];
-        size_t slen = strlen(b->ssid);
-        ok = slen <= 32 && em_buf_put(&op, b->bssid, 6) && em_buf_u8(&op, (uint8_t)slen) &&
-             em_buf_put(&op, b->ssid, slen) && em_buf_put(&conf, b->bssid, 6) &&
-             em_buf_u8(&conf, b->backhaul ? 0x80 : 0x40) && em_buf_u8(&conf, 0) &&
-             em_buf_u8(&conf, (uint8_t)slen) && em_buf_put(&conf, b->ssid, slen) &&
-             em_buf_put(&cl, b->bssid, 6) && em_buf_u16(&cl, (uint16_t)b->nstations);
-        for (size_t s = 0; ok && s < b->nstations; s++) {
-            bool found;
-            long age = age_of(ages, nages, b->stations[s], &found);
-            if (!found || age < 0)
-                ok = false;
-            else
-                ok = em_buf_put(&cl, b->stations[s], 6) && em_buf_u16(&cl, (uint16_t)(age > 65535 ? 65535 : age));
-            clients++;
+    /* AP Operational BSS and BSS Configuration Report: one radio each, the clients of every BSS */
+    ok = ok && em_buf_u8(&op, (uint8_t)nradios) && em_buf_u8(&conf, (uint8_t)nradios) &&
+         em_buf_u8(&cl, (uint8_t)nbss);
+    for (size_t k = 0; ok && k < nradios; k++) {
+        const em_radio_view *r = radios[k].radio;
+        ok = em_buf_put(&op, r->ruid, 6) && em_buf_u8(&op, (uint8_t)r->nbss) && em_buf_put(&conf, r->ruid, 6) &&
+             em_buf_u8(&conf, (uint8_t)r->nbss);
+        for (size_t i = 0; ok && i < r->nbss; i++) {
+            const em_bss_view *b = &r->bss[i];
+            size_t slen = strlen(b->ssid);
+            ok = slen <= 32 && em_buf_put(&op, b->bssid, 6) && em_buf_u8(&op, (uint8_t)slen) &&
+                 em_buf_put(&op, b->ssid, slen) && em_buf_put(&conf, b->bssid, 6) &&
+                 em_buf_u8(&conf, b->backhaul ? 0x80 : 0x40) && em_buf_u8(&conf, 0) &&
+                 em_buf_u8(&conf, (uint8_t)slen) && em_buf_put(&conf, b->ssid, slen) &&
+                 em_buf_put(&cl, b->bssid, 6) && em_buf_u16(&cl, (uint16_t)b->nstations);
+            for (size_t s = 0; ok && s < b->nstations; s++) {
+                bool found;
+                long age = age_of(ages, nages, b->stations[s], &found);
+                if (!found || age < 0)
+                    ok = false;
+                else
+                    ok = em_buf_put(&cl, b->stations[s], 6) && em_buf_u16(&cl, (uint16_t)(age > 65535 ? 65535 : age));
+                clients++;
+            }
         }
     }
     static const uint8_t services[2] = {1, 1}, profile = 1;
@@ -420,6 +473,15 @@ em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_a
         return EM_INVALID_INPUT;
     }
     return EM_OK;
+}
+
+em_reason em_topology_tlvs(const uint8_t agent_al[6], const uint8_t controller_al[6],
+                           const em_radio_view *r, int channel, const em_station_age *ages,
+                           size_t nages, bool r1, const em_backhaul *uplink,
+                           const em_backhaul_link *links, size_t nlinks, em_tlv_list *out)
+{
+    em_topology_radio one = {r, channel};
+    return em_topology_radios_tlvs(agent_al, controller_al, &one, 1, ages, nages, r1, uplink, links, nlinks, out);
 }
 
 /* -- the uplink (spec §8.3) --------------------------------------------------------- */

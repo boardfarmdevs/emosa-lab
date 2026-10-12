@@ -31,6 +31,7 @@ from emosa.opensync.easymesh_view import (
     device_view,
     inventory,
     radio_capabilities,
+    radios_capabilities,
     topology,
 )
 from emosa.opensync.pod_profile import PodBackend, RadioBackend
@@ -153,6 +154,17 @@ def with_parent_ap_50(raw):
         value = radio.get(column, ["set", []])
         present = value[1] if value[0] == "set" else [value]
         radio[column] = ["set", [*present, ["uuid", uuid]]]
+    return raw
+
+
+def with_child(raw, if_name, station):
+    """A station associated with the pod's AP `if_name`: owm's client row on the AP's State."""
+    raw = copy.deepcopy(raw)
+    client = "00000000-0000-4000-8000-0000000000c1"
+    raw["Wifi_Associated_Clients"][client] = {"mac": station, "state": "active"}
+    state = next(r for r in raw["Wifi_VIF_State"].values() if r["if_name"] == if_name)
+    present = state["associated_clients"][1] if state["associated_clients"][0] == "set" else []
+    state["associated_clients"] = ["set", [*present, ["uuid", client]]]
     return raw
 
 
@@ -291,6 +303,71 @@ def aged_at_response():
     }
 
 
+def multi_radio_case(name, raw, radios, ages, parent_aps=()):
+    """Spec 9: an agent reporting more than one radio. ``radios``: (RUID, channel, max_bss,
+    max_eirp, the if_names of the BSSes it represents) each, the fronthaul first; the AP
+    Capability Report lists each radio, the Topology Response each as an Operational and
+    Configured radio (none of its BSSes for a child's), its BSSes interfaces of its band."""
+    view = device_view(decode(raw), parent_aps=frozenset(parent_aps))
+    specs, represented = [], []
+    for ruid, channel, max_bss, max_eirp, names in radios:
+        radio = view.radio(mac(ruid))
+        specs.append((radio, channel, max_bss, max_eirp))
+        represented.append((radio, tuple(radio.bss(n) for n in names), channel))
+    (radio, bsses, channel), extra = represented[0], represented[1:]
+    facts = topology(
+        agent_al=mac(AGENT),
+        controller_al=mac(CONTROLLER),
+        radio=radio,
+        channel=channel,
+        bsses=bsses,
+        ages={mac(m): s for m, s in ages.items()},
+        extra_radios=tuple(extra),
+    )
+    binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
+    return {
+        "name": name,
+        "ovsdb_tables": raw,
+        "agent": {
+            "al_mac": AGENT,
+            "controller_al": CONTROLLER,
+            "parent_aps": list(parent_aps),
+            "radios": [
+                {"ruid": r, "channel": c, "max_bss": m, "max_eirp": e, "bsses": list(n)}
+                for r, c, m, e, n in radios
+            ],
+            "station_ages": ages,
+        },
+        "expected": {
+            "capability_tlvs": tlvs(capability_tlvs(radios_capabilities(tuple(specs)))),
+            "topology_tlvs": {
+                EASYMESH_61: tlvs(_topology(facts, binding, EASYMESH_61)),
+                R1: tlvs(_topology(facts, binding, R1)),
+            },
+        },
+    }
+
+
+def multi_radio_cases(ages):
+    return [
+        # a child's second radio carries only its station: a radio with no BSS (spec 9)
+        multi_radio_case(
+            "child-second-radio",
+            pod_rows(),
+            ((RUID, 6, 1, 30, ("home-ap-24",)), (RUID_50, 44, 1, 23, ())),
+            ages,
+        ),
+        # a GRE parent's AP b-ap-50 on its second radio, a child station on it
+        multi_radio_case(
+            "parent-ap-on-second-radio",
+            with_child(with_parent_ap_50(pod_rows()), "b-ap-50", "02:00:00:00:0c:01"),
+            ((RUID, 6, 1, 30, ("home-ap-24",)), (RUID_50, 44, 1, 23, ("b-ap-50",))),
+            {**ages, "02:00:00:00:0c:01": 5},
+            parent_aps=("b-ap-50",),
+        ),
+    ]
+
+
 def northbound_vectors():
     ages = {"02:00:00:00:0a:00": 12, "02:00:00:00:10:00": 70000}
     return {
@@ -310,6 +387,8 @@ def northbound_vectors():
             )
         ],
         "aged_at_response": aged_at_response(),
+        # spec 9: agents with more than one radio, their capability and topology TLVs
+        "multi_radio": multi_radio_cases(ages),
     }
 
 
