@@ -1135,6 +1135,15 @@ in 7.5 s, re-formed the child's tunnel in 12.2 s, and the child was back with a 
 path 17.5 s after the POST. A drifted tunnel (its gre row, port and interface deleted underneath a
 still-present child) was re-created by the same agent, at one process, in 1.2 s.
 
+**Finding A (live promotion).** Flipping an already-onboarded pod's profile to `gre-parent` did
+not convert its existing `backhaul_bss` into a parent AP; only a fresh onboard did.
+`pod_profile.role()` maps both a rendered parent AP (`multi_ap` none) and a plain `backhaul_bss`
+to `backhaul`, so reconcile's `observed.satisfies(intent.target())` was already true and the
+conversion in `_extra_ops()` was never submitted. The fix makes the backend's rendering
+expectation for a parent (`multi_ap` none plus the underlay `Wifi_Inet_Config`) reach the
+applied-predicate, so a live promotion submits; a box scenario covers it and the fresh-provision
+path is re-run. Carried with the second-radio work (§9).
+
 ## 9. Not covered yet
 
 - 5 and 6 GHz radios, and WPA3 (layer B, draft, binds a 5 GHz radio as a GRE parent's AP);
