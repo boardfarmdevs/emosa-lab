@@ -933,6 +933,11 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   The agent of a former parent (its tunnels' journal kept) removes the tunnels left on its former
   parent AP, with their `br-home` ports, and advertises no parent AP (status `gre_parent.withdrawn`,
   no `ap_bssid`). The pod's own rows are not touched. Both agents (box `gre-parent-demoted`).
+  Proven pods-only on rdk-1010 (12 October, the Pis' shape on hwsim, each pod's `b-ap-50` on its
+  5 GHz radio): seven SteerWiFiBackhaul moves of a child onto a parent's `b-ap-50` and back, none
+  refused, each in 16 to 19 s, a 1500-byte DF ping across both hops after each move onto the
+  parent, and a gateway 5 GHz channel change that the parent's station, its `b-ap-50` and the
+  child followed without EMOSA writing `b-ap-50` (docs/handover/second-radio.md).
 - **The parent AP's radio.** The controller decides where backhaul BSSes are, and can only do
   that for a radio it knows, so the parent AP's radio is one EMOSA **binds and reports** (its own
   M1 and Radio Basic Capabilities, the controller's M2 for it). Where the only radio that can

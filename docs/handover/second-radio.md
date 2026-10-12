@@ -39,63 +39,53 @@ Parent side:
 Spec: Finding A recorded in §8.6. Behaviour is identical for single-radio profiles throughout, so
 existing box/units are unaffected.
 
-## Remaining, in order (do P3b first — 7f)
-Work P3b on a **WIP branch off layer-b with frequent pushes**, merging to layer-b only when green,
-so a compaction never loses it (7f). It is the central WSC onboarding — a half-done one breaks every
-box scenario.
+## Done (12 October, branch `wip/second-radio-p3b`, fast-forwarded to layer-b when green)
+Both agents, vectors and box for each; spec 8.6 and 9 record the rules.
+- P3b: one M1 and one M2 per radio, sequential, each radio its own write scope and journal
+  (`radio-<band>`): 680162d, 21ddceb (C).
+- Item 9: policy radio lists (ddeeefa), channel procedures per radio (40a878c), UNII-3 classes
+  124/125 and a station's channel move as one fresh session that leaves `b-ap-50` alone (e5fea15),
+  AP metrics and unassociated queries per radio (a48d362).
+- Finding A, live promotion (d2652db), and its mirror, demotion (9332f97).
+- The Pis' profile `rpi-pod-mt7921u-6.6.1-gre-5g-v1` (1de67db).
+- Found by the lab proof: a GRE child's backhaul credentials from its 5 GHz radio's set (1c1e7ae);
+  channel procedures for a radio whose power the pod does not report (c292760).
 
-1. **P3b — per-radio M1/WSC (the central piece).** `make_bridge` and the exchange are per-radio
-   (P3a) but the onboarding (`src/emosa/wire/onboarding.py`, class `OnboardingSession`, ~803 lines)
-   still runs ONE exchange for `radios[0]`: it builds the bridge at line ~464 (via the factory =
-   `make_bridge` lambda in `pod.py` ~835), one `ComponentProvisioningSession` (~476-491), one
-   `awaiting_m2` state, and `receive()` (~321-365) routes the first M2 (msg_type 9) to that one
-   provisioning (→ state "provisioning", ~346-350). Add, **additively** (dormant when
-   `capabilities.radios` has one entry, so single-radio is unchanged = green): after the fronthaul is
-   provisioned, if there is a second bound radio, start a SECOND `ComponentProvisioningSession` with
-   `make_bridge(radio_index=1)` and a per-radio `ComponentTarget` (ruid =
-   `capabilities.radios[1].basic.ruid`, bssid = `b-ap-50`'s from the view; the factory at
-   `pod.py` ~820-845 builds one target for `radios[0]` today). **Do the exchanges SEQUENTIALLY**
-   (fronthaul M1→M2→provisioned, then the 5 GHz M1→M2): only one provisioning awaits an M2 at a time,
-   so the next msg_type-9 frame goes to it — no concurrent M2-routing-by-RUID needed, which is the
-   simplification that makes this tractable. Each radio's M2 applies to its BSSes (the M2-set
-   application already maps the backhaul BSS to `b-ap-50` via P2). Why it matters (7f): §8.6 rests on
-   "the controller's M2 backhaul BSS makes a pod a GRE parent"; without a 5 GHz M2 the controller
-   never decides for that radio and withdrawal-by-band (the absent-BSS path through the Band list)
-   acts on the wrong radio — the shortcut the owner ruled out. Keep P4's operational-report
-   modelling; it stays correct once each radio has its own exchange. Test with a multi-radio box
-   scenario (none exists yet; the box fixtures already present a 5 GHz radio).
-2. **item-9 channel rule.** `src/emosa/wire/channel.py` already declines a Channel Selection that
-   excludes the sole operable channel, but is 2.4G-specific (line ~256 `set(range(1,14)) - {6}`).
-   Extend per-radio so the 5 GHz radio is operable only on the station's channel; a selection off it
-   is declined (EMOSA does not move a radio whose channel follows its station).
-3. **Finding A (gre-parent live promotion).** Flipping a live pod's profile to `gre-parent` doesn't
-   convert its existing `backhaul_bss` to a parent AP; only a fresh onboard does, because
-   `pod_profile.role()` (`src/emosa/opensync/pod_profile.py` ~261) maps both a rendered parent AP
-   (`multi_ap` none) and a plain `backhaul_bss` to `backhaul`, so reconcile's
-   `snap.observed.satisfies(target)` (`src/emosa/agent/gre_parent.py` ~56) is already true and
-   `_extra_ops`'s conversion never submits. Fix: the applied-predicate for a parent must expect
-   `multi_ap` none plus the underlay `Wifi_Inet_Config`; add a live-promotion box scenario and re-run
-   the fresh-provision path. (Recorded in spec §8.6 as "Finding A".)
-4. **C mirror.** Mirror all of the above in `c/src` (the lab runs the C agent — on the critical path
-   to the lab proof): the profile model (`radios`/`slot_bands`), the 5 GHz operating class, per-radio
-   capabilities, the per-radio bind/render/topology, and per-radio WSC. Then `emosa-units`,
-   `emosa-vectors`, `scan-build`, and the STRICT/c-cert CI gates.
-5. **The (b) lab proof on rdk-1010.** Build + deploy the C agent at the new SRCREV, bring up pod-1 as
-   the 5 GHz parent and re-stage pod-2 on `lnf_radius_5g`, extenders off, then steer pod-2 onto
-   `b-ap-50` and back + the right-device steer + the layer-A regression, with times. Relaunch the
-   pods from **`rpi-pod-amd64-20261012084755`** (yocto-53's credential fix: pod-bootstrap takes only
-   bssid-less credentials) so the virtual proof runs V54's exact Pi pod code. Fewer soaks during
-   dev: box + units + the lab proof are the evidence; full soaks at the end. Before each
-   `SteerWiFiBackhaul`, show that the controller's model holds the child's 5 GHz backhaul station:
-   0216's "Backhaul STA learned ... sta=<bhaul-sta-50's MAC>" log line and the station-mode row on
-   its Device.N (7f, 12 October: the MV3 shows pods unrooted with no backhaul MACs today; this
-   proof is the evidence V54 fixes it). The Pis' adapter-B role is its own profile,
-   `rpi-pod-mt7921u-6.6.1-gre-5g-v1` (done; 7f: profile ids are contracts, an Ethernet-only Pi
-   keeps `rpi-pod-mt7921u-6.6.1-v1`), with `b-ap-50` at 52_owm_prep's index 1 (yocto-53, read
-   on pi1).
-6. **Deferred: the layer-A pods-only check.** A pod onto a POD serving a Multi-AP backhaul BSS (not
-   an extender) and back, pods-only, before the end soaks (the box already proves the move+revert
-   [c]). `b-ap-24`/02:00:00:01:ca:c0 were only example targets.
+## The (b) proof on rdk-1010 (12 October, PDT; UTC in brackets)
+EMOSA 1c1e7ae on the gateway from 15:30:41 (22:30:41Z); pods relaunched from
+`rpi-pod-amd64-20261012084755` by yocto-53 (pod-1 14:40:43, pod-2 14:41:13), both on
+`opensync-lab-hwsim-6.6.1-gre-5g-v1`; extenders stopped 14:44:22-40.
+- Both pods report two radios (2.4 GHz ch 6, 5 GHz ch 36); each radio's own M2 makes its
+  `b-ap-50` (pod-1 72:00:00:00:6b:00, pod-2 72:00:00:00:6d:00); every operation applied.
+- The controller holds pod-2's 5 GHz station: 0216's "Backhaul STA learned from Device Information:
+  sta=02:00:00:00:6d:00 parent=02:00:00:8a:29:1d", and a station row on its Device.N Radio.2.
+- The first steer (14:45:07) was sent but stalled on the child's credentials (fixed in 1c1e7ae); it
+  completed after the fix at 15:30:58 (22:30:58Z): "Backhaul parent update: sta=02:00:00:00:6d:00
+  ... new_bssid=72:00:00:00:6b:00", pod-1's tunnel pgd1_57 to 169.254.1.57, a 1500-byte DF ping
+  from pod-2 to 10.0.0.1 across both hops 3/3.
+- Six measured SteerWiFiBackhaul moves, alternately onto pod-1's `b-ap-50` and back to
+  `lnf_radius_5g` (15:31:35 to 15:35:00): all Status Success, each moved in 15.6 to 19.4 s, every
+  onto-move's ping 3/3; every request named pod-2's AL with the right previous parent; pod-1 never
+  moved. The controller's topology hangs pod-2 under pod-1's AL.
+- A gateway 5 GHz channel change with pod-2 on pod-1 (36 to 44 at 15:40:53, back at 15:41:53):
+  pod-1's station and `b-ap-50` followed within 4 s, pod-2 rejoined within 6 s (30 s on the way
+  back, with an extra radio reset of ours), the tunnel and the DF ping came back; each pod's EMOSA
+  took one session per change for its radio's new capabilities (more only when its OVSDB link,
+  carried by the moving backhaul, dropped); `b-ap-50`'s Config `_version` never changed.
+- Found: the pods were renewed by the controller every minute (EMOSA refused the channel
+  procedures for a radio with no reported power; fixed in c292760, its lab check pending). The
+  controller's data model of a pod's radio B (station MAC == RUID) is an open-work row for after
+  multi-hop: it does not affect steering (0 refusals in 7 steers).
+- Evidence: the gateway's /nvram/emosa/proof-second-radio/ (controller backhaul lines) and the
+  proof's local files (the steers, the channel-change samples).
+
+## Remaining
+1. Deploy c292760 on rdk-1010 and show the renew loop gone for 10 minutes, then restore the
+   `pre-layerb` snapshot and re-audit (7f).
+2. Deferred: the layer-A pods-only check (a pod onto a POD serving a Multi-AP backhaul BSS, not an
+   extender, and back) before the end soaks; the box proves the move and revert.
+3. Known gaps to close before V54's end soaks (spec 9): radio B's 80 MHz (class 128, centre 155, the
+   HT/VHT capability TLVs, a steer naming 128/155) and radio B's own telemetry.
 
 ## Lab access (rdk-1010 on rev120)
 `ssh rev120` → `lxc exec rdk-1010` → `lxc exec bpibroadband` (the gateway: em_ctrl + emosa). Feed
