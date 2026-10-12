@@ -501,9 +501,13 @@ def make_bridge(
     capabilities,
     message_set=EASYMESH_61,
     m2_session="distinct",
+    radio_index=0,
 ):
     node = report.facts
     uuid = hashlib.sha256(("emosa-agent:" + node["serial"]).encode()).digest()[:16]
+    # spec 9: a WSC exchange per bound radio; radio_index picks it, rf_band follows its band
+    radio = capabilities.radios[radio_index]
+    rf_band = 1 if radio.basic.operating_classes[0].operating_class == 81 else 2  # 1=2.4, 2=5 GHz
     device = M1Device(
         uuid=uuid,
         al_mac=report.binding.local_al,
@@ -518,13 +522,12 @@ def make_bridge(
         serial_number=node["serial"].encode()[:32],
         primary_device_type=bytes.fromhex("00060050f2040001"),
         device_name=node["serial"].encode()[:32],
-        rf_band=1,
+        rf_band=rf_band,
         association_state=0,
         device_password_id=4,
         configuration_error=0,
         os_version=1,
     )
-    radio = capabilities.radios[0]
     exchange = WscExchange(
         report.binding,
         device,
