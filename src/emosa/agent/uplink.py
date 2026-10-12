@@ -389,13 +389,18 @@ class UplinkSwitch:
         op = self.latest()
         if op is not None and op.state in ACTIVE:
             return "switch_in_progress"
-        if self.bootstrap and bssid == self.bootstrap["bssid"]:
-            # a steer back to the pod's own bootstrap BSS is a revert, not a pin (spec 8.6):
-            # EMOSA undoes its move (restores the station's vconf snapshot, deletes its credential)
-            # and the pod's parent pin lands the station back on the bootstrap. (With no record the
-            # revert would be recognised by the onboarding SSID in a scan; not built yet.)
-            if self.mode != BOOTSTRAP and self.bssid == self.configured:
-                return "already_on_bootstrap"  # no EMOSA move to undo
+        if (
+            self.bootstrap
+            and bssid == self.bootstrap["bssid"]
+            and self.bssid != self.bootstrap["bssid"]
+        ):
+            # a steer back to the pod's own bootstrap BSS is a revert, not a pin (spec 8.6), but
+            # only when EMOSA has moved the station away from it: a steer to the bootstrap while the
+            # station is still on it is an ordinary confirm-in-place and falls through to the switch
+            # path below (spec 8.3, the re-switch-to-the-BSS-in-use case). EMOSA undoes its move
+            # (restores the station's vconf snapshot, deletes its credential) and the pod's parent
+            # pin lands the station back on the bootstrap. (With no record the revert would be
+            # recognised by the onboarding SSID in a scan; not built yet.)
             previous, previous_station, previous_mode = self.bssid, self.station, self.mode
             self.move = {
                 "target": bssid,

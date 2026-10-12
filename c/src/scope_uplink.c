@@ -614,10 +614,10 @@ em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_jou
     if (btext) {
         cJSON *saved = cJSON_Parse(btext);
         free(btext);
-        const char *bssid = str(saved, "bssid"), *bssid_ssid = str(saved, "ssid");
+        const char *saved_bssid = str(saved, "bssid"), *bssid_ssid = str(saved, "ssid");
         uint8_t mac[6];
-        if (bssid && em_parse_mac(bssid, mac)) {
-            lower(bssid, u->bootstrap_bssid, sizeof(u->bootstrap_bssid));
+        if (saved_bssid && em_parse_mac(saved_bssid, mac)) {
+            lower(saved_bssid, u->bootstrap_bssid, sizeof(u->bootstrap_bssid));
             EM_FORMAT_FIXED(u->bootstrap_ssid, sizeof(u->bootstrap_ssid), "%s", bssid_ssid ? bssid_ssid : "");
             u->has_bootstrap = true;
         }
@@ -1210,11 +1210,13 @@ const char *em_uplink_steer(em_uplink_scope *u, const char *bssid, const char *b
     cJSON_Delete(op);
     if (active)
         return "switch_in_progress";
-    if (u->has_bootstrap && !strcmp(target_bssid, u->bootstrap_bssid)) {
-        /* a steer back to the pod's own bootstrap BSS is a revert, not a pin (spec 8.6): EMOSA
-         * undoes its move and the pod's parent pin lands the station on the bootstrap */
-        if (strcmp(u->mode, "bootstrap") && !strcmp(u->bssid, u->configured))
-            return "already_on_bootstrap"; /* no EMOSA move to undo */
+    if (u->has_bootstrap && !strcmp(target_bssid, u->bootstrap_bssid) &&
+        strcmp(u->bssid, u->bootstrap_bssid)) {
+        /* a steer back to the pod's own bootstrap BSS is a revert, not a pin (spec 8.6), but only
+         * when EMOSA has moved the station away from it: a steer to the bootstrap while the station
+         * is still on it is an ordinary confirm-in-place and falls through to the switch path below
+         * (spec 8.3, the re-switch-to-the-BSS-in-use case). EMOSA undoes its move and the pod's
+         * parent pin lands the station on the bootstrap. */
         memset(&u->move, 0, sizeof(u->move));
         u->has_move = true;
         EM_FORMAT_FIXED(u->move.target, sizeof(u->move.target), "%s", target_bssid);

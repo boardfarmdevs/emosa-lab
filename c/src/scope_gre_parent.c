@@ -772,7 +772,7 @@ static char *key_of(const em_gre_scope *g)
     at += snprintf(at, size, "%s:", g->instance);
     for (size_t k = 0; k < g->children.nremotes; k++)
         at += snprintf(at, size - (size_t)(at - key), "%s%s", k ? "," : "", g->children.remotes[k]);
-    snprintf(at, size - (size_t)(at - key), ":%u", g->redo);
+    (void)snprintf(at, size - (size_t)(at - key), ":%u", g->redo);
     return key;
 }
 
