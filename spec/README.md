@@ -1186,11 +1186,26 @@ path is re-run. Carried with the second-radio work (§9).
   with no primary BSS (the radio serves no fronthaul of its own), so a renew of one radio never
   rewrites the other's BSSes and a set without a backhaul BSS removes only that radio's parent AP.
   Every bound radio is an Operational and Configured radio of the Topology Response, with no BSS
-  when it carries none of EMOSA's (a child's radio). Only 5 GHz UNII-1 (opclass 115, no DFS) is
-  mapped. Both agents (box `second-radio-parent`, `second-radio-withdrawn`). Open: the item-9 channel rule
-  for that radio (operable only on the station's channel); and a station that moves the radio to
-  another channel changes the radio's capabilities, which today ends the agent's source (a new
-  session, as for a moved radio) where it should only update the reports;
+  when it carries none of EMOSA's (a child's radio). A radio is reported in every 20 MHz class of
+  its band (IEEE 802.11 Table E-4), its current channel the only operable one in each: 2.4 GHz
+  class 81; 5 GHz the non-DFS UNII-1 class 115 (36 to 48) and UNII-3 classes 124 (149 to 161)
+  and 125 (149 to 177). Its Operating Channel Report names the last class that has its channel
+  (115/44 on rdk-1010, 125/149 on V54). A further radio on a channel not mapped (DFS) is not
+  reported until it leaves it. The channel rule (item 9): the radio is operable only on its
+  station's channel, so a Channel Selection Request that forbids that channel, in any class that
+  has it, is declined for that radio alone. A station that moves the radio to another channel
+  changes the radio's capabilities: the agent takes them under the same pod source and starts
+  exactly one fresh session (a Search and an M1 per radio; a radio with no channel for a moment
+  keeps the one it was reported on, so a move is one change). The unchanged M2 sets are observed
+  applied without writing: `b-ap-<band>` moves with its radio, the pod's doing, and EMOSA neither
+  recreates nor rewrites it. A moved fronthaul radio is still a different device (a new source).
+  Both agents (box `second-radio-parent`, `second-radio-withdrawn`, `second-radio-moves-channel`).
+  Known gap, to close before V54's end soaks: V54's radio B runs VHT 80 MHz on 149/80 (centre
+  155), while EMOSA reports it in the 20 MHz classes with no HT, VHT or HE capability TLVs, so
+  the controller models a 20 MHz radio. The follow-up: the AP HT and VHT (later HE) Capabilities
+  TLVs, the 80 MHz class 128 (centre 155 for 149 to 161), and proof that a Backhaul Steering
+  Request naming 128/155 lands the child on the right primary channel (149), not on "channel
+  155";
 - backhaul link metrics and a 1905 neighbor on the backhaul interface towards an upstream
   that is not a pod of the fleet (an RDK or prpl node: EMOSA does not know its AL MAC);
 - EasyMesh AP and station metrics. The pod's station measurements are

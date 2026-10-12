@@ -33,8 +33,21 @@ from emosa.wire.cmdu import Reassembler, Tlv, fragment_message, invalid
 from emosa.wire.reports import PreparedReport
 
 # The operating classes a reported radio may be on and their channels (emosa.opensync.easymesh_view
-# OPERATING_CLASSES): 2.4 GHz, and the 5 GHz UNII-1 channels of a pod's second radio (spec 9).
-CLASS_CHANNELS = {81: tuple(range(1, 14)), 115: (36, 40, 44, 48)}
+# OPERATING_CLASSES): 2.4 GHz, and the non-DFS 5 GHz UNII-1 and UNII-3 classes of a pod's second
+# radio (spec 9). A radio advertises every class of its band (BAND_CLASSES), its current channel
+# the only operable one.
+CLASS_CHANNELS = {
+    81: tuple(range(1, 14)),
+    115: (36, 40, 44, 48),
+    124: (149, 153, 157, 161),
+    125: (149, 153, 157, 161, 165, 169, 173, 177),
+}
+BAND_CLASSES = ((81,), (115, 124, 125))
+
+
+def advertised(operating_class):
+    """The classes a radio operating in this class advertises: every class of its band."""
+    return next(classes for classes in BAND_CLASSES if operating_class in classes)
 
 
 @dataclass(frozen=True)
@@ -128,11 +141,11 @@ def selected_policy(tlvs, radios):
             ):
                 invalid("duplicate, truncated or foreign channel preferences")
             radio, entry = by_ruid[ruid], policy(ruid)
-            own = CLASS_CHANNELS[radio.operating_class]
+            classes = advertised(radio.operating_class)
             count, body = tlv.value[6], tlv.value[7:]
             if count > 8:
                 invalid("channel preference group budget exceeded")
-            preferences, specified = [], set()
+            preferences, specified = [], set()  # (class, channel) pairs already given
             for _ in range(count):
                 if len(body) < 3:
                     invalid("truncated channel preference group")
@@ -144,17 +157,19 @@ def selected_policy(tlvs, radios):
                 score, reason = value >> 4, value & 15
                 if score == 15 or reason > 13 or reason in (6, 7, 8, 9, 10):
                     invalid("reserved preference or agent-only reason in controller request")
-                if opclass != radio.operating_class:
+                if opclass not in classes:
                     # Not an operating class the radio advertises (e.g. RDK's 40 MHz
                     # classes 83/84): nothing in it applies to this radio.
                     entry["ignored"].append({"class": opclass, "channels": list(channels)})
                     continue
+                own = CLASS_CHANNELS[opclass]
                 if len(set(channels)) != len(channels) or any(c not in own for c in channels):
                     invalid("channels outside the operating class")
-                applies = set(channels or own)
+                applies = {(opclass, c) for c in channels or own}
                 if applies & specified:
                     invalid("overlapping controller channel preferences")
-                if radio.channel in applies and score == 0:
+                if (opclass, radio.channel) in applies and score == 0:
+                    # in any class it advertises (124 and 125 both have 149)
                     entry["decline"] = "controller forbids the sole advertised operable channel"
                 specified |= applies
                 preferences.append(
@@ -294,16 +309,18 @@ class ChannelCoordinator:
         for cap in caps:
             radio = measured[cap.basic.ruid]
             classes = cap.basic.operating_classes
-            if (
-                len(classes) != 1
-                or classes[0].operating_class != radio.operating_class
-                or set(classes[0].non_operable_channels)
-                != set(CLASS_CHANNELS[radio.operating_class]) - {radio.channel}
+            # every class of its band, the current channel the only operable one in each
+            if tuple(c.operating_class for c in classes) != advertised(
+                radio.operating_class
+            ) or any(
+                set(c.non_operable_channels)
+                != set(CLASS_CHANNELS[c.operating_class]) - {radio.channel}
+                for c in classes
             ):
                 raise EmosaError(
                     Reason.UNSUPPORTED_OPERATION, "a sole-channel capability contract is required"
                 )
-            if radio.tx_power_dbm > classes[0].max_eirp_dbm:
+            if any(radio.tx_power_dbm > c.max_eirp_dbm for c in classes):
                 raise EmosaError(Reason.NOT_READY, "observed power exceeds advertised capability")
             radios.append(radio)
         return tuple(radios)

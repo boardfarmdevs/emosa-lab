@@ -1090,6 +1090,169 @@
    }
   ]
  },
+ "multi_radio_unii3": {
+  "cases": [
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "channel-preference-query-second-radio-149",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800500500080000000"
+       ],
+       "result": "channel_preference_report_sent"
+      },
+      "request": "0272f97f0785020000e00001893a0000800400500080000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": {
+     "controller": "020000e00001",
+     "local_al": "0272f97f0785",
+     "mid": 81,
+     "radios": [
+      {
+       "ignored": [],
+       "power_limit_dbm": null,
+       "preferences": [
+        {
+         "channels": [
+          6
+         ],
+         "class": 81,
+         "preference": 14,
+         "reason": 0
+        }
+       ],
+       "ruid": "020000000100"
+      },
+      {
+       "ignored": [],
+       "power_limit_dbm": null,
+       "preferences": [
+        {
+         "channels": [
+          153,
+          157
+         ],
+         "class": 125,
+         "preference": 0,
+         "reason": 0
+        }
+       ],
+       "ruid": "020000000500"
+      }
+     ],
+     "status": "accepted_no_adjustment"
+    },
+    "handed_to_pod": [],
+    "name": "channel-selection-second-radio-149",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008007005100808e0007020000000100008e000702000000050000000000",
+        "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e8f000a020000000500017d9514000000"
+       ],
+       "result": "channel_selection_accepted"
+      },
+      "request": "0272f97f0785020000e00001893a00008006005100808b000b02000000010001510106e08b000c020000000500017d02999d00000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "channel-selection-second-radio-149-forbidden-in-124",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008007005200808e000702000000050002000000",
+        "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e8f000a020000000500017d9514000000"
+       ],
+       "result": "channel_selection_declined"
+      },
+      "request": "0272f97f0785020000e00001893a00008006005200808b000b020000000500017c019500000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": {
+     "controller": "020000e00001",
+     "local_al": "0272f97f0785",
+     "mid": 83,
+     "radios": [
+      {
+       "ignored": [],
+       "power_limit_dbm": null,
+       "preferences": [
+        {
+         "channels": [],
+         "class": 115,
+         "preference": 0,
+         "reason": 0
+        }
+       ],
+       "ruid": "020000000500"
+      }
+     ],
+     "status": "accepted_no_adjustment"
+    },
+    "handed_to_pod": [],
+    "name": "channel-selection-second-radio-149-unii1-forbidden",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008007005300808e000702000000050000000000",
+        "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e8f000a020000000500017d9514000000"
+       ],
+       "result": "channel_selection_accepted"
+      },
+      "request": "0272f97f0785020000e00001893a00008006005300808b000a02000000050001730000000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "channel-scan-second-radio-149",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800000540080000000",
+        "020000e000010272f97f0785893a0000801c01f40080a8001918323032362d30392d32355430303a30303a30302e3030305aa700090200000005007d9501000000"
+       ],
+       "result": "channel_scan_not_supported_reported"
+      },
+      "request": "0272f97f0785020000e00001893a0000801b00540080a60009000102000000050000000000"
+     }
+    ]
+   }
+  ],
+  "description": "spec 9: as multi_radio, the 5 GHz radio 02:00:00:00:05:00 on UNII-3 channel 149 (class 125 at 20 dBm, max EIRP 23). It advertises classes 115, 124 and 125, 149 the only operable channel in 124 and 125, and operates in 125.",
+  "radios": [
+   {
+    "channel": 6,
+    "class": 81,
+    "max_eirp": 30,
+    "ruid": "02:00:00:00:01:00",
+    "tx_power": 30
+   },
+   {
+    "channel": 149,
+    "class": 125,
+    "max_eirp": 23,
+    "ruid": "02:00:00:00:05:00",
+    "tx_power": 20
+   }
+  ]
+ },
  "ovsdb_tables": {
   "AWLAN_Node": {
    "96bc1650-4197-4cd8-9036-f9eb854e87ec": {

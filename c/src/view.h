@@ -69,8 +69,20 @@ void em_tlv_list_free(em_tlv_list *l);
 em_reason em_capability_tlvs(const em_radio_view *r, int channel, uint8_t max_bss, int8_t max_eirp,
                              em_tlv_list *out);
 
+/* A 20 MHz global operating class of a band and its channels (easymesh_view.OPERATING_CLASSES). */
+typedef struct {
+    uint8_t opclass, n, channels[13];
+} em_band_class;
+
+/* The classes a radio of this band advertises (2.4 GHz: 81; 5 GHz: 115, 124, 125), their count. */
+size_t em_band_classes(const char *band, const em_band_class **out);
+/* The class a radio of this band operates in on this channel (the last of its band's classes that
+ * has it: 125 for 149), or 0 when the channel is not mapped (DFS). */
+uint8_t em_operating_class(const char *band, int channel);
+
 /* One radio the agent reports (spec 9, easymesh_view.radios_capabilities): on its channel, the
- * BSSes it may carry, its maximum EIRP. 2.4 GHz (opclass 81) or 5 GHz UNII-1 (opclass 115). */
+ * BSSes it may carry, its maximum EIRP. 2.4 GHz, or 5 GHz UNII-1 or UNII-3, each in every class of
+ * its band. */
 typedef struct {
     const em_radio_view *radio;
     int channel;

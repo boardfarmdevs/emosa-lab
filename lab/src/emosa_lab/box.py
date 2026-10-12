@@ -3339,6 +3339,107 @@ async def second_radio_withdrawn(box):
     )
 
 
+def advertised_classes(m1):
+    """{operating class: its non-operable channels} of the radio an M1's AP Radio Basic
+    Capabilities TLV names (RUID, max BSS, class count, then class, max EIRP, count, channels)."""
+    value = next(t.value for t in m1.tlvs if t.kind == 0x85)
+    classes, at = {}, 8
+    for _ in range(value[7]):
+        count = value[at + 2]
+        classes[value[at]] = list(value[at + 3 : at + 3 + count])
+        at += 3 + count
+    return classes
+
+
+def recovery_starts(box):
+    """How many sessions the agent has started (its recovery loop's attempts)."""
+    session = (box.status() or {}).get("session") or {}
+    return (session.get("recovery") or {}).get("attempts_started", 0)
+
+
+async def second_radio_moves_channel(box):
+    """Spec 9's channel rule in V54's shape (radio B on UNII-3 channel 149). With both radios
+    configured, the pod's 5 GHz station roams to a parent on 149 and the radio, b-ap-50 on it,
+    moves from 44 with it: the pod's doing, its State channel-less for a moment, then 149. The
+    agent takes the radio's new capabilities in exactly one fresh session (one Search, an M1 per
+    radio, the 5 GHz one advertising 115, 124 and 125 with 149 operable in 124 and 125); both
+    radios' unchanged M2 sets are observed applied without writing, so b-ap-50, the fronthaul
+    and the radio's Config are left as they were, and no further session follows."""
+    if await serve_radios(box, lambda: both_radios_applied(box)) is None:
+        return box.result(passed=False, failed="the two radios were not both configured")
+    ap = (await box.vif("Wifi_VIF_Config", PARENT_AP_50))[1]
+    fronthaul = (await box.vif("Wifi_VIF_Config", COLD_VIF))[1]
+    radio = (await radio_config(box, "5G"))[1]
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    before = len((box.status() or {}).get("operations") or []), len(radio_operations(box, "5G"))
+    starts = recovery_starts(box)
+    state = next(
+        u for u, r in (await box.rows("Wifi_Radio_State")).items() if r.get("freq_band") == "5G"
+    )
+    for channel in (["set", []], 149):  # between two channels, then on the new parent's
+        await box.transact(
+            [
+                {
+                    "op": "update",
+                    "table": "Wifi_Radio_State",
+                    "where": [["_uuid", "==", ["uuid", state]]],
+                    "row": {"channel": channel},
+                }
+            ]
+        )
+        await asyncio.sleep(2)
+
+    async def taken_again():
+        ops, five = (box.status() or {}).get("operations") or [], radio_operations(box, "5G")
+        return (
+            len(ops) > before[0]
+            and len(five) > before[1]
+            and all_applied(ops)
+            and all_applied(five)
+        )
+
+    ruids = await serve_radios(box, taken_again, searches=searches, m1s=m1s)
+    if ruids is None:
+        return box.result(passed=False, failed="the radio's new capabilities were not taken")
+    await asyncio.sleep(10)  # no further session follows
+    status = box.status() or {}
+    new_m1s = box.sent(AUTOCONFIG_WSC)[m1s:]
+    classes = advertised_classes(new_m1s[1]) if len(new_m1s) > 1 else {}
+    noop = [
+        bool((ops[-1].get("application_evidence") or {}).get("observed_noop"))
+        for ops in (status.get("operations") or [{}], radio_operations(box, "5G") or [{}])
+    ]
+    unchanged = {
+        "b-ap-50": (await box.vif("Wifi_VIF_Config", PARENT_AP_50))[1] == ap,
+        "fronthaul": (await box.vif("Wifi_VIF_Config", COLD_VIF))[1] == fronthaul,
+        "radio": (await radio_config(box, "5G"))[1] == radio,
+    }
+    sessions = recovery_starts(box) - starts
+    radios = (status.get("pod") or {}).get("radios") or []
+    reported = {r.get("band"): r.get("channel") for r in radios}
+    return box.result(
+        passed=len(box.sent(AUTOCONFIG_SEARCH)) - searches == 1
+        and sessions == 1
+        and ruids == [RUID_24, RUID_50]
+        and classes
+        == {
+            115: [36, 40, 44, 48],
+            124: [153, 157, 161],
+            125: [153, 157, 161, 165, 169, 173, 177],
+        }
+        and all(noop)
+        and all(unchanged.values())
+        and reported.get("5G") == 149,
+        searches=len(box.sent(AUTOCONFIG_SEARCH)) - searches,
+        sessions=sessions,
+        m1_ruids=ruids,
+        radio_b_classes={str(k): v for k, v in classes.items()},
+        observed_noop=noop,
+        unchanged=unchanged,
+        reported_channels=reported,
+    )
+
+
 async def adapter_restart(box):
     """The agent process killed and started again (its journal kept): it takes the pod back,
     onboards again and finds the configuration already running, without writing (spec 5)."""
@@ -3482,6 +3583,7 @@ SCENARIOS = {
     "gre-parent-withdrawn": gre_parent_withdrawn,
     "second-radio-parent": second_radio_parent,
     "second-radio-withdrawn": second_radio_withdrawn,
+    "second-radio-moves-channel": second_radio_moves_channel,
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
     "write-lost-unapplied": write_lost_unapplied,
@@ -3570,6 +3672,11 @@ OPTIONS = {  # the box each scenario needs beyond the default
         "underlay": GRE_UNDERLAY,
     },
     "second-radio-withdrawn": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
+        "underlay": GRE_UNDERLAY,
+    },
+    "second-radio-moves-channel": {
         "multi_bss": True,
         "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
         "underlay": GRE_UNDERLAY,

@@ -29,6 +29,7 @@ from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
 from emosa.store import Store
 from emosa.wire.autoconfiguration import ExchangeResult, WscExchange
+from emosa.wire.channel import CLASS_CHANNELS
 from emosa.wire.cmdu import MidSequence, Tlv, decode_frame
 from emosa.wire.operation_bridge import ComponentTarget, ScopeContext, WscComponentBridge
 from emosa.wsc_radio import ExistingBssCandidate
@@ -287,3 +288,48 @@ def test_a_radio_scope_takes_only_its_radios_m2_set(tmp_path):
     ):
         with pytest.raises(EmosaError):
             WscComponentBridge(engine, exchange, wrong, radio.context, run_id="r")
+
+
+def test_a_second_radios_channel_change_retakes_its_capabilities_once(tmp_path):
+    """Spec 9's channel rule (V54: radio B on 149): the pod's station roams and the second radio
+    moves with it, from 36 to 149 by way of no channel. The report source takes the radio's new
+    capabilities under the same pod source (holding 36 in between, so the move changes them
+    once); a moved fronthaul radio is still a different device, refused until the source
+    changes."""
+    from emosa.agent.pod import PodReportSource, further_radios_changed
+    from test_pod_profile import RADIO_STATE, RADIO_STATE_5G
+
+    fronthaul, _, _ = parent_5g(tmp_path)
+    tables = fronthaul.session.tables
+    tables["Wifi_Radio_State"][RADIO_STATE_5G]["tx_power"] = 20
+    report = PodReportSource(fronthaul, BINDING, "pod-1")
+
+    def radio_b():
+        """Radio B's (class, channel) in the Operating Channel Report, and the classes its
+        capabilities make it operable in."""
+        snapshot = report.source.current()
+        basic = snapshot.capabilities.radios[1].basic
+        (operating,) = [
+            (r.operating_class, r.channel)
+            for r in snapshot.operating_radios
+            if r.ruid == basic.ruid
+        ]
+        operable = {
+            c.operating_class
+            for c in basic.operating_classes
+            if set(CLASS_CHANNELS[c.operating_class]) - set(c.non_operable_channels)
+        }
+        return operating, operable
+
+    assert asyncio.run(report.refresh())
+    assert radio_b() == ((115, 36), {115})
+    first = report.capabilities
+    tables["Wifi_Radio_State"][RADIO_STATE_5G]["channel"] = ["set", []]  # between two channels
+    assert asyncio.run(report.refresh())
+    assert report.capabilities == first and radio_b() == ((115, 36), {115})
+    tables["Wifi_Radio_State"][RADIO_STATE_5G]["channel"] = 149
+    assert asyncio.run(report.refresh())
+    assert further_radios_changed(first, report.capabilities)
+    assert radio_b() == ((125, 149), {124, 125})
+    tables["Wifi_Radio_State"][RADIO_STATE]["channel"] = 11
+    assert not asyncio.run(report.refresh()) and report.source.current() is None

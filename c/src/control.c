@@ -91,14 +91,24 @@ static size_t control_radios(const em_control *c, em_control_radio out[4])
     return 1;
 }
 
-/* CLASS_CHANNELS: a reported radio's operating class and its channels (2.4 GHz; the 5 GHz UNII-1
- * channels of a pod's second radio, spec 9) */
+/* CLASS_CHANNELS: the operating classes a reported radio may be on and their channels (2.4 GHz,
+ * and the non-DFS 5 GHz UNII-1 and UNII-3 classes of a pod's second radio, spec 9) */
 static bool class_channels(uint8_t op_class, const uint8_t **list, size_t *n)
 {
-    static const uint8_t ch24[13] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, ch50[4] = {36, 40, 44, 48};
-    *list = op_class == 81 ? ch24 : op_class == 115 ? ch50 : NULL;
-    *n = op_class == 81 ? 13 : op_class == 115 ? 4 : 0;
+    static const uint8_t ch81[13] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, ch115[4] = {36, 40, 44, 48},
+                         ch124[4] = {149, 153, 157, 161}, ch125[8] = {149, 153, 157, 161, 165, 169, 173, 177};
+    *list = op_class == 81 ? ch81 : op_class == 115 ? ch115 : op_class == 124 ? ch124 : op_class == 125 ? ch125 : NULL;
+    *n = op_class == 81 ? 13 : op_class == 115 || op_class == 124 ? 4 : op_class == 125 ? 8 : 0;
     return *list != NULL;
+}
+
+/* BAND_CLASSES (advertised): the classes a radio operating in this class advertises, every class
+ * of its band, their count */
+static size_t advertised(uint8_t op_class, const uint8_t **classes)
+{
+    static const uint8_t band24[1] = {81}, band50[3] = {115, 124, 125};
+    *classes = op_class == 81 ? band24 : band50;
+    return op_class == 81 ? 1 : op_class == 115 || op_class == 124 || op_class == 125 ? 3 : 0;
 }
 
 /* one radio a channel request names: its policy record entry and whether it is declined */
@@ -155,16 +165,15 @@ static em_reason channel_policy(const em_message *m, const em_control_radio *rad
         if (x->preferences)
             return EM_INVALID_INPUT; /* duplicate */
         x->preferences = true;
-        const uint8_t *own;
-        size_t nown;
-        class_channels(radios[k].op_class, &own, &nown);
+        const uint8_t *own, *classes;
+        size_t nown, nclasses = advertised(radios[k].op_class, &classes);
         cJSON *prefs = cJSON_GetObjectItemCaseSensitive(x->entry, "preferences"),
               *ignored = cJSON_GetObjectItemCaseSensitive(x->entry, "ignored");
         uint8_t count = t->value[6];
         if (count > 8)
             return EM_INVALID_INPUT;
         const uint8_t *p = t->value + 7, *end = t->value + t->len;
-        bool specified[16] = {0}; /* by index in the class's channels */
+        bool specified[3][16] = {{0}}; /* by advertised class, by index in its channels */
         for (int g = 0; g < count; g++) {
             if (end - p < 3)
                 return EM_INVALID_INPUT;
@@ -176,13 +185,17 @@ static em_reason channel_policy(const em_message *m, const em_control_radio *rad
             p += 3 + n;
             if (score == 15 || reason > 13 || (reason >= 6 && reason <= 10))
                 return EM_INVALID_INPUT;
-            if (opclass != radios[k].op_class) { /* a class the radio does not advertise */
+            size_t which = 0;
+            while (which < nclasses && classes[which] != opclass)
+                which++;
+            if (which == nclasses) { /* a class the radio does not advertise (RDK's 40 MHz 83/84) */
                 cJSON *other = cJSON_CreateObject();
                 cJSON_AddNumberToObject(other, "class", opclass);
                 cJSON_AddItemToObject(other, "channels", channel_list(channels, n));
                 cJSON_AddItemToArray(ignored, other);
                 continue;
             }
+            class_channels(opclass, &own, &nown);
             bool applies[16] = {0};
             for (int j = 0; j < n; j++) {
                 size_t at = 0;
@@ -195,11 +208,11 @@ static em_reason channel_policy(const em_message *m, const em_control_radio *rad
             for (size_t at = 0; !n && at < nown; at++)
                 applies[at] = true;
             for (size_t at = 0; at < nown; at++) {
-                if (applies[at] && specified[at])
+                if (applies[at] && specified[which][at])
                     return EM_INVALID_INPUT; /* overlapping preferences */
-                specified[at] = specified[at] || applies[at];
+                specified[which][at] = specified[which][at] || applies[at];
                 if (applies[at] && own[at] == radios[k].channel && score == 0)
-                    x->decline = true; /* forbids the radio's sole operable channel */
+                    x->decline = true; /* forbids the sole operable channel, in any class (124, 125: 149) */
             }
             cJSON *pref = cJSON_CreateObject();
             cJSON_AddNumberToObject(pref, "class", opclass);

@@ -56,6 +56,7 @@ from emosa.opensync.easymesh_view import (
     bound_radios,
     device_view,
     inventory,
+    operating_class,
     radios_capabilities,
     topology,
 )
@@ -118,7 +119,9 @@ RENEWALS = {
 # published report lives 1.5 s, which this refreshes three times over.
 REFRESH_PERIOD = 0.5
 # the band of a reported radio, by the operating class its capabilities advertise (spec 9)
-BAND_OF_OPERATING_CLASS = {opclass: band for band, (opclass, _) in OPERATING_CLASSES.items()}
+BAND_OF_OPERATING_CLASS = {
+    opclass: band for band, classes in OPERATING_CLASSES.items() for opclass, _ in classes
+}
 MONITOR = {
     **TABLES,
     "AWLAN_Node": [*TABLES["AWLAN_Node"], "id"],
@@ -213,6 +216,18 @@ def direction(seen, errors, packets, value):
     )
 
 
+def further_radios_changed(before, after):
+    """Only the further radios of two capability reports differ (spec 9: a second radio's channel
+    follows the pod's station, and it is reported once the pod brings it up): the fronthaul radio
+    and the device's own capabilities are the same."""
+    return (
+        bool(before.radios)
+        and bool(after.radios)
+        and before.radios[0] == after.radios[0]
+        and replace(before, radios=()) == replace(after, radios=())
+    )
+
+
 class PodReportSource:
     """What the agent reports about its pod: the bound BSS (and managed slot BSSes).
 
@@ -242,6 +257,7 @@ class PodReportSource:
         )
         self.capabilities = self.inventory = None
         self.capabilities_generation = None  # the pod source the capabilities are from
+        self.further_channels = {}  # RUID -> channel of each further radio reported (spec 9)
 
     def _represented(self, radio, bound):
         """The BSSes the agent represents: the bound one, then managed slot VIFs.
@@ -348,7 +364,9 @@ class PodReportSource:
                 additional=self.backend.profile.radios,
                 slots=self.backend.pod_slots,
                 slot_bands=self.backend.profile.slot_bands,
+                held={} if fresh else self.further_channels,
             )
+            self.further_channels = {r.ruid: ch for r, ch, _ in bound[1:]}
             stored = (
                 {
                     r.basic.ruid: r.basic.operating_classes[0].max_eirp_dbm
@@ -373,9 +391,16 @@ class PodReportSource:
                 self.capabilities_generation = raw["generation"]
                 self.inventory = inventory(device, radio, self.backend.profile.chipset.encode())
             elif capabilities != self.capabilities:
-                # A moved radio or replaced PHY under the same source is a different device
-                # to the controller: refused until the source changes.
-                raise EmosaError(Reason.NOT_READY, "pod radio identity or channel changed")
+                if further_radios_changed(self.capabilities, capabilities):
+                    # spec 9: a further radio's channel follows the pod's station (and the radio
+                    # appears once the pod brings it up): its capabilities are taken again, and
+                    # the session that sees them change starts afresh with this radio's new M1
+                    log.info("a further radio moved channel or came and went: capabilities taken")
+                    self.capabilities = capabilities
+                else:
+                    # A moved fronthaul radio or replaced PHY under the same source is a different
+                    # device to the controller: refused until the source changes.
+                    raise EmosaError(Reason.NOT_READY, "pod radio identity or channel changed")
             uplink = None
             for station in self.stations:
                 # a wireless backhaul station: a Multi-AP (4-address) uplink, or a 3-address
@@ -424,6 +449,10 @@ class PodReportSource:
                 uplink,
                 self.links,
                 radios_with_station,
+                # spec 9: a further radio's channel and power (its capabilities and its
+                # Operating Channel Report follow them)
+                tuple((r.ruid, ch, r.tx_power) for r, ch, _ in bound),
+                self.capabilities,
             )
             if facts != self.last:
                 self.revision += 1
@@ -480,8 +509,8 @@ class PodReportSource:
             # spec 9: each further radio on its own observed channel (it follows the pod's
             # station), within the power it advertises
             for r, ch, _ in bound[1:]:
-                opclass, channels = OPERATING_CLASSES[r.band]
-                if r.tx_power is not None and r.tx_power <= _eirp(r) and ch in channels:
+                opclass = operating_class(r.band, ch)
+                if r.tx_power is not None and r.tx_power <= _eirp(r) and opclass is not None:
                     operating += (OperatingRadio(r.ruid, opclass, ch, r.tx_power),)
             self.source.publish(
                 (raw["generation"], self.revision),

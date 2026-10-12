@@ -528,3 +528,13 @@ def test_a_steering_window_owm_never_takes_closes_at_its_deadline(agent, tmp_pat
 def test_a_steering_window_left_open_is_closed_after_the_agent_restarts(agent, tmp_path):
     result = box("steering-restart", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result
+
+
+def test_a_second_radios_channel_move_is_one_fresh_session_and_leaves_its_parent_ap(
+    agent, tmp_path
+):
+    # spec 9's channel rule, V54's radio B on 149: the station moves the radio, the agent takes
+    # its new capabilities once, and b-ap-50 is the pod's to move, not EMOSA's to rewrite
+    result = box("second-radio-moves-channel", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+    assert result["sessions"] == 1 and all(result["unchanged"].values())

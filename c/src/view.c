@@ -233,23 +233,40 @@ static bool append_bytes(em_tlv_list *l, uint8_t kind, const void *data, size_t 
     return em_buf_put(&b, data, len) && append(l, kind, &b);
 }
 
-/* OPERATING_CLASSES: the global operating class of a band and its channels (2.4 GHz; the 5 GHz
- * UNII-1 channels of a pod's second radio, spec 9); false for a band not mapped */
-static bool operating_class(const char *band, uint8_t *opclass, const uint8_t **channels, size_t *n)
+/* OPERATING_CLASSES: the 20 MHz global operating classes of a band and their channels (IEEE
+ * 802.11 Table E-4): 2.4 GHz, and the non-DFS 5 GHz UNII-1 and UNII-3 classes of a pod's second
+ * radio (spec 9: rdk-1010's 36 and 44, V54's 149) */
+static const em_band_class classes_24[] = {{81, 13, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}}};
+static const em_band_class classes_50[] = {
+    {115, 4, {36, 40, 44, 48}},
+    {124, 4, {149, 153, 157, 161}},
+    {125, 8, {149, 153, 157, 161, 165, 169, 173, 177}},
+};
+
+size_t em_band_classes(const char *band, const em_band_class **out)
 {
-    static const uint8_t ch24[13] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, ch50[4] = {36, 40, 44, 48};
     if (!strcmp(band, "2.4G")) {
-        *opclass = 81;
-        *channels = ch24;
-        *n = 13;
-    } else if (!strcmp(band, "5G")) {
-        *opclass = 115;
-        *channels = ch50;
-        *n = 4;
-    } else {
-        return false;
+        *out = classes_24;
+        return sizeof(classes_24) / sizeof(classes_24[0]);
     }
-    return true;
+    if (!strcmp(band, "5G")) {
+        *out = classes_50;
+        return sizeof(classes_50) / sizeof(classes_50[0]);
+    }
+    *out = NULL;
+    return 0;
+}
+
+uint8_t em_operating_class(const char *band, int channel)
+{
+    const em_band_class *classes;
+    uint8_t found = 0;
+    size_t n = em_band_classes(band, &classes);
+    for (size_t i = 0; i < n; i++)
+        for (size_t c = 0; c < classes[i].n; c++)
+            if (classes[i].channels[c] == channel)
+                found = classes[i].opclass; /* the last class that has it: 125 for 149 */
+    return found;
 }
 
 em_reason em_capabilities_tlvs(const em_capability_radio *radios, size_t n, em_tlv_list *out)
@@ -257,32 +274,36 @@ em_reason em_capabilities_tlvs(const em_capability_radio *radios, size_t n, em_t
     memset(out, 0, sizeof(*out));
     if (!n || 1 + 3 * n + 3 > sizeof(out->tlvs) / sizeof(out->tlvs[0]))
         return EM_INVALID_INPUT;
-    uint8_t opclass[EM_MAX_RADIOS] = {0};
-    const uint8_t *channels[EM_MAX_RADIOS] = {0};
-    size_t nchannels[EM_MAX_RADIOS] = {0};
     for (size_t i = 0; i < n; i++) {
-        if (i >= EM_MAX_RADIOS || !operating_class(radios[i].radio->band, &opclass[i], &channels[i], &nchannels[i]))
-            return EM_UNSUPPORTED_OPERATION; /* radio band not mapped */
+        if (i >= EM_MAX_RADIOS || !em_operating_class(radios[i].radio->band, radios[i].channel))
+            return EM_UNSUPPORTED_OPERATION; /* radio band or channel not mapped */
         if (!radios[i].max_bss)
             return EM_INVALID_INPUT; /* a radio advertises at least one BSS */
     }
     uint8_t zero = 0;
     bool ok = append_bytes(out, 0xA1, &zero, 1);
     for (size_t i = 0; ok && i < n; i++) {
-        /* only the current channel is operable: EMOSA does not move the pod's radio */
+        /* every class of its band, only the current channel operable in each: EMOSA does not move
+         * the pod's radio */
         const em_radio_view *r = radios[i].radio;
-        uint8_t ruid_flags[7], non_operable = 0;
+        const em_band_class *classes;
+        size_t nclasses = em_band_classes(r->band, &classes);
+        uint8_t ruid_flags[7];
         memcpy(ruid_flags, r->ruid, 6);
         ruid_flags[6] = 0;
-        for (size_t c = 0; c < nchannels[i]; c++)
-            non_operable += channels[i][c] != radios[i].channel;
         em_buf basic = {0};
-        ok = em_buf_put(&basic, r->ruid, 6) && em_buf_u8(&basic, radios[i].max_bss) && em_buf_u8(&basic, 1) &&
-             em_buf_u8(&basic, opclass[i]) && em_buf_u8(&basic, (uint8_t)radios[i].max_eirp) &&
-             em_buf_u8(&basic, non_operable);
-        for (size_t c = 0; ok && c < nchannels[i]; c++)
-            if (channels[i][c] != radios[i].channel)
-                ok = em_buf_u8(&basic, channels[i][c]);
+        ok = em_buf_put(&basic, r->ruid, 6) && em_buf_u8(&basic, radios[i].max_bss) &&
+             em_buf_u8(&basic, (uint8_t)nclasses);
+        for (size_t k = 0; ok && k < nclasses; k++) {
+            uint8_t non_operable = 0;
+            for (size_t c = 0; c < classes[k].n; c++)
+                non_operable += classes[k].channels[c] != radios[i].channel;
+            ok = em_buf_u8(&basic, classes[k].opclass) && em_buf_u8(&basic, (uint8_t)radios[i].max_eirp) &&
+                 em_buf_u8(&basic, non_operable);
+            for (size_t c = 0; ok && c < classes[k].n; c++)
+                if (classes[k].channels[c] != radios[i].channel)
+                    ok = em_buf_u8(&basic, classes[k].channels[c]);
+        }
         ok = ok && append(out, 0x85, &basic) && append_bytes(out, 0x86, ruid_flags, 7) &&
              append_bytes(out, 0xBE, ruid_flags, 7);
         em_buf_free(&basic);

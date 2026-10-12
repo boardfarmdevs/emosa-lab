@@ -3,6 +3,7 @@
 
 import asyncio
 import copy
+import dataclasses
 import json
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from emosa.opensync.easymesh_view import (
     bound_radios,
     device_view,
     inventory,
+    operating_class,
     radio_capabilities,
     radios_capabilities,
     topology,
@@ -142,12 +144,28 @@ def test_the_view_as_easymesh_payloads():
     (opclass,) = caps.radios[0].basic.operating_classes
     assert caps.radios[0].basic.ruid == RUID_24 and caps.radios[0].basic.max_bss == 1
     assert opclass.operating_class == 81 and 6 not in opclass.non_operable_channels
-    # the second radio of spec 9: a 5 GHz radio is now mapped (UNII-1, opclass 115)
+    # the second radio of spec 9: a 5 GHz radio in every non-DFS 20 MHz class of its band (UNII-1
+    # 115, UNII-3 124 and 125), its channel the only operable one
     five = radio_capabilities(view.radio(RUID_5), channel=44, max_bss=1, max_eirp=23)
-    (five_opclass,) = five.radios[0].basic.operating_classes
-    assert five.radios[0].basic.ruid == RUID_5 and five_opclass.operating_class == 115
-    assert 44 not in five_opclass.non_operable_channels
-    assert set(five_opclass.non_operable_channels) == {36, 40, 48}
+    unii1, unii3, unii3_wide = five.radios[0].basic.operating_classes
+    assert five.radios[0].basic.ruid == RUID_5
+    assert (unii1.operating_class, unii3.operating_class, unii3_wide.operating_class) == (
+        115,
+        124,
+        125,
+    )
+    assert set(unii1.non_operable_channels) == {36, 40, 48}
+    assert set(unii3.non_operable_channels) == {149, 153, 157, 161}
+    assert len(unii3_wide.non_operable_channels) == 8
+    # V54's Pis: radio B on 149 (UNII-3), operable there alone, in 124 and 125
+    on149 = radio_capabilities(view.radio(RUID_5), channel=149, max_bss=1, max_eirp=23)
+    unii1, unii3, unii3_wide = on149.radios[0].basic.operating_classes
+    assert len(unii1.non_operable_channels) == 4
+    assert 149 not in unii3.non_operable_channels and 149 not in unii3_wide.non_operable_channels
+    assert operating_class("5G", 149) == 125 and operating_class("5G", 44) == 115
+    assert operating_class("5G", 100) is None  # DFS: not mapped
+    with pytest.raises(EmosaError):
+        radio_capabilities(view.radio(RUID_5), channel=100, max_bss=1, max_eirp=23)
     assert inventory(view, radio).serial_number == SERIAL.encode()
     facts = topology(
         agent_al=AGENT,
@@ -193,6 +211,30 @@ def test_bound_radios_adds_the_profiles_second_radio():
     # no additional radios: just the fronthaul
     only = bound_radios(view.radios, fronthaul, 6, additional=(), slots=(), slot_bands=())
     assert [r.ruid for r, _, _ in only] == [RUID_24]
+
+
+def test_a_second_radio_follows_its_station_and_holds_its_channel_between_two():
+    """Spec 9's channel rule: the second radio is reported on the channel its station took
+    (V54's 149 here). Between two channels (no channel for a moment while the station roams) it
+    keeps the channel it was reported on, so a move changes its capabilities once; one not reported
+    yet is left out until it is up, as is one on a channel not mapped (DFS)."""
+    view = device_view(decode(raw_tables()))
+    fronthaul = view.radio(RUID_24)
+
+    def bound(channel, held=None):
+        radios = tuple(
+            dataclasses.replace(r, channel=channel) if r.ruid == RUID_5 else r for r in view.radios
+        )
+        found = bound_radios(
+            radios, fronthaul, 6, additional=({"band": "5G"},), slots=(), slot_bands=(), held=held
+        )
+        return [(r.ruid, ch) for r, ch, _ in found[1:]]
+
+    assert bound(149) == [(RUID_5, 149)]
+    assert bound(None, held={RUID_5: 44}) == [(RUID_5, 44)]
+    assert bound(149, held={RUID_5: 44}) == [(RUID_5, 149)]
+    assert bound(None) == []
+    assert bound(100, held={RUID_5: 44}) == []
 
 
 def test_radios_capabilities_reports_each_bound_radio():

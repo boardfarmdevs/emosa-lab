@@ -74,12 +74,30 @@ from emosa.wire.topology_values import (
 
 FRONTHAUL, BACKHAUL = "fronthaul", "backhaul"
 REPORT_FLAGS = {FRONTHAUL: 0x40, BACKHAUL: 0x80}  # BSS Configuration Report
-# freq_band -> (global operating class of a 20 MHz channel, its channels)
-# Global operating classes (802.11 Annex E / EasyMesh). The second radio of spec 9 runs on the
-# 5 GHz onboarding BSS's band, UNII-1 (opclass 115, 20 MHz, ch 36-48), which carries the pods'
-# bootstrap and the GRE parent AP b-ap-50 on rdk-1010 and V54's Pis. Wider 5 GHz sub-bands (118,
-# 121, 125) and 6 GHz are not mapped yet (spec 9).
-OPERATING_CLASSES = {"2.4G": (81, tuple(range(1, 14))), "5G": (115, (36, 40, 44, 48))}
+# freq_band -> ((global operating class of a 20 MHz channel, its channels), ...): IEEE 802.11
+# Table E-4 (emosa.operating_classes). EMOSA reports a radio in every class of its band, its current
+# channel the only operable one (spec 9: a second radio's channel follows the pod's station). 5 GHz:
+# the non-DFS UNII-1 (115) and UNII-3 (124, 125) classes, which carry the pods' bootstrap and the
+# GRE parent AP b-ap-50 on rdk-1010 (36, 44) and V54's Pis (149). DFS channels, 40/80/160 MHz
+# classes (and the VHT/HE capabilities they imply) and 6 GHz are not reported yet (spec 9).
+OPERATING_CLASSES = {
+    "2.4G": ((81, tuple(range(1, 14))),),
+    "5G": (
+        (115, (36, 40, 44, 48)),
+        (124, (149, 153, 157, 161)),
+        (125, (149, 153, 157, 161, 165, 169, 173, 177)),
+    ),
+}
+
+
+def operating_class(band, channel):
+    """The 20 MHz class a radio of this band operates in on this channel: the last of the band's
+    classes that has it (125 for 149: 802.11 extends 124 with it), or None when the channel is not
+    mapped (a DFS channel, say)."""
+    found = [c for c, channels in OPERATING_CLASSES.get(band, ()) if channel in channels]
+    return found[-1] if found else None
+
+
 IEEE_802_11N_24 = 0x0103  # 1905.1 media type of an 802.11n 2.4 GHz interface
 MEDIA = {"2.4G": IEEE_802_11N_24, "5G": 0x0104}  # 802.11n per band (no HT claims beyond)
 AP_ROLE, STA_ROLE = 0x00, 0x40  # 1905.1 802.11 media-specific role: AP, non-AP STA
@@ -287,13 +305,15 @@ def _early_radio(radio, *, channel, max_bss, max_eirp):
     """One radio's AP Radio Basic Capabilities. Only the current channel is operable: EMOSA does
     not move the pod's radio (spec 9's channel rule for the second radio - it follows the station).
     Declared: no HT/VHT/HE/EHT capability claims."""
-    if radio.band not in OPERATING_CLASSES:
-        raise EmosaError(Reason.UNSUPPORTED_OPERATION, "radio band not mapped")
-    opclass, channels = OPERATING_CLASSES[radio.band]
+    if radio.band not in OPERATING_CLASSES or operating_class(radio.band, channel) is None:
+        raise EmosaError(Reason.UNSUPPORTED_OPERATION, "radio band or channel not mapped")
     basic = APRadioBasicCapabilities(
         radio.ruid,
         max_bss,
-        (BasicOperatingClass(opclass, max_eirp, tuple(n for n in channels if n != channel)),),
+        tuple(
+            BasicOperatingClass(opclass, max_eirp, tuple(n for n in channels if n != channel))
+            for opclass, channels in OPERATING_CLASSES[radio.band]
+        ),
     )
     return EarlyRadio(
         basic,
@@ -335,7 +355,7 @@ def radios_capabilities(specs):
     )
 
 
-def bound_radios(device_radios, fronthaul, channel, *, additional, slots, slot_bands):
+def bound_radios(device_radios, fronthaul, channel, *, additional, slots, slot_bands, held=None):
     """The radios EMOSA binds and reports (spec 9): the fronthaul on ``channel``, then each of the
     profile's ``additional`` radios found among ``device_radios`` by band, on its observed channel.
     Returns ``(radio, channel, max_bss)`` each. ``max_bss`` is split by ``slot_bands``
@@ -344,8 +364,11 @@ def bound_radios(device_radios, fronthaul, channel, *, additional, slots, slot_b
     an AP Radio Basic Capabilities TLV may not advertise none, and a plain child's radio (its
     station only) can carry an AP; EMOSA maps none of that radio's M2 set (no slot), as it leaves
     out the BSSes beyond any radio's slots (spec 3.4). A second radio the pod has not brought up
-    yet (absent, or no channel) is left out and reported once it appears."""
-    on_a_second = dict(slot_bands)
+    yet (absent, or no channel) is left out and reported once it appears. ``held`` ({RUID:
+    channel}): the further radios already reported; one with no channel for a moment (between two
+    channels while its station roams) stays on its held channel, so that a move from one channel
+    to another changes its capabilities once."""
+    on_a_second, held = dict(slot_bands), held or {}
     fronthaul_bss = 1 + sum(1 for name, _, _ in slots if name not in on_a_second)
     bound = [(fronthaul, channel, fronthaul_bss)]
     for extra in additional:
@@ -353,10 +376,13 @@ def bound_radios(device_radios, fronthaul, channel, *, additional, slots, slot_b
         radio = next(
             (r for r in device_radios if r.band == band and r.ruid != fronthaul.ruid), None
         )
-        if radio is None or radio.channel is None:
-            continue
+        on = None if radio is None else radio.channel
+        if on is None and radio is not None:
+            on = held.get(radio.ruid)
+        if on is None or operating_class(band, on) is None:
+            continue  # not up yet, or on a channel not mapped (DFS): reported once it is
         on_band = sum(1 for name, _, _ in slots if on_a_second.get(name) == band)
-        bound.append((radio, radio.channel, max(1, on_band)))
+        bound.append((radio, on, max(1, on_band)))
     return tuple(bound)
 
 

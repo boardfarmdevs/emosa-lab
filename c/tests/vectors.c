@@ -840,10 +840,18 @@ static void control_vectors(const char *dir)
     }
     uint8_t ruid[6];
     em_parse_mac(str(agent, "radio"), ruid);
-    const cJSON *c, *multi = cJSON_GetObjectItemCaseSensitive(doc, "multi_radio");
+    const cJSON *c;
     cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases")) control_case(c, agent, view, ruid, NULL);
-    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(multi, "cases"))
-        control_case(c, agent, view, ruid, cJSON_GetObjectItemCaseSensitive(multi, "radios"));
+    /* spec 9: the second radio on UNII-1 channel 44, and on UNII-3 channel 149 (V54's radio B) */
+    static const char *const sets[] = {"multi_radio", "multi_radio_unii3"};
+    for (size_t s = 0; s < sizeof(sets) / sizeof(sets[0]); s++) {
+        const cJSON *multi = cJSON_GetObjectItemCaseSensitive(doc, sets[s]);
+        checks++;
+        if (!cJSON_GetArraySize(cJSON_GetObjectItemCaseSensitive(multi, "cases")))
+            fail("control", sets[s], "no cases");
+        cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(multi, "cases"))
+            control_case(c, agent, view, ruid, cJSON_GetObjectItemCaseSensitive(multi, "radios"));
+    }
     free(view);
     cJSON_Delete(doc);
 }

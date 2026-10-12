@@ -30,6 +30,7 @@ from emosa.opensync.easymesh_view import (
     backhaul_radios,
     device_view,
     inventory,
+    operating_class,
     radio_capabilities,
     radios_capabilities,
     topology,
@@ -154,6 +155,15 @@ def with_parent_ap_50(raw):
         value = radio.get(column, ["set", []])
         present = value[1] if value[0] == "set" else [value]
         radio[column] = ["set", [*present, ["uuid", uuid]]]
+    return raw
+
+
+def on_channel(raw, band, channel):
+    """The recorded pod with its `band` radio operating on `channel` (V54's radio B on 149)."""
+    raw = copy.deepcopy(raw)
+    for radio in raw["Wifi_Radio_State"].values():
+        if radio["freq_band"] == band:
+            radio["channel"] = channel
     return raw
 
 
@@ -362,6 +372,16 @@ def multi_radio_cases(ages):
             "parent-ap-on-second-radio",
             with_child(with_parent_ap_50(pod_rows()), "b-ap-50", "02:00:00:00:0c:01"),
             ((RUID, 6, 1, 30, ("home-ap-24",)), (RUID_50, 44, 1, 23, ("b-ap-50",))),
+            {**ages, "02:00:00:00:0c:01": 5},
+            parent_aps=("b-ap-50",),
+        ),
+        # the same on UNII-3 channel 149 (V54's radio B): classes 115, 124 and 125, 149 in 125
+        multi_radio_case(
+            "parent-ap-on-second-radio-149",
+            with_child(
+                with_parent_ap_50(on_channel(pod_rows(), "5G", 149)), "b-ap-50", "02:00:00:00:0c:01"
+            ),
+            ((RUID, 6, 1, 30, ("home-ap-24",)), (RUID_50, 149, 1, 23, ("b-ap-50",))),
             {**ages, "02:00:00:00:0c:01": 5},
             parent_aps=("b-ap-50",),
         ),
@@ -1439,10 +1459,10 @@ def wsc_m2_vectors():
     }
 
 
-def control_agent(raw, stations, *, second_radio=False):
-    """A provisioned agent's report source over recorded rows, at time 0. ``second_radio``: it
-    also reports the pod's 5 GHz radio (spec 9: a GRE parent's or child's second radio) on its
-    channel 44, with no BSS of EMOSA's on it."""
+def control_agent(raw, stations, *, second_radio=None):
+    """A provisioned agent's report source over recorded rows, at time 0. ``second_radio``: the
+    channel on which it also reports the pod's 5 GHz radio (spec 9: a GRE parent's or child's
+    second radio), with no BSS of EMOSA's on it."""
     from emosa.wire.channel import OperatingRadio
     from emosa.wire.coordinator import ReportSource
 
@@ -1450,7 +1470,7 @@ def control_agent(raw, stations, *, second_radio=False):
     radio = view.radio(mac(RUID))
     five = view.radio(mac(RUID_50))
     caps = (
-        radios_capabilities(((radio, 6, 5, 30), (five, 44, 1, 23)))
+        radios_capabilities(((radio, 6, 5, 30), (five, second_radio, 1, 23)))
         if second_radio
         else radio_capabilities(radio, channel=6, max_bss=5, max_eirp=30)
     )
@@ -1461,7 +1481,7 @@ def control_agent(raw, stations, *, second_radio=False):
         channel=6,
         bsses=radio.bsses,
         ages={mac(m): 10 for m in stations},
-        extra_radios=((five, (), 44),) if second_radio else (),
+        extra_radios=((five, (), second_radio),) if second_radio else (),
     )
     binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
     source = ReportSource(binding, "pod-1", "c" * 64, clock=lambda: 0.0)
@@ -1472,7 +1492,18 @@ def control_agent(raw, stations, *, second_radio=False):
         observed_at=0.0,
         lifetime=1.5,
         operating_radios=(OperatingRadio(mac(RUID), 81, 6, radio.tx_power),)
-        + ((OperatingRadio(mac(RUID_50), 115, 44, SECOND_RADIO_POWER),) if second_radio else ()),
+        + (
+            (
+                OperatingRadio(
+                    mac(RUID_50),
+                    operating_class("5G", second_radio),
+                    second_radio,
+                    SECOND_RADIO_POWER,
+                ),
+            )
+            if second_radio
+            else ()
+        ),
     )
     return source, radio
 
@@ -1910,13 +1941,44 @@ def control_vectors():
             Tlv(0xA6, b"\x00\x02" + ruid + bytes.fromhex("0151020106") + second + b"\x00"),
         ),
     ]
+    # the second radio on UNII-3 channel 149 (V54's radio B): it advertises classes 115, 124
+    # and 125, 149 operable in 124 and 125, and operates in 125
+    unii3 = [
+        one("channel-preference-query-second-radio-149", 0x8004, 80),
+        one(  # class 125 preferences that leave 149 allowed: accepted, reported as 125/149
+            "channel-selection-second-radio-149",
+            0x8006,
+            81,
+            Tlv(0x8B, good),
+            Tlv(0x8B, second + bytes((1, 125, 2, 153, 157, 0x00))),
+        ),
+        one(  # 149 forbidden in class 124: its sole operable channel, declined for it alone
+            "channel-selection-second-radio-149-forbidden-in-124",
+            0x8006,
+            82,
+            Tlv(0x8B, second + bytes((1, 124, 1, 149, 0x00))),
+        ),
+        one(  # all of UNII-1 forbidden: 149 is not in class 115, accepted
+            "channel-selection-second-radio-149-unii1-forbidden",
+            0x8006,
+            83,
+            Tlv(0x8B, second + bytes((1, 115, 0, 0x00))),
+        ),
+        one(  # the second radio's own class and channel when the request names none: 125/149
+            "channel-scan-second-radio-149",
+            0x801B,
+            84,
+            Tlv(0xA6, b"\x00\x01" + second + b"\x00"),
+        ),
+    ]
 
-    def run(sequences, *, second_radio=False):
+    def run(sequences, *, second_radio=None):
         return [run_case(name, frames, second_radio) for name, frames in sequences]
 
     def run_case(name, frames, second_radio):
         with tempfile.TemporaryDirectory() as directory:
-            source, _ = control_agent(copy.deepcopy(raw), stations, second_radio=second_radio)
+            rows = on_channel(raw, "5G", second_radio) if second_radio else copy.deepcopy(raw)
+            source, _ = control_agent(rows, stations, second_radio=second_radio)
             sent, handed = [], []
             mids = MidSequence(499)
             handlers = (
@@ -2019,7 +2081,24 @@ def control_vectors():
                     "max_eirp": 23,
                 },
             ],
-            "cases": run(multi_radio, second_radio=True),
+            "cases": run(multi_radio, second_radio=44),
+        },
+        "multi_radio_unii3": {
+            "description": "spec 9: as multi_radio, the 5 GHz radio "
+            + RUID_50
+            + " on UNII-3 channel 149 (class 125 at 20 dBm, max EIRP 23). It advertises classes "
+            "115, 124 and 125, 149 the only operable channel in 124 and 125, and operates in 125.",
+            "radios": [
+                {"ruid": RUID, "class": 81, "channel": 6, "tx_power": radio_power, "max_eirp": 30},
+                {
+                    "ruid": RUID_50,
+                    "class": 125,
+                    "channel": 149,
+                    "tx_power": SECOND_RADIO_POWER,
+                    "max_eirp": 23,
+                },
+            ],
+            "cases": run(unii3, second_radio=149),
         },
     }
 

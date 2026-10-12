@@ -169,14 +169,15 @@ def capability_tlvs(facts: EarlyCapabilities):
             radio.vht is False and radio.he is False and radio.eht is False,
             "unknown or unsupported technology needs its complete companion report",
         )
-        # 2.4 GHz, or the 5 GHz UNII-1 channels (opclass 115, no DFS) of a pod's second radio
-        # (spec 9); wider or DFS 5 GHz classes and 6 GHz need their own companion reports
+        # 2.4 GHz, or the non-DFS 5 GHz UNII-1 and UNII-3 classes (115, 124, 125) of a pod's
+        # second radio (spec 9); wider or DFS 5 GHz classes and 6 GHz need their companion reports
         _require(
             radio.basic.operating_classes
             and all(
-                op.operating_class in (81, 82, 83, 84, 115) for op in radio.basic.operating_classes
+                op.operating_class in (81, 82, 83, 84, 115, 124, 125)
+                for op in radio.basic.operating_classes
             ),
-            "early report currently requires explicit non-DFS 2.4 GHz or UNII-1 capability",
+            "early report currently requires explicit non-DFS 2.4 GHz, UNII-1 or UNII-3 capability",
         )
         _require(
             radio.advanced.ruid == radio.basic.ruid and radio.advanced.flags == 0,

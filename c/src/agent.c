@@ -339,6 +339,23 @@ static bool same_tlvs(const em_tlv_list *x, const em_tlv_list *y)
     return same;
 }
 
+/* Only the further radios of two capability reports differ (pod.further_radios_changed): the
+ * Early AP Capability TLV and the fronthaul's three before them, the device's three after them,
+ * are the same (spec 9: a second radio's channel follows the pod's station, and it is reported
+ * once the pod brings it up). */
+static bool further_radios_changed(const em_tlv_list *before, const em_tlv_list *after)
+{
+    if (before->count < 7 || after->count < 7)
+        return false;
+    em_tlv_list x = {0}, y = {0};
+    for (size_t i = 0; i < 7; i++) {
+        size_t from = i < 4 ? i : before->count - 7 + i, to = i < 4 ? i : after->count - 7 + i;
+        x.tlvs[x.count++] = before->tlvs[from];
+        y.tlvs[y.count++] = after->tlvs[to];
+    }
+    return same_tlvs(&x, &y);
+}
+
 /* The radios the agent shows, the fronthaul first, then each further radio the pod has brought
  * up (spec 9), each with the BSSes the agent represents on it, on its channel. */
 static size_t shown_radios(const agent *a, em_topology_radio out[1 + EXTRA_RADIOS])
@@ -403,6 +420,8 @@ static bool upstream_is_parent(void *ctx, const uint8_t bssid[6])
     em_peers_read(&a->peers, now());
     return em_peers_is_parent(&a->peers, bssid);
 }
+
+static void close_session(agent *a, em_session_state end);
 
 /* the pod's backhaul stations: the configured one (or the profile's) first, then the profile's
  * station on each band, each once */
@@ -494,19 +513,25 @@ static bool refresh(agent *a)
         for (size_t i = 0; i < view->nradios && !other; i++)
             if (!strcmp(view->radios[i].band, rs->band) && memcmp(view->radios[i].ruid, radio->ruid, 6))
                 other = &view->radios[i];
-        rs->bound = other && other->has_channel;
+        /* between two channels for a moment (its station roaming), a radio already reported stays
+         * on its channel, so that a move changes its capabilities once (bound_radios' held) */
+        bool held = other && !other->has_channel && !fresh && rs->bound;
+        int on = held ? rs->channel : other && other->has_channel ? other->channel : 0;
+        rs->bound = other && on && em_operating_class(rs->band, on);
         if (!rs->bound)
-            continue; /* not brought up yet: reported once it appears */
+            continue; /* not brought up yet, or on a channel not mapped (DFS): reported once it is */
         rs->represented = *other;
+        rs->represented.channel = on;
+        rs->represented.has_channel = true;
         rs->represented.nbss = 0;
         for (size_t s = 0; a->multi_bss && s < a->profile.nslots; s++)
             for (size_t i = 0; i < other->nbss; i++)
                 if (!strcmp(other->bss[i].if_name, a->profile.slots[s].if_name))
                     rs->represented.bss[rs->represented.nbss++] = other->bss[i];
-        rs->channel = other->channel;
+        rs->channel = on;
         rs->caps_index = nreported;
         size_t own = em_profile_slots_on(&a->profile, rs->band, a->multi_bss).nslots;
-        reported[nreported++] = (em_capability_radio){&rs->represented, other->channel, (uint8_t)(own ? own : 1), 0};
+        reported[nreported++] = (em_capability_radio){&rs->represented, on, (uint8_t)(own ? own : 1), 0};
     }
     for (size_t k = 0; k < nreported; k++) {
         /* its maximum EIRP: the source's own as first taken, else the pod's transmit power */
@@ -532,22 +557,31 @@ static bool refresh(agent *a)
         }
         a->caps = caps;
         a->max_eirp = max_eirp;
-        a->nreported = nreported;
-        for (size_t k = 0; k < nreported; k++) {
-            memcpy(a->reported[k].ruid, reported[k].radio->ruid, 6);
-            a->reported[k].max_eirp = reported[k].max_eirp;
-        }
         em_inventory_tlv(view, radio, "mac80211_hwsim", &a->inventory);
         a->caps_fixed = true;
         a->caps_generation = source;
-    } else {
-        bool same = same_tlvs(&caps, &a->caps);
+    } else if (same_tlvs(&caps, &a->caps)) {
         em_tlv_list_free(&caps);
-        if (!same) { /* a moved radio or replaced PHY under the same source: refused */
-            WARN("pod source unavailable: pod radio identity or channel changed");
-            free(view);
-            return false;
-        }
+    } else if (further_radios_changed(&a->caps, &caps)) {
+        /* spec 9: a further radio's channel follows the pod's station (and the radio appears once
+         * the pod brings it up): its capabilities are taken again, and the session that has the
+         * old ones ends, the next starting afresh with this radio's new M1 */
+        LOG("a further radio moved channel or came and went: capabilities taken");
+        em_tlv_list_free(&a->caps);
+        a->caps = caps;
+        if (a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
+            a->at.state != S_INCOMPATIBLE)
+            close_session(a, S_SOURCE_LOST);
+    } else { /* a moved fronthaul radio or replaced PHY under the same source: refused */
+        em_tlv_list_free(&caps);
+        WARN("pod source unavailable: pod radio identity or channel changed");
+        free(view);
+        return false;
+    }
+    a->nreported = nreported; /* each radio's maximum EIRP, as its capabilities advertise it */
+    for (size_t k = 0; k < nreported; k++) {
+        memcpy(a->reported[k].ruid, reported[k].radio->ruid, 6);
+        a->reported[k].max_eirp = reported[k].max_eirp;
     }
     /* station ages: since EMOSA first saw each one, on any radio's BSSes the agent shows */
     double t = now();
@@ -1063,13 +1097,21 @@ static em_radio_caps radio_caps_at(agent *a, size_t k)
             basic = &a->caps.tlvs[i];
     if (!basic)
         return r;
-    memcpy(r.ruid, basic->value, 6);
-    r.max_bss = basic->value[6];
-    r.nclasses = 1;
-    r.classes[0].operating_class = basic->value[8];
-    r.classes[0].max_eirp_dbm = (int8_t)basic->value[9];
-    r.classes[0].nnon_operable = basic->value[10];
-    memcpy(r.classes[0].non_operable, basic->value + 11, basic->value[10]);
+    /* the agent's own TLV (em_capabilities_tlvs): every class of the radio's band */
+    const uint8_t *v = basic->value;
+    size_t at = 8;
+    memcpy(r.ruid, v, 6);
+    r.max_bss = v[6];
+    for (size_t j = 0; j < v[7] && j < sizeof(r.classes) / sizeof(r.classes[0]) && at + 3 <= basic->len &&
+                       at + 3 + (size_t)v[at + 2] <= basic->len;
+         j++) {
+        em_basic_class *c = &r.classes[r.nclasses++];
+        c->operating_class = v[at];
+        c->max_eirp_dbm = (int8_t)v[at + 1];
+        c->nnon_operable = v[at + 2] < sizeof(c->non_operable) ? v[at + 2] : sizeof(c->non_operable);
+        memcpy(c->non_operable, v + at + 3, c->nnon_operable);
+        at += 3 + (size_t)v[at + 2];
+    }
     return r;
 }
 
@@ -1438,12 +1480,12 @@ static void control_radios(agent *a)
         for (size_t i = 0; i < a->nreported; i++)
             if (!memcmp(a->reported[i].ruid, rs->represented.ruid, 6))
                 eirp = a->reported[i].max_eirp;
-        bool unii1 = rs->channel == 36 || rs->channel == 40 || rs->channel == 44 || rs->channel == 48;
+        uint8_t op_class = em_operating_class(rs->band, rs->channel); /* 115 for 44, 125 for 149 */
         em_control_radio *x = &c->radios[c->nradios++];
-        *x = (em_control_radio){.op_class = strcmp(rs->band, "5G") ? 81 : 115, .channel = rs->channel,
+        *x = (em_control_radio){.op_class = op_class, .channel = rs->channel,
                                 .tx_power_dbm = rs->represented.has_tx_power ? rs->represented.tx_power : 0,
                                 .max_eirp_dbm = eirp,
-                                .measured = rs->represented.has_tx_power && (strcmp(rs->band, "5G") || unii1)};
+                                .measured = rs->represented.has_tx_power && op_class};
         memcpy(x->ruid, rs->represented.ruid, 6);
     }
 }
