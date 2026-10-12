@@ -1201,9 +1201,12 @@ path is re-run. Carried with the second-radio work (§9).
   recreates nor rewrites it. A moved fronthaul radio is still a different device (a new source).
   AP metrics (§3.8) per radio: each radio's BSSes carry the utilization of the pod's survey of
   that radio's own channel and their stations' metrics; a radio with no fresh survey is left out
-  of the response, nothing filled in. The pod's telemetry surveys and reports clients on the
-  fronthaul's band only, so today a second radio's BSS (`b-ap-<band>` and its child pods) is left
-  out: its own telemetry is open. An Unassociated STA Link Metrics Query (§3.9) is heard on any
+  of the response, nothing filled in. Known gap, to close before V54's end soaks: the pod's
+  telemetry surveys and reports clients on the fronthaul's band only, so a second radio's BSS
+  (`b-ap-<band>`) is left out and the controller cannot see its child pods' link quality (their
+  RCPI and rates). The move does not need it (an operator-directed backhaul steer), production
+  (b) does: the follow-up is that radio's own telemetry (its survey and client reports, a write
+  scope of its own). An Unassociated STA Link Metrics Query (§3.9) is heard on any
   of the agent's radios, on its channel in a class of its band (149 in 124 or 125), and a station
   on any radio's BSS is associated.
   Both agents (box `second-radio-parent`, `second-radio-withdrawn`, `second-radio-moves-channel`).
