@@ -54,7 +54,7 @@ from emosa.opensync.easymesh_view import (
     backhaul_radios,
     device_view,
     inventory,
-    radio_capabilities,
+    radios_capabilities,
     topology,
 )
 from emosa.opensync.gre_parent import MONITOR as GRE_PARENT_MONITOR
@@ -327,19 +327,43 @@ class PodReportSource:
             # A cold pod has the radio but no BSS yet: advertise the radio on the
             # channel the profile would create the BSS on, and no BSS.
             channel = radio.channel if primary else self.backend.channel
-            max_eirp = radio.tx_power if radio.tx_power and 0 < radio.tx_power <= 127 else 20
             # The capabilities are fixed for one pod source (spec 2.4): a new database
             # generation (the pod recreated, maybe with another radio) is a new source with
             # a new session, and its capabilities are taken again.
             fresh = self.capabilities is None or raw["generation"] != self.capabilities_generation
-            if not fresh:
-                max_eirp = self.capabilities.radios[0].basic.operating_classes[0].max_eirp_dbm
-            capabilities = radio_capabilities(
-                radio,
-                channel=channel,
-                max_bss=self.backend.max_bss,
-                max_eirp=max_eirp,
+            # spec 9: report the fronthaul radio and each of the profile's additional radios (the
+            # second radio of 8.6), each operable only on its own channel. max_bss is per radio: the
+            # fronthaul takes the BSSes whose slots are on it, a second radio takes its own (a
+            # parent's b-ap-<band>, none for a plain child).
+            slot_bands = dict(self.backend.profile.slot_bands)
+            fronthaul_bss = 1 + sum(1 for n, _, _ in self.backend.slots if n not in slot_bands)
+            bound = [(radio, channel, fronthaul_bss)]
+            for extra in self.backend.profile.radios:
+                band = extra["band"]
+                second = next(
+                    (r for r in device.radios if r.band == band and r.ruid != radio.ruid), None
+                )
+                if second is None or second.channel is None:
+                    continue  # the pod has not brought its second radio up yet
+                on_band = sum(1 for n, _, _ in self.backend.slots if slot_bands.get(n) == band)
+                bound.append((second, second.channel, on_band))
+            stored = (
+                {
+                    r.basic.ruid: r.basic.operating_classes[0].max_eirp_dbm
+                    for r in self.capabilities.radios
+                }
+                if not fresh and self.capabilities is not None
+                else {}
             )
+
+            def _eirp(r):
+                eirp = r.tx_power if r.tx_power and 0 < r.tx_power <= 127 else 20
+                return stored.get(r.ruid, eirp)
+
+            capabilities = radios_capabilities(
+                tuple((r, ch, mbss, _eirp(r)) for r, ch, mbss in bound)
+            )
+            max_eirp = _eirp(radio)  # the fronthaul radio's, for the Operating Channel Report below
             if fresh:
                 if self.capabilities is not None and capabilities != self.capabilities:
                     log.info("a new pod source with other radio capabilities: taken for it")
