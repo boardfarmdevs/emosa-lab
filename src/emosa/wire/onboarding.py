@@ -21,7 +21,15 @@ from emosa.wire.autoconfiguration import (
 )
 from emosa.wire.backhaul_steering import BackhaulSteeringCoordinator
 from emosa.wire.channel import ChannelCoordinator
-from emosa.wire.cmdu import MULTICAST, MidSequence, Reassembler, Tlv, decode_frame, fragment_message
+from emosa.wire.cmdu import (
+    MULTICAST,
+    MidSequence,
+    Reassembler,
+    Tlv,
+    decode_frame,
+    fragment_message,
+    parse_tlvs,
+)
 from emosa.wire.coordinator import ReportCoordinator
 from emosa.wire.disassociation import DisassociationCoordinator, FinalSession
 from emosa.wire.link_metrics import (
@@ -122,6 +130,7 @@ class OnboardingSession:
         backhaul_steering_state=None,
         backhaul_pairs=None,
         backhaul_steering_associated=None,
+        radio_bridge_factory=None,
     ):
         self.message_set = check_message_set(message_set)
         if type(inventory) is not DeviceInventory:
@@ -190,6 +199,16 @@ class OnboardingSession:
         self.backhaul_steering_associated = backhaul_steering_associated
         self.backhaul_steering_state = backhaul_steering_state  # the agent's, across sessions
         self.backhaul_steering = None
+        # Further radios (spec 9): one M1 and one M2 per radio (EasyMesh 6.1 §7.1), each into its
+        # radio's own scope. radio_bridge_factory(snapshot, mids, index) makes the exchange of
+        # capabilities.radios[index]; without it the session takes one radio only. Their M1s go
+        # one at a time once the fronthaul is provisioned; an M2 goes to the exchange of the radio
+        # its AP Radio Identifier names.
+        self.radio_bridge_factory = radio_bridge_factory
+        self.radio_sessions = {}  # RUID -> ComponentProvisioningSession, further radios
+        self.radio_awaiting = None  # the further radio whose M1 is out and M2 not yet taken
+        self.next_radio = 1
+        self.wsc_routes = {}  # (source, MID) of a fragmented M2 -> its exchange's session
 
     def _record(self, event):
         self.counts[event] = self.counts.get(event, 0) + 1
@@ -222,7 +241,7 @@ class OnboardingSession:
             return
         if self.state == "waiting_source":
             capability_tlvs(snapshot.capabilities)
-            if len(snapshot.capabilities.radios) != 1:
+            if len(snapshot.capabilities.radios) != 1 and self.radio_bridge_factory is None:
                 raise EmosaError(Reason.UNSUPPORTED_OPERATION, "one radio required")
             self.context, self.capabilities = snapshot.context_token, snapshot.capabilities
             self.discovery = DiscoveryExchange(
@@ -266,6 +285,12 @@ class OnboardingSession:
         self.departures = {key: at for key, at in self.departures.items() if self.clock() < at + 2}
         if self.provisioning:
             self.provisioning.tick()
+            for session in self.radio_sessions.values():
+                session.tick()
+            if self.state == "provisioning":
+                await self._next_radio(snapshot)
+                if self.state != "provisioning":
+                    return
             # Notify only observed topology changes, never desired Config changes.
             if snapshot.topology.operational != self.last_topology:
                 for frame in fragment_message(
@@ -318,6 +343,84 @@ class OnboardingSession:
                     else:
                         self.last_clients.discard((bssid, mac))
 
+    def _check_bridge(self, bridge, radio):
+        """An exchange's M1 must carry exactly what the reports say of its radio."""
+        if (
+            bridge.exchange.binding != self.binding
+            or bridge.exchange.message_set != self.message_set
+            or bridge.exchange.basic != radio.basic
+            or bridge.exchange.profile2 != self.capabilities.profile2
+            or bridge.exchange.advanced != radio.advanced
+        ):
+            bridge.close()
+            raise EmosaError(Reason.NOT_READY, "WSC/report capabilities disagree")
+
+    def _admitted(self, bridge):
+        """Every step of the exchange also needs this session's report source still current."""
+        original_context = bridge.current_context
+
+        async def admitted_context():
+            context = await original_context()
+            if self._snapshot() is None:
+                raise EmosaError(Reason.NOT_READY, "discovery report source lost")
+            return context
+
+        bridge.current_context = admitted_context
+
+    async def _next_radio(self, snapshot):
+        """Spec 9: the next further radio's own M1, once the radio before it has taken its M2
+        (one exchange awaits an M2 at a time). A failed start ends the attempt, as a failed
+        admission does: the recovery makes a fresh one (an unchanged M2 is then a no-op)."""
+        radios = self.capabilities.radios
+        if (
+            self.radio_bridge_factory is None
+            or self.radio_awaiting is not None
+            or self.next_radio >= len(radios)
+        ):
+            return
+        index, radio = self.next_radio, radios[self.next_radio]
+        self.next_radio += 1
+        try:
+            bridge = self.radio_bridge_factory(snapshot, self.mids, index)
+            self._check_bridge(bridge, radio)
+            self._admitted(bridge)
+            session = ComponentProvisioningSession(bridge, self.send_frame, clock=self.clock)
+            self.radio_sessions[radio.basic.ruid] = self.radio_awaiting = session
+            await session.start()
+            self._record("radio_m1_sent")
+        except (EmosaError, OSError):
+            self.close()
+            self.state = "failed"
+            self._record("radio_m1_failed")
+
+    def _wsc_session(self, fragment):
+        """The exchange a WSC frame is for (spec 9): the radio its M2's AP Radio Identifier names
+        (in the first fragment, which a TLV-boundary fragmentation keeps whole), its later
+        fragments with it; else the fronthaul's, whose exchange checks the radio again."""
+        key = (fragment.source, fragment.mid)
+        if fragment.fid:
+            session = self.wsc_routes.get(key, self.provisioning)
+        else:
+            try:
+                tlvs = parse_tlvs(fragment.payload, final=fragment.last)
+            except EmosaError:
+                tlvs = ()
+            ruid = next((t.value for t in tlvs if t.kind == 0x82), None)
+            session = self.radio_sessions.get(ruid, self.provisioning)
+            if not fragment.last:
+                # a few M2s in flight at most: the oldest route goes first
+                self.wsc_routes = dict(list(self.wsc_routes.items())[-3:]) | {key: session}
+        if fragment.last:
+            self.wsc_routes.pop(key, None)
+        return session
+
+    @property
+    def awaiting_m2(self):
+        """An M1 is out, of the fronthaul or of a further radio, and its M2 not yet taken."""
+        return self.state == "awaiting_m2" or (
+            self.state == "provisioning" and self.radio_awaiting is not None
+        )
+
     async def receive(self, frame, *, ingress, generation):
         if self.state in ("closed", "source_lost", "failed", "incompatible"):
             return self._record("inactive_input")
@@ -343,9 +446,18 @@ class OnboardingSession:
             if fragment.message_type == 9:
                 if self.provisioning is None:
                     return self._record("wsc_before_admission")
-                result = await self.provisioning.receive(
-                    frame, ingress=ingress, generation=generation
-                )
+                provisioning = self._wsc_session(fragment)
+                result = await provisioning.receive(frame, ingress=ingress, generation=generation)
+                if provisioning is not self.provisioning:
+                    if provisioning is self.radio_awaiting and (
+                        result["status"] == "operation"
+                        or result.get("reason")
+                        in (Reason.INVALID_INPUT, Reason.UNSUPPORTED_OPERATION)
+                    ):
+                        # taken, or refused for good (spec 3.4): the next radio's M1 may go; a
+                        # refused set leaves the radio as it is, a fresh M1 would get the same
+                        self.radio_awaiting = None
+                    return self._record("radio_wsc_" + result["status"])
                 if result["status"] == "operation":
                     self.state = "provisioning"
                     if self.reports:
@@ -462,28 +574,11 @@ class OnboardingSession:
                 if self.message_set != R1:
                     self.reports.notify_early()
                 bridge = self.factory(snapshot, self.mids)
-                radio = self.capabilities.radios[0]
-                if (
-                    bridge.exchange.binding != self.binding
-                    or bridge.exchange.message_set != self.message_set
-                    or bridge.exchange.basic != radio.basic
-                    or bridge.exchange.profile2 != self.capabilities.profile2
-                    or bridge.exchange.advanced != radio.advanced
-                ):
-                    bridge.close()
-                    raise EmosaError(Reason.NOT_READY, "WSC/report capabilities disagree")
+                self._check_bridge(bridge, self.capabilities.radios[0])
                 self.provisioning = ComponentProvisioningSession(
                     bridge, self.send_frame, clock=self.clock
                 )
-                original_context = bridge.current_context
-
-                async def admitted_context():
-                    context = await original_context()
-                    if self._snapshot() is None:
-                        raise EmosaError(Reason.NOT_READY, "discovery report source lost")
-                    return context
-
-                bridge.current_context = admitted_context
+                self._admitted(bridge)
                 self._snapshot()
                 if self.state == "source_lost":
                     return self._record("source_unavailable")
@@ -642,9 +737,11 @@ class OnboardingSession:
             self.steering,
             self.backhaul_steering,
             self.unassociated,
+            *self.radio_sessions.values(),
         ):
             if component:
                 component.close()
+        self.radio_awaiting = None
         self.departures.clear()
         self.state = "closed"
 
@@ -663,6 +760,15 @@ class OnboardingSession:
             if reports
             else None,
             "wsc": {k: wsc[k] for k in ("counts", "events", "closed")} if wsc else None,
+            # spec 9: each further radio's own exchange, in the order their M1s went
+            "radios": [
+                {
+                    "ruid": ruid.hex(":"),
+                    "awaiting_m2": session is self.radio_awaiting,
+                    **{k: v for k, v in session.status().items() if k in ("counts", "closed")},
+                }
+                for ruid, session in self.radio_sessions.items()
+            ],
             "full_profile_qualified": False,
             "physical_pod_proven": False,
             "reporting_policy": self.reporting_policy.status() if self.reporting_policy else None,
