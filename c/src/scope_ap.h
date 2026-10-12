@@ -13,6 +13,10 @@ typedef struct {
     em_ovsdb *ovs;
     const em_profile *profile;
     const char *serial, *pod_id;
+    /* a further radio's scope (spec 9, RadioBackend): the band of one of the profile's radios,
+     * whose slots it writes from that radio's own M2 set (a RadioIntent: no primary BSS);
+     * NULL: the fronthaul's scope */
+    const char *band;
     bool multi_bss;
     const char *underlay; /* the pod's underlay as a GRE parent (spec 8.6); NULL: none */
     em_vault *vault;
@@ -35,5 +39,10 @@ bool em_ap_context(em_ap_scope *s, int *generation, char schema_fingerprint[65],
 
 /* Intent.record() of an M2: additional NULL for a single-BSS intent (omitted). */
 cJSON *em_ap_intent_record(const char *pod_id, const char *ssid, const char *secret_ref, cJSON *additional);
+
+/* RadioIntent.record() of a further radio's M2 set (spec 9): the BSSes its slots map. */
+cJSON *em_radio_intent_record(const char *pod_id, const char *band, cJSON *additional);
+/* The radio id of a further radio's scope: "radio-<band>". */
+void em_radio_id(const char *band, char out[16]);
 
 #endif

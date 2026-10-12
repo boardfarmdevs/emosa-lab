@@ -33,6 +33,31 @@ cJSON *em_ap_intent_record(const char *pod_id, const char *ssid, const char *sec
     return i;
 }
 
+void em_radio_id(const char *band, char out[16])
+{
+    EM_FORMAT_FIXED(out, 16, "radio-%s", band);
+}
+
+cJSON *em_radio_intent_record(const char *pod_id, const char *band, cJSON *additional)
+{
+    char radio_id[16];
+    em_radio_id(band, radio_id);
+    cJSON *i = cJSON_CreateObject();
+    cJSON_AddStringToObject(i, "pod_id", pod_id);
+    cJSON_AddStringToObject(i, "radio_id", radio_id);
+    cJSON_AddItemToObject(i, "additional", additional ? additional : cJSON_CreateArray());
+    return i;
+}
+
+/* the band of this scope's radio: a further radio's (spec 9), else the fronthaul's */
+static const char *band_of(const em_ap_scope *s) { return s->band ? s->band : s->profile->band; }
+
+/* the profile's slots on this scope's radio (pod_profile.slots_on): one M2 configures one radio */
+static em_profile own_slots(const em_ap_scope *s)
+{
+    return em_profile_slots_on(s->profile, band_of(s), s->multi_bss);
+}
+
 static bool ssid_ok(const char *s)
 {
     size_t n = s ? strlen(s) : 0;
@@ -45,24 +70,39 @@ static bool nonempty(const cJSON *o, const char *k)
     return v && *v;
 }
 
+/* model.check_additional: at most seven further BSSes, each a role, an SSID and a reference */
+static em_reason check_additional(const cJSON *extra)
+{
+    const cJSON *b;
+    if (!cJSON_IsArray(extra) || cJSON_GetArraySize(extra) > 7)
+        return EM_INVALID_INPUT;
+    cJSON_ArrayForEach(b, extra)
+    {
+        const char *role = str(b, "role");
+        if (!cJSON_IsObject(b) || cJSON_GetArraySize(b) != 3 || !role ||
+            (strcmp(role, "fronthaul") && strcmp(role, "backhaul")) || !ssid_ok(str(b, "ssid")) ||
+            !nonempty(b, "secret_ref"))
+            return EM_INVALID_INPUT;
+    }
+    return EM_OK;
+}
+
+/* RadioIntent.validate (spec 9) */
+static em_reason validate_radio(const cJSON *intent)
+{
+    if (!nonempty(intent, "pod_id") || !nonempty(intent, "radio_id"))
+        return EM_INVALID_INPUT;
+    return check_additional(cJSON_GetObjectItemCaseSensitive(intent, "additional"));
+}
+
 /* Intent.validate */
 static em_reason validate(const cJSON *intent)
 {
     if (!ssid_ok(str(intent, "ssid")))
         return EM_INVALID_INPUT;
-    const cJSON *extra = cJSON_GetObjectItemCaseSensitive(intent, "additional"), *b;
-    if (extra && !cJSON_IsNull(extra)) {
-        if (!cJSON_IsArray(extra) || cJSON_GetArraySize(extra) > 7)
-            return EM_INVALID_INPUT;
-        cJSON_ArrayForEach(b, extra)
-        {
-            const char *role = str(b, "role");
-            if (!cJSON_IsObject(b) || cJSON_GetArraySize(b) != 3 || !role ||
-                (strcmp(role, "fronthaul") && strcmp(role, "backhaul")) || !ssid_ok(str(b, "ssid")) ||
-                !nonempty(b, "secret_ref"))
-                return EM_INVALID_INPUT;
-        }
-    }
+    const cJSON *extra = cJSON_GetObjectItemCaseSensitive(intent, "additional");
+    if (extra && !cJSON_IsNull(extra) && check_additional(extra) != EM_OK)
+        return EM_INVALID_INPUT;
     const char *mode = str(intent, "security_mode");
     if (!mode || strcmp(mode, "wpa2-psk") || !cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(intent, "enabled")))
         return EM_UNSUPPORTED_OPERATION;
@@ -103,9 +143,42 @@ static cJSON *sorted(cJSON *array, int (*compare)(const void *, const void *))
     return array;
 }
 
+/* model.additional_target: sorted [role, ssid, key fingerprint] of the further BSSes */
+static cJSON *additional_target(const em_ap_scope *s, const cJSON *extra, em_reason *why)
+{
+    const cJSON *b;
+    cJSON *list = cJSON_CreateArray();
+    cJSON_ArrayForEach(b, extra)
+    {
+        cJSON *efp = credential(s, str(b, "secret_ref"), why);
+        if (!efp) {
+            cJSON_Delete(list);
+            return NULL;
+        }
+        cJSON *entry = cJSON_CreateArray();
+        cJSON_AddItemToArray(entry, cJSON_CreateString(str(b, "role")));
+        cJSON_AddItemToArray(entry, cJSON_CreateString(str(b, "ssid")));
+        cJSON_AddItemToArray(entry, efp);
+        cJSON_AddItemToArray(list, entry);
+    }
+    return sorted(list, compare_lists);
+}
+
 static cJSON *target(void *ctx, const cJSON *intent, em_reason *why)
 {
     em_ap_scope *s = ctx;
+    const cJSON *extra = cJSON_GetObjectItemCaseSensitive(intent, "additional");
+    if (s->band) { /* RadioIntent.target: only the BSSes its slots map */
+        if ((*why = validate_radio(intent)) != EM_OK)
+            return NULL;
+        cJSON *list = additional_target(s, extra, why);
+        if (!list)
+            return NULL;
+        cJSON *t = cJSON_CreateObject();
+        cJSON_AddItemToObject(t, "additional", list);
+        *why = EM_OK;
+        return t;
+    }
     if ((*why = validate(intent)) != EM_OK)
         return NULL;
     cJSON *fp = credential(s, str(intent, "secret_ref"), why);
@@ -117,24 +190,13 @@ static cJSON *target(void *ctx, const cJSON *intent, em_reason *why)
     cJSON_AddStringToObject(t, "mode", "ap");
     cJSON_AddStringToObject(t, "security_mode", "wpa2-psk");
     cJSON_AddItemToObject(t, "credential_fingerprint", fp);
-    const cJSON *extra = cJSON_GetObjectItemCaseSensitive(intent, "additional"), *b;
     if (extra && !cJSON_IsNull(extra)) {
-        cJSON *list = cJSON_CreateArray();
-        cJSON_ArrayForEach(b, extra)
-        {
-            cJSON *efp = credential(s, str(b, "secret_ref"), why);
-            if (!efp) {
-                cJSON_Delete(list);
-                cJSON_Delete(t);
-                return NULL;
-            }
-            cJSON *entry = cJSON_CreateArray();
-            cJSON_AddItemToArray(entry, cJSON_CreateString(str(b, "role")));
-            cJSON_AddItemToArray(entry, cJSON_CreateString(str(b, "ssid")));
-            cJSON_AddItemToArray(entry, efp);
-            cJSON_AddItemToArray(list, entry);
+        cJSON *list = additional_target(s, extra, why);
+        if (!list) {
+            cJSON_Delete(t);
+            return NULL;
         }
-        cJSON_AddItemToObject(t, "additional", sorted(list, compare_lists));
+        cJSON_AddItemToObject(t, "additional", list);
     }
     *why = EM_OK;
     return t;
@@ -161,7 +223,7 @@ static em_reason bind(em_ap_scope *s, const cJSON *tables, binding *b)
     cJSON_ArrayForEach(r, em_table(tables, "Wifi_Radio_Config"))
     {
         const char *band = ovs_str(r, "freq_band");
-        if (band && !strcmp(band, s->profile->band)) {
+        if (band && !strcmp(band, band_of(s))) {
             radios++;
             b->radio = r;
             b->radio_uuid = r->string;
@@ -178,7 +240,8 @@ static em_reason bind(em_ap_scope *s, const cJSON *tables, binding *b)
     cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config"))
     {
         const char *name = ovs_str(r, "if_name");
-        if (name && !strcmp(name, s->profile->fronthaul_if)) {
+        /* a further radio's scope binds no VIF of its own (RadioBackend._binding) */
+        if (!s->band && name && !strcmp(name, s->profile->fronthaul_if)) {
             configs++;
             b->config = r;
             b->vif_uuid = r->string;
@@ -252,13 +315,14 @@ static int compare_dumps(const void *a, const void *b)
 static cJSON *additional(const em_ap_scope *s, const cJSON *tables, bool states)
 {
     cJSON *list = cJSON_CreateArray();
+    const em_profile own = own_slots(s);
     const cJSON *r;
     cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config"))
     {
         const char *name = ovs_str(r, "if_name");
         bool slot = false;
-        for (size_t i = 0; name && i < s->profile->nslots; i++)
-            slot = slot || !strcmp(name, s->profile->slots[i].if_name);
+        for (size_t i = 0; name && i < own.nslots; i++)
+            slot = slot || !strcmp(name, own.slots[i].if_name);
         if (!slot)
             continue;
         const cJSON *row = r;
@@ -282,8 +346,7 @@ static cJSON *additional(const em_ap_scope *s, const cJSON *tables, bool states)
         bool usable = mode && !strcmp(mode, "ap") && ovs_true(row, "enabled");
         cJSON *entry = cJSON_CreateArray();
         /* a Multi-AP backhaul BSS, or the GRE parent AP (multi_ap none, spec 8.6) */
-        bool backhaul = (multi_ap && !strcmp(multi_ap, "backhaul_bss")) ||
-                        (s->multi_bss && em_profile_parent_slot(s->profile, name));
+        bool backhaul = (multi_ap && !strcmp(multi_ap, "backhaul_bss")) || em_profile_parent_slot(&own, name);
         cJSON_AddItemToArray(entry, cJSON_CreateString(backhaul ? "backhaul" : "fronthaul"));
         cJSON_AddItemToArray(entry, em_row_string(row, "ssid"));
         char fp[65];
@@ -299,13 +362,14 @@ static cJSON *additional(const em_ap_scope *s, const cJSON *tables, bool states)
 /* slot VIFs are unambiguous and on the bound radio (PodBackend._extras) */
 static bool extras_ok(const em_ap_scope *s, const cJSON *tables, const binding *b)
 {
-    for (size_t i = 0; i < s->profile->nslots; i++) {
+    const em_profile own = own_slots(s);
+    for (size_t i = 0; i < own.nslots; i++) {
         size_t n = 0;
         const cJSON *r;
         cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config"))
         {
             const char *name = ovs_str(r, "if_name");
-            if (name && !strcmp(name, s->profile->slots[i].if_name)) {
+            if (name && !strcmp(name, own.slots[i].if_name)) {
                 if (++n > 1 || !em_row_has_uuid(b->radio, "vif_configs", r->string))
                     return false;
             }
@@ -334,17 +398,31 @@ static bool snapshot(void *ctx, em_snapshot *out)
         out->has_instance = s->last.has_instance;
         return true;
     }
-    cJSON *configured = values(s, b.config), *observed = values(s, b.state);
-    if (s->multi_bss) {
+    cJSON *configured, *observed;
+    bool fresh;
+    char resource[16] = "bss-1";
+    if (s->band) {
+        /* RadioBackend.snapshot: the radio's slot BSSes, ready once the pod and radio are bound */
+        configured = cJSON_CreateObject();
+        observed = cJSON_CreateObject();
         cJSON_AddItemToObject(configured, "additional", additional(s, tables, false));
         cJSON_AddItemToObject(observed, "additional", additional(s, tables, true));
+        fresh = out->ready = s->identity;
+        em_radio_id(s->band, resource);
+    } else {
+        configured = values(s, b.config);
+        observed = values(s, b.state);
+        if (s->multi_bss) {
+            cJSON_AddItemToObject(configured, "additional", additional(s, tables, false));
+            cJSON_AddItemToObject(observed, "additional", additional(s, tables, true));
+        }
+        fresh = b.state != NULL;
+        out->ready = fresh || (s->identity && !b.vif_uuid);
     }
-    bool fresh = b.state != NULL;
-    out->ready = fresh || (s->identity && !b.vif_uuid);
     out->generation = em_ovsdb_generation(s->ovs);
     EM_FORMAT_FIXED(out->schema_fingerprint, sizeof(out->schema_fingerprint), "%s", em_ovsdb_schema_fingerprint(s->ovs));
     out->config = configured;
-    out->observed = em_observation(s->pod_id, "bss-1", observed, MODE, out->generation, fresh, PROVENANCE,
+    out->observed = em_observation(s->pod_id, resource, observed, MODE, out->generation, fresh, PROVENANCE,
                                    em_ovsdb_revision(s->ovs));
     out->has_instance = em_start_instance(tables, out->instance);
     em_snapshot_clear(&s->last);
@@ -361,26 +439,76 @@ static bool snapshot(void *ctx, em_snapshot *out)
 /* PodBackend._assign: a slot for each additional BSS, by role in slot order */
 static em_reason assign(const em_ap_scope *s, const cJSON *intent, cJSON *slots)
 {
+    const em_profile own = own_slots(s);
     bool used[8] = {0};
     const cJSON *b;
     cJSON_ArrayForEach(b, cJSON_GetObjectItemCaseSensitive(intent, "additional"))
     {
         size_t i = 0;
-        while (i < s->profile->nslots && (used[i] || strcmp(s->profile->slots[i].role, str(b, "role"))))
+        while (i < own.nslots && (used[i] || strcmp(own.slots[i].role, str(b, "role"))))
             i++;
-        if (i == s->profile->nslots)
+        if (i == own.nslots)
             return EM_UNSUPPORTED_OPERATION; /* "more BSSes of a role than the radio maps" */
         used[i] = true;
-        cJSON_AddStringToObject(slots, s->profile->slots[i].if_name, str(b, "role"));
+        cJSON_AddStringToObject(slots, own.slots[i].if_name, str(b, "role"));
     }
     return EM_OK;
+}
+
+/* RadioBackend.plan (spec 9): the radio's slots the intent's BSSes take */
+static cJSON *radio_plan(em_ap_scope *s, const cJSON *intent, em_reason *why)
+{
+    cJSON *t = target(s, intent, why);
+    if (!t)
+        return NULL;
+    cJSON_Delete(t);
+    char radio_id[16];
+    em_radio_id(s->band, radio_id);
+    if (strcmp(str(intent, "pod_id"), s->pod_id) || strcmp(str(intent, "radio_id"), radio_id)) {
+        *why = EM_UNSUPPORTED_OPERATION; /* "request exceeds the bound radio" */
+        return NULL;
+    }
+    cJSON *slots = cJSON_CreateObject();
+    if ((*why = assign(s, intent, slots)) != EM_OK) {
+        cJSON_Delete(slots);
+        return NULL;
+    }
+    const cJSON *slot;
+    cJSON_ArrayForEach(slot, slots)
+    {
+        if (!s->underlay && em_profile_parent_slot(s->profile, slot->string)) {
+            cJSON_Delete(slots);
+            *why = EM_UNSUPPORTED_OPERATION; /* "a GRE parent AP needs the pod's underlay (spec 8.6)" */
+            return NULL;
+        }
+    }
+    const cJSON *tables = em_ovsdb_tables(s->ovs);
+    binding b;
+    if (!em_ovsdb_ready(s->ovs) || bind(s, tables, &b) != EM_OK || !s->identity || !extras_ok(s, tables, &b)) {
+        cJSON_Delete(slots);
+        *why = EM_NOT_READY; /* "complete current references/state required" */
+        return NULL;
+    }
+    cJSON *p = cJSON_CreateObject();
+    const char *fields[] = {"Wifi_VIF_Config", "Wifi_Radio_Config.vif_configs", "Inet"};
+    cJSON_AddStringToObject(p, "mapping", s->profile->id);
+    cJSON_AddStringToObject(p, "radio_id", radio_id);
+    cJSON_AddStringToObject(p, "bss_id", radio_id);
+    cJSON_AddStringToObject(p, "action", "slots");
+    cJSON_AddItemToObject(p, "additional_slots", slots);
+    cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 3));
+    cJSON_AddStringToObject(p, "guard", "pod serial, the radio, its slot VIFs");
+    *why = EM_OK;
+    return p;
 }
 
 static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
 {
     em_ap_scope *s = ctx;
+    if (s->band)
+        return radio_plan(s, intent, why);
     const cJSON *extra = cJSON_GetObjectItemCaseSensitive(intent, "additional");
-    if (cJSON_GetArraySize(extra) && !s->multi_bss) {
+    if (cJSON_GetArraySize(extra) && !own_slots(s).nslots) {
         *why = EM_UNSUPPORTED_OPERATION; /* "this radio maps one BSS" */
         return NULL;
     }
@@ -488,8 +616,10 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     em_ovs_session session = {em_ovsdb_tables(s->ovs), generation, s->transact, s->transact_ctx};
     resolver r = {s->vault, {0}, 0};
     em_submit_result result;
-    em_reason e = em_ap_submit(s->profile, s->serial, s->multi_bss, s->underlay, &session, &in, resolve, &r,
-                               &result);
+    em_reason e = s->band ? em_radio_submit(s->profile, s->serial, s->band, s->multi_bss, s->underlay, &session,
+                                            &in, resolve, &r, &result)
+                          : em_ap_submit(s->profile, s->serial, s->multi_bss, s->underlay, &session, &in, resolve,
+                                         &r, &result);
     for (size_t i = 0; i < r.n; i++) {
         em_free_secret(r.keys[i]);
     }
@@ -510,7 +640,7 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         if (em_start_instance(em_ovsdb_tables(s->ovs), instance))
             cJSON_AddStringToObject(out->evidence, "instance", instance);
         cJSON_AddStringToObject(out->evidence, "profile", s->profile->id);
-        cJSON_AddStringToObject(out->evidence, "action", create ? "create" : "update");
+        cJSON_AddStringToObject(out->evidence, "action", s->band ? "slots" : create ? "create" : "update");
         cJSON_AddNumberToObject(out->evidence, "additional_bss_count", (double)in.nadditional);
     }
 }
