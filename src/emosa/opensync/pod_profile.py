@@ -215,7 +215,9 @@ class PodBackend(OpenSyncBackend):
             # so that an M2 set's intent (its additional BSSes fitted to the slots) matches
             # (the C agent's PodBackend the same)
             if self.multi_bss:
-                extras = self._extras(decoded, radio_uuid)
+                extras = self._extras(
+                    decoded, set(self.radio_uuid_by_band.values()) or {radio_uuid}
+                )
                 configured["additional"] = self._additional(e["config"] for e in extras.values())
                 observed["additional"] = self._additional(
                     e["state"] for e in extras.values() if e["state"]
@@ -277,16 +279,22 @@ class PodBackend(OpenSyncBackend):
             )
         return sorted(values, key=json.dumps)
 
-    def _extras(self, decoded, radio_uuid):
-        """Slot VIFs present on the pod: if_name -> uuid, Config row, State row."""
+    def _extras(self, decoded, radio_uuids):
+        """Slot VIFs present on any of the pod's bound radios: if_name -> uuid, Config row, State
+        row. A slot's VIF may be on the fronthaul radio or on a second radio (spec 9), so a slot is
+        matched against the vif_configs of every bound radio."""
         names = {name for name, _, _ in self.slots}
-        radio = decoded["Wifi_Radio_Config"][radio_uuid]
+        on_a_bound_radio = set()
+        for radio_uuid in radio_uuids:
+            on_a_bound_radio.update(
+                decoded["Wifi_Radio_Config"][radio_uuid].get("vif_configs") or []
+            )
         found = {}
         for uuid, row in decoded.get("Wifi_VIF_Config", {}).items():
             name = row.get("if_name")
             if name not in names:
                 continue
-            if name in found or uuid not in (radio.get("vif_configs") or []):
+            if name in found or uuid not in on_a_bound_radio:
                 raise EmosaError(Reason.NOT_READY, "slot VIF ambiguous or on another radio")
             states = [
                 r
@@ -391,7 +399,7 @@ class PodBackend(OpenSyncBackend):
         if not raw["ready"] or not self.identity:
             raise EmosaError(Reason.NOT_READY, "complete current references/state required")
         if self.slots:
-            self._extras(decoded, radio_uuid)
+            self._extras(decoded, set(self.radio_uuid_by_band.values()) or {radio_uuid})
         common = {
             "mapping": self.profile.id,
             "radio_id": self.radio_id,
@@ -517,7 +525,11 @@ class PodBackend(OpenSyncBackend):
             t: {u: raw["schema"].row(t, r) for u, r in rows.items()}
             for t, rows in raw["tables"].items()
         }
-        extras = self._extras(decoded, radio_uuid)
+        slot_bands = dict(
+            self.profile.slot_bands
+        )  # spec 9: a slot's radio band (else the fronthaul)
+        bound_uuids = set(self.radio_uuid_by_band.values()) or {radio_uuid}
+        extras = self._extras(decoded, bound_uuids)
         assigned = self._assign(intent)
         inet = await self.session.transact(
             [{"op": "select", "table": "Wifi_Inet_Config", "where": [], "columns": ["if_name"]}]
@@ -525,6 +537,8 @@ class PodBackend(OpenSyncBackend):
         inet_names = {row.get("if_name") for row in (inet[0].get("rows", []) if inet else [])}
         ops, counts = [], []
         for index, (name, role, radio_idx) in enumerate(self.slots):
+            # spec 9: the radio this slot's VIF belongs on - its band's radio, else the fronthaul's
+            slot_radio = self.radio_uuid_by_band.get(slot_bands.get(name, self.band), radio_uuid)
             present = extras.get(name)
             if present:
                 raw_row = raw["tables"]["Wifi_VIF_Config"][present["uuid"]]
@@ -543,7 +557,7 @@ class PodBackend(OpenSyncBackend):
                     {
                         "op": "mutate",
                         "table": "Wifi_Radio_Config",
-                        "where": where_uuid(radio_uuid),
+                        "where": where_uuid(slot_radio),
                         "mutations": [
                             ["vif_configs", "delete", ["set", [["uuid", present["uuid"]]]]]
                         ],
@@ -627,7 +641,7 @@ class PodBackend(OpenSyncBackend):
                         {
                             "op": "mutate",
                             "table": "Wifi_Radio_Config",
-                            "where": where_uuid(radio_uuid),
+                            "where": where_uuid(slot_radio),
                             "mutations": [
                                 ["vif_configs", "insert", ["set", [["named-uuid", named]]]]
                             ],

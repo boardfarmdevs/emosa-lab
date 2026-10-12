@@ -473,6 +473,54 @@ def test_binding_records_the_uuid_of_each_radio_by_band(tmp_path):
     assert single.radio_uuid_by_band == {"2.4G": RADIO}
 
 
+def test_a_parent_ap_banded_5g_is_created_on_the_second_radio(tmp_path):
+    """Spec 9: a gre-parent's b-ap-50, banded 5 GHz by slot_bands, is created on the 5 GHz radio -
+    its Wifi_VIF_Config is inserted into that radio's vif_configs, not the fronthaul's."""
+    from emosa.opensync import profiles
+
+    data = json.loads(
+        (Path(profiles.__file__).parents[1] / "profiles" / f"{profiles.DEFAULT}.json").read_text()
+    )
+    data.update(id="gre-parent-5g", backhaul_mode="gre-parent", gre_parent={})
+    data["radios"] = [{"band": "5G", "ht_mode": "HT40", "chipset": "mac80211_hwsim"}]
+    data["extra_slots"] = [
+        {"if_name": "b-ap-50", "role": "backhaul", "vif_radio_idx": 1, "band": "5G"}
+    ]
+    path = tmp_path / "gre-5g.json"
+    path.write_text(json.dumps(data))
+    profile = profiles.load(str(path))
+    _, vault = multi(tmp_path)
+    pod = PodBackend(
+        "pod-1",
+        Session(with_second_radio(tables())),
+        vault,
+        serial=SERIAL,
+        multi_bss=True,
+        profile=profile,
+        underlay="169.254.2.0/24",
+    )
+    # the M2's backhaul BSS, assigned to the one backhaul slot b-ap-50 (no fronthaul slots here)
+    intent = Intent(
+        "pod-1",
+        "radio-1",
+        "bss-1",
+        "private_ssid",
+        "new",
+        additional=({"role": "backhaul", "ssid": "mesh_backhaul", "secret_ref": "x3"},),
+    )
+    rows = submitted(pod, intent)
+    assert ("Wifi_VIF_Config", "b-ap-50") in rows  # the parent AP VIF was created
+    radio_inserts = [
+        op
+        for op in pod.session.sent[-1]
+        if op["op"] == "mutate"
+        and op["table"] == "Wifi_Radio_Config"
+        and any(m[1] == "insert" for m in op["mutations"])
+    ]
+    assert radio_inserts  # b-ap-50 was added to a radio
+    assert all(op["where"] == [["_uuid", "==", ["uuid", RADIO_5G]]] for op in radio_inserts)
+
+
 def test_an_extra_slot_may_name_the_radio_its_vif_is_on(tmp_path):
     """Spec 9: a slot's `band` places its VIF on a non-fronthaul radio (the parent AP on 5 GHz)."""
     from emosa.opensync import profiles
