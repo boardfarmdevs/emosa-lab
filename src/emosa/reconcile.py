@@ -258,6 +258,15 @@ class Engine:
         current = getattr(snap, "instance", None)
         return bool(written and current and written != current)
 
+    def _remapped(self, op, pod_id):
+        """The operation was planned under another mapping than the pod's backend has now (the
+        pod's profile changed: a pod promoted to GRE parent while onboarded, finding A). Its
+        configuration is not owned under this mapping: the next operation's begins a new
+        ownership period, as a new start of the pod's OpenSync does."""
+        mapping = getattr(self.backends[pod_id], "mapping", None)
+        planned = (op.plan or {}).get("mapping")
+        return bool(mapping and planned and planned != mapping)
+
     def _expired(self, op):
         if op.operation_id not in self.deadlines:
             # A new process establishes a new monotonic budget from persisted UTC.
@@ -371,6 +380,7 @@ class Engine:
                             State.TIMED_OUT,
                         }
                         and not self._restarted(op, snap)
+                        and not self._remapped(op, pod_id)
                     ):
                         instance = getattr(snap, "instance", None)
                         self.store.conflict(

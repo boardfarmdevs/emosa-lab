@@ -584,6 +584,12 @@ Rules:
   conflict seen on an earlier start no longer blocks the pod (a new ownership
   period). The agent configures the pod again from the controller's next M2
   (§2.5). The operation's evidence names the start (`instance`).
+- A written configuration also belongs to the mapping it was planned under (its
+  plan's `mapping`: the pod's profile). When the pod's profile changes (a pod
+  promoted to GRE parent while onboarded, §8.6), what an earlier operation wrote is
+  read under the new mapping, where it may no longer hold: that is not another
+  manager's change either, so no ownership conflict, and the next operation begins
+  a new ownership period. An earlier operation's deadline still runs.
 - An `INDETERMINATE` operation becomes `TIMED_OUT` once its deadline has passed
   and the pod does not show it applied: its current Config lacks the write (it
   never landed, or a restart dropped it), or has it while a fresh State does not
@@ -916,7 +922,11 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   broadcasting it is the profile's choice (`ssid_broadcast`), since a child joins by its pinned
   BSSID either way. The parent AP is named `b-ap-<band>` (`b-ap-24` on the 2.4 GHz radio,
   `b-ap-50` on 5 GHz), as the OpenSync cloud and `local-noc` name it, so the pod's own
-  fallback can find it.
+  fallback can find it. The slot is the parent AP only as a parent renders it: a Multi-AP
+  backhaul BSS left in it (a pod promoted to GRE parent while onboarded, its profile changed and
+  its agent restarted) is not the applied configuration, so the controller's unchanged M2 set
+  converts that same row and writes its underlay Inet row in one transaction (§5: a new mapping,
+  no ownership conflict). Both agents (box `gre-parent-promoted`).
 - **The parent AP's radio.** The controller decides where backhaul BSSes are, and can only do
   that for a radio it knows, so the parent AP's radio is one EMOSA **binds and reports** (its own
   M1 and Radio Basic Capabilities, the controller's M2 for it). Where the only radio that can

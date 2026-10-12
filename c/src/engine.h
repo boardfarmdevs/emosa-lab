@@ -61,6 +61,10 @@ typedef struct {
     char pod_id[129];
     em_backend backend;
     void *ctx;
+    /* the mapping the backend plans under (its plan's "mapping": the pod's profile). An operation
+     * planned under another (the profile changed: a pod promoted to GRE parent, finding A) owns
+     * no configuration under this one (Engine._remapped); NULL: every operation's counts */
+    const char *mapping;
     double (*monotonic)(void);
     bool busy;
     struct {

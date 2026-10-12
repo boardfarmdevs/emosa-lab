@@ -538,3 +538,10 @@ def test_a_second_radios_channel_move_is_one_fresh_session_and_leaves_its_parent
     result = box("second-radio-moves-channel", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result
     assert result["sessions"] == 1 and all(result["unchanged"].values())
+
+
+def test_a_pod_promoted_to_gre_parent_while_onboarded_converts_its_backhaul_bss(agent, tmp_path):
+    # finding A (spec 8.6): the same b-ap-24 row becomes the parent AP, then a Renew is a no-op
+    result = box("gre-parent-promoted", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+    assert result["same_row"] and result["renew_noop"]

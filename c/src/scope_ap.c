@@ -345,9 +345,14 @@ static cJSON *additional(const em_ap_scope *s, const cJSON *tables, bool states)
         const char *key = em_row_wpa2_psk(row) ? em_row_sole_map_value(row, "wpa_psks") : NULL;
         bool usable = mode && !strcmp(mode, "ap") && ovs_true(row, "enabled");
         cJSON *entry = cJSON_CreateArray();
-        /* a Multi-AP backhaul BSS, or the GRE parent AP (multi_ap none, spec 8.6) */
-        bool backhaul = (multi_ap && !strcmp(multi_ap, "backhaul_bss")) || em_profile_parent_slot(&own, name);
-        cJSON_AddItemToArray(entry, cJSON_CreateString(backhaul ? "backhaul" : "fronthaul"));
+        /* a Multi-AP backhaul BSS, or the GRE parent AP (spec 8.6) as a parent renders it, not a
+         * Multi-AP BSS (multi_ap none or unset): a Multi-AP BSS left in a parent's slot (a pod
+         * promoted to GRE parent while onboarded, finding A) keeps its own value, so that the
+         * intent is not satisfied and the slot is converted (PodBackend.role) */
+        const char *role = multi_ap && !strcmp(multi_ap, "backhaul_bss") ? "backhaul" : "fronthaul";
+        if (em_profile_parent_slot(&own, name))
+            role = !multi_ap || !strcmp(multi_ap, "none") ? "backhaul" : multi_ap;
+        cJSON_AddItemToArray(entry, cJSON_CreateString(role));
         cJSON_AddItemToArray(entry, em_row_string(row, "ssid"));
         char fp[65];
         if (key && usable && em_vault_fingerprint_text(s->vault, key, fp))

@@ -383,6 +383,14 @@ static bool restarted(const cJSON *op, const em_snapshot *s)
     return written && s->has_instance && strcmp(written, s->instance);
 }
 
+/* The operation was planned under another mapping than the backend has now (Engine._remapped):
+ * its configuration is not owned under this one, a new ownership period begins. */
+static bool remapped(const em_engine *e, const cJSON *op)
+{
+    const char *planned = str(cJSON_GetObjectItemCaseSensitive(op, "plan"), "mapping");
+    return e->mapping && planned && strcmp(planned, e->mapping);
+}
+
 static void reject(em_engine *e, cJSON *op, em_reason r)
 {
     em_transition(op, "REJECTED", NULL);
@@ -668,7 +676,7 @@ void em_engine_reconcile(em_engine *e)
                 if (!config_matches &&
                     (!strcmp(now_state, "CONFIG_COMMITTED") || !strcmp(now_state, "OBSERVED_APPLIED") ||
                      !strcmp(now_state, "TIMED_OUT")) &&
-                    !restarted(op, &snap)) {
+                    !restarted(op, &snap) && !remapped(e, op)) {
                     cJSON *evidence = cJSON_CreateObject();
                     cJSON_AddStringToObject(evidence, "operation_id", str(op, "operation_id"));
                     cJSON_AddStringToObject(evidence, "reason", "owned configuration changed");

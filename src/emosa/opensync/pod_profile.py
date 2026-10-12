@@ -118,6 +118,11 @@ class PodBackend(OpenSyncBackend):
         self.identity = None  # radio MAC, BSSID (None before the VIF exists), channel, radio
 
     @property
+    def mapping(self):
+        """The mapping this scope plans under (its plan's "mapping"): the pod's profile."""
+        return self.profile.id
+
+    @property
     def parent_aps(self):
         """The slot VIFs a backhaul BSS takes as the pod's GRE parent AP (spec 8.6), on any of the
         pod's radios (a parent's b-ap-50 is on its 5 GHz radio, spec 9)."""
@@ -257,9 +262,14 @@ class PodBackend(OpenSyncBackend):
             return None
 
     def role(self, row):
-        """A slot row's role: a Multi-AP backhaul BSS, or the GRE parent AP (multi_ap none)."""
-        backhaul = row.get("multi_ap") == "backhaul_bss" or row.get("if_name") in self.parent_aps
-        return "backhaul" if backhaul else "fronthaul"
+        """A slot row's role: a Multi-AP backhaul BSS, or the GRE parent AP. A parent AP's slot is
+        the backhaul only as a parent renders it, not a Multi-AP BSS (multi_ap none, or unset): a
+        Multi-AP BSS left in it (a pod promoted to GRE parent while onboarded, finding A) keeps its
+        own value, so that the intent is not satisfied and the slot is converted."""
+        multi_ap = row.get("multi_ap")
+        if row.get("if_name") in self.parent_aps:
+            return "backhaul" if multi_ap in (None, "none") else multi_ap
+        return "backhaul" if multi_ap == "backhaul_bss" else "fronthaul"
 
     def _additional(self, rows):
         """Sorted [role, ssid, key fingerprint] of extra BSS rows (Config or State)."""

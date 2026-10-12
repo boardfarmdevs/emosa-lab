@@ -2790,6 +2790,75 @@ async def gre_parent_create(box):
     )
 
 
+GRE_PROFILE = "opensync-lab-hwsim-6.6.1-gre-v1"
+
+
+async def gre_parent_promoted(box):
+    """Finding A (spec 8.6): a pod onboarded with a Multi-AP backhaul BSS (b-ap-24, multi_ap
+    backhaul_bss), then promoted to GRE parent while onboarded: its profile flipped to the
+    gre-parent one and its agent restarted on its journal. The controller's unchanged M2 set is
+    not taken as applied while b-ap-24 is still a Multi-AP BSS: the agent converts that same row
+    into the parent AP (multi_ap none, no bridge, hidden) and writes its underlay Inet row, in one
+    transaction. A Renew afterwards finds it applied and writes nothing."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed=state.get("failed", "not onboarded"))
+    uuid, before = await box.vif("Wifi_VIF_Config", GRE_AP)
+    if not before or before.get("multi_ap") != "backhaul_bss":
+        return box.result(passed=False, failed="no Multi-AP backhaul BSS b-ap-24 to promote")
+    await apply_configuration(box.db)
+    box.process.kill()
+    box.process.wait(10)
+    config_path = box.directory / "agent.json"
+    config = json.loads(config_path.read_text())
+    config["profile"] = GRE_PROFILE
+    config_path.write_text(json.dumps(config, indent=2) + "\n")
+    operations = len((box.status() or {}).get("operations") or [])
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.restart_agent()
+
+    async def converted():
+        ops = (box.status() or {}).get("operations") or []
+        _, ap = await box.vif("Wifi_VIF_Config", GRE_AP)
+        return len(ops) > operations and all_applied(ops) and (ap or {}).get("multi_ap") == "none"
+
+    if await serve_radios(box, converted, searches=searches, m1s=m1s) is None:
+        return box.result(passed=False, failed="b-ap-24 was not converted into the parent AP")
+    after_uuid, ap = await box.vif("Wifi_VIF_Config", GRE_AP)
+    inet = await gre_inet(box, GRE_AP)
+    ops = (box.status() or {}).get("operations") or []
+    wrote = not (ops[-1].get("application_evidence") or {}).get("observed_noop")
+    # a Renew: the same M2 set, now applied
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.controller.send(RENEW, (Tlv(0x01, box.controller.al), Tlv(0x0F, b"\0"), Tlv(0x10, b"\0")))
+    count = len(ops)
+
+    async def taken_again():
+        again = (box.status() or {}).get("operations") or []
+        return len(again) > count and all_applied(again)
+
+    renewed = await serve_radios(box, taken_again, searches=searches, m1s=m1s) is not None
+    again = (box.status() or {}).get("operations") or []
+    noop = bool((again[-1].get("application_evidence") or {}).get("observed_noop"))
+    status = (box.status() or {}).get("gre_parent") or {}
+    rendered = {k: (ap or {}).get(k) for k in ("multi_ap", "bridge", "ap_bridge", "ssid_broadcast")}
+    return box.result(
+        passed=after_uuid == uuid
+        and rendered
+        == {"multi_ap": "none", "bridge": "", "ap_bridge": False, "ssid_broadcast": "disabled"}
+        and (inet or {}).get("inet_addr") == "169.254.2.1"
+        and wrote
+        and renewed
+        and noop
+        and status.get("ap") == GRE_AP,
+        same_row=after_uuid == uuid,
+        parent_ap=rendered,
+        underlay_inet=(inet or {}).get("inet_addr"),
+        conversion_written=wrote,
+        renew_noop=noop,
+    )
+
+
 async def gre_parent_ready(box):
     """nm applies the agent's underlay to the AP's Wifi_Inet_State, and the pod's bootstrap has
     br-home: what a tunnel needs besides the parent AP. br-home hangs from the Open_vSwitch root
@@ -3584,6 +3653,7 @@ SCENARIOS = {
     "second-radio-parent": second_radio_parent,
     "second-radio-withdrawn": second_radio_withdrawn,
     "second-radio-moves-channel": second_radio_moves_channel,
+    "gre-parent-promoted": gre_parent_promoted,
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
     "write-lost-unapplied": write_lost_unapplied,
@@ -3679,6 +3749,12 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "second-radio-moves-channel": {
         "multi_bss": True,
         "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
+        "underlay": GRE_UNDERLAY,
+    },
+    # onboarded on the plain profile, then promoted to GRE parent (finding A)
+    "gre-parent-promoted": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-v1",
         "underlay": GRE_UNDERLAY,
     },
 }

@@ -2439,6 +2439,7 @@ int main(int argc, char **argv)
                          .transact = transact,
                          .transact_ctx = &a};
     em_engine_init(&a.ap_engine, a.journal, &a.vault, a.pod_id, em_ap_backend(), &a.ap, now);
+    a.ap_engine.mapping = a.profile.id; /* the AP scope plans under the pod's profile */
     em_engine_recover(&a.ap_engine);
     /* spec 9: each of the profile's further radios is its own scope, configured by its own M2,
      * with its own journal (radio-<band>, as the reference's) */
@@ -2454,6 +2455,7 @@ int main(int argc, char **argv)
             return 1;
         }
         em_engine_init(&rs->engine, rs->journal, &a.vault, a.pod_id, em_ap_backend(), &rs->ap, now);
+        rs->engine.mapping = a.profile.id;
         em_engine_recover(&rs->engine);
         a.nradio_scopes++;
     }

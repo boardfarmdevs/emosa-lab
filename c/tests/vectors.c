@@ -2047,6 +2047,7 @@ typedef struct {
     bool fresh, ready;
     char instance[17]; /* the start of the pod's OpenSync, "" for none (spec §5) */
     char plan_error[32], result[16];
+    char mapping[32]; /* the mapping its plans are under, "" for none */
     jmp_buf crash;
 } scripted_pod;
 
@@ -2082,6 +2083,8 @@ static cJSON *scripted_plan(void *ctx, const cJSON *intent, em_reason *why)
     }
     cJSON *plan = cJSON_CreateObject();
     cJSON_AddStringToObject(plan, "action", "scripted");
+    if (p->mapping[0])
+        cJSON_AddStringToObject(plan, "mapping", p->mapping);
     return plan;
 }
 
@@ -2200,6 +2203,9 @@ static void engine_vectors(const char *dir)
                 const cJSON *instance = cJSON_GetArrayItem(s, 5);
                 snprintf(pod.instance, sizeof(pod.instance), "%s",
                          cJSON_IsString(instance) ? instance->valuestring : "");
+            } else if (!strcmp(kind, "mapping")) { /* the backend's mapping from now on */
+                snprintf(pod.mapping, sizeof(pod.mapping), "%s", cJSON_GetArrayItem(s, 1)->valuestring);
+                engine.mapping = pod.mapping;
             } else if (!strcmp(kind, "script")) {
                 const cJSON *e = cJSON_GetArrayItem(s, 1);
                 snprintf(pod.plan_error, sizeof(pod.plan_error), "%s", cJSON_IsString(e) ? e->valuestring : "");
@@ -2211,6 +2217,7 @@ static void engine_vectors(const char *dir)
             } else if (!strcmp(kind, "recover")) { /* a new process on the same journal */
                 em_engine_free(&engine);
                 em_engine_init(&engine, journal, &vault, "pod-1", backend, &pod, engine_clock);
+                engine.mapping = pod.mapping[0] ? pod.mapping : NULL;
                 em_engine_recover(&engine);
             } else if (!strcmp(kind, "cancel")) {
                 cJSON_Delete(em_engine_cancel(&engine, cJSON_GetArrayItem(ids, cJSON_GetArrayItem(s, 1)->valueint)->valuestring));

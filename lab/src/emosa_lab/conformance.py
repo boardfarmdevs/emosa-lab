@@ -3756,6 +3756,7 @@ def engine_vectors():
                 "instance": None,
             }
             self.plan_error = None
+            self.mapping = None  # the mapping its plans are under (a pod profile)
             self.result = "committed"
 
         async def snapshot(self):
@@ -3782,7 +3783,7 @@ def engine_vectors():
         async def plan(self, intent):
             if self.plan_error:
                 raise EmosaError(Reason(self.plan_error), "scripted refusal")
-            return {"action": "scripted"}
+            return {"action": "scripted", **({"mapping": self.mapping} if self.mapping else {})}
 
         async def submit(self, intent, attempt):
             if self.result == "crash":
@@ -3915,6 +3916,25 @@ def engine_vectors():
                 ("request", [a], "k3", 30),
             ],
         ),
+        (
+            # the pod's profile changed and the agent started again (a pod promoted to GRE parent,
+            # finding A): the configuration applied under the old mapping, no longer as it was
+            # read under the new one, is no conflict, and a new operation goes ahead
+            "profile-changed",
+            [
+                ("mapping", "profile-a"),
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("pod", a, a, True, True),
+                ("reconcile",),
+                ("mapping", "profile-b"),
+                ("recover",),
+                ("pod", b, b, True, True),
+                ("reconcile",),
+                ("request", [a], "k2", 30),
+                ("execute", 1),
+            ],
+        ),
         ("busy", [("request", [a], "k1", 30), ("request", [b], "k2", 30)]),
         (
             "plan-refused",
@@ -3988,6 +4008,8 @@ def engine_vectors():
                         "ready": step[4],
                         "instance": step[5] if len(step) > 5 else None,
                     }
+                elif kind == "mapping":
+                    backend.mapping = step[1]
                 elif kind == "script":
                     backend.plan_error, backend.result = step[1], step[2]
                 elif kind == "advance":
@@ -4039,8 +4061,10 @@ def engine_vectors():
         "reply) or crash (the process stops after the journal's SUBMITTED record)). The "
         "intent is a probe-watch intent (its target: the watched stations, joined by commas). "
         "A step: request (stations, idempotency key, deadline in seconds), execute (the n-th "
-        "operation), pod, script, advance (the clock, seconds), reconcile, recover (a new "
-        "process on the same journal), cancel. Per step: the request's error, every "
+        "operation), pod, script, mapping (the mapping the pod's plans are under from then on, "
+        "the plan's 'mapping': its profile), advance (the clock, seconds), reconcile, recover (a "
+        "new process on the same journal), cancel. An operation planned under another mapping "
+        "than the backend's owns no configuration under it. Per step: the request's error, every "
         "operation's lifecycle fields, whether the pod's ownership is lost, and the journal "
         "events the step added (their phases).",
         "cases": out,
