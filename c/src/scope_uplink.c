@@ -497,6 +497,40 @@ static void keep_target(em_uplink_scope *u)
     free(text);
 }
 
+static void lower(const char *in, char *out, size_t n);
+
+static void bootstrap_path(const em_uplink_scope *u, char *out, size_t n)
+{
+    EM_FORMAT_FIXED(out, n, "%s/bootstrap.json", em_journal_directory(u->journal));
+}
+
+/* Spec 8.6: the BSS the station is on before any EMOSA move is its bootstrap upstream (cm's own
+ * association to the onboarding/GTP BSS). Recorded once, when first observed on a working uplink
+ * with no move made, and persisted, so a later steer back to it is recognised as a revert. */
+static void record_bootstrap(em_uplink_scope *u)
+{
+    if (u->has_bootstrap || u->moves || u->has_move)
+        return;
+    if (!u->has_facts || !u->facts.kind[0] || !u->facts.parent[0])
+        return;
+    lower(u->facts.parent, u->bootstrap_bssid, sizeof(u->bootstrap_bssid));
+    EM_FORMAT_FIXED(u->bootstrap_ssid, sizeof(u->bootstrap_ssid), "%s", u->facts.ssid);
+    u->has_bootstrap = true;
+    char path[700];
+    bootstrap_path(u, path, sizeof(path));
+    cJSON *o = cJSON_CreateObject();
+    cJSON_AddStringToObject(o, "bssid", u->bootstrap_bssid);
+    cJSON_AddStringToObject(o, "ssid", u->bootstrap_ssid);
+    char *text = em_json_dumps(o, EM_JSON_DEFAULT, false);
+    cJSON_Delete(o);
+    if (text) {
+        em_write_file(path, text, true);
+        free(text);
+    }
+    em_log(EM_LOG_INFO, "emosa.agent.uplink", "bootstrap upstream recorded: %s (%s)",
+            u->bootstrap_bssid, u->bootstrap_ssid);
+}
+
 em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_journal_schemas *schemas,
                          const char *bssid)
 {
@@ -540,6 +574,22 @@ em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_jou
                 EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", station); /* a bound if_name */
         }
         cJSON_Delete(kept);
+    }
+    /* the bootstrap upstream recorded on an earlier start (spec 8.6), for a revert across restarts */
+    char bpath[700];
+    bootstrap_path(u, bpath, sizeof(bpath));
+    char *btext = em_read_file(bpath, 4096, NULL);
+    if (btext) {
+        cJSON *saved = cJSON_Parse(btext);
+        free(btext);
+        const char *bssid = str(saved, "bssid"), *bssid_ssid = str(saved, "ssid");
+        uint8_t mac[6];
+        if (bssid && em_parse_mac(bssid, mac)) {
+            lower(bssid, u->bootstrap_bssid, sizeof(u->bootstrap_bssid));
+            EM_FORMAT_FIXED(u->bootstrap_ssid, sizeof(u->bootstrap_ssid), "%s", bssid_ssid ? bssid_ssid : "");
+            u->has_bootstrap = true;
+        }
+        cJSON_Delete(saved);
     }
     return EM_OK;
 }
@@ -928,6 +978,7 @@ void em_uplink_tick(em_uplink_scope *u)
         em_snapshot_clear(&snap);
         return;
     }
+    record_bootstrap(u);
     op = em_journal_latest(u->journal);
     cJSON *intent = wanted(u, op, &snap);
     cJSON_Delete(op);
@@ -1111,6 +1162,13 @@ cJSON *em_uplink_status(em_uplink_scope *u)
     cJSON_AddStringToObject(o, "active_station", u->active);
     cJSON_AddStringToObject(o, "bssid", u->bssid);
     cJSON_AddStringToObject(o, "configured_bssid", u->configured);
+    if (u->has_bootstrap) {
+        cJSON *b = cJSON_AddObjectToObject(o, "bootstrap");
+        cJSON_AddStringToObject(b, "bssid", u->bootstrap_bssid);
+        cJSON_AddStringToObject(b, "ssid", u->bootstrap_ssid);
+    } else {
+        cJSON_AddNullToObject(o, "bootstrap");
+    }
     if (u->has_move) {
         cJSON *m = cJSON_AddObjectToObject(o, "move");
         cJSON_AddStringToObject(m, "target", u->move.target);

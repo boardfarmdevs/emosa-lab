@@ -74,6 +74,10 @@ typedef struct {
     } move;
     char waiting[128];
     bool has_waiting;
+    /* spec 8.6: the BSS the station was on before any EMOSA move (its bootstrap upstream, cm's own
+     * association), recorded once and persisted, so a steer back to it is a revert */
+    char bootstrap_bssid[18], bootstrap_ssid[65];
+    bool has_bootstrap;
     /* after a kept target failed: that switch's intent and start, until the pod is off it */
     cJSON *fallback_after;
     char fallback_instance[17];
