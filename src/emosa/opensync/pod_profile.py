@@ -67,6 +67,19 @@ VIF_GUARDS = (
 # the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod's
 # AP takes it as a Multi-AP agent's AP does (hostapd multi_ap 2 or 1)
 MULTI_AP = {"fronthaul": "fronthaul_bss", "backhaul": "backhaul_bss"}
+# A GRE parent AP's Inet columns beyond a slot's (spec 8.6): its underlay address and DHCP server
+PARENT_INET = ("ip_assign_scheme", "inet_addr", "dhcpd")
+
+
+def parent_rendered(row):
+    """An Inet row (raw RFC 7047 values) as a GRE parent AP has it: a static address or a DHCP
+    server, which a plain slot's row never has."""
+    address, dhcpd = row.get("inet_addr"), row.get("dhcpd")
+    return (
+        row.get("ip_assign_scheme") == "static"
+        or (isinstance(address, str) and address != "")
+        or (isinstance(dhcpd, list) and len(dhcpd) == 2 and dhcpd[0] == "map" and bool(dhcpd[1]))
+    )
 
 
 def slots_on(profile, band):
@@ -532,9 +545,17 @@ class PodBackend(OpenSyncBackend):
         extras = self._extras(decoded, radio_uuid)
         assigned = self._assign(intent)
         inet = await self.session.transact(
-            [{"op": "select", "table": "Wifi_Inet_Config", "where": [], "columns": ["if_name"]}]
+            [
+                {
+                    "op": "select",
+                    "table": "Wifi_Inet_Config",
+                    "where": [],
+                    "columns": ["if_name", *PARENT_INET],
+                }
+            ]
         )
-        inet_names = {row.get("if_name") for row in (inet[0].get("rows", []) if inet else [])}
+        inet_rows = {row.get("if_name"): row for row in (inet[0].get("rows", []) if inet else [])}
+        inet_names = set(inet_rows)
         ops, counts = [], []
         for index, (name, role, radio_idx) in enumerate(self.slots):
             present = extras.get(name)
@@ -669,6 +690,24 @@ class PodBackend(OpenSyncBackend):
                             "op": "insert",
                             "table": "Wifi_Inet_Config",
                             "row": {**self.profile.inet, "if_name": name},
+                        }
+                    )
+                    counts.append(None)
+                elif parent_rendered(inet_rows[name]):
+                    # a former GRE parent AP's row (the pod's profile no longer a parent, spec
+                    # 8.6): the profile's slot row again, the underlay's address and DHCP server
+                    # cleared, so that no stray DHCP server is left on the backhaul BSS
+                    ops.append(
+                        {
+                            "op": "update",
+                            "table": "Wifi_Inet_Config",
+                            "where": [["if_name", "==", name]],
+                            "row": {
+                                **{k: v for k, v in self.profile.inet.items() if k != "if_name"},
+                                "inet_addr": ["set", []],
+                                "netmask": ["set", []],
+                                "dhcpd": ["map", []],
+                            },
                         }
                     )
                     counts.append(None)

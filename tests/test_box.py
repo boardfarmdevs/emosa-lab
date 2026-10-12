@@ -545,3 +545,10 @@ def test_a_pod_promoted_to_gre_parent_while_onboarded_converts_its_backhaul_bss(
     result = box("gre-parent-promoted", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result
     assert result["same_row"] and result["renew_noop"]
+
+
+def test_a_demoted_gre_parent_leaves_no_dhcp_server_or_tunnel_on_its_backhaul(agent, tmp_path):
+    # spec 8.6, the mirror of finding A: no underlay address, DHCP server or tunnel is left
+    result = box("gre-parent-demoted", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+    assert result["same_row"] and result["own_rows_unchanged"] and not result["dhcpd"]

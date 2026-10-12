@@ -91,10 +91,13 @@ class GreParentBackend:
 
     mode = MODE
 
-    def __init__(self, pod_id, session, *, serial, ap, bridge, underlay):
+    def __init__(self, pod_id, session, *, serial, ap, bridge, underlay, withdrawn=False):
         self.pod_id, self.session = pod_id, session
         self.expected_serial, self.ap, self.bridge = serial, ap, bridge
         self.underlay = ipaddress.ip_network(underlay)
+        # a former parent (the pod's profile no longer a GRE parent): it has no children, so every
+        # tunnel left on its former parent AP is removed
+        self.withdrawn = withdrawn
         self.instance = None
         self.children = ()  # the child addresses at the last snapshot
         self.ap_bssid = None  # the parent AP's own BSSID, for the fleet's parent set (spec 8.6)
@@ -191,7 +194,7 @@ class GreParentBackend:
             raw = await self.session.snapshot()
             decoded, _ = self._binding(raw)
             configured = self._configured(decoded)
-            self.children = self.child_addresses(decoded)
+            self.children = () if self.withdrawn else self.child_addresses(decoded)
             self.ap_bssid = self.ap_mac(decoded)
             # nm's own table: each tunnel's interface is up once it has a State row
             up = {r.get("if_name") for r in decoded.get("Wifi_Inet_State", {}).values()}

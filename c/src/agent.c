@@ -2310,17 +2310,32 @@ static bool configure(agent *a, const char *path, const char *profiles)
         if (em_profile_parent_slot(&a->profile, a->profile.slots[i].if_name) &&
             (!parent || strcmp(a->profile.slots[i].if_name, parent) < 0))
             parent = a->profile.slots[i].if_name;
-    if (parent && a->underlay) {
+    /* a former GRE parent (its profile no longer one, its tunnels' journal kept): the tunnels left on
+     * its former parent AP, its backhaul slot, are removed (spec 8.6, a parent demoted) */
+    const char *former = NULL;
+    for (size_t i = 0; !parent && a->multi_bss && i < a->profile.nslots; i++) {
+        const char *name = a->profile.slots[i].if_name, *role = a->profile.slots[i].role;
+        if (name && role && !strcmp(role, "backhaul") && (!former || strcmp(name, former) < 0))
+            former = name;
+    }
+    char journal_dir[EM_STATE_DIR_MAX + 16];
+    struct stat st;
+    EM_FORMAT_FIXED(journal_dir, sizeof(journal_dir), "%s/gre-parent", a->state_dir);
+    bool demoted = former && stat(journal_dir, &st) == 0 && S_ISDIR(st.st_mode);
+    if ((parent && a->underlay) || demoted) {
         const char *bridge = cfg_str(a->profile.fronthaul_vif, "bridge");
         if (!bridge) {
             FAIL("gre parent: the profile's fronthaul has no bridge");
             return false;
         }
         a->gre = em_calloc(1, sizeof(*a->gre));
-        if (!em_gre_bind(a->gre, cfg_str(c, "pod_id"), parent, bridge, a->underlay)) {
+        /* a former parent only removes: no child address is checked against its underlay */
+        const char *underlay = a->underlay ? a->underlay : "169.254.0.0/16";
+        if (!em_gre_bind(a->gre, cfg_str(c, "pod_id"), demoted ? former : parent, bridge, underlay)) {
             FAIL("gre parent: the parent AP, the bridge or the underlay is not usable");
             return false;
         }
+        a->gre->withdrawn = demoted;
     }
     /* AP metrics from the pod's statistics: telemetry with the survey and a declared ESP */
     a->pod_metrics_on = a->telemetry_on && a->telemetry.intent.survey && a->profile.has_esp_be;

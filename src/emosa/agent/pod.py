@@ -743,7 +743,11 @@ async def serve(config, stop):
             run_id=config.get("run_id", pod_id),
         )
     tunnels = None
-    if backend.parent_aps and config.get("underlay"):
+    # a former GRE parent (its profile no longer one, its tunnels' journal kept): the tunnels left
+    # on its former parent AP, its backhaul slot, are removed (spec 8.6, a parent demoted)
+    former = sorted(name for name, role, _ in backend.pod_slots if role == "backhaul")
+    demoted = not backend.parent_aps and bool(former) and (state_dir / "gre-parent").is_dir()
+    if (backend.parent_aps and config.get("underlay")) or demoted:
         # a GRE parent (spec 8.6): a tunnel per child of its parent AP, in the fronthaul's bridge
         bridge = backend.profile.fronthaul_vif.get("bridge")
         if not bridge:
@@ -756,9 +760,11 @@ async def serve(config, stop):
                 pod_id,
                 session,
                 serial=config["serial"],
-                ap=min(backend.parent_aps),
+                ap=former[0] if demoted else min(backend.parent_aps),
                 bridge=bridge,
-                underlay=config["underlay"],
+                # a former parent only removes: no child address is checked against it
+                underlay=config.get("underlay") or "169.254.0.0/16",
+                withdrawn=demoted,
             ),
             Store(state_dir / "gre-parent"),
             vault,

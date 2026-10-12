@@ -128,7 +128,9 @@ class GreTunnels:
         snap = self.backend.last
         return {
             "ap": self.backend.ap,
-            "ap_bssid": self.backend.ap_bssid,
+            # the fleet's parent set reads it (emosa.agent.peers): a former parent is none
+            "ap_bssid": None if self.backend.withdrawn else self.backend.ap_bssid,
+            "withdrawn": self.backend.withdrawn,
             "underlay": str(self.backend.underlay),
             "children": list(self.backend.children),
             "tunnels": None if snap is None else snap.config.get("tunnels"),

@@ -883,6 +883,42 @@ static cJSON *record(void *ctx, const cJSON *operations)
     return results;
 }
 
+/* As record, a select of a whole table answered from the case's rows (the requested columns a row
+ * has), as the pod's database does (the generator's Recorder with selects). */
+typedef struct {
+    cJSON *sent;
+    const cJSON *tables;
+} answering;
+
+static cJSON *record_answering(void *ctx, const cJSON *operations)
+{
+    answering *a = ctx;
+    cJSON *results = record(a->sent, operations);
+    const cJSON *o;
+    int i = 0;
+    cJSON_ArrayForEach(o, operations)
+    {
+        const cJSON *where = cJSON_GetObjectItemCaseSensitive(o, "where");
+        if (!strcmp(str(o, "op"), "select") && cJSON_GetArraySize(where) == 0) {
+            cJSON *rows = cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(results, i), "rows");
+            const cJSON *row, *column;
+            cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(a->tables, str(o, "table")))
+            {
+                cJSON *picked = cJSON_CreateObject();
+                cJSON_ArrayForEach(column, cJSON_GetObjectItemCaseSensitive(o, "columns"))
+                {
+                    const cJSON *value = cJSON_GetObjectItemCaseSensitive(row, column->valuestring);
+                    if (value)
+                        cJSON_AddItemToObject(picked, column->valuestring, cJSON_Duplicate(value, 1));
+                }
+                cJSON_AddItemToArray(rows, picked);
+            }
+        }
+        i++;
+    }
+    return results;
+}
+
 static const char *passphrase(void *ctx, const char *ref)
 {
     return str(ctx, ref);
@@ -915,7 +951,12 @@ static void southbound_vectors(const char *dir)
             intent.nadditional++;
         }
         cJSON *sent = cJSON_CreateArray();
+        answering answer = {sent, cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables")};
         em_ovs_session session = {cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables"), 1, record, sent};
+        if (cJSON_IsTrue(cJSON_GetObjectItem(c, "selects"))) {
+            session.transact = record_answering;
+            session.ctx = &answer;
+        }
         em_submit_result result;
         bool multi_bss = cJSON_IsTrue(cJSON_GetObjectItem(c, "multi_bss"));
         const char *underlay = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(c, "underlay"));

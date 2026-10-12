@@ -121,6 +121,41 @@ def with_backhaul_slot(raw):
     return raw
 
 
+def as_former_parent(raw):
+    """The recorded pod with b-ap-24 as a GRE parent AP left it (spec 8.6): the parent's rendering
+    (not Multi-AP, no bridge, hidden) and its Inet row the underlay's .1 with its DHCP server,
+    beside the pod's own br-home row."""
+    raw = with_backhaul_slot(raw)
+    parent = {"multi_ap": "none", "bridge": "", "ap_bridge": False, "ssid_broadcast": "disabled"}
+    for table in ("Wifi_VIF_Config", "Wifi_VIF_State"):
+        for row in raw[table].values():
+            if row["if_name"] == "b-ap-24":
+                row.update(parent if table == "Wifi_VIF_Config" else {"multi_ap": "none"})
+    dhcpd = ["map", [["lease_time", "12h"], ["start", "169.254.2.10"], ["stop", "169.254.2.250"]]]
+    raw["Wifi_Inet_Config"] = {
+        "00000000-0000-4000-8000-0000000000e1": {
+            "if_name": "b-ap-24",
+            "if_type": "vif",
+            "enabled": True,
+            "network": True,
+            "NAT": False,
+            "mtu": 1600,
+            "ip_assign_scheme": "static",
+            "inet_addr": "169.254.2.1",
+            "netmask": "255.255.255.0",
+            "dhcpd": dhcpd,
+        },
+        "00000000-0000-4000-8000-0000000000e2": {
+            "if_name": "br-home",
+            "if_type": "bridge",
+            "enabled": True,
+            "network": True,
+            "ip_assign_scheme": "dhcp",
+        },
+    }
+    return raw
+
+
 def with_parent_ap_50(raw):
     """The recorded pod plus the GRE parent AP b-ap-50 on its 5 GHz radio (beside the pod's
     bhaul-sta-50), as that radio's own M2 creates it (spec 9)."""
@@ -420,10 +455,13 @@ class Recorder:
     steering client row a transaction inserts appears in the rows as owm steering it; the
     transactions numbered in ``lost`` (from 0) are carried out but their replies are lost."""
 
-    def __init__(self, raw, *, owm=False, lost=()):
+    def __init__(self, raw, *, owm=False, lost=(), selects=False):
         self.schema = Schema(json.loads(reference_path().read_text()))
         self.tables, self.sent = raw, []
         self.owm, self.lost = owm, set(lost)
+        # selects: a select of a whole table answered from the rows (the requested columns a row
+        # has), as the pod's database does; otherwise no rows
+        self.selects = selects
 
     async def snapshot(self):
         return {
@@ -447,17 +485,28 @@ class Recorder:
             "select": {"rows": []},
             "insert": {"uuid": ["uuid", INSERTED]},
         }
-        return [replies.get(op["op"], {"count": 1}) for op in operations]
+        return [
+            self.select(op) if op["op"] == "select" else replies.get(op["op"], {"count": 1})
+            for op in operations
+        ]
+
+    def select(self, op):
+        if not self.selects or op.get("where"):
+            return {"rows": []}
+        rows = self.tables.get(op["table"], {}).values()
+        return {"rows": [{c: r[c] for c in op.get("columns", r) if c in r} for r in rows]}
 
 
-def southbound_case(name, raw, intent, *, multi_bss, profile=DEFAULT, underlay=None, radio=None):
+def southbound_case(
+    name, raw, intent, *, multi_bss, profile=DEFAULT, underlay=None, radio=None, selects=False
+):
     """``radio``: the band of one of the profile's further radios, whose own scope takes the
     intent (spec 9: its M2 set's BSSes fitted to its slots, no primary BSS)."""
     with tempfile.TemporaryDirectory() as directory:
         vault = SecretStore(Path(directory) / "secrets")
         for ref, passphrase in PASSPHRASES.items():
             vault.write_simulated(ref, passphrase)
-        session = Recorder(copy.deepcopy(raw))
+        session = Recorder(copy.deepcopy(raw), selects=selects)
         common = {
             "serial": SERIAL,
             "multi_bss": multi_bss,
@@ -503,6 +552,7 @@ def southbound_case(name, raw, intent, *, multi_bss, profile=DEFAULT, underlay=N
         "multi_bss": multi_bss,
         **({"underlay": underlay} if underlay else {}),
         **({"radio": radio} if radio else {}),
+        **({"selects": True} if selects else {}),
         "intent": intent,
         "passphrases": PASSPHRASES,
         "expected": {"status": result.status, "transactions": session.sent},
@@ -569,6 +619,35 @@ def southbound_vectors():
                 multi_bss=True,
                 profile=GRE_5G,
                 underlay="169.254.2.0/24",
+            ),
+            # spec 8.6, a parent demoted: on the plain profile, b-ap-24 as a parent left it is
+            # made a Multi-AP backhaul BSS again and its Inet row the profile's slot row, the
+            # underlay's address and DHCP server cleared; the pod's br-home row is not touched
+            southbound_case(
+                "former-gre-parent-demoted",
+                as_former_parent(pod_rows()),
+                {**primary, "additional": rdk_set},
+                multi_bss=True,
+                selects=True,
+            ),
+            # promoted (finding A): the same row made the parent AP, the slot's Inet row the plain
+            # profile wrote updated to the underlay's address and DHCP server
+            southbound_case(
+                "gre-parent-promoted",
+                {
+                    **with_backhaul_slot(pod_rows()),
+                    "Wifi_Inet_Config": {
+                        "00000000-0000-4000-8000-0000000000e1": {
+                            **load_profile(DEFAULT).inet,
+                            "if_name": "b-ap-24",
+                        }
+                    },
+                },
+                {**primary, "additional": rdk_set},
+                multi_bss=True,
+                profile="opensync-lab-hwsim-6.6.1-gre-v1",
+                underlay="169.254.2.0/24",
+                selects=True,
             ),
         ],
     }

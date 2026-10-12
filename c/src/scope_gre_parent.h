@@ -36,6 +36,10 @@ typedef struct {
     unsigned redo;          /* bumped for a fresh write after an applied set of tunnels drifted */
     char waiting[128];      /* why nothing is written now, "" when nothing waits */
     bool has_waiting;
+    /* a former parent (the pod's profile no longer a GRE parent, GreParentBackend.withdrawn): it
+     * has no children, so every tunnel left on its former parent AP is removed, and it advertises
+     * no parent AP */
+    bool withdrawn;
 } em_gre_scope;
 
 /* Binds the scope to its pod, parent AP, bridge and underlay (a.b.c.d/len); false when one is

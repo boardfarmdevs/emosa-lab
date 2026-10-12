@@ -298,7 +298,7 @@ static void children_of(em_gre_scope *g, const cJSON *tables)
     EM_FORMAT_FIXED(c->pod_id, sizeof(c->pod_id), "%s", g->pod_id);
     EM_FORMAT_FIXED(c->ap, sizeof(c->ap), "%s", g->ap);
     EM_FORMAT_FIXED(c->bridge, sizeof(c->bridge), "%s", g->bridge);
-    for (size_t k = 0; k < nfound; k++)
+    for (size_t k = 0; k < nfound && !g->withdrawn; k++) /* a former parent has no children */
         ipv4_text(found[k], c->remotes[c->nremotes++]);
 }
 
@@ -849,7 +849,10 @@ cJSON *em_gre_status(em_gre_scope *g)
 {
     cJSON *o = cJSON_CreateObject(), *op = em_journal_latest(g->journal);
     cJSON_AddStringToObject(o, "ap", g->ap);
-    cJSON_AddItemToObject(o, "ap_bssid", g->ap_bssid[0] ? cJSON_CreateString(g->ap_bssid) : cJSON_CreateNull());
+    /* the fleet's parent set reads it (peers.c): a former parent is none */
+    cJSON_AddItemToObject(o, "ap_bssid",
+                          g->ap_bssid[0] && !g->withdrawn ? cJSON_CreateString(g->ap_bssid) : cJSON_CreateNull());
+    cJSON_AddBoolToObject(o, "withdrawn", g->withdrawn);
     char net[16], underlay[24];
     ipv4_text(g->net, net);
     int len = 0;

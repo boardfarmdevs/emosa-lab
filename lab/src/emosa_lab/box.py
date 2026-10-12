@@ -2791,6 +2791,119 @@ async def gre_parent_create(box):
 
 
 GRE_PROFILE = "opensync-lab-hwsim-6.6.1-gre-v1"
+PLAIN_PROFILE = "opensync-lab-hwsim-6.6.1-v1"
+
+
+async def with_profile(box, profile, done):
+    """The pod's profile changed (a promotion or demotion, spec 8.6): its agent killed, its
+    configuration given the profile, the agent started again on its journal, and every Search and
+    M1 answered until done(operations before) holds. False at the deadline."""
+    box.process.kill()
+    box.process.wait(10)
+    config_path = box.directory / "agent.json"
+    config = json.loads(config_path.read_text())
+    config["profile"] = profile
+    config_path.write_text(json.dumps(config, indent=2) + "\n")
+    operations = len((box.status() or {}).get("operations") or [])
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.restart_agent()
+    found = await serve_radios(box, lambda: done(operations), searches=searches, m1s=m1s)
+    return found is not None
+
+
+async def pod_own_rows(box):
+    """The pod's own rows as a GRE parent's changes must leave them: its Inet rows and VIFs other
+    than EMOSA's (the fronthaul, the slots, the tunnels), and br-home's ports other than the
+    tunnels'."""
+    emosa = {COLD_VIF, "svc-d-ap-24", "svc-e-ap-24", "fh-24", GRE_AP}
+
+    def own(rows):
+        return {
+            u: r
+            for u, r in rows.items()
+            if r.get("if_name") not in emosa and not str(r.get("if_name", "")).startswith("pgd")
+        }
+
+    ports = await box.rows("Port")
+    tunnels = {u for u, p in ports.items() if str(p.get("name", "")).startswith("pgd")}
+    bridge = next(
+        (b for b in (await box.rows("Bridge")).values() if b.get("name") == "br-home"), {}
+    )
+    return {
+        "inet": own(await box.rows("Wifi_Inet_Config")),
+        "vifs": own(await box.rows("Wifi_VIF_Config")),
+        "br-home": sorted(set(uuids(bridge.get("ports"))) - tunnels),
+    }
+
+
+async def gre_parent_demoted(box):
+    """spec 8.6, a parent demoted (the mirror of finding A): a GRE parent with a child's tunnel,
+    its profile flipped back to the plain one and its agent restarted on its journal. The
+    unchanged M2 set makes the same b-ap-24 row a Multi-AP backhaul BSS again and its Inet row the
+    profile's slot row: no underlay address and no DHCP server left on the backhaul. The tunnel
+    left on it goes with its br-home port, the pod's own rows are untouched, and the agent no
+    longer advertises a parent AP."""
+    ap, failure = await gre_parent_up(box)
+    if failure:
+        return failure
+    await gre_parent_ready(box)
+    await box.transact(
+        [
+            {
+                "op": "insert",
+                "table": "DHCP_leased_IP",
+                "row": {"hwaddr": GRE_CHILD_MAC, "inet_addr": GRE_CHILD_IP},
+            }
+        ]
+    )
+    await box.client_join(GRE_CHILD_MAC, GRE_AP)
+    if not await gre_await_tunnel(box, "pgd2_10", present=True):
+        return box.result(passed=False, failed="the child's tunnel was not made")
+    await gre_nm_apply(box)
+    await apply_configuration(box.db)
+    uuid, _ = await box.vif("Wifi_VIF_Config", GRE_AP)
+    own_before = await pod_own_rows(box)
+
+    async def demoted(operations):
+        ops = (box.status() or {}).get("operations") or []
+        _, vif = await box.vif("Wifi_VIF_Config", GRE_AP)
+        inet = await gre_inet(box, GRE_AP) or {}
+        return (
+            len(ops) > operations
+            and all_applied(ops)
+            and (vif or {}).get("multi_ap") == "backhaul_bss"
+            and not ovsdb_map(inet.get("dhcpd"))
+            and await gre_inet(box, "pgd2_10") is None
+        )
+
+    if not await with_profile(box, PLAIN_PROFILE, demoted):
+        return box.result(passed=False, failed="b-ap-24 was not made a Multi-AP backhaul again")
+    after_uuid, vif = await box.vif("Wifi_VIF_Config", GRE_AP)
+    inet = await gre_inet(box, GRE_AP) or {}
+    status = (box.status() or {}).get("gre_parent") or {}
+    own_after = await pod_own_rows(box)
+    # an optional column unset is the empty set
+    plain = {
+        k: None if inet.get(k) == ["set", []] else inet.get(k)
+        for k in ("ip_assign_scheme", "inet_addr", "netmask", "mtu")
+    }
+    return box.result(
+        passed=after_uuid == uuid
+        and (vif or {}).get("multi_ap") == "backhaul_bss"
+        and (vif or {}).get("bridge") == "br-home"
+        and plain == {"ip_assign_scheme": "none", "inet_addr": None, "netmask": None, "mtu": 1500}
+        and not ovsdb_map(inet.get("dhcpd"))
+        and not await gre_port_in_home(box, "pgd2_10")
+        and own_after == own_before
+        and status.get("withdrawn") is True
+        and status.get("ap_bssid") is None,
+        same_row=after_uuid == uuid,
+        multi_ap=(vif or {}).get("multi_ap"),
+        inet=plain,
+        dhcpd=ovsdb_map(inet.get("dhcpd")),
+        own_rows_unchanged=own_after == own_before,
+        gre_status=status,
+    )
 
 
 async def gre_parent_promoted(box):
@@ -2807,22 +2920,13 @@ async def gre_parent_promoted(box):
     if not before or before.get("multi_ap") != "backhaul_bss":
         return box.result(passed=False, failed="no Multi-AP backhaul BSS b-ap-24 to promote")
     await apply_configuration(box.db)
-    box.process.kill()
-    box.process.wait(10)
-    config_path = box.directory / "agent.json"
-    config = json.loads(config_path.read_text())
-    config["profile"] = GRE_PROFILE
-    config_path.write_text(json.dumps(config, indent=2) + "\n")
-    operations = len((box.status() or {}).get("operations") or [])
-    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
-    box.restart_agent()
 
-    async def converted():
+    async def converted(operations):
         ops = (box.status() or {}).get("operations") or []
         _, ap = await box.vif("Wifi_VIF_Config", GRE_AP)
         return len(ops) > operations and all_applied(ops) and (ap or {}).get("multi_ap") == "none"
 
-    if await serve_radios(box, converted, searches=searches, m1s=m1s) is None:
+    if not await with_profile(box, GRE_PROFILE, converted):
         return box.result(passed=False, failed="b-ap-24 was not converted into the parent AP")
     after_uuid, ap = await box.vif("Wifi_VIF_Config", GRE_AP)
     inet = await gre_inet(box, GRE_AP)
@@ -3654,6 +3758,7 @@ SCENARIOS = {
     "second-radio-withdrawn": second_radio_withdrawn,
     "second-radio-moves-channel": second_radio_moves_channel,
     "gre-parent-promoted": gre_parent_promoted,
+    "gre-parent-demoted": gre_parent_demoted,
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
     "write-lost-unapplied": write_lost_unapplied,
@@ -3749,6 +3854,12 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "second-radio-moves-channel": {
         "multi_bss": True,
         "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
+        "underlay": GRE_UNDERLAY,
+    },
+    # a GRE parent with a child, then demoted to the plain profile
+    "gre-parent-demoted": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-v1",
         "underlay": GRE_UNDERLAY,
     },
     # onboarded on the plain profile, then promoted to GRE parent (finding A)

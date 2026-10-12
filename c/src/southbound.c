@@ -453,12 +453,13 @@ static em_reason assign(const em_profile *p, const em_ap_intent *intent, int *bs
     return EM_OK;
 }
 
-/* the Inet interface names the pod has (one select, like the reference) */
+/* the pod's Inet rows (one select, like the reference): each interface's name and the columns a
+ * GRE parent AP sets beyond a slot's (PARENT_INET: its underlay address and DHCP server) */
 static bool inet_names(em_ovs_session *s, cJSON *names)
 {
     cJSON *ops = cJSON_CreateArray(), *sel = op("select", "Wifi_Inet_Config", cJSON_CreateArray());
-    const char *col = "if_name";
-    cJSON_AddItemToObject(sel, "columns", strings(&col, 1));
+    const char *cols[4] = {"if_name", "ip_assign_scheme", "inet_addr", "dhcpd"};
+    cJSON_AddItemToObject(sel, "columns", strings(cols, 4));
     cJSON_AddItemToArray(ops, sel);
     cJSON *results = s->transact(s->ctx, ops);
     cJSON_Delete(ops);
@@ -467,23 +468,38 @@ static bool inet_names(em_ovs_session *s, cJSON *names)
     const cJSON *row;
     cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(results, 0), "rows"))
     {
-        const char *name = ovs_str(row, "if_name");
-        if (name)
-            cJSON_AddItemToArray(names, cJSON_CreateString(name));
+        if (ovs_str(row, "if_name"))
+            cJSON_AddItemToArray(names, cJSON_Duplicate(row, true));
     }
     cJSON_Delete(results);
     return true;
 }
 
-static bool has_name(const cJSON *names, const char *name)
+/* the Inet row of an interface, or NULL */
+static const cJSON *inet_of(const cJSON *rows, const char *name)
 {
-    const cJSON *n;
-    cJSON_ArrayForEach(n, names)
+    const cJSON *r;
+    cJSON_ArrayForEach(r, rows)
     {
-        if (!strcmp(n->valuestring, name))
-            return true;
+        if (!strcmp(ovs_str(r, "if_name"), name))
+            return r;
     }
-    return false;
+    return NULL;
+}
+
+static bool has_name(const cJSON *rows, const char *name) { return inet_of(rows, name) != NULL; }
+
+/* an Inet row (raw RFC 7047 values) as a GRE parent AP has it (pod_profile.parent_rendered): a
+ * static address or a DHCP server, which a plain slot's row never has */
+static bool parent_rendered(const cJSON *row)
+{
+    const char *scheme = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(row, "ip_assign_scheme"));
+    const char *address = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(row, "inet_addr"));
+    const cJSON *dhcpd = cJSON_GetObjectItemCaseSensitive(row, "dhcpd");
+    const char *tag = cJSON_GetStringValue(cJSON_GetArrayItem(dhcpd, 0));
+    return (scheme && !strcmp(scheme, "static")) || (address && *address) ||
+           (cJSON_IsArray(dhcpd) && cJSON_GetArraySize(dhcpd) == 2 && tag && !strcmp(tag, "map") &&
+            cJSON_GetArraySize(cJSON_GetArrayItem(dhcpd, 1)) > 0);
 }
 
 static cJSON *inet_row(const em_profile *p, const char *name)
@@ -679,6 +695,20 @@ static em_reason slot_ops(const em_profile *p, const em_profile *own, const char
                 cJSON *io = op("insert", "Wifi_Inet_Config", NULL);
                 cJSON_AddItemToObject(io, "row", inet_row(p, name));
                 PUSH(io, -1);
+            } else if (parent_rendered(inet_of(names, name))) {
+                /* a former GRE parent AP's row (the pod's profile no longer a parent, spec 8.6): the
+                 * profile's slot row again, the underlay's address and DHCP server cleared, so that
+                 * no stray DHCP server is left on the backhaul BSS */
+                cJSON *uo = op("update", "Wifi_Inet_Config", where_eq("if_name", name)), *row = inet_row(p, name);
+                const char *const cleared[3] = {"inet_addr", "netmask", "dhcpd"};
+                cJSON_DeleteItemFromObjectCaseSensitive(row, "if_name");
+                for (int x = 0; x < 3; x++)
+                    cJSON_DeleteItemFromObjectCaseSensitive(row, cleared[x]);
+                cJSON_AddItemToObject(row, "inet_addr", tagged("set", cJSON_CreateArray()));
+                cJSON_AddItemToObject(row, "netmask", tagged("set", cJSON_CreateArray()));
+                cJSON_AddItemToObject(row, "dhcpd", tagged("map", cJSON_CreateArray()));
+                cJSON_AddItemToObject(uo, "row", row);
+                PUSH(uo, -1);
             }
         }
     }

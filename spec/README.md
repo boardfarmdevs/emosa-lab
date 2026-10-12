@@ -926,7 +926,13 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   backhaul BSS left in it (a pod promoted to GRE parent while onboarded, its profile changed and
   its agent restarted) is not the applied configuration, so the controller's unchanged M2 set
   converts that same row and writes its underlay Inet row in one transaction (§5: a new mapping,
-  no ownership conflict). Both agents (box `gre-parent-promoted`).
+  no ownership conflict). Both agents (box `gre-parent-promoted`). A parent demoted (its profile
+  back to the plain one) is the mirror: the same row is made a Multi-AP backhaul BSS again and its
+  Inet row the profile's slot row, the underlay's address and DHCP server cleared, since a DHCP
+  server left on a Multi-AP backhaul would hand underlay addresses to whatever associates there.
+  The agent of a former parent (its tunnels' journal kept) removes the tunnels left on its former
+  parent AP, with their `br-home` ports, and advertises no parent AP (status `gre_parent.withdrawn`,
+  no `ap_bssid`). The pod's own rows are not touched. Both agents (box `gre-parent-demoted`).
 - **The parent AP's radio.** The controller decides where backhaul BSSes are, and can only do
   that for a radio it knows, so the parent AP's radio is one EMOSA **binds and reports** (its own
   M1 and Radio Basic Capabilities, the controller's M2 for it). Where the only radio that can
