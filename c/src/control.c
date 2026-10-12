@@ -331,9 +331,27 @@ static bool addresses(const uint8_t **p, const uint8_t *end)
     return true;
 }
 
+/* a radio list's entries (each `stride` octets from `list`, its RUID first) name only the agent's
+ * radios, each once (reporting_policy.decode_policy, spec 9) */
+static bool own_radios(const em_control *c, const uint8_t *list, size_t n, size_t stride)
+{
+    for (size_t i = 0; i < n; i++) {
+        const uint8_t *ruid = list + i * stride;
+        bool ours = c->nradio_ids ? false : !memcmp(ruid, c->radio->ruid, 6);
+        for (size_t k = 0; k < c->nradio_ids && !ours; k++)
+            ours = !memcmp(ruid, c->radio_ids[k], 6);
+        for (size_t j = 0; ours && j < i; j++)
+            ours = memcmp(ruid, list + j * stride, 6) != 0;
+        if (!ours)
+            return false;
+    }
+    return true;
+}
+
 static em_reason decode_policy(const em_control *c, const em_message *m)
 {
     bool metrics = false, steering = false;
+    size_t radios = c->nradio_ids ? c->nradio_ids : 1;
     for (size_t i = 0; i < m->ntlvs; i++) {
         const em_tlv *t = &m->tlvs[i];
         const uint8_t *d = t->value, *end = t->value + t->len;
@@ -341,10 +359,13 @@ static em_reason decode_policy(const em_control *c, const em_message *m)
             if (metrics || t->len < 2 || t->len != 2 + d[1] * 10)
                 return EM_INVALID_INPUT;
             metrics = true;
-            if (d[1] > 1)
-                return EM_UNSUPPORTED_OPERATION; /* sole-radio policy required */
-            if (d[1] && (memcmp(d + 2, c->radio->ruid, 6) || d[8] > 220))
+            if (d[1] > radios)
+                return EM_UNSUPPORTED_OPERATION; /* more radios than the agent has */
+            if (!own_radios(c, d + 2, d[1], 10))
                 return EM_INVALID_INPUT;
+            for (size_t k = 0; k < d[1]; k++)
+                if (d[2 + k * 10 + 6] > 220)
+                    return EM_INVALID_INPUT; /* a reserved RCPI threshold */
         } else if (t->kind == 0x89) {
             if (steering)
                 return EM_INVALID_INPUT;
@@ -354,10 +375,13 @@ static em_reason decode_policy(const em_control *c, const em_message *m)
                 return EM_INVALID_INPUT;
             if (end - p < 1 || end - p != 1 + 9 * p[0])
                 return EM_INVALID_INPUT;
-            if (p[0] > 1)
+            if (p[0] > radios)
                 return EM_UNSUPPORTED_OPERATION;
-            if (p[0] && (memcmp(p + 1, c->radio->ruid, 6) || p[7] > 2 || p[9] > 220))
+            if (!own_radios(c, p + 1, p[0], 9))
                 return EM_INVALID_INPUT;
+            for (size_t k = 0; k < p[0]; k++)
+                if (p[1 + k * 9 + 6] > 2 || p[1 + k * 9 + 8] > 220)
+                    return EM_INVALID_INPUT; /* a reserved steering field */
         } else if (t->kind == 0xDB) {
             const uint8_t *p = d;
             if (!addresses(&p, end) || !addresses(&p, end) || end - p != 20)

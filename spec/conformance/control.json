@@ -819,6 +819,59 @@
   }
  ],
  "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00 on class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller request frame and the frames the agent sends in answer, in order; the agent's own messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. 'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), as decoded from the request; 'channel_policy' is the accepted channel policy's durable record (spec §3.4) without its context, or null when none was accepted. A case with 'probes' gives the pod's last probe request per station (spec §3.9); probe_wall is the agent's clock for their ages.",
+ "multi_radio": {
+  "cases": [
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "policy-two-radios",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800000460080000000"
+       ],
+       "result": "policy_receipt_ack_sent"
+      },
+      "request": "0272f97f0785020000e00001893a0000800300460080890015000002020000000100023c78020000000500003c788a0016050202000000010078053cc002000000050078053cc0000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "refused-policy-second-radio-repeated",
+    "steps": [
+     {
+      "expected": {
+       "frames": [],
+       "result": "INVALID_INPUT"
+      },
+      "request": "0272f97f0785020000e00001893a00008003004700808a001605020200000005000000000002000000050000000000000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "refused-policy-another-agents-radio",
+    "steps": [
+     {
+      "expected": {
+       "frames": [],
+       "result": "INVALID_INPUT"
+      },
+      "request": "0272f97f0785020000e00001893a0000800300480080890015000002020000000100003c78020000009900003c78000000"
+     }
+    ]
+   }
+  ],
+  "description": "spec 9: the same agent also reporting the pod's 5 GHz radio 02:00:00:00:05:00 (class 115 channel 44, max EIRP 23, no BSS of EMOSA's on it): 'radios' are its reported radios, the fronthaul first.",
+  "radios": [
+   "02:00:00:00:01:00",
+   "02:00:00:00:05:00"
+  ]
+ },
  "ovsdb_tables": {
   "AWLAN_Node": {
    "96bc1650-4197-4cd8-9036-f9eb854e87ec": {

@@ -32,8 +32,12 @@ def addresses(data):
     return values, data[length:]
 
 
-def decode_policy(tlvs, ruid):
+def decode_policy(tlvs, ruids):
     """Decode the entire selected request before recording any policy change.
+
+    ``ruids``: every radio the agent reports, the fronthaul first (spec 9: a pod's second
+    radio too). A radio list may name each of them once and no other radio; naming more radios
+    than the agent has is unsupported, a radio it does not have invalid.
 
     Omitted policy TLVs leave the corresponding previous policy unchanged.
     Reserved bit fields are ignored on reception and retained in raw evidence.
@@ -49,13 +53,20 @@ def decode_policy(tlvs, ruid):
         if tlv.kind == 0x8A:
             if "metrics" in result or len(data) < 2 or len(data) != 2 + data[1] * 10:
                 invalid("duplicate or malformed metric reporting policy")
-            if data[1] > 1:
-                raise EmosaError(Reason.UNSUPPORTED_OPERATION, "sole-radio policy required")
+            if data[1] > len(ruids):
+                raise EmosaError(Reason.UNSUPPORTED_OPERATION, "more radios than the agent has")
             radios = []
-            if data[1]:
-                radio, rcpi, hysteresis, utilization, flags = data[2:8], *data[8:12]
-                if radio != ruid or rcpi > 220:
-                    invalid("foreign radio or reserved RCPI threshold")
+            for offset in range(2, 2 + data[1] * 10, 10):
+                radio, rcpi, hysteresis, utilization, flags = (
+                    data[offset : offset + 6],
+                    *data[offset + 6 : offset + 10],
+                )
+                if (
+                    radio not in ruids
+                    or rcpi > 220
+                    or address(radio) in {r["ruid"] for r in radios}
+                ):
+                    invalid("foreign or repeated radio, or reserved RCPI threshold")
                 radios.append(
                     {
                         "ruid": address(radio),
@@ -75,13 +86,21 @@ def decode_policy(tlvs, ruid):
             btm, data = addresses(data)
             if not data or len(data) != 1 + 9 * data[0]:
                 invalid("malformed steering radio list")
-            if data[0] > 1:
-                raise EmosaError(Reason.UNSUPPORTED_OPERATION, "sole-radio policy required")
+            if data[0] > len(ruids):
+                raise EmosaError(Reason.UNSUPPORTED_OPERATION, "more radios than the agent has")
             radios = []
-            if data[0]:
-                radio, policy, utilization, rcpi = data[1:7], *data[7:10]
-                if radio != ruid or policy > 2 or rcpi > 220:
-                    invalid("foreign radio or reserved steering field")
+            for offset in range(1, 1 + data[0] * 9, 9):
+                radio, policy, utilization, rcpi = (
+                    data[offset : offset + 6],
+                    *data[offset + 6 : offset + 9],
+                )
+                if (
+                    radio not in ruids
+                    or policy > 2
+                    or rcpi > 220
+                    or address(radio) in {r["ruid"] for r in radios}
+                ):
+                    invalid("foreign or repeated radio, or reserved steering field")
                 radios.append(
                     {
                         "ruid": address(radio),
@@ -196,11 +215,11 @@ class ReportingPolicyCoordinator:
         current = self.source.current()
         if self.closed or self.source.binding != self.binding or current is None:
             raise EmosaError(Reason.NOT_READY, "reporting policy source unavailable")
-        if len(current.capabilities.radios) != 1:
-            raise EmosaError(Reason.UNSUPPORTED_OPERATION, "sole-radio policy required")
         return current
 
     def identity(self, snapshot):
+        """The controller, agent and fronthaul radio the record is for (a second radio's entries
+        live in the policy's radio lists, spec 9)."""
         return {
             "controller": self.binding.controller_al.hex(),
             "local_al": self.binding.local_al.hex(),
@@ -291,7 +310,9 @@ class ReportingPolicyCoordinator:
         if len(encoded) > 8192:
             invalid("policy request exceeds budget")
         digest = hashlib.sha256(encoded.encode()).hexdigest()
-        update = decode_policy(message.tlvs, snapshot.capabilities.radios[0].basic.ruid)
+        update = decode_policy(
+            message.tlvs, tuple(r.basic.ruid for r in snapshot.capabilities.radios)
+        )
         prior = self.recent.get(message.mid)
         if prior and prior[0] != digest:
             invalid("conflicting policy request MID")

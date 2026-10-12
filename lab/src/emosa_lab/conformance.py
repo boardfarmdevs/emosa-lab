@@ -1439,14 +1439,21 @@ def wsc_m2_vectors():
     }
 
 
-def control_agent(raw, stations):
-    """A provisioned agent's report source over recorded rows, at time 0."""
+def control_agent(raw, stations, *, second_radio=False):
+    """A provisioned agent's report source over recorded rows, at time 0. ``second_radio``: it
+    also reports the pod's 5 GHz radio (spec 9: a GRE parent's or child's second radio) on its
+    channel 44, with no BSS of EMOSA's on it."""
     from emosa.wire.channel import OperatingRadio
     from emosa.wire.coordinator import ReportSource
 
     view = device_view(decode(raw))
     radio = view.radio(mac(RUID))
-    caps = radio_capabilities(radio, channel=6, max_bss=5, max_eirp=30)
+    five = view.radio(mac(RUID_50))
+    caps = (
+        radios_capabilities(((radio, 6, 5, 30), (five, 44, 1, 23)))
+        if second_radio
+        else radio_capabilities(radio, channel=6, max_bss=5, max_eirp=30)
+    )
     facts = topology(
         agent_al=mac(AGENT),
         controller_al=mac(CONTROLLER),
@@ -1454,6 +1461,7 @@ def control_agent(raw, stations):
         channel=6,
         bsses=radio.bsses,
         ages={mac(m): 10 for m in stations},
+        extra_radios=((five, (), 44),) if second_radio else (),
     )
     binding = PeerBinding("conformance", 1, mac(AGENT), mac(CONTROLLER), (mac(CONTROLLER),))
     source = ReportSource(binding, "pod-1", "c" * 64, clock=lambda: 0.0)
@@ -1836,10 +1844,39 @@ def control_vectors():
         ),
     ]
     measured = {"unassociated-query-measured"}
-    cases = []
-    for name, frames in sequences:
+    # spec 9: an agent that also reports the pod's 5 GHz radio
+    second = mac(RUID_50)
+    multi_radio = [
+        one(  # RDK lists every radio it was reported, in its policy's two radio lists
+            "policy-two-radios",
+            0x8003,
+            70,
+            Tlv(0x89, b"\x00\x00\x02" + ruid + b"\x02\x3c\x78" + second + b"\x00\x3c\x78"),
+            Tlv(
+                0x8A,
+                b"\x05\x02" + ruid + bytes.fromhex("78053cc0") + second + bytes.fromhex("78053cc0"),
+            ),
+        ),
+        one(
+            "refused-policy-second-radio-repeated",
+            0x8003,
+            71,
+            Tlv(0x8A, b"\x05\x02" + second + bytes(4) + second + bytes(4)),
+        ),
+        one(
+            "refused-policy-another-agents-radio",
+            0x8003,
+            72,
+            Tlv(0x89, b"\x00\x00\x02" + ruid + b"\x00\x3c\x78" + other + b"\x00\x3c\x78"),
+        ),
+    ]
+
+    def run(sequences, *, second_radio=False):
+        return [run_case(name, frames, second_radio) for name, frames in sequences]
+
+    def run_case(name, frames, second_radio):
         with tempfile.TemporaryDirectory() as directory:
-            source, _ = control_agent(copy.deepcopy(raw), stations)
+            source, _ = control_agent(copy.deepcopy(raw), stations, second_radio=second_radio)
             sent, handed = [], []
             mids = MidSequence(499)
             handlers = (
@@ -1901,7 +1938,9 @@ def control_vectors():
             }
             if name in measured:
                 case["probes"] = PROBES
-            cases.append(case)
+            return case
+
+    cases = run(sequences)
     return {
         "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded "
         "pod rows "
@@ -1924,6 +1963,14 @@ def control_vectors():
         },
         "ovsdb_tables": raw,
         "cases": cases,
+        "multi_radio": {
+            "description": "spec 9: the same agent also reporting the pod's 5 GHz radio "
+            + RUID_50
+            + " (class 115 channel 44, max EIRP 23, no BSS of EMOSA's on it): 'radios' are its "
+            "reported radios, the fronthaul first.",
+            "radios": [RUID, RUID_50],
+            "cases": run(multi_radio, second_radio=True),
+        },
     }
 
 

@@ -754,6 +754,70 @@ static bool keep_record(void *ctx, const cJSON *record)
     return true;
 }
 
+/* one control.json case against the agent; radios: its reported radios (spec 9), or NULL */
+static void control_case(const cJSON *c, const cJSON *agent, const em_device_view *view, const uint8_t ruid[6],
+                         const cJSON *radios)
+{
+    const cJSON *r;
+    const char *name = str(c, "name");
+    cJSON *handed = cJSON_CreateArray();
+    em_control control = {0};
+    em_parse_mac(str(agent, "al_mac"), control.binding.local_al);
+    em_parse_mac(str(agent, "controller_al"), control.binding.controller_al);
+    memcpy(control.binding.sources[0], control.binding.controller_al, 6);
+    control.binding.nsources = 1;
+    control.radio = em_view_radio(view, ruid);
+    cJSON_ArrayForEach(r, radios)
+    {
+        if (control.nradio_ids < 4 && em_parse_mac(r->valuestring, control.radio_ids[control.nradio_ids]))
+            control.nradio_ids++;
+    }
+    control.tx_power_dbm = control.radio->tx_power;
+    control.max_eirp_dbm = 30;
+    control.previous_mid = (uint16_t)(num(agent, "first_mid") - 1);
+    control.utc = fixed_utc;
+    control.executor = record_mandate;
+    control.executor_ctx = handed;
+    em_pod_stats *probes = case_probes(c);
+    control.stats = probes;
+    control.wall = fixed_wall;
+    cJSON *kept = NULL;
+    control.keep_channel_policy = keep_record;
+    control.keep_ctx = &kept;
+    const cJSON *step;
+    cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
+    {
+        checks++;
+        cJSON *frames = cJSON_CreateArray();
+        cJSON_AddItemToArray(frames, cJSON_CreateString(str(step, "request")));
+        em_message *m = assemble(frames);
+        cJSON_Delete(frames);
+        em_frames out = {0};
+        em_reason error = EM_OK;
+        const char *result = m ? em_control_handle(&control, m, &out, &error) : NULL;
+        const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
+        const char *want = str(expected, "result");
+        if (!result && m)
+            result = em_reason_name(error); /* refused: its reason, as the reference's */
+        if (!result || !want || strcmp(result, want))
+            fail("control", name, result ? result : "no message");
+        else if (!frames_equal(&out, cJSON_GetObjectItemCaseSensitive(expected, "frames")))
+            fail("control", name, "frames differ");
+        em_frames_free(&out);
+        em_message_free(m);
+    }
+    checks++;
+    if (!cJSON_Compare(handed, cJSON_GetObjectItemCaseSensitive(c, "handed_to_pod"), 1))
+        fail("control", name, "mandates handed to the pod differ");
+    checks++;
+    const cJSON *want = cJSON_GetObjectItemCaseSensitive(c, "channel_policy");
+    if (cJSON_IsNull(want) ? kept != NULL : !kept || !cJSON_Compare(kept, want, 1))
+        fail("control", name, "the kept channel policy differs");
+    cJSON_Delete(kept);
+    cJSON_Delete(handed);
+    free(probes);
+}
+
 static void control_vectors(const char *dir)
 {
     cJSON *doc = load(dir, "control.json");
@@ -769,62 +833,10 @@ static void control_vectors(const char *dir)
     }
     uint8_t ruid[6];
     em_parse_mac(str(agent, "radio"), ruid);
-    const cJSON *c;
-    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
-    {
-        const char *name = str(c, "name");
-        cJSON *handed = cJSON_CreateArray();
-        em_control control = {0};
-        em_parse_mac(str(agent, "al_mac"), control.binding.local_al);
-        em_parse_mac(str(agent, "controller_al"), control.binding.controller_al);
-        memcpy(control.binding.sources[0], control.binding.controller_al, 6);
-        control.binding.nsources = 1;
-        control.radio = em_view_radio(view, ruid);
-        control.tx_power_dbm = control.radio->tx_power;
-        control.max_eirp_dbm = 30;
-        control.previous_mid = (uint16_t)(num(agent, "first_mid") - 1);
-        control.utc = fixed_utc;
-        control.executor = record_mandate;
-        control.executor_ctx = handed;
-        em_pod_stats *probes = case_probes(c);
-        control.stats = probes;
-        control.wall = fixed_wall;
-        cJSON *kept = NULL;
-        control.keep_channel_policy = keep_record;
-        control.keep_ctx = &kept;
-        const cJSON *step;
-        cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
-        {
-            checks++;
-            cJSON *frames = cJSON_CreateArray();
-            cJSON_AddItemToArray(frames, cJSON_CreateString(str(step, "request")));
-            em_message *m = assemble(frames);
-            cJSON_Delete(frames);
-            em_frames out = {0};
-            em_reason error = EM_OK;
-            const char *result = m ? em_control_handle(&control, m, &out, &error) : NULL;
-            const cJSON *expected = cJSON_GetObjectItemCaseSensitive(step, "expected");
-            const char *want = str(expected, "result");
-            if (!result && m)
-                result = em_reason_name(error); /* refused: its reason, as the reference's */
-            if (!result || !want || strcmp(result, want))
-                fail("control", name, result ? result : "no message");
-            else if (!frames_equal(&out, cJSON_GetObjectItemCaseSensitive(expected, "frames")))
-                fail("control", name, "frames differ");
-            em_frames_free(&out);
-            em_message_free(m);
-        }
-        checks++;
-        if (!cJSON_Compare(handed, cJSON_GetObjectItemCaseSensitive(c, "handed_to_pod"), 1))
-            fail("control", name, "mandates handed to the pod differ");
-        checks++;
-        const cJSON *want = cJSON_GetObjectItemCaseSensitive(c, "channel_policy");
-        if (cJSON_IsNull(want) ? kept != NULL : !kept || !cJSON_Compare(kept, want, 1))
-            fail("control", name, "the kept channel policy differs");
-        cJSON_Delete(kept);
-        cJSON_Delete(handed);
-        free(probes);
-    }
+    const cJSON *c, *multi = cJSON_GetObjectItemCaseSensitive(doc, "multi_radio");
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases")) control_case(c, agent, view, ruid, NULL);
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(multi, "cases"))
+        control_case(c, agent, view, ruid, cJSON_GetObjectItemCaseSensitive(multi, "radios"));
     free(view);
     cJSON_Delete(doc);
 }

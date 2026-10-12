@@ -5,7 +5,7 @@ from dataclasses import replace
 
 import pytest
 
-from emosa.errors import EmosaError
+from emosa.errors import EmosaError, Reason
 from emosa.wire.cmdu import Reassembler, Tlv, fragment_message
 from emosa.wire.coordinator import ReportSource
 from emosa.wire.reporting_policy import (
@@ -234,7 +234,7 @@ def test_the_rdk_controllers_policy_is_acknowledged_with_its_companions_recorded
         Tlv(0xC4, bytes(5)),
         Tlv(0x0B, bytes.fromhex("d89c8e00")),
     )
-    decoded = decode_policy(tlvs, ruid)
+    decoded = decode_policy(tlvs, (ruid,))
     assert decoded["metrics"]["interval_seconds"] == 5
     assert decoded["steering"]["radios"][0]["policy"] == 2
     assert [c["kind"] for c in decoded["not_applied"]] == [0xB5, 0xB6, 0xA4, 0xC4, 0x0B]
@@ -243,14 +243,37 @@ def test_the_rdk_controllers_policy_is_acknowledged_with_its_companions_recorded
 
 
 def test_reserved_bits_ignored_and_complete_counted_lists_retained(rig):
-    decoded = decode_policy((rig.metrics(flags=0xFF),), rig.ruid)
-    assert decoded == decode_policy((rig.metrics(),), rig.ruid)
+    decoded = decode_policy((rig.metrics(flags=0xFF),), (rig.ruid,))
+    assert decoded == decode_policy((rig.metrics(),), (rig.ruid,))
     sta = bytes.fromhex("020000000077")
     qos = Tlv(0xDB, b"\1" + sta + b"\0" + bytes([255]) * 20)
     assert (
-        decode_policy((qos, qos), rig.ruid)["qos"]
+        decode_policy((qos, qos), (rig.ruid,))["qos"]
         == [{"mscs_disallowed": [sta.hex()], "scs_disallowed": []}] * 2
     )
+
+
+def test_a_policy_names_each_of_the_agents_radios_once(rig):
+    """Spec 9: an agent with a second radio takes a policy whose radio lists name each of its
+    radios once (RDK lists every radio it was reported); another agent's radio, a radio named
+    twice, or more radios than the agent has are refused."""
+    ruid, second, other = rig.ruid, bytes.fromhex("020000001b00"), bytes.fromhex("020000009900")
+    ruids = (ruid, second)
+    metrics = Tlv(
+        0x8A, b"\x05\x02" + ruid + bytes.fromhex("78053cc0") + second + bytes.fromhex("78053cc0")
+    )
+    steering = Tlv(0x89, b"\x00\x00\x02" + ruid + b"\x02\x3c\x78" + second + b"\x00\x3c\x78")
+    decoded = decode_policy((metrics, steering), ruids)
+    assert [r["ruid"] for r in decoded["metrics"]["radios"]] == [ruid.hex(), second.hex()]
+    assert [r["policy"] for r in decoded["steering"]["radios"]] == [2, 0]
+    for refused, code in (
+        (Tlv(0x8A, b"\x05\x02" + ruid + bytes(4) + other + bytes(4)), Reason.INVALID_INPUT),
+        (Tlv(0x8A, b"\x05\x02" + second + bytes(4) + second + bytes(4)), Reason.INVALID_INPUT),
+        (Tlv(0x89, b"\x00\x00\x03" + (ruid + bytes(3)) * 3), Reason.UNSUPPORTED_OPERATION),
+    ):
+        with pytest.raises(EmosaError) as error:
+            decode_policy((refused,), ruids)
+        assert error.value.code == code
 
 
 def test_persistence_delay_cannot_send_late_ack(rig, monkeypatch):

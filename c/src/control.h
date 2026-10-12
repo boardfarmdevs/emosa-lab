@@ -29,6 +29,10 @@ typedef const char *(*em_steering_executor)(void *ctx, const em_steering_request
 typedef struct {
     em_binding binding;
     const em_radio_view *radio; /* the represented radio (its BSSes and stations) */
+    /* every radio the agent reports, the fronthaul first (spec 9): a policy's radio lists may
+     * name each once; nradio_ids 0: the represented radio's only */
+    size_t nradio_ids;
+    uint8_t radio_ids[4][6];
     int tx_power_dbm;           /* the operated power */
     int8_t max_eirp_dbm;        /* advertised */
     uint16_t previous_mid;      /* the agent's own messages take the next MIDs */

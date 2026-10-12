@@ -1245,6 +1245,9 @@ static void admitted(agent *a)
     a->control.binding = b;
     memcpy(a->control.binding.sources[0], a->controller, 6);
     a->control.binding.nsources = 1;
+    /* every radio the agent reports for this source (spec 9): a policy may name each */
+    for (size_t k = 0; k < a->nreported && k < 4; k++)
+        memcpy(a->control.radio_ids[a->control.nradio_ids++], a->reported[k].ruid, 6);
     if (a->channel_store) {
         if (a->at.starts == 1)
             reset_channel_policy(a);
