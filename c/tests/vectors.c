@@ -767,10 +767,17 @@ static void control_case(const cJSON *c, const cJSON *agent, const em_device_vie
     memcpy(control.binding.sources[0], control.binding.controller_al, 6);
     control.binding.nsources = 1;
     control.radio = em_view_radio(view, ruid);
-    cJSON_ArrayForEach(r, radios)
+    cJSON_ArrayForEach(r, radios) /* each reported radio, its class, channel and power (spec 9) */
     {
-        if (control.nradio_ids < 4 && em_parse_mac(r->valuestring, control.radio_ids[control.nradio_ids]))
-            control.nradio_ids++;
+        em_control_radio *x = &control.radios[control.nradios];
+        if (control.nradios < 4 && em_parse_mac(str(r, "ruid"), x->ruid)) {
+            x->op_class = (uint8_t)num(r, "class");
+            x->channel = (int)num(r, "channel");
+            x->tx_power_dbm = (int)num(r, "tx_power");
+            x->max_eirp_dbm = (int8_t)num(r, "max_eirp");
+            x->measured = true;
+            control.nradios++;
+        }
     }
     control.tx_power_dbm = control.radio->tx_power;
     control.max_eirp_dbm = 30;

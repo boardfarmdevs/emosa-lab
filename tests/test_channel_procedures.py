@@ -182,8 +182,9 @@ def test_complete_scope_validation_before_any_acceptance_or_persistence(rig):
         rig.request(tlvs=(supported, Tlv(0x8D, rig.radio.ruid + b"\x14")))
         == "channel_selection_accepted"
     )
-    assert rig.store.read()["power_limit_dbm"] == 20
-    assert rig.store.read()["preferences"][0]["preference"] == 14
+    (kept,) = rig.store.read()["radios"]  # the accepted radio's (spec 9: each its own)
+    assert kept["ruid"] == rig.radio.ruid.hex() and kept["power_limit_dbm"] == 20
+    assert kept["preferences"][0]["preference"] == 14
 
 
 @pytest.mark.parametrize(
@@ -238,7 +239,7 @@ def test_the_rdk_controllers_request_is_answered(rig):
     tlvs = (Tlv(0x8B, ruid + preferences), Tlv(0x8D, ruid + b"\x00"))
     assert rig.request(tlvs=tlvs) == "channel_selection_declined"  # 0 dBm is below 17
     assert Reassembler().feed(rig.sent[0]).tlvs == (Tlv(0x8E, ruid + b"\x02"),)
-    policy = selected_policy((tlvs[0],), rig.radio)
+    (policy,) = selected_policy((tlvs[0],), (rig.radio,))
     assert policy["decline"] is None
     assert [g["class"] for g in policy["ignored"]] == [83, 83, 84]
     assert [(g["channels"], g["preference"]) for g in policy["preferences"]] == [
@@ -336,7 +337,7 @@ def test_observed_power_change_notifies_and_reboot_explicitly_resets_policy(rig)
         rig.source, rig.sent.append, rig.store, MidSequence(200), clock=lambda: rig.now
     )
     assert rig.store.read()["status"] == "reboot_default"
-    assert rig.store.read()["power_limit_dbm"] is None
+    assert rig.store.read()["radios"] == []  # no radio's preferences kept
     restarted.close()
 
 
@@ -359,6 +360,8 @@ def test_transport_reconnect_retains_accepted_policy(rig):
 
 def test_signed_power_codec_and_all_class_preference(rig):
     assert replace(rig.radio, tx_power_dbm=-2).tlv().value[-1] == 254
-    policy = selected_policy((Tlv(0x8B, rig.radio.ruid + bytes.fromhex("015100d0")),), rig.radio)
+    (policy,) = selected_policy(
+        (Tlv(0x8B, rig.radio.ruid + bytes.fromhex("015100d0")),), (rig.radio,)
+    )
     assert policy["preferences"][0]["channels"] == []
     assert policy["preferences"][0]["preference"] == 13

@@ -1195,8 +1195,7 @@ static void reset_channel_policy(agent *a)
     cJSON_AddStringToObject(record, "status", "reboot_default");
     cJSON_AddStringToObject(record, "controller", controller);
     cJSON_AddStringToObject(record, "local_al", local);
-    cJSON_AddArrayToObject(record, "preferences");
-    cJSON_AddNullToObject(record, "power_limit_dbm");
+    cJSON_AddArrayToObject(record, "radios"); /* no radio's preferences kept (spec 9: each its own) */
     if (!em_channel_store_save(a->channel_store, record))
         WARN("channel policy record not reset");
     cJSON_Delete(record);
@@ -1237,6 +1236,9 @@ static void admitted(agent *a)
         send_frames(a, &f);
     a->at.state = S_AWAITING_M2;
     em_reporting_start(&a->reporting, a->policy_store, a->controller, a->al, a->represented.ruid, now());
+    /* every radio the agent reports for this source (spec 9): its policy may name each */
+    for (size_t k = 0; k < a->nreported && k < 4; k++)
+        memcpy(a->reporting.radio_ids[a->reporting.nradio_ids++], a->reported[k].ruid, 6);
     a->reporting_live = a->policy_store != NULL;
     if (a->uplink_on) /* Backhaul Steering: the pod has a Multi-AP backhaul station to move */
         em_bh_start(&a->bh, &a->bh_shared, a->controller, a->al, bh_executor, bh_outcome, a);
@@ -1245,9 +1247,6 @@ static void admitted(agent *a)
     a->control.binding = b;
     memcpy(a->control.binding.sources[0], a->controller, 6);
     a->control.binding.nsources = 1;
-    /* every radio the agent reports for this source (spec 9): a policy may name each */
-    for (size_t k = 0; k < a->nreported && k < 4; k++)
-        memcpy(a->control.radio_ids[a->control.nradio_ids++], a->reported[k].ruid, 6);
     if (a->channel_store) {
         if (a->at.starts == 1)
             reset_channel_policy(a);
@@ -1420,6 +1419,35 @@ static bool backhaul_link_metrics(agent *a, const em_message *m)
     return true;
 }
 
+/* the radios the control procedures answer for (spec 9), the fronthaul first: each on its one
+ * operable channel at its operated power; a further radio is measured once the pod reports its
+ * power, on a channel of its class */
+static void control_radios(agent *a)
+{
+    em_control *c = &a->control;
+    c->nradios = 0;
+    em_control_radio *f = &c->radios[c->nradios++];
+    *f = (em_control_radio){.op_class = 81, .channel = a->represented.channel, .tx_power_dbm = a->tx_power,
+                            .max_eirp_dbm = a->max_eirp, .measured = true};
+    memcpy(f->ruid, a->represented.ruid, 6);
+    for (size_t k = 0; k < a->nradio_scopes && c->nradios < 4; k++) {
+        const radio_scope *rs = &a->radio_scopes[k];
+        if (!rs->bound)
+            continue;
+        int8_t eirp = 20;
+        for (size_t i = 0; i < a->nreported; i++)
+            if (!memcmp(a->reported[i].ruid, rs->represented.ruid, 6))
+                eirp = a->reported[i].max_eirp;
+        bool unii1 = rs->channel == 36 || rs->channel == 40 || rs->channel == 44 || rs->channel == 48;
+        em_control_radio *x = &c->radios[c->nradios++];
+        *x = (em_control_radio){.op_class = strcmp(rs->band, "5G") ? 81 : 115, .channel = rs->channel,
+                                .tx_power_dbm = rs->represented.has_tx_power ? rs->represented.tx_power : 0,
+                                .max_eirp_dbm = eirp,
+                                .measured = rs->represented.has_tx_power && (strcmp(rs->band, "5G") || unii1)};
+        memcpy(x->ruid, rs->represented.ruid, 6);
+    }
+}
+
 static void handle_message(agent *a, const em_message *m)
 {
     char label[48];
@@ -1546,6 +1574,7 @@ static void handle_message(agent *a, const em_message *m)
     a->control.radio = &a->represented;
     a->control.tx_power_dbm = a->tx_power;
     a->control.max_eirp_dbm = a->max_eirp;
+    control_radios(a);
     a->control.previous_mid = a->mid;
     a->control.executor = start_steering;
     a->control.executor_ctx = a;

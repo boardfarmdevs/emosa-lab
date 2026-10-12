@@ -32,6 +32,10 @@ from emosa.wire.autoconfiguration import SECURITY_ENVELOPES
 from emosa.wire.cmdu import Reassembler, Tlv, fragment_message, invalid
 from emosa.wire.reports import PreparedReport
 
+# The operating classes a reported radio may be on and their channels (emosa.opensync.easymesh_view
+# OPERATING_CLASSES): 2.4 GHz, and the 5 GHz UNII-1 channels of a pod's second radio (spec 9).
+CLASS_CHANNELS = {81: tuple(range(1, 14)), 115: (36, 40, 44, 48)}
+
 
 @dataclass(frozen=True)
 class OperatingRadio:
@@ -46,15 +50,17 @@ class OperatingRadio:
             or len(self.ruid) != 6
             or not any(self.ruid)
             or self.ruid[0] & 1
-            or self.operating_class != 81
-            or self.channel != 6
+            or self.channel not in CLASS_CHANNELS.get(self.operating_class, ())
             or type(self.tx_power_dbm) is not int
             or not -128 <= self.tx_power_dbm <= 127
         ):
-            invalid("operating parameters outside the selected sole-radio contract")
+            invalid("operating parameters outside the selected sole-channel contract")
 
     def tlv(self):
-        return Tlv(0x8F, self.ruid + bytes((1, 81, 6, self.tx_power_dbm & 255)))
+        return Tlv(
+            0x8F,
+            self.ruid + bytes((1, self.operating_class, self.channel, self.tx_power_dbm & 255)),
+        )
 
 
 class ChannelPolicyStore:
@@ -92,18 +98,37 @@ class ChannelPolicyStore:
         self.db.close()
 
 
-def selected_policy(tlvs, radio):
+def selected_policy(tlvs, radios):
     """Validate the complete selected request before persisting or accepting it.
 
-    A contradictory request excluding the only advertised operable channel is
-    outside this controller/profile contract. It must not replace a usable policy
-    and then silently keep operating on a newly forbidden channel.
+    ``radios``: the agent's operating radios (spec 9: each radio it reports, the fronthaul
+    first). Each named radio's preferences and power limit are judged on their own; the result
+    lists them in the order first named, or every radio for a request naming none.
+
+    A contradictory request excluding a radio's only advertised operable channel is outside
+    this controller/profile contract (a second radio's channel follows the pod's station, spec
+    9). It must not replace a usable policy and then silently keep operating on a newly
+    forbidden channel.
     """
-    preferences, power, ignored, decline = None, None, [], None
+    by_ruid = {r.ruid: r for r in radios}
+    named = {}  # RUID -> its policy, in the order first named
+
+    def policy(ruid):
+        return named.setdefault(
+            ruid, {"preferences": None, "power_limit_dbm": None, "ignored": [], "decline": None}
+        )
+
     for tlv in tlvs:
         if tlv.kind == 0x8B:
-            if preferences is not None or len(tlv.value) < 7 or tlv.value[:6] != radio.ruid:
+            ruid = tlv.value[:6]
+            if (
+                len(tlv.value) < 7
+                or ruid not in by_ruid
+                or (ruid in named and named[ruid]["preferences"] is not None)
+            ):
                 invalid("duplicate, truncated or foreign channel preferences")
+            radio, entry = by_ruid[ruid], policy(ruid)
+            own = CLASS_CHANNELS[radio.operating_class]
             count, body = tlv.value[6], tlv.value[7:]
             if count > 8:
                 invalid("channel preference group budget exceeded")
@@ -119,20 +144,18 @@ def selected_policy(tlvs, radio):
                 score, reason = value >> 4, value & 15
                 if score == 15 or reason > 13 or reason in (6, 7, 8, 9, 10):
                     invalid("reserved preference or agent-only reason in controller request")
-                if opclass != 81:
+                if opclass != radio.operating_class:
                     # Not an operating class the radio advertises (e.g. RDK's 40 MHz
                     # classes 83/84): nothing in it applies to this radio.
-                    ignored.append({"class": opclass, "channels": list(channels)})
+                    entry["ignored"].append({"class": opclass, "channels": list(channels)})
                     continue
-                if len(set(channels)) != len(channels) or any(
-                    c not in range(1, 14) for c in channels
-                ):
+                if len(set(channels)) != len(channels) or any(c not in own for c in channels):
                     invalid("channels outside the operating class")
-                applies = set(channels or range(1, 14))
+                applies = set(channels or own)
                 if applies & specified:
                     invalid("overlapping controller channel preferences")
-                if 6 in applies and score == 0:
-                    decline = "controller forbids the sole advertised operable channel"
+                if radio.channel in applies and score == 0:
+                    entry["decline"] = "controller forbids the sole advertised operable channel"
                 specified |= applies
                 preferences.append(
                     {
@@ -144,22 +167,32 @@ def selected_policy(tlvs, radio):
                 )
             if body:
                 invalid("trailing channel preference octets")
+            entry["preferences"] = preferences
         elif tlv.kind == 0x8D:
-            if power is not None or len(tlv.value) != 7 or tlv.value[:6] != radio.ruid:
+            ruid = tlv.value[:6]
+            if (
+                len(tlv.value) != 7
+                or ruid not in by_ruid
+                or (ruid in named and named[ruid]["power_limit_dbm"] is not None)
+            ):
                 invalid("duplicate, truncated or foreign power limit")
-            power = int.from_bytes(tlv.value[6:], "big", signed=True)
-            if power < radio.tx_power_dbm:
-                decline = decline or "power actuation requires a qualified mapping"
+            entry = policy(ruid)
+            entry["power_limit_dbm"] = int.from_bytes(tlv.value[6:], "big", signed=True)
+            if entry["power_limit_dbm"] < by_ruid[ruid].tx_power_dbm:
+                entry["decline"] = (
+                    entry["decline"] or "power actuation requires a qualified mapping"
+                )
         else:
             raise EmosaError(
                 Reason.UNSUPPORTED_OPERATION, "unimplemented channel configuration companion"
             )
-    return {
-        "preferences": preferences or [],
-        "power_limit_dbm": power,
-        "ignored": ignored,
-        "decline": decline,
-    }
+    if not named:  # a request naming no radio: accepted for every radio, as for one radio
+        for radio in radios:
+            policy(radio.ruid)
+    return [
+        {"ruid": ruid, **entry, "preferences": entry["preferences"] or []}
+        for ruid, entry in named.items()
+    ]
 
 
 def decode_scan_request(tlvs):
@@ -187,7 +220,7 @@ def decode_scan_request(tlvs):
 
 @dataclass
 class PendingOperating:
-    radio: OperatingRadio
+    radios: tuple  # an OperatingRadio per radio the agent reports (spec 9)
     context: str
     deadline: float
     retry_at: float
@@ -227,8 +260,7 @@ class ChannelCoordinator:
                     "status": "reboot_default",
                     "controller": self.binding.controller_al.hex(),
                     "local_al": self.binding.local_al.hex(),
-                    "preferences": [],
-                    "power_limit_dbm": None,
+                    "radios": [],  # no radio's preferences kept (spec 9: each radio its own)
                 }
             )
 
@@ -242,25 +274,39 @@ class ChannelCoordinator:
             raise EmosaError(Reason.NOT_READY, "channel report source lost")
         return current
 
-    def radio(self, snapshot):
-        if len(snapshot.operating_radios) != 1:
-            raise EmosaError(Reason.NOT_READY, "measured operating parameters unavailable")
-        radio = snapshot.operating_radios[0]
+    @staticmethod
+    def unmeasured(snapshot):
+        """A reported radio has no fresh operating parameters yet (spec 9: every radio's)."""
+        measured = {r.ruid for r in snapshot.operating_radios}
+        return any(c.basic.ruid not in measured for c in snapshot.capabilities.radios)
+
+    def radios(self, snapshot):
+        """Each radio the agent reports (spec 9: a second radio too), the fronthaul first, with
+        its measured operating parameters; each operable on its one current channel only (the
+        fronthaul's channel, a second radio's its station's)."""
+        measured = {r.ruid: r for r in snapshot.operating_radios}
         caps = snapshot.capabilities.radios
-        if len(caps) != 1 or caps[0].basic.ruid != radio.ruid:
+        if not snapshot.operating_radios or self.unmeasured(snapshot):
+            raise EmosaError(Reason.NOT_READY, "measured operating parameters unavailable")
+        if len(measured) != len(caps):
             raise EmosaError(Reason.NOT_READY, "channel capability identity mismatch")
-        classes = caps[0].basic.operating_classes
-        if (
-            len(classes) != 1
-            or classes[0].operating_class != 81
-            or set(classes[0].non_operable_channels) != set(range(1, 14)) - {6}
-        ):
-            raise EmosaError(
-                Reason.UNSUPPORTED_OPERATION, "a sole-channel capability contract is required"
-            )
-        if radio.tx_power_dbm > classes[0].max_eirp_dbm:
-            raise EmosaError(Reason.NOT_READY, "observed power exceeds advertised capability")
-        return radio
+        radios = []
+        for cap in caps:
+            radio = measured[cap.basic.ruid]
+            classes = cap.basic.operating_classes
+            if (
+                len(classes) != 1
+                or classes[0].operating_class != radio.operating_class
+                or set(classes[0].non_operable_channels)
+                != set(CLASS_CHANNELS[radio.operating_class]) - {radio.channel}
+            ):
+                raise EmosaError(
+                    Reason.UNSUPPORTED_OPERATION, "a sole-channel capability contract is required"
+                )
+            if radio.tx_power_dbm > classes[0].max_eirp_dbm:
+                raise EmosaError(Reason.NOT_READY, "observed power exceeds advertised capability")
+            radios.append(radio)
+        return tuple(radios)
 
     def stamp(self):
         return self.snapshot().stamp
@@ -289,10 +335,10 @@ class ChannelCoordinator:
             return self.record("channel_request_budget_exhausted")
         if self.clock() >= received_at + 1:
             raise EmosaError(Reason.NOT_READY, "channel response deadline expired")
-        if not snapshot.operating_radios:
+        if self.unmeasured(snapshot):
             # A controller can send these immediately after M2, before the
-            # first fresh manager sample. Wait only within the original wire
-            # deadline and control context; duplicates cannot extend either.
+            # first fresh manager sample (of any of the agent's radios). Wait only within the
+            # original wire deadline and control context; duplicates cannot extend either.
             if len(self.waiting) >= 4:
                 return self.record("channel_observation_wait_budget_exhausted")
             self.waiting[key] = (message, received_at, snapshot.context_token)
@@ -300,7 +346,7 @@ class ChannelCoordinator:
         return self.answer(message, received_at, snapshot)
 
     def answer(self, message, received_at, snapshot):
-        radio = self.radio(snapshot)
+        radios = self.radios(snapshot)
         key = (message.message_type, message.mid)
         if message.message_type == 0x8004:
             if message.tlvs:
@@ -310,40 +356,50 @@ class ChannelCoordinator:
             self.send(0x8005, message.mid, (), snapshot, received_at + 1)
             self.queries[key] = self.clock() + 5
             return self.record("channel_preference_report_sent")
-        policy = selected_policy(message.tlvs, radio)
+        policies = selected_policy(message.tlvs, radios)
         snapshot.stamp.check(self.stamp(), self.clock())
         if self.clock() >= received_at + 1:
             raise EmosaError(Reason.NOT_READY, "channel response deadline expired")
-        if policy["decline"]:
+        accepted = [p for p in policies if not p["decline"]]
+        declined = [p for p in policies if p["decline"]]
+        if accepted:
+            # the accepted radios' preferences (spec 9: each radio its own); a declined radio
+            # does not replace the stored policy
+            try:
+                self.store.save(
+                    {
+                        "status": "accepted_no_adjustment",
+                        "mid": message.mid,
+                        "controller": self.binding.controller_al.hex(),
+                        "local_al": self.binding.local_al.hex(),
+                        "radios": [
+                            {
+                                "ruid": p["ruid"].hex(),
+                                "preferences": p["preferences"],
+                                "power_limit_dbm": p["power_limit_dbm"],
+                                "ignored": p["ignored"],
+                            }
+                            for p in accepted
+                        ],
+                        "context": snapshot.context_token,
+                    }
+                )
+            except sqlite3.Error as exc:
+                raise EmosaError(Reason.NOT_READY, "channel preference persistence failed") from exc
+        if declined:
             # 0x02: the request violates the most recently reported preferences.
-            self.last_decline = {"mid": message.mid, "reason": policy["decline"]}
-            self.send(
-                0x8007, message.mid, (Tlv(0x8E, radio.ruid + b"\x02"),), snapshot, received_at + 1
-            )
-            self.queries[key] = self.clock() + 5
-            self.record("channel_selection_declined")
-            self.notify(snapshot, radio)
-            return "channel_selection_declined"
-        del policy["decline"]
-        try:
-            self.store.save(
-                {
-                    **policy,
-                    "status": "accepted_no_adjustment",
-                    "mid": message.mid,
-                    "controller": self.binding.controller_al.hex(),
-                    "local_al": self.binding.local_al.hex(),
-                    "ruid": radio.ruid.hex(),
-                    "context": snapshot.context_token,
-                }
-            )
-        except sqlite3.Error as exc:
-            raise EmosaError(Reason.NOT_READY, "channel preference persistence failed") from exc
-        self.send(0x8007, message.mid, (Tlv(0x8E, radio.ruid + b"\0"),), snapshot, received_at + 1)
+            self.last_decline = {"mid": message.mid, "reason": declined[0]["decline"]}
+        # one Channel Selection Response per radio the request names, as named
+        responses = tuple(
+            Tlv(0x8E, p["ruid"] + (b"\x02" if p["decline"] else b"\0")) for p in policies
+        )
+        self.send(0x8007, message.mid, responses, snapshot, received_at + 1)
         self.queries[key] = self.clock() + 5
-        self.record("channel_selection_accepted")
-        self.notify(snapshot, radio)
-        return "channel_selection_accepted"
+        result = self.record(
+            "channel_selection_declined" if declined else "channel_selection_accepted"
+        )
+        self.notify(snapshot, radios)
+        return result
 
     def scan(self, message, received_at):
         """Channel Scan Request: Ack, then a report of "scan not supported" results."""
@@ -354,15 +410,17 @@ class ChannelCoordinator:
             return self.record("duplicate_channel_request")
         if self.clock() >= received_at + 1:
             raise EmosaError(Reason.NOT_READY, "channel scan Ack deadline expired")
-        radio = self.radio(snapshot)
+        by_ruid = {r.ruid: r for r in self.radios(snapshot)}
         requested = decode_scan_request(message.tlvs)
         stamp = self.utc().encode()
         results = []
         for ruid, classes in requested:
-            if ruid != radio.ruid:
+            radio = by_ruid.get(ruid)
+            if radio is None:
                 continue  # not a radio of this agent
-            for opclass, channels in classes or [(81, [radio.channel])]:
-                for channel in channels or ([radio.channel] if opclass == 81 else []):
+            own = radio.operating_class
+            for opclass, channels in classes or [(own, [radio.channel])]:
+                for channel in channels or ([radio.channel] if opclass == own else []):
                     # status 0x01: scan not supported on this class and channel
                     results.append(Tlv(0xA7, ruid + bytes((opclass, channel, 0x01))))
         self.send(0x8000, message.mid, (), snapshot, received_at + 1)
@@ -371,16 +429,17 @@ class ChannelCoordinator:
         self.send(0x801C, self.mids.next(), report, snapshot, self.clock() + 1)
         return self.record("channel_scan_not_supported_reported")
 
-    def notify(self, snapshot, radio):
+    def notify(self, snapshot, radios):
+        """The Operating Channel Report: one Operating Channel Report TLV per radio (spec 9)."""
         now = self.clock()
-        self.pending = PendingOperating(radio, snapshot.context_token, now + 1, now)
+        self.pending = PendingOperating(radios, snapshot.context_token, now + 1, now)
         self.transmit(snapshot)
-        self.last_operating = radio
+        self.last_operating = radios
 
     def transmit(self, snapshot):
         pending = self.pending
         mid = self.mids.next()
-        self.send(0x8008, mid, (pending.radio.tlv(),), snapshot, pending.deadline)
+        self.send(0x8008, mid, tuple(r.tlv() for r in pending.radios), snapshot, pending.deadline)
         pending.mids.add(mid)
         pending.transmissions += 1
         pending.retry_at = self.clock() + 0.3
@@ -399,7 +458,7 @@ class ChannelCoordinator:
                 snapshot = self.snapshot()
                 if snapshot.context_token != context:
                     raise EmosaError(Reason.NOT_READY, "queued channel context changed")
-                if not snapshot.operating_radios:
+                if self.unmeasured(snapshot):
                     continue
                 del self.waiting[key]
                 self.answer(message, received_at, snapshot)
@@ -411,17 +470,17 @@ class ChannelCoordinator:
             if self.last_operating is not None and not self.closed:
                 try:
                     snapshot = self.snapshot()
-                    radio = self.radio(snapshot)
+                    radios = self.radios(snapshot)
                 except EmosaError:
                     return
-                if radio != self.last_operating:
-                    self.notify(snapshot, radio)
+                if radios != self.last_operating:
+                    self.notify(snapshot, radios)
                     self.record("autonomous_operating_change_reported")
             return
         try:
             snapshot = self.snapshot()
-            radio = self.radio(snapshot)
-            if snapshot.context_token != pending.context or radio != pending.radio:
+            radios = self.radios(snapshot)
+            if snapshot.context_token != pending.context or radios != pending.radios:
                 raise EmosaError(Reason.NOT_READY, "operating report context changed")
         except EmosaError:
             self.pending = None
@@ -444,7 +503,7 @@ class ChannelCoordinator:
         if (
             self.clock() >= self.pending.deadline
             or snapshot.context_token != self.pending.context
-            or self.radio(snapshot) != self.pending.radio
+            or self.radios(snapshot) != self.pending.radios
         ):
             self.pending = None
             return self.record("stale_operating_ack_rejected")

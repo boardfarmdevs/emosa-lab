@@ -477,6 +477,12 @@ class PodReportSource:
                 and radio.tx_power <= max_eirp
                 else ()
             )
+            # spec 9: each further radio on its own observed channel (it follows the pod's
+            # station), within the power it advertises
+            for r, ch, _ in bound[1:]:
+                opclass, channels = OPERATING_CLASSES[r.band]
+                if r.tx_power is not None and r.tx_power <= _eirp(r) and ch in channels:
+                    operating += (OperatingRadio(r.ruid, opclass, ch, r.tx_power),)
             self.source.publish(
                 (raw["generation"], self.revision),
                 self.capabilities,

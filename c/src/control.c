@@ -74,92 +74,166 @@ static cJSON *channel_list(const uint8_t *channels, uint8_t n)
     return list;
 }
 
-/* The selected policy: EM_OK with *decline set when the pod cannot do it. Fills policy
- * with its preferences (operating class 81), power limit and the classes ignored, as
- * emosa.wire.channel.selected_policy. */
-static em_reason channel_policy(const em_control *c, const em_message *m, bool *decline, cJSON *policy)
+/* the agent's radios for the procedures: the configured list, or the represented radio alone */
+static size_t control_radios(const em_control *c, em_control_radio out[4])
 {
-    bool preferences = false, power = false;
-    *decline = false;
-    cJSON *prefs = cJSON_AddArrayToObject(policy, "preferences");
-    cJSON_AddNullToObject(policy, "power_limit_dbm");
-    cJSON *ignored = cJSON_AddArrayToObject(policy, "ignored");
+    if (c->nradios) {
+        memcpy(out, c->radios, c->nradios * sizeof(*out));
+        return c->nradios;
+    }
+    memset(out, 0, sizeof(*out));
+    memcpy(out[0].ruid, c->radio->ruid, 6);
+    out[0].op_class = 81;
+    out[0].channel = c->radio->channel;
+    out[0].tx_power_dbm = c->tx_power_dbm;
+    out[0].max_eirp_dbm = c->max_eirp_dbm;
+    out[0].measured = true;
+    return 1;
+}
+
+/* CLASS_CHANNELS: a reported radio's operating class and its channels (2.4 GHz; the 5 GHz UNII-1
+ * channels of a pod's second radio, spec 9) */
+static bool class_channels(uint8_t op_class, const uint8_t **list, size_t *n)
+{
+    static const uint8_t ch24[13] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, ch50[4] = {36, 40, 44, 48};
+    *list = op_class == 81 ? ch24 : op_class == 115 ? ch50 : NULL;
+    *n = op_class == 81 ? 13 : op_class == 115 ? 4 : 0;
+    return *list != NULL;
+}
+
+/* one radio a channel request names: its policy record entry and whether it is declined */
+typedef struct {
+    size_t radio; /* its index among the agent's radios */
+    bool preferences, power, decline;
+    cJSON *entry; /* {"ruid", "preferences", "power_limit_dbm", "ignored"} */
+} named_radio;
+
+static named_radio *name_radio(const em_control_radio *radios, size_t k, named_radio *named, size_t *nnamed)
+{
+    for (size_t i = 0; i < *nnamed; i++)
+        if (named[i].radio == k)
+            return &named[i];
+    named_radio *x = &named[(*nnamed)++];
+    memset(x, 0, sizeof(*x));
+    x->radio = k;
+    x->entry = cJSON_CreateObject();
+    add_hex(x->entry, "ruid", radios[k].ruid);
+    cJSON_AddArrayToObject(x->entry, "preferences");
+    cJSON_AddNullToObject(x->entry, "power_limit_dbm");
+    cJSON_AddArrayToObject(x->entry, "ignored");
+    return x;
+}
+
+/* The selected policy (emosa.wire.channel.selected_policy): each radio the request names, in the
+ * order first named (every radio for a request naming none), its preferences in its own operating
+ * class, power limit and the classes ignored, and whether the pod cannot do it (*named owns the
+ * entries). */
+static em_reason channel_policy(const em_message *m, const em_control_radio *radios, size_t nradios,
+                                named_radio named[4], size_t *nnamed)
+{
+    *nnamed = 0;
     for (size_t i = 0; i < m->ntlvs; i++) {
         const em_tlv *t = &m->tlvs[i];
-        if (t->kind == 0x8B) {
-            if (preferences || t->len < 7 || memcmp(t->value, c->radio->ruid, 6))
-                return EM_INVALID_INPUT;
-            preferences = true;
-            uint8_t count = t->value[6];
-            if (count > 8)
-                return EM_INVALID_INPUT;
-            const uint8_t *p = t->value + 7, *end = t->value + t->len;
-            bool specified[14] = {0};
-            for (int g = 0; g < count; g++) {
-                if (end - p < 3)
-                    return EM_INVALID_INPUT;
-                uint8_t opclass = p[0], n = p[1];
-                if (n > 13 || end - p < 3 + n)
-                    return EM_INVALID_INPUT;
-                const uint8_t *channels = p + 2;
-                uint8_t value = p[2 + n], score = value >> 4, reason = value & 15;
-                p += 3 + n;
-                if (score == 15 || reason > 13 || (reason >= 6 && reason <= 10))
-                    return EM_INVALID_INPUT;
-                if (opclass != 81) { /* a class the radio does not advertise */
-                    cJSON *other = cJSON_CreateObject();
-                    cJSON_AddNumberToObject(other, "class", opclass);
-                    cJSON_AddItemToObject(other, "channels", channel_list(channels, n));
-                    cJSON_AddItemToArray(ignored, other);
-                    continue;
-                }
-                bool applies[14] = {0};
-                for (int k = 0; k < n; k++) {
-                    if (channels[k] < 1 || channels[k] > 13 || applies[channels[k]])
-                        return EM_INVALID_INPUT;
-                    applies[channels[k]] = true;
-                }
-                if (!n)
-                    for (int k = 1; k <= 13; k++)
-                        applies[k] = true;
-                for (int k = 1; k <= 13; k++) {
-                    if (applies[k] && specified[k])
-                        return EM_INVALID_INPUT; /* overlapping preferences */
-                    specified[k] = specified[k] || applies[k];
-                }
-                if (applies[6] && score == 0)
-                    *decline = true; /* forbids the sole operable channel */
-                cJSON *pref = cJSON_CreateObject();
-                cJSON_AddNumberToObject(pref, "class", opclass);
-                cJSON_AddItemToObject(pref, "channels", channel_list(channels, n));
-                cJSON_AddNumberToObject(pref, "preference", score);
-                cJSON_AddNumberToObject(pref, "reason", reason);
-                cJSON_AddItemToArray(prefs, pref);
-            }
-            if (p != end)
-                return EM_INVALID_INPUT;
-        } else if (t->kind == 0x8D) {
-            if (power || t->len != 7 || memcmp(t->value, c->radio->ruid, 6))
-                return EM_INVALID_INPUT;
-            power = true;
-            cJSON_ReplaceItemInObject(policy, "power_limit_dbm", cJSON_CreateNumber((int8_t)t->value[6]));
-            if ((int8_t)t->value[6] < c->tx_power_dbm)
-                *decline = true; /* power actuation requires a qualified mapping */
-        } else {
+        if (t->kind != 0x8B && t->kind != 0x8D)
             return EM_UNSUPPORTED_OPERATION; /* an unimplemented companion */
+        size_t k = 0;
+        while (t->len >= 6 && k < nradios && memcmp(t->value, radios[k].ruid, 6))
+            k++;
+        bool preferences = t->kind == 0x8B;
+        if (t->len < (preferences ? 7 : 6) || k == nradios)
+            return EM_INVALID_INPUT; /* truncated or foreign */
+        named_radio *x = name_radio(radios, k, named, nnamed);
+        if (!preferences) {
+            if (x->power || t->len != 7)
+                return EM_INVALID_INPUT;
+            x->power = true;
+            cJSON_ReplaceItemInObject(x->entry, "power_limit_dbm", cJSON_CreateNumber((int8_t)t->value[6]));
+            if ((int8_t)t->value[6] < radios[k].tx_power_dbm)
+                x->decline = true; /* power actuation requires a qualified mapping */
+            continue;
         }
+        if (x->preferences)
+            return EM_INVALID_INPUT; /* duplicate */
+        x->preferences = true;
+        const uint8_t *own;
+        size_t nown;
+        class_channels(radios[k].op_class, &own, &nown);
+        cJSON *prefs = cJSON_GetObjectItemCaseSensitive(x->entry, "preferences"),
+              *ignored = cJSON_GetObjectItemCaseSensitive(x->entry, "ignored");
+        uint8_t count = t->value[6];
+        if (count > 8)
+            return EM_INVALID_INPUT;
+        const uint8_t *p = t->value + 7, *end = t->value + t->len;
+        bool specified[16] = {0}; /* by index in the class's channels */
+        for (int g = 0; g < count; g++) {
+            if (end - p < 3)
+                return EM_INVALID_INPUT;
+            uint8_t opclass = p[0], n = p[1];
+            if (n > 13 || end - p < 3 + n)
+                return EM_INVALID_INPUT;
+            const uint8_t *channels = p + 2;
+            uint8_t value = p[2 + n], score = value >> 4, reason = value & 15;
+            p += 3 + n;
+            if (score == 15 || reason > 13 || (reason >= 6 && reason <= 10))
+                return EM_INVALID_INPUT;
+            if (opclass != radios[k].op_class) { /* a class the radio does not advertise */
+                cJSON *other = cJSON_CreateObject();
+                cJSON_AddNumberToObject(other, "class", opclass);
+                cJSON_AddItemToObject(other, "channels", channel_list(channels, n));
+                cJSON_AddItemToArray(ignored, other);
+                continue;
+            }
+            bool applies[16] = {0};
+            for (int j = 0; j < n; j++) {
+                size_t at = 0;
+                while (at < nown && own[at] != channels[j])
+                    at++;
+                if (at == nown || applies[at])
+                    return EM_INVALID_INPUT; /* outside the class, or repeated */
+                applies[at] = true;
+            }
+            for (size_t at = 0; !n && at < nown; at++)
+                applies[at] = true;
+            for (size_t at = 0; at < nown; at++) {
+                if (applies[at] && specified[at])
+                    return EM_INVALID_INPUT; /* overlapping preferences */
+                specified[at] = specified[at] || applies[at];
+                if (applies[at] && own[at] == radios[k].channel && score == 0)
+                    x->decline = true; /* forbids the radio's sole operable channel */
+            }
+            cJSON *pref = cJSON_CreateObject();
+            cJSON_AddNumberToObject(pref, "class", opclass);
+            cJSON_AddItemToObject(pref, "channels", channel_list(channels, n));
+            cJSON_AddNumberToObject(pref, "preference", score);
+            cJSON_AddNumberToObject(pref, "reason", reason);
+            cJSON_AddItemToArray(prefs, pref);
+        }
+        if (p != end)
+            return EM_INVALID_INPUT;
     }
+    if (!*nnamed) /* a request naming no radio: accepted for every radio, as for one radio */
+        for (size_t k = 0; k < nradios; k++)
+            name_radio(radios, k, named, nnamed);
     return EM_OK;
+}
+
+static void free_named(named_radio *named, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+        cJSON_Delete(named[i].entry);
 }
 
 static const char *channel(em_control *c, const em_message *m, em_frames *out, em_reason *error)
 {
     if (seen(c, m->message_type, m->mid))
         return "duplicate_channel_request";
-    if (c->tx_power_dbm > c->max_eirp_dbm) {
-        *error = EM_NOT_READY;
-        return NULL;
-    }
+    em_control_radio radios[4];
+    size_t nradios = control_radios(c, radios);
+    for (size_t k = 0; k < nradios; k++)
+        if (!radios[k].measured || radios[k].tx_power_dbm > radios[k].max_eirp_dbm) {
+            *error = EM_NOT_READY; /* measured operating parameters unavailable */
+            return NULL;
+        }
     if (m->message_type == 0x8004) {
         if (m->ntlvs) {
             *error = EM_INVALID_INPUT;
@@ -169,40 +243,60 @@ static const char *channel(em_control *c, const em_message *m, em_frames *out, e
         remember(c, m->message_type, m->mid);
         return *error == EM_OK ? "channel_preference_report_sent" : NULL;
     }
-    bool decline;
-    cJSON *policy = cJSON_CreateObject();
-    em_reason r = channel_policy(c, m, &decline, policy);
-    if (r == EM_OK && !decline && c->keep_channel_policy) {
+    named_radio named[4];
+    size_t nnamed = 0;
+    em_reason r = channel_policy(m, radios, nradios, named, &nnamed);
+    bool declined = false, accepted = false;
+    for (size_t i = 0; i < nnamed; i++) {
+        declined = declined || named[i].decline;
+        accepted = accepted || !named[i].decline;
+    }
+    if (r == EM_OK && accepted && c->keep_channel_policy) {
+        /* the accepted radios' preferences (spec 9: each radio its own) */
+        cJSON *policy = cJSON_CreateObject(), *list;
         cJSON_AddStringToObject(policy, "status", "accepted_no_adjustment");
         cJSON_AddNumberToObject(policy, "mid", m->mid);
         add_hex(policy, "controller", c->binding.controller_al);
         add_hex(policy, "local_al", c->binding.local_al);
-        add_hex(policy, "ruid", c->radio->ruid);
+        list = cJSON_AddArrayToObject(policy, "radios");
+        for (size_t i = 0; i < nnamed; i++)
+            if (!named[i].decline)
+                cJSON_AddItemToArray(list, cJSON_Duplicate(named[i].entry, 1));
         if (!c->keep_channel_policy(c->keep_ctx, policy))
             r = EM_NOT_READY; /* "channel preference persistence failed" */
+        cJSON_Delete(policy);
     }
-    cJSON_Delete(policy);
     if (r != EM_OK) {
+        free_named(named, nnamed);
         *error = r;
         return NULL;
     }
-    uint8_t response[7], report[10];
-    memcpy(response, c->radio->ruid, 6);
-    response[6] = decline ? 0x02 : 0x00;
-    memcpy(report, c->radio->ruid, 6);
-    report[6] = 1;
-    report[7] = 81;
-    report[8] = (uint8_t)c->radio->channel;
-    report[9] = (uint8_t)c->tx_power_dbm;
-    em_tlv rt = {0x8E, 7, response}, ot = {0x8F, 10, report};
-    if ((r = send(c, 0x8007, m->mid, &rt, 1, out)) != EM_OK ||
-        (r = send(c, 0x8008, next_mid(c), &ot, 1, out)) != EM_OK) {
+    /* one Channel Selection Response per radio the request names; one Operating Channel Report
+     * TLV per radio of the agent */
+    uint8_t response[4][7], report[4][10];
+    em_tlv rt[4], ot[4];
+    for (size_t i = 0; i < nnamed; i++) {
+        memcpy(response[i], radios[named[i].radio].ruid, 6);
+        response[i][6] = named[i].decline ? 0x02 : 0x00;
+        rt[i] = (em_tlv){0x8E, 7, response[i]};
+    }
+    for (size_t k = 0; k < nradios; k++) {
+        memcpy(report[k], radios[k].ruid, 6);
+        report[k][6] = 1;
+        report[k][7] = radios[k].op_class;
+        report[k][8] = (uint8_t)radios[k].channel;
+        report[k][9] = (uint8_t)radios[k].tx_power_dbm;
+        ot[k] = (em_tlv){0x8F, 10, report[k]};
+    }
+    free_named(named, nnamed);
+    if ((r = send(c, 0x8007, m->mid, rt, nnamed, out)) != EM_OK ||
+        (r = send(c, 0x8008, next_mid(c), ot, nradios, out)) != EM_OK) {
         *error = r;
         return NULL;
     }
     remember(c, m->message_type, m->mid);
-    c->channel_policy_declined = decline;
-    return decline ? "channel_selection_declined" : "channel_selection_accepted";
+    c->channel_policy_declined = declined;
+    return declined ? "channel_selection_declined" : "channel_selection_accepted";
 }
 
 static void system_utc(char out[40])
@@ -238,6 +332,13 @@ static const char *scan(em_control *c, const em_message *m, em_frames *out, em_r
 {
     if (seen(c, m->message_type, m->mid))
         return "duplicate_channel_request";
+    em_control_radio radios[4];
+    size_t nradios = control_radios(c, radios);
+    for (size_t k = 0; k < nradios; k++)
+        if (!radios[k].measured || radios[k].tx_power_dbm > radios[k].max_eirp_dbm) {
+            *error = EM_NOT_READY; /* measured operating parameters unavailable */
+            return NULL;
+        }
     const em_tlv *request = NULL;
     for (size_t i = 0; i < m->ntlvs; i++)
         if (m->tlvs[i].kind == 0xA6) {
@@ -262,10 +363,15 @@ static const char *scan(em_control *c, const em_message *m, em_frames *out, em_r
         }
         const uint8_t *ruid = d + offset;
         unsigned nclasses = d[offset + 6];
-        bool ours = !memcmp(ruid, c->radio->ruid, 6);
+        /* one of the agent's radios (spec 9: a second radio too), on its own class and channel */
+        const em_control_radio *mine = NULL;
+        for (size_t k = 0; k < nradios && !mine; k++)
+            if (!memcmp(ruid, radios[k].ruid, 6))
+                mine = &radios[k];
+        bool ours = mine != NULL;
         offset += 7;
         if (ours && !nclasses)
-            add_result(&results, &nresults, &cap, ruid, 81, (uint8_t)c->radio->channel);
+            add_result(&results, &nresults, &cap, ruid, mine->op_class, (uint8_t)mine->channel);
         for (unsigned k = 0; k < nclasses; k++) {
             if (length < offset + 2 || length < offset + 2 + d[offset + 1]) {
                 free(results);
@@ -274,8 +380,8 @@ static const char *scan(em_control *c, const em_message *m, em_frames *out, em_r
             }
             uint8_t op_class = d[offset], n = d[offset + 1];
             const uint8_t *channels = d + offset + 2;
-            uint8_t current = (uint8_t)c->radio->channel;
-            if (!n && op_class == 81) {
+            uint8_t current = ours ? (uint8_t)mine->channel : 0;
+            if (!n && ours && op_class == mine->op_class) {
                 channels = &current;
                 n = 1;
             }
@@ -335,11 +441,13 @@ static bool addresses(const uint8_t **p, const uint8_t *end)
  * radios, each once (reporting_policy.decode_policy, spec 9) */
 static bool own_radios(const em_control *c, const uint8_t *list, size_t n, size_t stride)
 {
+    em_control_radio radios[4];
+    size_t nradios = control_radios(c, radios);
     for (size_t i = 0; i < n; i++) {
         const uint8_t *ruid = list + i * stride;
-        bool ours = c->nradio_ids ? false : !memcmp(ruid, c->radio->ruid, 6);
-        for (size_t k = 0; k < c->nradio_ids && !ours; k++)
-            ours = !memcmp(ruid, c->radio_ids[k], 6);
+        bool ours = false;
+        for (size_t k = 0; k < nradios && !ours; k++)
+            ours = !memcmp(ruid, radios[k].ruid, 6);
         for (size_t j = 0; ours && j < i; j++)
             ours = memcmp(ruid, list + j * stride, 6) != 0;
         if (!ours)
@@ -351,7 +459,7 @@ static bool own_radios(const em_control *c, const uint8_t *list, size_t n, size_
 static em_reason decode_policy(const em_control *c, const em_message *m)
 {
     bool metrics = false, steering = false;
-    size_t radios = c->nradio_ids ? c->nradio_ids : 1;
+    size_t radios = c->nradios ? c->nradios : 1;
     for (size_t i = 0; i < m->ntlvs; i++) {
         const em_tlv *t = &m->tlvs[i];
         const uint8_t *d = t->value, *end = t->value + t->len;

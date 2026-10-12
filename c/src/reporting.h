@@ -45,6 +45,10 @@ typedef struct {
     em_policy_store *store;
     cJSON *value; /* the stored record, or NULL */
     uint8_t controller[6], local_al[6], ruid[6];
+    /* every radio the agent reports, the fronthaul first (spec 9): a policy's radio lists may
+     * name each once; nradio_ids 0: ruid only */
+    size_t nradio_ids;
+    uint8_t radio_ids[4][6];
     size_t nrecent;
     struct {
         uint16_t mid;

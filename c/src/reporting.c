@@ -190,8 +190,26 @@ static bool addresses(const uint8_t *d, size_t len, cJSON **list, size_t *used)
     return true;
 }
 
-static cJSON *decode_policy(const em_message *m, const uint8_t ruid[6], em_reason *why)
+/* a radio list's entries (each `stride` octets, its RUID first) name only the agent's radios, each
+ * once (reporting_policy.decode_policy, spec 9) */
+static bool own_radios(const em_reporting *rep, const uint8_t *list, size_t n, size_t stride)
 {
+    for (size_t i = 0; i < n; i++) {
+        const uint8_t *ruid = list + i * stride;
+        bool ours = !rep->nradio_ids && !memcmp(ruid, rep->ruid, 6);
+        for (size_t k = 0; k < rep->nradio_ids && !ours; k++)
+            ours = !memcmp(ruid, rep->radio_ids[k], 6);
+        for (size_t j = 0; ours && j < i; j++)
+            ours = memcmp(ruid, list + j * stride, 6) != 0;
+        if (!ours)
+            return false;
+    }
+    return true;
+}
+
+static cJSON *decode_policy(const em_message *m, const em_reporting *rep, em_reason *why)
+{
+    size_t nradios = rep->nradio_ids ? rep->nradio_ids : 1;
     cJSON *r = cJSON_CreateObject();
     *why = EM_INVALID_INPUT;
     for (size_t i = 0; i < m->ntlvs; i++) {
@@ -201,24 +219,27 @@ static cJSON *decode_policy(const em_message *m, const uint8_t ruid[6], em_reaso
         if (t->kind == 0x8A) {
             if (cJSON_GetObjectItemCaseSensitive(r, "metrics") || len < 2 || len != 2 + (size_t)d[1] * 10)
                 goto invalid;
-            if (d[1] > 1) {
-                *why = EM_UNSUPPORTED_OPERATION; /* "sole-radio policy required" */
+            if (d[1] > nradios) {
+                *why = EM_UNSUPPORTED_OPERATION; /* "more radios than the agent has" */
                 goto invalid;
             }
+            if (!own_radios(rep, d + 2, d[1], 10))
+                goto invalid; /* "foreign or repeated radio" */
             cJSON *metrics = cJSON_AddObjectToObject(r, "metrics");
             cJSON_AddNumberToObject(metrics, "interval_seconds", d[0]);
             cJSON *radios = cJSON_AddArrayToObject(metrics, "radios");
-            if (d[1]) {
-                if (memcmp(d + 2, ruid, 6) || d[8] > 220)
-                    goto invalid; /* "foreign radio or reserved RCPI threshold" */
+            for (size_t k = 0; k < d[1]; k++) {
+                const uint8_t *e = d + 2 + k * 10;
+                if (e[6] > 220)
+                    goto invalid; /* "reserved RCPI threshold" */
                 cJSON *x = cJSON_CreateObject();
-                cJSON_AddItemToObject(x, "ruid", hex_of(d + 2));
-                cJSON_AddNumberToObject(x, "rcpi_threshold", d[8]);
-                cJSON_AddNumberToObject(x, "rcpi_hysteresis_db", d[9]);
-                cJSON_AddNumberToObject(x, "utilization_threshold", d[10]);
-                cJSON_AddBoolToObject(x, "include_traffic", d[11] & 0x80);
-                cJSON_AddBoolToObject(x, "include_link", d[11] & 0x40);
-                cJSON_AddBoolToObject(x, "include_wifi6_status", d[11] & 0x20);
+                cJSON_AddItemToObject(x, "ruid", hex_of(e));
+                cJSON_AddNumberToObject(x, "rcpi_threshold", e[6]);
+                cJSON_AddNumberToObject(x, "rcpi_hysteresis_db", e[7]);
+                cJSON_AddNumberToObject(x, "utilization_threshold", e[8]);
+                cJSON_AddBoolToObject(x, "include_traffic", e[9] & 0x80);
+                cJSON_AddBoolToObject(x, "include_link", e[9] & 0x40);
+                cJSON_AddBoolToObject(x, "include_wifi6_status", e[9] & 0x20);
                 cJSON_AddItemToArray(radios, x);
             }
         } else if (t->kind == 0x89) {
@@ -234,25 +255,26 @@ static cJSON *decode_policy(const em_message *m, const uint8_t ruid[6], em_reaso
             }
             const uint8_t *rest = d + a + b;
             size_t n = len - a - b;
-            if (!n || n != 1 + 9 * (size_t)rest[0] || rest[0] > 1) {
+            if (!n || n != 1 + 9 * (size_t)rest[0] || rest[0] > nradios || !own_radios(rep, rest + 1, rest[0], 9)) {
                 cJSON_Delete(local);
                 cJSON_Delete(btm);
-                if (n && n == 1 + 9 * (size_t)rest[0])
-                    *why = EM_UNSUPPORTED_OPERATION;
+                if (n && n == 1 + 9 * (size_t)rest[0] && rest[0] > nradios)
+                    *why = EM_UNSUPPORTED_OPERATION; /* more radios than the agent has */
                 goto invalid;
             }
             cJSON *steering = cJSON_AddObjectToObject(r, "steering");
             cJSON_AddItemToObject(steering, "local_disallowed", local);
             cJSON_AddItemToObject(steering, "btm_disallowed", btm);
             cJSON *radios = cJSON_AddArrayToObject(steering, "radios");
-            if (rest[0]) {
-                if (memcmp(rest + 1, ruid, 6) || rest[7] > 2 || rest[9] > 220)
-                    goto invalid; /* "foreign radio or reserved steering field" */
+            for (size_t k = 0; k < rest[0]; k++) {
+                const uint8_t *e = rest + 1 + k * 9;
+                if (e[6] > 2 || e[8] > 220)
+                    goto invalid; /* "reserved steering field" */
                 cJSON *x = cJSON_CreateObject();
-                cJSON_AddItemToObject(x, "ruid", hex_of(rest + 1));
-                cJSON_AddNumberToObject(x, "policy", rest[7]);
-                cJSON_AddNumberToObject(x, "utilization_threshold", rest[8]);
-                cJSON_AddNumberToObject(x, "rcpi_threshold", rest[9]);
+                cJSON_AddItemToObject(x, "ruid", hex_of(e));
+                cJSON_AddNumberToObject(x, "policy", e[6]);
+                cJSON_AddNumberToObject(x, "utilization_threshold", e[7]);
+                cJSON_AddNumberToObject(x, "rcpi_threshold", e[8]);
                 cJSON_AddItemToArray(radios, x);
             }
         } else if (t->kind == 0xDB) {
@@ -497,7 +519,7 @@ const char *em_reporting_policy(em_reporting *r, const em_message *m, double now
     em_sha256_hex(encoded, strlen(encoded), digest);
     free(encoded);
     em_reason why;
-    cJSON *update = decode_policy(m, r->ruid, &why);
+    cJSON *update = decode_policy(m, r, &why);
     if (!update) {
         cJSON_Delete(raw);
         *error = why;

@@ -1471,9 +1471,13 @@ def control_agent(raw, stations, *, second_radio=False):
         facts,
         observed_at=0.0,
         lifetime=1.5,
-        operating_radios=(OperatingRadio(mac(RUID), 81, 6, radio.tx_power),),
+        operating_radios=(OperatingRadio(mac(RUID), 81, 6, radio.tx_power),)
+        + ((OperatingRadio(mac(RUID_50), 115, 44, SECOND_RADIO_POWER),) if second_radio else ()),
     )
     return source, radio
+
+
+SECOND_RADIO_POWER = 20  # the 5 GHz radio's operated power in the two-radio control cases (dBm)
 
 
 SCAN_TIMESTAMP = "2026-09-25T00:00:00.000Z"  # the Channel Scan Report's time, fixed
@@ -1533,6 +1537,7 @@ def control_vectors():
     bssid = mac("82:00:00:00:01:00")
     ruid = mac(RUID)
     target = mac("02:00:00:12:75:2c")
+    radio_power = device_view(decode(raw)).radio(ruid).tx_power  # the fronthaul's operated power
 
     def request(message_type, mid, items):
         return fragment_message(mac(AGENT), mac(CONTROLLER), message_type, mid, items)[0]
@@ -1869,6 +1874,41 @@ def control_vectors():
             72,
             Tlv(0x89, b"\x00\x00\x02" + ruid + b"\x00\x3c\x78" + other + b"\x00\x3c\x78"),
         ),
+        one("channel-preference-query-two-radios", 0x8004, 73),
+        one(  # each radio's own preferences, its own response; the report names both radios
+            "channel-selection-two-radios",
+            0x8006,
+            74,
+            Tlv(0x8B, good),
+            Tlv(0x8B, second + bytes.fromhex("01730224 28e0".replace(" ", ""))),
+        ),
+        one(  # a selection off the second radio's channel (its station's): declined for it alone
+            "channel-selection-second-radio-off-its-channel",
+            0x8006,
+            75,
+            Tlv(0x8B, good),
+            Tlv(0x8B, second + bytes.fromhex("0173012c00")),
+        ),
+        one(  # a power limit below the second radio's operated power
+            "channel-selection-second-radio-power-declined",
+            0x8006,
+            76,
+            Tlv(0x8D, second + bytes([10])),
+        ),
+        one("channel-selection-empty-two-radios", 0x8006, 77),  # accepted for every radio
+        one(
+            "refused-selection-second-radio-twice",
+            0x8006,
+            78,
+            Tlv(0x8B, second + b"\x00"),
+            Tlv(0x8B, second + b"\x00"),
+        ),
+        one(  # the second radio's own class and channel when the request names none
+            "channel-scan-two-radios",
+            0x801B,
+            79,
+            Tlv(0xA6, b"\x00\x02" + ruid + bytes.fromhex("0151020106") + second + b"\x00"),
+        ),
     ]
 
     def run(sequences, *, second_radio=False):
@@ -1966,9 +2006,19 @@ def control_vectors():
         "multi_radio": {
             "description": "spec 9: the same agent also reporting the pod's 5 GHz radio "
             + RUID_50
-            + " (class 115 channel 44, max EIRP 23, no BSS of EMOSA's on it): 'radios' are its "
-            "reported radios, the fronthaul first.",
-            "radios": [RUID, RUID_50],
+            + " (class 115 channel 44 at 20 dBm, max EIRP 23, no BSS of EMOSA's on it): "
+            "'radios' are its reported radios, the fronthaul first, each on its one operable "
+            "channel at its operated power.",
+            "radios": [
+                {"ruid": RUID, "class": 81, "channel": 6, "tx_power": radio_power, "max_eirp": 30},
+                {
+                    "ruid": RUID_50,
+                    "class": 115,
+                    "channel": 44,
+                    "tx_power": SECOND_RADIO_POWER,
+                    "max_eirp": 23,
+                },
+            ],
             "cases": run(multi_radio, second_radio=True),
         },
     }

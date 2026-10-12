@@ -27,21 +27,25 @@
   {
    "channel_policy": {
     "controller": "020000e00001",
-    "ignored": [],
     "local_al": "0272f97f0785",
     "mid": 12,
-    "power_limit_dbm": null,
-    "preferences": [
+    "radios": [
      {
-      "channels": [
-       6
+      "ignored": [],
+      "power_limit_dbm": null,
+      "preferences": [
+       {
+        "channels": [
+         6
+        ],
+        "class": 81,
+        "preference": 14,
+        "reason": 0
+       }
       ],
-      "class": 81,
-      "preference": 14,
-      "reason": 0
+      "ruid": "020000000100"
      }
     ],
-    "ruid": "020000000100",
     "status": "accepted_no_adjustment"
    },
    "handed_to_pod": [],
@@ -62,29 +66,33 @@
   {
    "channel_policy": {
     "controller": "020000e00001",
-    "ignored": [
-     {
-      "channels": [
-       6
-      ],
-      "class": 83
-     }
-    ],
     "local_al": "0272f97f0785",
     "mid": 14,
-    "power_limit_dbm": 30,
-    "preferences": [
+    "radios": [
      {
-      "channels": [
-       1,
-       11
+      "ignored": [
+       {
+        "channels": [
+         6
+        ],
+        "class": 83
+       }
       ],
-      "class": 81,
-      "preference": 5,
-      "reason": 0
+      "power_limit_dbm": 30,
+      "preferences": [
+       {
+        "channels": [
+         1,
+         11
+        ],
+        "class": 81,
+        "preference": 5,
+        "reason": 0
+       }
+      ],
+      "ruid": "020000000100"
      }
     ],
-    "ruid": "020000000100",
     "status": "accepted_no_adjustment"
    },
    "handed_to_pod": [],
@@ -427,21 +435,25 @@
   {
    "channel_policy": {
     "controller": "020000e00001",
-    "ignored": [],
     "local_al": "0272f97f0785",
     "mid": 36,
-    "power_limit_dbm": null,
-    "preferences": [
+    "radios": [
      {
-      "channels": [
-       6
+      "ignored": [],
+      "power_limit_dbm": null,
+      "preferences": [
+       {
+        "channels": [
+         6
+        ],
+        "class": 81,
+        "preference": 14,
+        "reason": 0
+       }
       ],
-      "class": 81,
-      "preference": 14,
-      "reason": 0
+      "ruid": "020000000100"
      }
     ],
-    "ruid": "020000000100",
     "status": "accepted_no_adjustment"
    },
    "handed_to_pod": [],
@@ -864,12 +876,218 @@
       "request": "0272f97f0785020000e00001893a0000800300480080890015000002020000000100003c78020000009900003c78000000"
      }
     ]
+   },
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "channel-preference-query-two-radios",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800500490080000000"
+       ],
+       "result": "channel_preference_report_sent"
+      },
+      "request": "0272f97f0785020000e00001893a0000800400490080000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": {
+     "controller": "020000e00001",
+     "local_al": "0272f97f0785",
+     "mid": 74,
+     "radios": [
+      {
+       "ignored": [],
+       "power_limit_dbm": null,
+       "preferences": [
+        {
+         "channels": [
+          6
+         ],
+         "class": 81,
+         "preference": 14,
+         "reason": 0
+        }
+       ],
+       "ruid": "020000000100"
+      },
+      {
+       "ignored": [],
+       "power_limit_dbm": null,
+       "preferences": [
+        {
+         "channels": [
+          36,
+          40
+         ],
+         "class": 115,
+         "preference": 14,
+         "reason": 0
+        }
+       ],
+       "ruid": "020000000500"
+      }
+     ],
+     "status": "accepted_no_adjustment"
+    },
+    "handed_to_pod": [],
+    "name": "channel-selection-two-radios",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008007004a00808e0007020000000100008e000702000000050000000000",
+        "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e8f000a02000000050001732c14000000"
+       ],
+       "result": "channel_selection_accepted"
+      },
+      "request": "0272f97f0785020000e00001893a00008006004a00808b000b02000000010001510106e08b000c0200000005000173022428e0000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": {
+     "controller": "020000e00001",
+     "local_al": "0272f97f0785",
+     "mid": 75,
+     "radios": [
+      {
+       "ignored": [],
+       "power_limit_dbm": null,
+       "preferences": [
+        {
+         "channels": [
+          6
+         ],
+         "class": 81,
+         "preference": 14,
+         "reason": 0
+        }
+       ],
+       "ruid": "020000000100"
+      }
+     ],
+     "status": "accepted_no_adjustment"
+    },
+    "handed_to_pod": [],
+    "name": "channel-selection-second-radio-off-its-channel",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008007004b00808e0007020000000100008e000702000000050002000000",
+        "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e8f000a02000000050001732c14000000"
+       ],
+       "result": "channel_selection_declined"
+      },
+      "request": "0272f97f0785020000e00001893a00008006004b00808b000b02000000010001510106e08b000b0200000005000173012c00000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "channel-selection-second-radio-power-declined",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008007004c00808e000702000000050002000000",
+        "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e8f000a02000000050001732c14000000"
+       ],
+       "result": "channel_selection_declined"
+      },
+      "request": "0272f97f0785020000e00001893a00008006004c00808d00070200000005000a000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": {
+     "controller": "020000e00001",
+     "local_al": "0272f97f0785",
+     "mid": 77,
+     "radios": [
+      {
+       "ignored": [],
+       "power_limit_dbm": null,
+       "preferences": [],
+       "ruid": "020000000100"
+      },
+      {
+       "ignored": [],
+       "power_limit_dbm": null,
+       "preferences": [],
+       "ruid": "020000000500"
+      }
+     ],
+     "status": "accepted_no_adjustment"
+    },
+    "handed_to_pod": [],
+    "name": "channel-selection-empty-two-radios",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008007004d00808e0007020000000100008e000702000000050000000000",
+        "020000e000010272f97f0785893a0000800801f400808f000a0200000001000151061e8f000a02000000050001732c14000000"
+       ],
+       "result": "channel_selection_accepted"
+      },
+      "request": "0272f97f0785020000e00001893a00008006004d0080000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "refused-selection-second-radio-twice",
+    "steps": [
+     {
+      "expected": {
+       "frames": [],
+       "result": "INVALID_INPUT"
+      },
+      "request": "0272f97f0785020000e00001893a00008006004e00808b0007020000000500008b000702000000050000000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "channel-scan-two-radios",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008000004f0080000000",
+        "020000e000010272f97f0785893a0000801c01f40080a8001918323032362d30392d32355430303a30303a30302e3030305aa70009020000000100510101a70009020000000100510601a70009020000000500732c01000000"
+       ],
+       "result": "channel_scan_not_supported_reported"
+      },
+      "request": "0272f97f0785020000e00001893a0000801b004f0080a600140002020000000100015102010602000000050000000000"
+     }
+    ]
    }
   ],
-  "description": "spec 9: the same agent also reporting the pod's 5 GHz radio 02:00:00:00:05:00 (class 115 channel 44, max EIRP 23, no BSS of EMOSA's on it): 'radios' are its reported radios, the fronthaul first.",
+  "description": "spec 9: the same agent also reporting the pod's 5 GHz radio 02:00:00:00:05:00 (class 115 channel 44 at 20 dBm, max EIRP 23, no BSS of EMOSA's on it): 'radios' are its reported radios, the fronthaul first, each on its one operable channel at its operated power.",
   "radios": [
-   "02:00:00:00:01:00",
-   "02:00:00:00:05:00"
+   {
+    "channel": 6,
+    "class": 81,
+    "max_eirp": 30,
+    "ruid": "02:00:00:00:01:00",
+    "tx_power": 30
+   },
+   {
+    "channel": 44,
+    "class": 115,
+    "max_eirp": 23,
+    "ruid": "02:00:00:00:05:00",
+    "tx_power": 20
+   }
   ]
  },
  "ovsdb_tables": {

@@ -23,16 +23,27 @@ typedef struct {
     } targets[255];
 } em_steering_request;
 
+/* A radio the agent reports, for the channel procedures and the policy (spec 9). */
+typedef struct {
+    uint8_t ruid[6], op_class;
+    int channel, tx_power_dbm;
+    int8_t max_eirp_dbm;
+    bool measured;
+} em_control_radio;
+
 /* Starts a mandate on the pod; NULL, or why it did not start (e.g. "busy"). */
 typedef const char *(*em_steering_executor)(void *ctx, const em_steering_request *r, uint16_t mid);
 
 typedef struct {
     em_binding binding;
     const em_radio_view *radio; /* the represented radio (its BSSes and stations) */
-    /* every radio the agent reports, the fronthaul first (spec 9): a policy's radio lists may
-     * name each once; nradio_ids 0: the represented radio's only */
-    size_t nradio_ids;
-    uint8_t radio_ids[4][6];
+    /* every radio the agent reports, the fronthaul first (spec 9): its operating class, its one
+     * operable channel (a second radio's follows the pod's station), the operated power (unmeasured:
+     * the channel procedures are not ready) and the advertised maximum. A policy's radio lists and a
+     * channel request may name each; nradios 0: the represented radio alone, on class 81 at
+     * tx_power_dbm, max_eirp_dbm. */
+    size_t nradios;
+    em_control_radio radios[4];
     int tx_power_dbm;           /* the operated power */
     int8_t max_eirp_dbm;        /* advertised */
     uint16_t previous_mid;      /* the agent's own messages take the next MIDs */
