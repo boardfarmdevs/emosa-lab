@@ -283,12 +283,10 @@ def backhaul(device, station):
 # -- the view as EasyMesh payloads ----------------------------------------------
 
 
-def radio_capabilities(radio, *, channel, max_bss, max_eirp):
-    """AP Capability Report contents for one radio operated on one channel.
-
-    Only the current channel is operable: EMOSA does not move the pod's radio.
-    Declared: no HT/VHT/HE/EHT capability claims, WPA2-PSK with CCMP-128 only.
-    """
+def _early_radio(radio, *, channel, max_bss, max_eirp):
+    """One radio's AP Radio Basic Capabilities. Only the current channel is operable: EMOSA does
+    not move the pod's radio (spec 9's channel rule for the second radio - it follows the station).
+    Declared: no HT/VHT/HE/EHT capability claims."""
     if radio.band not in OPERATING_CLASSES:
         raise EmosaError(Reason.UNSUPPORTED_OPERATION, "radio band not mapped")
     opclass, channels = OPERATING_CLASSES[radio.band]
@@ -297,22 +295,43 @@ def radio_capabilities(radio, *, channel, max_bss, max_eirp):
         max_bss,
         (BasicOperatingClass(opclass, max_eirp, tuple(n for n in channels if n != channel)),),
     )
+    return EarlyRadio(
+        basic,
+        APHTCapabilities(radio.ruid, 0),
+        APRadioAdvancedCapabilities(radio.ruid, 0),
+        False,
+        False,
+        False,
+    )
+
+
+def _capabilities(early_radios):
+    """The device-wide AP Capability Report wrapping one or more radios' basic capabilities.
+    Declared: WPA2-PSK with CCMP-128 only."""
     return EarlyCapabilities(
-        (
-            EarlyRadio(
-                basic,
-                APHTCapabilities(radio.ruid, 0),
-                APRadioAdvancedCapabilities(radio.ruid, 0),
-                False,
-                False,
-                False,
-            ),
-        ),
+        tuple(early_radios),
         APCapability(0),
         Profile2APCapability(0, 0, 0, 0),
         AKMSuiteCapabilities((), (PSK,)),
         SupportedCipherSuites((CCMP128,)),
         True,
+    )
+
+
+def radio_capabilities(radio, *, channel, max_bss, max_eirp):
+    """AP Capability Report contents for one radio operated on one channel."""
+    return _capabilities(
+        (_early_radio(radio, channel=channel, max_bss=max_bss, max_eirp=max_eirp),)
+    )
+
+
+def radios_capabilities(specs):
+    """AP Capability Report for the several radios EMOSA binds (spec 9, the second radio of 8.6).
+    ``specs`` is a tuple of ``(radio, channel, max_bss, max_eirp)``, the fronthaul radio first; each
+    radio is operable only on its own current channel."""
+    return _capabilities(
+        _early_radio(radio, channel=channel, max_bss=max_bss, max_eirp=max_eirp)
+        for radio, channel, max_bss, max_eirp in specs
     )
 
 

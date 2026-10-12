@@ -15,6 +15,7 @@ from emosa.opensync.easymesh_view import (
     device_view,
     inventory,
     radio_capabilities,
+    radios_capabilities,
     topology,
 )
 from emosa.opensync.pod_profile import PodBackend
@@ -162,6 +163,22 @@ def test_the_view_as_easymesh_payloads():
         (STATIONS[0], 12),
         (STATIONS[1], 65535),
     ]
+
+
+def test_radios_capabilities_reports_each_bound_radio():
+    """Spec 9 second radio: EMOSA reports every bound radio in the AP Capability Report, each
+    operable only on its own channel (the fronthaul 2.4 GHz and the 5 GHz second radio)."""
+    view = device_view(decode(raw_tables()))
+    caps = radios_capabilities(
+        (
+            (view.radio(RUID_24), 6, 1, 30),
+            (view.radio(RUID_5), 44, 1, 23),
+        )
+    )
+    assert [r.basic.ruid for r in caps.radios] == [RUID_24, RUID_5]
+    assert caps.radios[0].basic.operating_classes[0].operating_class == 81
+    assert caps.radios[1].basic.operating_classes[0].operating_class == 115
+    assert 44 not in caps.radios[1].basic.operating_classes[0].non_operable_channels
 
 
 def test_the_agent_reports_the_real_pod_through_the_view(tmp_path):
