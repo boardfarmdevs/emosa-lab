@@ -385,6 +385,15 @@ class PodReportSource:
             active = {m for b in bsses for m in b.stations}
             self.first_seen = {m: self.first_seen.get(m, now) for m in active}
             self.links = self._backhaul_links(uplink, bsses)
+            # spec 9: each further bound radio that carries an EMOSA BSS (a parent's b-ap-50 on the
+            # 5 GHz radio) is reported as its own Operational/Configured radio, so the controller
+            # models the BSS on that radio and channel
+            extra_radios = tuple(
+                (r, represented, ch)
+                for r, ch, _ in bound[1:]
+                for represented in (self._represented(r, True)[1],)
+                if represented
+            )
             report = topology(
                 agent_al=self.agent,
                 controller_al=self.binding.controller_al,
@@ -396,6 +405,7 @@ class PodReportSource:
                 associated_at=self.first_seen,
                 peers=self.links,
                 backhaul_radios=radios_with_station,
+                extra_radios=extra_radios,
             )
             facts = (
                 raw["generation"],

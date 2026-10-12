@@ -391,8 +391,13 @@ def topology(
     associated_at=None,
     peers=(),
     backhaul_radios=(),
+    extra_radios=(),
 ):
     """Topology Response contents: the agent, its BSSes and their stations.
+
+    ``extra_radios`` ((radio, bsses, channel), ...) are the agent's further bound radios that carry
+    an EMOSA BSS (spec 9, a parent's b-ap-50 on 5 GHz): each adds an Operational and Configured
+    radio and its BSSes' interfaces, so the controller models the BSS on its own radio and channel.
 
     ``bsses`` is the subset of the radio's BSSes the agent represents; ``ages``
     maps a station MAC to seconds since association (as far as EMOSA knows);
@@ -408,9 +413,13 @@ def topology(
     in use first) are the pod's radios with a backhaul station, for the Backhaul STA
     Capability Report.
     """
+    # the fronthaul radio and each extra radio that carries an EMOSA BSS (spec 9), each with its own
+    # channel for the BSS interfaces and its own Operational/Configured radio
+    radios = ((radio.ruid, bsses, channel),) + tuple((r.ruid, bs, ch) for r, bs, ch in extra_radios)
     interfaces = (LocalInterface(agent_al, 1, b""),) + tuple(
-        LocalInterface(b.bssid, IEEE_802_11N_24, b.bssid + bytes([AP_ROLE, 0x00, channel, 0x00]))
-        for b in bsses
+        LocalInterface(b.bssid, IEEE_802_11N_24, b.bssid + bytes([AP_ROLE, 0x00, ch, 0x00]))
+        for _, bs, ch in radios
+        for b in bs
     )
     if uplink is not None:
         station = uplink.station
@@ -427,18 +436,18 @@ def topology(
         non1905=(),
         neighbors1905=neighbors_1905(agent_al, controller_al, peers),
         operational=APOperationalBss(
-            (
-                OperationalRadio(
-                    radio.ruid, tuple(OperationalBss(b.bssid, b.ssid.encode()) for b in bsses)
-                ),
+            tuple(
+                OperationalRadio(ruid, tuple(OperationalBss(b.bssid, b.ssid.encode()) for b in bs))
+                for ruid, bs, _ in radios
             )
         ),
         configuration=BssConfigurationReport(
-            (
+            tuple(
                 ConfiguredRadio(
-                    radio.ruid,
-                    tuple(ConfiguredBss(b.bssid, b.report_flags, b.ssid.encode()) for b in bsses),
-                ),
+                    ruid,
+                    tuple(ConfiguredBss(b.bssid, b.report_flags, b.ssid.encode()) for b in bs),
+                )
+                for ruid, bs, _ in radios
             )
         ),
         clients=AssociatedClients(

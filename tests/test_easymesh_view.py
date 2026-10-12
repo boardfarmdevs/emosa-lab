@@ -205,6 +205,26 @@ def test_radios_capabilities_reports_each_bound_radio():
     assert 44 not in caps.radios[1].basic.operating_classes[0].non_operable_channels
 
 
+def test_topology_reports_a_second_radios_bss():
+    """Spec 9: a further bound radio that carries an EMOSA BSS (a parent's b-ap-50 on 5 GHz) is its
+    own Operational and Configured radio, so the controller models the BSS on that radio."""
+    view = device_view(decode(raw_tables()))
+    fronthaul, five = view.radio(RUID_24), view.radio(RUID_5)
+    (bss,) = fronthaul.bsses
+    facts = topology(
+        agent_al=AGENT,
+        controller_al=CONTROLLER,
+        radio=fronthaul,
+        channel=6,
+        bsses=fronthaul.bsses,
+        ages={STATIONS[0]: 1.0, STATIONS[1]: 1.0},
+        extra_radios=((five, (bss,), 44),),
+    )
+    assert [r.ruid for r in facts.operational.radios] == [RUID_24, RUID_5]
+    assert [r.ruid for r in facts.configuration.radios] == [RUID_24, RUID_5]
+    assert [b.bssid for b in facts.configuration.radios[1].bsses] == [bss.bssid]
+
+
 def test_the_agent_reports_the_real_pod_through_the_view(tmp_path):
     vault = SecretStore(tmp_path / "secrets")
     backend = PodBackend("pod-1", Session(copy.deepcopy(raw_tables())), vault, serial=SERIAL)
