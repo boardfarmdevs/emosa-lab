@@ -24,6 +24,7 @@ from emosa.opensync.pod_profile import PodBackend
 from emosa.opensync.schema import Schema, reference_path
 from emosa.secrets import SecretStore
 from emosa.wire.autoconfiguration import PeerBinding
+from emosa.wire.reports import capability_tlvs
 from test_pod_profile import Session
 
 pytestmark = pytest.mark.unit
@@ -169,13 +170,17 @@ def test_the_view_as_easymesh_payloads():
 
 def test_bound_radios_adds_the_profiles_second_radio():
     """Spec 9: EMOSA binds the fronthaul plus each profile radio found on the device by band.
-    A plain child's second radio has no EMOSA AP (max_bss 0); a parent's b-ap-50 gives it one."""
+    A plain child's second radio has no EMOSA slot yet advertises one BSS (an AP Radio Basic
+    Capabilities TLV may not advertise none: the report would not encode); a parent's b-ap-50 is
+    that one."""
     view = device_view(decode(raw_tables()))
     fronthaul = view.radio(RUID_24)
     child = bound_radios(
         view.radios, fronthaul, 6, additional=({"band": "5G"},), slots=(), slot_bands=()
     )
-    assert [(r.ruid, ch, mbss) for r, ch, mbss in child] == [(RUID_24, 6, 1), (RUID_5, 44, 0)]
+    assert [(r.ruid, ch, mbss) for r, ch, mbss in child] == [(RUID_24, 6, 1), (RUID_5, 44, 1)]
+    caps = radios_capabilities(tuple((r, ch, mbss, 20) for r, ch, mbss in child))
+    assert [t.value[:6] for t in capability_tlvs(caps) if t.kind == 0x85] == [RUID_24, RUID_5]
     parent = bound_radios(
         view.radios,
         fronthaul,

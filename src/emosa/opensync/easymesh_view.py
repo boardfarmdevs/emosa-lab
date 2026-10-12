@@ -340,9 +340,11 @@ def bound_radios(device_radios, fronthaul, channel, *, additional, slots, slot_b
     profile's ``additional`` radios found among ``device_radios`` by band, on its observed channel.
     Returns ``(radio, channel, max_bss)`` each. ``max_bss`` is split by ``slot_bands``
     ((if_name, band) pairs): the fronthaul takes one plus the slots that name no other radio, a
-    second radio takes the slots that name its band (a parent's ``b-ap-<band>``, none for a plain
-    child). A second radio the pod has not brought up yet (absent, or no channel) is left out and
-    reported once it appears."""
+    second radio takes the slots that name its band (a parent's ``b-ap-<band>``), and at least one:
+    an AP Radio Basic Capabilities TLV may not advertise none, and a plain child's radio (its
+    station only) can carry an AP; EMOSA maps none of that radio's M2 set (no slot), as it leaves
+    out the BSSes beyond any radio's slots (spec 3.4). A second radio the pod has not brought up
+    yet (absent, or no channel) is left out and reported once it appears."""
     on_a_second = dict(slot_bands)
     fronthaul_bss = 1 + sum(1 for name, _, _ in slots if name not in on_a_second)
     bound = [(fronthaul, channel, fronthaul_bss)]
@@ -354,7 +356,7 @@ def bound_radios(device_radios, fronthaul, channel, *, additional, slots, slot_b
         if radio is None or radio.channel is None:
             continue
         on_band = sum(1 for name, _, _ in slots if on_a_second.get(name) == band)
-        bound.append((radio, radio.channel, on_band))
+        bound.append((radio, radio.channel, max(1, on_band)))
     return tuple(bound)
 
 
