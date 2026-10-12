@@ -12,6 +12,7 @@ from emosa.agent.pod import MONITOR, PodReportSource
 from emosa.errors import EmosaError
 from emosa.opensync.easymesh_view import (
     backhaul,
+    bound_radios,
     device_view,
     inventory,
     radio_capabilities,
@@ -163,6 +164,29 @@ def test_the_view_as_easymesh_payloads():
         (STATIONS[0], 12),
         (STATIONS[1], 65535),
     ]
+
+
+def test_bound_radios_adds_the_profiles_second_radio():
+    """Spec 9: EMOSA binds the fronthaul plus each profile radio found on the device by band.
+    A plain child's second radio has no EMOSA AP (max_bss 0); a parent's b-ap-50 gives it one."""
+    view = device_view(decode(raw_tables()))
+    fronthaul = view.radio(RUID_24)
+    child = bound_radios(
+        view.radios, fronthaul, 6, additional=({"band": "5G"},), slots=(), slot_bands=()
+    )
+    assert [(r.ruid, ch, mbss) for r, ch, mbss in child] == [(RUID_24, 6, 1), (RUID_5, 44, 0)]
+    parent = bound_radios(
+        view.radios,
+        fronthaul,
+        6,
+        additional=({"band": "5G"},),
+        slots=(("b-ap-50", "backhaul", 1), ("fh-24", "fronthaul", 6)),
+        slot_bands=(("b-ap-50", "5G"),),
+    )
+    assert [(r.ruid, ch, mbss) for r, ch, mbss in parent] == [(RUID_24, 6, 2), (RUID_5, 44, 1)]
+    # no additional radios: just the fronthaul
+    only = bound_radios(view.radios, fronthaul, 6, additional=(), slots=(), slot_bands=())
+    assert [r.ruid for r, _, _ in only] == [RUID_24]
 
 
 def test_radios_capabilities_reports_each_bound_radio():

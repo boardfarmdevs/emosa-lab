@@ -52,6 +52,7 @@ from emosa.opensync.easymesh_view import (
     MEDIA,
     backhaul,
     backhaul_radios,
+    bound_radios,
     device_view,
     inventory,
     radios_capabilities,
@@ -332,21 +333,15 @@ class PodReportSource:
             # a new session, and its capabilities are taken again.
             fresh = self.capabilities is None or raw["generation"] != self.capabilities_generation
             # spec 9: report the fronthaul radio and each of the profile's additional radios (the
-            # second radio of 8.6), each operable only on its own channel. max_bss is per radio: the
-            # fronthaul takes the BSSes whose slots are on it, a second radio takes its own (a
-            # parent's b-ap-<band>, none for a plain child).
-            slot_bands = dict(self.backend.profile.slot_bands)
-            fronthaul_bss = 1 + sum(1 for n, _, _ in self.backend.slots if n not in slot_bands)
-            bound = [(radio, channel, fronthaul_bss)]
-            for extra in self.backend.profile.radios:
-                band = extra["band"]
-                second = next(
-                    (r for r in device.radios if r.band == band and r.ruid != radio.ruid), None
-                )
-                if second is None or second.channel is None:
-                    continue  # the pod has not brought its second radio up yet
-                on_band = sum(1 for n, _, _ in self.backend.slots if slot_bands.get(n) == band)
-                bound.append((second, second.channel, on_band))
+            # second radio of 8.6), each operable only on its own channel.
+            bound = bound_radios(
+                device.radios,
+                radio,
+                channel,
+                additional=self.backend.profile.radios,
+                slots=self.backend.slots,
+                slot_bands=self.backend.profile.slot_bands,
+            )
             stored = (
                 {
                     r.basic.ruid: r.basic.operating_classes[0].max_eirp_dbm
