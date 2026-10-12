@@ -239,6 +239,11 @@ def test_backhaul_steering_moves_the_station_and_answers_success(agent, tmp_path
     assert result["passed"], result
 
 
+def test_a_pod_on_its_bootstrap_records_its_bootstrap_upstream(agent, tmp_path):
+    result = box("revert-by-record", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
 def test_a_backhaul_steering_answer_is_kept_across_a_renewal(agent, tmp_path):
     result = box("backhaul-steering-renewal", agent, tmp_path / "box")
     assert result["passed"], result

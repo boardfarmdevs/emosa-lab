@@ -41,6 +41,10 @@ ROOT = Path(__file__).resolve().parents[3]
 POD_ROWS = ROOT / "tests/fixtures/opensync/pod-6.6.1-hwsim-tables.json"
 # another pod, on a Multi-AP Wi-Fi backhaul (bhaul-sta-24 on emosa-lab-bh, data plane option 1)
 MULTI_AP_ROWS = ROOT / "tests/fixtures/opensync/pod-6.6.1-hwsim-uplink-multi-ap.json"
+# a pod on its GTP bootstrap: bhaul-sta-24 in vconf mode on the bootstrap BSS, cm on the gretap.
+# For the operator steer onto a parent and back (spec 8.6 revert); the agent awaits a steer.
+BOOTSTRAP_ROWS = ROOT / "tests/fixtures/opensync/pod-6.6.1-hwsim-bootstrap.json"
+BOOTSTRAP_BSS = "02:00:00:00:1b:01"
 BACKHAUL_PARENT, BACKHAUL_STATION = "02:00:00:00:19:01", "02:00:00:00:14:00"
 UPLINK = {
     "mode": "multi-ap",
@@ -433,6 +437,7 @@ class Box:
         telemetry=False,
         foreign_broker=False,
         backhaul=False,
+        bootstrap=False,
         multi_bss=False,
         uplink=None,
         topology_query_window=None,
@@ -477,7 +482,9 @@ class Box:
         # the reply to the agent's first write of the registrar's SSID lost; refused-close: the
         # agent's first steering close refused on the same connection)
         self.reply_cut = REPLY_CUTS[reply_cut]() if reply_cut else None
-        self.pod_rows = MULTI_AP_ROWS if backhaul else POD_ROWS
+        # bootstrap (with backhaul): the pod on its GTP bootstrap, the agent awaiting a steer
+        self.bootstrap = bootstrap
+        self.pod_rows = BOOTSTRAP_ROWS if bootstrap else (MULTI_AP_ROWS if backhaul else POD_ROWS)
         self.process = self.db = self.controller = self.log = self.broker = None
         self.interface = AGENT_INTERFACE  # the agent's 1905 interface (a fleet names its own)
 
@@ -1999,6 +2006,19 @@ async def backhaul_steering_refused(box):
     )
 
 
+async def revert_by_record(box):
+    """Spec 8.6: a pod on its GTP bootstrap, the agent awaiting a steer, records its bootstrap
+    upstream (the BSS its station is on) before any move. (Grown next: steer onto a parent, then
+    a steer back to this BSS reverts the move.)"""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    recorded = await box.until(lambda: uplink_status(box).get("bootstrap"), seconds=30)
+    return box.result(
+        passed=bool(recorded) and recorded.get("bssid") == BOOTSTRAP_BSS,
+        bootstrap=recorded,
+    )
+
+
 async def backhaul_steering_own_bss(box):
     """Suite finding (a pod's station on its own backhaul BSS loops br-home): a Backhaul
     Steering Request whose target is one of the pod's own BSSes is refused at once, failure
@@ -3023,6 +3043,7 @@ SCENARIOS = {
     "steering-refusals": steering_refusals,
     "backhaul-capability": backhaul_capability,
     "backhaul-steering": backhaul_steering,
+    "revert-by-record": revert_by_record,
     "backhaul-steering-renewal": backhaul_steering_renewal,
     "backhaul-steering-refused": backhaul_steering_refused,
     "backhaul-steering-own-bss": backhaul_steering_own_bss,
@@ -3053,6 +3074,17 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "unassociated": {"telemetry": True},
     "backhaul-capability": {"backhaul": True},
     "backhaul-steering": {"backhaul": True},
+    "revert-by-record": {
+        "backhaul": True,
+        "bootstrap": True,
+        "uplink": {
+            "mode": "gre",
+            "station": "bhaul-sta-24",
+            "credentials": "config",
+            "ssid": "emosa-lab-bh",
+            "secret_ref": "backhaul",
+        },
+    },
     "backhaul-steering-renewal": {"backhaul": True},
     "backhaul-steering-own-bss": {"backhaul": True},
     "backhaul-steering-across-bands": {"backhaul": True},
