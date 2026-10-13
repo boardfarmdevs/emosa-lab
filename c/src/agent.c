@@ -57,6 +57,10 @@
 
 #define REFRESH_PERIOD 0.5
 #define LEASE 1.5
+/* spec 2.5 (pod.RECONNECT_WINDOW): a provisioned session held this long while its pod's link is
+ * away, and kept when the same pod comes back within it (OpenSync's CM opens the link again 15 to
+ * 18 s after a backhaul move; well inside a controller's own silence windows) */
+#define RECONNECT_WINDOW 60
 #define DISCOVERY_PERIOD 60
 #define AP_DEADLINE 120
 
@@ -174,6 +178,17 @@ typedef struct {
     bool available, caps_fixed;
     int caps_generation; /* the pod source (OVSDB generation) caps are fixed for */
     double refreshed_at;
+    /* spec 2.5: the pod source the session is on (the pod, the start of its OpenSync, as of the
+     * last refresh), the new generations that continued it and those that were another source by
+     * reason; a Topology Notification due for a kept reconnection; the radios whose operable
+     * channel moved in a kept session, their reports due */
+    char source_serial[65], source_node[65], source_instance[17];
+    bool has_source;
+    unsigned reconnections_continued;
+    counters reconnections_fresh;
+    bool notify_due;
+    uint8_t channel_moves[1 + EXTRA_RADIOS][6];
+    size_t nchannel_moves;
     int generation;
     unsigned long revision; /* the pod database's, at the last refresh */
     em_device_view view;
@@ -372,6 +387,63 @@ static bool power_rose(const em_capability_radio *before, size_t n, const em_tlv
     return same;
 }
 
+/* An AP Radio Basic Capabilities TLV's value apart from its operable channels (spec 2.5): its RUID,
+ * maximum BSS and class count, and each class with its maximum EIRP, the non-operable channel
+ * lists left out (RUID(6) max_bss(1) classes(1), per class: class(1) EIRP(1) n(1) channels(n)).
+ * Its length, or 0 when the value is malformed or does not fit. */
+static size_t basic_identity(const em_tlv *t, uint8_t *out, size_t size)
+{
+    const uint8_t *v = t->value;
+    size_t off = 8, n = 8;
+    if (t->len < 8 || size < 8)
+        return 0;
+    memcpy(out, v, 8);
+    for (unsigned k = 0; k < v[7]; k++) {
+        if (off + 3 > t->len || n + 2 > size)
+            return 0;
+        out[n++] = v[off];
+        out[n++] = v[off + 1];
+        off += 3 + (size_t)v[off + 2];
+    }
+    return off == t->len ? n : 0;
+}
+
+/* Two capability reports are the same apart from their radios' operable channels
+ * (reports.capabilities_identity, spec 2.5). */
+static bool same_identity(const em_tlv_list *x, const em_tlv_list *y)
+{
+    if (x->count != y->count)
+        return false;
+    for (size_t i = 0; i < x->count; i++) {
+        const em_tlv *p = &x->tlvs[i], *q = &y->tlvs[i];
+        if (p->kind != q->kind)
+            return false;
+        if (p->kind == 0x85) {
+            uint8_t ip[256], iq[256];
+            size_t np = basic_identity(p, ip, sizeof(ip)), nq = basic_identity(q, iq, sizeof(iq));
+            if (!np || np != nq || memcmp(ip, iq, np))
+                return false;
+        } else if (p->len != q->len || memcmp(p->value, q->value, p->len)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/* The RUIDs of the radios whose AP Radio Basic Capabilities differ between two reports of the
+ * same identity: their operable channel moved (reports.operable_channels_moved), how many. */
+static size_t operable_moved(const em_tlv_list *before, const em_tlv_list *after, uint8_t out[][6], size_t max)
+{
+    size_t n = 0;
+    for (size_t i = 0; i < before->count && i < after->count && n < max; i++) {
+        const em_tlv *p = &before->tlvs[i], *q = &after->tlvs[i];
+        if (p->kind == 0x85 && q->kind == 0x85 && p->len >= 6 &&
+            (p->len != q->len || memcmp(p->value, q->value, p->len)))
+            memcpy(out[n++], q->value, 6);
+    }
+    return n;
+}
+
 /* The radios the agent shows, the fronthaul first, then each further radio the pod has brought
  * up (spec 9), each with the BSSes the agent represents on it, on its channel. */
 static size_t shown_radios(const agent *a, em_topology_radio out[1 + EXTRA_RADIOS])
@@ -455,6 +527,27 @@ static size_t station_names(const agent *a, const char *out[EM_UPLINK_BANDS + 1]
             out[n++] = a->profile.uplink_band_stations[i];
     }
     return n;
+}
+
+/* Why a new database generation of a pod source already taken is another source (spec 2.5), or
+ * NULL: it continues the last one (pod._fresh_reason). Only the link to the pod comes back in a
+ * continuation: the same pod, the same start of its OpenSync (its database and the configuration
+ * in it; a restart's comes from its template, and the engine writes only for an M2), within the
+ * window, with the same capabilities apart from their operable channels. */
+static const char *fresh_reason(const agent *a, const em_device_view *view, const cJSON *tables,
+                                const em_tlv_list *caps)
+{
+    char instance[17];
+    if (!a->has_source || strcmp(view->serial, a->source_serial) ||
+        strcmp(view->has_node_id ? view->node_id : "", a->source_node))
+        return "another_pod";
+    if (!em_start_instance(tables, instance) || strcmp(instance, a->source_instance))
+        return "pod_restarted";
+    if (now() - a->refreshed_at > RECONNECT_WINDOW)
+        return "window_passed";
+    if (!same_identity(caps, &a->caps))
+        return "capabilities_changed";
+    return NULL;
 }
 
 static bool refresh(agent *a)
@@ -550,12 +643,15 @@ static bool refresh(agent *a)
         reported[nreported++] = (em_capability_radio){&rs->represented, on, (uint8_t)(own ? own : 1), 0};
     }
     em_capability_radio before[1 + EXTRA_RADIOS]; /* the same radios as advertised so far */
+    /* a new generation of a source already taken is compared with the maxima it advertised
+     * (spec 2.5): a continuation keeps them */
+    bool new_source = fresh && a->caps_fixed;
     for (size_t k = 0; k < nreported; k++) {
         /* its maximum EIRP: the source's own, raised by a higher reported power (spec 2.5) */
         const em_radio_view *r = reported[k].radio;
         bool has_kept = false;
         int8_t kept = 0;
-        for (size_t i = 0; !fresh && i < a->nreported; i++)
+        for (size_t i = 0; a->caps_fixed && i < a->nreported; i++)
             if (!memcmp(a->reported[i].ruid, r->ruid, 6)) {
                 has_kept = true;
                 kept = a->reported[i].max_eirp;
@@ -565,12 +661,34 @@ static bool refresh(agent *a)
         if (has_kept)
             before[k].max_eirp = kept;
     }
-    int8_t max_eirp = reported[0].max_eirp;
     em_tlv_list caps;
     if (em_capabilities_tlvs(reported, nreported, &caps) != EM_OK) {
         free(view);
         return false;
     }
+    if (new_source) {
+        const char *why = fresh_reason(a, view, tables, &caps);
+        if (!why) { /* the same pod source: the session goes on (a provisioned one is kept) */
+            fresh = false;
+            a->caps_generation = source;
+            a->reconnections_continued++;
+            em_attempts_continue(&a->at, source);
+        } else { /* another source: its own maxima, a fresh session */
+            count(&a->reconnections_fresh, why);
+            LOG("a new pod source (%s): a fresh session", why);
+            em_tlv_list_free(&caps);
+            for (size_t k = 0; k < nreported; k++) {
+                const em_radio_view *r = reported[k].radio;
+                reported[k].max_eirp = em_advertised_eirp(false, 0, r->has_tx_power, r->tx_power);
+                before[k] = reported[k];
+            }
+            if (em_capabilities_tlvs(reported, nreported, &caps) != EM_OK) {
+                free(view);
+                return false;
+            }
+        }
+    }
+    int8_t max_eirp = reported[0].max_eirp;
     if (fresh) {
         if (a->caps_fixed) { /* the previous source's */
             if (!same_tlvs(&caps, &a->caps))
@@ -588,12 +706,26 @@ static bool refresh(agent *a)
         em_tlv_list_free(&caps);
     } else if (further_radios_changed(&a->caps, &caps)) {
         /* spec 9: a further radio's channel follows the pod's station (and the radio appears once
-         * the pod brings it up): its capabilities are taken again, and the session that has the
-         * old ones ends, the next starting afresh with this radio's new M1 */
+         * the pod brings it up): its capabilities are taken again. A channel move keeps a
+         * provisioned session (spec 2.5: its new operable channel reported); a radio that came or
+         * went, or a session not provisioned yet, starts afresh with new M1s. */
         LOG("a further radio moved channel or came and went: capabilities taken");
+        bool keeps = a->at.state == S_PROVISIONING && a->at.window > 0 && same_identity(&a->caps, &caps);
+        if (keeps) {
+            uint8_t moved[1 + EXTRA_RADIOS][6];
+            size_t n = operable_moved(&a->caps, &caps, moved, 1 + EXTRA_RADIOS);
+            for (size_t i = 0; i < n; i++) {
+                bool known = false;
+                for (size_t j = 0; j < a->nchannel_moves; j++)
+                    known = known || !memcmp(a->channel_moves[j], moved[i], 6);
+                if (!known && a->nchannel_moves < 1 + EXTRA_RADIOS)
+                    memcpy(a->channel_moves[a->nchannel_moves++], moved[i], 6);
+            }
+            count(&a->counts, "channel_move_kept");
+        }
         em_tlv_list_free(&a->caps);
         a->caps = caps;
-        if (a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
+        if (!keeps && a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
             a->at.state != S_INCOMPATIBLE)
             close_session(a, S_SOURCE_LOST);
     } else if (power_rose(before, nreported, &a->caps)) {
@@ -671,6 +803,12 @@ static bool refresh(agent *a)
     a->revision = em_ovsdb_revision(a->ovs);
     a->refreshed_at = t;
     a->available = true;
+    /* the pod source as of this refresh (spec 2.5: what a new generation must match to continue) */
+    EM_FORMAT_FIXED(a->source_serial, sizeof(a->source_serial), "%s", a->view.serial);
+    EM_FORMAT_FIXED(a->source_node, sizeof(a->source_node), "%s", a->view.has_node_id ? a->view.node_id : "");
+    if (!em_start_instance(tables, a->source_instance))
+        a->source_instance[0] = '\0';
+    a->has_source = true;
     return true;
 }
 
@@ -1861,9 +1999,11 @@ static void notify(agent *a)
         free(parent);
     }
     em_tlv al = {0x01, 6, a->al};
-    if (strcmp(topo, a->last_topology)) {
+    /* and once after a kept reconnection (spec 2.5: the pod's uplink may have moved) */
+    if (strcmp(topo, a->last_topology) || a->notify_due) {
         send_message(a, EM_MULTICAST, 0x0001, next_mid(a), &al, 1, true);
         EM_FORMAT_FIXED(a->last_topology, sizeof(a->last_topology), "%s", topo);
+        a->notify_due = false;
         count(&a->counts, "observed_topology_notification");
     }
     if (em_reannounce_due(&a->reannounce, a->topology_responses)) {
@@ -1913,20 +2053,54 @@ static void notify(agent *a)
     }
 }
 
+/* spec 2.5: the radios whose operable channel moved in a kept session: an unsolicited Channel
+ * Preference Report naming their new channel, then the Operating Channel Report (once every
+ * radio's operating parameters are measured; until then they stay due) */
+static void report_channel_moves(agent *a)
+{
+    a->control.radio = &a->represented;
+    a->control.tx_power_dbm = a->tx_power;
+    a->control.max_eirp_dbm = a->max_eirp;
+    control_radios(a);
+    a->control.previous_mid = a->mid;
+    em_frames out = {0};
+    unsigned bound_before = a->control.bound_reported;
+    em_reason r = em_control_moved(&a->control, (const uint8_t(*)[6])a->channel_moves, a->nchannel_moves, &out);
+    a->mid = a->control.previous_mid;
+    if (r != EM_OK) {
+        em_frames_free(&out);
+        return;
+    }
+    send_frames(a, &out);
+    a->nchannel_moves = 0;
+    count(&a->counts, "channel_preference_report_unsolicited");
+    count(&a->counts, "operating_channel_report_sent");
+    for (unsigned k = bound_before; k < a->control.bound_reported; k++)
+        count(&a->counts, "operating_power_bound_reported");
+}
+
 static void session_tick(agent *a)
 {
     double t = now();
     em_attempt_step step = em_attempts_tick(&a->at, t, source_current(a), a->generation);
+    if (step.held)
+        count(&a->counts, "reconnection_held");
+    if (step.kept) { /* spec 2.5: its pod reconnected, the session kept: a Topology Notification */
+        count(&a->counts, "reconnection_kept");
+        a->notify_due = true;
+    }
     if (step.start)
         start_session(a);
     if (step.ended) {
         count(&a->counts, step.ended);
+        if (step.window_passed)
+            count(&a->counts, "reconnection_window_passed");
         end_session(a);
         return;
     }
     if (step.search)
         search(a);
-    if (a->at.state == S_NONE)
+    if (a->at.state == S_NONE || a->at.away) /* held: nothing that needs the pod (spec 2.5) */
         return;
     early_tick(a);
     if (a->bh_live || a->bh_shared.pending) { /* a started Backhaul Steering move is answered */
@@ -1948,6 +2122,8 @@ static void session_tick(agent *a)
     }
     if (a->at.state == S_PROVISIONING)
         next_radio(a); /* spec 9: the further radios' own M1s, in turn */
+    if (a->at.state == S_PROVISIONING && a->nchannel_moves && source_current(a))
+        report_channel_moves(a);
     if (a->at.state == S_PROVISIONING)
         notify(a);
 }
@@ -2082,6 +2258,11 @@ static cJSON *status(agent *a)
     free(text);
     cJSON_AddItemToObject(o, "pod", pod_facts(a));
     cJSON_AddBoolToObject(o, "report_source_available", source_current(a));
+    /* spec 2.5: new generations that continued the pod source, and those that were another, by
+     * reason */
+    cJSON *reconnections = cJSON_AddObjectToObject(o, "reconnections");
+    cJSON_AddNumberToObject(reconnections, "continued", a->reconnections_continued);
+    cJSON_AddItemToObject(reconnections, "fresh", counters_json(&a->reconnections_fresh, ""));
     cJSON_AddStringToObject(session, "state", SESSION_NAMES[a->at.state]);
     cJSON *issues = cJSON_AddArrayToObject(session, "admission_issues");
     for (size_t i = 0; i < a->nadmission_issues; i++)
@@ -2630,6 +2811,7 @@ int main(int argc, char **argv)
     a.tokens = 32;
     a.token_time = now();
     em_renew_init(&a.renewals, a.token_time, a.topology_query_window);
+    a.at.window = RECONNECT_WINDOW;
     LOG("EMOSA C agent %s (%s) for %s: AL %s, controller %s, OVSDB %s, %s", EMOSA_VERSION, EMOSA_REVISION, a.pod_id,
         cfg_str(a.config, "al_mac"), cfg_str(a.config, "controller_al"), cfg_str(a.config, "ovsdb"),
         a.r1 ? "r1" : "easymesh-6.1");

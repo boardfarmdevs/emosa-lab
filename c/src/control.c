@@ -319,6 +319,71 @@ static const char *channel(em_control *c, const em_message *m, em_frames *out, e
     return declined ? "channel_selection_declined" : "channel_selection_accepted";
 }
 
+em_reason em_control_moved(em_control *c, const uint8_t (*moved)[6], size_t nmoved, em_frames *out)
+{
+    em_control_radio radios[4];
+    size_t nradios = control_radios(c, radios);
+    for (size_t k = 0; k < nradios; k++)
+        if (!radios[k].measured)
+            return EM_NOT_READY; /* "measured operating parameters unavailable" */
+    /* a Channel Preference TLV per moved radio: each class of its band with a channel other than
+     * its current one, those channels at preference 0, reason 8 (channel.moved_preferences) */
+    uint8_t preference[4][7 + 3 * (3 + 13)];
+    em_tlv pt[4], ot[4];
+    size_t np = 0;
+    for (size_t k = 0; k < nradios && np < 4; k++) {
+        bool is_moved = false;
+        for (size_t i = 0; i < nmoved; i++)
+            is_moved = is_moved || !memcmp(moved[i], radios[k].ruid, 6);
+        if (!is_moved)
+            continue;
+        const uint8_t *classes;
+        size_t nclasses = advertised(radios[k].op_class, &classes), len = 7;
+        uint8_t *v = preference[np], groups = 0;
+        memcpy(v, radios[k].ruid, 6);
+        for (size_t g = 0; g < nclasses; g++) {
+            const uint8_t *channels;
+            size_t n, at = len;
+            if (!class_channels(classes[g], &channels, &n))
+                continue;
+            v[len++] = classes[g];
+            v[len++] = 0;
+            for (size_t j = 0; j < n; j++)
+                if (channels[j] != radios[k].channel) {
+                    v[len++] = channels[j];
+                    v[at + 1]++;
+                }
+            if (!v[at + 1]) {
+                len = at;
+                continue;
+            }
+            v[len++] = 0x08; /* preference 0, reason 8: it would prevent the shared radio's backhaul */
+            groups++;
+        }
+        v[6] = groups;
+        pt[np++] = (em_tlv){0x8B, (uint16_t)len, v};
+    }
+    /* the Operating Channel Report: one TLV per radio of the agent */
+    uint8_t report[4][10];
+    unsigned bound = 0;
+    for (size_t k = 0; k < nradios; k++) {
+        memcpy(report[k], radios[k].ruid, 6);
+        report[k][6] = 1;
+        report[k][7] = radios[k].op_class;
+        report[k][8] = (uint8_t)radios[k].channel;
+        report[k][9] = (uint8_t)radios[k].tx_power_dbm;
+        if (radios[k].bound)
+            bound++;
+        ot[k] = (em_tlv){0x8F, 10, report[k]};
+    }
+    em_reason r = send(c, 0x8005, next_mid(c), pt, np, out);
+    if (r == EM_OK)
+        r = send(c, 0x8008, next_mid(c), ot, nradios, out);
+    if (r == EM_OK)
+        c->bound_reported += bound;
+    return r;
+}
+
 static void system_utc(char out[40])
 {
     struct timespec now;

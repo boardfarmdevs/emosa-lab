@@ -37,6 +37,33 @@ em_attempt_step em_attempts_tick(em_attempts *a, double now, bool source_ok, int
         a->next_search = now;
         a->discovery_deadline = now + DISCOVERY_TIMEOUT;
         step.start = true;
+    } else if (a->state == EM_SESSION_PROVISIONING && a->window > 0) {
+        /* spec 2.5: a provisioned attempt held while its pod's State is away, kept when the agent
+         * continues the source on a new generation (or the same one comes back) */
+        if (!source_ok) {
+            if (!a->away) {
+                a->away = true;
+                a->away_since = now;
+                step.held = true;
+            }
+            if (now < a->away_since + a->window)
+                return step;
+            a->away = a->continued = false;
+            step.ended = "source_lost";
+            step.window_passed = true;
+            end(a, now);
+            return step;
+        }
+        if (generation != a->generation) { /* another source: not continued by the agent */
+            a->away = a->continued = false;
+            step.ended = "source_lost";
+            end(a, now);
+            return step;
+        }
+        if (a->away || a->continued) {
+            a->away = a->continued = false;
+            step.kept = true;
+        }
     } else if (!source_ok || generation != a->generation) {
         step.ended = "source_lost";
         end(a, now);
@@ -64,6 +91,15 @@ void em_attempts_renew(em_attempts *a)
     a->state = EM_SESSION_NONE;
     a->failures = 0;
     a->next_start = 0;
+    a->away = a->continued = false;
+}
+
+void em_attempts_continue(em_attempts *a, int generation)
+{
+    if (a->state != EM_SESSION_PROVISIONING || a->window <= 0)
+        return;
+    a->generation = generation;
+    a->continued = true;
 }
 
 void em_reannounce_provisioned(em_reannounce *r, unsigned responses)

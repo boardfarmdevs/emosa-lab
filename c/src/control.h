@@ -89,4 +89,11 @@ const char *em_control_handle(em_control *c, const em_message *m, em_frames *out
 
 em_reason em_decode_steering_request(const em_message *m, em_steering_request *out);
 
+/* spec 2.5: the radios ``moved`` (RUIDs) changed channel in a kept session (their pod's uplink
+ * moved them): an unsolicited Channel Preference Report naming each one's current channel its
+ * only operable one (every other channel of its band's classes at preference 0, reason 8), then
+ * an Operating Channel Report of every radio, appended to *out. EM_NOT_READY while a radio's
+ * operating parameters are not measured. */
+em_reason em_control_moved(em_control *c, const uint8_t (*moved)[6], size_t nmoved, em_frames *out);
+
 #endif

@@ -26,9 +26,14 @@ typedef enum {
 
 typedef struct {
     em_session_state state;
-    int generation; /* the pod's database generation the attempt began on */
+    int generation; /* the pod's database generation the attempt is on */
     unsigned starts, failures, searches;
     double next_start, next_search, discovery_deadline;
+    /* spec 2.5: a provisioned attempt is held this many seconds while the pod's State is away
+     * (0: not held, the source lost at once), and kept on a new generation the agent continues */
+    double window;
+    double away_since;
+    bool away, continued;
 } em_attempts;
 
 /* What one tick asks of the agent, in order. */
@@ -36,10 +41,18 @@ typedef struct {
     bool start;         /* a new attempt: discovery begins */
     bool search;        /* send one AP-Autoconfiguration Search */
     const char *ended;  /* the attempt ended: "discovery_timeout", "source_lost", "failed" */
+    bool held;          /* spec 2.5: a provisioned attempt's source went away: held */
+    bool kept;          /* spec 2.5: a held or continued attempt goes on: its pod reconnected */
+    bool window_passed; /* spec 2.5: ended, its source away for the whole window */
 } em_attempt_step;
 
 /* One tick. source_ok: the pod's State is current; generation: its database generation. */
 em_attempt_step em_attempts_tick(em_attempts *a, double now, bool source_ok, int generation);
+/* spec 2.5: the agent judged the pod's new database generation to continue its source (the same
+ * pod, the same start of its OpenSync, the same capabilities apart from their operable channels,
+ * back within the window): a provisioned attempt goes on on it, and the next tick reports it
+ * kept. Nothing for an attempt not provisioned or not held. */
+void em_attempts_continue(em_attempts *a, int generation);
 /* A renewal (AP-Autoconfiguration Renew or a rule below): a fresh attempt at once. */
 void em_attempts_renew(em_attempts *a);
 
