@@ -160,6 +160,18 @@ own settings and steps stay with the router's project.
    extender, and back) before the end soaks; the box proves the move and revert.
 2. Known gaps to close before V54's end soaks (spec 9): radio B's 80 MHz (class 128, centre 155, the
    HT/VHT capability TLVs, a steer naming 128/155) and radio B's own telemetry.
+3. Known gap, after multi-hop: both agents answer a Backhaul STA Capability Query (0x8027) only
+   within an onboarding session.
+   - **C:** drops it from a session's end until the next session's first M1 (counted as
+     `unsupported_message_8027`).
+   - **Reference:** answers only while provisioning.
+   - **Should:** an agent answers it whenever it has the pod's view and its controller, since the
+     report describes the pod's backhaul station radios, not the autoconfiguration.
+   - **V54:** not hit on the MV3 (12 October): the counter stayed at 0. Radio B's 7-minute renew
+     loop after pi1's boot was the controller's (F-204: a bsta_cap queued behind the radio's
+     em_config, its query never sent). That fix is a controller patch (meta-cmf 0266, draft,
+     waiting for the owner's approval); EMOSA's sending of the Backhaul STA Radio Capabilities TLV
+     in every Topology Response is standard and stays.
 
 ## Lab access (rdk-1010 on rev120)
 `ssh rev120` → `lxc exec rdk-1010` → `lxc exec bpibroadband` (the gateway: em_ctrl + emosa). Feed
