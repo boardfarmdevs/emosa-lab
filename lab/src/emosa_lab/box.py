@@ -4384,6 +4384,48 @@ async def reconnect_moved_uplink(box):
     )
 
 
+async def reconnect_config_lost(box):
+    """spec 2.5's safety: a kept reconnection whose pod no longer has the agent's configuration,
+    though the same start of its OpenSync (its radio rows kept: a path not seen yet, here the AP
+    row's SSID changed while the link was cut). The agent ends the session at once, counted in
+    the status's reconnections as config_lost, and the fresh session's M2 writes the
+    configuration again, well within the 60 s the unserved rule would take."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
+    lost = ((box.status() or {}).get("reconnections") or {}).get("config_lost", 0)
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}", connect=False)
+    rows = await box.rows("Wifi_VIF_Config")
+    ours = next((u for u, r in rows.items() if r.get("ssid") == REGISTRAR_SSID), None)
+    if ours is None:
+        return box.result(passed=False, failed="the agent's AP row was not found")
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_VIF_Config",
+                "where": [["_uuid", "==", ["uuid", ours]]],
+                "row": {"ssid": "changed-while-away"},
+            }
+        ]
+    )
+    await apply_configuration(box.db)  # the pod runs it
+    await asyncio.sleep(10)
+    back_at = time.monotonic()
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}")
+    mode = await back(box, searches, m1s, continued, seconds=50)
+    took = time.monotonic() - back_at
+    counted = ((box.status() or {}).get("reconnections") or {}).get("config_lost", 0) > lost
+    return box.result(
+        passed=mode == "fresh" and counted and took < RECONNECT_WINDOW,
+        session=mode,
+        config_lost_counted=counted,
+        rewritten_after_s=round(took, 1),
+        operations=[op.get("state") for op in (box.status() or {}).get("operations") or []][-3:],
+    )
+
+
 async def reconnect_not_provisioned(box):
     """The pod's link cut for 15 s while the agent's first M1 waits for its M2 (spec 2.5): a
     session not yet provisioned is not held. It loses its source at once, and when the pod dials
@@ -4570,6 +4612,7 @@ SCENARIOS = {
     "reconnect-moved-uplink": reconnect_moved_uplink,
     "reconnect-channel-follows": reconnect_channel_follows,
     "reconnect-not-provisioned": reconnect_not_provisioned,
+    "reconnect-config-lost": reconnect_config_lost,
     "write-lost-unapplied": write_lost_unapplied,
     "restart-during-write": restart_during_write,
 }

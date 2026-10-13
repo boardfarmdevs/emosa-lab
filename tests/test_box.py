@@ -351,6 +351,12 @@ def test_a_session_not_yet_provisioned_is_not_held_across_a_cut(agent, tmp_path)
     assert result["passed"], result
 
 
+def test_a_kept_reconnection_without_its_configuration_onboards_again_at_once(agent, tmp_path):
+    # spec 2.5's safety: the configuration gone under the same start, the fresh session's M2
+    result = box("reconnect-config-lost", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
 # -- the adapter around the agents (plan 8.3): the fleet and the GTP, either implementation
 
 

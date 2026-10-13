@@ -49,6 +49,7 @@
       "additionalProperties": false,
       "properties": {
         "continued": {"type": "integer", "minimum": 0},
+        "config_lost": {"type": "integer", "minimum": 0, "description": "kept reconnections whose pod no longer had the configuration: the session ended at once, the fresh session's M2 writing it"},
         "fresh": {
           "type": "object",
           "additionalProperties": false,

@@ -936,6 +936,7 @@ async def serve(config, stop):
     message_set = check_message_set(config.get("message_set", EASYMESH_61))
     lifecycle, last_status, last_facts, last_write = None, None, None, 0
     next_discovery = 0
+    last_kept = None  # (the session's kept reconnections, the session) last checked for drift
     renewals = RenewRules(
         time.monotonic(), topology_query_window=config.get("topology_query_window")
     )
@@ -1114,6 +1115,25 @@ async def serve(config, stop):
                     await timed("session tick", lifecycle.tick())
                 except EmosaError as exc:
                     log.warning("session tick: %s", exc)
+                # spec 2.5: a kept reconnection whose pod no longer has the configuration (its rows
+                # missing or changed under the same start of its OpenSync): the session ends at
+                # once, and the fresh session's M2 writes it, rather than the unserved rule's 60 s
+                session = lifecycle.session
+                kept = (
+                    (session.counts.get("reconnection_kept", 0), id(session)) if session else None
+                )
+                if kept and kept != last_kept and kept[0] and refreshed and ready:
+                    last_kept = kept
+                    engines = [engine, *(e for _, e in radio_scopes.values())]
+                    if any([await e.drifted(pod_id) for e in engines if e.store.operations()]):
+                        log.info(
+                            "the pod's configuration is gone after its reconnection: "
+                            "onboarding again"
+                        )
+                        report.reconnections["config_lost"] = (
+                            report.reconnections.get("config_lost", 0) + 1
+                        )
+                        lifecycle.renew()
                 now = time.monotonic()
                 if now >= next_discovery:
                     for piece in topology_discovery(agent, mids):

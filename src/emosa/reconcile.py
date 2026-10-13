@@ -227,6 +227,22 @@ class Engine:
             evidence["instance"] = instance  # the start of the pod's OpenSync (spec §5)
         return evidence
 
+    async def drifted(self, pod_id):
+        """spec 2.5: the pod's most recent operation, observed applied, is no longer in the pod's
+        configuration (its rows missing or changed after a kept reconnection, under the same
+        start of its OpenSync). False while the pod's State is not ready."""
+        ops = [op for op in self.store.operations() if op.pod_id == pod_id]
+        if not ops or ops[-1].state != State.OBSERVED_APPLIED:
+            return False
+        snap = await self.backends[pod_id].snapshot()
+        if not snap.ready:
+            return False
+        try:
+            target = self.intent_type(**ops[-1].intent).target(self.vault)
+        except EmosaError:
+            return False
+        return not self._matches(snap.config, target)
+
     def _remember(self, pod_id, snap):
         instance = getattr(snap, "instance", None)
         if instance:
