@@ -80,6 +80,14 @@ size_t em_band_classes(const char *band, const em_band_class **out);
  * has it: 125 for 149), or 0 when the channel is not mapped (DFS). */
 uint8_t em_operating_class(const char *band, int channel);
 
+/* A radio's advertised maximum EIRP while the pod reports no power, dBm. */
+#define EM_DEFAULT_MAX_EIRP 20
+/* The maximum EIRP a radio advertises (spec 2.4, F-201; easymesh_view.advertised_eirp): has_kept and
+ * kept, what its capabilities advertise so far for this source; has_power and power, the pod's
+ * Wifi_Radio_State.tx_power. A source starts with the reported power, or EM_DEFAULT_MAX_EIRP; it rises
+ * with a reported power above it, and a fall changes nothing. */
+int8_t em_advertised_eirp(bool has_kept, int8_t kept, bool has_power, int power);
+
 /* One radio the agent reports (spec 9, easymesh_view.radios_capabilities): on its channel, the
  * BSSes it may carry, its maximum EIRP. 2.4 GHz, or 5 GHz UNII-1 or UNII-3, each in every class of
  * its band. */

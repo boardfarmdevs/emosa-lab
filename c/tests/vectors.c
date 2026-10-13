@@ -679,6 +679,17 @@ static void northbound_vectors(const char *dir)
             em_tlv_list_free(&list);
         }
     }
+    /* spec 2.4, F-201: a radio's advertised maximum EIRP only rises */
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "advertised_eirp"))
+    {
+        const cJSON *kept = cJSON_GetObjectItemCaseSensitive(c, "kept");
+        const cJSON *reported = cJSON_GetObjectItemCaseSensitive(c, "reported");
+        checks++;
+        int8_t got = em_advertised_eirp(cJSON_IsNumber(kept), cJSON_IsNumber(kept) ? (int8_t)kept->valueint : 0,
+                                        cJSON_IsNumber(reported), cJSON_IsNumber(reported) ? reported->valueint : 0);
+        if (got != (int8_t)num(c, "expected"))
+            fail("northbound", str(c, "name"), "advertised maximum EIRP differs");
+    }
     free(view);
     cJSON_Delete(doc);
 }

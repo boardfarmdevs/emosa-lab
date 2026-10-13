@@ -360,6 +360,18 @@ static bool further_radios_changed(const em_tlv_list *before, const em_tlv_list 
     return same_tlvs(&x, &y);
 }
 
+/* The radios with the maximum EIRP each advertised so far give the capabilities the agent has: a
+ * change of its capabilities is then only a radio's power risen above it (F-201). */
+static bool power_rose(const em_capability_radio *before, size_t n, const em_tlv_list *caps)
+{
+    em_tlv_list old;
+    if (em_capabilities_tlvs(before, n, &old) != EM_OK)
+        return false;
+    bool same = same_tlvs(&old, caps);
+    em_tlv_list_free(&old);
+    return same;
+}
+
 /* The radios the agent shows, the fronthaul first, then each further radio the pod has brought
  * up (spec 9), each with the BSSes the agent represents on it, on its channel. */
 static size_t shown_radios(const agent *a, em_topology_radio out[1 + EXTRA_RADIOS])
@@ -537,13 +549,21 @@ static bool refresh(agent *a)
         size_t own = em_profile_slots_on(&a->profile, rs->band, a->multi_bss).nslots;
         reported[nreported++] = (em_capability_radio){&rs->represented, on, (uint8_t)(own ? own : 1), 0};
     }
+    em_capability_radio before[1 + EXTRA_RADIOS]; /* the same radios as advertised so far */
     for (size_t k = 0; k < nreported; k++) {
-        /* its maximum EIRP: the source's own as first taken, else the pod's transmit power */
+        /* its maximum EIRP: the source's own, raised by a higher reported power (F-201) */
         const em_radio_view *r = reported[k].radio;
-        reported[k].max_eirp = (r->has_tx_power && r->tx_power > 0 && r->tx_power <= 127) ? (int8_t)r->tx_power : 20;
+        bool has_kept = false;
+        int8_t kept = 0;
         for (size_t i = 0; !fresh && i < a->nreported; i++)
-            if (!memcmp(a->reported[i].ruid, r->ruid, 6))
-                reported[k].max_eirp = a->reported[i].max_eirp;
+            if (!memcmp(a->reported[i].ruid, r->ruid, 6)) {
+                has_kept = true;
+                kept = a->reported[i].max_eirp;
+            }
+        reported[k].max_eirp = em_advertised_eirp(has_kept, kept, r->has_tx_power, r->tx_power);
+        before[k] = reported[k];
+        if (has_kept)
+            before[k].max_eirp = kept;
     }
     int8_t max_eirp = reported[0].max_eirp;
     em_tlv_list caps;
@@ -573,6 +593,23 @@ static bool refresh(agent *a)
         LOG("a further radio moved channel or came and went: capabilities taken");
         em_tlv_list_free(&a->caps);
         a->caps = caps;
+        if (a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
+            a->at.state != S_INCOMPATIBLE)
+            close_session(a, S_SOURCE_LOST);
+    } else if (power_rose(before, nreported, &a->caps)) {
+        /* F-201: a radio reports more power than the maximum EIRP it advertised (the source began
+         * before the pod reported any): its capabilities are taken again with the higher maximum,
+         * and the session that has the old ones ends, the next starting afresh */
+        for (size_t k = 0; k < nreported; k++)
+            if (reported[k].max_eirp != before[k].max_eirp) {
+                char *mac = em_mac_str(reported[k].radio->ruid);
+                LOG("a radio reports more power than it advertised: capabilities taken (%s %d -> %d dBm)",
+                    mac ? mac : "?", before[k].max_eirp, reported[k].max_eirp);
+                free(mac);
+            }
+        em_tlv_list_free(&a->caps);
+        a->caps = caps;
+        a->max_eirp = max_eirp;
         if (a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
             a->at.state != S_INCOMPATIBLE)
             close_session(a, S_SOURCE_LOST);

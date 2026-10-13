@@ -264,6 +264,11 @@ def test_a_gre_childs_kept_parent_gone_is_dropped_without_a_hold(agent, tmp_path
     assert result["passed"], result
 
 
+def test_a_radio_power_above_its_advertised_maximum_is_taken_once(agent, tmp_path):
+    result = box("power-rises", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_a_renew_on_the_bootstrap_with_a_dropped_station_is_one_session(agent, tmp_path):
     result = box("renew-on-bootstrap", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result

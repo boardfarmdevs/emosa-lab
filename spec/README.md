@@ -163,6 +163,18 @@ Rules:
   changes under the same source, the source is unavailable. A new source (a new database
   generation: the pod recreated, maybe with another radio) has its capabilities taken
   again, and its new session reports them.
+- One exception: a radio's maximum EIRP. A source starts with the radio's reported
+  `Wifi_Radio_State.tx_power`, or 20 dBm when the pod reports none yet. A reported power above
+  the maximum a radio advertises means new capabilities, since a radio cannot transmit above
+  its maximum: they are taken again with that power as the maximum, and the session that has
+  the old ones ends, the next starting afresh with the new M1s. Its unchanged M2 sets are
+  observed applied without writing. A fall changes nothing, so the maximum only rises and a
+  pod gets one fresh session per rise, not per change. Before this rule, a Pi whose source
+  began before it reported its power advertised 20 dBm and then reported 30, and the channel
+  procedures, which refuse a power above the advertised maximum, were refused; RDK renewed the
+  agent every 40 s (F-201, 12 October). Both agents (vectors `translation-northbound.json`
+  `advertised_eirp`, box `power-rises`). The agent does not wait for the power before its
+  first M1: a radio whose VIFs disagree is never given one (§9).
 - A session that fails, loses its source (the pod's State lost, or a new
   database generation), or receives a Renew is replaced by a new one. Restarts
   after failures back off by `min(30, 2^failures)` seconds; a Renew restarts at

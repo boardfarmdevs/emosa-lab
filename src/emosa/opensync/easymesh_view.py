@@ -300,6 +300,21 @@ def backhaul(device, station):
 
 # -- the view as EasyMesh payloads ----------------------------------------------
 
+DEFAULT_MAX_EIRP = 20  # dBm, a radio's advertised maximum while the pod reports no power
+
+
+def advertised_eirp(kept, reported):
+    """The maximum EIRP a radio advertises (spec 2.4, F-201): `kept`, what its capabilities
+    advertise so far for this source (None when the source starts), and `reported`, the pod's
+    Wifi_Radio_State.tx_power (None when unset). A source starts with the reported power, or
+    DEFAULT_MAX_EIRP when there is none. It rises with a reported power above it, since a radio
+    cannot transmit above its maximum; a fall changes nothing, so a pod's capabilities change
+    only on a rise."""
+    power = reported if type(reported) is int and 0 < reported <= 127 else None
+    if kept is None:
+        return DEFAULT_MAX_EIRP if power is None else power
+    return power if power is not None and power > kept else kept
+
 
 def _early_radio(radio, *, channel, max_bss, max_eirp):
     """One radio's AP Radio Basic Capabilities. Only the current channel is operable: EMOSA does

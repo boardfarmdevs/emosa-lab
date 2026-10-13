@@ -3932,6 +3932,111 @@ async def renew_on_bootstrap(box):
     )
 
 
+def advertised_max_eirp(m1):
+    """(RUID, [max EIRP of each class]) of the radio an M1's AP Radio Basic Capabilities name."""
+    value = next(t.value for t in m1.tlvs if t.kind == 0x85)
+    eirps, at = [], 8
+    for _ in range(value[7]):
+        eirps.append(value[at + 1])
+        at += 3 + value[at + 2]
+    return value[:6].hex(":"), eirps
+
+
+CONFIG_TABLES = (
+    "Wifi_VIF_Config",
+    "Wifi_Inet_Config",
+    "Wifi_Credential_Config",
+    "Wifi_Radio_Config",
+)
+
+
+async def set_radio_power(box, power):
+    """Every radio's Wifi_Radio_State.tx_power in one transaction, as the pod's managers fill it."""
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_Radio_State",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "row": {"tx_power": power},
+            }
+            for uuid in await box.rows("Wifi_Radio_State")
+        ]
+    )
+
+
+async def power_rises(box):
+    """Spec 2.4, F-201 (the Pis on their new mt76 modules, 12 October): a pod whose source began
+    before it reported its radios' power (the agent advertised its own or 20 dBm) reports more,
+    30 dBm, after onboarding. Each radio's capabilities are taken again with the higher maximum
+    EIRP: exactly one fresh session, its M1s advertising 30 dBm, its unchanged M2 sets observed
+    applied without writing, no Config row of the pod changed and its uplink untouched. The
+    channel procedures are then answered (before, refused while the power exceeded the advertised
+    maximum: RDK renewed the agent every 40 s). A fall to 23 dBm changes nothing."""
+    if await serve_radios(box, lambda: both_radios_applied(box)) is None:
+        return box.result(passed=False, failed="the two radios were not both configured")
+    before_m1s = {ruid: eirps for ruid, eirps in map(advertised_max_eirp, box.sent(AUTOCONFIG_WSC))}
+    config = {t: await box.rows(t) for t in CONFIG_TABLES}
+    uplink = {k: uplink_status(box).get(k) for k in ("waiting", "uplink", "in_use", "parent")}
+    starts = recovery_starts(box)
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    before = len((box.status() or {}).get("operations") or []), len(radio_operations(box, "5G"))
+    await set_radio_power(box, 30)
+
+    async def taken_again():
+        ops, five = (box.status() or {}).get("operations") or [], radio_operations(box, "5G")
+        more = len(ops) > before[0] and len(five) > before[1]
+        return more and all_applied(ops) and all_applied(five)
+
+    ruids = await serve_radios(box, taken_again, searches=searches, m1s=m1s)
+    if ruids is None:
+        return box.result(
+            passed=False, failed="no fresh session for the risen power", advertised=before_m1s
+        )
+    after_m1s = {
+        ruid: eirps for ruid, eirps in map(advertised_max_eirp, box.sent(AUTOCONFIG_WSC)[m1s:])
+    }
+    radio_a = bytes.fromhex(RUID_24.replace(":", ""))
+    reported = len(box.sent(0x8008))
+    selection = await box.ask(0x8006, (Tlv(0x8B, radio_a + b"\x00"),), 0x8007, seconds=5)
+    report = await next_message(box, 0x8008, reported, seconds=10)
+    responses = [t.value for t in selection.tlvs if t.kind == 0x8E] if selection else []
+    operating = [t.value for t in report.tlvs if t.kind == 0x8F] if report else []
+    radio_a_report = next((v for v in operating if v[:6] == radio_a), None)
+    sessions = recovery_starts(box) - starts
+    await set_radio_power(box, 23)  # a fall: nothing
+    await asyncio.sleep(10)
+    status = box.status() or {}
+    noop = [
+        bool((ops[-1].get("application_evidence") or {}).get("observed_noop"))
+        for ops in (status.get("operations") or [{}], radio_operations(box, "5G") or [{}])
+    ]
+    unchanged = {t: await box.rows(t) == rows for t, rows in config.items()}
+    uplink_after = {k: uplink_status(box).get(k) for k in uplink}
+    return box.result(
+        passed=sessions == 1
+        and recovery_starts(box) - starts == 1
+        and list(dict.fromkeys(ruids)) == [RUID_24, RUID_50]
+        and all(set(e) == {30} for e in after_m1s.values())
+        and set(after_m1s) == {RUID_24, RUID_50}
+        and [(v[:6], v[6]) for v in responses] == [(radio_a, 0)]
+        and radio_a_report is not None
+        and radio_a_report[9] == 30
+        and all(noop)
+        and all(unchanged.values())
+        and uplink_after == uplink,
+        advertised_before=before_m1s,
+        advertised_after=after_m1s,
+        sessions_on_the_rise=sessions,
+        sessions_after_the_fall=recovery_starts(box) - starts - sessions,
+        selection_codes=[v[6] for v in responses],
+        radio_a_operating=radio_a_report.hex() if radio_a_report else None,
+        observed_noop=noop,
+        config_unchanged=unchanged,
+        uplink_unchanged=uplink_after == uplink,
+    )
+
+
 async def adapter_restart(box):
     """The agent process killed and started again (its journal kept): it takes the pod back,
     onboards again and finds the configuration already running, without writing (spec 5)."""
@@ -4132,6 +4237,7 @@ SCENARIOS = {
     "second-radio-no-power": second_radio_no_power,
     "second-radio-moves-channel": second_radio_moves_channel,
     "renew-on-bootstrap": renew_on_bootstrap,
+    "power-rises": power_rises,
     "gre-parent-promoted": gre_parent_promoted,
     "gre-parent-demoted": gre_parent_demoted,
     "adapter-restart": adapter_restart,
@@ -4260,13 +4366,16 @@ OPTIONS = {  # the box each scenario needs beyond the default
         "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
         "underlay": GRE_UNDERLAY,
     },
-    "renew-on-bootstrap": {
-        "multi_bss": True,
-        "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
-        "underlay": GRE_UNDERLAY,
-        "backhaul": True,
-        "gre_child": True,
-        "uplink": {"mode": "gre", "station": "bhaul-sta-50"},
+    **{
+        name: {
+            "multi_bss": True,
+            "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
+            "underlay": GRE_UNDERLAY,
+            "backhaul": True,
+            "gre_child": True,
+            "uplink": {"mode": "gre", "station": "bhaul-sta-50"},
+        }
+        for name in ("renew-on-bootstrap", "power-rises")
     },
     # a GRE parent with a child, then demoted to the plain profile
     "gre-parent-demoted": {

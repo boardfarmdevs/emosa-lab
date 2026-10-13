@@ -51,6 +51,7 @@ from emosa.opensync.easymesh_view import (
     IEEE_802_11N_24,
     MEDIA,
     OPERATING_CLASSES,
+    advertised_eirp,
     backhaul,
     backhaul_radios,
     bound_radios,
@@ -377,11 +378,14 @@ class PodReportSource:
             )
 
             def _eirp(r):
-                eirp = r.tx_power if r.tx_power and 0 < r.tx_power <= 127 else 20
-                return stored.get(r.ruid, eirp)
+                return advertised_eirp(stored.get(r.ruid), r.tx_power)
 
             capabilities = radios_capabilities(
                 tuple((r, ch, mbss, _eirp(r)) for r, ch, mbss in bound)
+            )
+            # the same radios as advertised so far: different only when a radio's power rose
+            kept = radios_capabilities(
+                tuple((r, ch, mbss, stored.get(r.ruid, _eirp(r))) for r, ch, mbss in bound)
             )
             max_eirp = _eirp(radio)  # the fronthaul radio's, for the Operating Channel Report below
             if fresh:
@@ -396,6 +400,19 @@ class PodReportSource:
                     # appears once the pod brings it up): its capabilities are taken again, and
                     # the session that sees them change starts afresh with this radio's new M1
                     log.info("a further radio moved channel or came and went: capabilities taken")
+                    self.capabilities = capabilities
+                elif kept == self.capabilities:
+                    # F-201: a radio reports more power than the maximum EIRP it advertised (the
+                    # source began before the pod reported any): its capabilities are taken again
+                    # with the higher maximum, and the session that has the old ones starts afresh
+                    log.info(
+                        "a radio reports more power than it advertised: capabilities taken (%s)",
+                        ", ".join(
+                            f"{r.ruid.hex(':')} {stored.get(r.ruid)} -> {_eirp(r)} dBm"
+                            for r, _, _ in bound
+                            if stored.get(r.ruid) != _eirp(r)
+                        ),
+                    )
                     self.capabilities = capabilities
                 else:
                     # A moved fronthaul radio or replaced PHY under the same source is a different

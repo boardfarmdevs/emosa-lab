@@ -444,7 +444,34 @@ def northbound_vectors():
         "aged_at_response": aged_at_response(),
         # spec 9: agents with more than one radio, their capability and topology TLVs
         "multi_radio": multi_radio_cases(ages),
+        # spec 2.4, F-201: a radio's advertised maximum EIRP, as kept for the source and as the
+        # pod reports its power; it only rises (a fall changes nothing)
+        "advertised_eirp": advertised_eirp_cases(),
     }
+
+
+def advertised_eirp_cases():
+    from emosa.opensync.easymesh_view import advertised_eirp
+
+    cases = [
+        ("source-starts-with-power", None, 30),
+        ("source-starts-without-power", None, None),
+        ("source-starts-with-an-invalid-power", None, 0),
+        ("rises-with-the-pod", 20, 30),
+        ("kept-when-the-pod-reports-the-same", 30, 30),
+        ("kept-when-the-power-falls", 30, 23),
+        ("kept-when-the-power-goes-unset", 30, None),
+        ("kept-against-an-invalid-power", 20, 128),
+    ]
+    return [
+        {
+            "name": name,
+            "kept": kept,
+            "reported": reported,
+            "expected": advertised_eirp(kept, reported),
+        }
+        for name, kept, reported in cases
+    ]
 
 
 INSERTED = "00000000-0000-4000-8000-0000000000ff"

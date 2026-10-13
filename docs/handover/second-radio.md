@@ -55,6 +55,19 @@ Both agents, vectors and box for each; spec 8.6 and 9 record the rules.
   old write's deadline, and nothing onboarded again, so the pod stayed unconfigured until a
   Renew. This was in both agents, older than layer B. Now the old write fails at once (spec §5;
   vectors `engine.json` `restarted-before-observed`, box `restart-during-write`).
+- F-201, found on the MV3 bench (12 October, after the Pis took the mt76 transmit-power modules):
+  - **Cause:** a pod's source begins before OpenSync fills `Wifi_Radio_State.tx_power`, so the
+    agent advertised 20 dBm. The Pis then reported 30. The channel procedures refuse a power
+    above the advertised maximum, so the controller timed out and renewed the agent every
+    ~40 s. 9d930bc even refused the Channel Preference Query.
+  - **Now (spec 2.5):** a reported power above a radio's advertised maximum is taken as new
+    capabilities, with one fresh session, writing nothing. The maximum only rises (vectors
+    `translation-northbound.json` `advertised_eirp`, box `power-rises`, red before on both
+    agents).
+  - **Not done, on purpose:** the agent does not wait for the power before its first M1, as
+    7f offered. A radio whose VIFs disagree is never given a power by OpenSync (rdk-1010's
+    5 GHz radio), so every start of such a pod would wait out the bound. Each boot of a Pi
+    costs one fresh session instead, which writes nothing and leaves the uplink alone.
 
 ## The (b) proof on rdk-1010 (12 October, PDT; UTC in brackets)
 EMOSA 1c1e7ae on the gateway from 15:30:41 (22:30:41Z); pods relaunched from

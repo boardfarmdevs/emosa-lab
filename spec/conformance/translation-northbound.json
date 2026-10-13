@@ -1,4 +1,54 @@
 {
+ "advertised_eirp": [
+  {
+   "expected": 30,
+   "kept": null,
+   "name": "source-starts-with-power",
+   "reported": 30
+  },
+  {
+   "expected": 20,
+   "kept": null,
+   "name": "source-starts-without-power",
+   "reported": null
+  },
+  {
+   "expected": 20,
+   "kept": null,
+   "name": "source-starts-with-an-invalid-power",
+   "reported": 0
+  },
+  {
+   "expected": 30,
+   "kept": 20,
+   "name": "rises-with-the-pod",
+   "reported": 30
+  },
+  {
+   "expected": 30,
+   "kept": 30,
+   "name": "kept-when-the-pod-reports-the-same",
+   "reported": 30
+  },
+  {
+   "expected": 30,
+   "kept": 30,
+   "name": "kept-when-the-power-falls",
+   "reported": 23
+  },
+  {
+   "expected": 30,
+   "kept": 30,
+   "name": "kept-when-the-power-goes-unset",
+   "reported": null
+  },
+  {
+   "expected": 20,
+   "kept": 20,
+   "name": "kept-against-an-invalid-power",
+   "reported": 128
+  }
+ ],
  "aged_at_response": {
   "associated_at": {
    "02:00:00:00:0a:00": 100.0,

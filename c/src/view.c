@@ -257,6 +257,14 @@ size_t em_band_classes(const char *band, const em_band_class **out)
     return 0;
 }
 
+int8_t em_advertised_eirp(bool has_kept, int8_t kept, bool has_power, int power)
+{
+    bool valid = has_power && power > 0 && power <= 127;
+    if (!has_kept)
+        return valid ? (int8_t)power : EM_DEFAULT_MAX_EIRP;
+    return valid && power > kept ? (int8_t)power : kept;
+}
+
 uint8_t em_operating_class(const char *band, int channel)
 {
     const em_band_class *classes;
