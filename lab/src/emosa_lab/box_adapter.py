@@ -29,7 +29,9 @@ from emosa_lab.box import (
     ROOT,
     Box,
     agent_command,
+    back,
     dial,
+    kept_reconnections,
     onboarded,
     provision,
     wait_for_port,
@@ -357,33 +359,35 @@ async def fleet_handover(box):
 
 
 async def fleet_return(box):
-    """A pod back at the front port (a reboot, its cloud's redirect again) gets the same
-    agent: the same entry and port, one more handover, its unit started (a no-op), never
-    restarted; the agent, still the same process, provisions the pod again."""
+    """A pod back at the front port (its cloud's redirect again) gets the same agent: the same
+    entry and port, one more handover, its unit started (a no-op), never restarted; the agent,
+    still the same process, keeps the pod's session (spec 2.5: the same pod and database back
+    within the reconnection window)."""
     first = await onboarded(box)
     before = box.registry().get(box.serial, {})
     pid = box.process.pid()
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
-    back = await box.return_to_fleet()
+    continued = kept_reconnections(box)
+    returned = await box.return_to_fleet()
     after = box.registry().get(box.serial, {})
     actions = unit_actions(box.systemctl(), box.serial)
-    again = await provision(box, searches, m1s) if back else False
+    mode = await back(box, searches, m1s, continued) if returned else None
     passed = (
         bool(first.get("applied"))
-        and back
+        and returned
         and after.get("port") == before.get("port")
         and after.get("al_mac") == before.get("al_mac")
         and after.get("handovers", 0) > before.get("handovers", 0)
         and "restart" not in actions
         and box.process.pid() == pid
-        and again
+        and mode == "kept"
     )
     return box.result(
         passed=passed,
         handovers=[before.get("handovers"), after.get("handovers")],
         units=actions,
         same_process=box.process.pid() == pid,
-        provisioning_again=again,
+        session=mode,
     )
 
 

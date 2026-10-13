@@ -4422,7 +4422,7 @@ async def reconnect_config_lost(box):
         session=mode,
         config_lost_counted=counted,
         rewritten_after_s=round(took, 1),
-        operations=[op.get("state") for op in (box.status() or {}).get("operations") or []][-3:],
+        operations=[list(s) for s in operation_states(box)[-3:]],
     )
 
 
