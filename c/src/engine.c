@@ -16,6 +16,7 @@ static const char *str(const cJSON *o, const char *k)
 }
 
 static cJSON *current_ownership(em_engine *e, const char *run_id);
+static bool settle_restarted(em_engine *e, cJSON *op, const char *current);
 
 static void set(cJSON *o, const char *k, cJSON *v)
 {
@@ -299,8 +300,10 @@ cJSON *em_engine_request(em_engine *e, const cJSON *intent, const char *source, 
     cJSON_ArrayForEach(p, ops)
     {
         const char *pod = str(cJSON_GetObjectItemCaseSensitive(p, "intent"), "pod_id");
-        other_active = other_active || (pod && !strcmp(pod, e->pod_id) && em_state_active(em_state_of(p)) &&
-                                        strcmp(str(p, "operation_id"), id));
+        bool mine = pod && !strcmp(pod, e->pod_id) && strcmp(str(p, "operation_id"), id);
+        if (mine)
+            (void)settle_restarted(e, p, e->last_instance); /* on a copy: saved when settled */
+        other_active = other_active || (mine && em_state_active(em_state_of(p)));
     }
     cJSON_Delete(ops);
     cJSON *owned = other_active ? NULL : current_ownership(e, str(op, "run_id"));
@@ -373,14 +376,38 @@ static cJSON *current_ownership(em_engine *e, const char *run_id)
     return record;
 }
 
+/* The start of the pod's OpenSync the operation's configuration was written on, or NULL. */
+static const char *written_instance(const cJSON *op)
+{
+    const char *written = str(cJSON_GetObjectItemCaseSensitive(op, "application_evidence"), "instance");
+    return written ? written : str(cJSON_GetObjectItemCaseSensitive(op, "commit_evidence"), "instance");
+}
+
 /* The operation's configuration was written on an earlier start of the pod's OpenSync
  * than the snapshot shows: the pod lost it with that database (Engine._restarted). */
 static bool restarted(const cJSON *op, const em_snapshot *s)
 {
-    const char *written = str(cJSON_GetObjectItemCaseSensitive(op, "application_evidence"), "instance");
-    if (!written)
-        written = str(cJSON_GetObjectItemCaseSensitive(op, "commit_evidence"), "instance");
+    const char *written = written_instance(op);
     return written && s->has_instance && strcmp(written, s->instance);
+}
+
+/* An active write that belongs to an earlier start of the pod's OpenSync than `current` can
+ * never be observed applied: that start's database went with it. It fails at once (NOT_READY,
+ * as a write whose database generation changed), so it does not hold the new start's
+ * configuration BUSY until its deadline (Engine._settle_restarted, spec §5). True if it did. */
+static bool settle_restarted(em_engine *e, cJSON *op, const char *current)
+{
+    const char *state = em_state_of(op), *written = written_instance(op);
+    if ((strcmp(state, "CONFIG_COMMITTED") && strcmp(state, "INDETERMINATE")) || !written || !current ||
+        !*current || !strcmp(written, current) || !em_transition(op, "FAILED", NULL))
+        return false;
+    em_set_reason(op, "NOT_READY");
+    cJSON *payload = cJSON_CreateObject();
+    cJSON *restart = cJSON_AddObjectToObject(payload, "restarted");
+    cJSON_AddStringToObject(restart, "instance", current);
+    em_engine_save(e, op, payload);
+    cJSON_Delete(payload);
+    return true;
 }
 
 /* The operation was planned under another mapping than the backend has now (Engine._remapped):
@@ -637,6 +664,8 @@ void em_engine_reconcile(em_engine *e)
     int count = cJSON_GetArraySize(ops);
     for (int index = 0; index < count; index++) {
         cJSON *op = cJSON_GetArrayItem(ops, index);
+        if (settle_restarted(e, op, snap.has_instance ? snap.instance : NULL))
+            continue;
         bool expired = em_engine_expired(e, op), changed = false;
         const char *state = em_state_of(op);
         if (expired && (!strcmp(state, "CONFIG_COMMITTED") || !strcmp(state, "INDETERMINATE"))) {

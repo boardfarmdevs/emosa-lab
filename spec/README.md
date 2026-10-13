@@ -584,6 +584,13 @@ Rules:
   conflict seen on an earlier start no longer blocks the pod (a new ownership
   period). The agent configures the pod again from the controller's next M2
   (§2.5). The operation's evidence names the start (`instance`).
+- So an active operation whose write belongs to an earlier start than the one the
+  pod runs now can never be observed applied: it ends `FAILED` (`NOT_READY`, as a
+  write whose database generation changed) as soon as the agent sees the new
+  start, and does not hold the new start's M2 `BUSY` until its deadline. Before
+  this rule, a restart in the second between a write and its observation left the
+  pod unconfigured until a Renew (the box, 12 October). Both agents (vectors
+  `engine.json` `restarted-before-observed`, box `restart-during-write`).
 - A written configuration also belongs to the mapping it was planned under (its
   plan's `mapping`: the pod's profile). When the pod's profile changes (a pod
   promoted to GRE parent while onboarded, §8.6), what an earlier operation wrote is

@@ -4005,6 +4005,23 @@ def engine_vectors():
             ],
         ),
         (
+            # its OpenSync starts again between the write and its observation (the box, 12
+            # October): the write went with that start's database, so it fails at once (NOT_READY)
+            # and the new start's configuration goes ahead instead of being refused BUSY
+            "restarted-before-observed",
+            [
+                ("pod", "", "", True, True, "start-1"),
+                ("request", [a], "k1", 30),
+                ("execute", 0),
+                ("pod", "", "", True, True, "start-2"),
+                ("reconcile",),
+                ("request", [a], "k2", 30),
+                ("execute", 1),
+                ("pod", a, a, True, True, "start-2"),
+                ("reconcile",),
+            ],
+        ),
+        (
             # a conflict seen on one start no longer blocks the pod on the next
             "conflict-then-restart",
             [

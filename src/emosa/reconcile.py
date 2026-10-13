@@ -93,6 +93,10 @@ class Engine:
         self.store.add(op, wsc_receipt=wsc_receipt)
         self.starts[op.operation_id] = self.clock.monotonic()
         self.deadlines[op.operation_id] = self.clock.monotonic() + deadline
+        current = self._current_instance(intent.pod_id)
+        for p in self.store.operations():
+            if p.pod_id == intent.pod_id and p.operation_id != op.operation_id:
+                self._settle_restarted(p, current)
         if (
             self.quiesced
             or intent.pod_id in self.busy
@@ -249,14 +253,32 @@ class Engine:
         return owned
 
     @staticmethod
-    def _restarted(op, snap):
-        """The operation's configuration was written on an earlier start of the pod's OpenSync
-        than the one the snapshot shows: the pod lost it with that database (spec §5)."""
+    def _written_on_another_start(op, current):
+        """The operation's configuration was written on another start of the pod's OpenSync
+        than `current`: the pod lost it with that start's database (spec §5)."""
         written = (op.application_evidence or {}).get("instance") or (op.commit_evidence or {}).get(
             "instance"
         )
-        current = getattr(snap, "instance", None)
         return bool(written and current and written != current)
+
+    @classmethod
+    def _restarted(cls, op, snap):
+        """As _written_on_another_start, for the start the snapshot shows."""
+        return cls._written_on_another_start(op, getattr(snap, "instance", None))
+
+    def _settle_restarted(self, op, current):
+        """An active write that belongs to an earlier start of the pod's OpenSync than `current`
+        can never be observed applied: that start's database went with it. It fails at once
+        (NOT_READY, as a write whose database generation changed), so it does not hold the new
+        start's configuration BUSY until its deadline (spec §5). True if it did."""
+        if op.state not in (State.CONFIG_COMMITTED, State.INDETERMINATE):
+            return False
+        if not self._written_on_another_start(op, current):
+            return False
+        transition(op, State.FAILED)
+        op.reason = Reason.NOT_READY
+        self._save(op, {"restarted": {"instance": current}})
+        return True
 
     def _remapped(self, op, pod_id):
         """The operation was planned under another mapping than the pod's backend has now (the
@@ -307,6 +329,8 @@ class Engine:
                 for p in all_ops[index + 1 :]
             )
             if newer:
+                continue
+            if self._settle_restarted(op, getattr(snap, "instance", None)):
                 continue
             expired = self._expired(op)
             changed = False

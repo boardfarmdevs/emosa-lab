@@ -7,7 +7,6 @@ the box of emosa_lab.box.
 
 import asyncio
 import subprocess
-import time
 
 from emosa_lab.box import (
     ACK,
@@ -17,6 +16,7 @@ from emosa_lab.box import (
     BACKHAUL_STATION,
     REGISTRAR_SSID,
     STATIONS,
+    SWITCH_DEADLINE,
     TARGET_PARENT,
     UPLINK,
     backhaul_on,
@@ -34,22 +34,13 @@ from emosa_lab.box import (
     steering_rows,
     telemetry_applied,
     telemetry_status,
+    until_async,
     uplink_status,
     wait_rows,
 )
 
 BACKHAUL_SSID = "EMOSA-WSC-backhaul"  # deploy/wire/component-registrar.c, its backhaul mode
 BACKHAUL_KEY = "OnlySimulationWscBackhaul2026!"  # a public simulation input, as the SSID
-
-
-async def until_async(predicate, seconds=60, step=0.3):
-    """predicate() (a coroutine) until it holds; its last value."""
-    deadline = time.monotonic() + seconds
-    value = await predicate()
-    while not value and time.monotonic() < deadline:
-        await asyncio.sleep(step)
-        value = await predicate()
-    return value
 
 
 async def credentials(box):
@@ -299,9 +290,6 @@ async def uplink_held_retry(box):
 
 async def _credential_for(box, ssid):
     return [c for c in await credentials(box) if c.get("ssid") == ssid]
-
-
-SWITCH_DEADLINE = 95  # past an uplink switch's 90 s to be confirmed (spec 8.3)
 
 
 async def _reswitch_in_use(box, vif_parent):

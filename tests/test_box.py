@@ -254,6 +254,21 @@ def test_a_gre_move_and_its_revert_leave_the_fallback_station_untouched(agent, t
     assert result["passed"], result
 
 
+def test_a_gre_childs_move_is_reapplied_after_its_pod_restarts(agent, tmp_path):
+    result = box("gre-child-kept", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
+def test_a_gre_childs_kept_parent_gone_is_dropped_without_a_hold(agent, tmp_path):
+    result = box("gre-child-kept-gone", agent, tmp_path / "box", timeout=420)
+    assert result["passed"], result
+
+
+def test_a_write_its_pod_restarted_under_does_not_hold_the_next_start(agent, tmp_path):
+    result = box("restart-during-write", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_a_backhaul_steering_answer_is_kept_across_a_renewal(agent, tmp_path):
     result = box("backhaul-steering-renewal", agent, tmp_path / "box")
     assert result["passed"], result

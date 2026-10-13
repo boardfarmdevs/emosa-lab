@@ -2261,6 +2261,146 @@ async def fallback_during_move(box):
     )
 
 
+SWITCH_DEADLINE = 95  # past an uplink switch's 90 s to be confirmed (spec 8.3)
+
+
+async def gre_pinned(box):
+    """The station carries a gre credential pinned to the fleet parent's AP (a 3-address join)."""
+    rows = (await box.rows("Wifi_Credential_Config")).values()
+    return any(
+        str(r.get("bssid") or "").lower() == GRE_PARENT_AP and r.get("onboard_type") == "gre"
+        for r in rows
+    )
+
+
+def kept_target(box):
+    """The upstream a controller's move left for the pod's later starts (spec 8.3), or None."""
+    try:
+        path = box.directory / "state" / box.serial / "uplink" / "target.json"
+        return json.loads(path.read_text())
+    except (OSError, ValueError):
+        return None
+
+
+async def gre_child_moved(box):
+    """A GRE child onboarded on its GTP bootstrap and moved onto a fleet GRE parent by the
+    controller's Backhaul Steering Request, cm using the gretap on the parent: the answer, or None
+    when the move did not complete."""
+    if not (await onboarded(box)).get("applied"):
+        return None
+    peer_status(box, "RPIPOD0KEPTPARENT", al=PARENT_AL, gre_parent_ap=GRE_PARENT_AP)
+    await box.until(lambda: uplink_status(box).get("bootstrap"), seconds=30)
+    await asyncio.sleep(2.5)  # the agent's peer directory (1 s cache) picks up the GRE parent
+    answered = len(box.sent(0x801A))
+    mid = box.controller.send(0x8019, (backhaul_steering_request(BACKHAUL_STATION, GRE_PARENT_AP),))
+    await box.until(lambda: box.controller.reply(ACK, mid), seconds=5)
+    await until_async(lambda: gre_pinned(box), seconds=30)
+    await gre_join(box, GRE_PARENT_AP)
+    onto = await next_message(box, 0x801A, answered, seconds=60)
+    answer = steering_answer(onto)
+    return answer if answer == (BACKHAUL_STATION, GRE_PARENT_AP, 0) else None
+
+
+async def until_async(predicate, seconds=60, step=0.3):
+    """predicate() (a coroutine) until it holds; its last value."""
+    deadline = time.monotonic() + seconds
+    value = await predicate()
+    while not value and time.monotonic() < deadline:
+        await asyncio.sleep(step)
+        value = await predicate()
+    return value
+
+
+async def gre_child_kept(box):
+    """Spec 8.3 "Moved" for a GRE child (8.6), V54's fault row "pi2's OpenSync restarts": the
+    controller's move onto a fleet GRE parent is kept for the pod's later starts. The pod's
+    OpenSync starts again (a new database: back on its bootstrap, the move gone). On the new start
+    the agent re-applies the move without a new steer, the same 3-address GRE join pinned to the
+    parent AP, and it is applied once cm uses the gretap there: no hold, no second answer."""
+    moved = await gre_child_moved(box)
+    if moved is None:
+        return box.result(passed=False, failed="the move onto the GRE parent did not complete")
+    target = kept_target(box) or {}
+    answers = len(box.sent(0x801A))
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    await box.new_pod_database()  # back on its bootstrap
+    on_bootstrap = not await gre_pinned(box)
+    again = await provision(box, searches, m1s)
+    reapplied = await until_async(lambda: gre_pinned(box), seconds=60)
+    await gre_join(box, GRE_PARENT_AP)
+
+    def applied():
+        status = uplink_status(box)
+        operation = status.get("operation") or {}
+        return operation.get("state") == "OBSERVED_APPLIED" and (
+            str(status.get("parent") or "").lower() == GRE_PARENT_AP
+        )
+
+    done = await box.until(applied, seconds=60)
+    status = uplink_status(box)
+    return box.result(
+        passed=on_bootstrap
+        and bool(again)
+        and bool(reapplied)
+        and bool(done)
+        and str(target.get("target") or "").lower() == GRE_PARENT_AP
+        and target.get("mode") == "gre"
+        and not status.get("held")
+        and len(box.sent(0x801A)) == answers,
+        kept_target=target,
+        bootstrap_after_restart=on_bootstrap,
+        provisioned_again=again,
+        reapplied_without_a_steer=bool(reapplied),
+        applied=bool(done),
+        held=status.get("held"),
+        answers_after_restart=len(box.sent(0x801A)) - answers,
+    )
+
+
+async def gre_child_kept_gone(box):
+    """Spec 8.3 "Moved" for a GRE child (8.6), V54's fault row "pi1 reboots": the kept GRE
+    parent is gone when the child's pod starts again. The agent re-applies the move; the station
+    cannot join (no cm gretap on the parent), so the pod's OpenSync starts again on its bootstrap,
+    as its router checks fail. The switch is not applied within its 90 s: the agent drops the
+    target without a hold and, a GRE child having no configured upstream, writes nothing more:
+    the pod stays on its bootstrap until the controller steers it again."""
+    moved = await gre_child_moved(box)
+    if moved is None:
+        return box.result(passed=False, failed="the move onto the GRE parent did not complete")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    await box.new_pod_database()  # the child's restart, the parent gone meanwhile
+    await provision(box, searches, m1s)
+    # its configuration observed on this start before the next (restart-during-write is the race)
+    await box.until(lambda: operation_states(box)[-1:] == [("OBSERVED_APPLIED", None)], seconds=30)
+    tried = await until_async(lambda: gre_pinned(box), seconds=60)
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    await box.new_pod_database()  # cm's router checks fail: OpenSync again, on its bootstrap
+    again = await provision(box, searches, m1s)
+
+    def timed_out():
+        return (uplink_status(box).get("operation") or {}).get("state") == "TIMED_OUT"
+
+    failed = await box.until(timed_out, seconds=SWITCH_DEADLINE + 60)
+    await asyncio.sleep(10)
+    status = uplink_status(box)
+    rewritten = await gre_pinned(box)
+    return box.result(
+        passed=bool(tried)
+        and bool(again)
+        and bool(failed)
+        and not status.get("held")
+        and kept_target(box) is None
+        and not rewritten,
+        tried_kept_target=bool(tried),
+        provisioned_again=again,
+        kept_switch_timed_out=bool(failed),
+        held=status.get("held"),
+        target_dropped=kept_target(box) is None,
+        written_again=rewritten,
+        waiting=status.get("waiting"),
+    )
+
+
 async def backhaul_steering_own_bss(box):
     """Suite finding (a pod's station on its own backhaul BSS loops br-home): a Backhaul
     Steering Request whose target is one of the pod's own BSSes is refused at once, failure
@@ -3811,6 +3951,57 @@ async def write_lost_unapplied(box):
     )
 
 
+def operation_states(box):
+    """[(state, reason)] of the agent's operations, in order."""
+    return [
+        (op.get("state"), op.get("reason"))
+        for op in (box.status() or {}).get("operations") or []
+        if isinstance(op, dict)
+    ]
+
+
+async def restart_during_write(box):
+    """spec 5 (found by the box, 12 October): the pod's OpenSync starts again between the agent's
+    write and its observation. The controller's first M2 is written (CONFIG_COMMITTED) but the
+    pod's managers have not applied it when the pod's database comes back from its template.
+    That write went with its start, so it fails at once (NOT_READY) instead of holding the pod
+    until its deadline: the new start's M2 is written, not refused BUSY, and observed applied."""
+    before, searches, m1s = 0, 0, 0
+    deadline = time.monotonic() + 60
+    committed = False
+    while time.monotonic() < deadline and box.process.poll() is None and not committed:
+        found = box.sent(AUTOCONFIG_SEARCH)
+        for search in found[searches:]:
+            box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
+        searches = len(found)
+        found = box.sent(AUTOCONFIG_WSC)
+        for m1 in found[m1s:]:  # answered, and the write left unapplied by the pod's managers
+            wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
+            ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)
+            await answer_m1(box, ruid, wsc)
+        m1s = len(found)
+        states = operation_states(box)
+        committed = len(states) > before and states[-1][0] == "CONFIG_COMMITTED"
+        await asyncio.sleep(0.2)
+    if not committed:
+        return box.result(passed=False, failed="the first write was not committed")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    await box.new_pod_database()  # its OpenSync again, before the write was observed
+    again = await provision(box, searches, m1s)
+    await box.until(lambda: operation_states(box)[-1:] == [("OBSERVED_APPLIED", None)], seconds=30)
+    states = operation_states(box)
+    interrupted = states[before] if len(states) > before else None
+    return box.result(
+        passed=bool(again)
+        and interrupted == ("FAILED", "NOT_READY")
+        and states[-1] == ("OBSERVED_APPLIED", None)
+        and ("REJECTED", "BUSY") not in states[before:],
+        provisioned_again=again,
+        interrupted_write=interrupted,
+        operations=states[before:],
+    )
+
+
 SCENARIOS = {
     "boot": boot,
     "onboard": onboard,
@@ -3842,6 +4033,8 @@ SCENARIOS = {
     "revert-by-record": revert_by_record,
     "restart-during-move": restart_during_move,
     "fallback-during-move": fallback_during_move,
+    "gre-child-kept": gre_child_kept,
+    "gre-child-kept-gone": gre_child_kept_gone,
     "backhaul-steering-renewal": backhaul_steering_renewal,
     "backhaul-steering-refused": backhaul_steering_refused,
     "backhaul-steering-own-bss": backhaul_steering_own_bss,
@@ -3867,6 +4060,7 @@ SCENARIOS = {
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
     "write-lost-unapplied": write_lost_unapplied,
+    "restart-during-write": restart_during_write,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -3911,6 +4105,20 @@ OPTIONS = {  # the box each scenario needs beyond the default
             "ssid": "emosa-lab-bh",
             "secret_ref": "backhaul",
         },
+    },
+    **{
+        name: {
+            "backhaul": True,
+            "bootstrap": True,
+            "uplink": {
+                "mode": "gre",
+                "station": "bhaul-sta-24",
+                "credentials": "config",
+                "ssid": "emosa-lab-bh",
+                "secret_ref": "backhaul",
+            },
+        }
+        for name in ("gre-child-kept", "gre-child-kept-gone")
     },
     "backhaul-steering-renewal": {"backhaul": True},
     "backhaul-steering-own-bss": {"backhaul": True},

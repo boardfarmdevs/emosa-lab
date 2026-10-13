@@ -50,6 +50,11 @@ Both agents, vectors and box for each; spec 8.6 and 9 record the rules.
 - The Pis' profile `rpi-pod-mt7921u-6.6.1-gre-5g-v1` (1de67db).
 - Found by the lab proof: a GRE child's backhaul credentials from its 5 GHz radio's set (1c1e7ae);
   channel procedures for a radio whose power the pod does not report (c292760).
+- Found by the box (12 October, the GRE child's kept target for V54's fault rows): a pod's
+  OpenSync restart between a write and its observation held the new start's M2 `BUSY` until the
+  old write's deadline, and nothing onboarded again, so the pod stayed unconfigured until a
+  Renew. This was in both agents, older than layer B. Now the old write fails at once (spec §5;
+  vectors `engine.json` `restarted-before-observed`, box `restart-during-write`).
 
 ## The (b) proof on rdk-1010 (12 October, PDT; UTC in brackets)
 EMOSA 1c1e7ae on the gateway from 15:30:41 (22:30:41Z); pods relaunched from
@@ -113,9 +118,14 @@ own settings and steps stay with the router's project.
 - **The steers:** the operator's `SteerWiFiBackhaul` onto pi1's `b-ap-50` BSSID, and back onto
   the router's 5 GHz pod-backhaul BSSID (pi2's bootstrap). After each move onto pi1: pi2's uplink
   `gre`, applied on that
-  BSSID; a `pgd` tunnel on pi1; a 1500-byte DF ping across both hops. EMOSA never moves a pod by
-  itself: when pi1 goes away, pi2 returns by its own fallback (about 3 minutes) unless the
-  operator steers it back.
+  BSSID; a `pgd` tunnel on pi1; a 1500-byte DF ping across both hops. Only the controller
+  chooses a parent. The target of its last move is kept for the child's later starts (spec 8.3,
+  "Moved"). After the child's OpenSync restart, which lands it on its bootstrap, EMOSA re-applies
+  that move on the new start. When pi1 goes away, pi2 returns by its own fallback (about 3
+  minutes). On pi2's next start EMOSA tries pi1 once more and drops the target if pi1 is not
+  reachable within the switch's 90 s, unless the operator steers pi2 back sooner. The box proves
+  the kept target for the Multi-AP uplink (`backhaul-steering-kept`, `backhaul-kept-gone`) and
+  for a GRE child (`gre-child-kept`, `gre-child-kept-gone`), in both agents.
 - **Expected, not failures:**
   - radio B is reported in the 20 MHz classes (149 as class 125) while it runs 149/80 (the known
     gap below);
