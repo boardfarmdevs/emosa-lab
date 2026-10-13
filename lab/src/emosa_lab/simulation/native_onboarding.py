@@ -81,18 +81,31 @@ OWNER = {"owner": "emosa-native-onboarding-v1", "backend": "ovsdb-sim"}
 class RadioReportSource:
     """Explicit fixture capabilities plus a fresh complete observed OVSDB graph."""
 
-    def __init__(self, backend, binding, stations=None, *, forwarding_run=None, peer_metrics=False):
+    def __init__(
+        self,
+        backend,
+        binding,
+        stations=None,
+        *,
+        forwarding_run=None,
+        peer_metrics=False,
+        clock=time.monotonic_ns,
+    ):
         self.backend = backend
         self.stations = stations
         self.last_revision = None
         self.revision = 0
-        self.forwarding = ForwardingSource()
+        # one monotonic clock (ns) for every freshness check of the fixture's sources
+        self.clock = clock
+        self.forwarding = ForwardingSource(clock)
         self.egress = EgressAccountingSource(forwarding_run) if forwarding_run else None
         self.backhaul = BackhaulAccountingSource(forwarding_run) if forwarding_run else None
         self.virtual_capacity = VirtualCapacitySource(forwarding_run) if forwarding_run else None
         self.shaped_backhaul = ShapedBackhaulSource(forwarding_run) if forwarding_run else None
         self.neighbor = (
-            NeighborSource(CONTROLLER, AGENT, forwarding_run) if forwarding_run else None
+            NeighborSource(CONTROLLER, AGENT, forwarding_run, clock=clock)
+            if forwarding_run
+            else None
         )
         _, caps, self.template = fixtures()
         radio = replace(
@@ -117,6 +130,7 @@ class RadioReportSource:
                 b"owned-hwsim:sole-HT20-channel6:PSK-CCMP:nonDPP:v1"
                 + (b":observed-forwarding-identity:v1" if forwarding_run else b"")
             ).hexdigest(),
+            clock=lambda: clock() / 1e9,
         )
         self.inventory = DeviceInventory(
             SERIAL.encode(),
@@ -125,11 +139,11 @@ class RadioReportSource:
             (InventoryRadio(RADIO, b"mac80211_hwsim"),),
         )
         self.peer_metrics = (
-            PeerMetricPublisher(self.source, forwarding_run) if peer_metrics else None
+            PeerMetricPublisher(self.source, forwarding_run, clock=clock) if peer_metrics else None
         )
 
     async def refresh(self):
-        started = time.monotonic()
+        started = self.clock() / 1e9
         try:
             raw = await self.backend.session.snapshot()
             self.forwarding.refresh(raw)

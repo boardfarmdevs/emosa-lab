@@ -279,12 +279,13 @@ def test_native_topology_uses_observed_interfaces_and_withdraws_only_stale_topol
 
     class Driver:
         stale = False
+        now = 0  # the latest observation's time: the sampler's cadence, 0.5 s apart
 
         async def apply(self, config):
             pass
 
         async def observe(self):
-            now = time.monotonic_ns()
+            now = self.now = self.now + 500_000_000 if self.now else time.monotonic_ns()
             ports = observation(now - 100_000_000)
             for key in ("links", "links_after"):
                 ports[key][3]["address"] = RADIO_BSSID
@@ -313,7 +314,14 @@ def test_native_topology_uses_observed_interfaces_and_withdraws_only_stale_topol
                 radio_name="phy1",
             )
             binding = PeerBinding("probe0", 1, AGENT, CONTROLLER, (CONTROLLER,))
-            facts = RadioReportSource(backend, binding, forwarding_run="neighbor-unit-01")
+            # The sources judge freshness (2 s) by the driver's latest observation, not by how
+            # long a loaded runner takes between a cycle and a refresh (CI flaked on it twice).
+            facts = RadioReportSource(
+                backend,
+                binding,
+                forwarding_run="neighbor-unit-01",
+                clock=lambda: driver.now + 200_000_000,
+            )
             await manager.cycle()
             assert await facts.refresh()
             first = facts.source.current()
@@ -326,7 +334,8 @@ def test_native_topology_uses_observed_interfaces_and_withdraws_only_stale_topol
                 first.stamp,
                 ingress="probe0",
                 generation=1,
-                received_at=time.monotonic(),
+                received_at=facts.clock() / 1e9,
+                clock=lambda: facts.clock() / 1e9,
             )
             decoded = Reassembler().feed(reply.frames[0])
             device = decode_topology(3, next(t.value for t in decoded.tlvs if t.kind == 3))
