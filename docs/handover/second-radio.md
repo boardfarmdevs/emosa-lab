@@ -73,18 +73,30 @@ EMOSA 1c1e7ae on the gateway from 15:30:41 (22:30:41Z); pods relaunched from
   took one session per change for its radio's new capabilities (more only when its OVSDB link,
   carried by the moving backhaul, dropped); `b-ap-50`'s Config `_version` never changed.
 - Found: the pods were renewed by the controller every minute (EMOSA refused the channel
-  procedures for a radio with no reported power; fixed in c292760, its lab check pending). The
-  controller's data model of a pod's radio B (station MAC == RUID) is an open-work row for after
-  multi-hop: it does not affect steering (0 refusals in 7 steers).
-- Evidence: the gateway's /nvram/emosa/proof-second-radio/ (controller backhaul lines) and the
-  proof's local files (the steers, the channel-change samples).
+  procedures for a radio with no reported power; fixed in c292760). The controller's data model of
+  a pod's radio B (station MAC == RUID) is an open-work row for after multi-hop: it does not affect
+  steering (0 refusals in 7 steers).
+- The fix's lab check: 42eb4a4 deployed at 16:30:23 (23:30:23Z); no pod renew from 16:31:10 to
+  16:42:26 (pod-2 had one, at its agent's restart). Each pod answered one preference query. pod-1's
+  radio B, with no power in its State, was reported at the capability's maximum EIRP
+  (`operating_power_bound_reported` 2); pod-2's radio B read 30 dBm. Both pods declined every
+  Channel Selection Request with code 0x02. That is the known answer to RDK's 0 dBm Transmit Power
+  Limit and needs no change. The periodic AP metrics found no source, because pod telemetry
+  (MQTT over TLS) is not wired in this lab.
+- Seen, not EMOSA's: em_ctrl restarted at about 15:01 (22:01Z). After that it renewed the
+  gateway's own agent's three radios every ~42 s until the end of the session. The restored
+  baseline shows no such loop (0 renews from 16:52 to 17:08). Watch for it in the pods-only check.
+- rdk-1010 restored to `pre-layerb` at 16:49 (23:49Z); the lab came up at 17:05 (cold-boot
+  reconstruction PASS, model 6/18/60, 100/100 clients, 0 restarts) and its health audit passed at
+  17:07 (00:07Z 13 October; 100/100 traffic, no radio drops, no cores).
+- Evidence: rev140 `~/easymesh-builds/evidence-second-radio-20261012/` (the controller's backhaul
+  and post-fix lines, the pods' status, the steers, the channel-change samples, the audit log).
+  The gateway's copy went with the restore.
 
 ## Remaining
-1. Deploy c292760 on rdk-1010 and show the renew loop gone for 10 minutes, then restore the
-   `pre-layerb` snapshot and re-audit (7f).
-2. Deferred: the layer-A pods-only check (a pod onto a POD serving a Multi-AP backhaul BSS, not an
+1. Deferred: the layer-A pods-only check (a pod onto a POD serving a Multi-AP backhaul BSS, not an
    extender, and back) before the end soaks; the box proves the move and revert.
-3. Known gaps to close before V54's end soaks (spec 9): radio B's 80 MHz (class 128, centre 155, the
+2. Known gaps to close before V54's end soaks (spec 9): radio B's 80 MHz (class 128, centre 155, the
    HT/VHT capability TLVs, a steer naming 128/155) and radio B's own telemetry.
 
 ## Lab access (rdk-1010 on rev120)

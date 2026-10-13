@@ -1240,7 +1240,8 @@ path is re-run. Carried with the second-radio work (§9).
   radio's advertised maximum EIRP, a bound and not a measurement, logged and counted
   (`operating_power_bound_reported`) each time. Refused, RDK re-sent its query every second until
   its configuration timed out and renewed the pod every minute (rdk-1010, 12 October; box
-  `second-radio-no-power`). On mt7921 (the Pis) the reported power is the channel's regulatory
+  `second-radio-no-power`); answered, it renewed neither pod in the 11 minutes measured after the
+  deploy. On mt7921 (the Pis) the reported power is the channel's regulatory
   cap given to the firmware (30 dBm on 149 and on 2.4 GHz channel 6, 23 on 36), once the Pis'
   driver reports it (mt76 8286bbf62dcc backported to their host): before that it reads 3 dBm on
   every radio, which is not the radio's power.
