@@ -130,8 +130,11 @@ own settings and steps stay with the router's project.
   - radio B is reported in the 20 MHz classes (149 as class 125) while it runs 149/80 (the known
     gap below);
   - a radio with no power in its State is reported at its capability's maximum EIRP (counted);
-  - mt7921 reads 3 dBm until the Pis' kernel has the mt76 transmit-power series backported
-    (317bc1a0590e, 8286bbf62dcc, 879d754e48f6);
+  - the Pis report their channel's regulatory cap as the radio's power: 30 dBm on 149/80 and on
+    2.4 GHz channel 6 (23 on 36). Their kernels have had the mt76 transmit-power series
+    (317bc1a0590e, 8286bbf62dcc, 879d754e48f6) since 12 October, 18:40 PDT; before it they read
+    3 dBm. Both VIFs of a radio agree, so OpenSync fills `Wifi_Radio_State.tx_power` and EMOSA
+    reports the pod's value, not the capability bound;
   - a Channel Selection Request with a power limit below the reported power is declined with
     code 0x02.
 - **Watch:** the controller renewing the router's own agent every ~42 s after an em_ctrl restart
