@@ -723,6 +723,89 @@ def test_a_kept_upstream_not_reached_falls_back_to_the_configured_one_without_a_
     assert switch.latest().state == State.OBSERVED_APPLIED and not switch.held()
 
 
+def test_a_gre_childs_failed_kept_switch_is_undone_while_its_pod_stays_up(tmp_path):
+    """Spec 8.3 "Moved", 8.6 (13 October): a GRE child's kept parent is gone on its next start,
+    and the pod stays up on its fallback station (cm's uplink elsewhere, OpenSync not restarted).
+    After the switch's deadline the agent undoes its own write - the station's snapshot back, its
+    credential deleted - confirmed once the credential is off the station; then nothing more."""
+    switch, pod, clock, store = rig(tmp_path, bssid=None, parents=lambda: frozenset({GRE_PARENT}))
+    asyncio.run(switch.tick())  # the bootstrap recorded
+    assert switch.steer(GRE_PARENT) is None
+    asyncio.run(switch.tick())
+    pod.adopt_gre(parent=GRE_PARENT)
+    asyncio.run(switch.tick())
+    assert switch.steering_outcome(GRE_PARENT) is True  # the controller answered
+    pod.restart("00000000-0000-4000-8000-0000000000a2")  # the parent gone meanwhile
+    asyncio.run(switch.tick())
+    assert pod.sent[-1][2]["row"]["bssid"] == GRE_PARENT  # the kept target re-applied
+    # the station cannot join; the pod's fallback station keeps cm's uplink working
+    fallback = {"if_name": "g-bhaul-sta-24", "if_type": "gre", "is_used": True}
+    pod.tables["Connection_Manager_Uplink"] = {UPLINK: fallback}
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())  # the kept switch times out: the target dropped, no hold
+    assert not switch.held() and not (store.directory / "target.json").exists()
+    undo = pod.sent[-1]
+    assert ("delete", "Wifi_Credential_Config") in [(o["op"], o.get("table")) for o in undo]
+    update = next(o for o in undo if o["op"] == "update" and o["table"] == "Wifi_VIF_Config")
+    assert update["row"]["ssid"] == "opensync-lab-bhaul"  # the snapshot back
+    assert update["row"]["credential_configs"] == ["set", [["uuid", BOOT_CRED]]]
+    # owm takes the restored row; cm stays on the fallback station
+    pod.tables["Wifi_VIF_Config"] = bootstrap()["Wifi_VIF_Config"]
+    pod.generation += 1
+    asyncio.run(switch.tick())
+    done = switch.latest()
+    assert done.state == State.OBSERVED_APPLIED and done.intent["mode"] == BOOTSTRAP
+    sent = len(pod.sent)
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == sent and not switch.held()
+    assert switch.status()["waiting"] == "no upstream (awaiting a Backhaul Steering Request)"
+
+
+def test_a_gre_childs_failed_move_from_its_bootstrap_is_undone(tmp_path):
+    """Spec 8.3, 8.6: a GRE child's move onto a parent it never joins returns to no upstream,
+    without a hold; the agent undoes its own write on the station, as for a failed kept target."""
+    switch, pod, clock, _ = rig(tmp_path, bssid=None, parents=lambda: frozenset({GRE_PARENT}))
+    asyncio.run(switch.tick())
+    assert switch.steer(GRE_PARENT) is None
+    asyncio.run(switch.tick())
+    pod.tables["Connection_Manager_Uplink"] = {
+        UPLINK: {"if_name": "g-bhaul-sta-24", "if_type": "gre", "is_used": True}
+    }
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())
+    assert switch.steering_outcome(GRE_PARENT) == "not confirmed within the deadline"
+    assert not switch.held()
+    undo = pod.sent[-1]
+    assert ("delete", "Wifi_Credential_Config") in [(o["op"], o.get("table")) for o in undo]
+    pod.tables["Wifi_VIF_Config"] = bootstrap()["Wifi_VIF_Config"]
+    pod.generation += 1
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED and switch.bssid is None
+
+
+def test_the_controllers_steer_back_still_needs_the_station_on_the_bootstrap(tmp_path):
+    """Spec 8.6: the undo's lighter confirmation is the agent's own; a revert the controller asked
+    for is confirmed only with the station on the bootstrap BSS (it answers the controller)."""
+    switch, pod, clock, _ = rig(tmp_path, bssid=None, parents=lambda: {PARENT})
+    asyncio.run(switch.tick())
+    boot = dict(switch.bootstrap)
+    assert switch.steer(PARENT) is None
+    asyncio.run(switch.tick())
+    pod.adopt_gre(PARENT)
+    asyncio.run(switch.tick())
+    assert switch.steer(boot["bssid"]) is None
+    asyncio.run(switch.tick())  # the revert written
+    # the station's row is back, but cm stays on another uplink: not confirmed
+    pod.tables["Wifi_VIF_Config"] = bootstrap()["Wifi_VIF_Config"]
+    fallback = {"if_name": "g-bhaul-sta-24", "if_type": "gre", "is_used": True}
+    pod.tables["Connection_Manager_Uplink"] = {UPLINK: fallback}
+    pod.generation += 1
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.CONFIG_COMMITTED
+    assert switch.steering_outcome(boot["bssid"]) is None
+
+
 def test_the_configured_upstream_not_reached_after_a_kept_one_holds(tmp_path):
     switch, pod, clock, store = on_easymesh(tmp_path)
     switch.steer(NEXT)

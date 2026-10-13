@@ -774,6 +774,15 @@ static bool move_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
     EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "%s", u->move.previous_mode[0] ? u->move.previous_mode : "multi-ap");
     u->moves++;
     keep_target(u);
+    if (!u->bssid[0]) {
+        /* a GRE child's move from its bootstrap: no upstream to go back to, so the agent undoes its
+         * own write (undo_intent) while the station still carries it on this start */
+        cJSON_Delete(u->fallback_after);
+        u->fallback_after = cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "intent"), true);
+        const char *planned = str(cJSON_GetObjectItemCaseSensitive(op, "plan"), "instance");
+        (void)em_copy(u->fallback_instance, sizeof(u->fallback_instance), planned ? planned : "");
+        u->undo_logged = false;
+    }
     return true;
 }
 
@@ -796,6 +805,7 @@ static bool kept_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
     u->fallback_after = cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "intent"), true);
     const char *planned = str(cJSON_GetObjectItemCaseSensitive(op, "plan"), "instance");
     (void)em_copy(u->fallback_instance, sizeof(u->fallback_instance), planned ? planned : "");
+    u->undo_logged = false;
     return true;
 }
 
@@ -820,8 +830,13 @@ static void settle_revert(em_uplink_scope *u, cJSON *op, const em_snapshot *snap
     char fp[18];
     lower(u->facts.parent, fp, sizeof(fp));
     const char *cfg = snap ? str(snap->config, "uplink") : NULL;
-    bool back = same_start && em_snapshot_fresh(snap) && u->has_bootstrap && u->has_facts &&
-                u->facts.kind[0] && !strcmp(fp, u->bootstrap_bssid) && cfg && !strcmp(cfg, "other");
+    /* the controller's steer back is confirmed with the station on the bootstrap BSS; the undo of a
+     * failed switch (undo_intent) once EMOSA's credential is off the station, whichever uplink cm
+     * then uses (the pod's fallback station may keep it) */
+    bool asked = u->has_move && !u->move.done && !strcmp(u->move.mode, "bootstrap");
+    bool on_bootstrap = u->has_facts && u->facts.kind[0] && !strcmp(fp, u->bootstrap_bssid);
+    bool back = same_start && em_snapshot_fresh(snap) && u->has_bootstrap && (!asked || on_bootstrap) && cfg &&
+                !strcmp(cfg, "other");
     bool expired = em_engine_expired(&u->engine, op);
     if (!back && !expired)
         return;
@@ -846,7 +861,14 @@ static void settle_revert(em_uplink_scope *u, cJSON *op, const em_snapshot *snap
             u->move.applied = false;
             EM_FORMAT_FIXED(u->move.result, sizeof(u->move.result), "revert not confirmed within the deadline");
         }
-        em_log(EM_LOG_WARNING, "emosa.agent.uplink", "backhaul revert not confirmed within the deadline; given up");
+        if (asked) {
+            em_log(EM_LOG_WARNING, "emosa.agent.uplink", "backhaul revert not confirmed within the deadline; given up");
+        } else {
+            cJSON_Delete(u->fallback_after); /* once per failed switch: not again on this start */
+            u->fallback_after = NULL;
+            em_log(EM_LOG_WARNING, "emosa.agent.uplink",
+                   "undoing the failed switch not confirmed within the deadline; given up");
+        }
     }
     /* the move is undone: back to no EMOSA pin, so nothing more is written */
     EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "multi-ap");
@@ -854,9 +876,16 @@ static void settle_revert(em_uplink_scope *u, cJSON *op, const em_snapshot *snap
     EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->configured_station);
     u->moves++;
     keep_target(u);
-    if (back)
+    if (back && asked) {
         em_log(EM_LOG_INFO, "emosa.agent.uplink", "backhaul revert applied: the station is back on the bootstrap %s",
                u->bootstrap_bssid);
+    } else if (back) {
+        cJSON_Delete(u->fallback_after);
+        u->fallback_after = NULL;
+        const char *station = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "station");
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "the failed switch's credential is off %s",
+               station ? station : "the station");
+    }
 }
 
 static void settle(em_uplink_scope *u, cJSON *op, const em_snapshot *snap, bool have)
@@ -993,6 +1022,45 @@ static cJSON *move_snapshot(em_uplink_scope *u)
     return found ? cJSON_Duplicate(found, 1) : NULL;
 }
 
+/* UplinkSwitch._undo: a GRE child's failed switch (spec 8.3 "Moved", 8.6). With no configured
+ * upstream to switch to, the agent undoes its own write as the revert to the bootstrap does, while
+ * the station still carries the failed switch's credential on that start. NULL when there is nothing
+ * left to undo (a new start, or the credential gone) or no snapshot to restore. */
+static cJSON *undo_intent(em_uplink_scope *u, const em_snapshot *snap)
+{
+    if (!u->fallback_after)
+        return NULL;
+    em_reason why;
+    cJSON *failed = target(u, u->fallback_after, &why);
+    bool still = failed && u->has_instance && !strcmp(u->fallback_instance, u->instance) &&
+                 em_matches(snap->config, failed);
+    cJSON_Delete(failed);
+    if (!still) {
+        cJSON_Delete(u->fallback_after);
+        u->fallback_after = NULL;
+        return NULL;
+    }
+    const char *station = str(u->fallback_after, "station");
+    cJSON *restore = move_snapshot(u);
+    if (!restore || !u->has_bootstrap || !station) {
+        cJSON_Delete(restore);
+        return NULL;
+    }
+    if (!u->undo_logged) {
+        u->undo_logged = true;
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "the failed switch's credential is still on %s: undoing it", station);
+    }
+    cJSON *intent = cJSON_CreateObject();
+    cJSON_AddStringToObject(intent, "pod_id", u->pod_id);
+    cJSON_AddStringToObject(intent, "station", station);
+    cJSON_AddStringToObject(intent, "ssid", "");
+    cJSON_AddStringToObject(intent, "secret_ref", "");
+    cJSON_AddStringToObject(intent, "mode", "bootstrap");
+    cJSON_AddStringToObject(intent, "bssid", u->bootstrap_bssid);
+    cJSON_AddItemToObject(intent, "restore", restore);
+    return intent;
+}
+
 static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *snap)
 {
     if (held(u) && !hold_over(u)) {
@@ -1032,11 +1100,16 @@ static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *sna
         }
         if (!u->bssid[0]) {
             /* a GRE child with no configured upstream (spec 8.6): EMOSA writes nothing until the
-             * controller steers it onto a parent; its bootstrap uplink (the GTP) stands */
-            wait_for(u, "no upstream (awaiting a Backhaul Steering Request)");
-            return NULL;
+             * controller steers it onto a parent; its bootstrap uplink (the GTP) stands, once a
+             * failed switch's credential is off the station (undo_intent) */
+            intent = undo_intent(u, snap);
+            if (!intent) {
+                wait_for(u, "no upstream (awaiting a Backhaul Steering Request)");
+                return NULL;
+            }
+        } else {
+            intent = intent_of(u, ssid, ref);
         }
-        intent = intent_of(u, ssid, ref);
     }
     em_reason why;
     cJSON *t = target(u, intent, &why);
@@ -1076,7 +1149,8 @@ static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *sna
         cJSON_Delete(intent);
         return NULL;
     }
-    if (u->fallback_after) {
+    const char *imode = str(intent, "mode");
+    if (u->fallback_after && !(imode && !strcmp(imode, "bootstrap"))) {
         /* a switch written while cm still acts on the failed one is reverted with it (rdk-1004,
          * 5 Oct 2026): first the station off the failed credential, or a new start. Bounded:
          * OpenSync restarts a pod left without a working uplink. */

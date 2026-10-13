@@ -39,7 +39,10 @@ different scope from the fronthaul BSS, with its own lifecycle rules.
   to the kept target that fails (its BSS gone, out of reach) drops it and switches
   to the configured upstream instead, once the pod is back on its bootstrap uplink
   (``cm`` reverts the station on the same start, or OpenSync restarts); only that
-  switch holds.
+  switch holds. A GRE child has no configured upstream: after a failed switch to its kept
+  target, or a failed move from its bootstrap, it undoes its own write as the revert does,
+  while the station still carries the failed switch's credential on that start (a pod whose
+  fallback station keeps its uplink working never restarts to drop it).
 """
 
 import json
@@ -206,12 +209,21 @@ class UplinkSwitch:
         same_start = (
             snap is not None and snap.ready and self.backend.instance == op.plan.get("instance")
         )
+        # the controller's steer back is confirmed with the station on the bootstrap BSS; the undo
+        # of a failed switch (_undo) once EMOSA's credential is off the station, whichever uplink
+        # cm then uses (the pod's fallback station may keep it)
+        asked = (
+            self.move is not None
+            and self.move.get("mode") == BOOTSTRAP
+            and self.move.get("result") is None
+        )
         back = (
             same_start
             and snap.observed.fresh
             and self.bootstrap is not None
-            and facts.get("kind")
-            and facts.get("parent") == self.bootstrap["bssid"]
+            and (
+                not asked or (facts.get("kind") and facts.get("parent") == self.bootstrap["bssid"])
+            )
             and snap.config.get("uplink") == "other"  # the move's credential-list is gone (vconf)
         )
         if back:
@@ -226,10 +238,14 @@ class UplinkSwitch:
             self.bssid, self.station = self.configured, self.configured_station
             self.moves += 1
             self._keep_target()
-            log.info(
-                "backhaul revert applied: the station is back on the bootstrap %s",
-                self.bootstrap["bssid"],
-            )
+            if asked:
+                log.info(
+                    "backhaul revert applied: the station is back on the bootstrap %s",
+                    self.bootstrap["bssid"],
+                )
+            else:
+                self.fallback_after = None
+                log.info("the failed switch's credential is off %s", op.intent.get("station"))
         elif self.engine._expired(op):
             op.original_outcome, op.deadline_elapsed = op.state, True
             transition(op, State.TIMED_OUT)
@@ -243,7 +259,11 @@ class UplinkSwitch:
             self.bssid, self.station = self.configured, self.configured_station
             self.moves += 1
             self._keep_target()
-            log.warning("backhaul revert not confirmed within the deadline; given up")
+            if asked:
+                log.warning("backhaul revert not confirmed within the deadline; given up")
+            else:
+                self.fallback_after = None  # once per failed switch: not again on this start
+                log.warning("undoing the failed switch not confirmed within the deadline; given up")
 
     def _settle(self, op, snap):
         """Confirm or time out the latest operation; hold on failure."""
@@ -340,6 +360,10 @@ class UplinkSwitch:
         self.mode = move.get("previous_mode", MULTI_AP)
         self.moves += 1
         self._keep_target()
+        if self.bssid is None:
+            # a GRE child's move from its bootstrap: no upstream to go back to, so the agent
+            # undoes its own write (_undo) while the station still carries it on this start
+            self.fallback_after = {"instance": (op.plan or {}).get("instance"), "intent": op.intent}
         return True
 
     def _kept_failed(self, op, reason):
@@ -473,6 +497,36 @@ class UplinkSwitch:
             return True
         return None
 
+    def _undo(self, snap):
+        """A GRE child's failed switch (spec 8.3 "Moved", 8.6): with no configured upstream to
+        switch to, the agent undoes its own write as the revert to the bootstrap does, while the
+        station still carries the failed switch's credential on that start. None when there is
+        nothing left to undo (a new start, or the credential gone) or no snapshot to restore."""
+        failed = self.fallback_after
+        if failed is None:
+            return None
+        intent = UplinkIntent(**failed["intent"])
+        if failed["instance"] != self.backend.instance or not self.engine._matches(
+            snap.config, intent.target(self.engine.vault)
+        ):
+            self.fallback_after = None
+            return None
+        restore = self._move_snapshot()
+        if restore is None or self.bootstrap is None:
+            return None
+        if not failed.get("undo"):
+            failed["undo"] = True
+            log.info("the failed switch's credential is still on %s: undoing it", intent.station)
+        return UplinkIntent(
+            self.pod_id,
+            intent.station,
+            "",
+            "",
+            mode=BOOTSTRAP,
+            bssid=self.bootstrap["bssid"],
+            restore=restore,
+        )
+
     def _wanted(self, op, snap):
         """The intent to request now, or None (``self.waiting`` says why)."""
         if self.held() and not self._hold_over():
@@ -504,12 +558,16 @@ class UplinkSwitch:
                 return None
             if self.bssid is None:
                 # a GRE child with no configured upstream: EMOSA writes nothing until the
-                # controller steers it onto a parent; its bootstrap uplink (the GTP) stands.
-                self.waiting = "no upstream (awaiting a Backhaul Steering Request)"
-                return None
-            intent = UplinkIntent(
-                self.pod_id, self.station, *credentials, mode=self.mode, bssid=self.bssid
-            )
+                # controller steers it onto a parent; its bootstrap uplink (the GTP) stands,
+                # once a failed switch's credential is off the station (_undo)
+                intent = self._undo(snap)
+                if intent is None:
+                    self.waiting = "no upstream (awaiting a Backhaul Steering Request)"
+                    return None
+            else:
+                intent = UplinkIntent(
+                    self.pod_id, self.station, *credentials, mode=self.mode, bssid=self.bssid
+                )
         try:
             intent.target(self.engine.vault)
         except EmosaError as exc:
@@ -528,7 +586,7 @@ class UplinkSwitch:
         if (self.backend.facts or {}).get("kind") is None:
             self.waiting = "no working uplink yet"
             return None
-        if self.fallback_after is not None:
+        if self.fallback_after is not None and intent.mode != BOOTSTRAP:
             # A switch written while cm still acts on the failed one is reverted with it
             # (rdk-1004, 5 Oct 2026): first the station off the failed credential, or a new
             # start. Bounded: OpenSync restarts a pod left without a working uplink.

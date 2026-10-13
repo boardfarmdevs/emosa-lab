@@ -182,13 +182,24 @@ own settings and steps stay with the router's project.
      station matches by SSID, a BSSID pin only narrows it, so a broadcast SSID needs no Probe
      Response; the gateway broadcasts its own backhaul BSSes too.
    - **Not chosen:** turning the MT7921's probe answering off on the Pis, which fixes one hardware.
-5. To draft: after a failed switch to a kept target, or a failed move, of a GRE child (no
-   configured upstream), the agent leaves its credential and BSSID pin on the station
-   (`_kept_failed`, `_move_failed`, then "no upstream"). Spec 8.3 relies on the pod returning to
-   its bootstrap by itself, but the Pis' 2.4 GHz fallback station keeps `cm`'s uplink working,
-   so OpenSync never restarts and the 5 GHz station stays pinned to a parent it cannot join.
-   The agent should undo its own write, as the steer-back revert does (both agents, and a box
-   variant whose fallback station keeps the pod up).
+5. The agent undoes its own write after a failed switch of a GRE child (13 October; drafted on
+   `wip/second-radio-p3b`, not pinned). Before, after a failed switch to a kept target, or a failed
+   move from its bootstrap, a GRE child (no configured upstream) left its credential and BSSID pin
+   on the station (`_kept_failed`, `_move_failed`, then "no upstream"). Spec 8.3 relied on the pod
+   returning to its bootstrap by itself, but the Pis' 2.4 GHz fallback station keeps `cm`'s uplink
+   working, so OpenSync never restarts and the 5 GHz station stays pinned to a parent it cannot
+   join.
+   - **Fix (both agents):** while the station still carries the failed credential on that start,
+     the agent writes the steer-back revert's restore (the station's snapshot back, its credential
+     deleted). It is confirmed once the credential is off the station, whichever uplink `cm` uses,
+     and made once per failed switch. The controller's own steer back still needs the station on
+     the bootstrap BSS.
+   - **Tests, red first:** `test_uplink` (kept target, move, and the steer back unchanged); box
+     `gre-child-kept-gone-up` in both agents. The box's `gre-child-kept` now proves the re-apply
+     by a new credential row, not by catching the bootstrap first, which a fast agent can skip.
+   - **Seen, not changed:** both agents take the fronthaul as settled once a primary BSS has an
+     SSID, which a fresh database's template already has, so a kept target can be re-applied
+     before the controller's M2 on that start.
 6. Seen with two-radio pods, the controller's: after a Channel Selection Request for radio B, the
    agent's Operating Channel Report (radio A's TLV first, as EMOSA sends it) is handled on radio
    A's em thread, possibly before radio B's Channel Selection Response on radio B's. Radio B is

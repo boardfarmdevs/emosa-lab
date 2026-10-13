@@ -840,7 +840,14 @@ The agent makes the switch itself when its configuration has
   drops the target without a hold. The agent then switches to the configured
   upstream once the station no longer carries the failed switch's credential
   (`cm` reverts it on the same start, or OpenSync restarts): a switch written
-  before then is reverted with it. Only that switch holds. Both agents.
+  before then is reverted with it. Only that switch holds. A GRE child (§8.6) has no
+  configured upstream: after such a failed switch, or a failed move from its bootstrap, the
+  agent undoes its own write while the station still carries the failed credential on that
+  start, as the revert to the bootstrap does (the station's snapshot back, its credential
+  deleted). The undo is confirmed once the credential is off the station, whichever uplink
+  `cm` then uses, and made once per failed switch. A pod whose fallback station keeps its
+  uplink working never restarts to drop the credential, and the station would stay pinned to a
+  parent it cannot join (the Pis, 13 October). Both agents.
 
 ### 8.4 Ethernet uplink, for a wired pod
 
@@ -1112,6 +1119,11 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   a steer to the parent AP, back is a steer to the bootstrap BSS. With no record (EMOSA first bound
   while already on a parent) the revert is recognised instead by the target advertising the pod's own
   onboarding SSID in a scan.
+- **A failed move, or a failed switch to a kept parent,** is undone by the same restore, without
+  the operator (§8.3 "Moved"). A child has no configured upstream to switch to, and its pod may
+  never restart to drop the failed credential: the Pis' fallback station keeps `cm`'s uplink
+  working. The undo answers no controller, so it is confirmed once EMOSA's credential is off the
+  station, not by the station's parent.
 - **The parent AP on the second radio** (§9; the Pis' adapter B, one AP per adapter): `b-ap-50` is
   configured by the 5 GHz radio's own M2, through that radio's own write scope, never by the
   fronthaul radio's (whose set's backhaul BSS has no slot there and is left out, §3.4). One owner per

@@ -82,9 +82,11 @@ typedef struct {
      * association), recorded once and persisted, so a steer back to it is a revert */
     char bootstrap_bssid[18], bootstrap_ssid[65];
     bool has_bootstrap;
-    /* after a kept target failed: that switch's intent and start, until the pod is off it */
+    /* after a kept target failed, or a GRE child's move from its bootstrap: that switch's intent
+     * and start, until the pod is off it (a GRE child undoes it itself, spec 8.3 "Moved") */
     cJSON *fallback_after;
     char fallback_instance[17];
+    bool undo_logged; /* the undo of that switch announced once */
 } em_uplink_scope;
 
 em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_journal_schemas *schemas,

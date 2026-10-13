@@ -2266,11 +2266,17 @@ SWITCH_DEADLINE = 95  # past an uplink switch's 90 s to be confirmed (spec 8.3)
 
 async def gre_pinned(box):
     """The station carries a gre credential pinned to the fleet parent's AP (a 3-address join)."""
-    rows = (await box.rows("Wifi_Credential_Config")).values()
-    return any(
-        str(r.get("bssid") or "").lower() == GRE_PARENT_AP and r.get("onboard_type") == "gre"
-        for r in rows
-    )
+    return bool(await gre_pins(box))
+
+
+async def gre_pins(box):
+    """The UUIDs of the gre credentials pinned to the fleet parent's AP."""
+    rows = await box.rows("Wifi_Credential_Config")
+    return {
+        uuid
+        for uuid, r in rows.items()
+        if str(r.get("bssid") or "").lower() == GRE_PARENT_AP and r.get("onboard_type") == "gre"
+    }
 
 
 def kept_target(box):
@@ -2323,10 +2329,17 @@ async def gre_child_kept(box):
     target = kept_target(box) or {}
     answers = len(box.sent(0x801A))
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
-    await box.new_pod_database()  # back on its bootstrap
-    on_bootstrap = not await gre_pinned(box)
+    before = await gre_pins(box)
+    await box.new_pod_database()  # back on its bootstrap, the move gone
     again = await provision(box, searches, m1s)
-    reapplied = await until_async(lambda: gre_pinned(box), seconds=60)
+
+    async def pinned_anew():
+        # the move written again on the new start: a credential row the old start did not have
+        # (a fast agent may write it before the bootstrap can be seen, so this is the evidence)
+        return (await gre_pins(box)) - before
+
+    reapplied = await until_async(pinned_anew, seconds=60)
+    on_bootstrap = bool(before) and bool(reapplied)
     await gre_join(box, GRE_PARENT_AP)
 
     def applied():
@@ -2348,7 +2361,7 @@ async def gre_child_kept(box):
         and not status.get("held")
         and len(box.sent(0x801A)) == answers,
         kept_target=target,
-        bootstrap_after_restart=on_bootstrap,
+        written_anew_after_restart=on_bootstrap,
         provisioned_again=again,
         reapplied_without_a_steer=bool(reapplied),
         applied=bool(done),
@@ -2397,6 +2410,64 @@ async def gre_child_kept_gone(box):
         held=status.get("held"),
         target_dropped=kept_target(box) is None,
         written_again=rewritten,
+        waiting=status.get("waiting"),
+    )
+
+
+async def gre_child_kept_gone_up(box):
+    """Spec 8.3 "Moved" for a GRE child (8.6), "pi1 reboots" as the Pis met it (13 October): the
+    kept GRE parent is gone when the child's pod starts again, but the pod keeps a working uplink
+    (on the Pis, pod-bh-fallback's 2.4 GHz station), so its OpenSync does not start again. The
+    agent re-applies the move and the station cannot join. The switch is not applied within its
+    90 s: the agent drops the target without a hold and, a GRE child having no configured upstream,
+    undoes its own write as the revert to the bootstrap does: the station's columns back as the pod
+    had them on this start, EMOSA's credential deleted. The fallback station stays as the pod set
+    it, and nothing more is written."""
+    moved = await gre_child_moved(box)
+    if moved is None:
+        return box.result(passed=False, failed="the move onto the GRE parent did not complete")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    await box.new_pod_database()  # the child's restart, the parent gone meanwhile
+    fallback = await fallback_station(box)
+    await provision(box, searches, m1s)
+    tried = await until_async(lambda: gre_pinned(box), seconds=60)
+    # the kept switch not applied within its deadline: the target dropped (the undo, if any,
+    # follows at once and becomes the latest operation)
+    failed = await box.until(lambda: kept_target(box) is None, seconds=SWITCH_DEADLINE + 60)
+
+    async def undone():
+        return not await gre_pinned(box)
+
+    unpinned = await until_async(undone, seconds=30)
+    await asyncio.sleep(5)  # nothing more is written
+    status = uplink_status(box)
+    _, station = await box.vif("Wifi_VIF_Config", "bhaul-sta-24")
+    _, kept_fallback = await box.vif("Wifi_VIF_Config", "bhaul-sta-50")
+    columns = ("ssid", "credential_configs")
+    # the pod's own configuration back: its SSID (not the move's "" marker), and only the pod's
+    # own credentials linked, none pinned to a BSSID
+    credentials = await box.rows("Wifi_Credential_Config")
+    restored = bool(station.get("ssid")) and all(
+        u in credentials and not isinstance(credentials[u].get("bssid"), str)
+        for u in uuids(station.get("credential_configs"))
+    )
+    return box.result(
+        passed=bool(tried)
+        and bool(failed)
+        and bool(unpinned)
+        and restored
+        and not await gre_pinned(box)
+        and not status.get("held")
+        and kept_target(box) is None
+        and {k: kept_fallback.get(k) for k in fallback} == fallback,
+        tried_kept_target=bool(tried),
+        kept_switch_timed_out=bool(failed),
+        credential_removed=bool(unpinned),
+        station_restored=restored,
+        station=[station.get(k) for k in columns],
+        held=status.get("held"),
+        target_dropped=kept_target(box) is None,
+        fallback_untouched={k: kept_fallback.get(k) for k in fallback} == fallback,
         waiting=status.get("waiting"),
     )
 
@@ -4216,6 +4287,7 @@ SCENARIOS = {
     "fallback-during-move": fallback_during_move,
     "gre-child-kept": gre_child_kept,
     "gre-child-kept-gone": gre_child_kept_gone,
+    "gre-child-kept-gone-up": gre_child_kept_gone_up,
     "backhaul-steering-renewal": backhaul_steering_renewal,
     "backhaul-steering-refused": backhaul_steering_refused,
     "backhaul-steering-own-bss": backhaul_steering_own_bss,
@@ -4301,7 +4373,7 @@ OPTIONS = {  # the box each scenario needs beyond the default
                 "secret_ref": "backhaul",
             },
         }
-        for name in ("gre-child-kept", "gre-child-kept-gone")
+        for name in ("gre-child-kept", "gre-child-kept-gone", "gre-child-kept-gone-up")
     },
     "backhaul-steering-renewal": {"backhaul": True},
     "backhaul-steering-own-bss": {"backhaul": True},
