@@ -895,10 +895,10 @@ pod for it. The two agents, in one fleet, describe the hop to the controller:
 
 Both agents.
 
-### 8.6 A pod as the GRE parent of other pods (draft)
+### 8.6 A pod as the GRE parent of other pods
 
-*Draft for review (10 October): approved in principle on 9 October (plan 9.5, layer B); not
-implemented.*
+*Approved on 9 October (plan 9.5, layer B). Implemented in both agents and proven pods-only on
+rdk-1010 (12 October, below); the physical run on the Pis is V54.*
 
 §8.5 needs a 4-address Multi-AP link between the pods, which some radios cannot carry (a USB
 adapter whose driver has no 4-address station or AP). Layer B gives a pod on such a radio the role
@@ -1004,8 +1004,9 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   child's frames leave its tunnel on the parent, in `br-home`, and ride the parent's own uplink.
   The underlay itself MUST NOT be bridged into `br-home`.
 - **The child** of a GRE parent moves by the uplink switch (§8.3) with one difference: its
-  credential is the pod-backhaul SSID and passphrase of a 3-address join (`onboard_type=gre`),
-  pinned to the parent AP's BSSID, not a Multi-AP credential; `wds` stays unset. **Applied** when
+  credential, the backhaul SSID and passphrase of its applied M2 set (the parent AP's, above; not
+  the gateway's pod-backhaul SSID of §8.2), is a 3-address join (`onboard_type=gre`), pinned to the
+  parent AP's BSSID, not a Multi-AP credential; `wds` stays unset. **Applied** when
   its State shows the station on that BSSID and `cm`'s uplink in use is the station with its
   gretap. Held, moved and reverted as in §8.3; the fallback is still the pod's restart to its
   bootstrap (GTP) path. A pure GRE child has no configured Multi-AP upstream: it stays on its
@@ -1193,7 +1194,7 @@ path is re-run. Carried with the second-radio work (§9).
 ## 9. Not covered yet
 
 - 5 and 6 GHz radios, and WPA3 (layer B, draft, binds a 5 GHz radio as a GRE parent's AP);
-- more than one radio per agent, except the GRE parent's second radio of §8.6 (layer B, draft):
+- more than one radio per agent, except the GRE parent's second radio of §8.6 (layer B):
   EMOSA binds and reports it, owns `b-ap-<band>` and its tunnels on it, and leaves alone the
   pod's uplink station on it, its channel and `ht_mode` (the pod's channel override follows the
   station, so a written channel would fight it; EMOSA reports the channel from `Wifi_Radio_State`

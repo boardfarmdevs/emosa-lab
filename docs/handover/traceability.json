@@ -141,12 +141,12 @@
       "box": ["pod-child", "pod-parent", "pod-parent-loop"],
       "python": ["test_peers.py"]
     },
-    "README 8.6 A pod as the GRE parent of other pods (draft)": {
+    "README 8.6 A pod as the GRE parent of other pods": {
       "vectors": ["fleet-sessions.json", "translation-southbound.json", "scope-writes.json"],
       "box": ["gre-parent-create", "gre-parent-child", "gre-parent-child-gone", "gre-parent-withdrawn", "gre-parent-promoted", "gre-parent-demoted", "second-radio-parent", "second-radio-withdrawn", "second-radio-moves-channel", "second-radio-child-credentials", "second-radio-no-power"],
       "python": ["test_fleet.py", "test_pod_profile.py", "test_gre_parent.py", "test_second_radio.py"],
       "units": ["fleet_underlays"],
-      "note": "a draft: the fleet's underlays, the parent AP and its tunnels in both agents, box scenarios; the second radio (spec 9: one M1, one M2 and one write scope per radio) in both agents; the release follows"
+      "note": "the fleet's underlays, the parent AP and its tunnels in both agents, box scenarios; the second radio (spec 9: one M1, one M2 and one write scope per radio) in both agents; proven pods-only on rdk-1010 (12 October); the release follows"
     },
     "README 9. Not covered yet": {
       "note": "not implemented, so not tested: the list is what EMOSA does not do"
