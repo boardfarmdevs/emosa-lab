@@ -322,7 +322,20 @@ def test_native_topology_uses_observed_interfaces_and_withdraws_only_stale_topol
                 forwarding_run="neighbor-unit-01",
                 clock=lambda: driver.now + 200_000_000,
             )
-            await manager.cycle()
+
+            async def cycle():
+                """One manager cycle, then until the session's monitor shows what it wrote: the
+                transaction's reply can come before the monitor's update (a loaded CI runner),
+                and the fixture reads the monitor."""
+                await manager.cycle()
+                started = str(driver.now - 100_000_000)  # the cycle's observation
+                for _ in range(250):
+                    if started in json.dumps((await session.snapshot())["tables"]):
+                        return
+                    await asyncio.sleep(0.02)
+                raise AssertionError("the monitor never showed the cycle's observation")
+
+            await cycle()
             assert await facts.refresh()
             first = facts.source.current()
             assert first.topology.inventory_complete and facts.neighbor.current()
@@ -350,7 +363,7 @@ def test_native_topology_uses_observed_interfaces_and_withdraws_only_stale_topol
                 neighbor.neighbors[0].al_mac == CONTROLLER and neighbor.neighbors[0].bridges_present
             )
             driver.stale = True
-            await manager.cycle()
+            await cycle()
             assert await facts.refresh()
             stale = facts.source.current()
             assert (
@@ -358,7 +371,7 @@ def test_native_topology_uses_observed_interfaces_and_withdraws_only_stale_topol
             )
             assert facts.neighbor.current() is None
             driver.stale = False
-            await manager.cycle()
+            await cycle()
             assert await facts.refresh()
             assert facts.source.current().topology.inventory_complete
             assert facts.source.current().context_token == first.context_token
