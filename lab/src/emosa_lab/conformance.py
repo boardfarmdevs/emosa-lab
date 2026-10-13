@@ -4665,20 +4665,76 @@ def session_timing_vectors():
             ],
         ),
     ]
+    # spec 2.5's reconnections, with a 60 s window: ("provisioned", at) puts the attempt in
+    # provisioning (no controller answers here); a tick's fourth member, when given, is the
+    # agent's judgement of a new generation: "continued" (the same pod source) or "another"
+    kept = [
+        (
+            "provisioned-held-and-kept",
+            [
+                ("tick", 0.0, 1),
+                ("provisioned", 0.5),
+                ("tick", 1.0, 1),
+                ("tick", 2.0, None),
+                ("tick", 16.0, None),
+                ("tick", 17.0, 2, "continued"),
+                ("tick", 18.0, 2),
+            ],
+        ),
+        (
+            "provisioned-window-passes",
+            [
+                ("tick", 0.0, 1),
+                ("provisioned", 0.5),
+                ("tick", 1.0, 1),
+                ("tick", 2.0, None),
+                ("tick", 61.5, None),
+                ("tick", 62.0, None),
+                ("tick", 70.0, 2, "another"),
+            ],
+        ),
+        (
+            "provisioned-another-source",
+            [("tick", 0.0, 1), ("provisioned", 0.5), ("tick", 1.0, 1), ("tick", 2.0, 2, "another")],
+        ),
+        (
+            "provisioned-continued-without-a-gap",
+            [
+                ("tick", 0.0, 1),
+                ("provisioned", 0.5),
+                ("tick", 1.0, 1),
+                ("tick", 1.5, 2, "continued"),
+            ],
+        ),
+        ("discovering-not-held", [("tick", 0.0, 1), ("tick", 0.5, None), ("tick", 1.0, 1)]),
+        (
+            "discovering-continued-generation-is-a-new-source",
+            [("tick", 0.0, 1), ("tick", 1.0, 2, "continued"), ("tick", 2.0, 2)],
+        ),
+    ]
     out_attempts = []
-    for name, steps in attempts:
+    window = 60
+    for name, steps, reconnect_window in [(n, s, None) for n, s in attempts] + [
+        (n, s, window) for n, s in kept
+    ]:
         now = [0.0]
         clock = lambda now=now: now[0]  # noqa: E731
         source = ReportSource(binding, "pod-1", "c" * 64, clock=clock)
         sent = []
         recovery = OnboardingRecovery(
             source,
-            lambda source=source, sent=sent, clock=clock: OnboardingSession(
-                source, sent.append, refused, inventory, mids=MidSequence(499), clock=clock
+            lambda source=source, sent=sent, clock=clock, w=reconnect_window: OnboardingSession(
+                source,
+                sent.append,
+                refused,
+                inventory,
+                mids=MidSequence(499),
+                clock=clock,
+                reconnect_window=w,
             ),
             clock=clock,
         )
-        revision, recorded = [0, 0], []
+        revision, recorded, lineage = [0, 0], [], 0
         for step in steps:
             now[0] = step[1]
             before_sent, before_history, before_starts = (
@@ -4686,15 +4742,28 @@ def session_timing_vectors():
                 len(recovery.history),
                 recovery.starts,
             )
+            session = recovery.session
+            before_counts = dict(session.counts) if session else {}
             if step[0] == "renew":
                 recovery.renew()
+            elif step[0] == "provisioned":
+                recovery.session.state = "provisioning"
             else:
                 generation = step[2]
                 if generation is None:
                     source.invalidate()
                 else:
+                    if len(step) > 3 and step[3] == "another":
+                        lineage += 1
                     revision = [generation, revision[1] + 1]
-                    source.publish(tuple(revision), caps, facts, observed_at=now[0], lifetime=2)
+                    source.publish(
+                        tuple(revision),
+                        caps,
+                        facts,
+                        observed_at=now[0],
+                        lifetime=2,
+                        lineage=lineage if reconnect_window else None,
+                    )
                 asyncio.run(recovery.tick())
             ended = None
             for entry in list(recovery.history)[before_history:]:
@@ -4723,8 +4792,23 @@ def session_timing_vectors():
                     },
                 }
             )
+            if reconnect_window:
+                counts = recovery.session.counts if recovery.session is session and session else {}
+
+                def grew(event, counts=counts, before=before_counts):
+                    return counts.get(event, 0) > before.get(event, 0)
+
+                recorded[-1]["expected"] |= {
+                    "held": grew("reconnection_held"),
+                    "kept": grew("reconnection_kept"),
+                    "provisioning": recovery.session is not None
+                    and recovery.session.state == "provisioning",
+                }
         recovery.close()
-        out_attempts.append({"name": name, "steps": recorded})
+        out_attempts.append(
+            {"name": name, "steps": recorded}
+            | ({"reconnect_window": reconnect_window} if reconnect_window else {})
+        )
 
     # steps: ("contact", at), ("topology_query", at), ("check", at, unserved, awaiting[,
     # provisioning]); a case's third member, when given, is its topology_query_window
@@ -4906,7 +4990,12 @@ def session_timing_vectors():
         "AP-Autoconfiguration Renew). Per step: whether an attempt started, how many "
         "AP-Autoconfiguration Searches were sent, how the attempt ended (discovery_timeout, "
         "source_lost or null), whether one is discovering, and the attempts started, failures "
-        "and next start time after it. renewals: emosa.agent.renew.RenewRules created at 0 s, "
+        "and next start time after it. A case with a reconnect_window (spec 2.5, 60 s) also has "
+        "provisioned steps (at: the attempt put in provisioning, no controller answering here) "
+        "and ticks with a fourth member, the agent's judgement of a new generation: continued "
+        "(the same pod source) or another; per step also whether the attempt was held (its "
+        "source went away), kept (its pod reconnected) and is provisioning. "
+        "renewals: emosa.agent.renew.RenewRules created at 0 s, "
         "with the case's topology_query_window when it has one (none: that rule is off). "
         "A step: contact (at: a frame from the controller), topology_query (at: a Topology "
         "Query from the controller) or check (at, unserved, awaiting, and provisioning: false "

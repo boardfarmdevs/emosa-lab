@@ -3312,9 +3312,578 @@
      ]
     }
    ]
+  },
+  {
+   "name": "provisioned-held-and-kept",
+   "reconnect_window": 60,
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": false,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "provisioned",
+      0.5
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": true,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      2.0,
+      null
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      16.0,
+      null
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": true,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      17.0,
+      2,
+      "continued"
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      18.0,
+      2
+     ]
+    }
+   ]
+  },
+  {
+   "name": "provisioned-window-passes",
+   "reconnect_window": 60,
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": false,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "provisioned",
+      0.5
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": true,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      2.0,
+      null
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      61.5,
+      null
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": "source_lost",
+      "failures": 1,
+      "held": false,
+      "kept": false,
+      "next_start": 63.0,
+      "provisioning": false,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      62.0,
+      null
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "held": false,
+      "kept": false,
+      "next_start": 63.0,
+      "provisioning": false,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      70.0,
+      2,
+      "another"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "provisioned-another-source",
+   "reconnect_window": 60,
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": false,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "provisioned",
+      0.5
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": "source_lost",
+      "failures": 1,
+      "held": false,
+      "kept": false,
+      "next_start": 3.0,
+      "provisioning": false,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      2.0,
+      2,
+      "another"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "provisioned-continued-without-a-gap",
+   "reconnect_window": 60,
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": false,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "provisioned",
+      0.5
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": true,
+      "next_start": 0,
+      "provisioning": true,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.5,
+      2,
+      "continued"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "discovering-not-held",
+   "reconnect_window": 60,
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": false,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": "source_lost",
+      "failures": 1,
+      "held": false,
+      "kept": false,
+      "next_start": 1.5,
+      "provisioning": false,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      0.5,
+      null
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": null,
+      "failures": 1,
+      "held": false,
+      "kept": false,
+      "next_start": 1.5,
+      "provisioning": false,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "discovering-continued-generation-is-a-new-source",
+   "reconnect_window": 60,
+   "steps": [
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": true,
+      "ended": null,
+      "failures": 0,
+      "held": false,
+      "kept": false,
+      "next_start": 0,
+      "provisioning": false,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      0.0,
+      1
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 1,
+      "discovering": false,
+      "ended": "source_lost",
+      "failures": 1,
+      "held": false,
+      "kept": false,
+      "next_start": 2.0,
+      "provisioning": false,
+      "searches": 0,
+      "started": false
+     },
+     "step": [
+      "tick",
+      1.0,
+      2,
+      "continued"
+     ]
+    },
+    {
+     "expected": {
+      "attempts_started": 2,
+      "discovering": true,
+      "ended": null,
+      "failures": 1,
+      "held": false,
+      "kept": false,
+      "next_start": 2.0,
+      "provisioning": false,
+      "searches": 1,
+      "started": true
+     },
+     "step": [
+      "tick",
+      2.0,
+      2
+     ]
+    }
+   ]
   }
  ],
- "description": "spec §2.5: when the agent starts an onboarding attempt and ends it, when it renews one on its own, and when it announces its clients again. attempts: the reference's OnboardingRecovery over OnboardingSession on a published pod State that no controller answers; the clock starts at 0 s. A step: tick (at, the pod's database generation, or null: its State lost; otherwise the State is published anew at that time) or renew (at: an AP-Autoconfiguration Renew). Per step: whether an attempt started, how many AP-Autoconfiguration Searches were sent, how the attempt ended (discovery_timeout, source_lost or null), whether one is discovering, and the attempts started, failures and next start time after it. renewals: emosa.agent.renew.RenewRules created at 0 s, with the case's topology_query_window when it has one (none: that rule is off). A step: contact (at: a frame from the controller), topology_query (at: a Topology Query from the controller) or check (at, unserved, awaiting, and provisioning: false when absent): the reasons to renew, in order. reannouncements: emosa.wire.onboarding.ClientReannouncement of one session. A step: provisioned (M2 accepted) or tick, with the Topology Responses the session has sent: whether every client is announced again now (null for provisioned).",
+ "description": "spec §2.5: when the agent starts an onboarding attempt and ends it, when it renews one on its own, and when it announces its clients again. attempts: the reference's OnboardingRecovery over OnboardingSession on a published pod State that no controller answers; the clock starts at 0 s. A step: tick (at, the pod's database generation, or null: its State lost; otherwise the State is published anew at that time) or renew (at: an AP-Autoconfiguration Renew). Per step: whether an attempt started, how many AP-Autoconfiguration Searches were sent, how the attempt ended (discovery_timeout, source_lost or null), whether one is discovering, and the attempts started, failures and next start time after it. A case with a reconnect_window (spec 2.5, 60 s) also has provisioned steps (at: the attempt put in provisioning, no controller answering here) and ticks with a fourth member, the agent's judgement of a new generation: continued (the same pod source) or another; per step also whether the attempt was held (its source went away), kept (its pod reconnected) and is provisioning. renewals: emosa.agent.renew.RenewRules created at 0 s, with the case's topology_query_window when it has one (none: that rule is off). A step: contact (at: a frame from the controller), topology_query (at: a Topology Query from the controller) or check (at, unserved, awaiting, and provisioning: false when absent): the reasons to renew, in order. reannouncements: emosa.wire.onboarding.ClientReannouncement of one session. A step: provisioned (M2 accepted) or tick, with the Topology Responses the session has sent: whether every client is announced again now (null for provisioned).",
  "reannouncements": [
   {
    "name": "after-the-next-query",

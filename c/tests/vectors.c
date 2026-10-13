@@ -2690,6 +2690,9 @@ static void session_timing_vectors(const char *dir)
     {
         const char *name = str(c, "name");
         em_attempts at = {0};
+        /* spec 2.5: a case with a reconnection window holds and keeps a provisioned attempt */
+        const cJSON *window = cJSON_GetObjectItemCaseSensitive(c, "reconnect_window");
+        at.window = cJSON_IsNumber(window) ? window->valuedouble : 0;
         const cJSON *step;
         int index = 0;
         cJSON_ArrayForEach(step, cJSON_GetObjectItemCaseSensitive(c, "steps"))
@@ -2697,28 +2700,40 @@ static void session_timing_vectors(const char *dir)
             char label[96];
             snprintf(label, sizeof(label), "%s step %d", name, index++);
             const cJSON *s = cJSON_GetObjectItemCaseSensitive(step, "step");
+            const char *kind = cJSON_GetArrayItem(s, 0)->valuestring;
             double t = cJSON_GetArrayItem(s, 1)->valuedouble;
             em_attempt_step got = {0};
-            if (!strcmp(cJSON_GetArrayItem(s, 0)->valuestring, "renew")) {
+            if (!strcmp(kind, "renew")) {
                 em_attempts_renew(&at);
+            } else if (!strcmp(kind, "provisioned")) {
+                at.state = EM_SESSION_PROVISIONING; /* no controller answers in these cases */
             } else {
-                const cJSON *generation = cJSON_GetArrayItem(s, 2);
+                const cJSON *generation = cJSON_GetArrayItem(s, 2), *judged = cJSON_GetArrayItem(s, 3);
+                if (cJSON_IsString(judged) && !strcmp(judged->valuestring, "continued"))
+                    em_attempts_continue(&at, generation->valueint);
                 got = em_attempts_tick(&at, t, cJSON_IsNumber(generation),
                                        cJSON_IsNumber(generation) ? generation->valueint : 0);
             }
             const cJSON *e = cJSON_GetObjectItemCaseSensitive(step, "expected");
             const char *ended = str(e, "ended");
-            char seen[160];
-            snprintf(seen, sizeof(seen), "started %d searches %d ended %s discovering %d starts %u failures %u next %.3f",
+            char seen[200];
+            snprintf(seen, sizeof(seen),
+                     "started %d searches %d ended %s discovering %d starts %u failures %u next %.3f held %d kept %d "
+                     "provisioning %d",
                      got.start, got.search, got.ended ? got.ended : "null", at.state == EM_SESSION_DISCOVERING,
-                     at.starts, at.failures, at.next_start);
+                     at.starts, at.failures, at.next_start, got.held, got.kept, at.state == EM_SESSION_PROVISIONING);
             checks++;
+            const cJSON *held = cJSON_GetObjectItemCaseSensitive(e, "held"),
+                        *kept = cJSON_GetObjectItemCaseSensitive(e, "kept"),
+                        *provisioning = cJSON_GetObjectItemCaseSensitive(e, "provisioning");
             if (got.start != cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(e, "started")) ||
                 (int)got.search != (int)num(e, "searches") || (ended == NULL) != (got.ended == NULL) ||
                 (ended && strcmp(ended, got.ended)) ||
                 (at.state == EM_SESSION_DISCOVERING) != cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(e, "discovering")) ||
                 at.starts != (unsigned)num(e, "attempts_started") || at.failures != (unsigned)num(e, "failures") ||
-                fabs(at.next_start - num(e, "next_start")) > 1e-9)
+                fabs(at.next_start - num(e, "next_start")) > 1e-9 || (held && got.held != cJSON_IsTrue(held)) ||
+                (kept && got.kept != cJSON_IsTrue(kept)) ||
+                (provisioning && (at.state == EM_SESSION_PROVISIONING) != cJSON_IsTrue(provisioning)))
                 fail("session-timing", label, seen);
         }
     }

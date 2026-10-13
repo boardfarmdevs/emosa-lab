@@ -136,7 +136,7 @@ Any other message is ignored and counted as `unsupported_message_<type>`.
 | `admitting` | a Response was admitted |
 | `awaiting_m2` | M1 sent |
 | `provisioning` | M2 accepted as an operation; the agent is configured |
-| `source_lost` | the pod became unavailable |
+| `source_lost` | the pod became unavailable (a provisioned session: past the reconnection window), or another pod source |
 | `failed` | discovery timed out or the exchange failed |
 | `incompatible` | the controller's Response is outside what the agent supports |
 | `closed` | the session ended |
@@ -159,12 +159,47 @@ Rules:
 - A session starts while the pod's State is available. Discovery sends a
   Search at once and then every second, three at most, and fails when no
   Response is admitted within 5 s.
-- The radio's capabilities are fixed for one source. If the radio's identity or channel
-  changes under the same source, the source is unavailable. A new source is a new database
-  generation, which every new connection from the pod to its agent makes: the pod's OpenSync
-  restarted, the pod rebooted or was recreated (maybe with another radio), or its link to the
-  agent dropped and came back. Its capabilities are taken again from its first refresh, and
-  its new session reports them.
+- The radio's capabilities are fixed for one source. If the fronthaul radio's identity or
+  channel changes under the same source, the source is unavailable. Every new connection from
+  the pod to its agent is a new database generation: the pod's OpenSync restarted, the pod
+  rebooted or was recreated (maybe with another radio), or its link to the agent dropped and
+  came back. Its capabilities are taken again from its first refresh.
+- A provisioned session is kept across its pod's reconnection (owner's decision, 13 October).
+  Every backhaul move drops the pod's link to its agent, as the pod's station leaves its
+  parent: OpenSync's CM opens it again 15 to 18 s later, a new generation of the same database
+  (seen on rdk-1010 and on the Pis). Before this rule each move ended the session, a Search and
+  new M1s followed, and the controller's model lacked the pod's BSSes for about 20 s. Now, while
+  the link is away, a provisioned session is held, answering nothing that needs the pod, for
+  at most the reconnection window, 60 s. It is kept when the new generation continues the pod
+  source: the same pod (its serial and node ID), the same start of its OpenSync (its radio
+  rows, which every start creates anew), and the same capabilities apart from their operable
+  channels (every radio's RUID, maximum BSS, operating classes and their maximum EIRP, its HT and
+  advanced capabilities, and the device's own; the maxima advertised so far are kept for the
+  comparison). The agent then sends one Topology Notification, so that the controller's next
+  Topology Query sees the pod's new uplink, and no Search or M1; its write scopes see the new
+  generation, its configuration still in the pod. The window covers CM's reconnection with room
+  for a slow move and stays well inside a controller's own silence windows (RDK queries each
+  agent's topology every 15 s; EMOSA's `topology_query_window` in the RDK lab is 120 s; the
+  controller-silence rule below is 130 s), so a held agent never outlasts what its controller
+  tolerates. Any other new generation is another source, with a fresh session, counted by
+  reason in the status's `reconnections`: another pod (`another_pod`); a restart of its OpenSync
+  (`pod_restarted`: its database comes from its template, and the agent writes a configuration
+  only for an M2, so a restarted pod needs the fresh session's); the window passed
+  (`window_passed`); other capabilities (`capabilities_changed`, a power rise among them). A
+  session not yet provisioned (discovering, or an M1 awaiting its M2) is not held either: its
+  WSC exchange belongs to its source. Both agents (box `transport-cut`, `transport-cut-long`,
+  `reconnect-moved-uplink`, `reconnect-not-provisioned`, and the pod restarts `new-source`,
+  `restart-during-move`, `restart-during-write`, `gre-child-kept`).
+- A radio's operable channel follows its pod's uplink (§9: a further radio's channel is its
+  station's). When only the radios' operable channels changed, on a kept reconnection or on the
+  same source, a provisioned session is kept, as an EasyMesh agent reports a channel change
+  without onboarding again: the agent takes the new capabilities and, for the radios that
+  moved, sends an unsolicited Channel Preference Report naming each one's new channel its only
+  operable one (every other channel of its band's classes at preference 0, reason 8: operation
+  would prevent backhaul operation using a shared radio), then an Operating Channel Report. Its
+  M1 had named the old channel; the controller learns the new one from these. Nothing is
+  written: the pod moved the radio and its BSSes (box `second-radio-moves-channel`,
+  `reconnect-channel-follows`).
 - One exception: a radio's maximum EIRP. A source starts with the radio's reported
   `Wifi_Radio_State.tx_power`, or 20 dBm when the pod reports none yet. A reported power above
   the maximum a radio advertises means new capabilities, since a radio cannot transmit above
@@ -177,8 +212,9 @@ Rules:
   agent every 40 s (12 October). Both agents (vectors `translation-northbound.json`
   `advertised_eirp`, box `power-rises`). The agent does not wait for the power before its
   first M1: a radio whose VIFs disagree is never given one (§9).
-- A session that fails, loses its source (the pod's State lost, or a new
-  database generation), or receives a Renew is replaced by a new one. Restarts
+- A session that fails, loses its source (the pod's State lost, past the reconnection window
+  for a provisioned one, or another pod source), or receives a Renew is replaced by a new one.
+  Restarts
   after failures back off by `min(30, 2^failures)` seconds; a Renew restarts at
   once, and provisioning resets the failures.
 - With EasyMesh 6.1, the Early AP Capability Report goes out before M1 and is
@@ -678,6 +714,7 @@ Timers:
 | Controller silence before onboarding again | 130 s |
 | M1 without M2 before onboarding again | 30 s |
 | Provisioned but serving no BSS before onboarding again | 60 s |
+| Reconnection window (a provisioned session held for its pod's link) | 60 s |
 | Discovery window (three Searches, 1 s apart) | 5 s |
 | Early AP Capability Report: retransmission, window | 250 ms, 1 s |
 | Pod State re-read and reconcile | 0.5 s |
@@ -1253,11 +1290,12 @@ path is re-run. Carried with the second-radio work (§9).
   reported until it leaves it. The channel rule (item 9): the radio is operable only on its
   station's channel, so a Channel Selection Request that forbids that channel, in any class that
   has it, is declined for that radio alone. A station that moves the radio to another channel
-  changes the radio's capabilities: the agent takes them under the same pod source and starts
-  exactly one fresh session (a Search and an M1 per radio; a radio with no channel for a moment
-  keeps the one it was reported on, so a move is one change). The unchanged M2 sets are observed
-  applied without writing: `b-ap-<band>` moves with its radio, the pod's doing, and EMOSA neither
-  recreates nor rewrites it. A moved fronthaul radio is still a different device (a new source).
+  changes the radio's operable channel: a provisioned session is kept (§2.5), the agent takes the
+  new capabilities and reports the new channel in a Channel Preference Report and an Operating
+  Channel Report (a radio with no channel for a moment keeps the one it was reported on, so a
+  move is one change); a session not yet provisioned starts afresh. Nothing is written:
+  `b-ap-<band>` moves with its radio, the pod's doing, and EMOSA neither recreates nor rewrites
+  it. A moved fronthaul radio is still a different device (a new source).
   AP metrics (§3.8) per radio: each radio's BSSes carry the utilization of the pod's survey of
   that radio's own channel and their stations' metrics; a radio with no fresh survey is left out
   of the response, nothing filled in. Known gap, to close before V54's end soaks: the pod's
