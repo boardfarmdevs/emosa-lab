@@ -48,6 +48,32 @@ CLASS_CHANNELS = {
 BAND_CLASSES = ((81,), (115, 124, 125))
 
 
+# Channel Preference reason code 8: operation would prevent backhaul operation using a shared
+# radio (EasyMesh 6.1 Table 17.2.13: a radio whose channel follows its pod's backhaul station)
+SHARED_RADIO_BACKHAUL = 8
+
+
+def moved_preferences(capabilities, ruids):
+    """spec 2.5: the Channel Preference TLVs of an unsolicited Channel Preference Report for the
+    radios ``ruids`` whose channel moved with the pod's uplink in a kept session: each of the
+    radio's classes with a channel it cannot operate on, those channels at preference 0 (every
+    channel but its current one), reason 8."""
+    tlvs = []
+    for radio in capabilities.radios:
+        if radio.basic.ruid not in ruids:
+            continue
+        groups = [
+            (c.operating_class, c.non_operable_channels)
+            for c in radio.basic.operating_classes
+            if c.non_operable_channels
+        ]
+        value = bytearray(radio.basic.ruid) + bytes([len(groups)])
+        for opclass, channels in groups:
+            value += bytes([opclass, len(channels), *channels, SHARED_RADIO_BACKHAUL])
+        tlvs.append(Tlv(0x8B, bytes(value)))
+    return tuple(tlvs)
+
+
 def advertised(operating_class):
     """The classes a radio operating in this class advertises: every class of its band (none for
     a class not mapped)."""

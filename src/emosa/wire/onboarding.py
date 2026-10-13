@@ -20,7 +20,7 @@ from emosa.wire.autoconfiguration import (
     check_message_set,
 )
 from emosa.wire.backhaul_steering import BackhaulSteeringCoordinator
-from emosa.wire.channel import ChannelCoordinator
+from emosa.wire.channel import ChannelCoordinator, moved_preferences
 from emosa.wire.cmdu import (
     MULTICAST,
     MidSequence,
@@ -40,7 +40,12 @@ from emosa.wire.link_metrics import (
 from emosa.wire.pod_metrics import PodMetricReporter
 from emosa.wire.provisioning_session import ComponentProvisioningSession
 from emosa.wire.reporting_policy import ReportingPolicyCoordinator
-from emosa.wire.reports import PreparedReport, capability_tlvs
+from emosa.wire.reports import (
+    PreparedReport,
+    capabilities_identity,
+    capability_tlvs,
+    operable_channels_moved,
+)
 from emosa.wire.steering import SteeringCoordinator
 from emosa.wire.unassociated import UnassociatedCoordinator
 
@@ -131,8 +136,17 @@ class OnboardingSession:
         backhaul_pairs=None,
         backhaul_steering_associated=None,
         radio_bridge_factory=None,
+        reconnect_window=None,
     ):
         self.message_set = check_message_set(message_set)
+        # spec 2.5: a provisioned session held while its pod's link is away, at most this many
+        # seconds, and kept when the source comes back in the same lineage with the same
+        # capabilities apart from their operable channels (None: the source lost at once)
+        self.reconnect_window = reconnect_window
+        self.generation = None  # the pod source's database generation the session is on
+        self.away_since = None  # when a provisioned session's source went away
+        self.notify_due = False  # a Topology Notification for a kept reconnection
+        self.channel_moves = ()  # radios whose operable channel moved: their preferences due
         if type(inventory) is not DeviceInventory:
             raise EmosaError(Reason.INVALID_INPUT, "explicit device inventory required")
         encode_value(inventory)
@@ -215,17 +229,47 @@ class OnboardingSession:
         self.events.append(event)
         return event
 
+    def _lost(self, reason=None):
+        self.close()
+        self.state = "source_lost"
+        self._record("source_lost")
+        if reason:
+            self._record(reason)
+        return None
+
     def _snapshot(self):
         snapshot = self.source.current() if self.source.binding == self.binding else None
-        if self.context is not None and (
-            snapshot is None
-            or snapshot.context_token != self.context
-            or snapshot.capabilities != self.capabilities
-        ):
-            self.close()
-            self.state = "source_lost"
-            self._record("source_lost")
-            return None
+        if self.context is None:
+            return snapshot
+        # spec 2.5: only a provisioned session is held through its pod's reconnection and kept
+        keeps = self.state == "provisioning" and self.reconnect_window is not None
+        if snapshot is None:
+            if not keeps or self.source.binding != self.binding:
+                return self._lost()
+            if self.away_since is None:
+                self.away_since = self.clock()
+                self._record("reconnection_held")
+            if self.clock() < self.away_since + self.reconnect_window:
+                return None
+            return self._lost("reconnection_window_passed")
+        if snapshot.context_token != self.context:
+            return self._lost()
+        if snapshot.capabilities != self.capabilities:
+            if not keeps or capabilities_identity(snapshot.capabilities) != capabilities_identity(
+                self.capabilities
+            ):
+                return self._lost()
+            # a radio's channel moved with the pod's uplink: its new operable channel reported
+            # (a Channel Preference Report, and the Operating Channel Report that follows it)
+            moved = operable_channels_moved(self.capabilities, snapshot.capabilities)
+            self.capabilities = snapshot.capabilities
+            self.channel_moves = tuple(dict.fromkeys((*self.channel_moves, *moved)))
+            self._record("channel_move_kept")
+        if snapshot.generation != self.generation or self.away_since is not None:
+            if not keeps:
+                return self._lost()
+            self.generation, self.away_since, self.notify_due = snapshot.generation, None, True
+            self._record("reconnection_kept")
         return snapshot
 
     def _stamp(self):
@@ -244,6 +288,7 @@ class OnboardingSession:
             if len(snapshot.capabilities.radios) != 1 and self.radio_bridge_factory is None:
                 raise EmosaError(Reason.UNSUPPORTED_OPERATION, "one radio required")
             self.context, self.capabilities = snapshot.context_token, snapshot.capabilities
+            self.generation = snapshot.generation
             self.discovery = DiscoveryExchange(
                 self.binding,
                 band=0,
@@ -291,8 +336,24 @@ class OnboardingSession:
                 await self._next_radio(snapshot)
                 if self.state != "provisioning":
                     return
-            # Notify only observed topology changes, never desired Config changes.
-            if snapshot.topology.operational != self.last_topology:
+            if self.channel_moves:
+                # spec 2.5: a radio's channel moved in a kept session: its new operable channel
+                # in an unsolicited Channel Preference Report (its M1's capabilities named the
+                # old one); the Operating Channel Report follows from the channel procedures
+                for frame in fragment_message(
+                    self.binding.controller_al,
+                    self.binding.local_al,
+                    0x8005,
+                    self.mids.next(),
+                    moved_preferences(self.capabilities, self.channel_moves),
+                ):
+                    snapshot.stamp.check(self._stamp(), self.clock())
+                    self.send_frame(frame)
+                self.channel_moves = ()
+                self._record("channel_preference_report_unsolicited")
+            # Notify only observed topology changes, never desired Config changes, and once
+            # after a kept reconnection (spec 2.5: the pod's uplink may have moved).
+            if snapshot.topology.operational != self.last_topology or self.notify_due:
                 for frame in fragment_message(
                     MULTICAST,
                     self.binding.local_al,
@@ -304,6 +365,7 @@ class OnboardingSession:
                     snapshot.stamp.check(self._stamp(), self.clock())
                     self.send_frame(frame)
                 self.last_topology = snapshot.topology.operational
+                self.notify_due = False
                 self._record("observed_topology_notification")
             if self.reannounce.due(self.reports.counts.get("topology_response_sent", 0)):
                 self.last_clients = set()

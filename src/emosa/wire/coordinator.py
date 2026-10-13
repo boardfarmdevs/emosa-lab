@@ -41,6 +41,7 @@ class ReportSnapshot:
     operating_radios: tuple[OperatingRadio, ...] = ()
     telemetry_valid_until: float | None = None
     topology_valid_until: float | None = None
+    generation: int | None = None  # the pod source's database generation
 
 
 class ReportSource:
@@ -84,10 +85,17 @@ class ReportSource:
         operating_radios=(),
         telemetry_valid_until=None,
         topology_valid_until=None,
+        lineage=None,
     ):
+        """``lineage``: the agent's judgement of which sources are the same pod source (spec 2.5:
+        a reconnection of the same pod with the same capabilities apart from their operable
+        channels). With one, the session context is the lineage's, kept across invalidation and
+        a new database generation; without one, as before, the connection's (a disconnect, an
+        invalidation or a new generation needs discovery again)."""
         try:
             if (
                 (self.binding, self.pod_id, self.inputs_digest) != self._identity
+                or (lineage is not None and (type(lineage) is not int or lineage < 0))
                 or type(revision) is not tuple
                 or len(revision) != 2
                 or any(type(n) is not int or n < 0 for n in revision)
@@ -150,8 +158,13 @@ class ReportSource:
             raise
         self._revision, self._last_observed, self._last_facts = revision, observed_at, facts
         # Ordinary database revisions may change operational facts. Disconnect,
-        # invalidation or a new database generation requires discovery again.
-        context = f"{self.instance}/{self.epoch}/{revision[0]}"
+        # invalidation or a new database generation requires discovery again, unless the agent
+        # names the source's lineage (spec 2.5: a pod's reconnection kept).
+        context = (
+            f"{self.instance}/{self.epoch}/{revision[0]}"
+            if lineage is None
+            else f"{self.instance}/lineage-{lineage}"
+        )
         self._snapshot = ReportSnapshot(
             stamp,
             capabilities,
@@ -160,6 +173,7 @@ class ReportSource:
             operating_radios,
             telemetry_valid_until,
             topology_valid_until,
+            revision[0],
         )
         return self.current()
 

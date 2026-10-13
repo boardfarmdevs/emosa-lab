@@ -42,6 +42,24 @@
       ]
     },
     "report_source_available": {"type": "boolean"},
+    "reconnections": {
+      "type": "object",
+      "description": "spec 2.5: the pod's new database generations that continued its source (a provisioned session kept) and those that were another source (a fresh session), by reason.",
+      "required": ["continued", "fresh"],
+      "additionalProperties": false,
+      "properties": {
+        "continued": {"type": "integer", "minimum": 0},
+        "fresh": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "another_pod": {"type": "integer", "minimum": 0},
+            "window_passed": {"type": "integer", "minimum": 0},
+            "capabilities_changed": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
     "session": {"type": ["object", "null"], "description": "The onboarding session: state, counters and recent events.", "properties": {"state": {"enum": ["waiting_source", "discovering", "admitting", "awaiting_m2", "provisioning", "source_lost", "failed", "incompatible", "closed"]}}},
     "operations": {
       "type": "array",

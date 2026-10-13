@@ -103,6 +103,7 @@ from emosa.wire.link_metrics import BackhaulPair
 from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession
 from emosa.wire.operation_bridge import ComponentTarget, WscComponentBridge
 from emosa.wire.reporting_policy import ReportingPolicyStore
+from emosa.wire.reports import capabilities_identity
 from emosa.wsc_messages import M1Device
 
 log = logging.getLogger("emosa.agent")
@@ -119,6 +120,13 @@ RENEWALS = {
 # The pod's State is re-read on this cadence, not on every received frame: the
 # published report lives 1.5 s, which this refreshes three times over.
 REFRESH_PERIOD = 0.5
+# spec 2.5: a provisioned session is held this long while its pod's link is away, and kept when
+# the same pod comes back within it with the same capabilities apart from their operable
+# channels. OpenSync's CM opens the link again 15 to 18 s after a backhaul move; the window
+# stays well inside a controller's own silence windows (RDK: a Topology Query every 15 s, and
+# EMOSA's topology_query_window of 120 s in its lab), so a held agent never outlives the
+# controller's tolerance.
+RECONNECT_WINDOW = 60
 # the band of a reported radio, by the operating class its capabilities advertise (spec 9)
 BAND_OF_OPERATING_CLASS = {
     opclass: band for band, classes in OPERATING_CLASSES.items() for opclass, _ in classes
@@ -259,6 +267,30 @@ class PodReportSource:
         self.capabilities = self.inventory = None
         self.capabilities_generation = None  # the pod source the capabilities are from
         self.further_channels = {}  # RUID -> channel of each further radio reported (spec 9)
+        # spec 2.5: the sources that are one pod source to the session (a reconnection of the
+        # same pod with the same capabilities apart from their operable channels, back within
+        # RECONNECT_WINDOW); a new one for any other source
+        self.lineage = 0
+        self.identity = None  # (serial, node ID) of the pod last published
+        self.published_at = None  # when it was last published
+        self.reconnections = {"continued": 0, "fresh": {}}
+
+    def _fresh_reason(self, device, capabilities, now):
+        """Why a new database generation is another pod source (spec 2.5), or None: it
+        continues the last one."""
+        if (device.serial, device.node_id) != self.identity:
+            return "another_pod"
+        if self.published_at is None or now - self.published_at > RECONNECT_WINDOW:
+            return "window_passed"
+        if capabilities_identity(capabilities) != capabilities_identity(self.capabilities):
+            return "capabilities_changed"
+        return None
+
+    def _new_lineage(self, reason):
+        self.lineage += 1
+        fresh = self.reconnections["fresh"]
+        fresh[reason] = fresh.get(reason, 0) + 1
+        log.info("a new pod source (%s): a fresh session", reason.replace("_", " "))
 
     def _represented(self, radio, bound):
         """The BSSes the agent represents: the bound one, then managed slot VIFs.
@@ -368,14 +400,33 @@ class PodReportSource:
                 held={} if fresh else self.further_channels,
             )
             self.further_channels = {r.ruid: ch for r, ch, _ in bound[1:]}
-            stored = (
+            # each radio's advertised maximum EIRP so far: a source keeps its own (spec 2.5)
+            previous = (
                 {
                     r.basic.ruid: r.basic.operating_classes[0].max_eirp_dbm
                     for r in self.capabilities.radios
                 }
-                if not fresh and self.capabilities is not None
+                if self.capabilities is not None
                 else {}
             )
+            if fresh and self.capabilities is not None:
+                # spec 2.5: the same pod back within the reconnection window with the same
+                # capabilities apart from their operable channels (its maxima kept) continues the
+                # source: the session is kept. Anything else is a new source, a fresh session.
+                continued = radios_capabilities(
+                    tuple(
+                        (r, ch, mbss, advertised_eirp(previous.get(r.ruid), r.tx_power))
+                        for r, ch, mbss in bound
+                    )
+                )
+                why = self._fresh_reason(device, continued, started)
+                if why is None:
+                    fresh = False
+                    self.capabilities_generation = raw["generation"]
+                    self.reconnections["continued"] += 1
+                else:
+                    self._new_lineage(why)
+            stored = previous if not fresh else {}
 
             def _eirp(r):
                 return advertised_eirp(stored.get(r.ruid), r.tx_power)
@@ -397,8 +448,9 @@ class PodReportSource:
             elif capabilities != self.capabilities:
                 if further_radios_changed(self.capabilities, capabilities):
                     # spec 9: a further radio's channel follows the pod's station (and the radio
-                    # appears once the pod brings it up): its capabilities are taken again, and
-                    # the session that sees them change starts afresh with this radio's new M1
+                    # appears once the pod brings it up): its capabilities are taken again. A
+                    # channel move keeps a provisioned session (spec 2.5: its new operable channel
+                    # reported); a radio that came or went starts it afresh with new M1s.
                     log.info("a further radio moved channel or came and went: capabilities taken")
                     self.capabilities = capabilities
                 elif kept == self.capabilities:
@@ -541,7 +593,9 @@ class PodReportSource:
                 observed_at=started,
                 lifetime=1.5,  # (t + 2) - t can exceed 2 in floating point
                 operating_radios=operating,
+                lineage=self.lineage,
             )
+            self.identity, self.published_at = (device.serial, device.node_id), started
             return True
         except (EmosaError, ConnectionError, TimeoutError) as exc:
             # Once per cause: a pod that stays away must not flood the log, but a
@@ -893,6 +947,9 @@ async def serve(config, stop):
             "pod": report.facts,
             "report_source_available": snapshot is not None,
             "session": lifecycle.status() if lifecycle else None,
+            # spec 2.5: new database generations that continued the pod source (the session
+            # kept when it was provisioned), and those that were another source, by reason
+            "reconnections": report.reconnections,
             "operations": ops,
             # spec 9: each further radio's scope, by band: its operations, each the BSSes of the
             # radio's own M2 set its slots map
@@ -1012,6 +1069,7 @@ async def serve(config, stop):
                         pod_metrics["freshness"] if pod_metrics else FRESHNESS,
                     ),
                     radio_bridge_factory=radio_bridge if radio_scopes else None,
+                    reconnect_window=RECONNECT_WINDOW,
                 )
 
             channels = ChannelPolicyStore(state_dir / "channel-policy.sqlite")

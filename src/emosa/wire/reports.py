@@ -147,6 +147,39 @@ def _em(value):
     return Tlv(value.kind, encode_value(value))
 
 
+def capabilities_identity(facts: EarlyCapabilities):
+    """The capabilities apart from their operable channels (spec 2.5): a session is kept across
+    its pod's reconnection, and across a radio's channel move, while this stays the same. Every
+    radio's RUID, maximum BSS, operating classes and their maximum EIRP, its HT and advanced
+    capabilities and the device's own are kept; which channels are operable is left out (each
+    radio is operable on its current channel only, and that channel follows the pod's uplink)."""
+    return replace(
+        facts,
+        radios=tuple(
+            replace(
+                radio,
+                basic=replace(
+                    radio.basic,
+                    operating_classes=tuple(
+                        replace(c, non_operable_channels=()) for c in radio.basic.operating_classes
+                    ),
+                ),
+            )
+            for radio in facts.radios
+        ),
+    )
+
+
+def operable_channels_moved(before: EarlyCapabilities, after: EarlyCapabilities):
+    """The RUIDs of the radios whose operable channels differ between two capability reports of
+    the same identity (spec 2.5), in report order."""
+    return tuple(
+        a.basic.ruid
+        for b, a in zip(before.radios, after.radios, strict=True)
+        if b.basic.operating_classes != a.basic.operating_classes
+    )
+
+
 def capability_tlvs(facts: EarlyCapabilities):
     """Validate the complete restricted capability inventory before encoding."""
     _require(facts.inventory_complete is True, "complete capability inventory is required")
