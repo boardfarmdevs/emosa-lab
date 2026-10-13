@@ -17,8 +17,15 @@ SCRIPTS = [ROOT / "deploy/opensync-lab/vm/lab.sh", ROOT / "deploy/rdk-lab/vm/lab
 # $CAPTURE/<basename>, as does a file pushed (lxc file push ... SOURCE CT/PATH); a
 # container's places (emosa_layout) are read from $FAKE_DEFAULT for its
 # /etc/default/emosa (none: the kit's defaults); its LAN bridge has 10.0.0.1; no container
-# is running; everything else succeeds.
+# is running; a container's init is $FAKE_CPE_INIT (none: systemd), a busybox one's EMOSA
+# init script /etc/init.d/emosa-cpe; every call is logged in $CAPTURE/lxc.log; everything
+# else succeeds.
 FAKE_LXC = r"""#!/bin/bash
+echo "$*" >> "$CAPTURE/lxc.log"
+case " $* " in
+    *" config get "*" user.easymesh.cpe-init "*) echo "${FAKE_CPE_INIT:-}"; exit 0 ;;
+    *"grep -l"*"emosa-fleet-c"*) echo /etc/init.d/emosa-cpe; exit 0 ;;
+esac
 if [ "$1 $2" = "file push" ]; then
     cp "${@: -2:1}" "$CAPTURE/$(basename "${@: -1}")"; exit 0
 fi
@@ -125,6 +132,27 @@ def test_rdk_fleet_in_the_gateway(tmp_path):
     assert places == ("/nvram/emosa/state", "/nvram/emosa/agents")
     assert fleet["run_root"] == "/run/emosa"
     assert fleet["telemetry"] == {"mode": "mqtt", "broker": "10.0.0.1", "port": 8883}
+    assert "systemctl restart emosa-fleet" in (capture / "lxc.log").read_text()
+
+
+def test_rdk_fleet_in_a_busybox_cpe(tmp_path):
+    # a busybox-init CPE in the gateway's place (meta-cmf bpi.sh -t busybox): no units, the
+    # fleet (with its forwarder and agents) restarted by the image's own init script
+    state = tmp_path / "state"
+    state.mkdir()
+    (state / "gateway").touch()
+    _, capture = run(
+        tmp_path,
+        "FAKE_CPE_INIT=busybox CTL=bpibroadband "
+        "fleet_config 6640 6651 6690 02:00:00:00:00:01 r1 true shared",
+        state,
+    )
+    fleet = json.loads((capture / "emosa-fleet.json").read_text())
+    assert fleet["advertise"] == "10.0.0.1"
+    assert fleet["telemetry"] == {"mode": "off"}
+    calls = (capture / "lxc.log").read_text()
+    assert "/etc/init.d/emosa-cpe restart" in calls
+    assert "systemctl" not in calls
 
 
 def test_opensync_lab_fleet_without_pods(tmp_path):

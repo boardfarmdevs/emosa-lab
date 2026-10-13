@@ -115,6 +115,26 @@ emosa_layout() {
 emosa_state_root() { emosa_layout "$1" | cut -d" " -f3; }
 emosa_root() { emosa_state_root "$(emosa_where)"; }    # the state root where EMOSA runs
 
+# A busybox-init CPE in the gateway's place (meta-cmf gen/bpi.sh -t busybox, recorded on its
+# container) has no units: EMOSA's processes are its image's init script's, the one that
+# starts the fleet (the forwarder, the fleet with its agents supervised, the GTP with its
+# configuration, a keeper), and the controller's are the one bpi.sh recorded. The scripts
+# start their daemons in the background: their output stays in the container.
+cpe_busybox() { [ "$(lxc config get "$1" user.easymesh.cpe-init 2>/dev/null)" = busybox ]; }
+cpe_emosa() {    # cpe_emosa CT start|stop|restart: EMOSA's processes in a busybox CPE
+    local script
+    script=$(cx "$1" sh -c 'grep -l "^[^#]*/usr/bin/emosa-fleet-c" /etc/init.d/* 2>/dev/null' || true)
+    [ "$(printf '%s\n' "$script" | grep -c .)" = 1 ] ||
+        die "$1: not one init script starts emosa-fleet-c: ${script:-none}"
+    cx "$1" sh -c '"$1" "$2" > /dev/null 2>&1' sh "$script" "$2"
+}
+cpe_easymesh() {    # cpe_easymesh CT start|stop|restart: a busybox CPE's controller and co-located agent
+    local script
+    script=$(lxc config get "$1" user.easymesh.cpe-service 2>/dev/null || true)
+    [ -n "$script" ] || die "$1: no init script recorded for its controller (user.easymesh.cpe-service)"
+    cx "$1" sh -c '"$1" "$2" > /dev/null 2>&1' sh "$script" "$2"
+}
+
 lan_address() {    # the gateway's LAN address (its LAN bridge's first IPv4 address)
     local bridge
     bridge=$(cx "$CTL" sh -c '. /etc/default/emosa 2>/dev/null; echo "${EMOSA_BRIDGE:-brlan0}"')
@@ -220,8 +240,12 @@ fleet_config() {
   "telemetry": $(telemetry_json "$advertise")$pods$window$extra
 }
 EOF
-    cx "$ct" systemctl enable -q emosa-fleet
-    cx "$ct" systemctl restart emosa-fleet
+    if cpe_busybox "$ct"; then
+        cpe_emosa "$ct" restart
+    else
+        cx "$ct" systemctl enable -q emosa-fleet
+        cx "$ct" systemctl restart emosa-fleet
+    fi
 }
 
 # --- the agent implementation (deploy/adapter: EMOSA_AGENT) --------------------------------

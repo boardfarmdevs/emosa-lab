@@ -72,6 +72,10 @@ wait_provisioned() {    # wait_provisioned CT N: N agents provisioning in CT (at
 pods_running() { lxc list -c ns -f csv | grep -cE '^pod-[0-9]+,RUNNING$' || true; }
 
 stop_emosa() {    # stop_emosa CT: the fleet and every agent in CT stopped and disabled
+    if cpe_busybox "$1"; then    # its init script's stop: the fleet takes its agents with it
+        cpe_emosa "$1" stop
+        return
+    fi
     cx "$1" sh -c 'systemctl disable -q --now emosa-fleet 2>/dev/null || true
         for u in $(systemctl list-units --all --plain --no-legend "emosa-agent@*" | cut -d" " -f1); do
             systemctl disable -q --now "$u" 2>/dev/null || true
@@ -119,7 +123,7 @@ install_package() {    # install_package [IPK]: the package emosa in the gateway
     (cd "$d" && ar x "$ipk" && mkdir root && tar -xf data.tar.* -C root)
     tar -C "$d/root" -cf - . | lxc exec "$CTL" -- tar -xf - -C /
     rm -rf "$d"
-    cx "$CTL" systemctl daemon-reload
+    cpe_busybox "$CTL" || cx "$CTL" systemctl daemon-reload
 }
 
 operator_redirect() {    # operator_redirect TARGET|off: the operator's redirect on the pods' redirector address
@@ -166,8 +170,10 @@ gateway_ports() {    # the front and agent ports on the gateway's LAN address, i
     config=$(emosa_layout "$CTL" | cut -d" " -f1)
     cx "$CTL" cat "$config" | jq --arg lan "$lan" '.advertise = $lan | .forward = true' |
         lxc exec "$CTL" -- sh -c "cat > '$config.new' && mv '$config.new' '$config'"
-    cx "$CTL" systemctl enable -q emosa-forward
-    cx "$CTL" systemctl restart emosa-forward
+    if ! cpe_busybox "$CTL"; then    # a busybox CPE's forwarder: its init script's, with the fleet (on)
+        cx "$CTL" systemctl enable -q emosa-forward
+        cx "$CTL" systemctl restart emosa-forward
+    fi
     operator_redirect "tcp:$lan:$FLEET_PORT"
     log "gateway: the fleet and agents on $lan, the operator's redirect on $WAN_HOST:$FLEET_PORT"
 }
@@ -287,7 +293,18 @@ else:
     print("changed")
 EOF
 )
-    if [ "$changed" = changed ]; then
+    if [ "$changed" = changed ] && cpe_busybox "$CTL"; then
+        # a busybox CPE: its OneWifi starts with its boot (the pre-start makes wifi1.4), its
+        # controller and co-located agent after it, from its init scripts
+        lxc stop "$CTL" --timeout 30 >/dev/null 2>&1 || lxc stop "$CTL" --force >/dev/null 2>&1 || true
+        lxc start "$CTL"
+        for i in $(seq 1 60); do
+            cx "$CTL" sh -c 'rbuscli get Device.WiFi.SSIDNumberOfEntries 2>/dev/null | grep -q Value' && break
+            sleep 5
+        done
+        sleep 45    # the agent applies the controller's settings once onboarded: after that
+        log "gateway: $CTL restarted, OneWifi with lnf_radius_5g on wifi1.4 in $PODBH_BRIDGE, after ${i}x5 s"
+    elif [ "$changed" = changed ]; then
         # OneWifi again (its pre-start makes wifi1.4), and the gateway's agent after it: the
         # controller's settings again
         cx "$CTL" systemctl restart onewifi
@@ -309,6 +326,22 @@ PODBH_VAP=lnf_radius_5g
 PODBH_SSID=$BHAUL_SSID
 PODBH_KEY=$BHAUL_KEY
 EOF
+    if cpe_busybox "$CTL"; then
+        # a busybox CPE runs the helper from its EasyMesh init script, before the co-located
+        # agent starts: that script's restart, the helper's last line in its log
+        for i in 1 2 3 4; do
+            cpe_easymesh "$CTL" restart
+            sleep 45    # the agent applies the controller's settings once onboarded
+            # shellcheck disable=SC2016 # expanded in the gateway
+            cx "$CTL" sh -c 'grep -o "emosa-podbh:.*" /rdklogs/logs/easymesh.txt 2>/dev/null | tail -n 1' || true
+            ssid=$(cx "$CTL" sh -c "for v in \$(ls /sys/class/net/$PODBH_BRIDGE/brif 2>/dev/null); do iw dev \$v info; done" |
+                awk '$1 == "ssid" {print $2; exit}')
+            [ "$ssid" = "$BHAUL_SSID" ] && break
+        done
+        [ "$ssid" = "$BHAUL_SSID" ] || die "$CTL: the pods' SSID did not come up on $PODBH_BRIDGE (${ssid:-none})"
+        log "gateway: '$BHAUL_SSID' on $(cx "$CTL" ls "/sys/class/net/$PODBH_BRIDGE/brif" | tr '\n' ' ')in $PODBH_BRIDGE"
+        return
+    fi
     cx "$CTL" systemctl enable -q emosa-podbh
     for i in 1 2 3 4; do
         cx "$CTL" systemctl restart emosa-podbh
@@ -362,8 +395,10 @@ EOF
   "state_dir": "/var/lib/emosa-gtp"
 }
 EOF
-    cx "$CTL" systemctl enable -q emosa-gtp
-    cx "$CTL" systemctl restart emosa-gtp
+    if ! cpe_busybox "$CTL"; then    # a busybox CPE's GTP: its init script's, with the fleet (on)
+        cx "$CTL" systemctl enable -q emosa-gtp
+        cx "$CTL" systemctl restart emosa-gtp
+    fi
     # em-gtp's SSID and GTP off: the pods' bootstrap is the gateway's now
     if exists em-gtp && running em-gtp; then
         cx em-gtp sh -c 'systemctl disable -q --now hostapd emosa-gtp 2>/dev/null' || true
@@ -387,11 +422,15 @@ on() {
         fi
         cx "$CTL" test -x /usr/bin/emosa-fleet-c || die "$CTL has no EMOSA: deploy an image with it, or off"
         plumbing
-        cx "$CTL" systemctl enable -q emosa-fleet
-        cx "$CTL" systemctl restart emosa-fleet    # with the advertise address plumbing wrote
-        # and the agents with the broker it wrote (the fleet starts the registry's stopped ones)
-        cx "$CTL" sh -c 'for u in $(systemctl list-units --plain --no-legend "emosa-agent@*" | cut -d" " -f1); do
-            systemctl restart "$u"; done'
+        if cpe_busybox "$CTL"; then    # its init script's: the forwarder, the fleet with its agents, the GTP
+            cpe_emosa "$CTL" restart
+        else
+            cx "$CTL" systemctl enable -q emosa-fleet
+            cx "$CTL" systemctl restart emosa-fleet    # with the advertise address plumbing wrote
+            # and the agents with the broker it wrote (the fleet starts the registry's stopped ones)
+            cx "$CTL" sh -c 'for u in $(systemctl list-units --plain --no-legend "emosa-agent@*" | cut -d" " -f1); do
+                systemctl restart "$u"; done'
+        fi
         log "gateway: EMOSA in $CTL again ($(emosa_layout "$CTL"))"
         pods_to_broker
         wait_provisioned "$CTL" "$(pods_running)"
@@ -405,7 +444,11 @@ on() {
         touch "$STATE/gateway"
         bash "$HERE/lab.sh" fleet || { rm -f "$STATE/gateway"; die "the gateway's fleet configuration failed"; }
         plumbing
-        cx "$CTL" systemctl restart emosa-fleet    # with the advertise address plumbing wrote
+        if cpe_busybox "$CTL"; then    # its init script's: the forwarder, the fleet with its agents, the GTP
+            cpe_emosa "$CTL" restart
+        else
+            cx "$CTL" systemctl restart emosa-fleet    # with the advertise address plumbing wrote
+        fi
         log "gateway: EMOSA anew in $CTL ($(cx "$CTL" /usr/bin/emosa-agent-c --version); places $(emosa_layout "$CTL"))"
         return
     fi
@@ -415,8 +458,12 @@ on() {
     move_state emosa "$CTL"
     plumbing
     touch "$STATE/gateway"
-    cx "$CTL" systemctl enable -q emosa-fleet
-    cx "$CTL" systemctl restart emosa-fleet
+    if cpe_busybox "$CTL"; then
+        cpe_emosa "$CTL" restart
+    else
+        cx "$CTL" systemctl enable -q emosa-fleet
+        cx "$CTL" systemctl restart emosa-fleet
+    fi
     log "gateway: fleet started in $CTL, with its registry's agents"
     pods_to_broker
     wait_provisioned "$CTL" "$(pods_running)"

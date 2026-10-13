@@ -679,10 +679,17 @@ forget_pods() {    # remove the EMOSA agents' rows from the controller's model (
     local als
     als=$(fleet_cli list 2>/dev/null | jq -r '.[].al_mac' | tr '\n' ' ')
     [ -n "$als" ] || return 0
-    cx bpibroadband sh -ec "systemctl stop em_ctrl
-        for al in $als; do for t in PolicyList OperatingClassList BSSList RadioList DeviceList; do
-            mysql -N -ubpi -proot OneWifiMesh -e \"delete from \$t where ID like '%@\$al@%'\" 2>/dev/null; done; done
-        systemctl start em_ctrl"
+    if cpe_busybox bpibroadband; then    # its init script stops and starts the co-located agent too
+        cpe_easymesh bpibroadband stop
+        cx bpibroadband sh -c "for al in $als; do for t in PolicyList OperatingClassList BSSList RadioList DeviceList; do
+            mysql -N -ubpi -proot OneWifiMesh -e \"delete from \$t where ID like '%@\$al@%'\" 2>/dev/null; done; done"
+        cpe_easymesh bpibroadband start
+    else
+        cx bpibroadband sh -ec "systemctl stop em_ctrl
+            for al in $als; do for t in PolicyList OperatingClassList BSSList RadioList DeviceList; do
+                mysql -N -ubpi -proot OneWifiMesh -e \"delete from \$t where ID like '%@\$al@%'\" 2>/dev/null; done; done
+            systemctl start em_ctrl"
+    fi
     log "controller model: EMOSA agents $als removed"
 }
 
@@ -777,7 +784,11 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
     pods)
         systemctl stop "$ROOM"
         for pod in $(lxc list -c n -f csv | grep -E '^pod-[0-9]+$'); do start_guarded "$pod"; done
-        cx "$(emosa_where)" systemctl start emosa-fleet
+        if cpe_busybox "$(emosa_where)"; then
+            cpe_emosa "$(emosa_where)" start
+        else
+            cx "$(emosa_where)" systemctl start emosa-fleet
+        fi
         # The medium pins the pods' backhaul links to their stations, which exist once OpenSync
         # is up: after a VM restart the medium was made with the pods stopped (rdk-1004, 5 Oct)
         for pod in $(pods_running); do
@@ -805,7 +816,11 @@ rooms() {    # rooms pods|native: which rooms the lab's room service runs
         log "rooms: $1 ($n pods); suite: EASYMESH_ROOM_WORLDS_ROOT=$MEDIUM_CONFIGURATOR/worlds-$1" ;;
     native)
         systemctl stop "$ROOM"
-        cx "$(emosa_where)" sh -c 'systemctl stop emosa-fleet "emosa-agent@*"'
+        if cpe_busybox "$(emosa_where)"; then
+            cpe_emosa "$(emosa_where)" stop
+        else
+            cx "$(emosa_where)" sh -c 'systemctl stop emosa-fleet "emosa-agent@*"'
+        fi
         for pod in $(pods_running); do lxc stop "$pod"; done
         forget_pods
         room_manifest native
@@ -876,7 +891,15 @@ up() {    # up [python|c] [gateway]: the EMOSA option of the RDK lab, every step
             # on): an adapter container's state taken over if the lab has one, else the lab's
             # fleet configuration written there; no adapter or GTP container once the pods are
             # up (retire)
-            touch "$STATE/telemetry"    # the pods' statistics, to the gateway's broker
+            # the pods' statistics, to the gateway's broker; a busybox-init CPE in the gateway's
+            # place has none by its type (as the product it stands for runs EMOSA without one):
+            # no pod telemetry in that lab
+            if cpe_busybox "$CTL"; then
+                rm -f "$STATE/telemetry"
+                log "telemetry off: $CTL is a busybox-init CPE, which runs no broker for the pods"
+            else
+                touch "$STATE/telemetry"
+            fi
             wan_address    # the operator's redirect listens on it
             bash "$HERE/gateway.sh" on
         else
