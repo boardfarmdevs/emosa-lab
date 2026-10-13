@@ -4388,8 +4388,9 @@ async def reconnect_config_lost(box):
     """spec 2.5's safety: a kept reconnection whose pod no longer has the agent's configuration,
     though the same start of its OpenSync (its radio rows kept: a path not seen yet, here the AP
     row's SSID changed while the link was cut). The agent ends the session at once, counted in
-    the status's reconnections as config_lost, and the fresh session's M2 writes the
-    configuration again, well within the 60 s the unserved rule would take."""
+    the status's reconnections as config_lost, rather than after the unserved rule's 60 s. Spec
+    5's ownership rule stands: a configuration changed under the same start is another
+    manager's, so the fresh session's M2 operation is refused (OWNERSHIP_CONFLICT), not forced."""
     if not (await onboarded(box)).get("applied"):
         return box.result(passed=False, failed="not onboarded")
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
@@ -4412,17 +4413,44 @@ async def reconnect_config_lost(box):
     )
     await apply_configuration(box.db)  # the pod runs it
     await asyncio.sleep(10)
+    operations = len(operation_states(box))
     back_at = time.monotonic()
     await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}")
-    mode = await back(box, searches, m1s, continued, seconds=50)
-    took = time.monotonic() - back_at
+    # as a controller does, until the fresh session's M2 has its operation
+    deadline, answered_searches, answered_m1s, fresh_after = (
+        time.monotonic() + 50,
+        searches,
+        m1s,
+        None,
+    )
+    while time.monotonic() < deadline and box.process.poll() is None:
+        found = box.sent(AUTOCONFIG_SEARCH)
+        if fresh_after is None and len(found) > searches:
+            fresh_after = time.monotonic() - back_at
+        for search in found[answered_searches:]:
+            box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
+        answered_searches = len(found)
+        found = box.sent(AUTOCONFIG_WSC)
+        for m1 in found[answered_m1s:]:
+            wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
+            ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)
+            await answer_m1(box, ruid, wsc)
+        answered_m1s = len(found)
+        if len(operation_states(box)) > operations:
+            break
+        await asyncio.sleep(0.3)
+    states = operation_states(box)
     counted = ((box.status() or {}).get("reconnections") or {}).get("config_lost", 0) > lost
     return box.result(
-        passed=mode == "fresh" and counted and took < RECONNECT_WINDOW,
-        session=mode,
+        passed=counted
+        and fresh_after is not None
+        and fresh_after < 15
+        and states[operations:] == [("REJECTED", "OWNERSHIP_CONFLICT")]
+        and kept_reconnections(box) > continued,
+        reconnection_kept_first=kept_reconnections(box) > continued,
         config_lost_counted=counted,
-        rewritten_after_s=round(took, 1),
-        operations=[list(s) for s in operation_states(box)[-3:]],
+        fresh_session_after_s=None if fresh_after is None else round(fresh_after, 1),
+        operations=[list(s) for s in states[-3:]],
     )
 
 

@@ -194,7 +194,12 @@ Rules:
   session not yet provisioned (discovering, or an M1 awaiting its M2) is not held either: its
   WSC exchange belongs to its source. Both agents (box `transport-cut`, `transport-cut-long`,
   `reconnect-moved-uplink`, `reconnect-not-provisioned`, and the pod restarts `new-source`,
-  `restart-during-move`, `restart-during-write`, `gre-child-kept`).
+  `restart-during-move`, `restart-during-write`, `gre-child-kept`). A kept reconnection whose pod no longer
+  has the agent's configuration (its rows missing or changed under the same start: a path not
+  seen yet) ends the session at once, counted as `config_lost`, rather than after the unserved
+  rule's 60 s; the fresh session's M2 is written as §5 allows: a configuration changed under the
+  same start is another manager's, and its operation is refused (`OWNERSHIP_CONFLICT`), not forced
+  (box `reconnect-config-lost`).
 - A radio's operable channel follows its pod's uplink (§9: a further radio's channel is its
   station's). When only the radios' operable channels changed, on a kept reconnection or on the
   same source, a provisioned session is kept, as an EasyMesh agent reports a channel change
