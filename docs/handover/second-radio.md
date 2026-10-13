@@ -57,7 +57,9 @@ Both agents, vectors and box for each; spec 8.6 and 9 record the rules.
   vectors `engine.json` `restarted-before-observed`, box `restart-during-write`).
 - F-201, found on the MV3 bench (12 October, after the Pis took the mt76 transmit-power modules):
   - **Cause:** a pod's source begins before OpenSync fills `Wifi_Radio_State.tx_power`, so the
-    agent advertised 20 dBm. The Pis then reported 30. The channel procedures refuse a power
+    agent advertised 20 dBm. Every new connection from the pod is a new source and repeats the
+    race, an OpenSync restart included: on the bench, restarts at 19:08 and 19:14 PDT took 20
+    again. The Pis then reported 30. The channel procedures refuse a power
     above the advertised maximum, so the controller timed out and renewed the agent every
     ~40 s. 9d930bc even refused the Channel Preference Query.
   - **Now (spec 2.5):** a reported power above a radio's advertised maximum is taken as new

@@ -160,9 +160,11 @@ Rules:
   Search at once and then every second, three at most, and fails when no
   Response is admitted within 5 s.
 - The radio's capabilities are fixed for one source. If the radio's identity or channel
-  changes under the same source, the source is unavailable. A new source (a new database
-  generation: the pod recreated, maybe with another radio) has its capabilities taken
-  again, and its new session reports them.
+  changes under the same source, the source is unavailable. A new source is a new database
+  generation, which every new connection from the pod to its agent makes: the pod's OpenSync
+  restarted, the pod rebooted or was recreated (maybe with another radio), or its link to the
+  agent dropped and came back. Its capabilities are taken again from its first refresh, and
+  its new session reports them.
 - One exception: a radio's maximum EIRP. A source starts with the radio's reported
   `Wifi_Radio_State.tx_power`, or 20 dBm when the pod reports none yet. A reported power above
   the maximum a radio advertises means new capabilities, since a radio cannot transmit above
