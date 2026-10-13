@@ -1244,7 +1244,8 @@ path is re-run. Carried with the second-radio work (§9).
   `second-radio-no-power`); answered, it renewed neither pod in the 11 minutes measured after the
   deploy. On mt7921 (the Pis) the reported power is the channel's regulatory
   cap given to the firmware (30 dBm on 149 and on 2.4 GHz channel 6, 23 on 36), once the Pis'
-  driver reports it (mt76 8286bbf62dcc backported to their host): before that it reads 3 dBm on
+  driver reports it (mt76's transmit-power series 317bc1a0590e, 8286bbf62dcc and 879d754e48f6
+  backported to their kernel): before that it reads 3 dBm on
   every radio, which is not the radio's power.
   Both agents (box `second-radio-parent`, `second-radio-withdrawn`, `second-radio-moves-channel`).
   Known gap, to close before V54's end soaks: V54's radio B runs VHT 80 MHz on 149/80 (centre

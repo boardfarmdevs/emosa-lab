@@ -93,6 +93,40 @@ EMOSA 1c1e7ae on the gateway from 15:30:41 (22:30:41Z); pods relaunched from
   and post-fix lines, the pods' status, the steers, the channel-change samples, the audit log).
   The gateway's copy went with the restore.
 
+## V54 on the Pis (EMOSA's side)
+The physical run of the (b) proof: the router, pi1 and pi2, extenders off; the Pi side, the run's
+checks and its faults are in opensync-rpi `docs/multihop.md` ("V54 on the Pis"). The router's
+own settings and steps stay with the router's project.
+- **EMOSA:** the router's build pinned to an emosa-lab main commit.
+- **Fleet configuration:** the router's own, plus `gtp_underlay` set to its GTP's underlay and
+  for pi1 `RPIPOD02A632CA11B6` and pi2 `RPIPOD02A632CA11D8`: profile
+  `rpi-pod-mt7921u-6.6.1-gre-5g-v1`, uplink `{mode gre, station bhaul-sta-50}`. A fleet restart
+  applies it. The fleet rewrites each agent's configuration and restarts the agent, keeping the
+  registry (AL MACs, ports), and gives each Pi a parent underlay that does not overlap the GTP
+  (the lowest free `169.254.N.0/24`).
+- **Before the first steer:** both agents onboarded with one M1 per radio. pi1's status shows
+  `gre_parent.ap_bssid` as its `b-ap-50` BSSID (not withdrawn), and its `b-ap-50` is up on its
+  station's channel with the underlay's `.1`.
+- **Before each steer** (as on rdk-1010): the controller's 0216 line "Backhaul STA learned
+  from Device Information: sta=<pi2's bhaul-sta-50> parent=<its current parent>" and pi2's
+  station row in its `Device.N`.
+- **The steers:** the operator's `SteerWiFiBackhaul` onto pi1's `b-ap-50` BSSID, and back onto
+  the router's 5 GHz pod-backhaul BSSID (pi2's bootstrap). After each move onto pi1: pi2's uplink
+  `gre`, applied on that
+  BSSID; a `pgd` tunnel on pi1; a 1500-byte DF ping across both hops. EMOSA never moves a pod by
+  itself: when pi1 goes away, pi2 returns by its own fallback (about 3 minutes) unless the
+  operator steers it back.
+- **Expected, not failures:**
+  - radio B is reported in the 20 MHz classes (149 as class 125) while it runs 149/80 (the known
+    gap below);
+  - a radio with no power in its State is reported at its capability's maximum EIRP (counted);
+  - mt7921 reads 3 dBm until the Pis' kernel has the mt76 transmit-power series backported
+    (317bc1a0590e, 8286bbf62dcc, 879d754e48f6);
+  - a Channel Selection Request with a power limit below the reported power is declined with
+    code 0x02.
+- **Watch:** the controller renewing the router's own agent every ~42 s after an em_ctrl restart
+  (seen on rdk-1010, not in its baseline).
+
 ## Remaining
 1. Deferred: the layer-A pods-only check (a pod onto a POD serving a Multi-AP backhaul BSS, not an
    extender, and back) before the end soaks; the box proves the move and revert.
