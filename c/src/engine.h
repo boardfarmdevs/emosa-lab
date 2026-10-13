@@ -98,6 +98,10 @@ cJSON *em_engine_request(em_engine *e, const cJSON *intent, const char *source, 
 cJSON *em_engine_execute(em_engine *e, const char *operation_id);
 /* Engine.reconcile: confirm or time out the pod's latest legitimate operation. */
 void em_engine_reconcile(em_engine *e);
+/* Engine.drifted (spec 2.5): the pod's most recent operation, observed applied, is no longer in
+ * the pod's configuration (its rows missing or changed after a kept reconnection, under the same
+ * start of its OpenSync). False while the pod's State is not ready. */
+bool em_engine_drifted(em_engine *e);
 /* Engine.recover: at start, unsent operations cancelled, sent ones INDETERMINATE. */
 void em_engine_recover(em_engine *e);
 bool em_engine_expired(em_engine *e, cJSON *op);

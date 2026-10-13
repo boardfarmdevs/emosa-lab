@@ -638,6 +638,33 @@ static void observation_event(em_engine *e, cJSON *op, const em_snapshot *snap, 
     cJSON_Delete(payload);
 }
 
+bool em_engine_drifted(em_engine *e)
+{
+    const cJSON *p, *last = NULL;
+    cJSON_ArrayForEach(p, em_journal_operations_view(e->journal))
+    {
+        const char *pp = str(cJSON_GetObjectItemCaseSensitive(p, "intent"), "pod_id");
+        if (pp && !strcmp(pp, e->pod_id))
+            last = p;
+    }
+    if (!last || strcmp(em_state_of(last), "OBSERVED_APPLIED"))
+        return false;
+    em_snapshot snap = {0};
+    if (!e->backend.snapshot(e->ctx, &snap))
+        return false;
+    bool drifted = false;
+    if (snap.ready) {
+        em_reason why;
+        cJSON *target = e->backend.target(e->ctx, cJSON_GetObjectItemCaseSensitive(last, "intent"), &why);
+        if (target) {
+            drifted = !em_matches(snap.config, target);
+            cJSON_Delete(target);
+        }
+    }
+    em_snapshot_clear(&snap);
+    return drifted;
+}
+
 void em_engine_reconcile(em_engine *e)
 {
     em_snapshot snap = {0};

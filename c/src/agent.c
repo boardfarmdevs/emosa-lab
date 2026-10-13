@@ -184,9 +184,9 @@ typedef struct {
      * channel moved in a kept session, their reports due */
     char source_serial[65], source_node[65], source_instance[17];
     bool has_source;
-    unsigned reconnections_continued;
+    unsigned reconnections_continued, reconnections_config_lost;
     counters reconnections_fresh;
-    bool notify_due;
+    bool notify_due, check_drift;
     uint8_t channel_moves[1 + EXTRA_RADIOS][6];
     size_t nchannel_moves;
     int generation;
@@ -851,8 +851,23 @@ static bool writing(agent *a)
     return active;
 }
 
+static void renew(agent *a, const char *why);
+
 static void reconcile(agent *a)
 {
+    /* spec 2.5: a kept reconnection whose pod no longer has the configuration (its rows missing
+     * or changed under the same start of its OpenSync): the session ends at once, and the fresh
+     * session's M2 writes it, rather than the unserved rule's 60 s */
+    if (a->check_drift && source_current(a)) {
+        a->check_drift = false;
+        bool drifted = em_journal_count(a->journal) && em_engine_drifted(&a->ap_engine);
+        for (size_t k = 0; k < a->nradio_scopes && !drifted; k++)
+            drifted = em_journal_count(a->radio_scopes[k].journal) && em_engine_drifted(&a->radio_scopes[k].engine);
+        if (drifted) {
+            a->reconnections_config_lost++;
+            renew(a, "the pod's configuration is gone after its reconnection");
+        }
+    }
     if (em_journal_count(a->journal))
         em_engine_reconcile(&a->ap_engine);
     for (size_t k = 0; k < a->nradio_scopes; k++) /* each further radio's own scope (spec 9) */
@@ -2087,7 +2102,7 @@ static void session_tick(agent *a)
         count(&a->counts, "reconnection_held");
     if (step.kept) { /* spec 2.5: its pod reconnected, the session kept: a Topology Notification */
         count(&a->counts, "reconnection_kept");
-        a->notify_due = true;
+        a->notify_due = a->check_drift = true;
     }
     if (step.start)
         start_session(a);
@@ -2262,6 +2277,8 @@ static cJSON *status(agent *a)
      * reason */
     cJSON *reconnections = cJSON_AddObjectToObject(o, "reconnections");
     cJSON_AddNumberToObject(reconnections, "continued", a->reconnections_continued);
+    if (a->reconnections_config_lost)
+        cJSON_AddNumberToObject(reconnections, "config_lost", a->reconnections_config_lost);
     cJSON_AddItemToObject(reconnections, "fresh", counters_json(&a->reconnections_fresh, ""));
     cJSON_AddStringToObject(session, "state", SESSION_NAMES[a->at.state]);
     cJSON *issues = cJSON_AddArrayToObject(session, "admission_issues");
