@@ -1,6 +1,6 @@
 {
   "id": "rpi-pod-mt7921u-6.6.1-gre-5g-v1",
-  "description": "opensync-rpi pods as GRE parents on adapter B (spec 8.6, 9; V54's pods-only shape): rpi-pod-mt7921u-6.6.1-v1 with a second radio. Adapter A (MT7921AU, the pod's 2.4 GHz radio) keeps the fronthaul home-ap-24; it runs one AP, so the 2.4 GHz radio's M2 set maps the fronthaul alone and its backhaul BSS has no slot there. Adapter B (MT7921AU, 5 GHz) carries the pod's uplink station bhaul-sta-50 (the pod's: it keeps the phy's MAC) and the parent AP b-ap-50 (EMOSA's), configured by that radio's own M2: its backhaul BSS is the parent AP, not Multi-AP, no bridge, hidden, its Inet row the pod's underlay. EMOSA writes no channel or ht_mode on adapter B, which follows the station (V54: VHT 80 MHz on 149/80; EMOSA reports it in the 20 MHz classes, a known gap in spec 9). The interface names are the ones 52_owm_prep creates on both adapters; b-ap-50's vif_radio_idx is 1, 52_owm_prep's order on the real Pis (bhaul-sta 0, b-ap 1), unique on adapter B's radio, whose other VIF is the pod's station at 0 (read on pi1, image 084736, 12 October). A pod on Ethernet only keeps rpi-pod-mt7921u-6.6.1-v1.",
+  "description": "opensync-rpi pods as GRE parents on adapter B (spec 8.6, 9; V54's pods-only shape): rpi-pod-mt7921u-6.6.1-v1 with a second radio. Adapter A (MT7921AU, the pod's 2.4 GHz radio) keeps the fronthaul home-ap-24; it runs one AP, so the 2.4 GHz radio's M2 set maps the fronthaul alone and its backhaul BSS has no slot there. Adapter B (MT7921AU, 5 GHz) carries the pod's uplink station bhaul-sta-50 (the pod's: it keeps the phy's MAC) and the parent AP b-ap-50 (EMOSA's), configured by that radio's own M2: its backhaul BSS is the parent AP, not Multi-AP, no bridge, broadcasting its SSID (gre_parent.vif: a hidden parent depends on its Probe Responses carrying the SSID, and adapter B's MT7921 answered with the hidden beacon's empty one, 13 October), its Inet row the pod's underlay. EMOSA writes no channel or ht_mode on adapter B, which follows the station (V54: VHT 80 MHz on 149/80; EMOSA reports it in the 20 MHz classes, a known gap in spec 9). The interface names are the ones 52_owm_prep creates on both adapters; b-ap-50's vif_radio_idx is 1, 52_owm_prep's order on the real Pis (bhaul-sta 0, b-ap 1), unique on adapter B's radio, whose other VIF is the pod's station at 0 (read on pi1, image 084736, 12 October). A pod on Ethernet only keeps rpi-pod-mt7921u-6.6.1-v1.",
   "opensync_version": "6.6.1.0",
   "radio": {
     "band": "2.4G",
@@ -44,7 +44,9 @@
   },
   "backhaul_mode": "gre-parent",
   "gre_parent": {
-    "vif": {},
+    "vif": {
+      "ssid_broadcast": "enabled"
+    },
     "inet": {}
   },
   "extra_slots": [

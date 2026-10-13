@@ -756,3 +756,26 @@ def test_the_pis_adapter_b_profile_puts_the_parent_ap_beside_the_station():
     assert pi.extra_slots == (("b-ap-50", "backhaul", 1),) and pi.slot_bands == (("b-ap-50", "5G"),)
     assert pi.uplink_station == "bhaul-sta-50"
     assert profiles.load("rpi-pod-mt7921u-6.6.1-v1").backhaul_mode != "gre-parent"
+
+
+def test_the_5ghz_parent_profiles_broadcast_their_parent_ap(tmp_path):
+    """Spec 8.6: the gre-5g profiles' parent AP b-ap-50 broadcasts its SSID. A child's station
+    matches its parent by SSID, the BSSID pin only narrowing it, so a hidden parent depends on its
+    Probe Responses carrying the SSID; the Pis' MT7921 answered with the hidden beacon's empty
+    SSID (13 October), and the gateway broadcasts its own backhaul BSSes."""
+    from emosa.opensync import profiles
+
+    _, vault = multi(tmp_path)
+    for name in ("rpi-pod-mt7921u-6.6.1-gre-5g-v1", "opensync-lab-hwsim-6.6.1-gre-5g-v1"):
+        profile = profiles.load(name)
+        pod = PodBackend(
+            "pod-1",
+            Session(with_second_radio(tables())),
+            vault,
+            underlay="169.254.2.0/24",
+            serial=SERIAL,
+            multi_bss=True,
+            profile=profile,
+        )
+        ap = pod._parent_vif()
+        assert (ap["ssid_broadcast"], ap["multi_ap"], ap["bridge"]) == ("enabled", "none", ""), name

@@ -2533,7 +2533,7 @@
          []
         ],
         "ssid": "emosa-bh",
-        "ssid_broadcast": "disabled",
+        "ssid_broadcast": "enabled",
         "vif_radio_idx": 1,
         "wpa": true,
         "wpa_key_mgmt": "wpa-psk",

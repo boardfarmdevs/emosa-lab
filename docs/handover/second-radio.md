@@ -173,6 +173,31 @@ own settings and steps stay with the router's project.
      radio's em_config, its query never sent). That fix is a controller patch (meta-cmf 0266,
      approved 12 October); EMOSA's sending of the Backhaul STA Radio Capabilities TLV in every
      Topology Response is standard and stays.
+4. The parent AP broadcasts its SSID (13 October; drafted on `wip/second-radio-p3b`, not pinned,
+   for the owner's decision). After pi1's reboot, its hidden `b-ap-50` answered pi2's directed
+   Probe Requests with the hidden beacon's empty SSID, from below hostapd (a receive-only capture
+   on 149, 13 October 00:44 PDT), so pi2's station, pinned to its BSSID, never matched it:
+   `CTRL-EVENT-NETWORK-NOT-FOUND` every 6 s. The same pin had joined in 5 s before the reboot.
+   - **Fix:** the gre-5g profiles' `gre_parent.vif` sets `ssid_broadcast` enabled (spec 8.6). A
+     station matches by SSID, a BSSID pin only narrows it, so a broadcast SSID needs no Probe
+     Response; the gateway broadcasts its own backhaul BSSes too.
+   - **Not chosen:** turning the MT7921's probe answering off on the Pis, which fixes one hardware.
+5. To draft: after a failed switch to a kept target, or a failed move, of a GRE child (no
+   configured upstream), the agent leaves its credential and BSSID pin on the station
+   (`_kept_failed`, `_move_failed`, then "no upstream"). Spec 8.3 relies on the pod returning to
+   its bootstrap by itself, but the Pis' 2.4 GHz fallback station keeps `cm`'s uplink working,
+   so OpenSync never restarts and the 5 GHz station stays pinned to a parent it cannot join.
+   The agent should undo its own write, as the steer-back revert does (both agents, and a box
+   variant whose fallback station keeps the pod up).
+6. Seen with two-radio pods, the controller's: after a Channel Selection Request for radio B, the
+   agent's Operating Channel Report (radio A's TLV first, as EMOSA sends it) is handled on radio
+   A's em thread, possibly before radio B's Channel Selection Response on radio B's. Radio B is
+   then left in channel_selected until em_config's time limit renews the agent (three rounds after
+   a boot, 13 October). A controller patch (meta-cmf 0268, draft) lets a report complete a radio
+   still pending. EMOSA keeps its TLV order: reordering would hide the controller's race from
+   every other agent that reports all its radios.
+7. The agents' log lines on the router carry no timestamps, so their order against the
+   controller's log has to be inferred.
 
 ## Lab access (rdk-1010 on rev120)
 `ssh rev120` → `lxc exec rdk-1010` → `lxc exec bpibroadband` (the gateway: em_ctrl + emosa). Feed

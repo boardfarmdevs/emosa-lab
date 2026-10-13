@@ -1096,6 +1096,13 @@ static void second_radio_profile(const char *schemas, const char *scratch)
               !strcmp(pi50.slots[0].if_name, "b-ap-50") && pi50.slots[0].vif_radio_idx == 1 &&
               em_profile_parent_slot(&rpi, "b-ap-50"),
           "the Pis' parent AP b-ap-50 on adapter B, index 1");
+    /* spec 8.6: the gre-5g parent APs broadcast their SSID (a hidden parent depends on its Probe
+     * Responses carrying it) */
+    const cJSON *pi_broadcast = cJSON_GetObjectItemCaseSensitive(rpi.gre_parent_vif, "ssid_broadcast"),
+                *broadcast = cJSON_GetObjectItemCaseSensitive(p.gre_parent_vif, "ssid_broadcast");
+    CHECK(cJSON_IsString(pi_broadcast) && !strcmp(pi_broadcast->valuestring, "enabled") &&
+              cJSON_IsString(broadcast) && !strcmp(broadcast->valuestring, "enabled"),
+          "the gre-5g parent APs broadcast their SSID");
     em_profile_free(&rpi);
     /* a slot on a radio the profile does not bind, or a further radio on the fronthaul's band */
     for (int mutation = 0; mutation < 2; mutation++) {

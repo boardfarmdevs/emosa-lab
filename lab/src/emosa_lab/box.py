@@ -3561,9 +3561,9 @@ async def second_radio_parent(box):
     """Spec 9: a GRE parent whose parent AP is on its 5 GHz radio (the Pis' adapter B). The agent
     sends an M1 for each radio, the 2.4 GHz one first; the 2.4 GHz radio's M2 set configures the
     fronthaul (its backhaul BSS has no slot there and is left out), the 5 GHz radio's set makes
-    b-ap-50 the parent AP on the 5 GHz radio, through that radio's own scope. The pod's station
-    on that radio and the radio's channel are left alone; the Topology Response reports both
-    radios, b-ap-50 under the 5 GHz one."""
+    b-ap-50 the parent AP on the 5 GHz radio, through that radio's own scope, broadcasting its
+    SSID (spec 8.6, the gre-5g profiles). The pod's station on that radio and the radio's channel
+    are left alone; the Topology Response reports both radios, b-ap-50 under the 5 GHz one."""
     before_radio = (await radio_config(box, "5G"))[1]
     before_station = (await box.vif("Wifi_VIF_Config", "bhaul-sta-50"))[1]
     ruids = await serve_radios(box, lambda: both_radios_applied(box))
@@ -3598,8 +3598,8 @@ async def second_radio_parent(box):
         and ap is not None
         and ap_uuid in uuids(radio.get("vif_configs"))
         and ap_uuid not in on_24
-        and (ap.get("ssid"), ap.get("multi_ap"), ap.get("bridge"))
-        == ("EMOSA-WSC-backhaul", "none", "")
+        and (ap.get("ssid"), ap.get("multi_ap"), ap.get("bridge"), ap.get("ssid_broadcast"))
+        == ("EMOSA-WSC-backhaul", "none", "", "enabled")
         and (inet or {}).get("inet_addr") == "169.254.2.1"
         and fronthaul.get("ssid") == REGISTRAR_SSID
         and unchanged
