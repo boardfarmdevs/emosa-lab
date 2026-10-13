@@ -3856,6 +3856,82 @@ async def second_radio_moves_channel(box):
     )
 
 
+async def renew_on_bootstrap(box):
+    """V54 regression guard (the MV3's controller restart, 12 October): a GRE child of the Pis'
+    shape on its bootstrap, both radios configured. The controller restarts: a Renew, and the
+    pod's station dropped by the router for a moment, so the station has no parent and its 5 GHz
+    radio, whose channel follows the station, shows none, then the same one again. The agent
+    onboards once, for the Renew (the held channel covers the moment, spec 9): one session, both
+    radios' unchanged M2 sets observed applied without writing, and none of the pod's station,
+    credential or Inet rows touched."""
+    if await serve_radios(box, lambda: both_radios_applied(box)) is None:
+        return box.result(passed=False, failed="the two radios were not both configured")
+    station = (await box.vif("Wifi_VIF_Config", "bhaul-sta-50"))[1]
+    credentials = await box.rows("Wifi_Credential_Config")
+    inet = await box.rows("Wifi_Inet_Config")
+    starts = recovery_starts(box)
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    before = len((box.status() or {}).get("operations") or []), len(radio_operations(box, "5G"))
+    box.controller.send(RENEW, (Tlv(0x01, box.controller.al), Tlv(0x0F, b"\0"), Tlv(0x10, b"\0")))
+    radios = (await box.rows("Wifi_Radio_State")).items()
+    radio, radio_row = next((u, r) for u, r in radios if r.get("freq_band") == "5G")
+    vif, vif_row = await box.vif("Wifi_VIF_State", "bhaul-sta-50")
+    flap = [  # dropped by the router, then back on the same parent and channel
+        ({"channel": ["set", []]}, {"parent": ["set", []]}),
+        ({"channel": radio_row.get("channel")}, {"parent": vif_row.get("parent") or ["set", []]}),
+    ]
+    for radio_change, vif_change in flap:
+        await box.transact(
+            [
+                {
+                    "op": "update",
+                    "table": "Wifi_Radio_State",
+                    "where": [["_uuid", "==", ["uuid", radio]]],
+                    "row": radio_change,
+                },
+                {
+                    "op": "update",
+                    "table": "Wifi_VIF_State",
+                    "where": [["_uuid", "==", ["uuid", vif]]],
+                    "row": vif_change,
+                },
+            ]
+        )
+        await asyncio.sleep(0.5)
+
+    async def taken_again():
+        ops, five = (box.status() or {}).get("operations") or [], radio_operations(box, "5G")
+        more = len(ops) > before[0] and len(five) > before[1]
+        return more and all_applied(ops) and all_applied(five)
+
+    ruids = await serve_radios(box, taken_again, searches=searches, m1s=m1s)
+    if ruids is None:
+        return box.result(passed=False, failed="the Renew's session did not configure both radios")
+    await asyncio.sleep(10)  # no further session follows
+    status = box.status() or {}
+    noop = [
+        bool((ops[-1].get("application_evidence") or {}).get("observed_noop"))
+        for ops in (status.get("operations") or [{}], radio_operations(box, "5G") or [{}])
+    ]
+    unchanged = {
+        "station": (await box.vif("Wifi_VIF_Config", "bhaul-sta-50"))[1] == station,
+        "credentials": await box.rows("Wifi_Credential_Config") == credentials,
+        "inet": await box.rows("Wifi_Inet_Config") == inet,
+    }
+    sessions = recovery_starts(box) - starts
+    return box.result(
+        passed=sessions == 1
+        and list(dict.fromkeys(ruids)) == [RUID_24, RUID_50]
+        and all(noop)
+        and all(unchanged.values()),
+        sessions=sessions,
+        m1_ruids=ruids,
+        observed_noop=noop,
+        unchanged=unchanged,
+        uplink_waiting=uplink_status(box).get("waiting"),
+    )
+
+
 async def adapter_restart(box):
     """The agent process killed and started again (its journal kept): it takes the pod back,
     onboards again and finds the configuration already running, without writing (spec 5)."""
@@ -4055,6 +4131,7 @@ SCENARIOS = {
     "second-radio-child-credentials": second_radio_child_credentials,
     "second-radio-no-power": second_radio_no_power,
     "second-radio-moves-channel": second_radio_moves_channel,
+    "renew-on-bootstrap": renew_on_bootstrap,
     "gre-parent-promoted": gre_parent_promoted,
     "gre-parent-demoted": gre_parent_demoted,
     "adapter-restart": adapter_restart,
@@ -4182,6 +4259,14 @@ OPTIONS = {  # the box each scenario needs beyond the default
         "multi_bss": True,
         "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
         "underlay": GRE_UNDERLAY,
+    },
+    "renew-on-bootstrap": {
+        "multi_bss": True,
+        "profile": "opensync-lab-hwsim-6.6.1-gre-5g-v1",
+        "underlay": GRE_UNDERLAY,
+        "backhaul": True,
+        "gre_child": True,
+        "uplink": {"mode": "gre", "station": "bhaul-sta-50"},
     },
     # a GRE parent with a child, then demoted to the plain profile
     "gre-parent-demoted": {
