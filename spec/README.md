@@ -159,8 +159,13 @@ Rules:
 - A session starts while the pod's State is available. Discovery sends a
   Search at once and then every second, three at most, and fails when no
   Response is admitted within 5 s.
-- The radio's capabilities are fixed for one source. If the fronthaul radio's identity or
-  channel changes under the same source, the source is unavailable. Every new connection from
+- The radio's capabilities are fixed for one source. If the fronthaul radio's channel moves
+  under the same source (on the Pis' 2.4 GHz fallback the fronthaul AP follows the station it
+  shares the radio with), or another radio is in its place, that is another pod source
+  (`fronthaul_moved`, `capabilities_changed`): a fresh session with the new capabilities, never
+  a refusal, which would turn a channel move into an outage (box `fronthaul-channel-moves`).
+  The fronthaul's move kept with its reports, as a further radio's is below, comes with §9's
+  2.4 GHz contract, channel 6 only today. Every new connection from
   the pod to its agent is a new database generation: the pod's OpenSync restarted, the pod
   rebooted or was recreated (maybe with another radio), or its link to the agent dropped and
   came back. Its capabilities are taken again from its first refresh.
@@ -1295,7 +1300,7 @@ path is re-run. Carried with the second-radio work (§9).
   Channel Report (a radio with no channel for a moment keeps the one it was reported on, so a
   move is one change); a session not yet provisioned starts afresh. Nothing is written:
   `b-ap-<band>` moves with its radio, the pod's doing, and EMOSA neither recreates nor rewrites
-  it. A moved fronthaul radio is still a different device (a new source).
+  it. A moved fronthaul radio is another pod source: a fresh session (§2.5).
   AP metrics (§3.8) per radio: each radio's BSSes carry the utilization of the pod's survey of
   that radio's own channel and their stations' metrics; a radio with no fresh survey is left out
   of the response, nothing filled in. Known gap, to close before V54's end soaks: the pod's

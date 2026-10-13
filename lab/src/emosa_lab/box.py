@@ -4426,6 +4426,43 @@ async def reconnect_config_lost(box):
     )
 
 
+async def fronthaul_channel_moves(box):
+    """spec 2.5, the Pis' 2.4 GHz fallback (their fronthaul AP on the radio the station shares,
+    which follows the station's channel): the pod's fronthaul radio moves from 6 to 11 on the
+    same source. Another pod source (fronthaul_moved): a fresh session whose M1 advertises 11
+    the radio's only operable channel, provisioning again; the source is never refused (the
+    fronthaul's move kept with its reports comes with spec 9's 2.4 GHz contract)."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued, moved = kept_reconnections(box), fresh_reconnections(box, "fronthaul_moved")
+    state = next(
+        u for u, r in (await box.rows("Wifi_Radio_State")).items() if r.get("freq_band") == "2.4G"
+    )
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_Radio_State",
+                "where": [["_uuid", "==", ["uuid", state]]],
+                "row": {"channel": 11},
+            }
+        ]
+    )
+    mode = await back(box, searches, m1s, continued)
+    m1 = next(iter(box.sent(AUTOCONFIG_WSC)[m1s:]), None)
+    classes = advertised_classes(m1) if m1 else {}
+    counted = fresh_reconnections(box, "fronthaul_moved") > moved
+    return box.result(
+        passed=mode == "fresh"
+        and counted
+        and classes.get(81) == [c for c in range(1, 14) if c != 11],
+        session=mode,
+        fresh_as_fronthaul_moved=counted,
+        non_operable_81=classes.get(81),
+    )
+
+
 async def reconnect_not_provisioned(box):
     """The pod's link cut for 15 s while the agent's first M1 waits for its M2 (spec 2.5): a
     session not yet provisioned is not held. It loses its source at once, and when the pod dials
@@ -4613,6 +4650,7 @@ SCENARIOS = {
     "reconnect-channel-follows": reconnect_channel_follows,
     "reconnect-not-provisioned": reconnect_not_provisioned,
     "reconnect-config-lost": reconnect_config_lost,
+    "fronthaul-channel-moves": fronthaul_channel_moves,
     "write-lost-unapplied": write_lost_unapplied,
     "restart-during-write": restart_during_write,
 }

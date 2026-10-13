@@ -745,11 +745,23 @@ static bool refresh(agent *a)
         if (a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
             a->at.state != S_INCOMPATIBLE)
             close_session(a, S_SOURCE_LOST);
-    } else { /* a moved fronthaul radio or replaced PHY under the same source: refused */
-        em_tlv_list_free(&caps);
-        WARN("pod source unavailable: pod radio identity or channel changed");
-        free(view);
-        return false;
+    } else {
+        /* spec 2.5: the fronthaul radio's channel moved (its pod's uplink moved it, the radio
+         * shared with its station) or another radio is in its place: another pod source, a fresh
+         * session with these capabilities, never a refusal (that would make a channel move an
+         * outage). Spec 9's 2.4 GHz contract is channel 6 only today: not kept with reports yet. */
+        const char *why = same_identity(&a->caps, &caps) ? "fronthaul_moved" : "capabilities_changed";
+        count(&a->reconnections_fresh, why);
+        LOG("a new pod source (%s): a fresh session", why);
+        em_tlv_list_free(&a->caps);
+        a->caps = caps;
+        a->max_eirp = max_eirp;
+        free(a->inventory.value);
+        a->inventory = (em_tlv){0};
+        em_inventory_tlv(view, radio, "mac80211_hwsim", &a->inventory);
+        if (a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
+            a->at.state != S_INCOMPATIBLE)
+            close_session(a, S_SOURCE_LOST);
     }
     a->nreported = nreported; /* each radio's maximum EIRP, as its capabilities advertise it */
     for (size_t k = 0; k < nreported; k++) {

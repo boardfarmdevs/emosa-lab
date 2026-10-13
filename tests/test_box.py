@@ -351,6 +351,12 @@ def test_a_session_not_yet_provisioned_is_not_held_across_a_cut(agent, tmp_path)
     assert result["passed"], result
 
 
+def test_a_fronthaul_channel_move_is_a_fresh_session_not_a_refusal(agent, tmp_path):
+    # spec 2.5: the Pis' 2.4 GHz fallback, the fronthaul following its station's channel
+    result = box("fronthaul-channel-moves", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
 def test_a_kept_reconnection_without_its_configuration_onboards_again_at_once(agent, tmp_path):
     # spec 2.5's safety: the configuration gone under the same start, the fresh session's M2
     result = box("reconnect-config-lost", agent, tmp_path / "box")

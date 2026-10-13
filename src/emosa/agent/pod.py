@@ -482,9 +482,19 @@ class PodReportSource:
                     )
                     self.capabilities = capabilities
                 else:
-                    # A moved fronthaul radio or replaced PHY under the same source is a different
-                    # device to the controller: refused until the source changes.
-                    raise EmosaError(Reason.NOT_READY, "pod radio identity or channel changed")
+                    # spec 2.5: the fronthaul radio's channel moved (its pod's uplink moved it, the
+                    # radio shared with its station) or another radio is in its place: another pod
+                    # source, a fresh session with these capabilities, never a refusal (that would
+                    # make a channel move an outage). Spec 9's 2.4 GHz contract is channel 6 only
+                    # today: the fronthaul's move is not kept with its reports yet.
+                    self._new_lineage(
+                        "fronthaul_moved"
+                        if capabilities_identity(capabilities)
+                        == capabilities_identity(self.capabilities)
+                        else "capabilities_changed"
+                    )
+                    self.capabilities = capabilities
+                    self.inventory = inventory(device, radio, self.backend.profile.chipset.encode())
             uplink = None
             for station in self.stations:
                 # a wireless backhaul station: a Multi-AP (4-address) uplink, or a 3-address

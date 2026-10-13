@@ -331,8 +331,13 @@ def test_a_second_radios_channel_change_retakes_its_capabilities_once(tmp_path):
     assert asyncio.run(report.refresh())
     assert further_radios_changed(first, report.capabilities)
     assert radio_b() == ((125, 149), {124, 125})
+    # spec 2.5: the fronthaul's channel moved is another pod source, a fresh session (a new
+    # lineage), never the source refused
+    context = report.source.current().context_token
     tables["Wifi_Radio_State"][RADIO_STATE]["channel"] = 11
-    assert not asyncio.run(report.refresh()) and report.source.current() is None
+    assert asyncio.run(report.refresh())
+    assert report.reconnections["fresh"] == {"fronthaul_moved": 1}
+    assert report.source.current().context_token != context
 
 
 def test_a_radio_with_no_reported_power_is_operated_at_its_advertised_bound(tmp_path):
