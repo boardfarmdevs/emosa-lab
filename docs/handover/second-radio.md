@@ -209,6 +209,22 @@ own settings and steps stay with the router's project.
    every other agent that reports all its radios.
 7. The agents' log lines on the router carry no timestamps, so their order against the
    controller's log has to be inferred.
+8. Pod side, a design gap for spec 9 (13 October, 01:32-01:46 PDT; the pod team's reading). EMOSA
+   writes no channel on adapter B: `b-ap-50` follows the pod's station through OpenSync's
+   `sta_channel_override`.
+   - **What happened:** a gateway radio restart moved its pod-backhaul BSS from 149 to 36 and back
+     to 149 without a CSA. Both pods' `bhaul-sta-50` followed it, but `b-ap-50` stayed on 36
+     ("csa: refused by hostapd, restarting the bss on the new channel now", and the restart kept
+     36). The 5 GHz radio's `Wifi_Radio_State.channel` went empty.
+   - **The loop:** then "failed to converge channels", and owm aborted every ~3 min 10 s, each
+     restart dropping the GRE briefly, until an OpenSync restart cleared it.
+   - **Consequence:** a parent's channel change, by the gateway or by an EMOSA channel procedure,
+     can strand `b-ap-50` on the old channel, and a child under that pod loses its parent. Open on
+     the pod side (why hostapd refuses the CSA, and why the BSS restart keeps the old channel):
+     opensync-rpi 859f1ae, `docs/bench.md`, "A parent's channel change while the pod's b-ap-50 is
+     up".
+     The agents' part to decide: whether to detect a parent AP off its station's channel (an empty
+     radio channel, or the two VIFs disagreeing) and report or recover it.
 
 ## Lab access (rdk-1010 on rev120)
 `ssh rev120` → `lxc exec rdk-1010` → `lxc exec bpibroadband` (the gateway: em_ctrl + emosa). Feed
