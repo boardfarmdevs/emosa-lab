@@ -1056,6 +1056,64 @@ async def provision(box, searches=0, m1s=0, *, seconds=90):
     return False
 
 
+def kept_reconnections(box):
+    """The agent's new database generations that continued its pod source (spec 2.5)."""
+    return ((box.status() or {}).get("reconnections") or {}).get("continued", 0)
+
+
+def fresh_reconnections(box, reason):
+    """The agent's new database generations that were another pod source, for this reason."""
+    reconnections = (box.status() or {}).get("reconnections") or {}
+    return (reconnections.get("fresh") or {}).get(reason, 0)
+
+
+async def back(box, searches, m1s, continued, *, seconds=90):
+    """After the pod's link came back (a new database generation, spec 2.5): "kept" once the
+    agent has counted the reconnection as continuing its source (beyond ``continued``, the count
+    before the link went) and the session is provisioning without a new Search or M1, its
+    configuration applied; "fresh" once it onboarded anew, answered as a controller does (as
+    provision); None when neither. Credentials the agent writes again on a pod that lost them
+    (a database from its template) are applied by the pod's managers."""
+    deadline = time.monotonic() + seconds
+    answered_searches, answered_m1s, fresh = searches, m1s, False
+    while time.monotonic() < deadline and box.process.poll() is None:
+        found = box.sent(AUTOCONFIG_SEARCH)
+        for search in found[answered_searches:]:
+            box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
+            fresh = True
+        answered_searches = len(found)
+        found = box.sent(AUTOCONFIG_WSC)
+        for m1 in found[answered_m1s:]:
+            wsc = next(t.value for t in m1.tlvs if t.kind == 0x11)
+            ruid = next(t.value[:6] for t in m1.tlvs if t.kind == 0x85)
+            await answer_m1(box, ruid, wsc)
+            fresh = True
+        answered_m1s = len(found)
+        written = any(
+            r.get("ssid") == REGISTRAR_SSID for r in (await box.rows("Wifi_VIF_Config")).values()
+        )
+        on_air = any(
+            r.get("ssid") == REGISTRAR_SSID for r in (await box.rows("Wifi_VIF_State")).values()
+        )
+        if written and not on_air:
+            await apply_configuration(box.db)  # the pod's managers apply it
+            if box.cold:
+                await attach_vifs(box.db)
+        status = box.status() or {}
+        session = status.get("session") or {}
+        operations = status.get("operations") or []
+        if (
+            written
+            and on_air
+            and session.get("state") == "provisioning"
+            and all_applied(operations[-1:])
+            and (fresh or kept_reconnections(box) > continued)
+        ):
+            return "fresh" if fresh else "kept"
+        await asyncio.sleep(0.3)
+    return None
+
+
 async def early_report(box):
     """With EasyMesh 6.1 the Early AP Capability Report goes before M1 and, without an Ack,
     three times in all, 250 ms apart, each with a new MID (spec 2.5); acknowledged, once."""
@@ -1256,16 +1314,25 @@ async def pod_recreated(box):
 
 async def new_source(box):
     """Suite finding: the pod dropped with its extender and back with a fresh database (a new
-    generation). The agent ends the session on the old source and onboards on the new one."""
+    generation, the configuration gone). Its OpenSync started again (new radio rows): another
+    pod source (spec 2.5), so the agent ends the session on the old source and onboards on the
+    new one, its configuration written there by the new session's M2."""
     if not (await onboarded(box)).get("applied"):
         return box.result(passed=False, failed="not onboarded")
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued, restarted = kept_reconnections(box), fresh_reconnections(box, "pod_restarted")
     await box.new_pod_database()
-    again = await provision(box, searches, m1s)
+    mode = await back(box, searches, m1s, continued)
     rows = await box.rows("Wifi_VIF_Config")
     written = any(r.get("ssid") == REGISTRAR_SSID for r in rows.values())
+    why = fresh_reconnections(box, "pod_restarted") > restarted
     return box.result(
-        passed=again and written, provisioning_again=again, credentials_on_new_database=written
+        passed=mode == "fresh" and written and why,
+        session=mode,
+        fresh_as_pod_restarted=why,
+        credentials_on_new_database=written,
+        searches=len(box.sent(AUTOCONFIG_SEARCH)) - searches,
+        m1s=len(box.sent(AUTOCONFIG_WSC)) - m1s,
     )
 
 
@@ -1697,7 +1764,9 @@ async def steering_leftover(box):
     opened = await wait_rows(box, lambda c, n, g: c and n and g)
     if not opened:
         return box.result(passed=False, failed="no steering window", acked=bool(ack))
+    continued = kept_reconnections(box)
     await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}", connect=False)  # owm never takes it
+    cut_at = time.monotonic()
 
     def counts():
         return ((box.status() or {}).get("steering") or {}).get("counts") or {}
@@ -1705,8 +1774,12 @@ async def steering_leftover(box):
     close_failed = await box.until(lambda: counts().get("close_failed"), seconds=60)
     left, _, _ = await steering_rows(box)  # the pod's own database, the link still cut
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    away = time.monotonic() - cut_at
     await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}")
-    again = await provision(box, searches, m1s)
+    # spec 2.5: back within the reconnection window the session is kept, else a fresh one
+    mode = await back(box, searches, m1s, continued)
+    expected = "kept" if away < RECONNECT_WINDOW - 5 else "fresh"
+    again = mode == expected if abs(away - RECONNECT_WINDOW) > 5 else mode is not None
     closed = await wait_rows(box, lambda c, n, g: not c and not n and not g, seconds=30)
     second = await box.ask(0x8014, (steering_request(STATIONS[0]),), ACK)
     reopened = await wait_rows(box, lambda c, n, g: c and n and g)
@@ -1721,6 +1794,8 @@ async def steering_leftover(box):
         and not refused,
         close_failed_seen=bool(close_failed),
         rows_left_while_away=len(left),
+        link_away_s=round(away, 1),
+        session=mode,
         provisioning_again=again,
         leftover_closed=bool(closed),
         second_window=bool(reopened),
@@ -2187,19 +2262,21 @@ async def restart_during_move(box):
     await four_address(box, TARGET_PARENT)
     onto = await next_message(box, 0x801A, answered, seconds=60)
     onto_ok = onto is not None and steering_answer(onto) == (BACKHAUL_STATION, TARGET_PARENT, 0)
-    # the pod's OpenSync restarts: a fresh database, back on its bootstrap, the move dropped
+    # the pod's OpenSync restarts: a fresh database, back on its bootstrap, the move dropped;
+    # another pod source (spec 2.5): a fresh session
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
     await box.new_pod_database()
-    again = await provision(box, searches, m1s)
+    mode = await back(box, searches, m1s, continued)
     # EMOSA re-applies the move from its persisted target, with no new operator steer
     deadline = time.monotonic() + 30
     while time.monotonic() < deadline and not await pinned(box, TARGET_PARENT):
         await asyncio.sleep(0.3)
     reapplied = await pinned(box, TARGET_PARENT)
     return box.result(
-        passed=onto_ok and again and reapplied,
+        passed=onto_ok and mode == "fresh" and reapplied,
         onto=steering_answer(onto),
-        provisioned_again=again,
+        session=mode,
         reapplied_without_a_steer=reapplied,
     )
 
@@ -2262,6 +2339,7 @@ async def fallback_during_move(box):
 
 
 SWITCH_DEADLINE = 95  # past an uplink switch's 90 s to be confirmed (spec 8.3)
+RECONNECT_WINDOW = 60  # spec 2.5: a provisioned session held this long for its pod
 
 
 async def gre_pinned(box):
@@ -2330,8 +2408,10 @@ async def gre_child_kept(box):
     answers = len(box.sent(0x801A))
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
     before = await gre_pins(box)
+    continued = kept_reconnections(box)
     await box.new_pod_database()  # back on its bootstrap, the move gone
-    again = await provision(box, searches, m1s)
+    # its OpenSync started again: a fresh session (spec 2.5), the kept target as before
+    again = await back(box, searches, m1s, continued) == "fresh"
 
     async def pinned_anew():
         # the move written again on the new start: a credential row the old start did not have
@@ -2381,14 +2461,16 @@ async def gre_child_kept_gone(box):
     if moved is None:
         return box.result(passed=False, failed="the move onto the GRE parent did not complete")
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
     await box.new_pod_database()  # the child's restart, the parent gone meanwhile
-    await provision(box, searches, m1s)
+    first = await back(box, searches, m1s, continued)  # a restart: a fresh session
     # its configuration observed on this start before the next (restart-during-write is the race)
     await box.until(lambda: operation_states(box)[-1:] == [("OBSERVED_APPLIED", None)], seconds=30)
     tried = await until_async(lambda: gre_pinned(box), seconds=60)
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
     await box.new_pod_database()  # cm's router checks fail: OpenSync again, on its bootstrap
-    again = await provision(box, searches, m1s)
+    again = first == "fresh" and await back(box, searches, m1s, continued) == "fresh"
 
     def timed_out():
         return (uplink_status(box).get("operation") or {}).get("state") == "TIMED_OUT"
@@ -2427,9 +2509,11 @@ async def gre_child_kept_gone_up(box):
     if moved is None:
         return box.result(passed=False, failed="the move onto the GRE parent did not complete")
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
     await box.new_pod_database()  # the child's restart, the parent gone meanwhile
     fallback = await fallback_station(box)
-    await provision(box, searches, m1s)
+    # its OpenSync started again: a fresh session (spec 2.5), the undo as before
+    session = await back(box, searches, m1s, continued)
     tried = await until_async(lambda: gre_pinned(box), seconds=60)
     # the kept switch not applied within its deadline: the target dropped (the undo, if any,
     # follows at once and becomes the latest operation)
@@ -2452,7 +2536,8 @@ async def gre_child_kept_gone_up(box):
         for u in uuids(station.get("credential_configs"))
     )
     return box.result(
-        passed=bool(tried)
+        passed=session == "fresh"
+        and bool(tried)
         and bool(failed)
         and bool(unpinned)
         and restored
@@ -2460,6 +2545,7 @@ async def gre_child_kept_gone_up(box):
         and not status.get("held")
         and kept_target(box) is None
         and {k: kept_fallback.get(k) for k in fallback} == fallback,
+        session=session,
         tried_kept_target=bool(tried),
         kept_switch_timed_out=bool(failed),
         credential_removed=bool(unpinned),
@@ -3834,15 +3920,54 @@ def recovery_starts(box):
     return (session.get("recovery") or {}).get("attempts_started", 0)
 
 
-async def second_radio_moves_channel(box):
-    """Spec 9's channel rule in V54's shape (radio B on UNII-3 channel 149). With both radios
-    configured, the pod's 5 GHz station roams to a parent on 149 and the radio, b-ap-50 on it,
-    moves from 44 with it: the pod's doing, its State channel-less for a moment, then 149. The
-    agent takes the radio's new capabilities in exactly one fresh session (its recovery starts one,
-    with an M1 per radio, the 5 GHz one advertising 115, 124 and 125 with 149 operable in 124 and
-    125; a Search answered late may be sent again within it); both
-    radios' unchanged M2 sets are observed applied without writing, so b-ap-50, the fronthaul
-    and the radio's Config are left as they were, and no further session follows."""
+def channel_reports(box, after):
+    """(RUID, class, channel) of each Operating Channel Report TLV beyond the first ``after``
+    reports."""
+    out = []
+    for message in box.sent(0x8008)[after:]:
+        for t in message.tlvs:
+            if t.kind == 0x8F and len(t.value) >= 10:
+                out.append((t.value[:6].hex(":"), t.value[7], t.value[8]))
+    return out
+
+
+def preference_reports(box, after):
+    """(RUID, {class: channels at preference 0}) of each Channel Preference TLV in the Channel
+    Preference Reports beyond the first ``after`` (an answer to a query names none)."""
+    out = []
+    for message in box.sent(0x8005)[after:]:
+        for t in message.tlvs:
+            if t.kind != 0x8B or len(t.value) < 7:
+                continue
+            body, groups = t.value[7:], {}
+            for _ in range(t.value[6]):
+                opclass, n = body[0], body[1]
+                if body[2 + n] >> 4 == 0:
+                    groups[opclass] = list(body[2 : 2 + n])
+                body = body[3 + n :]
+            out.append((t.value[:6].hex(":"), groups))
+    return out
+
+
+# radio B on 149: every channel of its band's classes but 149 at preference 0 (as its M1 would
+# advertise them non-operable)
+RADIO_B_ON_149 = {
+    115: [36, 40, 44, 48],
+    124: [153, 157, 161],
+    125: [153, 157, 161, 165, 169, 173, 177],
+}
+
+
+async def radio_b_moves(box, *, cut=0):
+    """Spec 9's channel rule in V54's shape (radio B on UNII-3 channel 149), kept (spec 2.5). With
+    both radios configured, the pod's 5 GHz station roams to a parent on 149 and the radio, b-ap-50
+    on it, moves from 44 with it: the pod's doing, its State channel-less for a moment, then 149.
+    With ``cut``, the pod's link to its agent is cut for that many seconds around it (the station
+    lost its parent: OpenSync's CM opens the link again). The agent keeps its session: no Search
+    or M1; it reports radio B's new operable channel in a Channel Preference Report (every other
+    channel of its classes at preference 0) and its Operating Channel Report on 149, and after a
+    cut a Topology Notification. Nothing is written: b-ap-50, the fronthaul and the radio's Config
+    are left as they were."""
     if await serve_radios(box, lambda: both_radios_applied(box)) is None:
         return box.result(passed=False, failed="the two radios were not both configured")
     ap = (await box.vif("Wifi_VIF_Config", PARENT_AP_50))[1]
@@ -3851,9 +3976,13 @@ async def second_radio_moves_channel(box):
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
     before = len((box.status() or {}).get("operations") or []), len(radio_operations(box, "5G"))
     starts = recovery_starts(box)
+    continued, notified = kept_reconnections(box), topology_notifications(box)
+    channels, preferences = len(box.sent(0x8008)), len(box.sent(0x8005))
     state = next(
         u for u, r in (await box.rows("Wifi_Radio_State")).items() if r.get("freq_band") == "5G"
     )
+    if cut:
+        await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}", connect=False)
     for channel in (["set", []], 149):  # between two channels, then on the new parent's
         await box.transact(
             [
@@ -3866,34 +3995,19 @@ async def second_radio_moves_channel(box):
             ]
         )
         await asyncio.sleep(2)
+    if cut:
+        await asyncio.sleep(max(0, cut - 4))
+        await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}")
 
-    async def taken_again():
-        ops, five = (box.status() or {}).get("operations") or [], radio_operations(box, "5G")
-        return (
-            len(ops) > before[0]
-            and len(five) > before[1]
-            and all_applied(ops)
-            and all_applied(five)
-        )
+    async def reported():
+        return any(
+            r == RUID_50 and ch == 149 for r, _, ch in channel_reports(box, channels)
+        ) and any(r == RUID_50 for r, _ in preference_reports(box, preferences))
 
-    ruids = await serve_radios(box, taken_again, searches=searches, m1s=m1s)
-    if ruids is None:
-        return box.result(passed=False, failed="the radio's new capabilities were not taken")
-    await asyncio.sleep(10)  # no further session follows
+    done = await until_async(reported, seconds=60)
+    await asyncio.sleep(10)  # no session follows
     status = box.status() or {}
-    radio_b_m1 = next(
-        (
-            m1
-            for m1 in box.sent(AUTOCONFIG_WSC)[m1s:]
-            if next(t.value[:6] for t in m1.tlvs if t.kind == 0x85).hex(":") == RUID_50
-        ),
-        None,
-    )
-    classes = advertised_classes(radio_b_m1) if radio_b_m1 else {}
-    noop = [
-        bool((ops[-1].get("application_evidence") or {}).get("observed_noop"))
-        for ops in (status.get("operations") or [{}], radio_operations(box, "5G") or [{}])
-    ]
+    preferred = next((g for r, g in preference_reports(box, preferences) if r == RUID_50), {})
     unchanged = {
         "b-ap-50": (await box.vif("Wifi_VIF_Config", PARENT_AP_50))[1] == ap,
         "fronthaul": (await box.vif("Wifi_VIF_Config", COLD_VIF))[1] == fronthaul,
@@ -3901,30 +4015,48 @@ async def second_radio_moves_channel(box):
     }
     sessions = recovery_starts(box) - starts
     radios = (status.get("pod") or {}).get("radios") or []
-    reported = {r.get("band"): r.get("channel") for r in radios}
-    # one session: the agent's recovery started exactly one, its radios' M1s in order. Within it a
-    # Search or an M1 may go again when its answer is late (the box under load answered a Search
-    # after more than the agent's 1 s, 12 Oct): a retransmission, not another session.
-    return box.result(
-        passed=sessions == 1
-        and list(dict.fromkeys(ruids)) == [RUID_24, RUID_50]
-        and classes
-        == {
-            115: [36, 40, 44, 48],
-            124: [153, 157, 161],
-            125: [153, 157, 161, 165, 169, 173, 177],
-        }
-        and all(noop)
-        and all(unchanged.values())
-        and reported.get("5G") == 149,
-        searches=len(box.sent(AUTOCONFIG_SEARCH)) - searches,
-        sessions=sessions,
-        m1_ruids=ruids,
-        radio_b_classes={str(k): v for k, v in classes.items()},
-        observed_noop=noop,
-        unchanged=unchanged,
-        reported_channels=reported,
+    reported_channels = {r.get("band"): r.get("channel") for r in radios}
+    new_operations = (
+        len(status.get("operations") or []) - before[0],
+        len(radio_operations(box, "5G")) - before[1],
     )
+    after_cut = not cut or (
+        kept_reconnections(box) > continued and topology_notifications(box) > notified
+    )
+    return box.result(
+        passed=bool(done)
+        and sessions == 0
+        and len(box.sent(AUTOCONFIG_SEARCH)) == searches
+        and len(box.sent(AUTOCONFIG_WSC)) == m1s
+        and preferred == RADIO_B_ON_149
+        and all(unchanged.values())
+        and new_operations == (0, 0)
+        and reported_channels.get("5G") == 149
+        and after_cut,
+        reported=bool(done),
+        sessions=sessions,
+        searches=len(box.sent(AUTOCONFIG_SEARCH)) - searches,
+        m1s=len(box.sent(AUTOCONFIG_WSC)) - m1s,
+        preferences={str(k): v for k, v in preferred.items()},
+        operating_channel_reports=channel_reports(box, channels),
+        unchanged=unchanged,
+        new_operations=list(new_operations),
+        reported_channels=reported_channels,
+        kept_after_cut=after_cut,
+    )
+
+
+async def second_radio_moves_channel(box):
+    """Radio B's channel follows the pod's station on the same source (the link stays up): the
+    session kept, radio B's new operable channel reported (radio_b_moves)."""
+    return await radio_b_moves(box)
+
+
+async def reconnect_channel_follows(box):
+    """A backhaul move whose station lost its parent (the pod's link cut for 15 s around it), the
+    AP on radio B following the station to 149: the session kept across the reconnection, radio
+    B's new operable channel reported and a Topology Notification (radio_b_moves)."""
+    return await radio_b_moves(box, cut=15)
 
 
 async def renew_on_bootstrap(box):
@@ -4129,30 +4261,148 @@ async def adapter_restart(box):
     )
 
 
+async def cut_link(box, seconds):
+    """The pod's management connection to the agent cut for this long (the pod's database drops
+    the remote, as OpenSync's CM does for a backhaul move), then dialed again: a new database
+    generation of the same database. The session states the agent showed meanwhile."""
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}", connect=False)
+    states, until = set(), time.monotonic() + seconds
+    while time.monotonic() < until:
+        states.add(((box.status() or {}).get("session") or {}).get("state"))
+        await asyncio.sleep(0.5)
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}")
+    return sorted(s for s in states if s)
+
+
+def topology_notifications(box):
+    return len(box.sent(TOPOLOGY_NOTIFICATION))
+
+
 async def transport_cut(box):
-    """The pod's management connection to the agent cut for 20 s (the pod's database drops
-    the remote): the agent loses its source, and when the pod dials again it onboards anew
-    and is provisioning, the configuration found running (spec 2.5)."""
+    """The pod's management connection to the agent cut for 20 s, as for a backhaul move (spec
+    2.5): the provisioned session is held meanwhile and kept when the pod dials again (the same
+    pod, its database and capabilities unchanged): no Search or M1, a Topology Notification,
+    the configuration found running without a write."""
     if not (await onboarded(box)).get("applied"):
         return box.result(passed=False, failed="not onboarded")
-    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}", connect=False)
-    states = set()
-
-    def lost_source():
-        state = ((box.status() or {}).get("session") or {}).get("state")
-        states.add(state)
-        return state not in {"provisioning", None}
-
-    lost = await box.until(lost_source, seconds=30)
-    await asyncio.sleep(20)
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
-    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}")
-    again = await provision(box, searches, m1s)
+    continued, notified = kept_reconnections(box), topology_notifications(box)
+    writes = len((box.status() or {}).get("operations") or [])
+    states = await cut_link(box, 20)
+    mode = await back(box, searches, m1s, continued)
+    notification = await box.until(lambda: topology_notifications(box) > notified, seconds=10)
+    operations = (box.status() or {}).get("operations") or []
+    counts = ((box.status() or {}).get("session") or {}).get("counts") or {}
     return box.result(
-        passed=bool(lost) and again,
-        source_lost_seen=bool(lost),
-        states_during_cut=sorted(s for s in states if s),
-        provisioning_again=again,
+        passed=mode == "kept"
+        and states == ["provisioning"]
+        and bool(notification)
+        and len(operations) == writes
+        and counts.get("reconnection_kept", 0) >= 1,
+        session=mode,
+        states_during_cut=states,
+        topology_notification=bool(notification),
+        new_operations=len(operations) - writes,
+        reconnection_kept=counts.get("reconnection_kept"),
+    )
+
+
+async def transport_cut_long(box):
+    """The pod's management connection cut for longer than the reconnection window (spec 2.5):
+    the held session loses its source once the window has passed, and when the pod dials again
+    it onboards anew (Search and M1), its configuration found running."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued, passed = kept_reconnections(box), fresh_reconnections(box, "window_passed")
+    states = await cut_link(box, RECONNECT_WINDOW + 5)
+    mode = await back(box, searches, m1s, continued)
+    why = fresh_reconnections(box, "window_passed") > passed
+    return box.result(
+        passed=mode == "fresh" and "provisioning" in states and why,
+        session=mode,
+        states_during_cut=states,
+        fresh_as_window_passed=why,
+    )
+
+
+def station_parent(topology):
+    """The BSSID the pod's backhaul station is on, as a Topology Response's 1905 Device
+    Information TLV names it: the 802.11 interface with the non-AP STA role."""
+    value = next((t.value for t in topology.tlvs if t.kind == 0x03), b"") if topology else b""
+    if len(value) < 7:
+        return None
+    body = value[7:]
+    for _ in range(value[6]):
+        if len(body) < 9:
+            return None
+        size = body[8]
+        info = body[9 : 9 + size]
+        if size >= 7 and info[6] & 0xF0 == 0x40:  # non-AP STA
+            return info[:6].hex(":")
+        body = body[9 + size :]
+    return None
+
+
+async def reconnect_moved_uplink(box):
+    """A Backhaul Steering move onto another parent, the pod's link to its agent cut for 15 s
+    around it as OpenSync's CM does when the station leaves its parent (spec 2.5): the session
+    kept, no Search or M1. The agent answers the move once the station is on its target, sends a
+    Topology Notification, and its next Topology Response names the new parent on the backhaul
+    station's interface."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    await box.until(lambda: uplink_status(box).get("bootstrap"), seconds=30)
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued, notified = kept_reconnections(box), topology_notifications(box)
+    answered = len(box.sent(0x801A))
+    onto_mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, TARGET_PARENT),)
+    )
+    await box.until(lambda: box.controller.reply(ACK, onto_mid), seconds=5)
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline and not await pinned(box, TARGET_PARENT):
+        await asyncio.sleep(0.3)
+    # the station leaves its parent: CM drops the link, the station joins the target, and CM
+    # opens the link again
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}", connect=False)
+    await four_address(box, TARGET_PARENT)
+    await asyncio.sleep(15)
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}")
+    mode = await back(box, searches, m1s, continued)
+    onto = await next_message(box, 0x801A, answered, seconds=60)
+    onto_ok = onto is not None and steering_answer(onto) == (BACKHAUL_STATION, TARGET_PARENT, 0)
+    notification = await box.until(lambda: topology_notifications(box) > notified, seconds=10)
+    topology = await box.ask(TOPOLOGY_QUERY, (Tlv(0xB3, b"\x01"),), TOPOLOGY_RESPONSE)
+    parent = station_parent(topology)
+    return box.result(
+        passed=mode == "kept" and onto_ok and bool(notification) and parent == TARGET_PARENT,
+        session=mode,
+        onto=steering_answer(onto),
+        topology_notification=bool(notification),
+        station_parent=parent,
+    )
+
+
+async def reconnect_not_provisioned(box):
+    """The pod's link cut for 15 s while the agent's first M1 waits for its M2 (spec 2.5): a
+    session not yet provisioned is not held. It loses its source at once, and when the pod dials
+    again the agent onboards anew, a Search and an M1."""
+    search = await box.until(lambda: box.controller.latest(AUTOCONFIG_SEARCH))
+    if not search:
+        return box.result(passed=False, failed="no search")
+    box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
+    if not await box.until(lambda: box.controller.latest(AUTOCONFIG_WSC), seconds=20):
+        return box.result(passed=False, failed="no M1")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    starts = recovery_starts(box)
+    states = await cut_link(box, 15)
+    mode = await back(box, searches, m1s, kept_reconnections(box))
+    return box.result(
+        passed=mode == "fresh" and recovery_starts(box) > starts and "provisioning" not in states,
+        session=mode,
+        states_during_cut=states,
+        sessions_started=recovery_starts(box) - starts,
     )
 
 
@@ -4238,17 +4488,19 @@ async def restart_during_write(box):
     if not committed:
         return box.result(passed=False, failed="the first write was not committed")
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
     await box.new_pod_database()  # its OpenSync again, before the write was observed
-    again = await provision(box, searches, m1s)
+    # its OpenSync started again: a fresh session (spec 2.5), its M2 written on the new start
+    mode = await back(box, searches, m1s, continued)
     await box.until(lambda: operation_states(box)[-1:] == [("OBSERVED_APPLIED", None)], seconds=30)
     states = operation_states(box)
     interrupted = states[before] if len(states) > before else None
     return box.result(
-        passed=bool(again)
+        passed=mode == "fresh"
         and interrupted == ("FAILED", "NOT_READY")
         and states[-1] == ("OBSERVED_APPLIED", None)
         and ("REJECTED", "BUSY") not in states[before:],
-        provisioned_again=again,
+        session=mode,
         interrupted_write=interrupted,
         operations=states[before:],
     )
@@ -4314,6 +4566,10 @@ SCENARIOS = {
     "gre-parent-demoted": gre_parent_demoted,
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
+    "transport-cut-long": transport_cut_long,
+    "reconnect-moved-uplink": reconnect_moved_uplink,
+    "reconnect-channel-follows": reconnect_channel_follows,
+    "reconnect-not-provisioned": reconnect_not_provisioned,
     "write-lost-unapplied": write_lost_unapplied,
     "restart-during-write": restart_during_write,
 }
@@ -4462,6 +4718,10 @@ OPTIONS = {  # the box each scenario needs beyond the default
         "underlay": GRE_UNDERLAY,
     },
 }
+# spec 2.5's reconnections: the uplink move as restart-during-move's, radio B's move as
+# second-radio-moves-channel's
+OPTIONS["reconnect-moved-uplink"] = OPTIONS["restart-during-move"]
+OPTIONS["reconnect-channel-follows"] = OPTIONS["second-radio-moves-channel"]
 
 
 async def run(scenario, agent, directory, *, binary=None):

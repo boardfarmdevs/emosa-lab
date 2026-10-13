@@ -351,6 +351,8 @@ class OnboardingSession:
                     self.send_frame(frame)
                 self.channel_moves = ()
                 self._record("channel_preference_report_unsolicited")
+                if self.channels:
+                    self.channels.moved()
             # Notify only observed topology changes, never desired Config changes, and once
             # after a kept reconnection (spec 2.5: the pod's uplink may have moved).
             if snapshot.topology.operational != self.last_topology or self.notify_due:

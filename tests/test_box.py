@@ -327,8 +327,27 @@ def test_a_restarted_agent_takes_the_pod_back_without_writing_again(agent, tmp_p
     assert result["passed"], result
 
 
-def test_a_cut_pod_connection_is_onboarded_again_when_the_pod_returns(agent, tmp_path):
+def test_a_pod_connection_cut_for_20_s_keeps_its_session(agent, tmp_path):
+    # spec 2.5: a backhaul move's reconnection, the session held and kept
     result = box("transport-cut", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
+def test_a_pod_connection_cut_past_the_reconnection_window_is_onboarded_again(agent, tmp_path):
+    result = box("transport-cut-long", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
+def test_a_move_with_the_pods_link_cut_keeps_the_session_and_reports_the_new_parent(
+    agent, tmp_path
+):
+    # spec 2.5: the Topology Notification, and the next Topology Response names the new parent
+    result = box("reconnect-moved-uplink", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
+def test_a_session_not_yet_provisioned_is_not_held_across_a_cut(agent, tmp_path):
+    result = box("reconnect-not-provisioned", agent, tmp_path / "box")
     assert result["passed"], result
 
 
@@ -560,14 +579,23 @@ def test_a_steering_window_left_open_is_closed_after_the_agent_restarts(agent, t
     assert result["passed"], result
 
 
-def test_a_second_radios_channel_move_is_one_fresh_session_and_leaves_its_parent_ap(
-    agent, tmp_path
-):
-    # spec 9's channel rule, V54's radio B on 149: the station moves the radio, the agent takes
-    # its new capabilities once, and b-ap-50 is the pod's to move, not EMOSA's to rewrite
+def test_a_second_radios_channel_move_keeps_the_session_and_leaves_its_parent_ap(agent, tmp_path):
+    # spec 9's channel rule and 2.5, V54's radio B on 149: the station moves the radio, the
+    # agent keeps its session and reports the new operable channel (a Channel Preference Report
+    # and an Operating Channel Report), and b-ap-50 is the pod's to move, not EMOSA's to rewrite
     result = box("second-radio-moves-channel", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result
-    assert result["sessions"] == 1 and all(result["unchanged"].values())
+    assert result["sessions"] == 0 and all(result["unchanged"].values())
+
+
+def test_a_move_with_the_pods_link_cut_keeps_the_session_as_its_ap_follows_the_station(
+    agent, tmp_path
+):
+    # spec 2.5: the station's new parent on 149 with the pod's link cut around it (the Pis'
+    # radio B: the AP restarts on the station's channel), the session kept, the channel reported
+    result = box("reconnect-channel-follows", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+    assert result["sessions"] == 0 and result["kept_after_cut"]
 
 
 def test_a_pod_promoted_to_gre_parent_while_onboarded_converts_its_backhaul_bss(agent, tmp_path):

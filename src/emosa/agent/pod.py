@@ -81,6 +81,7 @@ from emosa.opensync.uplink import (
     MULTI_AP,
     UplinkBackend,
     band_of_operating_class,
+    start_instance,
     uplink_state,
 )
 from emosa.opensync.uplink import MONITOR as UPLINK_MONITOR
@@ -272,19 +273,33 @@ class PodReportSource:
         # RECONNECT_WINDOW); a new one for any other source
         self.lineage = 0
         self.identity = None  # (serial, node ID) of the pod last published
+        self.instance = None  # the start of the pod's OpenSync last published (its radio rows)
         self.published_at = None  # when it was last published
         self.reconnections = {"continued": 0, "fresh": {}}
 
-    def _fresh_reason(self, device, capabilities, now):
+    def _fresh_reason(self, device, instance, capabilities, now):
         """Why a new database generation is another pod source (spec 2.5), or None: it
-        continues the last one."""
+        continues the last one. Only the link to the pod comes back in a continuation: the
+        same start of its OpenSync (its database and the configuration in it), not a restart,
+        whose database comes from its template (the engine writes a configuration only for an
+        M2, so a restarted pod needs the fresh session's)."""
         if (device.serial, device.node_id) != self.identity:
             return "another_pod"
+        if instance is None or instance != self.instance:
+            return "pod_restarted"
         if self.published_at is None or now - self.published_at > RECONNECT_WINDOW:
             return "window_passed"
         if capabilities_identity(capabilities) != capabilities_identity(self.capabilities):
             return "capabilities_changed"
         return None
+
+    @staticmethod
+    def _start(rows):
+        """Which start of the pod's OpenSync (its radio rows), or None before it has them."""
+        try:
+            return start_instance(rows)
+        except EmosaError:
+            return None
 
     def _new_lineage(self, reason):
         self.lineage += 1
@@ -419,7 +434,7 @@ class PodReportSource:
                         for r, ch, mbss in bound
                     )
                 )
-                why = self._fresh_reason(device, continued, started)
+                why = self._fresh_reason(device, self._start(rows), continued, started)
                 if why is None:
                     fresh = False
                     self.capabilities_generation = raw["generation"]
@@ -596,6 +611,7 @@ class PodReportSource:
                 lineage=self.lineage,
             )
             self.identity, self.published_at = (device.serial, device.node_id), started
+            self.instance = self._start(rows)
             return True
         except (EmosaError, ConnectionError, TimeoutError) as exc:
             # Once per cause: a pod that stays away must not flood the log, but a

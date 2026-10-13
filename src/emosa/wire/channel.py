@@ -504,6 +504,13 @@ class ChannelCoordinator:
         self.transmit(snapshot)
         self.last_operating = radios
 
+    def moved(self):
+        """spec 2.5: a radio's channel moved in a kept session: the Operating Channel Report goes
+        out as for an autonomous change, at the next tick that has every radio's operating
+        parameters, even if none was reported before."""
+        if self.last_operating is None:
+            self.last_operating = ()
+
     def transmit(self, snapshot):
         pending = self.pending
         mid = self.mids.next()

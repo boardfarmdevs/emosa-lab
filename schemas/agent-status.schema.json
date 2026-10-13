@@ -54,6 +54,7 @@
           "additionalProperties": false,
           "properties": {
             "another_pod": {"type": "integer", "minimum": 0},
+            "pod_restarted": {"type": "integer", "minimum": 0},
             "window_passed": {"type": "integer", "minimum": 0},
             "capabilities_changed": {"type": "integer", "minimum": 0}
           }
