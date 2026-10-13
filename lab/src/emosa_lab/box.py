@@ -3857,7 +3857,7 @@ async def second_radio_moves_channel(box):
 
 
 async def renew_on_bootstrap(box):
-    """V54 regression guard (the MV3's controller restart, 12 October): a GRE child of the Pis'
+    """V54 regression guard (a gateway's controller restart, 12 October): a GRE child of the Pis'
     shape on its bootstrap, both radios configured. The controller restarts: a Renew, and the
     pod's station dropped by the router for a moment, so the station has no parent and its 5 GHz
     radio, whose channel follows the station, shows none, then the same one again. The agent
@@ -3966,7 +3966,7 @@ async def set_radio_power(box, power):
 
 
 async def power_rises(box):
-    """Spec 2.4, F-201 (the Pis on their new mt76 modules, 12 October): a pod whose source began
+    """Spec 2.5 (the Pis on their new mt76 modules, 12 October): a pod whose source began
     before it reported its radios' power (the agent advertised its own or 20 dBm) reports more,
     30 dBm, after onboarding. Each radio's capabilities are taken again with the higher maximum
     EIRP: exactly one fresh session, its M1s advertising 30 dBm, its unchanged M2 sets observed

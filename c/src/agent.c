@@ -361,7 +361,7 @@ static bool further_radios_changed(const em_tlv_list *before, const em_tlv_list 
 }
 
 /* The radios with the maximum EIRP each advertised so far give the capabilities the agent has: a
- * change of its capabilities is then only a radio's power risen above it (F-201). */
+ * change of its capabilities is then only a radio's power risen above it (spec 2.5). */
 static bool power_rose(const em_capability_radio *before, size_t n, const em_tlv_list *caps)
 {
     em_tlv_list old;
@@ -551,7 +551,7 @@ static bool refresh(agent *a)
     }
     em_capability_radio before[1 + EXTRA_RADIOS]; /* the same radios as advertised so far */
     for (size_t k = 0; k < nreported; k++) {
-        /* its maximum EIRP: the source's own, raised by a higher reported power (F-201) */
+        /* its maximum EIRP: the source's own, raised by a higher reported power (spec 2.5) */
         const em_radio_view *r = reported[k].radio;
         bool has_kept = false;
         int8_t kept = 0;
@@ -597,7 +597,7 @@ static bool refresh(agent *a)
             a->at.state != S_INCOMPATIBLE)
             close_session(a, S_SOURCE_LOST);
     } else if (power_rose(before, nreported, &a->caps)) {
-        /* F-201: a radio reports more power than the maximum EIRP it advertised (the source began
+        /* spec 2.5: a radio reports more power than the maximum EIRP it advertised (the source began
          * before the pod reported any): its capabilities are taken again with the higher maximum,
          * and the session that has the old ones ends, the next starting afresh */
         for (size_t k = 0; k < nreported; k++)

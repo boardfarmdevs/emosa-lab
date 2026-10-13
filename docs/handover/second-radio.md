@@ -55,7 +55,8 @@ Both agents, vectors and box for each; spec 8.6 and 9 record the rules.
   old write's deadline, and nothing onboarded again, so the pod stayed unconfigured until a
   Renew. This was in both agents, older than layer B. Now the old write fails at once (spec §5;
   vectors `engine.json` `restarted-before-observed`, box `restart-during-write`).
-- F-201, found on the MV3 bench (12 October, after the Pis took the mt76 transmit-power modules):
+- The advertised maximum EIRP (spec 2.5), found on the physical Pis (12 October, after they took
+  the mt76 transmit-power modules):
   - **Cause:** a pod's source begins before OpenSync fills `Wifi_Radio_State.tx_power`, so the
     agent advertised 20 dBm. Every new connection from the pod is a new source and repeats the
     race, an OpenSync restart included: on the bench, restarts at 19:08 and 19:14 PDT took 20
@@ -167,11 +168,11 @@ own settings and steps stay with the router's project.
    - **Reference:** answers only while provisioning.
    - **Should:** an agent answers it whenever it has the pod's view and its controller, since the
      report describes the pod's backhaul station radios, not the autoconfiguration.
-   - **V54:** not hit on the MV3 (12 October): the counter stayed at 0. Radio B's 7-minute renew
-     loop after pi1's boot was the controller's (F-204: a bsta_cap queued behind the radio's
-     em_config, its query never sent). That fix is a controller patch (meta-cmf 0266, draft,
-     waiting for the owner's approval); EMOSA's sending of the Backhaul STA Radio Capabilities TLV
-     in every Topology Response is standard and stays.
+   - **V54:** not hit on the physical Pis (12 October): the counter stayed at 0. Radio B's
+     7-minute renew loop after pi1's boot was the controller's (a bsta_cap queued behind the
+     radio's em_config, its query never sent). That fix is a controller patch (meta-cmf 0266,
+     approved 12 October); EMOSA's sending of the Backhaul STA Radio Capabilities TLV in every
+     Topology Response is standard and stays.
 
 ## Lab access (rdk-1010 on rev120)
 `ssh rev120` → `lxc exec rdk-1010` → `lxc exec bpibroadband` (the gateway: em_ctrl + emosa). Feed

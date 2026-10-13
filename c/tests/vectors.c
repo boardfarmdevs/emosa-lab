@@ -679,7 +679,7 @@ static void northbound_vectors(const char *dir)
             em_tlv_list_free(&list);
         }
     }
-    /* spec 2.4, F-201: a radio's advertised maximum EIRP only rises */
+    /* spec 2.5: a radio's advertised maximum EIRP only rises */
     cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "advertised_eirp"))
     {
         const cJSON *kept = cJSON_GetObjectItemCaseSensitive(c, "kept");

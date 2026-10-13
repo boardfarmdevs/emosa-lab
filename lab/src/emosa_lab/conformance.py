@@ -444,7 +444,7 @@ def northbound_vectors():
         "aged_at_response": aged_at_response(),
         # spec 9: agents with more than one radio, their capability and topology TLVs
         "multi_radio": multi_radio_cases(ages),
-        # spec 2.4, F-201: a radio's advertised maximum EIRP, as kept for the source and as the
+        # spec 2.5: a radio's advertised maximum EIRP, as kept for the source and as the
         # pod reports its power; it only rises (a fall changes nothing)
         "advertised_eirp": advertised_eirp_cases(),
     }

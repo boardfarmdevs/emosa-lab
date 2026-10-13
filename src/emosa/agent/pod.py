@@ -402,7 +402,7 @@ class PodReportSource:
                     log.info("a further radio moved channel or came and went: capabilities taken")
                     self.capabilities = capabilities
                 elif kept == self.capabilities:
-                    # F-201: a radio reports more power than the maximum EIRP it advertised (the
+                    # spec 2.5: a radio reports more power than the maximum EIRP it advertised (the
                     # source began before the pod reported any): its capabilities are taken again
                     # with the higher maximum, and the session that has the old ones starts afresh
                     log.info(

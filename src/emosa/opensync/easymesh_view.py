@@ -304,7 +304,7 @@ DEFAULT_MAX_EIRP = 20  # dBm, a radio's advertised maximum while the pod reports
 
 
 def advertised_eirp(kept, reported):
-    """The maximum EIRP a radio advertises (spec 2.4, F-201): `kept`, what its capabilities
+    """The maximum EIRP a radio advertises (spec 2.5): `kept`, what its capabilities
     advertise so far for this source (None when the source starts), and `reported`, the pod's
     Wifi_Radio_State.tx_power (None when unset). A source starts with the reported power, or
     DEFAULT_MAX_EIRP when there is none. It rises with a reported power above it, since a radio

@@ -82,7 +82,7 @@ uint8_t em_operating_class(const char *band, int channel);
 
 /* A radio's advertised maximum EIRP while the pod reports no power, dBm. */
 #define EM_DEFAULT_MAX_EIRP 20
-/* The maximum EIRP a radio advertises (spec 2.4, F-201; easymesh_view.advertised_eirp): has_kept and
+/* The maximum EIRP a radio advertises (spec 2.5; easymesh_view.advertised_eirp): has_kept and
  * kept, what its capabilities advertise so far for this source; has_power and power, the pod's
  * Wifi_Radio_State.tx_power. A source starts with the reported power, or EM_DEFAULT_MAX_EIRP; it rises
  * with a reported power above it, and a fall changes nothing. */

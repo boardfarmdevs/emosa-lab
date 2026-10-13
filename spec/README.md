@@ -174,7 +174,7 @@ Rules:
   pod gets one fresh session per rise, not per change. Before this rule, a Pi whose source
   began before it reported its power advertised 20 dBm and then reported 30, and the channel
   procedures, which refuse a power above the advertised maximum, were refused; RDK renewed the
-  agent every 40 s (F-201, 12 October). Both agents (vectors `translation-northbound.json`
+  agent every 40 s (12 October). Both agents (vectors `translation-northbound.json`
   `advertised_eirp`, box `power-rises`). The agent does not wait for the power before its
   first M1: a radio whose VIFs disagree is never given one (§9).
 - A session that fails, loses its source (the pod's State lost, or a new
