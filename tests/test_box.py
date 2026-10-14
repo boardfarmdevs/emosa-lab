@@ -338,6 +338,12 @@ def test_a_pod_connection_cut_past_the_reconnection_window_is_onboarded_again(ag
     assert result["passed"], result
 
 
+def test_a_pod_gone_without_a_fin_is_noticed_by_the_echo_probe(agent, tmp_path):
+    # spec 3.1: the pod's database frozen, its connection open; the agent's probe drops it
+    result = box("pod-vanished", agent, tmp_path / "box", timeout=180)
+    assert result["passed"], result
+
+
 def test_a_move_with_the_pods_link_cut_keeps_the_session_and_reports_the_new_parent(
     agent, tmp_path
 ):

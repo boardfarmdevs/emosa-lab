@@ -22,6 +22,10 @@
 
 #define DATABASE "Open_vSwitch"
 #define MAX_MESSAGE (16 * 1024 * 1024)
+/* spec 3.1, the reference's OVS reconnect probe (5000 ms): nothing received for PROBE seconds, an
+ * echo; nothing for PROBE more, the connection is dropped (a pod gone without a FIN: powered off,
+ * rebooted behind a switch) */
+#define PROBE 5.0
 
 struct em_ovsdb {
     int listener, conn;
@@ -39,6 +43,8 @@ struct em_ovsdb {
     char *buf;
     size_t len, cap;
     em_json_scanner scan; /* where the scan of buf stopped */
+    double received;      /* when the pod last sent anything (monotonic) */
+    bool probing;         /* an echo sent since */
 };
 
 static double now(void)
@@ -270,6 +276,8 @@ static bool read_conn(em_ovsdb *s)
     for (;;) {
         ssize_t r = recv(s->conn, chunk, sizeof(chunk), MSG_DONTWAIT);
         if (r > 0) {
+            s->received = now();
+            s->probing = false;
             if (!em_ovsdb_input(s, chunk, (size_t)r))
                 return false;
             continue;
@@ -380,6 +388,8 @@ bool em_ovsdb_pump(em_ovsdb *s)
         disconnect(s); /* a new connection replaces the old one */
         s->conn = fd;
         s->generation++;
+        s->received = now();
+        s->probing = false;
         if (!start_monitor(s)) {
             disconnect(s);
             return false;
@@ -391,6 +401,25 @@ bool em_ovsdb_pump(em_ovsdb *s)
     if (poll(&p, 1, 0) > 0 && !read_conn(s)) {
         disconnect(s);
         return false;
+    }
+    /* the probe (PROBE): an idle connection gets an echo; one still silent after it is dropped */
+    double idle = now() - s->received;
+    if (idle >= 2 * PROBE) {
+        disconnect(s);
+        return false;
+    }
+    if (idle >= PROBE && !s->probing) {
+        cJSON *echo = cJSON_CreateObject();
+        cJSON_AddStringToObject(echo, "method", "echo");
+        cJSON_AddItemToObject(echo, "params", cJSON_CreateArray());
+        cJSON_AddStringToObject(echo, "id", "echo");
+        bool sent = send_json(s, echo);
+        cJSON_Delete(echo);
+        if (!sent) {
+            disconnect(s);
+            return false;
+        }
+        s->probing = true;
     }
     return true;
 }
