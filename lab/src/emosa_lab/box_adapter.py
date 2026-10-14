@@ -13,6 +13,7 @@ pod-backhaul AP's port, a LAN port, and the lease events dnsmasq would report.
 
 import asyncio
 import contextlib
+import hashlib
 import json
 import os
 import shlex
@@ -21,6 +22,9 @@ import signal
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.request
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 from emosa_lab.box import (
@@ -40,6 +44,8 @@ from emosa_lab.box import (
 FLEET_PORT = 6650
 FLEET_PORTS = [6651, 6652]
 FLEET_INTERFACE = "em1"  # the fleet's name for its first agent's interface
+FILES_PORT = 6660  # the file server's in the box (6650 by default: the box's front port here)
+MODULE_FILE = b"#!/bin/sh\n# a module's file, served by its SHA-256\n"
 FLEET_ADDRESS = f"tcp:127.0.0.1:{FLEET_PORT}"
 AGENT_ADDRESS = f"tcp:127.0.0.1:{FLEET_PORTS[0]}"
 
@@ -761,6 +767,73 @@ async def gtp(directory, implementation, binary=None):
     return {"scenario": "gtp", "agent": implementation, "passed": all(checks.values()), **checks}
 
 
+def fetch(url, method="GET"):
+    """(status, headers, body) of one plain HTTP request."""
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, method=method), timeout=5) as r:
+            return r.status, dict(r.headers), r.read()
+    except urllib.error.HTTPError as exc:
+        return exc.code, dict(exc.headers), b""
+
+
+async def fleet_files(box):
+    """spec 4, the pods' modules: the fleet with files (a module's file named by its SHA-256, and
+    one whose content is not its name) and a module with that update. The agent's configuration
+    gets the module's settings with update_url (the fleet's file server on its advertise address)
+    and update_sha256. HEAD / answers 200, an empty body and a Date in GMT (now); GET /<sha256>
+    the file; the misnamed file and any other path 404, each with a Date. The fleet logs the
+    file served and the one it does not serve."""
+    files = box.directory / "files"
+    files.mkdir()
+    sha = hashlib.sha256(MODULE_FILE).hexdigest()
+    (files / sha).write_bytes(MODULE_FILE)
+    (files / ("0" * 64)).write_bytes(b"not its name")
+    await box.restart_fleet(
+        files={"directory": str(files), "port": FILES_PORT},
+        modules={"hook": {"config": {"redirector": "auto"}, "update": sha}},
+    )
+    await wait_for_port(FILES_PORT)
+    base = f"http://127.0.0.1:{FILES_PORT}"
+    head = await asyncio.to_thread(fetch, base + "/", "HEAD")
+    got = await asyncio.to_thread(fetch, f"{base}/{sha}")
+    misnamed = await asyncio.to_thread(fetch, f"{base}/{'0' * 64}")
+    other = await asyncio.to_thread(fetch, f"{base}/fleet.json")
+    date = head[1].get("Date") or ""
+    skew = abs(parsedate_to_datetime(date).timestamp() - time.time()) if date else None
+    config = json.loads((box.config_dir / f"{box.serial}.json").read_text())
+    log = (box.directory / "fleet.log").read_text(errors="replace")
+    passed = (
+        head[0] == 200
+        and head[2] == b""
+        and date.endswith(" GMT")
+        and skew is not None
+        and skew < 60
+        and got[0] == 200
+        and got[2] == MODULE_FILE
+        and misnamed[0] == 404
+        and bool(misnamed[1].get("Date"))
+        and other[0] == 404
+        and config.get("modules")
+        == {
+            "hook": {
+                "redirector": "auto",
+                "update_url": f"{base}/{sha}",
+                "update_sha256": sha,
+            }
+        }
+        and f"files: 127.0.0.1 GET /{sha}: 200" in log
+        and "not served" in log
+    )
+    return box.result(
+        passed=passed,
+        head=[head[0], date],
+        file=[got[0], len(got[2])],
+        misnamed=misnamed[0],
+        other=other[0],
+        modules=config.get("modules"),
+    )
+
+
 SCENARIOS = {
     "fleet-handover": fleet_handover,
     "fleet-return": fleet_return,
@@ -769,6 +842,7 @@ SCENARIOS = {
     "fleet-takeover": fleet_takeover,
     "fleet-forget": fleet_forget,
     "fleet-supervised": fleet_supervised,
+    "fleet-files": fleet_files,
 }
 OPTIONS = {
     "fleet-refusals": {"fleet": {"admit": [OTHER_POD]}, "handover_seconds": 6},

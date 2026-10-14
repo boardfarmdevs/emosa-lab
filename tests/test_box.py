@@ -234,6 +234,12 @@ def test_the_backhaul_sta_capability_names_each_backhaul_station_radio(agent, tm
     assert result["passed"], result
 
 
+def test_the_fleet_serves_a_modules_file_by_its_sha256_with_the_date(agent, tmp_path):
+    # spec 4, the pods' modules: each implementation's fleet, its file server and the settings
+    result = box("fleet-files", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_pods_module_gets_its_settings_and_its_report_is_read(agent, tmp_path):
     # spec 4, the pods' modules: Node_Config written once per start, Node_State in the status
     result = box("node-config", agent, tmp_path / "box", timeout=240)
