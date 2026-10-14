@@ -1,6 +1,6 @@
 {
   "id": "bcm-pod-2.4.3-gre-v1",
-  "description": "A two-radio Broadcom pod whose firmware names OpenSync 2.4.3 but whose database is the legacy one (spec 3.10: no wpa_* columns or multi_ap, OpenSync 2.0's schema without multi_ap): wl1 (2.4 GHz, 11n) and wl0 (5 GHz, 11ac). The pod's platform names its VIFs by radio and index: wlN.1 its backhaul AP, wlN.2 its home AP, and the radio's own interface (wl1, wl0) its station, which the pod's connection manager onboards by GRE on its own credentials. WPA2-PSK is the security map, encryption WPA-PSK and the key; the home APs carry the platform's oftag home--1, as the pod's own cloud writes them. The 2.4 GHz radio carries the fronthaul wl1.2 and one GRE parent AP, wl1.1, hidden and on the pod's underlay (spec 8.6), replacing whatever address the pod had there; the 5 GHz radio's M2 maps its fronthaul wl0.2 only. WM2 moves a whole radio onto its connected station's channel, so the 2.4 GHz radio's channel is the uplink's.",
+  "description": "A two-radio Broadcom pod whose firmware names OpenSync 2.4.3 but whose database is the legacy one (spec 3.10: no wpa_* columns or multi_ap, OpenSync 2.0's schema without multi_ap), on its 2.4 GHz radio only: wl1 (11n). The pod's platform names its VIFs by radio and index: wlN.1 its backhaul AP, wlN.2 its home AP, and the radio's own interface (wl1) its station, which the pod's connection manager onboards by GRE on its own credentials. WPA2-PSK is the security map, encryption WPA-PSK and the key; the home AP carries the platform's oftag home--1, as the pod's own cloud writes it. The 2.4 GHz radio carries the fronthaul wl1.2 and one GRE parent AP, wl1.1, hidden and on the pod's underlay (spec 8.6), replacing whatever address the pod had there. WM2 moves a whole radio onto its connected station's channel, so the radio's channel is the uplink's. Its 5 GHz radio (wl0, bcm4366) is not bound: a profile with it is a further one, as the Pis' gre-5g.",
   "opensync_version": "2.4.3",
   "schema": "opensync-2.0",
   "radio": {
@@ -9,13 +9,6 @@
     "ht_mode": "HT20",
     "chipset": "bcm47189"
   },
-  "radios": [
-    {
-      "band": "5G",
-      "ht_mode": "HT80",
-      "chipset": "bcm4366"
-    }
-  ],
   "fronthaul": {
     "if_name": "wl1.2",
     "vif": {
@@ -67,12 +60,6 @@
       "if_name": "wl1.1",
       "role": "backhaul",
       "vif_radio_idx": 1
-    },
-    {
-      "if_name": "wl0.2",
-      "role": "fronthaul",
-      "vif_radio_idx": 2,
-      "band": "5G"
     }
   ],
   "inet": {
@@ -86,8 +73,7 @@
   "uplink": {
     "station": "wl1",
     "stations": {
-      "2.4G": "wl1",
-      "5G": "wl0"
+      "2.4G": "wl1"
     }
   },
   "ap_metrics": {
