@@ -689,6 +689,18 @@ def test_a_legacy_gre_child_losing_its_ethernet_keeps_the_gtp_as_its_bootstrap(a
     assert result["passed"], result
 
 
+def test_a_seeded_legacy_pods_gtp_station_is_written_and_carries_its_uplink(agent, tmp_path):
+    # spec 3.10, the GTP station: no 2.x core makes one; written once, then the Ethernet lost
+    result = box("legacy-gtp-station", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_a_legacy_station_already_there_is_left_alone(agent, tmp_path):
+    # spec 3.10: the pod's, an operator's or a start-up hook's row; nothing written
+    result = box("legacy-gtp-station-present", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_legacy_pods_5ghz_radio_serves_its_own_fronthaul(agent, tmp_path):
     # spec 3.10, 9: bcm-pod-2.4.3-gre-5g-v1, the backhaul staying on 2.4 GHz
     result = box("legacy-5g-fronthaul", agent, tmp_path / "box", timeout=240)

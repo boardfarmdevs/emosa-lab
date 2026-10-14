@@ -427,6 +427,44 @@
           "additionalProperties": false
         },
         {
+          "title": "A legacy pod's station on the site's GTP BSS (the GTP station scope, spec 3.10)",
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "station": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]{1,15}$"
+            },
+            "ssid": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "secret_ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$"
+            },
+            "bssid": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"
+            }
+          },
+          "required": [
+            "pod_id",
+            "station",
+            "ssid",
+            "secret_ref"
+          ],
+          "additionalProperties": false
+        },
+        {
           "title": "A GRE parent AP's tunnels, one to each child address (the GRE parent scope, spec 8.6)",
           "type": "object",
           "properties": {

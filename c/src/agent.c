@@ -46,6 +46,7 @@
 #include "scope_steering.h"
 #include "scope_telemetry.h"
 #include "scope_gre_parent.h"
+#include "scope_gtp.h"
 #include "scope_wired.h"
 #include "scope_uplink.h"
 #include "scope_watch.h"
@@ -267,6 +268,8 @@ typedef struct {
     em_uplink_scope uplink;
     bool wired_on;              /* the wired uplink scope (emosa.agent.wired): uplink.mode ethernet */
     em_wired_scope wired;
+    bool gtp_on;                /* the GTP station scope (emosa.agent.gtp_station): uplink.bootstrap */
+    em_gtp_scope gtp;
     em_gre_scope *gre;          /* a GRE parent's tunnels (emosa.agent.gre_parent, spec 8.6); NULL: none */
     em_bh_shared bh_shared;     /* Backhaul Steering under way: the agent's, across sessions */
     em_bh_coordinator bh;
@@ -2388,6 +2391,7 @@ static cJSON *status(agent *a)
     }
     cJSON_AddItemToObject(o, "probe_watch", a->watch_on ? em_watch_status(&a->watch) : cJSON_CreateNull());
     cJSON_AddItemToObject(o, "gre_parent", a->gre ? em_gre_status(a->gre) : cJSON_CreateNull());
+    cJSON_AddItemToObject(o, "gtp_station", a->gtp_on ? em_gtp_status(&a->gtp) : cJSON_CreateNull());
     cJSON_AddNumberToObject(o, "writes", a->writes);
     cJSON_AddNumberToObject(o, "worker_pid", getpid());
     struct timespec ts;
@@ -2604,6 +2608,30 @@ static bool configure(agent *a, const char *path, const char *profiles)
         a->wired.legacy = a->profile.legacy;
         if (!em_copy(a->wired.wan_bridge, sizeof(a->wired.wan_bridge), a->profile.wan_bridge)) {
             FAIL("profile: wan_bridge must be an interface name");
+            return false;
+        }
+    }
+    /* spec 3.10, the GTP station: a legacy pod's core makes none, and its seed has none */
+    const cJSON *bootstrap = cJSON_GetObjectItemCaseSensitive(uplink, "bootstrap");
+    a->gtp_on = cJSON_IsObject(bootstrap);
+    if (a->gtp_on) {
+        em_reason why;
+        const char *station = cfg_str(uplink, "station") ? cfg_str(uplink, "station") : a->profile.uplink_station;
+        if (!a->profile.legacy) {
+            FAIL("uplink: bootstrap is a legacy pod's (spec 3.10)");
+            return false;
+        }
+        if (!station || !em_gtp_intent_from(cfg_str(c, "pod_id"), station, bootstrap, &a->gtp.intent, &why)) {
+            FAIL("uplink: bootstrap needs a station, an SSID of 1-32 octets, a secret_ref and a BSSID if any");
+            return false;
+        }
+        /* the station's radio: its band in the profile's stations, else the fronthaul's */
+        const char *band = a->profile.band;
+        for (size_t i = 0; i < a->profile.nuplink_bands && i < 3; i++)
+            if (a->profile.uplink_band_stations[i] && !strcmp(a->profile.uplink_band_stations[i], station))
+                band = a->profile.uplink_bands[i];
+        if (!band || !em_copy(a->gtp.band, sizeof(a->gtp.band), band)) {
+            FAIL("uplink: bootstrap: the station's band");
             return false;
         }
     }
@@ -2872,6 +2900,19 @@ int main(int argc, char **argv)
             return 1;
         }
     }
+    if (a.gtp_on) {
+        a.gtp.ovs = a.ovs;
+        a.gtp.serial = a.serial;
+        a.gtp.run_id = a.run_id;
+        a.gtp.vault = &a.vault;
+        a.gtp.transact = transact;
+        a.gtp.transact_ctx = &a;
+        em_reason why = em_gtp_open(&a.gtp, a.state_dir, &a.schemas, now);
+        if (why != EM_OK) {
+            FAIL("gtp station journal: %s", em_reason_name(why));
+            return 1;
+        }
+    }
     /* EMOSA_NETNS (/etc/default/emosa): the agents' interfaces in a namespace of their own */
     if (em_ethernet_open_in(&a.eth, getenv("EMOSA_NETNS"), a.interface, a.al) != EM_OK) {
         FAIL("cannot open the 1905 interface %s with MAC %s", a.interface, cfg_str(a.config, "al_mac"));
@@ -2942,6 +2983,8 @@ int main(int argc, char **argv)
             em_uplink_tick(&a.uplink);
         if (refreshed && a.wired_on)
             em_wired_tick(&a.wired);
+        if (refreshed && a.gtp_on)
+            em_gtp_tick(&a.gtp);
         if (refreshed && a.gre)
             em_gre_tick(a.gre);
         if (refreshed && a.telemetry_on)
@@ -2972,6 +3015,8 @@ int main(int argc, char **argv)
         em_uplink_close(&a.uplink);
     if (a.wired_on)
         em_wired_close(&a.wired);
+    if (a.gtp_on)
+        em_gtp_close(&a.gtp);
     if (a.gre) {
         em_gre_close(a.gre);
         free(a.gre);

@@ -369,3 +369,131 @@ def test_a_placed_radios_channel_must_be_one_emosa_maps(tmp_path):
     with pytest.raises(EmosaError) as refused:
         load_profile(str(path))
     assert refused.value.code == Reason.INVALID_INPUT
+
+
+# spec 3.10, the GTP station: written on a seeded pod, left alone where a station is
+GTP_INET, GTP_CRED, GTP_STA, GTP_STATE = (
+    f"00000000-0000-4000-8000-0000000004{n}" for n in ("01", "02", "03", "04")
+)
+GTP_KEY = "OnlySimulationGtp2026!"
+GTP_PIN = "92:00:00:00:24:65"
+
+
+class SeededPod(WiredPod):
+    """A wired legacy pod as its vendor's seed has it: no station, wl1's Inet row off."""
+
+    def __init__(self, inet=True):
+        super().__init__()
+        if inet:
+            self.tables["Wifi_Inet_Config"] = {
+                GTP_INET: {"if_name": "wl1", "if_type": "vif", "enabled": False}
+            }
+
+    async def transact(self, operations, transaction_id=None, generation=None, **_):
+        self.sent.append(operations)
+        return [{"count": 1} if op["op"] in ("mutate", "update") else {} for op in operations]
+
+
+def gtp(tmp_path, pod, bssid=None):
+    from emosa.opensync.gtp_station import GtpStationBackend, GtpStationIntent
+
+    vault = SecretStore(tmp_path / "secrets")
+    vault.write_simulated("gtp", GTP_KEY)
+    backend = GtpStationBackend("pod-1", pod, vault, serial=SERIAL, station="wl1", band="2.4G")
+    return backend, GtpStationIntent("pod-1", "wl1", "site-gtp", "gtp", bssid), vault
+
+
+def test_a_seeded_legacy_pods_gtp_station_is_written_in_one_transaction(tmp_path):
+    pod = SeededPod()
+    backend, intent, _ = gtp(tmp_path, pod)
+    assert asyncio.run(backend.snapshot()).config["present"] is False
+    plan = asyncio.run(backend.plan(intent))
+    assert plan["action"] == "gtp-station" and plan["pinned"] is False
+    attempt = {"transaction_id": "t1", "session_generation": 1}
+    assert asyncio.run(backend.submit(intent, attempt)).status == "committed"
+    (ops,) = pod.sent
+    assert [op["op"] for op in ops] == ["wait", "wait", "insert", "insert", "mutate", "update"]
+    assert ops[1]["where"] == [["if_name", "==", "wl1"]] and ops[1]["rows"] == []
+    security = ["map", [["encryption", "WPA-PSK"], ["key", GTP_KEY]]]
+    assert ops[2]["row"] == {"ssid": "site-gtp", "security": security, "onboard_type": "gre"}
+    assert ops[3]["row"] == {
+        "if_name": "wl1",
+        "mode": "sta",
+        "enabled": True,
+        "vif_radio_idx": 0,
+        "ssid": "site-gtp",
+        "security": security,
+        "credential_configs": ["set", [["named-uuid", "gtp_credential"]]],
+    }  # vconf form, no pin by default
+    assert ops[4]["mutations"] == [
+        ["vif_configs", "insert", ["set", [["named-uuid", "gtp_station"]]]]
+    ]
+    assert ops[5]["row"] == {"enabled": True, "network": True}  # the seed's scheme stays
+
+
+def test_a_pinned_gtp_station_on_a_pod_without_its_inet_row(tmp_path):
+    pod = SeededPod(inet=False)
+    backend, intent, _ = gtp(tmp_path, pod, bssid=GTP_PIN)
+    attempt = {"transaction_id": "t1", "session_generation": 1}
+    assert asyncio.run(backend.submit(intent, attempt)).status == "committed"
+    (ops,) = pod.sent
+    assert ops[3]["row"]["parent"] == GTP_PIN
+    assert ops[5]["op"] == "insert" and ops[5]["row"] == {
+        "if_name": "wl1",
+        "if_type": "vif",
+        "enabled": True,
+        "network": True,
+        "ip_assign_scheme": "dhcp",
+    }
+
+
+def test_a_station_already_there_is_left_alone(tmp_path):
+    pod = SeededPod()
+    pod.tables["Wifi_VIF_Config"] = {
+        GTP_STA: {"if_name": "wl1", "mode": "sta", "enabled": True, "ssid": "hook-gtp"}
+    }
+    backend, intent, _ = gtp(tmp_path, pod)
+    assert asyncio.run(backend.snapshot()).config["present"] is True
+    with pytest.raises(EmosaError) as refused:
+        asyncio.run(backend.plan(intent))
+    assert refused.value.code == Reason.OWNERSHIP_CONFLICT
+    assert not pod.sent
+
+
+def test_the_written_station_reads_back_as_its_target_once_wm_shows_it(tmp_path):
+    pod = SeededPod()
+    backend, intent, vault = gtp(tmp_path, pod)
+    security = ["map", [["encryption", "WPA-PSK"], ["key", GTP_KEY]]]
+    pod.tables["Wifi_Credential_Config"] = {
+        GTP_CRED: {"ssid": "site-gtp", "security": security, "onboard_type": "gre"}
+    }
+    pod.tables["Wifi_VIF_Config"] = {
+        GTP_STA: {
+            "if_name": "wl1",
+            "mode": "sta",
+            "enabled": True,
+            "ssid": "site-gtp",
+            "security": security,
+            "credential_configs": ["set", [["uuid", GTP_CRED]]],
+        }
+    }
+    target = intent.target(vault)
+    config = asyncio.run(backend.snapshot()).config
+    assert config["joined"] is False and config["ssid"] == "site-gtp"
+    assert not all(config.get(k) == v for k, v in target.items())  # not applied before wm
+    pod.tables["Wifi_VIF_State"] = {GTP_STATE: {"if_name": "wl1", "mode": "sta"}}
+    config = asyncio.run(backend.snapshot()).config
+    assert all(config.get(k) == v for k, v in target.items())
+
+
+def test_a_gtp_station_intent_is_refused_without_a_valid_ssid_or_pin():
+    from emosa.opensync.gtp_station import GtpStationIntent
+
+    for bad in (
+        GtpStationIntent("pod-1", "wl1", "x" * 33, "gtp"),
+        GtpStationIntent("pod-1", "wl1", "site-gtp", "gtp", "92:00:00:00:24:6G"),
+        GtpStationIntent("pod-1", "wl1/x", "site-gtp", "gtp"),
+    ):
+        with pytest.raises(EmosaError) as refused:
+            bad.validate()
+        assert refused.value.code == Reason.INVALID_INPUT

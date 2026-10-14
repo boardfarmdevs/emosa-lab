@@ -460,16 +460,21 @@ class Box:
         underlay=None,
         gre_child=False,
         legacy=False,
-        ethernet_first=False,
+        ethernet_first=None,
+        gtp_station=None,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         # legacy: the pod is a legacy pod (spec 3.10), on its own schema and rows, its agent on
         # the legacy profile unless the scenario gives another
         self.legacy = legacy
         # ethernet_first (legacy): wired as the first legacy pod was admitted on the router (13
-        # October): cm on eth0 and no GRE, its patch pair already joining br-wan to br-home, and its
-        # station linked beside the agent to the GTP's BSS, associated there but unused
+        # October): cm on eth0 and no GRE, its patch pair already joining br-wan to br-home, and
+        # its station "linked" beside the agent to the GTP's BSS, associated there but unused, or
+        # as its vendor's "seed" has it: no station, the operator's credentials unlinked
         self.ethernet_first = ethernet_first
+        # gtp_station: the agent's uplink.bootstrap (spec 3.10, the GTP station), its secret
+        # GTP_KEY in the agent's secret directory
+        self.gtp_station = gtp_station
         # underlay (with a gre-parent profile): the pod's 169.254.N.0/24 as a GRE parent (spec
         # 8.6), given to the agent as the fleet registry would; its parent AP takes the .1
         self.underlay = underlay
@@ -562,7 +567,7 @@ class Box:
                     ]
                 )
             if self.ethernet_first:
-                await session.transact(ethernet_first())
+                await session.transact(ethernet_first(self.ethernet_first))
         finally:
             await session.close()
         entry = {
@@ -608,6 +613,15 @@ class Box:
                 (kept / "target.json").write_text(
                     json.dumps({"configured": configured, "target": self.kept_target, "moves": 1})
                 )
+        if self.gtp_station:  # the site's GTP BSS, its passphrase by reference (spec 3.10)
+            fleet["uplink"] = {
+                **fleet.get("uplink", {"mode": "off"}),
+                "bootstrap": self.gtp_station,
+            }
+            secrets = state_root / self.serial / "secrets"
+            secrets.mkdir(parents=True, mode=0o700, exist_ok=True)
+            (secrets / self.gtp_station["secret_ref"]).write_text(GTP_KEY)
+            (secrets / self.gtp_station["secret_ref"]).chmod(0o600)
         config = agent_config(entry, fleet)
         # the agent's interface carries its AL MAC, as the labs' macvlan per agent does
         subprocess.run(["ip", "link", "set", self.interface, "address", self.al_mac], check=True)
@@ -805,7 +819,7 @@ async def apply_configuration(db):
         tables, schema = snapshot["tables"], snapshot["schema"]
         states = {
             schema.decode("Wifi_VIF_State", "if_name", row["if_name"]): uuid
-            for uuid, row in tables["Wifi_VIF_State"].items()
+            for uuid, row in tables.get("Wifi_VIF_State", {}).items()
         }
         changes = []
         for uuid, row in tables["Wifi_VIF_Config"].items():
@@ -4871,12 +4885,16 @@ GTP_BSSID = "02:00:00:00:1b:02"  # the legacy fixture's station parent: the GTP'
 GTP_SSID, GTP_KEY = "emosa-lab-gtp", "OnlySimulationGtp2026!"
 
 
-def ethernet_first():
+OPERATOR_CREDENTIALS = ("operator-bh-1", "operator-bh-2")  # a seed's onboarding, unlinked
+
+
+def ethernet_first(kind):
     """The legacy pod as the first one was admitted on the router (13 October), one transaction:
-    cm on eth0 and no GRE (2.x cm builds none while the Ethernet link is used), OpenSync's patch
-    pair joining br-wan to br-home, and the station wl1 in credential-list mode, its one
-    credential the GTP's (written beside the agent, by hand), pinned by its parent to the GTP's
-    BSS, where it is associated."""
+    cm on eth0 and no GRE (2.x cm builds none while the Ethernet link is used), and OpenSync's
+    patch pair joining br-wan to br-home. Its station wl1: "linked", in credential-list mode, its
+    one credential the GTP's (written beside the agent, by hand), pinned by its parent to the
+    GTP's BSS, where it is associated; or as the vendor's "seed" has it: no station row, wl1's
+    Inet row off (dhcp), and the operator's onboarding credentials, linked by nothing."""
     operations = [
         {
             "op": "delete",
@@ -4894,23 +4912,60 @@ def ethernet_first():
                 "has_L3": True,
             },
         },
-        {
-            "op": "insert",
-            "table": "Wifi_Credential_Config",
-            "uuid-name": "gtp",
-            "row": {
-                "ssid": GTP_SSID,
-                "onboard_type": "gre",
-                "security": ["map", [["encryption", "WPA-PSK"], ["key", GTP_KEY]]],
-            },
-        },
-        {
-            "op": "update",
-            "table": "Wifi_VIF_Config",
-            "where": [["if_name", "==", "wl1"]],
-            "row": {"credential_configs": ["set", [["named-uuid", "gtp"]]], "parent": GTP_BSSID},
-        },
     ]
+    if kind == "linked":
+        operations += [
+            {
+                "op": "insert",
+                "table": "Wifi_Credential_Config",
+                "uuid-name": "gtp",
+                "row": {
+                    "ssid": GTP_SSID,
+                    "onboard_type": "gre",
+                    "security": ["map", [["encryption", "WPA-PSK"], ["key", GTP_KEY]]],
+                },
+            },
+            {
+                "op": "update",
+                "table": "Wifi_VIF_Config",
+                "where": [["if_name", "==", "wl1"]],
+                "row": {
+                    "credential_configs": ["set", [["named-uuid", "gtp"]]],
+                    "parent": GTP_BSSID,
+                },
+            },
+        ]
+    else:  # the seed: wl1's rows go (its Radio's vif_configs reference is weak)
+        operations += [
+            {"op": "delete", "table": table, "where": [["if_name", "==", "wl1"]]}
+            for table in ("Wifi_VIF_Config", "Wifi_VIF_State")
+        ]
+        operations.append(
+            {
+                "op": "insert",
+                "table": "Wifi_Inet_Config",
+                "row": {
+                    "if_name": "wl1",
+                    "if_type": "vif",
+                    "enabled": False,
+                    "network": False,
+                    "ip_assign_scheme": "dhcp",
+                    "mtu": 1552,
+                },
+            }
+        )
+        operations += [
+            {
+                "op": "insert",
+                "table": "Wifi_Credential_Config",
+                "row": {
+                    "ssid": ssid,
+                    "onboard_type": "gre",
+                    "security": ["map", [["encryption", "WPA-PSK"], ["key", "operator-key"]]],
+                },
+            }
+            for ssid in OPERATOR_CREDENTIALS
+        ]
     for name, peer, bridge, tag in (
         ("patch-w2h", "patch-h2w", "br-wan", "w2h"),
         ("patch-h2w", "patch-w2h", "br-home", "h2w"),
@@ -4954,20 +5009,12 @@ async def legacy_own_uplink(box):
     }
 
 
-async def legacy_ethernet_lost(box):
-    """spec 3.10, 8.2, 2.5: a legacy pod wired as the first was admitted (ethernet_first), its
-    agent's uplink mode off, GRE parent on its underlay. Its Ethernet goes: its link to the agent
-    drops, cm builds its GRE over the station already on the GTP's BSS (g-wl1 in use), and the
-    link comes back over it 15 s later. The session is kept (no Search or M1) with a Topology
-    Notification; its next Topology Response names the station on the GTP's BSS (a Wi-Fi
-    backhaul, none while wired); the agent writes nothing of the pod's uplink (its station, its
-    credentials, the patch pair), and its fronthaul and parent AP stay applied. With uplink mode
-    gre (legacy-ethernet-lost-gre, a GRE child awaiting a steer), the station written beside the
-    agent is not taken for the agent's own move: the GTP's BSS is its recorded bootstrap."""
-    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
-    if failure:
-        return failure
-    await box.until(lambda: all_applied((box.status() or {}).get("operations") or []), seconds=30)
+async def lose_ethernet(box):
+    """The wired legacy pod's Ethernet goes, as 2.x cm meets it: its link to the agent drops, cm
+    builds its GRE over the station (g-wl1 in use, eth0 no longer), and the link comes back over
+    it 15 s later. {"own": the pod's own uplink before, "wired"/"wireless": the station's parent
+    in a Topology Response before and after, "session": kept/fresh, "notification": a Topology
+    Notification after}."""
     query = (Tlv(0xB3, b"\x01"),)
     wired = station_parent(await box.ask(TOPOLOGY_QUERY, query, TOPOLOGY_RESPONSE))
     own = await legacy_own_uplink(box)
@@ -5000,28 +5047,201 @@ async def legacy_ethernet_lost(box):
     mode = await back(box, searches, m1s, continued)
     notification = await box.until(lambda: topology_notifications(box) > notified, seconds=10)
     wireless = station_parent(await box.ask(TOPOLOGY_QUERY, query, TOPOLOGY_RESPONSE))
-    after = await legacy_own_uplink(box)
+    return {
+        "own": own,
+        "wired": wired,
+        "wireless": wireless,
+        "session": mode,
+        "notification": bool(notification),
+    }
+
+
+async def legacy_ethernet_lost(box):
+    """spec 3.10, 8.2, 2.5: a legacy pod wired as the first was admitted (ethernet_first), its
+    agent's uplink mode off, GRE parent on its underlay. Its Ethernet goes: its link to the agent
+    drops, cm builds its GRE over the station already on the GTP's BSS (g-wl1 in use), and the
+    link comes back over it 15 s later. The session is kept (no Search or M1) with a Topology
+    Notification; its next Topology Response names the station on the GTP's BSS (a Wi-Fi
+    backhaul, none while wired); the agent writes nothing of the pod's uplink (its station, its
+    credentials, the patch pair), and its fronthaul and parent AP stay applied. With uplink mode
+    gre (legacy-ethernet-lost-gre, a GRE child awaiting a steer), the station written beside the
+    agent is not taken for the agent's own move: the GTP's BSS is its recorded bootstrap."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    await box.until(lambda: all_applied((box.status() or {}).get("operations") or []), seconds=30)
+    lost = await lose_ethernet(box)
+    own, after = lost["own"], await legacy_own_uplink(box)
     _, parent_ap = await box.vif("Wifi_VIF_Config", LEGACY_PARENT)
     status = box.status() or {}
     uplink = uplink_status(box)
+    gtp = status.get("gtp_station") or {}
     return box.result(
-        passed=mode == "kept"
-        and bool(notification)
-        and wired is None
-        and wireless == GTP_BSSID
+        passed=lost["session"] == "kept"
+        and lost["notification"]
+        and lost["wired"] is None
+        and lost["wireless"] == GTP_BSSID
         and after == own
         and all(member for member, _, _ in own["pair"].values())
         and parent_ap == ap
         and all_applied(status.get("operations") or [])
         and not status.get("pod_refused")
-        and (not box.backhaul or (uplink.get("bootstrap") or {}).get("bssid") == GTP_BSSID),
-        session=mode,
-        topology_notification=bool(notification),
-        station_parent={"wired": wired, "wireless": wireless},
+        and (not box.backhaul or (uplink.get("bootstrap") or {}).get("bssid") == GTP_BSSID)
+        # with uplink.bootstrap: the station already there is left alone, nothing written
+        and (not box.gtp_station or (bool(gtp) and gtp.get("operation") is None)),
+        session=lost["session"],
+        topology_notification=lost["notification"],
+        station_parent={"wired": lost["wired"], "wireless": lost["wireless"]},
         own_uplink_unchanged=after == own,
         own_uplink=after,
+        gtp_station=gtp or None,
         parent_ap_unchanged=parent_ap == ap,
         uplink={k: uplink.get(k) for k in ("mode", "bootstrap", "in_use", "operation")},
+    )
+
+
+async def gtp_station_written(box):
+    """(the station's Config uuid and row, its one linked credential) once a wl1 station row
+    exists; else None."""
+    uuid, station = await box.vif("Wifi_VIF_Config", "wl1")
+    if not station or station.get("mode") != "sta":
+        return None
+    credentials = await box.rows("Wifi_Credential_Config")
+    linked = [credentials[u] for u in uuids(station.get("credential_configs")) if u in credentials]
+    return (uuid, station, linked[0]) if len(linked) == 1 else None
+
+
+async def legacy_gtp_station(box):
+    """spec 3.10, the GTP station: a legacy pod as its vendor's seed has it, wired (cm on eth0, no
+    GRE), with no station and only the operator's credentials, unlinked; its agent's uplink mode
+    off with uplink.bootstrap (the GTP BSS's SSID, its passphrase by reference, no pin). The agent
+    writes the station once, in one transaction: a credential (ssid, the security map,
+    onboard_type gre, nothing else), wl1 mode=sta enabled in vconf form (the GTP's SSID and
+    security, vif_radio_idx 0, the credential linked, no parent), in its radio's vif_configs, and
+    wl1's Inet enabled; applied once wm shows the station. Meanwhile cm's uplink, the radio and the
+    home AP are not written, nor the operator's credentials. Then the Ethernet goes (as
+    legacy-ethernet-lost): the session is kept, the station is the Wi-Fi backhaul on the GTP's
+    BSS, and nothing more is written."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    radio_uuid, _ = next(
+        (u, r)
+        for u, r in (await box.rows("Wifi_Radio_Config")).items()
+        if r.get("if_name") == "wl1"
+    )
+
+    async def untouched():
+        """What the station's write must leave alone: cm's uplink rows, wl1's radio and home AP."""
+        radios, home = (
+            await box.rows("Wifi_Radio_Config"),
+            await box.vif("Wifi_VIF_Config", "wl1.2"),
+        )
+        radio = radios.get(radio_uuid) or {}
+        cm = await box.rows("Connection_Manager_Uplink")
+        return {
+            "uplink": sorted((r.get("if_name"), r.get("is_used")) for r in cm.values()),
+            "radio": {k: str(radio.get(k)) for k in ("channel", "ht_mode", "enabled")},
+            "home_ap": {k: str((home[1] or {}).get(k)) for k in ("ssid", "enabled", "security")},
+        }
+
+    before = await untouched()
+    written = await until_async(lambda: gtp_station_written(box), seconds=30)
+    if not written:
+        return box.result(
+            passed=False,
+            failed="no GTP station",
+            gtp_station=(box.status() or {}).get("gtp_station"),
+        )
+    config_uuid, station, credential = written
+    # wm takes the station, in its radio's vif_states, and its supplicant joins the GTP's BSS,
+    # beside the Ethernet uplink
+    await box.transact(
+        [
+            {
+                "op": "insert",
+                "table": "Wifi_VIF_State",
+                "uuid-name": "sta",
+                "row": {
+                    "if_name": "wl1",
+                    "mode": "sta",
+                    "enabled": True,
+                    "mac": LEGACY_STATION,
+                    "ssid": GTP_SSID,
+                    "parent": GTP_BSSID,
+                    "vif_config": ["uuid", config_uuid],
+                },
+            },
+            {
+                "op": "mutate",
+                "table": "Wifi_Radio_State",
+                "where": [["if_name", "==", "wl1"]],
+                "mutations": [["vif_states", "insert", ["set", [["named-uuid", "sta"]]]]],
+            },
+        ]
+    )
+
+    def applied():
+        operation = ((box.status() or {}).get("gtp_station") or {}).get("operation") or {}
+        return operation.get("state") == "OBSERVED_APPLIED"
+
+    done = await box.until(applied, seconds=30)
+    radios = await box.rows("Wifi_Radio_Config")
+    in_radio = config_uuid in uuids((radios.get(radio_uuid) or {}).get("vif_configs"))
+    inet = next(
+        (r for r in (await box.rows("Wifi_Inet_Config")).values() if r.get("if_name") == "wl1"), {}
+    )
+    operators = {
+        r.get("ssid")
+        for r in (await box.rows("Wifi_Credential_Config")).values()
+        if r.get("ssid") in OPERATOR_CREDENTIALS
+    }
+    wired = await untouched()
+    lost = await lose_ethernet(box)
+    after = await legacy_own_uplink(box)
+    security = {"encryption": "WPA-PSK", "key": GTP_KEY}
+    station_ok = (
+        station.get("enabled") is True
+        and station.get("ssid") == GTP_SSID
+        and ovsdb_map(station.get("security")) == security
+        and station.get("vif_radio_idx") == 0
+        and station.get("parent") in (None, "", ["set", []])  # no pin by default
+    )
+    credential_ok = (
+        credential.get("ssid") == GTP_SSID
+        and credential.get("onboard_type") == "gre"
+        and ovsdb_map(credential.get("security")) == security
+        and not {"bssid", "priority", "enabled"} & set(credential)
+    )
+    status = box.status() or {}
+    return box.result(
+        passed=station_ok
+        and credential_ok
+        and in_radio
+        and inet.get("enabled") is True
+        and inet.get("network") is True
+        and bool(done)
+        and wired == before
+        and operators == set(OPERATOR_CREDENTIALS)
+        and lost["session"] == "kept"
+        and lost["notification"]
+        and lost["wired"] is None
+        and lost["wireless"] == GTP_BSSID
+        and after == lost["own"]
+        and all_applied(status.get("operations") or []),
+        station={k: station.get(k) for k in ("mode", "enabled", "ssid", "vif_radio_idx", "parent")},
+        credential={k: v for k, v in credential.items() if k != "security"},
+        station_ok=station_ok,
+        credential_ok=credential_ok,
+        in_radio=in_radio,
+        inet={k: inet.get(k) for k in ("enabled", "network", "ip_assign_scheme")},
+        applied=bool(done),
+        untouched_while_wired=wired == before,
+        operators_kept=sorted(operators),
+        session=lost["session"],
+        station_parent={"wired": lost["wired"], "wireless": lost["wireless"]},
+        nothing_more_written=after == lost["own"],
+        gtp_station=status.get("gtp_station"),
     )
 
 
@@ -5162,6 +5382,8 @@ SCENARIOS = {
     "legacy-5g-fronthaul": legacy_5g_fronthaul,
     "legacy-ethernet-lost": legacy_ethernet_lost,
     "legacy-ethernet-lost-gre": legacy_ethernet_lost,
+    "legacy-gtp-station": legacy_gtp_station,
+    "legacy-gtp-station-present": legacy_ethernet_lost,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -5329,12 +5551,23 @@ OPTIONS["legacy-ethernet-lost"] = {
     "legacy": True,
     "multi_bss": True,
     "underlay": LEGACY_UNDERLAY,
-    "ethernet_first": True,
+    "ethernet_first": "linked",
 }
 OPTIONS["legacy-ethernet-lost-gre"] = {
     **OPTIONS["legacy-ethernet-lost"],
     "backhaul": True,
     "uplink": {"mode": "gre", "station": "wl1"},
+}
+# spec 3.10, the GTP station: written on the seed; a station already there left alone
+GTP_STATION = {"ssid": GTP_SSID, "secret_ref": "gtp"}
+OPTIONS["legacy-gtp-station"] = {
+    **OPTIONS["legacy-ethernet-lost"],
+    "ethernet_first": "seed",
+    "gtp_station": GTP_STATION,
+}
+OPTIONS["legacy-gtp-station-present"] = {
+    **OPTIONS["legacy-ethernet-lost"],
+    "gtp_station": GTP_STATION,
 }
 OPTIONS["legacy-gre-move"] = {
     "legacy": True,

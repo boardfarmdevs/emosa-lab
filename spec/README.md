@@ -600,6 +600,47 @@ is everything above. For a legacy pod, all of this specification applies, except
   `Wifi_VIF_Config.parent`, beside `credential_configs` (credential-list mode, `ssid`
   empty). A linked credential counts as enabled. The station's `parent` is guarded with
   its other columns and snapshotted for the revert, which puts the pod's back.
+- **The GTP station** (uplink `bootstrap`). A legacy pod's core makes no backhaul station: `cm`
+  selects the `mode=sta` rows it finds, and `wm` gives a station only the credentials its own
+  `credential_configs` links. Its database is its vendor's seed again at every start of Open
+  vSwitch: the operator's onboarding credentials, unlinked, and no station. So its Wi-Fi path to
+  the site's GTP (§8.2) is EMOSA's to write, as a 6.6 pod's bootstrap writes its own. The agent
+  does it when its configuration has `uplink.bootstrap`, in any uplink mode a legacy pod serves:
+  the GTP BSS's `ssid`, its WPA2-PSK passphrase by `secret_ref`, and an optional `bssid` pin. There
+  is no pin by default: a pinned pod would stay on that BSS when the site's GTP BSS changes.
+  - **When:** the pod is bound and its uplink station (the profile's `uplink.station`) has no
+    `Wifi_VIF_Config` row. A row already there is left alone, whoever wrote it (the pod, an
+    operator, a start-up hook). The write is made once per start of the pod's OpenSync (§8.3);
+    the next start writes it again.
+  - **Write:** one guarded transaction:
+    1. `wait` on the serial, and that the station has no `Wifi_VIF_Config` row;
+    2. `insert Wifi_Credential_Config`: `ssid`, `security` (`encryption` `WPA-PSK` and `key`),
+       `onboard_type=gre`;
+    3. `insert Wifi_VIF_Config` of the station: `if_name`, `mode=sta`, `enabled=true`,
+       `vif_radio_idx=0`, `ssid` and `security` the GTP BSS's (a bootstrap's vconf form, as a 6.6
+       pod's), `credential_configs` the credential, and `parent` the pin if any;
+    4. `mutate Wifi_Radio_Config vif_configs` of the station's radio (`insert`);
+    5. `update Wifi_Inet_Config` of the station (`enabled=true`, `network=true`; its address
+       scheme stays the seed's), or `insert` one (`if_type=vif`, `ip_assign_scheme=dhcp`) when
+       the pod has none.
+
+    This is the write that joined a 2.x pod to a GTP BSS on 13 October, made by hand.
+  - **Applied** when, on the same start, the station's row is in that form and its
+    `Wifi_VIF_State` row exists. A write that fails, or is not applied within 30 s, is not
+    repeated on that start.
+  - **While wired:** `cm` keeps its Ethernet port as the uplink in use, and builds no GRE until
+    the port goes. The station joins the GTP's BSS beside it, then carries the uplink. The
+    radio's channel is then the GTP BSS's, which must be the legacy profile's (channel 6 on
+    2.4 GHz).
+  - **The operator's credentials** stay, unlinked: `wm` uses none of them.
+  - **Not persisted.** A reboot brings back the vendor's seed, with the operator's redirector,
+    and no write of EMOSA's survives it. Bringing the pod back to the fleet after a reboot is
+    the pod's own start-up's job.
+  - A GRE child's switch (§8.6) treats this station as the pod's bootstrap, in vconf mode: its
+    snapshot and revert put it back.
+
+  Both agents. Box `legacy-gtp-station` (the seed, then the Ethernet lost) and
+  `legacy-gtp-station-present` (a station already there, left alone).
 - **Not served** on a legacy pod, refused at the agent's start
   (`INVALID_INPUT`) or turned off and said so in the status:
   the uplink switch onto a Multi-AP backhaul (§8.3: no Multi-AP station on such a

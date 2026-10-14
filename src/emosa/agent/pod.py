@@ -37,6 +37,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from emosa.agent.gre_parent import GreTunnels
+from emosa.agent.gtp_station import GtpStation
 from emosa.agent.peers import PeerDirectory, children, loops, mac_bytes, parent_bssids, upstream
 from emosa.agent.probe_watch import ProbeWatch
 from emosa.agent.renew import CONTROLLER_TIMEOUT, M2_TIMEOUT, RenewRules
@@ -63,6 +64,7 @@ from emosa.opensync.easymesh_view import (
 )
 from emosa.opensync.gre_parent import MONITOR as GRE_PARENT_MONITOR
 from emosa.opensync.gre_parent import GreParentBackend
+from emosa.opensync.gtp_station import GtpStationBackend, GtpStationIntent
 from emosa.opensync.pod_profile import PodBackend, RadioBackend, wpa2_psk
 from emosa.opensync.probe_watch import MONITOR as WATCH_MONITOR
 from emosa.opensync.probe_watch import WatchBackend
@@ -81,6 +83,7 @@ from emosa.opensync.uplink import (
     MULTI_AP,
     UplinkBackend,
     band_of_operating_class,
+    lower_mac,
     start_instance,
     uplink_state,
 )
@@ -870,6 +873,38 @@ async def serve(config, stop):
             WiredIntent(pod_id, port, bridge),
             run_id=config.get("run_id", pod_id),
         )
+    gtp_station = None
+    bootstrap = uplink_config.get("bootstrap")
+    if bootstrap:
+        # spec 3.10, the GTP station: a legacy pod's core makes none, and its seed has none
+        if not profile.legacy:
+            raise EmosaError(
+                Reason.INVALID_INPUT, "uplink: bootstrap is a legacy pod's (spec 3.10)"
+            )
+        gtp_intent = GtpStationIntent(
+            pod_id,
+            station,
+            bootstrap["ssid"],
+            bootstrap["secret_ref"],
+            lower_mac(bootstrap.get("bssid")),
+        )
+        gtp_intent.validate()
+        bands = [b for b, s in backend.profile.uplink_stations if s == station]
+        gtp_station = GtpStation(
+            pod_id,
+            GtpStationBackend(
+                pod_id,
+                session,
+                vault,
+                serial=config["serial"],
+                station=station,
+                band=bands[0] if bands else backend.profile.band,
+            ),
+            Store(state_dir / "gtp-station"),
+            vault,
+            gtp_intent,
+            run_id=config.get("run_id", pod_id),
+        )
     tunnels = None
     # a former GRE parent (its profile no longer one, its tunnels' journal kept): the tunnels left
     # on its former parent AP, its backhaul slot, are removed (spec 8.6, a parent demoted)
@@ -1032,6 +1067,7 @@ async def serve(config, stop):
             "steering": {"mode": "owm", **steering.status()} if steering else {"mode": "off"},
             "probe_watch": watch.status() if watch else None,
             "gre_parent": tunnels.status() if tunnels else None,
+            "gtp_station": gtp_station.status() if gtp_station else None,
             "writes": backend.write_count,
             "worker_pid": os.getpid(),
             "updated": time.time(),
@@ -1239,6 +1275,11 @@ async def serve(config, stop):
                         await timed("wired uplink", wired.tick())
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("wired uplink: %s", exc)
+                if refreshed and gtp_station:
+                    try:
+                        await timed("gtp station", gtp_station.tick())
+                    except (EmosaError, ConnectionError, TimeoutError) as exc:
+                        log.warning("gtp station: %s", exc)
                 if refreshed and tunnels:
                     try:
                         await timed("gre parent", tunnels.tick())
