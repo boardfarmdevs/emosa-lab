@@ -1039,6 +1039,16 @@ gretap. The GTP:
   1538 (1600 in the reference);
 - MUST create one gretap per associated pod lease (MTU 1562), bridged to the
   gateway LAN, and remove it when the lease or association ends;
+- MUST NOT end a tunnel on a step of the gateway's clock: dnsmasq ends leases by the
+  wall clock, so a forward step (an NTP sync after hours unsynchronized; 14
+  October: 43 min ended the Pis' 1 h leases while they held them) ends them early. The
+  reference keeps each lease's last start (`add`, `old`) on the monotonic clock
+  (CLOCK_BOOTTIME, in `<state_dir>/lease-times.json`, this boot's only). A `del` that comes
+  before the lease ran its length there, beyond a margin (60 s, at most a quarter of the
+  length), keeps the tunnel and is logged; a reconcile keeps it too. A kept tunnel goes
+  once a whole lease passes without a renewal (the pod left), at the next lease event or
+  reconcile. dnsmasq does not tell a release from an expiry, so a released lease's tunnel
+  stays that long, harmless: a later lease of the address replaces it;
 - MUST NOT bridge the underlay segment itself into the LAN;
 - MUST answer ICMP echo on `.1`: OpenSync 6.6 `cm`'s link check pings it,
   without an ARP fallback.

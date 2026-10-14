@@ -14,6 +14,8 @@
 #include <time.h>
 
 #define LEASES_MAX (4 * 1024 * 1024)
+#define TIMES_MAX (1024 * 1024)
+#define EARLY_MARGIN 60 /* seconds a lease may end early and still be its own end (at most a quarter) */
 
 static void info(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 static void info(const char *fmt, ...)
@@ -360,6 +362,129 @@ static const char *lease_mac(const leases *l, const char *ip)
     return NULL;
 }
 
+/* -- the lease times (emosa.gtp.LeaseTimes) --------------------------------------------- */
+
+static double boottime(void)
+{
+    struct timespec ts;
+    return clock_gettime(CLOCK_BOOTTIME, &ts) ? 0 : (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
+}
+
+static void boot_id(char out[64])
+{
+    char *text = em_read_file("/proc/sys/kernel/random/boot_id", 64, NULL);
+    out[0] = 0;
+    if (text) {
+        (void)em_copy(out, 64, text); /* 36 characters and a newline */
+        out[strcspn(out, "\n")] = 0;
+    }
+    free(text);
+}
+
+/* lease_length: dnsmasq's (DNSMASQ_LEASE_LENGTH, or DNSMASQ_LEASE_EXPIRES from now), else the
+ * configured lease_time; -1 for an infinite lease */
+static long lease_length(em_gtp *g)
+{
+    const char *length = getenv("DNSMASQ_LEASE_LENGTH"), *expires = getenv("DNSMASQ_LEASE_EXPIRES");
+    char *end;
+    if (length && *length) {
+        long v = strtol(length, &end, 10);
+        if (!*end && v >= 0)
+            return v;
+    }
+    if (expires && *expires) {
+        long v = strtol(expires, &end, 10);
+        if (!*end && v > 0)
+            return v > (long)time(NULL) ? v - (long)time(NULL) : 0;
+    }
+    const char *text = text_of(underlay_of(g->config), "lease_time");
+    if (!text || !strcmp(text, "infinite"))
+        return -1;
+    long v = strtol(text, &end, 10);
+    return v * (*end == 'h' ? 3600 : *end == 'm' ? 60 : 1);
+}
+
+static void times_path(em_gtp *g, char *out, size_t size)
+{
+    (void)em_format(out, size, "%s/lease-times.json", g->state_dir); /* a path that fits, else none read */
+}
+
+/* this boot's lease times: {ip: {"mac", "start", "length", "early"}} (caller frees) */
+static cJSON *times_load(em_gtp *g)
+{
+    char path[600], boot[64];
+    times_path(g, path, sizeof(path));
+    boot_id(boot);
+    char *text = em_read_file(path, TIMES_MAX, NULL);
+    cJSON *saved = text ? cJSON_Parse(text) : NULL;
+    free(text);
+    const char *was = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(saved, "boot_id"));
+    cJSON *times = was && !strcmp(was, boot) ? cJSON_DetachItemFromObjectCaseSensitive(saved, "leases") : NULL;
+    cJSON_Delete(saved);
+    return cJSON_IsObject(times) ? times : (cJSON_Delete(times), cJSON_CreateObject());
+}
+
+static void times_save(em_gtp *g, cJSON *times)
+{
+    char path[600], boot[64];
+    times_path(g, path, sizeof(path));
+    boot_id(boot);
+    cJSON *o = cJSON_CreateObject();
+    cJSON_AddStringToObject(o, "boot_id", boot);
+    cJSON_AddItemReferenceToObject(o, "leases", times);
+    char *text = cJSON_PrintUnformatted(o);
+    if (!text || !em_write_file(path, text, false))
+        em_log(EM_LOG_WARNING, "emosa.gtp", "lease times not saved in %s", path);
+    free(text);
+    cJSON_Delete(o);
+}
+
+static double now_of(em_gtp *g) { return g->clock ? g->clock() : boottime(); }
+
+static double number(const cJSON *o, const char *key, double fallback)
+{
+    const cJSON *v = cJSON_GetObjectItemCaseSensitive(o, key);
+    return cJSON_IsNumber(v) ? v->valuedouble : fallback;
+}
+
+/* LeaseTimes.early: the seconds the lease ends before its length on the monotonic clock beyond
+ * the margin; -1 when it ran its length (or nothing is known of it) */
+static long early_by(em_gtp *g, const cJSON *times, const char *ip)
+{
+    const cJSON *entry = cJSON_GetObjectItemCaseSensitive(times, ip);
+    double length = number(entry, "length", -1), start = number(entry, "start", -1);
+    if (!entry || length < 0 || start < 0)
+        return -1;
+    double margin = length / 4 < EARLY_MARGIN ? (double)((long)length / 4) : EARLY_MARGIN;
+    double left = length - (now_of(g) - start);
+    return left > margin ? (long)left : -1;
+}
+
+static bool remove_tunnel(em_gtp *g, const char *ip, char *why, size_t size);
+
+/* GTP.sweep: the kept tunnels whose pods left (no renewal a whole lease after the early end) */
+static bool sweep(em_gtp *g, cJSON *times, char *why, size_t size)
+{
+    double now = now_of(g);
+    cJSON *entry = times ? times->child : NULL;
+    bool ok = true;
+    while (ok && entry) {
+        cJSON *next = entry->next;
+        double early = number(entry, "early", -1), length = number(entry, "length", -1);
+        if (early >= 0 && length >= 0 && now - early >= length) {
+            char name[16];
+            ok = remove_tunnel(g, entry->string, why, size);
+            if (ok && em_gtp_tunnel_name(entry->string, name))
+                info("tunnel %s: no renewal a lease after its early end: removed", name);
+            if (ok)
+                cJSON_DeleteItemFromObjectCaseSensitive(times, entry->string);
+        }
+        entry = next;
+    }
+    times_save(g, times);
+    return ok;
+}
+
 /* -- the commands --------------------------------------------------------------------- */
 
 bool em_gtp_init(em_gtp *g, const cJSON *config, em_ip ip, char *why, size_t size)
@@ -473,12 +598,20 @@ static int compare_ips(const void *a, const void *b) { return strcmp(((const lea
 
 cJSON *em_gtp_reconcile(em_gtp *g, char *why, size_t size)
 {
+    cJSON *times = times_load(g);
+    if (!sweep(g, times, why, size)) {
+        cJSON_Delete(times);
+        return NULL;
+    }
     leases l = read_leases(g);
     tunnels t = gretaps(g);
     bool ok = true;
-    for (size_t i = 0; ok && i < t.n; i++)
-        if (!lease_mac(&l, t.items[i].remote))
+    for (size_t i = 0; ok && i < t.n; i++) { /* a tunnel a clock step kept stays too */
+        const cJSON *kept = cJSON_GetObjectItemCaseSensitive(times, t.items[i].remote);
+        if (!lease_mac(&l, t.items[i].remote) && number(kept, "early", -1) < 0)
             ok = RUN(g, why, size, "link", "del", t.items[i].name);
+    }
+    cJSON_Delete(times);
     free(t.items);
     em_sort(l.items, l.n, sizeof(*l.items), compare_ips); /* the reference's sorted(): as text */
     for (size_t i = 0; ok && i < l.n; i++)
@@ -508,10 +641,41 @@ cJSON *em_gtp_lease(em_gtp *g, const char *action, const char *mac, const char *
         return NULL;
     }
     bool ok = true;
-    if (!strcmp(action, "add") || !strcmp(action, "old"))
+    cJSON *times = times_load(g);
+    if (!strcmp(action, "add") || !strcmp(action, "old")) {
         ok = ensure(g, ip, why, size);
-    else if (!strcmp(action, "del"))
-        ok = remove_tunnel(g, ip, why, size);
+        if (ok) {
+            char lower_mac[18];
+            EM_FORMAT_FIXED(lower_mac, sizeof(lower_mac), "%s", mac); /* 17 characters, checked */
+            lower(lower_mac);
+            long length = lease_length(g);
+            cJSON *entry = cJSON_CreateObject();
+            cJSON_AddStringToObject(entry, "mac", lower_mac);
+            cJSON_AddNumberToObject(entry, "start", now_of(g));
+            cJSON_AddItemToObject(entry, "length", length < 0 ? cJSON_CreateNull() : cJSON_CreateNumber((double)length));
+            cJSON_AddNullToObject(entry, "early");
+            cJSON_DeleteItemFromObjectCaseSensitive(times, ip);
+            cJSON_AddItemToObject(times, ip, entry);
+        }
+    } else if (!strcmp(action, "del")) {
+        long early = early_by(g, times, ip);
+        if (early >= 0) { /* dnsmasq's clock stepped forward: the pod still holds the lease */
+            char name[16];
+            cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(times, ip), "early",
+                                                   cJSON_CreateNumber(now_of(g)));
+            if (em_gtp_tunnel_name(ip, name))
+                em_log(EM_LOG_WARNING, "emosa.gtp",
+                       "lease %s ended %ld s before its length on the monotonic clock (the system clock stepped): "
+                       "tunnel %s kept",
+                       ip, early, name);
+        } else {
+            ok = remove_tunnel(g, ip, why, size);
+            if (ok)
+                cJSON_DeleteItemFromObjectCaseSensitive(times, ip);
+        }
+    }
+    ok = ok && sweep(g, times, why, size);
+    cJSON_Delete(times);
     return ok ? em_gtp_list(g, why, size) : NULL;
 }
 

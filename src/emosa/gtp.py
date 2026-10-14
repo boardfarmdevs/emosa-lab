@@ -12,6 +12,13 @@ link-local address, and builds a gretap to the first host of that subnet
 - keeps one gretap per leased pod, bridged into the gateway LAN bridge, and
   removes it when the lease ends or the pod's address changes.
 
+A lease's end is dnsmasq's, by the wall clock: a forward step of the gateway's
+clock (an NTP sync after hours unsynchronized) ends leases early while their pods
+still hold them. So the hook keeps each lease's last start on the monotonic
+clock (``LeaseTimes``): a "del" that comes before the lease has run its length
+there is a clock step, its tunnel kept; a kept tunnel goes once a whole lease
+passes without a renewal (the pod left).
+
 It never bridges the underlay itself into the LAN. The design is in
 docs/concepts/data-plane.md §4; the contract is spec §8.
 
@@ -38,6 +45,7 @@ log = logging.getLogger("emosa.gtp")
 
 GRETAP_OVERHEAD = 38  # outer IPv4 20 + GRE 4 + inner Ethernet 14
 LINK_LOCAL = ipaddress.ip_network("169.254.0.0/16")
+EARLY_MARGIN = 60  # seconds a lease may end early and still be its own end (at most a quarter)
 MAC = re.compile(r"[0-9a-f]{2}(:[0-9a-f]{2}){5}")
 
 
@@ -133,9 +141,82 @@ def render_dnsmasq(config, config_path):
     ), (f'#!/bin/sh\nexec {sys.executable} -m emosa.gtp lease "{config_path}" "$@"\n')
 
 
+def lease_length(config, environ=None):
+    """A lease's length in seconds: dnsmasq's (DNSMASQ_LEASE_LENGTH, or DNSMASQ_LEASE_EXPIRES
+    from now), else the configured lease_time; None for an infinite lease."""
+    environ = os.environ if environ is None else environ
+    length = environ.get("DNSMASQ_LEASE_LENGTH", "")
+    if length.isdigit():
+        return int(length)
+    expires = environ.get("DNSMASQ_LEASE_EXPIRES", "")
+    if expires.isdigit() and int(expires) > 0:
+        return max(0, int(expires) - int(time.time()))
+    text = config["underlay"]["lease_time"]
+    if text == "infinite":
+        return None
+    unit = {"m": 60, "h": 3600}.get(text[-1], 1)
+    return int(text.rstrip("mh")) * unit
+
+
+def boot_id():
+    try:
+        return Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+    except OSError:
+        return ""
+
+
+class LeaseTimes:
+    """Each lease's last start (add or old) on the monotonic clock (CLOCK_BOOTTIME), its length
+    and, once a "del" came early, when: ``<state_dir>/lease-times.json``, for this boot only."""
+
+    def __init__(self, state_dir, clock=None):
+        self.path = Path(state_dir) / "lease-times.json"
+        self.clock = clock or (lambda: time.clock_gettime(time.CLOCK_BOOTTIME))
+        self.boot = boot_id()
+        try:
+            saved = json.loads(self.path.read_text())
+        except (OSError, ValueError):
+            saved = {}
+        self.leases = saved.get("leases", {}) if saved.get("boot_id") == self.boot else {}
+
+    def save(self):
+        tmp = self.path.with_suffix(".tmp")
+        tmp.write_text(json.dumps({"boot_id": self.boot, "leases": self.leases}, sort_keys=True))
+        os.replace(tmp, self.path)
+
+    def started(self, ip, mac, length):
+        self.leases[ip] = {"mac": mac, "start": self.clock(), "length": length, "early": None}
+
+    def early(self, ip):
+        """Seconds the lease ends before its length on the monotonic clock, beyond the margin;
+        None when it ran its length (or nothing is known of it)."""
+        lease = self.leases.get(ip)
+        if not lease or lease.get("length") is None:
+            return None
+        margin = min(EARLY_MARGIN, lease["length"] // 4)
+        left = lease["length"] - (self.clock() - lease["start"])
+        return int(left) if left > margin else None
+
+    def keep(self, ip):
+        self.leases[ip]["early"] = self.clock()
+
+    def gone(self):
+        """The kept leases a whole lease length passed by since their early end: their pods left."""
+        now = self.clock()
+        return sorted(
+            ip
+            for ip, lease in self.leases.items()
+            if lease.get("early") is not None and now - lease["early"] >= lease["length"]
+        )
+
+    def kept(self):
+        return {ip for ip, lease in self.leases.items() if lease.get("early") is not None}
+
+
 class GTP:
-    def __init__(self, config, links=None):
+    def __init__(self, config, links=None, clock=None):
         self.config, self.links = config, links or Links()
+        self.times = LeaseTimes(config["state_dir"], clock)
         self.underlay = config["underlay"]["interface"]
         self.local = str(ipaddress.ip_interface(config["underlay"]["address"]).ip)
         self.bridge = config["lan"]["bridge"]
@@ -200,7 +281,7 @@ class GTP:
             self.links.run("link", "del", name)
             log.info("tunnel %s removed (%s)", name, ip)
 
-    def lease(self, action, mac, ip):
+    def lease(self, action, mac, ip, environ=None):
         """One dnsmasq lease event."""
         address = ipaddress.ip_address(ip)
         network = ipaddress.ip_interface(self.config["underlay"]["address"]).network
@@ -208,12 +289,36 @@ class GTP:
             raise ConfigError("lease outside the underlay")
         if action in ("add", "old"):
             self.ensure(ip)
+            self.times.started(ip, mac.lower(), lease_length(self.config, environ))
         elif action == "del":
-            self.remove(ip)
+            early = self.times.early(ip)
+            if early is not None:
+                # dnsmasq's clock stepped forward: the pod still holds the lease
+                self.times.keep(ip)
+                log.warning(
+                    "lease %s ended %d s before its length on the monotonic clock (the system"
+                    " clock stepped): tunnel %s kept",
+                    ip,
+                    early,
+                    tunnel_name(ip),
+                )
+            else:
+                self.remove(ip)
+                self.times.leases.pop(ip, None)
+        self.sweep()
         return self.list()
 
+    def sweep(self):
+        """The kept tunnels whose pods left (no renewal a whole lease after the early end)."""
+        for ip in self.times.gone():
+            self.remove(ip)
+            self.times.leases.pop(ip, None)
+            log.info("tunnel %s: no renewal a lease after its early end: removed", tunnel_name(ip))
+        self.times.save()
+
     def reconcile(self):
-        wanted = set(self.leases())
+        self.sweep()
+        wanted = set(self.leases()) | self.times.kept()
         for name, (_, remote, _) in self.links.gretaps().items():
             if remote not in wanted:
                 self.links.run("link", "del", name)

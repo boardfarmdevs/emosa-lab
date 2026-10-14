@@ -686,9 +686,12 @@ async def gtp(directory, implementation, binary=None):
     """spec §8.2: the GTP on links of the box's own. setup addresses the underlay (raising
     its port's MTU too), bridges the LAN port and writes a dnsmasq configuration dnsmasq
     accepts; the lease events dnsmasq reports, through the hook setup wrote, add one
-    gretap per leased pod into the LAN bridge (a renewal changes nothing) and delete it;
-    reconcile makes the tunnels the current leases; a lease outside the underlay is
-    refused."""
+    gretap per leased pod into the LAN bridge (a renewal changes nothing) and delete it once
+    the lease ran its length; reconcile makes the tunnels the current leases; a lease outside
+    the underlay is refused. A "del" before the lease ran its length on the monotonic
+    clock (the system clock stepped) keeps the tunnel, and a kept tunnel goes once a whole
+    lease passes without a renewal (here leases of a few seconds, as dnsmasq gives the hook
+    in DNSMASQ_LEASE_LENGTH)."""
     directory.mkdir(parents=True, exist_ok=True)
     for command in (
         "link set lo up",
@@ -710,9 +713,11 @@ async def gtp(directory, implementation, binary=None):
     env = {**os.environ, "EMOSA_SCHEMAS": str(ROOT / "schemas")}
     log = (directory / "gtp.log").open("w")
 
-    def run(*args):
-        out = subprocess.run(args, capture_output=True, text=True, env=env)
+    def run(*args, length=None):
+        lease_env = {**env, "DNSMASQ_LEASE_LENGTH": str(length)} if length is not None else env
+        out = subprocess.run(args, capture_output=True, text=True, env=lease_env)
         log.write(f"$ {' '.join(map(str, args))}\n{out.stdout}{out.stderr}")
+        log.flush()
         try:
             return out.returncode, json.loads(out.stdout or "null")
         except ValueError:
@@ -757,8 +762,28 @@ async def gtp(directory, implementation, binary=None):
         and listed == {"gtp2_60": {"mac": second[0], "remote": second[1]}}
         and link("gtp2_57") is None
     )
+    code, _ = run(hook, "old", *second, length=1)  # its last renewal, a 1 s lease
+    time.sleep(1.5)
     code, _ = run(hook, "del", *second)
     checks["lease_del"] = code == 0 and link("gtp2_60") is None
+    # the clock steps forward and dnsmasq ends an hour's lease at once: the tunnel stays
+    third, fourth = ("02:00:00:00:07:00", "169.254.2.61"), ("02:00:00:00:08:00", "169.254.2.62")
+    run(hook, "add", *third)
+    code, _ = run(hook, "del", *third)
+    checks["clock_step_kept"] = (
+        code == 0
+        and tunnel_ok("gtp2_61", "169.254.2.61", 1562, "br-gtp")
+        and "the system clock stepped" in (directory / "gtp.log").read_text()
+    )
+    # a 4 s lease ended at once (kept), then no renewal for a whole lease: the next event sweeps it
+    run(hook, "old", *third, length=4)
+    run(hook, "del", *third)
+    kept = link("gtp2_61") is not None
+    time.sleep(4.5)
+    code, _ = run(hook, "add", *fourth, length=1)
+    checks["kept_tunnel_swept"] = code == 0 and kept and link("gtp2_61") is None
+    time.sleep(1.5)
+    run(hook, "del", *fourth)
     code, _ = run(hook, "add", first[0], "169.254.1.57")
     checks["outside_refused"] = code == 1 and link("gtp1_57") is None
     code, listed = run(*command, "list", config_path)
