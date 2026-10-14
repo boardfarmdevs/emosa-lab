@@ -284,7 +284,10 @@ other as 1905 neighbors on it, with its link metrics (§8.5).
   fleet configuration: the front and agent ports on the `advertise` address); in
   the labs' containers, an LXD proxy. The agent keeps one
   `monitor` session and reconnects with 1 to 9 s backoff. Echo probes run every
-  5 s.
+  5 s: a connection that has received nothing for 5 s gets an echo request, and one
+  that has still received nothing 5 s later is dropped, its pod source lost (a pod
+  gone without a FIN, powered off or rebooted behind a switch, is not held for
+  hours as its source; 14 October). Both agents (box `pod-vanished`).
 - The agent MUST refuse to act on a pod whose `AWLAN_Node.serial_number` differs
   from its configured `serial`.
 
