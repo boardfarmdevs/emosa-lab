@@ -469,10 +469,18 @@ OPERATOR_STATS = (
 )
 CLOUD_COLUMNS = ("mqtt_headers", "mqtt_settings", "mqtt_topics")
 # spec 4, the pods' modules: a module of the pod's own (a hook, say) with a setting and an update,
-# the pod's Node_Config with a key the module no longer has and another module's row
+# the pod's Node_Config with a key the module no longer has and other modules' rows (a converted
+# pod's seed has its operator's cloud's for several of its managers' modules, 14 October)
 NODE_UPDATE = "b" * 64
 NODE_MODULES = {"hook": {"config": {"redirector": "auto"}, "update": NODE_UPDATE}}
-NODE_ROWS = (("hook", "stale", "x"), ("vendor", "level", "debug"))
+FOREIGN_NODE_ROWS = (
+    ("vendor", "level", "debug"),
+    ("fm", "enabled", "true"),
+    ("healthcheck", "interval", "60"),
+    ("healthcheck", "failures", "10"),
+    ("iot", "claim_key", "operator-claim"),
+)
+NODE_ROWS = (("hook", "stale", "x"), *FOREIGN_NODE_ROWS)
 NODE_ADVERTISE = "192.0.2.1"
 
 
@@ -6178,9 +6186,10 @@ async def node_report(box, **state):
 async def node_config(box):
     """spec 4, the pods' modules: the fleet's module "hook" (a setting, redirector auto, and an
     update by its SHA-256) on a pod whose Node_Config has a key the module no longer has and
-    another module's row. The agent writes the module's rows in one guarded write, applied: its
-    setting, update_url (the fleet's file server) and update_sha256, persist true; the stale key
-    removed; the other module's row kept. The box plays the hook: its Node_State (state ok, boot,
+    other modules' rows (as a converted pod's operator leaves them). The agent writes the module's
+    rows in one guarded write, applied: its setting, update_url (the fleet's file server) and
+    update_sha256, persist true; the stale key removed; the other modules' rows kept, each as it
+    was. The box plays the hook: its Node_State (state ok, boot,
     version, the setting echoed, the update failed its check, three events). The status reports
     them, the setting echoed, the flag update_failed; each event is logged once. The pod's
     OpenSync starts again (a new database): the rows are written again on the new start."""
@@ -6199,7 +6208,7 @@ async def node_config(box):
         ("hook", "redirector"): ("auto", True),
         ("hook", "update_url"): (url, True),
         ("hook", "update_sha256"): (NODE_UPDATE, True),
-        ("vendor", "level"): ("debug", True),
+        **{(m, k): (v, True) for m, k, v in FOREIGN_NODE_ROWS},  # never touched
     }
     await node_report(
         box,
