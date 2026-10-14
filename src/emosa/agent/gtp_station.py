@@ -6,9 +6,15 @@ OpenSync, with its own operation journal, while the station has no row: a legacy
 makes none, and its database is its vendor's seed again at every start. A row already there is
 left alone, whoever wrote it. A failed or refused write is not retried on the same start: the
 next start, or a new admission, tries again.
+
+The guard: the pods' vendor healthcheck reboots a pod after ten minutes of a configured station
+that is not associated. The station in the scope's form (the GTP's SSID) that stays unassociated
+for ``unassociated`` seconds (300) is deleted, and written again after a back-off (``retry``: 15,
+30, then 60 minutes; back to the first once a write associates).
 """
 
 import logging
+import time
 
 from emosa.errors import EmosaError, Reason
 from emosa.model import ACTIVE, State
@@ -19,15 +25,37 @@ from emosa.reconcile import Engine
 log = logging.getLogger("emosa.agent.gtp_station")
 DEADLINE = 30  # wm shows the station as soon as it has taken the row
 SOURCE = "gtp-station-policy"
+UNASSOCIATED = 300  # well inside the vendor healthcheck's ten failing minutes
+RETRY = (900, 1800, 3600)
 
 
 class GtpStation:
-    def __init__(self, pod_id, backend, store, vault, intent, *, run_id, clock=None):
+    def __init__(
+        self,
+        pod_id,
+        backend,
+        store,
+        vault,
+        intent,
+        *,
+        run_id,
+        clock=None,
+        unassociated=UNASSOCIATED,
+        retry=RETRY,
+        monotonic=time.monotonic,
+    ):
         self.pod_id, self.backend, self.store, self.run_id = pod_id, backend, store, run_id
         self.intent = intent
         self.engine = Engine(store, vault, {pod_id: backend}, clock, intent_type=GtpStationIntent)
         self.engine.recover()
         self.waiting = None
+        self.unassociated, self.retry, self.monotonic = unassociated, tuple(retry), monotonic
+        self.start = None  # the start of the pod's OpenSync the attempts below count on
+        self.attempt = 0  # the station's writes removed on that start
+        self.since = None  # the station in the scope's form unassociated since (monotonic)
+        self.retry_at = None  # no write before (monotonic), after a removal
+        self.backoff = 0  # the next removal's back-off: retry[backoff]
+        self.removed = 0  # stations removed unassociated, since the agent started
 
     def latest(self):
         ops = self.store.operations()
@@ -58,8 +86,51 @@ class GtpStation:
             self.engine._save(op)
 
     def key(self):
-        """One write per OpenSync start and station."""
-        return f"{self.backend.instance}:{self.intent.station}"
+        """One write per OpenSync start and station, and one more after each removal."""
+        key = f"{self.backend.instance}:{self.intent.station}"
+        return key if not self.attempt else f"{key}:{self.attempt}"
+
+    async def _guard(self, snap):
+        """The station's guard: True once it removed the station (nothing else on this tick)."""
+        config = snap.config if snap.ready else {}
+        ours = config.get("ssid") == self.intent.ssid  # the station in the scope's form
+        if not ours or config.get("associated"):
+            if ours:
+                self.backoff = 0  # a write that associated
+            self.since = None
+            return False
+        now = self.monotonic()
+        if self.since is None:
+            self.since = now
+        if now - self.since < self.unassociated:
+            return False
+        try:
+            deleted = await self.backend.remove(self.intent)
+        except (EmosaError, ConnectionError, TimeoutError) as exc:
+            log.warning("the pod's station %s: not removed: %s", self.intent.station, exc)
+            return True
+        delay = self.retry[min(self.backoff, len(self.retry) - 1)]
+        self.attempt, self.backoff, self.removed = (
+            self.attempt + 1,
+            self.backoff + 1,
+            self.removed + 1,
+        )
+        self.since, self.retry_at = None, now + delay
+        self.store.event(
+            self.run_id,
+            "GTP_STATION_REMOVED",
+            {"station": self.intent.station, "unassociated_s": self.unassociated, "retry_s": delay},
+            pod_id=self.pod_id,
+        )
+        log.warning(
+            "the pod's station %s was not associated for %d s: removed (%d rows), written again in"
+            " %d s",
+            self.intent.station,
+            self.unassociated,
+            deleted,
+            delay,
+        )
+        return True
 
     def _wanted(self, op, snap):
         if not snap.ready:
@@ -70,6 +141,12 @@ class GtpStation:
             return False
         if op is not None and op.state in ACTIVE:
             self.waiting = "write in progress"
+            return False
+        if self.retry_at is not None and self.monotonic() < self.retry_at:
+            self.waiting = (
+                f"removed, not associated: written again in "
+                f"{int(self.retry_at - self.monotonic())} s"
+            )
             return False
         done = self.store.lookup(SOURCE, self.pod_id, self.key())
         if done is not None:
@@ -94,7 +171,16 @@ class GtpStation:
         op = self.latest()
         if op is not None:
             self._settle(op, snap)
-        if snap is None or not self._wanted(self.latest(), snap):
+        if snap is None:
+            return
+        if snap.ready and self.start != self.backend.instance:  # a new start: its own attempts
+            self.start, self.attempt, self.since, self.retry_at = (
+                self.backend.instance,
+                0,
+                None,
+                None,
+            )
+        if await self._guard(snap) or not self._wanted(self.latest(), snap):
             return
         op = self.engine.request(
             self.intent, source=SOURCE, key=self.key(), run_id=self.run_id, deadline=DEADLINE
@@ -113,6 +199,8 @@ class GtpStation:
             "pinned": self.intent.bssid is not None,
             "present": None if snap is None else bool(snap.config.get("present")),
             "joined": None if snap is None else bool(snap.config.get("joined")),
+            "associated": None if snap is None else bool(snap.config.get("associated")),
+            "removed_unassociated": self.removed,
             "waiting": self.waiting,
             "operation": None
             if op is None

@@ -701,8 +701,16 @@ def test_a_legacy_station_already_there_is_left_alone(agent, tmp_path):
     assert result["passed"], result
 
 
+def test_an_unassociated_gtp_station_is_removed_before_the_healthcheck_reboots_the_pod(
+    agent, tmp_path
+):
+    # spec 3.10, the station's guard: removed unassociated, written again after the back-off
+    result = box("legacy-gtp-station-unassociated", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_legacy_pods_radio_plan_is_emosas_once_per_start(agent, tmp_path):
-    # spec 3.10, radio_plan emosa: the seed's operator APs off, wl1 on 6; stations never touched
+    # spec 3.10, radio_plan emosa: wl0.1's Inet off, wl1 on 6; no AP disabled, stations untouched
     result = box("legacy-radio-plan", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result
 

@@ -132,17 +132,87 @@ class GtpStationBackend:
             and sole.get("ssid") == vif.get("ssid")
             and credential_key(sole) == key
         )
-        joined = any(
-            r.get("mode") == "sta" for _, r in station_rows(decoded, "Wifi_VIF_State", self.station)
-        )
+        states = [
+            r
+            for _, r in station_rows(decoded, "Wifi_VIF_State", self.station)
+            if r.get("mode") == "sta"
+        ]
         return {
             "station": self.station,
             "present": bool(rows),
             "ssid": vif.get("ssid") if written else None,
             "credential_fingerprint": self.vault.fingerprint(key) if written else None,
             "bssid": (lower_mac(vif.get("parent")) or None) if written else None,
-            "joined": joined,
+            "joined": bool(states),
+            # on a BSS (its State's parent), as the vendor healthcheck's `wl bssid` sees it
+            "associated": any(lower_mac(r.get("parent")) for r in states),
         }
+
+    async def remove(self, intent):
+        """spec 3.10, the station's guard: the station in the scope's form (the intent's SSID), not
+        associated past the guard, deleted in one guarded transaction: its row, its linked
+        credentials and its radio's reference (a disabled station would still fail the vendor
+        healthcheck). The number of rows deleted."""
+        self._check(intent)
+        raw = await self.session.snapshot()
+        decoded, node_uuid = self._binding(raw)
+        rows = station_rows(decoded, "Wifi_VIF_Config", self.station)
+        if len(rows) != 1:
+            raise EmosaError(Reason.NOT_READY, "no single station row")
+        uuid, vif = rows[0]
+        if vif.get("mode") != "sta" or vif.get("ssid") != intent.ssid:
+            raise EmosaError(Reason.OWNERSHIP_CONFLICT, "not the GTP station")
+        credentials = sorted(
+            u
+            for u in vif.get("credential_configs") or []
+            if u in decoded.get("Wifi_Credential_Config", {})
+        )
+        radios = sorted(
+            u
+            for u, r in decoded.get("Wifi_Radio_Config", {}).items()
+            if uuid in (r.get("vif_configs") or [])
+        )
+        operations = [
+            {
+                "op": "wait",
+                "table": "AWLAN_Node",
+                "where": where_uuid(node_uuid),
+                "columns": ["serial_number"],
+                "until": "==",
+                "rows": [{"serial_number": self.expected_serial}],
+                "timeout": 0,
+            },
+            {
+                "op": "wait",
+                "table": "Wifi_VIF_Config",
+                "where": where_uuid(uuid),
+                "columns": ["if_name", "mode", "ssid"],
+                "until": "==",
+                "rows": [{"if_name": self.station, "mode": "sta", "ssid": intent.ssid}],
+                "timeout": 0,
+            },
+        ]
+        counts = [None, None]
+        for radio in radios:
+            operations.append(
+                {
+                    "op": "mutate",
+                    "table": "Wifi_Radio_Config",
+                    "where": where_uuid(radio),
+                    "mutations": [["vif_configs", "delete", ["set", [["uuid", uuid]]]]],
+                }
+            )
+            counts.append(1)
+        operations.append({"op": "delete", "table": "Wifi_VIF_Config", "where": where_uuid(uuid)})
+        counts.append(1)
+        for credential in credentials:
+            operations.append(
+                {"op": "delete", "table": "Wifi_Credential_Config", "where": where_uuid(credential)}
+            )
+            counts.append(1)
+        results = await self.session.transact(operations, generation=raw["generation"])
+        check_results(results, counts)
+        return 1 + len(credentials)
 
     async def snapshot(self):
         try:

@@ -638,38 +638,73 @@ is everything above. For a legacy pod, all of this specification applies, except
     the pod's own start-up's job.
   - A GRE child's switch (§8.6) treats this station as the pod's bootstrap, in vconf mode: its
     snapshot and revert put it back.
+  - **The guard.** The 2.4.3 pods' vendor healthcheck (read on 14 October) runs every minute
+    over every `Wifi_VIF_Config` row, enabled or not: an AP must beacon (a BSSID other than
+    zero), a station must be associated. Ten failing minutes in a row reboot the pod; one
+    passing round resets the count. So a station that cannot associate (a wrong passphrase, the
+    GTP BSS gone or out of reach) would reboot a wired pod every ten minutes. The station in the
+    scope's form (the GTP's SSID) that is not associated (its `Wifi_VIF_State` has no `parent`)
+    for `uplink.bootstrap.unassociated_seconds` (300) in a row is deleted, not disabled (a
+    disabled row fails the check too): one guarded transaction deletes its row, its linked
+    credentials and its radio's reference. It is written again after a back-off
+    (`retry_seconds`, 900, 1800 then 3600, at most three, the last repeated; back to the first
+    once a write associates); each attempt costs the healthcheck at most five failing rounds.
+    Counted in the status (`gtp_station.removed_unassociated`, `associated`) and journalled
+    (`GTP_STATION_REMOVED`). A station the scope did not write (another SSID) is not its to
+    remove.
+  - **Why it is written while wired, not on the Ethernet's loss:** the pod's OVSDB session to
+    its agent runs over that Ethernet, so once it is gone nothing can be written; the station
+    must be there before. **Accepted risk:** a pod cabled to the gateway that hosts its agent
+    loses its Ethernet with the gateway, and `cm` restarts its managers from the seed (which has
+    no station) after 120 s, two or three failing rounds; but a pod wired through another
+    switch, its GTP BSS gone for more than ten minutes while its agent's host is down too (so
+    nothing removes the station), reboots once. Its seed has no station, so it is one reboot,
+    never a loop.
 
-  Both agents. Box `legacy-gtp-station` (the seed, then the Ethernet lost) and
-  `legacy-gtp-station-present` (a station already there, left alone).
+  Both agents. Box `legacy-gtp-station` (the seed, then the Ethernet lost),
+  `legacy-gtp-station-present` (a station already there, left alone) and
+  `legacy-gtp-station-unassociated` (the guard).
 - **The radio plan** (profile `radio_plan: emosa`, a legacy profile's choice; `pod`, the
   default, leaves it alone). The vendor's seed brings back, at every start, the operator's APs
   on every radio, some with their own address and DHCP server, and the radios' channels as the
   operator left them. With `radio_plan: emosa`, the pod's radio plan is EMOSA's, as a
   controller's is:
   - **Unclaimed APs.** Every `mode=ap` `Wifi_VIF_Config` row that no VIF of the profile names
-    (its fronthaul and its slots, on any radio) is disabled (`enabled=false`), and so is its
-    `Wifi_Inet_Config` row, which stops its DHCP server. A station is never touched, whoever
-    wrote it (the GTP station, a start-up hook's), nor a VIF the profile names.
+    (its fronthaul and its slots, on any radio) keeps its VIF on, and its `Wifi_Inet_Config` row
+    goes off (`enabled=false`): its address, its DHCP server, DNS and firewall rules go, and its
+    link stays `wm`'s (OpenSync's `inet_vif`: an Inet row never takes a VIF down), so it keeps
+    beaconing. An AP is never disabled, nor a radio: the vendor healthcheck (see the GTP
+    station's guard) reboots a pod whose configured VIF has no BSSID, and disabling `wl0.1` and
+    `wl0.2` rebooted a converted pod ten minutes later, twice (13 and 14 October). A station is
+    never touched, whoever wrote it (the GTP station, a start-up hook's), nor a VIF the profile
+    names.
   - **The fronthaul radio's channel.** The profile's `radio.channel` and `ht_mode` are written
     on the fronthaul's radio while the uplink in use is not its station (the pod wired). On its
     Wi-Fi uplink, `wm` moves the radio to its upstream's channel, which a legacy profile then
     shares (the GTP BSS on channel 6).
   - **Write:** once per start of the pod's OpenSync, in one guarded transaction: `wait` on the
-    serial and on each changed row as it is (`if_name`, `mode` and `enabled` of a VIF;
-    `if_name` and `enabled` of an Inet row; `if_name`, `channel` and `ht_mode` of the radio),
-    then each `update`. Nothing is written when nothing differs. **Applied** when, on the same
-    start, every unclaimed AP is disabled in its Config and its State, its Inet row too, and
-    the radio's Config has the profile's channel. Not repeated on that start, even when a row
-    is enabled again: the next start writes it again.
+    serial and on each changed row as it is (`if_name` and `enabled` of an Inet row; `if_name`,
+    `channel` and `ht_mode` of the radio), then each `update`. Nothing is written when nothing
+    differs. **Applied** when, on the same start, every unclaimed AP's Inet row is off
+    (`unclaimed_inet_on` empty) and the radio's Config has the profile's channel. Not repeated on
+    that start, even when a row is turned on again: the next start writes it again. The status
+    shows the unclaimed APs left on (`unclaimed_enabled`) and their Inet rows still on.
+  - Not yet: an unclaimed AP keeps its operator's SSID and passphrase (hiding it, EMOSA's own
+    credential, out of `br-home` are a later step; none of them takes its BSSID).
 
-  Both agents. Box `legacy-radio-plan`.
+  Both agents. Box `legacy-radio-plan` (every VIF beaconing or associated, the box's terms for the
+  vendor healthcheck).
 - **Its starts, counted by its agent's sessions.** A legacy pod's database is its vendor's seed
   again at every start of its OpenSync (a reboot, or its connection manager restarting the
   managers after more than 120 s without its uplink), every row with the UUID it had in the
   seed, its radio rows too: seen on a converted pod on 14 October, one start instance (§8.3)
   across 13 October's configuration and the next day's re-seed, so the operator's rows read as
   another manager changing EMOSA's configuration under the same start, every M2 refused
-  (`OWNERSHIP_CONFLICT`), and the GTP station and the radio plan taken as written. On a legacy
+  (`OWNERSHIP_CONFLICT`), and the GTP station and the radio plan taken as written. Across that
+  pod's reboot the same day only its `Wifi_Radio_Config` rows kept their UUIDs; its radios'
+  State rows and its VIFs' Config and State rows were new. Those tell a reboot apart, but a
+  re-seed within one boot (the managers restarted) has not been sampled, so the agent does not
+  rely on them. On a legacy
   profile the agent counts the pod's starts itself: a start is one of its sessions with the
   pod, a token of the agent's renewed for the first, for every fresh session (another pod
   source, §2.5, whatever the reason) and for a kept reconnection that found its configuration

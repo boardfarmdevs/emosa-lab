@@ -2674,6 +2674,35 @@ static bool configure(agent *a, const char *path, const char *profiles)
             FAIL("uplink: bootstrap: the station's band");
             return false;
         }
+        /* the station's guard (spec 3.10): unassociated this long, removed; written again after
+         * the back-off (the box shortens both); GtpStation's defaults otherwise */
+        const cJSON *unassociated = cJSON_GetObjectItemCaseSensitive(bootstrap, "unassociated_seconds");
+        const cJSON *retry = cJSON_GetObjectItemCaseSensitive(bootstrap, "retry_seconds"), *s;
+        a->gtp.unassociated = 300;
+        a->gtp.retry[0] = 900;
+        a->gtp.retry[1] = 1800;
+        a->gtp.retry[2] = 3600;
+        a->gtp.nretry = 3;
+        bool guard_ok = true;
+        if (unassociated)
+            guard_ok = em_json_int(unassociated, &a->gtp.unassociated) && a->gtp.unassociated >= 1;
+        if (retry) {
+            a->gtp.nretry = 0;
+            guard_ok = guard_ok && cJSON_IsArray(retry) && cJSON_GetArraySize(retry) >= 1;
+            cJSON_ArrayForEach(s, retry)
+            {
+                int seconds = 0;
+                if (!em_json_int(s, &seconds) || seconds < 1 || a->gtp.nretry >= 3) {
+                    guard_ok = false;
+                    break;
+                }
+                a->gtp.retry[a->gtp.nretry++] = seconds;
+            }
+        }
+        if (!guard_ok) {
+            FAIL("uplink: bootstrap's unassociated_seconds and retry_seconds are positive seconds");
+            return false;
+        }
     }
     /* a GRE parent (spec 8.6): a tunnel per child of its parent AP, in the fronthaul's bridge */
     const char *parent = NULL;

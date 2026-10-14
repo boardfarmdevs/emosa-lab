@@ -110,7 +110,7 @@ static cJSON *target(void *ctx, const cJSON *intent, em_reason *why)
         return NULL;
     }
     cJSON *t = cJSON_CreateObject();
-    cJSON_AddArrayToObject(t, "unclaimed_enabled");
+    cJSON_AddArrayToObject(t, "unclaimed_inet_on");
     cJSON_AddTrueToObject(t, "radio_planned");
     return t;
 }
@@ -123,9 +123,9 @@ typedef struct {
 } named;
 
 typedef struct {
-    size_t nvifs, ninets, nall;
-    named vifs[ROWS], inets[ROWS]; /* to write: unclaimed APs on in their Config; their Inet rows on */
-    char all[ROWS][16];            /* every unclaimed AP */
+    size_t ninets, nall;
+    named inets[ROWS];  /* to write: the unclaimed APs' Inet rows on (the APs themselves left on) */
+    char all[ROWS][16]; /* every unclaimed AP */
     const char *radio_uuid;        /* to write: the wired pod's radio, off the profile's channel */
     const cJSON *radio;
 } plan_changes;
@@ -148,12 +148,13 @@ static bool unclaimed_ap(const plan_changes *c, const char *name)
     return false;
 }
 
-/* RadioPlanBackend._changes: what the plan writes now, and the configured view */
+/* RadioPlanBackend._changes: what the plan writes now, and the configured view. An AP is never
+ * disabled: the 2.4.3 pods' vendor healthcheck reboots a pod whose AP stops beaconing (spec 3.10) */
 static cJSON *changes(const em_plan_intent *i, const cJSON *tables, plan_changes *c)
 {
     memset(c, 0, sizeof(*c));
     const cJSON *r;
-    char on[ROWS * 2][16]; /* unclaimed APs on in Config, State or Inet */
+    char on[ROWS * 2][16]; /* unclaimed APs on in Config or State (left on) */
     size_t non = 0;
     cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config"))
     {
@@ -161,12 +162,8 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, plan_changes
         if (!mode || strcmp(mode, "ap") || !name || claimed(i, name) || c->nall >= ROWS)
             continue;
         (void)em_copy(c->all[c->nall++], 16, name); /* an interface name (15) */
-        if (ovs_true(r, "enabled") && c->nvifs < ROWS) {
-            (void)em_copy(c->vifs[c->nvifs].name, 16, name);
-            c->vifs[c->nvifs++].uuid = r->string;
-            if (non < ROWS * 2)
-                (void)em_copy(on[non++], 16, name);
-        }
+        if (ovs_true(r, "enabled") && non < ROWS * 2)
+            (void)em_copy(on[non++], 16, name);
     }
     cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_State"))
     {
@@ -180,11 +177,8 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, plan_changes
         if (name && unclaimed_ap(c, name) && ovs_true(r, "enabled") && c->ninets < ROWS) {
             (void)em_copy(c->inets[c->ninets].name, 16, name);
             c->inets[c->ninets++].uuid = r->string;
-            if (non < ROWS * 2)
-                (void)em_copy(on[non++], 16, name);
         }
     }
-    qsort(c->vifs, c->nvifs, sizeof(c->vifs[0]), named_order);
     qsort(c->inets, c->ninets, sizeof(c->inets[0]), named_order);
     qsort(c->all, c->nall, sizeof(c->all[0]), by_name);
     qsort(on, non, sizeof(on[0]), by_name);
@@ -230,11 +224,14 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, plan_changes
     for (size_t k = 0; k < non; k++)
         if (k == 0 || strcmp(on[k], on[k - 1])) /* sorted: each name once */
             cJSON_AddItemToArray(list, cJSON_CreateString(on[k]));
+    list = cJSON_AddArrayToObject(v, "unclaimed_inet_on");
+    for (size_t k = 0; k < c->ninets; k++)
+        cJSON_AddItemToArray(list, cJSON_CreateString(c->inets[k].name));
     cJSON_AddItemToObject(v, "channel", has_channel ? cJSON_CreateNumber((double)channel) : cJSON_CreateNull());
     cJSON_AddItemToObject(v, "ht_mode", ht_mode ? cJSON_CreateString(ht_mode) : cJSON_CreateNull());
     cJSON_AddBoolToObject(v, "wired", wired);
     cJSON_AddBoolToObject(v, "radio_planned", !wired || on_plan);
-    cJSON_AddBoolToObject(v, "pending", c->nvifs || c->ninets || c->radio);
+    cJSON_AddBoolToObject(v, "pending", c->ninets || c->radio);
     return v;
 }
 
@@ -303,17 +300,13 @@ static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
     cJSON *p = cJSON_CreateObject();
     cJSON_AddStringToObject(p, "mapping", MODE);
     cJSON_AddStringToObject(p, "action", "radio-plan");
-    cJSON *list = cJSON_AddArrayToObject(p, "disable");
-    for (size_t k = 0; k < c.nvifs; k++)
-        cJSON_AddItemToArray(list, cJSON_CreateString(c.vifs[k].name));
-    list = cJSON_AddArrayToObject(p, "inet_off");
+    cJSON *list = cJSON_AddArrayToObject(p, "inet_off");
     for (size_t k = 0; k < c.ninets; k++)
         cJSON_AddItemToArray(list, cJSON_CreateString(c.inets[k].name));
     cJSON_AddItemToObject(p, "channel", c.radio ? cJSON_CreateNumber(i.channel) : cJSON_CreateNull());
     cJSON_AddStringToObject(p, "instance", s->instance);
-    const char *fields[] = {"Wifi_VIF_Config.enabled", "Wifi_Inet_Config.enabled", "Wifi_Radio_Config.channel",
-                            "Wifi_Radio_Config.ht_mode"};
-    cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 4));
+    const char *fields[] = {"Wifi_Inet_Config.enabled", "Wifi_Radio_Config.channel", "Wifi_Radio_Config.ht_mode"};
+    cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 3));
     cJSON_AddStringToObject(p, "guard", "pod serial and each changed row as it is");
     return p;
 }
@@ -366,32 +359,20 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     plan_changes c = {0};
     if (node)
         cJSON_Delete(changes(&i, em_ovsdb_tables(s->ovs), &c));
-    if (!node || em_ovsdb_generation(s->ovs) != generation || !(c.nvifs || c.ninets || c.radio)) {
+    if (!node || em_ovsdb_generation(s->ovs) != generation || !(c.ninets || c.radio)) {
         strcpy(out->status, "rejected"); /* not bound, another session, or nothing differs any more */
         out->reason = EM_NOT_READY;
         return;
     }
     cJSON *ops = cJSON_CreateArray(), *row;
-    int counts[1 + 2 * (ROWS + ROWS + 1)];
+    int counts[1 + 2 * (ROWS + 1)];
     size_t n = 0;
     const char *node_cols[] = {"serial_number"};
     row = cJSON_CreateObject();
     cJSON_AddStringToObject(row, "serial_number", s->serial);
     cJSON_AddItemToArray(ops, wait_row("AWLAN_Node", node_uuid, node_cols, 1, row));
     counts[n++] = -1;
-    const char *vif_cols[] = {"if_name", "mode", "enabled"}, *inet_cols[] = {"if_name", "enabled"};
-    for (size_t k = 0; k < c.nvifs; k++) {
-        row = cJSON_CreateObject();
-        cJSON_AddStringToObject(row, "if_name", c.vifs[k].name);
-        cJSON_AddStringToObject(row, "mode", "ap");
-        cJSON_AddTrueToObject(row, "enabled");
-        cJSON_AddItemToArray(ops, wait_row("Wifi_VIF_Config", c.vifs[k].uuid, vif_cols, 3, row));
-        row = cJSON_CreateObject();
-        cJSON_AddFalseToObject(row, "enabled");
-        cJSON_AddItemToArray(ops, update_row("Wifi_VIF_Config", c.vifs[k].uuid, row));
-        counts[n++] = -1;
-        counts[n++] = 1;
-    }
+    const char *inet_cols[] = {"if_name", "enabled"};
     for (size_t k = 0; k < c.ninets; k++) {
         row = cJSON_CreateObject();
         cJSON_AddStringToObject(row, "if_name", c.inets[k].name);
@@ -573,8 +554,8 @@ cJSON *em_plan_status(em_plan_scope *s)
 {
     cJSON *o = cJSON_CreateObject(), *op = em_journal_latest(s->journal);
     const cJSON *config = s->has_last ? s->last.config : NULL;
-    const char *keys[] = {"unclaimed", "unclaimed_enabled", "channel", "wired"};
-    for (size_t k = 0; k < 4; k++) {
+    const char *keys[] = {"unclaimed", "unclaimed_enabled", "unclaimed_inet_on", "channel", "wired"};
+    for (size_t k = 0; k < 5; k++) {
         const cJSON *v = cJSON_GetObjectItemCaseSensitive(config, keys[k]);
         cJSON_AddItemToObject(o, keys[k], v ? cJSON_Duplicate(v, 1) : cJSON_CreateNull());
     }

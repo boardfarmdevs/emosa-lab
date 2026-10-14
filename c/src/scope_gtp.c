@@ -25,6 +25,8 @@ static const char *str(const cJSON *o, const char *k)
 }
 
 /* an interface name: 1 to 15 of [A-Za-z0-9_.-] (the reference's INTERFACE) */
+static int by_uuid(const void *a, const void *b) { return strcmp(*(const char *const *)a, *(const char *const *)b); }
+
 static bool interface_name(const char *s)
 {
     size_t n = s ? strlen(s) : 0;
@@ -170,12 +172,16 @@ static cJSON *configured(const em_gtp_scope *g, const cJSON *tables)
     bool written = mode && !strcmp(mode, "sta") && ovs_true(vif, "enabled") && ssid && *ssid && key && onboard &&
                    !strcmp(onboard, "gre") && sole_ssid && !strcmp(sole_ssid, ssid) && sole_key &&
                    !strcmp(sole_key, key);
-    bool joined = false;
+    bool joined = false, associated = false;
     cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_State"))
     {
         const char *rn = ovs_str(r, "if_name"), *rm = ovs_str(r, "mode");
-        if (rn && !strcmp(rn, g->intent.station) && rm && !strcmp(rm, "sta"))
+        char parent[18];
+        if (rn && !strcmp(rn, g->intent.station) && rm && !strcmp(rm, "sta")) {
             joined = true;
+            /* on a BSS (its State's parent), as the vendor healthcheck's `wl bssid` sees it */
+            associated = associated || em_row_mac(r, "parent", parent);
+        }
     }
     cJSON *c = cJSON_CreateObject();
     cJSON_AddStringToObject(c, "station", g->intent.station);
@@ -189,6 +195,7 @@ static cJSON *configured(const em_gtp_scope *g, const cJSON *tables)
     bool pinned = written && em_row_mac(vif, "parent", mac);
     cJSON_AddItemToObject(c, "bssid", pinned ? cJSON_CreateString(mac) : cJSON_CreateNull());
     cJSON_AddBoolToObject(c, "joined", joined);
+    cJSON_AddBoolToObject(c, "associated", associated);
     return c;
 }
 
@@ -461,11 +468,156 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     cJSON_AddItemToObject(out->evidence, "results", results);
 }
 
+/* GtpStationBackend.remove: the station in the scope's form (the intent's SSID), deleted in one
+ * guarded transaction: its row, its linked credentials and its radio's reference. EM_OK when it
+ * committed; *deleted the rows deleted */
+static em_reason remove_station(em_gtp_scope *g, size_t *deleted)
+{
+    const char *node_uuid, *uuid = NULL;
+    const cJSON *vif = NULL, *r;
+    if (!em_ovsdb_ready(g->ovs) || !bind(g, &node_uuid))
+        return EM_NOT_READY;
+    const cJSON *tables = em_ovsdb_tables(g->ovs);
+    if (named_rows(tables, "Wifi_VIF_Config", g->intent.station, &vif, &uuid) != 1)
+        return EM_NOT_READY; /* "no single station row" */
+    const char *mode = ovs_str(vif, "mode"), *ssid = ovs_str(vif, "ssid");
+    if (!mode || strcmp(mode, "sta") || !ssid || strcmp(ssid, g->intent.ssid))
+        return EM_OWNERSHIP_CONFLICT; /* "not the GTP station" */
+    cJSON *ops = cJSON_CreateArray(), *row;
+    int counts[2 + 4 + 1 + 8];
+    size_t n = 0;
+    cJSON *wait = em_ovs_op("wait", "AWLAN_Node", em_ovs_where_uuid(node_uuid));
+    const char *node_cols[] = {"serial_number"}, *vif_cols[] = {"if_name", "mode", "ssid"};
+    cJSON_AddItemToObject(wait, "columns", em_ovs_strings(node_cols, 1));
+    cJSON_AddStringToObject(wait, "until", "==");
+    row = cJSON_CreateObject();
+    cJSON_AddStringToObject(row, "serial_number", g->serial);
+    cJSON_AddItemToArray(cJSON_AddArrayToObject(wait, "rows"), row);
+    cJSON_AddNumberToObject(wait, "timeout", 0);
+    cJSON_AddItemToArray(ops, wait);
+    counts[n++] = -1;
+    wait = em_ovs_op("wait", "Wifi_VIF_Config", em_ovs_where_uuid(uuid));
+    cJSON_AddItemToObject(wait, "columns", em_ovs_strings(vif_cols, 3));
+    cJSON_AddStringToObject(wait, "until", "==");
+    row = cJSON_CreateObject();
+    cJSON_AddStringToObject(row, "if_name", g->intent.station);
+    cJSON_AddStringToObject(row, "mode", "sta");
+    cJSON_AddStringToObject(row, "ssid", g->intent.ssid);
+    cJSON_AddItemToArray(cJSON_AddArrayToObject(wait, "rows"), row);
+    cJSON_AddNumberToObject(wait, "timeout", 0);
+    cJSON_AddItemToArray(ops, wait);
+    counts[n++] = -1;
+    /* the radios that list it (one), sorted by UUID as the reference */
+    const char *radios[4];
+    size_t nradios = 0;
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_Radio_Config"))
+    {
+        const char *refs[64];
+        size_t nrefs = ovs_uuids(r, "vif_configs", refs, 64);
+        for (size_t k = 0; k < nrefs && nradios < 4; k++)
+            if (!strcmp(refs[k], uuid)) {
+                radios[nradios++] = r->string;
+                break;
+            }
+    }
+    em_sort(radios, nradios, sizeof(*radios), by_uuid);
+    for (size_t k = 0; k < nradios; k++) {
+        cJSON *mutate = em_ovs_op("mutate", "Wifi_Radio_Config", em_ovs_where_uuid(radios[k]));
+        cJSON *mutation = cJSON_CreateArray(), *set = cJSON_CreateArray(), *items = cJSON_CreateArray(),
+              *ref = cJSON_CreateArray();
+        cJSON_AddItemToArray(ref, cJSON_CreateString("uuid"));
+        cJSON_AddItemToArray(ref, cJSON_CreateString(uuid));
+        cJSON_AddItemToArray(items, ref);
+        cJSON_AddItemToArray(set, cJSON_CreateString("set"));
+        cJSON_AddItemToArray(set, items);
+        cJSON_AddItemToArray(mutation, cJSON_CreateString("vif_configs"));
+        cJSON_AddItemToArray(mutation, cJSON_CreateString("delete"));
+        cJSON_AddItemToArray(mutation, set);
+        cJSON_AddItemToArray(cJSON_AddArrayToObject(mutate, "mutations"), mutation);
+        cJSON_AddItemToArray(ops, mutate);
+        counts[n++] = 1;
+    }
+    cJSON_AddItemToArray(ops, em_ovs_op("delete", "Wifi_VIF_Config", em_ovs_where_uuid(uuid)));
+    counts[n++] = 1;
+    const char *links[8], *credentials[8];
+    size_t nlinks = ovs_uuids(vif, "credential_configs", links, 8), ncredentials = 0;
+    for (size_t k = 0; k < nlinks; k++)
+        if (cJSON_GetObjectItemCaseSensitive(em_table(tables, "Wifi_Credential_Config"), links[k]))
+            credentials[ncredentials++] = links[k];
+    em_sort(credentials, ncredentials, sizeof(*credentials), by_uuid);
+    for (size_t k = 0; k < ncredentials; k++) {
+        cJSON_AddItemToArray(ops, em_ovs_op("delete", "Wifi_Credential_Config", em_ovs_where_uuid(credentials[k])));
+        counts[n++] = 1;
+    }
+    cJSON *results = g->transact(g->transact_ctx, ops);
+    cJSON_Delete(ops);
+    if (!results)
+        return EM_OUTCOME_UNKNOWN;
+    em_reason checked = em_check_results(results, counts, n);
+    cJSON_Delete(results);
+    *deleted = 1 + ncredentials;
+    return checked;
+}
+
+/* GtpStation._guard: true once it removed the station (nothing else on this tick) */
+static bool guard(em_gtp_scope *g, const em_snapshot *snap)
+{
+    const cJSON *config = snap->ready ? snap->config : NULL;
+    const char *ssid = str(config, "ssid");
+    bool ours = ssid && !strcmp(ssid, g->intent.ssid); /* the station in the scope's form */
+    bool associated = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(config, "associated"));
+    if (!ours || associated) {
+        if (ours)
+            g->backoff = 0; /* a write that associated */
+        g->unassociated_seen = false;
+        return false;
+    }
+    double now = g->monotonic();
+    if (!g->unassociated_seen) {
+        g->unassociated_seen = true;
+        g->since = now;
+    }
+    if (now - g->since < g->unassociated)
+        return false;
+    size_t deleted = 0;
+    em_reason why = remove_station(g, &deleted);
+    if (why != EM_OK) {
+        em_log(EM_LOG_WARNING, "emosa.agent.gtp_station", "the pod's station %s: not removed: %s", g->intent.station,
+               em_reason_name(why));
+        return true;
+    }
+    int delay = g->retry[g->backoff < g->nretry ? g->backoff : g->nretry - 1];
+    g->attempt++;
+    g->backoff++;
+    g->removed++;
+    g->unassociated_seen = false;
+    g->retry_due = true;
+    g->retry_at = now + delay;
+    cJSON *payload = cJSON_CreateObject();
+    cJSON_AddStringToObject(payload, "station", g->intent.station);
+    cJSON_AddNumberToObject(payload, "unassociated_s", g->unassociated);
+    cJSON_AddNumberToObject(payload, "retry_s", delay);
+    (void)em_journal_event(g->journal, g->run_id, "GTP_STATION_REMOVED", payload, g->intent.pod_id);
+    cJSON_Delete(payload);
+    em_log(EM_LOG_WARNING, "emosa.agent.gtp_station",
+           "the pod's station %s was not associated for %d s: removed (%zu rows), written again in %d s",
+           g->intent.station, g->unassociated, deleted, delay);
+    return true;
+}
+
 /* -- GtpStation ---------------------------------------------------------------------------- */
 
 em_reason em_gtp_open(em_gtp_scope *g, const char *state_dir, const em_journal_schemas *schemas,
                       double (*monotonic)(void))
 {
+    g->monotonic = monotonic;
+    if (!g->nretry) { /* GtpStation's defaults: UNASSOCIATED, RETRY */
+        g->unassociated = 300;
+        g->retry[0] = 900;
+        g->retry[1] = 1800;
+        g->retry[2] = 3600;
+        g->nretry = 3;
+    }
     char dir[600];
     EM_FORMAT_FIXED(dir, sizeof(dir), "%s/gtp-station", state_dir); /* EM_STATE_DIR_MAX */
     em_reason why;
@@ -534,19 +686,36 @@ void em_gtp_tick(em_gtp_scope *g)
         em_snapshot_clear(&snap);
         return;
     }
+    if (snap.ready && g->has_instance && strcmp(g->start, g->instance)) { /* a new start: its own attempts */
+        EM_FORMAT_FIXED(g->start, sizeof(g->start), "%s", g->instance);
+        g->attempt = 0;
+        g->unassociated_seen = g->retry_due = false;
+    }
+    if (guard(g, &snap)) {
+        em_snapshot_clear(&snap);
+        return;
+    }
     /* GtpStation._wanted */
     op = em_journal_latest(g->journal);
     cJSON *owned = em_journal_ownership(g->journal, g->intent.pod_id);
-    char key[40];
-    EM_FORMAT_FIXED(key, sizeof(key), "%s:%s", g->instance, g->intent.station); /* 16+1+15 */
+    char key[56]; /* one write per start and station, one more after each removal */
+    if (g->attempt)
+        EM_FORMAT_FIXED(key, sizeof(key), "%s:%s:%u", g->instance, g->intent.station, g->attempt);
+    else
+        EM_FORMAT_FIXED(key, sizeof(key), "%s:%s", g->instance, g->intent.station); /* 16+1+15 */
     cJSON *done = NULL;
     bool wanted = false;
+    double now = g->monotonic();
     if (!snap.ready) {
         wait_for(g, "pod not bound");
     } else if (owned) {
         wait_for(g, "another manager changed the station: admit the pod anew");
     } else if (op && em_state_active(em_state_of(op))) {
         wait_for(g, "write in progress");
+    } else if (g->retry_due && now < g->retry_at) {
+        char text[128];
+        EM_FORMAT_FIXED(text, sizeof(text), "removed, not associated: written again in %d s", (int)(g->retry_at - now));
+        wait_for(g, text);
     } else if ((done = em_journal_lookup(g->journal, SOURCE, g->intent.pod_id, key))) {
         if (!strcmp(em_state_of(done), "OBSERVED_APPLIED")) {
             wait_for(g, NULL);
@@ -595,10 +764,14 @@ cJSON *em_gtp_status(em_gtp_scope *g)
     if (g->has_last) {
         cJSON_AddBoolToObject(o, "present", cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(g->last.config, "present")));
         cJSON_AddBoolToObject(o, "joined", cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(g->last.config, "joined")));
+        cJSON_AddBoolToObject(o, "associated",
+                              cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(g->last.config, "associated")));
     } else {
         cJSON_AddNullToObject(o, "present");
         cJSON_AddNullToObject(o, "joined");
+        cJSON_AddNullToObject(o, "associated");
     }
+    cJSON_AddNumberToObject(o, "removed_unassociated", g->removed);
     cJSON_AddItemToObject(o, "waiting", g->has_waiting ? cJSON_CreateString(g->waiting) : cJSON_CreateNull());
     if (op) {
         cJSON *x = cJSON_AddObjectToObject(o, "operation");

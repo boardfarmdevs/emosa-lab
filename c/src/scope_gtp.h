@@ -29,6 +29,16 @@ typedef struct {
     bool has_last;
     char waiting[128]; /* why nothing is written now, "" when nothing waits */
     bool has_waiting;
+    /* the guard (GtpStation._guard): the station in the scope's form unassociated `unassociated`
+     * seconds is deleted, written again after retry[backoff] seconds (the vendor healthcheck) */
+    double (*monotonic)(void);
+    int unassociated, retry[3];
+    size_t nretry, backoff;
+    char start[17];   /* the start the attempts count on */
+    unsigned attempt; /* the station's writes removed on that start */
+    bool unassociated_seen, retry_due;
+    double since, retry_at;
+    unsigned removed; /* stations removed unassociated, since the agent started */
 } em_gtp_scope;
 
 /* The intent from the agent configuration's uplink.bootstrap (ssid, secret_ref, bssid?) and the
@@ -44,8 +54,8 @@ void em_gtp_close(em_gtp_scope *g);
 /* One step on the agent's refresh cadence. */
 void em_gtp_tick(em_gtp_scope *g);
 
-/* GtpStation.status: {"station", "ssid", "pinned", "present", "joined", "waiting", "operation"}; never
- * the passphrase. */
+/* GtpStation.status: {"station", "ssid", "pinned", "present", "joined", "associated",
+ * "removed_unassociated", "waiting", "operation"}; never the passphrase. */
 cJSON *em_gtp_status(em_gtp_scope *g);
 
 #endif

@@ -5395,15 +5395,152 @@ async def radio_plan_rows(box):
     }
 
 
+async def associate_station(box):
+    """wm takes the GTP station and its supplicant joins the GTP's BSS (the box plays both): the
+    station's State, in its radio's vif_states, its parent the GTP's BSSID."""
+    config_uuid, station = await box.vif("Wifi_VIF_Config", "wl1")
+    if not station or station.get("mode") != "sta":
+        return False
+    state_uuid, _ = await box.vif("Wifi_VIF_State", "wl1")
+    row = {
+        "mode": "sta",
+        "enabled": True,
+        "mac": LEGACY_STATION,
+        "ssid": GTP_SSID,
+        "parent": GTP_BSSID,
+        "vif_config": ["uuid", config_uuid],
+    }
+    if state_uuid:
+        await box.transact(
+            [
+                {
+                    "op": "update",
+                    "table": "Wifi_VIF_State",
+                    "where": [["_uuid", "==", ["uuid", state_uuid]]],
+                    "row": row,
+                }
+            ]
+        )
+        return True
+    await box.transact(
+        [
+            {
+                "op": "insert",
+                "table": "Wifi_VIF_State",
+                "uuid-name": "sta",
+                "row": {**row, "if_name": "wl1"},
+            },
+            {
+                "op": "mutate",
+                "table": "Wifi_Radio_State",
+                "where": [["if_name", "==", "wl1"]],
+                "mutations": [["vif_states", "insert", ["set", [["named-uuid", "sta"]]]]],
+            },
+        ]
+    )
+    return True
+
+
+async def healthcheck(box):
+    """The pods' vendor healthcheck in the box's terms (spec 3.10): every Wifi_VIF_Config row's
+    interface beacons (an AP: its State enabled) or is associated (a station: its State's parent),
+    whatever the row's own enabled. The interfaces that fail, sorted."""
+    configs, states = await box.rows("Wifi_VIF_Config"), await box.rows("Wifi_VIF_State")
+    state = {r.get("if_name"): r for r in states.values()}
+    failing = []
+    for row in configs.values():
+        name = row.get("if_name")
+        seen = state.get(name) or {}
+        if row.get("mode") == "sta":
+            parent = seen.get("parent")
+            ok = isinstance(parent, str) and parent not in ("", "00:00:00:00:00:00")
+        else:
+            ok = seen.get("enabled") is True
+        if not ok:
+            failing.append(name)
+    return sorted(failing)
+
+
+async def legacy_gtp_station_unassociated(box):
+    """spec 3.10, the station's guard: the pods' vendor healthcheck reboots a pod after ten
+    minutes of a configured station that is not associated. The GTP station written on the seed
+    does not associate (the box plays no supplicant): the healthcheck fails on wl1 meanwhile. Once
+    it has been unassociated for the guard's time (8 s here, 300 by default) the agent deletes it,
+    its credential and its radio's reference with it, and counts it; the healthcheck passes again.
+    After the back-off (12 s here) the station is written again; this time it associates, and stays
+    past the guard."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    written = await until_async(lambda: gtp_station_written(box), seconds=30)
+    if not written:
+        return box.result(passed=False, failed="no GTP station")
+    config_uuid, _, _ = written
+    first = gtp_station_operation(box).get("operation_id")
+    written_at = time.monotonic()
+    failing_while = await healthcheck(box)
+
+    async def gone():
+        _, row = await box.vif("Wifi_VIF_Config", "wl1")
+        return row is None
+
+    removed = await until_async(gone, seconds=30)
+    removed_after = time.monotonic() - written_at
+    radios = await box.rows("Wifi_Radio_Config")
+    referenced = any(config_uuid in uuids(r.get("vif_configs")) for r in radios.values())
+    credentials = await box.rows("Wifi_Credential_Config")
+    credential_gone = not any(r.get("ssid") == GTP_SSID for r in credentials.values())
+    counted = ((box.status() or {}).get("gtp_station") or {}).get("removed_unassociated")
+    failing_after = await healthcheck(box)
+
+    async def again():
+        found = await gtp_station_written(box)
+        operation = gtp_station_operation(box).get("operation_id")
+        return found if found and operation not in (None, first) else None
+
+    rewritten = await until_async(again, seconds=40)
+    if rewritten:
+        await associate_station(box)
+    await asyncio.sleep(12)  # past the guard: an associated station stays
+    _, kept = await box.vif("Wifi_VIF_Config", "wl1")
+    final = (box.status() or {}).get("gtp_station") or {}
+    failing_end = await healthcheck(box)
+    return box.result(
+        passed=failing_while == ["wl1"]
+        and bool(removed)
+        and removed_after < 20
+        and not referenced
+        and credential_gone
+        and counted == 1
+        and not failing_after
+        and bool(rewritten)
+        and kept is not None
+        and final.get("associated") is True
+        and final.get("removed_unassociated") == 1
+        and not failing_end,
+        healthcheck_failing_while_unassociated=failing_while,
+        removed_after_s=round(removed_after, 1),
+        radio_reference_left=referenced,
+        credential_removed=credential_gone,
+        removed_counted=counted,
+        healthcheck_failing_after_removal=failing_after,
+        written_again=bool(rewritten),
+        kept_once_associated=kept is not None,
+        healthcheck_failing_at_end=failing_end,
+        gtp_station=final,
+    )
+
+
 async def legacy_radio_plan(box):
     """spec 3.10, the radio plan (radio_plan emosa): a wired legacy pod as its vendor's seed has
     it, the operator's APs on wl0 (wl0.1 with its own address and DHCP server, wl0.2 in br-home)
     and wl1 on channel 1 at HT40, the GTP station configured. The agent writes the plan once on
-    that start: wl0.1 and wl0.2 disabled, wl0.1's Inet off, wl1 on the profile's channel 6 at
-    HT20; the VIFs the profile names (wl1.1, wl1.2) and the station (EMOSA's GTP station) stay
-    enabled. An AP enabled again on that start is left alone: one write per start. The pod's
-    OpenSync starts again on its seed (a new database): the plan is written once more, on the
-    new start, and nothing after."""
+    that start: wl0.1's Inet off and wl1 on the profile's channel 6 at HT20. No AP is disabled
+    (the pods' vendor healthcheck reboots a pod whose configured VIF has no BSSID): every VIF
+    stays on, the pod passes the healthcheck once its station is associated. wl0.1's Inet turned
+    on again on that start is left alone: one write per start. The pod's OpenSync starts again
+    on its seed (its rows with the same UUIDs): the plan is written once more on the new start,
+    and nothing after."""
     ap, failure = await gre_parent_up(box, LEGACY_PARENT)
     if failure:
         return failure
@@ -5412,28 +5549,33 @@ async def legacy_radio_plan(box):
         return box.result(
             passed=False, failed="no radio plan", radio_plan=(box.status() or {}).get("radio_plan")
         )
+    await until_async(lambda: gtp_station_written(box), seconds=30)
+    await associate_station(box)
     rows = await radio_plan_rows(box)
     vifs = rows["vifs"]
-    disabled = all(vifs.get(n) == ("ap", False, False) for n in OPERATOR_APS)
+    kept_on = all(vifs.get(n) == ("ap", True, True) for n in OPERATOR_APS)
     claimed = all(vifs.get(n, (None, None))[1] is True for n in (LEGACY_FRONTHAUL, LEGACY_PARENT))
     station = vifs.get("wl1", (None, None))[:2] == ("sta", True)
     planned = rows["inets"].get("wl0.1") is False and rows["wl1"] == (6, "HT20")
-    # someone enables wl0.2 again on this start: left alone, no second write
-    uuid, _ = await box.vif("Wifi_VIF_Config", "wl0.2")
+    failing = await healthcheck(box)
+    # someone turns wl0.1's Inet on again on this start: left alone, no second write
+    uuid = next(
+        u for u, r in (await box.rows("Wifi_Inet_Config")).items() if r.get("if_name") == "wl0.1"
+    )
     await box.transact(
         [
             {
                 "op": "update",
-                "table": "Wifi_VIF_Config",
+                "table": "Wifi_Inet_Config",
                 "where": [["_uuid", "==", ["uuid", uuid]]],
                 "row": {"enabled": True},
             }
         ]
     )
     await asyncio.sleep(8)
-    again = (await radio_plan_rows(box))["vifs"].get("wl0.2", (None, None))[1] is True
+    again = (await radio_plan_rows(box))["inets"].get("wl0.1") is True
     same_start = radio_plan_operation(box).get("operation_id") == first.get("operation_id")
-    # the pod's OpenSync starts again on its seed: a fresh session, the plan written once more
+    # the pod's OpenSync starts again on its seed: a new start, the plan written once more
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
     continued = kept_reconnections(box)
     await box.new_pod_database()
@@ -5445,28 +5587,35 @@ async def legacy_radio_plan(box):
         and second.get("instance") != first.get("instance")
     )
     await until_async(lambda: gtp_station_written(box), seconds=30)  # the new start's too
-    vifs_again = (await radio_plan_rows(box))["vifs"]
+    await associate_station(box)
+    rows_again = await radio_plan_rows(box)
+    failing_again = await healthcheck(box)
     await asyncio.sleep(8)
     once = radio_plan_operation(box).get("operation_id") == (second or {}).get("operation_id")
     return box.result(
-        passed=disabled
+        passed=kept_on
         and claimed
         and station
         and planned
+        and not failing
         and again
         and same_start
         and reseeded
-        and all(vifs_again.get(n) == ("ap", False, False) for n in OPERATOR_APS)
-        and vifs_again.get("wl1", (None, None))[:2] == ("sta", True)
+        and all(rows_again["vifs"].get(n) == ("ap", True, True) for n in OPERATOR_APS)
+        and rows_again["inets"].get("wl0.1") is False
+        and rows_again["vifs"].get("wl1", (None, None))[:2] == ("sta", True)
+        and not failing_again
         and once,
         vifs=vifs,
         inets=rows["inets"],
         wl1=rows["wl1"],
-        operator_aps_disabled=disabled,
+        operator_aps_kept_on=kept_on,
         claimed_enabled=claimed,
         station_enabled=station,
-        enabled_again_left_alone=again and same_start,
+        healthcheck_failing=failing,
+        inet_on_again_left_alone=again and same_start,
         session_after_reseed=session,
+        healthcheck_failing_after_reseed=failing_again,
         reseed_written_once=reseeded and once,
         radio_plan=(box.status() or {}).get("radio_plan"),
     )
@@ -5523,7 +5672,7 @@ async def legacy_reseed(box, *, away=0):
     pod's starts by its own sessions: the fresh session (or a kept reconnection that found the
     configuration lost) is a new start, a new ownership period. The controller's M2 is written
     and applied again, with no ownership conflict; the GTP station and the radio plan are written
-    once more (the operator's APs the profile does not name off again, wl0.1's Inet with them);
+    once more (wl0.1's Inet off again, every AP left on and the pod passing the healthcheck);
     with the 5 GHz profile, wl0 back on 36 at HT80 with its home AP wl0.2."""
     five = box.profile == LEGACY_PROFILE_5G
     unclaimed = sorted(n for n in OPERATOR_APS if not (five and n == LEGACY_SLOT_5G))
@@ -5538,7 +5687,7 @@ async def legacy_reseed(box, *, away=0):
         fronthaul = next((r for r in configs.values() if r.get("if_name") == LEGACY_FRONTHAUL), {})
         return {
             "fronthaul": fronthaul.get("ssid") == REGISTRAR_SSID,
-            "unclaimed_off": all(vifs.get(n) == ("ap", False, False) for n in unclaimed),
+            "unclaimed_on": all(vifs.get(n) == ("ap", True, True) for n in unclaimed),
             "wl0.1_inet_off": rows["inets"].get("wl0.1") is False,
             "station": vifs.get("wl1", (None, None))[:2] == ("sta", True),
             "wl1": rows["wl1"] == (6, "HT20"),
@@ -5566,6 +5715,7 @@ async def legacy_reseed(box, *, away=0):
                 found = gtp_station_operation(box)
                 if found.get("operation_id") not in (None, before[1].get("operation_id")):
                     station = found
+                    await associate_station(box)  # the box plays wm and the supplicant
             if plan is not None and station is not None:
                 break
             await asyncio.sleep(0.5)
@@ -5598,6 +5748,7 @@ async def legacy_reseed(box, *, away=0):
         await box.until(lambda: all_applied(radio_operations(box, "5G")[-1:]), seconds=60)
         await apply_configuration(box.db)
     after = await configured()
+    failing = await healthcheck(box)
     states = operation_states(box)
     conflicts = [s for s in states if "OWNERSHIP_CONFLICT" in s]
     new_start = ((box.status() or {}).get("session_starts") or 0) > starts
@@ -5612,6 +5763,7 @@ async def legacy_reseed(box, *, away=0):
         passed=session is not None
         and not all(seeded.values())
         and all(after.values())
+        and not failing
         and not conflicts
         and len(states) > operations
         and states[-1][0] == "OBSERVED_APPLIED"
@@ -5620,6 +5772,7 @@ async def legacy_reseed(box, *, away=0):
         session=session,
         seeded=seeded,
         configured_again=after,
+        healthcheck_failing=failing,
         operations=[list(s) for s in states[operations - 1 :]],
         ownership_conflicts=len(conflicts),
         session_starts=(box.status() or {}).get("session_starts"),
@@ -5634,11 +5787,11 @@ async def legacy_reseed_reclaim(box):
 
 async def legacy_profile_5g(box):
     """spec 3.10, 9, plan A: a legacy pod configured on bcm-pod-2.4.3-gre-v1 (the operator's
-    seed, the radio plan applied: wl0.2 off), then its fleet entry switched to
+    seed, the radio plan applied), then its fleet entry switched to
     bcm-pod-2.4.3-gre-5g-v1 and its agent restarted on its journal, on the same start of the
     pod's OpenSync. No ownership conflict: the earlier operations were planned under another
     profile (spec 5) and the agent's new session is a new start (spec 3.10). The 5 GHz radio's M2
-    makes wl0.2 its home AP and puts wl0 on 36 at HT80; wl0.1 stays off."""
+    makes wl0.2 its home AP and puts wl0 on 36 at HT80; wl0.1 stays on, its Inet off."""
     ap, failure = await gre_parent_up(box, LEGACY_PARENT)
     if failure:
         return failure
@@ -5676,7 +5829,7 @@ async def legacy_profile_5g(box):
         passed=done
         and not conflicts
         and placed == {"wl0": (36, "HT80"), "home_5g": {"ssid": REGISTRAR_SSID, "enabled": True}}
-        and rows["vifs"].get("wl0.1") == ("ap", False, False)
+        and rows["vifs"].get("wl0.1") == ("ap", True, True)
         and rows["inets"].get("wl0.1") is False,
         switched=done,
         five_ghz=placed,
@@ -5799,6 +5952,7 @@ SCENARIOS = {
     "legacy-reseed-reclaim-5g": legacy_reseed_reclaim,
     "legacy-reseed-reclaim-late": legacy_reseed_reclaim_late,
     "legacy-profile-5g": legacy_profile_5g,
+    "legacy-gtp-station-unassociated": legacy_gtp_station_unassociated,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -5994,6 +6148,11 @@ OPTIONS["legacy-reseed-reclaim"] = OPTIONS["legacy-radio-plan"]
 OPTIONS["legacy-reseed-reclaim-5g"] = {**OPTIONS["legacy-radio-plan"], "profile": LEGACY_PROFILE_5G}
 OPTIONS["legacy-reseed-reclaim-late"] = OPTIONS["legacy-radio-plan"]
 OPTIONS["legacy-profile-5g"] = OPTIONS["legacy-radio-plan"]
+# the station's guard, its times shortened: removed after 8 s unassociated, written again 12 s later
+OPTIONS["legacy-gtp-station-unassociated"] = {
+    **OPTIONS["legacy-gtp-station"],
+    "gtp_station": {**GTP_STATION, "unassociated_seconds": 8, "retry_seconds": [12]},
+}
 OPTIONS["legacy-gre-move"] = {
     "legacy": True,
     "backhaul": True,

@@ -2,9 +2,9 @@
 """The agent writes a legacy pod's radio plan (spec 3.10, profile ``radio_plan: emosa``).
 
 ``RadioPlan`` writes the plan (``emosa.opensync.radio_plan``) at most once per start of the
-pod's OpenSync, with its own operation journal: when something differs from it (an unclaimed AP
-on, its Inet row on, the wired pod's fronthaul radio off the profile's channel). Not repeated on
-that start, even when a row is changed again: the next start writes it again.
+pod's OpenSync, with its own operation journal: when something differs from it (an unclaimed
+AP's Inet row on, the wired pod's fronthaul radio off the profile's channel; the AP itself is left
+on). Not repeated on that start, even when a row is changed again: the next start writes it again.
 """
 
 import logging
@@ -105,6 +105,7 @@ class RadioPlan:
         return {
             "unclaimed": config.get("unclaimed"),
             "unclaimed_enabled": config.get("unclaimed_enabled"),
+            "unclaimed_inet_on": config.get("unclaimed_inet_on"),
             "channel": config.get("channel"),
             "wired": config.get("wired"),
             "waiting": self.waiting,

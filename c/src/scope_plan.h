@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /* The radio plan scope, as emosa.opensync.radio_plan.RadioPlanBackend and
- * emosa.agent.radio_plan.RadioPlan (spec 3.10, profile radio_plan emosa): a legacy pod's APs the
- * profile does not name disabled with their Inet rows, and its fronthaul radio on the profile's
+ * emosa.agent.radio_plan.RadioPlan (spec 3.10, profile radio_plan emosa): the Inet rows of a legacy
+ * pod's APs the profile does not name off (the APs left on), and its fronthaul radio on the profile's
  * channel while it is wired, written at most once per OpenSync start, with its own journal. */
 #ifndef EMOSA_SCOPE_PLAN_H
 #define EMOSA_SCOPE_PLAN_H

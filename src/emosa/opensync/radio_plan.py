@@ -4,12 +4,14 @@
 A legacy pod's database is its vendor's seed again at every start: the operator's APs on every
 radio, some with an address and a DHCP server of their own, and the radios' channels as the
 operator left them. With ``radio_plan: emosa`` the plan is EMOSA's, written once per start of the
-pod's OpenSync in one guarded transaction: every ``mode=ap`` VIF the profile does not name
-(its fronthaul and its slots) disabled, its Inet row too, and, while the pod is wired (its uplink
-in use an Ethernet port), the fronthaul radio on the profile's channel and ``ht_mode``. A station
-is never touched, nor a VIF the profile names. Applied when, on the same start, those APs are off
-in their Config and State, their Inet rows off, and the radio on the profile's channel (or the
-pod not wired, its radio then its upstream's, which ``wm`` follows).
+pod's OpenSync in one guarded transaction: the Inet row of every ``mode=ap`` VIF the profile does
+not name (its fronthaul and its slots) off, which takes its address and DHCP server away and
+leaves its link to ``wm`` (OpenSync's inet_vif), and, while the pod is wired (its uplink in use an
+Ethernet port), the fronthaul radio on the profile's channel and ``ht_mode``. An AP is never
+disabled: the 2.4.3 pods' vendor healthcheck reboots a pod whose AP stops beaconing (14
+October). A station is never touched, nor a VIF the profile names. Applied when, on the same
+start, those APs' Inet rows are off and the radio is on the profile's channel (or the pod not
+wired, its radio then its upstream's, which ``wm`` follows).
 """
 
 import json
@@ -35,8 +37,9 @@ MONITOR = {
 
 @dataclass(frozen=True)
 class RadioPlanIntent:
-    """The pod's radio plan: only the VIFs named ``claimed`` may be APs that are on; the radio of
-    ``band`` on ``channel`` at ``ht_mode`` while the pod is wired."""
+    """The pod's radio plan: only the VIFs named ``claimed`` may be APs with an Inet row on (an
+    address of their own); the radio of ``band`` on ``channel`` at ``ht_mode`` while the pod is
+    wired."""
 
     pod_id: str
     claimed: tuple
@@ -63,7 +66,7 @@ class RadioPlanIntent:
 
     def target(self, vault=None):
         self.validate()
-        return {"unclaimed_enabled": [], "radio_planned": True}
+        return {"unclaimed_inet_on": [], "radio_planned": True}
 
 
 def optional(value):
@@ -101,9 +104,9 @@ class RadioPlanBackend:
         return decoded, next(iter(nodes))
 
     def _changes(self, decoded, intent):
-        """What the plan writes now: the unclaimed APs on in their Config ((uuid, if_name) each),
-        their Inet rows on ((uuid, if_name)), and the radio ((uuid, row) or None: wired and not on
-        the profile's channel). And the configured view."""
+        """What the plan writes now: the unclaimed APs' Inet rows on ((uuid, if_name) each), and the
+        radio ((uuid, row) or None: wired and not on the profile's channel). And the configured
+        view, with the unclaimed APs on in their Config or State (left on)."""
         claimed = set(intent.claimed)
         aps = sorted(
             (r.get("if_name"), u)
@@ -139,18 +142,18 @@ class RadioPlanBackend:
             intent.ht_mode,
         )
         changes = (
-            [(u, n) for n, u in aps if n in configs],
             [(u, n) for n, u in inets],
             radio if wired and radio[0] is not None and not on_plan else None,
         )
         configured = {
             "unclaimed": sorted(names),
-            "unclaimed_enabled": sorted(configs | states | {n for n, _ in inets}),
+            "unclaimed_enabled": sorted(configs | states),
+            "unclaimed_inet_on": sorted(n for n, _ in inets),
             "channel": radio[1].get("channel"),
             "ht_mode": radio[1].get("ht_mode"),
             "wired": wired,
             "radio_planned": not wired or on_plan,
-            "pending": bool(changes[0] or changes[1] or changes[2]),
+            "pending": bool(changes[0] or changes[1]),
         }
         return changes, configured
 
@@ -195,16 +198,14 @@ class RadioPlanBackend:
         decoded, _ = self._binding(raw)
         if not raw["ready"]:
             raise EmosaError(Reason.NOT_READY, "the pod's database is not ready")
-        (vifs, inets, radio), _ = self._changes(decoded, intent)
+        (inets, radio), _ = self._changes(decoded, intent)
         return {
             "mapping": MODE,
             "action": "radio-plan",
-            "disable": [n for _, n in vifs],
             "inet_off": [n for _, n in inets],
             "channel": None if radio is None else intent.channel,
             "instance": self.instance,
             "fields": [
-                "Wifi_VIF_Config.enabled",
                 "Wifi_Inet_Config.enabled",
                 "Wifi_Radio_Config.channel",
                 "Wifi_Radio_Config.ht_mode",
@@ -214,8 +215,8 @@ class RadioPlanBackend:
 
     def transaction(self, intent, decoded, node_uuid):
         """The guarded write: its operations and the counts each must match (None: no write)."""
-        (vifs, inets, radio), _ = self._changes(decoded, intent)
-        if not (vifs or inets or radio):
+        (inets, radio), _ = self._changes(decoded, intent)
+        if not (inets or radio):
             return None, None
         operations = [
             {
@@ -229,25 +230,6 @@ class RadioPlanBackend:
             }
         ]
         counts = [None]
-        for uuid, name in vifs:
-            operations += [
-                {
-                    "op": "wait",
-                    "table": "Wifi_VIF_Config",
-                    "where": where_uuid(uuid),
-                    "columns": ["if_name", "mode", "enabled"],
-                    "until": "==",
-                    "rows": [{"if_name": name, "mode": "ap", "enabled": True}],
-                    "timeout": 0,
-                },
-                {
-                    "op": "update",
-                    "table": "Wifi_VIF_Config",
-                    "where": where_uuid(uuid),
-                    "row": {"enabled": False},
-                },
-            ]
-            counts += [None, 1]
         for uuid, name in inets:
             operations += [
                 {

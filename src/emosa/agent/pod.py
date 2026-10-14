@@ -37,7 +37,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from emosa.agent.gre_parent import GreTunnels
-from emosa.agent.gtp_station import GtpStation
+from emosa.agent.gtp_station import RETRY, UNASSOCIATED, GtpStation
 from emosa.agent.peers import PeerDirectory, children, loops, mac_bytes, parent_bssids, upstream
 from emosa.agent.probe_watch import ProbeWatch
 from emosa.agent.radio_plan import RadioPlan
@@ -908,6 +908,21 @@ async def serve(config, stop):
             lower_mac(bootstrap.get("bssid")),
         )
         gtp_intent.validate()
+        # the station's guard (spec 3.10): unassociated this long, removed; written again after
+        # the back-off (the box shortens both)
+        unassociated = bootstrap.get("unassociated_seconds", UNASSOCIATED)
+        retry = bootstrap.get("retry_seconds", list(RETRY))
+        if (
+            not isinstance(unassociated, int)
+            or unassociated < 1
+            or not isinstance(retry, list)
+            or not 1 <= len(retry) <= 3
+            or not all(isinstance(s, int) and s >= 1 for s in retry)
+        ):
+            raise EmosaError(
+                Reason.INVALID_INPUT,
+                "uplink: bootstrap's unassociated_seconds and retry_seconds are positive seconds",
+            )
         bands = [b for b, s in backend.profile.uplink_stations if s == station]
         gtp_station = GtpStation(
             pod_id,
@@ -923,6 +938,8 @@ async def serve(config, stop):
             vault,
             gtp_intent,
             run_id=config.get("run_id", pod_id),
+            unassociated=unassociated,
+            retry=retry,
         )
     radio_plan = None
     if profile.radio_plan == "emosa":

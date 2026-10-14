@@ -499,7 +499,8 @@ def test_a_gtp_station_intent_is_refused_without_a_valid_ssid_or_pin():
         assert refused.value.code == Reason.INVALID_INPUT
 
 
-# spec 3.10, the radio plan (radio_plan emosa): the seed's unclaimed APs off, the radio planned
+# spec 3.10, the radio plan (radio_plan emosa): the seed's unclaimed APs left on, their Inet rows
+# off, the radio planned
 OP_AP1, OP_AP2, OP_INET, OP_STATE = (
     f"00000000-0000-4000-8000-0000000005{n}" for n in ("01", "02", "03", "04")
 )
@@ -529,19 +530,22 @@ def radio_plan(pod):
     return RadioPlanBackend("pod-1", pod, serial=SERIAL, intent=intent), intent
 
 
-def test_the_radio_plan_disables_only_unclaimed_aps_and_plans_the_wired_radio():
+def test_the_radio_plan_turns_off_only_unclaimed_aps_inet_and_plans_the_wired_radio():
+    # an AP is never disabled: the 2.4.3 pods' vendor healthcheck reboots a pod whose AP stops
+    # beaconing (14 October); an Inet row off leaves the link to wm (inet_vif)
     pod = OperatorPod()
     backend, intent = radio_plan(pod)
     config = asyncio.run(backend.snapshot()).config
     assert config["unclaimed"] == ["wl0.1", "wl0.2"] and config["pending"] is True
+    assert config["unclaimed_enabled"] == ["wl0.1", "wl0.2"]
+    assert config["unclaimed_inet_on"] == ["wl0.1"]
     assert config["wired"] is True and config["radio_planned"] is False
     attempt = {"transaction_id": "t1", "session_generation": 1}
     assert asyncio.run(backend.submit(intent, attempt)).status == "committed"
     (ops,) = pod.sent
+    assert not [op for op in ops if op["table"] == "Wifi_VIF_Config"]
     updates = [(op["table"], op["where"], op["row"]) for op in ops if op["op"] == "update"]
     assert updates == [
-        ("Wifi_VIF_Config", [["_uuid", "==", ["uuid", OP_AP1]]], {"enabled": False}),
-        ("Wifi_VIF_Config", [["_uuid", "==", ["uuid", OP_AP2]]], {"enabled": False}),
         ("Wifi_Inet_Config", [["_uuid", "==", ["uuid", OP_INET]]], {"enabled": False}),
         (
             "Wifi_Radio_Config",
@@ -570,10 +574,7 @@ def test_the_radio_plan_leaves_the_radio_to_its_station_when_not_wired():
 
 
 def test_a_planned_pod_has_nothing_to_write():
-    pod = OperatorPod()
-    for uuid in (OP_AP1, OP_AP2):
-        pod.tables["Wifi_VIF_Config"][uuid]["enabled"] = False
-    pod.tables["Wifi_VIF_State"][OP_STATE]["enabled"] = False
+    pod = OperatorPod()  # its unclaimed APs on, as the plan leaves them
     pod.tables["Wifi_Inet_Config"][OP_INET]["enabled"] = False
     pod.tables["Wifi_Radio_Config"][RADIO].update({"channel": 6, "ht_mode": "HT20"})
     backend, intent = radio_plan(pod)
