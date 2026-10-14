@@ -20,6 +20,9 @@ A pod that reconnects later, for example after a reboot, gets the same agent
 back. Per-pod agents stay separate processes: one pod's fault or restart never
 touches another pod's agent.
 
+With ``files`` the fleet also serves files for the pods' own modules (spec 4): plain HTTP on
+its advertise address, each file named by its SHA-256 (``FileServer``).
+
 Run: ``python -m emosa.agent.fleet serve /etc/emosa-fleet.json``
 (also ``list`` and ``forget SERIAL``).
 """
@@ -28,6 +31,7 @@ import argparse
 import contextlib
 import errno
 import hashlib
+import http.server
 import ipaddress
 import json
 import logging
@@ -44,13 +48,16 @@ import ovs.poller
 import ovs.stream
 
 from emosa.config import validate
-from emosa.errors import EmosaError
+from emosa.errors import EmosaError, Reason
 from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
 from emosa.secrets import REFERENCE, FileSecrets
 
 log = logging.getLogger("emosa.fleet")
 
 SERIAL = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
+SHA256 = re.compile(r"[0-9a-f]{64}")
+FILES_PORT = 6650
+FILE_MAX = 1 << 20  # bytes of one served file, at most
 IDENTITY = ["id", "serial_number", "model", "firmware_version"]
 TIMEOUT = 5  # seconds for one pod's whole identify-and-hand-over exchange
 AGENT_DEFAULTS = {
@@ -186,6 +193,21 @@ class Registry:
             return entry
 
 
+def module_settings(modules, fleet):
+    """The agent's ``modules`` from the fleet's (spec 4): each module's settings, with
+    ``update_url`` (the fleet's file server) and ``update_sha256`` for its ``update``."""
+    settings = {}
+    for module, own in sorted((modules or {}).items()):
+        values = dict(sorted((own.get("config") or {}).items()))
+        if own.get("update"):
+            port = (fleet.get("files") or {}).get("port", FILES_PORT)
+            values["update_url"] = f"http://{fleet['advertise']}:{port}/{own['update']}"
+            values["update_sha256"] = own["update"]
+        if values:
+            settings[module] = values
+    return settings
+
+
 def agent_config(entry, fleet):
     """The per-pod agent configuration (the format ``emosa.agent.pod`` reads).
 
@@ -206,6 +228,12 @@ def agent_config(entry, fleet):
         **(
             {"topology_query_window": fleet["topology_query_window"]}
             if "topology_query_window" in fleet
+            else {}
+        ),
+        # its modules' settings (spec 4), only when there are any
+        **(
+            {"modules": modules}
+            if (modules := module_settings(own.get("modules", fleet.get("modules")), fleet))
             else {}
         ),
         # its underlay as a GRE parent (spec 8.6), while the fleet allocates them
@@ -235,9 +263,105 @@ def systemd_stopper(pod_id):
     subprocess.run(["systemctl", "disable", "-q", "--now", f"emosa-agent@{pod_id}"], check=False)
 
 
+def servable(directory, name):
+    """The file ``name`` of ``directory`` when it is served (spec 4): a SHA-256 name, a regular
+    file of at most FILE_MAX bytes whose content has that SHA-256. (content, None), or (None,
+    why)."""
+    if not SHA256.fullmatch(name):
+        return None, "not a SHA-256"
+    path = Path(directory) / name
+    try:
+        if not path.is_file() or path.is_symlink():
+            return None, "no such file"
+        if path.stat().st_size > FILE_MAX:
+            return None, "too large"
+        content = path.read_bytes()
+    except OSError as exc:
+        return None, f"unreadable: {exc.strerror}"
+    if hashlib.sha256(content).hexdigest() != name:
+        return None, "its content is not its name"
+    return content, None
+
+
+class FileServer:
+    """The fleet's file server (spec 4): plain HTTP on ``host``:``port``. GET or HEAD ``/``:
+    200, an empty body (a pod reads the time from its Date header); ``/<sha256>``: a servable file
+    of ``directory``, checked at each request, else 404. Every reply has a Date header (GMT, the
+    standard library's); each request is logged with the peer, the path and the answer."""
+
+    def __init__(self, directory, host, port):
+        self.directory = Path(directory)
+        server = self
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            server_version, sys_version = "emosa-fleet", ""
+
+            def answer(self, body):
+                path = self.path.split("?", 1)[0]
+                if path == "/":
+                    content, why = b"", None
+                else:
+                    content, why = servable(server.directory, path.lstrip("/"))
+                if content is None:
+                    self.send_response(404)
+                    self.send_header("Content-Length", "0")
+                    self.end_headers()
+                    log.warning(
+                        "files: %s %s %s: 404, %s", self.client_address[0], self.command, path, why
+                    )
+                    return
+                self.send_response(200)
+                self.send_header("Content-Type", "application/octet-stream")
+                self.send_header("Content-Length", str(len(content)))
+                self.end_headers()
+                if body:
+                    self.wfile.write(content)
+                if path != "/":
+                    log.info(
+                        "files: %s %s %s: 200, %d bytes",
+                        self.client_address[0],
+                        self.command,
+                        path,
+                        len(content),
+                    )
+
+            def do_GET(self):  # noqa: N802 (the standard library's name)
+                self.answer(True)
+
+            def do_HEAD(self):  # noqa: N802
+                self.answer(False)
+
+            def log_message(self, format, *args):  # noqa: A002
+                pass  # answer() logs each request
+
+        self.httpd = http.server.ThreadingHTTPServer((host, port), Handler)
+        self.httpd.daemon_threads = True
+        self.address = self.httpd.server_address
+
+    def start(self):
+        names = sorted(p.name for p in self.directory.iterdir()) if self.directory.is_dir() else []
+        served = [n for n in names if servable(self.directory, n)[0] is not None]
+        for name in names:
+            if name not in served:
+                log.warning("files: %s not served: %s", name, servable(self.directory, name)[1])
+        log.info(
+            "files: %d served from %s on %s:%d", len(served), self.directory, *self.address[:2]
+        )
+        threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
+
+    def stop(self):
+        self.httpd.shutdown()
+        self.httpd.server_close()
+
+
 class Fleet:
     def __init__(self, config, *, starter=systemd_starter, stopper=systemd_stopper):
         validate("fleet-config", config)
+        modules = [config.get("modules") or {}] + [
+            own.get("modules") or {} for own in (config.get("pods") or {}).values()
+        ]
+        if not config.get("files") and any(m.get("update") for ms in modules for m in ms.values()):
+            raise EmosaError(Reason.INVALID_INPUT, "a module's update needs the fleet's files")
         self.config = config
         low, high = config["ports"]
         self.registry = Registry(
@@ -432,6 +556,14 @@ class Fleet:
 
     def serve(self, pstream=None, ready=None):
         pstream = pstream or self.listen()
+        files = None
+        if self.config.get("files"):
+            files = FileServer(
+                self.config["files"]["directory"],
+                self.config["advertise"],
+                self.config["files"].get("port", FILES_PORT),
+            )
+            files.start()
         self.start_registered()
         if ready is not None:
             ready.set()
@@ -454,6 +586,8 @@ class Fleet:
                 threading.Thread(target=self._serve_one, args=(stream,), daemon=True).start()
         finally:
             pstream.close()
+            if files is not None:
+                files.stop()
 
     def forget(self, serial):
         """Release a pod: stop its agent, drop its entry and configuration, and

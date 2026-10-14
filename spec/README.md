@@ -788,6 +788,39 @@ agent has, durable. One missing from the fleet's store too is logged by referenc
 then says what it lacks. The value is never logged. So a pod forgotten and admitted again, or
 a new one, needs no secret placed by hand. Both fleets.
 
+**The pods' modules.** A pod may run software of its own that EMOSA manages through OpenSync's
+`Node_Config` and `Node_State` (a start-up hook kept on a converted pod's flash, say: its
+redirector, its own updates). The fleet's `modules`, replaced per pod by `pods.<serial>.modules`,
+names each module (the site's name, `[a-z0-9_-]`, at most 32) with its settings (`config`: key
+to value, `[a-z0-9_]` keys, values of 1 to 1024 characters) and, optionally, a file to install
+(`update`: its SHA-256). The agent's configuration gets each module's settings as a map
+(`modules`), with `update_url` (`http://<advertise>:<files.port>/<sha256>`) and `update_sha256`
+for an update; the fleet refuses an update without `files`.
+- **The agent** writes each module's settings once per start of the pod's OpenSync (each session
+  start on a legacy pod, §3.10), in one guarded transaction, with its own journal
+  (`node-config`): a `Node_Config` row per setting (`persist` true), a changed value updated, a
+  key it no longer sets or a second row of one key removed, each `wait`ed on as it is, and a new
+  key's insert guarded by its absence. Another module's rows are never touched. Applied when the
+  module's rows are its settings and nothing else, on the same start; not repeated on that
+  start. It reads each configured module's `Node_State`, never writes it, and puts in its status
+  (`node_config.modules`): whether the settings are written (`settings_written`), the settings
+  the module echoes with the value written (`settings_echoed`, a `Node_State` row with the
+  setting's key), `state` (`ok` or `error:<reason>`), `boot_id`, `version` (the SHA-256 of the
+  module's installed file), `running` (the one its running process started from), `slot`, and
+  `update` (`ok` or `failed:<reason>`) with `update_sha256` (the request it answers). The `flags`
+  say what they mean: `state_error`; `not_started_at_boot` (`slot` `none`); `update_pending` (no
+  answer to this update yet); `update_failed`; `restart_not_taken` (the update installed, `ok`,
+  and still not running 60 s later). Its `events` (`<seq> <word>[:<detail>]` entries joined by
+  `;`, newest last, `seq` rising within a boot) are logged once each, by boot and `seq`.
+- **The file server.** With `files` the fleet serves plain HTTP on its advertise address only,
+  port `files.port` (6650 by default): `GET` or `HEAD /` answers 200 with an empty body, and
+  `/<sha256>` the file of `files.directory` with that name, when it is a regular file of at most
+  1 MiB whose content has that SHA-256 (checked at each request); anything else is 404. Every
+  reply carries a `Date` header in GMT, the gateway's clock: a pod without a clock of its own
+  may take its time from it. Each request is logged (the peer, the path, the answer); the files
+  are listed at the fleet's start, those not served with why. No file is pushed: the module
+  fetches it, checks it and installs it, and reports in `Node_State`. Both fleets.
+
 **The agents' processes.** With `agents` `systemd` (the default) each agent is the unit
 `emosa-agent@<pod_id>`:
 step 4 enables it and starts or restarts it, and `forget` disables and stops it. With

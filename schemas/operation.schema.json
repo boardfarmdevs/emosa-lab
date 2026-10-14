@@ -546,6 +546,39 @@
             "remotes"
           ],
           "additionalProperties": false
+        },
+        {
+          "title": "Write the pod's modules' settings (the node-config scope, spec 4, the pods' modules)",
+          "type": "object",
+          "properties": {
+            "pod_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "modules": {
+              "type": "object",
+              "propertyNames": {
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$"
+              },
+              "additionalProperties": {
+                "type": "object",
+                "propertyNames": {
+                  "pattern": "^[a-z0-9][a-z0-9_]{0,63}$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                }
+              }
+            }
+          },
+          "required": [
+            "pod_id",
+            "modules"
+          ],
+          "additionalProperties": false
         }
       ]
     },
