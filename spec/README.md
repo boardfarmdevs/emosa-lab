@@ -816,10 +816,17 @@ for an update; the fleet refuses an update without `files`.
   port `files.port` (6650 by default): `GET` or `HEAD /` answers 200 with an empty body, and
   `/<sha256>` the file of `files.directory` with that name, when it is a regular file of at most
   1 MiB whose content has that SHA-256 (checked at each request); anything else is 404. Every
-  reply carries a `Date` header in GMT, the gateway's clock: a pod without a clock of its own
-  may take its time from it. Each request is logged (the peer, the path, the answer); the files
-  are listed at the fleet's start, those not served with why. No file is pushed: the module
-  fetches it, checks it and installs it, and reports in `Node_State`. Both fleets.
+  reply carries a `Date` header in GMT, the gateway's clock. Each request is logged (the peer,
+  the path, the answer; `/` only when it is not 200); the files are listed at the fleet's start,
+  those not served with why. No file is pushed: the module fetches it, checks it and installs
+  it, and reports in `Node_State`. Both fleets.
+- **The pods' time.** `HEAD /` on the file server is the pods' time source: a converted pod has
+  no clock that survives a reboot (no RTC) and gets none without its operator's cloud, and its
+  vendor's healthcheck reboots a pod whose clock is not set (14 October). Its hook reads the
+  `Date` of `HEAD http://<advertise>:<files.port>/` and sets the clock from it, refusing a time
+  earlier than the one it saved or its own build's (a gateway whose clock is not set yet). The
+  fleet adds nothing for it: the answer is the file server's, so the gateway's own clock must be
+  set (NTP on its WAN).
 
 **The agents' processes.** With `agents` `systemd` (the default) each agent is the unit
 `emosa-agent@<pod_id>`:
