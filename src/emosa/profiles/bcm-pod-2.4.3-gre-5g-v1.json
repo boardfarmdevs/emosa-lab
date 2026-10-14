@@ -1,6 +1,6 @@
 {
   "id": "bcm-pod-2.4.3-gre-5g-v1",
-  "description": "bcm-pod-2.4.3-gre-v1 with the pod's 5 GHz radio as a fronthaul only: wl0 (bcm4366, 11ac) serves the 5 GHz radio's M2 set on its home AP wl0.2, its other BSSes left out (no 5 GHz backhaul slot), and is reported on the channel it operates on, which EMOSA does not move (a channel selection that forbids it is declined, spec 3.4). The backhaul stays on wl1 (2.4 GHz): its station and the GRE parent AP wl1.1. wl0.2 is the 5 GHz home AP as the pod's own cloud writes it (oftag home--1).",
+  "description": "bcm-pod-2.4.3-gre-v1 with the pod's 5 GHz radio as a fronthaul only: wl0 (bcm4366, 11ac) serves the 5 GHz radio's M2 set on its home AP wl0.2, its other BSSes left out (no 5 GHz backhaul slot), and is reported on the channel it operates on, which EMOSA does not move (a channel selection that forbids it is declined, spec 3.4). The backhaul stays on wl1 (2.4 GHz): its station and the GRE parent AP wl1.1. wl0.2 is the 5 GHz home AP as the pod's own cloud writes it (oftag home--1). The backhaul row clears a MAC list on the parent AP (mac_list_type none): a pod converted live keeps its former manager's whitelist there, which would refuse the fleet's other pods as its children.",
   "opensync_version": "2.4.3",
   "schema": "opensync-2.0",
   "radio": {
@@ -47,6 +47,7 @@
   "backhaul_vif": {
     "ssid_broadcast": "disabled",
     "min_hw_mode": "11g",
+    "mac_list_type": "none",
     "security": [
       "map",
       [
