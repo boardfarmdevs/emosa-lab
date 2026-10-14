@@ -754,6 +754,16 @@ directory, its link would show the next agent's). A pod handed over
 again starts a new ownership period, so conflicts recorded before its release
 don't block it.
 
+**The fleet's secrets.** With `secrets` (a directory: the fleet's own secret store, the files
+backend of §6) a secret a site shares among its pods is kept once per gateway: the GTP BSS's
+passphrase (a legacy pod's `uplink.bootstrap.secret_ref`, §3.10) or a backhaul credential
+(`uplink.secret_ref`). Whenever the fleet writes an agent's configuration (step 4, and at its
+start), each reference the configuration names that the agent's own store lacks is copied from
+the fleet's: created (mode 0600, the agent's `secrets` directory 0700), never replacing one the
+agent has, durable. One missing from the fleet's store too is logged by reference; the agent
+then says what it lacks. The value is never logged. So a pod forgotten and admitted again, or
+a new one, needs no secret placed by hand. Both fleets.
+
 **The agents' processes.** With `agents` `systemd` (the default) each agent is the unit
 `emosa-agent@<pod_id>`:
 step 4 enables it and starts or restarts it, and `forget` disables and stops it. With

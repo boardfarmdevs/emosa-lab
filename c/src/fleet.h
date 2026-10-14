@@ -72,7 +72,15 @@ typedef struct {
     const char *database, *state_root, *config_dir;
     em_registry registry;
     char registry_path[512];
+    /* told of each secret reference provisioned (or missing) when an agent configuration is
+     * written (Fleet.provision_secrets' log lines); NULL: not told */
+    void (*secret_note)(const char *pod_id, const char *ref, bool provisioned);
 } em_fleet;
+
+/* Fleet.provision_secrets (spec 4): each secret reference the agent configuration names (its
+ * uplink's, its GTP station's) that the agent's store lacks, copied from the fleet's store (the
+ * configuration's secrets): created, never replaced, durable; the value never leaves the stores. */
+void em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config);
 
 /* Takes config. False (*why) when the registry file exists but cannot be read. */
 bool em_fleet_open(em_fleet *f, cJSON *config, char *why, size_t size);

@@ -270,3 +270,52 @@ def test_the_reference_refuses_supervised_agents(tmp_path, monkeypatch, capsys, 
     assert stopped.value.code == 2
     assert "emosa-fleet-c" in capsys.readouterr().err
     assert not (tmp_path / "state").exists()
+
+
+def fleet_secret(directory, ref, value):
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    path = directory / ref
+    path.write_text(value)
+    path.chmod(0o600)
+
+
+def test_an_agents_secret_is_provisioned_from_the_fleets_store(tmp_path):
+    # spec §4: the GTP passphrase kept once per gateway (the fleet's secrets), copied into the
+    # agent's store when its configuration names it, so a forgotten or new pod needs no hand
+    fleet_secret(tmp_path / "fleet-secrets", "gtp", "FleetGtpPassphrase1")
+    started = []
+    bootstrap = {"ssid": "site-gtp", "secret_ref": "gtp"}
+    fleet = make_fleet(
+        tmp_path,
+        started,
+        secrets=str(tmp_path / "fleet-secrets"),
+        pods={"POD2": {"uplink": {"mode": "off", "bootstrap": bootstrap}}},
+    )
+    entry = {"pod_id": "POD2", "port": 6652, "interface": "em2", "al_mac": derive_al("POD2")}
+    fleet.bind(entry)
+    copied = tmp_path / "state" / "POD2" / "secrets" / "gtp"
+    assert copied.read_text() == "FleetGtpPassphrase1"
+    assert copied.stat().st_mode & 0o777 == 0o600
+    assert (copied.parent.stat().st_mode & 0o777) == 0o700
+    assert started == [("POD2", False)]
+
+
+def test_an_agents_own_secret_is_never_replaced_and_a_missing_one_is_only_logged(tmp_path, caplog):
+    fleet_secret(tmp_path / "fleet-secrets", "gtp", "FleetGtpPassphrase1")
+    fleet_secret(tmp_path / "state" / "POD2" / "secrets", "gtp", "AgentsOwnPassphrase")
+    started = []
+    fleet = make_fleet(
+        tmp_path,
+        started,
+        secrets=str(tmp_path / "fleet-secrets"),
+        pods={
+            "POD2": {"uplink": {"mode": "off", "bootstrap": {"ssid": "g", "secret_ref": "gtp"}}},
+            "POD3": {"uplink": {"mode": "off", "bootstrap": {"ssid": "g", "secret_ref": "other"}}},
+        },
+    )
+    for pod, port in (("POD2", 6652), ("POD3", 6653)):
+        fleet.bind({"pod_id": pod, "port": port, "interface": "em2", "al_mac": derive_al(pod)})
+    assert (tmp_path / "state" / "POD2" / "secrets" / "gtp").read_text() == "AgentsOwnPassphrase"
+    assert not (tmp_path / "state" / "POD3" / "secrets" / "other").exists()
+    assert "other" in caplog.text and "FleetGtpPassphrase1" not in caplog.text
+    assert [pod for pod, _ in started] == ["POD2", "POD3"]  # the agent starts all the same
