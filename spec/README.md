@@ -1205,7 +1205,11 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   `ap_bridge=false`. The SSID is hidden by default, as the OpenSync cloud keeps a backhaul;
   broadcasting it is the profile's choice (`ssid_broadcast`). A child's station still matches
   its parent by SSID, the BSSID pin only narrowing the match, so a hidden parent depends on its
-  Probe Responses carrying the SSID. The Pis' MT7921 answered a child's directed probe with the
+  Probe Responses carrying the SSID. Every parent AP of a site carries the same backhaul SSID and
+  passphrase, whatever its pod's generation, so a station holding them without a pin joins
+  whichever parent it hears best, and its lease and tunnel go with it: with mixed parents, a
+  station's parent is the one it hears best unless pinned (14 October, a station renewing one
+  converted pod's underlay lease on another's parent AP). The Pis' MT7921 answered a child's directed probe with the
   hidden beacon's empty SSID, below hostapd (13 October), and the child never joined, so the
   gre-5g profiles broadcast it, as a gateway broadcasts its own backhaul BSSes; hiding protects
   nothing, as every association request carries the SSID. The parent AP is named `b-ap-<band>` (`b-ap-24` on the 2.4 GHz radio,
