@@ -11,9 +11,13 @@ Ethernet port), the fronthaul radio on the profile's channel and ``ht_mode``. An
 disabled: the 2.4.3 pods' vendor healthcheck reboots a pod whose AP stops beaconing (14
 October). Each such AP is neutralized instead: hidden, out of any bridge, on EMOSA's own
 passphrase (a per-pod ``emosa-`` secret, never logged), so the operator's credentials admit no
-one and it still beacons. A station is never touched, nor a VIF the profile names. Applied when,
-on the same start, those APs are neutral, their Inet rows off and the radio on the profile's
-channel (or the pod not wired, its radio then its upstream's, which ``wm`` follows).
+one and it still beacons. A station is never touched, nor a VIF the profile names. A converted
+pod talks only to EMOSA: the seed's own way to its operator's cloud, ``AWLAN_Node``'s MQTT
+settings, headers and topics (qm's broker), emptied, and its ``Wifi_Stats_Config`` rows (the
+statistics it samples for that broker) removed, in the same write. Applied when, on the same
+start, those APs are neutral, their Inet rows off, the operator's cloud cleared and the radio on
+the profile's channel (or the pod not wired, its radio then its upstream's, which ``wm``
+follows).
 """
 
 import json
@@ -29,8 +33,11 @@ from emosa.opensync.uplink import credential_key, start_instance
 MODE = "opensync-2.0-radio-plan"
 NEUTRAL_REF = "emosa-unclaimed"
 PROVENANCE = "opensync-wm:Wifi_VIF_State+Wifi_Radio_Config"
+# AWLAN_Node's columns that point qm at a broker: the operator's cloud on a seed
+CLOUD = ("mqtt_headers", "mqtt_settings", "mqtt_topics")
 # What the scope monitors beyond the AP scope's tables (emosa.opensync.schema.TABLES): the radio's
-# channel and width, which its guard compares, and the Inet rows' and cm's columns it reads
+# channel and width, which its guard compares, and the Inet rows', cm's, the cloud's and the
+# statistics' columns it reads
 MONITOR = {
     "Wifi_VIF_Config": [
         "ssid_broadcast"
@@ -38,6 +45,8 @@ MONITOR = {
     "Wifi_Radio_Config": ["channel", "ht_mode"],
     "Wifi_Inet_Config": ["if_name", "enabled"],
     "Connection_Manager_Uplink": ["if_name", "if_type", "is_used"],
+    "AWLAN_Node": list(CLOUD),
+    "Wifi_Stats_Config": ["stats_type", "radio_type"],
 }
 
 
@@ -74,7 +83,12 @@ class RadioPlanIntent:
 
     def target(self, vault=None):
         self.validate()
-        return {"unclaimed_inet_on": [], "unclaimed_exposed": [], "radio_planned": True}
+        return {
+            "unclaimed_inet_on": [],
+            "unclaimed_exposed": [],
+            "operator_cloud": [],
+            "radio_planned": True,
+        }
 
 
 def neutral_row(key):
@@ -100,6 +114,11 @@ def neutral(row, key):
 def optional(value):
     """An OVSDB optional's value in a wait row: the value, or the empty set."""
     return ["set", []] if value is None else value
+
+
+def ovs_map(value):
+    """A decoded map column as OVSDB's map, its pairs sorted."""
+    return ["map", [[k, v] for k, v in sorted((value or {}).items())]]
 
 
 class RadioPlanBackend:
@@ -134,9 +153,11 @@ class RadioPlanBackend:
 
     def _changes(self, decoded, intent):
         """What the plan writes now: the unclaimed APs not neutral ((uuid, if_name) each: hidden,
-        in no bridge, on EMOSA's own passphrase), their Inet rows on ((uuid, if_name)), and the
-        radio ((uuid, row) or None: wired and not on the profile's channel). And the configured
-        view, with the unclaimed APs on in their Config or State (left on)."""
+        in no bridge, on EMOSA's own passphrase), their Inet rows on ((uuid, if_name)), the radio
+        ((uuid, row) or None: wired and not on the profile's channel), the operator's cloud
+        ({column: map} as it is, or None: no MQTT setting left) and the statistics rows ((uuid,
+        row) each). And the configured view, with the unclaimed APs on in their Config or State
+        (left on)."""
         claimed = set(intent.claimed)
         aps = sorted(
             (r.get("if_name"), u)
@@ -173,21 +194,28 @@ class RadioPlanBackend:
             intent.channel,
             intent.ht_mode,
         )
+        node = next(iter(decoded.get("AWLAN_Node", {}).values()), {})
+        cloud = {c: dict(node.get(c) or {}) for c in CLOUD}
+        stats = sorted(decoded.get("Wifi_Stats_Config", {}).items())
         changes = (
             [(u, n) for n, u in exposed],
             [(u, n) for n, u in inets],
             radio if wired and radio[0] is not None and not on_plan else None,
+            cloud if any(cloud.values()) else None,
+            stats,
         )
         configured = {
             "unclaimed": sorted(names),
             "unclaimed_enabled": sorted(configs | states),
             "unclaimed_inet_on": sorted(n for n, _ in inets),
             "unclaimed_exposed": sorted(n for n, _ in exposed),
+            "operator_cloud": [c for c in CLOUD if cloud[c]]
+            + (["Wifi_Stats_Config"] if stats else []),
             "channel": radio[1].get("channel"),
             "ht_mode": radio[1].get("ht_mode"),
             "wired": wired,
             "radio_planned": not wired or on_plan,
-            "pending": bool(changes[0] or changes[1] or changes[2]),
+            "pending": any(changes),
         }
         return changes, configured
 
@@ -232,13 +260,14 @@ class RadioPlanBackend:
         decoded, _ = self._binding(raw)
         if not raw["ready"]:
             raise EmosaError(Reason.NOT_READY, "the pod's database is not ready")
-        (exposed, inets, radio), _ = self._changes(decoded, intent)
+        (exposed, inets, radio, _, _), configured = self._changes(decoded, intent)
         return {
             "mapping": MODE,
             "action": "radio-plan",
             "neutralize": [n for _, n in exposed],
             "inet_off": [n for _, n in inets],
             "channel": None if radio is None else intent.channel,
+            "cloud_cleared": configured["operator_cloud"],
             "instance": self.instance,
             "fields": [
                 "Wifi_VIF_Config.security",
@@ -247,14 +276,16 @@ class RadioPlanBackend:
                 "Wifi_Inet_Config.enabled",
                 "Wifi_Radio_Config.channel",
                 "Wifi_Radio_Config.ht_mode",
+                *(f"AWLAN_Node.{c}" for c in CLOUD),
+                "Wifi_Stats_Config",
             ],
             "guard": "pod serial and each changed row as it is",
         }
 
     def transaction(self, intent, decoded, node_uuid):
         """The guarded write: its operations and the counts each must match (None: no write)."""
-        (exposed, inets, radio), _ = self._changes(decoded, intent)
-        if not (exposed or inets or radio):
+        (exposed, inets, radio, cloud, stats), _ = self._changes(decoded, intent)
+        if not (exposed or inets or radio or cloud or stats):
             return None, None
         operations = [
             {
@@ -331,6 +362,44 @@ class RadioPlanBackend:
                     "where": where_uuid(uuid),
                     "row": {"channel": intent.channel, "ht_mode": intent.ht_mode},
                 },
+            ]
+            counts += [None, 1]
+        if cloud is not None:  # qm's broker, headers and topics emptied: no cloud but EMOSA
+            operations += [
+                {
+                    "op": "wait",
+                    "table": "AWLAN_Node",
+                    "where": where_uuid(node_uuid),
+                    "columns": list(CLOUD),
+                    "until": "==",
+                    "rows": [{c: ovs_map(cloud[c]) for c in CLOUD}],
+                    "timeout": 0,
+                },
+                {
+                    "op": "update",
+                    "table": "AWLAN_Node",
+                    "where": where_uuid(node_uuid),
+                    "row": {c: ["map", []] for c in CLOUD},
+                },
+            ]
+            counts += [None, 1]
+        for uuid, row in stats:  # each statistics row as it is, removed
+            operations += [
+                {
+                    "op": "wait",
+                    "table": "Wifi_Stats_Config",
+                    "where": where_uuid(uuid),
+                    "columns": ["stats_type", "radio_type"],
+                    "until": "==",
+                    "rows": [
+                        {
+                            "stats_type": optional(row.get("stats_type")),
+                            "radio_type": optional(row.get("radio_type")),
+                        }
+                    ],
+                    "timeout": 0,
+                },
+                {"op": "delete", "table": "Wifi_Stats_Config", "where": where_uuid(uuid)},
             ]
             counts += [None, 1]
         return operations, counts

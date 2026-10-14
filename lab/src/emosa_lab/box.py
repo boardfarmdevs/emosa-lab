@@ -455,6 +455,19 @@ TELEMETRY = {  # the pod's statistics through a broker in the box (spec 3.6)
     "survey": True,
 }
 FOREIGN_BROKER = [["broker", "cloud.example.net"], ["port", "443"], ["topics", "operator/stats"]]
+# spec 3.10: a legacy pod's seed with its way to its operator's cloud, qm's broker (FOREIGN_BROKER)
+# and headers, and the statistics rows it samples for them
+OPERATOR_HEADERS = [["locationId", "site-1"], ["nodeId", "node-1"]]
+OPERATOR_STATS = (
+    {"stats_type": "client", "radio_type": "2.4G", "report_type": "raw", "reporting_interval": 60},
+    {
+        "stats_type": "survey",
+        "radio_type": "5G",
+        "survey_type": "on-chan",
+        "reporting_interval": 60,
+    },
+)
+CLOUD_COLUMNS = ("mqtt_headers", "mqtt_settings", "mqtt_topics")
 
 
 class Box:
@@ -487,8 +500,16 @@ class Box:
         legacy=False,
         ethernet_first=None,
         gtp_station=None,
+        operator_cloud=False,
+        stations_off=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
+        # operator_cloud (legacy): the seed with its operator's cloud, qm's broker and headers and
+        # two statistics rows (spec 3.10)
+        self.operator_cloud = operator_cloud
+        # stations_off: the pod with a backhaul station on each radio, every one off and none its
+        # uplink, as the Pis' bootstrap leaves a wired pod (14 October)
+        self.stations_off = stations_off
         # legacy: the pod is a legacy pod (spec 3.10), on its own schema and rows, its agent on
         # the legacy profile unless the scenario gives another
         self.legacy = legacy
@@ -541,6 +562,8 @@ class Box:
         # with the agent's uplink setting: a GRE child of the Pis' shape (spec 8.6, 9)
         if gre_child:
             self.pod_rows = POD_ROWS
+        if stations_off:
+            self.pod_rows = MULTI_AP_ROWS
         self.schema = None  # the pod's schema file: the 6.6 reference unless a legacy pod's
         if legacy:
             self.pod_rows = LEGACY_ROWS
@@ -559,6 +582,28 @@ class Box:
         if self.foreign_broker:
             node = next(o for o in operations if o["table"] == "AWLAN_Node")
             node["row"]["mqtt_settings"] = ["map", FOREIGN_BROKER]
+        if self.operator_cloud:
+            node = next(o for o in operations if o["table"] == "AWLAN_Node")
+            node["row"]["mqtt_settings"] = ["map", FOREIGN_BROKER]
+            node["row"]["mqtt_headers"] = ["map", OPERATOR_HEADERS]
+            operations = [
+                *operations,
+                *(
+                    {"op": "insert", "table": "Wifi_Stats_Config", "row": dict(r)}
+                    for r in OPERATOR_STATS
+                ),
+            ]
+        if self.stations_off:
+            for o in operations:
+                if (
+                    o["table"] in ("Wifi_VIF_Config", "Wifi_VIF_State")
+                    and o["row"].get("mode") == "sta"
+                ):
+                    o["row"]["enabled"] = False
+                    if o["table"] == "Wifi_VIF_State":
+                        o["row"]["parent"] = ["set", []]
+                if o["table"] == "Connection_Manager_Uplink":
+                    o["row"]["is_used"] = False
         if self.telemetry:
             # anonymous, local, and as the namespace's own root: no privileges to drop
             broker_config = self.directory / "broker.conf"
@@ -2196,6 +2241,51 @@ async def backhaul_capability(box):
         passed=on and radios == expected and await pinned(box, BACKHAUL_PARENT),
         uplink_applied=on,
         radios=radios,
+    )
+
+
+async def wired_stations_off(box):
+    """spec 8.4, 8.3: a wired pod whose bootstrap made a backhaul station on each radio, every one
+    off (the Pis' bootstrap, 14 October: a station row per band, only the one in use on, none on a
+    wired pod). The agent onboards it and bridges its Ethernet uplink, and writes nothing to the
+    stations: each row as the bootstrap left it. Each still counts as its radio's backhaul STA
+    (EasyMesh 6.1, 9.3), so a controller's move has a row to enable."""
+
+    async def stations():
+        return {
+            r.get("if_name"): {
+                k: r.get(k) for k in ("enabled", "ssid", "parent", "security", "credential_configs")
+            }
+            for r in (await box.rows("Wifi_VIF_Config")).values()
+            if r.get("mode") == "sta"
+        }
+
+    before = await stations()
+    onboarding = await onboarded(box)
+
+    def applied():
+        operation = ((box.status() or {}).get("uplink") or {}).get("operation") or {}
+        return operation.get("state") == "OBSERVED_APPLIED"
+
+    done = await box.until(applied, seconds=60)
+    await asyncio.sleep(8)
+    after = await stations()
+    report = await box.ask(0x8027, (), 0x8028)
+    radios = sorted(t.value[:6].hex(":") for t in (report.tlvs if report else []) if t.kind == 0xCB)
+    uplink = (box.status() or {}).get("uplink") or {}
+    return box.result(
+        passed=bool(onboarding.get("applied"))
+        and bool(done)
+        and sorted(before) == ["bhaul-sta-24", OTHER_STATION_IF]
+        and not any(s["enabled"] for s in before.values())
+        and after == before
+        and radios == ["02:00:00:00:14:00", "02:00:00:00:15:00"],  # both radios' RUIDs
+        onboarded=bool(onboarding.get("applied")),
+        uplink_applied=bool(done),
+        uplink={k: uplink.get(k) for k in ("mode", "bridge", "in_use", "waiting")},
+        stations_untouched=after == before,
+        stations=after,
+        backhaul_sta_radios=radios,
     )
 
 
@@ -6035,6 +6125,69 @@ async def legacy_reseed_reclaim_late(box):
     return await legacy_reseed(box, away=RECONNECT_WINDOW + 5)
 
 
+async def operator_cloud(box):
+    """What of its operator's cloud the pod has: {AWLAN_Node's MQTT column: its map} for each not
+    empty, and "Wifi_Stats_Config": the statistics rows' types when there are any."""
+    node = next(iter((await box.rows("AWLAN_Node")).values()), {})
+    cloud = {c: ovsdb_map(node.get(c)) for c in CLOUD_COLUMNS if ovsdb_map(node.get(c))}
+    stats = await box.rows("Wifi_Stats_Config")
+    if stats:
+        cloud["Wifi_Stats_Config"] = sorted(r.get("stats_type") for r in stats.values())
+    return cloud
+
+
+async def legacy_cloud_cleared(box):
+    """spec 3.10, a converted pod talks only to EMOSA: legacy-radio-plan's pod, its seed with its
+    operator's cloud (qm's broker and headers, a client and a survey statistics row) and the
+    fleet's telemetry on. The radio plan clears it in its one write on the start: AWLAN_Node's
+    MQTT settings, headers and topics empty, the statistics rows gone. The agent's own telemetry
+    is off on a converted pod: nothing of EMOSA's written in their place. The pod's OpenSync starts
+    again on its seed, the operator's cloud back: cleared once more on the new start."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    first = await radio_plan_applied(box)
+    if not first:
+        return box.result(
+            passed=False, failed="no radio plan", radio_plan=(box.status() or {}).get("radio_plan")
+        )
+    await asyncio.sleep(8)  # the telemetry scope's ticks, were it on
+    cleared = await operator_cloud(box)
+    telemetry = ((box.status() or {}).get("telemetry") or {}).get("mode")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
+    await box.new_pod_database()
+    seeded = await operator_cloud(box)
+    session = await back(box, searches, m1s, continued)
+
+    async def applied_again():
+        await apply_configuration(box.db)
+        operation = radio_plan_operation(box)
+        new = operation.get("operation_id") != first.get("operation_id")
+        return operation if new and operation.get("state") == "OBSERVED_APPLIED" else None
+
+    second = await until_async(applied_again, seconds=60)
+    await asyncio.sleep(8)
+    again = await operator_cloud(box)
+    plan = (box.status() or {}).get("radio_plan") or {}
+    return box.result(
+        passed=not cleared
+        and telemetry == "off"
+        and sorted(seeded) == ["Wifi_Stats_Config", "mqtt_headers", "mqtt_settings"]
+        and session is not None
+        and second is not None
+        and second.get("instance") != first.get("instance")
+        and not again
+        and plan.get("operator_cloud") == [],
+        cloud_after_plan=cleared,
+        telemetry=telemetry,
+        seeded=seeded,
+        session_after_reseed=session,
+        cloud_after_reseed=again,
+        radio_plan=plan,
+    )
+
+
 async def generation_refused(box):
     """spec 3.10: the pod's schema is not its profile's generation (a 6.6 profile on a legacy pod,
     or a legacy profile on a 6.6 pod). The agent refuses the pod (SCHEMA_MISMATCH in its status):
@@ -6084,6 +6237,7 @@ SCENARIOS = {
     "steering-close-refused": steering_close_refused,
     "steering-refusals": steering_refusals,
     "backhaul-capability": backhaul_capability,
+    "wired-stations-off": wired_stations_off,
     "backhaul-steering": backhaul_steering,
     "revert-by-record": revert_by_record,
     "restart-during-move": restart_during_move,
@@ -6146,6 +6300,7 @@ SCENARIOS = {
     "legacy-reseed-reclaim-late": legacy_reseed_reclaim_late,
     "legacy-profile-5g": legacy_profile_5g,
     "legacy-gtp-station-unassociated": legacy_gtp_station_unassociated,
+    "legacy-cloud-cleared": legacy_cloud_cleared,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -6157,6 +6312,7 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "metrics": {"telemetry": True},
     "unassociated": {"telemetry": True},
     "backhaul-capability": {"backhaul": True},
+    "wired-stations-off": {"wired": True, "stations_off": True},
     "backhaul-steering": {"backhaul": True},
     "revert-by-record": {
         "backhaul": True,
@@ -6347,6 +6503,13 @@ OPTIONS["legacy-profile-5g"] = OPTIONS["legacy-radio-plan"]
 OPTIONS["legacy-gtp-station-unassociated"] = {
     **OPTIONS["legacy-gtp-station"],
     "gtp_station": {**GTP_STATION, "unassociated_seconds": 8, "retry_seconds": [12]},
+}
+# spec 3.10, the operator's cloud cleared: the radio plan's pod, its seed with the cloud, and the
+# fleet's telemetry on (off on a converted pod)
+OPTIONS["legacy-cloud-cleared"] = {
+    **OPTIONS["legacy-radio-plan"],
+    "operator_cloud": True,
+    "telemetry": True,
 }
 OPTIONS["legacy-gre-move"] = {
     "legacy": True,

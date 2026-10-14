@@ -2650,6 +2650,12 @@ static bool configure(agent *a, const char *path, const char *profiles)
             FAIL("profile: radio_plan needs the profile's VIF names, band, channel and ht_mode");
             return false;
         }
+        if (a->telemetry_on) {
+            /* a converted pod talks only to EMOSA, its plan clears qm's broker and the statistics rows
+             * on every start; the pod publishes nothing (a fleet's telemetry is ignored) */
+            WARN("telemetry: off on a converted pod (radio_plan emosa)");
+            a->telemetry_on = a->watch_on = false;
+        }
     }
     /* spec 3.10, the GTP station: a legacy pod's core makes none, and its seed has none */
     const cJSON *bootstrap = cJSON_GetObjectItemCaseSensitive(uplink, "bootstrap");

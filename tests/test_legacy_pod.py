@@ -391,7 +391,9 @@ class SeededPod(WiredPod):
 
     async def transact(self, operations, transaction_id=None, generation=None, **_):
         self.sent.append(operations)
-        return [{"count": 1} if op["op"] in ("mutate", "update") else {} for op in operations]
+        return [
+            {"count": 1} if op["op"] in ("mutate", "update", "delete") else {} for op in operations
+        ]
 
 
 def gtp(tmp_path, pod, bssid=None):
@@ -602,10 +604,86 @@ def test_a_planned_pod_has_nothing_to_write(tmp_path):
     assert all(config.get(k) == v for k, v in intent.target(vault).items())
 
 
+STATS_CLIENT, STATS_SURVEY = (f"00000000-0000-4000-8000-0000000006{n}" for n in ("01", "02"))
+OPERATOR_MQTT = {"broker": "cloud.example.net", "port": "443", "topics": "operator/stats"}
+
+
+def with_operator_cloud(pod):
+    """The seed's way to its operator's cloud: qm's broker, headers and topics, and the
+    statistics rows it samples for them."""
+    pod.tables["AWLAN_Node"][NODE].update(
+        {
+            "mqtt_settings": ["map", sorted(map(list, OPERATOR_MQTT.items()))],
+            "mqtt_headers": ["map", [["locationId", "site-1"], ["nodeId", "node-1"]]],
+            "mqtt_topics": ["map", []],
+        }
+    )
+    pod.tables["Wifi_Stats_Config"] = {
+        STATS_CLIENT: {"stats_type": "client", "radio_type": "2.4G"},
+        STATS_SURVEY: {"stats_type": "survey", "radio_type": "5G"},
+    }
+    return pod
+
+
+def test_the_radio_plan_clears_the_operators_cloud(tmp_path):
+    # a converted pod talks only to EMOSA: qm's broker, headers and topics emptied, the
+    # statistics rows removed, each as it is, in the plan's one write
+    pod = with_operator_cloud(OperatorPod())
+    backend, intent, _ = radio_plan(pod, tmp_path)
+    config = asyncio.run(backend.snapshot()).config
+    assert config["operator_cloud"] == ["mqtt_headers", "mqtt_settings", "Wifi_Stats_Config"]
+    plan = asyncio.run(backend.plan(intent))
+    assert plan["cloud_cleared"] == config["operator_cloud"]
+    assert "AWLAN_Node.mqtt_settings" in plan["fields"] and "Wifi_Stats_Config" in plan["fields"]
+    attempt = {"transaction_id": "t1", "session_generation": 1}
+    assert asyncio.run(backend.submit(intent, attempt)).status == "committed"
+    (ops,) = pod.sent
+    node = [op for op in ops if op["table"] == "AWLAN_Node"]
+    assert node[1]["columns"] == ["mqtt_headers", "mqtt_settings", "mqtt_topics"]
+    assert node[1]["rows"] == [
+        {
+            "mqtt_headers": ["map", [["locationId", "site-1"], ["nodeId", "node-1"]]],
+            "mqtt_settings": ["map", sorted(map(list, OPERATOR_MQTT.items()))],
+            "mqtt_topics": ["map", []],
+        }
+    ]
+    assert node[2]["op"] == "update" and node[2]["row"] == {
+        "mqtt_headers": ["map", []],
+        "mqtt_settings": ["map", []],
+        "mqtt_topics": ["map", []],
+    }
+    stats = [op for op in ops if op["table"] == "Wifi_Stats_Config"]
+    assert [(op["op"], op["where"]) for op in stats] == [
+        (kind, [["_uuid", "==", ["uuid", uuid]]])
+        for uuid in (STATS_CLIENT, STATS_SURVEY)
+        for kind in ("wait", "delete")
+    ]
+    assert stats[0]["rows"] == [{"stats_type": "client", "radio_type": "2.4G"}]
+
+
+def test_a_cleared_cloud_is_part_of_the_applied_plan(tmp_path):
+    pod = with_operator_cloud(OperatorPod())
+    backend, intent, vault = radio_plan(pod, tmp_path)
+    key = vault.generated("emosa-unclaimed")
+    for uuid in (OP_AP1, OP_AP2):
+        pod.tables["Wifi_VIF_Config"][uuid].update(neutral(key))
+    pod.tables["Wifi_Inet_Config"][OP_INET]["enabled"] = False
+    pod.tables["Wifi_Radio_Config"][RADIO].update({"channel": 6, "ht_mode": "HT20"})
+    config = asyncio.run(backend.snapshot()).config
+    assert config["pending"] is True  # the cloud is still the operator's
+    assert not all(config.get(k) == v for k, v in intent.target(vault).items())
+    for column in ("mqtt_settings", "mqtt_headers"):
+        pod.tables["AWLAN_Node"][NODE][column] = ["map", []]
+    pod.tables["Wifi_Stats_Config"] = {}
+    config = asyncio.run(backend.snapshot()).config
+    assert config["pending"] is False and config["operator_cloud"] == []
+    assert all(config.get(k) == v for k, v in intent.target(vault).items())
+
+
 def test_the_agent_monitors_every_column_the_radio_plan_compares():
     # the session sees only the columns monitored: the neutral AP's hidden flag, bridge and key,
     # the radio's channel and width, the Inet rows and cm's uplink (the box found the hidden flag
-    # missing: the plan was written and never seen applied)
+    # missing: the plan was written and never seen applied), the cloud's and statistics' columns
     from emosa.agent.pod import MONITOR
 
     for table, columns in {
@@ -613,6 +691,8 @@ def test_the_agent_monitors_every_column_the_radio_plan_compares():
         "Wifi_Radio_Config": ("channel", "ht_mode"),
         "Wifi_Inet_Config": ("if_name", "enabled"),
         "Connection_Manager_Uplink": ("if_name", "if_type", "is_used"),
+        "AWLAN_Node": ("mqtt_settings", "mqtt_headers", "mqtt_topics"),
+        "Wifi_Stats_Config": ("stats_type", "radio_type"),
     }.items():
         assert set(columns) <= set(MONITOR[table]), table
 

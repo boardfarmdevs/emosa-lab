@@ -16,7 +16,12 @@
 #define SOURCE "radio-plan-policy"
 #define DEADLINE 30
 #define ROWS 16 /* the unclaimed APs and their Inet rows the scope reads, at most */
+#define STATS 64 /* the statistics rows removed in one write, at most */
 #define NEUTRAL_REF "emosa-unclaimed" /* RadioPlanIntent's default neutral_ref */
+
+/* radio_plan.CLOUD: AWLAN_Node's columns that point qm at a broker, the operator's cloud on a seed */
+static const char *const CLOUD[] = {"mqtt_headers", "mqtt_settings", "mqtt_topics"};
+#define NCLOUD 3
 
 static const char *str(const cJSON *o, const char *k)
 {
@@ -119,6 +124,7 @@ static cJSON *target(void *ctx, const cJSON *intent, em_reason *why)
     cJSON *t = cJSON_CreateObject();
     cJSON_AddArrayToObject(t, "unclaimed_inet_on");
     cJSON_AddArrayToObject(t, "unclaimed_exposed");
+    cJSON_AddArrayToObject(t, "operator_cloud");
     cJSON_AddTrueToObject(t, "radio_planned");
     return t;
 }
@@ -137,9 +143,20 @@ typedef struct {
     char all[ROWS][16]; /* every unclaimed AP */
     const char *radio_uuid;        /* to write: the wired pod's radio, off the profile's channel */
     const cJSON *radio;
+    const cJSON *node; /* to write: the pod's node, an MQTT setting of its operator's on it */
+    size_t nstats;
+    const cJSON *stats[STATS]; /* to remove: the statistics rows (each row's uuid its key) */
 } plan_changes;
 
 static int named_order(const void *a, const void *b) { return strcmp(((const named *)a)->name, ((const named *)b)->name); }
+
+static int uuid_order(const void *a, const void *b)
+{
+    return strcmp((*(const cJSON *const *)a)->string, (*(const cJSON *const *)b)->string);
+}
+
+/* the node's MQTT settings, headers or topics not empty: the cloud it points qm at */
+static bool cloud_column(const cJSON *node, size_t k) { return node && ovs_map_size(node, CLOUD[k]) > 0; }
 
 static bool claimed(const em_plan_intent *i, const char *name)
 {
@@ -268,6 +285,18 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, const char *
         c->radio = radio;
         c->radio_uuid = radio_uuid;
     }
+    /* the operator's cloud: the node's MQTT columns, the statistics rows */
+    const cJSON *node = cJSON_GetArrayItem(em_table(tables, "AWLAN_Node"), 0);
+    bool cloud = false;
+    for (size_t k = 0; k < NCLOUD; k++)
+        cloud = cloud || cloud_column(node, k);
+    c->node = cloud ? node : NULL;
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_Stats_Config"))
+    {
+        if (c->nstats < STATS)
+            c->stats[c->nstats++] = r;
+    }
+    qsort(c->stats, c->nstats, sizeof(c->stats[0]), uuid_order);
     cJSON *v = cJSON_CreateObject(), *list = cJSON_AddArrayToObject(v, "unclaimed");
     for (size_t k = 0; k < c->nall; k++)
         cJSON_AddItemToArray(list, cJSON_CreateString(c->all[k]));
@@ -281,11 +310,17 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, const char *
     list = cJSON_AddArrayToObject(v, "unclaimed_exposed");
     for (size_t k = 0; k < c->nexposed; k++)
         cJSON_AddItemToArray(list, cJSON_CreateString(c->exposed[k].name));
+    list = cJSON_AddArrayToObject(v, "operator_cloud");
+    for (size_t k = 0; k < NCLOUD; k++)
+        if (cloud_column(node, k))
+            cJSON_AddItemToArray(list, cJSON_CreateString(CLOUD[k]));
+    if (c->nstats)
+        cJSON_AddItemToArray(list, cJSON_CreateString("Wifi_Stats_Config"));
     cJSON_AddItemToObject(v, "channel", has_channel ? cJSON_CreateNumber((double)channel) : cJSON_CreateNull());
     cJSON_AddItemToObject(v, "ht_mode", ht_mode ? cJSON_CreateString(ht_mode) : cJSON_CreateNull());
     cJSON_AddBoolToObject(v, "wired", wired);
     cJSON_AddBoolToObject(v, "radio_planned", !wired || on_plan);
-    cJSON_AddBoolToObject(v, "pending", c->nexposed || c->ninets || c->radio);
+    cJSON_AddBoolToObject(v, "pending", c->nexposed || c->ninets || c->radio || c->node || c->nstats);
     return v;
 }
 
@@ -353,7 +388,7 @@ static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
     }
     plan_changes c;
     char *key = neutral_key(s, &i);
-    cJSON_Delete(changes(&i, em_ovsdb_tables(s->ovs), key, &c));
+    cJSON *view = changes(&i, em_ovsdb_tables(s->ovs), key, &c);
     em_free_secret(key);
     cJSON *p = cJSON_CreateObject();
     cJSON_AddStringToObject(p, "mapping", MODE);
@@ -365,10 +400,14 @@ static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
     for (size_t k = 0; k < c.ninets; k++)
         cJSON_AddItemToArray(list, cJSON_CreateString(c.inets[k].name));
     cJSON_AddItemToObject(p, "channel", c.radio ? cJSON_CreateNumber(i.channel) : cJSON_CreateNull());
+    cJSON_AddItemToObject(p, "cloud_cleared", cJSON_DetachItemFromObjectCaseSensitive(view, "operator_cloud"));
+    cJSON_Delete(view);
     cJSON_AddStringToObject(p, "instance", s->instance);
     const char *fields[] = {"Wifi_VIF_Config.security",  "Wifi_VIF_Config.ssid_broadcast", "Wifi_VIF_Config.bridge",
-                            "Wifi_Inet_Config.enabled",  "Wifi_Radio_Config.channel",      "Wifi_Radio_Config.ht_mode"};
-    cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 6));
+                            "Wifi_Inet_Config.enabled",  "Wifi_Radio_Config.channel",      "Wifi_Radio_Config.ht_mode",
+                            "AWLAN_Node.mqtt_headers",   "AWLAN_Node.mqtt_settings",       "AWLAN_Node.mqtt_topics",
+                            "Wifi_Stats_Config"};
+    cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 10));
     cJSON_AddStringToObject(p, "guard", "pod serial and each changed row as it is");
     return p;
 }
@@ -400,6 +439,15 @@ static cJSON *empty_set(void)
     return set;
 }
 
+/* OVSDB's empty map, ["map", []] */
+static cJSON *empty_map(void)
+{
+    cJSON *map = cJSON_CreateArray();
+    cJSON_AddItemToArray(map, cJSON_CreateString("map"));
+    cJSON_AddItemToArray(map, cJSON_CreateArray());
+    return map;
+}
+
 static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_submit_out *out)
 {
     em_plan_scope *s = ctx;
@@ -422,15 +470,15 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     char *key = neutral_key(s, &i);
     if (node)
         cJSON_Delete(changes(&i, em_ovsdb_tables(s->ovs), key, &c));
-    if (!node || em_ovsdb_generation(s->ovs) != generation || !(c.nexposed || c.ninets || c.radio) ||
-        (c.nexposed && !key)) {
+    if (!node || em_ovsdb_generation(s->ovs) != generation ||
+        !(c.nexposed || c.ninets || c.radio || c.node || c.nstats) || (c.nexposed && !key)) {
         em_free_secret(key);
         strcpy(out->status, "rejected"); /* not bound, another session, nothing differs, or no key */
         out->reason = EM_NOT_READY;
         return;
     }
     cJSON *ops = cJSON_CreateArray(), *row;
-    int counts[1 + 2 * (ROWS + ROWS + 1)];
+    int counts[1 + 2 * (ROWS + ROWS + 1 + 1 + STATS)];
     size_t n = 0;
     const char *node_cols[] = {"serial_number"};
     row = cJSON_CreateObject();
@@ -478,6 +526,30 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         cJSON_AddNumberToObject(row, "channel", i.channel);
         cJSON_AddStringToObject(row, "ht_mode", i.ht_mode);
         cJSON_AddItemToArray(ops, update_row("Wifi_Radio_Config", c.radio_uuid, row));
+        counts[n++] = -1;
+        counts[n++] = 1;
+    }
+    if (c.node) { /* qm's broker, headers and topics emptied: no cloud but EMOSA */
+        row = cJSON_CreateObject();
+        cJSON *empty = cJSON_CreateObject();
+        for (size_t k = 0; k < NCLOUD; k++) {
+            const cJSON *v = cJSON_GetObjectItemCaseSensitive(c.node, CLOUD[k]);
+            cJSON_AddItemToObject(row, CLOUD[k], v ? cJSON_Duplicate(v, 1) : empty_map());
+            cJSON_AddItemToObject(empty, CLOUD[k], empty_map());
+        }
+        cJSON_AddItemToArray(ops, wait_row("AWLAN_Node", node_uuid, CLOUD, NCLOUD, row));
+        cJSON_AddItemToArray(ops, update_row("AWLAN_Node", node_uuid, empty));
+        counts[n++] = -1;
+        counts[n++] = 1;
+    }
+    const char *stats_cols[] = {"stats_type", "radio_type"};
+    for (size_t k = 0; k < c.nstats; k++) { /* each statistics row as it is, removed */
+        const char *type = ovs_str(c.stats[k], "stats_type"), *radio_type = ovs_str(c.stats[k], "radio_type");
+        row = cJSON_CreateObject();
+        cJSON_AddItemToObject(row, "stats_type", type ? cJSON_CreateString(type) : empty_set());
+        cJSON_AddItemToObject(row, "radio_type", radio_type ? cJSON_CreateString(radio_type) : empty_set());
+        cJSON_AddItemToArray(ops, wait_row("Wifi_Stats_Config", c.stats[k]->string, stats_cols, 2, row));
+        cJSON_AddItemToArray(ops, em_ovs_op("delete", "Wifi_Stats_Config", em_ovs_where_uuid(c.stats[k]->string)));
         counts[n++] = -1;
         counts[n++] = 1;
     }
@@ -635,8 +707,9 @@ cJSON *em_plan_status(em_plan_scope *s)
 {
     cJSON *o = cJSON_CreateObject(), *op = em_journal_latest(s->journal);
     const cJSON *config = s->has_last ? s->last.config : NULL;
-    const char *keys[] = {"unclaimed", "unclaimed_enabled", "unclaimed_inet_on", "unclaimed_exposed", "channel", "wired"};
-    for (size_t k = 0; k < 6; k++) {
+    const char *keys[] = {"unclaimed",      "unclaimed_enabled", "unclaimed_inet_on", "unclaimed_exposed",
+                          "operator_cloud", "channel",           "wired"};
+    for (size_t k = 0; k < 7; k++) {
         const cJSON *v = cJSON_GetObjectItemCaseSensitive(config, keys[k]);
         cJSON_AddItemToObject(o, keys[k], v ? cJSON_Duplicate(v, 1) : cJSON_CreateNull());
     }

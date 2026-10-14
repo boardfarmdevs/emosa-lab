@@ -689,19 +689,31 @@ is everything above. For a legacy pod, all of this specification applies, except
     on the fronthaul's radio while the uplink in use is not its station (the pod wired). On its
     Wi-Fi uplink, `wm` moves the radio to its upstream's channel, which a legacy profile then
     shares (the GTP BSS on channel 6).
+  - **The operator's cloud.** A converted pod talks only to EMOSA (the owner, 14 October). The
+    seed points `qm` at its operator's cloud: `AWLAN_Node`'s `mqtt_settings` (the broker, port
+    and topic), `mqtt_headers` and `mqtt_topics`, and `Wifi_Stats_Config` rows asking the pod's
+    managers for the statistics it publishes there. The plan empties the three maps and removes
+    every statistics row, so `qm` has no broker and nothing is sampled for one. The agent's own
+    telemetry (§3.6) is off on a converted pod, a fleet's `telemetry` ignored with a warning in
+    the log: nothing of EMOSA's takes the cloud's place. What the vendor's own scripts send past
+    OpenSync (a log upload, say) is not the agent's to change.
   - **Write:** once per start of the pod's OpenSync, in one guarded transaction: `wait` on the
     serial and on each changed row as it is (`if_name` and `mode` of a VIF; `if_name` and
-    `enabled` of an Inet row; `if_name`, `channel` and `ht_mode` of the radio), then each
-    `update`. Nothing is written when nothing differs. **Applied** when, on the same start, every
-    unclaimed AP is neutral (`unclaimed_exposed` empty), its Inet row off (`unclaimed_inet_on`
-    empty) and the radio's Config has the profile's channel. Not repeated on that start, even
-    when a row is changed again: the next start writes it again. The status shows the unclaimed
-    APs left on (`unclaimed_enabled`), those not neutral yet and their Inet rows still on. The
-    vendor's target may rebuild a VIF to hide it or change its key: a few seconds without
-    beacons, at most one failing healthcheck round.
+    `enabled` of an Inet row; `if_name`, `channel` and `ht_mode` of the radio; the node's three
+    MQTT maps; `stats_type` and `radio_type` of a statistics row), then each `update` (a
+    statistics row's `delete`). Nothing is written when nothing differs. **Applied** when, on the
+    same start, every unclaimed AP is neutral (`unclaimed_exposed` empty), its Inet row off
+    (`unclaimed_inet_on` empty), the operator's cloud cleared (`operator_cloud` empty: none of the
+    three maps set, no statistics row) and the radio's Config has the profile's channel. Not
+    repeated on that start, even when a row is changed again: the next start writes it again. The
+    status shows the unclaimed APs left on (`unclaimed_enabled`), those not neutral yet, their
+    Inet rows still on and what is left of the cloud. The vendor's target may rebuild a VIF to
+    hide it or change its key: a few seconds without beacons, at most one failing healthcheck
+    round.
 
   Both agents. Box `legacy-radio-plan` (every VIF beaconing or associated, the box's terms for the
-  vendor healthcheck).
+  vendor healthcheck) and `legacy-cloud-cleared` (the cloud cleared on the start and again after
+  a re-seed, the fleet's telemetry ignored).
 - **Its starts, counted by its agent's sessions.** A legacy pod's database is its vendor's seed
   again at every start of its OpenSync (a reboot, or its connection manager restarting the
   managers after more than 120 s without its uplink), every row with the UUID it had in the

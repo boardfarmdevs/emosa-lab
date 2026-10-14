@@ -234,6 +234,12 @@ def test_the_backhaul_sta_capability_names_each_backhaul_station_radio(agent, tm
     assert result["passed"], result
 
 
+def test_a_wired_pods_backhaul_stations_all_off_are_left_alone(agent, tmp_path):
+    # spec 8.4, 8.3: the Pis' bootstrap, a station row per band and none on a wired pod
+    result = box("wired-stations-off", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
 def test_backhaul_steering_moves_the_station_and_answers_success(agent, tmp_path):
     result = box("backhaul-steering", agent, tmp_path / "box")
     assert result["passed"], result
@@ -712,6 +718,12 @@ def test_an_unassociated_gtp_station_is_removed_before_the_healthcheck_reboots_t
 ):
     # spec 3.10, the station's guard: removed unassociated, written again after the back-off
     result = box("legacy-gtp-station-unassociated", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_a_converted_pods_operator_cloud_is_cleared_on_every_start(agent, tmp_path):
+    # spec 3.10, a converted pod talks only to EMOSA: qm's broker and the statistics rows gone
+    result = box("legacy-cloud-cleared", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result
 
 

@@ -107,6 +107,7 @@ class RadioPlan:
             "unclaimed_enabled": config.get("unclaimed_enabled"),
             "unclaimed_inet_on": config.get("unclaimed_inet_on"),
             "unclaimed_exposed": config.get("unclaimed_exposed"),
+            "operator_cloud": config.get("operator_cloud"),
             "channel": config.get("channel"),
             "wired": config.get("wired"),
             "waiting": self.waiting,

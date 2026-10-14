@@ -995,6 +995,11 @@ async def serve(config, stop):
     telemetry = stats = subscriber = telemetry_store = watch = None
     telemetry_config = config.get("telemetry", {"mode": "off"})
     wanted = telemetry_intent(pod_id, config["serial"], telemetry_config)
+    if wanted is not None and radio_plan is not None:
+        # spec 3.10: a converted pod talks only to EMOSA, its plan clears qm's broker and the
+        # statistics rows on every start; the pod publishes nothing (a fleet's telemetry is ignored)
+        log.warning("telemetry: off on a converted pod (radio_plan emosa)")
+        wanted = None
     if wanted is not None:
         telemetry_store = Store(state_dir / "telemetry")
         telemetry = TelemetrySetup(
