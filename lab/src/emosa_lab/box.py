@@ -517,8 +517,12 @@ class Box:
         operator_cloud=False,
         stations_off=False,
         modules=None,
+        seed_stations=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
+        # seed_stations (legacy): the seed with onboarding stations on wl0 and wl1, as a converted
+        # pod's own seed brings them back at a hooked boot (14 October)
+        self.seed_stations = seed_stations
         # modules: the fleet's modules (spec 4), the pod's Node_Config with NODE_ROWS beside
         self.modules = modules
         # operator_cloud (legacy): the seed with its operator's cloud, qm's broker and headers and
@@ -667,6 +671,8 @@ class Box:
                 )
             if self.ethernet_first:
                 await session.transact(ethernet_first(self.ethernet_first))
+            if self.seed_stations:
+                await session.transact(seed_stations())
         finally:
             await session.close()
         if self.legacy:  # its vendor's seed, as every start of its OpenSync restores it
@@ -5201,6 +5207,61 @@ OPERATOR_CREDENTIALS = ("operator-bh-1", "operator-bh-2")  # a seed's onboarding
 OPERATOR_APS = {"wl0.1": "operator-bh-1", "wl0.2": "operator-home"}
 
 
+SEED_STATION_SSID = "operator-onboarding"
+
+
+def seed_stations():
+    """A converted pod's onboarding stations as its seed brings them back (14 October: its wl0
+    and wl1 joined another pod's operator backhaul): on wl0 and wl1, credential-list mode, the
+    operator's onboarding credential linked, each in its radio's vif_configs, wl0 with an Inet
+    row (wl1 has the seed's)."""
+    operations = [
+        {
+            "op": "insert",
+            "table": "Wifi_Credential_Config",
+            "uuid-name": "onboarding",
+            "row": {
+                "ssid": SEED_STATION_SSID,
+                "onboard_type": "gre",
+                "security": ["map", [["encryption", "WPA-PSK"], ["key", "operator-key"]]],
+            },
+        },
+        {
+            "op": "insert",
+            "table": "Wifi_Inet_Config",
+            "row": {
+                "if_name": "wl0",
+                "if_type": "vif",
+                "enabled": False,
+                "network": False,
+                "ip_assign_scheme": "dhcp",
+            },
+        },
+    ]
+    for name in ("wl0", "wl1"):
+        operations += [
+            {
+                "op": "insert",
+                "table": "Wifi_VIF_Config",
+                "uuid-name": f"sta_{name}",
+                "row": {
+                    "if_name": name,
+                    "mode": "sta",
+                    "enabled": True,
+                    "vif_radio_idx": 0,
+                    "credential_configs": ["set", [["named-uuid", "onboarding"]]],
+                },
+            },
+            {
+                "op": "mutate",
+                "table": "Wifi_Radio_Config",
+                "where": [["if_name", "==", name]],
+                "mutations": [["vif_configs", "insert", ["set", [["named-uuid", f"sta_{name}"]]]]],
+            },
+        ]
+    return operations
+
+
 def operator_aps():
     """The operator's APs as a vendor's seed has them, applied by its wm: wl0.1, a hidden
     backhaul AP with its own address and DHCP server (169.254.3.1/24), and wl0.2, a home AP in
@@ -6263,6 +6324,80 @@ async def node_config(box):
     )
 
 
+async def station_rows(box):
+    """The pod's station rows: {if_name: its SSID} (its linked credentials' when it has none)."""
+    credentials = await box.rows("Wifi_Credential_Config")
+    found = {}
+    for row in (await box.rows("Wifi_VIF_Config")).values():
+        if row.get("mode") == "sta":
+            linked = sorted(
+                credentials[u].get("ssid") or ""
+                for u in uuids(row.get("credential_configs"))
+                if u in credentials
+            )
+            ssid = row.get("ssid") if isinstance(row.get("ssid"), str) else ""
+            found[row.get("if_name")] = ssid or ",".join(linked)
+    return found
+
+
+async def legacy_seed_stations(box):
+    """spec 3.10, a converted pod's seed stations: legacy-radio-plan's wired pod, its seed with the
+    operator's onboarding stations on wl0 and wl1 (credential-list mode), which associate to nothing
+    on a converted site and fail the vendor healthcheck. The radio plan's write on the start deletes
+    both, with their credential, wl0's Inet row and their radios' references; the agent logs it.
+    wl1 free, the GTP station is written there and associates: after admission the only station is
+    EMOSA's, and the pod passes the healthcheck. The pod's OpenSync starts again on its seed (the
+    stations back): the same on the new start."""
+    seeded = await station_rows(box)
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+
+    async def settled():
+        await apply_configuration(box.db)
+        rows = await station_rows(box)
+        if rows == {"wl1": GTP_SSID}:
+            await associate_station(box)
+            return rows
+        return None
+
+    first = await until_async(settled, seconds=90)
+    inets = sorted(r.get("if_name") for r in (await box.rows("Wifi_Inet_Config")).values())
+    credentials = sorted(r.get("ssid") for r in (await box.rows("Wifi_Credential_Config")).values())
+    failing = await healthcheck(box)
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
+    await box.new_pod_database()
+    reseeded = await station_rows(box)
+    session = await back(box, searches, m1s, continued, seconds=90)
+    again = await until_async(settled, seconds=90)
+    failing_again = await healthcheck(box)
+    log = (box.directory / "agent.log").read_text(errors="replace")
+    plan = (box.status() or {}).get("radio_plan") or {}
+    return box.result(
+        passed=seeded == {"wl0": SEED_STATION_SSID, "wl1": SEED_STATION_SSID}
+        and first == {"wl1": GTP_SSID}
+        and "wl0" not in inets
+        and SEED_STATION_SSID not in credentials
+        and not failing
+        and reseeded == seeded
+        and session is not None
+        and again == {"wl1": GTP_SSID}
+        and not failing_again
+        and log.count("stations") >= 2
+        and plan.get("foreign_stations") == [],
+        seeded=seeded,
+        after_admission=first,
+        inet_rows=inets,
+        credentials=credentials,
+        healthcheck_failing=failing,
+        session_after_reseed=session,
+        after_reseed=again,
+        healthcheck_failing_after_reseed=failing_again,
+        radio_plan=plan,
+    )
+
+
 async def operator_cloud(box):
     """What of its operator's cloud the pod has: {AWLAN_Node's MQTT column: its map} for each not
     empty, and "Wifi_Stats_Config": the statistics rows' types when there are any."""
@@ -6440,6 +6575,7 @@ SCENARIOS = {
     "legacy-gtp-station-unassociated": legacy_gtp_station_unassociated,
     "legacy-cloud-cleared": legacy_cloud_cleared,
     "node-config": node_config,
+    "legacy-seed-stations": legacy_seed_stations,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -6646,6 +6782,8 @@ OPTIONS["legacy-gtp-station-unassociated"] = {
 }
 # spec 3.10, the operator's cloud cleared: the radio plan's pod, its seed with the cloud, and the
 # fleet's telemetry on (off on a converted pod)
+# spec 3.10, the seed's stations: the radio plan's pod with the operator's onboarding stations
+OPTIONS["legacy-seed-stations"] = {**OPTIONS["legacy-radio-plan"], "seed_stations": True}
 OPTIONS["legacy-cloud-cleared"] = {
     **OPTIONS["legacy-radio-plan"],
     "operator_cloud": True,

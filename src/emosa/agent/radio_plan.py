@@ -97,6 +97,13 @@ class RadioPlan:
         if op.state == State.REQUESTED:
             op = await self.engine.execute(op.operation_id)
             log.info("radio plan %s: %s %s", op.operation_id, op.state, op.reason or "")
+            removed = (op.plan or {}).get("stations_removed")
+            if removed and op.state in (State.CONFIG_COMMITTED, State.OBSERVED_APPLIED):
+                log.warning(
+                    "radio plan: the pod's stations %s deleted (not EMOSA's GTP station, the pod"
+                    " wired)",
+                    ", ".join(removed),
+                )
 
     def status(self):
         op = self.latest()
@@ -108,6 +115,7 @@ class RadioPlan:
             "unclaimed_inet_on": config.get("unclaimed_inet_on"),
             "unclaimed_exposed": config.get("unclaimed_exposed"),
             "operator_cloud": config.get("operator_cloud"),
+            "foreign_stations": config.get("foreign_stations"),
             "channel": config.get("channel"),
             "wired": config.get("wired"),
             "waiting": self.waiting,

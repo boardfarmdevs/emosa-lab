@@ -733,6 +733,12 @@ def test_an_unassociated_gtp_station_is_removed_before_the_healthcheck_reboots_t
     assert result["passed"], result
 
 
+def test_a_converted_pods_seed_stations_go_and_only_its_gtp_station_stays(agent, tmp_path):
+    # spec 3.10: the seed's onboarding stations deleted while wired, the GTP station written
+    result = box("legacy-seed-stations", agent, tmp_path / "box", timeout=360)
+    assert result["passed"], result
+
+
 def test_a_converted_pods_operator_cloud_is_cleared_on_every_start(agent, tmp_path):
     # spec 3.10, a converted pod talks only to EMOSA: qm's broker and the statistics rows gone
     result = box("legacy-cloud-cleared", agent, tmp_path / "box", timeout=300)

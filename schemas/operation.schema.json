@@ -502,6 +502,12 @@
               "description": "EMOSA's own passphrase for the unclaimed APs, by reference (absent in records made before it: emosa-unclaimed)",
               "type": "string",
               "pattern": "^emosa-[a-z0-9-]{1,32}$"
+            },
+            "gtp_ssid": {
+              "description": "The site's GTP SSID (uplink.bootstrap): while the pod is wired, the plan deletes every station row not on it (absent: no station judged)",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
             }
           },
           "required": [

@@ -680,6 +680,95 @@ def test_a_cleared_cloud_is_part_of_the_applied_plan(tmp_path):
     assert all(config.get(k) == v for k, v in intent.target(vault).items())
 
 
+SEED_STA, SEED_CRED, SEED_INET, RADIO0 = (
+    f"00000000-0000-4000-8000-0000000006{n}" for n in ("11", "12", "13", "14")
+)
+
+
+def with_seed_station(pod):
+    """The seed's onboarding station on wl0 (credential-list mode, the operator's credential, its
+    Inet row, its radio's reference) beside the GTP station on wl1 (on the GTP's SSID)."""
+    pod.tables["Wifi_VIF_Config"][GTP_STA]["ssid"] = "site-gtp"
+    pod.tables["Wifi_VIF_Config"][SEED_STA] = {
+        "if_name": "wl0",
+        "mode": "sta",
+        "enabled": True,
+        "credential_configs": ["set", [["uuid", SEED_CRED]]],  # a credential list, no SSID
+    }
+    pod.tables["Wifi_Credential_Config"] = {
+        SEED_CRED: {"ssid": "operator-backhaul", "onboard_type": "gre"}
+    }
+    pod.tables["Wifi_Inet_Config"][SEED_INET] = {"if_name": "wl0", "enabled": False}
+    pod.tables["Wifi_Radio_Config"][RADIO0] = {
+        "if_name": "wl0",
+        "freq_band": "5G",
+        "vif_configs": ["set", [["uuid", SEED_STA]]],
+    }
+    return pod
+
+
+def plan_with_gtp(pod, tmp_path, gtp_ssid="site-gtp"):
+    from dataclasses import replace
+
+    backend, intent, vault = radio_plan(pod, tmp_path)
+    backend.intent = replace(intent, gtp_ssid=gtp_ssid)
+    return backend, backend.intent
+
+
+def test_a_wired_converted_pods_seed_stations_are_deleted_and_its_gtp_station_kept(tmp_path):
+    # the seed's onboarding stations associate to nothing on a converted site and fail the
+    # vendor healthcheck (14 October): deleted with their Inet, credentials and radio reference
+    pod = with_seed_station(OperatorPod())
+    backend, intent = plan_with_gtp(pod, tmp_path)
+    config = asyncio.run(backend.snapshot()).config
+    assert config["foreign_stations"] == ["wl0"] and config["pending"] is True
+    assert asyncio.run(backend.plan(intent))["stations_removed"] == ["wl0"]
+    attempt = {"transaction_id": "t1", "session_generation": 1}
+    assert asyncio.run(backend.submit(intent, attempt)).status == "committed"
+    (ops,) = pod.sent
+    where = [["_uuid", "==", ["uuid", SEED_STA]]]
+    station = [o for o in ops if o.get("where") == where]
+    assert [o["op"] for o in station] == ["wait", "delete"]
+    assert station[0]["rows"] == [{"if_name": "wl0", "mode": "sta", "ssid": ["set", []]}]
+    assert {
+        "op": "delete",
+        "table": "Wifi_Credential_Config",
+        "where": [["_uuid", "==", ["uuid", SEED_CRED]]],
+    } in ops
+    assert {
+        "op": "delete",
+        "table": "Wifi_Inet_Config",
+        "where": [["_uuid", "==", ["uuid", SEED_INET]]],
+    } in ops
+    mutate = next(o for o in ops if o["op"] == "mutate")
+    assert mutate["where"] == [["_uuid", "==", ["uuid", RADIO0]]]
+    assert mutate["mutations"] == [["vif_configs", "delete", ["set", [["uuid", SEED_STA]]]]]
+    touched = {json.dumps(o.get("where")) for o in ops}
+    assert json.dumps([["_uuid", "==", ["uuid", GTP_STA]]]) not in touched  # the GTP station kept
+    assert json.dumps([["_uuid", "==", ["uuid", GTP_INET]]]) not in touched
+
+
+def test_a_station_on_the_gtps_ssid_by_its_credential_is_kept(tmp_path):
+    # a start-up hook's station in credential-list mode: its linked credential on the GTP's SSID
+    pod = with_seed_station(OperatorPod())
+    pod.tables["Wifi_Credential_Config"][SEED_CRED]["ssid"] = "site-gtp"
+    backend, _ = plan_with_gtp(pod, tmp_path)
+    assert asyncio.run(backend.snapshot()).config["foreign_stations"] == []
+
+
+def test_stations_are_left_alone_unwired_or_without_a_gtp(tmp_path):
+    pod = with_seed_station(OperatorPod())
+    backend, _ = plan_with_gtp(pod, tmp_path, gtp_ssid=None)
+    assert asyncio.run(backend.snapshot()).config["foreign_stations"] == []
+    pod.tables["Connection_Manager_Uplink"][UPLINK] = {
+        "if_name": "g-wl1",
+        "if_type": "gre",
+        "is_used": True,
+    }
+    backend, _ = plan_with_gtp(pod, tmp_path)
+    assert asyncio.run(backend.snapshot()).config["foreign_stations"] == []
+
+
 def test_the_agent_monitors_every_column_the_radio_plan_compares():
     # the session sees only the columns monitored: the neutral AP's hidden flag, bridge and key,
     # the radio's channel and width, the Inet rows and cm's uplink (the box found the hidden flag
@@ -687,12 +776,22 @@ def test_the_agent_monitors_every_column_the_radio_plan_compares():
     from emosa.agent.pod import MONITOR
 
     for table, columns in {
-        "Wifi_VIF_Config": ("if_name", "mode", "enabled", "ssid_broadcast", "bridge", "security"),
+        "Wifi_VIF_Config": (
+            "if_name",
+            "mode",
+            "enabled",
+            "ssid",
+            "ssid_broadcast",
+            "bridge",
+            "security",
+            "credential_configs",
+        ),
         "Wifi_Radio_Config": ("channel", "ht_mode"),
         "Wifi_Inet_Config": ("if_name", "enabled"),
         "Connection_Manager_Uplink": ("if_name", "if_type", "is_used"),
         "AWLAN_Node": ("mqtt_settings", "mqtt_headers", "mqtt_topics"),
         "Wifi_Stats_Config": ("stats_type", "radio_type"),
+        "Wifi_Credential_Config": ("ssid",),
     }.items():
         assert set(columns) <= set(MONITOR[table]), table
 

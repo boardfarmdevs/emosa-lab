@@ -17,6 +17,8 @@
 #define DEADLINE 30
 #define ROWS 16 /* the unclaimed APs and their Inet rows the scope reads, at most */
 #define STATS 64 /* the statistics rows removed in one write, at most */
+#define STATIONS 8 /* the station rows deleted in one write, at most */
+#define REFS 32  /* the credentials or radio references of those, at most */
 #define NEUTRAL_REF "emosa-unclaimed" /* RadioPlanIntent's default neutral_ref */
 
 /* radio_plan.CLOUD: AWLAN_Node's columns that point qm at a broker, the operator's cloud on a seed */
@@ -83,6 +85,8 @@ static cJSON *record(const em_plan_intent *i)
     cJSON_AddNumberToObject(r, "channel", i->channel);
     cJSON_AddStringToObject(r, "ht_mode", i->ht_mode);
     cJSON_AddStringToObject(r, "neutral_ref", i->neutral_ref);
+    if (*i->gtp_ssid)
+        cJSON_AddStringToObject(r, "gtp_ssid", i->gtp_ssid);
     return r;
 }
 
@@ -109,6 +113,9 @@ static bool from_record(const cJSON *r, em_plan_intent *i)
     const char *ref = str(r, "neutral_ref") ? str(r, "neutral_ref") : NEUTRAL_REF;
     if (!em_copy(i->neutral_ref, sizeof(i->neutral_ref), ref))
         return false;
+    /* absent: no GTP, no station judged */
+    if (str(r, "gtp_ssid") && (!*str(r, "gtp_ssid") || !em_copy(i->gtp_ssid, sizeof(i->gtp_ssid), str(r, "gtp_ssid"))))
+        return false;
     return validate(i) == EM_OK;
 }
 
@@ -125,6 +132,7 @@ static cJSON *target(void *ctx, const cJSON *intent, em_reason *why)
     cJSON_AddArrayToObject(t, "unclaimed_inet_on");
     cJSON_AddArrayToObject(t, "unclaimed_exposed");
     cJSON_AddArrayToObject(t, "operator_cloud");
+    cJSON_AddArrayToObject(t, "foreign_stations");
     cJSON_AddTrueToObject(t, "radio_planned");
     return t;
 }
@@ -146,6 +154,11 @@ typedef struct {
     const cJSON *node; /* to write: the pod's node, an MQTT setting of its operator's on it */
     size_t nstats;
     const cJSON *stats[STATS]; /* to remove: the statistics rows (each row's uuid its key) */
+    /* to delete while wired: the stations not on the GTP's SSID, their radios' references to them,
+     * their credentials no kept station links, and their Inet rows */
+    size_t nstations, nrefs, ncredentials, ninet_rows;
+    const cJSON *stations[STATIONS];
+    const char *ref_radio[REFS], *ref_vif[REFS], *credentials[REFS], *inet_rows[STATIONS];
 } plan_changes;
 
 static int named_order(const void *a, const void *b) { return strcmp(((const named *)a)->name, ((const named *)b)->name); }
@@ -153,6 +166,40 @@ static int named_order(const void *a, const void *b) { return strcmp(((const nam
 static int uuid_order(const void *a, const void *b)
 {
     return strcmp((*(const cJSON *const *)a)->string, (*(const cJSON *const *)b)->string);
+}
+
+/* radio_plan.kept_station: no GTP, or the station on the GTP's SSID, its own or a linked
+ * credential's (EMOSA's GTP station, or one a start-up hook wrote) */
+static bool kept_station(const cJSON *row, const em_plan_intent *i, const cJSON *credentials)
+{
+    if (!*i->gtp_ssid)
+        return true;
+    const char *ssid = ovs_str(row, "ssid"), *refs[REFS];
+    if (ssid && !strcmp(ssid, i->gtp_ssid))
+        return true;
+    size_t n = ovs_uuids(row, "credential_configs", refs, REFS);
+    for (size_t k = 0; k < n; k++) {
+        const char *linked = ovs_str(cJSON_GetObjectItemCaseSensitive(credentials, refs[k]), "ssid");
+        if (linked && !strcmp(linked, i->gtp_ssid))
+            return true;
+    }
+    return false;
+}
+
+static bool listed(const char *const *names, size_t n, const char *name)
+{
+    for (size_t k = 0; k < n; k++)
+        if (name && names[k] && !strcmp(names[k], name))
+            return true;
+    return false;
+}
+
+static int row_name_order(const void *a, const void *b)
+{
+    const cJSON *x = *(const cJSON *const *)a, *y = *(const cJSON *const *)b;
+    const char *nx = ovs_str(x, "if_name"), *ny = ovs_str(y, "if_name");
+    int k = strcmp(nx ? nx : "", ny ? ny : "");
+    return k ? k : strcmp(x->string, y->string);
 }
 
 /* the node's MQTT settings, headers or topics not empty: the cloud it points qm at */
@@ -297,6 +344,53 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, const char *
             c->stats[c->nstats++] = r;
     }
     qsort(c->stats, c->nstats, sizeof(c->stats[0]), uuid_order);
+    /* while wired: the stations not on the GTP's SSID, with what goes with them */
+    const cJSON *credentials = em_table(tables, "Wifi_Credential_Config");
+    const char *kept_names[ROWS * 2], *kept_refs[REFS];
+    size_t nkept = 0, nkept_refs = 0;
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config"))
+    {
+        const char *mode = ovs_str(r, "mode");
+        if (wired && mode && !strcmp(mode, "sta") && !kept_station(r, i, credentials)) {
+            if (c->nstations < STATIONS)
+                c->stations[c->nstations++] = r;
+        } else {
+            if (nkept < ROWS * 2)
+                kept_names[nkept++] = ovs_str(r, "if_name");
+            nkept_refs += ovs_uuids(r, "credential_configs", kept_refs + nkept_refs, REFS - nkept_refs);
+        }
+    }
+    qsort(c->stations, c->nstations, sizeof(c->stations[0]), row_name_order);
+    const char *gone_names[STATIONS] = {0};
+    for (size_t k = 0; k < c->nstations; k++) {
+        const cJSON *st = c->stations[k];
+        gone_names[k] = ovs_str(st, "if_name");
+        const char *refs[REFS];
+        size_t n = ovs_uuids(st, "credential_configs", refs, REFS);
+        for (size_t j = 0; j < n; j++)
+            if (cJSON_GetObjectItemCaseSensitive(credentials, refs[j]) && !listed(kept_refs, nkept_refs, refs[j]) &&
+                !listed(c->credentials, c->ncredentials, refs[j]) && c->ncredentials < REFS)
+                c->credentials[c->ncredentials++] = refs[j];
+    }
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_Radio_Config"))
+    {
+        const char *refs[ROWS * 2];
+        size_t n = ovs_uuids(r, "vif_configs", refs, ROWS * 2);
+        for (size_t j = 0; j < n; j++)
+            for (size_t k = 0; k < c->nstations; k++)
+                if (!strcmp(refs[j], c->stations[k]->string) && c->nrefs < REFS) {
+                    c->ref_radio[c->nrefs] = r->string;
+                    c->ref_vif[c->nrefs++] = refs[j];
+                }
+    }
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_Inet_Config"))
+    {
+        const char *name = ovs_str(r, "if_name");
+        if (listed(gone_names, c->nstations, name) && !listed(kept_names, nkept, name) && c->ninet_rows < STATIONS)
+            c->inet_rows[c->ninet_rows++] = r->string;
+    }
+    qsort(c->credentials, c->ncredentials, sizeof(c->credentials[0]), by_name);
+    qsort(c->inet_rows, c->ninet_rows, sizeof(c->inet_rows[0]), by_name);
     cJSON *v = cJSON_CreateObject(), *list = cJSON_AddArrayToObject(v, "unclaimed");
     for (size_t k = 0; k < c->nall; k++)
         cJSON_AddItemToArray(list, cJSON_CreateString(c->all[k]));
@@ -316,11 +410,15 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, const char *
             cJSON_AddItemToArray(list, cJSON_CreateString(CLOUD[k]));
     if (c->nstats)
         cJSON_AddItemToArray(list, cJSON_CreateString("Wifi_Stats_Config"));
+    list = cJSON_AddArrayToObject(v, "foreign_stations");
+    for (size_t k = 0; k < c->nstations; k++) /* sorted: each name once */
+        if (gone_names[k] && (k == 0 || !gone_names[k - 1] || strcmp(gone_names[k], gone_names[k - 1])))
+            cJSON_AddItemToArray(list, cJSON_CreateString(gone_names[k]));
     cJSON_AddItemToObject(v, "channel", has_channel ? cJSON_CreateNumber((double)channel) : cJSON_CreateNull());
     cJSON_AddItemToObject(v, "ht_mode", ht_mode ? cJSON_CreateString(ht_mode) : cJSON_CreateNull());
     cJSON_AddBoolToObject(v, "wired", wired);
     cJSON_AddBoolToObject(v, "radio_planned", !wired || on_plan);
-    cJSON_AddBoolToObject(v, "pending", c->nexposed || c->ninets || c->radio || c->node || c->nstats);
+    cJSON_AddBoolToObject(v, "pending", c->nexposed || c->ninets || c->radio || c->node || c->nstats || c->nstations);
     return v;
 }
 
@@ -401,13 +499,15 @@ static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
         cJSON_AddItemToArray(list, cJSON_CreateString(c.inets[k].name));
     cJSON_AddItemToObject(p, "channel", c.radio ? cJSON_CreateNumber(i.channel) : cJSON_CreateNull());
     cJSON_AddItemToObject(p, "cloud_cleared", cJSON_DetachItemFromObjectCaseSensitive(view, "operator_cloud"));
+    cJSON_AddItemToObject(p, "stations_removed", cJSON_DetachItemFromObjectCaseSensitive(view, "foreign_stations"));
     cJSON_Delete(view);
     cJSON_AddStringToObject(p, "instance", s->instance);
     const char *fields[] = {"Wifi_VIF_Config.security",  "Wifi_VIF_Config.ssid_broadcast", "Wifi_VIF_Config.bridge",
                             "Wifi_Inet_Config.enabled",  "Wifi_Radio_Config.channel",      "Wifi_Radio_Config.ht_mode",
                             "AWLAN_Node.mqtt_headers",   "AWLAN_Node.mqtt_settings",       "AWLAN_Node.mqtt_topics",
-                            "Wifi_Stats_Config"};
-    cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 10));
+                            "Wifi_Stats_Config",         "Wifi_VIF_Config (stations)",     "Wifi_Credential_Config",
+                            "Wifi_Inet_Config (stations)"};
+    cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 13));
     cJSON_AddStringToObject(p, "guard", "pod serial and each changed row as it is");
     return p;
 }
@@ -471,14 +571,14 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     if (node)
         cJSON_Delete(changes(&i, em_ovsdb_tables(s->ovs), key, &c));
     if (!node || em_ovsdb_generation(s->ovs) != generation ||
-        !(c.nexposed || c.ninets || c.radio || c.node || c.nstats) || (c.nexposed && !key)) {
+        !(c.nexposed || c.ninets || c.radio || c.node || c.nstats || c.nstations) || (c.nexposed && !key)) {
         em_free_secret(key);
         strcpy(out->status, "rejected"); /* not bound, another session, nothing differs, or no key */
         out->reason = EM_NOT_READY;
         return;
     }
     cJSON *ops = cJSON_CreateArray(), *row;
-    int counts[1 + 2 * (ROWS + ROWS + 1 + 1 + STATS)];
+    int counts[1 + 2 * (ROWS + ROWS + 1 + 1 + STATS) + 2 * STATIONS + 2 * REFS + STATIONS];
     size_t n = 0;
     const char *node_cols[] = {"serial_number"};
     row = cJSON_CreateObject();
@@ -551,6 +651,45 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         cJSON_AddItemToArray(ops, wait_row("Wifi_Stats_Config", c.stats[k]->string, stats_cols, 2, row));
         cJSON_AddItemToArray(ops, em_ovs_op("delete", "Wifi_Stats_Config", em_ovs_where_uuid(c.stats[k]->string)));
         counts[n++] = -1;
+        counts[n++] = 1;
+    }
+    /* each station row as it is, out of its radio, deleted; then its credentials and Inet */
+    const char *sta_cols[] = {"if_name", "mode", "ssid"};
+    for (size_t k = 0; k < c.nstations; k++) {
+        const char *name = ovs_str(c.stations[k], "if_name"), *ssid = ovs_str(c.stations[k], "ssid");
+        row = cJSON_CreateObject();
+        cJSON_AddItemToObject(row, "if_name", name ? cJSON_CreateString(name) : empty_set());
+        cJSON_AddStringToObject(row, "mode", "sta");
+        cJSON_AddItemToObject(row, "ssid", ssid ? cJSON_CreateString(ssid) : empty_set());
+        cJSON_AddItemToArray(ops, wait_row("Wifi_VIF_Config", c.stations[k]->string, sta_cols, 3, row));
+        counts[n++] = -1;
+    }
+    for (size_t k = 0; k < c.nrefs; k++) {
+        cJSON *mutate = em_ovs_op("mutate", "Wifi_Radio_Config", em_ovs_where_uuid(c.ref_radio[k]));
+        cJSON *set = cJSON_CreateArray(), *members = cJSON_CreateArray(), *ref = cJSON_CreateArray();
+        cJSON_AddItemToArray(ref, cJSON_CreateString("uuid"));
+        cJSON_AddItemToArray(ref, cJSON_CreateString(c.ref_vif[k]));
+        cJSON_AddItemToArray(members, ref);
+        cJSON_AddItemToArray(set, cJSON_CreateString("set"));
+        cJSON_AddItemToArray(set, members);
+        cJSON *mutation = cJSON_CreateArray();
+        cJSON_AddItemToArray(mutation, cJSON_CreateString("vif_configs"));
+        cJSON_AddItemToArray(mutation, cJSON_CreateString("delete"));
+        cJSON_AddItemToArray(mutation, set);
+        cJSON_AddItemToArray(cJSON_AddArrayToObject(mutate, "mutations"), mutation);
+        cJSON_AddItemToArray(ops, mutate);
+        counts[n++] = 1;
+    }
+    for (size_t k = 0; k < c.nstations; k++) {
+        cJSON_AddItemToArray(ops, em_ovs_op("delete", "Wifi_VIF_Config", em_ovs_where_uuid(c.stations[k]->string)));
+        counts[n++] = 1;
+    }
+    for (size_t k = 0; k < c.ncredentials; k++) {
+        cJSON_AddItemToArray(ops, em_ovs_op("delete", "Wifi_Credential_Config", em_ovs_where_uuid(c.credentials[k])));
+        counts[n++] = 1;
+    }
+    for (size_t k = 0; k < c.ninet_rows; k++) {
+        cJSON_AddItemToArray(ops, em_ovs_op("delete", "Wifi_Inet_Config", em_ovs_where_uuid(c.inet_rows[k])));
         counts[n++] = 1;
     }
     cJSON *results = s->transact(s->transact_ctx, ops);
@@ -695,9 +834,16 @@ void em_plan_tick(em_plan_scope *s)
     if (op && !strcmp(em_state_of(op), "REQUESTED")) {
         cJSON *result = em_engine_execute(&s->engine,
                                           cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(op, "operation_id")));
-        const char *reason = str(result, "reason");
-        em_log(EM_LOG_INFO, "emosa.agent.radio_plan", "radio plan %s: %s %s", str(result, "operation_id"),
-               em_state_of(result), reason ? reason : "");
+        const char *reason = str(result, "reason"), *state = em_state_of(result);
+        em_log(EM_LOG_INFO, "emosa.agent.radio_plan", "radio plan %s: %s %s", str(result, "operation_id"), state,
+               reason ? reason : "");
+        const cJSON *removed = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(result, "plan"), "stations_removed");
+        if (cJSON_GetArraySize(removed) && (!strcmp(state, "CONFIG_COMMITTED") || !strcmp(state, "OBSERVED_APPLIED"))) {
+            char *names = cJSON_PrintUnformatted(removed);
+            em_log(EM_LOG_WARNING, "emosa.agent.radio_plan",
+                   "radio plan: the pod's stations %s deleted (not on the GTP's SSID, the pod wired)", names ? names : "");
+            free(names);
+        }
         cJSON_Delete(result);
     }
     cJSON_Delete(op);
@@ -708,8 +854,8 @@ cJSON *em_plan_status(em_plan_scope *s)
     cJSON *o = cJSON_CreateObject(), *op = em_journal_latest(s->journal);
     const cJSON *config = s->has_last ? s->last.config : NULL;
     const char *keys[] = {"unclaimed",      "unclaimed_enabled", "unclaimed_inet_on", "unclaimed_exposed",
-                          "operator_cloud", "channel",           "wired"};
-    for (size_t k = 0; k < 7; k++) {
+                          "operator_cloud", "foreign_stations",  "channel",           "wired"};
+    for (size_t k = 0; k < 8; k++) {
         const cJSON *v = cJSON_GetObjectItemCaseSensitive(config, keys[k]);
         cJSON_AddItemToObject(o, keys[k], v ? cJSON_Duplicate(v, 1) : cJSON_CreateNull());
     }

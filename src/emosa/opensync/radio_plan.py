@@ -11,13 +11,17 @@ Ethernet port), the fronthaul radio on the profile's channel and ``ht_mode``. An
 disabled: the 2.4.3 pods' vendor healthcheck reboots a pod whose AP stops beaconing (14
 October). Each such AP is neutralized instead: hidden, out of any bridge, on EMOSA's own
 passphrase (a per-pod ``emosa-`` secret, never logged), so the operator's credentials admit no
-one and it still beacons. A station is never touched, nor a VIF the profile names. A converted
+one and it still beacons. A VIF the profile names is never touched. A converted
 pod talks only to EMOSA: the seed's own way to its operator's cloud, ``AWLAN_Node``'s MQTT
 settings, headers and topics (qm's broker), emptied, and its ``Wifi_Stats_Config`` rows (the
-statistics it samples for that broker) removed, in the same write. Applied when, on the same
-start, those APs are neutral, their Inet rows off, the operator's cloud cleared and the radio on
-the profile's channel (or the pod not wired, its radio then its upstream's, which ``wm``
-follows).
+statistics it samples for that broker) removed, in the same write. While the pod is wired and the
+site has a GTP (``uplink.bootstrap``), every station row not on the GTP's SSID (its own or a
+linked credential's: EMOSA's GTP station, or one a start-up hook wrote) is deleted in that write
+too, with its Inet row, its credentials and its radio's reference: the seed's onboarding stations,
+which can associate to nothing on a converted site and fail the vendor healthcheck. Applied when,
+on the same start, those APs are neutral, their Inet rows off, the operator's cloud cleared, no
+such station left and the radio on the profile's channel (or the pod not wired, its
+radio then its upstream's, which ``wm`` follows).
 """
 
 import json
@@ -39,9 +43,9 @@ CLOUD = ("mqtt_headers", "mqtt_settings", "mqtt_topics")
 # channel and width, which its guard compares, and the Inet rows', cm's, the cloud's and the
 # statistics' columns it reads
 MONITOR = {
-    "Wifi_VIF_Config": [
-        "ssid_broadcast"
-    ],  # an unclaimed AP neutral: hidden (with bridge, security)
+    # an unclaimed AP neutral: hidden (with bridge, security); a station's credentials
+    "Wifi_VIF_Config": ["ssid_broadcast", "credential_configs"],
+    "Wifi_Credential_Config": ["ssid"],
     "Wifi_Radio_Config": ["channel", "ht_mode"],
     "Wifi_Inet_Config": ["if_name", "enabled"],
     "Connection_Manager_Uplink": ["if_name", "if_type", "is_used"],
@@ -62,6 +66,9 @@ class RadioPlanIntent:
     channel: int
     ht_mode: str
     neutral_ref: str = NEUTRAL_REF  # EMOSA's own passphrase for the unclaimed APs
+    # the site's GTP SSID (uplink.bootstrap): while the pod is wired, every station row not on it is
+    # deleted (None: no GTP, no station judged)
+    gtp_ssid: str | None = None
 
     def record(self):
         return {
@@ -71,6 +78,7 @@ class RadioPlanIntent:
             "channel": self.channel,
             "ht_mode": self.ht_mode,
             "neutral_ref": self.neutral_ref,
+            **({"gtp_ssid": self.gtp_ssid} if self.gtp_ssid else {}),
         }
 
     def validate(self):
@@ -80,6 +88,10 @@ class RadioPlanIntent:
             raise EmosaError(Reason.INVALID_INPUT, "the profile's VIF names are required")
         if not isinstance(self.channel, int) or not isinstance(self.ht_mode, str):
             raise EmosaError(Reason.INVALID_INPUT, "the profile's channel and ht_mode are required")
+        if self.gtp_ssid is not None and (
+            not isinstance(self.gtp_ssid, str) or not 1 <= len(self.gtp_ssid) <= 32
+        ):
+            raise EmosaError(Reason.INVALID_INPUT, "the GTP's SSID is 1 to 32 characters")
 
     def target(self, vault=None):
         self.validate()
@@ -87,6 +99,7 @@ class RadioPlanIntent:
             "unclaimed_inet_on": [],
             "unclaimed_exposed": [],
             "operator_cloud": [],
+            "foreign_stations": [],
             "radio_planned": True,
         }
 
@@ -109,6 +122,17 @@ def neutral(row, key):
         and bridge in (None, "", [])
         and credential_key(row) == key
     )
+
+
+def kept_station(row, intent, credentials):
+    """A station row the plan keeps: any without a GTP configured; else one on the GTP's SSID, its
+    own or a linked credential's (EMOSA's GTP station, or one a start-up hook wrote)."""
+    if intent.gtp_ssid is None:
+        return True
+    ssids = {row.get("ssid")} | {
+        credentials.get(c, {}).get("ssid") for c in row.get("credential_configs") or []
+    }
+    return intent.gtp_ssid in ssids
 
 
 def optional(value):
@@ -194,6 +218,40 @@ class RadioPlanBackend:
             intent.channel,
             intent.ht_mode,
         )
+        # while wired: every station row not on the GTP's SSID, with what goes with it
+        vifs = decoded.get("Wifi_VIF_Config", {})
+        credentials = decoded.get("Wifi_Credential_Config", {})
+        foreign = sorted(
+            (r.get("if_name") or "", u)
+            for u, r in vifs.items()
+            if wired and r.get("mode") == "sta" and not kept_station(r, intent, credentials)
+        )
+        gone = {u for _, u in foreign}
+        kept = [r for u, r in vifs.items() if u not in gone]
+        kept_credentials = {c for r in kept for c in r.get("credential_configs") or []}
+        kept_names = {r.get("if_name") for r in kept}
+        stations = {
+            "rows": [(u, vifs[u]) for _, u in foreign],
+            "radios": sorted(
+                (u, v)
+                for u, r in decoded.get("Wifi_Radio_Config", {}).items()
+                for v in r.get("vif_configs") or []
+                if v in gone
+            ),
+            "credentials": sorted(
+                {
+                    c
+                    for u in gone
+                    for c in vifs[u].get("credential_configs") or []
+                    if c in credentials and c not in kept_credentials
+                }
+            ),
+            "inets": sorted(
+                u
+                for u, r in decoded.get("Wifi_Inet_Config", {}).items()
+                if r.get("if_name") in {n for n, _ in foreign} - kept_names
+            ),
+        }
         node = next(iter(decoded.get("AWLAN_Node", {}).values()), {})
         cloud = {c: dict(node.get(c) or {}) for c in CLOUD}
         stats = sorted(decoded.get("Wifi_Stats_Config", {}).items())
@@ -203,6 +261,7 @@ class RadioPlanBackend:
             radio if wired and radio[0] is not None and not on_plan else None,
             cloud if any(cloud.values()) else None,
             stats,
+            stations if foreign else None,
         )
         configured = {
             "unclaimed": sorted(names),
@@ -211,6 +270,7 @@ class RadioPlanBackend:
             "unclaimed_exposed": sorted(n for n, _ in exposed),
             "operator_cloud": [c for c in CLOUD if cloud[c]]
             + (["Wifi_Stats_Config"] if stats else []),
+            "foreign_stations": sorted({n for n, _ in foreign}),
             "channel": radio[1].get("channel"),
             "ht_mode": radio[1].get("ht_mode"),
             "wired": wired,
@@ -260,7 +320,7 @@ class RadioPlanBackend:
         decoded, _ = self._binding(raw)
         if not raw["ready"]:
             raise EmosaError(Reason.NOT_READY, "the pod's database is not ready")
-        (exposed, inets, radio, _, _), configured = self._changes(decoded, intent)
+        (exposed, inets, radio, _, _, _), configured = self._changes(decoded, intent)
         return {
             "mapping": MODE,
             "action": "radio-plan",
@@ -268,6 +328,7 @@ class RadioPlanBackend:
             "inet_off": [n for _, n in inets],
             "channel": None if radio is None else intent.channel,
             "cloud_cleared": configured["operator_cloud"],
+            "stations_removed": configured["foreign_stations"],
             "instance": self.instance,
             "fields": [
                 "Wifi_VIF_Config.security",
@@ -278,14 +339,17 @@ class RadioPlanBackend:
                 "Wifi_Radio_Config.ht_mode",
                 *(f"AWLAN_Node.{c}" for c in CLOUD),
                 "Wifi_Stats_Config",
+                "Wifi_VIF_Config (stations)",
+                "Wifi_Credential_Config",
+                "Wifi_Inet_Config (stations)",
             ],
             "guard": "pod serial and each changed row as it is",
         }
 
     def transaction(self, intent, decoded, node_uuid):
         """The guarded write: its operations and the counts each must match (None: no write)."""
-        (exposed, inets, radio, cloud, stats), _ = self._changes(decoded, intent)
-        if not (exposed or inets or radio or cloud or stats):
+        (exposed, inets, radio, cloud, stats, stations), _ = self._changes(decoded, intent)
+        if not (exposed or inets or radio or cloud or stats or stations):
             return None, None
         operations = [
             {
@@ -402,6 +466,45 @@ class RadioPlanBackend:
                 {"op": "delete", "table": "Wifi_Stats_Config", "where": where_uuid(uuid)},
             ]
             counts += [None, 1]
+        if stations is not None:
+            # each station row as it is, out of its radio, deleted; then its credentials and Inet
+            for uuid, row in stations["rows"]:
+                operations.append(
+                    {
+                        "op": "wait",
+                        "table": "Wifi_VIF_Config",
+                        "where": where_uuid(uuid),
+                        "columns": ["if_name", "mode", "ssid"],
+                        "until": "==",
+                        "rows": [
+                            {
+                                "if_name": row.get("if_name"),
+                                "mode": "sta",
+                                "ssid": optional(row.get("ssid")),  # a credential list: none
+                            }
+                        ],
+                        "timeout": 0,
+                    }
+                )
+                counts.append(None)
+            for radio_uuid, uuid in stations["radios"]:
+                operations.append(
+                    {
+                        "op": "mutate",
+                        "table": "Wifi_Radio_Config",
+                        "where": where_uuid(radio_uuid),
+                        "mutations": [["vif_configs", "delete", ["set", [["uuid", uuid]]]]],
+                    }
+                )
+                counts.append(1)
+            for table, uuids in (
+                ("Wifi_VIF_Config", [u for u, _ in stations["rows"]]),
+                ("Wifi_Credential_Config", stations["credentials"]),
+                ("Wifi_Inet_Config", stations["inets"]),
+            ):
+                for uuid in uuids:
+                    operations.append({"op": "delete", "table": table, "where": where_uuid(uuid)})
+                    counts.append(1)
         return operations, counts
 
     async def submit(self, intent, attempt):

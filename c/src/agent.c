@@ -2724,6 +2724,9 @@ static bool configure(agent *a, const char *path, const char *profiles)
             FAIL("uplink: bootstrap's unassociated_seconds and retry_seconds are positive seconds");
             return false;
         }
+        /* the radio plan keeps, while the pod is wired, only the stations on the GTP's SSID */
+        if (a->plan_on)
+            (void)em_copy(a->plan.intent.gtp_ssid, sizeof(a->plan.intent.gtp_ssid), a->gtp.intent.ssid); /* 32 */
     }
     /* a GRE parent (spec 8.6): a tunnel per child of its parent AP, in the fronthaul's bridge */
     const char *parent = NULL;

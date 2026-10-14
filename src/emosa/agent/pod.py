@@ -968,6 +968,8 @@ async def serve(config, stop):
                     profile.band,
                     profile.channel,
                     profile.ht_mode,
+                    # the GTP's SSID: a station not on it is deleted while the pod is wired
+                    gtp_ssid=gtp_station.intent.ssid if gtp_station else None,
                 ),
             ),
             Store(state_dir / "radio-plan"),

@@ -682,9 +682,20 @@ is everything above. For a legacy pod, all of this specification applies, except
     `wm`'s (OpenSync's `inet_vif`: an Inet row never takes a VIF down), so it keeps beaconing (a
     hidden BSS beacons with its BSSID). An AP is never disabled, nor a radio: the vendor healthcheck (see the GTP
     station's guard) reboots a pod whose configured VIF has no BSSID, and disabling `wl0.1` and
-    `wl0.2` rebooted a converted pod ten minutes later, twice (13 and 14 October). A station is
-    never touched, whoever wrote it (the GTP station, a start-up hook's), nor a VIF the profile
-    names.
+    `wl0.2` rebooted a converted pod ten minutes later, twice (13 and 14 October). A VIF the
+    profile names is never touched.
+  - **The seed's stations.** A converted pod's seed brings back the operator's onboarding
+    stations (on `wl0` and `wl1`, the operator's credential linked): seen on 14 October, a
+    looping pod's two radios joined another pod's operator backhaul APs. On a converted site
+    they associate to nothing and fail the vendor healthcheck (a station must be associated),
+    and a station on `wl1` keeps the GTP station from being written. So while the pod is wired
+    and the site has a GTP (`uplink.bootstrap`), every `mode=sta` row not on the GTP's SSID (its
+    own `ssid` or a linked credential's: the GTP station, or one a start-up hook wrote on the
+    GTP) is deleted in the plan's write, with its radio's `vif_configs` reference, the
+    credentials no kept station links and its Inet row (when no kept VIF has its name); each
+    row `wait`ed on as it is, and logged. The GTP station is then written on the free `wl1`. A
+    pod on its Wi-Fi uplink keeps its stations (one may be its uplink). The status shows the
+    stations left to delete (`foreign_stations`).
   - **The fronthaul radio's channel.** The profile's `radio.channel` and `ht_mode` are written
     on the fronthaul's radio while the uplink in use is not its station (the pod wired). On its
     Wi-Fi uplink, `wm` moves the radio to its upstream's channel, which a legacy profile then
@@ -700,11 +711,13 @@ is everything above. For a legacy pod, all of this specification applies, except
   - **Write:** once per start of the pod's OpenSync, in one guarded transaction: `wait` on the
     serial and on each changed row as it is (`if_name` and `mode` of a VIF; `if_name` and
     `enabled` of an Inet row; `if_name`, `channel` and `ht_mode` of the radio; the node's three
-    MQTT maps; `stats_type` and `radio_type` of a statistics row), then each `update` (a
-    statistics row's `delete`). Nothing is written when nothing differs. **Applied** when, on the
+    MQTT maps; `stats_type` and `radio_type` of a statistics row; `if_name`, `mode` and `ssid`
+    of a station row), then each `update` (a statistics row's, a station's and its rows'
+    `delete`, its radio's `mutate`). Nothing is written when nothing differs. **Applied** when, on the
     same start, every unclaimed AP is neutral (`unclaimed_exposed` empty), its Inet row off
     (`unclaimed_inet_on` empty), the operator's cloud cleared (`operator_cloud` empty: none of the
-    three maps set, no statistics row) and the radio's Config has the profile's channel. Not
+    three maps set, no statistics row), no seed station left (`foreign_stations` empty) and the
+    radio's Config has the profile's channel. Not
     repeated on that start, even when a row is changed again: the next start writes it again. The
     status shows the unclaimed APs left on (`unclaimed_enabled`), those not neutral yet, their
     Inet rows still on and what is left of the cloud. The vendor's target may rebuild a VIF to
@@ -712,8 +725,9 @@ is everything above. For a legacy pod, all of this specification applies, except
     round.
 
   Both agents. Box `legacy-radio-plan` (every VIF beaconing or associated, the box's terms for the
-  vendor healthcheck) and `legacy-cloud-cleared` (the cloud cleared on the start and again after
-  a re-seed, the fleet's telemetry ignored).
+  vendor healthcheck), `legacy-cloud-cleared` (the cloud cleared on the start and again after
+  a re-seed, the fleet's telemetry ignored) and `legacy-seed-stations` (the seed's stations
+  deleted, only the GTP station left, on the start and after a re-seed).
 - **Its starts, counted by its agent's sessions.** A legacy pod's database is its vendor's seed
   again at every start of its OpenSync (a reboot, or its connection manager restarting the
   managers after more than 120 s without its uplink), every row with the UUID it had in the
