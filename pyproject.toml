@@ -41,6 +41,8 @@ packages = ["src/emosa"]
 "tests/fixtures/opensync/opensync.ovsschema" = "emosa/data/opensync.ovsschema"
 "tests/fixtures/opensync/LICENSE.opensync" = "emosa/data/LICENSE.opensync"
 "tests/fixtures/opensync/provenance.json" = "emosa/data/opensync-provenance.json"
+"tests/fixtures/opensync/opensync-2.0.0.ovsschema" = "emosa/data/opensync-2.0.0.ovsschema"
+"tests/fixtures/opensync/provenance-2.0.0.json" = "emosa/data/opensync-2.0.0-provenance.json"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

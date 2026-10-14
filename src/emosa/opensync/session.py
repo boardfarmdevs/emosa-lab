@@ -59,8 +59,11 @@ class OvsSession:
         monitor_columns=None,
         tls_files=None,
         peer_certificate_sha256=None,
+        schema_generation="opensync-6.6",
     ):
         global UNIX_SIGNAL_HOOK_READY
+        # the generation the pod's schema qualifies as (its profile's, spec 3.10)
+        self.schema_generation = schema_generation
         local_endpoint = endpoint.startswith(("unix:", "punix:", "tcp:127.0.0.1:")) or re.fullmatch(
             r"ptcp:[0-9]+:127\.0\.0\.1", endpoint
         )
@@ -274,7 +277,7 @@ class OvsSession:
         if not self.ready:
             self.schema = Schema(self._request("get_schema", [self.database]))
             if not self.read_only:
-                self.schema.qualify_synthetic()
+                self.schema.qualify_synthetic(generation=self.schema_generation)
             self.selected_tables = {
                 table: [
                     column for column in columns if column in self.schema.db.tables[table].columns

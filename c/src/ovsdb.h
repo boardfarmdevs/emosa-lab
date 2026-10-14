@@ -30,6 +30,9 @@ bool em_ovsdb_ready(const em_ovsdb *s);
 int em_ovsdb_generation(const em_ovsdb *s);
 /* The connected pod's schema fingerprint (sha256 of its compact sorted JSON). */
 const char *em_ovsdb_schema_fingerprint(const em_ovsdb *s);
+/* The connected pod's generation (spec 3.10): 1 when its schema has no Wifi_VIF_Config.wpa_psks
+ * (a legacy pod), 0 when it has, -1 when unknown (no schema: a fixed session). */
+int em_ovsdb_legacy_schema(const em_ovsdb *s);
 unsigned long em_ovsdb_revision(const em_ovsdb *s);
 /* The monitor cache, {table: {uuid: row}} in RFC 7047 form. */
 const cJSON *em_ovsdb_tables(const em_ovsdb *s);

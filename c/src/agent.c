@@ -167,6 +167,7 @@ typedef struct {
     const char *status_dir; /* run_dir when configured (a RAM disk), else state_dir */
     uint8_t al[6], controller[6];
     bool r1, multi_bss, shared_session, steering_on;
+    bool watch_on; /* the probe watch (§3.9): with telemetry, never on a legacy pod (spec 3.10) */
     double topology_query_window; /* 0: the renewal rule is off */
     const char *underlay;          /* the pod's underlay as a GRE parent (spec 8.6); NULL: none */
     em_profile profile;
@@ -272,6 +273,8 @@ typedef struct {
     bool bh_live;
     em_backhaul backhaul;       /* the pod's EasyMesh backhaul, when it is one */
     bool has_backhaul;
+    /* spec 3.10: the connected pod's schema is not the profile's generation: nothing read or written */
+    bool pod_refused;
     /* the pod's radios with a backhaul station, the one in use first: the Backhaul STA
      * Capability Report (spec §8.3), as of the last refresh */
     em_backhaul_radio radios[EM_UPLINK_BANDS + 1];
@@ -321,6 +324,15 @@ static void send_message(agent *a, const uint8_t *dst, uint16_t type, uint16_t m
 static cJSON *transact(void *ctx, const cJSON *ops)
 {
     agent *a = ctx;
+    if (a->pod_refused) { /* spec 3.10: never written; each operation refused (the write rejected) */
+        cJSON *results = cJSON_CreateArray();
+        for (int i = 0; i < cJSON_GetArraySize(ops); i++) {
+            cJSON *e = cJSON_CreateObject();
+            cJSON_AddStringToObject(e, "error", "SCHEMA_MISMATCH");
+            cJSON_AddItemToArray(results, e);
+        }
+        return results;
+    }
     a->writes++;
     return em_ovsdb_transact(a->ovs, ops, 2.0);
 }
@@ -337,16 +349,6 @@ static const cJSON *vif_state_row(agent *a, const char *if_name)
             return row;
     }
     return NULL;
-}
-
-static bool wpa2_psk_row(const cJSON *row)
-{
-    const char *akm[8];
-    size_t n = ovs_strings(row, "wpa_key_mgmt", akm, 8);
-    return ovs_true(row, "wpa") && n == 1 && !strcmp(akm[0], "wpa-psk") &&
-           ovs_true(row, "rsn_pairwise_ccmp") && ovs_map_size(row, "security") == 0 &&
-           !ovs_true(row, "wpa_pairwise_tkip") && !ovs_true(row, "wpa_pairwise_ccmp") &&
-           ovs_map_size(row, "wpa_psks") == 1;
 }
 
 static bool same_tlvs(const em_tlv_list *x, const em_tlv_list *y)
@@ -555,6 +557,15 @@ static bool refresh(agent *a)
     const cJSON *tables = em_ovsdb_tables(a->ovs), *row;
     if (!em_ovsdb_ready(a->ovs))
         return false;
+    /* spec 3.10: a pod whose schema is not the profile's generation is refused, and said so */
+    int legacy = em_ovsdb_legacy_schema(a->ovs);
+    bool refused = legacy >= 0 && (legacy == 1) != a->profile.legacy;
+    if (refused != a->pod_refused && refused)
+        WARN("pod refused: its schema is not the profile's generation (%s)",
+             a->profile.legacy ? "opensync-2.0" : "opensync-6.6");
+    a->pod_refused = refused;
+    if (refused)
+        return false;
     /* the bound radio: the profile's band in Config, its State with a MAC */
     const char *radio_uuid = NULL;
     cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(tables, "Wifi_Radio_Config"))
@@ -592,7 +603,7 @@ static bool refresh(agent *a)
         const em_bss_view *b = &radio->bss[i];
         if (!strcmp(b->if_name, a->profile.fronthaul_if)) {
             const cJSON *st = vif_state_row(a, b->if_name);
-            if (radio->enabled && st && wpa2_psk_row(st) && radio->has_channel) {
+            if (radio->enabled && st && em_row_wpa2_psk(st) && radio->has_channel) {
                 rep.bss[rep.nbss++] = *b;
                 primary = true;
             }
@@ -1823,7 +1834,7 @@ static void handle_message(agent *a, const em_message *m)
     }
     /* channel and client steering; the unassociated query from the pod's probes */
     a->control.stats = a->telemetry_on ? &a->stats : NULL;
-    a->control.watch = a->telemetry_on ? watch_ask : NULL;
+    a->control.watch = a->watch_on ? watch_ask : NULL;
     a->control.watch_ctx = a;
     a->control.radio = &a->represented;
     a->control.tx_power_dbm = a->tx_power;
@@ -2285,6 +2296,10 @@ static cJSON *status(agent *a)
     free(text);
     cJSON_AddItemToObject(o, "pod", pod_facts(a));
     cJSON_AddBoolToObject(o, "report_source_available", source_current(a));
+    if (a->pod_refused) /* spec 3.10: the pod's schema is not the profile's generation */
+        cJSON_AddStringToObject(o, "pod_refused", "SCHEMA_MISMATCH");
+    else
+        cJSON_AddNullToObject(o, "pod_refused");
     /* spec 2.5: new generations that continued the pod source, and those that were another, by
      * reason */
     cJSON *reconnections = cJSON_AddObjectToObject(o, "reconnections");
@@ -2366,7 +2381,7 @@ static cJSON *status(agent *a)
         cJSON_ArrayForEach(m, x) cJSON_AddItemToObject(st, m->string, cJSON_Duplicate(m, 1));
         cJSON_Delete(x);
     }
-    cJSON_AddItemToObject(o, "probe_watch", a->telemetry_on ? em_watch_status(&a->watch) : cJSON_CreateNull());
+    cJSON_AddItemToObject(o, "probe_watch", a->watch_on ? em_watch_status(&a->watch) : cJSON_CreateNull());
     cJSON_AddItemToObject(o, "gre_parent", a->gre ? em_gre_status(a->gre) : cJSON_CreateNull());
     cJSON_AddNumberToObject(o, "writes", a->writes);
     cJSON_AddNumberToObject(o, "worker_pid", getpid());
@@ -2504,6 +2519,18 @@ static bool configure(agent *a, const char *path, const char *profiles)
     if (!em_format(profile, sizeof(profile), "%s/%s.json", profiles, a->profile_id) ||
         em_profile_load(profile, &a->profile) != EM_OK)
         return false;
+    if (a->profile.legacy) {
+        /* spec 3.10: a legacy pod has no Multi-AP station (Wifi_Credential_Config without bssid,
+         * priority or enabled), its Ethernet uplink no Connection_Manager_Uplink.bridge, and its
+         * Band_Steering_Clients not steering's or the watch's columns */
+        const char *legacy_uplink = cfg_str(cJSON_GetObjectItemCaseSensitive(c, "uplink"), "mode");
+        if (legacy_uplink && strcmp(legacy_uplink, "off")) {
+            FAIL("uplink: %s is not served on a legacy pod", legacy_uplink);
+            return false;
+        }
+        a->steering_on = false;
+    }
+    a->watch_on = a->telemetry_on && !a->profile.legacy;
     /* the uplink: option 1, the pod's backhaul station on the EasyMesh backhaul BSS */
     const cJSON *uplink = cJSON_GetObjectItemCaseSensitive(c, "uplink");
     const char *umode = cfg_str(uplink, "mode");
@@ -2761,11 +2788,13 @@ int main(int argc, char **argv)
         char client[160];
         EM_FORMAT_FIXED(client, sizeof(client), "emosa-agent-%s", a.pod_id); /* pod_id: at most 64 (schema) */
         a.mqtt = em_mqtt_open(a.subscribe_host, a.subscribe_port, a.telemetry.intent.topic, client, deliver, &a);
+    }
+    if (a.watch_on) {
         /* the stations the controller asks about, watched for their probe requests (§3.9) */
         a.watch = (em_watch_scope){.ovs = a.ovs, .serial = a.serial, .pod_id = a.pod_id, .run_id = a.run_id,
                                    .if_name = a.profile.fronthaul_if, .band = a.telemetry.intent.radio_type,
                                    .transact = transact, .transact_ctx = &a, .monotonic = now};
-        why = em_watch_open(&a.watch, a.state_dir, &a.schemas, &a.vault);
+        em_reason why = em_watch_open(&a.watch, a.state_dir, &a.schemas, &a.vault);
         if (why != EM_OK) {
             FAIL("probe watch journal: %s", em_reason_name(why));
             return 1;
@@ -2905,7 +2934,7 @@ int main(int argc, char **argv)
             em_telemetry_tick(&a.telemetry);
         if (refreshed && a.steering_on)
             em_steering_tick(&a.steering);
-        if (refreshed && a.telemetry_on)
+        if (refreshed && a.watch_on)
             em_watch_tick(&a.watch);
         write_status(&a);
     }
@@ -2920,8 +2949,9 @@ int main(int argc, char **argv)
     if (a.telemetry_on) {
         em_mqtt_close(a.mqtt);
         em_telemetry_close(&a.telemetry);
-        em_watch_close(&a.watch);
     }
+    if (a.watch_on)
+        em_watch_close(&a.watch);
     if (a.steering_on)
         em_steering_scope_close(&a.steering);
     if (a.uplink_on)

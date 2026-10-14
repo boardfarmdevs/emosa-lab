@@ -31,6 +31,7 @@ struct em_ovsdb {
     long next_id, monitor_id, pending_id;
     cJSON *tables;         /* the cache */
     char schema_fingerprint[65]; /* sha256 of the pod's schema as compact sorted JSON */
+    int legacy_schema;           /* 1: no Wifi_VIF_Config.wpa_psks (spec 3.10), 0: it has, -1: unknown */
     bool fixed;                  /* recorded rows, no pod (vectors and tests) */
     cJSON *pending_reply;  /* the reply awaited by transact */
     char **table_names;
@@ -94,6 +95,7 @@ em_ovsdb *em_ovsdb_fixed(const cJSON *tables, int generation, const char *schema
     em_ovsdb *s = em_calloc(1, sizeof(*s));
     s->listener = s->conn = -1;
     s->fixed = s->monitored = true;
+    s->legacy_schema = -1;
     s->generation = generation;
     s->revision = 1;
     s->tables = cJSON_Duplicate(tables, true);
@@ -135,6 +137,7 @@ size_t em_ovsdb_fds(const em_ovsdb *s, int *fds, size_t max)
 bool em_ovsdb_ready(const em_ovsdb *s) { return s->fixed || (s->conn >= 0 && s->monitored); }
 int em_ovsdb_generation(const em_ovsdb *s) { return s->generation; }
 const char *em_ovsdb_schema_fingerprint(const em_ovsdb *s) { return s->schema_fingerprint; }
+int em_ovsdb_legacy_schema(const em_ovsdb *s) { return s->legacy_schema; }
 unsigned long em_ovsdb_revision(const em_ovsdb *s) { return s->revision; }
 const cJSON *em_ovsdb_tables(const em_ovsdb *s) { return s->tables; }
 
@@ -316,6 +319,11 @@ static bool start_monitor(em_ovsdb *s)
     }
     em_sha256_hex(text, strlen(text), s->schema_fingerprint);
     free(text);
+    /* the pod's generation (spec 3.10): a legacy pod's VIF table has no wpa_psks */
+    const cJSON *vif_columns = cJSON_GetObjectItemCaseSensitive(
+        cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(raw, "tables"), "Wifi_VIF_Config"),
+        "columns");
+    s->legacy_schema = !vif_columns ? -1 : !cJSON_GetObjectItemCaseSensitive(vif_columns, "wpa_psks");
     cJSON *params = cJSON_CreateArray(), *requests = cJSON_CreateObject();
     long monitor = (long)(s->generation % 1000000) * 1000 + 1; /* no overflow however many sessions (INT32-C) */
     cJSON_AddItemToArray(params, cJSON_CreateString(DATABASE));

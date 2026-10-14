@@ -292,7 +292,7 @@ static cJSON *values(const em_ap_scope *s, const cJSON *row)
     cJSON_AddItemToObject(v, "mode", em_row_string(row, "mode"));
     cJSON_AddItemToObject(v, "security_mode",
                           row && em_row_wpa2_psk(row) ? cJSON_CreateString("wpa2-psk") : cJSON_CreateNull());
-    const char *key = em_row_sole_map_value(row, "wpa_psks");
+    const char *key = em_row_psk(row);
     char fp[65];
     if (key && em_vault_fingerprint_text(s->vault, key, fp))
         cJSON_AddStringToObject(v, "credential_fingerprint", fp);
@@ -342,7 +342,7 @@ static cJSON *additional(const em_ap_scope *s, const cJSON *tables, bool states)
                 continue;
         }
         const char *multi_ap = ovs_str(row, "multi_ap"), *mode = ovs_str(row, "mode");
-        const char *key = em_row_wpa2_psk(row) ? em_row_sole_map_value(row, "wpa_psks") : NULL;
+        const char *key = em_row_wpa2_psk(row) ? em_row_psk(row) : NULL;
         bool usable = mode && !strcmp(mode, "ap") && ovs_true(row, "enabled");
         cJSON *entry = cJSON_CreateArray();
         /* a Multi-AP backhaul BSS, or the GRE parent AP (spec 8.6) as a parent renders it, not a
@@ -570,7 +570,7 @@ static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
         *why = EM_UNSUPPORTED_OPERATION; /* "current VIF/security representation unqualified" */
         return NULL;
     }
-    const char *fields[] = {"ssid", "wpa_psks"};
+    const char *fields[] = {"ssid", s->profile->legacy ? "security" : "wpa_psks"};
     cJSON_AddStringToObject(p, "action", "update");
     cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 2));
     cJSON_AddStringToObject(p, "guard", "pod serial, radio/VIF references and VIF security fields");

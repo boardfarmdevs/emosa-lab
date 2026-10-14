@@ -14,8 +14,13 @@ const cJSON *em_table(const cJSON *tables, const char *name);
 const cJSON *em_bound_node(const cJSON *tables, const char *serial, const char **uuid);
 /* start_instance: sha256(json.dumps(sorted Wifi_Radio_Config UUIDs))[:16]; false without radios. */
 bool em_start_instance(const cJSON *tables, char out[17]);
-/* The 6.6 osw encoding of WPA2-PSK/CCMP with one PSK slot (radio_scope.wpa2_psk). */
+/* The 6.6 osw encoding of WPA2-PSK/CCMP with one PSK slot, or on a legacy pod (spec 3.10) the
+ * security map's encryption WPA-PSK and a key (radio_scope.wpa2_psk). */
 bool em_row_wpa2_psk(const cJSON *row);
+/* A legacy pod's VIF row (spec 3.10): no wpa_* columns (radio_scope.legacy_row). */
+bool em_row_legacy(const cJSON *row);
+/* The row's one passphrase: its single wpa_psks slot, or a legacy row's security key (psk). */
+const char *em_row_psk(const cJSON *row);
 /* The row's UUID set (or single UUID) column contains uuid. */
 bool em_row_has_uuid(const cJSON *row, const char *column, const char *uuid);
 /* A string column as a JSON value: the string, or null (absent or empty set). */

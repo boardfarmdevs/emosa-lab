@@ -45,7 +45,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
 from emosa.opensync.mapping import OpenSyncBackend, check_results, guard, where_uuid
 from emosa.opensync.profiles import load as load_profile
-from emosa.opensync.radio_scope import wpa2_psk
+from emosa.opensync.radio_scope import psk, wpa2_psk
 from emosa.opensync.uplink import start_instance
 from emosa.wire.operation_bridge import ScopeContext
 
@@ -64,6 +64,8 @@ VIF_GUARDS = (
     "wpa_pairwise_tkip",
     "wpa_pairwise_ccmp",
 )
+# a legacy pod's (spec 3.10): its WPA2-PSK is the security map
+LEGACY_VIF_GUARDS = ("if_name", "mode", "enabled", "ssid", "security")
 # the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod's
 # AP takes it as a Multi-AP agent's AP does (hostapd multi_ap 2 or 1)
 MULTI_AP = {"fronthaul": "fronthaul_bss", "backhaul": "backhaul_bss"}
@@ -143,9 +145,29 @@ class PodBackend(OpenSyncBackend):
             return frozenset()
         return frozenset(name for name, role, _ in self.pod_slots if role == "backhaul")
 
+    @property
+    def vif_guards(self):
+        """The guarded AP VIF fields of the pod's generation (spec 3.2, 3.10)."""
+        return LEGACY_VIF_GUARDS if self.profile.legacy else VIF_GUARDS
+
+    def _secured(self, row, key):
+        """The row with WPA2-PSK and the key in the pod's encoding: the single wpa_psks slot, or on
+        a legacy pod the security map, the row's own entries then encryption WPA-PSK and the key
+        (spec 3.10)."""
+        if not self.profile.legacy:
+            return {**row, "wpa_psks": ["map", [["key", key]]]}
+        security = row.get("security") or ["map", []]
+        entries = {**dict(security[1]), "encryption": "WPA-PSK", "key": key}
+        return {**row, "security": ["map", sorted([k, v] for k, v in entries.items())]}
+
+    def _role_row(self, row, multi_ap):
+        """The row with its role in multi_ap (spec 3.4); a legacy pod has none (spec 3.10)."""
+        if self.profile.legacy:
+            return {k: v for k, v in row.items() if k != "multi_ap"}
+        return {**row, "multi_ap": multi_ap}
+
     def _values(self, row):
-        psks = row.get("wpa_psks") or {}
-        key = next(iter(psks.values())) if len(psks) == 1 else None
+        key = psk(row)
         return {
             "ssid": row.get("ssid"),
             "enabled": row.get("enabled"),
@@ -288,8 +310,7 @@ class PodBackend(OpenSyncBackend):
         """Sorted [role, ssid, key fingerprint] of extra BSS rows (Config or State)."""
         values = []
         for row in rows:
-            psks = row.get("wpa_psks") or {}
-            key = next(iter(psks.values())) if len(psks) == 1 and wpa2_psk(row) else None
+            key = psk(row) if wpa2_psk(row) else None
             usable = row.get("mode") == "ap" and row.get("enabled") is True
             values.append(
                 [
@@ -327,14 +348,16 @@ class PodBackend(OpenSyncBackend):
         """The GRE parent AP's row (spec 8.6), as the OpenSync cloud writes a parent's backhaul
         AP: no Multi-AP, no bridge, no bridging between its stations; hidden unless the
         profile says otherwise."""
-        return {
-            **self.profile.backhaul_row,
-            "ssid_broadcast": "disabled",
-            **(self.profile.gre_parent_vif or {}),
-            "multi_ap": "none",
-            "bridge": "",
-            "ap_bridge": False,
-        }
+        return self._role_row(
+            {
+                **self.profile.backhaul_row,
+                "ssid_broadcast": "disabled",
+                **(self.profile.gre_parent_vif or {}),
+                "bridge": "",
+                "ap_bridge": False,
+            },
+            "none",
+        )
 
     def _parent_inet(self, name):
         """The GRE parent AP's Inet row (spec 8.6): the underlay's .1, its DHCP range .10 to
@@ -441,7 +464,9 @@ class PodBackend(OpenSyncBackend):
         return {
             **common,
             "action": "update",
-            "fields": ["ssid", "multi_ap", "wpa_psks"],
+            "fields": ["ssid", "security"]
+            if self.profile.legacy
+            else ["ssid", "multi_ap", "wpa_psks"],
             "guard": "pod serial, radio/VIF references and VIF security fields",
         }
 
@@ -492,13 +517,17 @@ class PodBackend(OpenSyncBackend):
                 "op": "insert",
                 "table": "Wifi_VIF_Config",
                 "uuid-name": "fh",
-                "row": {
-                    **self.profile.fronthaul_vif,
-                    "if_name": self.if_name,
-                    "ssid": intent.ssid,
-                    "multi_ap": MULTI_AP["fronthaul"],
-                    "wpa_psks": ["map", [["key", key]]],
-                },
+                "row": self._secured(
+                    self._role_row(
+                        {
+                            **self.profile.fronthaul_vif,
+                            "if_name": self.if_name,
+                            "ssid": intent.ssid,
+                        },
+                        MULTI_AP["fronthaul"],
+                    ),
+                    key,
+                ),
             },
             {
                 "op": "mutate",
@@ -601,16 +630,30 @@ class PodBackend(OpenSyncBackend):
                 if name in self.parent_aps:
                     base = self._parent_vif()
                 else:
-                    base = {
-                        **(
-                            self.profile.backhaul_row
-                            if role == "backhaul"
-                            else self.profile.fronthaul_vif
-                        ),
-                        "multi_ap": MULTI_AP[role],
-                    }
+                    base = self._role_row(
+                        self.profile.backhaul_row
+                        if role == "backhaul"
+                        else self.profile.fronthaul_vif,
+                        MULTI_AP[role],
+                    )
                 key = self.vault.resolve(bss["secret_ref"])
-                if present:
+                if present and self.profile.legacy:  # the whole security map, in the update
+                    ops.append(
+                        {
+                            "op": "update",
+                            "table": "Wifi_VIF_Config",
+                            "where": where_uuid(present["uuid"]),
+                            "row": self._secured(
+                                {
+                                    **{k: v for k, v in base.items() if k != "vif_radio_idx"},
+                                    "ssid": bss["ssid"],
+                                },
+                                key,
+                            ),
+                        }
+                    )
+                    counts.append(1)
+                elif present:
                     slots = sorted(present["config"].get("wpa_psks") or {})
                     ops += [
                         {
@@ -649,13 +692,15 @@ class PodBackend(OpenSyncBackend):
                             "op": "insert",
                             "table": "Wifi_VIF_Config",
                             "uuid-name": named,
-                            "row": {
-                                **base,
-                                "if_name": name,
-                                "ssid": bss["ssid"],
-                                "vif_radio_idx": radio_idx,
-                                "wpa_psks": ["map", [["key", key]]],
-                            },
+                            "row": self._secured(
+                                {
+                                    **base,
+                                    "if_name": name,
+                                    "ssid": bss["ssid"],
+                                    "vif_radio_idx": radio_idx,
+                                },
+                                key,
+                            ),
                         },
                         {
                             "op": "mutate",
@@ -724,32 +769,43 @@ class PodBackend(OpenSyncBackend):
         else:
             vif = raw["tables"]["Wifi_VIF_Config"][vif_uuid]
             radio = raw["tables"]["Wifi_Radio_Config"][radio_uuid]
-            slots = sorted(config.get("wpa_psks") or {})
             transaction = [
                 self._node_guard(raw),
                 guard("Wifi_Radio_Config", radio_uuid, radio, ["if_name", "vif_configs"]),
-                guard("Wifi_VIF_Config", vif_uuid, vif, list(VIF_GUARDS)),
-                {
-                    "op": "update",
-                    "table": "Wifi_VIF_Config",
-                    "where": where_uuid(vif_uuid),
-                    "row": {"ssid": intent.ssid, "multi_ap": MULTI_AP["fronthaul"]},
-                },
-                {
-                    "op": "mutate",
-                    "table": "Wifi_VIF_Config",
-                    "where": where_uuid(vif_uuid),
-                    "mutations": [
-                        ["wpa_psks", "delete", ["set", slots]],
-                        [
-                            "wpa_psks",
-                            "insert",
-                            ["map", [["key", self.vault.resolve(intent.secret_ref)]]],
-                        ],
-                    ],
-                },
+                guard("Wifi_VIF_Config", vif_uuid, vif, list(self.vif_guards)),
             ]
-            counts = [None, None, None, 1, 1]
+            key = self.vault.resolve(intent.secret_ref)
+            if self.profile.legacy:  # the profile's security map with the key, in one update
+                security = self.profile.fronthaul_vif.get("security") or ["map", []]
+                transaction.append(
+                    {
+                        "op": "update",
+                        "table": "Wifi_VIF_Config",
+                        "where": where_uuid(vif_uuid),
+                        "row": self._secured({"ssid": intent.ssid, "security": security}, key),
+                    }
+                )
+                counts = [None, None, None, 1]
+            else:
+                slots = sorted(config.get("wpa_psks") or {})
+                transaction += [
+                    {
+                        "op": "update",
+                        "table": "Wifi_VIF_Config",
+                        "where": where_uuid(vif_uuid),
+                        "row": {"ssid": intent.ssid, "multi_ap": MULTI_AP["fronthaul"]},
+                    },
+                    {
+                        "op": "mutate",
+                        "table": "Wifi_VIF_Config",
+                        "where": where_uuid(vif_uuid),
+                        "mutations": [
+                            ["wpa_psks", "delete", ["set", slots]],
+                            ["wpa_psks", "insert", ["map", [["key", key]]]],
+                        ],
+                    },
+                ]
+                counts = [None, None, None, 1, 1]
         if self.slots and intent.additional is not None:
             extra_ops, extra_counts = await self._extra_ops(intent, raw, radio_uuid)
             transaction += extra_ops

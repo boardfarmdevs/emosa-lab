@@ -52,8 +52,22 @@ bool em_start_instance(const cJSON *tables, char out[17])
     return true;
 }
 
+bool em_row_legacy(const cJSON *row)
+{
+    return row && !cJSON_GetObjectItemCaseSensitive(row, "wpa") && !cJSON_GetObjectItemCaseSensitive(row, "wpa_psks");
+}
+
+const char *em_row_psk(const cJSON *row)
+{
+    return em_row_legacy(row) ? ovs_map_get(row, "security", "key") : em_row_sole_map_value(row, "wpa_psks");
+}
+
 bool em_row_wpa2_psk(const cJSON *row)
 {
+    if (em_row_legacy(row)) { /* spec 3.10: the security map's encryption WPA-PSK and a key */
+        const char *encryption = ovs_map_get(row, "security", "encryption"), *key = ovs_map_get(row, "security", "key");
+        return encryption && !strcmp(encryption, "WPA-PSK") && key && *key;
+    }
     const char *akm[8];
     size_t n = ovs_strings(row, "wpa_key_mgmt", akm, 8);
     return ovs_true(row, "wpa") && n == 1 && !strcmp(akm[0], "wpa-psk") && ovs_true(row, "rsn_pairwise_ccmp") &&

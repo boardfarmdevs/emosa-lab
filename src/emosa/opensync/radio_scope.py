@@ -20,8 +20,17 @@ SECURITY_COLUMNS = [
 ]
 
 
+def legacy_row(row):
+    """A legacy pod's VIF row (spec 3.10): its schema has no wpa_* columns."""
+    return "wpa" not in row and "wpa_psks" not in row
+
+
 def wpa2_psk(row):
-    """True for the 6.6 osw encoding of WPA2-PSK/CCMP with one PSK slot (spec 3.3)."""
+    """True for the 6.6 osw encoding of WPA2-PSK/CCMP with one PSK slot (spec 3.3), or on a
+    legacy pod the security map's: encryption WPA-PSK and a key (spec 3.10)."""
+    if legacy_row(row):
+        security = row.get("security") or {}
+        return security.get("encryption") == "WPA-PSK" and bool(security.get("key"))
     return (
         row.get("wpa") is True
         and row.get("wpa_key_mgmt") == ["wpa-psk"]
@@ -31,6 +40,14 @@ def wpa2_psk(row):
         and not row.get("wpa_pairwise_ccmp")
         and len(row.get("wpa_psks") or {}) == 1
     )
+
+
+def psk(row):
+    """The row's one passphrase: its single wpa_psks slot, or a legacy pod's security key."""
+    if legacy_row(row):
+        return (row.get("security") or {}).get("key")
+    psks = row.get("wpa_psks") or {}
+    return next(iter(psks.values())) if len(psks) == 1 else None
 
 
 def simulator_wpa2_psk(row):

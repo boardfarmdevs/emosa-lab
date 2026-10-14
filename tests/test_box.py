@@ -636,3 +636,25 @@ def test_a_radio_with_no_reported_power_still_answers_the_channel_procedures(age
     result = box("second-radio-no-power", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result
     assert result["not_ready_refusals"] == 0 and result["bound_counted"]
+
+
+def test_a_legacy_pods_fronthaul_is_written_in_its_security_map(agent, tmp_path):
+    # spec 3.10: OpenSync 2.0's schema, no wpa_* columns or multi_ap
+    result = box("legacy-onboard", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_a_legacy_pods_backhaul_bss_is_its_gre_parent_ap_on_its_underlay(agent, tmp_path):
+    # spec 3.10, 8.6: the former manager's 169.254.2.1 on wl1.1 replaced by the pod's underlay
+    result = box("legacy-parent", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_a_legacy_pod_under_a_6_6_profile_is_refused(agent, tmp_path):
+    result = box("legacy-pod-6-6-profile", agent, tmp_path / "box", timeout=120)
+    assert result["passed"], result
+
+
+def test_a_6_6_pod_under_a_legacy_profile_is_refused(agent, tmp_path):
+    result = box("pod-6-6-legacy-profile", agent, tmp_path / "box", timeout=120)
+    assert result["passed"], result

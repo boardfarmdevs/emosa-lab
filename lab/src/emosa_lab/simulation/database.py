@@ -14,7 +14,7 @@ import ovs.jsonrpc
 import ovs.stream
 
 from emosa.errors import EmosaError, Reason
-from emosa.opensync.schema import reference_path
+from emosa.opensync.schema import OPENSYNC_66, reference_path
 from emosa.opensync.session import OvsSession
 
 
@@ -38,7 +38,11 @@ def binary(name):
 class SimDatabase:
     """Disposable private Unix-socket database, no host daemon or switch datapath."""
 
-    def __init__(self, directory=None, *, tls_files=None):
+    def __init__(self, directory=None, *, tls_files=None, schema=None, generation=None):
+        # schema: the pod's schema file (a legacy pod's, spec 3.10), else the 6.6 reference;
+        # generation: what that schema qualifies as, for the sessions that write the pod's rows
+        self.schema = schema
+        self.generation = generation or OPENSYNC_66
         self.temporary = (
             tempfile.TemporaryDirectory(prefix="emosa-db-") if directory is None else None
         )
@@ -55,7 +59,7 @@ class SimDatabase:
         if not db.exists():
             result = await asyncio.to_thread(
                 subprocess.run,
-                [tool, "create", str(db), str(reference_path())],
+                [tool, "create", str(db), str(self.schema or reference_path())],
                 capture_output=True,
                 text=True,
             )

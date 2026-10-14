@@ -4,7 +4,10 @@ EMOSA is licensed under the Apache License 2.0 ([LICENSE](../../LICENSE)). What 
 is the material in or around it that is not EMOSA's own.
 
 `tests/fixtures/opensync/opensync.ovsschema` is the unmodified schema from
-plume-design/opensync commit `78d8a7194d5e77635877cc456231e7be5cf03d68`.
+plume-design/opensync commit `78d8a7194d5e77635877cc456231e7be5cf03d68`, and
+`tests/fixtures/opensync/opensync-2.0.0.ovsschema` the unmodified schema of its tag
+`osync_2.0.0` (commit `063e1af2502de222669c5e8aa7decf3e0f67a34d`, `provenance-2.0.0.json`),
+the legacy pods' reference (spec 3.10).
 The original license is retained as `tests/fixtures/opensync/LICENSE.opensync`;
 the corresponding source path, hash and provenance are in `provenance.json`.
 The native Kconfig evidence is also from that pinned source. No full OpenSync

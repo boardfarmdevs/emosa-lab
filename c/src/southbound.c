@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "ovs.h"
+#include "scope.h"
 #include "view.h"
 
 /* -- profile ------------------------------------------------------------------------ */
@@ -41,6 +42,8 @@ em_reason em_profile_load(const char *path, em_profile *out)
     const cJSON *gre = cJSON_GetObjectItemCaseSensitive(d, "gre_parent");
     out->gre_parent_vif = cJSON_GetObjectItemCaseSensitive(gre, "vif");
     out->gre_parent_inet = cJSON_GetObjectItemCaseSensitive(gre, "inet");
+    const char *schema = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(d, "schema"));
+    out->legacy = schema && !strcmp(schema, "opensync-2.0");
     const cJSON *band_station;
     cJSON_ArrayForEach(band_station, cJSON_GetObjectItemCaseSensitive(
                                          cJSON_GetObjectItemCaseSensitive(d, "uplink"), "stations"))
@@ -82,10 +85,14 @@ em_reason em_profile_load(const char *path, em_profile *out)
             goto invalid;
         out->radio_bands[out->nradios++] = band;
     }
-    for (size_t i = 0; i < out->nslots; i++)
+    for (size_t i = 0; i < out->nslots; i++) {
         if (out->slots[i].band && strcmp(out->slots[i].band, out->band) &&
             !em_profile_has_radio(out, out->slots[i].band))
             goto invalid;
+        /* a legacy pod has no Multi-AP backhaul BSS: its backhaul slots are GRE parents (3.10) */
+        if (out->legacy && !strcmp(out->slots[i].role, "backhaul") && strcmp(out->backhaul_mode, "gre-parent"))
+            goto invalid;
+    }
     return EM_OK;
 invalid:
     em_profile_free(out);
@@ -315,16 +322,8 @@ static const char *const VIF_GUARDS[] = {"if_name", "mode", "enabled", "ssid", "
                                          "wpa_key_mgmt", "wpa_psks", "security",
                                          "rsn_pairwise_ccmp", "wpa_pairwise_tkip",
                                          "wpa_pairwise_ccmp"};
-
-static bool wpa2_psk(const cJSON *row)
-{
-    const char *akm[8];
-    size_t n = ovs_strings(row, "wpa_key_mgmt", akm, 8);
-    return ovs_true(row, "wpa") && n == 1 && !strcmp(akm[0], "wpa-psk") &&
-           ovs_true(row, "rsn_pairwise_ccmp") && ovs_map_size(row, "security") == 0 &&
-           !ovs_true(row, "wpa_pairwise_tkip") && !ovs_true(row, "wpa_pairwise_ccmp") &&
-           ovs_map_size(row, "wpa_psks") == 1;
-}
+/* a legacy pod's (spec 3.10): its WPA2-PSK is the security map */
+static const char *const LEGACY_VIF_GUARDS[] = {"if_name", "mode", "enabled", "ssid", "security"};
 
 static bool contains(const cJSON *row, const char *column, const char *uuid)
 {
@@ -512,10 +511,11 @@ static cJSON *inet_row(const em_profile *p, const char *name)
 
 /* the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec §3.4): the pod's
  * AP takes it as a Multi-AP agent's AP does (hostapd multi_ap 2 or 1) */
-static void set_role(cJSON *row, const char *role)
+static void set_role(cJSON *row, const em_profile *p, const char *role)
 {
     cJSON_DeleteItemFromObjectCaseSensitive(row, "multi_ap");
-    cJSON_AddStringToObject(row, "multi_ap", !strcmp(role, "backhaul") ? "backhaul_bss" : "fronthaul_bss");
+    if (!p->legacy) /* a legacy pod has no multi_ap (spec 3.10) */
+        cJSON_AddStringToObject(row, "multi_ap", !strcmp(role, "backhaul") ? "backhaul_bss" : "fronthaul_bss");
 }
 
 /* the GRE parent AP's row over the backhaul row (spec 8.6, PodBackend._parent_vif): hidden unless
@@ -528,9 +528,54 @@ static void set_parent(cJSON *row, const em_profile *p)
     const char *const fixed[3] = {"multi_ap", "bridge", "ap_bridge"};
     for (int i = 0; i < 3; i++)
         cJSON_DeleteItemFromObjectCaseSensitive(row, fixed[i]);
-    cJSON_AddStringToObject(row, "multi_ap", "none");
+    if (!p->legacy)
+        cJSON_AddStringToObject(row, "multi_ap", "none");
     cJSON_AddStringToObject(row, "bridge", "");
     cJSON_AddFalseToObject(row, "ap_bridge");
+}
+
+/* the row with WPA2-PSK and the key in the pod's encoding (PodBackend._secured): the single
+ * wpa_psks slot, or on a legacy pod the security map, the row's own entries then encryption
+ * WPA-PSK and the key, in key order (spec 3.10) */
+static void set_secured(cJSON *row, const em_profile *p, const char *key)
+{
+    if (!p->legacy) {
+        cJSON_DeleteItemFromObjectCaseSensitive(row, "wpa_psks");
+        cJSON_AddItemToObject(row, "wpa_psks", psk_map(key));
+        return;
+    }
+    const char *keys[16], *values[16];
+    size_t n = 0;
+    const cJSON *pair, *pairs = cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(row, "security"), 1);
+    cJSON_ArrayForEach(pair, pairs)
+    {
+        const char *k = cJSON_GetStringValue(cJSON_GetArrayItem(pair, 0));
+        const char *v = cJSON_GetStringValue(cJSON_GetArrayItem(pair, 1));
+        if (k && v && n < 14 && strcmp(k, "encryption") && strcmp(k, "key")) {
+            keys[n] = k;
+            values[n++] = v;
+        }
+    }
+    keys[n] = "encryption";
+    values[n++] = "WPA-PSK";
+    keys[n] = "key";
+    values[n++] = key;
+    for (size_t i = 1; i < n; i++) /* key order, as the reference's sorted pairs */
+        for (size_t j = i; j > 0 && strcmp(keys[j - 1], keys[j]) > 0; j--) {
+            const char *tk = keys[j], *tv = values[j];
+            keys[j] = keys[j - 1], values[j] = values[j - 1];
+            keys[j - 1] = tk, values[j - 1] = tv;
+        }
+    cJSON *list = cJSON_CreateArray();
+    for (size_t i = 0; i < n; i++) {
+        cJSON *entry = cJSON_CreateArray();
+        cJSON_AddItemToArray(entry, cJSON_CreateString(keys[i]));
+        cJSON_AddItemToArray(entry, cJSON_CreateString(values[i]));
+        cJSON_AddItemToArray(list, entry);
+    }
+    cJSON *map = tagged("map", list); /* built before the old map, whose strings it copied, goes */
+    cJSON_DeleteItemFromObjectCaseSensitive(row, "security");
+    cJSON_AddItemToObject(row, "security", map);
 }
 
 static void ipv4_text(uint32_t address, char out[16])
@@ -640,7 +685,7 @@ static em_reason slot_ops(const em_profile *p, const em_profile *own, const char
             if (parent)
                 set_parent(base, p);
             else
-                set_role(base, own->slots[i].role);
+                set_role(base, p, own->slots[i].role);
             const char *bkey = resolve(resolve_ctx, intent->additional[k].secret_ref);
             if (!bkey) {
                 cJSON_Delete(base);
@@ -652,9 +697,12 @@ static em_reason slot_ops(const em_profile *p, const em_profile *own, const char
                 merge(row, base, "vif_radio_idx");
                 cJSON_DeleteItemFromObjectCaseSensitive(row, "ssid");
                 cJSON_AddStringToObject(row, "ssid", intent->additional[k].ssid);
+                if (p->legacy) /* the whole security map, in the update (spec 3.10) */
+                    set_secured(row, p, bkey);
                 cJSON_AddItemToObject(upd, "row", row);
                 PUSH(upd, 1);
-                PUSH(psk_mutate(found[i].uuid, found[i].config, bkey), 1);
+                if (!p->legacy)
+                    PUSH(psk_mutate(found[i].uuid, found[i].config, bkey), 1);
             } else {
                 char label[32];
                 EM_FORMAT_FIXED(label, sizeof(label), "extra%zu", i);
@@ -668,7 +716,7 @@ static em_reason slot_ops(const em_profile *p, const em_profile *own, const char
                 cJSON_AddStringToObject(row, "if_name", name);
                 cJSON_AddStringToObject(row, "ssid", intent->additional[k].ssid);
                 cJSON_AddNumberToObject(row, "vif_radio_idx", own->slots[i].vif_radio_idx);
-                cJSON_AddItemToObject(row, "wpa_psks", psk_map(bkey));
+                set_secured(row, p, bkey);
                 cJSON_AddItemToObject(ins, "row", row);
                 PUSH(ins, -1);
                 PUSH(vif_configs_mutate(radio_uuid, "insert", named(label)), 1);
@@ -813,7 +861,7 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
         if (!b.state)
             return EM_NOT_READY;
         const char *mode = ovs_str(b.config, "mode");
-        if (!mode || strcmp(mode, "ap") || !ovs_true(b.config, "enabled") || !wpa2_psk(b.config))
+        if (!mode || strcmp(mode, "ap") || !ovs_true(b.config, "enabled") || !em_row_wpa2_psk(b.config))
             return EM_UNSUPPORTED_OPERATION; /* current VIF/security representation unqualified */
     }
     cJSON *ops = cJSON_CreateArray();
@@ -841,8 +889,8 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
         cJSON_AddStringToObject(row, "if_name", p->fronthaul_if);
         cJSON_DeleteItemFromObjectCaseSensitive(row, "ssid");
         cJSON_AddStringToObject(row, "ssid", intent->ssid);
-        set_role(row, "fronthaul");
-        cJSON_AddItemToObject(row, "wpa_psks", psk_map(key));
+        set_role(row, p, "fronthaul");
+        set_secured(row, p, key);
         cJSON_AddItemToObject(ins, "row", row);
         PUSH(ins, -1);
         PUSH(vif_configs_mutate(b.radio_uuid, "insert", named("fh")), 1);
@@ -858,11 +906,22 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
             cJSON_AddItemToObject(io, "row", inet_row(p, p->fronthaul_if));
             PUSH(io, -1);
         }
+    } else if (p->legacy) {
+        /* the profile's security map with the key, in one update (spec 3.10) */
+        PUSH(guard("Wifi_VIF_Config", b.vif_uuid, b.config, LEGACY_VIF_GUARDS, 5), -1);
+        cJSON *upd = op("update", "Wifi_VIF_Config", where_uuid(b.vif_uuid)), *row = cJSON_CreateObject();
+        cJSON_AddStringToObject(row, "ssid", intent->ssid);
+        const cJSON *security = cJSON_GetObjectItemCaseSensitive(p->fronthaul_vif, "security");
+        cJSON_AddItemToObject(row, "security",
+                              security ? cJSON_Duplicate(security, 1) : tagged("map", cJSON_CreateArray()));
+        set_secured(row, p, key);
+        cJSON_AddItemToObject(upd, "row", row);
+        PUSH(upd, 1);
     } else {
         PUSH(guard("Wifi_VIF_Config", b.vif_uuid, b.config, VIF_GUARDS, 11), -1);
         cJSON *upd = op("update", "Wifi_VIF_Config", where_uuid(b.vif_uuid)), *row = cJSON_CreateObject();
         cJSON_AddStringToObject(row, "ssid", intent->ssid);
-        set_role(row, "fronthaul");
+        set_role(row, p, "fronthaul");
         cJSON_AddItemToObject(upd, "row", row);
         PUSH(upd, 1);
         PUSH(psk_mutate(b.vif_uuid, b.config, key), 1);

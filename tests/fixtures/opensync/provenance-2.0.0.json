@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/plume-design/opensync",
+  "commit": "063e1af2502de222669c5e8aa7decf3e0f67a34d",
+  "tag": "osync_2.0.0",
+  "source": "https://raw.githubusercontent.com/plume-design/opensync/063e1af2502de222669c5e8aa7decf3e0f67a34d/interfaces/opensync.ovsschema",
+  "database": "Open_vSwitch",
+  "version": "7.11.201",
+  "sha256": "0d2dd69e44dfe0d4561613625665041ab82beeaff6a4cbe1dfe73bd676475f21",
+  "actual_pod_schema": false,
+  "sanitization": "Unmodified upstream schema: definitions only, no device records. EMOSA's legacy generation (spec 3.10) is this schema without Wifi_VIF_Config.multi_ap and Wifi_VIF_State.multi_ap, removed when it is read.",
+  "license": "LICENSE.opensync"
+}

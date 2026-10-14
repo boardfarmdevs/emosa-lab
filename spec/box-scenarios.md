@@ -106,6 +106,21 @@ fleet must admit the serial and give it the profile `opensync-lab-hwsim-6.6.1-v1
 | `gre-child-kept-gone-up` | spec 8.3 "Moved" for a GRE child (8.6), "pi1 reboots" as the Pis met it (13 October): as `gre-child-kept-gone`, but the pod keeps a working uplink (the Pis' 2.4 GHz fallback station), so its OpenSync does not start again. After the 90 s the agent drops the target without a hold and undoes its own write, as the revert to the bootstrap does: the station's `ssid` and `credential_configs` back as the pod started them, EMOSA's credential deleted, the fallback station untouched | V54 |
 | `backhaul-steering-refused` | without option 1 (the pod on GRE): refused at once, failure with an Error Code | finding 12 |
 
+## Legacy pods (spec 3.10)
+
+The box's legacy pod is synthesized, not recorded: OpenSync 2.0's schema without `multi_ap`
+(`tests/fixtures/opensync/opensync-2.0.0.ovsschema`, unmodified upstream, the box removes the
+column), two radios `wl1` (2.4 GHz) and `wl0` (5 GHz), its station `wl1` on its GRE uplink, no AP
+yet, and a former manager's Inet row on `wl1.1` (`169.254.2.1/24` with a DHCP server). Its agent runs
+the `bcm-pod-2.4.3-gre-v1` profile.
+
+| Scenario | What it shows | Relied on by |
+| --- | --- | --- |
+| `legacy-onboard` | the legacy pod qualifies against its generation's reference; the controller's fronthaul written on the cold pod as `wl1.2`, WPA2-PSK in the `security` map (`encryption` `WPA-PSK`, the key, the profile's `oftag`), no `multi_ap`, applied, and reported | the two-radio Broadcom pods on OpenSync 2.4.3 (13 October) |
+| `legacy-parent` | with an M2 set and an underlay, the backhaul BSS is the GRE parent AP `wl1.1`: its key in the `security` map, no `multi_ap`, hidden, no bridge, no bridging between its stations; its Inet row moved to the underlay (`169.254.5.1`, DHCP `.10` to `.250`), replacing the former manager's `169.254.2.1` | as above; a parent on the podbh subnet would shadow the GTP |
+| `legacy-pod-6-6-profile` | a 6.6 profile on the legacy pod: refused (`pod_refused` `SCHEMA_MISMATCH`), no M1, nothing written | a pod given the wrong profile |
+| `pod-6-6-legacy-profile` | a legacy profile on a 6.6 pod: refused the same way | as above |
+
 ## The reference workload's faults
 
 | Scenario | What it shows | Relied on by |

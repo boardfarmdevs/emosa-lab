@@ -404,7 +404,9 @@ A profile gives:
 - the extra VIF slots for multi-BSS;
 - the `Wifi_Inet_Config` row of a created VIF;
 - the backhaul station the uplink switch moves (§8.3), one the pod's bootstrap
-  creates.
+  creates;
+- the pod's database generation, `schema`: `opensync-6.6`, or `opensync-2.0` for a
+  legacy pod (§3.10).
 
 The bundled profile is `opensync-lab-hwsim-6.6.1-v1`.
 
@@ -562,6 +564,41 @@ the uplink RCPI derived from the probe's SNR as in §3.8. Channels other than
 the pod's operating channel are answered with reason `0x02` for their
 stations. Measurements are real or absent: the agent never fills a station
 from the radio model or a default.
+
+### 3.10 Legacy pods: the OpenSync 2.0 schema
+
+Some pods run an OpenSync whose database predates the `wpa_*` columns and
+`multi_ap`, whatever version their firmware names. A pod is served as one
+when its profile says `"schema": "opensync-2.0"`; the default, `opensync-6.6`,
+is everything above. For a legacy pod, all of this specification applies, except:
+
+- **Qualification.** The reference is the unmodified schema of OpenSync
+  `osync_2.0.0` (`tests/fixtures/opensync/opensync-2.0.0.ovsschema`, pinned by
+  hash) without `Wifi_VIF_Config.multi_ap` and `Wifi_VIF_State.multi_ap`. At
+  connect, every column EMOSA uses (§3.2, without the `wpa_*` columns and
+  `multi_ap`) MUST exist with the reference's type. An enum column qualifies
+  when its values are a subset of the reference's that keeps every value EMOSA
+  writes (a pod without `ap_vlan`, say). The generations do not mix: a pod with
+  `wpa_psks` is not a legacy pod, and one without it is not a 6.6 pod. Either
+  mismatch is refused, `SCHEMA_MISMATCH`, before anything is read or written.
+- **Security.** WPA2-PSK is the `security` map: `encryption` `WPA-PSK` and
+  `key` the passphrase, after the profile row's own entries (an `oftag`, say).
+  EMOSA writes the whole map in one `update` (or in the `insert` of a created
+  VIF). A BSS is WPA2-PSK in this encoding while its map's `encryption` is
+  `WPA-PSK` and it has a `key`. Guarded AP VIF fields: `if_name`, `mode`,
+  `enabled`, `ssid` and `security`.
+- **Roles.** There is no `multi_ap`, so EMOSA writes none. A BSS's role is its
+  slot's (§3.4): the fronthaul VIF and fronthaul slots are fronthaul,
+  backhaul slots backhaul, and the BSS Configuration Report flags follow from it.
+  With no Multi-AP backhaul BSS on such a pod, a legacy profile's
+  `backhaul_mode` MUST be `gre-parent` (§8.6) when it has backhaul slots.
+- **Not served** on a legacy pod, refused at the agent's start
+  (`INVALID_INPUT`) or turned off and said so in the status:
+  the uplink switch onto a Multi-AP backhaul (§8.3; `Wifi_Credential_Config`
+  has no `bssid`, `priority` or `enabled`); the Ethernet uplink of §8.4, whose
+  `Connection_Manager_Uplink.bridge` does not exist; client steering (§3.7) and
+  the station watch (§3.9), whose `Band_Steering_Clients` columns do not
+  exist. Statistics (§3.6) are served: their columns are the same.
 
 ## 4. The fleet
 

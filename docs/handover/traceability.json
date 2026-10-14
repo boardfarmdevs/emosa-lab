@@ -90,6 +90,10 @@
       "box": ["unassociated"],
       "python": ["test_unassociated.py", "test_probe_watch.py"]
     },
+    "README 3.10 Legacy pods: the OpenSync 2.0 schema": {
+      "box": ["legacy-onboard", "legacy-parent", "legacy-pod-6-6-profile", "pod-6-6-legacy-profile"],
+      "python": ["test_legacy_pod.py"]
+    },
     "README 4. The fleet": {
       "vectors": ["fleet.json", "fleet-sessions.json"],
       "box": ["fleet-handover", "fleet-return", "fleet-upgrade", "fleet-refusals", "fleet-takeover", "fleet-forget", "fleet-supervised"],

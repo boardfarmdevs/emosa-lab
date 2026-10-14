@@ -1,0 +1,96 @@
+{
+  "source": "synthesized (13 October 2026), not recorded: a legacy pod (spec 3.10) on OpenSync 2.0's schema without multi_ap, two Broadcom radios wl1 (2.4 GHz) and wl0 (5 GHz), as its platform names them; its station wl1 on its GRE uplink g-wl1, no AP of its own yet (a cold pod), and a leftover Inet row of its former manager on wl1.1 (169.254.2.1/24 with a DHCP server), which an EMOSA GRE parent AP there replaces",
+  "tables": {
+    "AWLAN_Node": {
+      "6c0a1c10-0000-4000-8000-000000000001": {
+        "firmware_version": "2.4.3-0-legacy",
+        "id": "BCMPOD0000000001",
+        "model": "BCM_LEGACY_POD",
+        "serial_number": "BCMPOD0000000001"
+      }
+    },
+    "Wifi_Radio_Config": {
+      "6c0a1c10-0000-4000-8000-000000000011": {
+        "enabled": true,
+        "freq_band": "2.4G",
+        "if_name": "wl1",
+        "vif_configs": ["uuid", "6c0a1c10-0000-4000-8000-000000000031"]
+      },
+      "6c0a1c10-0000-4000-8000-000000000012": {
+        "enabled": true,
+        "freq_band": "5G",
+        "if_name": "wl0",
+        "vif_configs": ["set", []]
+      }
+    },
+    "Wifi_Radio_State": {
+      "6c0a1c10-0000-4000-8000-000000000021": {
+        "channel": 6,
+        "country": "EU",
+        "enabled": true,
+        "freq_band": "2.4G",
+        "if_name": "wl1",
+        "mac": "02:00:00:00:41:00",
+        "radio_config": ["uuid", "6c0a1c10-0000-4000-8000-000000000011"],
+        "tx_power": 20,
+        "vif_states": ["uuid", "6c0a1c10-0000-4000-8000-000000000041"]
+      },
+      "6c0a1c10-0000-4000-8000-000000000022": {
+        "channel": 44,
+        "country": "EU",
+        "enabled": true,
+        "freq_band": "5G",
+        "if_name": "wl0",
+        "mac": "02:00:00:00:40:00",
+        "radio_config": ["uuid", "6c0a1c10-0000-4000-8000-000000000012"],
+        "tx_power": 20,
+        "vif_states": ["set", []]
+      }
+    },
+    "Wifi_VIF_Config": {
+      "6c0a1c10-0000-4000-8000-000000000031": {
+        "bridge": "",
+        "enabled": true,
+        "if_name": "wl1",
+        "mode": "sta",
+        "security": ["map", []],
+        "ssid": ""
+      }
+    },
+    "Wifi_VIF_State": {
+      "6c0a1c10-0000-4000-8000-000000000041": {
+        "enabled": true,
+        "if_name": "wl1",
+        "mac": "02:00:00:00:41:01",
+        "mode": "sta",
+        "parent": "02:00:00:00:1b:02",
+        "security": ["map", []],
+        "ssid": "",
+        "vif_config": ["uuid", "6c0a1c10-0000-4000-8000-000000000031"]
+      }
+    },
+    "Connection_Manager_Uplink": {
+      "6c0a1c10-0000-4000-8000-000000000051": {
+        "has_L2": true,
+        "has_L3": true,
+        "if_name": "g-wl1",
+        "if_type": "gre",
+        "is_used": true
+      }
+    },
+    "Wifi_Inet_Config": {
+      "6c0a1c10-0000-4000-8000-000000000061": {
+        "NAT": false,
+        "dhcpd": ["map", [["lease_time", "12h"], ["start", "169.254.2.10"], ["stop", "169.254.2.250"]]],
+        "enabled": true,
+        "if_name": "wl1.1",
+        "if_type": "vif",
+        "inet_addr": "169.254.2.1",
+        "ip_assign_scheme": "static",
+        "mtu": 1552,
+        "netmask": "255.255.255.0",
+        "network": true
+      }
+    }
+  }
+}

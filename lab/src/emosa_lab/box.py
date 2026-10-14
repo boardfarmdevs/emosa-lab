@@ -30,7 +30,7 @@ import ovs.jsonrpc
 import ovs.stream
 
 from emosa.agent.fleet import agent_config, derive_al
-from emosa.opensync.schema import reference_path
+from emosa.opensync.schema import LEGACY, reference_path, reference_schema
 from emosa.opensync.session import OvsSession
 from emosa.wire.cmdu import Reassembler, Tlv, fragment_message
 from emosa.wsc import decode_attributes
@@ -65,6 +65,12 @@ AUTOCONFIG_SEARCH, AUTOCONFIG_RESPONSE, AUTOCONFIG_WSC = 0x0007, 0x0008, 0x0009
 REGISTRAR = ROOT / ".cache/wsc-registrar/component-registrar"  # scripts/build-wsc-registrar.py
 REGISTRAR_SSID = "EMOSA-WSC-component"  # deploy/wire/component-registrar.c
 COLD_VIF = "home-ap-24"  # the profiles' fronthaul VIF
+# a legacy pod (spec 3.10): OpenSync 2.0's schema without multi_ap, two Broadcom radios, its
+# station on its GRE uplink and no AP yet; its profile's fronthaul wl1.2 and GRE parent AP wl1.1
+LEGACY_ROWS = ROOT / "tests/fixtures/opensync/pod-2.0-legacy-tables.json"
+LEGACY_PROFILE = "bcm-pod-2.4.3-gre-v1"
+LEGACY_FRONTHAUL, LEGACY_PARENT, LEGACY_SLOT_5G = "wl1.2", "wl1.1", "wl0.2"
+LEGACY_UNDERLAY = "169.254.5.0/24"  # not the fixture's leftover 169.254.2.1 on wl1.1
 
 
 def in_namespace():
@@ -143,7 +149,7 @@ async def table_rows(db, table):
 
 
 async def db_transact(db, operations):
-    session = OvsSession(db.endpoint)
+    session = OvsSession(db.endpoint, schema_generation=db.generation)
     try:
         return await session.transact(operations)
     finally:
@@ -453,8 +459,12 @@ class Box:
         reply_cut=False,
         underlay=None,
         gre_child=False,
+        legacy=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
+        # legacy: the pod is a legacy pod (spec 3.10), on its own schema and rows, its agent on
+        # the legacy profile unless the scenario gives another
+        self.legacy = legacy
         # underlay (with a gre-parent profile): the pod's 169.254.N.0/24 as a GRE parent (spec
         # 8.6), given to the agent as the fleet registry would; its parent AP takes the .1
         self.underlay = underlay
@@ -496,12 +506,19 @@ class Box:
         # with the agent's uplink setting: a GRE child of the Pis' shape (spec 8.6, 9)
         if gre_child:
             self.pod_rows = POD_ROWS
+        self.schema = None  # the pod's schema file: the 6.6 reference unless a legacy pod's
+        if legacy:
+            self.pod_rows = LEGACY_ROWS
+            self.profile = profile or LEGACY_PROFILE
         self.process = self.db = self.controller = self.log = self.broker = None
         self.interface = AGENT_INTERFACE  # the agent's 1905 interface (a fleet names its own)
 
     async def __aenter__(self):
         self.directory.mkdir(parents=True, exist_ok=True)
         network(self.interface)
+        if self.legacy:  # OpenSync 2.0's schema as the legacy pod has it: no multi_ap
+            self.schema = self.directory / "legacy.ovsschema"
+            self.schema.write_text(json.dumps(reference_schema(LEGACY)))
         tables, operations = recorded_pod(self.pod_rows, drop=self.drop)
         self.serial = next(iter(tables["AWLAN_Node"].values()))["serial_number"]
         if self.foreign_broker:
@@ -517,11 +534,10 @@ class Box:
                 stderr=subprocess.STDOUT,
             )
             await wait_for_port(1883)
-        self.db = (
-            SimDatabase()
-        )  # its own short directory: Unix socket paths are limited to 108 bytes
+        # its own short directory: Unix socket paths are limited to 108 bytes
+        self.db = SimDatabase(schema=self.schema, generation=LEGACY if self.legacy else None)
         await self.db.start()
-        session = OvsSession(self.db.endpoint)
+        session = OvsSession(self.db.endpoint, schema_generation=self.db.generation)
         try:
             await session.transact(operations)
             if self.wired:
@@ -755,7 +771,7 @@ class Box:
         old = self.db
         await old.close()
         tables, operations = recorded_pod(self.pod_rows, replace, self.drop)
-        self.db = SimDatabase()
+        self.db = SimDatabase(schema=self.schema, generation=old.generation)
         await self.db.start()
         await self.transact(operations)
         await dial(self.db, f"tcp:127.0.0.1:{AGENT_PORT}")
@@ -776,7 +792,7 @@ class Box:
 async def apply_configuration(db):
     """The pod's managers: each VIF's State takes its Config's applied columns (a new
     VIF gets its State row), as OpenSync's wm does once the radio has applied them."""
-    session = OvsSession(db.endpoint)
+    session = OvsSession(db.endpoint, schema_generation=db.generation)
     try:
         snapshot = await session.snapshot()
         tables, schema = snapshot["tables"], snapshot["schema"]
@@ -870,7 +886,7 @@ async def onboarded(box):
             if any(r.get("ssid") == REGISTRAR_SSID for r in rows.values()):
                 wrote, pending = True, False
                 await apply_configuration(box.db)  # the pod's managers apply it, once
-                if box.cold:
+                if box.cold or box.legacy:  # VIFs the agent created (the legacy pod has none)
                     await attach_vifs(box.db)
         if wrote and applied():
             break
@@ -3035,15 +3051,15 @@ GRE_CHILD_MAC = "02:00:00:00:2a:01"
 GRE_CHILD_IP = "169.254.2.10"  # its tunnel is pgd2_10
 
 
-async def gre_parent_up(box):
+async def gre_parent_up(box, parent=GRE_AP):
     """Onboard a gre-parent pod: the M2's backhaul BSS written as the parent AP. (parent AP
     Config row, None) on success, else (None, a failed result)."""
     state = await onboarded(box)
     if not state.get("applied"):
         return None, box.result(passed=False, failed=state.get("failed", "not onboarded"))
-    _, ap = await box.vif("Wifi_VIF_Config", GRE_AP)
+    _, ap = await box.vif("Wifi_VIF_Config", parent)
     if not ap:
-        return None, box.result(passed=False, failed="no parent AP b-ap-24")
+        return None, box.result(passed=False, failed=f"no parent AP {parent}")
     return ap, None
 
 
@@ -4613,6 +4629,103 @@ async def restart_during_write(box):
     )
 
 
+REGISTRAR_KEY = "OnlySimulationWscKey2026!"  # deploy/wire/component-registrar.c
+REGISTRAR_BACKHAUL_KEY = "OnlySimulationWscBackhaul2026!"
+LEGACY_NO_COLUMNS = ("wpa", "wpa_key_mgmt", "wpa_psks", "multi_ap")
+
+
+def legacy_row_ok(row, security):
+    """A legacy pod's VIF row (spec 3.10): its security map exactly as given, and none of the
+    6.6 columns (the pod's schema has none: a row with one could not have been written)."""
+    return (
+        row is not None
+        and ovsdb_map(row.get("security")) == security
+        and not any(c in row for c in LEGACY_NO_COLUMNS)
+    )
+
+
+async def legacy_onboard(box):
+    """spec 3.10: a legacy pod onboarded. Its schema qualifies against OpenSync 2.0's without
+    multi_ap; the controller's fronthaul is written on the cold pod as wl1.2 with WPA2-PSK in the
+    security map (encryption WPA-PSK, the key, the profile's oftag) and no multi_ap, applied by the
+    pod's managers, and reported as the agent's fronthaul BSS."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed=state.get("failed", "not applied"))
+    _, config = await box.vif("Wifi_VIF_Config", LEGACY_FRONTHAUL)
+    _, observed = await box.vif("Wifi_VIF_State", LEGACY_FRONTHAUL)
+    wanted = {"encryption": "WPA-PSK", "key": REGISTRAR_KEY, "oftag": "home--1"}
+    pod = await box.until(lambda: ((box.status() or {}).get("pod") or {}).get("ssid"), seconds=20)
+    return box.result(
+        passed=legacy_row_ok(config, wanted)
+        and legacy_row_ok(observed, wanted)
+        and (config or {}).get("bridge") == "br-home"
+        and pod == REGISTRAR_SSID
+        and not (box.status() or {}).get("pod_refused"),
+        fronthaul={k: (config or {}).get(k) for k in ("if_name", "ssid", "bridge", "mode")},
+        security_keys=sorted(ovsdb_map((config or {}).get("security"))),
+        reported_ssid=pod,
+    )
+
+
+async def legacy_parent(box):
+    """spec 3.10, 8.6: on a legacy pod the M2 set's backhaul BSS is the GRE parent AP wl1.1, with
+    no multi_ap (the pod has none), its WPA2-PSK in the security map, hidden, no bridge, no
+    bridging between its stations; its Inet row moves to the pod's underlay (.1, DHCP .10 to
+    .250), replacing the address the pod's former manager had left there (169.254.2.1)."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    inet = await gre_inet(box, LEGACY_PARENT)
+    dhcpd = ovsdb_map((inet or {}).get("dhcpd"))
+    status = (box.status() or {}).get("gre_parent") or {}
+    ap_ok = (
+        legacy_row_ok(ap, {"encryption": "WPA-PSK", "key": REGISTRAR_BACKHAUL_KEY})
+        and ap.get("bridge") == ""
+        and ap.get("ap_bridge") is False
+        and ap.get("ssid_broadcast") == "disabled"
+    )
+    inet_ok = (
+        inet is not None
+        and inet.get("inet_addr") == "169.254.5.1"
+        and inet.get("netmask") == "255.255.255.0"
+        and dhcpd.get("start") == "169.254.5.10"
+        and dhcpd.get("stop") == "169.254.5.250"
+    )
+    return box.result(
+        passed=ap_ok
+        and inet_ok
+        and status.get("ap") == LEGACY_PARENT
+        and status.get("underlay") == LEGACY_UNDERLAY,
+        parent_ap={k: ap.get(k) for k in ("ssid", "bridge", "ap_bridge", "ssid_broadcast")},
+        security_keys=sorted(ovsdb_map(ap.get("security"))),
+        underlay_inet=inet,
+        gre_status=status,
+    )
+
+
+async def generation_refused(box):
+    """spec 3.10: the pod's schema is not its profile's generation (a 6.6 profile on a legacy pod,
+    or a legacy profile on a 6.6 pod). The agent refuses the pod (SCHEMA_MISMATCH in its status):
+    no M1, nothing written, however long the controller waits."""
+    before = await box.rows("Wifi_VIF_Config")
+    refused = await box.until(lambda: (box.status() or {}).get("pod_refused"), seconds=30)
+    search = box.controller.latest(AUTOCONFIG_SEARCH)
+    if search:
+        box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
+    await asyncio.sleep(5)
+    box.controller.poll()
+    after = await box.rows("Wifi_VIF_Config")
+    return box.result(
+        passed=refused == "SCHEMA_MISMATCH"
+        and box.controller.latest(AUTOCONFIG_WSC) is None
+        and after == before,
+        pod_refused=refused,
+        m1=box.controller.latest(AUTOCONFIG_WSC) is not None,
+        unchanged=after == before,
+    )
+
+
 SCENARIOS = {
     "boot": boot,
     "onboard": onboard,
@@ -4681,6 +4794,10 @@ SCENARIOS = {
     "fronthaul-channel-moves": fronthaul_channel_moves,
     "write-lost-unapplied": write_lost_unapplied,
     "restart-during-write": restart_during_write,
+    "legacy-onboard": legacy_onboard,
+    "legacy-parent": legacy_parent,
+    "legacy-pod-6-6-profile": generation_refused,
+    "pod-6-6-legacy-profile": generation_refused,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -4831,6 +4948,11 @@ OPTIONS = {  # the box each scenario needs beyond the default
 # second-radio-moves-channel's
 OPTIONS["reconnect-moved-uplink"] = OPTIONS["restart-during-move"]
 OPTIONS["reconnect-channel-follows"] = OPTIONS["second-radio-moves-channel"]
+# spec 3.10: a legacy pod, and each generation's pod under the other's profile
+OPTIONS["legacy-onboard"] = {"legacy": True}
+OPTIONS["legacy-parent"] = {"legacy": True, "multi_bss": True, "underlay": LEGACY_UNDERLAY}
+OPTIONS["legacy-pod-6-6-profile"] = {"legacy": True, "profile": PLAIN_PROFILE}
+OPTIONS["pod-6-6-legacy-profile"] = {"profile": LEGACY_PROFILE}
 
 
 async def run(scenario, agent, directory, *, binary=None):

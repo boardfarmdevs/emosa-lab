@@ -42,6 +42,7 @@
       ]
     },
     "report_source_available": {"type": "boolean"},
+    "pod_refused": {"type": ["string", "null"], "description": "spec 3.10: SCHEMA_MISMATCH while the connected pod's schema is not its profile's generation (a 6.6 profile on a legacy pod, or the other way round): nothing is read from it or written to it."},
     "reconnections": {
       "type": "object",
       "description": "spec 2.5: the pod's new database generations that continued its source (a provisioned session kept) and those that were another source (a fresh session), by reason.",

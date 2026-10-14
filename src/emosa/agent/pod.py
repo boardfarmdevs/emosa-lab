@@ -622,6 +622,7 @@ class PodReportSource:
             )
             self.identity, self.published_at = (device.serial, device.node_id), started
             self.instance = self._start(rows)
+            self.refused = None
             return True
         except (EmosaError, ConnectionError, TimeoutError) as exc:
             # Once per cause: a pod that stays away must not flood the log, but a
@@ -629,12 +630,16 @@ class PodReportSource:
             if self.facts is not None or str(exc) != self._unavailable:
                 log.info("pod source unavailable: %s", exc)
             self._unavailable = str(exc)
+            # spec 3.10: a pod whose schema is not the profile's generation is refused, and said so
+            mismatch = isinstance(exc, EmosaError) and exc.code == Reason.SCHEMA_MISMATCH
+            self.refused = Reason.SCHEMA_MISMATCH.value if mismatch else None
             self.facts = None
             self.source.invalidate()
             return False
 
     _clients = None
     _unavailable = None
+    refused = None  # SCHEMA_MISMATCH while the pod's schema is not the profile's generation
 
 
 def make_bridge(
@@ -730,14 +735,17 @@ async def serve(config, stop):
     status_file = status_path(config, state_dir)
     pod_id = config["pod_id"]
     agent, controller = mac(config["al_mac"]), mac(config["controller_al"])
-    session = OvsSession(config["ovsdb"], monitor_columns=MONITOR, timeout=2)
+    profile = load_profile(config.get("profile", DEFAULT_PROFILE))
+    session = OvsSession(
+        config["ovsdb"], monitor_columns=MONITOR, timeout=2, schema_generation=profile.schema
+    )
     vault, store = SecretStore(state_dir / "secrets"), Store(state_dir / "journal")
     backend = PodBackend(
         pod_id,
         session,
         vault,
         serial=config["serial"],
-        profile=load_profile(config.get("profile", DEFAULT_PROFILE)),
+        profile=profile,
         multi_bss=config.get("multi_bss", False) is True,
         underlay=config.get("underlay"),
     )
@@ -777,6 +785,12 @@ async def serve(config, stop):
     # the fleet's other agents, beside this one's run directory (spec 8.5)
     directory = PeerDirectory(config["run_dir"], pod_id) if config.get("run_dir") else None
     uplink_config = config.get("uplink", {"mode": "off"})
+    if profile.legacy and uplink_config["mode"] != "off":
+        # spec 3.10: a legacy pod has no Multi-AP station (Wifi_Credential_Config without bssid,
+        # priority or enabled), and its Ethernet uplink no Connection_Manager_Uplink.bridge
+        raise EmosaError(
+            Reason.INVALID_INPUT, f"uplink: {uplink_config['mode']} is not served on a legacy pod"
+        )
     station = uplink_config.get("station") or backend.profile.uplink_station
     switch = uplink_store = None
     if uplink_config["mode"] in (MULTI_AP, GRE):
@@ -895,16 +909,19 @@ async def serve(config, stop):
             run_id=config.get("run_id", pod_id),
         )
         stats = PodStats(wanted.topic, interval=wanted.reporting_interval)
-        # the stations the controller asks about, watched for their probe requests (§3.9)
-        watch = ProbeWatch(
-            pod_id,
-            WatchBackend(pod_id, session, serial=config["serial"]),
-            Store(state_dir / "probe-watch"),
-            vault,
-            if_name=backend.profile.fronthaul_if,
-            band=wanted.radio_type,
-            run_id=config.get("run_id", pod_id),
-        )
+        # the stations the controller asks about, watched for their probe requests (§3.9); not on
+        # a legacy pod, whose Band_Steering_Clients lacks the watch's columns (spec 3.10)
+        watch = None
+        if not profile.legacy:
+            watch = ProbeWatch(
+                pod_id,
+                WatchBackend(pod_id, session, serial=config["serial"]),
+                Store(state_dir / "probe-watch"),
+                vault,
+                if_name=backend.profile.fronthaul_if,
+                band=wanted.radio_type,
+                run_id=config.get("run_id", pod_id),
+            )
         host, _, port = telemetry_config.get("subscribe", "127.0.0.1:1883").rpartition(":")
         subscriber = MqttSubscriber(
             host,
@@ -914,9 +931,10 @@ async def serve(config, stop):
             client_id=f"emosa-agent-{pod_id}",
         )
         subscriber.start(asyncio.get_running_loop())
-    # Client steering mandates from the controller, carried out by owm (on unless "off").
+    # Client steering mandates from the controller, carried out by owm (on unless "off"); off on a
+    # legacy pod, whose Band_Steering_Clients lacks steering's columns (spec 3.10)
     steering = steering_store = None
-    if config.get("steering", {}).get("mode", "owm") != "off":
+    if config.get("steering", {}).get("mode", "owm") != "off" and not profile.legacy:
         steering_store = Store(state_dir / "steering")
         steering = ClientSteering(
             pod_id,
@@ -973,6 +991,7 @@ async def serve(config, stop):
             "controller_al": controller.hex(":"),
             "pod": report.facts,
             "report_source_available": snapshot is not None,
+            "pod_refused": report.refused,
             "session": lifecycle.status() if lifecycle else None,
             # spec 2.5: new database generations that continued the pod source (the session
             # kept when it was provisioned), and those that were another source, by reason

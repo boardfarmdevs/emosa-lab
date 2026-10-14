@@ -34,6 +34,9 @@ typedef struct {
      * overrides of its VIF and Inet rows (gre_parent.vif, .inet; NULL when absent) */
     const char *backhaul_mode;
     const cJSON *gre_parent_vif, *gre_parent_inet;
+    /* schema "opensync-2.0" (spec 3.10): a legacy pod, its WPA2-PSK in the security map, no
+     * multi_ap, the roles the profile's slots */
+    bool legacy;
 } em_profile;
 
 em_reason em_profile_load(const char *path, em_profile *out);

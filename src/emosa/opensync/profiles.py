@@ -48,10 +48,17 @@ class PodProfile:
     # the radio each extra slot's VIF is on, when not the fronthaul's `radio` (spec 9):
     # ((if_name, band), ...). A parent AP b-ap-50 on the second radio is ("b-ap-50", "5G").
     slot_bands: tuple = ()
+    # the pod's database generation (spec 3.10): "opensync-6.6", or "opensync-2.0", a legacy pod
+    # with its WPA2-PSK in the security map and no multi_ap
+    schema: str = "opensync-6.6"
 
     @property
     def backhaul_row(self):
         return {**self.fronthaul_vif, **self.backhaul_vif}
+
+    @property
+    def legacy(self):
+        return self.schema == "opensync-2.0"
 
 
 def load(ref=DEFAULT):
@@ -72,6 +79,16 @@ def load(ref=DEFAULT):
             raise EmosaError(
                 Reason.INVALID_INPUT, f"pod profile {data['id']}: {slot['if_name']} on no radio"
             )
+    # a legacy pod has no Multi-AP backhaul BSS: its backhaul slots are GRE parent APs (spec 3.10)
+    backhaul_slots = any(s["role"] == "backhaul" for s in data["extra_slots"])
+    if (
+        data.get("schema") == "opensync-2.0"
+        and backhaul_slots
+        and data.get("backhaul_mode") != "gre-parent"
+    ):
+        raise EmosaError(
+            Reason.INVALID_INPUT, f"pod profile {data['id']}: a legacy pod's backhaul is gre-parent"
+        )
     return PodProfile(
         data["id"],
         data["radio"]["band"],
@@ -91,4 +108,5 @@ def load(ref=DEFAULT):
         data.get("gre_parent", {}).get("inet", {}),
         tuple(data.get("radios", ())),
         tuple((s["if_name"], s["band"]) for s in data["extra_slots"] if "band" in s),
+        data.get("schema", "opensync-6.6"),
     )
