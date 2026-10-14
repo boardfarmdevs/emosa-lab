@@ -6430,7 +6430,12 @@ async def legacy_cloud_cleared(box):
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
     continued = kept_reconnections(box)
     await box.new_pod_database()
-    seeded = await operator_cloud(box)
+    # the seed the pod restores, as the box keeps it (read from the pod, the agent may have
+    # cleared it already: the C agent did, in CI)
+    node = next(iter(box.seed.get("AWLAN_Node", [])), {})
+    seeded = [c for c in CLOUD_COLUMNS if ovsdb_map(node.get(c))]
+    if box.seed.get("Wifi_Stats_Config"):
+        seeded.append("Wifi_Stats_Config")
     session = await back(box, searches, m1s, continued)
 
     async def applied_again():
