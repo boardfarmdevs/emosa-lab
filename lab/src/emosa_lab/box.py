@@ -460,11 +460,16 @@ class Box:
         underlay=None,
         gre_child=False,
         legacy=False,
+        ethernet_first=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         # legacy: the pod is a legacy pod (spec 3.10), on its own schema and rows, its agent on
         # the legacy profile unless the scenario gives another
         self.legacy = legacy
+        # ethernet_first (legacy): wired as the first legacy pod was admitted on the router (13
+        # October): cm on eth0 and no GRE, its patch pair already joining br-wan to br-home, and its
+        # station linked beside the agent to the GTP's BSS, associated there but unused
+        self.ethernet_first = ethernet_first
         # underlay (with a gre-parent profile): the pod's 169.254.N.0/24 as a GRE parent (spec
         # 8.6), given to the agent as the fleet registry would; its parent AP takes the .1
         self.underlay = underlay
@@ -556,6 +561,8 @@ class Box:
                         }
                     ]
                 )
+            if self.ethernet_first:
+                await session.transact(ethernet_first())
         finally:
             await session.close()
         entry = {
@@ -4860,6 +4867,164 @@ async def legacy_gre_move(box):
     )
 
 
+GTP_BSSID = "02:00:00:00:1b:02"  # the legacy fixture's station parent: the GTP's BSS
+GTP_SSID, GTP_KEY = "emosa-lab-gtp", "OnlySimulationGtp2026!"
+
+
+def ethernet_first():
+    """The legacy pod as the first one was admitted on the router (13 October), one transaction:
+    cm on eth0 and no GRE (2.x cm builds none while the Ethernet link is used), OpenSync's patch
+    pair joining br-wan to br-home, and the station wl1 in credential-list mode, its one
+    credential the GTP's (written beside the agent, by hand), pinned by its parent to the GTP's
+    BSS, where it is associated."""
+    operations = [
+        {
+            "op": "delete",
+            "table": "Connection_Manager_Uplink",
+            "where": [["if_name", "==", "g-wl1"]],
+        },
+        {
+            "op": "insert",
+            "table": "Connection_Manager_Uplink",
+            "row": {
+                "if_name": "eth0",
+                "if_type": "eth",
+                "is_used": True,
+                "has_L2": True,
+                "has_L3": True,
+            },
+        },
+        {
+            "op": "insert",
+            "table": "Wifi_Credential_Config",
+            "uuid-name": "gtp",
+            "row": {
+                "ssid": GTP_SSID,
+                "onboard_type": "gre",
+                "security": ["map", [["encryption", "WPA-PSK"], ["key", GTP_KEY]]],
+            },
+        },
+        {
+            "op": "update",
+            "table": "Wifi_VIF_Config",
+            "where": [["if_name", "==", "wl1"]],
+            "row": {"credential_configs": ["set", [["named-uuid", "gtp"]]], "parent": GTP_BSSID},
+        },
+    ]
+    for name, peer, bridge, tag in (
+        ("patch-w2h", "patch-h2w", "br-wan", "w2h"),
+        ("patch-h2w", "patch-w2h", "br-home", "h2w"),
+    ):
+        operations += [
+            {
+                "op": "insert",
+                "table": "Interface",
+                "uuid-name": f"i_{tag}",
+                "row": {"name": name, "type": "patch", "options": ["map", [["peer", peer]]]},
+            },
+            {
+                "op": "insert",
+                "table": "Port",
+                "uuid-name": f"p_{tag}",
+                "row": {"name": name, "interfaces": ["set", [["named-uuid", f"i_{tag}"]]]},
+            },
+            {
+                "op": "mutate",
+                "table": "Bridge",
+                "where": [["name", "==", bridge]],
+                "mutations": [["ports", "insert", ["set", [["named-uuid", f"p_{tag}"]]]]],
+            },
+        ]
+    return operations
+
+
+async def legacy_own_uplink(box):
+    """What the legacy pod's own uplink is made of, beside cm's rows: its station's Config, its
+    credentials and the patch pair."""
+    _, station = await box.vif("Wifi_VIF_Config", "wl1")
+    station = station or {}
+    credentials = await box.rows("Wifi_Credential_Config")
+    return {
+        "station": {
+            k: str(station.get(k))
+            for k in ("mode", "enabled", "ssid", "parent", "credential_configs")
+        },
+        "credentials": sorted((r.get("ssid"), r.get("onboard_type")) for r in credentials.values()),
+        "pair": await patch_pair(box),
+    }
+
+
+async def legacy_ethernet_lost(box):
+    """spec 3.10, 8.2, 2.5: a legacy pod wired as the first was admitted (ethernet_first), its
+    agent's uplink mode off, GRE parent on its underlay. Its Ethernet goes: its link to the agent
+    drops, cm builds its GRE over the station already on the GTP's BSS (g-wl1 in use), and the
+    link comes back over it 15 s later. The session is kept (no Search or M1) with a Topology
+    Notification; its next Topology Response names the station on the GTP's BSS (a Wi-Fi
+    backhaul, none while wired); the agent writes nothing of the pod's uplink (its station, its
+    credentials, the patch pair), and its fronthaul and parent AP stay applied. With uplink mode
+    gre (legacy-ethernet-lost-gre, a GRE child awaiting a steer), the station written beside the
+    agent is not taken for the agent's own move: the GTP's BSS is its recorded bootstrap."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    await box.until(lambda: all_applied((box.status() or {}).get("operations") or []), seconds=30)
+    query = (Tlv(0xB3, b"\x01"),)
+    wired = station_parent(await box.ask(TOPOLOGY_QUERY, query, TOPOLOGY_RESPONSE))
+    own = await legacy_own_uplink(box)
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued, notified = kept_reconnections(box), topology_notifications(box)
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}", connect=False)
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Connection_Manager_Uplink",
+                "where": [["if_name", "==", "eth0"]],
+                "row": {"is_used": False, "has_L2": False, "has_L3": False},
+            },
+            {
+                "op": "insert",
+                "table": "Connection_Manager_Uplink",
+                "row": {
+                    "if_name": "g-wl1",
+                    "if_type": "gre",
+                    "is_used": True,
+                    "has_L2": True,
+                    "has_L3": True,
+                },
+            },
+        ]
+    )
+    await asyncio.sleep(15)
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}")
+    mode = await back(box, searches, m1s, continued)
+    notification = await box.until(lambda: topology_notifications(box) > notified, seconds=10)
+    wireless = station_parent(await box.ask(TOPOLOGY_QUERY, query, TOPOLOGY_RESPONSE))
+    after = await legacy_own_uplink(box)
+    _, parent_ap = await box.vif("Wifi_VIF_Config", LEGACY_PARENT)
+    status = box.status() or {}
+    uplink = uplink_status(box)
+    return box.result(
+        passed=mode == "kept"
+        and bool(notification)
+        and wired is None
+        and wireless == GTP_BSSID
+        and after == own
+        and all(member for member, _, _ in own["pair"].values())
+        and parent_ap == ap
+        and all_applied(status.get("operations") or [])
+        and not status.get("pod_refused")
+        and (not box.backhaul or (uplink.get("bootstrap") or {}).get("bssid") == GTP_BSSID),
+        session=mode,
+        topology_notification=bool(notification),
+        station_parent={"wired": wired, "wireless": wireless},
+        own_uplink_unchanged=after == own,
+        own_uplink=after,
+        parent_ap_unchanged=parent_ap == ap,
+        uplink={k: uplink.get(k) for k in ("mode", "bootstrap", "in_use", "operation")},
+    )
+
+
 async def legacy_5g_fronthaul(box):
     """spec 3.10, 9: the legacy pod's 5 GHz radio as a fronthaul only (bcm-pod-2.4.3-gre-5g-v1).
     The pod left wl0 on DFS channel 108, which EMOSA does not map; the profile places it on 36
@@ -4995,6 +5160,8 @@ SCENARIOS = {
     "legacy-wired-half-pair": legacy_wired_half_pair,
     "legacy-gre-move": legacy_gre_move,
     "legacy-5g-fronthaul": legacy_5g_fronthaul,
+    "legacy-ethernet-lost": legacy_ethernet_lost,
+    "legacy-ethernet-lost-gre": legacy_ethernet_lost,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -5157,6 +5324,17 @@ OPTIONS["legacy-5g-fronthaul"] = {
     "multi_bss": True,
     "underlay": LEGACY_UNDERLAY,
     "profile": "bcm-pod-2.4.3-gre-5g-v1",
+}
+OPTIONS["legacy-ethernet-lost"] = {
+    "legacy": True,
+    "multi_bss": True,
+    "underlay": LEGACY_UNDERLAY,
+    "ethernet_first": True,
+}
+OPTIONS["legacy-ethernet-lost-gre"] = {
+    **OPTIONS["legacy-ethernet-lost"],
+    "backhaul": True,
+    "uplink": {"mode": "gre", "station": "wl1"},
 }
 OPTIONS["legacy-gre-move"] = {
     "legacy": True,

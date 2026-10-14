@@ -677,6 +677,18 @@ def test_a_legacy_gre_child_is_moved_by_its_stations_parent_pin(agent, tmp_path)
     assert result["passed"], result
 
 
+def test_a_legacy_pod_losing_its_ethernet_keeps_its_session_on_the_gtp(agent, tmp_path):
+    # spec 3.10, 8.2, 2.5: wired, its station already on the GTP's BSS, as first admitted
+    result = box("legacy-ethernet-lost", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_a_legacy_gre_child_losing_its_ethernet_keeps_the_gtp_as_its_bootstrap(agent, tmp_path):
+    # the same with uplink mode gre: the station linked beside the agent is not its own move
+    result = box("legacy-ethernet-lost-gre", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_legacy_pods_5ghz_radio_serves_its_own_fronthaul(agent, tmp_path):
     # spec 3.10, 9: bcm-pod-2.4.3-gre-5g-v1, the backhaul staying on 2.4 GHz
     result = box("legacy-5g-fronthaul", agent, tmp_path / "box", timeout=240)
