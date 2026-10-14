@@ -673,10 +673,14 @@ is everything above. For a legacy pod, all of this specification applies, except
   operator left them. With `radio_plan: emosa`, the pod's radio plan is EMOSA's, as a
   controller's is:
   - **Unclaimed APs.** Every `mode=ap` `Wifi_VIF_Config` row that no VIF of the profile names
-    (its fronthaul and its slots, on any radio) keeps its VIF on, and its `Wifi_Inet_Config` row
-    goes off (`enabled=false`): its address, its DHCP server, DNS and firewall rules go, and its
-    link stays `wm`'s (OpenSync's `inet_vif`: an Inet row never takes a VIF down), so it keeps
-    beaconing. An AP is never disabled, nor a radio: the vendor healthcheck (see the GTP
+    (its fronthaul and its slots, on any radio) keeps its VIF on and is made neutral: hidden
+    (`ssid_broadcast=disabled`), in no bridge (`bridge` empty, out of `br-home`), on EMOSA's own
+    passphrase (WPA2-PSK in the security map: a per-pod secret `emosa-unclaimed`, 32 random
+    letters and digits made once by the agent's secret store, never in a log, the status or the
+    journal), so the operator's credentials admit no one; and its `Wifi_Inet_Config` row goes off
+    (`enabled=false`): its address, its DHCP server, DNS and firewall rules go, and its link stays
+    `wm`'s (OpenSync's `inet_vif`: an Inet row never takes a VIF down), so it keeps beaconing (a
+    hidden BSS beacons with its BSSID). An AP is never disabled, nor a radio: the vendor healthcheck (see the GTP
     station's guard) reboots a pod whose configured VIF has no BSSID, and disabling `wl0.1` and
     `wl0.2` rebooted a converted pod ten minutes later, twice (13 and 14 October). A station is
     never touched, whoever wrote it (the GTP station, a start-up hook's), nor a VIF the profile
@@ -686,14 +690,15 @@ is everything above. For a legacy pod, all of this specification applies, except
     Wi-Fi uplink, `wm` moves the radio to its upstream's channel, which a legacy profile then
     shares (the GTP BSS on channel 6).
   - **Write:** once per start of the pod's OpenSync, in one guarded transaction: `wait` on the
-    serial and on each changed row as it is (`if_name` and `enabled` of an Inet row; `if_name`,
-    `channel` and `ht_mode` of the radio), then each `update`. Nothing is written when nothing
-    differs. **Applied** when, on the same start, every unclaimed AP's Inet row is off
-    (`unclaimed_inet_on` empty) and the radio's Config has the profile's channel. Not repeated on
-    that start, even when a row is turned on again: the next start writes it again. The status
-    shows the unclaimed APs left on (`unclaimed_enabled`) and their Inet rows still on.
-  - Not yet: an unclaimed AP keeps its operator's SSID and passphrase (hiding it, EMOSA's own
-    credential, out of `br-home` are a later step; none of them takes its BSSID).
+    serial and on each changed row as it is (`if_name` and `mode` of a VIF; `if_name` and
+    `enabled` of an Inet row; `if_name`, `channel` and `ht_mode` of the radio), then each
+    `update`. Nothing is written when nothing differs. **Applied** when, on the same start, every
+    unclaimed AP is neutral (`unclaimed_exposed` empty), its Inet row off (`unclaimed_inet_on`
+    empty) and the radio's Config has the profile's channel. Not repeated on that start, even
+    when a row is changed again: the next start writes it again. The status shows the unclaimed
+    APs left on (`unclaimed_enabled`), those not neutral yet and their Inet rows still on. The
+    vendor's target may rebuild a VIF to hide it or change its key: a few seconds without
+    beacons, at most one failing healthcheck round.
 
   Both agents. Box `legacy-radio-plan` (every VIF beaconing or associated, the box's terms for the
   vendor healthcheck).

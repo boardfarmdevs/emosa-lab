@@ -949,6 +949,7 @@ async def serve(config, stop):
             RadioPlanBackend(
                 pod_id,
                 session,
+                vault,
                 serial=config["serial"],
                 intent=RadioPlanIntent(
                     pod_id,

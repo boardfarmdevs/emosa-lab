@@ -1,10 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
+import contextlib
 import hashlib
 import hmac
 import json
 import os
 import re
+import secrets as randomness
 import stat
+import string
 from pathlib import Path
 
 from emosa.errors import EmosaError, Reason
@@ -91,6 +94,9 @@ class FileSecrets:
 
 REFERENCE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,95}")
 RECEIVED = re.compile(r"wsc-[a-f0-9]{32}(-[1-7])?")
+# EMOSA's own credentials, made by the agent (spec 3.10: the APs a legacy profile does not name)
+GENERATED = re.compile(r"emosa-[a-z0-9-]{1,32}")
+ALPHABET = string.ascii_letters + string.digits
 
 
 class SecretStore:
@@ -145,6 +151,22 @@ class SecretStore:
         ):
             raise EmosaError(Reason.INVALID_INPUT, "invalid received credential reference/value")
         self.backend.create(ref, value.encode())
+
+    def generated(self, ref: str) -> str:
+        """EMOSA's own passphrase under ``ref`` (an ``emosa-`` reference; spec 3.10, the APs a
+        legacy profile does not name): made once, 32 random letters and digits, durable before
+        it is returned; the same value from then on. Never logged."""
+        if not GENERATED.fullmatch(ref):
+            raise EmosaError(Reason.INVALID_INPUT, "invalid generated credential reference")
+        try:
+            return self.resolve(ref)
+        except EmosaError as exc:
+            if exc.code != Reason.MISSING_PREREQUISITE:
+                raise
+        value = "".join(randomness.choice(ALPHABET) for _ in range(32))
+        with contextlib.suppress(FileExistsError):  # made meanwhile: that one stands
+            self.backend.create(ref, value.encode())
+        return self.resolve(ref)
 
     def forget(self, ref: str):
         """Removes a reference (a credential whose operation was never journaled)."""
