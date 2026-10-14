@@ -1,5 +1,5 @@
 {
-  "source": "synthesized (13 October 2026), not recorded: a legacy pod (spec 3.10) on OpenSync 2.0's schema without multi_ap, two Broadcom radios wl1 (2.4 GHz) and wl0 (5 GHz), as its platform names them; its station wl1 on its GRE uplink g-wl1, no AP of its own yet (a cold pod), and a leftover Inet row of its former manager on wl1.1 (169.254.2.1/24 with a DHCP server), which an EMOSA GRE parent AP there replaces",
+  "source": "synthesized (13 October 2026), not recorded: a legacy pod (spec 3.10) on OpenSync 2.0's schema without multi_ap, two Broadcom radios wl1 (2.4 GHz) and wl0 (5 GHz), as its platform names them; its station wl1 on its GRE uplink g-wl1, no AP of its own yet (a cold pod), and a leftover Inet row of its former manager on wl1.1 (169.254.2.1/24 with a DHCP server), which an EMOSA GRE parent AP there replaces; its Open vSwitch bridges as a 2.x pod has them: br-home and br-wan, the WAN bridge holding the Ethernet port eth1 (the box's wired port), no patch pair (the pod in router mode)",
   "tables": {
     "AWLAN_Node": {
       "6c0a1c10-0000-4000-8000-000000000001": {
@@ -14,13 +14,19 @@
         "enabled": true,
         "freq_band": "2.4G",
         "if_name": "wl1",
-        "vif_configs": ["uuid", "6c0a1c10-0000-4000-8000-000000000031"]
+        "vif_configs": [
+          "uuid",
+          "6c0a1c10-0000-4000-8000-000000000031"
+        ]
       },
       "6c0a1c10-0000-4000-8000-000000000012": {
         "enabled": true,
         "freq_band": "5G",
         "if_name": "wl0",
-        "vif_configs": ["set", []]
+        "vif_configs": [
+          "set",
+          []
+        ]
       }
     },
     "Wifi_Radio_State": {
@@ -31,9 +37,15 @@
         "freq_band": "2.4G",
         "if_name": "wl1",
         "mac": "02:00:00:00:41:00",
-        "radio_config": ["uuid", "6c0a1c10-0000-4000-8000-000000000011"],
+        "radio_config": [
+          "uuid",
+          "6c0a1c10-0000-4000-8000-000000000011"
+        ],
         "tx_power": 20,
-        "vif_states": ["uuid", "6c0a1c10-0000-4000-8000-000000000041"]
+        "vif_states": [
+          "uuid",
+          "6c0a1c10-0000-4000-8000-000000000041"
+        ]
       },
       "6c0a1c10-0000-4000-8000-000000000022": {
         "channel": 44,
@@ -42,9 +54,15 @@
         "freq_band": "5G",
         "if_name": "wl0",
         "mac": "02:00:00:00:40:00",
-        "radio_config": ["uuid", "6c0a1c10-0000-4000-8000-000000000012"],
+        "radio_config": [
+          "uuid",
+          "6c0a1c10-0000-4000-8000-000000000012"
+        ],
         "tx_power": 20,
-        "vif_states": ["set", []]
+        "vif_states": [
+          "set",
+          []
+        ]
       }
     },
     "Wifi_VIF_Config": {
@@ -53,7 +71,10 @@
         "enabled": true,
         "if_name": "wl1",
         "mode": "sta",
-        "security": ["map", []],
+        "security": [
+          "map",
+          []
+        ],
         "ssid": ""
       }
     },
@@ -64,9 +85,15 @@
         "mac": "02:00:00:00:41:01",
         "mode": "sta",
         "parent": "02:00:00:00:1b:02",
-        "security": ["map", []],
+        "security": [
+          "map",
+          []
+        ],
         "ssid": "",
-        "vif_config": ["uuid", "6c0a1c10-0000-4000-8000-000000000031"]
+        "vif_config": [
+          "uuid",
+          "6c0a1c10-0000-4000-8000-000000000031"
+        ]
       }
     },
     "Connection_Manager_Uplink": {
@@ -81,7 +108,23 @@
     "Wifi_Inet_Config": {
       "6c0a1c10-0000-4000-8000-000000000061": {
         "NAT": false,
-        "dhcpd": ["map", [["lease_time", "12h"], ["start", "169.254.2.10"], ["stop", "169.254.2.250"]]],
+        "dhcpd": [
+          "map",
+          [
+            [
+              "lease_time",
+              "12h"
+            ],
+            [
+              "start",
+              "169.254.2.10"
+            ],
+            [
+              "stop",
+              "169.254.2.250"
+            ]
+          ]
+        ],
         "enabled": true,
         "if_name": "wl1.1",
         "if_type": "vif",
@@ -90,6 +133,82 @@
         "mtu": 1552,
         "netmask": "255.255.255.0",
         "network": true
+      }
+    },
+    "Interface": {
+      "6c0a1c10-0000-4000-8000-000000000071": {
+        "name": "br-home"
+      },
+      "6c0a1c10-0000-4000-8000-000000000072": {
+        "name": "br-wan"
+      },
+      "6c0a1c10-0000-4000-8000-000000000073": {
+        "name": "eth1"
+      }
+    },
+    "Port": {
+      "6c0a1c10-0000-4000-8000-000000000081": {
+        "name": "br-home",
+        "interfaces": [
+          "uuid",
+          "6c0a1c10-0000-4000-8000-000000000071"
+        ]
+      },
+      "6c0a1c10-0000-4000-8000-000000000082": {
+        "name": "br-wan",
+        "interfaces": [
+          "uuid",
+          "6c0a1c10-0000-4000-8000-000000000072"
+        ]
+      },
+      "6c0a1c10-0000-4000-8000-000000000083": {
+        "name": "eth1",
+        "interfaces": [
+          "uuid",
+          "6c0a1c10-0000-4000-8000-000000000073"
+        ]
+      }
+    },
+    "Bridge": {
+      "6c0a1c10-0000-4000-8000-000000000091": {
+        "name": "br-home",
+        "ports": [
+          "uuid",
+          "6c0a1c10-0000-4000-8000-000000000081"
+        ]
+      },
+      "6c0a1c10-0000-4000-8000-000000000092": {
+        "name": "br-wan",
+        "ports": [
+          "set",
+          [
+            [
+              "uuid",
+              "6c0a1c10-0000-4000-8000-000000000082"
+            ],
+            [
+              "uuid",
+              "6c0a1c10-0000-4000-8000-000000000083"
+            ]
+          ]
+        ]
+      }
+    },
+    "Open_vSwitch": {
+      "6c0a1c10-0000-4000-8000-000000000099": {
+        "bridges": [
+          "set",
+          [
+            [
+              "uuid",
+              "6c0a1c10-0000-4000-8000-000000000091"
+            ],
+            [
+              "uuid",
+              "6c0a1c10-0000-4000-8000-000000000092"
+            ]
+          ]
+        ]
       }
     }
   }

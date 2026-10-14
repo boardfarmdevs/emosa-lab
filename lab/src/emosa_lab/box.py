@@ -4704,6 +4704,95 @@ async def legacy_parent(box):
     )
 
 
+async def bridge_members(box, bridge):
+    """The Port names in the pod's Bridge `bridge`."""
+    ports = await box.rows("Port")
+    row = next((r for r in (await box.rows("Bridge")).values() if r.get("name") == bridge), {})
+    return {ports[u]["name"] for u in uuids(row.get("ports")) if u in ports}
+
+
+async def patch_pair(box):
+    """The pod's patch pair as written: {end: (in its bridge's ports, its type, its peer)}."""
+    interfaces = {r.get("name"): r for r in (await box.rows("Interface")).values()}
+    wan, home = await bridge_members(box, "br-wan"), await bridge_members(box, "br-home")
+    pair = {}
+    for name, members in (("patch-w2h", wan), ("patch-h2w", home)):
+        row = interfaces.get(name) or {}
+        pair[name] = (name in members, row.get("type"), ovsdb_map(row.get("options")).get("peer"))
+    return pair
+
+
+async def legacy_wired(box):
+    """spec 3.10, 8.4: a wired legacy pod (no Connection_Manager_Uplink.bridge), cm using eth1 as
+    its uplink in the WAN bridge br-wan. The agent bridges it the 2.x way, OpenSync's patch pair:
+    patch-w2h in br-wan and patch-h2w in br-home, each a patch Interface whose peer is the other,
+    in one guarded write; applied, and the uplink reported as ethernet, in use, in br-home."""
+    onboarding = await onboarded(box)
+
+    async def paired():
+        pair = await patch_pair(box)
+        return pair if all(member for member, _, _ in pair.values()) else None
+
+    pair = await until_async(paired, seconds=60)
+
+    def applied():
+        operation = ((box.status() or {}).get("uplink") or {}).get("operation") or {}
+        return operation.get("state") == "OBSERVED_APPLIED"
+
+    done = await box.until(applied, seconds=60)
+    uplink = (box.status() or {}).get("uplink") or {}
+    return box.result(
+        passed=bool(onboarding.get("applied"))
+        and pair
+        == {"patch-w2h": (True, "patch", "patch-h2w"), "patch-h2w": (True, "patch", "patch-w2h")}
+        and bool(done)
+        and uplink.get("in_use") == "eth1"
+        and uplink.get("bridge") == "br-home",
+        onboarded=bool(onboarding.get("applied")),
+        pair=pair,
+        applied=bool(done),
+        uplink={k: uplink.get(k) for k in ("mode", "port", "bridge", "in_use", "waiting")},
+    )
+
+
+async def legacy_wired_half_pair(box):
+    """spec 8.4: a legacy pod with half a patch pair (patch-w2h alone in br-wan, another
+    manager's): left alone, the agent's write refused (OWNERSHIP_CONFLICT), no patch-h2w made."""
+    wan = next(u for u, r in (await box.rows("Bridge")).items() if r.get("name") == "br-wan")
+    await box.transact(
+        [
+            {"op": "insert", "table": "Interface", "uuid-name": "i", "row": {"name": "patch-w2h"}},
+            {
+                "op": "insert",
+                "table": "Port",
+                "uuid-name": "p",
+                "row": {"name": "patch-w2h", "interfaces": ["set", [["named-uuid", "i"]]]},
+            },
+            {
+                "op": "mutate",
+                "table": "Bridge",
+                "where": [["_uuid", "==", ["uuid", wan]]],
+                "mutations": [["ports", "insert", ["set", [["named-uuid", "p"]]]]],
+            },
+        ]
+    )
+    onboarding = await onboarded(box)
+
+    def refused():
+        operation = ((box.status() or {}).get("uplink") or {}).get("operation") or {}
+        return operation if operation.get("reason") == "OWNERSHIP_CONFLICT" else None
+
+    operation = await box.until(refused, seconds=60)
+    await asyncio.sleep(3)
+    home = await bridge_members(box, "br-home")
+    return box.result(
+        passed=bool(onboarding.get("applied")) and bool(operation) and "patch-h2w" not in home,
+        onboarded=bool(onboarding.get("applied")),
+        operation=operation,
+        home_ports=sorted(home),
+    )
+
+
 async def generation_refused(box):
     """spec 3.10: the pod's schema is not its profile's generation (a 6.6 profile on a legacy pod,
     or a legacy profile on a 6.6 pod). The agent refuses the pod (SCHEMA_MISMATCH in its status):
@@ -4798,6 +4887,8 @@ SCENARIOS = {
     "legacy-parent": legacy_parent,
     "legacy-pod-6-6-profile": generation_refused,
     "pod-6-6-legacy-profile": generation_refused,
+    "legacy-wired": legacy_wired,
+    "legacy-wired-half-pair": legacy_wired_half_pair,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -4953,6 +5044,8 @@ OPTIONS["legacy-onboard"] = {"legacy": True}
 OPTIONS["legacy-parent"] = {"legacy": True, "multi_bss": True, "underlay": LEGACY_UNDERLAY}
 OPTIONS["legacy-pod-6-6-profile"] = {"legacy": True, "profile": PLAIN_PROFILE}
 OPTIONS["pod-6-6-legacy-profile"] = {"profile": LEGACY_PROFILE}
+OPTIONS["legacy-wired"] = {"legacy": True, "wired": True}
+OPTIONS["legacy-wired-half-pair"] = {"legacy": True, "wired": True}
 
 
 async def run(scenario, agent, directory, *, binary=None):

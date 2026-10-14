@@ -51,6 +51,8 @@ class PodProfile:
     # the pod's database generation (spec 3.10): "opensync-6.6", or "opensync-2.0", a legacy pod
     # with its WPA2-PSK in the security map and no multi_ap
     schema: str = "opensync-6.6"
+    # a legacy pod's WAN bridge, the one its cm puts the uplink port in (spec 8.4)
+    wan_bridge: str = "br-wan"
 
     @property
     def backhaul_row(self):
@@ -109,4 +111,5 @@ def load(ref=DEFAULT):
         tuple(data.get("radios", ())),
         tuple((s["if_name"], s["band"]) for s in data["extra_slots"] if "band" in s),
         data.get("schema", "opensync-6.6"),
+        data.get("wan_bridge", "br-wan"),
     )

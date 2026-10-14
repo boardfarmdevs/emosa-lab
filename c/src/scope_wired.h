@@ -17,6 +17,10 @@ typedef struct {
     em_ovsdb *ovs;
     const char *serial, *run_id;
     em_wired_intent intent;
+    /* a legacy pod (spec 3.10, 8.4): its bridge mode is OpenSync's patch pair between wan_bridge
+     * and the intent's bridge, there being no Connection_Manager_Uplink.bridge */
+    bool legacy;
+    char wan_bridge[16];
     cJSON *(*transact)(void *ctx, const cJSON *operations);
     void *transact_ctx;
     em_journal *journal;

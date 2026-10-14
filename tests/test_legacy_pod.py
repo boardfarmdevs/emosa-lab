@@ -217,3 +217,86 @@ def test_a_cold_legacy_pods_fronthaul_is_created_in_its_encoding(tmp_path):
     assert row["if_name"] == "wl1.2" and row["ssid"] == "emosa-mesh"
     assert row["security"] == WANTED
     assert not {"multi_ap", "wpa", "wpa_psks", "wpa_key_mgmt"} & set(row)
+
+
+# spec 8.4 on a legacy pod: the Ethernet uplink bridged by OpenSync's patch pair
+UPLINK, WAN, HOME = (f"00000000-0000-4000-8000-0000000002{n}" for n in ("01", "02", "03"))
+PW, PH = "00000000-0000-4000-8000-000000000211", "00000000-0000-4000-8000-000000000212"
+
+
+class WiredPod:
+    def __init__(self, ports=()):
+        self.schema = Schema(reference_schema(LEGACY))
+        self.sent = []
+        port_rows = {PW: {"name": "patch-w2h"}, PH: {"name": "patch-h2w"}}
+        self.tables = {
+            "AWLAN_Node": {NODE: {"serial_number": SERIAL}},
+            "Wifi_Radio_Config": {RADIO: {"if_name": "wl1", "freq_band": "2.4G"}},
+            "Connection_Manager_Uplink": {
+                UPLINK: {"if_name": "eth0", "if_type": "eth", "is_used": True}
+            },
+            "Port": {u: port_rows[u] for u in ports},
+            "Bridge": {
+                WAN: {"name": "br-wan", "ports": ["set", [["uuid", PW]] if PW in ports else []]},
+                HOME: {"name": "br-home", "ports": ["set", [["uuid", PH]] if PH in ports else []]},
+            },
+        }
+
+    async def snapshot(self):
+        return {
+            "tables": copy.deepcopy(self.tables),
+            "generation": 1,
+            "revision": 1,
+            "ready": True,
+            "schema": self.schema,
+        }
+
+    async def transact(self, operations, transaction_id=None, generation=None, **_):
+        self.sent.append(operations)
+        return [{"count": 1} if op["op"] == "mutate" else {} for op in operations]
+
+
+def wired(pod):
+    from emosa.opensync.wired import WiredBackend, WiredIntent
+
+    backend = WiredBackend(
+        "pod-1", pod, serial=SERIAL, port="eth0", legacy=True, home_bridge="br-home"
+    )
+    return backend, WiredIntent("pod-1", "eth0", "br-home")
+
+
+def test_a_legacy_pods_uplink_is_bridged_by_writing_the_patch_pair():
+    pod = WiredPod()
+    backend, intent = wired(pod)
+    assert asyncio.run(backend.snapshot()).config["bridge"] is None
+    plan = asyncio.run(backend.plan(intent))
+    assert plan["action"] == "wired-uplink-patch-pair" and plan["wan_bridge"] == "br-wan"
+    attempt = {"transaction_id": "t1", "session_generation": 1}
+    assert asyncio.run(backend.submit(intent, attempt)).status == "committed"
+    (ops,) = pod.sent
+    assert [op["op"] for op in ops] == ["wait"] * 4 + ["insert"] * 4 + ["mutate"] * 2
+    assert "bridge" not in ops[1]["columns"]  # a legacy pod's row has none
+    assert [op["where"] for op in ops[2:4]] == [
+        [["name", "==", "patch-w2h"]],
+        [["name", "==", "patch-h2w"]],
+    ]
+    interfaces = {op["row"]["name"]: op["row"] for op in ops[4:6]}
+    assert interfaces["patch-w2h"] == {
+        "name": "patch-w2h",
+        "type": "patch",
+        "options": ["map", [["peer", "patch-h2w"]]],
+    }
+    assert interfaces["patch-h2w"]["options"] == ["map", [["peer", "patch-w2h"]]]
+    assert [(op["where"], op["mutations"][0][2]) for op in ops[8:]] == [
+        ([["name", "==", "br-wan"]], ["set", [["named-uuid", "patch_w_port"]]]),
+        ([["name", "==", "br-home"]], ["set", [["named-uuid", "patch_h_port"]]]),
+    ]
+
+
+def test_a_legacy_pods_pair_in_place_is_its_bridge_and_half_a_pair_is_refused():
+    backend, _ = wired(WiredPod(ports=(PW, PH)))
+    assert asyncio.run(backend.snapshot()).config["bridge"] == "br-home"
+    backend, intent = wired(WiredPod(ports=(PW,)))
+    with pytest.raises(EmosaError) as refused:
+        asyncio.run(backend.plan(intent))
+    assert refused.value.code == Reason.OWNERSHIP_CONFLICT

@@ -134,6 +134,65 @@ static const char *bridge_of(const cJSON *row)
     return b && *b ? b : NULL;
 }
 
+/* -- a legacy pod's patch pair (spec 8.4) --------------------------------------------------- */
+
+#define PATCH_WAN "patch-w2h"
+#define PATCH_HOME "patch-h2w"
+
+/* the one Bridge `name`, else NULL (bridge_ports) */
+static const cJSON *bridge_row(const cJSON *tables, const char *name)
+{
+    const cJSON *found = NULL, *r;
+    size_t n = 0;
+    cJSON_ArrayForEach(r, em_table(tables, "Bridge"))
+    {
+        const char *rn = ovs_str(r, "name");
+        if (rn && !strcmp(rn, name)) {
+            found = r;
+            n++;
+        }
+    }
+    return n == 1 ? found : NULL;
+}
+
+/* the Port `port` is one of the bridge's ports */
+static bool bridge_has_port(const cJSON *tables, const cJSON *bridge, const char *port)
+{
+    const char *uuids[256];
+    size_t n = bridge ? ovs_uuids(bridge, "ports", uuids, 256) : 0;
+    for (size_t i = 0; i < n; i++) {
+        const char *name = ovs_str(cJSON_GetObjectItemCaseSensitive(em_table(tables, "Port"), uuids[i]), "name");
+        if (name && !strcmp(name, port))
+            return true;
+    }
+    return false;
+}
+
+static bool port_exists(const cJSON *tables, const char *name)
+{
+    const cJSON *r;
+    cJSON_ArrayForEach(r, em_table(tables, "Port"))
+    {
+        const char *rn = ovs_str(r, "name");
+        if (rn && !strcmp(rn, name))
+            return true;
+    }
+    return false;
+}
+
+typedef enum { PAIR_NONE, PAIR_PAIRED, PAIR_OTHER } pair_state;
+
+/* WiredBackend._paired: both ends in their bridges, neither Port there, or anything else */
+static pair_state paired(const em_wired_scope *w, const cJSON *tables, const char *home)
+{
+    if (bridge_has_port(tables, bridge_row(tables, w->wan_bridge), PATCH_WAN) &&
+        bridge_has_port(tables, bridge_row(tables, home), PATCH_HOME))
+        return PAIR_PAIRED;
+    if (!port_exists(tables, PATCH_WAN) && !port_exists(tables, PATCH_HOME))
+        return PAIR_NONE;
+    return PAIR_OTHER;
+}
+
 /* WiredBackend._configured */
 static cJSON *configured(const em_wired_scope *w, const cJSON *tables)
 {
@@ -141,7 +200,9 @@ static cJSON *configured(const em_wired_scope *w, const cJSON *tables)
     cJSON *c = cJSON_CreateObject();
     cJSON_AddStringToObject(c, "port", w->intent.port);
     cJSON_AddBoolToObject(c, "uplink", in_use(row));
-    const char *bridge = bridge_of(row);
+    /* a legacy pod: the bridge the pair joins the WAN bridge to, while the pair is there */
+    const char *bridge = w->legacy ? (paired(w, tables, w->intent.bridge) == PAIR_PAIRED ? w->intent.bridge : NULL)
+                                   : bridge_of(row);
     cJSON_AddItemToObject(c, "bridge", bridge ? cJSON_CreateString(bridge) : cJSON_CreateNull());
     return c;
 }
@@ -192,9 +253,16 @@ static em_reason check(em_wired_scope *w, const em_wired_intent *i, const cJSON 
 {
     if (strcmp(i->pod_id, w->intent.pod_id) || strcmp(i->port, w->intent.port))
         return EM_UNSUPPORTED_OPERATION;
-    *row = uplink_row(em_ovsdb_tables(w->ovs), i->port, row_uuid);
+    const cJSON *tables = em_ovsdb_tables(w->ovs);
+    *row = uplink_row(tables, i->port, row_uuid);
     if (!*row || !in_use(*row))
         return EM_NOT_READY; /* "the port is not the pod's Ethernet uplink in use" */
+    if (w->legacy) {
+        if (!bridge_row(tables, w->wan_bridge) || !bridge_row(tables, i->bridge))
+            return EM_NOT_READY; /* "the pod's WAN or home bridge is absent" */
+        /* half a pair, or its ends elsewhere: another manager's, not taken over */
+        return paired(w, tables, i->bridge) == PAIR_OTHER ? EM_OWNERSHIP_CONFLICT : EM_OK;
+    }
     const char *current = bridge_of(*row);
     if (current && strcmp(current, i->bridge))
         return EM_OWNERSHIP_CONFLICT; /* another manager's bridge is not taken over */
@@ -223,6 +291,17 @@ static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
         return NULL;
     cJSON *p = cJSON_CreateObject();
     cJSON_AddStringToObject(p, "mapping", MODE);
+    if (w->legacy) {
+        cJSON_AddStringToObject(p, "action", "wired-uplink-patch-pair");
+        cJSON_AddStringToObject(p, "port", i.port);
+        cJSON_AddStringToObject(p, "bridge", i.bridge);
+        cJSON_AddStringToObject(p, "wan_bridge", w->wan_bridge);
+        cJSON_AddStringToObject(p, "instance", w->instance);
+        const char *fields[] = {"Interface", "Port", "Bridge.ports"};
+        cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 3));
+        cJSON_AddStringToObject(p, "guard", "pod serial, the uplink row's if_name, if_type and is_used, no pair");
+        return p;
+    }
     cJSON_AddStringToObject(p, "action", "wired-uplink-bridge");
     cJSON_AddStringToObject(p, "port", i.port);
     cJSON_AddStringToObject(p, "bridge", i.bridge);
@@ -231,6 +310,71 @@ static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
     cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 1));
     cJSON_AddStringToObject(p, "guard", "pod serial and the uplink row's if_name, if_type, is_used and bridge");
     return p;
+}
+
+static cJSON *named_set(const char *name)
+{
+    cJSON *ref = cJSON_CreateArray(), *items = cJSON_CreateArray(), *set = cJSON_CreateArray();
+    cJSON_AddItemToArray(ref, cJSON_CreateString("named-uuid"));
+    cJSON_AddItemToArray(ref, cJSON_CreateString(name));
+    cJSON_AddItemToArray(items, ref);
+    cJSON_AddItemToArray(set, cJSON_CreateString("set"));
+    cJSON_AddItemToArray(set, items);
+    return set;
+}
+
+/* WiredBackend._pair_transaction after its two guards: no pair yet, the two patch Interfaces and
+ * their Ports, each Port into its bridge */
+static void pair_ops(const em_wired_scope *w, const char *home, cJSON *ops)
+{
+    const char *const ends[2] = {PATCH_WAN, PATCH_HOME}, *const tags[2] = {"w", "h"};
+    const char *const bridges[2] = {w->wan_bridge, home};
+    for (int k = 0; k < 2; k++) {
+        cJSON *absent = em_ovs_op("wait", "Port", em_ovs_where_eq("name", ends[k]));
+        const char *cols[] = {"name"};
+        cJSON_AddItemToObject(absent, "columns", em_ovs_strings(cols, 1));
+        cJSON_AddStringToObject(absent, "until", "==");
+        cJSON_AddArrayToObject(absent, "rows");
+        cJSON_AddNumberToObject(absent, "timeout", 0);
+        cJSON_AddItemToArray(ops, absent);
+    }
+    char label[16];
+    for (int k = 0; k < 2; k++) {
+        cJSON *ins = em_ovs_op("insert", "Interface", NULL), *row = cJSON_CreateObject();
+        EM_FORMAT_FIXED(label, sizeof(label), "patch_%s_if", tags[k]);
+        cJSON_AddStringToObject(ins, "uuid-name", label);
+        cJSON_AddStringToObject(row, "name", ends[k]);
+        cJSON_AddStringToObject(row, "type", "patch");
+        cJSON *peer = cJSON_CreateArray(), *pairs = cJSON_CreateArray(), *map = cJSON_CreateArray();
+        cJSON_AddItemToArray(peer, cJSON_CreateString("peer"));
+        cJSON_AddItemToArray(peer, cJSON_CreateString(ends[1 - k]));
+        cJSON_AddItemToArray(pairs, peer);
+        cJSON_AddItemToArray(map, cJSON_CreateString("map"));
+        cJSON_AddItemToArray(map, pairs);
+        cJSON_AddItemToObject(row, "options", map);
+        cJSON_AddItemToObject(ins, "row", row);
+        cJSON_AddItemToArray(ops, ins);
+    }
+    for (int k = 0; k < 2; k++) {
+        cJSON *ins = em_ovs_op("insert", "Port", NULL), *row = cJSON_CreateObject();
+        EM_FORMAT_FIXED(label, sizeof(label), "patch_%s_port", tags[k]);
+        cJSON_AddStringToObject(ins, "uuid-name", label);
+        cJSON_AddStringToObject(row, "name", ends[k]);
+        EM_FORMAT_FIXED(label, sizeof(label), "patch_%s_if", tags[k]);
+        cJSON_AddItemToObject(row, "interfaces", named_set(label));
+        cJSON_AddItemToObject(ins, "row", row);
+        cJSON_AddItemToArray(ops, ins);
+    }
+    for (int k = 0; k < 2; k++) {
+        cJSON *mut = em_ovs_op("mutate", "Bridge", em_ovs_where_eq("name", bridges[k]));
+        cJSON *mutations = cJSON_AddArrayToObject(mut, "mutations"), *m = cJSON_CreateArray();
+        EM_FORMAT_FIXED(label, sizeof(label), "patch_%s_port", tags[k]);
+        cJSON_AddItemToArray(m, cJSON_CreateString("ports"));
+        cJSON_AddItemToArray(m, cJSON_CreateString("insert"));
+        cJSON_AddItemToArray(m, named_set(label));
+        cJSON_AddItemToArray(mutations, m);
+        cJSON_AddItemToArray(ops, mut);
+    }
 }
 
 static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_submit_out *out)
@@ -257,7 +401,8 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         return;
     }
     cJSON *ops = cJSON_CreateArray();
-    const int counts[] = {-1, -1, 1};
+    /* a legacy pod's pair: two guards, two absences, four inserts, two Bridge mutations */
+    const int counts[] = {-1, -1, 1}, pair_counts[] = {-1, -1, -1, -1, -1, -1, -1, -1, 1, 1};
     /* wait: the node's serial */
     cJSON *wait = em_ovs_op("wait", "AWLAN_Node", em_ovs_where_uuid(node_uuid));
     const char *node_cols[] = {"serial_number"};
@@ -268,10 +413,10 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     cJSON_AddItemToArray(rows, guard);
     cJSON_AddNumberToObject(wait, "timeout", 0);
     cJSON_AddItemToArray(ops, wait);
-    /* wait: the uplink row as it is now (its bridge none or ours) */
+    /* wait: the uplink row as it is now (its bridge none or ours; a legacy pod has no bridge) */
     wait = em_ovs_op("wait", "Connection_Manager_Uplink", em_ovs_where_uuid(row_uuid));
     const char *row_cols[] = {"if_name", "if_type", "is_used", "bridge"};
-    cJSON_AddItemToObject(wait, "columns", em_ovs_strings(row_cols, 4));
+    cJSON_AddItemToObject(wait, "columns", em_ovs_strings(row_cols, w->legacy ? 3 : 4));
     cJSON_AddStringToObject(wait, "until", "==");
     rows = cJSON_AddArrayToObject(wait, "rows");
     guard = cJSON_CreateObject();
@@ -279,7 +424,9 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     cJSON_AddStringToObject(guard, "if_type", "eth");
     cJSON_AddTrueToObject(guard, "is_used");
     const char *current = bridge_of(row);
-    if (current) {
+    if (w->legacy) {
+        /* the pair is the bridging (spec 8.4) */
+    } else if (current) {
         cJSON_AddStringToObject(guard, "bridge", current);
     } else {
         const char *set_items[] = {"set"};
@@ -290,11 +437,16 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     cJSON_AddItemToArray(rows, guard);
     cJSON_AddNumberToObject(wait, "timeout", 0);
     cJSON_AddItemToArray(ops, wait);
-    cJSON *update = em_ovs_op("update", "Connection_Manager_Uplink", em_ovs_where_uuid(row_uuid));
-    cJSON *urow = cJSON_CreateObject();
-    cJSON_AddStringToObject(urow, "bridge", i.bridge);
-    cJSON_AddItemToObject(update, "row", urow);
-    cJSON_AddItemToArray(ops, update);
+    if (w->legacy) {
+        pair_ops(w, i.bridge, ops);
+    } else {
+        cJSON *update = em_ovs_op("update", "Connection_Manager_Uplink", em_ovs_where_uuid(row_uuid));
+        cJSON *urow = cJSON_CreateObject();
+        cJSON_AddStringToObject(urow, "bridge", i.bridge);
+        cJSON_AddItemToObject(update, "row", urow);
+        cJSON_AddItemToArray(ops, update);
+    }
+    size_t nops = (size_t)cJSON_GetArraySize(ops);
     cJSON *results = w->transact(w->transact_ctx, ops);
     cJSON_Delete(ops);
     if (!results) {
@@ -304,7 +456,7 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         cJSON_AddStringToObject(out->evidence, "attribution", "unknown");
         return;
     }
-    em_reason checked = em_check_results(results, counts, 3);
+    em_reason checked = em_check_results(results, w->legacy ? pair_counts : counts, nops);
     if (checked != EM_OK) {
         cJSON_Delete(results);
         EM_FORMAT_FIXED(out->status, sizeof(out->status), "%s",
@@ -318,7 +470,7 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     cJSON_AddTrueToObject(out->evidence, "transaction_validated");
     cJSON_AddStringToObject(out->evidence, "transaction_id", str(attempt, "transaction_id"));
     cJSON_AddNumberToObject(out->evidence, "session_generation", generation);
-    cJSON_AddStringToObject(out->evidence, "action", "wired-uplink-bridge");
+    cJSON_AddStringToObject(out->evidence, "action", w->legacy ? "wired-uplink-patch-pair" : "wired-uplink-bridge");
     cJSON_AddStringToObject(out->evidence, "instance", w->instance);
     cJSON_AddItemToObject(out->evidence, "results", results);
 }

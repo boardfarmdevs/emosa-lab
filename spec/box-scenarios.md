@@ -120,6 +120,8 @@ the `bcm-pod-2.4.3-gre-v1` profile.
 | `legacy-parent` | with an M2 set and an underlay, the backhaul BSS is the GRE parent AP `wl1.1`: its key in the `security` map, no `multi_ap`, hidden, no bridge, no bridging between its stations; its Inet row moved to the underlay (`169.254.5.1`, DHCP `.10` to `.250`), replacing the former manager's `169.254.2.1` | as above; a parent on the podbh subnet would shadow the GTP |
 | `legacy-pod-6-6-profile` | a 6.6 profile on the legacy pod: refused (`pod_refused` `SCHEMA_MISMATCH`), no M1, nothing written | a pod given the wrong profile |
 | `pod-6-6-legacy-profile` | a legacy profile on a 6.6 pod: refused the same way | as above |
+| `legacy-wired` | a wired legacy pod, `cm` using `eth1` as its uplink in its WAN bridge `br-wan`, uplink mode ethernet: the agent writes OpenSync's patch pair (`patch-w2h` in `br-wan`, `patch-h2w` in `br-home`, patch Interfaces each the other's peer) in one guarded write, applied, the uplink reported in `br-home` (spec 8.4) | the pods wired to `rdk-1010`'s gateway LAN |
+| `legacy-wired-half-pair` | the same pod with half a pair already (`patch-w2h` alone, another manager's): left alone, the write refused `OWNERSHIP_CONFLICT`, no `patch-h2w` made | as above |
 
 ## The reference workload's faults
 

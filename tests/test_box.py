@@ -658,3 +658,14 @@ def test_a_legacy_pod_under_a_6_6_profile_is_refused(agent, tmp_path):
 def test_a_6_6_pod_under_a_legacy_profile_is_refused(agent, tmp_path):
     result = box("pod-6-6-legacy-profile", agent, tmp_path / "box", timeout=120)
     assert result["passed"], result
+
+
+def test_a_wired_legacy_pods_uplink_is_bridged_by_the_patch_pair(agent, tmp_path):
+    # spec 3.10, 8.4: no Connection_Manager_Uplink.bridge on a 2.x pod
+    result = box("legacy-wired", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_half_a_patch_pair_is_another_managers_and_left_alone(agent, tmp_path):
+    result = box("legacy-wired-half-pair", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result

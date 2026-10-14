@@ -44,6 +44,8 @@ em_reason em_profile_load(const char *path, em_profile *out)
     out->gre_parent_inet = cJSON_GetObjectItemCaseSensitive(gre, "inet");
     const char *schema = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(d, "schema"));
     out->legacy = schema && !strcmp(schema, "opensync-2.0");
+    const char *wan = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(d, "wan_bridge"));
+    out->wan_bridge = wan ? wan : "br-wan";
     const cJSON *band_station;
     cJSON_ArrayForEach(band_station, cJSON_GetObjectItemCaseSensitive(
                                          cJSON_GetObjectItemCaseSensitive(d, "uplink"), "stations"))

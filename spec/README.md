@@ -592,11 +592,12 @@ is everything above. For a legacy pod, all of this specification applies, except
   backhaul slots backhaul, and the BSS Configuration Report flags follow from it.
   With no Multi-AP backhaul BSS on such a pod, a legacy profile's
   `backhaul_mode` MUST be `gre-parent` (§8.6) when it has backhaul slots.
+- **The Ethernet uplink** (§8.4) is bridged by OpenSync's patch pair, there being no
+  `Connection_Manager_Uplink.bridge`.
 - **Not served** on a legacy pod, refused at the agent's start
   (`INVALID_INPUT`) or turned off and said so in the status:
   the uplink switch onto a Multi-AP backhaul (§8.3; `Wifi_Credential_Config`
-  has no `bssid`, `priority` or `enabled`); the Ethernet uplink of §8.4, whose
-  `Connection_Manager_Uplink.bridge` does not exist; client steering (§3.7) and
+  has no `bssid`, `priority` or `enabled`); client steering (§3.7) and
   the station watch (§3.9), whose `Band_Steering_Clients` columns do not
   exist. Statistics (§3.6) are served: their columns are the same.
 
@@ -953,6 +954,18 @@ does it when its configuration has `uplink.mode = ethernet`:
   refused.
 - **Reported:** the pod's backhaul is the Ethernet attachment the agent declares in any
   case (§8.2), which here it is (D7). Its 1905 neighbor is on that interface.
+- **A legacy pod (§3.10)** has no `Connection_Manager_Uplink.bridge`: its `cm` adds the
+  uplink port to its WAN bridge (the profile's `wan_bridge`, `br-wan`) and takes the pod as
+  a bridge when OpenSync's patch pair joins that bridge to the home bridge. `cm` neither
+  makes nor removes the pair. The agent writes it, in one guarded transaction: `wait` on
+  the serial, on the port's row (`if_name`, `if_type=eth`, `is_used=true`) and that no Port
+  `patch-w2h` or `patch-h2w` exists → `insert Interface` `patch-w2h` and `patch-h2w`
+  (`type=patch`, `options` `peer` the other) → `insert Port` of each → `mutate Bridge`
+  `ports` of the WAN bridge (`patch-w2h`) and of the fronthaul's bridge (`patch-h2w`).
+  **Applied** when both Ports are in their bridges. A pair already in place is the same
+  bridging, whoever made it; half a pair (one Port without the other) is another
+  manager's, left alone, and the write refused. The pair stays across the pod's starts
+  (its Open vSwitch database keeps it), so nothing is written again while it is there.
 
 Both agents.
 

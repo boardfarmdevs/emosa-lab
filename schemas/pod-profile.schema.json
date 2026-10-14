@@ -62,6 +62,7 @@
       }
     },
     "inet": {"$ref": "#/$defs/row"},
+    "wan_bridge": {"$ref": "#/$defs/if_name", "description": "A legacy pod's WAN bridge (spec 8.4), the one its cm puts the Ethernet uplink port in; the patch pair joins it to the fronthaul's bridge. br-wan when absent."},
     "schema": {"enum": ["opensync-6.6", "opensync-2.0"], "description": "The pod's database generation (spec 3.10): opensync-6.6 (the default) or opensync-2.0, a legacy pod with no wpa_* columns or multi_ap, its WPA2-PSK in the security map and its BSS roles from the profile's slots."},
     "backhaul_mode": {"enum": ["multi-ap", "gre-parent"], "description": "How the pod's radios carry a backhaul BSS of the controller's M2 set: a Multi-AP 4-address BSS (spec 8.5, the default) or a parent AP its children reach by GRE (spec 8.6)."},
     "gre_parent": {

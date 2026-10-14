@@ -2521,10 +2521,10 @@ static bool configure(agent *a, const char *path, const char *profiles)
         return false;
     if (a->profile.legacy) {
         /* spec 3.10: a legacy pod has no Multi-AP station (Wifi_Credential_Config without bssid,
-         * priority or enabled), its Ethernet uplink no Connection_Manager_Uplink.bridge, and its
-         * Band_Steering_Clients not steering's or the watch's columns */
+         * priority or enabled), its Ethernet uplink is bridged by the patch pair (spec 8.4), and its
+         * Band_Steering_Clients has not steering's or the watch's columns */
         const char *legacy_uplink = cfg_str(cJSON_GetObjectItemCaseSensitive(c, "uplink"), "mode");
-        if (legacy_uplink && strcmp(legacy_uplink, "off")) {
+        if (legacy_uplink && strcmp(legacy_uplink, "off") && strcmp(legacy_uplink, "ethernet")) {
             FAIL("uplink: %s is not served on a legacy pod", legacy_uplink);
             return false;
         }
@@ -2590,6 +2590,12 @@ static bool configure(agent *a, const char *path, const char *profiles)
         }
         if (!em_wired_intent_from(cfg_str(c, "pod_id"), uplink, bridge, &a->wired.intent, &why)) {
             FAIL("uplink: the port and the bridge must be interface names");
+            return false;
+        }
+        /* a legacy pod's bridging is the patch pair from its WAN bridge (spec 8.4) */
+        a->wired.legacy = a->profile.legacy;
+        if (!em_copy(a->wired.wan_bridge, sizeof(a->wired.wan_bridge), a->profile.wan_bridge)) {
+            FAIL("profile: wan_bridge must be an interface name");
             return false;
         }
     }

@@ -785,9 +785,9 @@ async def serve(config, stop):
     # the fleet's other agents, beside this one's run directory (spec 8.5)
     directory = PeerDirectory(config["run_dir"], pod_id) if config.get("run_dir") else None
     uplink_config = config.get("uplink", {"mode": "off"})
-    if profile.legacy and uplink_config["mode"] != "off":
+    if profile.legacy and uplink_config["mode"] not in ("off", WIRED):
         # spec 3.10: a legacy pod has no Multi-AP station (Wifi_Credential_Config without bssid,
-        # priority or enabled), and its Ethernet uplink no Connection_Manager_Uplink.bridge
+        # priority or enabled); its Ethernet uplink is bridged by the patch pair (spec 8.4)
         raise EmosaError(
             Reason.INVALID_INPUT, f"uplink: {uplink_config['mode']} is not served on a legacy pod"
         )
@@ -854,7 +854,15 @@ async def serve(config, stop):
             raise EmosaError(Reason.INVALID_INPUT, "uplink: the profile's fronthaul has no bridge")
         wired = WiredUplink(
             pod_id,
-            WiredBackend(pod_id, session, serial=config["serial"], port=port),
+            WiredBackend(
+                pod_id,
+                session,
+                serial=config["serial"],
+                port=port,
+                legacy=profile.legacy,
+                wan_bridge=profile.wan_bridge,
+                home_bridge=bridge,
+            ),
             Store(state_dir / "wired-uplink"),
             vault,
             WiredIntent(pod_id, port, bridge),

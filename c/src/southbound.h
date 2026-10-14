@@ -37,6 +37,8 @@ typedef struct {
     /* schema "opensync-2.0" (spec 3.10): a legacy pod, its WPA2-PSK in the security map, no
      * multi_ap, the roles the profile's slots */
     bool legacy;
+    /* a legacy pod's WAN bridge, its cm's uplink bridge (spec 8.4): wan_bridge, "br-wan" absent */
+    const char *wan_bridge;
 } em_profile;
 
 em_reason em_profile_load(const char *path, em_profile *out);

@@ -91,7 +91,7 @@
       "python": ["test_unassociated.py", "test_probe_watch.py"]
     },
     "README 3.10 Legacy pods: the OpenSync 2.0 schema": {
-      "box": ["legacy-onboard", "legacy-parent", "legacy-pod-6-6-profile", "pod-6-6-legacy-profile"],
+      "box": ["legacy-onboard", "legacy-parent", "legacy-pod-6-6-profile", "pod-6-6-legacy-profile", "legacy-wired", "legacy-wired-half-pair"],
       "python": ["test_legacy_pod.py"]
     },
     "README 4. The fleet": {
