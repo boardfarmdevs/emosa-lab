@@ -5490,6 +5490,11 @@ async def legacy_gtp_station_unassociated(box):
     referenced = any(config_uuid in uuids(r.get("vif_configs")) for r in radios.values())
     credentials = await box.rows("Wifi_Credential_Config")
     credential_gone = not any(r.get("ssid") == GTP_SSID for r in credentials.values())
+    # the agent's status file follows on its own cadence: the count once it is written there
+    await box.until(
+        lambda: ((box.status() or {}).get("gtp_station") or {}).get("removed_unassociated"),
+        seconds=10,
+    )
     counted = ((box.status() or {}).get("gtp_station") or {}).get("removed_unassociated")
     failing_after = await healthcheck(box)
 
