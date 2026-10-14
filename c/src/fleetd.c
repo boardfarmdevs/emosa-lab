@@ -171,6 +171,16 @@ static void stop_agent(void *ctx, const char *pod_id)
         WARN("systemctl not started for %s", unit);
 }
 
+/* a secret reference provisioned into an agent's store from the fleet's, or missing from both
+ * (Fleet.provision_secrets): the reference, never the value */
+static void secret_note(const char *pod_id, const char *ref, bool provisioned)
+{
+    if (provisioned)
+        LOG("pod %s: secret %s provisioned from the fleet's store", pod_id, ref);
+    else
+        WARN("pod %s: secret %s in neither its store nor the fleet's", pod_id, ref);
+}
+
 /* at the fleet's start, an agent of the registry: enabled, then started (restarted when
  * its configuration changed), each waited for; as the reference, a failure only logged */
 static void start_agent(void *ctx, const char *pod_id, bool changed)
@@ -651,6 +661,7 @@ int main(int argc, char **argv)
         em_fleet_close(&s.fleet);
         return 1;
     }
+    s.fleet.secret_note = secret_note; /* Fleet.provision_secrets' log lines */
     int rc = 0;
     if (list_cmd) {
         char *text = em_registry_dump(&s.fleet.registry);

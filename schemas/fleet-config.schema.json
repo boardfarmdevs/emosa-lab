@@ -38,6 +38,7 @@
     "topology_query_window": {"type": "integer", "minimum": 10, "maximum": 3600, "description": "Given to every agent: a property of the controller (spec §2.5). Absent: the rule is off."},
     "gtp_underlay": {"type": "string", "pattern": "^169\\.254\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(1[6-9]|2[0-9]|3[0-2])$", "description": "The site's own GTP underlay (spec 8.2), such as 169.254.1.0/24: given, the registry allocates each pod an underlay for its role as a GRE parent (spec 8.6), a 169.254.N.0/24 that never overlaps this one. Absent: none."},
     "state_root": {"type": "string", "minLength": 1},
+    "secrets": {"type": "string", "minLength": 1, "description": "The fleet's own secret store (a directory, mode 0700, one private file per reference): a secret_ref an agent configuration names (its uplink's, its GTP station's) that the agent's store lacks is copied from here when the fleet writes the configuration; never replaced, never logged by value (spec 4)."},
     "run_root": {"type": "string", "minLength": 1, "description": "Each agent's run directory is run_root/<pod_id> (its status, on a RAM disk on a gateway). Absent: the agents write their status in their state directories."},
     "config_dir": {"type": "string", "minLength": 1},
     "admit": {"oneOf": [{"const": "*"}, {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 64}}], "default": "*"},

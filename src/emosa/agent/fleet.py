@@ -25,6 +25,7 @@ Run: ``python -m emosa.agent.fleet serve /etc/emosa-fleet.json``
 """
 
 import argparse
+import contextlib
 import errno
 import hashlib
 import ipaddress
@@ -43,7 +44,9 @@ import ovs.poller
 import ovs.stream
 
 from emosa.config import validate
+from emosa.errors import EmosaError
 from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
+from emosa.secrets import REFERENCE, FileSecrets
 
 log = logging.getLogger("emosa.fleet")
 
@@ -324,7 +327,9 @@ class Fleet:
         started, or restarted when the configuration changed (spec §4 step 4). Whether it
         changed."""
         path = self.config_dir / f"{entry['pod_id']}.json"
-        text = json.dumps(agent_config(entry, self.config), indent=2) + "\n"
+        config = agent_config(entry, self.config)
+        self.provision_secrets(config)
+        text = json.dumps(config, indent=2) + "\n"
         changed = path.exists() and path.read_text() != text
         if not path.exists() or changed:
             tmp = path.with_suffix(".tmp")
@@ -332,6 +337,45 @@ class Fleet:
             os.replace(tmp, path)
         self.starter(entry["pod_id"], changed)
         return changed
+
+    def provision_secrets(self, config):
+        """spec §4: each secret reference the agent configuration names (its uplink's, its GTP
+        station's) that the agent's own store lacks, copied from the fleet's store (``secrets``):
+        created, never replaced, durable, mode 0600. One the fleet's store lacks too is logged
+        by reference only; the agent then says what it misses."""
+        if not self.config.get("secrets"):
+            return
+        uplink = config.get("uplink") or {}
+        refs = sorted(
+            {
+                ref
+                for ref in (
+                    uplink.get("secret_ref"),
+                    (uplink.get("bootstrap") or {}).get("secret_ref"),
+                )
+                if isinstance(ref, str) and REFERENCE.fullmatch(ref)
+            }
+        )
+        if not refs:
+            return
+        fleet = FileSecrets(Path(self.config["secrets"]))
+        own = FileSecrets(Path(config["state_dir"]) / "secrets")
+        for ref in refs:
+            try:
+                own.read(ref)
+                continue  # the agent's own: never replaced
+            except EmosaError:
+                pass
+            try:
+                value = fleet.read(ref)
+            except EmosaError:
+                log.warning(
+                    "pod %s: secret %s in neither its store nor the fleet's", config["pod_id"], ref
+                )
+                continue
+            with contextlib.suppress(FileExistsError):
+                own.create(ref, value)
+            log.info("pod %s: secret %s provisioned from the fleet's store", config["pod_id"], ref)
 
     def start_registered(self):
         """At the fleet's start, every admitted pod's agent in the registry, as step 4

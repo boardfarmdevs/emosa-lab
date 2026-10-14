@@ -637,6 +637,67 @@ static void fleet_underlays(void)
     em_registry_free(&r);
 }
 
+static unsigned notes_provisioned, notes_missing;
+static void note(const char *pod, const char *ref, bool provisioned)
+{
+    (void)pod;
+    (void)ref;
+    provisioned ? notes_provisioned++ : notes_missing++;
+}
+
+static bool secret_file(const char *dir, const char *ref, const char *value)
+{
+    char path[600];
+    (void)mkdir(dir, 0700);
+    snprintf(path, sizeof(path), "%s/%s", dir, ref);
+    FILE *f = fopen(path, "w");
+    if (!f)
+        return false;
+    (void)fputs(value, f);
+    (void)fclose(f);
+    return chmod(path, 0600) == 0;
+}
+
+/* Fleet.provision_secrets (tests/test_fleet.py's two) */
+static void fleet_secrets(const char *scratch)
+{
+    char fleet_dir[512], state[512], own_dir[600], path[700];
+    snprintf(fleet_dir, sizeof(fleet_dir), "%s/fleet-secrets", scratch);
+    snprintf(state, sizeof(state), "%s/state-POD2", scratch);
+    snprintf(own_dir, sizeof(own_dir), "%s/secrets", state);
+    CHECK(secret_file(fleet_dir, "gtp", "FleetGtpPassphrase1"), "the fleet's secret");
+    cJSON *config = cJSON_CreateObject();
+    cJSON_AddStringToObject(config, "secrets", fleet_dir);
+    em_fleet f = {.config = config, .secret_note = note};
+    cJSON *agent = cJSON_CreateObject(), *uplink = cJSON_AddObjectToObject(agent, "uplink");
+    cJSON_AddStringToObject(agent, "pod_id", "POD2");
+    cJSON_AddStringToObject(agent, "state_dir", state);
+    cJSON_AddStringToObject(cJSON_AddObjectToObject(uplink, "bootstrap"), "secret_ref", "gtp");
+    em_fleet_provision_secrets(&f, agent);
+    snprintf(path, sizeof(path), "%s/gtp", own_dir);
+    size_t len = 0;
+    char *copied = em_read_file(path, 4096, &len);
+    struct stat st;
+    CHECK(copied && !strcmp(copied, "FleetGtpPassphrase1") && stat(path, &st) == 0 && (st.st_mode & 0777) == 0600 &&
+              notes_provisioned == 1,
+          "the agent's store gets the fleet's secret, private");
+    free(copied);
+    CHECK(secret_file(fleet_dir, "other", "AnotherPassphrase2") && unlink(path) == 0 &&
+              secret_file(own_dir, "gtp", "AgentsOwnPassphrase"),
+          "the agent's own secret");
+    em_fleet_provision_secrets(&f, agent);
+    copied = em_read_file(path, 4096, &len);
+    CHECK(copied && !strcmp(copied, "AgentsOwnPassphrase") && notes_provisioned == 1, "never replaced");
+    free(copied);
+    cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(uplink, "bootstrap"), "secret_ref",
+                                           cJSON_CreateString("missing"));
+    em_fleet_provision_secrets(&f, agent);
+    snprintf(path, sizeof(path), "%s/missing", own_dir);
+    CHECK(access(path, F_OK) != 0 && notes_missing == 1, "one the fleet lacks too: told, nothing made");
+    cJSON_Delete(agent);
+    cJSON_Delete(config);
+}
+
 static void ethernet(void)
 {
     /* what is refused before any packet socket (the box opens real ones) */
@@ -1148,6 +1209,7 @@ int main(int argc, char **argv)
     framing();
     channel_store(argv[2]);
     fleet_underlays();
+    fleet_secrets(argv[2]);
     ethernet();
     schema_keywords(argv[2]);
     helpers(argv[2]);

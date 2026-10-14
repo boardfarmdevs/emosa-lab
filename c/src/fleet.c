@@ -3,10 +3,12 @@
 #include "fleet.h"
 
 #include "canon.h"
+#include "vault.h"
 
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
+#include <openssl/crypto.h>
 #include <openssl/sha.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -566,6 +568,10 @@ em_fleet_outcome em_fleet_identify(em_fleet *f, const cJSON *select_result, doub
     bool saved = registry && em_write_file(f->registry_path, registry, true);
     free(registry);
     char path[600];
+    cJSON *agent = em_agent_config(e, f->config);
+    if (agent)
+        em_fleet_provision_secrets(f, agent);
+    cJSON_Delete(agent);
     char *config = em_agent_config_text(e, f->config);
     bool written = saved && config &&
                    em_format(path, sizeof(path), "%s/%s.json", f->config_dir, e->pod_id) &&
@@ -603,6 +609,10 @@ size_t em_fleet_start_registered(em_fleet *f, void (*start)(void *ctx, const cha
             continue;
         char path[600];
         bool changed = false;
+        cJSON *agent = em_agent_config(e, f->config);
+        if (agent)
+            em_fleet_provision_secrets(f, agent);
+        cJSON_Delete(agent);
         char *config = em_agent_config_text(e, f->config);
         bool written = config && em_format(path, sizeof(path), "%s/%s.json", f->config_dir, e->pod_id) &&
                        write_if_changed(path, config, &changed);
@@ -622,6 +632,55 @@ bool em_fleet_update_ok(const cJSON *result)
     const cJSON *count = cJSON_GetObjectItemCaseSensitive(first, "count");
     return cJSON_IsObject(first) && (!error || cJSON_IsNull(error) || cJSON_IsFalse(error)) &&
            cJSON_IsNumber(count) && count->valuedouble == 1;
+}
+
+static int by_ref(const void *a, const void *b) { return strcmp(*(const char *const *)a, *(const char *const *)b); }
+
+void em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config)
+{
+    const char *source = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(f->config, "secrets"));
+    const char *pod = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(agent_config, "pod_id"));
+    const char *state = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(agent_config, "state_dir"));
+    const cJSON *uplink = cJSON_GetObjectItemCaseSensitive(agent_config, "uplink");
+    const char *refs[2] = {
+        cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(uplink, "secret_ref")),
+        cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(uplink, "bootstrap"),
+                                                              "secret_ref"))};
+    size_t n = 0;
+    for (size_t i = 0; i < 2; i++)
+        if (refs[i])
+            refs[n++] = refs[i];
+    if (!source || !pod || !state || !n)
+        return;
+    em_sort(refs, n, sizeof(*refs), by_ref);
+    if (n == 2 && !strcmp(refs[0], refs[1]))
+        n = 1;
+    char dir[600];
+    em_vault fleet, own;
+    /* the agent's state directory may not exist before its first start */
+    if ((mkdir(state, 0700) && errno != EEXIST) || !em_format(dir, sizeof(dir), "%s/secrets", state) ||
+        em_vault_open(&fleet, source) != EM_OK || em_vault_open(&own, dir) != EM_OK)
+        return;
+    for (size_t i = 0; i < n; i++) {
+        size_t len = 0;
+        uint8_t *have = own.backend.read(&own, refs[i], &len);
+        if (have) { /* the agent's own: never replaced */
+            OPENSSL_cleanse(have, len);
+            free(have);
+            continue;
+        }
+        uint8_t *value = fleet.backend.read(&fleet, refs[i], &len);
+        if (!value) {
+            if (f->secret_note)
+                f->secret_note(pod, refs[i], false);
+            continue;
+        }
+        (void)own.backend.create(&own, refs[i], value, len); /* made meanwhile: that one stands */
+        OPENSSL_cleanse(value, len);
+        free(value);
+        if (f->secret_note)
+            f->secret_note(pod, refs[i], true);
+    }
 }
 
 cJSON *em_fleet_forget(em_fleet *f, const char *serial, const char *stamp,
