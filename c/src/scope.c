@@ -3,11 +3,16 @@
 #include "scope.h"
 
 #include <ctype.h>
+#include <openssl/rand.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "canon.h"
 #include "ovs.h"
+
+/* spec 3.10 (uplink._session_start): a legacy pod's start as its agent counts it, a token renewed
+ * for every fresh session, empty on a 6.6 pod. One agent process serves one pod. */
+static char session_start[17];
 
 const cJSON *em_table(const cJSON *tables, const char *name)
 {
@@ -43,12 +48,25 @@ bool em_start_instance(const cJSON *tables, char out[17])
     for (i = 0; i < n; i++)
         cJSON_AddItemToArray(list, cJSON_CreateString(uuids[i]));
     free(uuids);
+    if (session_start[0]) /* a legacy pod's: its session's start too (spec 3.10) */
+        cJSON_AddItemToArray(list, cJSON_CreateString(session_start));
     char *text = em_json_dumps(list, EM_JSON_DEFAULT, false), hex[65];
     cJSON_Delete(list);
     em_sha256_hex(text, strlen(text), hex);
     free(text);
     memcpy(out, hex, 16);
     out[16] = 0;
+    return true;
+}
+
+bool em_new_session_start(void)
+{
+    uint8_t token[8];
+    if (RAND_bytes(token, sizeof(token)) != 1)
+        return false;
+    char *hex = em_hex(token, sizeof(token));
+    EM_FORMAT_FIXED(session_start, sizeof(session_start), "%s", hex);
+    free(hex);
     return true;
 }
 

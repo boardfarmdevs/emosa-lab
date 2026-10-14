@@ -663,6 +663,26 @@ is everything above. For a legacy pod, all of this specification applies, except
     is enabled again: the next start writes it again.
 
   Both agents. Box `legacy-radio-plan`.
+- **Its starts, counted by its agent's sessions.** A legacy pod's database is its vendor's seed
+  again at every start of its OpenSync (a reboot, or its connection manager restarting the
+  managers after more than 120 s without its uplink), every row with the UUID it had in the
+  seed, its radio rows too: seen on a converted pod on 14 October, one start instance (§8.3)
+  across 13 October's configuration and the next day's re-seed, so the operator's rows read as
+  another manager changing EMOSA's configuration under the same start, every M2 refused
+  (`OWNERSHIP_CONFLICT`), and the GTP station and the radio plan taken as written. On a legacy
+  profile the agent counts the pod's starts itself: a start is one of its sessions with the
+  pod, a token of the agent's renewed for the first, for every fresh session (another pod
+  source, §2.5, whatever the reason) and for a kept reconnection that found its configuration
+  lost (`config_lost`), and taken into the start instance beside the radio rows. Each is a new
+  start for every scope: a new ownership period (§5, a conflict recorded on an earlier one
+  released), the controller's M2 written again where the pod lacks it, and the GTP station and
+  the radio plan written once more where they differ: the pod claimed again, as at its first
+  admission, with no hands on it. A kept reconnection stays on its start. Once the pod's
+  `manager_addr` is EMOSA's, no other manager writes its rows, so nothing is taken from one.
+  The status's `session_starts` counts them (a legacy profile's only), and the agent's log says
+  each ("its configuration claimed again"). A 6.6 pod's start is its radio rows alone, as
+  before. Both agents. Box `legacy-reseed-reclaim`, `legacy-reseed-reclaim-5g` (wl0 back on 36
+  at HT80 with its home AP) and `legacy-reseed-reclaim-late` (past the reconnection window).
 - **Not served** on a legacy pod, refused at the agent's start
   (`INVALID_INPUT`) or turned off and said so in the status:
   the uplink switch onto a Multi-AP backhaul (§8.3: no Multi-AP station on such a
@@ -745,7 +765,8 @@ Rules:
 - A configuration the pod already runs is observed as applied without writing:
   repeated M2s never cause repeated writes.
 - A written configuration belongs to the start of the pod's OpenSync it was
-  written on (the start's radio rows, as for the uplink switch, §8.3). When the
+  written on (the start's radio rows, as for the uplink switch, §8.3; a legacy pod's
+  start is one of its agent's sessions, whose radio rows do not change, §3.10). When the
   pod's OpenSync starts again, its database comes back from the template without
   it: that is not another manager's change, so it is no ownership conflict, and a
   conflict seen on an earlier start no longer blocks the pod (a new ownership

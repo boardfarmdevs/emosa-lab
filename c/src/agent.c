@@ -189,6 +189,7 @@ typedef struct {
     bool has_source;
     unsigned reconnections_continued, reconnections_config_lost;
     counters reconnections_fresh;
+    unsigned session_starts; /* spec 3.10: a legacy pod's starts, counted by its agent's sessions */
     bool notify_due, check_drift;
     uint8_t channel_moves[1 + EXTRA_RADIOS][6];
     size_t nchannel_moves;
@@ -537,6 +538,21 @@ static size_t station_names(const agent *a, const char *out[EM_UPLINK_BANDS + 1]
     return n;
 }
 
+/* spec 3.10: a legacy pod's new start, counted by its agent's sessions (its radio rows come back
+ * from its vendor's seed with the same UUIDs): a new ownership period, and the writes made once
+ * per start written again where the pod lacks them, a re-claim (pod.PodReportSource.new_start) */
+static void new_start(agent *a, const char *why)
+{
+    if (!a->profile.legacy)
+        return;
+    if (!em_new_session_start()) {
+        WARN("a legacy pod's new start (%s): no randomness, the start kept", why);
+        return;
+    }
+    a->session_starts++;
+    LOG("a legacy pod's new start (%s): its configuration claimed again", why);
+}
+
 /* Why a new database generation of a pod source already taken is another source (spec 2.5), or
  * NULL: it continues the last one (pod._fresh_reason). Only the link to the pod comes back in a
  * continuation: the same pod, the same start of its OpenSync (its database and the configuration
@@ -698,6 +714,7 @@ static bool refresh(agent *a)
         } else { /* another source: its own maxima, a fresh session */
             count(&a->reconnections_fresh, why);
             LOG("a new pod source (%s): a fresh session", why);
+            new_start(a, "a fresh session");
             em_tlv_list_free(&caps);
             for (size_t k = 0; k < nreported; k++) {
                 const em_radio_view *r = reported[k].radio;
@@ -775,6 +792,7 @@ static bool refresh(agent *a)
         const char *why = same_identity(&a->caps, &caps) ? "fronthaul_moved" : "capabilities_changed";
         count(&a->reconnections_fresh, why);
         LOG("a new pod source (%s): a fresh session", why);
+        new_start(a, "a fresh session");
         em_tlv_list_free(&a->caps);
         a->caps = caps;
         a->max_eirp = max_eirp;
@@ -899,6 +917,7 @@ static void reconcile(agent *a)
             drifted = em_journal_count(a->radio_scopes[k].journal) && em_engine_drifted(&a->radio_scopes[k].engine);
         if (drifted) {
             a->reconnections_config_lost++;
+            new_start(a, "its configuration lost"); /* spec 3.10: a re-seed within the window */
             renew(a, "the pod's configuration is gone after its reconnection");
         }
     }
@@ -2318,6 +2337,8 @@ static cJSON *status(agent *a)
     if (a->reconnections_config_lost)
         cJSON_AddNumberToObject(reconnections, "config_lost", a->reconnections_config_lost);
     cJSON_AddItemToObject(reconnections, "fresh", counters_json(&a->reconnections_fresh, ""));
+    if (a->profile.legacy) /* spec 3.10: a legacy pod's starts, counted by its agent's sessions */
+        cJSON_AddNumberToObject(o, "session_starts", a->session_starts);
     cJSON_AddStringToObject(session, "state", SESSION_NAMES[a->at.state]);
     cJSON *issues = cJSON_AddArrayToObject(session, "admission_issues");
     for (size_t i = 0; i < a->nadmission_issues; i++)
@@ -2533,6 +2554,12 @@ static bool configure(agent *a, const char *path, const char *profiles)
         em_profile_load(profile, &a->profile) != EM_OK)
         return false;
     if (a->profile.legacy) {
+        /* spec 3.10: the pod's starts counted by its agent's sessions, this one first */
+        if (!em_new_session_start()) {
+            FAIL("no randomness for the pod's session start");
+            return false;
+        }
+        a->session_starts = 1;
         /* spec 3.10: a legacy pod has no Multi-AP station (Wifi_Credential_Config without bssid,
          * priority or enabled): a GRE child's pin is its station's parent; its Ethernet uplink is
          * bridged by the patch pair (spec 8.4); its Band_Steering_Clients has not steering's or

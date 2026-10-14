@@ -87,6 +87,7 @@ from emosa.opensync.uplink import (
     UplinkBackend,
     band_of_operating_class,
     lower_mac,
+    new_session_start,
     start_instance,
     uplink_state,
 )
@@ -283,6 +284,16 @@ class PodReportSource:
         self.instance = None  # the start of the pod's OpenSync last published (its radio rows)
         self.published_at = None  # when it was last published
         self.reconnections = {"continued": 0, "fresh": {}}
+        # spec 3.10: a legacy pod's starts as its agent counts them (its sessions), this one first
+        self.session_starts = 1 if backend.profile.legacy else None
+
+    def new_start(self, why):
+        """spec 3.10: a legacy pod's new start, counted by its agent's sessions (its radio rows
+        come back from its vendor's seed with the same UUIDs): a new ownership period, and the
+        writes made once per start written again where the pod lacks them (a re-claim)."""
+        new_session_start()
+        self.session_starts += 1
+        log.info("a legacy pod's new start (%s): its configuration claimed again", why)
 
     def _fresh_reason(self, device, instance, capabilities, now):
         """Why a new database generation is another pod source (spec 2.5), or None: it
@@ -313,6 +324,8 @@ class PodReportSource:
         fresh = self.reconnections["fresh"]
         fresh[reason] = fresh.get(reason, 0) + 1
         log.info("a new pod source (%s): a fresh session", reason.replace("_", " "))
+        if self.backend.profile.legacy:
+            self.new_start("a fresh session")
 
     def _represented(self, radio, bound):
         """The BSSes the agent represents: the bound one, then managed slot VIFs.
@@ -743,6 +756,8 @@ async def serve(config, stop):
     pod_id = config["pod_id"]
     agent, controller = mac(config["al_mac"]), mac(config["controller_al"])
     profile = load_profile(config.get("profile", DEFAULT_PROFILE))
+    if profile.legacy:
+        new_session_start()  # spec 3.10: the pod's starts counted by its agent's sessions
     session = OvsSession(
         config["ovsdb"], monitor_columns=MONITOR, timeout=2, schema_generation=profile.schema
     )
@@ -1066,6 +1081,8 @@ async def serve(config, stop):
             # spec 2.5: new database generations that continued the pod source (the session
             # kept when it was provisioned), and those that were another source, by reason
             "reconnections": report.reconnections,
+            # spec 3.10: a legacy pod's starts, counted by its agent's sessions
+            **({"session_starts": report.session_starts} if profile.legacy else {}),
             "operations": ops,
             # spec 9: each further radio's scope, by band: its operations, each the BSSes of the
             # radio's own M2 set its slots map
@@ -1234,6 +1251,8 @@ async def serve(config, stop):
                         report.reconnections["config_lost"] = (
                             report.reconnections.get("config_lost", 0) + 1
                         )
+                        if profile.legacy:  # spec 3.10: a re-seed within the window
+                            report.new_start("its configuration lost")
                         lifecycle.renew()
                 now = time.monotonic()
                 if now >= next_discovery:

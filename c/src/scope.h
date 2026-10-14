@@ -12,8 +12,12 @@
 const cJSON *em_table(const cJSON *tables, const char *name);
 /* The pod's one AWLAN_Node row when its serial is `serial` (*uuid its UUID), else NULL. */
 const cJSON *em_bound_node(const cJSON *tables, const char *serial, const char **uuid);
-/* start_instance: sha256(json.dumps(sorted Wifi_Radio_Config UUIDs))[:16]; false without radios. */
+/* start_instance: sha256(json.dumps(sorted Wifi_Radio_Config UUIDs))[:16]; false without radios.
+ * A legacy pod's agent adds its session's start token (em_new_session_start). */
 bool em_start_instance(const cJSON *tables, char out[17]);
+/* new_session_start (spec 3.10): from now on, a new start of a legacy pod's OpenSync for every
+ * scope (the ownership period, the writes made once per start); false without randomness. */
+bool em_new_session_start(void);
 /* The 6.6 osw encoding of WPA2-PSK/CCMP with one PSK slot, or on a legacy pod (spec 3.10) the
  * security map's encryption WPA-PSK and a key (radio_scope.wpa2_psk). */
 bool em_row_wpa2_psk(const cJSON *row);

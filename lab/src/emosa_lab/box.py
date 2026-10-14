@@ -69,6 +69,7 @@ COLD_VIF = "home-ap-24"  # the profiles' fronthaul VIF
 # station on its GRE uplink and no AP yet; its profile's fronthaul wl1.2 and GRE parent AP wl1.1
 LEGACY_ROWS = ROOT / "tests/fixtures/opensync/pod-2.0-legacy-tables.json"
 LEGACY_PROFILE = "bcm-pod-2.4.3-gre-v1"
+LEGACY_PROFILE_5G = "bcm-pod-2.4.3-gre-5g-v1"  # with wl0 as a 5 GHz fronthaul only (wl0.2)
 LEGACY_FRONTHAUL, LEGACY_PARENT, LEGACY_SLOT_5G = "wl1.2", "wl1.1", "wl0.2"
 LEGACY_UNDERLAY = "169.254.5.0/24"  # not the fixture's leftover 169.254.2.1 on wl1.1
 
@@ -154,6 +155,29 @@ async def db_transact(db, operations):
         return await session.transact(operations)
     finally:
         await session.close()
+
+
+async def seed_rows(db, schema):
+    """spec 3.10: a legacy pod's vendor seed as the box keeps it, every row of the database as it
+    was first made, raw ({table: [row with _uuid]}). The pod restores its seed at every start of
+    its OpenSync, its rows with the same UUIDs (a converted pod, 14 October)."""
+    tables = sorted(json.loads(Path(schema).read_text())["tables"])
+    results = await db_transact(db, [{"op": "select", "table": t, "where": []} for t in tables])
+    return {t: result["rows"] for t, result in zip(tables, results, strict=True)}
+
+
+def reseeded(seed):
+    """The seed's rows inserted again, each with its own UUID: one transaction."""
+    return [
+        {
+            "op": "insert",
+            "table": table,
+            "uuid": row["_uuid"][1],
+            "row": {c: v for c, v in row.items() if c not in ("_uuid", "_version")},
+        }
+        for table, rows in seed.items()
+        for row in rows
+    ]
 
 
 FIRST_OCTETS = ("82", "a2", "c2", "e2", "86", "a6", "c6", "e6")  # locally administered
@@ -570,6 +594,8 @@ class Box:
                 await session.transact(ethernet_first(self.ethernet_first))
         finally:
             await session.close()
+        if self.legacy:  # its vendor's seed, as every start of its OpenSync restores it
+            self.seed = await seed_rows(self.db, self.schema)
         entry = {
             "pod_id": self.serial,
             "port": AGENT_PORT,
@@ -785,18 +811,24 @@ class Box:
             ]
         )
 
-    async def new_pod_database(self, replace=None):
+    async def new_pod_database(self, replace=None, *, away=0):
         """The pod's OpenSync started again (its container with its extender, say): a new
         database from the template, with new row UUIDs (and replace's changes: other
-        radios), dialing the agent again."""
+        radios), dialing the agent again, ``away`` seconds after the old one went. A legacy
+        pod's is its vendor's seed again, every row with the UUID it had there (spec 3.10: its
+        radio rows too, so they do not tell the starts apart)."""
         old = self.db
         await old.close()
-        tables, operations = recorded_pod(self.pod_rows, replace, self.drop)
+        await asyncio.sleep(away)
         self.db = SimDatabase(schema=self.schema, generation=old.generation)
         await self.db.start()
-        await self.transact(operations)
-        if self.ethernet_first:  # the same legacy pod again, as its seed has it
-            await self.transact(ethernet_first(self.ethernet_first))
+        if self.legacy and replace is None:
+            await self.transact(reseeded(self.seed))
+        else:
+            tables, operations = recorded_pod(self.pod_rows, replace, self.drop)
+            await self.transact(operations)
+            if self.ethernet_first:  # the same legacy pod again, as its seed has it
+                await self.transact(ethernet_first(self.ethernet_first))
         await dial(self.db, f"tcp:127.0.0.1:{AGENT_PORT}")
 
     def result(self, **extra):
@@ -1136,7 +1168,7 @@ async def back(box, searches, m1s, continued, *, seconds=90):
         )
         if written and not on_air:
             await apply_configuration(box.db)  # the pod's managers apply it
-            if box.cold:
+            if box.cold or box.legacy:  # VIFs the agent created (as onboarded)
                 await attach_vifs(box.db)
         status = box.status() or {}
         session = status.get("session") or {}
@@ -5412,6 +5444,7 @@ async def legacy_radio_plan(box):
         and second.get("operation_id") != first.get("operation_id")
         and second.get("instance") != first.get("instance")
     )
+    await until_async(lambda: gtp_station_written(box), seconds=30)  # the new start's too
     vifs_again = (await radio_plan_rows(box))["vifs"]
     await asyncio.sleep(8)
     once = radio_plan_operation(box).get("operation_id") == (second or {}).get("operation_id")
@@ -5474,6 +5507,189 @@ async def legacy_5g_fronthaul(box):
         wl0=placed,
         vifs=sorted(n for n in names if n),
     )
+
+
+def gtp_station_operation(box):
+    return ((box.status() or {}).get("gtp_station") or {}).get("operation") or {}
+
+
+async def legacy_reseed(box, *, away=0):
+    """spec 3.10, a converted legacy pod re-seeded (14 October: its connection manager restarted
+    its managers from the vendor's seed after more than 120 s without its Ethernet, and the pod
+    went back to its operator, until it was admitted again): its database is its seed again, every
+    row with the UUID it had there, its radio rows too, so they do not tell the starts apart. The
+    pod configured first (the controller's M2 applied, the GTP station written, the radio plan
+    applied), then its seed again, dialing the agent ``away`` seconds later. The agent counts the
+    pod's starts by its own sessions: the fresh session (or a kept reconnection that found the
+    configuration lost) is a new start, a new ownership period. The controller's M2 is written
+    and applied again, with no ownership conflict; the GTP station and the radio plan are written
+    once more (the operator's APs the profile does not name off again, wl0.1's Inet with them);
+    with the 5 GHz profile, wl0 back on 36 at HT80 with its home AP wl0.2."""
+    five = box.profile == LEGACY_PROFILE_5G
+    unclaimed = sorted(n for n in OPERATOR_APS if not (five and n == LEGACY_SLOT_5G))
+
+    async def configured():
+        """The pod as EMOSA configures it: {what: bool}."""
+        rows = await radio_plan_rows(box)
+        vifs = rows["vifs"]
+        radios, configs = await box.rows("Wifi_Radio_Config"), await box.rows("Wifi_VIF_Config")
+        wl0 = next((r for r in radios.values() if r.get("if_name") == "wl0"), {})
+        _, home_5g = await box.vif("Wifi_VIF_Config", LEGACY_SLOT_5G)
+        fronthaul = next((r for r in configs.values() if r.get("if_name") == LEGACY_FRONTHAUL), {})
+        return {
+            "fronthaul": fronthaul.get("ssid") == REGISTRAR_SSID,
+            "unclaimed_off": all(vifs.get(n) == ("ap", False, False) for n in unclaimed),
+            "wl0.1_inet_off": rows["inets"].get("wl0.1") is False,
+            "station": vifs.get("wl1", (None, None))[:2] == ("sta", True),
+            "wl1": rows["wl1"] == (6, "HT20"),
+            **(
+                {
+                    "wl0": (wl0.get("channel"), wl0.get("ht_mode")) == (36, "HT80"),
+                    "home_5g": (home_5g or {}).get("ssid") == REGISTRAR_SSID
+                    and (home_5g or {}).get("enabled") is True,
+                }
+                if five
+                else {}
+            ),
+        }
+
+    async def settled(before=({}, {})):
+        """The radio plan and the GTP station of this start, other operations than ``before``'s
+        (the last start's): (plan, station) operations, each None if not there in 60 s."""
+        deadline, plan, station = time.monotonic() + 60, None, None
+        while time.monotonic() < deadline and box.process.poll() is None:
+            if plan is None:
+                found = await radio_plan_applied(box)
+                if found and found.get("operation_id") != before[0].get("operation_id"):
+                    plan = found
+            if station is None and await gtp_station_written(box):
+                found = gtp_station_operation(box)
+                if found.get("operation_id") not in (None, before[1].get("operation_id")):
+                    station = found
+            if plan is not None and station is not None:
+                break
+            await asyncio.sleep(0.5)
+        return plan, station
+
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    if five and not await box.until(lambda: radio_operations(box, "5G"), seconds=60):
+        return box.result(passed=False, failed="no 5 GHz M2 before the re-seed")
+    plan, station = await settled()
+    before = await configured()
+    if not plan or not station or not all(before.values()):
+        return box.result(
+            passed=False,
+            failed="not configured before the re-seed",
+            configured=before,
+            radio_plan=(box.status() or {}).get("radio_plan"),
+            gtp_station=(box.status() or {}).get("gtp_station"),
+        )
+    starts = (box.status() or {}).get("session_starts") or 0
+    operations = len(operation_states(box))
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
+    await box.new_pod_database(away=away)
+    seeded = await configured()  # the seed's: the operator's again
+    session = await back(box, searches, m1s, continued, seconds=90)
+    plan_again, station_again = await settled((plan, station))
+    if five:
+        await box.until(lambda: all_applied(radio_operations(box, "5G")[-1:]), seconds=60)
+        await apply_configuration(box.db)
+    after = await configured()
+    states = operation_states(box)
+    conflicts = [s for s in states if "OWNERSHIP_CONFLICT" in s]
+    new_start = ((box.status() or {}).get("session_starts") or 0) > starts
+    written_again = (
+        plan_again is not None
+        and plan_again.get("operation_id") != plan.get("operation_id")
+        and plan_again.get("instance") != plan.get("instance")
+        and station_again is not None
+        and station_again.get("operation_id") != station.get("operation_id")
+    )
+    return box.result(
+        passed=session is not None
+        and not all(seeded.values())
+        and all(after.values())
+        and not conflicts
+        and len(states) > operations
+        and states[-1][0] == "OBSERVED_APPLIED"
+        and new_start
+        and written_again,
+        session=session,
+        seeded=seeded,
+        configured_again=after,
+        operations=[list(s) for s in states[operations - 1 :]],
+        ownership_conflicts=len(conflicts),
+        session_starts=(box.status() or {}).get("session_starts"),
+        plan_and_station_written_again=written_again,
+        radio_plan=(box.status() or {}).get("radio_plan"),
+    )
+
+
+async def legacy_reseed_reclaim(box):
+    return await legacy_reseed(box)
+
+
+async def legacy_profile_5g(box):
+    """spec 3.10, 9, plan A: a legacy pod configured on bcm-pod-2.4.3-gre-v1 (the operator's
+    seed, the radio plan applied: wl0.2 off), then its fleet entry switched to
+    bcm-pod-2.4.3-gre-5g-v1 and its agent restarted on its journal, on the same start of the
+    pod's OpenSync. No ownership conflict: the earlier operations were planned under another
+    profile (spec 5) and the agent's new session is a new start (spec 3.10). The 5 GHz radio's M2
+    makes wl0.2 its home AP and puts wl0 on 36 at HT80; wl0.1 stays off."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    if not await radio_plan_applied(box):
+        return box.result(passed=False, failed="no radio plan on the 2.4 GHz profile")
+
+    async def five_ghz():
+        radios = await box.rows("Wifi_Radio_Config")
+        wl0 = next((r for r in radios.values() if r.get("if_name") == "wl0"), {})
+        _, home = await box.vif("Wifi_VIF_Config", LEGACY_SLOT_5G)
+        return {
+            "wl0": (wl0.get("channel"), wl0.get("ht_mode")),
+            "home_5g": {k: (home or {}).get(k) for k in ("ssid", "enabled")},
+        }
+
+    async def switched(operations):
+        await apply_configuration(box.db)
+        ops = (box.status() or {}).get("operations") or []
+        placed = await five_ghz()
+        return (
+            len(ops) > operations
+            and all_applied(ops[operations:])
+            and all_applied(radio_operations(box, "5G")[-1:])
+            and placed["wl0"] == (36, "HT80")
+        )
+
+    done = await with_profile(box, LEGACY_PROFILE_5G, switched)
+    placed = await five_ghz()
+    rows = await radio_plan_rows(box)
+    states = operation_states(box) + [
+        (op.get("state"), op.get("reason")) for op in radio_operations(box, "5G")
+    ]
+    conflicts = [s for s in states if "OWNERSHIP_CONFLICT" in s]
+    return box.result(
+        passed=done
+        and not conflicts
+        and placed == {"wl0": (36, "HT80"), "home_5g": {"ssid": REGISTRAR_SSID, "enabled": True}}
+        and rows["vifs"].get("wl0.1") == ("ap", False, False)
+        and rows["inets"].get("wl0.1") is False,
+        switched=done,
+        five_ghz=placed,
+        wl0_1=rows["vifs"].get("wl0.1"),
+        ownership_conflicts=len(conflicts),
+        operations=[list(s) for s in states],
+    )
+
+
+async def legacy_reseed_reclaim_late(box):
+    """legacy-reseed-reclaim with the pod away past the reconnection window (a reboot's or a
+    long outage's): the session lost meanwhile, the pod's seed a fresh session's."""
+    return await legacy_reseed(box, away=RECONNECT_WINDOW + 5)
 
 
 async def generation_refused(box):
@@ -5579,6 +5795,10 @@ SCENARIOS = {
     "legacy-gtp-station": legacy_gtp_station,
     "legacy-gtp-station-present": legacy_ethernet_lost,
     "legacy-radio-plan": legacy_radio_plan,
+    "legacy-reseed-reclaim": legacy_reseed_reclaim,
+    "legacy-reseed-reclaim-5g": legacy_reseed_reclaim,
+    "legacy-reseed-reclaim-late": legacy_reseed_reclaim_late,
+    "legacy-profile-5g": legacy_profile_5g,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -5769,6 +5989,11 @@ OPTIONS["legacy-radio-plan"] = {
     **OPTIONS["legacy-gtp-station"],
     "ethernet_first": "operator",
 }
+# spec 3.10, a re-seed: the radio plan's pod, its seed restored with the same UUIDs
+OPTIONS["legacy-reseed-reclaim"] = OPTIONS["legacy-radio-plan"]
+OPTIONS["legacy-reseed-reclaim-5g"] = {**OPTIONS["legacy-radio-plan"], "profile": LEGACY_PROFILE_5G}
+OPTIONS["legacy-reseed-reclaim-late"] = OPTIONS["legacy-radio-plan"]
+OPTIONS["legacy-profile-5g"] = OPTIONS["legacy-radio-plan"]
 OPTIONS["legacy-gre-move"] = {
     "legacy": True,
     "backhaul": True,

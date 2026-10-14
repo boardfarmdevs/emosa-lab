@@ -28,6 +28,7 @@ memory (seen live, data-plane.md §5.6). A BSSID of the pod itself is refused.
 import hashlib
 import json
 import re
+import secrets
 from dataclasses import asdict, dataclass
 
 from emosa.backends.base import Snapshot, SubmitResult
@@ -171,16 +172,35 @@ def own_bssids(decoded):
     }
 
 
+# spec 3.10: a legacy pod's database is its vendor's seed again at every start, its radio rows
+# with the same UUIDs (a converted pod, 14 October: one instance across a re-seed), so they
+# cannot tell its starts apart. Its agent counts its starts by its own sessions instead: a token
+# renewed for every fresh session (new_session_start), with the radio rows in the instance.
+# None on a 6.6 pod, whose instance is its radio rows alone. One agent process serves one pod.
+_session_start = None
+
+
+def new_session_start():
+    """A legacy pod's agent (spec 3.10): from now on, a new start of the pod's OpenSync for every
+    scope (the ownership period, the writes made once per start). The token."""
+    global _session_start
+    _session_start = secrets.token_hex(8)
+    return _session_start
+
+
 def start_instance(decoded):
     """Which start of the pod's OpenSync: a hash of its radio rows' UUIDs.
 
     Its start scripts create the radio rows anew (new UUIDs), which then live as
     long as that start does. AWLAN_Node comes from the database template and
-    keeps its UUID (seen live), so it cannot tell two starts apart.
+    keeps its UUID (seen live), so it cannot tell two starts apart. A legacy
+    pod's agent adds its session's start token (new_session_start).
     """
     radios = sorted(decoded.get("Wifi_Radio_Config", {}))
     if not radios:
         raise EmosaError(Reason.NOT_READY, "the pod's radios are not configured yet")
+    if _session_start is not None:
+        radios.append(_session_start)
     return hashlib.sha256(json.dumps(radios).encode()).hexdigest()[:16]
 
 

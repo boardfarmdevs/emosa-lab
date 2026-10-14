@@ -707,6 +707,30 @@ def test_a_legacy_pods_radio_plan_is_emosas_once_per_start(agent, tmp_path):
     assert result["passed"], result
 
 
+def test_a_reseeded_legacy_pod_is_claimed_again_without_a_conflict(agent, tmp_path):
+    # spec 3.10: its seed's radio rows keep their UUIDs; the agent's fresh session is a new start
+    result = box("legacy-reseed-reclaim", agent, tmp_path / "box", timeout=360)
+    assert result["passed"], result
+
+
+def test_a_reseeded_legacy_pod_gets_its_5ghz_fronthaul_back_on_36(agent, tmp_path):
+    # the same on bcm-pod-2.4.3-gre-5g-v1: wl0 on 36 at HT80 again, wl0.2 its home AP
+    result = box("legacy-reseed-reclaim-5g", agent, tmp_path / "box", timeout=360)
+    assert result["passed"], result
+
+
+def test_a_legacy_pod_reseeded_past_the_window_is_claimed_again(agent, tmp_path):
+    # the same with the pod away past the reconnection window, as after a reboot
+    result = box("legacy-reseed-reclaim-late", agent, tmp_path / "box", timeout=420)
+    assert result["passed"], result
+
+
+def test_a_legacy_pod_switched_to_the_5ghz_profile_takes_wl0_without_a_conflict(agent, tmp_path):
+    # plan A: its entry switched to bcm-pod-2.4.3-gre-5g-v1, its agent restarted on its journal
+    result = box("legacy-profile-5g", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_a_legacy_pods_5ghz_radio_serves_its_own_fronthaul(agent, tmp_path):
     # spec 3.10, 9: bcm-pod-2.4.3-gre-5g-v1, the backhaul staying on 2.4 GHz
     result = box("legacy-5g-fronthaul", agent, tmp_path / "box", timeout=240)
